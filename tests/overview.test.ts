@@ -10,7 +10,7 @@ const filters = { month: "2026-09", day: null, filter: "all" as const, search: "
 test("overview totals use monthly personal shares independently of list filters", () => {
   const before = structuredClone(ledger);
   const result = selectOverview(ledger, { ...filters, search: "missing" });
-  assert.deepEqual(result.summary, { expense: 1000, income: 50000 });
+  assert.deepEqual(result.summary, { expense: 1000, income: 50000, investment: 0 });
   assert.equal(result.visibleEntries.length, 0);
   assert.equal(result.monthEntries.length, 2);
   assert.equal(result.spending[0].amount, 1000);
@@ -32,7 +32,7 @@ test("day and kind filters combine and groups remain in descending date order", 
 
 test("empty months have no spending and zero totals", () => {
   const result = selectOverview(ledger, { ...filters, month: "2027-01" });
-  assert.deepEqual(result.summary, { expense: 0, income: 0 });
+  assert.deepEqual(result.summary, { expense: 0, income: 0, investment: 0 });
   assert.deepEqual(result.spending, []);
   assert.equal(result.grouped.size, 0);
 });

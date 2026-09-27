@@ -22,6 +22,7 @@ export const C = {
   accent: "#D96B42",
   orangeBg: "#FBEEE6",
   green: "#528768",
+  blue: "#678DB1",
   pale: "#EDF3EC",
 };
 export const Icon = ({

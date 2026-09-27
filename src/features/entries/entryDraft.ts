@@ -23,7 +23,7 @@ export function buildEntry(draft: EntryDraft, categories: Category[], entry?: Tr
   if (!categories.some((c) => c.id === categoryId && c.kind === kind)) throw new Error("Choose a category.");
   const transaction: Transaction = {
     id: entry?.id ?? uid(), kind, title: title.trim(), total,
-    share: personalShare(total, kind === "income" ? "full" : split, shareInput),
+    share: personalShare(total, kind === "expense" ? split : "full", shareInput),
     date, categoryId, note: note.trim(), receipt: kind === "expense" ? receipt : undefined,
     recurringId: entry?.recurringId,
   };

@@ -64,7 +64,7 @@ export default function RecurringScreen() {
               </View>
               <Text
                 style={{
-                  color: rule.kind === "income" ? C.green : C.ink,
+                  color: rule.kind === "income" ? C.green : rule.kind === "investment" ? C.blue : C.ink,
                   fontSize: 20,
                   fontWeight: "500",
                 }}

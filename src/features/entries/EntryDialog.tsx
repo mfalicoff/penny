@@ -1,3 +1,4 @@
+import { kindLabels } from "../../domain/ledger";
 import { deleteEntry, saveEntry } from "../../domain/commands";
 import { useLedger } from "../../providers/LedgerProvider";
 import { useWorkspace } from "../../providers/WorkspaceProvider";
@@ -14,7 +15,7 @@ export function EntryDialog() {
     currency={ledger.currency}
     onClose={() => setForm(null)}
     onSave={async (transaction, recurring) => {
-      await commit(saveEntry(transaction, form.entry, recurring), form.entry ? "Changes saved" : `${transaction.kind === "expense" ? "Expense" : "Income"} added`);
+      await commit(saveEntry(transaction, form.entry, recurring), form.entry ? "Changes saved" : `${kindLabels[transaction.kind]} added`);
       setMonth(transaction.date.slice(0, 7));
       setDay(null);
     }}

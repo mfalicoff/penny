@@ -4,7 +4,7 @@ import { buildMoneyFlow, layoutMoneyFlow } from "../src/features/overview/moneyF
 import { emptyLedger, type Transaction } from "../src/domain/ledger.ts";
 const categories = emptyLedger().categories;
 const entry = (
-  kind: "income" | "expense",
+  kind: Transaction["kind"],
   share: number,
   categoryId: string,
   total = share,

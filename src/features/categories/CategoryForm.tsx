@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { saveCategory } from "../../domain/commands";
-import { palette, uid, type Category, type Ledger } from "../../domain/ledger";
+import { kinds, kindLabels, palette, uid, type Category, type Ledger } from "../../domain/ledger";
 import { Button, Field, Icon, Sheet, s } from "../../shared/ui";
 export function CategoryForm({
   category,
@@ -65,11 +65,11 @@ export function CategoryForm({
         maxLength={50}
       />
       {!category && (
-        <View style={s.row}>
-          {(["expense", "income"] as const).map((k) => (
+        <View style={[s.row, { flexWrap: "wrap" }]}>
+          {kinds.map((k) => (
             <Button
               key={k}
-              title={k === "expense" ? "Expense" : "Income"}
+              title={kindLabels[k]}
               tone={kind === k ? "primary" : "quiet"}
               onPress={() => setKind(k)}
             />
@@ -102,6 +102,7 @@ export function CategoryForm({
       <View style={[s.row, { flexWrap: "wrap" }]}>
         {[
           "pricetag-outline",
+          "trending-up-outline",
           "airplane-outline",
           "car-outline",
           "paw-outline",

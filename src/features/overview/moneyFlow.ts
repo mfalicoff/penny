@@ -11,6 +11,7 @@ export type MoneyFlow = {
   destinations: FlowNode[];
   income: number;
   expense: number;
+  investment: number;
   total: number;
   gap: number;
   remaining: number;
@@ -60,8 +61,13 @@ export function buildMoneyFlow(
   const destinations = group(entries, categories, "expense");
   const income = sources.reduce((sum, node) => sum + node.amount, 0);
   const expense = destinations.reduce((sum, node) => sum + node.amount, 0);
-  const gap = Math.max(0, expense - income);
-  const remaining = Math.max(0, income - expense);
+  const investment = entries.reduce((sum, entry) => sum + (entry.kind === "investment" ? entry.share : 0), 0);
+  if (investment > 0) destinations.push({
+    id: "investment:total", label: "Invested", amount: investment, color: "#678DB1",
+  });
+  const outflow = expense + investment;
+  const gap = Math.max(0, outflow - income);
+  const remaining = Math.max(0, income - outflow);
   // A deficit is a balancing gap, never invented income or an assumed loan.
   if (gap)
     sources.push({
@@ -82,7 +88,8 @@ export function buildMoneyFlow(
     destinations,
     income,
     expense,
-    total: Math.max(income, expense),
+    investment,
+    total: Math.max(income, outflow),
     gap,
     remaining,
   };

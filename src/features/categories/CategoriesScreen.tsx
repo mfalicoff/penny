@@ -1,6 +1,6 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { type Category } from "../../domain/ledger";
+import { kinds, type Category } from "../../domain/ledger";
 import { useLedger } from "../../providers/LedgerProvider";
 import { Button, C, Icon, s } from "../../shared/ui";
 import { useResponsive } from "../../shared/useResponsive";
@@ -12,12 +12,10 @@ export default function CategoriesScreen() {
   const [categoryForm, setCategoryForm] = React.useState<{ category?: Category; } | null>(null);
   const { commit } = useLedger();
   return (<View style={{ gap: 26 }}>
-    {(["expense", "income"] as const).map((kind) => (
+    {kinds.map((kind) => (
       <View key={kind} style={{ gap: 14 }}>
         <Text style={a.eyebrow}>
-          {kind === "expense"
-            ? "EXPENSE CATEGORIES"
-            : "INCOME CATEGORIES"}
+          {kind.toUpperCase()} CATEGORIES
         </Text>
         <View
           style={{

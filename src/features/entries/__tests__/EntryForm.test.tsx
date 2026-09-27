@@ -5,6 +5,22 @@ import { EntryForm } from "../EntryForm";
 jest.mock("../../../data/receipts", () => ({ saveReceipt: jest.fn() }));
 jest.mock("../../receipts/ReceiptPreview", () => ({ ReceiptPreview: () => null }));
 
+test("investment form saves a full recurring contribution without expense controls", async () => {
+  const onSave = jest.fn().mockResolvedValue(undefined);
+  await render(<EntryForm categories={emptyLedger().categories} currency="CAD" onClose={jest.fn()} onSave={onSave} onDelete={jest.fn()} />);
+  await fireEvent.press(screen.getByRole("button", { name: "Investment" }));
+  await fireEvent.changeText(screen.getByLabelText("Amount (CAD)"), "1000.00");
+  await fireEvent.changeText(screen.getByLabelText("Where are you investing?"), "TFSA contribution");
+  expect(screen.queryByRole("button", { name: "Split equally" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Choose file" })).toBeNull();
+  await fireEvent.press(screen.getByRole("button", { name: "Monthly" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Add investment" }));
+  expect(onSave).toHaveBeenCalledWith(
+    expect.objectContaining({ kind: "investment", total: 100000, share: 100000, categoryId: "investments", receipt: undefined }),
+    expect.objectContaining({ kind: "investment", frequency: "monthly", share: 100000 }),
+  );
+});
+
 test("invalid money cannot submit an entry", async () => {
   const onSave = jest.fn();
   await render(<EntryForm categories={emptyLedger().categories} currency="CAD" onClose={jest.fn()} onSave={onSave} onDelete={jest.fn()} />);

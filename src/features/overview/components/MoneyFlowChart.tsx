@@ -117,7 +117,7 @@ export function MoneyFlowChart({
             Every little entry tells a story.
           </Text>
           <Text style={[s.muted, { textAlign: "center" }]}>
-            Add income or expenses this month to see your money flow.
+            Add income, expenses, or investments this month to see your money flow.
           </Text>
         </View>
       ) : (
@@ -178,7 +178,7 @@ export function MoneyFlowChart({
                       color: C.muted,
                     }}
                   >
-                    {flow.remaining ? "EXPENSES + LEFT OVER" : "EXPENSES"}
+                    WHERE IT GOES
                   </Text>
                 </View>
                 <View style={{ height: layout.height, width }}>
@@ -283,8 +283,8 @@ export function MoneyFlowChart({
             </Text>
             <Text style={{ color: C.muted, fontSize: 11, lineHeight: 18 }}>
               {flow.gap
-                ? `Spending exceeds recorded income by ${money(flow.gap)}. “Beyond income” balances the diagram; its funding source is not recorded.`
-                : "Expenses include only your share of split receipts. Left over is income minus spending, not an account balance."}
+                ? `Expenses and investments exceed recorded income by ${money(flow.gap)}. “Beyond income” balances the diagram; its funding source is not recorded.`
+                : "Expenses include only your share of split receipts. Invested shows contributions. Left over is income minus expenses and investments, not an account balance."}
             </Text>
           </View>
         </>

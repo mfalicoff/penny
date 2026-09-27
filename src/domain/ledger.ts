@@ -1,4 +1,8 @@
-export type Kind = "expense" | "income";
+export type Kind = "expense" | "income" | "investment";
+export const kinds: Kind[] = ["expense", "income", "investment"];
+export const kindLabels: Record<Kind, string> = {
+  expense: "Expense", income: "Income", investment: "Investment",
+};
 export type Frequency = "weekly" | "monthly" | "yearly";
 export type Category = {
   id: string;
@@ -27,7 +31,7 @@ export type Recurring = Omit<Transaction, "receipt" | "recurringId"> & {
   active: boolean;
 };
 export type Ledger = {
-  version: 1;
+  version: 2;
   currency: string;
   categories: Category[];
   transactions: Transaction[];
@@ -41,6 +45,10 @@ export const palette = [
   "#9D83BA",
   "#C8798D",
 ];
+const investmentCategory: Category = {
+  id: "investments", name: "Investments", icon: "trending-up-outline",
+  color: "#678DB1", kind: "investment",
+};
 export const initialCategories: Category[] = [
   {
     id: "groceries",
@@ -119,14 +127,27 @@ export const initialCategories: Category[] = [
     color: "#C6953A",
     kind: "income",
   },
+  investmentCategory,
 ];
 export const emptyLedger = (): Ledger => ({
-  version: 1,
+  version: 2,
   currency: "CAD",
   categories: initialCategories.map((c) => ({ ...c })),
   transactions: [],
   recurring: [],
 });
+// Upgrade once, without reclassifying historical expenses or restoring deleted categories.
+export function upgradeLedger(ledger: Ledger | (Omit<Ledger, "version"> & { version: 1 })): Ledger {
+  if (ledger.version === 2) return ledger;
+  const categories = [...ledger.categories];
+  if (!categories.some((c) => c.kind === "investment") && categories.length < 300) {
+    let id = investmentCategory.id;
+    let suffix = 1;
+    while (categories.some((c) => c.id === id)) id = `${investmentCategory.id}-${suffix++}`;
+    categories.push({ ...investmentCategory, id });
+  }
+  return { ...ledger, version: 2, categories };
+}
 export const uid = () =>
   `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 export function dateKey(date = new Date()): string {
@@ -222,7 +243,7 @@ export function totals(entries: Transaction[]) {
       sum[t.kind] += t.share;
       return sum;
     },
-    { income: 0, expense: 0 },
+    { income: 0, expense: 0, investment: 0 },
   );
 }
 export function demoLedger(today = new Date()): Ledger {

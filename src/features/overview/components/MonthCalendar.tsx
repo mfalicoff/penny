@@ -62,6 +62,7 @@ export function MonthCalendar({
           const hasExpense = entries.some(
             (t) => t.kind === "expense",
           );
+          const hasInvestment = entries.some((t) => t.kind === "investment");
           return (
             <View
               key={index}
@@ -129,6 +130,9 @@ export function MonthCalendar({
                         }}
                       />
                     )}
+                    {hasInvestment && (
+                      <View style={{ width: 4, height: 4, borderRadius: 4, backgroundColor: C.blue }} />
+                    )}
                   </View>
                 </Pressable>
               ) : (
@@ -141,12 +145,13 @@ export function MonthCalendar({
       <View
         style={[
           s.row,
-          { justifyContent: "center", paddingTop: 18, gap: 16 },
+          { justifyContent: "center", paddingTop: 18, gap: 16, flexWrap: "wrap" },
         ]}
       >
         {[
           [C.green, "Income"],
           [C.accent, "Expense"],
+          [C.blue, "Investment"],
         ].map(([color, label]) => (
           <View key={label} style={[s.row, { gap: 5 }]}>
             <View

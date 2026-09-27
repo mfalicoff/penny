@@ -1,6 +1,6 @@
-import { dateKey, parseDate, totals, type Ledger, type Transaction } from "../../domain/ledger.ts";
+import { dateKey, parseDate, totals, type Kind, type Ledger, type Transaction } from "../../domain/ledger.ts";
 
-export type EntryFilter = "all" | "expense" | "income";
+export type EntryFilter = "all" | Kind;
 export type OverviewFilters = { month: string; day: string | null; filter: EntryFilter; search: string; };
 
 export function selectOverview(ledger: Ledger, { month, day, filter, search }: OverviewFilters) {

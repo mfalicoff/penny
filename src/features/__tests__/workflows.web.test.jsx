@@ -87,6 +87,37 @@ test("new split recurring expense validates, saves cents and closes only after s
   expect(close).toHaveBeenCalledTimes(1);
 });
 
+test.each([
+  ["desktop", { compact: false, desktop: true }],
+  ["phone", { compact: true, desktop: false }],
+])("%s investment edits update totals, chart, and filters without counting as spending", async (_name, responsive) => {
+  mockResponsive = responsive;
+  const date = ledger.transactions[0].date;
+  ledger.transactions = [
+    { id: "pay", title: "Salary", kind: "income", categoryId: "salary", total: 500000, share: 500000, date, note: "" },
+    { id: "rent", title: "Rent", kind: "expense", categoryId: "home", total: 300000, share: 300000, date, note: "" },
+    { id: "tfsa", title: "TFSA deposit", kind: "expense", categoryId: "other", total: 100000, share: 100000, date, note: "" },
+  ];
+  ledger.recurring = [];
+  const body = await renderWeb(<Workspace><OverviewScreen /><EntryDialog /></Workspace>);
+  await click(body.querySelector('[aria-label^="Edit TFSA deposit,"]'));
+  await click(button("Investment"));
+  await click(button("Save changes"));
+  expect(ledger.transactions.find((entry) => entry.id === "tfsa")).toMatchObject({ kind: "investment", categoryId: "investments" });
+  expect(body.textContent).toContain("Expenses$3,000.00");
+  expect(body.textContent).toContain("Invested$1,000.00");
+  expect(body.textContent).toContain("Cash remaining$1,000.00");
+  expect(body.querySelector('[aria-label^="Invested,"]')).not.toBeNull();
+  await click(button("Investments"));
+  expect(body.querySelector('[aria-label^="Edit TFSA deposit,"]')).not.toBeNull();
+  expect(body.querySelector('[aria-label^="Edit Rent,"]')).toBeNull();
+  await click(body.querySelector('[aria-label^="Edit TFSA deposit,"]'));
+  await click(button("Delete entry"));
+  await click(button("Delete this entry"));
+  expect(body.textContent).toContain("Invested$0.00");
+  expect(body.textContent).toContain("Cash remaining$2,000.00");
+});
+
 test("income form and deletion confirmation render and invoke their actions", async () => {
   const income = ledger.transactions.find((entry) => entry.kind === "income");
   const remove = jest.fn().mockResolvedValue(undefined);

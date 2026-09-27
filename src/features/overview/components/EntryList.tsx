@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { dateKey, parseDate, type Ledger, type Transaction } from "../../../domain/ledger";
+import { dateKey, kinds, parseDate, type Ledger, type Transaction } from "../../../domain/ledger";
 import { Button, C, Field, Icon, Tag, s } from "../../../shared/ui";
 import { type EntryFilter } from "../selectors";
 
@@ -24,7 +24,7 @@ export function EntryList({
 
   return (
     <View style={[s.card, { padding: compact ? 16 : 24 }]}>
-      <View style={[s.between, { marginBottom: 20 }]}>
+      <View style={[s.between, { marginBottom: 20 }, compact && { alignItems: "flex-start", flexDirection: "column", gap: 12 }]}>
         <Text style={s.heading}>
           {day
             ? parseDate(day).toLocaleDateString("en-CA", {
@@ -54,7 +54,7 @@ export function EntryList({
             },
           ]}
         >
-          {(["all", "expense", "income"] as const).map((f) => (
+          {(["all", ...kinds] as const).map((f) => (
             <Pressable
               accessibilityRole="button"
               accessibilityState={{ selected: filter === f }}
@@ -78,7 +78,7 @@ export function EntryList({
                   ? "All"
                   : f === "expense"
                     ? "Expenses"
-                    : "Income"}
+                    : f === "investment" ? "Investments" : "Income"}
               </Text>
             </Pressable>
           ))}
@@ -181,7 +181,7 @@ export function EntryList({
                         fontSize: 14,
                         fontWeight: "500",
                         color:
-                          t.kind === "income" ? C.green : C.ink,
+                          t.kind === "income" ? C.green : t.kind === "investment" ? C.blue : C.ink,
                       }}
                     >
                       {t.kind === "income" ? "+" : "−"}
@@ -234,7 +234,7 @@ export function EntryList({
           <Text style={[s.muted, { textAlign: "center" }]}>
             {search || day || filter !== "all"
               ? "Try a different search, day, or filter."
-              : "Add an income or expense. We’ll take it from there."}
+              : "Add income, an expense, or an investment. We’ll take it from there."}
           </Text>
           {!search && !day && filter === "all" && (
             <Button

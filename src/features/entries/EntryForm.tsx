@@ -5,6 +5,8 @@ import { Image, Platform, Pressable, Text, View } from "react-native";
 import { saveReceipt } from "../../data/receipts";
 import {
   cents,
+  kinds,
+  kindLabels,
   dateKey,
   personalShare,
   type Category,
@@ -68,7 +70,7 @@ export function EntryForm({
     }).format(
       personalShare(
         cents(amount),
-        kind === "income" ? "full" : split,
+        kind === "expense" ? split : "full",
         shareInput,
       ) / 100,
     );
@@ -204,15 +206,17 @@ export function EntryForm({
             { backgroundColor: C.bg, padding: 5, borderRadius: 13 },
           ]}
         >
-          {(["expense", "income"] as Kind[]).map((k) => (
+          {kinds.map((k) => (
             <Pressable
               key={k}
               accessibilityRole="button"
+              accessibilityLabel={kindLabels[k]}
               accessibilityState={{ selected: kind === k }}
               onPress={() => switchKind(k)}
               style={{
                 flex: 1,
-                padding: 12,
+                paddingVertical: 12,
+                paddingHorizontal: 4,
                 alignItems: "center",
                 borderRadius: 9,
                 backgroundColor: kind === k ? "#fff" : "transparent",
@@ -224,11 +228,16 @@ export function EntryForm({
                   fontWeight: "600",
                 }}
               >
-                {k === "expense" ? "↗  Expense" : "↙  Income"}
+                {kindLabels[k]}
               </Text>
             </Pressable>
           ))}
         </View>
+        {kind === "investment" && (
+          <Text style={{ color: C.muted, fontSize: 12 }}>
+            Record money you contribute to investments. This reduces cash remaining without counting as spending or tracking portfolio value.
+          </Text>
+        )}
         <Field
           label={`Amount (${currency})`}
           placeholder="0.00"
@@ -245,12 +254,12 @@ export function EntryForm({
         />
         <Field
           label={
-            kind === "expense" ? "What was it for?" : "Where did it come from?"
+            kind === "investment" ? "Where are you investing?" : kind === "expense" ? "What was it for?" : "Where did it come from?"
           }
           placeholder={
             kind === "expense"
               ? "Coffee, groceries, a good evening…"
-              : "Salary, a project, a gift…"
+              : kind === "investment" ? "TFSA, retirement, brokerage…" : "Salary, a project, a gift…"
           }
           value={title}
           onChangeText={setTitle}
@@ -439,7 +448,7 @@ export function EntryForm({
             {frequency !== "none" && (
               <Text style={s.muted}>
                 Due entries are added automatically when you open the app.
-                Receipts apply to this entry only.
+                {kind === "expense" ? " Receipts apply to this entry only." : ""}
               </Text>
             )}
           </View>

@@ -195,7 +195,7 @@ export function AppShell() {
                   {tab === "Overview"
                     ? "The everyday ins and outs, all in one place."
                     : tab === "Recurring"
-                      ? "Your regular expenses and income, taken care of."
+                      ? "Your regular expenses, income, and investments, taken care of."
                       : "Categories that make sense for your everyday."}
                 </Text>
               </View>

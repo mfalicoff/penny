@@ -2,7 +2,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { C, Icon, s } from "../../../shared/ui";
 
 type SummaryCardsProps = {
-  summary: { income: number; expense: number };
+  summary: { income: number; expense: number; investment: number };
   compact: boolean;
   money: (value: number) => string;
 };
@@ -13,7 +13,7 @@ export function SummaryCards({ summary, compact, money }: SummaryCardsProps) {
     <View
       style={[
         s.row,
-        { alignItems: "stretch", gap: compact ? 8 : 18 },
+        { alignItems: "stretch", flexWrap: "wrap", gap: compact ? 8 : 18 },
       ]}
     >
       {[
@@ -23,6 +23,7 @@ export function SummaryCards({ summary, compact, money }: SummaryCardsProps) {
           icon: "arrow-down-outline",
           color: C.green,
           bg: C.pale,
+          hint: "Money coming your way",
         },
         {
           label: "Expenses",
@@ -30,21 +31,31 @@ export function SummaryCards({ summary, compact, money }: SummaryCardsProps) {
           icon: "arrow-up-outline",
           color: C.accent,
           bg: C.orangeBg,
+          hint: "Your share of spending",
         },
         {
-          label: "Net income",
-          amount: summary.income - summary.expense,
+          label: "Invested",
+          amount: summary.investment,
+          icon: "trending-up-outline",
+          color: C.blue,
+          bg: "#EDF2F7",
+          hint: "Contributions, not portfolio value",
+        },
+        {
+          label: "Cash remaining",
+          amount: summary.income - summary.expense - summary.investment,
           icon: "wallet-outline",
           color: C.ink,
           bg: "#E9EEE6",
+          hint: "This month, after expenses and investing",
         },
       ].map((stat, i) => (
         <View
           key={stat.label}
           style={[
             a.stat,
-            { padding: compact ? 13 : 23 },
-            i === 2 && {
+            { padding: compact ? 13 : 23, flexBasis: compact ? "45%" : 0 },
+            i === 3 && {
               backgroundColor: "#EEF2E9",
               borderColor: "#E3E9DC",
             },
@@ -92,11 +103,7 @@ export function SummaryCards({ summary, compact, money }: SummaryCardsProps) {
             <Text
               style={{ fontSize: 10, color: C.muted, marginTop: 7 }}
             >
-              {i === 0
-                ? "Money coming your way"
-                : i === 1
-                  ? "Your share of spending"
-                  : "Income minus expenses"}
+              {stat.hint}
             </Text>
           )}
         </View>

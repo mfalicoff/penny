@@ -1,19 +1,22 @@
 # Penny
 
-A simple expense and income tracker for iOS, Android, and web, built with Expo / React Native. A self-hosted Node server stores accounts, transactions, recurring schedules, categories, and receipt files in SQLite.
+A simple expense, income, and investment contribution tracker for iOS, Android, and web, built with Expo / React Native. A self-hosted Node server stores accounts, transactions, recurring schedules, categories, and receipt files in SQLite.
 
 ## What works
 
-- Add, edit, delete, search, and filter income and expenses.
+- Add, edit, delete, search, and filter income, expenses, and investment contributions.
+- Investment contributions appear in a separate Invested total and are excluded from spending. Cash remaining is the month's income minus expenses and contributions; it is not an account balance. Contributions track money invested, not portfolio value or returns.
 - Monthly overview, calendar, category breakdown, and personal-share totals.
-- Interactive monthly Sankey diagram: income categories → monthly flow → expense categories and left over. Personal shares determine band widths. Spending beyond recorded income is labeled explicitly; smaller categories are grouped without dropping their amounts. The chart scrolls horizontally on phones.
+- Interactive monthly Sankey diagram: income categories → monthly flow → expense categories, invested, and left over. Personal shares determine band widths. Outflows beyond recorded income are labeled explicitly; smaller expense categories are grouped without dropping their amounts. The chart scrolls horizontally on phones.
 - Attach a photo from your library or an image/PDF from files (up to 10 MB).
 - Split by equal shares, a personal amount, or a percentage. The original total and your share are both retained; reports count your share only.
-- Weekly, monthly, and yearly income/expenses; pause, resume, or remove a schedule.
+- Weekly, monthly, and yearly income, expenses, and investments; pause, resume, or remove a schedule.
 - Custom category names, colors, and icons.
 - Accounts and cross-device sync. A save merges into the newest server state; revision checks reject stale overwrites. Conflicting edits to the same entry ask you to review the latest version.
 - Photos render in-app; web PDFs render in the browser; native PDFs open through the system share/open sheet.
 - A clearly labeled, temporary demo without an account.
+
+Existing ledgers upgrade to version 2 on read and persist that version on the next save. An Investments category is added unless one already exists or the 300-category limit is reached. Historical expenses retain their classification; edit an entry and select Investment to reclassify it. Editing a recurring occurrence does not change its schedule. For future contributions, remove the old expense schedule and create a recurring investment. Deploy the updated server alongside the client so investment entries can be saved.
 
 ## Run the complete web app
 
