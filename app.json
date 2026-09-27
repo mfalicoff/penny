@@ -26,7 +26,8 @@
     "plugins": [
       "expo-sharing",
       "expo-secure-store",
-      "expo-router"
+      "expo-router",
+      "expo-web-browser"
     ],
     "scheme": "penny",
     "extra": {

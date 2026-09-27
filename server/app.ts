@@ -1,3 +1,6 @@
+import { createOidcService } from "./application/oidc.ts";
+import type { OidcOptions } from "./application/ports.ts";
+import { createOidcProvider } from "./infrastructure/oidc.ts";
 import express from "express";
 import cors from "cors";
 import { createAuthService } from "./application/auth.ts";
@@ -13,6 +16,7 @@ import { apiPolicy, errorHandler, requireSession } from "./http/middleware.ts";
 
 export interface AppOptions {
   databasePath: string;
+  oidc?: OidcOptions;
   origins?: string[];
   secureCookies?: boolean;
   allowRegistration?: boolean;
@@ -21,6 +25,7 @@ export interface AppOptions {
 /** Composition root: one database and one set of services/middleware per app. */
 export function createApp({
   databasePath,
+  oidc,
   origins = ["http://localhost:8081", "http://localhost:3001"],
   secureCookies = false,
   allowRegistration = true,
@@ -31,7 +36,7 @@ export function createApp({
     const auth = createAuthService({ ...repositories, security, allowRegistration });
     const ledger = createLedgerService(repositories.ledgers, repositories.receipts);
     const receipts = createReceiptService(repositories.receipts, security);
-    const authRoutes = createAuthRoutes(auth, secureCookies);
+    const authRoutes = createAuthRoutes(auth, secureCookies, oidc ? createOidcService(oidc, createOidcProvider(oidc), auth, security) : undefined);
     const app = express();
     app.disable("x-powered-by");
     app.use(cors({

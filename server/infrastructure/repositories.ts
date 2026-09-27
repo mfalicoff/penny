@@ -4,6 +4,26 @@ import type { Ledger } from "../../src/domain/ledger.ts";
 
 export function createRepositories(db: DatabaseSync) {
   const accounts: AccountRepository = {
+    findByIdentity(issuer, subject) {
+      return db.prepare("SELECT users.* FROM users JOIN oidc_identities ON users.id = oidc_identities.user_id WHERE issuer = ? AND subject = ?").get(issuer, subject) as User | undefined;
+    },
+    createOidc(user, identity, ledger) {
+      db.exec("BEGIN IMMEDIATE");
+      try {
+        if (accounts.findByEmail(user.email) || accounts.findByIdentity(identity.issuer, identity.subject)) {
+          db.exec("ROLLBACK");
+          return false;
+        }
+        db.prepare("INSERT INTO users VALUES (?, ?, ?, ?)").run(user.id, user.email, user.password, user.salt);
+        db.prepare("INSERT INTO ledgers VALUES (?, 0, ?)").run(user.id, JSON.stringify(ledger));
+        db.prepare("INSERT INTO oidc_identities VALUES (?, ?, ?)").run(identity.issuer, identity.subject, user.id);
+        db.exec("COMMIT");
+        return true;
+      } catch (error) {
+        db.exec("ROLLBACK");
+        throw error;
+      }
+    },
     findByEmail(email) {
       return db.prepare("SELECT * FROM users WHERE email = ?").get(email) as User | undefined;
     },

@@ -1,6 +1,7 @@
 import { mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import express from "express";
+import { oidcFromEnv } from "./infrastructure/oidc.ts";
 import { createApp } from "./app.ts";
 const databasePath = resolve(
   process.env.DATABASE_PATH || "./data/penny.sqlite",
@@ -8,6 +9,7 @@ const databasePath = resolve(
 mkdirSync(dirname(databasePath), { recursive: true });
 const { app, db } = createApp({
   databasePath,
+  oidc: oidcFromEnv(process.env),
   origins: (
     process.env.CORS_ORIGINS || "http://localhost:8081,http://localhost:3001"
   )

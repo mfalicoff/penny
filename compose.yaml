@@ -10,6 +10,12 @@ services:
       NODE_ENV: production
       CORS_ORIGINS: "${CORS_ORIGINS:-http://localhost:3001}"
       COOKIE_SECURE: "${COOKIE_SECURE:-false}"
+      OIDC_ISSUER: "${OIDC_ISSUER:-}"
+      OIDC_CLIENT_ID: "${OIDC_CLIENT_ID:-}"
+      OIDC_CLIENT_SECRET: "${OIDC_CLIENT_SECRET:-}"
+      OIDC_REDIRECT_URIS: "${OIDC_REDIRECT_URIS:-}"
+      OIDC_LABEL: "${OIDC_LABEL:-Single sign-on}"
+      OIDC_ALLOW_REGISTRATION: "${OIDC_ALLOW_REGISTRATION:-false}"
       ALLOW_REGISTRATION: "${ALLOW_REGISTRATION:-true}"
     volumes:
       - penny-data:/data

@@ -54,6 +54,31 @@ npm run android
 
 Standalone mobile builds should use an HTTPS API endpoint. Development against plain HTTP depends on platform transport policies. The [Android APK workflow](docs/android-apk.md) builds signed, installable APKs through EAS and reuses the same signing key for updates. Complete its one-time Expo account and credentials setup before running it. Apple signing and app store distribution are not configured.
 
+## OpenID Connect (OIDC) sign-in
+
+Penny supports one configurable OIDC provider alongside email/password login on web, iOS, and Android. Configure a client supporting Authorization Code with S256 PKCE and the `openid email profile` scopes. The provider must return a verified email (`email_verified: true`) in the ID token or UserInfo response.
+
+Set these **server-side** variables in `.env` (Compose forwards them automatically):
+
+```dotenv
+OIDC_ISSUER=https://identity.example.com/realms/penny
+OIDC_CLIENT_ID=penny
+OIDC_CLIENT_SECRET=your-server-only-secret
+OIDC_REDIRECT_URIS=https://penny.example.com/auth/callback,penny://auth/callback
+OIDC_LABEL=Single sign-on
+OIDC_ALLOW_REGISTRATION=true
+```
+
+Use the exact issuer URL advertised by your provider. Register each exact redirect URI with the provider; wildcards are unsupported. For web development add `http://localhost:8081/auth/callback` (or `http://localhost:3001/auth/callback` when serving the exported app). Web sign-in uses a popup and requires HTTPS or localhost; keep the popup and original window on the same origin. Your reverse proxy must serve the app at `/auth/callback`. Use `CORS_ORIGINS` to allow your web app's origin as usual.
+
+The client secret is optional for public clients. Confidential clients use `client_secret_post` authentication; configure that method at the provider. Never put this secret in an `EXPO_PUBLIC_` variable. Discovery, code exchange, signature/issuer/audience/expiry/nonce validation, and PKCE verification are performed by the server using [openid-client](https://github.com/panva/openid-client). Provider tokens are discarded after sign-in; Penny uses its existing 30-day HttpOnly cookie on web and SecureStore session on native.
+
+For mobile, install a new development or production build containing `expo-web-browser` and the `penny` URL scheme. OIDC cannot be tested in Expo Go. Native sign-in uses the system authentication browser ([Expo WebBrowser SDK 57 documentation](https://docs.expo.dev/versions/v57.0.0/sdk/webbrowser/)). The app must stay alive during sign-in; after a reload/restart or a 10-minute timeout, start again.
+
+New OIDC accounts are disabled by default. Set `OIDC_ALLOW_REGISTRATION=true` to provision an empty ledger on first sign-in, then set it back to `false` to allow only existing OIDC users. This is independent of password signup's `ALLOW_REGISTRATION`. Restrict who can access the client at your identity provider while provisioning is enabled. Existing users are identified by the stable `(issuer, subject)` pair, including after an email change. An existing account with the same email is **never automatically linked**; account linking/migration is not provided.
+
+Signing out revokes the Penny session; it does not sign out of the identity provider or other Penny devices. Sign-in attempts are single-use and held in server memory, so a server restart requires restarting sign-in. Run one API instance (as in the supplied SQLite/Compose deployment).
+
 ## Self-host with Docker Compose
 
 The container serves the web app and API on port 3001. A named volume holds the database **including receipts**.

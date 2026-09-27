@@ -1,7 +1,7 @@
 import { emptyLedger } from "../../src/domain/ledger.ts";
 import { credentialsSchema } from "../validation/auth.ts";
 import { ApplicationError } from "./errors.ts";
-import type { AccountRepository, Security, SessionRepository } from "./ports.ts";
+import type { AccountRepository, OidcIdentity, Security, SessionRepository } from "./ports.ts";
 
 export const SESSION_DURATION_MS = 30 * 86400000;
 const duplicateEmail = "An account with this email already exists. Please sign in.";
@@ -22,6 +22,15 @@ export function createAuthService({ accounts, sessions, security, allowRegistrat
   }
 
   return {
+    loginOidc(identity: OidcIdentity, allowOidcRegistration: boolean) {
+      const existing = accounts.findByIdentity(identity.issuer, identity.subject);
+      if (existing) return { token: issueSession(existing.id), email: existing.email };
+      if (!allowOidcRegistration) throw new ApplicationError("forbidden", "New single sign-on accounts are disabled on this server.");
+      if (accounts.findByEmail(identity.email)) throw new ApplicationError("conflict", "An account already uses this email. Sign in with its existing method; automatic account linking is disabled.");
+      const user = { id: security.randomId(16), email: identity.email, password: "", salt: security.randomId(16) };
+      if (!accounts.createOidc(user, identity, emptyLedger())) throw new ApplicationError("conflict", "This account already exists. Please try signing in again.");
+      return { token: issueSession(user.id), email: user.email };
+    },
     async register(body: unknown) {
       if (!allowRegistration) {
         throw new ApplicationError("forbidden", "Account registration is disabled on this server.");

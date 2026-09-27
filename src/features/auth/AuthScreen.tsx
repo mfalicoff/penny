@@ -1,3 +1,4 @@
+import { OidcButton } from "./OidcButton";
 import { useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -80,6 +81,7 @@ export function Auth({
             <Text style={s.heading}>
               {register ? "Make yourself at home." : "Welcome back."}
             </Text>
+            <OidcButton onReady={onReady} busy={busy} onBusy={setBusy} />
             <Field
               label="Email"
               value={email}
@@ -109,6 +111,7 @@ export function Auth({
               disabled={busy}
             />
             <Pressable
+              disabled={busy}
               accessibilityRole="button"
               onPress={() => {
                 setRegister(!register);
@@ -128,6 +131,7 @@ export function Auth({
             title="Take a look around with sample data"
             tone="quiet"
             onPress={onDemo}
+            disabled={busy}
           />
           <View style={[s.row, { justifyContent: "center" }]}>
             <Icon name="server-outline" size={14} color={C.muted} />
