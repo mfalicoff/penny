@@ -1,6 +1,6 @@
 import type { DatabaseSync } from "node:sqlite";
 import type { AccountRepository, LedgerRepository, ReceiptRepository, SessionRepository, StoredReceipt, User } from "../application/ports.ts";
-import type { Ledger } from "../../src/domain/ledger.ts";
+import { upgradeLedger } from "../../src/domain/ledger.ts";
 
 export function createRepositories(db: DatabaseSync) {
   const accounts: AccountRepository = {
@@ -65,7 +65,7 @@ export function createRepositories(db: DatabaseSync) {
     read(userId) {
       const row = db.prepare("SELECT revision, data FROM ledgers WHERE user_id = ?").get(userId);
       if (!row) throw new Error("Account ledger is missing.");
-      return { revision: row.revision as number, ledger: JSON.parse(row.data as string) as Ledger };
+      return { revision: row.revision as number, ledger: upgradeLedger(JSON.parse(row.data as string)) };
     },
     save(userId, snapshot) {
       const result = db.prepare("UPDATE ledgers SET data = ?, revision = revision + 1 WHERE user_id = ? AND revision = ?")

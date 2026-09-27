@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { validDate } from "../../src/domain/ledger.ts";
+import { upgradeLedger, validDate } from "../../src/domain/ledger.ts";
 
 const id = z.string().min(1).max(100);
 const date = z.string().refine(validDate, "Invalid calendar date");
@@ -7,7 +7,7 @@ const amount = z.number().int().nonnegative().max(99999999999);
 const entry = z.object({
   id,
   title: z.string().min(1).max(100),
-  kind: z.enum(["income", "expense"]),
+  kind: z.enum(["income", "expense", "investment"]),
   total: amount.positive(),
   share: amount,
   categoryId: id,
@@ -22,7 +22,7 @@ const receipt = z.object({
 });
 const ledgerSchema = z
   .object({
-    version: z.literal(1),
+    version: z.union([z.literal(1), z.literal(2)]),
     currency: z.enum(["CAD", "USD", "EUR", "GBP"]),
     categories: z
       .array(
@@ -31,7 +31,7 @@ const ledgerSchema = z
           name: z.string().min(1).max(50),
           icon: z.string().max(80),
           color: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
-          kind: z.enum(["income", "expense"]),
+          kind: z.enum(["income", "expense", "investment"]),
         }),
       )
       .max(300),
@@ -60,12 +60,12 @@ const ledgerSchema = z
       if (new Set(list.map((i) => i.id)).size !== list.length)
         ctx.addIssue({ code: "custom", message: "Duplicate identifiers" });
     for (const t of [...data.transactions, ...data.recurring]) {
-      if (t.share > t.total || (t.kind === "income" && t.share !== t.total))
+      if (t.share > t.total || (t.kind !== "expense" && t.share !== t.total))
         ctx.addIssue({ code: "custom", message: "Invalid personal share" });
       if (categories.get(t.categoryId)?.kind !== t.kind)
         ctx.addIssue({ code: "custom", message: "Invalid category" });
     }
-  });
+  }).transform(upgradeLedger);
 
 export const ledgerWriteSchema = z.object({
   revision: z.number().int().nonnegative(),
