@@ -14,6 +14,10 @@ export default function RecurringScreen() {
   const { setForm } = useWorkspace();
   const { commit } = useLedger();
   const [confirmRule, setConfirmRule] = React.useState<Recurring>();
+  const recurring = React.useMemo(
+    () => [...ledger.recurring].sort((a, b) => a.nextDate.localeCompare(b.nextDate)),
+    [ledger.recurring],
+  );
   const money = (value: number) => currencyFormat(value, ledger.currency);
   return (<View style={{ gap: 26 }}>
     <View style={[s.card, { backgroundColor: C.pale, gap: 8 }]}>
@@ -27,8 +31,8 @@ export default function RecurringScreen() {
         skips its paused dates.
       </Text>
     </View>
-    {ledger.recurring.length ? (
-      ledger.recurring.map((rule) => {
+    {recurring.length ? (
+      recurring.map((rule) => {
         const c = ledger.categories.find(
           (c) => c.id === rule.categoryId,
         );
