@@ -87,7 +87,7 @@ export function EntryList({
       </View>
       <Field
         label="Search entries"
-        placeholder="Search by name, category, or note…"
+        placeholder="Search by name, category, account, or note…"
         value={search}
         onChangeText={setSearch}
         style={{ fontSize: 12, minHeight: 40, paddingVertical: 10 }}
@@ -178,6 +178,7 @@ export function EntryList({
                         style={{ color: C.muted, fontSize: 11 }}
                       >
                         {c?.name}
+                        {t.accountId && ` · ${ledger.accounts.find((a) => a.id === t.accountId)?.name ?? ""}`}
                       </Text>
                       {t.scheduled && <Tag text="SCHEDULED" color={C.green} />}
                       {t.share !== t.total && (

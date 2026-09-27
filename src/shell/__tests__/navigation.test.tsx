@@ -2,6 +2,7 @@ import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { renderRouter } from "expo-router/testing-library";
 import RootLayout from "../../app/_layout";
+import Accounts from "../../app/accounts";
 import Categories from "../../app/categories";
 import Overview from "../../app/index";
 import Recurring from "../../app/recurring";
@@ -22,7 +23,7 @@ beforeEach(() => {
 afterEach(() => jest.useRealTimers());
 
 test("real routes render their feature and navigation preserves overview filters and session", async () => {
-  await renderRouter({ _layout: RootLayout, index: Overview, recurring: Recurring, categories: Categories });
+  await renderRouter({ _layout: RootLayout, index: Overview, recurring: Recurring, categories: Categories, accounts: Accounts });
   expect(screen.getByText(/Your entries/)).toBeOnTheScreen();
   await fireEvent.changeText(screen.getByLabelText("Search entries"), "coffee");
   await fireEvent.press(screen.getByRole("button", { name: "Recurring" }));
@@ -30,6 +31,8 @@ test("real routes render their feature and navigation preserves overview filters
   expect(screen.queryByLabelText("Search entries")).toBeNull();
   await fireEvent.press(screen.getByRole("button", { name: "Categories" }));
   expect(screen.getByText("EXPENSE CATEGORIES")).toBeOnTheScreen();
+  await fireEvent.press(screen.getByRole("button", { name: "Accounts" }));
+  expect(screen.getByText("Where your money lives.")).toBeOnTheScreen();
   await fireEvent.press(screen.getByRole("button", { name: "Overview" }));
   expect(screen.getByLabelText("Search entries")).toHaveDisplayValue("coffee");
   expect(api.whoAmI).toHaveBeenCalledTimes(1);
@@ -37,7 +40,7 @@ test("real routes render their feature and navigation preserves overview filters
 });
 
 test("deep linking opens the correct feature and an entry draft survives route changes", async () => {
-  await renderRouter({ _layout: RootLayout, index: Overview, recurring: Recurring, categories: Categories }, { initialUrl: "/recurring" });
+  await renderRouter({ _layout: RootLayout, index: Overview, recurring: Recurring, categories: Categories, accounts: Accounts }, { initialUrl: "/recurring" });
   expect(screen.getByText("Rent, payday, the usuals.")).toBeOnTheScreen();
   await fireEvent.press(screen.getByRole("button", { name: "Add a recurring entry" }));
   await fireEvent.changeText(screen.getByLabelText("What was it for?"), "Unfinished draft");

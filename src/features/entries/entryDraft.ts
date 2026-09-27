@@ -6,6 +6,7 @@ export type EntryDraft = {
   amount: string;
   date: string;
   categoryId: string;
+  accountId?: string;
   note: string;
   split: "full" | "equal" | "amount" | "percent";
   shareInput: string;
@@ -24,7 +25,7 @@ export function buildEntry(draft: EntryDraft, categories: Category[], entry?: Tr
   const transaction: Transaction = {
     id: entry?.id ?? uid(), kind, title: title.trim(), total,
     share: personalShare(total, kind === "expense" ? split : "full", shareInput),
-    date, categoryId, note: note.trim(), receipt: kind === "expense" ? receipt : undefined,
+    date, categoryId, accountId: draft.accountId, note: note.trim(), receipt: kind === "expense" ? receipt : undefined,
     recurringId: entry?.recurringId,
   };
   let recurring: Recurring | undefined;

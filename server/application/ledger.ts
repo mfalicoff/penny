@@ -10,6 +10,11 @@ export function createLedgerService(ledgers: LedgerRepository, receipts: Pick<Re
     save(userId: string, body: unknown) {
       const input = ledgerWriteSchema.safeParse(body);
       if (!input.success) throw new ApplicationError("invalid", "Invalid ledger data.");
+      // Older clients drop account fields when rebuilding entries. Do not let
+      // their legacy snapshots silently erase payment accounts or their links.
+      const sourceVersion = (body as { ledger: { version: number } }).ledger.version;
+      if (sourceVersion < 3 && ledgers.read(userId).ledger.accounts.length)
+        throw new ApplicationError("invalid", "Update or reload the app before saving payment accounts.");
       for (const transaction of input.data.ledger.transactions) {
         if (transaction.receipt && !receipts.owns(userId, transaction.receipt.id)) {
           throw new ApplicationError("invalid", "Receipt does not belong to this account.");

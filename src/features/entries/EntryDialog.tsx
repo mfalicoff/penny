@@ -11,6 +11,8 @@ export function EntryDialog() {
   return <EntryForm
     demo={demo}
     categories={ledger.categories}
+    accounts={ledger.accounts}
+    commit={commit}
     entry={form.entry}
     rule={form.rule}
     currency={ledger.currency}

@@ -12,11 +12,12 @@ A simple expense, income, and investment contribution tracker for iOS, Android, 
 - Split by equal shares, a personal amount, or a percentage. The original total and your share are both retained; reports count your share only.
 - Weekly, monthly, and yearly income, expenses, and investments; pause, resume, or remove a schedule.
 - Custom category names, colors, and icons.
-- Accounts and cross-device sync. A save merges into the newest server state; revision checks reject stale overwrites. Conflicting edits to the same entry ask you to review the latest version.
+- Payment accounts: add bank accounts, credit cards, cash wallets, or other accounts in **Accounts** or directly from an entry. Assign or change the optional payment account on expenses, income, investments, and recurring schedules. Account names appear on entries and can be searched. Rename accounts freely; accounts linked to entries or schedules cannot be deleted until those links are reassigned. These are manually tracked accounts, with no bank connection or balance reconciliation.
+- Sign-in accounts and cross-device sync. A save merges into the newest server state; revision checks reject stale overwrites. Conflicting edits to the same entry ask you to review the latest version.
 - Photos render in-app; web PDFs render in the browser; native PDFs open through the system share/open sheet.
 - A clearly labeled, temporary demo without an account.
 
-Existing ledgers upgrade to version 2 on read and persist that version on the next save. An Investments category is added unless one already exists or the 300-category limit is reached. Historical expenses retain their classification; edit an entry and select Investment to reclassify it. Editing a recurring occurrence does not change its schedule. For future contributions, remove the old expense schedule and create a recurring investment. Deploy the updated server alongside the client so investment entries can be saved.
+Existing ledgers upgrade to version 3 on read and persist that version on the next save. Payment accounts start empty, and historical entries stay unassigned. For version 1 ledgers, an Investments category is added unless one already exists or the 300-category limit is reached. Historical expenses retain their classification; edit an entry and select Investment to reclassify it. Editing a recurring occurrence does not change its schedule. Edit the recurring schedule to change future contributions or their payment account. Deploy the updated server alongside the client so payment accounts and investment entries can be saved.
 
 ## Run the complete web app
 

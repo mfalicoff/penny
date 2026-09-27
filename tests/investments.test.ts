@@ -78,13 +78,13 @@ test("legacy upgrade preserves history, avoids category ID collisions, and runs 
     categories: ledger.categories.filter((c) => c.kind !== "investment") };
   legacy.categories.push({ id: "investments", name: "Old investing expenses", kind: "expense", icon: "pricetag-outline", color: "#678DB1" });
   const updated = upgradeLedger(legacy);
-  assert.equal(updated.version, 2);
+  assert.equal(updated.version, 3);
   assert.deepEqual(updated.transactions, legacy.transactions);
   assert.equal(updated.categories.find((c) => c.kind === "investment")?.id, "investments-1");
   assert.equal(upgradeLedger(updated), updated);
   const deleted = { ...updated, categories: updated.categories.filter((c) => c.kind !== "investment") };
   assert.equal(upgradeLedger(deleted), deleted);
-  assert.equal(ledgerWriteSchema.parse({ revision: 0, ledger: legacy }).ledger.version, 2);
+  assert.equal(ledgerWriteSchema.parse({ revision: 0, ledger: legacy }).ledger.version, 3);
 });
 
 test("legacy accounts can read, save, and reload investments with revision protection", (t) => {
@@ -97,13 +97,13 @@ test("legacy accounts can read, save, and reload investments with revision prote
   db.prepare("UPDATE ledgers SET data = ? WHERE user_id = ?").run(JSON.stringify(legacy), "investor");
   const service = createLedgerService(repositories.ledgers, repositories.receipts);
   const snapshot = service.read("investor");
-  assert.equal(snapshot.ledger.version, 2);
+  assert.equal(snapshot.ledger.version, 3);
   const { transaction, recurring } = buildEntry(draft, snapshot.ledger.categories);
   const saved = service.save("investor", { ...snapshot, ledger: saveEntry(transaction, undefined, recurring)(snapshot.ledger) });
   assert.deepEqual(service.read("investor"), JSON.parse(JSON.stringify(saved)));
   assert.equal(saved.revision, 1);
   assert.throws(() => service.save("investor", snapshot), { reason: "conflict" });
   const reloaded: Ledger = JSON.parse(db.prepare("SELECT data FROM ledgers WHERE user_id = ?").get("investor")!.data as string);
-  assert.equal(reloaded.version, 2);
+  assert.equal(reloaded.version, 3);
   assert.equal(reloaded.transactions[0].kind, "investment");
 });

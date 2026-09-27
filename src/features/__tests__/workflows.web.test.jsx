@@ -9,6 +9,7 @@ import { demoLedger, emptyLedger } from "../../domain/ledger";
 import { LedgerProvider } from "../../providers/LedgerProvider";
 import { WorkspaceProvider } from "../../providers/WorkspaceProvider";
 import { Auth } from "../auth/AuthScreen";
+import AccountsScreen from "../accounts/AccountsScreen";
 import CategoriesScreen from "../categories/CategoriesScreen";
 import { EntryDialog } from "../entries/EntryDialog";
 import { EntryForm } from "../entries/EntryForm";
@@ -294,4 +295,51 @@ test("entry web dates use constrained date inputs and save the selected calendar
   await fill("What was it for?", "Lunch");
   await click(button("Add expense"));
   expect(save).toHaveBeenCalledWith(expect.objectContaining({ date: "2028-02-29" }), undefined);
+});
+
+
+test.each([
+  ["desktop", { compact: false, desktop: true }],
+  ["phone", { compact: true, desktop: false }],
+])("%s creates an account inside an entry, preserves the draft, and keeps links after renaming", async (_name, responsive) => {
+  mockResponsive = responsive;
+  const body = await renderWeb(<Workspace><OverviewScreen /><EntryDialog /></Workspace>);
+  await click(body.querySelector('[aria-label^="Edit Weekly groceries,"]'));
+  await fill("What was it for?", "Account-linked groceries");
+  await click(button("Add account"));
+  await fill("Account name", "Everyday Visa");
+  await click(button("Credit card"));
+  await click(button("Save account"));
+  expect(body.querySelector('[aria-label="What was it for?"]').value).toBe("Account-linked groceries");
+  expect(button("Use Everyday Visa").getAttribute("aria-selected")).toBe("true");
+  await click(button("Save changes"));
+  const entry = ledger.transactions.find((t) => t.title === "Account-linked groceries");
+  expect(entry.accountId).toBe(ledger.accounts[0].id);
+  expect(ledger.accounts[0].type).toBe("credit");
+  await fill("Search entries", "Everyday Visa");
+  expect(body.textContent).toContain("Account-linked groceries");
+  await renderWeb(<Workspace><AccountsScreen /></Workspace>);
+  await click(button("Edit account Everyday Visa"));
+  expect(button("Account is in use").getAttribute("aria-disabled")).toBe("true");
+  await fill("Account name", "Travel Visa");
+  await click(button("Save account"));
+  expect(ledger.accounts[0].name).toBe("Travel Visa");
+  expect(ledger.transactions.find((t) => t.id === entry.id).accountId).toBe(entry.accountId);
+});
+
+test("accounts page validates names, retains failed drafts, and deletes unused accounts", async () => {
+  const body = await renderWeb(<Workspace><AccountsScreen /></Workspace>);
+  await click(button("Add account"));
+  await click(button("Save account"));
+  expect(body.textContent).toContain("Give your account a name");
+  await fill("Account name", "Wallet");
+  await click(button("Cash"));
+  api.mutateLedger.mockRejectedValueOnce(new Error("Server offline"));
+  await click(button("Save account"));
+  expect(body.textContent).toContain("Server offline");
+  expect(body.querySelector('[aria-label="Account name"]').value).toBe("Wallet");
+  await click(button("Save account"));
+  await click(button("Edit account Wallet"));
+  await click(button("Delete unused account"));
+  expect(ledger.accounts).toEqual([]);
 });

@@ -9,6 +9,8 @@ import {
   kindLabels,
   dateKey,
   personalShare,
+  accountTypeIcons,
+  type PaymentAccount,
   type Category,
   type Frequency,
   type Kind,
@@ -20,9 +22,13 @@ import { Button, C, Field, Icon, Sheet, s } from "../../shared/ui";
 import { ReceiptPreview } from "../receipts/ReceiptPreview";
 import { DateField } from "../../shared/ui/DateField";
 import { buildEntry, buildSchedule } from "./entryDraft";
+import { AccountForm } from "../accounts/AccountForm";
+import type { LedgerChange } from "../../domain/commands";
 
 export function EntryForm({
   categories,
+  accounts = [],
+  commit,
   entry,
   rule,
   currency,
@@ -33,6 +39,8 @@ export function EntryForm({
 }: {
   demo?: boolean;
   categories: Category[];
+  accounts?: PaymentAccount[];
+  commit?: (change: LedgerChange, message: string) => Promise<void>;
   entry?: Transaction;
   rule?: Recurring;
   currency: string;
@@ -48,6 +56,8 @@ export function EntryForm({
   );
   const [date, setDate] = useState(rule?.nextDate ?? entry?.date ?? dateKey());
   const [categoryId, setCategory] = useState(initial?.categoryId ?? "food");
+  const [accountId, setAccountId] = useState(initial?.accountId);
+  const [addingAccount, setAddingAccount] = useState(false);
   const [note, setNote] = useState(initial?.note ?? "");
   const [split, setSplit] = useState<"full" | "equal" | "amount" | "percent">(
     initial && initial.share !== initial.total ? "amount" : "full",
@@ -146,7 +156,8 @@ export function EntryForm({
   async function submit() {
     if (saving) return;
     try {
-      const draft = { kind, title, amount, date, categoryId, note, split, shareInput, frequency, receipt };
+      if (accountId && !accounts.some((a) => a.id === accountId)) throw new Error("Choose an available payment account.");
+      const draft = { kind, title, amount, date, categoryId, accountId, note, split, shareInput, frequency, receipt };
       const { transaction, recurring }: { transaction: Transaction; recurring?: Recurring } = rule
         ? { transaction: rule, recurring: buildSchedule(draft, categories, rule) }
         : buildEntry(draft, categories, entry);
@@ -165,6 +176,7 @@ export function EntryForm({
       setSaving(false);
     }
   }
+  if (addingAccount && commit) return <AccountForm commit={commit} onSaved={(account) => setAccountId(account.id)} onClose={() => setAddingAccount(false)} />;
   if (viewingReceipt)
     return (
       <Sheet
@@ -291,6 +303,22 @@ export function EntryForm({
                 </Pressable>
               ))}
           </View>
+        </View>
+        <View style={{ gap: 10 }}>
+          <Text style={s.label}>Payment account (optional)</Text>
+          <View style={[s.row, { flexWrap: "wrap", gap: 8 }]}>
+            <Pressable accessibilityRole="button" accessibilityLabel="Unassigned" aria-selected={!accountId}
+              onPress={() => setAccountId(undefined)} style={[s.chip, { minHeight: 44 }, !accountId && s.chipActive]}>
+              <Text style={{ color: C.ink, fontSize: 12 }}>Unassigned</Text>
+            </Pressable>
+            {accounts.map((account) => <Pressable key={account.id} accessibilityRole="button" accessibilityLabel={`Use ${account.name}`}
+              aria-selected={accountId === account.id} onPress={() => setAccountId(account.id)}
+              style={[s.chip, { minHeight: 44 }, accountId === account.id && s.chipActive]}>
+              <Icon name={accountTypeIcons[account.type]} size={17} />
+              <Text style={{ color: C.ink, fontSize: 12 }}>{account.name}</Text>
+            </Pressable>)}
+          </View>
+          {commit && <Button title="Add account" icon="add" tone="quiet" onPress={() => setAddingAccount(true)} />}
         </View>
         <DateField label={rule ? "Next occurrence" : "Date"} value={date} onChange={setDate} />
         {kind === "expense" && (

@@ -7,6 +7,7 @@ export type OverviewFilters = { month: string; day: string | null; filter: Entry
 
 export function selectOverview(ledger: Ledger, { month, day, filter, search }: OverviewFilters) {
   const categories = new Map(ledger.categories.map((c) => [c.id, c]));
+  const accounts = new Map(ledger.accounts.map((a) => [a.id, a]));
   const monthEntries = ledger.transactions.filter((t) => t.date.startsWith(month));
   const scheduled = scheduledEntries(ledger, month);
   const calendarEntries: OverviewEntry[] = [...monthEntries, ...scheduled];
@@ -14,7 +15,7 @@ export function selectOverview(ledger: Ledger, { month, day, filter, search }: O
   const query = search.toLowerCase();
   const visibleEntries = calendarEntries.filter((t) =>
     (!day || t.date === day) && (filter === "all" || t.kind === filter) &&
-    `${t.title} ${t.note} ${categories.get(t.categoryId)?.name ?? ""}`.toLowerCase().includes(query),
+    `${t.title} ${t.note} ${categories.get(t.categoryId)?.name ?? ""} ${accounts.get(t.accountId ?? "")?.name ?? ""}`.toLowerCase().includes(query),
   ).sort((a, b) => b.date.localeCompare(a.date));
   const grouped = new Map<string, OverviewEntry[]>();
   for (const entry of visibleEntries) {
@@ -57,7 +58,7 @@ export function scheduledEntries(ledger: Ledger, month: string): OverviewEntry[]
       const id = `${rule.id}:${date}`;
       if (date >= start && !existing.has(id)) {
         result.push({ id, title: rule.title, kind: rule.kind, total: rule.total,
-          share: rule.share, categoryId: rule.categoryId, date, note: rule.note,
+          share: rule.share, categoryId: rule.categoryId, accountId: rule.accountId, date, note: rule.note,
           recurringId: rule.id, scheduled: true });
       }
       date = nextOccurrence(date, rule.frequency, rule.anchorDay);

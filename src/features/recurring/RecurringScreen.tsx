@@ -60,6 +60,7 @@ export default function RecurringScreen() {
                   {rule.frequency[0].toUpperCase() +
                     rule.frequency.slice(1)}{" "}
                   · {c?.name}
+                  {rule.accountId && ` · ${ledger.accounts.find((a) => a.id === rule.accountId)?.name ?? ""}`}
                 </Text>
               </View>
               <Text

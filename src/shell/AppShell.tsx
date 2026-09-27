@@ -9,11 +9,12 @@ import { useLedger } from "../providers/LedgerProvider";
 import { useWorkspace } from "../providers/WorkspaceProvider";
 import { Button, C, Icon, IconButton, s } from "../shared/ui";
 import { useResponsive } from "../shared/useResponsive";
-type Tab = "Overview" | "Recurring" | "Categories";
+type Tab = "Overview" | "Recurring" | "Categories" | "Accounts";
 const navigation: { tab: Tab; icon: string; }[] = [
   { tab: "Overview", icon: "grid-outline" },
   { tab: "Recurring", icon: "repeat-outline" },
   { tab: "Categories", icon: "pricetags-outline" },
+  { tab: "Accounts", icon: "wallet-outline" },
 ];
 export function AppShell() {
   const { compact, desktop } = useResponsive();
@@ -21,8 +22,8 @@ export function AppShell() {
   const { setForm } = useWorkspace();
   const [settings, setSettings] = React.useState(false);
   const pathname = usePathname();
-  const tab: Tab = pathname === "/recurring" ? "Recurring" : pathname === "/categories" ? "Categories" : "Overview";
-  const setTab = (value: Tab) => router.navigate(({ Overview: "/", Recurring: "/recurring", Categories: "/categories" } as const)[value]);
+  const tab: Tab = pathname === "/accounts" ? "Accounts" : pathname === "/recurring" ? "Recurring" : pathname === "/categories" ? "Categories" : "Overview";
+  const setTab = (value: Tab) => router.navigate(({ Overview: "/", Recurring: "/recurring", Categories: "/categories", Accounts: "/accounts" } as const)[value]);
   const nav = (mobile = false) => (
     <View style={mobile ? a.mobileNav : { gap: 8 }}>
       {navigation.map((item) => (
@@ -189,17 +190,17 @@ export function AppShell() {
                     ? "Your money, at a glance."
                     : tab === "Recurring"
                       ? "On repeat."
-                      : "Keep it organized."}
+                      : tab === "Accounts" ? "Your accounts." : "Keep it organized."}
                 </Text>
                 <Text style={s.muted}>
                   {tab === "Overview"
                     ? "The everyday ins and outs, all in one place."
                     : tab === "Recurring"
                       ? "Your regular expenses, income, and investments, taken care of."
-                      : "Categories that make sense for your everyday."}
+                      : tab === "Accounts" ? "Bank, card, or cash. Give every entry a home." : "Categories that make sense for your everyday."}
                 </Text>
               </View>
-              {!compact && tab !== "Categories" && (
+              {!compact && tab !== "Categories" && tab !== "Accounts" && (
                 <Button
                   title="Add entry"
                   icon="add"
@@ -222,7 +223,7 @@ export function AppShell() {
                 <Button title="Retry" tone="quiet" onPress={sync} />
               </View>
             )}
-            {compact && tab !== "Categories" && (
+            {compact && tab !== "Categories" && tab !== "Accounts" && (
               <Button
                 title="Add entry"
                 icon="add"
@@ -339,10 +340,12 @@ const a = StyleSheet.create({
     borderColor: C.line,
   },
   mobileNavItem: {
+    flex: 1,
+    minWidth: 0,
     alignItems: "center",
     gap: 5,
     paddingVertical: 9,
-    paddingHorizontal: 24,
+    paddingHorizontal: 4,
     borderRadius: 12,
   },
   pageTitle: {
