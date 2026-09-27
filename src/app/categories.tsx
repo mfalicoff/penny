@@ -1,1 +1,1 @@
-export default function CategoriesRoute() { return null; }
+export { default } from "../features/categories/CategoriesScreen";

@@ -1,13 +1,13 @@
-import React, { useMemo, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { useMemo, useState } from "react";
+import { Platform, Pressable, ScrollView, Text, View } from "react-native";
 import Svg, { Path, Rect } from "react-native-svg";
+import type { Category, Transaction } from "../../../domain/ledger";
+import { C, Icon, s } from "../../../shared/ui";
 import {
   buildMoneyFlow,
   layoutMoneyFlow,
   type PositionedFlowNode,
-} from "./moneyFlow";
-import type { Category, Transaction } from "./model";
-import { C, Icon, s } from "./ui";
+} from "../moneyFlow";
 
 function ribbon(
   x: number,
@@ -185,8 +185,10 @@ export function MoneyFlowChart({
                   <Svg
                     width={width}
                     height={layout.height}
-                    accessible={false}
-                    pointerEvents="none"
+                    {...(Platform.OS === "web"
+                      ? { "aria-hidden": true, tabIndex: -1 as const }
+                      : { accessible: false })}
+                    style={{ pointerEvents: "none" }}
                   >
                     {layout.sources.map((node) => (
                       <Path

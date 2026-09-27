@@ -1,1 +1,1 @@
-export default function RecurringRoute() { return null; }
+export { default } from "../features/recurring/RecurringScreen";

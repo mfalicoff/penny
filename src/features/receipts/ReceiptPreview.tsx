@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Image, Text } from "react-native";
+import { receiptUrl, releaseReceiptUrl } from "../../data/receipts";
+import { type Receipt } from "../../domain/ledger";
+import { s } from "../../shared/ui";
 import { PdfPreview } from "./PdfPreview";
-import { type Receipt } from "./model";
-import { receiptUrl, releaseReceiptUrl } from "./storage";
-import { s } from "./ui";
 
-export function ReceiptPreview({ receipt }: { receipt: Receipt }) {
+export function ReceiptPreview({ receipt }: { receipt: Receipt; }) {
   const [source, setSource] = useState("");
   const [error, setError] = useState("");
   useEffect(() => {

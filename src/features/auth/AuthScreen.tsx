@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -7,8 +7,8 @@ import {
   Text,
   View,
 } from "react-native";
-import { signIn } from "./api";
-import { Button, C, Field, Icon, s } from "./ui";
+import { signIn } from "../../data/api";
+import { Button, C, Field, Icon, s } from "../../shared/ui";
 export function Auth({
   onReady,
   onDemo,

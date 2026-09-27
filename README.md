@@ -124,15 +124,17 @@ Recurring entries are materialized when a client syncs or saves, using that devi
 
 ## Implementation
 
-- `App.tsx`: persistent responsive shell, UI, and coordination.
-- `src/app/`: Expo Router entry points for Overview, Recurring, and Categories.
-- `src/EntryForm.tsx`: fast entry, receipt selection, and splits.
-- `src/model.ts`: types, integer-cent calculations, recurrence.
-- `src/api.ts`: authenticated requests and revision-based sync.
-- `src/session.*`: HttpOnly cookies on web; SecureStore on native.
-- `src/storage.*`: authenticated receipt upload/download and platform viewing.
+- `src/app/`: thin Expo Router entry points for real feature screens.
+- `src/shell/`: persistent responsive navigation and application composition.
+- `src/features/`: feature-owned screens, forms, presentation components, selectors and behavior tests.
+- `src/providers/`: session/ledger lifecycle and workspace state that survives navigation.
+- `src/domain/`: ledger types, integer-cent calculations, recurrence and immutable mutation commands.
+- `src/data/`: authenticated requests, revision retries, platform sessions and receipt I/O.
+- `src/shared/`: reusable UI primitives, responsive breakpoints and formatting.
 - `server/app.ts`: Express API, validation, password hashing, account/receipt isolation.
 - `server/index.ts`: SQLite lifecycle and web hosting.
+
+See [Frontend architecture](docs/frontend-architecture.md) for ownership rules, the pattern for adding a feature, and the testing strategy.
 
 The initial name, Penny, is a working name. The visual direction emphasizes warm neutral colors, calm hierarchy, quick feedback, and simple entry, inspired by your preferences rather than copied product assets.
 
@@ -146,7 +148,9 @@ npm run build:web
 npx expo export --platform ios --platform android --output-dir /tmp/penny-native-export
 ```
 
-Tests cover decimal validation, rounding, month-end and leap-year recurrence, catch-up idempotence, paused schedules, authenticated two-session sync, stale-revision rejection, account isolation, receipt ownership, PNG/PDF uploads and downloads, invalid uploads, invalid money, untrusted origins, restart persistence, and logout.
+`npm test` runs both Node core/API tests and Jest/Expo frontend behavior tests. Use `npm run test:core`, `npm run test:ui`, or `npm run test:ui:watch` while developing.
+
+Tests cover decimal validation, rounding, month-end and leap-year recurrence, immutable commands, stale edit/delete conflicts, category safeguards, draft conversion, monthly filtering, failed-save draft retention, session isolation, sync cleanup, API retries, route navigation and persistent drafts. Existing API integration tests cover authenticated two-session sync, stale revisions, account isolation, receipt ownership/uploads/downloads, untrusted origins, restart persistence and logout.
 
 ## Current limits
 

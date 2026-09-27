@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
   KeyboardAvoidingView,
@@ -12,7 +13,6 @@ import {
   type TextInputProps,
   type ViewStyle,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 export const C = {
   bg: "#F8F8F4",
   paper: "#FFFFFF",
@@ -116,7 +116,7 @@ export function Field({
   label,
   style,
   ...props
-}: TextInputProps & { label: string }) {
+}: TextInputProps & { label: string; }) {
   return (
     <View style={{ gap: 8 }}>
       <Text style={s.label}>{label}</Text>

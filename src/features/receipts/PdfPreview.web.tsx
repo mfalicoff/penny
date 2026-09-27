@@ -1,12 +1,12 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Text, View } from "react-native";
 import {
   getDocument,
   GlobalWorkerOptions,
   type PDFDocumentProxy,
   type RenderTask,
 } from "pdfjs-dist";
-import { Button, C, s } from "./ui";
+import React, { useEffect, useRef, useState } from "react";
+import { Text, View } from "react-native";
+import { Button, C, s } from "../../shared/ui";
 GlobalWorkerOptions.workerSrc = "/pdf/pdf.worker.min.mjs";
 export function PdfPreview({
   source,

@@ -1,6 +1,6 @@
 import { File, Paths } from "expo-file-system";
+import { type Receipt } from "../domain/ledger";
 import { api } from "./api";
-import { type Receipt } from "./model";
 export async function saveReceipt(asset: {
   uri: string;
   name: string;
@@ -24,4 +24,4 @@ export async function receiptUrl(receipt: Receipt): Promise<string> {
   file.write(new Uint8Array(await response.arrayBuffer()));
   return file.uri;
 }
-export function releaseReceiptUrl(_url: string) {}
+export function releaseReceiptUrl(_url: string) { }

@@ -1,4 +1,4 @@
-import type { Category, Transaction } from "./model";
+import type { Category, Transaction } from "../../domain/ledger";
 
 export type FlowNode = {
   id: string;

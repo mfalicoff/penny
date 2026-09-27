@@ -1,25 +1,22 @@
-import React, { useState } from "react";
-import { Image, Platform, Pressable, Text, View } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
-import { Button, C, Field, Icon, Sheet, s } from "./ui";
+import { useState } from "react";
+import { Image, Platform, Pressable, Text, View } from "react-native";
+import { saveReceipt } from "../../data/receipts";
 import {
   cents,
   dateKey,
-  nextOccurrence,
-  parseDate,
   personalShare,
-  uid,
-  validDate,
   type Category,
   type Frequency,
   type Kind,
   type Receipt,
   type Recurring,
-  type Transaction,
-} from "./model";
-import { saveReceipt } from "./storage";
-import { ReceiptPreview } from "./ReceiptPreview";
+  type Transaction
+} from "../../domain/ledger";
+import { Button, C, Field, Icon, Sheet, s } from "../../shared/ui";
+import { ReceiptPreview } from "../receipts/ReceiptPreview";
+import { buildEntry } from "./entryDraft";
 
 export function EntryForm({
   categories,
@@ -75,7 +72,7 @@ export function EntryForm({
         shareInput,
       ) / 100,
     );
-  } catch {}
+  } catch { }
   const switchKind = (value: Kind) => {
     setKind(value);
     setCategory(categories.find((c) => c.kind === value)?.id ?? "");
@@ -107,7 +104,7 @@ export function EntryForm({
           a.uri,
           a.name,
           a.mimeType ||
-            (/\.pdf$/i.test(a.name) ? "application/pdf" : "image/jpeg"),
+          (/\.pdf$/i.test(a.name) ? "application/pdf" : "image/jpeg"),
           a.size,
         );
       }
@@ -143,48 +140,10 @@ export function EntryForm({
   async function submit() {
     if (saving) return;
     try {
-      const total = cents(amount);
-      if (!total) throw new Error("Enter an amount greater than zero.");
-      if (!validDate(date))
-        throw new Error(
-          "Use a valid date between 2000 and 2100, in YYYY-MM-DD format.",
-        );
-      if (!title.trim()) throw new Error("Add a name for this entry.");
-      if (!categories.some((c) => c.id === categoryId && c.kind === kind))
-        throw new Error("Choose a category.");
-      const share = personalShare(
-        total,
-        kind === "income" ? "full" : split,
-        shareInput,
-      );
+      const { transaction, recurring } = buildEntry({ kind, title, amount, date, categoryId, note, split, shareInput, frequency, receipt }, categories, entry);
       setSaving(true);
       setError("");
-      const savedReceipt = attachment ? await saveReceipt(attachment) : receipt;
-      const transaction: Transaction = {
-        id: entry?.id ?? uid(),
-        kind,
-        title: title.trim(),
-        total,
-        share,
-        date,
-        categoryId,
-        note: note.trim(),
-        receipt: kind === "expense" ? savedReceipt : undefined,
-        recurringId: entry?.recurringId,
-      };
-      let recurring: Recurring | undefined;
-      if (!entry && frequency !== "none") {
-        const { receipt: _, recurringId: __, ...base } = transaction;
-        recurring = {
-          ...base,
-          id: uid(),
-          active: true,
-          frequency,
-          nextDate: nextOccurrence(date, frequency, parseDate(date).getDate()),
-          anchorDay: parseDate(date).getDate(),
-        };
-        transaction.recurringId = recurring.id;
-      }
+      if (kind === "expense" && attachment) transaction.receipt = await saveReceipt(attachment);
       await onSave(transaction, recurring);
       onClose();
     } catch (e) {
@@ -237,8 +196,7 @@ export function EntryForm({
       }
     >
       <View
-        style={{ gap: 22, opacity: saving ? 0.6 : 1 }}
-        pointerEvents={saving ? "none" : "auto"}
+        style={{ gap: 22, opacity: saving ? 0.6 : 1, pointerEvents: saving ? "none" : "auto" }}
       >
         <View
           style={[

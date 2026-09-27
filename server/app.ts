@@ -10,7 +10,7 @@ import {
 } from "node:crypto";
 import { promisify } from "node:util";
 import { z } from "zod";
-import { emptyLedger, validDate } from "../src/model.ts";
+import { emptyLedger, validDate } from "../src/domain/ledger.ts";
 const scrypt = promisify(scryptCallback);
 const hash = (s: string) => createHash("sha256").update(s).digest("hex");
 const id = z.string().min(1).max(100);

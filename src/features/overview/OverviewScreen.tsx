@@ -1,0 +1,72 @@
+import { useMemo } from "react";
+import { Pressable, Text, View } from "react-native";
+import { dateKey, parseDate } from "../../domain/ledger";
+import { useLedger } from "../../providers/LedgerProvider";
+import { useWorkspace } from "../../providers/WorkspaceProvider";
+import { currencyFormat } from "../../shared/format";
+import { C, IconButton, s } from "../../shared/ui";
+import { useResponsive } from "../../shared/useResponsive";
+import { EntryList } from "./components/EntryList";
+import { MoneyFlowChart } from "./components/MoneyFlowChart";
+import { MonthCalendar } from "./components/MonthCalendar";
+import { SpendingBreakdown } from "./components/SpendingBreakdown";
+import { SummaryCards } from "./components/SummaryCards";
+import { selectOverview, shiftMonthKey } from "./selectors";
+
+export default function OverviewScreen() {
+  const { ledger } = useLedger();
+  const { month, setMonth, day, setDay, filter, setFilter, search, setSearch, setForm } = useWorkspace();
+  const { compact, desktop } = useResponsive();
+  const { monthEntries, summary, visibleEntries, grouped, spending } = useMemo(() => selectOverview(ledger, { month, day, filter, search }), [ledger, month, day, filter, search]);
+  const monthLabel = parseDate(`${month}-01`).toLocaleDateString("en-CA", { month: "long", year: "numeric" });
+  const money = (value: number) => currencyFormat(value, ledger.currency);
+  function shiftMonth(delta: number) { setMonth(shiftMonthKey(month, delta)); setDay(null); }
+  return (<View style={{ gap: 26 }}>
+
+    <View style={s.between}>
+      <View style={[s.row, { gap: 4 }]}>
+        <IconButton
+          icon="chevron-back"
+          label="Previous month"
+          onPress={() => shiftMonth(-1)}
+        />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Go to current month"
+          onPress={() => {
+            setMonth(dateKey().slice(0, 7));
+            setDay(null);
+          }}
+        >
+          <Text
+            style={{
+              color: C.ink,
+              fontSize: 16,
+              fontWeight: "600",
+              minWidth: compact ? 150 : 165,
+              textAlign: "center",
+            }}
+          >
+            {monthLabel}
+          </Text>
+        </Pressable>
+        <IconButton
+          icon="chevron-forward"
+          label="Next month"
+          onPress={() => shiftMonth(1)}
+        />
+      </View>
+      <Text style={{ fontSize: 11, color: C.muted }}>
+        {ledger.currency}
+      </Text>
+    </View>
+
+    <SummaryCards summary={summary} compact={compact} money={money} />
+    <View style={{ flexDirection: desktop ? "row" : "column", gap: 22, alignItems: "stretch" }}>
+      <MonthCalendar {...{ month, day, setDay, monthLabel, monthEntries, compact, desktop }} />
+      <SpendingBreakdown {...{ spending, summary, desktop, money }} />
+    </View>
+    <MoneyFlowChart key={month} entries={monthEntries} categories={ledger.categories} currency={ledger.currency} monthLabel={monthLabel} />
+    <EntryList {...{ day, filter, search, setFilter, setSearch, visibleEntries, grouped, ledger, compact, money, setForm }} />
+  </View>);
+}

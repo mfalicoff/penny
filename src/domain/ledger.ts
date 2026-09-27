@@ -7,7 +7,7 @@ export type Category = {
   color: string;
   kind: Kind;
 };
-export type Receipt = { id: string; name: string; uri: string; mime: string };
+export type Receipt = { id: string; name: string; uri: string; mime: string; };
 export type Transaction = {
   id: string;
   title: string;

@@ -8,7 +8,7 @@ import {
   emptyLedger,
   totals,
   validDate,
-} from "../src/model.ts";
+} from "../src/domain/ledger.ts";
 
 test("money uses integer cents and rejects ambiguous or invalid input", () => {
   assert.equal(cents("10.29"), 1029);

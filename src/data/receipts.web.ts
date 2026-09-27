@@ -1,5 +1,5 @@
+import { type Receipt } from "../domain/ledger";
 import { api } from "./api";
-import { type Receipt } from "./model";
 export async function saveReceipt(asset: {
   uri: string;
   name: string;

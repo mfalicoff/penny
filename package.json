@@ -31,11 +31,15 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@testing-library/react-native": "^14.0.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
+    "@types/jest": "29.5.14",
     "@types/react": "~19.2.2",
     "eslint": "^9.0.0",
     "eslint-config-expo": "~57.0.2",
+    "jest": "~29.7.0",
+    "jest-expo": "~57.0.5",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -44,11 +48,14 @@
     "ios": "expo start --ios",
     "web": "npm run prepare:pdf && expo start --web",
     "server": "node --env-file-if-exists=.env --experimental-strip-types server/index.ts",
-    "test": "node --test tests/*.test.ts",
+    "test": "npm run test:core && npm run test:ui",
     "typecheck": "tsc --noEmit",
     "build:web": "npm run prepare:pdf && expo export --platform web",
     "prepare:pdf": "node scripts/copy-pdf-worker.mjs",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "test:core": "node --test tests/*.test.ts",
+    "test:ui": "jest --runInBand",
+    "test:ui:watch": "jest --watch"
   },
   "private": true
 }

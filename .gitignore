@@ -41,10 +41,13 @@ yarn-error.*
 /android
 
 # Server data and deployment secrets
-data/
+/data/
 .env
 .env.*
 !.env.example
 
 # Generated PDF.js assets
 public/pdf/
+
+# Test reports
+coverage/

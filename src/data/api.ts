@@ -1,6 +1,6 @@
 import { Platform } from "react-native";
-import { getToken, setToken, clearToken } from "./session";
-import { materialize, type Ledger } from "./model";
+import { materialize, type Ledger } from "../domain/ledger";
+import { clearToken, getToken, setToken } from "./session";
 export const API_URL =
   process.env.EXPO_PUBLIC_API_URL ||
   (Platform.OS === "web" ? "" : "http://localhost:3001");
@@ -66,7 +66,7 @@ export async function signOut() {
 export async function whoAmI() {
   return (await (await api("/auth/me")).json()).email as string;
 }
-export type Snapshot = { revision: number; ledger: Ledger };
+export type Snapshot = { revision: number; ledger: Ledger; };
 export async function fetchLedger(): Promise<Snapshot> {
   return (await api("/ledger")).json();
 }

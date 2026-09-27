@@ -1,6 +1,5 @@
-import React from "react";
 import * as Sharing from "expo-sharing";
-import { Button } from "./ui";
+import { Button } from "../../shared/ui";
 export function PdfPreview({
   source,
   name,
