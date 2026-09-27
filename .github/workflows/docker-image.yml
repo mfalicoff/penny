@@ -102,6 +102,6 @@ jobs:
           tags: ${{ steps.metadata.outputs.tags }}
           labels: ${{ steps.metadata.outputs.labels }}
           build-args: |
-            EXPO_PUBLIC_API_URL=
+            EXPO_PUBLIC_API_URL=https://penny.local.maziliosu.org
           cache-from: type=gha
           cache-to: type=gha,mode=max
