@@ -52,7 +52,7 @@ npm run ios
 npm run android
 ```
 
-Standalone mobile builds should use an HTTPS API endpoint. Development against plain HTTP depends on platform transport policies. Signing, app store distribution, and device builds require the usual Apple/Android setup and have not been configured with a personal developer account.
+Standalone mobile builds should use an HTTPS API endpoint. Development against plain HTTP depends on platform transport policies. The [Android APK workflow](docs/android-apk.md) builds signed, installable APKs through EAS and reuses the same signing key for updates. Complete its one-time Expo account and credentials setup before running it. Apple signing and app store distribution are not configured.
 
 ## Self-host with Docker Compose
 
@@ -131,10 +131,15 @@ Recurring entries are materialized when a client syncs or saves, using that devi
 - `src/domain/`: ledger types, integer-cent calculations, recurrence and immutable mutation commands.
 - `src/data/`: authenticated requests, revision retries, platform sessions and receipt I/O.
 - `src/shared/`: reusable UI primitives, responsive breakpoints and formatting.
-- `server/app.ts`: Express API, validation, password hashing, account/receipt isolation.
-- `server/index.ts`: SQLite lifecycle and web hosting.
+- `server/app.ts`: wires storage, services and Express middleware/routes together.
+- `server/http/`: thin routes, cookies, authentication middleware and HTTP error mapping.
+- `server/application/`: account, ledger and receipt operations with typed storage/security interfaces.
+- `server/validation/`: input schemas, ledger invariants and receipt signature checks.
+- `server/infrastructure/`: SQLite schema/repositories, atomic writes and password/token cryptography.
+- `server/index.ts`: process lifecycle, environment configuration and web hosting.
 
 See [Frontend architecture](docs/frontend-architecture.md) for ownership rules, the pattern for adding a feature, and the testing strategy.
+See [Backend architecture](docs/backend-architecture.md) for service boundaries, persistence guarantees, API regression coverage and the Hono assessment.
 
 The initial name, Penny, is a working name. The visual direction emphasizes warm neutral colors, calm hierarchy, quick feedback, and simple entry, inspired by your preferences rather than copied product assets.
 

@@ -10,6 +10,7 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.mfalicoff.penny",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -27,6 +28,13 @@
       "expo-secure-store",
       "expo-router"
     ],
-    "scheme": "penny"
+    "scheme": "penny",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "42509ccd-a59b-4cb7-9370-3bd3a559de61"
+      }
+    },
+    "owner": "mfalicoff"
   }
 }
