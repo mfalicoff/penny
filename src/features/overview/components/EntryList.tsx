@@ -1,7 +1,8 @@
+import { type EntryFormState } from "../../../providers/WorkspaceProvider";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { dateKey, kinds, parseDate, type Ledger, type Transaction } from "../../../domain/ledger";
+import { dateKey, kinds, parseDate, type Ledger } from "../../../domain/ledger";
 import { Button, C, Field, Icon, Tag, s } from "../../../shared/ui";
-import { type EntryFilter } from "../selectors";
+import { type OverviewEntry, type EntryFilter } from "../selectors";
 
 type EntryListProps = {
   day: string | null;
@@ -9,12 +10,12 @@ type EntryListProps = {
   search: string;
   setFilter: (filter: EntryFilter) => void;
   setSearch: (search: string) => void;
-  visibleEntries: Transaction[];
-  grouped: Map<string, Transaction[]>;
+  visibleEntries: OverviewEntry[];
+  grouped: Map<string, OverviewEntry[]>;
   ledger: Ledger;
   compact: boolean;
   money: (value: number) => string;
-  setForm: (form: { entry?: Transaction }) => void;
+  setForm: (form: EntryFormState) => void;
 };
 
 export function EntryList({
@@ -91,6 +92,9 @@ export function EntryList({
         onChangeText={setSearch}
         style={{ fontSize: 12, minHeight: 40, paddingVertical: 10 }}
       />
+      {visibleEntries.some((t) => t.scheduled) && (
+        <Text style={[s.muted, { marginTop: 12 }]}>Scheduled entries are previews and are excluded from recorded totals. Tap one to edit its schedule.</Text>
+      )}
       {visibleEntries.length ? (
         [...grouped].map(([date, entries]) => (
           <View key={date}>
@@ -112,8 +116,13 @@ export function EntryList({
               return (
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel={`Edit ${t.title}, ${money(t.share)}`}
-                  onPress={() => setForm({ entry: t })}
+                  accessibilityLabel={`${t.scheduled ? "Edit schedule for" : "Edit"} ${t.title}, ${money(t.share)}`}
+                  onPress={() => {
+                    if (t.scheduled) {
+                      const rule = ledger.recurring.find((r) => r.id === t.recurringId);
+                      if (rule) setForm({ rule });
+                    } else setForm({ entry: t });
+                  }}
                   key={t.id}
                   style={({ pressed }) => [
                     a.entryRow,
@@ -170,6 +179,7 @@ export function EntryList({
                       >
                         {c?.name}
                       </Text>
+                      {t.scheduled && <Tag text="SCHEDULED" color={C.green} />}
                       {t.share !== t.total && (
                         <Tag text="SPLIT" color={C.accent} />
                       )}

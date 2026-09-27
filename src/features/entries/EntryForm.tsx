@@ -18,11 +18,13 @@ import {
 } from "../../domain/ledger";
 import { Button, C, Field, Icon, Sheet, s } from "../../shared/ui";
 import { ReceiptPreview } from "../receipts/ReceiptPreview";
-import { buildEntry } from "./entryDraft";
+import { DateField } from "../../shared/ui/DateField";
+import { buildEntry, buildSchedule } from "./entryDraft";
 
 export function EntryForm({
   categories,
   entry,
+  rule,
   currency,
   onClose,
   onSave,
@@ -32,26 +34,28 @@ export function EntryForm({
   demo?: boolean;
   categories: Category[];
   entry?: Transaction;
+  rule?: Recurring;
   currency: string;
   onClose: () => void;
   onSave: (entry: Transaction, rule?: Recurring) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
 }) {
-  const [kind, setKind] = useState<Kind>(entry?.kind ?? "expense");
-  const [title, setTitle] = useState(entry?.title ?? "");
+  const initial = rule ?? entry;
+  const [kind, setKind] = useState<Kind>(initial?.kind ?? "expense");
+  const [title, setTitle] = useState(initial?.title ?? "");
   const [amount, setAmount] = useState(
-    entry ? (entry.total / 100).toFixed(2) : "",
+    initial ? (initial.total / 100).toFixed(2) : "",
   );
-  const [date, setDate] = useState(entry?.date ?? dateKey());
-  const [categoryId, setCategory] = useState(entry?.categoryId ?? "food");
-  const [note, setNote] = useState(entry?.note ?? "");
+  const [date, setDate] = useState(rule?.nextDate ?? entry?.date ?? dateKey());
+  const [categoryId, setCategory] = useState(initial?.categoryId ?? "food");
+  const [note, setNote] = useState(initial?.note ?? "");
   const [split, setSplit] = useState<"full" | "equal" | "amount" | "percent">(
-    entry && entry.share !== entry.total ? "amount" : "full",
+    initial && initial.share !== initial.total ? "amount" : "full",
   );
   const [shareInput, setShareInput] = useState(
-    entry ? (entry.share / 100).toFixed(2) : "2",
+    initial ? (initial.share / 100).toFixed(2) : "2",
   );
-  const [frequency, setFrequency] = useState<Frequency | "none">("none");
+  const [frequency, setFrequency] = useState<Frequency | "none">(rule?.frequency ?? "none");
   const [viewingReceipt, setViewingReceipt] = useState<Receipt>();
   const [receipt, setReceipt] = useState<Receipt | undefined>(entry?.receipt);
   const [attachment, setAttachment] = useState<{
@@ -142,7 +146,10 @@ export function EntryForm({
   async function submit() {
     if (saving) return;
     try {
-      const { transaction, recurring } = buildEntry({ kind, title, amount, date, categoryId, note, split, shareInput, frequency, receipt }, categories, entry);
+      const draft = { kind, title, amount, date, categoryId, note, split, shareInput, frequency, receipt };
+      const { transaction, recurring }: { transaction: Transaction; recurring?: Recurring } = rule
+        ? { transaction: rule, recurring: buildSchedule(draft, categories, rule) }
+        : buildEntry(draft, categories, entry);
       setSaving(true);
       setError("");
       if (kind === "expense" && attachment) transaction.receipt = await saveReceipt(attachment);
@@ -177,7 +184,7 @@ export function EntryForm({
   return (
     <Sheet
       visible
-      title={entry ? "Edit entry" : "A little update."}
+      title={rule ? "Edit recurring entry" : entry ? "Edit entry" : "A little update."}
       onClose={() => {
         if (!saving) onClose();
       }}
@@ -189,7 +196,7 @@ export function EntryForm({
             </Text>
           ) : null}
           <Button
-            title={saving ? "Saving…" : entry ? "Save changes" : `Add ${kind}`}
+            title={saving ? "Saving…" : initial ? "Save changes" : `Add ${kind}`}
             icon="checkmark"
             disabled={saving}
             onPress={submit}
@@ -250,7 +257,7 @@ export function EntryForm({
             fontWeight: "500",
             letterSpacing: -1,
           }}
-          autoFocus={!entry && Platform.OS === "web"}
+          autoFocus={!initial && Platform.OS === "web"}
         />
         <Field
           label={
@@ -285,13 +292,7 @@ export function EntryForm({
               ))}
           </View>
         </View>
-        <Field
-          label="Date (YYYY-MM-DD)"
-          value={date}
-          onChangeText={setDate}
-          placeholder="YYYY-MM-DD"
-          maxLength={10}
-        />
+        <DateField label={rule ? "Next occurrence" : "Date"} value={date} onChange={setDate} />
         {kind === "expense" && (
           <View
             style={{
@@ -356,7 +357,7 @@ export function EntryForm({
             )}
           </View>
         )}
-        {kind === "expense" && (
+        {kind === "expense" && !rule && (
           <View style={{ gap: 10 }}>
             <Text style={s.label}>Receipt</Text>
             {receipt || attachment ? (
@@ -425,11 +426,11 @@ export function EntryForm({
             )}
           </View>
         )}
-        {!entry && (
+        {(!entry || rule) && (
           <View style={{ gap: 10 }}>
             <Text style={s.label}>Repeat</Text>
             <View style={[s.row, { gap: 6, flexWrap: "wrap" }]}>
-              {(["none", "weekly", "monthly", "yearly"] as const).map((f) => (
+              {(["none", "weekly", "monthly", "yearly"] as const).filter((f) => !rule || f !== "none").map((f) => (
                 <Pressable
                   accessibilityRole="button"
                   accessibilityState={{ selected: frequency === f }}
@@ -447,8 +448,8 @@ export function EntryForm({
             </View>
             {frequency !== "none" && (
               <Text style={s.muted}>
-                Due entries are added automatically when you open the app.
-                {kind === "expense" ? " Receipts apply to this entry only." : ""}
+                {rule ? "Changes apply to future occurrences. Recorded entries keep their original details." : "Due entries are added automatically when you open the app."}
+                {!rule && kind === "expense" ? " Receipts apply to this entry only." : ""}
               </Text>
             )}
           </View>

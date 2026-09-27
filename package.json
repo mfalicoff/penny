@@ -4,6 +4,7 @@
   "main": "expo-router/entry",
   "dependencies": {
     "@expo/metro-runtime": "~57.0.16",
+    "@expo/ui": "~57.0.20",
     "@expo/vector-icons": "^15.0.2",
     "cors": "^2.8.6",
     "expo": "~57.0.25",

@@ -85,6 +85,11 @@ export default function RecurringScreen() {
                 color={rule.active ? C.green : C.muted}
               />
               <View style={s.row}>
+                <IconButton
+                  icon="create-outline"
+                  label={`Edit ${rule.title} schedule`}
+                  onPress={() => setForm({ rule })}
+                />
                 <Button
                   title={rule.active ? "Pause" : "Resume"}
                   tone="quiet"

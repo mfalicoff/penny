@@ -44,3 +44,30 @@ test("calendar handles leap years, Monday starts, six-week months and year bound
   assert.equal(shiftMonthKey("2026-12", 1), "2027-01");
   assert.equal(shiftMonthKey("2026-01", -1), "2025-12");
 });
+
+test("future schedules appear in calendar and filtered lists without changing recorded totals or the ledger", () => {
+  const rule = { ...expense, id: "rent", frequency: "monthly" as const, active: true, anchorDay: 31, nextDate: "2026-09-30" };
+  const data = { ...ledger, recurring: [rule] };
+  const before = structuredClone(data);
+  const result = selectOverview(data, { ...filters, month: "2026-10", day: "2026-10-31", search: "alex" });
+  assert.equal(result.calendarEntries.length, 1);
+  assert.equal(result.visibleEntries[0].scheduled, true);
+  assert.equal(result.visibleEntries[0].recurringId, rule.id);
+  assert.equal(result.visibleEntries[0].date, "2026-10-31");
+  assert.deepEqual(result.summary, { expense: 0, income: 0, investment: 0 });
+  assert.equal(result.monthEntries.length, 0);
+  assert.deepEqual(data, before);
+});
+
+test("previews respect paused schedules, weekly repeats, leap years, and recorded occurrences", () => {
+  const monthly = { ...expense, id: "rent", frequency: "monthly" as const, active: true, anchorDay: 31, nextDate: "2024-01-31" };
+  const weekly = { ...monthly, id: "weekly", frequency: "weekly" as const, nextDate: "2024-02-02" };
+  const yearly = { ...monthly, id: "yearly", frequency: "yearly" as const, anchorDay: 29, nextDate: "2023-02-28" };
+  const data = { ...emptyLedger(), recurring: [monthly, weekly, yearly, { ...monthly, id: "paused", active: false }],
+    transactions: [{ ...expense, id: "weekly:2024-02-09", date: "2024-02-09", recurringId: weekly.id }] };
+  const result = selectOverview(data, { ...filters, month: "2024-02" });
+  assert.equal(result.calendarEntries.length, 6);
+  assert.equal(result.calendarEntries.filter((t) => t.date === "2024-02-29").length, 2);
+  assert.equal(result.calendarEntries.filter((t) => t.date === "2024-02-09").length, 1);
+  assert.equal(result.calendarEntries.some((t) => t.recurringId === "paused"), false);
+});

@@ -17,7 +17,7 @@ export default function OverviewScreen() {
   const { ledger } = useLedger();
   const { month, setMonth, day, setDay, filter, setFilter, search, setSearch, setForm } = useWorkspace();
   const { compact, desktop } = useResponsive();
-  const { monthEntries, summary, visibleEntries, grouped, spending } = useMemo(() => selectOverview(ledger, { month, day, filter, search }), [ledger, month, day, filter, search]);
+  const { monthEntries, calendarEntries, summary, visibleEntries, grouped, spending } = useMemo(() => selectOverview(ledger, { month, day, filter, search }), [ledger, month, day, filter, search]);
   const monthLabel = parseDate(`${month}-01`).toLocaleDateString("en-CA", { month: "long", year: "numeric" });
   const money = (value: number) => currencyFormat(value, ledger.currency);
   function shiftMonth(delta: number) { setMonth(shiftMonthKey(month, delta)); setDay(null); }
@@ -63,7 +63,7 @@ export default function OverviewScreen() {
 
     <SummaryCards summary={summary} compact={compact} money={money} />
     <View style={{ flexDirection: desktop ? "row" : "column", gap: 22, alignItems: "stretch" }}>
-      <MonthCalendar {...{ month, day, setDay, monthLabel, monthEntries, compact, desktop }} />
+      <MonthCalendar monthEntries={calendarEntries} {...{ month, day, setDay, monthLabel, compact, desktop }} />
       <SpendingBreakdown {...{ spending, summary, desktop, money }} />
     </View>
     <MoneyFlowChart key={month} entries={monthEntries} categories={ledger.categories} currency={ledger.currency} monthLabel={monthLabel} />

@@ -251,3 +251,47 @@ test("unreadable PDFs render an actionable fallback without a console error", as
   expect(body.textContent).toContain("This PDF cannot be previewed.");
   expect(body.querySelector('a[download="Bad.pdf"]')).not.toBeNull();
 });
+
+test.each([
+  ["desktop", { compact: false, desktop: true }],
+  ["phone", { compact: true, desktop: false }],
+])("%s future calendar opens a schedule and saves edits without changing history", async (_name, responsive) => {
+  mockResponsive = responsive;
+  ledger.recurring = [ledger.recurring.find((rule) => rule.kind === "expense")];
+  const rule = ledger.recurring[0];
+  const history = JSON.parse(JSON.stringify(ledger.transactions));
+  const body = await renderWeb(<Workspace><OverviewScreen /><RecurringScreen /><EntryDialog /></Workspace>);
+  await click(button("Next month"));
+  const day = body.querySelector('[aria-label$=" 1, 1 entries"]');
+  expect(day).not.toBeNull();
+  await click(day);
+  expect(body.textContent).toContain("SCHEDULED");
+  await click(body.querySelector('[aria-label^="Edit schedule for Rent,"]'));
+  expect(body.textContent).toContain("Edit recurring entry");
+  expect(body.querySelector('[aria-label="Next occurrence"]').type).toBe("date");
+  expect(body.querySelector('[aria-label="Next occurrence"]').value).toBe(rule.nextDate);
+  await fill("What was it for?", "Updated rent");
+  await fill("Amount (CAD)", "1500.00");
+  await fill("Next occurrence", `${rule.nextDate.slice(0, 7)}-15`);
+  await click(button("Weekly"));
+  await click(button("Save changes"));
+  expect(ledger.recurring[0]).toMatchObject({ title: "Updated rent", total: 150000, frequency: "weekly", anchorDay: 15 });
+  expect(ledger.transactions).toEqual(history);
+  expect(ledger.recurring).toHaveLength(1);
+  await click(button("Edit Updated rent schedule"));
+  expect(body.querySelector('[aria-label="Amount (CAD)"]').value).toBe("1500.00");
+});
+
+test("entry web dates use constrained date inputs and save the selected calendar date", async () => {
+  const save = jest.fn().mockResolvedValue(undefined);
+  const body = await renderWeb(<EntryForm categories={ledger.categories} currency="CAD" onClose={jest.fn()} onSave={save} onDelete={jest.fn()} />);
+  const date = body.querySelector('[aria-label="Date"]');
+  expect(date.type).toBe("date");
+  expect(date.min).toBe("2000-01-01");
+  expect(date.max).toBe("2100-12-31");
+  await fill("Date", "2028-02-29");
+  await fill("Amount (CAD)", "25.00");
+  await fill("What was it for?", "Lunch");
+  await click(button("Add expense"));
+  expect(save).toHaveBeenCalledWith(expect.objectContaining({ date: "2028-02-29" }), undefined);
+});

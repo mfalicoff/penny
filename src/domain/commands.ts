@@ -58,6 +58,16 @@ export function removeSchedule(id: string): LedgerChange {
   return (ledger) => ({ ...ledger, recurring: ledger.recurring.filter((rule) => rule.id !== id) });
 }
 
+export function saveSchedule(rule: Recurring, original: Recurring): LedgerChange {
+  return (ledger) => {
+    if (JSON.stringify(ledger.recurring.find((r) => r.id === original.id)) !== JSON.stringify(original))
+      throw new Error("This schedule changed on another device. Close this form and reopen it to review the latest version.");
+    if (!ledger.categories.some((c) => c.id === rule.categoryId && c.kind === rule.kind))
+      throw new Error("This category was removed on another device. Choose another category.");
+    return { ...ledger, recurring: ledger.recurring.map((r) => r.id === original.id ? rule : r) };
+  };
+}
+
 export function changeCurrency(currency: string): LedgerChange {
   return (ledger) => {
     if (ledger.transactions.length || ledger.recurring.length)

@@ -36,3 +36,14 @@ export function buildEntry(draft: EntryDraft, categories: Category[], entry?: Tr
   }
   return { transaction, recurring };
 }
+
+export function buildSchedule(draft: EntryDraft, categories: Category[], original: Recurring): Recurring {
+  if (draft.frequency === "none") throw new Error("Choose a repeat schedule.");
+  const { transaction } = buildEntry(draft, categories, original);
+  const { receipt: _, recurringId: __, ...details } = transaction;
+  return {
+    ...original, ...details, date: original.date,
+    frequency: draft.frequency, nextDate: draft.date,
+    anchorDay: draft.date === original.nextDate ? original.anchorDay : parseDate(draft.date).getDate(),
+  };
+}

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { changeCurrency, deleteEntry, removeSchedule, saveCategory, saveEntry, setScheduleActive } from "../src/domain/commands.ts";
+import { changeCurrency, deleteEntry, removeSchedule, saveCategory, saveEntry, saveSchedule, setScheduleActive } from "../src/domain/commands.ts";
 import { emptyLedger, type Recurring, type Transaction } from "../src/domain/ledger.ts";
 
 const entry: Transaction = { id: "lunch", title: "Lunch", kind: "expense", total: 2000, share: 1000, categoryId: "food", date: "2026-01-31", note: "" };
@@ -70,4 +70,20 @@ test("currency cannot change once there is transaction or schedule history", () 
   assert.equal(ledger.currency, "CAD");
   assert.throws(() => changeCurrency("USD")({ ...ledger, transactions: [entry] }), /before adding entries/);
   assert.throws(() => changeCurrency("USD")({ ...ledger, recurring: [rule] }), /before adding entries/);
+});
+
+
+test("schedule edits preserve history and reject stale or deleted rules and categories", () => {
+  const ledger = { ...emptyLedger(), transactions: [entry], recurring: [rule] };
+  const before = structuredClone(ledger);
+  const update = saveSchedule({ ...rule, title: "New lunch", total: 3000, share: 1500 }, rule);
+  const next = update(ledger);
+  assert.deepEqual(next.transactions, ledger.transactions);
+  assert.equal(next.recurring[0].title, "New lunch");
+  assert.equal(next.recurring[0].active, false);
+  assert.equal(next.recurring.length, 1);
+  assert.deepEqual(ledger, before);
+  assert.throws(() => update(next), /changed on another device/);
+  assert.throws(() => update({ ...ledger, recurring: [] }), /changed on another device/);
+  assert.throws(() => update({ ...ledger, categories: [] }), /Choose another category/);
 });

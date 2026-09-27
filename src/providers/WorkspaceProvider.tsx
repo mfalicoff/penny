@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState } from "react";
-import { dateKey, type Kind, type Transaction } from "../domain/ledger";
+import { dateKey, type Kind, type Recurring, type Transaction } from "../domain/ledger";
+
+export type EntryFormState = { entry?: Transaction; rule?: Recurring };
 
 // Shared only because navigation must preserve filters and unfinished entry drafts.
 function useWorkspaceState() {
@@ -7,7 +9,7 @@ function useWorkspaceState() {
   const [day, setDay] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | Kind>("all");
   const [search, setSearch] = useState("");
-  const [form, setForm] = useState<{ entry?: Transaction; } | null>(null);
+  const [form, setForm] = useState<EntryFormState | null>(null);
   return { month, setMonth, day, setDay, filter, setFilter, search, setSearch, form, setForm };
 }
 

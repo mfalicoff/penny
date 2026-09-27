@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { emptyLedger } from "../src/domain/ledger.ts";
-import { buildEntry, type EntryDraft } from "../src/features/entries/entryDraft.ts";
+import { buildEntry, buildSchedule, type EntryDraft } from "../src/features/entries/entryDraft.ts";
 
 const draft: EntryDraft = { kind: "expense", title: " Dinner ", amount: "10.01", date: "2026-01-31", categoryId: "food", note: " shared ", split: "equal", shareInput: "3", frequency: "monthly", receipt: { id: "receipt", name: "Bill", mime: "image/png", uri: "receipt" } };
 const categories = emptyLedger().categories;
@@ -36,4 +36,23 @@ test("income always records the full amount and omits expense receipts", () => {
 test("invalid dates, empty titles, zero amounts and category-kind mismatches are rejected", () => {
   for (const changes of [{ date: "2026-02-30" }, { title: " " }, { amount: "0" }, { categoryId: "salary" }])
     assert.throws(() => buildEntry({ ...draft, ...changes }, categories));
+});
+
+
+test("schedule drafts preserve month-end anchors unless the next date changes", () => {
+  const original = { ...buildEntry(draft, categories).recurring!, active: false };
+  const edited = buildSchedule({ ...draft, date: original.nextDate, amount: "30.00", title: "Updated" }, categories, original);
+  assert.equal(edited.anchorDay, 31);
+  assert.equal(edited.nextDate, "2026-02-28");
+  assert.equal(edited.date, "2026-01-31");
+  assert.equal(edited.total, 3000);
+  assert.equal(edited.share, 1000);
+  assert.equal(edited.active, false);
+  assert.equal(edited.id, original.id);
+  assert.equal("receipt" in edited, false);
+  const moved = buildSchedule({ ...draft, date: "2026-03-15", frequency: "weekly" }, categories, original);
+  assert.equal(moved.anchorDay, 15);
+  assert.equal(moved.frequency, "weekly");
+  assert.throws(() => buildSchedule({ ...draft, frequency: "none" }, categories, original), /Choose a repeat/);
+  assert.throws(() => buildSchedule({ ...draft, date: "2026-02-30" }, categories, original), /valid date/);
 });
