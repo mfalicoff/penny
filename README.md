@@ -84,6 +84,34 @@ Proxy the entire hostname to `penny:3001` (or the host's mapped port). The Docke
 
 After creating your account, set `ALLOW_REGISTRATION=false` and run `docker compose up -d` to disable additional signups. Accounts are separate; sharing a login across your own devices syncs that account's data.
 
+### Automated container builds
+
+The **Build container image** workflow (`.github/workflows/docker-image.yml`) runs on pull requests to `main`, pushes to `main`, version tags such as `v1.2.3`, and manual runs from the Actions tab. Lint, type checks, and tests must pass before it builds the image.
+
+It builds both **linux/amd64** and **linux/arm64** from the root Dockerfile. Pull requests build without publishing. Pushes and manual runs publish to `ghcr.io/<owner>/<repository>` using the built-in `GITHUB_TOKEN`; no registry password or Docker Hub account is required. Owner/repository names are lowercased automatically.
+
+Image tags:
+
+- `latest` and `main` for builds on `main`.
+- `v1.2.3` for a matching Git tag (version tags do not move `latest`).
+- `sha-<full-commit-sha>` for identifying the source commit.
+- The branch name for manual runs on other branches.
+
+To deploy a published image, replace the `build:` block in `compose.yaml` with your image name:
+
+```yaml
+    image: ghcr.io/<owner>/<repository>:latest
+```
+
+Keep the existing environment variables, ports, and data volume, then run:
+
+```sh
+docker compose pull
+docker compose up -d
+```
+
+For a private GHCR package, authenticate the homelab to GHCR with a token allowed to read that package. Repository/organization policies must permit the workflow to write packages. This workflow builds and publishes images; it does not deploy to your server.
+
 ### Backups
 
 Back up the `penny-data` volume. Stop the container during a filesystem backup so SQLite's database and WAL files are consistent; then restart it. Restore the full volume with the service stopped. Alternatively, use SQLite's online backup API. Receipt bytes, password hashes, sessions, and ledgers are all in the database. Keep backups private.
