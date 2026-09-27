@@ -1,0 +1,9 @@
+node_modules
+.expo
+.git
+dist
+data
+.env
+.env.*
+*.log
+tests

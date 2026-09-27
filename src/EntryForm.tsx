@@ -1,0 +1,540 @@
+import React, { useState } from "react";
+import { Image, Platform, Pressable, Text, View } from "react-native";
+import * as DocumentPicker from "expo-document-picker";
+import * as ImagePicker from "expo-image-picker";
+import { Button, C, Field, Icon, Sheet, s } from "./ui";
+import {
+  cents,
+  dateKey,
+  nextOccurrence,
+  parseDate,
+  personalShare,
+  uid,
+  validDate,
+  type Category,
+  type Frequency,
+  type Kind,
+  type Receipt,
+  type Recurring,
+  type Transaction,
+} from "./model";
+import { saveReceipt } from "./storage";
+import { ReceiptPreview } from "./ReceiptPreview";
+
+export function EntryForm({
+  categories,
+  entry,
+  currency,
+  onClose,
+  onSave,
+  onDelete,
+  demo = false,
+}: {
+  demo?: boolean;
+  categories: Category[];
+  entry?: Transaction;
+  currency: string;
+  onClose: () => void;
+  onSave: (entry: Transaction, rule?: Recurring) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
+}) {
+  const [kind, setKind] = useState<Kind>(entry?.kind ?? "expense");
+  const [title, setTitle] = useState(entry?.title ?? "");
+  const [amount, setAmount] = useState(
+    entry ? (entry.total / 100).toFixed(2) : "",
+  );
+  const [date, setDate] = useState(entry?.date ?? dateKey());
+  const [categoryId, setCategory] = useState(entry?.categoryId ?? "food");
+  const [note, setNote] = useState(entry?.note ?? "");
+  const [split, setSplit] = useState<"full" | "equal" | "amount" | "percent">(
+    entry && entry.share !== entry.total ? "amount" : "full",
+  );
+  const [shareInput, setShareInput] = useState(
+    entry ? (entry.share / 100).toFixed(2) : "2",
+  );
+  const [frequency, setFrequency] = useState<Frequency | "none">("none");
+  const [viewingReceipt, setViewingReceipt] = useState<Receipt>();
+  const [receipt, setReceipt] = useState<Receipt | undefined>(entry?.receipt);
+  const [attachment, setAttachment] = useState<{
+    uri: string;
+    name: string;
+    mime: string;
+  }>();
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  let preview = "—";
+  try {
+    preview = new Intl.NumberFormat("en-CA", {
+      style: "currency",
+      currency,
+    }).format(
+      personalShare(
+        cents(amount),
+        kind === "income" ? "full" : split,
+        shareInput,
+      ) / 100,
+    );
+  } catch {}
+  const switchKind = (value: Kind) => {
+    setKind(value);
+    setCategory(categories.find((c) => c.kind === value)?.id ?? "");
+    setSplit("full");
+  };
+  function attach(uri: string, name: string, mime: string, size?: number) {
+    if (size && size > 10 * 1024 * 1024)
+      throw new Error("Choose a receipt smaller than 10 MB.");
+    if (!mime.startsWith("image/") && mime !== "application/pdf")
+      throw new Error("Choose a photo or PDF receipt.");
+    setAttachment({ uri, name, mime });
+    setReceipt(undefined);
+    setError("");
+  }
+  async function pickFile() {
+    if (demo) {
+      setError("Sign in to attach receipts to your own entries.");
+      return;
+    }
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ["image/*", "application/pdf"],
+        copyToCacheDirectory: true,
+        base64: true,
+      });
+      if (!result.canceled) {
+        const a = result.assets[0];
+        attach(
+          a.uri,
+          a.name,
+          a.mimeType ||
+            (/\.pdf$/i.test(a.name) ? "application/pdf" : "image/jpeg"),
+          a.size,
+        );
+      }
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "Could not attach this receipt.",
+      );
+    }
+  }
+  async function pickPhoto() {
+    if (demo) {
+      setError("Sign in to attach receipts to your own entries.");
+      return;
+    }
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        quality: 0.85,
+      });
+      if (!result.canceled) {
+        const a = result.assets[0];
+        attach(
+          a.uri,
+          a.fileName ?? "Receipt.jpg",
+          a.mimeType ?? "image/jpeg",
+          a.fileSize,
+        );
+      }
+    } catch {
+      setError("Could not open your photos. Please try the file picker.");
+    }
+  }
+  async function submit() {
+    if (saving) return;
+    try {
+      const total = cents(amount);
+      if (!total) throw new Error("Enter an amount greater than zero.");
+      if (!validDate(date))
+        throw new Error(
+          "Use a valid date between 2000 and 2100, in YYYY-MM-DD format.",
+        );
+      if (!title.trim()) throw new Error("Add a name for this entry.");
+      if (!categories.some((c) => c.id === categoryId && c.kind === kind))
+        throw new Error("Choose a category.");
+      const share = personalShare(
+        total,
+        kind === "income" ? "full" : split,
+        shareInput,
+      );
+      setSaving(true);
+      setError("");
+      const savedReceipt = attachment ? await saveReceipt(attachment) : receipt;
+      const transaction: Transaction = {
+        id: entry?.id ?? uid(),
+        kind,
+        title: title.trim(),
+        total,
+        share,
+        date,
+        categoryId,
+        note: note.trim(),
+        receipt: kind === "expense" ? savedReceipt : undefined,
+        recurringId: entry?.recurringId,
+      };
+      let recurring: Recurring | undefined;
+      if (!entry && frequency !== "none") {
+        const { receipt: _, recurringId: __, ...base } = transaction;
+        recurring = {
+          ...base,
+          id: uid(),
+          active: true,
+          frequency,
+          nextDate: nextOccurrence(date, frequency, parseDate(date).getDate()),
+          anchorDay: parseDate(date).getDate(),
+        };
+        transaction.recurringId = recurring.id;
+      }
+      await onSave(transaction, recurring);
+      onClose();
+    } catch (e) {
+      setError(
+        e instanceof Error
+          ? e.message
+          : "Could not save. Your entry is still here; please try again.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+  if (viewingReceipt)
+    return (
+      <Sheet
+        visible
+        title={viewingReceipt.name}
+        wide
+        onClose={() => setViewingReceipt(undefined)}
+      >
+        <ReceiptPreview receipt={viewingReceipt} />
+        <Button
+          title="Back to entry"
+          tone="quiet"
+          onPress={() => setViewingReceipt(undefined)}
+        />
+      </Sheet>
+    );
+  return (
+    <Sheet
+      visible
+      title={entry ? "Edit entry" : "A little update."}
+      onClose={() => {
+        if (!saving) onClose();
+      }}
+      footer={
+        <>
+          {error ? (
+            <Text accessibilityRole="alert" style={s.error}>
+              {error}
+            </Text>
+          ) : null}
+          <Button
+            title={saving ? "Saving…" : entry ? "Save changes" : `Add ${kind}`}
+            icon="checkmark"
+            disabled={saving}
+            onPress={submit}
+          />
+        </>
+      }
+    >
+      <View
+        style={{ gap: 22, opacity: saving ? 0.6 : 1 }}
+        pointerEvents={saving ? "none" : "auto"}
+      >
+        <View
+          style={[
+            s.row,
+            { backgroundColor: C.bg, padding: 5, borderRadius: 13 },
+          ]}
+        >
+          {(["expense", "income"] as Kind[]).map((k) => (
+            <Pressable
+              key={k}
+              accessibilityRole="button"
+              accessibilityState={{ selected: kind === k }}
+              onPress={() => switchKind(k)}
+              style={{
+                flex: 1,
+                padding: 12,
+                alignItems: "center",
+                borderRadius: 9,
+                backgroundColor: kind === k ? "#fff" : "transparent",
+              }}
+            >
+              <Text
+                style={{
+                  color: kind === k ? C.ink : C.muted,
+                  fontWeight: "600",
+                }}
+              >
+                {k === "expense" ? "↗  Expense" : "↙  Income"}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+        <Field
+          label={`Amount (${currency})`}
+          placeholder="0.00"
+          keyboardType="decimal-pad"
+          value={amount}
+          onChangeText={setAmount}
+          style={{
+            fontSize: 36,
+            height: 76,
+            fontWeight: "500",
+            letterSpacing: -1,
+          }}
+          autoFocus={!entry && Platform.OS === "web"}
+        />
+        <Field
+          label={
+            kind === "expense" ? "What was it for?" : "Where did it come from?"
+          }
+          placeholder={
+            kind === "expense"
+              ? "Coffee, groceries, a good evening…"
+              : "Salary, a project, a gift…"
+          }
+          value={title}
+          onChangeText={setTitle}
+          maxLength={100}
+        />
+        <View style={{ gap: 10 }}>
+          <Text style={s.label}>Category</Text>
+          <View style={[s.row, { flexWrap: "wrap", gap: 8 }]}>
+            {categories
+              .filter((c) => c.kind === kind)
+              .map((c) => (
+                <Pressable
+                  key={c.id}
+                  accessibilityRole="button"
+                  accessibilityLabel={c.name}
+                  accessibilityState={{ selected: categoryId === c.id }}
+                  onPress={() => setCategory(c.id)}
+                  style={[s.chip, categoryId === c.id && s.chipActive]}
+                >
+                  <Icon name={c.icon} size={17} color={c.color} />
+                  <Text style={{ color: C.ink, fontSize: 12 }}>{c.name}</Text>
+                </Pressable>
+              ))}
+          </View>
+        </View>
+        <Field
+          label="Date (YYYY-MM-DD)"
+          value={date}
+          onChangeText={setDate}
+          placeholder="YYYY-MM-DD"
+          maxLength={10}
+        />
+        {kind === "expense" && (
+          <View
+            style={{
+              gap: 12,
+              borderTopWidth: 1,
+              borderColor: C.line,
+              paddingTop: 20,
+            }}
+          >
+            <View style={s.between}>
+              <View style={s.row}>
+                <Icon name="people-outline" size={18} />
+                <Text style={s.label}>Your part of the receipt</Text>
+              </View>
+              <Text style={{ color: C.accent, fontWeight: "600" }}>
+                {preview}
+              </Text>
+            </View>
+            <View style={[s.row, { gap: 6, flexWrap: "wrap" }]}>
+              {(
+                [
+                  ["full", "All mine"],
+                  ["equal", "Split equally"],
+                  ["amount", "My amount"],
+                  ["percent", "Percentage"],
+                ] as const
+              ).map(([mode, label]) => (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: split === mode }}
+                  key={mode}
+                  style={[s.chip, split === mode && s.chipActive]}
+                  onPress={() => {
+                    setSplit(mode);
+                    setShareInput(
+                      mode === "equal" ? "2" : mode === "percent" ? "50" : "",
+                    );
+                  }}
+                >
+                  <Text style={{ fontSize: 12, color: C.ink }}>{label}</Text>
+                </Pressable>
+              ))}
+            </View>
+            {split !== "full" && (
+              <>
+                <Field
+                  label={
+                    split === "equal"
+                      ? "Number of people (including you)"
+                      : split === "amount"
+                        ? `Your amount (${currency})`
+                        : "Your percentage (%)"
+                  }
+                  value={shareInput}
+                  onChangeText={setShareInput}
+                  keyboardType="decimal-pad"
+                />
+                <Text style={s.muted}>
+                  Only your share counts toward your spending.
+                </Text>
+              </>
+            )}
+          </View>
+        )}
+        {kind === "expense" && (
+          <View style={{ gap: 10 }}>
+            <Text style={s.label}>Receipt</Text>
+            {receipt || attachment ? (
+              <View
+                style={[
+                  s.card,
+                  { padding: 14, gap: 10, backgroundColor: C.bg },
+                ]}
+              >
+                <View style={s.row}>
+                  <Icon name="document-attach-outline" color={C.accent} />
+                  <Text
+                    numberOfLines={1}
+                    style={{ flex: 1, color: C.ink, fontSize: 13 }}
+                  >
+                    {attachment?.name ?? receipt?.name}
+                  </Text>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Remove receipt"
+                    onPress={() => {
+                      setReceipt(undefined);
+                      setAttachment(undefined);
+                    }}
+                  >
+                    <Icon name="close-circle-outline" />
+                  </Pressable>
+                </View>
+                {attachment?.mime.startsWith("image/") && (
+                  <Image
+                    source={{ uri: attachment.uri }}
+                    style={{ width: "100%", height: 160, borderRadius: 8 }}
+                    resizeMode="contain"
+                  />
+                )}
+                {receipt && (
+                  <Button
+                    title="View receipt"
+                    tone="quiet"
+                    onPress={() => setViewingReceipt(receipt)}
+                  />
+                )}
+              </View>
+            ) : (
+              <>
+                <View style={s.row}>
+                  <Button
+                    title="Upload photo"
+                    icon="image-outline"
+                    tone="quiet"
+                    onPress={pickPhoto}
+                    style={{ flex: 1 }}
+                  />
+                  <Button
+                    title="Choose file"
+                    icon="attach-outline"
+                    tone="quiet"
+                    onPress={pickFile}
+                    style={{ flex: 1 }}
+                  />
+                </View>
+                <Text style={s.muted}>
+                  Photos or PDFs, up to 10 MB. Saved with this expense.
+                </Text>
+              </>
+            )}
+          </View>
+        )}
+        {!entry && (
+          <View style={{ gap: 10 }}>
+            <Text style={s.label}>Repeat</Text>
+            <View style={[s.row, { gap: 6, flexWrap: "wrap" }]}>
+              {(["none", "weekly", "monthly", "yearly"] as const).map((f) => (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: frequency === f }}
+                  key={f}
+                  style={[s.chip, frequency === f && s.chipActive]}
+                  onPress={() => setFrequency(f)}
+                >
+                  <Text style={{ fontSize: 12, color: C.ink }}>
+                    {f === "none"
+                      ? "Just once"
+                      : f[0].toUpperCase() + f.slice(1)}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+            {frequency !== "none" && (
+              <Text style={s.muted}>
+                Due entries are added automatically when you open the app.
+                Receipts apply to this entry only.
+              </Text>
+            )}
+          </View>
+        )}
+        {entry?.recurringId && (
+          <Text style={s.muted}>
+            Changes apply to this occurrence. Manage future entries in
+            Recurring.
+          </Text>
+        )}
+        <Field
+          label="Note (optional)"
+          placeholder="Anything you’d like to remember"
+          value={note}
+          onChangeText={setNote}
+          multiline
+          maxLength={1000}
+        />
+        {entry &&
+          (confirmDelete ? (
+            <View style={{ gap: 10 }}>
+              <Text style={s.muted}>
+                Delete this entry? This cannot be undone.
+              </Text>
+              <Button
+                title="Delete this entry"
+                tone="danger"
+                onPress={async () => {
+                  setSaving(true);
+                  try {
+                    await onDelete(entry.id);
+                    onClose();
+                  } catch {
+                    setError("Could not delete this entry. Please try again.");
+                  } finally {
+                    setSaving(false);
+                  }
+                }}
+              />
+              <Button
+                title="Keep entry"
+                tone="quiet"
+                onPress={() => setConfirmDelete(false)}
+              />
+            </View>
+          ) : (
+            <Button
+              title="Delete entry"
+              tone="danger"
+              onPress={() => setConfirmDelete(true)}
+            />
+          ))}
+      </View>
+    </Sheet>
+  );
+}

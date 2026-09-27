@@ -39,3 +39,12 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Server data and deployment secrets
+data/
+.env
+.env.*
+!.env.example
+
+# Generated PDF.js assets
+public/pdf/

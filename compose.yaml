@@ -1,0 +1,18 @@
+services:
+  penny:
+    build:
+      context: .
+      args:
+        EXPO_PUBLIC_API_URL: ""
+    ports:
+      - "${PORT:-3001}:3001"
+    environment:
+      NODE_ENV: production
+      CORS_ORIGINS: "${CORS_ORIGINS:-http://localhost:3001}"
+      COOKIE_SECURE: "${COOKIE_SECURE:-false}"
+      ALLOW_REGISTRATION: "${ALLOW_REGISTRATION:-true}"
+    volumes:
+      - penny-data:/data
+    restart: unless-stopped
+volumes:
+  penny-data:
