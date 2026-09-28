@@ -16,11 +16,13 @@ type EntryListProps = {
   compact: boolean;
   money: (value: number) => string;
   setForm: (form: EntryFormState) => void;
+  totalCount?: number;
+  periodLabel?: string;
 };
 
 export function EntryList({
   day, filter, search, setFilter, setSearch,
-  visibleEntries, grouped, ledger, compact, money, setForm,
+  visibleEntries, grouped, ledger, compact, money, setForm, totalCount, periodLabel,
 }: EntryListProps) {
 
   return (
@@ -41,7 +43,7 @@ export function EntryList({
             }}
           >
             {" "}
-            {visibleEntries.length}
+            {totalCount ?? visibleEntries.length}
           </Text>
         </Text>
         <View
@@ -49,6 +51,7 @@ export function EntryList({
             s.row,
             {
               gap: 3,
+              flexWrap: "wrap",
               backgroundColor: C.bg,
               padding: 4,
               borderRadius: 9,
@@ -63,6 +66,8 @@ export function EntryList({
               onPress={() => setFilter(f)}
               style={{
                 paddingVertical: 7,
+                minHeight: 44,
+                justifyContent: "center",
                 paddingHorizontal: compact ? 7 : 12,
                 backgroundColor:
                   filter === f ? "#fff" : "transparent",
@@ -106,6 +111,7 @@ export function EntryList({
                     weekday: "long",
                     month: "short",
                     day: "numeric",
+                    ...(periodLabel ? { year: "numeric" as const } : {}),
                   })
                   .toUpperCase()}
             </Text>
@@ -240,16 +246,16 @@ export function EntryList({
           >
             {search || day || filter !== "all"
               ? "No entries found."
-              : "Your next little moment starts here."}
+              : periodLabel ? `No recorded entries for ${periodLabel}.` : "Your next little moment starts here."}
           </Text>
           <Text style={[s.muted, { textAlign: "center" }]}>
             {search || day || filter !== "all"
-              ? "Try a different search, day, or filter."
-              : "Add income, an expense, or an investment. We’ll take it from there."}
+              ? periodLabel ? "Try a different search, period, or filter." : "Try a different search, day, or filter."
+              : periodLabel ? "Choose another period or add an entry." : "Add income, an expense, or an investment. We’ll take it from there."}
           </Text>
           {!search && !day && filter === "all" && (
             <Button
-              title="Add your first entry"
+              title={periodLabel ? "Add entry" : "Add your first entry"}
               icon="add"
               onPress={() => setForm({})}
             />

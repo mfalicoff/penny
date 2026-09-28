@@ -9,9 +9,10 @@ import { useLedger } from "../providers/LedgerProvider";
 import { useWorkspace } from "../providers/WorkspaceProvider";
 import { Button, C, Icon, IconButton, s } from "../shared/ui";
 import { useResponsive } from "../shared/useResponsive";
-type Tab = "Overview" | "Recurring" | "Categories" | "Accounts";
+type Tab = "Overview" | "Transactions" | "Recurring" | "Categories" | "Accounts";
 const navigation: { tab: Tab; icon: string; }[] = [
   { tab: "Overview", icon: "grid-outline" },
+  { tab: "Transactions", icon: "list-outline" },
   { tab: "Recurring", icon: "repeat-outline" },
   { tab: "Categories", icon: "pricetags-outline" },
   { tab: "Accounts", icon: "wallet-outline" },
@@ -22,8 +23,8 @@ export function AppShell() {
   const { setForm } = useWorkspace();
   const [settings, setSettings] = React.useState(false);
   const pathname = usePathname();
-  const tab: Tab = pathname === "/accounts" ? "Accounts" : pathname === "/recurring" ? "Recurring" : pathname === "/categories" ? "Categories" : "Overview";
-  const setTab = (value: Tab) => router.navigate(({ Overview: "/", Recurring: "/recurring", Categories: "/categories", Accounts: "/accounts" } as const)[value]);
+  const tab: Tab = pathname === "/transactions" ? "Transactions" : pathname === "/accounts" ? "Accounts" : pathname === "/recurring" ? "Recurring" : pathname === "/categories" ? "Categories" : "Overview";
+  const setTab = (value: Tab) => router.navigate(({ Overview: "/", Transactions: "/transactions", Recurring: "/recurring", Categories: "/categories", Accounts: "/accounts" } as const)[value]);
   const nav = (mobile = false) => (
     <View style={mobile ? a.mobileNav : { gap: 8 }}>
       {navigation.map((item) => (
@@ -181,6 +182,8 @@ export function AppShell() {
                 <Text style={a.eyebrow}>
                   {tab === "Overview"
                     ? "A LITTLE MORE CLARITY"
+                    : tab === "Transactions"
+                      ? "EVERY ENTRY, IN VIEW"
                     : tab === "Recurring"
                       ? "SET IT. REMEMBER LESS."
                       : "A PLACE FOR EVERYTHING"}
@@ -188,6 +191,8 @@ export function AppShell() {
                 <Text style={[a.pageTitle, compact && { fontSize: 28 }]}>
                   {tab === "Overview"
                     ? "Your money, at a glance."
+                    : tab === "Transactions"
+                      ? "Your transactions."
                     : tab === "Recurring"
                       ? "On repeat."
                       : tab === "Accounts" ? "Your accounts." : "Keep it organized."}
@@ -195,6 +200,8 @@ export function AppShell() {
                 <Text style={s.muted}>
                   {tab === "Overview"
                     ? "The everyday ins and outs, all in one place."
+                    : tab === "Transactions"
+                      ? "Browse your income, expenses, and investments by month or year."
                     : tab === "Recurring"
                       ? "Your regular expenses, income, and investments, taken care of."
                       : tab === "Accounts" ? "Bank, card, or cash. Give every entry a home." : "Categories that make sense for your everyday."}

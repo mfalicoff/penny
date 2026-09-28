@@ -5,9 +5,10 @@ type SummaryCardsProps = {
   summary: { income: number; expense: number; investment: number };
   compact: boolean;
   money: (value: number) => string;
+  period?: "month" | "year";
 };
 
-export function SummaryCards({ summary, compact, money }: SummaryCardsProps) {
+export function SummaryCards({ summary, compact, money, period = "month" }: SummaryCardsProps) {
 
   return (
     <View
@@ -47,7 +48,7 @@ export function SummaryCards({ summary, compact, money }: SummaryCardsProps) {
           icon: "wallet-outline",
           color: C.ink,
           bg: "#E9EEE6",
-          hint: "This month, after expenses and investing",
+          hint: `This ${period}, after expenses and investing`,
         },
       ].map((stat, i) => (
         <View

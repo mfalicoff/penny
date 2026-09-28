@@ -10,7 +10,12 @@ function useWorkspaceState() {
   const [filter, setFilter] = useState<"all" | Kind>("all");
   const [search, setSearch] = useState("");
   const [form, setForm] = useState<EntryFormState | null>(null);
-  return { month, setMonth, day, setDay, filter, setFilter, search, setSearch, form, setForm };
+  const [transactionFilters, setTransactionFilters] = useState<{
+    month: string; period: "month" | "year"; filter: "all" | Kind; search: string; page: number;
+  }>({
+    month: dateKey().slice(0, 7), period: "month", filter: "all", search: "", page: 0,
+  });
+  return { month, setMonth, day, setDay, filter, setFilter, search, setSearch, form, setForm, transactionFilters, setTransactionFilters };
 }
 
 const WorkspaceContext = createContext<ReturnType<typeof useWorkspaceState> | null>(null);

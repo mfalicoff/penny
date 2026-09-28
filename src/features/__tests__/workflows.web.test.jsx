@@ -14,6 +14,7 @@ import CategoriesScreen from "../categories/CategoriesScreen";
 import { EntryDialog } from "../entries/EntryDialog";
 import { EntryForm } from "../entries/EntryForm";
 import OverviewScreen from "../overview/OverviewScreen";
+import TransactionsScreen from "../transactions/TransactionsScreen";
 import RecurringScreen from "../recurring/RecurringScreen";
 import { ReceiptPreview } from "../receipts/ReceiptPreview";
 import { SettingsSheet } from "../settings/SettingsSheet";
@@ -45,6 +46,49 @@ beforeEach(() => {
 function Workspace({ children }) {
   return <LedgerProvider><WorkspaceProvider>{children}</WorkspaceProvider></LedgerProvider>;
 }
+
+test.each([
+  ["desktop", { compact: false, desktop: true }],
+  ["phone", { compact: true, desktop: false }],
+])("%s transactions supports direct period selection, yearly totals, filters and editing", async (_name, responsive) => {
+  mockResponsive = responsive;
+  ledger.recurring = [];
+  const base = { total: 10000, share: 5000, categoryId: "food", note: "", kind: "expense" };
+  ledger.transactions = [
+    { ...base, id: "feb", title: "February lunch", date: "2024-02-29" },
+    { ...base, id: "jan", title: "January salary", date: "2024-01-01", kind: "income", categoryId: "salary", share: 50000 },
+    { ...base, id: "dec", title: "December investment", date: "2024-12-31", kind: "investment", categoryId: "investments", share: 10000 },
+    { ...base, id: "outside", title: "Other year", date: "2023-12-31" },
+  ];
+  const body = await renderWeb(<Workspace><TransactionsScreen /><EntryDialog /></Workspace>);
+  await click(body.querySelector('[aria-label^="Choose month:"]'));
+  await fill("Year", "1999");
+  expect(button("Apply period").getAttribute("aria-disabled")).toBe("true");
+  await fill("Year", "2024");
+  await click(button("Feb"));
+  await click(button("Apply period"));
+  expect(body.textContent).toContain("February lunch");
+  expect(body.textContent).not.toContain("January salary");
+  await click(button("By year"));
+  expect(body.textContent).toContain("January salary");
+  expect(body.textContent).toContain("December investment");
+  expect(body.textContent).not.toContain("Other year");
+  expect(body.textContent).toContain("Cash remaining$350.00");
+  await click(button("Investments"));
+  expect(body.textContent).not.toContain("February lunch");
+  expect(body.textContent).toContain("Cash remaining$350.00");
+  await click(body.querySelector('[aria-label^="Edit December investment,"]'));
+  expect(body.textContent).toContain("Edit entry");
+  await click(button("Close dialog"));
+  await click(button("All"));
+  await fill("Search entries", "missing");
+  expect(body.textContent).toContain("No entries found.");
+  await fill("Search entries", "");
+  await click(button("Next year"));
+  expect(body.textContent).toContain("No recorded entries for 2025.");
+  await click(button("Previous year"));
+  expect(body.textContent).toContain("February lunch");
+});
 
 test.each([
   ["desktop", { compact: false, desktop: true }],

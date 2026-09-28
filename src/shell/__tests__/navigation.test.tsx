@@ -6,6 +6,7 @@ import Accounts from "../../app/accounts";
 import Categories from "../../app/categories";
 import Overview from "../../app/index";
 import Recurring from "../../app/recurring";
+import Transactions from "../../app/transactions";
 import * as api from "../../data/api";
 import { emptyLedger } from "../../domain/ledger";
 
@@ -23,9 +24,14 @@ beforeEach(() => {
 afterEach(() => jest.useRealTimers());
 
 test("real routes render their feature and navigation preserves overview filters and session", async () => {
-  await renderRouter({ _layout: RootLayout, index: Overview, recurring: Recurring, categories: Categories, accounts: Accounts });
+  await renderRouter({ _layout: RootLayout, index: Overview, recurring: Recurring, categories: Categories, accounts: Accounts, transactions: Transactions });
   expect(screen.getByText(/Your entries/)).toBeOnTheScreen();
   await fireEvent.changeText(screen.getByLabelText("Search entries"), "coffee");
+  await fireEvent.press(screen.getByRole("button", { name: "Transactions" }));
+  expect(screen.getByText("Your transactions.")).toBeOnTheScreen();
+  expect(screen.getByLabelText("Search entries")).toHaveDisplayValue("");
+  await fireEvent.press(screen.getByRole("button", { name: "By year" }));
+  await fireEvent.changeText(screen.getByLabelText("Search entries"), "salary");
   await fireEvent.press(screen.getByRole("button", { name: "Recurring" }));
   expect(screen.getByText("Rent, payday, the usuals.")).toBeOnTheScreen();
   expect(screen.queryByLabelText("Search entries")).toBeNull();
@@ -35,6 +41,9 @@ test("real routes render their feature and navigation preserves overview filters
   expect(screen.getByText("Where your money lives.")).toBeOnTheScreen();
   await fireEvent.press(screen.getByRole("button", { name: "Overview" }));
   expect(screen.getByLabelText("Search entries")).toHaveDisplayValue("coffee");
+  await fireEvent.press(screen.getByRole("button", { name: "Transactions" }));
+  expect(screen.getByLabelText("Search entries")).toHaveDisplayValue("salary");
+  expect(screen.getByRole("button", { name: "By year", selected: true })).toBeOnTheScreen();
   expect(api.whoAmI).toHaveBeenCalledTimes(1);
   expect(api.fetchLedger).toHaveBeenCalledTimes(1);
 });
