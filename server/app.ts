@@ -7,6 +7,8 @@ import { createAuthService } from "./application/auth.ts";
 import { createLedgerService } from "./application/ledger.ts";
 import { createReceiptService } from "./application/receipts.ts";
 import { createHouseholdService } from "./infrastructure/households.ts";
+import { createPushService } from "./application/push.ts";
+import { createPushRepository } from "./infrastructure/push.ts";
 import { openDatabase } from "./infrastructure/database.ts";
 import { createRepositories } from "./infrastructure/repositories.ts";
 import { security } from "./infrastructure/security.ts";
@@ -14,6 +16,7 @@ import { createAuthRoutes } from "./http/auth.ts";
 import { createLedgerRoutes } from "./http/ledger.ts";
 import { createReceiptRoutes } from "./http/receipts.ts";
 import { createHouseholdRoutes } from "./http/households.ts";
+import { createPushRoutes } from "./http/push.ts";
 import { apiPolicy, errorHandler, requireSession } from "./http/middleware.ts";
 
 export interface AppOptions {
@@ -38,6 +41,7 @@ export function createApp({
     const auth = createAuthService({ ...repositories, security, allowRegistration });
     const ledger = createLedgerService(repositories.ledgers, repositories.receipts);
     const households = createHouseholdService(db, security);
+    const push = createPushService(createPushRepository(db));
     const receipts = createReceiptService(repositories.receipts, security, households.canReadReceipt);
     const authRoutes = createAuthRoutes(auth, secureCookies, oidc ? createOidcService(oidc, createOidcProvider(oidc), auth, security) : undefined);
     const app = express();
@@ -54,9 +58,10 @@ export function createApp({
     app.use("/api/ledger", createLedgerRoutes(ledger));
     app.use("/api/receipts", createReceiptRoutes(receipts));
     app.use("/api/households", createHouseholdRoutes(households));
+    app.use("/api/push", createPushRoutes(push));
     app.use("/api", (_req, res) => res.status(404).json({ error: "API route not found." }));
     app.use(errorHandler);
-    return { app, db, households };
+    return { app, db, households, push };
   } catch (error) {
     db.close();
     throw error;
