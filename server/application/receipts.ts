@@ -2,7 +2,7 @@ import { decodeReceipt, receiptUploadSchema } from "../validation/receipts.ts";
 import { ApplicationError } from "./errors.ts";
 import type { ReceiptRepository, Security } from "./ports.ts";
 
-export function createReceiptService(receipts: ReceiptRepository, security: Pick<Security, "randomId">) {
+export function createReceiptService(receipts: ReceiptRepository, security: Pick<Security, "randomId">, canReadShared?: (userId: string, receiptId: string) => boolean) {
   return {
     upload(userId: string, body: unknown) {
       const input = receiptUploadSchema.safeParse(body);
@@ -15,7 +15,7 @@ export function createReceiptService(receipts: ReceiptRepository, security: Pick
       return { id, name, mime };
     },
     read(userId: string, receiptId: string) {
-      const receipt = receipts.read(userId, receiptId);
+      const receipt = receipts.read(userId, receiptId) ?? (canReadShared?.(userId, receiptId) ? receipts.readShared?.(receiptId) : undefined);
       if (!receipt) throw new ApplicationError("not_found", "Receipt not found.");
       return receipt;
     },
