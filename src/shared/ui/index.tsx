@@ -139,6 +139,7 @@ export function Sheet({
   wide = false,
   footer,
   headerActions,
+  overlay,
 }: {
   visible: boolean;
   title: string;
@@ -147,6 +148,7 @@ export function Sheet({
   wide?: boolean;
   footer?: React.ReactNode;
   headerActions?: React.ReactNode;
+  overlay?: React.ReactNode;
 }) {
   const { width } = useWindowDimensions();
   const narrowHeader = width < 360;
@@ -163,7 +165,7 @@ export function Sheet({
         style={s.backdrop}
       >
         <View
-          accessibilityViewIsModal
+          accessibilityViewIsModal={!overlay}
           style={[s.sheet, { maxWidth: wide ? 780 : 520 }]}
         >
           <View style={[s.sheetHeader, hasHeaderActions ? {
@@ -198,6 +200,9 @@ export function Sheet({
             </View>
           )}
         </View>
+        {overlay && <View accessibilityViewIsModal style={[StyleSheet.absoluteFill, { zIndex: 30, elevation: 30, pointerEvents: "box-none" }]}>
+          {overlay}
+        </View>}
       </KeyboardAvoidingView>
     </Modal>
   );

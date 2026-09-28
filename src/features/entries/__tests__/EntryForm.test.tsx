@@ -74,3 +74,15 @@ test("expense form assigns an existing trip and allows removing the assignment",
   await fireEvent.press(screen.getByRole("button", { name: "Add expense" }));
   expect(onSave).toHaveBeenLastCalledWith(expect.objectContaining({ tripId: undefined }), undefined);
 });
+
+test("category options scroll outside the entry form's scroll view", async () => {
+  await render(<EntryForm categories={emptyLedger().categories} currency="CAD" onClose={jest.fn()} onSave={jest.fn()} onDelete={jest.fn()} />);
+  await fireEvent.press(screen.getByRole("button", { name: "Category: Food & drinks" }));
+  let parent = screen.getByRole("button", { name: "Other" }).parent;
+  let scrollViews = 0;
+  while (parent) {
+    if (parent.type === "RCTScrollView") scrollViews++;
+    parent = parent.parent;
+  }
+  expect(scrollViews).toBe(1);
+});
