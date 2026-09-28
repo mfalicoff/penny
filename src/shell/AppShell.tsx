@@ -9,6 +9,7 @@ import { useLedger } from "../providers/LedgerProvider";
 import { useWorkspace } from "../providers/WorkspaceProvider";
 import { Button, C, Icon, IconButton, s } from "../shared/ui";
 import { useResponsive } from "../shared/useResponsive";
+import { SaveToast } from "./SaveToast";
 type Tab = "Overview" | "Transactions" | "Trips" | "Recurring" | "Categories" | "Accounts";
 const navigation: { tab: Tab; icon: string; }[] = [
   { tab: "Overview", icon: "grid-outline" },
@@ -20,7 +21,7 @@ const navigation: { tab: Tab; icon: string; }[] = [
 ];
 export function AppShell() {
   const { compact, desktop } = useResponsive();
-  const { email, demo, leaveDemo, syncing, syncError, sync, toast } = useLedger();
+  const { email, demo, leaveDemo, syncing, syncError, sync, toast, toastKind, toastSequence } = useLedger();
   const { setForm } = useWorkspace();
   const [settings, setSettings] = React.useState(false);
   const pathname = usePathname();
@@ -276,10 +277,7 @@ export function AppShell() {
         </View>
       </View>
       {toast !== "" && (
-        <View accessibilityRole="alert" style={a.toast}>
-          <Icon name="checkmark-circle" color="#B4D7B6" size={18} />
-          <Text style={{ color: "white", fontSize: 13 }}>{toast}</Text>
-        </View>
+        <SaveToast key={toastSequence} message={toast} kind={toastKind} />
       )}
       <EntryDialog />
       <SettingsSheet visible={settings} onClose={() => setSettings(false)} />
@@ -379,18 +377,5 @@ const a = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 11,
-  },
-  toast: {
-    position: "absolute",
-    bottom: 86,
-    alignSelf: "center",
-    backgroundColor: C.ink,
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderRadius: 14,
-    flexDirection: "row",
-    gap: 9,
-    alignItems: "center",
-    boxShadow: "0px 8px 30px #24362A20",
   },
 });

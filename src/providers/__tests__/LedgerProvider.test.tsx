@@ -67,6 +67,27 @@ test("failed saves preserve the displayed ledger, report errors, and permit retr
   await unmount();
 });
 
+test("entry feedback is attached only to a successful typed commit", async () => {
+  const { result, unmount } = await renderHook(useLedger, { wrapper: LedgerProvider });
+  await act(() => result.current.openDemo());
+  await act(async () => {
+    await result.current.commit((ledger) => ledger, "Expense added", "expense");
+  });
+  expect(result.current.toastKind).toBe("expense");
+  expect(result.current.toastSequence).toBe(1);
+  await act(async () => {
+    await expect(result.current.commit(() => { throw new Error("Offline"); }, "Income added", "income")).rejects.toThrow("Offline");
+  });
+  expect(result.current.toastKind).toBe("expense");
+  expect(result.current.toastSequence).toBe(1);
+  await act(async () => {
+    await result.current.commit((ledger) => ledger, "Changes saved");
+  });
+  expect(result.current.toastKind).toBeNull();
+  expect(result.current.toastSequence).toBe(2);
+  await unmount();
+});
+
 test("in-flight sync blocks overlapping saves and stale responses cannot replace a new session", async () => {
   jest.mocked(api.whoAmI).mockResolvedValue("test@example.com");
   const pending = deferred<api.Snapshot>();
