@@ -11,6 +11,20 @@
       "android": {
         "buildType": "apk"
       }
+    },
+    "ipa": {
+      "distribution": "store",
+      "environment": "production",
+      "credentialsSource": "remote",
+      "autoIncrement": true,
+      "ios": {
+        "simulator": false
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {}
     }
   }
 }

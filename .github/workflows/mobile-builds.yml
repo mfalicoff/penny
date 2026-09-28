@@ -1,0 +1,203 @@
+name: Build Android APK and iOS IPA for TestFlight
+
+on:
+  push:
+    tags: ['v*.*.*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Serialize runs so each platform's remote build counter advances predictably.
+concurrency:
+  group: mobile-builds
+  cancel-in-progress: false
+
+jobs:
+  checks:
+    name: Check application
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Check EAS setup
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "::error::Add the EXPO_TOKEN repository secret. See docs/android-apk.md and docs/ios-ipa.md."
+            exit 1
+          fi
+          if ! jq -e '.expo.extra.eas.projectId | strings | select(length > 0)' app.json > /dev/null; then
+            echo "::error::Run npx eas-cli@latest init and commit the updated app.json."
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Check types
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+  apk:
+    name: Build signed APK
+    needs: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build on EAS with the existing signing key
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          npx --yes eas-cli@latest build \
+            --platform android \
+            --profile apk \
+            --non-interactive \
+            --freeze-credentials \
+            --wait \
+            --json > "$RUNNER_TEMP/eas-build.json"
+
+      - name: Download the completed APK
+        run: |
+          apk_url=$(jq -er '
+            if length == 1 and .[0].status == "FINISHED" and .[0].platform == "ANDROID"
+            then .[0].artifacts.buildUrl | strings | select(startswith("https://"))
+            else error("EAS did not return a completed Android build") end
+          ' "$RUNNER_TEMP/eas-build.json")
+          mkdir -p artifacts
+          curl --fail --location --retry 3 --proto '=https' --proto-redir '=https' \
+            "$apk_url" --output artifacts/penny.apk
+          # AABs and error pages must not be published as installable APKs.
+          unzip -l artifacts/penny.apk AndroidManifest.xml
+          (cd artifacts && sha256sum penny.apk > penny.apk.sha256)
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: penny-apk-${{ github.run_number }}-${{ github.run_attempt }}
+          path: artifacts/penny.apk*
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
+
+  ipa:
+    name: Build IPA and submit to TestFlight
+    needs: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check TestFlight setup
+        env:
+          ASC_APP_ID: ${{ vars.ASC_APP_ID }}
+        run: |
+          if [[ ! "$ASC_APP_ID" =~ ^[0-9]+$ ]]; then
+            echo "::error::Set the ASC_APP_ID repository variable to Penny's App Store Connect Apple ID. See docs/ios-ipa.md."
+            exit 1
+          fi
+          if ! jq -e '.build.ipa.distribution == "store"' eas.json > /dev/null; then
+            echo "::error::The ipa EAS profile must use store distribution for TestFlight."
+            exit 1
+          fi
+
+      - name: Build on EAS with the existing signing credentials
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          npx --yes eas-cli@latest build \
+            --platform ios \
+            --profile ipa \
+            --non-interactive \
+            --freeze-credentials \
+            --wait \
+            --json > "$RUNNER_TEMP/eas-build.json"
+
+      - name: Download the completed IPA
+        run: |
+          ipa_url=$(jq -er '
+            if length == 1 and .[0].status == "FINISHED" and .[0].platform == "IOS"
+            then .[0].artifacts.buildUrl | strings | select(startswith("https://"))
+            else error("EAS did not return a completed iOS build") end
+          ' "$RUNNER_TEMP/eas-build.json")
+          mkdir -p artifacts
+          curl --fail --location --retry 3 --proto '=https' --proto-redir '=https' \
+            "$ipa_url" --output artifacts/penny.ipa
+          unzip -tqq artifacts/penny.ipa
+          unzip -Z -1 artifacts/penny.ipa | grep -Eq '^Payload/[^/]+\.app/Info\.plist$'
+          (cd artifacts && sha256sum penny.ipa > penny.ipa.sha256)
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: penny-ipa-${{ github.run_number }}-${{ github.run_attempt }}
+          path: artifacts/penny.ipa*
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
+
+      - name: Configure App Store Connect app ID
+        env:
+          ASC_APP_ID: ${{ vars.ASC_APP_ID }}
+        run: |
+          jq --arg app_id "$ASC_APP_ID" \
+            '.submit.production.ios.ascAppId = $app_id' eas.json > "$RUNNER_TEMP/eas-submit.json"
+          mv "$RUNNER_TEMP/eas-submit.json" eas.json
+
+      - name: Submit this IPA to TestFlight
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          build_id=$(jq -er '
+            if length == 1 and .[0].status == "FINISHED" and .[0].platform == "IOS"
+            then .[0].id | strings | select(length > 0)
+            else error("EAS did not return a completed iOS build") end
+          ' "$RUNNER_TEMP/eas-build.json")
+          npx --yes eas-cli@latest submit \
+            --platform ios \
+            --profile production \
+            --id "$build_id" \
+            --non-interactive \
+            --wait

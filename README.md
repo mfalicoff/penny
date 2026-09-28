@@ -79,7 +79,7 @@ npm run ios
 npm run android
 ```
 
-Standalone mobile builds should use an HTTPS API endpoint. Development against plain HTTP depends on platform transport policies. The [Android APK workflow](docs/android-apk.md) builds signed, installable APKs through EAS and reuses the same signing key for updates. Complete its one-time Expo account and credentials setup before running it. Apple signing and app store distribution are not configured.
+Standalone mobile builds should use an HTTPS API endpoint. Development against plain HTTP depends on platform transport policies. The [mobile build workflow](.github/workflows/mobile-builds.yml) runs checks and builds a signed [Android APK](docs/android-apk.md) and [iOS IPA](docs/ios-ipa.md) through EAS on version tags or manual dispatch. It uploads the store signed IPA to TestFlight automatically. Complete the platform signing and App Store Connect setup in those guides before running it.
 
 ## OpenID Connect (OIDC) sign-in
 

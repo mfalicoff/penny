@@ -1,6 +1,6 @@
 # Android APK builds
 
-The **Build Android APK** GitHub Actions workflow runs manually from the Actions tab or when a version tag such as `v1.2.3` is pushed. It runs lint, type checks and tests, waits for an EAS cloud build, and uploads `penny.apk` plus its SHA-256 checksum as a GitHub Actions artifact retained for 30 days. Download and unzip that artifact to install the APK on a phone. Builds use your Expo account's EAS build quota.
+The **Build Android APK and iOS IPA for TestFlight** GitHub Actions workflow runs manually from the Actions tab or when a version tag such as `v1.2.3` is pushed. It runs lint, type checks and tests, then starts Android and iOS EAS cloud builds. The Android job uploads `penny.apk` plus its SHA-256 checksum as a GitHub Actions artifact retained for 30 days. Download and unzip that artifact to install the APK on a phone. Builds use your Expo account's EAS build quota. See [iOS IPA builds](ios-ipa.md) for the Apple signing and TestFlight setup required by the other job.
 
 ## One-time setup
 
@@ -39,7 +39,7 @@ The **Build Android APK** GitHub Actions workflow runs manually from the Actions
 
 5. Create an [Expo access token](https://docs.expo.dev/accounts/programmatic-access/) for an account with access to this project. In GitHub, open **Settings → Secrets and variables → Actions** and add it as a repository secret named `EXPO_TOKEN`.
 
-6. Push the configuration, then open **Actions → Build Android APK → Run workflow**. Future version tags also trigger builds. Ordinary branch pushes and pull requests do not consume EAS builds.
+6. Complete the [iOS and TestFlight setup](ios-ipa.md) as well, then push the configuration and open **Actions → Build Android APK and iOS IPA for TestFlight → Run workflow**. Future version tags also trigger both builds. Ordinary branch pushes and pull requests do not consume EAS builds.
 
 ## Keeping APK updates compatible
 
