@@ -5,17 +5,17 @@ import { useWorkspace } from "../../providers/WorkspaceProvider";
 import { EntryForm } from "./EntryForm";
 import { useHouseholds } from "../../providers/HouseholdProvider";
 import { playSaveHaptic } from "./saveHaptic";
-import { router } from "expo-router";
 
 export function EntryDialog() {
-  const { ledger, demo, commit } = useLedger();
-  const { households } = useHouseholds();
+  const { ledger, demo, commit, email } = useLedger();
+  const { households, refresh } = useHouseholds();
   const { form, setForm, setMonth, setDay } = useWorkspace();
   if (!form) return null;
   return <EntryForm
     demo={demo}
     households={households}
-    onHousehold={(householdId) => { setForm(null); router.push(`/households/${householdId}?add=1`); }}
+    userEmail={email}
+    onHouseholdSaved={refresh}
     categories={ledger.categories}
     accounts={ledger.accounts}
     trips={ledger.trips}

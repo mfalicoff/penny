@@ -1,8 +1,10 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { emptyLedger } from "../../../domain/ledger";
+import { createExpense, getHousehold } from "../../../data/households";
 import { EntryForm } from "../EntryForm";
 
 jest.mock("../../../data/receipts", () => ({ saveReceipt: jest.fn() }));
+jest.mock("../../../data/households", () => ({ ...jest.requireActual("../../../data/households"), createExpense: jest.fn(), getHousehold: jest.fn() }));
 jest.mock("../../receipts/ReceiptPreview", () => ({ ReceiptPreview: () => null }));
 
 test("investment form saves a full recurring contribution without expense controls", async () => {
@@ -85,4 +87,25 @@ test("category options scroll outside the entry form's scroll view", async () =>
     parent = parent.parent;
   }
   expect(scrollViews).toBe(1);
+});
+
+test("the standard entry form keeps its draft when an Overview expense is assigned to a household", async () => {
+  const household = { id: "home", name: "Home", currency: "CAD", creatorId: "alice", createdAt: 1, memberCount: 2 };
+  const members = ["alice", "bob"].map((id) => ({ userId: id, email: `${id}@example.com`, joinedAt: 1 }));
+  jest.mocked(getHousehold).mockResolvedValue({ household, members });
+  jest.mocked(createExpense).mockResolvedValue({ expense: {} as never });
+  const onClose = jest.fn();
+  const onHouseholdSaved = jest.fn();
+  await render(<EntryForm categories={emptyLedger().categories} currency="CAD" households={[household]}
+    userEmail="alice@example.com" onClose={onClose} onHouseholdSaved={onHouseholdSaved} />);
+  await fireEvent.changeText(screen.getByLabelText("Amount (CAD)"), "60.00");
+  await fireEvent.changeText(screen.getByLabelText("What was it for?"), "Groceries");
+  await fireEvent.press(screen.getByRole("button", { name: "Expense for Home" }));
+  expect(await screen.findByText("Paid by")).toBeOnTheScreen();
+  expect(screen.getByLabelText("Amount (CAD)")).toHaveDisplayValue("60.00");
+  expect(screen.getByLabelText("What was it for?")).toHaveDisplayValue("Groceries");
+  await fireEvent.press(screen.getByRole("button", { name: "Add expense" }));
+  expect(createExpense).toHaveBeenCalledWith("home", expect.objectContaining({ title: "Groceries", totalCents: 6000, payerUserId: "alice", splitMode: "equal" }));
+  expect(onHouseholdSaved).toHaveBeenCalledTimes(1);
+  expect(onClose).toHaveBeenCalledTimes(1);
 });
