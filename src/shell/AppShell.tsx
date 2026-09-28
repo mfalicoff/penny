@@ -10,14 +10,14 @@ import { useWorkspace } from "../providers/WorkspaceProvider";
 import { Button, C, Icon, IconButton, s } from "../shared/ui";
 import { useResponsive } from "../shared/useResponsive";
 type Tab = "Overview" | "Transactions" | "Households" | "Trips" | "Recurring" | "Categories" | "Accounts";
-const navigation: { tab: Tab; icon: string; }[] = [
-  { tab: "Overview", icon: "grid-outline" },
-  { tab: "Transactions", icon: "list-outline" },
-  { tab: "Households", icon: "people-outline" },
-  { tab: "Trips", icon: "airplane-outline" },
-  { tab: "Recurring", icon: "repeat-outline" },
-  { tab: "Categories", icon: "pricetags-outline" },
-  { tab: "Accounts", icon: "wallet-outline" },
+const navigation: { tab: Tab; icon: string; mobileLabel: string }[] = [
+  { tab: "Overview", icon: "grid-outline", mobileLabel: "Home" },
+  { tab: "Transactions", icon: "list-outline", mobileLabel: "Entries" },
+  { tab: "Households", icon: "people-outline", mobileLabel: "Shared" },
+  { tab: "Trips", icon: "airplane-outline", mobileLabel: "Trips" },
+  { tab: "Recurring", icon: "repeat-outline", mobileLabel: "Repeat" },
+  { tab: "Categories", icon: "pricetags-outline", mobileLabel: "Tags" },
+  { tab: "Accounts", icon: "wallet-outline", mobileLabel: "Wallet" },
 ];
 export function AppShell() {
   const { compact, desktop } = useResponsive();
@@ -32,6 +32,7 @@ export function AppShell() {
       {navigation.map((item) => (
         <Pressable
           accessibilityRole="button"
+          accessibilityLabel={item.tab}
           accessibilityState={{ selected: tab === item.tab }}
           onPress={() => setTab(item.tab)}
           key={item.tab}
@@ -46,13 +47,14 @@ export function AppShell() {
             color={tab === item.tab ? C.ink : C.muted}
           />
           <Text
+            numberOfLines={1}
             style={{
               color: tab === item.tab ? C.ink : C.muted,
-              fontSize: mobile ? 10 : 13,
+              fontSize: mobile ? 9 : 13,
               fontWeight: tab === item.tab ? "600" : "400",
             }}
           >
-            {item.tab}
+            {mobile ? item.mobileLabel : item.tab}
           </Text>
           {!mobile && tab === item.tab && (
             <View

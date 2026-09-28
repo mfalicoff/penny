@@ -1,4 +1,5 @@
 import { mkdirSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import express from "express";
 import { oidcFromEnv } from "./infrastructure/oidc.ts";
@@ -38,7 +39,7 @@ async function runPushDelivery() {
 void runPushDelivery();
 const pushDeliveryTimer = setInterval(() => { void runPushDelivery(); }, 15_000);
 app.use(express.static(resolve("dist")));
-app.get("/{*path}", (_req, res) => res.sendFile(resolve("dist/index.html")));
+app.get("/{*path}", async (_req, res) => res.type("html").send(await readFile(resolve("dist/index.html"))));
 const port = Number(process.env.PORT || 3001);
 const server = app.listen(port, "0.0.0.0");
 server.on("listening", () =>

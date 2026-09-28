@@ -91,7 +91,7 @@ export default function HouseholdDetailScreen() {
     {error ? <Text accessibilityRole="alert" style={s.error}>{error}</Text> : null}
     {household && <>
       <View style={[s.card, { gap: 12 }]}><View style={[s.between, { flexWrap: "wrap" }]}>
-        <View style={{ gap: 4 }}><Text style={s.heading}>{household.name}</Text><Text style={s.muted}>{household.currency} · {members.filter((member) => !member.leftAt).length} active members</Text></View>
+        <View style={{ gap: 4 }}><Text style={s.heading}>{household.name}</Text><Text style={s.muted}>{household.currency} · {members.filter((member) => !member.leftAt).length} active {members.filter((member) => !member.leftAt).length === 1 ? "member" : "members"}</Text></View>
         <Button title="Add expense" icon="add" disabled={!myId} onPress={() => setForm("new")} />
       </View></View>
       <View style={[s.card, { gap: 15 }]}><View style={s.between}>
