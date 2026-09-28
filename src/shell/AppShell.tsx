@@ -1,7 +1,7 @@
 import { Slot, router, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { EntryDialog } from "../features/entries/EntryDialog";
 import { SettingsSheet } from "../features/settings/SettingsSheet";
@@ -25,6 +25,9 @@ export function AppShell() {
   const theme = useTheme();
   const a = makeStyles();
   const { compact, desktop } = useResponsive();
+  const { height } = useWindowDimensions();
+  const shortSidebar = height < 850;
+  const veryShortSidebar = height < 600;
   const { email, demo, leaveDemo, syncing, syncError, sync, toast, toastKind, toastSequence } = useLedger();
   const { setForm } = useWorkspace();
   const [settings, setSettings] = React.useState(false);
@@ -32,7 +35,7 @@ export function AppShell() {
   const tab: Tab = pathname === "/transactions" ? "Transactions" : pathname.startsWith("/households") ? "Households" : pathname.startsWith("/trips") ? "Trips" : pathname === "/accounts" ? "Accounts" : pathname === "/recurring" ? "Recurring" : pathname === "/categories" ? "Categories" : "Overview";
   const setTab = (value: Tab) => router.navigate(({ Overview: "/", Transactions: "/transactions", Households: "/households", Trips: "/trips", Recurring: "/recurring", Categories: "/categories", Accounts: "/accounts" } as const)[value]);
   const nav = (mobile = false) => (
-    <View style={mobile ? a.mobileNav : { gap: 8 }}>
+    <View style={mobile ? a.mobileNav : { gap: shortSidebar ? 4 : 8 }}>
       {navigation.map((item) => (
         <Pressable
           accessibilityRole="button"
@@ -42,6 +45,7 @@ export function AppShell() {
           key={item.tab}
           style={[
             mobile ? a.mobileNavItem : a.navItem,
+            !mobile && shortSidebar && { paddingVertical: veryShortSidebar ? 6 : 10 },
             tab === item.tab && { backgroundColor: C.pale },
           ]}
         >
@@ -81,7 +85,7 @@ export function AppShell() {
       <View style={{ flex: 1, flexDirection: "row" }}>
         {desktop && (
           <View style={a.sidebar}>
-            <View style={[s.row, { paddingHorizontal: 12, marginBottom: 52 }]}>
+            <View style={[s.row, { paddingHorizontal: 12, marginBottom: shortSidebar ? 22 : 52 }]}>
               <View style={a.logo}>
                 <Icon name="leaf-outline" color="white" size={22} />
               </View>
@@ -89,10 +93,10 @@ export function AppShell() {
                 penny<Text style={{ color: C.accent }}>.</Text>
               </Text>
             </View>
-            <Text style={a.navLabel}>YOUR EVERYDAY</Text>
+            {!veryShortSidebar && <Text style={a.navLabel}>YOUR EVERYDAY</Text>}
             {nav()}
             <View style={{ flex: 1 }} />
-            <View style={a.sideNote}>
+            {!shortSidebar && <View style={a.sideNote}>
               <Icon name="sunny-outline" color={C.green} size={27} />
               <Text
                 style={{
@@ -107,7 +111,7 @@ export function AppShell() {
               <Text style={[s.muted, { fontSize: 11, lineHeight: 18 }]}>
                 Make a little space to see where your money goes.
               </Text>
-            </View>
+            </View>}
             <Pressable
               accessibilityRole="button"
               onPress={() => setSettings(true)}
