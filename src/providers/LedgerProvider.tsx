@@ -2,7 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useRef, useSt
 import { AppState, Platform } from "react-native";
 import { ApiError, fetchLedger, mutateLedger, signOut, whoAmI } from "../data/api";
 import type { LedgerChange } from "../domain/commands";
-import { demoLedger, emptyLedger, materialize, type Ledger } from "../domain/ledger";
+import { demoLedger, emptyLedger, materialize, type Kind, type Ledger } from "../domain/ledger";
 import { PushRegistration, unregisterPushForLogout } from "./PushRegistration";
 
 function useLedgerSession() {
@@ -13,6 +13,8 @@ function useLedgerSession() {
   const [syncing, setSyncing] = useState(false);
   const [syncError, setSyncError] = useState("");
   const [toast, setToast] = useState("");
+  const [toastKind, setToastKind] = useState<Kind | null>(null);
+  const [toastSequence, setToastSequence] = useState(0);
   const [sessionKey, setSessionKey] = useState(0);
   const ledgerRef = useRef(ledger);
   const operation = useRef(false);
@@ -42,7 +44,7 @@ function useLedgerSession() {
     if (!toast) return;
     const timer = setTimeout(() => setToast(""), 3500);
     return () => clearTimeout(timer);
-  }, [toast]);
+  }, [toast, toastSequence]);
 
   const sync = useCallback(async () => {
     if (!email || demo || operation.current) return;
@@ -84,7 +86,7 @@ function useLedgerSession() {
     return () => { clearInterval(timer); listener.remove(); };
   }, [sync, email, demo]);
 
-  async function commit(change: LedgerChange, message: string) {
+  async function commit(change: LedgerChange, message: string, feedbackKind?: Kind) {
     if (operation.current) throw new Error("Sync is finishing. Please try again in a moment.");
     if (!email && !demo) throw new Error("Sign in before saving an entry.");
     const current = generation.current;
@@ -96,6 +98,8 @@ function useLedgerSession() {
       replaceLedger(next);
       setSyncError("");
       setToast(message);
+      setToastKind(feedbackKind ?? null);
+      setToastSequence((value) => value + 1);
     } catch (error) {
       if (current === generation.current) setSyncError(error instanceof Error ? error.message : "Could not save.");
       throw error;
@@ -118,6 +122,7 @@ function useLedgerSession() {
     setSyncing(false);
     setSyncError("");
     setToast("");
+    setToastKind(null);
   }
 
   async function logout() {
@@ -137,7 +142,7 @@ function useLedgerSession() {
   }
 
   return {
-    email, checking, demo, ledger, syncing, syncError, toast, sessionKey, sync, commit, logout,
+    email, checking, demo, ledger, syncing, syncError, toast, toastKind, toastSequence, sessionKey, sync, commit, logout,
     login: (address: string) => startSession(address, false),
     openDemo: () => startSession(null, true),
     leaveDemo: () => startSession(null, false),

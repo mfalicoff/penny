@@ -25,8 +25,8 @@ import { DateField } from "../../shared/ui/DateField";
 import { buildEntry, buildSchedule } from "./entryDraft";
 import { AccountForm } from "../accounts/AccountForm";
 import type { LedgerChange } from "../../domain/commands";
-import { EntryPillPicker } from "./EntryPillPicker";
 import type { Household } from "../../data/households";
+import { EntryPillMenu, EntryPillPicker, type PillMenuPosition, type PillOption } from "./EntryPillPicker";
 
 export function EntryForm({
   categories,
@@ -70,6 +70,7 @@ export function EntryForm({
   const [accountId, setAccountId] = useState(initial?.accountId);
   const [tripId, setTripId] = useState(entry?.tripId ?? initialTripId);
   const [openPicker, setOpenPicker] = useState<"category" | "trip" | "account" | null>(null);
+  const [menuPosition, setMenuPosition] = useState<PillMenuPosition | null>(null);
   const [addingAccount, setAddingAccount] = useState(false);
   const [note, setNote] = useState(initial?.note ?? "");
   const [split, setSplit] = useState<"full" | "equal" | "amount" | "percent">(
@@ -191,6 +192,25 @@ export function EntryForm({
       setSaving(false);
     }
   }
+  const categoryOptions: PillOption[] = categories.filter((c) => c.kind === kind).map((c) => ({ id: c.id, label: c.name, icon: c.icon, color: c.color }));
+  const tripOptions: PillOption[] = [{ id: "", label: "No trip" }, ...trips.map((trip) => ({ id: trip.id, label: trip.name, accessibilityLabel: `Assign to ${trip.name}` }))];
+  const accountOptions: PillOption[] = [{ id: "", label: "Unassigned" }, ...accounts.map((account) => ({
+    id: account.id, label: account.name, icon: accountTypeIcons[account.type], accessibilityLabel: `Use ${account.name}`,
+  }))];
+  const pickerOptions = openPicker === "category" ? categoryOptions : openPicker === "trip" ? tripOptions : accountOptions;
+  const pickerValue = openPicker === "category" ? categoryId : openPicker === "trip" ? tripId ?? "" : accountId ?? "";
+  const tripEmptyMessage = !trips.length ? "Create a trip in Trips to organize travel expenses." : undefined;
+  const accountFooter = commit ? { label: "Add account", onPress: () => { setOpenPicker(null); setAddingAccount(true); } } : undefined;
+  const togglePicker = (picker: "category" | "trip" | "account") => {
+    setMenuPosition(null);
+    setOpenPicker(openPicker === picker ? null : picker);
+  };
+  const selectPickerOption = (id: string) => {
+    if (openPicker === "category") setCategory(id);
+    if (openPicker === "trip") setTripId(id || undefined);
+    if (openPicker === "account") setAccountId(id || undefined);
+    setOpenPicker(null);
+  };
   if (addingAccount && commit) return <AccountForm commit={commit} onSaved={(account) => setAccountId(account.id)} onClose={() => setAddingAccount(false)} />;
   if (viewingReceipt)
     return (
@@ -212,24 +232,23 @@ export function EntryForm({
     <Sheet
       visible
       title={rule ? "Edit recurring entry" : entry ? "Edit entry" : "A little update."}
+      overlay={openPicker && <EntryPillMenu label={openPicker === "category" ? "Category" : openPicker === "trip" ? "Trip" : "Account"}
+        value={pickerValue} options={pickerOptions} position={menuPosition}
+        onClose={() => setOpenPicker(null)} onSelect={selectPickerOption}
+        emptyMessage={openPicker === "trip" ? tripEmptyMessage : undefined}
+        footerAction={openPicker === "account" ? accountFooter : undefined} />}
       headerActions={<>
         <DateField label={rule ? "Next occurrence" : "Date"} value={date} onChange={setDate} pill iconOnly />
         <EntryPillPicker label="Category" value={categoryId} iconOnly align="center"
-          options={categories.filter((c) => c.kind === kind).map((c) => ({ id: c.id, label: c.name, icon: c.icon, color: c.color }))}
-          open={openPicker === "category"} onToggle={() => setOpenPicker(openPicker === "category" ? null : "category")}
-          onSelect={(id) => { setCategory(id); setOpenPicker(null); }} />
+          options={categoryOptions} open={openPicker === "category"} onToggle={() => togglePicker("category")}
+          onPosition={setMenuPosition} />
         {kind === "expense" && !rule && <EntryPillPicker label="Trip" value={tripId ?? ""} iconOnly align="right"
-          options={[{ id: "", label: "No trip" }, ...trips.map((trip) => ({ id: trip.id, label: trip.name, accessibilityLabel: `Assign to ${trip.name}` }))]}
-          emptyMessage={!trips.length ? "Create a trip in Trips to organize travel expenses." : undefined}
-          open={openPicker === "trip"} onToggle={() => setOpenPicker(openPicker === "trip" ? null : "trip")}
-          onSelect={(id) => { setTripId(id || undefined); setOpenPicker(null); }} />}
+          options={tripOptions} emptyMessage={tripEmptyMessage}
+          open={openPicker === "trip"} onToggle={() => togglePicker("trip")}
+          onPosition={setMenuPosition} />}
         <EntryPillPicker label="Account" value={accountId ?? ""} iconOnly align="right"
-          options={[{ id: "", label: "Unassigned" }, ...accounts.map((account) => ({
-            id: account.id, label: account.name, icon: accountTypeIcons[account.type], accessibilityLabel: `Use ${account.name}`,
-          }))]}
-          open={openPicker === "account"} onToggle={() => setOpenPicker(openPicker === "account" ? null : "account")}
-          onSelect={(id) => { setAccountId(id || undefined); setOpenPicker(null); }}
-          footerAction={commit ? { label: "Add account", onPress: () => { setOpenPicker(null); setAddingAccount(true); } } : undefined} />
+          options={accountOptions} open={openPicker === "account"} onToggle={() => togglePicker("account")}
+          onPosition={setMenuPosition} hasFooterAction={Boolean(accountFooter)} />
       </>}
       onClose={() => {
         if (!saving) onClose();
@@ -251,10 +270,8 @@ export function EntryForm({
       }
     >
       <View
-        style={{ gap: 22, position: "relative", opacity: saving ? 0.6 : 1, pointerEvents: saving ? "none" : "auto" }}
+        style={{ gap: 22, opacity: saving ? 0.6 : 1, pointerEvents: saving ? "none" : "auto" }}
       >
-        {openPicker && <Pressable accessibilityRole="button" accessibilityLabel="Close selection"
-          onPress={() => setOpenPicker(null)} style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, zIndex: 1 }} />}
         <View
           style={[
             s.row,
@@ -274,7 +291,7 @@ export function EntryForm({
                 paddingHorizontal: 4,
                 alignItems: "center",
                 borderRadius: 9,
-                backgroundColor: kind === k ? "#fff" : "transparent",
+                backgroundColor: kind === k ? C.paper : "transparent",
               }}
             >
               <Text

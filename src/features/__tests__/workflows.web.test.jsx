@@ -8,6 +8,7 @@ import * as receipts from "../../data/receipts";
 import { demoLedger, emptyLedger } from "../../domain/ledger";
 import { LedgerProvider } from "../../providers/LedgerProvider";
 import { WorkspaceProvider } from "../../providers/WorkspaceProvider";
+import { C, getTheme, setTheme, ThemeProvider } from "../../shared/theme";
 import { Auth } from "../auth/AuthScreen";
 import AccountsScreen from "../accounts/AccountsScreen";
 import CategoriesScreen from "../categories/CategoriesScreen";
@@ -45,7 +46,7 @@ beforeEach(() => {
 });
 
 function Workspace({ children }) {
-  return <LedgerProvider><WorkspaceProvider>{children}</WorkspaceProvider></LedgerProvider>;
+  return <ThemeProvider><LedgerProvider><WorkspaceProvider>{children}</WorkspaceProvider></LedgerProvider></ThemeProvider>;
 }
 
 test.each([
@@ -212,6 +213,25 @@ test("settings changes the currency of an empty account", async () => {
   await click(button("USD"));
   expect(ledger.currency).toBe("USD");
   expect(body.textContent).toContain("Your personal space");
+});
+
+test("settings switches all four appearance palettes", async () => {
+  const body = await renderWeb(<Workspace><SettingsSheet visible onClose={jest.fn()} /></Workspace>);
+  try {
+    for (const [label, theme, background] of [
+      ["Dark", "dark", "#171D1B"],
+      ["AMOLED", "amoled", "#000000"],
+      ["Catppuccin", "catppuccin", "#1E1E2E"],
+      ["Light", "light", "#F8F8F4"],
+    ]) {
+      await click(body.querySelector(`[aria-label="${label} theme"]`));
+      expect(getTheme()).toBe(theme);
+      expect(C.bg).toBe(background);
+      expect(body.querySelector(`[aria-label="${label} theme"]`).getAttribute("aria-checked")).toBe("true");
+    }
+  } finally {
+    act(() => setTheme("light"));
+  }
 });
 
 test("auth handles errors, registration switching and a successful retry", async () => {

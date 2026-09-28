@@ -3,8 +3,9 @@ import { deleteEntry, saveEntry, saveSchedule } from "../../domain/commands";
 import { useLedger } from "../../providers/LedgerProvider";
 import { useWorkspace } from "../../providers/WorkspaceProvider";
 import { EntryForm } from "./EntryForm";
-import { router } from "expo-router";
 import { useHouseholds } from "../../providers/HouseholdProvider";
+import { playSaveHaptic } from "./saveHaptic";
+import { router } from "expo-router";
 
 export function EntryDialog() {
   const { ledger, demo, commit } = useLedger();
@@ -29,7 +30,8 @@ export function EntryDialog() {
         await commit(saveSchedule(recurring, form.rule), "Schedule updated");
         return;
       }
-      await commit(saveEntry(transaction, form.entry, recurring), form.entry ? "Changes saved" : `${kindLabels[transaction.kind]} added`);
+      await commit(saveEntry(transaction, form.entry, recurring), form.entry ? "Changes saved" : `${kindLabels[transaction.kind]} added`, form.entry ? undefined : transaction.kind);
+      if (!form.entry) playSaveHaptic();
       setMonth(transaction.date.slice(0, 7));
       setDay(null);
     }}

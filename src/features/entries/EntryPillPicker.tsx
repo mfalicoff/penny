@@ -1,10 +1,15 @@
-import { useEffect, useRef, useState } from "react";
-import { Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
+import { useEffect, useRef } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { C, Icon, s } from "../../shared/ui";
 
 export type PillOption = { id: string; label: string; icon?: string; color?: string; accessibilityLabel?: string };
+export type PillMenuPosition = { left: number; top: number; width: number };
 
-export function EntryPillPicker({ label, value, options, open, iconOnly = false, align = "left", onToggle, onSelect, emptyMessage, footerAction }: {
+function menuListHeight(count: number, emptyMessage: boolean, footerAction: boolean) {
+  return Math.min(footerAction ? 156 : 196, count * 44 + (emptyMessage ? 66 : 0));
+}
+
+export function EntryPillPicker({ label, value, options, open, iconOnly = false, align = "left", onToggle, onPosition, emptyMessage, hasFooterAction = false }: {
   label: string;
   value: string;
   options: PillOption[];
@@ -12,26 +17,30 @@ export function EntryPillPicker({ label, value, options, open, iconOnly = false,
   align?: "left" | "center" | "right";
   iconOnly?: boolean;
   onToggle: () => void;
-  onSelect: (id: string) => void;
+  onPosition: (position: PillMenuPosition) => void;
   emptyMessage?: string;
-  footerAction?: { label: string; onPress: () => void };
+  hasFooterAction?: boolean;
 }) {
   const { width, height } = useWindowDimensions();
   const anchor = useRef<View>(null);
-  const [above, setAbove] = useState(false);
-  const [menuLeft, setMenuLeft] = useState<number | null>(null);
   const triggerSize = iconOnly && width < 360 ? 30 : 34;
   const menuWidth = Math.min(iconOnly ? 230 : 250, width - (iconOnly ? 48 : 90));
+  const menuHeight = 49 + menuListHeight(options.length, Boolean(emptyMessage), hasFooterAction) + (hasFooterAction ? 44 : 0);
   useEffect(() => {
     if (open) anchor.current?.measureInWindow((x, y, triggerWidth, triggerHeight) => {
-      setAbove(height - y - triggerHeight < 260 && y > 260);
       const preferredLeft = align === "right" ? x + triggerWidth - menuWidth
         : align === "center" ? x + (triggerWidth - menuWidth) / 2 : x;
-      setMenuLeft(Math.max(16, Math.min(preferredLeft, width - menuWidth - 16)) - x);
+      const preferredTop = height - y - triggerHeight < menuHeight + 6 && y > menuHeight + 6
+        ? y - menuHeight - 6 : y + triggerHeight + 6;
+      onPosition({
+        left: Math.max(16, Math.min(preferredLeft, width - menuWidth - 16)),
+        top: Math.max(12, Math.min(preferredTop, height - menuHeight - 12)),
+        width: menuWidth,
+      });
     });
-  }, [open, height, width, align, menuWidth]);
+  }, [open, height, width, align, menuWidth, menuHeight, onPosition]);
   const selected = options.find((option) => option.id === value);
-  return <View ref={anchor} style={{ position: "relative", zIndex: open ? 3 : 0 }}>
+  return <View ref={anchor}>
     <Pressable accessibilityRole="button" accessibilityLabel={`${label}: ${selected?.label ?? "Choose"}`}
       accessibilityState={{ expanded: open }} onPress={onToggle}
       style={[s.chip, iconOnly ? {
@@ -47,17 +56,31 @@ export function EntryPillPicker({ label, value, options, open, iconOnly = false,
         <Icon name={open ? "chevron-up" : "chevron-down"} size={14} color={C.muted} />
       </>}
     </Pressable>
-    {open && <View style={{
-      position: "absolute", ...(above ? { bottom: iconOnly ? triggerSize + 6 : 50 } : { top: iconOnly ? triggerSize + 6 : 50 }),
-      ...(menuLeft === null ? align === "right" ? { right: 0 }
-        : align === "center" ? { left: -Math.round((menuWidth - triggerSize) / 2) } : { left: 0 }
-        : { left: menuLeft }),
-      width: menuWidth, maxHeight: 250, backgroundColor: C.paper,
+  </View>;
+}
+
+export function EntryPillMenu({ label, value, options, position, onClose, onSelect, emptyMessage, footerAction }: {
+  label: string;
+  value: string;
+  options: PillOption[];
+  position: PillMenuPosition | null;
+  onClose: () => void;
+  onSelect: (id: string) => void;
+  emptyMessage?: string;
+  footerAction?: { label: string; onPress: () => void };
+}) {
+  const { width } = useWindowDimensions();
+  const listHeight = menuListHeight(options.length, Boolean(emptyMessage), Boolean(footerAction));
+  return <View style={[StyleSheet.absoluteFill, { pointerEvents: "box-none" }]}>
+    <Pressable accessibilityRole="button" accessibilityLabel="Close selection" onPress={onClose} style={StyleSheet.absoluteFill} />
+    <View style={{
+      position: "absolute", left: position?.left ?? 16, top: position?.top ?? 70,
+      width: position?.width ?? Math.min(230, width - 48), backgroundColor: C.paper,
       borderWidth: 1, borderColor: C.line, borderRadius: 16,
-      padding: 8, elevation: 12, boxShadow: "0px 12px 32px #1C302B20",
+      padding: 8, elevation: 12, boxShadow: `0px 12px 32px ${C.shadow}`,
     }}>
       <Text style={[s.label, { paddingHorizontal: 10, paddingVertical: 7 }]}>Choose {label.toLowerCase()}</Text>
-      <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled" style={{ maxHeight: 196 }}>
+      <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled" style={{ height: listHeight }}>
         {options.map((option) => <Pressable key={option.id} accessibilityRole="button"
           accessibilityLabel={option.accessibilityLabel ?? option.label}
           accessibilityState={{ selected: value === option.id }}
@@ -74,6 +97,6 @@ export function EntryPillPicker({ label, value, options, open, iconOnly = false,
         <Icon name="add" color={C.accent} size={18} />
         <Text style={{ color: C.ink, fontSize: 13 }}>{footerAction.label}</Text>
       </Pressable>}
-    </View>}
+    </View>
   </View>;
 }

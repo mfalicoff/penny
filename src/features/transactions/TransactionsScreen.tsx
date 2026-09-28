@@ -7,6 +7,7 @@ import { ledgerWithHouseholds } from "../households/projection";
 import { useWorkspace } from "../../providers/WorkspaceProvider";
 import { currencyFormat } from "../../shared/format";
 import { Button, Field, Icon, Sheet, s } from "../../shared/ui";
+import { useTheme } from "../../shared/theme";
 import { useResponsive } from "../../shared/useResponsive";
 import { EntryList } from "../overview/components/EntryList";
 import { SummaryCards } from "../overview/components/SummaryCards";
@@ -18,6 +19,7 @@ const months = Array.from({ length: 12 }, (_, index) => ({
 }));
 
 export default function TransactionsScreen() {
+  useTheme();
   const { ledger: privateLedger } = useLedger();
   const { projection, households, loadProjection } = useHouseholds();
   const ledger = useMemo(() => ledgerWithHouseholds(privateLedger, projection, households), [privateLedger, projection, households]);

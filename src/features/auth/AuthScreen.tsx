@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { signIn } from "../../data/api";
 import { Button, C, Field, Icon, s } from "../../shared/ui";
+import { useTheme } from "../../shared/theme";
 export function Auth({
   onReady,
   onDemo,
@@ -17,6 +18,7 @@ export function Auth({
   onReady: (email: string) => void;
   onDemo: () => void;
 }) {
+  useTheme();
   const [register, setRegister] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

@@ -92,7 +92,7 @@ export function MonthCalendar({
                   <Text
                     style={{
                       color: selected
-                        ? "#fff"
+                        ? C.onAccent
                         : today
                           ? C.accent
                           : C.ink,
@@ -126,7 +126,7 @@ export function MonthCalendar({
                           width: 4,
                           height: 4,
                           borderRadius: 4,
-                          backgroundColor: "#79A185",
+                          backgroundColor: C.green,
                         }}
                       />
                     )}

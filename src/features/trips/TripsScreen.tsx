@@ -5,11 +5,13 @@ import { parseDate, type Trip } from "../../domain/ledger";
 import { useLedger } from "../../providers/LedgerProvider";
 import { currencyFormat } from "../../shared/format";
 import { Button, C, Icon, s } from "../../shared/ui";
+import { useTheme } from "../../shared/theme";
 import { useResponsive } from "../../shared/useResponsive";
 import { TripForm } from "./TripForm";
 import { tripSummaries } from "./selectors";
 
 export default function TripsScreen() {
+  useTheme();
   const { ledger, commit } = useLedger();
   const { compact } = useResponsive();
   const [editing, setEditing] = useState<Trip | null | undefined>(undefined);

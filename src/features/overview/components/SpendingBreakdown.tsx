@@ -12,6 +12,7 @@ type SpendingBreakdownProps = {
 export function SpendingBreakdown({
   spending, summary, desktop, money,
 }: SpendingBreakdownProps) {
+  const a = makeStyles();
 
   return (
     <View
@@ -110,7 +111,7 @@ export function SpendingBreakdown({
   );
 }
 
-const a = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   emptyIcon: {
     width: 60,
     height: 60,

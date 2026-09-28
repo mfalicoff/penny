@@ -7,8 +7,10 @@ import { EntryDialog } from "../features/entries/EntryDialog";
 import { SettingsSheet } from "../features/settings/SettingsSheet";
 import { useLedger } from "../providers/LedgerProvider";
 import { useWorkspace } from "../providers/WorkspaceProvider";
+import { useTheme } from "../shared/theme";
 import { Button, C, Icon, IconButton, s } from "../shared/ui";
 import { useResponsive } from "../shared/useResponsive";
+import { SaveToast } from "./SaveToast";
 type Tab = "Overview" | "Transactions" | "Households" | "Trips" | "Recurring" | "Categories" | "Accounts";
 const navigation: { tab: Tab; icon: string; mobileLabel: string }[] = [
   { tab: "Overview", icon: "grid-outline", mobileLabel: "Home" },
@@ -20,8 +22,10 @@ const navigation: { tab: Tab; icon: string; mobileLabel: string }[] = [
   { tab: "Accounts", icon: "wallet-outline", mobileLabel: "Wallet" },
 ];
 export function AppShell() {
+  const theme = useTheme();
+  const a = makeStyles();
   const { compact, desktop } = useResponsive();
-  const { email, demo, leaveDemo, syncing, syncError, sync, toast } = useLedger();
+  const { email, demo, leaveDemo, syncing, syncError, sync, toast, toastKind, toastSequence } = useLedger();
   const { setForm } = useWorkspace();
   const [settings, setSettings] = React.useState(false);
   const pathname = usePathname();
@@ -73,7 +77,7 @@ export function AppShell() {
   );
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.bg }}>
-      <StatusBar style="dark" />
+      <StatusBar style={theme === "light" ? "dark" : "light"} />
       <View style={{ flex: 1, flexDirection: "row" }}>
         {desktop && (
           <View style={a.sidebar}>
@@ -237,10 +241,10 @@ export function AppShell() {
               <View
                 style={[
                   s.between,
-                  { backgroundColor: "#FFF1ED", borderRadius: 12, padding: 14 },
+                  { backgroundColor: C.dangerBg, borderRadius: 12, padding: 14 },
                 ]}
               >
-                <Text style={{ color: "#B45343", fontSize: 12, flex: 1 }}>
+                <Text style={{ color: C.danger, fontSize: 12, flex: 1 }}>
                   {syncError}
                 </Text>
                 <Button title="Retry" tone="quiet" onPress={sync} />
@@ -276,7 +280,7 @@ export function AppShell() {
                         : "Synced with your server"}
                 </Text>
               </View>
-              <Text style={{ color: "#A3ADA4", fontSize: 10 }}>
+              <Text style={{ color: C.subtle, fontSize: 10 }}>
                 One little entry at a time.
               </Text>
             </View>
@@ -285,10 +289,7 @@ export function AppShell() {
         </View>
       </View>
       {toast !== "" && (
-        <View accessibilityRole="alert" style={a.toast}>
-          <Icon name="checkmark-circle" color="#B4D7B6" size={18} />
-          <Text style={{ color: "white", fontSize: 13 }}>{toast}</Text>
-        </View>
+        <SaveToast key={toastSequence} message={toast} kind={toastKind} />
       )}
       <EntryDialog />
       <SettingsSheet visible={settings} onClose={() => setSettings(false)} />
@@ -296,10 +297,10 @@ export function AppShell() {
   );
 }
 
-const a = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   sidebar: {
     width: 224,
-    backgroundColor: "#FEFFFC",
+    backgroundColor: C.chrome,
     borderRightWidth: 1,
     borderColor: C.line,
     padding: 23,
@@ -318,7 +319,7 @@ const a = StyleSheet.create({
     fontSize: 9,
     letterSpacing: 1.6,
     fontWeight: "600",
-    color: "#A4AEA6",
+    color: C.subtle,
     marginBottom: 18,
     marginLeft: 12,
   },
@@ -331,7 +332,7 @@ const a = StyleSheet.create({
     borderRadius: 12,
   },
   sideNote: {
-    backgroundColor: "#F5F7F0",
+    backgroundColor: C.soft,
     borderRadius: 16,
     padding: 18,
     gap: 12,
@@ -340,7 +341,7 @@ const a = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 12,
-    backgroundColor: "#EAF0E5",
+    backgroundColor: C.avatar,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -352,12 +353,12 @@ const a = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderColor: C.line,
-    backgroundColor: "#FEFFFC",
+    backgroundColor: C.chrome,
   },
   mobileNav: {
     flexDirection: "row",
     justifyContent: "space-around",
-    backgroundColor: "#FEFFFC",
+    backgroundColor: C.chrome,
     padding: 10,
     borderTopWidth: 1,
     borderColor: C.line,
@@ -380,26 +381,13 @@ const a = StyleSheet.create({
   eyebrow: {
     fontSize: 9,
     fontWeight: "600",
-    color: "#8A988A",
+    color: C.subtle,
     letterSpacing: 1.8,
   },
   demoBanner: {
-    backgroundColor: "#FBEEE6",
+    backgroundColor: C.orangeBg,
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 11,
-  },
-  toast: {
-    position: "absolute",
-    bottom: 86,
-    alignSelf: "center",
-    backgroundColor: C.ink,
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderRadius: 14,
-    flexDirection: "row",
-    gap: 9,
-    alignItems: "center",
-    boxShadow: "0px 8px 30px #24362A20",
   },
 });

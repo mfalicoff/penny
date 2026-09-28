@@ -37,3 +37,15 @@ test.each([
   expect(document.body.textContent).not.toContain("Cannot reach your server.");
   expect(document.body.querySelector('[role="alert"]')).toBeNull();
 });
+
+test("new expense and income toasts use distinct feedback colors", async () => {
+  mockResponsive = { compact: true, desktop: false };
+  mockSession = { ...mockSession, toast: "Expense added", toastKind: "expense", toastSequence: 1 };
+  await renderWeb(<AppShell />);
+  const expenseColor = document.body.querySelector('[role="alert"]').style.backgroundColor;
+  mockSession = { ...mockSession, toast: "Income added", toastKind: "income", toastSequence: 2 };
+  await renderWeb(<AppShell />);
+  const incomeColor = document.body.querySelector('[role="alert"]').style.backgroundColor;
+  expect(expenseColor).toBe("rgb(251, 233, 230)");
+  expect(incomeColor).toBe("rgb(232, 244, 234)");
+});

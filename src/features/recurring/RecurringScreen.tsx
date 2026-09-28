@@ -6,9 +6,12 @@ import { useLedger } from "../../providers/LedgerProvider";
 import { useWorkspace } from "../../providers/WorkspaceProvider";
 import { currencyFormat } from "../../shared/format";
 import { Button, C, Icon, IconButton, Sheet, Tag, s } from "../../shared/ui";
+import { useTheme } from "../../shared/theme";
 import { useResponsive } from "../../shared/useResponsive";
 
 export default function RecurringScreen() {
+  useTheme();
+  const a = makeStyles();
   const { ledger } = useLedger();
   const { compact } = useResponsive();
   const { setForm } = useWorkspace();
@@ -170,7 +173,7 @@ export default function RecurringScreen() {
   </View>);
 }
 
-const a = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   emptyIcon: {
     width: 60,
     height: 60,

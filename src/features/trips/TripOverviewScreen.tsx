@@ -6,11 +6,13 @@ import { useLedger } from "../../providers/LedgerProvider";
 import { useWorkspace } from "../../providers/WorkspaceProvider";
 import { currencyFormat } from "../../shared/format";
 import { Button, C, Icon, s } from "../../shared/ui";
+import { useTheme } from "../../shared/theme";
 import { useResponsive } from "../../shared/useResponsive";
 import { TripForm } from "./TripForm";
 import { tripOverview } from "./selectors";
 
 export default function TripOverviewScreen() {
+  useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { ledger, commit } = useLedger();
   const { setForm } = useWorkspace();

@@ -26,6 +26,7 @@ export function EntryList({
   day, filter, search, setFilter, setSearch,
   visibleEntries, grouped, ledger, compact, money, setForm, totalCount, periodLabel,
 }: EntryListProps) {
+  const a = makeStyles();
 
   return (
     <View style={[s.card, { padding: compact ? 16 : 24 }]}>
@@ -72,7 +73,7 @@ export function EntryList({
                 justifyContent: "center",
                 paddingHorizontal: compact ? 7 : 12,
                 backgroundColor:
-                  filter === f ? "#fff" : "transparent",
+                  filter === f ? C.paper : "transparent",
                 borderRadius: 6,
               }}
             >
@@ -221,7 +222,7 @@ export function EntryList({
                   <Icon
                     name="chevron-forward"
                     size={13}
-                    color="#BBC3BD"
+                    color={C.muted}
                   />
                 </Pressable>
               );
@@ -273,7 +274,7 @@ export function EntryList({
   );
 }
 
-const a = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   emptyIcon: {
     width: 60,
     height: 60,
@@ -295,10 +296,10 @@ const a = StyleSheet.create({
     gap: 13,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderColor: "#F1F3EF",
+    borderColor: C.line,
   },
   dateLabel: {
-    color: "#9AA39B",
+    color: C.subtle,
     fontSize: 9,
     letterSpacing: 1.2,
     marginTop: 26,

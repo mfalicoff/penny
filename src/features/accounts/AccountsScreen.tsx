@@ -3,10 +3,12 @@ import { Pressable, Text, View } from "react-native";
 import { accountTypeIcons, accountTypeLabels, type PaymentAccount } from "../../domain/ledger";
 import { useLedger } from "../../providers/LedgerProvider";
 import { Button, C, Icon, s } from "../../shared/ui";
+import { useTheme } from "../../shared/theme";
 import { useResponsive } from "../../shared/useResponsive";
 import { AccountForm } from "./AccountForm";
 
 export default function AccountsScreen() {
+  useTheme();
   const { ledger, commit } = useLedger();
   const { compact } = useResponsive();
   const [form, setForm] = useState<{ account?: PaymentAccount } | null>(null);

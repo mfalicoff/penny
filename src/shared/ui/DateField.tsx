@@ -28,7 +28,7 @@ export function DateField({ label, value, onChange, pill = false, iconOnly = fal
         position: "absolute", top: iconOnly ? triggerSize + 6 : 50,
         ...(iconOnly ? { left: -Math.round((calendarWidth - triggerSize) / 2), width: calendarWidth } : { right: 0, width: Math.min(320, width - 40) }),
         padding: 12, backgroundColor: C.paper, borderRadius: 16, borderWidth: 1,
-        borderColor: C.line, elevation: 12, boxShadow: "0px 12px 32px #1C302B20",
+        borderColor: C.line, elevation: 12, boxShadow: `0px 12px 32px ${C.shadow}`,
       } : { alignSelf: "stretch" }}><DateTimePicker value={parseDate(value)} mode="date" presentation="dialog"
         display={Platform.OS === "ios" ? "inline" : "default"}
         minimumDate={parseDate("2000-01-01")} maximumDate={parseDate("2100-12-31")}
