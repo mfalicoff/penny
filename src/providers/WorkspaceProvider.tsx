@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState } from "react";
 import { dateKey, type Kind, type Recurring, type Transaction } from "../domain/ledger";
 
-export type EntryFormState = { entry?: Transaction; rule?: Recurring };
+export type EntryFormState = { entry?: Transaction; rule?: Recurring; tripId?: string };
 
 // Shared only because navigation must preserve filters and unfinished entry drafts.
 function useWorkspaceState() {

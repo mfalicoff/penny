@@ -120,6 +120,7 @@ test("new split recurring expense validates, saves cents and closes only after s
   expect(body.textContent).toContain("Enter an amount with up to two decimal places.");
   await fill("Amount (CAD)", "98.00");
   await fill("What was it for?", "metro");
+  await click(button("Category: Food & drinks"));
   await click(button("Groceries"));
   await click(button("Split equally"));
   await click(button("Monthly"));
@@ -350,12 +351,13 @@ test.each([
   const body = await renderWeb(<Workspace><OverviewScreen /><EntryDialog /></Workspace>);
   await click(body.querySelector('[aria-label^="Edit Weekly groceries,"]'));
   await fill("What was it for?", "Account-linked groceries");
+  await click(button("Account: Unassigned"));
   await click(button("Add account"));
   await fill("Account name", "Everyday Visa");
   await click(button("Credit card"));
   await click(button("Save account"));
   expect(body.querySelector('[aria-label="What was it for?"]').value).toBe("Account-linked groceries");
-  expect(button("Use Everyday Visa").getAttribute("aria-selected")).toBe("true");
+  expect(button("Account: Everyday Visa")).toBeTruthy();
   await click(button("Save changes"));
   const entry = ledger.transactions.find((t) => t.title === "Account-linked groceries");
   expect(entry.accountId).toBe(ledger.accounts[0].id);

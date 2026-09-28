@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
   type TextInputProps,
   type ViewStyle,
@@ -137,6 +138,7 @@ export function Sheet({
   onClose,
   wide = false,
   footer,
+  headerActions,
 }: {
   visible: boolean;
   title: string;
@@ -144,7 +146,11 @@ export function Sheet({
   onClose: () => void;
   wide?: boolean;
   footer?: React.ReactNode;
+  headerActions?: React.ReactNode;
 }) {
+  const { width } = useWindowDimensions();
+  const narrowHeader = width < 360;
+  const hasHeaderActions = headerActions != null;
   return (
     <Modal
       visible={visible}
@@ -160,9 +166,17 @@ export function Sheet({
           accessibilityViewIsModal
           style={[s.sheet, { maxWidth: wide ? 780 : 520 }]}
         >
-          <View style={s.sheetHeader}>
-            <Text style={s.sheetTitle}>{title}</Text>
-            <IconButton icon="close" label="Close dialog" onPress={onClose} />
+          <View style={[s.sheetHeader, hasHeaderActions ? {
+            paddingHorizontal: narrowHeader ? 8 : 12, gap: narrowHeader ? 2 : 3,
+            zIndex: 20, elevation: 20,
+          } : undefined]}>
+            <Text numberOfLines={hasHeaderActions ? 1 : undefined}
+              style={[s.sheetTitle, { flexShrink: 1 }, hasHeaderActions ? { fontSize: narrowHeader ? 14 : 18, flex: 1, minWidth: 0 } : undefined]}>{title}</Text>
+            {hasHeaderActions && <View style={[s.row, { gap: narrowHeader ? 2 : 3 }]}>{headerActions}</View>}
+            {hasHeaderActions ? <Pressable accessibilityRole="button" accessibilityLabel="Close dialog"
+              onPress={onClose} style={{ width: narrowHeader ? 32 : 36, height: 36, alignItems: "center", justifyContent: "center" }}>
+              <Icon name="close" size={21} />
+            </Pressable> : <IconButton icon="close" label="Close dialog" onPress={onClose} />}
           </View>
           <ScrollView
             keyboardShouldPersistTaps="handled"
@@ -262,6 +276,7 @@ export const s = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    gap: 8,
   },
   sheetTitle: {
     fontSize: 22,

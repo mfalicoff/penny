@@ -16,7 +16,8 @@ import {
   type Kind,
   type Receipt,
   type Recurring,
-  type Transaction
+  type Transaction,
+  type Trip,
 } from "../../domain/ledger";
 import { Button, C, Field, Icon, Sheet, s } from "../../shared/ui";
 import { ReceiptPreview } from "../receipts/ReceiptPreview";
@@ -24,10 +25,13 @@ import { DateField } from "../../shared/ui/DateField";
 import { buildEntry, buildSchedule } from "./entryDraft";
 import { AccountForm } from "../accounts/AccountForm";
 import type { LedgerChange } from "../../domain/commands";
+import { EntryPillPicker } from "./EntryPillPicker";
 
 export function EntryForm({
   categories,
   accounts = [],
+  trips = [],
+  initialTripId,
   commit,
   entry,
   rule,
@@ -40,6 +44,8 @@ export function EntryForm({
   demo?: boolean;
   categories: Category[];
   accounts?: PaymentAccount[];
+  trips?: Trip[];
+  initialTripId?: string;
   commit?: (change: LedgerChange, message: string) => Promise<void>;
   entry?: Transaction;
   rule?: Recurring;
@@ -57,6 +63,8 @@ export function EntryForm({
   const [date, setDate] = useState(rule?.nextDate ?? entry?.date ?? dateKey());
   const [categoryId, setCategory] = useState(initial?.categoryId ?? "food");
   const [accountId, setAccountId] = useState(initial?.accountId);
+  const [tripId, setTripId] = useState(entry?.tripId ?? initialTripId);
+  const [openPicker, setOpenPicker] = useState<"category" | "trip" | "account" | null>(null);
   const [addingAccount, setAddingAccount] = useState(false);
   const [note, setNote] = useState(initial?.note ?? "");
   const [split, setSplit] = useState<"full" | "equal" | "amount" | "percent">(
@@ -93,6 +101,7 @@ export function EntryForm({
     setKind(value);
     setCategory(categories.find((c) => c.kind === value)?.id ?? "");
     setSplit("full");
+    setOpenPicker(null);
   };
   function attach(uri: string, name: string, mime: string, size?: number) {
     if (size && size > 10 * 1024 * 1024)
@@ -157,7 +166,8 @@ export function EntryForm({
     if (saving) return;
     try {
       if (accountId && !accounts.some((a) => a.id === accountId)) throw new Error("Choose an available payment account.");
-      const draft = { kind, title, amount, date, categoryId, accountId, note, split, shareInput, frequency, receipt };
+      if (kind === "expense" && !rule && tripId && !trips.some((trip) => trip.id === tripId)) throw new Error("Choose an available trip.");
+      const draft = { kind, title, amount, date, categoryId, accountId, tripId: rule ? undefined : tripId, note, split, shareInput, frequency, receipt };
       const { transaction, recurring }: { transaction: Transaction; recurring?: Recurring } = rule
         ? { transaction: rule, recurring: buildSchedule(draft, categories, rule) }
         : buildEntry(draft, categories, entry);
@@ -197,6 +207,25 @@ export function EntryForm({
     <Sheet
       visible
       title={rule ? "Edit recurring entry" : entry ? "Edit entry" : "A little update."}
+      headerActions={<>
+        <DateField label={rule ? "Next occurrence" : "Date"} value={date} onChange={setDate} pill iconOnly />
+        <EntryPillPicker label="Category" value={categoryId} iconOnly align="center"
+          options={categories.filter((c) => c.kind === kind).map((c) => ({ id: c.id, label: c.name, icon: c.icon, color: c.color }))}
+          open={openPicker === "category"} onToggle={() => setOpenPicker(openPicker === "category" ? null : "category")}
+          onSelect={(id) => { setCategory(id); setOpenPicker(null); }} />
+        {kind === "expense" && !rule && <EntryPillPicker label="Trip" value={tripId ?? ""} iconOnly align="right"
+          options={[{ id: "", label: "No trip" }, ...trips.map((trip) => ({ id: trip.id, label: trip.name, accessibilityLabel: `Assign to ${trip.name}` }))]}
+          emptyMessage={!trips.length ? "Create a trip in Trips to organize travel expenses." : undefined}
+          open={openPicker === "trip"} onToggle={() => setOpenPicker(openPicker === "trip" ? null : "trip")}
+          onSelect={(id) => { setTripId(id || undefined); setOpenPicker(null); }} />}
+        <EntryPillPicker label="Account" value={accountId ?? ""} iconOnly align="right"
+          options={[{ id: "", label: "Unassigned" }, ...accounts.map((account) => ({
+            id: account.id, label: account.name, icon: accountTypeIcons[account.type], accessibilityLabel: `Use ${account.name}`,
+          }))]}
+          open={openPicker === "account"} onToggle={() => setOpenPicker(openPicker === "account" ? null : "account")}
+          onSelect={(id) => { setAccountId(id || undefined); setOpenPicker(null); }}
+          footerAction={commit ? { label: "Add account", onPress: () => { setOpenPicker(null); setAddingAccount(true); } } : undefined} />
+      </>}
       onClose={() => {
         if (!saving) onClose();
       }}
@@ -217,8 +246,10 @@ export function EntryForm({
       }
     >
       <View
-        style={{ gap: 22, opacity: saving ? 0.6 : 1, pointerEvents: saving ? "none" : "auto" }}
+        style={{ gap: 22, position: "relative", opacity: saving ? 0.6 : 1, pointerEvents: saving ? "none" : "auto" }}
       >
+        {openPicker && <Pressable accessibilityRole="button" accessibilityLabel="Close selection"
+          onPress={() => setOpenPicker(null)} style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, zIndex: 1 }} />}
         <View
           style={[
             s.row,
@@ -284,43 +315,6 @@ export function EntryForm({
           onChangeText={setTitle}
           maxLength={100}
         />
-        <View style={{ gap: 10 }}>
-          <Text style={s.label}>Category</Text>
-          <View style={[s.row, { flexWrap: "wrap", gap: 8 }]}>
-            {categories
-              .filter((c) => c.kind === kind)
-              .map((c) => (
-                <Pressable
-                  key={c.id}
-                  accessibilityRole="button"
-                  accessibilityLabel={c.name}
-                  accessibilityState={{ selected: categoryId === c.id }}
-                  onPress={() => setCategory(c.id)}
-                  style={[s.chip, categoryId === c.id && s.chipActive]}
-                >
-                  <Icon name={c.icon} size={17} color={c.color} />
-                  <Text style={{ color: C.ink, fontSize: 12 }}>{c.name}</Text>
-                </Pressable>
-              ))}
-          </View>
-        </View>
-        <View style={{ gap: 10 }}>
-          <Text style={s.label}>Payment account (optional)</Text>
-          <View style={[s.row, { flexWrap: "wrap", gap: 8 }]}>
-            <Pressable accessibilityRole="button" accessibilityLabel="Unassigned" aria-selected={!accountId}
-              onPress={() => setAccountId(undefined)} style={[s.chip, { minHeight: 44 }, !accountId && s.chipActive]}>
-              <Text style={{ color: C.ink, fontSize: 12 }}>Unassigned</Text>
-            </Pressable>
-            {accounts.map((account) => <Pressable key={account.id} accessibilityRole="button" accessibilityLabel={`Use ${account.name}`}
-              aria-selected={accountId === account.id} onPress={() => setAccountId(account.id)}
-              style={[s.chip, { minHeight: 44 }, accountId === account.id && s.chipActive]}>
-              <Icon name={accountTypeIcons[account.type]} size={17} />
-              <Text style={{ color: C.ink, fontSize: 12 }}>{account.name}</Text>
-            </Pressable>)}
-          </View>
-          {commit && <Button title="Add account" icon="add" tone="quiet" onPress={() => setAddingAccount(true)} />}
-        </View>
-        <DateField label={rule ? "Next occurrence" : "Date"} value={date} onChange={setDate} />
         {kind === "expense" && (
           <View
             style={{

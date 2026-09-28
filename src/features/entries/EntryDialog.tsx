@@ -12,6 +12,8 @@ export function EntryDialog() {
     demo={demo}
     categories={ledger.categories}
     accounts={ledger.accounts}
+    trips={ledger.trips}
+    initialTripId={form.tripId}
     commit={commit}
     entry={form.entry}
     rule={form.rule}

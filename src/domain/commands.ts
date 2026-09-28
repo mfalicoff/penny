@@ -1,4 +1,4 @@
-import { accountTypes, dateKey, nextOccurrence, type Category, type Ledger, type PaymentAccount, type Recurring, type Transaction } from "./ledger.ts";
+import { accountTypes, dateKey, nextOccurrence, validDate, type Category, type Ledger, type PaymentAccount, type Recurring, type Transaction, type Trip } from "./ledger.ts";
 
 export type LedgerChange = (ledger: Ledger) => Ledger;
 
@@ -6,6 +6,8 @@ export function saveEntry(transaction: Transaction, original?: Transaction, recu
   return (ledger) => {
     assertAccount(ledger, transaction.accountId);
     if (recurring) assertAccount(ledger, recurring.accountId);
+    if (transaction.tripId && (transaction.kind !== "expense" || !ledger.trips.some((trip) => trip.id === transaction.tripId)))
+      throw new Error("This trip is no longer available. Choose another trip.");
     if (!ledger.categories.some((c) => c.id === transaction.categoryId && c.kind === transaction.kind))
       throw new Error("This category was removed on another device. Choose another category.");
     if (original && JSON.stringify(ledger.transactions.find((t) => t.id === original.id)) !== JSON.stringify(original))
@@ -15,6 +17,27 @@ export function saveEntry(transaction: Transaction, original?: Transaction, recu
       transactions: [...ledger.transactions.filter((t) => t.id !== transaction.id), transaction],
       recurring: recurring ? [...ledger.recurring, recurring] : ledger.recurring,
     };
+  };
+}
+
+export function saveTrip(item: Trip, original?: Trip, remove = false): LedgerChange {
+  return (ledger) => {
+    if (original && JSON.stringify(ledger.trips.find((trip) => trip.id === original.id)) !== JSON.stringify(original))
+      throw new Error("This trip changed on another device. Reopen it before editing.");
+    if (remove && ledger.transactions.some((entry) => entry.tripId === item.id))
+      throw new Error("This trip has expenses. Reassign them before deleting it.");
+    const name = item.name.trim();
+    if (!remove) {
+      if (!name || name.length > 80) throw new Error("Give your trip a name of up to 80 characters.");
+      if (!validDate(item.startDate) || !validDate(item.endDate) || item.endDate < item.startDate)
+        throw new Error("Choose valid trip dates, with the end on or after the start.");
+      if (ledger.trips.some((trip) => trip.id !== item.id && trip.name.toLowerCase() === name.toLowerCase()))
+        throw new Error("You already have a trip with this name.");
+      if (!original && ledger.trips.length >= 300) throw new Error("You can add up to 300 trips.");
+    }
+    const trip = { ...item, name };
+    return { ...ledger, trips: remove ? ledger.trips.filter((value) => value.id !== item.id)
+      : original ? ledger.trips.map((value) => value.id === item.id ? trip : value) : [...ledger.trips, trip] };
   };
 }
 

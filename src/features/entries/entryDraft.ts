@@ -7,6 +7,7 @@ export type EntryDraft = {
   date: string;
   categoryId: string;
   accountId?: string;
+  tripId?: string;
   note: string;
   split: "full" | "equal" | "amount" | "percent";
   shareInput: string;
@@ -25,12 +26,13 @@ export function buildEntry(draft: EntryDraft, categories: Category[], entry?: Tr
   const transaction: Transaction = {
     id: entry?.id ?? uid(), kind, title: title.trim(), total,
     share: personalShare(total, kind === "expense" ? split : "full", shareInput),
-    date, categoryId, accountId: draft.accountId, note: note.trim(), receipt: kind === "expense" ? receipt : undefined,
+    date, categoryId, accountId: draft.accountId, tripId: kind === "expense" ? draft.tripId : undefined,
+    note: note.trim(), receipt: kind === "expense" ? receipt : undefined,
     recurringId: entry?.recurringId,
   };
   let recurring: Recurring | undefined;
   if (!entry && frequency !== "none") {
-    const { receipt: _, recurringId: __, ...base } = transaction;
+    const { receipt: _, recurringId: __, tripId: ___, ...base } = transaction;
     const anchorDay = parseDate(date).getDate();
     recurring = { ...base, id: uid(), active: true, frequency, nextDate: nextOccurrence(date, frequency, anchorDay), anchorDay };
     transaction.recurringId = recurring.id;
@@ -41,7 +43,7 @@ export function buildEntry(draft: EntryDraft, categories: Category[], entry?: Tr
 export function buildSchedule(draft: EntryDraft, categories: Category[], original: Recurring): Recurring {
   if (draft.frequency === "none") throw new Error("Choose a repeat schedule.");
   const { transaction } = buildEntry(draft, categories, original);
-  const { receipt: _, recurringId: __, ...details } = transaction;
+  const { receipt: _, recurringId: __, tripId: ___, ...details } = transaction;
   return {
     ...original, ...details, date: original.date,
     frequency: draft.frequency, nextDate: draft.date,

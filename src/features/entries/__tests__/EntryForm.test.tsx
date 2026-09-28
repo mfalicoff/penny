@@ -56,3 +56,21 @@ test("dismissing the date picker leaves the entry date unchanged", async () => {
   expect(screen.queryByTestId("system-date-picker")).toBeNull();
   expect(screen.getByRole("button", { name: "Date" }).props.accessibilityValue).toEqual(before);
 });
+
+test("expense form assigns an existing trip and allows removing the assignment", async () => {
+  const ledger = emptyLedger();
+  const trip = { id: "trip", name: "Montréal", startDate: "2026-09-10", endDate: "2026-09-14" };
+  const onSave = jest.fn().mockResolvedValue(undefined);
+  await render(<EntryForm categories={ledger.categories} trips={[trip]} currency="CAD" onClose={jest.fn()} onSave={onSave} onDelete={jest.fn()} />);
+  await fireEvent.changeText(screen.getByLabelText("Amount (CAD)"), "20");
+  await fireEvent.changeText(screen.getByLabelText("What was it for?"), "Lunch");
+  await fireEvent.press(screen.getByRole("button", { name: "Trip: No trip" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Assign to Montréal" }));
+  expect(screen.queryByRole("button", { name: "Assign to Montréal" })).toBeNull();
+  await fireEvent.press(screen.getByRole("button", { name: "Add expense" }));
+  expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ tripId: "trip" }), undefined);
+  await fireEvent.press(screen.getByRole("button", { name: "Trip: Montréal" }));
+  await fireEvent.press(screen.getByRole("button", { name: "No trip" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Add expense" }));
+  expect(onSave).toHaveBeenLastCalledWith(expect.objectContaining({ tripId: undefined }), undefined);
+});

@@ -7,6 +7,8 @@ import Categories from "../../app/categories";
 import Overview from "../../app/index";
 import Recurring from "../../app/recurring";
 import Transactions from "../../app/transactions";
+import Trips from "../../app/trips";
+import TripOverview from "../../app/trips/[id]";
 import * as api from "../../data/api";
 import { emptyLedger } from "../../domain/ledger";
 
@@ -24,7 +26,7 @@ beforeEach(() => {
 afterEach(() => jest.useRealTimers());
 
 test("real routes render their feature and navigation preserves overview filters and session", async () => {
-  await renderRouter({ _layout: RootLayout, index: Overview, recurring: Recurring, categories: Categories, accounts: Accounts, transactions: Transactions });
+  await renderRouter({ _layout: RootLayout, index: Overview, recurring: Recurring, categories: Categories, accounts: Accounts, transactions: Transactions, trips: Trips });
   expect(screen.getByText(/Your entries/)).toBeOnTheScreen();
   await fireEvent.changeText(screen.getByLabelText("Search entries"), "coffee");
   await fireEvent.press(screen.getByRole("button", { name: "Transactions" }));
@@ -39,6 +41,8 @@ test("real routes render their feature and navigation preserves overview filters
   expect(screen.getByText("EXPENSE CATEGORIES")).toBeOnTheScreen();
   await fireEvent.press(screen.getByRole("button", { name: "Accounts" }));
   expect(screen.getByText("Where your money lives.")).toBeOnTheScreen();
+  await fireEvent.press(screen.getByRole("button", { name: "Trips" }));
+  expect(screen.getByText("Your next trip starts here.")).toBeOnTheScreen();
   await fireEvent.press(screen.getByRole("button", { name: "Overview" }));
   expect(screen.getByLabelText("Search entries")).toHaveDisplayValue("coffee");
   await fireEvent.press(screen.getByRole("button", { name: "Transactions" }));
@@ -57,4 +61,15 @@ test("deep linking opens the correct feature and an entry draft survives route c
   expect(screen.getByLabelText("What was it for?")).toHaveDisplayValue("Unfinished draft");
   await fireEvent.press(screen.getByRole("button", { name: "Close dialog" }));
   expect(screen.getByLabelText("Search entries")).toBeOnTheScreen();
+});
+
+test("trip navigation opens its overview and starts an assigned expense", async () => {
+  const ledger = emptyLedger();
+  ledger.trips.push({ id: "weekend", name: "Weekend away", startDate: "2026-09-10", endDate: "2026-09-12" });
+  jest.mocked(api.fetchLedger).mockResolvedValue({ revision: 1, ledger });
+  await renderRouter({ _layout: RootLayout, index: Overview, "trips/index": Trips, "trips/[id]": TripOverview }, { initialUrl: "/trips" });
+  await fireEvent.press(screen.getByRole("button", { name: "Open trip Weekend away" }));
+  expect(screen.getByText("By category")).toBeOnTheScreen();
+  await fireEvent.press(screen.getByRole("button", { name: "Add expense to trip" }));
+  expect(screen.getByRole("button", { name: "Trip: Weekend away" })).toBeOnTheScreen();
 });

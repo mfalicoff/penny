@@ -187,6 +187,7 @@ export function EntryList({
                         {t.accountId && ` · ${ledger.accounts.find((a) => a.id === t.accountId)?.name ?? ""}`}
                       </Text>
                       {t.scheduled && <Tag text="SCHEDULED" color={C.green} />}
+                      {t.tripId && <Tag text={ledger.trips.find((trip) => trip.id === t.tripId)?.name ?? "TRIP"} color={C.blue} />}
                       {t.share !== t.total && (
                         <Tag text="SPLIT" color={C.accent} />
                       )}

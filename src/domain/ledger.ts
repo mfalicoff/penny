@@ -13,6 +13,7 @@ export const accountTypeIcons: Record<AccountType, string> = {
   bank: "business-outline", credit: "card-outline", cash: "cash-outline", other: "wallet-outline",
 };
 export type PaymentAccount = { id: string; name: string; type: AccountType };
+export type Trip = { id: string; name: string; startDate: string; endDate: string };
 export type Category = {
   id: string;
   name: string;
@@ -29,21 +30,23 @@ export type Transaction = {
   share: number;
   categoryId: string;
   accountId?: string;
+  tripId?: string;
   date: string;
   note: string;
   receipt?: Receipt;
   recurringId?: string;
 };
-export type Recurring = Omit<Transaction, "receipt" | "recurringId"> & {
+export type Recurring = Omit<Transaction, "receipt" | "recurringId" | "tripId"> & {
   frequency: Frequency;
   nextDate: string;
   anchorDay: number;
   active: boolean;
 };
 export type Ledger = {
-  version: 3;
+  version: 4;
   currency: string;
   accounts: PaymentAccount[];
+  trips: Trip[];
   categories: Category[];
   transactions: Transaction[];
   recurring: Recurring[];
@@ -141,16 +144,17 @@ export const initialCategories: Category[] = [
   investmentCategory,
 ];
 export const emptyLedger = (): Ledger => ({
-  version: 3,
+  version: 4,
   currency: "CAD",
   accounts: [],
+  trips: [],
   categories: initialCategories.map((c) => ({ ...c })),
   transactions: [],
   recurring: [],
 });
 // Upgrade once, without reclassifying historical expenses or restoring deleted categories.
-export function upgradeLedger(ledger: Ledger | (Omit<Ledger, "version" | "accounts"> & { version: 1 | 2; accounts?: PaymentAccount[] })): Ledger {
-  if (ledger.version === 3) return ledger;
+export function upgradeLedger(ledger: Ledger | (Omit<Ledger, "version" | "accounts" | "trips"> & { version: 1 | 2 | 3; accounts?: PaymentAccount[]; trips?: Trip[] })): Ledger {
+  if (ledger.version === 4) return ledger;
   const categories = [...ledger.categories];
   if (ledger.version === 1 && !categories.some((c) => c.kind === "investment") && categories.length < 300) {
     let id = investmentCategory.id;
@@ -158,7 +162,7 @@ export function upgradeLedger(ledger: Ledger | (Omit<Ledger, "version" | "accoun
     while (categories.some((c) => c.id === id)) id = `${investmentCategory.id}-${suffix++}`;
     categories.push({ ...investmentCategory, id });
   }
-  return { ...ledger, version: 3, accounts: ledger.accounts ?? [], categories };
+  return { ...ledger, version: 4, accounts: ledger.accounts ?? [], trips: ledger.trips ?? [], categories };
 }
 export const uid = () =>
   `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;

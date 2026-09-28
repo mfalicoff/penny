@@ -12,6 +12,7 @@ const entry = z.object({
   share: amount,
   categoryId: id,
   accountId: id.optional(),
+  tripId: id.optional(),
   date,
   note: z.string().max(1000),
 });
@@ -23,9 +24,10 @@ const receipt = z.object({
 });
 const ledgerSchema = z
   .object({
-    version: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+    version: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
     currency: z.enum(["CAD", "USD", "EUR", "GBP"]),
     accounts: z.array(z.object({ id, name: z.string().trim().min(1).max(50), type: z.enum(accountTypes) })).max(300).optional(),
+    trips: z.array(z.object({ id, name: z.string().trim().min(1).max(80), startDate: date, endDate: date })).max(300).optional(),
     categories: z
       .array(
         z.object({
@@ -57,13 +59,19 @@ const ledgerSchema = z
       .max(1000),
   })
   .superRefine((data, ctx) => {
-    if (data.version === 3 && !data.accounts)
+    if (data.version >= 3 && !data.accounts)
       ctx.addIssue({ code: "custom", message: "Missing accounts" });
+    if (data.version === 4 && !data.trips)
+      ctx.addIssue({ code: "custom", message: "Missing trips" });
     const accounts = new Set((data.accounts ?? []).map((a) => a.id));
+    const trips = new Set((data.trips ?? []).map((trip) => trip.id));
     const categories = new Map(data.categories.map((c) => [c.id, c]));
-    for (const list of [data.accounts ?? [], data.categories, data.transactions, data.recurring])
+    for (const list of [data.accounts ?? [], data.trips ?? [], data.categories, data.transactions, data.recurring])
       if (new Set(list.map((i) => i.id)).size !== list.length)
         ctx.addIssue({ code: "custom", message: "Duplicate identifiers" });
+    for (const trip of data.trips ?? [])
+      if (trip.endDate < trip.startDate)
+        ctx.addIssue({ code: "custom", message: "Invalid trip dates" });
     for (const t of [...data.transactions, ...data.recurring]) {
       if (t.accountId && !accounts.has(t.accountId))
         ctx.addIssue({ code: "custom", message: "Invalid payment account" });
@@ -72,7 +80,12 @@ const ledgerSchema = z
       if (categories.get(t.categoryId)?.kind !== t.kind)
         ctx.addIssue({ code: "custom", message: "Invalid category" });
     }
-  }).transform((data) => upgradeLedger({ ...data, accounts: data.accounts ?? [] }));
+    for (const t of data.transactions)
+      if (t.tripId && (t.kind !== "expense" || !trips.has(t.tripId)))
+        ctx.addIssue({ code: "custom", message: "Invalid trip assignment" });
+    for (const rule of data.recurring)
+      if (rule.tripId) ctx.addIssue({ code: "custom", message: "Recurring entries cannot belong to a trip" });
+  }).transform((data) => upgradeLedger({ ...data, accounts: data.accounts ?? [], trips: data.trips ?? [] }));
 
 export const ledgerWriteSchema = z.object({
   revision: z.number().int().nonnegative(),
