@@ -4,6 +4,7 @@ import type { Kind } from "../domain/ledger";
 import { C, Icon } from "../shared/ui";
 
 export function SaveToast({ message, kind }: { message: string; kind?: Kind | null }) {
+  const styles = makeStyles();
   const [progress] = useState(() => new Animated.Value(0));
   useEffect(() => {
     const animation = Animated.timing(progress, {
@@ -16,8 +17,8 @@ export function SaveToast({ message, kind }: { message: string; kind?: Kind | nu
     return () => animation.stop();
   }, [progress]);
 
-  const color = kind === "expense" ? "#B94E43" : kind === "income" ? "#347B53" : kind === "investment" ? C.blue : "#B4D7B6";
-  const backgroundColor = kind === "expense" ? "#FBE9E6" : kind === "income" ? "#E8F4EA" : kind === "investment" ? "#EAF1F8" : C.ink;
+  const color = kind === "expense" ? C.expenseFeedback : kind === "income" ? C.incomeFeedback : kind === "investment" ? C.blue : C.successFeedback;
+  const backgroundColor = kind === "expense" ? C.expenseFeedbackBg : kind === "income" ? C.incomeFeedbackBg : kind === "investment" ? C.investmentFeedbackBg : C.ink;
   const icon = kind === "expense" ? "arrow-down" : kind === "income" ? "arrow-up" : kind === "investment" ? "trending-up-outline" : "checkmark-circle";
 
   return <Animated.View accessibilityRole="alert" style={[styles.toast, {
@@ -30,15 +31,15 @@ export function SaveToast({ message, kind }: { message: string; kind?: Kind | nu
     ],
   }]}>
     <Animated.View style={{ transform: [{ scale: progress.interpolate({ inputRange: [0, 0.7, 1], outputRange: [0.6, 1.14, 1] }) }] }}>
-      <View style={[styles.icon, { backgroundColor: kind ? "#FFFFFF" : "transparent" }]}>
+      <View style={[styles.icon, { backgroundColor: kind ? C.paper : "transparent" }]}>
         <Icon name={icon} color={color} size={19} />
       </View>
     </Animated.View>
-    <Text style={{ color: kind ? C.ink : "white", fontSize: 13, fontWeight: "600" }}>{message}</Text>
+    <Text style={{ color: kind ? C.ink : C.paper, fontSize: 13, fontWeight: "600" }}>{message}</Text>
   </Animated.View>;
 }
 
-const styles = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   toast: {
     position: "absolute",
     bottom: 86,
@@ -54,7 +55,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 9,
     alignItems: "center",
-    boxShadow: "0px 8px 30px #24362A20",
+    boxShadow: `0px 8px 30px ${C.shadow}`,
   },
   icon: {
     width: 30,

@@ -4,6 +4,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Auth } from "../features/auth/AuthScreen";
 import { LedgerProvider, useLedger } from "../providers/LedgerProvider";
 import { WorkspaceProvider } from "../providers/WorkspaceProvider";
+import { ThemeProvider } from "../shared/theme";
 import { C, Icon, s } from "../shared/ui";
 import { AppShell } from "./AppShell";
 
@@ -19,5 +20,5 @@ function SessionGate() {
 
 export default function RootLayout() {
   if (isOidcCallback()) return <View style={{ flex: 1, justifyContent: "center", padding: 24 }}><Text>Completing sign-in… You can close this window and return to Penny.</Text></View>;
-  return <SafeAreaProvider><LedgerProvider><SessionGate /></LedgerProvider></SafeAreaProvider>;
+  return <ThemeProvider><SafeAreaProvider><LedgerProvider><SessionGate /></LedgerProvider></SafeAreaProvider></ThemeProvider>;
 }

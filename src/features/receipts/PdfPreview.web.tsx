@@ -90,7 +90,7 @@ export function PdfPreview({
               maxWidth: 640,
               height: "auto",
               alignSelf: "center",
-              border: "1px solid #E9EDE7",
+              border: `1px solid ${C.line}`,
               borderRadius: 8,
               display: pdf ? "block" : "none",
             },

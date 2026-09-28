@@ -286,7 +286,7 @@ export function EntryForm({
                 paddingHorizontal: 4,
                 alignItems: "center",
                 borderRadius: 9,
-                backgroundColor: kind === k ? "#fff" : "transparent",
+                backgroundColor: kind === k ? C.paper : "transparent",
               }}
             >
               <Text

@@ -5,6 +5,7 @@ import { useLedger } from "../../providers/LedgerProvider";
 import { useWorkspace } from "../../providers/WorkspaceProvider";
 import { currencyFormat } from "../../shared/format";
 import { C, IconButton, s } from "../../shared/ui";
+import { useTheme } from "../../shared/theme";
 import { useResponsive } from "../../shared/useResponsive";
 import { EntryList } from "./components/EntryList";
 import { MoneyFlowChart } from "./components/MoneyFlowChart";
@@ -14,6 +15,7 @@ import { SummaryCards } from "./components/SummaryCards";
 import { selectOverview, shiftMonthKey } from "./selectors";
 
 export default function OverviewScreen() {
+  useTheme();
   const { ledger } = useLedger();
   const { month, setMonth, day, setDay, filter, setFilter, search, setSearch, setForm } = useWorkspace();
   const { compact, desktop } = useResponsive();

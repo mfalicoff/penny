@@ -5,6 +5,7 @@ import { useLedger } from "../../providers/LedgerProvider";
 import { useWorkspace } from "../../providers/WorkspaceProvider";
 import { currencyFormat } from "../../shared/format";
 import { Button, Field, Icon, Sheet, s } from "../../shared/ui";
+import { useTheme } from "../../shared/theme";
 import { useResponsive } from "../../shared/useResponsive";
 import { EntryList } from "../overview/components/EntryList";
 import { SummaryCards } from "../overview/components/SummaryCards";
@@ -16,6 +17,7 @@ const months = Array.from({ length: 12 }, (_, index) => ({
 }));
 
 export default function TransactionsScreen() {
+  useTheme();
   const { ledger } = useLedger();
   const { transactionFilters: filters, setTransactionFilters, setForm } = useWorkspace();
   const { compact } = useResponsive();

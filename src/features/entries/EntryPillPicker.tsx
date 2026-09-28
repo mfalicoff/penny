@@ -77,7 +77,7 @@ export function EntryPillMenu({ label, value, options, position, onClose, onSele
       position: "absolute", left: position?.left ?? 16, top: position?.top ?? 70,
       width: position?.width ?? Math.min(230, width - 48), backgroundColor: C.paper,
       borderWidth: 1, borderColor: C.line, borderRadius: 16,
-      padding: 8, elevation: 12, boxShadow: "0px 12px 32px #1C302B20",
+      padding: 8, elevation: 12, boxShadow: `0px 12px 32px ${C.shadow}`,
     }}>
       <Text style={[s.label, { paddingHorizontal: 10, paddingVertical: 7 }]}>Choose {label.toLowerCase()}</Text>
       <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled" style={{ height: listHeight }}>

@@ -3,10 +3,13 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { kinds, type Category } from "../../domain/ledger";
 import { useLedger } from "../../providers/LedgerProvider";
 import { Button, C, Icon, s } from "../../shared/ui";
+import { useTheme } from "../../shared/theme";
 import { useResponsive } from "../../shared/useResponsive";
 import { CategoryForm } from "./CategoryForm";
 
 export default function CategoriesScreen() {
+  useTheme();
+  const a = makeStyles();
   const { ledger } = useLedger();
   const { compact } = useResponsive();
   const [categoryForm, setCategoryForm] = React.useState<{ category?: Category; } | null>(null);
@@ -71,11 +74,11 @@ export default function CategoriesScreen() {
   </View>);
 }
 
-const a = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   eyebrow: {
     fontSize: 9,
     fontWeight: "600",
-    color: "#8A988A",
+    color: C.subtle,
     letterSpacing: 1.8,
   },
   categoryIcon: {

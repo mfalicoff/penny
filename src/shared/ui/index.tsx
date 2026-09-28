@@ -14,27 +14,19 @@ import {
   type TextInputProps,
   type ViewStyle,
 } from "react-native";
-export const C = {
-  bg: "#F8F8F4",
-  paper: "#FFFFFF",
-  ink: "#283B33",
-  muted: "#839087",
-  line: "#E9EDE7",
-  accent: "#D96B42",
-  orangeBg: "#FBEEE6",
-  green: "#528768",
-  blue: "#678DB1",
-  pale: "#EDF3EC",
-};
+import { C, getTheme, type ThemeColors } from "../theme";
+export { C } from "../theme";
 export const Icon = ({
   name,
   size = 20,
-  color = C.ink,
+  color,
 }: {
   name: string;
   size?: number;
   color?: string;
-}) => <Ionicons name={name as any} size={size} color={color} />;
+}) => {
+  return <Ionicons name={name as any} size={size} color={color ?? C.ink} />;
+};
 export function Button({
   title,
   onPress,
@@ -61,7 +53,7 @@ export function Button({
         tone === "primary"
           ? s.primary
           : tone === "danger"
-            ? { backgroundColor: "#FBEAE7" }
+            ? { backgroundColor: C.dangerBg }
             : s.quiet,
         style,
         { opacity: disabled ? 0.45 : pressed ? 0.7 : 1 },
@@ -72,7 +64,7 @@ export function Button({
           name={icon}
           size={18}
           color={
-            tone === "primary" ? "#fff" : tone === "danger" ? "#B45343" : C.ink
+            tone === "primary" ? C.onAccent : tone === "danger" ? C.danger : C.ink
           }
         />
       )}
@@ -82,9 +74,9 @@ export function Button({
           {
             color:
               tone === "primary"
-                ? "#fff"
+                ? C.onAccent
                 : tone === "danger"
-                  ? "#B45343"
+                  ? C.danger
                   : C.ink,
           },
         ]}
@@ -124,7 +116,7 @@ export function Field({
       <Text style={s.label}>{label}</Text>
       <TextInput
         accessibilityLabel={label}
-        placeholderTextColor="#A5ACA6"
+        placeholderTextColor={C.placeholder}
         {...props}
         style={[s.input, style]}
       />
@@ -209,25 +201,26 @@ export function Sheet({
 }
 export function Tag({
   text,
-  color = C.muted,
+  color,
 }: {
   text: string;
   color?: string;
 }) {
+  const tagColor = color ?? C.muted;
   return (
     <View
       style={{
-        backgroundColor: `${color}13`,
+        backgroundColor: `${tagColor}13`,
         borderRadius: 6,
         paddingHorizontal: 7,
         paddingVertical: 4,
       }}
     >
-      <Text style={{ fontSize: 10, fontWeight: "600", color }}>{text}</Text>
+      <Text style={{ fontSize: 10, fontWeight: "600", color: tagColor }}>{text}</Text>
     </View>
   );
 }
-export const s = StyleSheet.create({
+const makeStyles = (C: ThemeColors) => StyleSheet.create({
   button: {
     minHeight: 44,
     paddingHorizontal: 18,
@@ -251,7 +244,7 @@ export const s = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: C.line,
-    backgroundColor: "#FBFCF9",
+    backgroundColor: C.input,
     borderRadius: 12,
     minHeight: 48,
     padding: 13,
@@ -262,7 +255,7 @@ export const s = StyleSheet.create({
   label: { color: C.ink, fontSize: 12, fontWeight: "600" },
   backdrop: {
     flex: 1,
-    backgroundColor: "#21332960",
+    backgroundColor: C.backdrop,
     justifyContent: "center",
     alignItems: "center",
     padding: 16,
@@ -273,7 +266,7 @@ export const s = StyleSheet.create({
     maxHeight: "92%",
     borderRadius: 24,
     overflow: "hidden",
-    boxShadow: "0px 20px 80px #1C302B20",
+    boxShadow: `0px 20px 80px ${C.shadow}`,
   },
   sheetHeader: {
     padding: 24,
@@ -322,11 +315,22 @@ export const s = StyleSheet.create({
   },
   chipActive: { borderColor: C.accent, backgroundColor: C.orangeBg },
   error: {
-    color: "#B45343",
+    color: C.danger,
     fontSize: 13,
     lineHeight: 20,
-    backgroundColor: "#FFF1ED",
+    backgroundColor: C.dangerBg,
     padding: 12,
     borderRadius: 10,
+  },
+});
+let cachedTheme = getTheme();
+let cachedStyles = makeStyles(C);
+export const s: ReturnType<typeof makeStyles> = new Proxy(cachedStyles, {
+  get(_target, property) {
+    if (cachedTheme !== getTheme()) {
+      cachedTheme = getTheme();
+      cachedStyles = makeStyles(C);
+    }
+    return cachedStyles[property as keyof typeof cachedStyles];
   },
 });

@@ -1,3 +1,4 @@
+import { getTheme } from "../theme";
 import { useId, useState } from "react";
 import { Text, useWindowDimensions, View } from "react-native";
 import { validDate } from "../../domain/ledger";
@@ -21,7 +22,7 @@ export function DateField({ label, value, onChange, pill = false, iconOnly = fal
       onChange={(event) => { if (validDate(event.target.value)) onChange(event.target.value); }}
       style={{ boxSizing: "border-box", width: iconOnly ? triggerSize : pill ? "auto" : "100%", minWidth: 0, minHeight: iconOnly ? triggerSize : pill ? 44 : 48,
         padding: pill ? "9px 14px" : "12px 14px", border: `1px solid ${C.line}`, borderRadius: pill ? 999 : 10,
-        backgroundColor: pill ? C.bg : "#fff", color: C.ink, fontSize: pill ? 13 : 16, fontFamily: "inherit", colorScheme: "light",
+        backgroundColor: pill ? C.bg : C.input, color: C.ink, fontSize: pill ? 13 : 16, fontFamily: "inherit", colorScheme: getTheme() === "light" ? "light" : "dark",
         ...(iconOnly ? { position: "absolute", top: 0, left: 0, opacity: 0, padding: 0, cursor: "pointer" } : {}) }} />
   </View>;
 }

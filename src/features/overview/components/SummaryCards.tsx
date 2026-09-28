@@ -9,6 +9,7 @@ type SummaryCardsProps = {
 };
 
 export function SummaryCards({ summary, compact, money, period = "month" }: SummaryCardsProps) {
+  const a = makeStyles();
 
   return (
     <View
@@ -39,7 +40,7 @@ export function SummaryCards({ summary, compact, money, period = "month" }: Summ
           amount: summary.investment,
           icon: "trending-up-outline",
           color: C.blue,
-          bg: "#EDF2F7",
+          bg: C.pale,
           hint: "Contributions, not portfolio value",
         },
         {
@@ -47,7 +48,7 @@ export function SummaryCards({ summary, compact, money, period = "month" }: Summ
           amount: summary.income - summary.expense - summary.investment,
           icon: "wallet-outline",
           color: C.ink,
-          bg: "#E9EEE6",
+          bg: C.pale,
           hint: `This ${period}, after expenses and investing`,
         },
       ].map((stat, i) => (
@@ -57,8 +58,8 @@ export function SummaryCards({ summary, compact, money, period = "month" }: Summ
             a.stat,
             { padding: compact ? 13 : 23, flexBasis: compact ? "45%" : 0 },
             i === 3 && {
-              backgroundColor: "#EEF2E9",
-              borderColor: "#E3E9DC",
+              backgroundColor: C.pale,
+              borderColor: C.line,
             },
           ]}
         >
@@ -114,9 +115,9 @@ export function SummaryCards({ summary, compact, money, period = "month" }: Summ
   );
 }
 
-const a = StyleSheet.create({
+const makeStyles = () => StyleSheet.create({
   stat: {
-    backgroundColor: "#fff",
+    backgroundColor: C.paper,
     borderWidth: 1,
     borderColor: C.line,
     borderRadius: 18,
