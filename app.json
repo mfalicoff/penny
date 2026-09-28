@@ -27,6 +27,7 @@
       "expo-sharing",
       "expo-secure-store",
       "expo-router",
+      "expo-notifications",
       "expo-web-browser"
     ],
     "scheme": "penny",
