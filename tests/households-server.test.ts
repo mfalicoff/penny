@@ -19,9 +19,10 @@ function setup() {
     db.prepare("INSERT INTO users VALUES (?,?,?,?)").run(id,email,"hash","salt");
     db.prepare("INSERT INTO ledgers VALUES (?,0,?)").run(id,JSON.stringify(emptyLedger()));
   }
-  const service = createHouseholdService(db,security,()=>stamp);
+  let currentTime = stamp;
+  const service = createHouseholdService(db,security,()=>currentTime);
   const household = service.create("alex",{name:"Home",currency:"CAD"}).household;
-  return {db,service,household};
+  return {db,service,household,advance:(date:string)=>{currentTime=Date.parse(date);}};
 }
 function join(service: ReturnType<typeof createHouseholdService>, householdId: string, userId: string) {
   const {code}=service.invite(householdId,"alex");
@@ -32,7 +33,7 @@ function expense(totalCents: number, payerUserId="alex", date="2026-09-28") {
 }
 
 test("household invite, access, splits, recap, reimbursement and audit", (t) => {
-  const {db,service,household}=setup(); t.after(()=>db.close());
+  const {db,service,household,advance}=setup(); t.after(()=>db.close());
   assert.throws(()=>service.invite(household.id,"bea"),{reason:"not_found"});
   const first=service.invite(household.id,"alex");
   assert.equal(first.expiresAt,stamp+600000);
@@ -48,13 +49,15 @@ test("household invite, access, splits, recap, reimbursement and audit", (t) => 
   assert.deepEqual(month.suggestions.map((s)=>s.amountCents),[3000,3000]);
   assert.throws(()=>service.leave(household.id,"bea"),{reason:"conflict"});
   assert.throws(()=>service.leave(household.id,"alex"),{reason:"conflict"});
+  assert.throws(()=>service.reimburse(household.id,"bea","2026-09",{fromUserId:"bea",toUserId:"alex",amountCents:3000}),{reason:"conflict"},"the month is still open");
+  advance("2026-09-30T12:00:00Z");
   assert.throws(()=>service.reimburse(household.id,"bea","2026-09",{fromUserId:"bea",toUserId:"alex",amountCents:2999}),{reason:"conflict"});
   const repaid=service.reimburse(household.id,"bea","2026-09",{fromUserId:"bea",toUserId:"alex",amountCents:3000}).reimbursement;
   assert.equal(repaid.amountCents,3000);
   assert.equal(service.projection("bea").transactions.length,1,"reimbursement is not a spending transaction");
   assert.equal(service.month(household.id,"bea","2026-09").balances.find((b)=>b.userId==="bea")?.balanceCents,0);
   service.leave(household.id,"bea");
-  assert.equal(service.get(household.id,"alex").members.find((m)=>m.userId==="bea")?.leftAt,stamp);
+  assert.equal(service.get(household.id,"alex").members.find((m)=>m.userId==="bea")?.leftAt,Date.parse("2026-09-30T12:00:00Z"));
   assert.equal(service.get(household.id,"bea").members.length,3,"departed member retains history");
   const history=service.audit(household.id,"bea",created.id as string);
   assert.equal(history.events[0]?.action,"expense.created");
@@ -107,17 +110,18 @@ test("household currency and recurring occurrences use current membership", (t) 
 });
 
 test("departed member sees only their own historical expense and receipt", (t) => {
-  const {db,service,household}=setup(); t.after(()=>db.close());
+  const {db,service,household,advance}=setup(); t.after(()=>db.close());
   join(service,household.id,"bea");
   const oldReceipt="old-receipt";
   db.prepare("INSERT INTO receipts VALUES (?,?,?,?,?)").run(oldReceipt,"alex","Old.pdf","application/pdf",Buffer.from("%PDF"));
   const old=service.createExpense(household.id,"alex",{...expense(9000),receiptId:oldReceipt}).expense;
   service.createRecurring(household.id,"alex",{...expense(9000),date:undefined,nextDate:"2026-10-28",frequency:"monthly"});
+  advance("2026-09-30T12:00:00Z");
   service.reimburse(household.id,"bea","2026-09",{fromUserId:"bea",toUserId:"alex",amountCents:4500});
   service.leave(household.id,"bea");
   const newReceipt="new-receipt";
   db.prepare("INSERT INTO receipts VALUES (?,?,?,?,?)").run(newReceipt,"alex","New.pdf","application/pdf",Buffer.from("%PDF"));
-  const newer=service.createExpense(household.id,"alex",{...expense(1200),receiptId:newReceipt}).expense;
+  const newer=service.createExpense(household.id,"alex",{...expense(1200,"alex","2026-10-01"),receiptId:newReceipt}).expense;
   assert.deepEqual(service.expenses(household.id,"bea").expenses.map((e)=>e.id),[old.id]);
   assert.throws(()=>service.getExpense(household.id,"bea",newer.id as string),{reason:"not_found"});
   assert.equal(service.canReadReceipt("bea",oldReceipt),true);

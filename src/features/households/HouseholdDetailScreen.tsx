@@ -72,6 +72,9 @@ export default function HouseholdDetailScreen() {
   const name = (userId: string) => members.find((member) => member.userId === userId)?.email ?? "Former member";
   const money = (amount: number) => currencyFormat(amount, household?.currency ?? "CAD");
   const monthLabel = parseDate(`${month}-01`).toLocaleDateString("en-CA", { month: "long", year: "numeric" });
+  const [monthYear, monthNumber] = month.split("-").map(Number);
+  const monthEnd = new Date(Date.UTC(monthYear, monthNumber, 0)).toISOString().slice(0, 10);
+  const reimbursementsOpen = new Date().toISOString().slice(0, 10) >= monthEnd;
   async function act(operation: () => Promise<unknown>, after?: () => void) {
     if (busy) return;
     setBusy(true); setError("");
@@ -113,9 +116,10 @@ export default function HouseholdDetailScreen() {
           </Text></View>)}
         {!recap?.balances?.length && <Text style={s.muted}>No balances this month.</Text>}
         <Text style={[s.label, { marginTop: 8 }]}>Suggested reimbursements</Text>
+        {!reimbursementsOpen && !!recap?.suggestions?.length && <Text style={s.muted}>Record reimbursements on the last day of the month or later.</Text>}
         {recap?.suggestions?.map((transfer, index) => <View key={`${transfer.fromUserId}:${transfer.toUserId}:${index}`} style={[s.between, { alignItems: "flex-start", flexWrap: "wrap" }]}>
           <Text style={[s.muted, { flex: 1 }]}>{name(transfer.fromUserId)} pays {name(transfer.toUserId)} {money(transfer.amountCents)}</Text>
-          {(myId === transfer.fromUserId || myId === transfer.toUserId) && <Button title="Record paid" tone="quiet" disabled={busy} onPress={() => void act(() => reimburse(id, month, transfer))} />}
+          {reimbursementsOpen && (myId === transfer.fromUserId || myId === transfer.toUserId) && <Button title="Record paid" tone="quiet" disabled={busy} onPress={() => void act(() => reimburse(id, month, transfer))} />}
         </View>)}
         {!recap?.suggestions?.length && <Text style={s.muted}>Nothing to reimburse.</Text>}
         {!!recap?.reimbursements?.length && <><Text style={[s.label, { marginTop: 8 }]}>Recorded reimbursements</Text>
