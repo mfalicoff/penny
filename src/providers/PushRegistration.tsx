@@ -5,7 +5,6 @@ import { useEffect } from "react";
 import { AppState, Platform } from "react-native";
 import { api } from "../data/api";
 import { householdPushPath } from "../data/push";
-import { useLedger } from "./LedgerProvider";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -66,9 +65,7 @@ export async function unregisterPushForLogout(): Promise<void> {
 }
 
 /** Mount once under LedgerProvider. Web uses PushRegistration.web.tsx instead. */
-export function PushRegistration() {
-  const { email, demo } = useLedger();
-
+export function PushRegistration({ email, demo }: { email: string | null; demo: boolean }) {
   useEffect(() => {
     if (!email || demo) return;
     void registerCurrentDevice(email).catch(() => {

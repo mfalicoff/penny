@@ -2,7 +2,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { archiveHousehold, createInvite, getAudit, getHousehold, getMonth, leaveHousehold, listRecurring, reimburse, removeMember, renameHousehold,
-  type AuditEvent, type Household, type HouseholdExpense, type HouseholdMember, type HouseholdRecurring, type MonthRecap, type Transfer } from "../../data/households";
+  type AuditEvent, type Household, type HouseholdExpense, type HouseholdMember, type HouseholdRecurring, type MonthRecap } from "../../data/households";
 import { dateKey, parseDate } from "../../domain/ledger";
 import { useHouseholds } from "../../providers/HouseholdProvider";
 import { useLedger } from "../../providers/LedgerProvider";
@@ -50,7 +50,6 @@ export default function HouseholdDetailScreen() {
   const [renaming, setRenaming] = useState(false);
   const [archiving, setArchiving] = useState(false);
   const [newName, setNewName] = useState("");
-  const [confirmTransfer, setConfirmTransfer] = useState<Transfer>();
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const openedDeepLink = useRef(params.add === "1");
@@ -116,7 +115,7 @@ export default function HouseholdDetailScreen() {
         <Text style={[s.label, { marginTop: 8 }]}>Suggested reimbursements</Text>
         {recap?.suggestions?.map((transfer, index) => <View key={`${transfer.fromUserId}:${transfer.toUserId}:${index}`} style={[s.between, { alignItems: "flex-start", flexWrap: "wrap" }]}>
           <Text style={[s.muted, { flex: 1 }]}>{name(transfer.fromUserId)} pays {name(transfer.toUserId)} {money(transfer.amountCents)}</Text>
-          {(myId === transfer.fromUserId || myId === transfer.toUserId) && <Button title="Record paid" tone="quiet" onPress={() => setConfirmTransfer(transfer)} />}
+          {(myId === transfer.fromUserId || myId === transfer.toUserId) && <Button title="Record paid" tone="quiet" disabled={busy} onPress={() => void act(() => reimburse(id, month, transfer))} />}
         </View>)}
         {!recap?.suggestions?.length && <Text style={s.muted}>Nothing to reimburse.</Text>}
         {!!recap?.reimbursements?.length && <><Text style={[s.label, { marginTop: 8 }]}>Recorded reimbursements</Text>
@@ -176,11 +175,6 @@ export default function HouseholdDetailScreen() {
       <Text style={s.muted}>Remove {name(removeUserId)} from future expenses? Their past expenses stay in the household.</Text>
       <Button title="Remove member" tone="danger" disabled={busy} onPress={() => void act(() => removeMember(id, removeUserId), () => setRemoveUserId(undefined))} />
       <Button title="Cancel" tone="quiet" onPress={() => setRemoveUserId(undefined)} />
-    </Sheet>}
-    {confirmTransfer && <Sheet visible title="Record reimbursement" onClose={() => setConfirmTransfer(undefined)}>
-      <Text style={s.muted}>Record that {name(confirmTransfer.fromUserId)} paid {name(confirmTransfer.toUserId)} {money(confirmTransfer.amountCents)} for {monthLabel}? This does not add a spending transaction.</Text>
-      <Button title="Record full reimbursement" disabled={busy} onPress={() => void act(() => reimburse(id, month, confirmTransfer), () => setConfirmTransfer(undefined))} />
-      <Button title="Cancel" tone="quiet" onPress={() => setConfirmTransfer(undefined)} />
     </Sheet>}
     {audit && <Sheet visible wide title="Change history" onClose={() => setAudit(null)}>
       {audit.map((event) => <View key={event.id} style={{ gap: 6, paddingVertical: 12, borderBottomWidth: 1, borderColor: C.line }}>
