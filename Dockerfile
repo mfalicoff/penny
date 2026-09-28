@@ -16,6 +16,7 @@ RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=build /app/dist ./dist
 COPY server ./server
 COPY src/domain/ledger.ts ./src/domain/ledger.ts
+COPY src/domain/households.ts ./src/domain/households.ts
 RUN mkdir /data && chown node:node /data
 USER node
 VOLUME ["/data"]
