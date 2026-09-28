@@ -76,7 +76,7 @@ export function createRepositories(db: DatabaseSync) {
       return (db.prepare("SELECT DISTINCT h.currency FROM households h JOIN household_members m ON m.household_id=h.id WHERE m.user_id=? AND m.left_at IS NULL AND h.archived_at IS NULL").all(userId) as {currency:string}[]).map((row)=>row.currency);
     },
     linkedHouseholdAccounts(userId) {
-      return (db.prepare("SELECT DISTINCT account_id FROM household_expenses WHERE payer_id=? AND account_id IS NOT NULL AND deleted_at IS NULL").all(userId) as {account_id:string}[]).map((row)=>row.account_id);
+      return (db.prepare("SELECT account_id FROM household_expenses WHERE payer_id=? AND account_id IS NOT NULL AND deleted_at IS NULL UNION SELECT account_id FROM household_recurring WHERE payer_id=? AND account_id IS NOT NULL").all(userId,userId) as {account_id:string}[]).map((row)=>row.account_id);
     },
   };
   const receipts: ReceiptRepository = {

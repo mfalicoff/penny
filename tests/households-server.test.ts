@@ -145,6 +145,13 @@ test("private ledger cannot change currency or remove a linked household account
   const linked=repositories.ledgers.read("alex");
   linked.ledger.accounts=[];
   assert.throws(()=>ledgerService.save("alex",linked),{reason:"invalid"});
+  const scheduled=repositories.ledgers.read("alex");
+  scheduled.ledger.accounts.push({id:"schedule-account",name:"Schedule",type:"bank"});
+  ledgerService.save("alex",scheduled);
+  service.createRecurring(household.id,"alex",{...expense(1000),date:undefined,nextDate:"2026-10-28",frequency:"monthly",accountId:"schedule-account"});
+  const ruleLinked=repositories.ledgers.read("alex");
+  ruleLinked.ledger.accounts=ruleLinked.ledger.accounts.filter((account)=>account.id!=="schedule-account");
+  assert.throws(()=>ledgerService.save("alex",ruleLinked),{reason:"invalid"},"future household occurrences still use this account");
 });
 
 test("opening a pre-household database preserves private ledger and marks migration", (t) => {
