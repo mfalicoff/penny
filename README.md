@@ -209,6 +209,19 @@ npx expo export --platform ios --platform android --output-dir /tmp/penny-native
 
 Tests cover decimal validation, rounding, month-end and leap-year recurrence, immutable commands, stale edit/delete conflicts, category safeguards, draft conversion, monthly filtering, failed-save draft retention, session isolation, sync cleanup, API retries, route navigation and persistent drafts. Existing API integration tests cover authenticated two-session sync, stale revisions, account isolation, receipt ownership/uploads/downloads, untrusted origins, restart persistence and logout.
 
+### Browser integration tests
+
+Playwright runs the exported production web app and its API together against a new temporary SQLite database. The suite covers registration and login, the demo, navigation, expense/income/investment entry flows, search and filters, receipt upload and preview, category/account/trip management, recurring schedules, settings, and server-backed persistence. OIDC provider sign-in needs a configured identity provider and is covered by the existing OIDC service/API tests instead.
+
+Install Chromium once, then run the suite:
+
+```sh
+npx playwright install chromium
+npm run test:e2e
+```
+
+The GitHub Actions check installs Chromium and runs `npm run test:e2e` before building the container. Playwright writes an HTML report and failure traces; CI uploads them as the `playwright-report` artifact.
+
 ## Current limits
 
 This is a working first version. It does not yet include OCR, line-item receipt splitting, bank connections, scheduled push reminders, offline editing, multiple currencies within one account, email verification, password recovery, or an account export UI. Currency is chosen before adding entries. Receipt files removed from entries are retained on the server; storage cleanup is not yet automated. Passwords are hashed with salted scrypt; sessions expire after 30 days. Deploy behind HTTPS or your private network/VPN.

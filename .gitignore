@@ -53,3 +53,5 @@ public/pdf/
 
 # Test reports
 coverage/
+playwright-report/
+test-results/

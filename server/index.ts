@@ -41,7 +41,7 @@ const pushDeliveryTimer = setInterval(() => { void runPushDelivery(); }, 15_000)
 app.use(express.static(resolve("dist")));
 app.get("/{*path}", async (_req, res) => res.type("html").send(await readFile(resolve("dist/index.html"))));
 const port = Number(process.env.PORT || 3001);
-const server = app.listen(port, "0.0.0.0");
+const server = app.listen(port, process.env.HOST || "0.0.0.0");
 server.on("listening", () =>
   console.log(`Penny server listening on port ${port}`),
 );

@@ -37,6 +37,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@testing-library/react-native": "^14.0.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
@@ -58,9 +59,10 @@
     "typecheck": "tsc --noEmit",
     "build:web": "npm run prepare:pdf && expo export --platform web",
     "prepare:pdf": "node scripts/copy-pdf-worker.mjs",
-    "lint": "expo lint src server tests",
+    "lint": "expo lint src server tests e2e scripts playwright.config.ts",
     "test:core": "node --test tests/*.test.ts",
     "test:ui": "jest --runInBand",
+    "test:e2e": "node scripts/run-playwright.mjs",
     "test:ui:watch": "jest --watch"
   },
   "private": true
