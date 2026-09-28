@@ -3,13 +3,18 @@ import { deleteEntry, saveEntry, saveSchedule } from "../../domain/commands";
 import { useLedger } from "../../providers/LedgerProvider";
 import { useWorkspace } from "../../providers/WorkspaceProvider";
 import { EntryForm } from "./EntryForm";
+import { router } from "expo-router";
+import { useHouseholds } from "../../providers/HouseholdProvider";
 
 export function EntryDialog() {
   const { ledger, demo, commit } = useLedger();
+  const { households } = useHouseholds();
   const { form, setForm, setMonth, setDay } = useWorkspace();
   if (!form) return null;
   return <EntryForm
     demo={demo}
+    households={households}
+    onHousehold={(householdId) => { setForm(null); router.push(`/households/${householdId}?add=1`); }}
     categories={ledger.categories}
     accounts={ledger.accounts}
     trips={ledger.trips}

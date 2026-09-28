@@ -1,4 +1,6 @@
 import { type EntryFormState } from "../../../providers/WorkspaceProvider";
+import { router } from "expo-router";
+import { isHouseholdTransaction } from "../../households/projection";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { dateKey, kinds, parseDate, type Ledger } from "../../../domain/ledger";
 import { Button, C, Field, Icon, Tag, s } from "../../../shared/ui";
@@ -127,6 +129,8 @@ export function EntryList({
                     if (t.scheduled) {
                       const rule = ledger.recurring.find((r) => r.id === t.recurringId);
                       if (rule) setForm({ rule });
+                    } else if (isHouseholdTransaction(t)) {
+                      router.push(`/households/${encodeURIComponent(t.householdId)}/expenses/${encodeURIComponent(t.householdExpenseId)}`);
                     } else setForm({ entry: t });
                   }}
                   key={t.id}
@@ -187,6 +191,7 @@ export function EntryList({
                         {t.accountId && ` · ${ledger.accounts.find((a) => a.id === t.accountId)?.name ?? ""}`}
                       </Text>
                       {t.scheduled && <Tag text="SCHEDULED" color={C.green} />}
+                      {isHouseholdTransaction(t) && <Tag text="HOUSEHOLD" color={C.green} />}
                       {t.tripId && <Tag text={ledger.trips.find((trip) => trip.id === t.tripId)?.name ?? "TRIP"} color={C.blue} />}
                       {t.share !== t.total && (
                         <Tag text="SPLIT" color={C.accent} />

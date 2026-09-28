@@ -26,6 +26,7 @@ import { buildEntry, buildSchedule } from "./entryDraft";
 import { AccountForm } from "../accounts/AccountForm";
 import type { LedgerChange } from "../../domain/commands";
 import { EntryPillPicker } from "./EntryPillPicker";
+import type { Household } from "../../data/households";
 
 export function EntryForm({
   categories,
@@ -40,6 +41,8 @@ export function EntryForm({
   onSave,
   onDelete,
   demo = false,
+  households = [],
+  onHousehold,
 }: {
   demo?: boolean;
   categories: Category[];
@@ -53,6 +56,8 @@ export function EntryForm({
   onClose: () => void;
   onSave: (entry: Transaction, rule?: Recurring) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
+  households?: Household[];
+  onHousehold?: (householdId: string) => void;
 }) {
   const initial = rule ?? entry;
   const [kind, setKind] = useState<Kind>(initial?.kind ?? "expense");
@@ -288,6 +293,11 @@ export function EntryForm({
             Record money you contribute to investments. This reduces cash remaining without counting as spending or tracking portfolio value.
           </Text>
         )}
+        {kind === "expense" && !initial && !!households.length && onHousehold && <View style={{ gap: 8 }}>
+          <Text style={s.label}>Add to a household instead</Text>
+          <View style={[s.row, { flexWrap: "wrap" }]}>{households.map((household) => <Button key={household.id} title={household.name} tone="quiet" icon="people-outline" onPress={() => onHousehold(household.id)} />)}</View>
+          <Text style={s.muted}>Household expenses are split among members and appear in your personal reports.</Text>
+        </View>}
         <Field
           label={`Amount (${currency})`}
           placeholder="0.00"
