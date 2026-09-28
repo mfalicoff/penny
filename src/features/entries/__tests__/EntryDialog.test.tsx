@@ -13,6 +13,9 @@ let mockSave: (entry: Transaction) => Promise<void>;
 jest.mock("../../../providers/LedgerProvider", () => ({
   useLedger: () => ({ ledger: mockLedger, demo: true, commit: mockCommit }),
 }));
+jest.mock("../../../providers/HouseholdProvider", () => ({
+  useHouseholds: () => ({ households: [], refresh: jest.fn() }),
+}));
 jest.mock("../../../providers/WorkspaceProvider", () => ({
   useWorkspace: () => ({ form: mockForm, setForm: jest.fn(), setMonth: mockSetMonth, setDay: mockSetDay }),
 }));

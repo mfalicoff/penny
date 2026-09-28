@@ -1,13 +1,15 @@
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Image, Platform, Pressable, Text, View } from "react-native";
 import { saveReceipt } from "../../data/receipts";
+import { calculateHouseholdSplits } from "../../domain/households";
 import {
   cents,
   kinds,
   kindLabels,
   dateKey,
+  validDate,
   personalShare,
   accountTypeIcons,
   type PaymentAccount,
@@ -25,7 +27,23 @@ import { DateField } from "../../shared/ui/DateField";
 import { buildEntry, buildSchedule } from "./entryDraft";
 import { AccountForm } from "../accounts/AccountForm";
 import type { LedgerChange } from "../../domain/commands";
+import { createExpense, createRecurring, deleteExpense, deleteRecurring, getHousehold, updateExpense, updateRecurring,
+  type ExpenseInput, type Household, type HouseholdExpense, type HouseholdMember, type HouseholdRecurring } from "../../data/households";
 import { EntryPillMenu, EntryPillPicker, type PillMenuPosition, type PillOption } from "./EntryPillPicker";
+
+const sharedCategoryId = "__household_original_category__";
+
+function originalAllocations(expense?: HouseholdExpense): Record<string, string> {
+  if (!expense) return {};
+  let assigned = 0;
+  return Object.fromEntries(expense.splits.map((part, index) => {
+    if (expense.splitMode !== "percent") return [part.userId, (part.amountCents / 100).toFixed(2)];
+    const basisPoints = index === expense.splits.length - 1 ? 10000 - assigned
+      : Math.round(part.amountCents / expense.totalCents * 10000);
+    assigned += basisPoints;
+    return [part.userId, (basisPoints / 100).toFixed(2)];
+  }));
+}
 
 export function EntryForm({
   categories,
@@ -40,6 +58,13 @@ export function EntryForm({
   onSave,
   onDelete,
   demo = false,
+  households = [],
+  userEmail,
+  initialHousehold,
+  initialMembers = [],
+  householdExpense,
+  householdRule,
+  onHouseholdSaved,
 }: {
   demo?: boolean;
   categories: Category[];
@@ -51,32 +76,50 @@ export function EntryForm({
   rule?: Recurring;
   currency: string;
   onClose: () => void;
-  onSave: (entry: Transaction, rule?: Recurring) => Promise<void>;
-  onDelete: (id: string) => Promise<void>;
+  onSave?: (entry: Transaction, rule?: Recurring) => Promise<void>;
+  onDelete?: (id: string) => Promise<void>;
+  households?: Household[];
+  userEmail?: string | null;
+  initialHousehold?: Household;
+  initialMembers?: HouseholdMember[];
+  householdExpense?: HouseholdExpense;
+  householdRule?: HouseholdRecurring;
+  onHouseholdSaved?: () => Promise<void> | void;
 }) {
   const initial = rule ?? entry;
-  const [kind, setKind] = useState<Kind>(initial?.kind ?? "expense");
-  const [title, setTitle] = useState(initial?.title ?? "");
+  const sharedInitial = householdExpense ?? householdRule;
+  const editing = Boolean(initial || sharedInitial);
+  const [kind, setKind] = useState<Kind>(sharedInitial ? "expense" : initial?.kind ?? "expense");
+  const [title, setTitle] = useState(initial?.title ?? sharedInitial?.title ?? "");
   const [amount, setAmount] = useState(
-    initial ? (initial.total / 100).toFixed(2) : "",
+    initial ? (initial.total / 100).toFixed(2) : sharedInitial ? (sharedInitial.totalCents / 100).toFixed(2) : "",
   );
-  const [date, setDate] = useState(rule?.nextDate ?? entry?.date ?? dateKey());
-  const [categoryId, setCategory] = useState(initial?.categoryId ?? "food");
-  const [accountId, setAccountId] = useState(initial?.accountId);
+  const [date, setDate] = useState(rule?.nextDate ?? entry?.date ?? householdRule?.nextDate ?? householdExpense?.date ?? dateKey());
+  const [categoryId, setCategory] = useState(initial?.categoryId ?? categories.find((item) => item.kind === "expense" && item.name === sharedInitial?.category.name)?.id ?? (sharedInitial ? sharedCategoryId : "food"));
+  const [accountId, setAccountId] = useState(initial?.accountId ?? sharedInitial?.accountId);
   const [tripId, setTripId] = useState(entry?.tripId ?? initialTripId);
+  const [householdId, setHouseholdId] = useState(initialHousehold?.id ?? "");
+  const [members, setMembers] = useState<HouseholdMember[]>(initialMembers);
+  const [loadingMembers, setLoadingMembers] = useState(false);
+  const selectionRequest = useRef(0);
+  const [payerUserId, setPayerUserId] = useState(sharedInitial?.payerUserId ?? initialMembers.find((member) => member.email === userEmail && !member.leftAt)?.userId ?? "");
+  const [householdSplit, setHouseholdSplit] = useState<ExpenseInput["splitMode"]>(sharedInitial?.splitMode ?? "equal");
+  const [allocations, setAllocations] = useState<Record<string, string>>(() => originalAllocations(householdExpense));
+  const [ruleActive, setRuleActive] = useState(householdRule?.active ?? true);
   const [openPicker, setOpenPicker] = useState<"category" | "trip" | "account" | null>(null);
   const [menuPosition, setMenuPosition] = useState<PillMenuPosition | null>(null);
   const [addingAccount, setAddingAccount] = useState(false);
-  const [note, setNote] = useState(initial?.note ?? "");
+  const [note, setNote] = useState(initial?.note ?? sharedInitial?.note ?? "");
   const [split, setSplit] = useState<"full" | "equal" | "amount" | "percent">(
     initial && initial.share !== initial.total ? "amount" : "full",
   );
   const [shareInput, setShareInput] = useState(
     initial ? (initial.share / 100).toFixed(2) : "2",
   );
-  const [frequency, setFrequency] = useState<Frequency | "none">(rule?.frequency ?? "none");
+  const [frequency, setFrequency] = useState<Frequency | "none">(rule?.frequency ?? householdRule?.frequency ?? "none");
   const [viewingReceipt, setViewingReceipt] = useState<Receipt>();
-  const [receipt, setReceipt] = useState<Receipt | undefined>(entry?.receipt);
+  const [receipt, setReceipt] = useState<Receipt | undefined>(entry?.receipt ?? householdExpense?.receipt);
+  const [retainedReceiptId, setRetainedReceiptId] = useState(sharedInitial?.receiptId);
   const [attachment, setAttachment] = useState<{
     uri: string;
     name: string;
@@ -85,17 +128,45 @@ export function EntryForm({
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const selectedHousehold = initialHousehold?.id === householdId ? initialHousehold : households.find((item) => item.id === householdId);
+  const activeMembers = members.filter((member) => new Date(member.joinedAt).toISOString().slice(0, 10) <= date &&
+    (!member.leftAt || new Date(member.leftAt).toISOString().slice(0, 10) > date));
+  const selfId = members.find((member) => member.email === userEmail)?.userId;
+  const sharedCurrency = selectedHousehold?.currency ?? currency;
+  async function selectHousehold(id: string) {
+    if (id === householdId) return;
+    const request = ++selectionRequest.current;
+    setHouseholdId(id);
+    setMembers([]);
+    setPayerUserId("");
+    setAllocations({});
+    setHouseholdSplit("equal");
+    setError("");
+    if (!id) { setLoadingMembers(false); return; }
+    setLoadingMembers(true);
+    try {
+      const details = await getHousehold(id);
+      if (selectionRequest.current !== request) return;
+      setMembers(details.members);
+      setPayerUserId(details.members.find((member) => member.email === userEmail && !member.leftAt)?.userId ?? details.members.find((member) => !member.leftAt)?.userId ?? "");
+      setTripId(undefined);
+    } catch (failure) {
+      if (selectionRequest.current !== request) return;
+      setError(failure instanceof Error ? failure.message : "Could not load household members.");
+      setHouseholdId("");
+    } finally { if (selectionRequest.current === request) setLoadingMembers(false); }
+  }
   let preview = "—";
   try {
     preview = new Intl.NumberFormat("en-CA", {
       style: "currency",
-      currency,
+      currency: sharedCurrency,
     }).format(
-      personalShare(
-        cents(amount),
-        kind === "expense" ? split : "full",
-        shareInput,
-      ) / 100,
+      householdId && selfId
+        ? (householdSplit === "equal" ? calculateHouseholdSplits(cents(amount), { mode: "equal", memberIds: activeMembers.map((member) => member.userId) }).find((part) => part.userId === selfId)?.amountCents ?? 0
+          : householdSplit === "exact" ? cents(allocations[selfId] || "0")
+            : Math.round(cents(amount) * Number(allocations[selfId] || "0") / 100)) / 100
+        : personalShare(cents(amount), kind === "expense" ? split : "full", shareInput) / 100,
     );
   } catch { }
   const switchKind = (value: Kind) => {
@@ -166,6 +237,46 @@ export function EntryForm({
   async function submit() {
     if (saving) return;
     try {
+      if (householdId) {
+        if (!selectedHousehold || loadingMembers || !activeMembers.length) throw new Error("Wait for household members to load.");
+        const totalCents = cents(amount);
+        if (!title.trim()) throw new Error("Enter what this expense was for.");
+        if (totalCents <= 0) throw new Error("Enter an amount greater than zero.");
+        if (!validDate(date)) throw new Error("Enter a valid date.");
+        if (!activeMembers.some((member) => member.userId === payerUserId)) throw new Error("Choose an active payer.");
+        const category = categories.find((item) => item.id === categoryId && item.kind === "expense")
+          ?? (categoryId === sharedCategoryId ? sharedInitial?.category : undefined);
+        if (!category) throw new Error("Choose a category.");
+        if (accountId && payerUserId === selfId && !accounts.some((item) => item.id === accountId)) throw new Error("Choose an available payment account.");
+        if (frequency !== "none" && householdSplit !== "equal") throw new Error("Recurring household expenses must be split equally.");
+        let parts: ExpenseInput["allocations"];
+        if (householdSplit === "exact") {
+          parts = activeMembers.map((member) => ({ userId: member.userId, amountCents: cents(allocations[member.userId] || "0") }));
+          if (parts.reduce((sum, item) => sum + ("amountCents" in item ? item.amountCents : 0), 0) !== totalCents)
+            throw new Error("Member amounts must add up to the expense total.");
+        } else if (householdSplit === "percent") {
+          parts = activeMembers.map((member) => ({ userId: member.userId, percentBasisPoints: cents(allocations[member.userId] || "0") }));
+          if (parts.reduce((sum, item) => sum + ("percentBasisPoints" in item ? item.percentBasisPoints : 0), 0) !== 10000)
+            throw new Error("Member percentages must add up to 100%.");
+        }
+        setSaving(true);
+        setError("");
+        const savedReceipt = attachment ? await saveReceipt(attachment) : undefined;
+        const input: ExpenseInput = {
+          title: title.trim(), totalCents, date, payerUserId, splitMode: householdSplit,
+          allocations: parts, category: { name: category.name, icon: category.icon, color: category.color },
+          note: note.trim(), accountId: payerUserId === selfId ? accountId : undefined,
+          receiptId: savedReceipt?.id ?? receipt?.id ?? retainedReceiptId,
+        };
+        if (householdRule) await updateRecurring(householdId, householdRule.id, householdRule.revision,
+          { ...input, nextDate: date, frequency: frequency === "none" ? householdRule.frequency : frequency, active: ruleActive });
+        else if (householdExpense) await updateExpense(householdId, householdExpense.id, householdExpense.revision, input);
+        else if (frequency !== "none") await createRecurring(householdId, { ...input, nextDate: date, frequency });
+        else await createExpense(householdId, input);
+        await onHouseholdSaved?.();
+        onClose();
+        return;
+      }
       if (accountId && !accounts.some((a) => a.id === accountId)) throw new Error("Choose an available payment account.");
       if (kind === "expense" && !rule && tripId && !trips.some((trip) => trip.id === tripId)) throw new Error("Choose an available trip.");
       const draft = { kind, title, amount, date, categoryId, accountId, tripId: rule ? undefined : tripId, note, split, shareInput, frequency, receipt };
@@ -175,6 +286,7 @@ export function EntryForm({
       setSaving(true);
       setError("");
       if (kind === "expense" && attachment) transaction.receipt = await saveReceipt(attachment);
+      if (!onSave) throw new Error("This entry cannot be saved here.");
       await onSave(transaction, recurring);
       onClose();
     } catch (e) {
@@ -188,6 +300,8 @@ export function EntryForm({
     }
   }
   const categoryOptions: PillOption[] = categories.filter((c) => c.kind === kind).map((c) => ({ id: c.id, label: c.name, icon: c.icon, color: c.color }));
+  if (kind === "expense" && sharedInitial && !categories.some((item) => item.kind === "expense" && item.name === sharedInitial.category.name))
+    categoryOptions.push({ id: sharedCategoryId, label: sharedInitial.category.name, icon: sharedInitial.category.icon, color: sharedInitial.category.color });
   const tripOptions: PillOption[] = [{ id: "", label: "No trip" }, ...trips.map((trip) => ({ id: trip.id, label: trip.name, accessibilityLabel: `Assign to ${trip.name}` }))];
   const accountOptions: PillOption[] = [{ id: "", label: "Unassigned" }, ...accounts.map((account) => ({
     id: account.id, label: account.name, icon: accountTypeIcons[account.type], accessibilityLabel: `Use ${account.name}`,
@@ -226,7 +340,7 @@ export function EntryForm({
   return (
     <Sheet
       visible
-      title={rule ? "Edit recurring entry" : entry ? "Edit entry" : "A little update."}
+      title={rule || householdRule ? "Edit recurring entry" : entry || householdExpense ? "Edit entry" : "A little update."}
       overlay={openPicker && <EntryPillMenu label={openPicker === "category" ? "Category" : openPicker === "trip" ? "Trip" : "Account"}
         value={pickerValue} options={pickerOptions} position={menuPosition}
         onClose={() => setOpenPicker(null)} onSelect={selectPickerOption}
@@ -237,13 +351,13 @@ export function EntryForm({
         <EntryPillPicker label="Category" value={categoryId} iconOnly align="center"
           options={categoryOptions} open={openPicker === "category"} onToggle={() => togglePicker("category")}
           onPosition={setMenuPosition} />
-        {kind === "expense" && !rule && <EntryPillPicker label="Trip" value={tripId ?? ""} iconOnly align="right"
+        {kind === "expense" && !rule && !householdId && <EntryPillPicker label="Trip" value={tripId ?? ""} iconOnly align="right"
           options={tripOptions} emptyMessage={tripEmptyMessage}
           open={openPicker === "trip"} onToggle={() => togglePicker("trip")}
           onPosition={setMenuPosition} />}
-        <EntryPillPicker label="Account" value={accountId ?? ""} iconOnly align="right"
+        {(!householdId || payerUserId === selfId) && <EntryPillPicker label="Account" value={accountId ?? ""} iconOnly align="right"
           options={accountOptions} open={openPicker === "account"} onToggle={() => togglePicker("account")}
-          onPosition={setMenuPosition} hasFooterAction={Boolean(accountFooter)} />
+          onPosition={setMenuPosition} hasFooterAction={Boolean(accountFooter)} />}
       </>}
       onClose={() => {
         if (!saving) onClose();
@@ -256,7 +370,7 @@ export function EntryForm({
             </Text>
           ) : null}
           <Button
-            title={saving ? "Saving…" : initial ? "Save changes" : `Add ${kind}`}
+            title={saving ? "Saving…" : editing ? "Save changes" : `Add ${kind}`}
             icon="checkmark"
             disabled={saving}
             onPress={submit}
@@ -273,7 +387,7 @@ export function EntryForm({
             { backgroundColor: C.bg, padding: 5, borderRadius: 13 },
           ]}
         >
-          {kinds.map((k) => (
+          {kinds.filter((k) => !householdId || k === "expense").map((k) => (
             <Pressable
               key={k}
               accessibilityRole="button"
@@ -305,8 +419,22 @@ export function EntryForm({
             Record money you contribute to investments. This reduces cash remaining without counting as spending or tracking portfolio value.
           </Text>
         )}
+        {kind === "expense" && (!editing || !!sharedInitial) && (households.length > 0 || !!initialHousehold) && <View style={{ gap: 8 }}>
+          <Text style={s.label}>Expense for</Text>
+          <View style={[s.row, { flexWrap: "wrap" }]}>
+            {!editing && <Pressable accessibilityRole="button" accessibilityState={{ selected: !householdId }}
+              onPress={() => void selectHousehold("")} style={[s.chip, !householdId && s.chipActive]}><Text style={s.label}>Personal</Text></Pressable>}
+            {(initialHousehold && !households.some((item) => item.id === initialHousehold.id) ? [initialHousehold, ...households] : households).map((household) =>
+              <Pressable key={household.id} accessibilityRole="button" accessibilityLabel={`Expense for ${household.name}`}
+                accessibilityState={{ selected: householdId === household.id }}
+                onPress={() => void selectHousehold(household.id)} style={[s.chip, householdId === household.id && s.chipActive]}>
+                <Text style={s.label}>{household.name}</Text>
+              </Pressable>)}
+          </View>
+          {loadingMembers && <Text style={s.muted}>Loading household members…</Text>}
+        </View>}
         <Field
-          label={`Amount (${currency})`}
+          label={`Amount (${sharedCurrency})`}
           placeholder="0.00"
           keyboardType="decimal-pad"
           value={amount}
@@ -317,7 +445,7 @@ export function EntryForm({
             fontWeight: "500",
             letterSpacing: -1,
           }}
-          autoFocus={!initial && Platform.OS === "web"}
+          autoFocus={!editing && Platform.OS === "web"}
         />
         <Field
           label={
@@ -332,7 +460,7 @@ export function EntryForm({
           onChangeText={setTitle}
           maxLength={100}
         />
-        {kind === "expense" && (
+        {kind === "expense" && !householdId && (
           <View
             style={{
               gap: 12,
@@ -396,10 +524,34 @@ export function EntryForm({
             )}
           </View>
         )}
-        {kind === "expense" && !rule && (
+        {kind === "expense" && !!householdId && <View style={{ gap: 12, borderTopWidth: 1, borderColor: C.line, paddingTop: 20 }}>
+          <View style={s.between}><View style={s.row}><Icon name="people-outline" size={18} /><Text style={s.label}>Your part of the receipt</Text></View>
+            <Text style={{ color: C.accent, fontWeight: "600" }}>{preview}</Text></View>
+          <Text style={s.label}>Paid by</Text>
+          <View style={[s.row, { flexWrap: "wrap", gap: 6 }]}>{activeMembers.map((member) =>
+            <Pressable key={member.userId} accessibilityRole="button" accessibilityState={{ selected: payerUserId === member.userId }}
+              onPress={() => setPayerUserId(member.userId)} style={[s.chip, payerUserId === member.userId && s.chipActive]}>
+              <Text style={s.label}>{member.email === userEmail ? "You" : member.email}</Text>
+            </Pressable>)}</View>
+          {!activeMembers.length && <Text style={s.muted}>No household members are active on this date.</Text>}
+          <Text style={s.label}>Split among members</Text>
+          <View style={[s.row, { flexWrap: "wrap", gap: 6 }]}>
+            {([ ["equal", "Equally"], ["exact", "Exact amounts"], ["percent", "Percentages"] ] as const)
+              .filter(([mode]) => frequency === "none" || mode === "equal").map(([mode, label]) =>
+                <Pressable key={mode} accessibilityRole="button" accessibilityState={{ selected: householdSplit === mode }}
+                  onPress={() => { setHouseholdSplit(mode); if (mode !== householdSplit) setAllocations({}); }}
+                  style={[s.chip, householdSplit === mode && s.chipActive]}><Text style={s.label}>{label}</Text></Pressable>)}</View>
+          {householdSplit === "equal" ? <Text style={s.muted}>Every active member owes an equal share, including the payer.</Text>
+            : activeMembers.map((member) => <Field key={member.userId}
+              label={`${member.email === userEmail ? "You" : member.email} (${householdSplit === "percent" ? "%" : sharedCurrency})`}
+              value={allocations[member.userId] ?? ""}
+              onChangeText={(value) => setAllocations((current) => ({ ...current, [member.userId]: value }))}
+              placeholder="0" keyboardType="decimal-pad" />)}
+        </View>}
+        {kind === "expense" && !rule && !householdRule && (
           <View style={{ gap: 10 }}>
             <Text style={s.label}>Receipt</Text>
-            {receipt || attachment ? (
+            {receipt || attachment || retainedReceiptId ? (
               <View
                 style={[
                   s.card,
@@ -412,7 +564,7 @@ export function EntryForm({
                     numberOfLines={1}
                     style={{ flex: 1, color: C.ink, fontSize: 13 }}
                   >
-                    {attachment?.name ?? receipt?.name}
+                    {attachment?.name ?? receipt?.name ?? "Receipt attached"}
                   </Text>
                   <Pressable
                     accessibilityRole="button"
@@ -420,6 +572,7 @@ export function EntryForm({
                     onPress={() => {
                       setReceipt(undefined);
                       setAttachment(undefined);
+                      setRetainedReceiptId(undefined);
                     }}
                   >
                     <Icon name="close-circle-outline" />
@@ -465,17 +618,17 @@ export function EntryForm({
             )}
           </View>
         )}
-        {(!entry || rule) && (
+        {(!entry && !householdExpense || rule || householdRule) && (
           <View style={{ gap: 10 }}>
             <Text style={s.label}>Repeat</Text>
             <View style={[s.row, { gap: 6, flexWrap: "wrap" }]}>
-              {(["none", "weekly", "monthly", "yearly"] as const).filter((f) => !rule || f !== "none").map((f) => (
+              {(["none", "weekly", "monthly", "yearly"] as const).filter((f) => !(rule || householdRule) || f !== "none").map((f) => (
                 <Pressable
                   accessibilityRole="button"
                   accessibilityState={{ selected: frequency === f }}
                   key={f}
                   style={[s.chip, frequency === f && s.chipActive]}
-                  onPress={() => setFrequency(f)}
+                  onPress={() => { setFrequency(f); if (householdId && f !== "none") { setHouseholdSplit("equal"); setAllocations({}); } }}
                 >
                   <Text style={{ fontSize: 12, color: C.ink }}>
                     {f === "none"
@@ -487,10 +640,11 @@ export function EntryForm({
             </View>
             {frequency !== "none" && (
               <Text style={s.muted}>
-                {rule ? "Changes apply to future occurrences. Recorded entries keep their original details." : "Due entries are added automatically when you open the app."}
-                {!rule && kind === "expense" ? " Receipts apply to this entry only." : ""}
+                {rule || householdRule ? "Changes apply to future occurrences. Recorded entries keep their original details." : householdId ? "Each occurrence is split among members active on its date." : "Due entries are added automatically when you open the app."}
+                {!rule && !householdRule && kind === "expense" ? " Receipts apply to this entry only." : ""}
               </Text>
             )}
+            {householdRule && <Button title={ruleActive ? "Pause schedule" : "Resume schedule"} tone="quiet" onPress={() => setRuleActive(!ruleActive)} />}
           </View>
         )}
         {entry?.recurringId && (
@@ -507,7 +661,7 @@ export function EntryForm({
           multiline
           maxLength={1000}
         />
-        {entry &&
+        {(entry || householdExpense || householdRule) &&
           (confirmDelete ? (
             <View style={{ gap: 10 }}>
               <Text style={s.muted}>
@@ -519,7 +673,10 @@ export function EntryForm({
                 onPress={async () => {
                   setSaving(true);
                   try {
-                    await onDelete(entry.id);
+                    if (householdExpense && householdId) await deleteExpense(householdId, householdExpense.id, householdExpense.revision);
+                    else if (householdRule && householdId) await deleteRecurring(householdId, householdRule.id, householdRule.revision);
+                    else if (entry && onDelete) await onDelete(entry.id);
+                    await onHouseholdSaved?.();
                     onClose();
                   } catch {
                     setError("Could not delete this entry. Please try again.");

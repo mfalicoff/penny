@@ -24,6 +24,7 @@ jest.mock("../../data/api", () => ({
   ApiError: class extends Error {}, whoAmI: jest.fn(), fetchLedger: jest.fn(), mutateLedger: jest.fn(), signIn: jest.fn(), signOut: jest.fn(),
 }));
 jest.mock("../../data/receipts", () => ({ saveReceipt: jest.fn(), receiptUrl: jest.fn(), releaseReceiptUrl: jest.fn() }));
+jest.mock("../../providers/HouseholdProvider", () => ({ useHouseholds: () => ({ households: [], projection: [], refresh: jest.fn(), loadProjection: jest.fn() }) }));
 jest.mock("expo-router", () => ({ router: { navigate: jest.fn() } }));
 jest.mock("expo-document-picker", () => ({ getDocumentAsync: jest.fn() }));
 jest.mock("expo-image-picker", () => ({ launchImageLibraryAsync: jest.fn() }));

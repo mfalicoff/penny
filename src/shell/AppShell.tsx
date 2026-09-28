@@ -1,7 +1,7 @@
 import { Slot, router, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { EntryDialog } from "../features/entries/EntryDialog";
 import { SettingsSheet } from "../features/settings/SettingsSheet";
@@ -11,35 +11,41 @@ import { useTheme } from "../shared/theme";
 import { Button, C, Icon, IconButton, s } from "../shared/ui";
 import { useResponsive } from "../shared/useResponsive";
 import { SaveToast } from "./SaveToast";
-type Tab = "Overview" | "Transactions" | "Trips" | "Recurring" | "Categories" | "Accounts";
-const navigation: { tab: Tab; icon: string; }[] = [
-  { tab: "Overview", icon: "grid-outline" },
-  { tab: "Transactions", icon: "list-outline" },
-  { tab: "Trips", icon: "airplane-outline" },
-  { tab: "Recurring", icon: "repeat-outline" },
-  { tab: "Categories", icon: "pricetags-outline" },
-  { tab: "Accounts", icon: "wallet-outline" },
+type Tab = "Overview" | "Transactions" | "Households" | "Trips" | "Recurring" | "Categories" | "Accounts";
+const navigation: { tab: Tab; icon: string; mobileLabel: string }[] = [
+  { tab: "Overview", icon: "grid-outline", mobileLabel: "Home" },
+  { tab: "Transactions", icon: "list-outline", mobileLabel: "Entries" },
+  { tab: "Households", icon: "people-outline", mobileLabel: "Shared" },
+  { tab: "Trips", icon: "airplane-outline", mobileLabel: "Trips" },
+  { tab: "Recurring", icon: "repeat-outline", mobileLabel: "Repeat" },
+  { tab: "Categories", icon: "pricetags-outline", mobileLabel: "Tags" },
+  { tab: "Accounts", icon: "wallet-outline", mobileLabel: "Wallet" },
 ];
 export function AppShell() {
   const theme = useTheme();
   const a = makeStyles();
   const { compact, desktop } = useResponsive();
+  const { height } = useWindowDimensions();
+  const shortSidebar = height < 850;
+  const veryShortSidebar = height < 600;
   const { email, demo, leaveDemo, syncing, syncError, sync, toast, toastKind, toastSequence } = useLedger();
   const { setForm } = useWorkspace();
   const [settings, setSettings] = React.useState(false);
   const pathname = usePathname();
-  const tab: Tab = pathname === "/transactions" ? "Transactions" : pathname.startsWith("/trips") ? "Trips" : pathname === "/accounts" ? "Accounts" : pathname === "/recurring" ? "Recurring" : pathname === "/categories" ? "Categories" : "Overview";
-  const setTab = (value: Tab) => router.navigate(({ Overview: "/", Transactions: "/transactions", Trips: "/trips", Recurring: "/recurring", Categories: "/categories", Accounts: "/accounts" } as const)[value]);
+  const tab: Tab = pathname === "/transactions" ? "Transactions" : pathname.startsWith("/households") ? "Households" : pathname.startsWith("/trips") ? "Trips" : pathname === "/accounts" ? "Accounts" : pathname === "/recurring" ? "Recurring" : pathname === "/categories" ? "Categories" : "Overview";
+  const setTab = (value: Tab) => router.navigate(({ Overview: "/", Transactions: "/transactions", Households: "/households", Trips: "/trips", Recurring: "/recurring", Categories: "/categories", Accounts: "/accounts" } as const)[value]);
   const nav = (mobile = false) => (
-    <View style={mobile ? a.mobileNav : { gap: 8 }}>
+    <View style={mobile ? a.mobileNav : { gap: shortSidebar ? 4 : 8 }}>
       {navigation.map((item) => (
         <Pressable
           accessibilityRole="button"
+          accessibilityLabel={item.tab}
           accessibilityState={{ selected: tab === item.tab }}
           onPress={() => setTab(item.tab)}
           key={item.tab}
           style={[
             mobile ? a.mobileNavItem : a.navItem,
+            !mobile && shortSidebar && { paddingVertical: veryShortSidebar ? 6 : 10 },
             tab === item.tab && { backgroundColor: C.pale },
           ]}
         >
@@ -49,13 +55,14 @@ export function AppShell() {
             color={tab === item.tab ? C.ink : C.muted}
           />
           <Text
+            numberOfLines={1}
             style={{
               color: tab === item.tab ? C.ink : C.muted,
-              fontSize: mobile ? 10 : 13,
+              fontSize: mobile ? 9 : 13,
               fontWeight: tab === item.tab ? "600" : "400",
             }}
           >
-            {item.tab}
+            {mobile ? item.mobileLabel : item.tab}
           </Text>
           {!mobile && tab === item.tab && (
             <View
@@ -78,7 +85,7 @@ export function AppShell() {
       <View style={{ flex: 1, flexDirection: "row" }}>
         {desktop && (
           <View style={a.sidebar}>
-            <View style={[s.row, { paddingHorizontal: 12, marginBottom: 52 }]}>
+            <View style={[s.row, { paddingHorizontal: 12, marginBottom: shortSidebar ? 22 : 52 }]}>
               <View style={a.logo}>
                 <Icon name="leaf-outline" color="white" size={22} />
               </View>
@@ -86,10 +93,10 @@ export function AppShell() {
                 penny<Text style={{ color: C.accent }}>.</Text>
               </Text>
             </View>
-            <Text style={a.navLabel}>YOUR EVERYDAY</Text>
+            {!veryShortSidebar && <Text style={a.navLabel}>YOUR EVERYDAY</Text>}
             {nav()}
             <View style={{ flex: 1 }} />
-            <View style={a.sideNote}>
+            {!shortSidebar && <View style={a.sideNote}>
               <Icon name="sunny-outline" color={C.green} size={27} />
               <Text
                 style={{
@@ -104,7 +111,7 @@ export function AppShell() {
               <Text style={[s.muted, { fontSize: 11, lineHeight: 18 }]}>
                 Make a little space to see where your money goes.
               </Text>
-            </View>
+            </View>}
             <Pressable
               accessibilityRole="button"
               onPress={() => setSettings(true)}
@@ -191,6 +198,8 @@ export function AppShell() {
                       ? "EVERY ENTRY, IN VIEW"
                     : tab === "Trips"
                       ? "MEMORIES, WITH A CLEARER TOTAL"
+                    : tab === "Households"
+                      ? "SHARE THE EVERYDAY"
                     : tab === "Recurring"
                       ? "SET IT. REMEMBER LESS."
                       : "A PLACE FOR EVERYTHING"}
@@ -202,6 +211,8 @@ export function AppShell() {
                       ? "Your transactions."
                     : tab === "Trips"
                       ? "Your trips."
+                    : tab === "Households"
+                      ? "Your households."
                     : tab === "Recurring"
                       ? "On repeat."
                       : tab === "Accounts" ? "Your accounts." : "Keep it organized."}
@@ -213,12 +224,14 @@ export function AppShell() {
                       ? "Browse your income, expenses, and investments by month or year."
                     : tab === "Trips"
                       ? "See the expenses behind each journey."
+                    : tab === "Households"
+                      ? "Shared expenses and monthly reimbursements, together."
                     : tab === "Recurring"
                       ? "Your regular expenses, income, and investments, taken care of."
                       : tab === "Accounts" ? "Bank, card, or cash. Give every entry a home." : "Categories that make sense for your everyday."}
                 </Text>
               </View>
-              {!compact && tab !== "Categories" && tab !== "Accounts" && (
+              {!compact && tab !== "Categories" && tab !== "Accounts" && tab !== "Households" && (
                 <Button
                   title="Add entry"
                   icon="add"
@@ -241,7 +254,7 @@ export function AppShell() {
                 <Button title="Retry" tone="quiet" onPress={sync} />
               </View>
             )}
-            {compact && tab !== "Categories" && tab !== "Accounts" && (
+            {compact && tab !== "Categories" && tab !== "Accounts" && tab !== "Households" && (
               <Button
                 title="Add entry"
                 icon="add"

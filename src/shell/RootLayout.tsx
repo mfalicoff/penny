@@ -4,6 +4,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Auth } from "../features/auth/AuthScreen";
 import { LedgerProvider, useLedger } from "../providers/LedgerProvider";
 import { WorkspaceProvider } from "../providers/WorkspaceProvider";
+import { HouseholdProvider } from "../providers/HouseholdProvider";
 import { ThemeProvider } from "../shared/theme";
 import { C, Icon, s } from "../shared/ui";
 import { AppShell } from "./AppShell";
@@ -15,7 +16,7 @@ function SessionGate() {
     <Text style={s.muted}>Making a little room for clarity…</Text>
   </View>;
   if (!email && !demo) return <Auth onReady={login} onDemo={openDemo} />;
-  return <WorkspaceProvider key={sessionKey}><AppShell /></WorkspaceProvider>;
+  return <WorkspaceProvider key={sessionKey}><HouseholdProvider><AppShell /></HouseholdProvider></WorkspaceProvider>;
 }
 
 export default function RootLayout() {

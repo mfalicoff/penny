@@ -1,7 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { dateKey, parseDate } from "../../domain/ledger";
 import { useLedger } from "../../providers/LedgerProvider";
+import { useHouseholds } from "../../providers/HouseholdProvider";
+import { ledgerWithHouseholds } from "../households/projection";
 import { useWorkspace } from "../../providers/WorkspaceProvider";
 import { currencyFormat } from "../../shared/format";
 import { Button, Field, Icon, Sheet, s } from "../../shared/ui";
@@ -18,8 +20,11 @@ const months = Array.from({ length: 12 }, (_, index) => ({
 
 export default function TransactionsScreen() {
   useTheme();
-  const { ledger } = useLedger();
+  const { ledger: privateLedger } = useLedger();
+  const { projection, households, loadProjection } = useHouseholds();
+  const ledger = useMemo(() => ledgerWithHouseholds(privateLedger, projection, households), [privateLedger, projection, households]);
   const { transactionFilters: filters, setTransactionFilters, setForm } = useWorkspace();
+  useEffect(() => { void loadProjection(filters.period === "year" ? filters.month.slice(0, 4) : filters.month); }, [filters.period, filters.month, loadProjection]);
   const { compact } = useResponsive();
   const [choosing, setChoosing] = useState(false);
   const [year, setYear] = useState("");

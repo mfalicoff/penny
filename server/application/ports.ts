@@ -26,12 +26,15 @@ export interface LedgerRepository {
   read(userId: string): LedgerSnapshot;
   /** Atomic compare-and-swap; false if another writer changed the revision. */
   save(userId: string, snapshot: LedgerSnapshot): boolean;
+  householdCurrencies(userId: string): string[];
+  linkedHouseholdAccounts(userId: string): string[];
 }
 
 export interface ReceiptRepository {
   owns(userId: string, receiptId: string): boolean;
   create(userId: string, receiptId: string, receipt: StoredReceipt): void;
   read(userId: string, receiptId: string): StoredReceipt | undefined;
+  readShared?(receiptId: string): StoredReceipt | undefined;
 }
 
 export interface Security {

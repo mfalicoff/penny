@@ -3,6 +3,7 @@ import { AppState, Platform } from "react-native";
 import { ApiError, fetchLedger, mutateLedger, signOut, whoAmI } from "../data/api";
 import type { LedgerChange } from "../domain/commands";
 import { demoLedger, emptyLedger, materialize, type Kind, type Ledger } from "../domain/ledger";
+import { PushRegistration, unregisterPushForLogout } from "./PushRegistration";
 
 function useLedgerSession() {
   const [email, setEmail] = useState<string | null>(null);
@@ -128,6 +129,7 @@ function useLedgerSession() {
     if (operation.current) return false;
     operation.current = true;
     try {
+      await unregisterPushForLogout();
       await signOut();
       startSession(null, false);
       return true;
@@ -151,7 +153,10 @@ const LedgerContext = createContext<ReturnType<typeof useLedgerSession> | null>(
 
 export function LedgerProvider({ children }: React.PropsWithChildren) {
   const value = useLedgerSession();
-  return <LedgerContext.Provider value={value}>{children}</LedgerContext.Provider>;
+  return <LedgerContext.Provider value={value}>
+    <PushRegistration email={value.email} demo={value.demo} />
+    {children}
+  </LedgerContext.Provider>;
 }
 
 export function useLedger() {

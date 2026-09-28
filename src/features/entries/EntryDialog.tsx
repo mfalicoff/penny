@@ -3,14 +3,19 @@ import { deleteEntry, saveEntry, saveSchedule } from "../../domain/commands";
 import { useLedger } from "../../providers/LedgerProvider";
 import { useWorkspace } from "../../providers/WorkspaceProvider";
 import { EntryForm } from "./EntryForm";
+import { useHouseholds } from "../../providers/HouseholdProvider";
 import { playSaveHaptic } from "./saveHaptic";
 
 export function EntryDialog() {
-  const { ledger, demo, commit } = useLedger();
+  const { ledger, demo, commit, email } = useLedger();
+  const { households, refresh } = useHouseholds();
   const { form, setForm, setMonth, setDay } = useWorkspace();
   if (!form) return null;
   return <EntryForm
     demo={demo}
+    households={households}
+    userEmail={email}
+    onHouseholdSaved={refresh}
     categories={ledger.categories}
     accounts={ledger.accounts}
     trips={ledger.trips}

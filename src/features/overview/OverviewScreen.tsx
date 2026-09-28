@@ -1,7 +1,9 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { Pressable, Text, View } from "react-native";
 import { dateKey, parseDate } from "../../domain/ledger";
 import { useLedger } from "../../providers/LedgerProvider";
+import { useHouseholds } from "../../providers/HouseholdProvider";
+import { ledgerWithHouseholds } from "../households/projection";
 import { useWorkspace } from "../../providers/WorkspaceProvider";
 import { currencyFormat } from "../../shared/format";
 import { C, IconButton, s } from "../../shared/ui";
@@ -16,8 +18,11 @@ import { selectOverview, shiftMonthKey } from "./selectors";
 
 export default function OverviewScreen() {
   useTheme();
-  const { ledger } = useLedger();
+  const { ledger: privateLedger } = useLedger();
+  const { projection, households, loadProjection } = useHouseholds();
+  const ledger = useMemo(() => ledgerWithHouseholds(privateLedger, projection, households), [privateLedger, projection, households]);
   const { month, setMonth, day, setDay, filter, setFilter, search, setSearch, setForm } = useWorkspace();
+  useEffect(() => { void loadProjection(month); }, [month, loadProjection]);
   const { compact, desktop } = useResponsive();
   const { monthEntries, calendarEntries, summary, visibleEntries, grouped, spending } = useMemo(() => selectOverview(ledger, { month, day, filter, search }), [ledger, month, day, filter, search]);
   const monthLabel = parseDate(`${month}-01`).toLocaleDateString("en-CA", { month: "long", year: "numeric" });
