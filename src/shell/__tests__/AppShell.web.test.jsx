@@ -24,7 +24,8 @@ test.each([
 ])("%s renders empty, populated and cleared messages without raw text warnings", async (_name, responsive) => {
   mockResponsive = responsive;
   await renderWeb(<AppShell />);
-  expect(document.body.textContent).toContain("Synced with your server");
+  if (_name === "desktop") expect(document.body.textContent).toContain("Synced with your server");
+  else expect(document.body.textContent).not.toContain("Synced with your server");
   expect(document.body.querySelector('[role="alert"]')).toBeNull();
 
   mockSession = { ...mockSession, syncError: "Cannot reach your server.", toast: "Entry saved" };

@@ -34,11 +34,14 @@ test("real routes render their feature and navigation preserves overview filters
   expect(screen.getByLabelText("Search entries")).toHaveDisplayValue("");
   await fireEvent.press(screen.getByRole("button", { name: "By year" }));
   await fireEvent.changeText(screen.getByLabelText("Search entries"), "salary");
+  await fireEvent.press(screen.getByRole("button", { name: "More sections" }));
   await fireEvent.press(screen.getByRole("button", { name: "Recurring" }));
   expect(screen.getByText("Rent, payday, the usuals.")).toBeOnTheScreen();
   expect(screen.queryByLabelText("Search entries")).toBeNull();
+  await fireEvent.press(screen.getByRole("button", { name: "More sections" }));
   await fireEvent.press(screen.getByRole("button", { name: "Categories" }));
   expect(screen.getByText("EXPENSE CATEGORIES")).toBeOnTheScreen();
+  await fireEvent.press(screen.getByRole("button", { name: "More sections" }));
   await fireEvent.press(screen.getByRole("button", { name: "Accounts" }));
   expect(screen.getByText("Where your money lives.")).toBeOnTheScreen();
   await fireEvent.press(screen.getByRole("button", { name: "Trips" }));

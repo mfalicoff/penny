@@ -1,27 +1,31 @@
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { saveCategory } from "../../domain/commands";
-import { kinds, kindLabels, palette, uid, type Category, type Ledger } from "../../domain/ledger";
+import { kinds, kindLabels, palette, uid, type Category, type Kind, type Ledger } from "../../domain/ledger";
 import { Button, Field, Icon, Sheet, s } from "../../shared/ui";
 export function CategoryForm({
   category,
   ledger,
+  initialKind,
   onClose,
+  onSaved,
   commit,
 }: {
   category?: Category;
-  ledger: Ledger;
+  ledger?: Ledger;
+  initialKind?: Kind;
   onClose: () => void;
+  onSaved?: (category: Category) => void;
   commit: (change: (l: Ledger) => Ledger, message: string) => Promise<void>;
 }) {
   const [name, setName] = useState(category?.name ?? "");
-  const [kind, setKind] = useState(category?.kind ?? "expense");
+  const [kind, setKind] = useState(category?.kind ?? initialKind ?? "expense");
   const [color, setColor] = useState(category?.color ?? palette[0]);
   const [icon, setIcon] = useState(category?.icon ?? "pricetag-outline");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const used =
-    category &&
+    category && ledger &&
     [...ledger.transactions, ...ledger.recurring].some(
       (t) => t.categoryId === category.id,
     );
@@ -44,6 +48,7 @@ export function CategoryForm({
         saveCategory(item, category, remove),
         remove ? "Category removed" : "Category saved",
       );
+      if (!remove) onSaved?.(item);
       onClose();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not save.");
@@ -54,7 +59,7 @@ export function CategoryForm({
   return (
     <Sheet
       visible
-      title={category ? "Make it yours." : "A new little category."}
+      title={category ? "Make it yours." : initialKind ? `New ${initialKind} category` : "A new little category."}
       onClose={onClose}
     >
       <Field
@@ -64,7 +69,7 @@ export function CategoryForm({
         onChangeText={setName}
         maxLength={50}
       />
-      {!category && (
+      {!category && !initialKind && (
         <View style={[s.row, { flexWrap: "wrap" }]}>
           {kinds.map((k) => (
             <Button

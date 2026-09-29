@@ -22,10 +22,12 @@ import {
   type Trip,
 } from "../../domain/ledger";
 import { Button, C, Field, Icon, Sheet, s } from "../../shared/ui";
+import { useResponsive } from "../../shared/useResponsive";
 import { ReceiptPreview } from "../receipts/ReceiptPreview";
 import { DateField } from "../../shared/ui/DateField";
 import { buildEntry, buildSchedule } from "./entryDraft";
 import { AccountForm } from "../accounts/AccountForm";
+import { CategoryForm } from "../categories/CategoryForm";
 import type { LedgerChange } from "../../domain/commands";
 import { createExpense, createRecurring, deleteExpense, deleteRecurring, getHousehold, updateExpense, updateRecurring,
   type ExpenseInput, type Household, type HouseholdExpense, type HouseholdMember, type HouseholdRecurring } from "../../data/households";
@@ -86,6 +88,7 @@ export function EntryForm({
   householdRule?: HouseholdRecurring;
   onHouseholdSaved?: () => Promise<void> | void;
 }) {
+  const { compact } = useResponsive();
   const initial = rule ?? entry;
   const sharedInitial = householdExpense ?? householdRule;
   const editing = Boolean(initial || sharedInitial);
@@ -109,6 +112,7 @@ export function EntryForm({
   const [openPicker, setOpenPicker] = useState<"category" | "trip" | "account" | null>(null);
   const [menuPosition, setMenuPosition] = useState<PillMenuPosition | null>(null);
   const [addingAccount, setAddingAccount] = useState(false);
+  const [addingCategory, setAddingCategory] = useState(false);
   const [note, setNote] = useState(initial?.note ?? sharedInitial?.note ?? "");
   const [split, setSplit] = useState<"full" | "equal" | "amount" | "percent">(
     initial && initial.share !== initial.total ? "amount" : "full",
@@ -310,6 +314,7 @@ export function EntryForm({
   const pickerValue = openPicker === "category" ? categoryId : openPicker === "trip" ? tripId ?? "" : accountId ?? "";
   const tripEmptyMessage = !trips.length ? "Create a trip in Trips to organize travel expenses." : undefined;
   const accountFooter = commit ? { label: "Add account", onPress: () => { setOpenPicker(null); setAddingAccount(true); } } : undefined;
+  const categoryFooter = commit ? { label: "Add category", onPress: () => { setOpenPicker(null); setAddingCategory(true); } } : undefined;
   const togglePicker = (picker: "category" | "trip" | "account") => {
     setMenuPosition(null);
     setOpenPicker(openPicker === picker ? null : picker);
@@ -321,6 +326,8 @@ export function EntryForm({
     setOpenPicker(null);
   };
   if (addingAccount && commit) return <AccountForm commit={commit} onSaved={(account) => setAccountId(account.id)} onClose={() => setAddingAccount(false)} />;
+  if (addingCategory && commit) return <CategoryForm initialKind={kind} commit={commit}
+    onSaved={(category) => setCategory(category.id)} onClose={() => setAddingCategory(false)} />;
   if (viewingReceipt)
     return (
       <Sheet
@@ -340,17 +347,17 @@ export function EntryForm({
   return (
     <Sheet
       visible
-      title={rule || householdRule ? "Edit recurring entry" : entry || householdExpense ? "Edit entry" : "A little update."}
+      title={rule || householdRule ? "Edit recurring entry" : entry || householdExpense ? "Edit entry" : compact && householdId ? "Add expense" : "A little update."}
       overlay={openPicker && <EntryPillMenu label={openPicker === "category" ? "Category" : openPicker === "trip" ? "Trip" : "Account"}
         value={pickerValue} options={pickerOptions} position={menuPosition}
         onClose={() => setOpenPicker(null)} onSelect={selectPickerOption}
         emptyMessage={openPicker === "trip" ? tripEmptyMessage : undefined}
-        footerAction={openPicker === "account" ? accountFooter : undefined} />}
+        footerAction={openPicker === "account" ? accountFooter : openPicker === "category" ? categoryFooter : undefined} />}
       headerActions={<>
         <DateField label={rule ? "Next occurrence" : "Date"} value={date} onChange={setDate} pill iconOnly />
         <EntryPillPicker label="Category" value={categoryId} iconOnly align="center"
           options={categoryOptions} open={openPicker === "category"} onToggle={() => togglePicker("category")}
-          onPosition={setMenuPosition} />
+          onPosition={setMenuPosition} hasFooterAction={Boolean(categoryFooter)} />
         {kind === "expense" && !rule && !householdId && <EntryPillPicker label="Trip" value={tripId ?? ""} iconOnly align="right"
           options={tripOptions} emptyMessage={tripEmptyMessage}
           open={openPicker === "trip"} onToggle={() => togglePicker("trip")}
@@ -379,9 +386,9 @@ export function EntryForm({
       }
     >
       <View
-        style={{ gap: 22, opacity: saving ? 0.6 : 1, pointerEvents: saving ? "none" : "auto" }}
+        style={{ gap: compact ? 16 : 22, opacity: saving ? 0.6 : 1, pointerEvents: saving ? "none" : "auto" }}
       >
-        <View
+        {(!compact || !householdId) && <View
           style={[
             s.row,
             { backgroundColor: C.bg, padding: 5, borderRadius: 13 },
@@ -413,13 +420,13 @@ export function EntryForm({
               </Text>
             </Pressable>
           ))}
-        </View>
+        </View>}
         {kind === "investment" && (
           <Text style={{ color: C.muted, fontSize: 12 }}>
             Record money you contribute to investments. This reduces cash remaining without counting as spending or tracking portfolio value.
           </Text>
         )}
-        {kind === "expense" && (!editing || !!sharedInitial) && (households.length > 0 || !!initialHousehold) && <View style={{ gap: 8 }}>
+        {kind === "expense" && (!editing || !!sharedInitial) && (households.length > 0 || !!initialHousehold) && (!compact || !initialHousehold) && <View style={{ gap: 8 }}>
           <Text style={s.label}>Expense for</Text>
           <View style={[s.row, { flexWrap: "wrap" }]}>
             {!editing && <Pressable accessibilityRole="button" accessibilityState={{ selected: !householdId }}
@@ -524,7 +531,7 @@ export function EntryForm({
             )}
           </View>
         )}
-        {kind === "expense" && !!householdId && <View style={{ gap: 12, borderTopWidth: 1, borderColor: C.line, paddingTop: 20 }}>
+        {kind === "expense" && !!householdId && (!compact || activeMembers.length !== 1 || editing) && <View style={{ gap: 12, borderTopWidth: 1, borderColor: C.line, paddingTop: 20 }}>
           <View style={s.between}><View style={s.row}><Icon name="people-outline" size={18} /><Text style={s.label}>Your part of the receipt</Text></View>
             <Text style={{ color: C.accent, fontWeight: "600" }}>{preview}</Text></View>
           <Text style={s.label}>Paid by</Text>
@@ -541,7 +548,7 @@ export function EntryForm({
                 <Pressable key={mode} accessibilityRole="button" accessibilityState={{ selected: householdSplit === mode }}
                   onPress={() => { setHouseholdSplit(mode); if (mode !== householdSplit) setAllocations({}); }}
                   style={[s.chip, householdSplit === mode && s.chipActive]}><Text style={s.label}>{label}</Text></Pressable>)}</View>
-          {householdSplit === "equal" ? <Text style={s.muted}>Every active member owes an equal share, including the payer.</Text>
+          {householdSplit === "equal" ? !compact && <Text style={s.muted}>Every active member owes an equal share, including the payer.</Text>
             : activeMembers.map((member) => <Field key={member.userId}
               label={`${member.email === userEmail ? "You" : member.email} (${householdSplit === "percent" ? "%" : sharedCurrency})`}
               value={allocations[member.userId] ?? ""}
@@ -611,9 +618,9 @@ export function EntryForm({
                     style={{ flex: 1 }}
                   />
                 </View>
-                <Text style={s.muted}>
+                {!compact && <Text style={s.muted}>
                   Photos or PDFs, up to 10 MB. Saved with this expense.
-                </Text>
+                </Text>}
               </>
             )}
           </View>
@@ -638,7 +645,7 @@ export function EntryForm({
                 </Pressable>
               ))}
             </View>
-            {frequency !== "none" && (
+            {frequency !== "none" && !compact && (
               <Text style={s.muted}>
                 {rule || householdRule ? "Changes apply to future occurrences. Recorded entries keep their original details." : householdId ? "Each occurrence is split among members active on its date." : "Due entries are added automatically when you open the app."}
                 {!rule && !householdRule && kind === "expense" ? " Receipts apply to this entry only." : ""}

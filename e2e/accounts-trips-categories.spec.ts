@@ -78,6 +78,27 @@ test("an account can be created inside an entry without losing the entry draft",
   await expect(savedEntry.getByText(/Coffee wallet/)).toBeVisible();
 });
 
+test("a category can be created from the entry picker and selected without losing the draft", async ({ page }) => {
+  await signUp(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openAddEntry(page);
+  await page.getByLabel("Amount (CAD)").fill("28.50");
+  await page.getByLabel("What was it for?").fill("Bakery stop");
+  await page.getByRole("button", { name: /^Category:/ }).click();
+  await page.getByRole("button", { name: "Add category", exact: true }).click();
+  await page.getByLabel("Category name").fill("Bakeries");
+  await page.getByRole("button", { name: "cafe", exact: true }).click();
+  await page.getByRole("button", { name: "Save category", exact: true }).click();
+
+  await expect(page.getByLabel("Amount (CAD)")).toHaveValue("28.50");
+  await expect(page.getByLabel("What was it for?")).toHaveValue("Bakery stop");
+  await expect(page.getByRole("button", { name: "Category: Bakeries" })).toBeVisible();
+  await page.getByRole("button", { name: "Add expense", exact: true }).click();
+  await page.getByRole("button", { name: "Transactions" }).click();
+  await page.getByRole("button", { name: /^Edit Bakery stop,/ }).click();
+  await expect(page.getByRole("button", { name: "Category: Bakeries" })).toBeVisible();
+});
+
 test("custom categories can be created, edited, protected while in use, and deleted after reassignment", async ({ page }) => {
   await signUp(page);
   await page.getByRole("button", { name: "Categories" }).click();

@@ -55,9 +55,12 @@ test("demo entry point, all feature routes, and compact navigation work", async 
   }
 
   await page.setViewportSize({ width: 390, height: 844 });
-  await expect(page.getByRole("button", { name: "Accounts" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "More sections" })).toBeVisible();
+  await page.getByRole("button", { name: "More sections" }).click();
+  await page.getByRole("button", { name: "Accounts" }).click();
+  await expect(page.getByText("Accounts", { exact: true }).first()).toBeVisible();
   await page.getByRole("button", { name: "Trips" }).click();
-  await expect(page.getByText("Your trips.", { exact: true })).toBeVisible();
+  await expect(page.getByText("Trips", { exact: true }).first()).toBeVisible();
   await page.getByText("Start my own tracker →", { exact: true }).click();
   await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeVisible();
 });

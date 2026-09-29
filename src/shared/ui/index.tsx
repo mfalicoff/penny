@@ -160,7 +160,7 @@ export function Sheet({
           accessibilityViewIsModal={!overlay}
           style={[s.sheet, { maxWidth: wide ? 780 : 520 }]}
         >
-          <View style={[s.sheetHeader, hasHeaderActions ? {
+          <View style={[s.sheetHeader, width < 400 && { paddingHorizontal: 18, paddingTop: 18 }, hasHeaderActions ? {
             paddingHorizontal: narrowHeader ? 8 : 12, gap: narrowHeader ? 2 : 3,
             zIndex: 20, elevation: 20,
           } : undefined]}>
@@ -174,7 +174,7 @@ export function Sheet({
           </View>
           <ScrollView
             keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{ padding: 26, paddingTop: 8, gap: 22 }}
+            contentContainerStyle={{ padding: width < 400 ? 18 : 26, paddingTop: 8, gap: width < 400 ? 16 : 22 }}
           >
             {children}
           </ScrollView>
@@ -235,8 +235,8 @@ const makeStyles = (C: ThemeColors) => StyleSheet.create({
   quiet: { backgroundColor: C.pale },
   buttonText: { fontSize: 13, fontWeight: "600" },
   iconButton: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 12,

@@ -7,7 +7,8 @@ import { dateKey, parseDate } from "../../domain/ledger";
 import { useHouseholds } from "../../providers/HouseholdProvider";
 import { useLedger } from "../../providers/LedgerProvider";
 import { currencyFormat } from "../../shared/format";
-import { Button, C, Field, Icon, Sheet, s } from "../../shared/ui";
+import { Button, C, Field, Icon, IconButton, Sheet, s } from "../../shared/ui";
+import { useResponsive } from "../../shared/useResponsive";
 import { shiftMonthKey } from "../overview/selectors";
 import { ReceiptPreview } from "../receipts/ReceiptPreview";
 import { HouseholdExpenseForm } from "./HouseholdExpenseForm";
@@ -32,6 +33,7 @@ function describeAudit(event: AuditEvent, memberName: (id: string) => string, mo
 }
 
 export default function HouseholdDetailScreen() {
+  const { compact } = useResponsive();
   const params = useLocalSearchParams<{ id: string; month?: string; expenseId?: string; add?: string }>();
   const id = String(params.id ?? "");
   const { email } = useLedger();
@@ -45,6 +47,9 @@ export default function HouseholdDetailScreen() {
   const [ruleForm, setRuleForm] = useState<HouseholdRecurring | null>(null);
   const [audit, setAudit] = useState<AuditEvent[] | null>(null);
   const [receipt, setReceipt] = useState<HouseholdExpense["receipt"]>();
+  const [expenseActions, setExpenseActions] = useState<HouseholdExpense>();
+  const [showRecurring, setShowRecurring] = useState(false);
+  const [showMembers, setShowMembers] = useState(false);
   const [invite, setInvite] = useState<{ code: string; expiresAt: number }>();
   const [removeUserId, setRemoveUserId] = useState<string>();
   const [renaming, setRenaming] = useState(false);
@@ -69,7 +74,7 @@ export default function HouseholdDetailScreen() {
 
   const myId = members.find((member) => member.email === email && !member.leftAt)?.userId;
   const creator = household?.creatorId === myId;
-  const name = (userId: string) => members.find((member) => member.userId === userId)?.email ?? "Former member";
+  const name = (userId: string) => userId === myId ? "You" : members.find((member) => member.userId === userId)?.email ?? "Former member";
   const money = (amount: number) => currencyFormat(amount, household?.currency ?? "CAD");
   const monthLabel = parseDate(`${month}-01`).toLocaleDateString("en-CA", { month: "long", year: "numeric" });
   const [monthYear, monthNumber] = month.split("-").map(Number);
@@ -87,80 +92,112 @@ export default function HouseholdDetailScreen() {
     catch (failure) { setError(failure instanceof Error ? failure.message : "Could not load changes."); }
   }
 
-  return <View style={{ gap: 18 }}>
+  const recurringContent = <>
+    {rules.map((rule) => <Pressable key={rule.id} accessibilityRole="button" accessibilityLabel={`Edit recurring ${rule.title}`} onPress={() => { setShowRecurring(false); setRuleForm(rule); }} style={[s.between, { minHeight: 56, borderTopWidth: 1, borderColor: C.line }]}>
+      <View style={{ flex: 1, gap: 4 }}><Text numberOfLines={1} style={s.label}>{rule.title}</Text><Text style={s.muted}>{rule.frequency} · next {rule.nextDate} · {rule.active ? "Active" : "Paused"}</Text></View>
+      <Text style={s.label}>{money(rule.totalCents)}</Text><Icon name="chevron-forward" size={16} color={C.muted} />
+    </Pressable>)}
+    {!rules.length && <Text style={s.muted}>No recurring expenses yet. Choose Repeat when adding an expense.</Text>}
+  </>;
+  const membersContent = <>
+    {members.filter((member) => !member.leftAt).map((member) => <View key={member.userId} style={[s.between, { minHeight: 52, borderBottomWidth: 1, borderColor: C.line }]}>
+      <View style={{ flex: 1 }}><Text numberOfLines={1} style={s.label}>{member.email === email ? "You" : member.email}</Text>
+        {member.userId === household?.creatorId && <Text style={s.muted}>Creator</Text>}</View>
+      {creator && member.userId !== myId && <Button title="Remove" tone="quiet" onPress={() => { setShowMembers(false); setRemoveUserId(member.userId); }} />}
+    </View>)}
+    {creator && <Button title="Invite member" icon="person-add-outline" tone="quiet" onPress={() => { setShowMembers(false); void act(async () => setInvite(await createInvite(id))); }} />}
+    {creator && <Button title="Rename household" tone="quiet" onPress={() => { setShowMembers(false); setNewName(household?.name ?? ""); setRenaming(true); }} />}
+    {creator && <Button title="Archive household" tone="quiet" onPress={() => { setShowMembers(false); setArchiving(true); }} />}
+    {(!creator || members.filter((member) => !member.leftAt).length === 1) && <Button title="Leave household" tone="quiet" disabled={busy} onPress={() => void act(() => leaveHousehold(id), () => router.push("/households"))} />}
+    {!compact && <Text style={s.muted}>The creator manages invitations and members. Outstanding balances must be settled before leaving.</Text>}
+    <Button title="View household activity" tone="quiet" onPress={() => { setShowMembers(false); void showAudit(""); }} />
+  </>;
+
+  return <View style={{ gap: compact ? 14 : 18 }}>
     <Pressable accessibilityRole="button" onPress={() => router.push("/households")} style={[s.row, { alignSelf: "flex-start", minHeight: 44 }]}>
-      <Icon name="chevron-back" size={17} color={C.accent} /><Text style={{ color: C.accent }}>All households</Text>
+      <Icon name="chevron-back" size={17} color={C.accent} /><Text style={{ color: C.accent }}>{compact ? "Households" : "All households"}</Text>
     </Pressable>
     {error ? <Text accessibilityRole="alert" style={s.error}>{error}</Text> : null}
     {household && <>
-      <View style={[s.card, { gap: 12 }]}><View style={[s.between, { flexWrap: "wrap" }]}>
-        <View style={{ gap: 4 }}><Text style={s.heading}>{household.name}</Text><Text style={s.muted}>{household.currency} · {members.filter((member) => !member.leftAt).length} active {members.filter((member) => !member.leftAt).length === 1 ? "member" : "members"}</Text></View>
-        <Button title="Add expense" icon="add" disabled={!myId} onPress={() => setForm("new")} />
-      </View></View>
-      <View style={[s.card, { gap: 15 }]}><View style={s.between}>
-        <Button title="Previous" tone="quiet" onPress={() => setMonth(shiftMonthKey(month, -1))} />
-        <Text style={[s.heading, { textAlign: "center", flex: 1 }]}>{monthLabel}</Text>
-        <Button title="Next" tone="quiet" onPress={() => setMonth(shiftMonthKey(month, 1))} />
+      <View style={compact ? { gap: 12 } : [s.card, { gap: 12 }]}>
+        <View style={s.between}>
+          <View style={{ flex: 1, gap: 3 }}><Text numberOfLines={1} style={[s.heading, compact && { fontSize: 22 }]}>{household.name}</Text>
+            <Text style={s.muted}>{members.filter((member) => !member.leftAt).length} {members.filter((member) => !member.leftAt).length === 1 ? "member" : "members"} · {household.currency}</Text></View>
+          {compact && <IconButton icon="settings-outline" label="Manage household" onPress={() => setShowMembers(true)} />}
+          {!compact && <Button title="Add expense" icon="add" disabled={!myId} onPress={() => setForm("new")} />}
+        </View>
+        {compact && <Button title="Add expense" icon="add" disabled={!myId} onPress={() => setForm("new")} />}
       </View>
-      {recap?.overdue && <Text style={s.error}>This month has an overdue reimbursement. It stays separate from other months.</Text>}
+      <View style={[s.card, { gap: compact ? 10 : 15 }, compact && { padding: 14 }]}><View style={s.between}>
+        {compact ? <IconButton icon="chevron-back" label="Previous month" onPress={() => setMonth(shiftMonthKey(month, -1))} />
+          : <Button title="Previous" tone="quiet" onPress={() => setMonth(shiftMonthKey(month, -1))} />}
+        <Text style={[s.heading, { textAlign: "center", flex: 1 }, compact && { fontSize: 16 }]}>{monthLabel}</Text>
+        {compact ? <IconButton icon="chevron-forward" label="Next month" onPress={() => setMonth(shiftMonthKey(month, 1))} />
+          : <Button title="Next" tone="quiet" onPress={() => setMonth(shiftMonthKey(month, 1))} />}
+      </View>
+      {recap?.overdue && <Text style={s.error}>{compact ? "Reimbursement overdue for this month." : "This month has an overdue reimbursement. It stays separate from other months."}</Text>}
       {!!recap?.overdueMonths?.length && <View style={[s.row, { flexWrap: "wrap" }]}>
-        <Text style={s.muted}>Unpaid older months:</Text>
+        <Text style={s.muted}>{compact ? "Unpaid:" : "Unpaid older months:"}</Text>
         {recap.overdueMonths.map((value) => <Button key={value} title={value} tone="quiet" onPress={() => setMonth(value)} />)}
       </View>}
-      <Text style={s.muted}>Every month stands on its own. Reimbursements appear here, outside your spending reports.</Text>
+      {!compact && <Text style={s.muted}>Every month stands on its own. Reimbursements appear here, outside your spending reports.</Text>}
       </View>
-      <View style={[s.card, { gap: 14 }]}><Text style={s.heading}>Monthly recap</Text>
-        {recap?.balances?.map((balance) => <View key={balance.userId} style={s.between}><Text style={s.label}>{name(balance.userId)}</Text>
+      <View style={[s.card, { gap: 14 }, compact && { padding: 16 }]}><Text style={s.heading}>{compact ? "Balances" : "Monthly recap"}</Text>
+        {recap?.balances?.map((balance) => <View key={balance.userId} style={s.between}><Text numberOfLines={1} style={[s.label, { flex: 1 }]}>{name(balance.userId)}</Text>
           <Text style={{ color: balance.balanceCents < 0 ? C.accent : C.green, fontWeight: "600" }}>
             {balance.balanceCents < 0 ? "Owes " : balance.balanceCents > 0 ? "Is owed " : "Settled · "}{money(Math.abs(balance.balanceCents))}
           </Text></View>)}
         {!recap?.balances?.length && <Text style={s.muted}>No balances this month.</Text>}
-        <Text style={[s.label, { marginTop: 8 }]}>Suggested reimbursements</Text>
-        {!reimbursementsOpen && !!recap?.suggestions?.length && <Text style={s.muted}>Record reimbursements on the last day of the month or later.</Text>}
+        {(!compact || !!recap?.suggestions?.length) && <Text style={[s.label, { marginTop: 8 }]}>{compact ? "To settle" : "Suggested reimbursements"}</Text>}
+        {!reimbursementsOpen && !!recap?.suggestions?.length && <Text style={s.muted}>{compact ? "Available at month end" : "Record reimbursements on the last day of the month or later."}</Text>}
         {recap?.suggestions?.map((transfer, index) => <View key={`${transfer.fromUserId}:${transfer.toUserId}:${index}`} style={[s.between, { alignItems: "flex-start", flexWrap: "wrap" }]}>
           <Text style={[s.muted, { flex: 1 }]}>{name(transfer.fromUserId)} pays {name(transfer.toUserId)} {money(transfer.amountCents)}</Text>
           {reimbursementsOpen && (myId === transfer.fromUserId || myId === transfer.toUserId) && <Button title="Record paid" tone="quiet" disabled={busy} onPress={() => void act(() => reimburse(id, month, transfer))} />}
         </View>)}
-        {!recap?.suggestions?.length && <Text style={s.muted}>Nothing to reimburse.</Text>}
+        {!compact && !recap?.suggestions?.length && <Text style={s.muted}>Nothing to reimburse.</Text>}
         {!!recap?.reimbursements?.length && <><Text style={[s.label, { marginTop: 8 }]}>Recorded reimbursements</Text>
           {recap.reimbursements.map((item) => <Text key={item.id} style={s.muted}>{name(item.fromUserId)} paid {name(item.toUserId)} {money(item.amountCents)}</Text>)}
         </>}
       </View>
-      <View style={[s.card, { gap: 12 }]}><Text style={s.heading}>Expenses in {monthLabel}</Text>
+      <View style={[s.card, { gap: 12 }, compact && { padding: 16 }]}><Text style={s.heading}>{compact ? "Expenses" : `Expenses in ${monthLabel}`}</Text>
         {recap?.expenses?.map((expense) => <View key={expense.id} style={{ borderTopWidth: 1, borderColor: C.line, paddingTop: 12, gap: 8 }}>
-          <Pressable accessibilityRole="button" accessibilityLabel={`Edit ${expense.title}`} onPress={() => setForm(expense)} style={[s.between, { minHeight: 44 }]}>
-            <View style={{ flex: 1, gap: 4 }}><Text style={s.label}>{expense.title}</Text><Text style={s.muted}>{expense.date} · Paid by {name(expense.payerUserId)} · {expense.category.name}</Text></View>
-            <Text style={s.label}>{money(expense.totalCents)}</Text><Icon name="chevron-forward" size={16} />
+          <View style={s.row}><Pressable accessibilityRole="button" accessibilityLabel={`Edit ${expense.title}`} onPress={() => setForm(expense)} style={[s.between, { minHeight: 48, flex: 1, minWidth: 0 }]}>
+            <View style={{ flex: 1, gap: 4, minWidth: 0 }}><Text numberOfLines={1} style={s.label}>{expense.title}</Text>
+              <Text numberOfLines={1} style={s.muted}>{compact ? `${expense.date.slice(5)} · ${name(expense.payerUserId)}` : `${expense.date} · Paid by ${name(expense.payerUserId)} · ${expense.category.name}`}</Text></View>
+            <Text style={s.label}>{money(expense.totalCents)}</Text>{!compact && <Icon name="chevron-forward" size={16} />}
           </Pressable>
-          <Text style={s.muted}>{expense.splits.map((split) => `${name(split.userId)} ${money(split.amountCents)}`).join(" · ")}</Text>
-          <View style={[s.row, { flexWrap: "wrap" }]}><Button title="Change history" tone="quiet" onPress={() => void showAudit(expense.id)} />
-            {expense.receipt && <Button title="View receipt" tone="quiet" onPress={() => setReceipt(expense.receipt)} />}</View>
+          {compact && <IconButton icon="ellipsis-horizontal" label={`More actions for ${expense.title}`} onPress={() => setExpenseActions(expense)} />}
+          </View>
+          {!compact && <Text style={s.muted}>{expense.splits.map((split) => `${name(split.userId)} ${money(split.amountCents)}`).join(" · ")}</Text>}
+          {!compact && <View style={[s.row, { flexWrap: "wrap" }]}><Button title="Change history" tone="quiet" onPress={() => void showAudit(expense.id)} />
+            {expense.receipt && <Button title="View receipt" tone="quiet" onPress={() => setReceipt(expense.receipt)} />}</View>}
         </View>)}
         {!recap?.expenses?.length && <Text style={s.muted}>No household expenses this month.</Text>}
       </View>
-      <View style={[s.card, { gap: 12 }]}><Text style={s.heading}>Recurring household expenses</Text>
-        {rules.map((rule) => <Pressable key={rule.id} accessibilityRole="button" accessibilityLabel={`Edit recurring ${rule.title}`} onPress={() => setRuleForm(rule)} style={[s.between, { minHeight: 48, borderTopWidth: 1, borderColor: C.line }]}>
-          <View style={{ flex: 1, gap: 4 }}><Text style={s.label}>{rule.title}</Text><Text style={s.muted}>{rule.frequency} · next {rule.nextDate} · {rule.active ? "Active" : "Paused"}</Text></View>
-          <Text style={s.label}>{money(rule.totalCents)}</Text><Icon name="chevron-forward" size={16} />
-        </Pressable>)}
-        {!rules.length && <Text style={s.muted}>No recurring household expenses yet. Choose Repeat when adding an expense.</Text>}
-      </View>
-      <View style={[s.card, { gap: 12 }]}><Text style={s.heading}>Members</Text>
-        {members.filter((member) => !member.leftAt).map((member) => <View key={member.userId} style={s.between}><View style={{ flex: 1 }}><Text style={s.label}>{member.email === email ? "You" : member.email}</Text>
-          {member.userId === household.creatorId && <Text style={s.muted}>Creator</Text>}</View>
-          {creator && member.userId !== myId && <Button title="Remove" tone="quiet" onPress={() => setRemoveUserId(member.userId)} />}</View>)}
-        {creator && <Button title="Invite member" icon="person-add-outline" tone="quiet" onPress={() => void act(async () => setInvite(await createInvite(id)))} />}
-        {creator && <Button title="Rename household" tone="quiet" onPress={() => { setNewName(household.name); setRenaming(true); }} />}
-        {creator && <Button title="Archive household" tone="quiet" onPress={() => setArchiving(true)} />}
-        {(!creator || members.filter((member) => !member.leftAt).length === 1) && <Button title="Leave household" tone="quiet" disabled={busy} onPress={() => void act(() => leaveHousehold(id), () => router.push("/households"))} />}
-        <Text style={s.muted}>The creator manages invitations and members. Outstanding balances must be settled before leaving.</Text>
-      </View>
-      <Button title="View household activity" tone="quiet" onPress={() => void showAudit("")} />
+      {compact ? <Pressable accessibilityRole="button" accessibilityLabel="Recurring expenses" onPress={() => setShowRecurring(true)} style={[s.card, s.between, { padding: 16, minHeight: 60 }]}>
+        <View style={s.row}><Icon name="repeat-outline" color={C.green} /><Text style={s.label}>Recurring expenses</Text></View>
+        <View style={s.row}><Text style={s.muted}>{rules.length}</Text><Icon name="chevron-forward" size={16} color={C.muted} /></View>
+      </Pressable> : <>
+        <View style={[s.card, { gap: 12 }]}><Text style={s.heading}>Recurring household expenses</Text>{recurringContent}</View>
+        <View style={[s.card, { gap: 12 }]}><Text style={s.heading}>Members</Text>{membersContent}</View>
+      </>}
     </>}
     {form && household && <HouseholdExpenseForm household={household} members={members} expense={form === "new" ? undefined : form}
       onClose={() => setForm(null)} onSaved={async () => { await refresh(); await refreshHouseholds(); }} />}
     {ruleForm && household && <HouseholdExpenseForm household={household} members={members} rule={ruleForm}
       onClose={() => setRuleForm(null)} onSaved={async () => { await refresh(); await refreshHouseholds(); }} />}
+    {compact && showRecurring && <Sheet visible title="Recurring expenses" onClose={() => setShowRecurring(false)}>{recurringContent}</Sheet>}
+    {compact && showMembers && <Sheet visible title="Members & settings" onClose={() => setShowMembers(false)}>{membersContent}</Sheet>}
+    {expenseActions && <Sheet visible title={expenseActions.title} onClose={() => setExpenseActions(undefined)}>
+      <Text style={s.muted}>{expenseActions.category.name} · Paid by {name(expenseActions.payerUserId)}</Text>
+      <Text style={s.label}>Split</Text>
+      {expenseActions.splits.map((split) => <View key={split.userId} style={s.between}>
+        <Text numberOfLines={1} style={[s.muted, { flex: 1 }]}>{name(split.userId)}</Text>
+        <Text style={s.label}>{money(split.amountCents)}</Text>
+      </View>)}
+      <Button title="Change history" tone="quiet" onPress={() => { const expenseId = expenseActions.id; setExpenseActions(undefined); void showAudit(expenseId); }} />
+      {expenseActions.receipt && <Button title="View receipt" tone="quiet" onPress={() => { setReceipt(expenseActions.receipt); setExpenseActions(undefined); }} />}
+    </Sheet>}
     {invite && <Sheet visible title="Invite a member" onClose={() => setInvite(undefined)}>
       <Text style={s.muted}>Share this code with someone who has a Penny account. It expires at {new Date(invite.expiresAt).toLocaleTimeString("en-CA", { hour: "numeric", minute: "2-digit" })}.</Text>
       <Text selectable style={[s.heading, { fontSize: 30, textAlign: "center", letterSpacing: 4, marginVertical: 14 }]}>{invite.code}</Text>

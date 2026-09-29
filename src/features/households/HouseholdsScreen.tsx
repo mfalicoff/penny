@@ -5,8 +5,10 @@ import { createHousehold, joinHousehold } from "../../data/households";
 import { useLedger } from "../../providers/LedgerProvider";
 import { useHouseholds } from "../../providers/HouseholdProvider";
 import { Button, C, Field, Icon, Sheet, s } from "../../shared/ui";
+import { useResponsive } from "../../shared/useResponsive";
 
 export default function HouseholdsScreen() {
+  const { compact } = useResponsive();
   const { ledger, demo } = useLedger();
   const { households, loading, error: loadError, refresh } = useHouseholds();
   const [mode, setMode] = useState<"create" | "join" | null>(null);
@@ -37,12 +39,12 @@ export default function HouseholdsScreen() {
   }
 
   return <View style={{ gap: 18 }}>
-    <View style={[s.card, { gap: 12 }]}>
-      <Text style={s.heading}>Shared homes, clearer balances</Text>
-      <Text style={s.muted}>Add expenses together and see each person’s share in their own spending.</Text>
-      {!demo && <View style={[s.row, { flexWrap: "wrap" }]}>
+    <View style={compact ? { gap: 10 } : [s.card, { gap: 12 }]}>
+      {!compact && <><Text style={s.heading}>Shared homes, clearer balances</Text>
+        <Text style={s.muted}>Add expenses together and see each person’s share in their own spending.</Text></>}
+      {!demo && <View style={[s.row, compact ? { gap: 8 } : { flexWrap: "wrap" }]}>
         <Button title="Create household" icon="add" onPress={() => { setError(""); setMode("create"); }} />
-        <Button title="Join with code" tone="quiet" icon="key-outline" onPress={() => { setError(""); setMode("join"); }} />
+        <Button title={compact ? "Join" : "Join with code"} tone="quiet" icon="key-outline" onPress={() => { setError(""); setMode("join"); }} />
       </View>}
       {demo && <Text style={s.muted}>Sign in to create or join a household.</Text>}
     </View>
@@ -51,13 +53,16 @@ export default function HouseholdsScreen() {
     {households.map((household) => <Pressable key={household.id} accessibilityRole="button"
       accessibilityLabel={`Open ${household.name} household`}
       onPress={() => router.push(`/households/${household.id}`)}
-      style={[s.card, s.between, { minHeight: 84, padding: 18 }]}>
+      style={[s.card, s.between, { minHeight: 76, padding: compact ? 16 : 18 }]}>
       <View style={[s.row, { flex: 1 }]}><Icon name="people-outline" color={C.green} />
-        <View style={{ flex: 1, gap: 4 }}><Text style={s.heading}>{household.name}</Text>
+        <View style={{ flex: 1, gap: 4 }}><Text numberOfLines={1} style={s.heading}>{household.name}</Text>
           <Text style={s.muted}>{household.memberCount} {household.memberCount === 1 ? "member" : "members"} · {household.currency}</Text>
         </View></View><Icon name="chevron-forward" color={C.muted} />
     </Pressable>)}
-    {!loading && !households.length && !loadError && <Text style={[s.muted, { textAlign: "center", padding: 24 }]}>Your households will appear here.</Text>}
+    {!loading && !households.length && !loadError && <View style={{ alignItems: "center", gap: 8, padding: 28 }}>
+      <Icon name="people-outline" size={28} color={C.muted} />
+      <Text style={[s.muted, { textAlign: "center" }]}>No households yet</Text>
+    </View>}
     {mode && <Sheet visible title={mode === "create" ? "Create a household" : "Join a household"} onClose={() => setMode(null)}
       footer={<><Text style={s.muted}>{mode === "create" ? `Expenses will use ${ledger.currency}, the currency of your personal ledger.` : "Ask the creator for a code. Each code lasts 10 minutes."}</Text>
         {error ? <Text accessibilityRole="alert" style={s.error}>{error}</Text> : null}

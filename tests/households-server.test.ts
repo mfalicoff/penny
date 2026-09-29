@@ -171,6 +171,7 @@ test("opening a pre-household database preserves private ledger and marks migrat
 });
 
 test("HTTP household routes enforce sessions and share receipts only with members", async (t) => {
+  const today = new Date().toISOString().slice(0, 10);
   const { createApp } = await import("../server/app.ts");
   const { once } = await import("node:events");
   const instance=createApp({databasePath:":memory:"});
@@ -195,11 +196,11 @@ test("HTTP household routes enforce sessions and share receipts only with member
   const uploaded=await request("/receipts","POST",{name:"Slip.pdf",mime:"application/pdf",base64:pdf.toString("base64")},alex.token);
   assert.equal(uploaded.status,201,await uploaded.clone().text());
   const receipt=await uploaded.json() as {id:string};
-  const e=await request(`/households/${household.id}/expenses`,"POST",{...expense(8000,household.creatorId),receiptId:receipt.id},alex.token);
+  const e=await request(`/households/${household.id}/expenses`,"POST",{...expense(8000,household.creatorId,today),receiptId:receipt.id},alex.token);
   assert.equal(e.status,201,await e.clone().text());
   assert.equal((await request(`/receipts/${receipt.id}`,"GET",undefined,bea.token)).status,200);
   assert.equal((await request(`/receipts/${receipt.id}`,"GET",undefined,outsider.token)).status,404);
   assert.equal((await request(`/households/${household.id}/expenses`,"GET",undefined,outsider.token)).status,404);
-  const projection=await (await request("/households/projection?year=2026","GET",undefined,bea.token)).json() as {transactions:{shareCents:number}[]};
+  const projection=await (await request(`/households/projection?year=${today.slice(0, 4)}`,"GET",undefined,bea.token)).json() as {transactions:{shareCents:number}[]};
   assert.equal(projection.transactions[0].shareCents,4000);
 });

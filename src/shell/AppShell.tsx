@@ -8,7 +8,7 @@ import { SettingsSheet } from "../features/settings/SettingsSheet";
 import { useLedger } from "../providers/LedgerProvider";
 import { useWorkspace } from "../providers/WorkspaceProvider";
 import { useTheme } from "../shared/theme";
-import { Button, C, Icon, IconButton, s } from "../shared/ui";
+import { Button, C, Icon, IconButton, Sheet, s } from "../shared/ui";
 import { useResponsive } from "../shared/useResponsive";
 import { SaveToast } from "./SaveToast";
 type Tab = "Overview" | "Transactions" | "Households" | "Trips" | "Recurring" | "Categories" | "Accounts";
@@ -31,12 +31,14 @@ export function AppShell() {
   const { email, demo, leaveDemo, syncing, syncError, sync, toast, toastKind, toastSequence } = useLedger();
   const { setForm } = useWorkspace();
   const [settings, setSettings] = React.useState(false);
+  const [moreOpen, setMoreOpen] = React.useState(false);
   const pathname = usePathname();
+  const nestedMobileScreen = compact && (pathname.startsWith("/households/") || pathname.startsWith("/trips/"));
   const tab: Tab = pathname === "/transactions" ? "Transactions" : pathname.startsWith("/households") ? "Households" : pathname.startsWith("/trips") ? "Trips" : pathname === "/accounts" ? "Accounts" : pathname === "/recurring" ? "Recurring" : pathname === "/categories" ? "Categories" : "Overview";
   const setTab = (value: Tab) => router.navigate(({ Overview: "/", Transactions: "/transactions", Households: "/households", Trips: "/trips", Recurring: "/recurring", Categories: "/categories", Accounts: "/accounts" } as const)[value]);
   const nav = (mobile = false) => (
     <View style={mobile ? a.mobileNav : { gap: shortSidebar ? 4 : 8 }}>
-      {navigation.map((item) => (
+      {(mobile ? navigation.slice(0, 4) : navigation).map((item) => (
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={item.tab}
@@ -58,7 +60,7 @@ export function AppShell() {
             numberOfLines={1}
             style={{
               color: tab === item.tab ? C.ink : C.muted,
-              fontSize: mobile ? 9 : 13,
+              fontSize: mobile ? 11 : 13,
               fontWeight: tab === item.tab ? "600" : "400",
             }}
           >
@@ -77,6 +79,12 @@ export function AppShell() {
           )}
         </Pressable>
       ))}
+      {mobile && <Pressable accessibilityRole="button" accessibilityLabel="More sections"
+        accessibilityState={{ selected: ["Recurring", "Categories", "Accounts"].includes(tab) }}
+        onPress={() => setMoreOpen(true)} style={[a.mobileNavItem, ["Recurring", "Categories", "Accounts"].includes(tab) && { backgroundColor: C.pale }]}>
+        <Icon name="ellipsis-horizontal" size={21} color={["Recurring", "Categories", "Accounts"].includes(tab) ? C.ink : C.muted} />
+        <Text style={{ color: ["Recurring", "Categories", "Accounts"].includes(tab) ? C.ink : C.muted, fontSize: 11, fontWeight: "600" }}>More</Text>
+      </Pressable>}
     </View>
   );
   return (
@@ -157,13 +165,13 @@ export function AppShell() {
           )}
           <ScrollView
             contentContainerStyle={{
-              padding: compact ? 20 : 40,
-              paddingTop: compact ? 20 : 36,
-              gap: 26,
+              padding: compact ? 16 : 40,
+              paddingTop: compact ? 16 : 36,
+              gap: compact ? 16 : 26,
               maxWidth: 1320,
               width: "100%",
               alignSelf: "center",
-              paddingBottom: 44,
+              paddingBottom: compact ? 24 : 44,
             }}
           >
             {demo && (
@@ -189,9 +197,9 @@ export function AppShell() {
                 </Pressable>
               </View>
             )}
-            <View style={[s.between, compact && { alignItems: "flex-start" }]}>
-              <View style={{ gap: 8, flex: 1 }}>
-                <Text style={a.eyebrow}>
+            {!nestedMobileScreen && <View style={[s.between, compact && { alignItems: "flex-start" }]}>
+              <View style={{ gap: compact ? 0 : 8, flex: 1 }}>
+                {!compact && <Text style={a.eyebrow}>
                   {tab === "Overview"
                     ? "A LITTLE MORE CLARITY"
                     : tab === "Transactions"
@@ -203,21 +211,21 @@ export function AppShell() {
                     : tab === "Recurring"
                       ? "SET IT. REMEMBER LESS."
                       : "A PLACE FOR EVERYTHING"}
-                </Text>
+                </Text>}
                 <Text style={[a.pageTitle, compact && { fontSize: 28 }]}>
                   {tab === "Overview"
-                    ? "Your money, at a glance."
+                    ? compact ? "Overview" : "Your money, at a glance."
                     : tab === "Transactions"
-                      ? "Your transactions."
+                      ? compact ? "Transactions" : "Your transactions."
                     : tab === "Trips"
-                      ? "Your trips."
+                    ? compact ? "Trips" : "Your trips."
                     : tab === "Households"
-                      ? "Your households."
+                      ? compact ? "Households" : "Your households."
                     : tab === "Recurring"
-                      ? "On repeat."
-                      : tab === "Accounts" ? "Your accounts." : "Keep it organized."}
+                      ? compact ? "Recurring" : "On repeat."
+                      : tab === "Accounts" ? compact ? "Accounts" : "Your accounts." : compact ? "Categories" : "Keep it organized."}
                 </Text>
-                <Text style={s.muted}>
+                {!compact && <Text style={s.muted}>
                   {tab === "Overview"
                     ? "The everyday ins and outs, all in one place."
                     : tab === "Transactions"
@@ -229,7 +237,7 @@ export function AppShell() {
                     : tab === "Recurring"
                       ? "Your regular expenses, income, and investments, taken care of."
                       : tab === "Accounts" ? "Bank, card, or cash. Give every entry a home." : "Categories that make sense for your everyday."}
-                </Text>
+                </Text>}
               </View>
               {!compact && tab !== "Categories" && tab !== "Accounts" && tab !== "Households" && (
                 <Button
@@ -240,7 +248,7 @@ export function AppShell() {
                   }
                 />
               )}
-            </View>
+            </View>}
             {syncError !== "" && (
               <View
                 style={[
@@ -254,7 +262,7 @@ export function AppShell() {
                 <Button title="Retry" tone="quiet" onPress={sync} />
               </View>
             )}
-            {compact && tab !== "Categories" && tab !== "Accounts" && tab !== "Households" && (
+            {compact && !nestedMobileScreen && tab !== "Categories" && tab !== "Accounts" && tab !== "Households" && (
               <Button
                 title="Add entry"
                 icon="add"
@@ -264,7 +272,7 @@ export function AppShell() {
               />
             )}
             <Slot />
-            <View style={s.between}>
+            {!compact && <View style={s.between}>
               <View style={[s.row, { gap: 6 }]}>
                 <View
                   style={{
@@ -287,7 +295,7 @@ export function AppShell() {
               <Text style={{ color: C.subtle, fontSize: 10 }}>
                 One little entry at a time.
               </Text>
-            </View>
+            </View>}
           </ScrollView>
           {!desktop && nav(true)}
         </View>
@@ -297,6 +305,15 @@ export function AppShell() {
       )}
       <EntryDialog />
       <SettingsSheet visible={settings} onClose={() => setSettings(false)} />
+      {moreOpen && <Sheet visible title="More" onClose={() => setMoreOpen(false)}>
+        {navigation.slice(4).map((item) => <Pressable key={item.tab} accessibilityRole="button" accessibilityLabel={item.tab}
+          onPress={() => { setMoreOpen(false); setTab(item.tab); }}
+          style={[s.row, { minHeight: 52, borderBottomWidth: 1, borderColor: C.line }]}>
+          <Icon name={item.icon} color={C.ink} />
+          <Text style={[s.label, { flex: 1, fontSize: 15 }]}>{item.tab}</Text>
+          <Icon name="chevron-forward" size={17} color={C.muted} />
+        </Pressable>)}
+      </Sheet>}
     </SafeAreaView>
   );
 }
