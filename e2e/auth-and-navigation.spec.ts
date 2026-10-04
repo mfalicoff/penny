@@ -33,7 +33,7 @@ test("auth reports invalid credentials and lets the user retry", async ({ page }
   await expect(page.getByText("Email or password is incorrect.", { exact: true })).toBeVisible();
   await page.getByLabel("Password").fill(testPassword);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await expect(page.getByText("Your money, at a glance.", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Add entry", exact: true })).toBeVisible();
 });
 
 test("demo entry point, all feature routes, and compact navigation work", async ({ page }) => {
@@ -74,7 +74,7 @@ test("settings persist currency and appearance and enforce currency lock after e
   await expect(page.getByText("USD", { exact: true }).first()).toBeVisible();
 
   await page.reload();
-  await expect(page.getByText("Your money, at a glance.", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Add entry", exact: true })).toBeVisible();
   await expect(page.getByText("USD", { exact: true }).first()).toBeVisible();
   await openSettings(page);
   await expect(page.getByRole("radio", { name: "Dark theme" })).toHaveAttribute("aria-checked", "true");

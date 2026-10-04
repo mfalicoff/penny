@@ -12,9 +12,9 @@ test("accounts and trips can be created, assigned, renamed, reassigned, and remo
   await expect(page.getByRole("button", { name: "Edit account Travel card" })).toBeVisible();
 
   await page.getByRole("button", { name: "Trips" }).click();
-  await page.getByRole("button", { name: "Create trip", exact: true }).click();
+  await page.getByRole("button", { name: "Personal trip", exact: true }).click();
   await page.getByLabel("Trip name").fill("Playwright Montréal trip");
-  await page.getByRole("button", { name: "Create trip", exact: true }).last().click();
+  await page.getByRole("button", { name: "Create trip", exact: true }).click();
   await page.getByRole("button", { name: "Open trip Playwright Montréal trip" }).click();
   await expect(page.getByText("No expenses assigned yet.", { exact: true })).toBeVisible();
 
