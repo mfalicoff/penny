@@ -64,6 +64,40 @@ test("household invite, access, splits, recap, reimbursement and audit", (t) => 
   assert.throws(()=>service.createExpense(household.id,"bea",expense(3000)),{reason:"not_found"});
 });
 
+test("shared trips invite multiple accounts and split bookings made before the group existed", (t) => {
+  const { db, service } = setup(); t.after(() => db.close());
+  assert.throws(() => service.createTrip("alex", { name: "Coast", currency: "CAD", startDate: "2026-11-08", endDate: "2026-11-01" }), { reason: "invalid" });
+  const trip = service.createTrip("alex", { name: "Coast", currency: "CAD", startDate: "2026-11-01", endDate: "2026-11-08" }).household;
+  assert.deepEqual(trip.trip, { startDate: "2026-11-01", endDate: "2026-11-08" });
+  assert.equal(service.list("bea").households.some((item) => item.id === trip.id), false);
+  assert.throws(() => service.get(trip.id, "bea"), { reason: "not_found" });
+  join(service, trip.id, "bea"); join(service, trip.id, "cam");
+  assert.equal(service.list("cam").households.find((item) => item.id === trip.id)?.memberCount, 3);
+  const booking = service.createExpense(trip.id, "bea", expense(9000, "bea", "2026-08-01")).expense;
+  assert.deepEqual(booking.splits.map((part) => part.amountCents), [3000, 3000, 3000]);
+  assert.equal(service.projection("cam", "2026-08").transactions[0]?.shareCents, 3000);
+  assert.throws(() => service.updateTrip(trip.id, "bea", { name: "New", startDate: "2026-11-01", endDate: "2026-11-08" }), { reason: "forbidden" });
+  const edited = service.updateTrip(trip.id, "alex", { name: "Coast weekend", startDate: "2026-11-02", endDate: "2026-11-08" }).household;
+  assert.equal(service.get(trip.id, "cam").household.name, edited.name);
+});
+
+test("a household member joining after UTC midnight can share an expense on their local join date", (t) => {
+  const { db, service, advance } = setup(); t.after(() => db.close());
+  advance("2026-10-05T01:30:00Z"); // October 4 at 9:30 p.m. in Toronto.
+  const household = service.create("alex", { name: "Evening home", currency: "CAD", timezoneOffsetMinutes: 240 }).household;
+  const code = service.invite(household.id, "alex").code;
+  service.join("bea", { code, timezoneOffsetMinutes: 240 });
+  assert.equal(service.get(household.id, "alex").members.find((member) => member.userId === "bea")?.joinedOn, "2026-10-04");
+  const shared = service.createExpense(household.id, "alex", expense(2000, "alex", "2026-10-04")).expense;
+  assert.deepEqual(shared.splits.map((part) => part.amountCents), [1000, 1000]);
+  assert.equal(service.projection("bea", "2026-10").transactions[0]?.shareCents, 1000);
+  const legacyCode = service.invite(household.id, "alex").code;
+  service.join("cam", { code: legacyCode }); // Older clients did not send an offset.
+  assert.equal(service.get(household.id, "alex").members.find((member) => member.userId === "cam")?.joinedOn, undefined);
+  const later = service.createExpense(household.id, "alex", { ...expense(3000, "alex", "2026-10-04"), timezoneOffsetMinutes: 240 }).expense;
+  assert.deepEqual(later.splits.map((part) => part.amountCents), [1000, 1000, 1000]);
+});
+
 test("exact and percent splits, stale edits, private accounts and receipt access", (t) => {
   const {db,service,household}=setup(); t.after(()=>db.close());
   join(service,household.id,"bea"); join(service,household.id,"cam");
@@ -159,7 +193,7 @@ test("opening a pre-household database preserves private ledger and marks migrat
   t.after(()=>rmSync(folder,{recursive:true,force:true}));
   const path=joinPath(folder,"old.sqlite");
   const old=new DatabaseSync(path);
-  old.exec("CREATE TABLE users (id TEXT PRIMARY KEY,email TEXT UNIQUE NOT NULL,password TEXT NOT NULL,salt TEXT NOT NULL); CREATE TABLE ledgers (user_id TEXT PRIMARY KEY REFERENCES users(id),revision INTEGER NOT NULL DEFAULT 0,data TEXT NOT NULL);");
+  old.exec("CREATE TABLE users (id TEXT PRIMARY KEY,email TEXT UNIQUE NOT NULL,password TEXT NOT NULL,salt TEXT NOT NULL); CREATE TABLE ledgers (user_id TEXT PRIMARY KEY REFERENCES users(id),revision INTEGER NOT NULL DEFAULT 0,data TEXT NOT NULL); CREATE TABLE household_member_periods (id TEXT PRIMARY KEY,household_id TEXT NOT NULL,user_id TEXT NOT NULL,joined_at INTEGER NOT NULL,left_at INTEGER);");
   old.prepare("INSERT INTO users VALUES (?,?,?,?)").run("alex","alex@example.test","hash","salt");
   old.prepare("INSERT INTO ledgers VALUES (?,0,?)").run("alex",JSON.stringify(emptyLedger()));
   old.close();
@@ -168,6 +202,7 @@ test("opening a pre-household database preserves private ledger and marks migrat
   assert.equal(upgraded.prepare("PRAGMA user_version").get()!.user_version,1);
   assert.equal((upgraded.prepare("SELECT data FROM ledgers WHERE user_id='alex'").get()!.data as string),JSON.stringify(emptyLedger()));
   assert.equal(upgraded.prepare("SELECT count(*) AS n FROM household_members").get()!.n,0);
+  assert.equal((upgraded.prepare("PRAGMA table_info(household_member_periods)").all() as { name: string }[]).some((column) => column.name === "joined_on"), true);
 });
 
 test("HTTP household routes enforce sessions and share receipts only with members", async (t) => {
@@ -185,6 +220,12 @@ test("HTTP household routes enforce sessions and share receipts only with member
   const alex=await (await request("/auth/register","POST",{email:"alex@example.test",password:"a secure test password"})).json() as {token:string};
   const bea=await (await request("/auth/register","POST",{email:"bea@example.test",password:"a secure test password"})).json() as {token:string};
   const outsider=await (await request("/auth/register","POST",{email:"outside@example.test",password:"a secure test password"})).json() as {token:string};
+  const shared=await request("/households/trips","POST",{name:"Coast",currency:"CAD",startDate:today,endDate:today},alex.token);
+  assert.equal(shared.status,201);
+  const {household:sharedTrip}=await shared.json() as {household:{id:string;trip:{startDate:string;endDate:string}}};
+  assert.deepEqual(sharedTrip.trip,{startDate:today,endDate:today});
+  assert.equal((await request(`/households/${sharedTrip.id}/trip`,"PATCH",{name:"Updated",startDate:today,endDate:today},bea.token)).status,404);
+  assert.equal((await request(`/households/${sharedTrip.id}/trip`,"PATCH",{name:"Updated",startDate:today,endDate:today},alex.token)).status,200);
   const created=await request("/households","POST",{name:"Home",currency:"CAD"},alex.token);
   assert.equal(created.status,201);
   const {household}=await created.json() as {household:{id:string;creatorId:string}};

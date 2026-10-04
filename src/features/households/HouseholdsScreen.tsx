@@ -32,7 +32,7 @@ export default function HouseholdsScreen() {
       await refresh();
       setMode(null);
       setName(""); setCode("");
-      router.push(`/households/${result.household.id}`);
+      router.push(result.household.trip ? `/trips/${result.household.id}` : `/households/${result.household.id}`);
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : "Could not save household.");
     } finally { setSaving(false); }
@@ -50,7 +50,7 @@ export default function HouseholdsScreen() {
     </View>
     {loadError ? <Text style={s.error}>{loadError}</Text> : null}
     {loading && !households.length ? <Text style={s.muted}>Loading households…</Text> : null}
-    {households.map((household) => <Pressable key={household.id} accessibilityRole="button"
+    {households.filter((household) => !household.trip).map((household) => <Pressable key={household.id} accessibilityRole="button"
       accessibilityLabel={`Open ${household.name} household`}
       onPress={() => router.push(`/households/${household.id}`)}
       style={[s.card, s.between, { minHeight: 76, padding: compact ? 16 : 18 }]}>
@@ -59,7 +59,7 @@ export default function HouseholdsScreen() {
           <Text style={s.muted}>{household.memberCount} {household.memberCount === 1 ? "member" : "members"} · {household.currency}</Text>
         </View></View><Icon name="chevron-forward" color={C.muted} />
     </Pressable>)}
-    {!loading && !households.length && !loadError && <View style={{ alignItems: "center", gap: 8, padding: 28 }}>
+    {!loading && !households.some((household) => !household.trip) && !loadError && <View style={{ alignItems: "center", gap: 8, padding: 28 }}>
       <Icon name="people-outline" size={28} color={C.muted} />
       <Text style={[s.muted, { textAlign: "center" }]}>No households yet</Text>
     </View>}

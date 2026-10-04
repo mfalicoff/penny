@@ -133,8 +133,9 @@ export function EntryForm({
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const selectedHousehold = initialHousehold?.id === householdId ? initialHousehold : households.find((item) => item.id === householdId);
-  const activeMembers = members.filter((member) => new Date(member.joinedAt).toISOString().slice(0, 10) <= date &&
-    (!member.leftAt || new Date(member.leftAt).toISOString().slice(0, 10) > date));
+  const activeMembers = members.filter((member) => selectedHousehold?.trip ? !member.leftAt
+    : (member.joinedOn ?? dateKey(new Date(member.joinedAt))) <= date &&
+      (!member.leftAt || new Date(member.leftAt).toISOString().slice(0, 10) > date));
   const selfId = members.find((member) => member.email === userEmail)?.userId;
   const sharedCurrency = selectedHousehold?.currency ?? currency;
   async function selectHousehold(id: string) {
@@ -271,6 +272,7 @@ export function EntryForm({
           allocations: parts, category: { name: category.name, icon: category.icon, color: category.color },
           note: note.trim(), accountId: payerUserId === selfId ? accountId : undefined,
           receiptId: savedReceipt?.id ?? receipt?.id ?? retainedReceiptId,
+          timezoneOffsetMinutes: new Date().getTimezoneOffset(),
         };
         if (householdRule) await updateRecurring(householdId, householdRule.id, householdRule.revision,
           { ...input, nextDate: date, frequency: frequency === "none" ? householdRule.frequency : frequency, active: ruleActive });

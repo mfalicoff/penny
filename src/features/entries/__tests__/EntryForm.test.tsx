@@ -77,6 +77,21 @@ test("expense form assigns an existing trip and allows removing the assignment",
   expect(onSave).toHaveBeenLastCalledWith(expect.objectContaining({ tripId: undefined }), undefined);
 });
 
+test("a member is available on their local join date even when the UTC date is tomorrow", async () => {
+  const household = { id: "home", name: "Home", currency: "CAD", creatorId: "alice", createdAt: 1, memberCount: 2 };
+  const members = [
+    { userId: "alice", email: "alice@example.com", joinedAt: 1, joinedOn: "2026-01-01" },
+    { userId: "bob", email: "bob@example.com", joinedAt: Date.parse("2026-10-05T01:30:00Z"), joinedOn: "2026-10-04" },
+  ];
+  jest.mocked(createExpense).mockResolvedValue({ expense: {} as never });
+  await render(<EntryForm categories={emptyLedger().categories} currency="CAD" initialHousehold={household} initialMembers={members}
+    userEmail="alice@example.com" onClose={jest.fn()} />);
+  await fireEvent.press(screen.getByRole("button", { name: "Date" }));
+  await fireEvent(screen.getByTestId("system-date-picker"), "valueChange", {}, new Date(2026, 9, 4, 12));
+  await fireEvent.press(screen.getByRole("button", { name: "Exact amounts" }));
+  expect(screen.getByLabelText("bob@example.com (CAD)")).toBeOnTheScreen();
+});
+
 test("category options scroll outside the entry form's scroll view", async () => {
   await render(<EntryForm categories={emptyLedger().categories} currency="CAD" onClose={jest.fn()} onSave={jest.fn()} onDelete={jest.fn()} />);
   await fireEvent.press(screen.getByRole("button", { name: "Category: Food & drinks" }));

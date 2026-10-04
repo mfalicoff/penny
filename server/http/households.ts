@@ -9,10 +9,12 @@ export function createHouseholdRoutes(service: HouseholdService) {
   const inviteLimit = rateLimit({ windowMs: 10 * 60000, limit: 20, standardHeaders: "draft-8", legacyHeaders: false, message: {error:"Too many invite attempts. Try again later."} });
   routes.get("/projection", (req,res) => res.json(service.projection(actor(res), typeof req.query.month === "string" ? req.query.month : undefined, typeof req.query.year === "string" ? req.query.year : undefined)));
   routes.post("/join", inviteLimit, (req,res) => res.json(service.join(actor(res),req.body)));
+  routes.post("/trips", (req,res) => res.status(201).json(service.createTrip(actor(res),req.body)));
   routes.get("/", (_req,res) => res.json(service.list(actor(res))));
   routes.post("/", (req,res) => res.status(201).json(service.create(actor(res),req.body)));
   routes.get("/:id", (req,res) => res.json(service.get(req.params.id,actor(res))));
   routes.patch("/:id", (req,res) => res.json(service.rename(req.params.id,actor(res),req.body)));
+  routes.patch("/:id/trip", (req,res) => res.json(service.updateTrip(req.params.id,actor(res),req.body)));
   routes.post("/:id/archive", (req,res) => res.json(service.archive(req.params.id,actor(res))));
   routes.post("/:id/invites", (req,res) => res.status(201).json(service.invite(req.params.id,actor(res))));
   routes.post("/:id/leave", (req,res) => res.json(service.leave(req.params.id,actor(res))));

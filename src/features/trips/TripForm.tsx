@@ -22,7 +22,7 @@ export function TripForm({ trip, used = false, commit, onClose, onRemoved }: {
     setBusy(true);
     setError("");
     try {
-      const item = { id: trip?.id ?? uid(), name, startDate, endDate };
+      const item = { id: trip?.id ?? uid(), name, startDate, endDate, ...(trip?.sharedHouseholdId ? { sharedHouseholdId: trip.sharedHouseholdId } : {}) };
       await commit(saveTrip(item, trip, remove), remove ? "Trip removed" : "Trip saved");
       onClose();
       if (remove) onRemoved?.();

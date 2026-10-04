@@ -8,7 +8,7 @@ function useHouseholdState() {
   const { email, demo, ledger } = useLedger();
   const [households, setHouseholds] = useState<Household[]>([]);
   const [byPeriod, setByPeriod] = useState<Record<string, ProjectedExpense[]>>({});
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(Boolean(email && !demo));
   const [error, setError] = useState("");
   const session = useRef(0);
   const requested = useRef(new Set<string>());

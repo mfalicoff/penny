@@ -13,7 +13,7 @@ export const accountTypeIcons: Record<AccountType, string> = {
   bank: "business-outline", credit: "card-outline", cash: "cash-outline", other: "wallet-outline",
 };
 export type PaymentAccount = { id: string; name: string; type: AccountType };
-export type Trip = { id: string; name: string; startDate: string; endDate: string };
+export type Trip = { id: string; name: string; startDate: string; endDate: string; sharedHouseholdId?: string };
 export type Category = {
   id: string;
   name: string;

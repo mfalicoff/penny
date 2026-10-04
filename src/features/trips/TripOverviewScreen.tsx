@@ -1,24 +1,48 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import { archiveHousehold } from "../../data/households";
+import { saveTrip } from "../../domain/commands";
 import { parseDate } from "../../domain/ledger";
 import { useLedger } from "../../providers/LedgerProvider";
+import { useHouseholds } from "../../providers/HouseholdProvider";
 import { useWorkspace } from "../../providers/WorkspaceProvider";
 import { currencyFormat } from "../../shared/format";
 import { Button, C, Icon, s } from "../../shared/ui";
 import { useTheme } from "../../shared/theme";
 import { useResponsive } from "../../shared/useResponsive";
 import { TripForm } from "./TripForm";
+import { SharedTripForm } from "./SharedTripForm";
 import { tripOverview } from "./selectors";
+import HouseholdDetailScreen from "../households/HouseholdDetailScreen";
 
 export default function TripOverviewScreen() {
   useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { ledger, commit } = useLedger();
+  const { ledger, commit, demo } = useLedger();
+  const { households, loading, refresh } = useHouseholds();
   const { setForm } = useWorkspace();
   const { compact } = useResponsive();
   const [editing, setEditing] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const shared = households.find((household) => household.id === id && household.trip);
+  if (shared) {
+    const previous = ledger.trips.find((item) => item.sharedHouseholdId === shared.id);
+    const personal = previous ? tripOverview(ledger, previous) : undefined;
+    return <View style={{ gap: 20 }}>
+      <HouseholdDetailScreen />
+      {!!personal?.expenses.length && <View style={[s.card, { gap: 10 }]}>
+        <Text style={s.heading}>Your earlier personal expenses</Text>
+        <Text style={s.muted}>These entries stay private. Add expenses above to share them with everyone on the trip.</Text>
+        {personal.expenses.map((entry) => <Pressable key={entry.id} accessibilityRole="button" accessibilityLabel={`Edit ${entry.title}`}
+          onPress={() => setForm({ entry })} style={[s.between, { minHeight: 48 }]}>
+          <Text style={s.label}>{entry.title}</Text><Text style={s.label}>{currencyFormat(entry.share, ledger.currency)}</Text>
+        </Pressable>)}
+      </View>}
+    </View>;
+  }
   const trip = ledger.trips.find((item) => item.id === id);
+  if (!trip && loading) return <Text style={s.muted}>Opening trip…</Text>;
   if (!trip) return <View style={[s.card, { gap: 16 }]}>
     <Text style={s.heading}>Trip not found.</Text>
     <Button title="Back to trips" tone="quiet" onPress={() => router.navigate("/trips")} />
@@ -32,7 +56,10 @@ export default function TripOverviewScreen() {
           <Text style={[s.heading, { fontSize: 24 }]}>{trip.name}</Text>
           <Text style={s.muted}>{parseDate(trip.startDate).toLocaleDateString("en-CA", { month: "long", day: "numeric", year: "numeric" })} – {parseDate(trip.endDate).toLocaleDateString("en-CA", { month: "long", day: "numeric", year: "numeric" })}</Text>
         </View>
-        <Button title="Edit trip" icon="create-outline" tone="quiet" onPress={() => setEditing(true)} />
+        <View style={[s.row, { flexWrap: "wrap" }]}>
+          {!demo && !trip.sharedHouseholdId && <Button title="Invite people" icon="person-add-outline" onPress={() => setSharing(true)} />}
+          <Button title="Edit trip" icon="create-outline" tone="quiet" onPress={() => setEditing(true)} />
+        </View>
       </View>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
         <View style={[s.card, { backgroundColor: C.pale, flexGrow: 1, minWidth: 140, gap: 6 }]}>
@@ -67,5 +94,11 @@ export default function TripOverviewScreen() {
       </Pressable>) : <Text style={s.muted}>No expenses assigned yet.</Text>}
     </View>
     {editing && <TripForm trip={trip} used={overview.expenses.length > 0} commit={commit} onClose={() => setEditing(false)} onRemoved={() => router.navigate("/trips")} />}
+    {sharing && <SharedTripForm currency={ledger.currency} initial={trip} onClose={() => setSharing(false)} onSaved={async (group) => {
+      try { await commit(saveTrip({ ...trip, sharedHouseholdId: group.id }, trip), "Trip shared"); }
+      catch (cause) { await archiveHousehold(group.id); throw cause; }
+      await refresh();
+      router.replace({ pathname: "/trips/[id]", params: { id: group.id } });
+    }} />}
   </View>;
 }

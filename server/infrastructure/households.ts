@@ -15,16 +15,20 @@ const allocations = z.array(z.union([
   z.object({ userId: id, amountCents: z.number().int().nonnegative() }),
   z.object({ userId: id, percentBasisPoints: z.number().int().min(0).max(10000) }),
 ])).max(100);
-const expenseInput = z.object({ title: z.string().trim().min(1).max(100), totalCents: positiveCents, date, payerUserId: id, splitMode: z.enum(["equal", "exact", "percent"]), allocations: allocations.optional(), category, note: z.string().max(1000).default(""), accountId: id.optional(), receiptId: id.optional() });
+const expenseInput = z.object({ title: z.string().trim().min(1).max(100), totalCents: positiveCents, date, payerUserId: id, splitMode: z.enum(["equal", "exact", "percent"]), allocations: allocations.optional(), category, note: z.string().max(1000).default(""), accountId: id.optional(), receiptId: id.optional(), timezoneOffsetMinutes: z.number().int().min(-840).max(720).optional() });
 const recurringInput = expenseInput.omit({ date: true }).extend({ nextDate: date, frequency: z.enum(["weekly", "monthly", "yearly"]) });
-const householdInput = z.object({ name: z.string().trim().min(1).max(80), currency: z.enum(["CAD", "USD", "EUR", "GBP"]) });
+const timezoneOffsetMinutes = z.number().int().min(-840).max(720).optional();
+const householdInput = z.object({ name: z.string().trim().min(1).max(80), currency: z.enum(["CAD", "USD", "EUR", "GBP"]), timezoneOffsetMinutes });
+const tripFields = householdInput.extend({ startDate: date, endDate: date });
+const tripInput = tripFields.refine((value) => value.endDate >= value.startDate);
 const reimbursementInput = z.object({ fromUserId: id, toUserId: id, amountCents: positiveCents });
 const time = () => Date.now();
+const joinDate = (stamp: number, offsetMinutes?: number) => offsetMinutes === undefined ? null : new Date(stamp - offsetMinutes * 60000).toISOString().slice(0, 10);
 function fail(reason: "invalid" | "forbidden" | "not_found" | "conflict", message: string): never { throw new ApplicationError(reason, message); }
 function parse<T>(schema: z.ZodType<T>, value: unknown): T { const result = schema.safeParse(value); if (!result.success) fail("invalid", "Invalid household data."); return result.data; }
 function transaction<T>(db: DatabaseSync, work: () => T): T { db.exec("BEGIN IMMEDIATE"); try { const result = work(); db.exec("COMMIT"); return result; } catch (error) { db.exec("ROLLBACK"); throw error; } }
 function json(value: unknown) { return JSON.stringify(value); }
-function rowToMember(row: Row) { return { userId: row.user_id as string, email: row.email as string, joinedAt: row.joined_at as number, ...(row.left_at ? { leftAt: row.left_at as number } : {}) }; }
+function rowToMember(row: Row) { return { userId: row.user_id as string, email: row.email as string, joinedAt: row.joined_at as number, ...(row.joined_on ? { joinedOn: row.joined_on as string } : {}), ...(row.left_at ? { leftAt: row.left_at as number } : {}) }; }
 function rowToHousehold(row: Row) { return { id: row.id as string, name: row.name as string, currency: row.currency as string, creatorId: row.creator_id as string, createdAt: row.created_at as number, memberCount: row.member_count as number }; }
 function split(totalCents: number, mode: "equal" | "exact" | "percent", memberIds: string[], input?: z.infer<typeof allocations>) {
   if (!memberIds.length || new Set(memberIds).size !== memberIds.length) fail("invalid", "Select distinct members.");
@@ -50,18 +54,22 @@ function split(totalCents: number, mode: "equal" | "exact" | "percent", memberId
 }
 
 export function createHouseholdService(db: DatabaseSync, security: Pick<Security, "randomId" | "hashToken">, now = time) {
+  const householdView = (row: Row) => {
+    const trip = db.prepare("SELECT start_date, end_date FROM household_trips WHERE household_id=?").get(row.id as string) as Row | undefined;
+    return { ...rowToHousehold(row), ...(trip ? { trip: { startDate: trip.start_date as string, endDate: trip.end_date as string } } : {}) };
+  };
   const member = (householdId: string, userId: string, historical = false) => db.prepare(`SELECT m.*, u.email FROM household_members m JOIN users u ON u.id=m.user_id WHERE m.household_id=? AND m.user_id=? ${historical ? "" : "AND m.left_at IS NULL"}`).get(householdId, userId) as Row | undefined;
-  const members = (householdId: string) => (db.prepare("SELECT m.*, u.email FROM household_members m JOIN users u ON u.id=m.user_id WHERE household_id=? ORDER BY m.joined_at, m.user_id").all(householdId) as Row[]).map(rowToMember);
+  const members = (householdId: string) => (db.prepare("SELECT m.*, u.email, (SELECT p.joined_on FROM household_member_periods p WHERE p.household_id=m.household_id AND p.user_id=m.user_id ORDER BY p.joined_at DESC LIMIT 1) AS joined_on FROM household_members m JOIN users u ON u.id=m.user_id WHERE m.household_id=? ORDER BY m.joined_at, m.user_id").all(householdId) as Row[]).map(rowToMember);
   const requireMember = (householdId: string, userId: string, historical = false) => { if (!member(householdId, userId, historical) || (!historical && !household(householdId))) fail("not_found", "Household not found."); };
   const household = (householdId: string, includeArchived = false) => db.prepare(`SELECT h.*, (SELECT COUNT(*) FROM household_members m WHERE m.household_id=h.id AND m.left_at IS NULL) AS member_count FROM households h WHERE h.id=? ${includeArchived ? "" : "AND h.archived_at IS NULL"}`).get(householdId) as Row | undefined;
   const requireCreator = (householdId: string, userId: string) => { requireMember(householdId, userId); if (household(householdId)?.creator_id !== userId) fail("forbidden", "Only the household creator can manage members."); };
-  const activeIds = (householdId: string, onDate: string) => {
-    const periods = db.prepare("SELECT user_id, joined_at, left_at FROM household_member_periods WHERE household_id=?").all(householdId) as Row[];
+  const activeIds = (householdId: string, onDate: string, legacyOffsetMinutes = 0) => {
+    const periods = db.prepare("SELECT user_id, joined_at, joined_on, left_at FROM household_member_periods WHERE household_id=?").all(householdId) as Row[];
     const members: HouseholdMember[] = periods.map((period) => ({
       householdId,
       userId: period.user_id as string,
       displayName: "",
-      joinedOn: new Date(period.joined_at as number).toISOString().slice(0, 10),
+      joinedOn: (period.joined_on as string | null) ?? new Date((period.joined_at as number) - legacyOffsetMinutes * 60000).toISOString().slice(0, 10),
       ...(period.left_at ? { leftOn: new Date(period.left_at as number).toISOString().slice(0, 10) } : {}),
     }));
     return activeMemberIds(members, onDate);
@@ -128,7 +136,8 @@ export function createHouseholdService(db: DatabaseSync, security: Pick<Security
     for (const monthValue of allMonths(householdId)) if (recap(householdId,userId,monthValue).balances.some((b) => b.userId===userId && b.balanceCents!==0)) fail("conflict", "Settle every monthly balance before leaving.");
   };
   const createExpense = (householdId: string, actorId: string, data: z.infer<typeof expenseInput>, recurringId?: string, predeterminedSplits?: { userId: string; amountCents: number }[]) => {
-    const memberIds = activeIds(householdId, data.date);
+    // Trip bookings can predate the trip and even the creation of its shared group.
+    const memberIds = householdView(household(householdId)!).trip ? currentIds(householdId) : activeIds(householdId, data.date, data.timezoneOffsetMinutes);
     if (!memberIds.includes(data.payerUserId)) fail("invalid", "The payer must be a current household member.");
     validateAccount(data.payerUserId,actorId,data.accountId); validateReceipt(householdId,actorId,data.receiptId);
     const shares = predeterminedSplits ?? split(data.totalCents,data.splitMode,memberIds,data.allocations);
@@ -138,10 +147,41 @@ export function createHouseholdService(db: DatabaseSync, security: Pick<Security
     const result = expense(householdId,idValue,actorId); audit(householdId,actorId,"expense.created",null,{...result,accountId:undefined},idValue); return result;
   };
   return {
-    list(userId: string) { return { households: (db.prepare("SELECT h.*, (SELECT COUNT(*) FROM household_members x WHERE x.household_id=h.id AND x.left_at IS NULL) AS member_count FROM households h JOIN household_members m ON m.household_id=h.id WHERE m.user_id=? AND h.archived_at IS NULL ORDER BY h.created_at DESC").all(userId) as Row[]).map(rowToHousehold) }; },
-    create(userId: string, body: unknown) { const input = parse(householdInput,body); return transaction(db,() => { const ledger=db.prepare("SELECT data FROM ledgers WHERE user_id=?").get(userId) as Row; if(JSON.parse(ledger.data as string).currency!==input.currency)fail("invalid","Household currency must match your ledger currency."); const householdId=security.randomId(16), stamp=now(); db.prepare("INSERT INTO households VALUES (?,?,?,?,?,NULL)").run(householdId,input.name,input.currency,userId,stamp); db.prepare("INSERT INTO household_members VALUES (?,?,?,NULL)").run(householdId,userId,stamp); db.prepare("INSERT INTO household_member_periods VALUES (?,?,?,?,NULL)").run(security.randomId(16),householdId,userId,stamp); const result=rowToHousehold(household(householdId)!); audit(householdId,userId,"household.created",null,result); return { household:result }; }); },
-    get(householdId: string,userId: string) { requireMember(householdId,userId,true); const row=household(householdId,true); if (!row) fail("not_found","Household not found."); const membership=member(householdId,userId,true)!; return {household:rowToHousehold(row),members:members(householdId).filter((m)=>!membership.left_at || m.joinedAt <= (membership.left_at as number))}; },
-    rename(householdId: string,userId: string,body: unknown) { requireCreator(householdId,userId); const input=parse(z.object({name:householdInput.shape.name}),body); return transaction(db,()=>{ const before=rowToHousehold(household(householdId)!); db.prepare("UPDATE households SET name=? WHERE id=?").run(input.name,householdId); const after=rowToHousehold(household(householdId)!); audit(householdId,userId,"household.renamed",before,after); return {household:after}; }); },
+    list(userId: string) { return { households: (db.prepare("SELECT h.*, (SELECT COUNT(*) FROM household_members x WHERE x.household_id=h.id AND x.left_at IS NULL) AS member_count FROM households h JOIN household_members m ON m.household_id=h.id WHERE m.user_id=? AND h.archived_at IS NULL ORDER BY h.created_at DESC").all(userId) as Row[]).map(householdView) }; },
+    create(userId: string, body: unknown) {
+      const input = parse(householdInput, body);
+      return transaction(db, () => {
+        const ledger = db.prepare("SELECT data FROM ledgers WHERE user_id=?").get(userId) as Row;
+        if (JSON.parse(ledger.data as string).currency !== input.currency) fail("invalid", "Household currency must match your ledger currency.");
+        const householdId = security.randomId(16), stamp = now();
+        db.prepare("INSERT INTO households VALUES (?,?,?,?,?,NULL)").run(householdId, input.name, input.currency, userId, stamp);
+        db.prepare("INSERT INTO household_members VALUES (?,?,?,NULL)").run(householdId, userId, stamp);
+        db.prepare("INSERT INTO household_member_periods (id,household_id,user_id,joined_at,joined_on,left_at) VALUES (?,?,?,?,?,NULL)")
+          .run(security.randomId(16), householdId, userId, stamp, joinDate(stamp, input.timezoneOffsetMinutes));
+        const result = householdView(household(householdId)!);
+        audit(householdId, userId, "household.created", null, result);
+        return { household: result };
+      });
+    },
+    createTrip(userId: string, body: unknown) {
+      const input = parse(tripInput, body);
+      return transaction(db, () => {
+        const ledger = db.prepare("SELECT data FROM ledgers WHERE user_id=?").get(userId) as Row;
+        if (JSON.parse(ledger.data as string).currency !== input.currency) fail("invalid", "Trip currency must match your ledger currency.");
+        const householdId = security.randomId(16), stamp = now();
+        db.prepare("INSERT INTO households VALUES (?,?,?,?,?,NULL)").run(householdId, input.name, input.currency, userId, stamp);
+        db.prepare("INSERT INTO household_trips VALUES (?,?,?)").run(householdId, input.startDate, input.endDate);
+        db.prepare("INSERT INTO household_members VALUES (?,?,?,NULL)").run(householdId, userId, stamp);
+        db.prepare("INSERT INTO household_member_periods (id,household_id,user_id,joined_at,joined_on,left_at) VALUES (?,?,?,?,?,NULL)")
+          .run(security.randomId(16), householdId, userId, stamp, joinDate(stamp, input.timezoneOffsetMinutes));
+        const result = householdView(household(householdId)!);
+        audit(householdId, userId, "trip.created", null, result);
+        return { household: result };
+      });
+    },
+    updateTrip(householdId: string, userId: string, body: unknown) { requireCreator(householdId, userId); const input = parse(tripFields.omit({ currency: true, timezoneOffsetMinutes: true }).refine((value) => value.endDate >= value.startDate), body); return transaction(db, () => { const before = householdView(household(householdId)!); if (!before.trip) fail("not_found", "Trip not found."); db.prepare("UPDATE households SET name=? WHERE id=?").run(input.name, householdId); db.prepare("UPDATE household_trips SET start_date=?, end_date=? WHERE household_id=?").run(input.startDate, input.endDate, householdId); const after = householdView(household(householdId)!); audit(householdId, userId, "trip.edited", before, after); return { household: after }; }); },
+    get(householdId: string,userId: string) { requireMember(householdId,userId,true); const row=household(householdId,true); if (!row) fail("not_found","Household not found."); const membership=member(householdId,userId,true)!; return {household:householdView(row),members:members(householdId).filter((m)=>!membership.left_at || m.joinedAt <= (membership.left_at as number))}; },
+    rename(householdId: string,userId: string,body: unknown) { requireCreator(householdId,userId); const input=parse(z.object({name:householdInput.shape.name}),body); return transaction(db,()=>{ const before=householdView(household(householdId)!); db.prepare("UPDATE households SET name=? WHERE id=?").run(input.name,householdId); const after=householdView(household(householdId)!); audit(householdId,userId,"household.renamed",before,after); return {household:after}; }); },
     archive(householdId: string, userId: string) {
       return transaction(db, () => {
         requireCreator(householdId, userId);
@@ -154,13 +194,30 @@ export function createHouseholdService(db: DatabaseSync, security: Pick<Security
       });
     },
     invite(householdId: string,userId: string) { requireCreator(householdId,userId); return transaction(db,()=>{ db.prepare("DELETE FROM household_invites WHERE household_id=?").run(householdId); const code=security.randomId(5).toUpperCase(),expiresAt=now()+600000; db.prepare("INSERT INTO household_invites VALUES (?,?,?,NULL)").run(security.hashToken(code),householdId,expiresAt); audit(householdId,userId,"invite.created",null,{expiresAt}); return {code,expiresAt}; }); },
-    join(userId: string,body: unknown) { const {code}=parse(z.object({code:z.string().regex(/^[A-Fa-f0-9]{10}$/)}),body); return transaction(db,()=>{ const invitation=db.prepare("SELECT * FROM household_invites WHERE code_hash=? AND expires_at>? ").get(security.hashToken(code.toUpperCase()),now()) as Row|undefined; if (!invitation) fail("invalid","Invite code is invalid or expired."); const householdId=invitation.household_id as string; const ledger=db.prepare("SELECT data FROM ledgers WHERE user_id=?").get(userId) as Row; if(JSON.parse(ledger.data as string).currency!==household(householdId)?.currency)fail("invalid","Household currency must match your ledger currency."); if (member(householdId,userId)) fail("conflict","You are already a member."); if (member(householdId,userId,true)) db.prepare("UPDATE household_members SET joined_at=?,left_at=NULL WHERE household_id=? AND user_id=?").run(now(),householdId,userId); else db.prepare("INSERT INTO household_members VALUES (?,?,?,NULL)").run(householdId,userId,now()); db.prepare("INSERT INTO household_member_periods VALUES (?,?,?,?,NULL)").run(security.randomId(16),householdId,userId,now()); audit(householdId,userId,"member.joined",null,{userId}); return {household:rowToHousehold(household(householdId)!)}; }); },
+    join(userId: string, body: unknown) {
+      const { code, timezoneOffsetMinutes: offset } = parse(z.object({ code: z.string().regex(/^[A-Fa-f0-9]{10}$/), timezoneOffsetMinutes }), body);
+      return transaction(db, () => {
+        const invitation = db.prepare("SELECT * FROM household_invites WHERE code_hash=? AND expires_at>?").get(security.hashToken(code.toUpperCase()), now()) as Row | undefined;
+        if (!invitation) fail("invalid", "Invite code is invalid or expired.");
+        const householdId = invitation.household_id as string;
+        const ledger = db.prepare("SELECT data FROM ledgers WHERE user_id=?").get(userId) as Row;
+        if (JSON.parse(ledger.data as string).currency !== household(householdId)?.currency) fail("invalid", "Household currency must match your ledger currency.");
+        if (member(householdId, userId)) fail("conflict", "You are already a member.");
+        const stamp = now();
+        if (member(householdId, userId, true)) db.prepare("UPDATE household_members SET joined_at=?,left_at=NULL WHERE household_id=? AND user_id=?").run(stamp, householdId, userId);
+        else db.prepare("INSERT INTO household_members VALUES (?,?,?,NULL)").run(householdId, userId, stamp);
+        db.prepare("INSERT INTO household_member_periods (id,household_id,user_id,joined_at,joined_on,left_at) VALUES (?,?,?,?,?,NULL)")
+          .run(security.randomId(16), householdId, userId, stamp, joinDate(stamp, offset));
+        audit(householdId, userId, "member.joined", null, { userId });
+        return { household: householdView(household(householdId)!) };
+      });
+    },
     leave(householdId: string,userId: string) { return transaction(db,()=>{ requireMember(householdId,userId); if (household(householdId)?.creator_id===userId && currentIds(householdId).length>1) fail("conflict","The creator cannot leave while other members remain."); canLeave(householdId,userId); db.prepare("UPDATE household_members SET left_at=? WHERE household_id=? AND user_id=?").run(now(),householdId,userId); db.prepare("UPDATE household_member_periods SET left_at=? WHERE household_id=? AND user_id=? AND left_at IS NULL").run(now(),householdId,userId); audit(householdId,userId,"member.left",{userId},null); return {ok:true}; }); },
     remove(householdId: string,actorId: string,userId: string) { return transaction(db,()=>{ requireCreator(householdId,actorId); if (actorId===userId) fail("invalid","The creator cannot remove themselves."); requireMember(householdId,userId); canLeave(householdId,userId); db.prepare("UPDATE household_members SET left_at=? WHERE household_id=? AND user_id=?").run(now(),householdId,userId); db.prepare("UPDATE household_member_periods SET left_at=? WHERE household_id=? AND user_id=? AND left_at IS NULL").run(now(),householdId,userId); audit(householdId,actorId,"member.removed",{userId},null); return {ok:true}; }); },
     expenses(householdId: string,userId: string,monthValue?: string) { return {expenses:listExpenses(householdId,userId,monthValue)}; },
     getExpense(householdId: string,userId: string,expenseId: string) { requireMember(householdId,userId,true); return {expense:expense(householdId,expenseId,userId)}; },
     createExpense(householdId: string,userId: string,body: unknown) { requireMember(householdId,userId); const input=parse(expenseInput,body); return transaction(db,()=>({expense:createExpense(householdId,userId,input)})); },
-    updateExpense(householdId: string,userId: string,expenseId: string,body: unknown) { requireMember(householdId,userId); const input=parse(expenseInput.extend({revision:z.number().int().nonnegative()}),body); return transaction(db,()=>{ const before=expense(householdId,expenseId,userId); if (before.revision!==input.revision) fail("conflict","Expense changed. Refresh and try again."); const memberIds=activeIds(householdId,input.date); if (!memberIds.includes(input.payerUserId)) fail("invalid","The payer must be a current household member."); const storedAccount=db.prepare("SELECT payer_id,account_id FROM household_expenses WHERE id=? AND household_id=?").get(expenseId,householdId) as Row; const accountId=input.accountId ?? (userId!==input.payerUserId && storedAccount.payer_id===input.payerUserId ? storedAccount.account_id as string|undefined : undefined); validateAccount(input.payerUserId,userId,input.accountId); validateReceipt(householdId,userId,input.receiptId); const shares=split(input.totalCents,input.splitMode,memberIds,input.allocations); db.prepare("UPDATE household_expenses SET title=?,total_cents=?,expense_date=?,payer_id=?,split_mode=?,category=?,note=?,account_id=?,receipt_id=?,revision=revision+1,updated_by=?,updated_at=? WHERE id=? AND household_id=? AND revision=?").run(input.title,input.totalCents,input.date,input.payerUserId,input.splitMode,json(input.category),input.note,accountId??null,input.receiptId??null,userId,now(),expenseId,householdId,input.revision); db.prepare("DELETE FROM household_splits WHERE expense_id=?").run(expenseId); for(const share of shares) db.prepare("INSERT INTO household_splits VALUES (?,?,?)").run(expenseId,share.userId,share.amountCents); const after=expense(householdId,expenseId,userId); audit(householdId,userId,"expense.updated",{...before,accountId:undefined},{...after,accountId:undefined},expenseId); return {expense:after}; }); },
+    updateExpense(householdId: string,userId: string,expenseId: string,body: unknown) { requireMember(householdId,userId); const input=parse(expenseInput.extend({revision:z.number().int().nonnegative()}),body); return transaction(db,()=>{ const before=expense(householdId,expenseId,userId); if (before.revision!==input.revision) fail("conflict","Expense changed. Refresh and try again."); const memberIds=householdView(household(householdId)!).trip ? currentIds(householdId) : activeIds(householdId,input.date,input.timezoneOffsetMinutes); if (!memberIds.includes(input.payerUserId)) fail("invalid","The payer must be a current household member."); const storedAccount=db.prepare("SELECT payer_id,account_id FROM household_expenses WHERE id=? AND household_id=?").get(expenseId,householdId) as Row; const accountId=input.accountId ?? (userId!==input.payerUserId && storedAccount.payer_id===input.payerUserId ? storedAccount.account_id as string|undefined : undefined); validateAccount(input.payerUserId,userId,input.accountId); validateReceipt(householdId,userId,input.receiptId); const shares=split(input.totalCents,input.splitMode,memberIds,input.allocations); db.prepare("UPDATE household_expenses SET title=?,total_cents=?,expense_date=?,payer_id=?,split_mode=?,category=?,note=?,account_id=?,receipt_id=?,revision=revision+1,updated_by=?,updated_at=? WHERE id=? AND household_id=? AND revision=?").run(input.title,input.totalCents,input.date,input.payerUserId,input.splitMode,json(input.category),input.note,accountId??null,input.receiptId??null,userId,now(),expenseId,householdId,input.revision); db.prepare("DELETE FROM household_splits WHERE expense_id=?").run(expenseId); for(const share of shares) db.prepare("INSERT INTO household_splits VALUES (?,?,?)").run(expenseId,share.userId,share.amountCents); const after=expense(householdId,expenseId,userId); audit(householdId,userId,"expense.updated",{...before,accountId:undefined},{...after,accountId:undefined},expenseId); return {expense:after}; }); },
     deleteExpense(householdId: string,userId: string,expenseId: string,body: unknown) { requireMember(householdId,userId); const {revision}=parse(z.object({revision:z.number().int().nonnegative()}),body); return transaction(db,()=>{ const before=expense(householdId,expenseId,userId); if(before.revision!==revision) fail("conflict","Expense changed. Refresh and try again."); db.prepare("UPDATE household_expenses SET deleted_at=?,updated_by=?,revision=revision+1 WHERE id=?").run(now(),userId,expenseId); audit(householdId,userId,"expense.deleted",{...before,accountId:undefined},null,expenseId); return {ok:true}; }); },
     month(householdId: string,userId: string,monthValue: string) { const result=recap(householdId,userId,monthValue); const currentMonth=new Date(now()).toISOString().slice(0,7); const membership=member(householdId,userId,true)!; const leftMonth=membership.left_at?new Date(membership.left_at as number).toISOString().slice(0,7):undefined; const overdueMonths=allMonths(householdId).filter((m)=>m<currentMonth&&(!leftMonth||m<=leftMonth)&&recap(householdId,userId,m).suggestions.length>0).sort(); return {...result,overdueMonths}; },
     reimburse(householdId: string,userId: string,monthValue: string,body: unknown) { requireMember(householdId,userId); parse(month,monthValue); const input=parse(reimbursementInput,body); if(input.fromUserId===input.toUserId) fail("invalid","Choose two different members."); if(userId!==input.fromUserId && userId!==input.toUserId) fail("forbidden","Only people involved can record a reimbursement."); const [year,monthNumber]=monthValue.split("-").map(Number); const lastDay=new Date(Date.UTC(year,monthNumber,0)).toISOString().slice(0,10); if(new Date(now()).toISOString().slice(0,10)<lastDay) fail("conflict","Record reimbursements on the last day of the month or later."); return transaction(db,()=>{ const suggestion=recap(householdId,userId,monthValue).suggestions.find((s)=>s.fromUserId===input.fromUserId&&s.toUserId===input.toUserId&&s.amountCents===input.amountCents); if(!suggestion) fail("conflict","This is no longer the full suggested reimbursement."); const idValue=security.randomId(16),stamp=now(); db.prepare("INSERT INTO household_reimbursements VALUES (?,?,?,?,?,?,?,?)").run(idValue,householdId,monthValue,input.fromUserId,input.toUserId,input.amountCents,userId,stamp); const result={id:idValue,householdId,month:monthValue,...input,createdBy:userId,createdAt:stamp}; audit(householdId,userId,"reimbursement.created",null,result); return {reimbursement:result}; }); },
@@ -242,7 +299,7 @@ export function createHouseholdService(db: DatabaseSync, security: Pick<Security
                 const periods = db.prepare("SELECT * FROM household_member_periods WHERE household_id=?").all(householdId) as Row[];
                 const members: HouseholdMember[] = periods.map((period) => ({
                   householdId, userId: period.user_id as string, displayName: "",
-                  joinedOn: new Date(period.joined_at as number).toISOString().slice(0, 10),
+                  joinedOn: (period.joined_on as string | null) ?? new Date(period.joined_at as number).toISOString().slice(0, 10),
                   ...(period.left_at ? {leftOn:new Date(period.left_at as number).toISOString().slice(0, 10)} : {}),
                 }));
                 const splitMode = rule.split_mode as "equal" | "exact" | "percent";

@@ -2,6 +2,8 @@
 export interface HouseholdService {
   list(userId: string): unknown;
   create(userId: string, body: unknown): unknown;
+  createTrip(userId: string, body: unknown): unknown;
+  updateTrip(householdId: string, userId: string, body: unknown): unknown;
   get(householdId: string, userId: string): unknown;
   rename(householdId: string, userId: string, body: unknown): unknown;
   archive(householdId: string, userId: string): unknown;

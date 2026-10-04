@@ -27,7 +27,7 @@ const ledgerSchema = z
     version: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
     currency: z.enum(["CAD", "USD", "EUR", "GBP"]),
     accounts: z.array(z.object({ id, name: z.string().trim().min(1).max(50), type: z.enum(accountTypes) })).max(300).optional(),
-    trips: z.array(z.object({ id, name: z.string().trim().min(1).max(80), startDate: date, endDate: date })).max(300).optional(),
+    trips: z.array(z.object({ id, name: z.string().trim().min(1).max(80), startDate: date, endDate: date, sharedHouseholdId: id.optional() })).max(300).optional(),
     categories: z
       .array(
         z.object({

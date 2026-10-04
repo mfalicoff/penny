@@ -46,6 +46,16 @@ test("trip edits are protected and trips with expenses cannot be deleted", () =>
   assert.equal(saveTrip(trip, trip, true)(ledger).trips.length, 0);
 });
 
+test("a personal trip can link to a shared group without losing private expenses", () => {
+  const ledger = saveTrip(trip)(emptyLedger());
+  const expense = buildEntry({ ...draft, frequency: "none" }, ledger.categories).transaction;
+  const withExpense = saveEntry(expense)(ledger);
+  const linked = saveTrip({ ...trip, sharedHouseholdId: "group-1" }, trip)(withExpense);
+  assert.equal(linked.trips[0].sharedHouseholdId, "group-1");
+  assert.equal(tripOverview(linked, linked.trips[0]).expenses.length, 1);
+  assert.equal(ledgerWriteSchema.safeParse({ revision: 0, ledger: linked }).success, true);
+});
+
 test("server rejects missing trips, invalid trip references, and non-expense assignments", () => {
   const ledger = saveTrip(trip)(emptyLedger());
   const expense = buildEntry({ ...draft, frequency: "none" }, ledger.categories).transaction;
