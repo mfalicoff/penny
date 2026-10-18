@@ -21,16 +21,26 @@ The `ipa` EAS build profile uses `"distribution": "store"`. TestFlight accepts s
 
    Select the `ipa` build profile and let EAS create or reuse a distribution certificate and App Store provisioning profile. In the credentials menu, select **App Store Connect → Manage your API Key → Set up your project to use an API Key for EAS Submit**. The CI submission reuses that key non-interactively. If this app has a previous iOS build number, first set the remote EAS counter to that value with `npx eas-cli@latest build:version:set --platform ios --profile ipa`.
 
-5. Run the first iOS build interactively to finish Apple signing setup:
+5. After completing the widget App Groups setup below, run the first iOS build interactively to finish Apple signing setup:
 
    ```sh
-   npx eas-cli@latest build --platform ios --profile ipa
+   EXPO_NO_CAPABILITY_SYNC=1 npx eas-cli@latest build --platform ios --profile ipa
    ```
 
    In GitHub, also set the repository **secret** `EXPO_TOKEN` to an Expo access token with access to this EAS project. It is shared with the Android job. Push the configuration, then open **Actions → Build Android APK and iOS IPA for TestFlight → Run workflow**. Ordinary branch pushes and pull requests do not start EAS builds.
+
+### Widget App Groups setup
+
+Penny's iOS widgets share data with the app through the App Group `group.com.mfalicoff.penny`. Before running the iOS CI job with widgets, configure it in [Apple Developer → Certificates, Identifiers & Profiles](https://developer.apple.com/account/resources/identifiers/list):
+
+1. Under **Identifiers → App Groups**, register `group.com.mfalicoff.penny` if it does not already exist.
+2. Under **Identifiers → App IDs**, open both `com.mfalicoff.penny` and `com.mfalicoff.penny.ExpoWidgetsTarget`. Enable **App Groups** on each ID and assign the same `group.com.mfalicoff.penny` group. Save both IDs.
+3. Regenerate the App Store provisioning profiles for **both** bundle IDs so their entitlements include that App Group. For EAS-managed credentials, run `EXPO_NO_CAPABILITY_SYNC=1 npx eas-cli@latest credentials --platform ios` from this repository, select the `ipa` profile, and update each target's provisioning profile. Keep the existing distribution certificate. Then run the interactive build from step 5 to verify signing before rerunning GitHub Actions.
+
+The iOS CI build sets `EXPO_NO_CAPABILITY_SYNC=1` because EAS's capability-sync request can be [rejected by Apple's API](https://github.com/expo/eas-cli/issues/3986). This only skips the remote capability update; it does not remove the app's or widget extension's App Group entitlements. Any future iOS entitlement changes must be applied to the matching Apple App IDs and provisioning profiles before CI builds.
 
 CI passes `--non-interactive --freeze-credentials` to EAS Build, so missing or unusable signing credentials fail the iOS job. It checks `ASC_APP_ID` before building and submits the exact completed build ID with the stored App Store Connect API key. EAS increments the iOS build number remotely on each build, including reruns.
 
 After submission, Apple processes the build before it appears under **App Store Connect → Penny → TestFlight**. Add it to an internal testing group to invite your App Store Connect team; enable automatic distribution there if those testers should receive each new build automatically. External testers require a TestFlight group and Apple's Beta App Review. If GitHub times out after submitting, check the EAS dashboard and App Store Connect before starting another build.
 
-References: [Expo TestFlight guide](https://docs.expo.dev/submit/testflight/), [iOS submission](https://docs.expo.dev/submit/ios/), [EAS CI setup](https://docs.expo.dev/build/building-on-ci/), and [remote version management](https://docs.expo.dev/build-reference/app-versions/).
+References: [Expo TestFlight guide](https://docs.expo.dev/submit/testflight/), [iOS submission](https://docs.expo.dev/submit/ios/), [EAS CI setup](https://docs.expo.dev/build/building-on-ci/), [iOS capabilities](https://docs.expo.dev/build-reference/ios-capabilities/), and [remote version management](https://docs.expo.dev/build-reference/app-versions/).

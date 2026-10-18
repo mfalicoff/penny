@@ -146,6 +146,9 @@ jobs:
       - name: Build on EAS with the existing signing credentials
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          # App Groups are configured in Apple Developer for both Penny targets.
+          # EAS capability sync currently sends a request Apple rejects for this capability.
+          EXPO_NO_CAPABILITY_SYNC: '1'
         run: |
           npx --yes eas-cli@latest build \
             --platform ios \
