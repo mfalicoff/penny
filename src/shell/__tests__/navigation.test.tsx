@@ -18,6 +18,8 @@ jest.mock("../../data/api", () => ({
 }));
 jest.mock("../../data/receipts", () => ({ saveReceipt: jest.fn() }));
 jest.mock("../../features/receipts/ReceiptPreview", () => ({ ReceiptPreview: () => null }));
+jest.mock("../../widgets/WidgetSync", () => ({ WidgetSync: () => null }));
+jest.mock("../../widgets/WidgetClear", () => ({ WidgetClear: () => null }));
 
 beforeEach(() => {
   jest.mocked(api.whoAmI).mockResolvedValue("test@example.com");

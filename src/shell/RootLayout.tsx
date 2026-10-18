@@ -8,6 +8,7 @@ import { HouseholdProvider } from "../providers/HouseholdProvider";
 import { ThemeProvider } from "../shared/theme";
 import { C, Icon, s } from "../shared/ui";
 import { AppShell } from "./AppShell";
+import { WidgetClear } from "../widgets/WidgetClear";
 
 function SessionGate() {
   const { checking, email, demo, sessionKey, login, openDemo } = useLedger();
@@ -15,7 +16,7 @@ function SessionGate() {
     <Icon name="leaf-outline" color={C.accent} size={40} />
     <Text style={s.muted}>Making a little room for clarity…</Text>
   </View>;
-  if (!email && !demo) return <Auth onReady={login} onDemo={openDemo} />;
+  if (!email && !demo) return <><WidgetClear /><Auth onReady={login} onDemo={openDemo} /></>;
   return <WorkspaceProvider key={sessionKey}><HouseholdProvider><AppShell /></HouseholdProvider></WorkspaceProvider>;
 }
 

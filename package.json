@@ -4,7 +4,7 @@
   "main": "expo-router/entry",
   "dependencies": {
     "@expo/metro-runtime": "~57.0.16",
-    "@expo/ui": "~57.0.20",
+    "@expo/ui": "~57.0.25",
     "@expo/vector-icons": "^15.0.2",
     "cors": "^2.8.6",
     "expo": "~57.0.25",
@@ -21,6 +21,7 @@
     "expo-status-bar": "~57.0.1",
     "expo-system-ui": "~57.0.4",
     "expo-web-browser": "~57.0.3",
+    "expo-widgets": "~57.0.26",
     "express": "^5.2.1",
     "express-rate-limit": "^8.7.0",
     "openid-client": "^6.8.8",

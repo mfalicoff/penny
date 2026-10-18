@@ -11,6 +11,7 @@ import { useTheme } from "../shared/theme";
 import { Button, C, Icon, IconButton, Sheet, s } from "../shared/ui";
 import { useResponsive } from "../shared/useResponsive";
 import { SaveToast } from "./SaveToast";
+import { WidgetSync } from "../widgets/WidgetSync";
 type Tab = "Overview" | "Transactions" | "Households" | "Trips" | "Recurring" | "Categories" | "Accounts";
 const navigation: { tab: Tab; icon: string; mobileLabel: string }[] = [
   { tab: "Overview", icon: "grid-outline", mobileLabel: "Home" },
@@ -89,6 +90,7 @@ export function AppShell() {
   );
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.bg }}>
+      <WidgetSync />
       <StatusBar style={theme === "light" ? "dark" : "light"} />
       <View style={{ flex: 1, flexDirection: "row" }}>
         {desktop && (
