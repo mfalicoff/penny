@@ -28,11 +28,13 @@ Save flow:
 ```text
 Form input → pure draft validation → optional receipt upload
            → domain command → LedgerProvider.commit
-                            → latest server ledger + command + revision check
-                            → updated snapshot or visible error
+                            → persist per-account base/local ledger
+                            → update UI with pending-sync state
+Background sync → fetch server snapshot → merge base/local/remote
+                → revision-checked PUT (retry on 409) → update base/local
 ```
 
-Commands return `(ledger: Ledger) => Ledger`; they must not mutate the input or perform side effects. The API can replay them after a revision conflict. Generate IDs before constructing a command, preserve unrelated changes, and check edit conflicts against the original entity. A failed save preserves the displayed ledger and the form draft. There is no offline queue.
+Commands return `(ledger: Ledger) => Ledger`; they must not mutate the input or perform side effects. Generate IDs before constructing a command, preserve unrelated changes, and check edit conflicts against the original entity. A failed save preserves the form draft. Signed-in personal changes are persisted as per-account base/local ledger snapshots before the UI reports them saved. The sync loop merges pending local changes with the latest server ledger and retries revision conflicts up to four times. Shared household actions and receipt uploads still require a connection.
 
 The session provider rejects overlapping saves, ignores results from an obsolete session, and cleans up timers and foreground listeners. Demo changes use the same commands locally. Do not add polling or direct ledger writes to screens.
 
@@ -73,7 +75,7 @@ Cover success and failure where behavior can lose user work: stale edit/delete c
 
 Native font loading is mocked globally; receipt I/O and preview are mocked in native form/navigation tests. Web receipt tests render the real preview UI with mocked file I/O and PDF worker results to check loading, errors, pagination, download links and resource cleanup. These tests do not validate device pickers, actual PDF decoding, keyboard behavior, accessibility on a device or visual layout. Bundle exports check cross-platform resolution, not device interaction. Changes to those areas still need a browser or simulator/device check. The server integration test requires permission to listen on a local port.
 
-### Verification on September 27, 2026
+### Historical verification on September 27, 2026
 
 - Passed 26 core tests, 16 native UI tests and 22 real-DOM web tests, plus lint and TypeScript checks.
 - Exported web, iOS and Android bundles successfully.

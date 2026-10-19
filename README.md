@@ -19,7 +19,7 @@ A simple expense, income, and investment contribution tracker for iOS, Android, 
 - Photos render in-app; web PDFs render in the browser; native PDFs open through the system share/open sheet.
 - A clearly labeled, temporary demo without an account.
 
-Existing ledgers upgrade to version 3 on read and persist that version on the next save. Payment accounts start empty, and historical entries stay unassigned. For version 1 ledgers, an Investments category is added unless one already exists or the 300-category limit is reached. Historical expenses retain their classification; edit an entry and select Investment to reclassify it. Editing a recurring occurrence does not change its schedule. Edit the recurring schedule to change future contributions or their payment account. Deploy the updated server alongside the client so payment accounts and investment entries can be saved.
+Existing ledgers are exposed as version 4 on read and persist as v4 on the next validated save. Payment accounts and personal trips start empty, and historical entries stay unassigned. For version 1 ledgers, an Investments category is added unless one already exists or the 300-category limit is reached. Historical expenses retain their classification; edit an entry and select Investment to reclassify it. Editing a recurring occurrence does not change its schedule. Edit the recurring schedule to change future contributions or their payment account. Deploy the updated server alongside the client so payment accounts, trips and investment entries can be saved.
 
 ## Shared households
 
@@ -201,6 +201,7 @@ Recurring entries are materialized when a client syncs or saves, using that devi
 
 See [Frontend architecture](docs/frontend-architecture.md) for ownership rules, the pattern for adding a feature, and the testing strategy.
 See [Backend architecture](docs/backend-architecture.md) for service boundaries, persistence guarantees, API regression coverage and the Hono assessment.
+See [Migration architecture](docs/migration/architecture.md), [API reference](docs/migration/api-reference.md), [feature parity matrix](docs/migration/feature-parity.md), and the [OpenAPI contract](contracts/openapi.json) for the v2 migration baseline. The current Expo/Node app remains the running product while those independent stacks are built.
 
 The initial name, Penny, is a working name. The visual direction emphasizes warm neutral colors, calm hierarchy, quick feedback, and simple entry, inspired by your preferences rather than copied product assets.
 

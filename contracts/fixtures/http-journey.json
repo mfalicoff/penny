@@ -1,0 +1,99 @@
+{
+  "register": {
+    "request": {
+      "email": "contract-user@example.test",
+      "password": "synthetic password only"
+    },
+    "status": 201,
+    "response": {
+      "email": "contract-user@example.test"
+    },
+    "cookie": {
+      "name": "penny_session",
+      "httpOnly": true,
+      "sameSite": "Lax",
+      "path": "/api"
+    }
+  },
+  "initialLedger": {
+    "status": 200,
+    "response": {
+      "revision": 0,
+      "ledgerVersion": 4,
+      "currency": "CAD"
+    }
+  },
+  "write": {
+    "request": {
+      "revision": 0,
+      "entry": {
+        "id": "synthetic-lunch",
+        "title": "Sample lunch",
+        "kind": "expense",
+        "total": 1200,
+        "share": 600,
+        "categoryId": "food",
+        "date": "2026-10-01",
+        "note": ""
+      }
+    },
+    "status": 200,
+    "response": {
+      "revision": 1,
+      "entry": {
+        "id": "synthetic-lunch",
+        "title": "Sample lunch",
+        "kind": "expense",
+        "total": 1200,
+        "share": 600,
+        "categoryId": "food",
+        "date": "2026-10-01",
+        "note": ""
+      }
+    }
+  },
+  "staleWrite": {
+    "request": {
+      "revision": 0
+    },
+    "status": 409,
+    "response": {
+      "error": "Your data changed on another device. Please refresh and try again."
+    }
+  },
+  "projection": {
+    "status": 200,
+    "response": {
+      "transactions": []
+    }
+  },
+  "shared": {
+    "secondAccount": {
+      "email": "contract-peer@example.test",
+      "password": "synthetic password only"
+    },
+    "household": {
+      "name": "Sample household",
+      "currency": "CAD",
+      "timezoneOffsetMinutes": 0
+    },
+    "expense": {
+      "title": "Sample shared expense",
+      "totalCents": 1200,
+      "date": "2099-01-01",
+      "splitMode": "equal",
+      "category": {
+        "name": "Food",
+        "icon": "cafe-outline",
+        "color": "#E47850"
+      },
+      "note": ""
+    },
+    "projection": {
+      "totalCents": 1200,
+      "shareCents": 600,
+      "date": "2099-01-01",
+      "title": "Sample shared expense"
+    }
+  }
+}

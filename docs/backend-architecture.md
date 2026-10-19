@@ -1,5 +1,7 @@
 # Backend architecture
 
+This describes the running Node/Express service. For the planned .NET replacement and compatibility contract, see [Migration architecture](migration/architecture.md) and the [API reference](migration/api-reference.md). Keep the existing service stable during client and backend coexistence.
+
 Use this pattern for new work: **a thin HTTP route, an application service, validated input and a typed persistence boundary**.
 
 ## Ownership
@@ -57,7 +59,7 @@ npm run test:core
 
 `tests/server-boundaries.test.ts` covers cookie authentication, bearer precedence, cookie/security headers, API 404s, malformed/oversized JSON, CORS preflight, registration policy, rate limiting and concurrent signup. It also exercises the auth service without HTTP using an injected clock for exact session expiration, and verifies database rollback when initial-ledger creation fails. HTTP tests need permission to listen on a loopback port. All databases used by these tests are temporary or in memory.
 
-## Hono assessment
+## Historical Hono assessment for the Node service
 
 Keep Express for the current Node/SQLite deployment. This refactor addresses the immediate maintenance problem: business operations and SQL were embedded in one HTTP module. A framework migration would also require replacing cookie handling, middleware, rate limiting, static-file hosting and listener integration, then rechecking the same API contract.
 

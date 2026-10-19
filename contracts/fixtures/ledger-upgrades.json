@@ -1,0 +1,296 @@
+[
+  {
+    "name": "ledger-v1-to-v4",
+    "input": {
+      "version": 1,
+      "currency": "CAD",
+      "categories": [
+        {
+          "id": "food",
+          "name": "Food",
+          "icon": "cafe-outline",
+          "color": "#E47850",
+          "kind": "expense"
+        },
+        {
+          "id": "salary",
+          "name": "Salary",
+          "icon": "briefcase-outline",
+          "color": "#6C9C79",
+          "kind": "income"
+        }
+      ],
+      "transactions": [
+        {
+          "id": "synthetic-lunch",
+          "title": "Sample lunch",
+          "kind": "expense",
+          "total": 1200,
+          "share": 600,
+          "categoryId": "food",
+          "date": "2026-10-01",
+          "note": ""
+        }
+      ],
+      "recurring": []
+    },
+    "expected": {
+      "version": 4,
+      "currency": "CAD",
+      "categories": [
+        {
+          "id": "food",
+          "name": "Food",
+          "icon": "cafe-outline",
+          "color": "#E47850",
+          "kind": "expense"
+        },
+        {
+          "id": "salary",
+          "name": "Salary",
+          "icon": "briefcase-outline",
+          "color": "#6C9C79",
+          "kind": "income"
+        },
+        {
+          "id": "investments",
+          "name": "Investments",
+          "icon": "trending-up-outline",
+          "color": "#678DB1",
+          "kind": "investment"
+        }
+      ],
+      "transactions": [
+        {
+          "id": "synthetic-lunch",
+          "title": "Sample lunch",
+          "kind": "expense",
+          "total": 1200,
+          "share": 600,
+          "categoryId": "food",
+          "date": "2026-10-01",
+          "note": ""
+        }
+      ],
+      "recurring": [],
+      "accounts": [],
+      "trips": []
+    }
+  },
+  {
+    "name": "ledger-v2-to-v4",
+    "input": {
+      "version": 2,
+      "currency": "CAD",
+      "categories": [
+        {
+          "id": "food",
+          "name": "Food",
+          "icon": "cafe-outline",
+          "color": "#E47850",
+          "kind": "expense"
+        },
+        {
+          "id": "salary",
+          "name": "Salary",
+          "icon": "briefcase-outline",
+          "color": "#6C9C79",
+          "kind": "income"
+        }
+      ],
+      "transactions": [
+        {
+          "id": "synthetic-lunch",
+          "title": "Sample lunch",
+          "kind": "expense",
+          "total": 1200,
+          "share": 600,
+          "categoryId": "food",
+          "date": "2026-10-01",
+          "note": ""
+        }
+      ],
+      "recurring": []
+    },
+    "expected": {
+      "version": 4,
+      "currency": "CAD",
+      "categories": [
+        {
+          "id": "food",
+          "name": "Food",
+          "icon": "cafe-outline",
+          "color": "#E47850",
+          "kind": "expense"
+        },
+        {
+          "id": "salary",
+          "name": "Salary",
+          "icon": "briefcase-outline",
+          "color": "#6C9C79",
+          "kind": "income"
+        }
+      ],
+      "transactions": [
+        {
+          "id": "synthetic-lunch",
+          "title": "Sample lunch",
+          "kind": "expense",
+          "total": 1200,
+          "share": 600,
+          "categoryId": "food",
+          "date": "2026-10-01",
+          "note": ""
+        }
+      ],
+      "recurring": [],
+      "accounts": [],
+      "trips": []
+    }
+  },
+  {
+    "name": "ledger-v3-to-v4",
+    "input": {
+      "version": 3,
+      "currency": "CAD",
+      "categories": [
+        {
+          "id": "food",
+          "name": "Food",
+          "icon": "cafe-outline",
+          "color": "#E47850",
+          "kind": "expense"
+        },
+        {
+          "id": "salary",
+          "name": "Salary",
+          "icon": "briefcase-outline",
+          "color": "#6C9C79",
+          "kind": "income"
+        }
+      ],
+      "transactions": [
+        {
+          "id": "synthetic-lunch",
+          "title": "Sample lunch",
+          "kind": "expense",
+          "total": 1200,
+          "share": 600,
+          "categoryId": "food",
+          "date": "2026-10-01",
+          "note": ""
+        }
+      ],
+      "recurring": [],
+      "accounts": []
+    },
+    "expected": {
+      "version": 4,
+      "currency": "CAD",
+      "categories": [
+        {
+          "id": "food",
+          "name": "Food",
+          "icon": "cafe-outline",
+          "color": "#E47850",
+          "kind": "expense"
+        },
+        {
+          "id": "salary",
+          "name": "Salary",
+          "icon": "briefcase-outline",
+          "color": "#6C9C79",
+          "kind": "income"
+        }
+      ],
+      "transactions": [
+        {
+          "id": "synthetic-lunch",
+          "title": "Sample lunch",
+          "kind": "expense",
+          "total": 1200,
+          "share": 600,
+          "categoryId": "food",
+          "date": "2026-10-01",
+          "note": ""
+        }
+      ],
+      "recurring": [],
+      "accounts": [],
+      "trips": []
+    }
+  },
+  {
+    "name": "ledger-v4-to-v4",
+    "input": {
+      "version": 4,
+      "currency": "CAD",
+      "categories": [
+        {
+          "id": "food",
+          "name": "Food",
+          "icon": "cafe-outline",
+          "color": "#E47850",
+          "kind": "expense"
+        },
+        {
+          "id": "salary",
+          "name": "Salary",
+          "icon": "briefcase-outline",
+          "color": "#6C9C79",
+          "kind": "income"
+        }
+      ],
+      "transactions": [
+        {
+          "id": "synthetic-lunch",
+          "title": "Sample lunch",
+          "kind": "expense",
+          "total": 1200,
+          "share": 600,
+          "categoryId": "food",
+          "date": "2026-10-01",
+          "note": ""
+        }
+      ],
+      "recurring": [],
+      "accounts": [],
+      "trips": []
+    },
+    "expected": {
+      "version": 4,
+      "currency": "CAD",
+      "categories": [
+        {
+          "id": "food",
+          "name": "Food",
+          "icon": "cafe-outline",
+          "color": "#E47850",
+          "kind": "expense"
+        },
+        {
+          "id": "salary",
+          "name": "Salary",
+          "icon": "briefcase-outline",
+          "color": "#6C9C79",
+          "kind": "income"
+        }
+      ],
+      "transactions": [
+        {
+          "id": "synthetic-lunch",
+          "title": "Sample lunch",
+          "kind": "expense",
+          "total": 1200,
+          "share": 600,
+          "categoryId": "food",
+          "date": "2026-10-01",
+          "note": ""
+        }
+      ],
+      "recurring": [],
+      "accounts": [],
+      "trips": []
+    }
+  }
+]
