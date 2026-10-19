@@ -15,7 +15,7 @@ A simple expense, income, and investment contribution tracker for iOS, Android, 
 - Weekly, monthly, and yearly income, expenses, and investments; pause, resume, or remove a schedule.
 - Custom category names, colors, and icons.
 - Payment accounts: add bank accounts, credit cards, cash wallets, or other accounts in **Accounts** or directly from an entry. Assign or change the optional payment account on expenses, income, investments, and recurring schedules. Account names appear on entries and can be searched. Rename accounts freely; accounts linked to entries or schedules cannot be deleted until those links are reassigned. These are manually tracked accounts, with no bank connection or balance reconciliation.
-- Sign-in accounts and cross-device sync. A save merges into the newest server state; revision checks reject stale overwrites. Conflicting edits to the same entry ask you to review the latest version.
+- Sign-in accounts and cross-device sync. Personal ledger changes are saved on the device while offline and sync when the server is reachable again. Revision checks retry server races and merge independent device edits.
 - Photos render in-app; web PDFs render in the browser; native PDFs open through the system share/open sheet.
 - A clearly labeled, temporary demo without an account.
 
@@ -179,7 +179,7 @@ Back up the `penny-data` volume. Stop the container during a filesystem backup s
 
 ## Sync and recurrence behavior
 
-The app fetches on sign-in, foregrounding, and every 15 seconds while in use. Every edit first fetches the latest revision, applies only that operation, and saves conditionally; revision races retry up to four times. Same-entry and same-category edit conflicts are surfaced rather than silently overwritten. An unreachable server leaves the currently displayed data intact and reports that saving failed; there is no offline write queue.
+The app caches each signed-in personal ledger on the device. A personal entry, account, category, trip, or schedule change is persisted locally before it appears as saved. Pending changes survive app restarts and sync on reconnect, foregrounding, or the 15-second active interval. Sync fetches the latest server revision, merges changes to separate records and fields, and retries revision races up to four times. If both devices change the same field, this device's pending value wins. The sync banner shows when changes are waiting or a retry is needed. Signing out is blocked until pending personal changes sync. Shared household actions and receipt uploads still require a connection.
 
 Recurring entries are materialized when a client syncs or saves, using that device's local calendar date. Missed dates catch up once. Monthly schedules retain their original day through short months (Jan 31 → Feb 28 → Mar 31). Pausing skips paused dates on resume. Deleting an occurrence does not regenerate it. Deleting a schedule preserves history. Editing an occurrence changes only that occurrence; remove/recreate a schedule to change its amount or cadence. Attachments belong to individual occurrences and are not copied onto future entries.
 
@@ -233,6 +233,6 @@ The GitHub Actions check installs Chromium and runs `npm run test:e2e` before bu
 
 ## Current limits
 
-This is a working first version. It does not yet include OCR, line-item receipt splitting, bank connections, scheduled push reminders, offline editing, multiple currencies within one account, email verification, password recovery, or an account export UI. Currency is chosen before adding entries. Receipt files removed from entries are retained on the server; storage cleanup is not yet automated. Passwords are hashed with salted scrypt; sessions expire after 30 days. Deploy behind HTTPS or your private network/VPN.
+This is a working first version. It does not yet include OCR, line-item receipt splitting, bank connections, scheduled push reminders, offline shared-household editing or receipt uploads, multiple currencies within one account, email verification, password recovery, or an account export UI. Currency is chosen before adding entries. Receipt files removed from entries are retained on the server; storage cleanup is not yet automated. Passwords are hashed with salted scrypt; sessions expire after 30 days. Deploy behind HTTPS or your private network/VPN.
 
 Web UI and API flows have been exercised locally. iOS/Android JavaScript bundles have been compiled; physical-device testing and signing remain. Docker configuration is provided; no Docker engine was available locally to run the container.

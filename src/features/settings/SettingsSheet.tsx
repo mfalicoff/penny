@@ -49,7 +49,7 @@ export function SettingsSheet({ visible, onClose }: { visible: boolean; onClose:
       />)}
     </View>
     <Text style={s.muted}>Choose your currency before adding entries. One currency per account keeps your totals consistent.</Text>
-    <Text style={s.muted}>Sync runs when the app opens, after each change, and every 15 seconds while in use. An internet connection to your server is required to save.</Text>
+    <Text style={s.muted}>Personal entries are saved on this device while offline and sync when the connection returns. Shared household changes and receipt uploads require your server.</Text>
     <Button title={demo ? "Leave demo" : "Sign out"} tone="quiet" icon="log-out-outline" onPress={async () => {
       if (demo) leaveDemo();
       else if (!await logout()) { onClose(); return; }

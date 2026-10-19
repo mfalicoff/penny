@@ -2,6 +2,7 @@ import { beforeEach, expect, jest, test } from "@jest/globals";
 import { act } from "react";
 import { getDocumentAsync } from "expo-document-picker";
 import { getDocument } from "pdfjs-dist";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { button, click, fill, renderWeb } from "../../../tests/web-renderer";
 import * as api from "../../data/api";
 import * as receipts from "../../data/receipts";
@@ -21,7 +22,7 @@ import { ReceiptPreview } from "../receipts/ReceiptPreview";
 import { SettingsSheet } from "../settings/SettingsSheet";
 
 jest.mock("../../data/api", () => ({
-  ApiError: class extends Error {}, whoAmI: jest.fn(), fetchLedger: jest.fn(), mutateLedger: jest.fn(), signIn: jest.fn(), signOut: jest.fn(),
+  ApiError: class extends Error {}, whoAmI: jest.fn(), fetchLedger: jest.fn(), saveSnapshot: jest.fn(), mutateLedger: jest.fn(), signIn: jest.fn(), signOut: jest.fn(),
 }));
 jest.mock("../../data/receipts", () => ({ saveReceipt: jest.fn(), receiptUrl: jest.fn(), releaseReceiptUrl: jest.fn() }));
 jest.mock("../../providers/HouseholdProvider", () => ({ useHouseholds: () => ({ households: [], projection: [], refresh: jest.fn(), loadProjection: jest.fn() }) }));
@@ -34,14 +35,15 @@ jest.mock("../../shared/useResponsive", () => ({ useResponsive: () => mockRespon
 let mockResponsive;
 let ledger;
 
-beforeEach(() => {
+beforeEach(async () => {
+  await AsyncStorage.clear();
   mockResponsive = { compact: false, desktop: true };
   ledger = demoLedger();
   api.whoAmI.mockResolvedValue("test@example.com");
   api.fetchLedger.mockImplementation(async () => ({ revision: 1, ledger }));
-  api.mutateLedger.mockImplementation(async (change) => {
-    ledger = change(ledger);
-    return { revision: 2, ledger };
+  api.saveSnapshot.mockImplementation(async (snapshot) => {
+    ledger = snapshot.ledger;
+    return { revision: snapshot.revision + 1, ledger };
   });
 });
 
@@ -200,7 +202,7 @@ test("recurring schedules pause, resume and remove without deleting transaction 
   await click(button("Pause"));
   expect(body.textContent).toContain("PAUSED");
   await click(button("Resume"));
-  expect(ledger.recurring[0].active).toBe(true);
+  expect(button("Pause")).toBeTruthy();
   await click(button(`Delete ${ledger.recurring[0].title} schedule`));
   await click(button("Remove schedule"));
   expect(body.textContent).toContain("Rent, payday, the usuals.");
@@ -390,6 +392,7 @@ test.each([
   expect(button("Account is in use").getAttribute("aria-disabled")).toBe("true");
   await fill("Account name", "Travel Visa");
   await click(button("Save account"));
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
   expect(ledger.accounts[0].name).toBe("Travel Visa");
   expect(ledger.transactions.find((t) => t.id === entry.id).accountId).toBe(entry.accountId);
 });
@@ -401,12 +404,13 @@ test("accounts page validates names, retains failed drafts, and deletes unused a
   expect(body.textContent).toContain("Give your account a name");
   await fill("Account name", "Wallet");
   await click(button("Cash"));
-  api.mutateLedger.mockRejectedValueOnce(new Error("Server offline"));
+  AsyncStorage.setItem.mockRejectedValueOnce(new Error("Device storage unavailable"));
   await click(button("Save account"));
-  expect(body.textContent).toContain("Server offline");
+  expect(body.textContent).toContain("Device storage unavailable");
   expect(body.querySelector('[aria-label="Account name"]').value).toBe("Wallet");
   await click(button("Save account"));
   await click(button("Edit account Wallet"));
   await click(button("Delete unused account"));
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
   expect(ledger.accounts).toEqual([]);
 });

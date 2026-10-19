@@ -29,7 +29,7 @@ export function AppShell() {
   const { height } = useWindowDimensions();
   const shortSidebar = height < 850;
   const veryShortSidebar = height < 600;
-  const { email, demo, leaveDemo, syncing, syncError, sync, toast, toastKind, toastSequence } = useLedger();
+  const { email, demo, leaveDemo, syncing, syncError, pending, sync, toast, toastKind, toastSequence } = useLedger();
   const { setForm } = useWorkspace();
   const [settings, setSettings] = React.useState(false);
   const [moreOpen, setMoreOpen] = React.useState(false);
@@ -259,11 +259,15 @@ export function AppShell() {
                 ]}
               >
                 <Text style={{ color: C.danger, fontSize: 12, flex: 1 }}>
-                  {syncError}
+                  {pending ? `Saved on this device. ${syncError}` : syncError}
                 </Text>
                 <Button title="Retry" tone="quiet" onPress={sync} />
               </View>
             )}
+            {pending && syncError === "" && <View style={[s.between, { backgroundColor: C.dangerBg, borderRadius: 12, padding: 14 }]}>
+              <Text style={{ color: C.ink, fontSize: 12, flex: 1 }}>Saved on this device · Waiting to sync</Text>
+              <Button title="Sync now" tone="quiet" onPress={sync} />
+            </View>}
             {compact && !nestedMobileScreen && tab !== "Categories" && tab !== "Accounts" && tab !== "Households" && (
               <Button
                 title="Add entry"
@@ -281,7 +285,7 @@ export function AppShell() {
                     width: 5,
                     height: 5,
                     borderRadius: 5,
-                    backgroundColor: syncError ? C.accent : C.green,
+                    backgroundColor: syncError || pending ? C.accent : C.green,
                   }}
                 />
                 <Text style={{ color: C.muted, fontSize: 10 }}>
@@ -289,6 +293,8 @@ export function AppShell() {
                     ? "Demo · Changes are temporary"
                     : syncing
                       ? "Syncing with your server…"
+                      : pending
+                        ? "Saved on this device · Waiting to sync"
                       : syncError
                         ? "Not synced · Retry to reconnect"
                         : "Synced with your server"}

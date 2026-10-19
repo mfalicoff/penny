@@ -1,8 +1,10 @@
 import { act, renderHook } from "@testing-library/react-native";
 import { AppState } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as api from "../../data/api";
 import { changeCurrency } from "../../domain/commands";
 import { emptyLedger } from "../../domain/ledger";
+import { rememberAccount, writeLocalLedger } from "../../data/offlineLedger";
 import { LedgerProvider, useLedger } from "../LedgerProvider";
 
 jest.mock("../../data/api", () => ({
@@ -10,7 +12,7 @@ jest.mock("../../data/api", () => ({
     status: number;
     constructor(message: string, status: number) { super(message); this.status = status; }
   },
-  whoAmI: jest.fn(), fetchLedger: jest.fn(), mutateLedger: jest.fn(), signOut: jest.fn(),
+  whoAmI: jest.fn(), fetchLedger: jest.fn(), saveSnapshot: jest.fn(), mutateLedger: jest.fn(), signOut: jest.fn(),
 }));
 
 function deferred<T>() {
@@ -23,6 +25,7 @@ function deferred<T>() {
 const initialAppState = AppState.currentState;
 
 beforeEach(() => {
+  void AsyncStorage.clear();
   AppState.currentState = "active";
   jest.useFakeTimers();
   jest.mocked(api.whoAmI).mockRejectedValue(new api.ApiError("Not signed in", 401));
@@ -48,22 +51,64 @@ test("demo changes stay local and leaving clears account state", async () => {
   await unmount();
 });
 
-test("failed saves preserve the displayed ledger, report errors, and permit retry", async () => {
+test("offline saves remain visible and durable, then merge into the server ledger", async () => {
   jest.mocked(api.whoAmI).mockResolvedValue("test@example.com");
   const { result, unmount } = await renderHook(useLedger, { wrapper: LedgerProvider });
-  const original = result.current.ledger;
-  jest.mocked(api.mutateLedger).mockRejectedValueOnce(new Error("Offline"));
+  jest.mocked(api.fetchLedger).mockRejectedValueOnce(new api.ApiError("Offline", 0));
   await act(async () => {
-    await expect(result.current.commit(changeCurrency("USD"), "Currency updated")).rejects.toThrow("Offline");
+    await result.current.commit(changeCurrency("USD"), "Currency updated");
   });
-  expect(result.current.ledger).toBe(original);
-  expect(result.current.syncError).toBe("Offline");
-  expect(result.current.syncing).toBe(false);
-  jest.mocked(api.mutateLedger).mockResolvedValueOnce({ revision: 2, ledger: { ...emptyLedger(), currency: "USD" } });
-  await act(async () => { await result.current.commit(changeCurrency("USD"), "Currency updated"); });
   expect(result.current.ledger.currency).toBe("USD");
-  expect(result.current.syncError).toBe("");
+  expect(result.current.pending).toBe(true);
   expect(result.current.toast).toBe("Currency updated");
+  const stored = await AsyncStorage.getItem("penny:ledger:test@example.com");
+  expect(JSON.parse(stored!).local.currency).toBe("USD");
+  jest.mocked(api.saveSnapshot).mockImplementation(async (snapshot) => ({ ...snapshot, revision: snapshot.revision + 1 }));
+  await act(async () => { jest.advanceTimersByTime(0); });
+  await act(async () => { await result.current.sync(); });
+  expect(api.saveSnapshot).toHaveBeenCalledWith(expect.objectContaining({ ledger: expect.objectContaining({ currency: "USD" }) }));
+  expect(result.current.pending).toBe(false);
+  await unmount();
+});
+
+test("a pending ledger reopens offline after the provider remounts", async () => {
+  const base = emptyLedger();
+  await rememberAccount("test@example.com");
+  await writeLocalLedger("test@example.com", { base, local: { ...base, currency: "USD" } });
+  jest.mocked(api.whoAmI).mockRejectedValue(new api.ApiError("Offline", 0));
+  jest.mocked(api.fetchLedger).mockRejectedValue(new api.ApiError("Offline", 0));
+  const { result, unmount } = await renderHook(useLedger, { wrapper: LedgerProvider });
+  expect(result.current.checking).toBe(false);
+  expect(result.current.email).toBe("test@example.com");
+  expect(result.current.ledger.currency).toBe("USD");
+  expect(result.current.pending).toBe(true);
+  await unmount();
+});
+
+test("multiple edits remain available when the server is down and sign-out protects them", async () => {
+  jest.mocked(api.whoAmI).mockResolvedValue("test@example.com");
+  const { result, unmount } = await renderHook(useLedger, { wrapper: LedgerProvider });
+  jest.mocked(api.fetchLedger).mockRejectedValue(new api.ApiError("Server unavailable", 0));
+  await act(async () => { await result.current.sync(); });
+  await act(async () => { await result.current.commit(changeCurrency("USD"), "Currency updated"); });
+  await act(async () => { await result.current.commit((ledger) => ({ ...ledger, accounts: [{ id: "cash", name: "Cash", type: "cash" }] }), "Account added"); });
+  expect(result.current.ledger.currency).toBe("USD");
+  expect(result.current.ledger.accounts).toHaveLength(1);
+  expect(result.current.pending).toBe(true);
+  await act(async () => { expect(await result.current.logout()).toBe(false); });
+  expect(api.signOut).not.toHaveBeenCalled();
+  await unmount();
+});
+
+test("a storage failure does not claim a local save succeeded", async () => {
+  jest.mocked(api.whoAmI).mockResolvedValue("test@example.com");
+  const { result, unmount } = await renderHook(useLedger, { wrapper: LedgerProvider });
+  jest.mocked(AsyncStorage.setItem).mockRejectedValueOnce(new Error("Storage full"));
+  await act(async () => {
+    await expect(result.current.commit(changeCurrency("USD"), "Currency updated")).rejects.toThrow("Storage full");
+  });
+  expect(result.current.ledger.currency).toBe("CAD");
+  expect(result.current.pending).toBe(false);
   await unmount();
 });
 
