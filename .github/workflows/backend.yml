@@ -25,11 +25,15 @@ jobs:
         with:
           dotnet-version: 10.0.401
       - name: Restore exact dependency graph
-        run: dotnet restore Penny.Backend.sln --locked-mode
-      - name: Check formatting and analyzers
-        run: dotnet format Penny.Backend.sln --verify-no-changes --no-restore
+        run: dotnet restore Penny.Backend.slnx --locked-mode
+      - name: Restore pinned CSharpier tool
+        run: dotnet tool restore
+      - name: Check CSharpier formatting
+        run: dotnet csharpier check .
+      - name: Check analyzers
+        run: dotnet format analyzers Penny.Backend.slnx --verify-no-changes --no-restore
       - name: Compile with warnings as errors
-        run: dotnet build Penny.Backend.sln --no-restore --configuration Release
+        run: dotnet build Penny.Backend.slnx --no-restore --configuration Release
 
   tests:
     runs-on: ubuntu-latest
@@ -45,8 +49,8 @@ jobs:
         with:
           dotnet-version: 10.0.401
       - name: Restore exact dependency graph
-        run: dotnet restore Penny.Backend.sln --locked-mode
-      - name: Build test harness
-        run: dotnet build Penny.Backend.sln --no-restore --configuration Release
-      - name: Run unit and real HTTP integration checks
-        run: dotnet run --project Penny.Backend.Tests --configuration Release --no-build --no-restore
+        run: dotnet restore Penny.Backend.slnx --locked-mode
+      - name: Build integration tests
+        run: dotnet build Penny.Backend.slnx --no-restore --configuration Release
+      - name: Run real HTTP integration tests
+        run: dotnet test Penny.Backend.IntegrationTests/Penny.Backend.IntegrationTests.csproj --configuration Release --no-build --no-restore

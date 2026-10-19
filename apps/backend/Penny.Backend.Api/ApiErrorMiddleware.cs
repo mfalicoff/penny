@@ -29,22 +29,26 @@ public sealed class ApiErrorMiddleware(RequestDelegate next, ILogger<ApiErrorMid
 
 public static class ApiErrors
 {
-    public static (int Status, string Message) Map(Exception error) => error switch
-    {
-        BackendFailure failure => failure.Kind switch
+    public static (int Status, string Message) Map(Exception error) =>
+        error switch
         {
-            FailureKind.Invalid => (400, failure.Message),
-            FailureKind.Unauthorized => (401, failure.Message),
-            FailureKind.Forbidden => (403, failure.Message),
-            FailureKind.NotFound => (404, failure.Message),
-            FailureKind.Conflict => (409, failure.Message),
-            _ => (500, "The server could not complete this request.")
-        },
-        BadHttpRequestException badRequest when badRequest.StatusCode == 413 => (413, "The upload is too large."),
-        BadHttpRequestException => (400, "Invalid request."),
-        JsonException => (400, "Invalid JSON."),
-        _ => (500, "The server could not complete this request.")
-    };
+            BackendFailure failure => failure.Kind switch
+            {
+                FailureKind.Invalid => (400, failure.Message),
+                FailureKind.Unauthorized => (401, failure.Message),
+                FailureKind.Forbidden => (403, failure.Message),
+                FailureKind.NotFound => (404, failure.Message),
+                FailureKind.Conflict => (409, failure.Message),
+                _ => (500, "The server could not complete this request."),
+            },
+            BadHttpRequestException badRequest when badRequest.StatusCode == 413 => (
+                413,
+                "The upload is too large."
+            ),
+            BadHttpRequestException => (400, "Invalid request."),
+            JsonException => (400, "Invalid JSON."),
+            _ => (500, "The server could not complete this request."),
+        };
 
     public static async Task WriteAsync(HttpContext context, int status, string message)
     {

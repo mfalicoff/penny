@@ -6,7 +6,7 @@ public enum FailureKind
     Unauthorized,
     Forbidden,
     NotFound,
-    Conflict
+    Conflict,
 }
 
 public sealed class BackendFailure(FailureKind kind, string message) : Exception(message)

@@ -4,22 +4,25 @@ This is the future ASP.NET Core API. The current Node service and Expo clients r
 
 ## Prerequisites and layout
 
-- Install the exact .NET SDK in `global.json` (10.0.401). .NET 10 is supported through November 2028. The SDK and ASP.NET shared framework provide all current dependencies; there are no external NuGet packages. Each project's `packages.lock.json` fixes its project dependency graph. `NuGet.Config` has no remote source until the first external package is needed.
+- Install the exact .NET SDK in `global.json` (10.0.401). .NET 10 is supported through November 2028. `global.json` also selects Microsoft Testing Platform for `dotnet test`.
+- `Directory.Packages.props` owns all project package versions. `NuGet.Config` selects nuget.org; each project's `packages.lock.json` fixes the restored graph. `dotnet-tools.json` pins the local CSharpier tool separately from project packages.
 - `Penny.Backend.Domain`: domain failures and future pure rules.
 - `Penny.Backend.Application`: options, ports, and orchestration.
 - `Penny.Backend.Persistence`: data-directory readiness adapter; no SQLite writer yet.
 - `Penny.Backend.Api`: HTTP host, dependency injection, configuration, limits, and error mapping.
-- `Penny.Backend.Tests`: package-free unit and real HTTP integration harness.
+- `Penny.Backend.IntegrationTests`: xUnit v3 and Awesome Assertions checks against a real loopback Kestrel server.
 
 ## Local commands
 
 From `apps/backend`:
 
 ```sh
-dotnet restore Penny.Backend.sln --locked-mode
-dotnet format Penny.Backend.sln --verify-no-changes --no-restore
-dotnet build Penny.Backend.sln --no-restore
-dotnet run --project Penny.Backend.Tests --no-build --no-restore
+dotnet tool restore
+dotnet restore Penny.Backend.slnx --locked-mode
+dotnet csharpier check .
+dotnet format analyzers Penny.Backend.slnx --verify-no-changes --no-restore
+dotnet build Penny.Backend.slnx --no-restore
+dotnet test Penny.Backend.IntegrationTests/Penny.Backend.IntegrationTests.csproj --no-build --no-restore
 dotnet run --project Penny.Backend.Api --no-restore --urls http://127.0.0.1:5091
 ```
 
@@ -31,6 +34,6 @@ Expected application failures map to the legacy JSON `{"error":"..."}` shape (40
 
 ## CI and troubleshooting
 
-`.github/workflows/backend.yml` restores in locked mode, verifies formatting, builds with analyzers and warnings as errors, and runs the unit and HTTP suite in separate build and test jobs. It runs from a clean checkout for `v2` and `main` changes and on manual dispatch. Local `dotnet format` can fix formatting by omitting `--verify-no-changes`.
+`.github/workflows/backend.yml` restores in locked mode, restores CSharpier, checks formatting and analyzers, builds with warnings as errors, and runs the real HTTP suite in separate build and test jobs. It runs from a clean checkout for `v2` and `main` changes and on manual dispatch. Run `dotnet csharpier format .` to fix formatting locally.
 
-If SDK selection fails, install exactly 10.0.401; `global.json` disables roll-forward to keep restore reproducible. If locked restore fails after a project reference or package change, run `dotnet restore Penny.Backend.sln` and commit the changed lock file with the source change. If a new external package is required, add a trusted source to `NuGet.Config` and pin the package version in the project. If readiness is 503, check directory existence, mount permissions, and available disk space. If a request returns 413, check `Backend__MaxRequestBodyBytes` and the reverse proxy's own limit. CI does not prove future SQLite migration or client compatibility; those have separate parity gates in `docs/migration/feature-parity.md`.
+If SDK selection fails, install exactly 10.0.401; `global.json` disables roll-forward to keep restore reproducible. If locked restore fails after a project reference or package change, update `Directory.Packages.props` as needed, run `dotnet restore Penny.Backend.slnx`, and commit the changed lock files with the source change. If CSharpier is unavailable, run `dotnet tool restore`; its version belongs in `dotnet-tools.json`. If readiness is 503, check directory existence, mount permissions, and available disk space. If a request returns 413, check `Backend__MaxRequestBodyBytes` and the reverse proxy's own limit. CI does not prove future SQLite migration or client compatibility; those have separate parity gates in `docs/migration/feature-parity.md`.

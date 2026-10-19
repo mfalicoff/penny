@@ -1,9 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <IsTestProject>true</IsTestProject>
+    <IsPackable>false</IsPackable>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="AwesomeAssertions" />
+    <PackageReference Include="xunit.v3" />
     <ProjectReference Include="../Penny.Backend.Api/Penny.Backend.Api.csproj" />
   </ItemGroup>
 </Project>

@@ -1,0 +1,12 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="Penny.Backend.Api/Penny.Backend.Api.csproj" />
+  <Project Path="Penny.Backend.Application/Penny.Backend.Application.csproj" />
+  <Project Path="Penny.Backend.Domain/Penny.Backend.Domain.csproj" />
+  <Project Path="Penny.Backend.IntegrationTests/Penny.Backend.IntegrationTests.csproj" />
+  <Project Path="Penny.Backend.Persistence/Penny.Backend.Persistence.csproj" />
+</Solution>
