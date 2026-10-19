@@ -7,7 +7,7 @@ import { useHouseholds } from "../../providers/HouseholdProvider";
 import { playSaveHaptic } from "./saveHaptic";
 
 export function EntryDialog() {
-  const { ledger, demo, commit, email } = useLedger();
+  const { ledger, demo, commit, showToast, email } = useLedger();
   const { households, refresh } = useHouseholds();
   const { form, setForm, setMonth, setDay } = useWorkspace();
   if (!form) return null;
@@ -16,6 +16,7 @@ export function EntryDialog() {
     households={households}
     userEmail={email}
     onHouseholdSaved={refresh}
+    onHouseholdFeedback={showToast}
     categories={ledger.categories}
     accounts={ledger.accounts}
     trips={ledger.trips}

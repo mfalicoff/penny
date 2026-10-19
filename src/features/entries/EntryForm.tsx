@@ -67,6 +67,7 @@ export function EntryForm({
   householdExpense,
   householdRule,
   onHouseholdSaved,
+  onHouseholdFeedback,
 }: {
   demo?: boolean;
   categories: Category[];
@@ -87,6 +88,7 @@ export function EntryForm({
   householdExpense?: HouseholdExpense;
   householdRule?: HouseholdRecurring;
   onHouseholdSaved?: () => Promise<void> | void;
+  onHouseholdFeedback?: (message: string, kind?: Kind) => void;
 }) {
   const { compact } = useResponsive();
   const initial = rule ?? entry;
@@ -281,6 +283,10 @@ export function EntryForm({
         else await createExpense(householdId, input);
         await onHouseholdSaved?.();
         onClose();
+        onHouseholdFeedback?.(
+          householdRule ? "Schedule updated" : householdExpense ? "Changes saved" : frequency !== "none" ? "Schedule added" : "Expense added",
+          householdRule || householdExpense || frequency !== "none" ? undefined : "expense",
+        );
         return;
       }
       if (accountId && !accounts.some((a) => a.id === accountId)) throw new Error("Choose an available payment account.");

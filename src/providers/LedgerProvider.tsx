@@ -20,6 +20,12 @@ function useLedgerSession() {
   const operation = useRef(false);
   const generation = useRef(0);
 
+  function showToast(message: string, kind?: Kind) {
+    setToast(message);
+    setToastKind(kind ?? null);
+    setToastSequence((value) => value + 1);
+  }
+
   function replaceLedger(next: Ledger) {
     ledgerRef.current = next;
     setLedger(next);
@@ -97,9 +103,7 @@ function useLedgerSession() {
       if (current !== generation.current) throw new Error("Your session changed. Reopen this entry before saving.");
       replaceLedger(next);
       setSyncError("");
-      setToast(message);
-      setToastKind(feedbackKind ?? null);
-      setToastSequence((value) => value + 1);
+      showToast(message, feedbackKind);
     } catch (error) {
       if (current === generation.current) setSyncError(error instanceof Error ? error.message : "Could not save.");
       throw error;
@@ -142,7 +146,7 @@ function useLedgerSession() {
   }
 
   return {
-    email, checking, demo, ledger, syncing, syncError, toast, toastKind, toastSequence, sessionKey, sync, commit, logout,
+    email, checking, demo, ledger, syncing, syncError, toast, toastKind, toastSequence, sessionKey, sync, commit, showToast, logout,
     login: (address: string) => startSession(address, false),
     openDemo: () => startSession(null, true),
     leaveDemo: () => startSession(null, false),

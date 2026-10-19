@@ -12,7 +12,7 @@ export function HouseholdExpenseForm({ household, members, expense, rule, onClos
   onClose: () => void;
   onSaved: () => Promise<void> | void;
 }) {
-  const { ledger, email, commit, demo } = useLedger();
+  const { ledger, email, commit, showToast, demo } = useLedger();
   return <EntryForm
     categories={ledger.categories}
     accounts={ledger.accounts}
@@ -26,6 +26,7 @@ export function HouseholdExpenseForm({ household, members, expense, rule, onClos
     householdExpense={expense}
     householdRule={rule}
     onHouseholdSaved={onSaved}
+    onHouseholdFeedback={showToast}
     onSave={(transaction, recurring) => commit(saveEntry(transaction, undefined, recurring), `${kindLabels[transaction.kind]} added`)}
     onClose={onClose}
   />;

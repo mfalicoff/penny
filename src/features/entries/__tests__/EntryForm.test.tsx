@@ -111,8 +111,10 @@ test("the standard entry form keeps its draft when an Overview expense is assign
   jest.mocked(createExpense).mockResolvedValue({ expense: {} as never });
   const onClose = jest.fn();
   const onHouseholdSaved = jest.fn();
+  const onHouseholdFeedback = jest.fn();
   await render(<EntryForm categories={emptyLedger().categories} currency="CAD" households={[household]}
-    userEmail="alice@example.com" onClose={onClose} onHouseholdSaved={onHouseholdSaved} />);
+    userEmail="alice@example.com" onClose={onClose} onHouseholdSaved={onHouseholdSaved}
+    onHouseholdFeedback={onHouseholdFeedback} />);
   await fireEvent.changeText(screen.getByLabelText("Amount (CAD)"), "60.00");
   await fireEvent.changeText(screen.getByLabelText("What was it for?"), "Groceries");
   await fireEvent.press(screen.getByRole("button", { name: "Expense for Home" }));
@@ -123,4 +125,22 @@ test("the standard entry form keeps its draft when an Overview expense is assign
   expect(createExpense).toHaveBeenCalledWith("home", expect.objectContaining({ title: "Groceries", totalCents: 6000, payerUserId: "alice", splitMode: "equal" }));
   expect(onHouseholdSaved).toHaveBeenCalledTimes(1);
   expect(onClose).toHaveBeenCalledTimes(1);
+  expect(onHouseholdFeedback).toHaveBeenCalledWith("Expense added", "expense");
+});
+
+test("a failed shared expense save does not show success feedback", async () => {
+  const household = { id: "home", name: "Home", currency: "CAD", creatorId: "alice", createdAt: 1, memberCount: 2 };
+  const members = ["alice", "bob"].map((id) => ({ userId: id, email: `${id}@example.com`, joinedAt: 1 }));
+  jest.mocked(createExpense).mockRejectedValueOnce(new Error("Server offline"));
+  const onClose = jest.fn();
+  const onHouseholdFeedback = jest.fn();
+  await render(<EntryForm categories={emptyLedger().categories} currency="CAD" initialHousehold={household}
+    initialMembers={members} userEmail="alice@example.com" onClose={onClose}
+    onHouseholdFeedback={onHouseholdFeedback} />);
+  await fireEvent.changeText(screen.getByLabelText("Amount (CAD)"), "60.00");
+  await fireEvent.changeText(screen.getByLabelText("What was it for?"), "Groceries");
+  await fireEvent.press(screen.getByRole("button", { name: "Add expense" }));
+  expect(screen.getByText("Server offline")).toBeOnTheScreen();
+  expect(onClose).not.toHaveBeenCalled();
+  expect(onHouseholdFeedback).not.toHaveBeenCalled();
 });
