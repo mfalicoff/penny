@@ -1,5 +1,7 @@
 # Penny
 
+The future .NET API foundation lives in [apps/backend](apps/backend/README.md). The existing Node service and Expo app remain the running product during migration.
+
 A simple expense, income, and investment contribution tracker for iOS, Android, and web, built with Expo / React Native. A self-hosted Node server stores accounts, transactions, recurring schedules, categories, and receipt files in SQLite.
 
 ## What works

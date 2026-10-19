@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../Penny.Backend.Domain/Penny.Backend.Domain.csproj" />
+  </ItemGroup>
+</Project>

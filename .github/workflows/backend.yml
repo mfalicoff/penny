@@ -1,0 +1,52 @@
+name: Backend foundation
+
+on:
+  push:
+    branches: [v2, main]
+  pull_request:
+    branches: [v2, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/backend
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.401
+      - name: Restore exact dependency graph
+        run: dotnet restore Penny.Backend.sln --locked-mode
+      - name: Check formatting and analyzers
+        run: dotnet format Penny.Backend.sln --verify-no-changes --no-restore
+      - name: Compile with warnings as errors
+        run: dotnet build Penny.Backend.sln --no-restore --configuration Release
+
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/backend
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.401
+      - name: Restore exact dependency graph
+        run: dotnet restore Penny.Backend.sln --locked-mode
+      - name: Build test harness
+        run: dotnet build Penny.Backend.sln --no-restore --configuration Release
+      - name: Run unit and real HTTP integration checks
+        run: dotnet run --project Penny.Backend.Tests --configuration Release --no-build --no-restore

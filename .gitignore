@@ -2,6 +2,8 @@
 
 # dependencies
 node_modules/
+/apps/backend/**/bin/
+/apps/backend/**/obj/
 
 # Expo
 .expo/
