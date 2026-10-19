@@ -1,3 +1,10 @@
 using Penny.Backend.Api;
 
-await BackendApp.Create(args).RunAsync();
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddControllers();
+builder.AddBackendServices();
+
+var app = builder.Build();
+app.UseBackendMiddleware();
+app.MapControllers();
+app.Run();

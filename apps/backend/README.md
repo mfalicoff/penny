@@ -9,7 +9,7 @@ This is the future ASP.NET Core API. The current Node service and Expo clients r
 - `Penny.Backend.Domain`: domain failures and future pure rules.
 - `Penny.Backend.Application`: options, ports, and orchestration.
 - `Penny.Backend.Persistence`: data-directory readiness adapter; no SQLite writer yet.
-- `Penny.Backend.Api`: HTTP host, dependency injection, configuration, limits, and error mapping.
+- `Penny.Backend.Api`: controller-based HTTP host, dependency injection, configuration, limits, and error mapping. `Program.cs` owns the standard ASP.NET Core startup flow; `BackendApp` shares host configuration with the integration tests.
 - `Penny.Backend.IntegrationTests`: xUnit v3 and Awesome Assertions checks against a real loopback Kestrel server.
 
 ## Local commands
@@ -30,7 +30,7 @@ dotnet run --project Penny.Backend.Api --no-restore --urls http://127.0.0.1:5091
 
 The host creates `Backend:DataDirectory` on startup (`data/backend` relative to the working directory by default). Set `Backend__DataDirectory` for a different volume. `Backend__MaxRequestBodyBytes` defaults to 20 MiB and allows 1–100,000,000 bytes; `Backend__ShutdownTimeoutSeconds` defaults to 30 and allows 1–300 seconds. Invalid values fail startup. ASP.NET Core standard environment configuration and `--Backend:Key=value` command-line overrides work too. The request body cap applies to Kestrel and is checked before route handling when `Content-Length` is known. Readiness takes the request cancellation token; the generic host drains requests for the configured shutdown interval.
 
-Expected application failures map to the legacy JSON `{"error":"..."}` shape (400, 401, 403, 404, 409). Oversized requests use 413; unexpected failures use a generic 500 body and are logged server-side. Status codes are the stable contract, not English message text. The API sends `Cache-Control: no-store` and `X-Content-Type-Options: nosniff`. The legacy service remains the only active SQLite writer.
+Expected application failures and controller model-validation errors map to the legacy JSON `{"error":"..."}` shape (400, 401, 403, 404, 409). Oversized requests use 413; unexpected failures use a generic 500 body and are logged server-side. Status codes are the stable contract, not English message text. The API sends `Cache-Control: no-store` and `X-Content-Type-Options: nosniff`. The legacy service remains the only active SQLite writer.
 
 ## CI and troubleshooting
 

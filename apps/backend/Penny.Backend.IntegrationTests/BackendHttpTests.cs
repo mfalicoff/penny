@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
@@ -83,30 +84,15 @@ public sealed class BackendHttpTests
         HttpStatusCode status
     )
     {
-        await using var backend = await RunningBackend.StartAsync(app =>
-            app.MapGet(
-                "/api/test/failure",
-                (Func<IResult>)(() => throw new BackendFailure(kind, "Expected failure."))
-            )
-        );
+        await using var backend = await RunningBackend.StartAsync();
 
-        await AssertError(backend.Client, "/api/test/failure", status, "Expected failure.");
+        await AssertError(backend.Client, $"/api/test/failure/{kind}", status, "Expected failure.");
     }
 
     [Fact]
     public async Task UnexpectedAndMalformedFailuresDoNotLeakDetails()
     {
-        await using var backend = await RunningBackend.StartAsync(app =>
-        {
-            app.MapGet(
-                "/api/test/unexpected",
-                (Func<IResult>)(() => throw new Exception("private diagnostic"))
-            );
-            app.MapGet(
-                "/api/test/json",
-                (Func<IResult>)(() => throw new JsonException("private diagnostic"))
-            );
-        });
+        await using var backend = await RunningBackend.StartAsync();
 
         await AssertError(
             backend.Client,
@@ -126,6 +112,25 @@ public sealed class BackendHttpTests
             HttpStatusCode.NotFound,
             "API route not found."
         );
+    }
+
+    [Fact]
+    public async Task InvalidControllerBodyUsesTheLegacyErrorEnvelope()
+    {
+        await using var backend = await RunningBackend.StartAsync();
+        using var response = await backend.Client.PostAsync(
+            "/api/test/payload",
+            new StringContent("{invalid", System.Text.Encoding.UTF8, "application/json"),
+            TestContext.Current.CancellationToken
+        );
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (
+            await response.Content.ReadFromJsonAsync<ErrorBody>(
+                TestContext.Current.CancellationToken
+            )
+        )!
+            .Error.Should()
+            .Be("Invalid request.");
     }
 
     [Fact]
@@ -266,12 +271,15 @@ public sealed class BackendHttpTests
                 Path.GetTempPath(),
                 $"penny-backend-test-{Guid.NewGuid():N}"
             );
-            var app = BackendApp.Create([
-                $"--Backend:DataDirectory={dataDirectory}",
-                "--Backend:MaxRequestBodyBytes=64",
-                "--Backend:ShutdownTimeoutSeconds=2",
-                "--Logging:LogLevel:Default=Warning",
-            ]);
+            var app = BackendApp.Create(
+                [
+                    $"--Backend:DataDirectory={dataDirectory}",
+                    "--Backend:MaxRequestBodyBytes=64",
+                    "--Backend:ShutdownTimeoutSeconds=2",
+                    "--Logging:LogLevel:Default=Warning",
+                ],
+                mvc => mvc.AddApplicationPart(typeof(TestFailureController).Assembly)
+            );
             configure?.Invoke(app);
             app.Urls.Add("http://127.0.0.1:0");
             await app.StartAsync(TestContext.Current.CancellationToken);
@@ -296,3 +304,23 @@ public sealed class BackendHttpTests
         }
     }
 }
+
+[ApiController]
+[Route("api/test")]
+public sealed class TestFailureController : ControllerBase
+{
+    [HttpGet("failure/{kind}")]
+    public IActionResult Failure(FailureKind kind) =>
+        throw new BackendFailure(kind, "Expected failure.");
+
+    [HttpGet("unexpected")]
+    public IActionResult Unexpected() => throw new Exception("private diagnostic");
+
+    [HttpGet("json")]
+    public IActionResult Json() => throw new JsonException("private diagnostic");
+
+    [HttpPost("payload")]
+    public IActionResult Payload([FromBody] TestPayload payload) => Ok(payload);
+}
+
+public sealed record TestPayload(string Value);
