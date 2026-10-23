@@ -26,7 +26,10 @@ test("household essentials and management remain usable on a narrow phone", asyn
 
   await page.getByRole("button", { name: "Add expense" }).click();
   await expect(page.getByText("Your part of the receipt", { exact: true })).toHaveCount(0);
-  await expect(page.getByText("Expense for", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Expense for", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Expense for Our home", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Personal", exact: true })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
   await page.getByLabel("Amount (CAD)").fill("42.00");
   await page.getByLabel("What was it for?").fill("Groceries");
   await page.getByRole("button", { name: /^Category:/ }).click();
