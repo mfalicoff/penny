@@ -39,15 +39,33 @@
               "name": "BalanceChartWidget",
               "displayName": "Monthly balance",
               "description": "Income and expenses at a glance",
-              "ios": { "supportedFamilies": ["systemSmall"], "contentMarginsDisabled": true }
+              "ios": {
+                "supportedFamilies": [
+                  "systemSmall"
+                ],
+                "contentMarginsDisabled": true
+              }
             },
             {
               "name": "RecentExpensesWidget",
               "displayName": "Recent expenses",
               "description": "Recent spending and a shortcut to add an expense",
-              "ios": { "supportedFamilies": ["systemSmall"], "contentMarginsDisabled": true }
+              "ios": {
+                "supportedFamilies": [
+                  "systemSmall"
+                ],
+                "contentMarginsDisabled": true
+              }
             }
           ]
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "enableSceneSupport": true
+          }
         }
       ]
     ],

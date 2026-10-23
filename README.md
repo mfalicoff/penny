@@ -214,7 +214,9 @@ npm run build:web
 npx expo export --platform ios --platform android --output-dir /tmp/penny-native-export
 ```
 
-`npm test` runs both Node core/API tests and Jest/Expo frontend behavior tests. Use `npm run test:core`, `npm run test:ui`, or `npm run test:ui:watch` while developing.
+`npm test` runs both Node core/API tests and Jest/Expo frontend behavior tests. The UI command runs the native interaction suite under both iOS and Android presets, plus web rendering tests. Use `npm run test:ui:ios` or `npm run test:ui:android` to target one platform while developing. These Jest projects exercise platform-specific JavaScript behavior; they do not launch a simulator or emulator.
+
+See [Mobile testing](docs/mobile-testing.md) for the coverage map and native device smoke prerequisites.
 
 Tests cover decimal validation, rounding, month-end and leap-year recurrence, immutable commands, stale edit/delete conflicts, category safeguards, draft conversion, monthly filtering, failed-save draft retention, session isolation, sync cleanup, API retries, route navigation and persistent drafts. Existing API integration tests cover authenticated two-session sync, stale revisions, account isolation, receipt ownership/uploads/downloads, untrusted origins, restart persistence and logout.
 

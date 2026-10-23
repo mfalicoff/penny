@@ -1,7 +1,7 @@
 // Font loading is native infrastructure; interaction tests exercise real controls.
 jest.mock("@expo/vector-icons", () => ({ Ionicons: () => null }));
-jest.mock("@react-native-async-storage/async-storage", () => require("@react-native-async-storage/async-storage/jest/async-storage-mock"));
-jest.mock("@react-native-community/netinfo", () => require("@react-native-community/netinfo/jest/netinfo-mock"));
+jest.mock("@react-native-async-storage/async-storage", () => jest.requireActual("@react-native-async-storage/async-storage/jest/async-storage-mock"));
+jest.mock("@react-native-community/netinfo", () => jest.requireActual("@react-native-community/netinfo/jest/netinfo-mock"));
 
 // Push delivery is native infrastructure; screen tests exercise app behavior without a device token.
 jest.mock("../src/providers/PushRegistration", () => ({

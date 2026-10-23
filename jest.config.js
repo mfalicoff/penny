@@ -5,12 +5,18 @@ const shared = {
 
 module.exports = {
   projects: [
-    {
+    ...(["ios", "android"].map((platform) => ({
       ...shared,
-      displayName: "native",
-      preset: "jest-expo",
+      displayName: platform,
+      preset: `jest-expo/${platform}`,
+      transform: {
+        "\\.[jt]sx?$": ["babel-jest", {
+          presets: [require.resolve("expo/internal/babel-preset")],
+          caller: { name: "metro", bundler: "metro", platform },
+        }],
+      },
       testMatch: ["<rootDir>/src/**/__tests__/**/*.test.ts?(x)"],
-    },
+    }))),
     {
       ...shared,
       displayName: "web",

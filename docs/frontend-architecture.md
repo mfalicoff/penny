@@ -52,7 +52,9 @@ ESLint rejects upward dependencies from domain, data, shared code and providers 
 
 ```sh
 npm run test:core      # Node: money, recurrence, commands, draft conversion, selectors, real API integration
-npm run test:ui        # Jest/Expo: native behavior tests and web rendering regressions
+npm run test:ui        # Jest/Expo: iOS, Android, and web projects
+npm run test:ui:ios    # iOS native component interactions
+npm run test:ui:android # Android native component interactions
 npm run test:ui:watch  # Interactive frontend work
 npm test              # Both suites; also used by CI
 npm run lint
@@ -61,7 +63,7 @@ npm run build:web
 npx expo export --platform ios --platform android --output-dir /tmp/penny-native-export
 ```
 
-The frontend harness uses the SDK-matched [Jest Expo preset](https://docs.expo.dev/develop/unit-testing/), React Native Testing Library and [Expo Router's testing utilities](https://docs.expo.dev/router/reference/testing/). Tests press accessible controls and assert observable outcomes, rather than snapshots of the component tree. The separate web project runs `*.web.test.jsx` with React DOM and real React Native Web components, including SVGs and modal portals; it catches rendering errors that native mocks can miss. Run it alone with `npm run test:ui -- --selectProjects web`.
+The frontend harness uses the SDK-matched [Jest Expo preset](https://docs.expo.dev/develop/unit-testing/), React Native Testing Library and [Expo Router's testing utilities](https://docs.expo.dev/router/reference/testing/). The same native interaction tests run with the iOS and Android presets so platform-specific module resolution and picker behavior are checked on both. Tests press accessible controls and assert observable outcomes, rather than snapshots of the component tree. The separate web project runs `*.web.test.jsx` with React DOM and real React Native Web components, including SVGs and modal portals; it catches rendering errors that native mocks can miss. Run it alone with `npm run test:ui -- --selectProjects web`.
 
 Web tests use `tests/web-renderer.jsx`, which fails on any `console.error` or `console.warn`, including during unmount. Do not silence these messages in individual tests. Test both empty and populated states: the empty chart does not mount an SVG, so it cannot catch SVG prop incompatibilities. Chart cases cover split expenses without income, income only, mixed income/expenses, overspending, break-even and label selection. Workflow cases cover desktop/phone overview filters and editing, form validation and failed-save retries, category CRUD, schedule pause/resume/removal, authentication, currency changes and receipt failure handling.
 
