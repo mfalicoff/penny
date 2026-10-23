@@ -65,6 +65,47 @@ Open **http://localhost:3001**. Create an account, or choose the sample-data dem
 
 Data is saved to `data/penny.sqlite` by default. This directory is ignored by Git.
 
+## Nix / direnv development shell
+
+The pinned `flake.nix` / `flake.lock` environment provides Node 24 (including npm)
+and the SQLite CLI on Apple Silicon and Intel macOS, as well as Linux.
+It does not install dependencies, load `.env`, or start services automatically.
+
+On nix-darwin, enable direnv and its flake integration in your system configuration,
+then rebuild it:
+
+```nix
+programs.direnv = {
+  enable = true;
+  nix-direnv.enable = true;
+};
+```
+
+Ensure direnv is hooked into your interactive shell. If your configuration does not
+already do this, add `eval "$(direnv hook zsh)"` to `~/.zshrc` (or the equivalent
+hook for your shell), then open a new terminal.
+
+From the project directory:
+
+```sh
+direnv allow
+npm ci
+```
+
+Alternatively, use `nix develop` without direnv. After cloning, the flake files are
+already tracked; when adding these files to another Git checkout, stage
+`flake.nix` and `flake.lock` before using `nix develop` or `direnv allow`, because
+Nix ignores untracked files in Git flakes. Update the pinned toolchain deliberately
+with `nix flake update` and commit the resulting lockfile.
+
+The shell uses the existing npm lockfile; Expo and EAS CLIs remain project-local
+or invoked with `npx`. Xcode/Command Line Tools, simulators, and the Android SDK
+must be installed separately for local native builds. Watchman is optional and can
+be installed at the system level for filesystem watching. Existing `ANDROID_HOME` and
+other platform settings are left unchanged. For browser tests, install Chromium
+with `npx playwright install chromium` as described below (Linux may also need
+host browser dependencies).
+
 ## Develop with live reload
 
 ```sh
