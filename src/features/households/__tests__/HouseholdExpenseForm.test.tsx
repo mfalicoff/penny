@@ -5,6 +5,7 @@ import { HouseholdExpenseForm } from "../HouseholdExpenseForm";
 
 const mockLedger = () => emptyLedger();
 jest.mock("../../../providers/LedgerProvider", () => ({ useLedger: () => ({ ledger: mockLedger(), email: "alice@example.com" }) }));
+jest.mock("../../../providers/HouseholdProvider", () => ({ useHouseholds: () => ({ households: [], refresh: jest.fn() }) }));
 jest.mock("../../../data/households", () => ({ createExpense: jest.fn(), updateExpense: jest.fn(), deleteExpense: jest.fn(), createRecurring: jest.fn(), updateRecurring: jest.fn(), deleteRecurring: jest.fn() }));
 
 const household = { id: "home", name: "Home", currency: "CAD", creatorId: "alice", createdAt: 1, memberCount: 3 };

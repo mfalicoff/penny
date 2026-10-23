@@ -1,10 +1,10 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { emptyLedger } from "../../../domain/ledger";
-import { createExpense, getHousehold } from "../../../data/households";
+import { createExpense, deleteExpense, getHousehold, updateExpense, type HouseholdExpense } from "../../../data/households";
 import { EntryForm } from "../EntryForm";
 
 jest.mock("../../../data/receipts", () => ({ saveReceipt: jest.fn() }));
-jest.mock("../../../data/households", () => ({ ...jest.requireActual("../../../data/households"), createExpense: jest.fn(), getHousehold: jest.fn() }));
+jest.mock("../../../data/households", () => ({ ...jest.requireActual("../../../data/households"), createExpense: jest.fn(), updateExpense: jest.fn(), deleteExpense: jest.fn(), getHousehold: jest.fn() }));
 jest.mock("../../receipts/ReceiptPreview", () => ({ ReceiptPreview: () => null }));
 
 test("investment form saves a full recurring contribution without expense controls", async () => {
@@ -126,6 +126,103 @@ test("the standard entry form keeps its draft when an Overview expense is assign
   expect(onHouseholdSaved).toHaveBeenCalledTimes(1);
   expect(onClose).toHaveBeenCalledTimes(1);
   expect(onHouseholdFeedback).toHaveBeenCalledWith("Expense added", "expense");
+});
+
+test("editing a personal expense can move it to a household after the shared copy saves", async () => {
+  const ledger = emptyLedger();
+  const household = { id: "home", name: "Home", currency: "CAD", creatorId: "alice", createdAt: 1, memberCount: 2 };
+  const members = ["alice", "bob"].map((id) => ({ userId: id, email: `${id}@example.com`, joinedAt: 1 }));
+  const entry = { id: "personal-1", kind: "expense" as const, title: "Lunch", total: 2400, share: 2400,
+    date: "2026-10-20", categoryId: "food", note: "", tripId: "trip" };
+  jest.mocked(getHousehold).mockResolvedValue({ household, members });
+  jest.mocked(createExpense).mockResolvedValue({ expense: { id: "shared-1", revision: 0 } as HouseholdExpense });
+  const onDelete = jest.fn().mockResolvedValue(undefined);
+  await render(<EntryForm categories={ledger.categories} entry={entry} currency="CAD" households={[household]}
+    userEmail="alice@example.com" onClose={jest.fn()} onSave={jest.fn()} onDelete={onDelete} />);
+  await fireEvent.press(screen.getByRole("button", { name: "Expense for Home" }));
+  expect(await screen.findByText("Paid by")).toBeOnTheScreen();
+  await fireEvent.press(screen.getByRole("button", { name: "Save changes" }));
+  expect(createExpense).toHaveBeenCalledWith("home", expect.objectContaining({ title: "Lunch", totalCents: 2400 }));
+  expect(onDelete).toHaveBeenCalledWith("personal-1");
+});
+
+test("a failed personal removal rolls back the new household copy", async () => {
+  const ledger = emptyLedger();
+  const household = { id: "home", name: "Home", currency: "CAD", creatorId: "alice", createdAt: 1, memberCount: 1 };
+  const members = [{ userId: "alice", email: "alice@example.com", joinedAt: 1 }];
+  const entry = { id: "personal-1", kind: "expense" as const, title: "Lunch", total: 2400, share: 2400,
+    date: "2026-10-20", categoryId: "food", note: "" };
+  jest.mocked(getHousehold).mockResolvedValue({ household, members });
+  jest.mocked(createExpense).mockResolvedValue({ expense: { id: "shared-1", revision: 0 } as HouseholdExpense });
+  jest.mocked(deleteExpense).mockResolvedValue({ ok: true });
+  const onClose = jest.fn();
+  await render(<EntryForm categories={ledger.categories} entry={entry} currency="CAD" households={[household]}
+    userEmail="alice@example.com" onClose={onClose} onSave={jest.fn()}
+    onDelete={jest.fn().mockRejectedValue(new Error("Personal entry changed"))} />);
+  await fireEvent.press(screen.getByRole("button", { name: "Expense for Home" }));
+  expect(await screen.findByText("Paid by")).toBeOnTheScreen();
+  await fireEvent.press(screen.getByRole("button", { name: "Save changes" }));
+  expect(deleteExpense).toHaveBeenCalledWith("home", "shared-1", 0);
+  expect(screen.getByText("Personal entry changed")).toBeOnTheScreen();
+  expect(onClose).not.toHaveBeenCalled();
+});
+
+test("editing a shared expense can move it to a personal trip", async () => {
+  const ledger = emptyLedger();
+  const household = { id: "home", name: "Home", currency: "CAD", creatorId: "alice", createdAt: 1, memberCount: 2 };
+  const members = ["alice", "bob"].map((id) => ({ userId: id, email: `${id}@example.com`, joinedAt: 1 }));
+  const expense = { id: "shared-1", householdId: "home", title: "Lunch", totalCents: 2400,
+    date: "2026-10-20", payerUserId: "alice", splitMode: "equal" as const, splits: [{ userId: "alice", amountCents: 1200 }, { userId: "bob", amountCents: 1200 }],
+    category: { name: "Food & drinks", icon: "cafe-outline", color: "#E47850" }, note: "", revision: 0, createdBy: "alice", createdAt: 1, updatedBy: "alice", updatedAt: 1 };
+  jest.mocked(deleteExpense).mockResolvedValue({ ok: true });
+  const onSave = jest.fn().mockResolvedValue(undefined);
+  await render(<EntryForm categories={ledger.categories} currency="CAD" trips={[{ id: "trip", name: "Weekend", startDate: "2026-10-20", endDate: "2026-10-22" }]}
+    initialHousehold={household} initialMembers={members} householdExpense={expense} userEmail="alice@example.com"
+    onClose={jest.fn()} onSave={onSave} onDelete={jest.fn()} />);
+  await fireEvent.press(screen.getByRole("button", { name: "Personal" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Trip: No trip" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Assign to Weekend" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Save changes" }));
+  expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ title: "Lunch", total: 2400, tripId: "trip" }));
+  expect(deleteExpense).toHaveBeenCalledWith("home", "shared-1", 0);
+});
+
+test("a failed shared removal rolls back the new personal copy", async () => {
+  const ledger = emptyLedger();
+  const household = { id: "home", name: "Home", currency: "CAD", creatorId: "alice", createdAt: 1, memberCount: 1 };
+  const members = [{ userId: "alice", email: "alice@example.com", joinedAt: 1 }];
+  const expense = { id: "shared-1", householdId: "home", title: "Lunch", totalCents: 2400,
+    date: "2026-10-20", payerUserId: "alice", splitMode: "equal" as const, splits: [{ userId: "alice", amountCents: 2400 }],
+    category: { name: "Food & drinks", icon: "cafe-outline", color: "#E47850" }, note: "", revision: 0, createdBy: "alice", createdAt: 1, updatedBy: "alice", updatedAt: 1 };
+  jest.mocked(deleteExpense).mockRejectedValueOnce(new Error("Shared expense changed"));
+  const onDelete = jest.fn().mockResolvedValue(undefined);
+  const onClose = jest.fn();
+  await render(<EntryForm categories={ledger.categories} currency="CAD" initialHousehold={household}
+    initialMembers={members} householdExpense={expense} userEmail="alice@example.com"
+    onClose={onClose} onSave={jest.fn().mockResolvedValue(undefined)} onDelete={onDelete} />);
+  await fireEvent.press(screen.getByRole("button", { name: "Personal" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Save changes" }));
+  expect(onDelete).toHaveBeenCalledWith(expect.any(String));
+  expect(screen.getByText("Shared expense changed")).toBeOnTheScreen();
+  expect(onClose).not.toHaveBeenCalled();
+});
+
+test("editing a shared expense can move it to another shared group", async () => {
+  const ledger = emptyLedger();
+  const home = { id: "home", name: "Home", currency: "CAD", creatorId: "alice", createdAt: 1, memberCount: 1 };
+  const trip = { ...home, id: "coast", name: "Coast", trip: { startDate: "2026-11-01", endDate: "2026-11-08" } };
+  const members = [{ userId: "alice", email: "alice@example.com", joinedAt: 1 }];
+  const expense = { id: "shared-1", householdId: "home", title: "Lunch", totalCents: 2400,
+    date: "2026-10-20", payerUserId: "alice", splitMode: "equal" as const, splits: [{ userId: "alice", amountCents: 2400 }],
+    category: { name: "Food & drinks", icon: "cafe-outline", color: "#E47850" }, note: "", revision: 0, createdBy: "alice", createdAt: 1, updatedBy: "alice", updatedAt: 1 };
+  jest.mocked(getHousehold).mockResolvedValue({ household: trip, members });
+  jest.mocked(updateExpense).mockResolvedValue({ expense });
+  await render(<EntryForm categories={ledger.categories} currency="CAD" households={[home, trip]}
+    initialHousehold={home} initialMembers={members} householdExpense={expense} userEmail="alice@example.com" onClose={jest.fn()} />);
+  await fireEvent.press(screen.getByRole("button", { name: "Expense for Coast" }));
+  expect(await screen.findByText("Paid by")).toBeOnTheScreen();
+  await fireEvent.press(screen.getByRole("button", { name: "Save changes" }));
+  expect(updateExpense).toHaveBeenCalledWith("home", "shared-1", 0, expect.objectContaining({ title: "Lunch" }), "coast");
 });
 
 test("a failed shared expense save does not show success feedback", async () => {

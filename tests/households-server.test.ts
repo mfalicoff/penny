@@ -81,6 +81,29 @@ test("shared trips invite multiple accounts and split bookings made before the g
   assert.equal(service.get(trip.id, "cam").household.name, edited.name);
 });
 
+test("an expense moves between a household and a shared trip without changing its id", (t) => {
+  const { db, service, household } = setup(); t.after(() => db.close());
+  const trip = service.createTrip("alex", { name: "Coast", currency: "CAD", startDate: "2026-11-01", endDate: "2026-11-08" }).household;
+  const original = service.createExpense(household.id, "alex", expense(4200)).expense;
+  const moved = service.updateExpense(household.id, "alex", original.id as string,
+    { ...expense(4200), revision: original.revision, targetHouseholdId: trip.id }).expense;
+  assert.equal(moved.id, original.id);
+  assert.equal(moved.householdId, trip.id);
+  assert.equal(moved.revision, 1);
+  assert.equal(service.expenses(household.id, "alex").expenses.length, 0);
+  assert.equal(service.expenses(trip.id, "alex").expenses.length, 1);
+  assert.equal(service.audit(household.id, "alex", original.id as string).events[0]?.action, "expense.moved");
+  assert.equal(service.audit(trip.id, "alex", original.id as string).events[0]?.action, "expense.created");
+  assert.throws(() => service.updateExpense(trip.id, "alex", original.id as string,
+    { ...expense(4200), revision: 0, targetHouseholdId: household.id }), { reason: "conflict" });
+  assert.throws(() => service.updateExpense(trip.id, "alex", original.id as string,
+    { ...expense(4200), revision: moved.revision, targetHouseholdId: "unavailable" }), { reason: "not_found" });
+  const returned = service.updateExpense(trip.id, "alex", original.id as string,
+    { ...expense(4200), revision: moved.revision, targetHouseholdId: household.id }).expense;
+  assert.equal(returned.householdId, household.id);
+  assert.equal(returned.id, original.id);
+});
+
 test("a household member joining after UTC midnight can share an expense on their local join date", (t) => {
   const { db, service, advance } = setup(); t.after(() => db.close());
   advance("2026-10-05T01:30:00Z"); // October 4 at 9:30 p.m. in Toronto.

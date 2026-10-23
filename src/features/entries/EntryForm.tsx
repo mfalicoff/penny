@@ -2,7 +2,7 @@ import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import { useRef, useState } from "react";
 import { Image, Platform, Pressable, Text, View } from "react-native";
-import { saveReceipt } from "../../data/receipts";
+import { receiptUrl, saveReceipt } from "../../data/receipts";
 import { calculateHouseholdSplits } from "../../domain/households";
 import {
   cents,
@@ -149,7 +149,13 @@ export function EntryForm({
     setAllocations({});
     setHouseholdSplit("equal");
     setError("");
-    if (!id) { setLoadingMembers(false); return; }
+    if (!id) {
+      if (sharedInitial) setCategory(categories.find((item) => item.kind === "expense" && item.name === sharedInitial.category.name)?.id
+        ?? categories.find((item) => item.kind === "expense")?.id ?? "");
+      setSplit("full");
+      setLoadingMembers(false);
+      return;
+    }
     setLoadingMembers(true);
     try {
       const details = await getHousehold(id);
@@ -276,16 +282,28 @@ export function EntryForm({
           receiptId: savedReceipt?.id ?? receipt?.id ?? retainedReceiptId,
           timezoneOffsetMinutes: new Date().getTimezoneOffset(),
         };
+        if (entry && !onDelete) throw new Error("This expense cannot be moved here.");
         if (householdRule) await updateRecurring(householdId, householdRule.id, householdRule.revision,
           { ...input, nextDate: date, frequency: frequency === "none" ? householdRule.frequency : frequency, active: ruleActive });
-        else if (householdExpense) await updateExpense(householdId, householdExpense.id, householdExpense.revision, input);
+        else if (householdExpense) await updateExpense(householdExpense.householdId, householdExpense.id, householdExpense.revision, input,
+          householdId !== householdExpense.householdId ? householdId : undefined);
         else if (frequency !== "none") await createRecurring(householdId, { ...input, nextDate: date, frequency });
-        else await createExpense(householdId, input);
+        else {
+          const created = await createExpense(householdId, input);
+          if (entry) {
+            try { await onDelete!(entry.id); }
+            catch (failure) {
+              try { await deleteExpense(householdId, created.expense.id, created.expense.revision); }
+              catch { throw new Error("The household copy was saved, but the original could not be removed. Review both entries."); }
+              throw failure;
+            }
+          }
+        }
         await onHouseholdSaved?.();
         onClose();
         onHouseholdFeedback?.(
-          householdRule ? "Schedule updated" : householdExpense ? "Changes saved" : frequency !== "none" ? "Schedule added" : "Expense added",
-          householdRule || householdExpense || frequency !== "none" ? undefined : "expense",
+          householdRule ? "Schedule updated" : householdExpense || entry ? "Changes saved" : frequency !== "none" ? "Schedule added" : "Expense added",
+          householdRule || householdExpense || entry || frequency !== "none" ? undefined : "expense",
         );
         return;
       }
@@ -297,6 +315,21 @@ export function EntryForm({
         : buildEntry(draft, categories, entry);
       setSaving(true);
       setError("");
+      if (householdExpense) {
+        if (!onSave || !onDelete) throw new Error("This expense cannot be moved here.");
+        transaction.receipt = attachment ? await saveReceipt(attachment)
+          : receipt ? await saveReceipt({ uri: await receiptUrl(receipt), name: receipt.name, mime: receipt.mime }) : undefined;
+        await onSave(transaction);
+        try { await deleteExpense(householdExpense.householdId, householdExpense.id, householdExpense.revision); }
+        catch (failure) {
+          try { await onDelete(transaction.id); }
+          catch { throw new Error("The personal copy was saved, but the household expense could not be removed. Review both entries."); }
+          throw failure;
+        }
+        await onHouseholdSaved?.();
+        onClose();
+        return;
+      }
       if (kind === "expense" && attachment) transaction.receipt = await saveReceipt(attachment);
       if (!onSave) throw new Error("This entry cannot be saved here.");
       await onSave(transaction, recurring);
@@ -434,16 +467,17 @@ export function EntryForm({
             Record money you contribute to investments. This reduces cash remaining without counting as spending or tracking portfolio value.
           </Text>
         )}
-        {kind === "expense" && (!editing || !!sharedInitial) && (households.length > 0 || !!initialHousehold) && (!compact || !initialHousehold) && <View style={{ gap: 8 }}>
+        {kind === "expense" && !rule && !householdRule && (households.length > 0 || !!initialHousehold) && <View style={{ gap: 8 }}>
           <Text style={s.label}>Expense for</Text>
           <View style={[s.row, { flexWrap: "wrap" }]}>
-            {!editing && <Pressable accessibilityRole="button" accessibilityState={{ selected: !householdId }}
-              onPress={() => void selectHousehold("")} style={[s.chip, !householdId && s.chipActive]}><Text style={s.label}>Personal</Text></Pressable>}
-            {(initialHousehold && !households.some((item) => item.id === initialHousehold.id) ? [initialHousehold, ...households] : households).map((household) =>
+            <Pressable accessibilityRole="button" accessibilityState={{ selected: !householdId }}
+              onPress={() => void selectHousehold("")} style={[s.chip, !householdId && s.chipActive]}><Text style={s.label}>Personal</Text></Pressable>
+            {(initialHousehold && !households.some((item) => item.id === initialHousehold.id) ? [initialHousehold, ...households] : households)
+              .filter((household) => household.currency === currency).map((household) =>
               <Pressable key={household.id} accessibilityRole="button" accessibilityLabel={`Expense for ${household.name}`}
                 accessibilityState={{ selected: householdId === household.id }}
                 onPress={() => void selectHousehold(household.id)} style={[s.chip, householdId === household.id && s.chipActive]}>
-                <Text style={s.label}>{household.name}</Text>
+                <Text style={s.label}>{household.trip ? `Trip · ${household.name}` : household.name}</Text>
               </Pressable>)}
           </View>
           {loadingMembers && <Text style={s.muted}>Loading household members…</Text>}
