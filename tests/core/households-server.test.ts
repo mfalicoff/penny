@@ -16,8 +16,8 @@ import type { ProjectedExpense } from "../../src/data/households";
 
 const stamp = Date.parse("2026-09-28T12:00:00Z");
 const category = { name: "Groceries", icon: "basket-outline", color: "#6C9C79" };
-function setup() {
-  const db = openDatabase(":memory:");
+function setup(databasePath = ":memory:") {
+  const db = openDatabase(databasePath);
   for (const [id,email] of [["alex","alex@example.test"],["bea","bea@example.test"],["cam","cam@example.test"],["outsider","other@example.test"]]) {
     db.prepare("INSERT INTO users VALUES (?,?,?,?)").run(id,email,"hash","salt");
     db.prepare("INSERT INTO ledgers VALUES (?,0,?)").run(id,JSON.stringify(emptyLedger()));
@@ -65,6 +65,187 @@ test("household invite, access, splits, recap, reimbursement and audit", (t) => 
   const history=service.audit(household.id,"bea",created.id as string);
   assert.equal(history.events[0]?.action,"expense.created");
   assert.throws(()=>service.createExpense(household.id,"bea",expense(3000)),{reason:"not_found"});
+});
+
+test("individual shares can be paid early without changing spending or another month", (t) => {
+  const {db,service,household}=setup(); t.after(()=>db.close());
+  join(service,household.id,"bea"); join(service,household.id,"cam");
+  const created=service.createExpense(household.id,"alex",expense(9000)).expense;
+  const october=service.createExpense(household.id,"alex",expense(6000,"alex","2026-10-01")).expense;
+  const projection=service.projection("bea","2026-09");
+  const octoberBefore=service.month(household.id,"cam","2026-10");
+  assert.deepEqual(created.payments,[]);
+  assert.equal(created.paymentsClosed,false);
+  const paid=service.payExpense(household.id,"bea",created.id as string,{
+    fromUserId:"bea",revision:created.revision,amountCents:1,toUserId:"cam",
+  }).expense;
+  assert.deepEqual(paid.payments,[{fromUserId:"bea",amountCents:3000,createdAt:stamp,createdBy:"bea"}]);
+  assert.equal(paid.revision,1);
+  assert.equal(paid.updatedBy,"bea");
+  assert.equal(paid.updatedAt,stamp);
+  assert.equal(paid.paymentsClosed,false,"linked payments do not close other shares");
+  const partial=service.month(household.id,"cam","2026-09");
+  assert.deepEqual(partial.balances.map(({userId,balanceCents})=>({userId,balanceCents})),[
+    {userId:"alex",balanceCents:3000},{userId:"bea",balanceCents:0},{userId:"cam",balanceCents:-3000},
+  ]);
+  assert.deepEqual(partial.suggestions,[{fromUserId:"cam",toUserId:"alex",amountCents:3000}]);
+  assert.equal(partial.reimbursements[0]?.expenseId,created.id);
+  assert.deepEqual(service.projection("bea","2026-09"),projection,"payment is not spending");
+  assert.deepEqual(service.month(household.id,"cam","2026-10"),octoberBefore);
+  assert.deepEqual(service.getExpense(household.id,"cam",october.id as string).expense.payments,[]);
+  const reloaded=createHouseholdService(db,security,()=>stamp);
+  assert.deepEqual(reloaded.getExpense(household.id,"cam",created.id as string).expense.payments,paid.payments);
+  const event=reloaded.audit(household.id,"cam",created.id as string).events[0];
+  assert.equal(event?.action,"reimbursement.created");
+  assert.equal(event?.expenseId,created.id);
+  assert.equal(event?.after.expenseId,created.id);
+  const notifications=db.prepare("SELECT entity_id,payload FROM push_outbox WHERE event_type='reimbursement.created'").all();
+  assert.equal(notifications.length,2);
+  assert.ok(notifications.every((row)=>row.entity_id===created.id && JSON.parse(row.payload as string).expenseId===created.id));
+  const fullyPaid=reloaded.payExpense(household.id,"alex",created.id as string,{fromUserId:"cam",revision:paid.revision}).expense;
+  assert.equal(fullyPaid.payments.length,2,"the payer can confirm another debtor's share");
+  assert.ok(reloaded.month(household.id,"cam","2026-09").balances.every((balance)=>balance.balanceCents===0));
+  assert.deepEqual(reloaded.month(household.id,"cam","2026-09").suggestions,[]);
+});
+
+test("month-end reimbursement pays only the remainder and closes individual payments", (t) => {
+  const {db,service,household,advance}=setup(); t.after(()=>db.close());
+  join(service,household.id,"bea");
+  const first=service.createExpense(household.id,"alex",expense(6000)).expense;
+  const second=service.createExpense(household.id,"alex",expense(6000)).expense;
+  service.payExpense(household.id,"bea",first.id as string,{fromUserId:"bea",revision:first.revision});
+  const reimbursement={fromUserId:"bea",toUserId:"alex",amountCents:3000};
+  assert.throws(()=>service.reimburse(household.id,"bea","2026-09",reimbursement),{reason:"conflict"});
+  advance("2026-09-30T12:00:00Z");
+  assert.throws(()=>service.reimburse(household.id,"bea","2026-09",{...reimbursement,amountCents:6000}),{reason:"conflict"});
+  service.reimburse(household.id,"bea","2026-09",reimbursement);
+  assert.ok(service.month(household.id,"bea","2026-09").balances.every((balance)=>balance.balanceCents===0));
+  assert.equal(service.getExpense(household.id,"bea",first.id as string).expense.paymentsClosed,true);
+  const closed=service.getExpense(household.id,"bea",second.id as string).expense;
+  assert.equal(closed.paymentsClosed,true);
+  assert.deepEqual(closed.payments,[],"monthly settlement is not an individual expense payment");
+  assert.throws(()=>service.payExpense(household.id,"bea",second.id as string,{fromUserId:"bea",revision:closed.revision}),{reason:"conflict"});
+  const october=service.createExpense(household.id,"alex",expense(6000,"alex","2026-10-01")).expense;
+  assert.equal(october.paymentsClosed,false);
+  service.payExpense(household.id,"bea",october.id as string,{fromUserId:"bea",revision:october.revision});
+  assert.equal(service.month(household.id,"bea","2026-09").reimbursements.length,2,"failed payment did not add another reimbursement");
+});
+
+test("share payments reject third parties, payer shares, zero shares, stale and duplicate requests", (t) => {
+  const {db,service,household}=setup(); t.after(()=>db.close());
+  join(service,household.id,"bea"); join(service,household.id,"cam");
+  const input={...expense(9000),splitMode:"exact",allocations:[
+    {userId:"alex",amountCents:6000},{userId:"bea",amountCents:0},{userId:"cam",amountCents:3000},
+  ]};
+  const created=service.createExpense(household.id,"alex",input).expense;
+  const payment={fromUserId:"cam",revision:created.revision};
+  assert.throws(()=>service.payExpense(household.id,"bea",created.id as string,payment),{reason:"forbidden"});
+  assert.throws(()=>service.payExpense(household.id,"outsider",created.id as string,payment),{reason:"not_found"});
+  assert.throws(()=>service.payExpense(household.id,"alex",created.id as string,{...payment,fromUserId:"alex"}),{reason:"invalid"});
+  assert.throws(()=>service.payExpense(household.id,"bea",created.id as string,{...payment,fromUserId:"bea"}),{reason:"invalid"});
+  assert.throws(()=>service.payExpense(household.id,"alex",created.id as string,{...payment,fromUserId:"outsider"}),{reason:"not_found"});
+  join(service,household.id,"outsider");
+  assert.throws(()=>service.payExpense(household.id,"outsider",created.id as string,{...payment,fromUserId:"outsider"}),{reason:"invalid"});
+  const updated=service.updateExpense(household.id,"alex",created.id as string,{
+    ...input,allocations:[...input.allocations,{userId:"outsider",amountCents:0}],title:"Updated",revision:created.revision,
+  }).expense;
+  assert.throws(()=>service.payExpense(household.id,"cam",created.id as string,payment),{reason:"conflict"});
+  const paid=service.payExpense(household.id,"cam",created.id as string,{...payment,revision:updated.revision}).expense;
+  assert.throws(()=>service.payExpense(household.id,"cam",created.id as string,{...payment,revision:paid.revision}),{reason:"conflict"});
+  assert.throws(()=>service.payExpense(household.id,"cam",created.id as string,{...payment,revision:updated.revision}),{reason:"conflict"});
+  assert.equal(service.month(household.id,"alex","2026-09").reimbursements.length,1);
+});
+
+test("both debtor and payer must still be household members", (t) => {
+  const {db,service,household}=setup(); t.after(()=>db.close());
+  join(service,household.id,"bea");
+  const alexPaid=service.createExpense(household.id,"alex",expense(6000)).expense;
+  const beaPaid=service.createExpense(household.id,"bea",expense(6000,"bea")).expense;
+  service.leave(household.id,"bea");
+  assert.throws(()=>service.payExpense(household.id,"alex",alexPaid.id as string,{fromUserId:"bea",revision:alexPaid.revision}),{reason:"not_found"});
+  assert.throws(()=>service.payExpense(household.id,"alex",beaPaid.id as string,{fromUserId:"alex",revision:beaPaid.revision}),{reason:"not_found"});
+  assert.deepEqual(service.month(household.id,"alex","2026-09").reimbursements,[]);
+});
+
+test("paid expenses protect their finances and deletion while metadata remains editable", (t) => {
+  const {db,service,household}=setup(); t.after(()=>db.close());
+  join(service,household.id,"bea");
+  const destination=service.createTrip("alex",{name:"Trip",currency:"CAD",startDate:"2026-10-01",endDate:"2026-10-04"}).household;
+  const created=service.createExpense(household.id,"alex",expense(6000)).expense;
+  const paid=service.payExpense(household.id,"bea",created.id as string,{fromUserId:"bea",revision:created.revision}).expense;
+  const original={...expense(6000),revision:paid.revision};
+  for(const change of [
+    {totalCents:8000},{payerUserId:"bea"},{date:"2026-10-01"},{targetHouseholdId:destination.id},
+    {splitMode:"exact",allocations:[{userId:"alex",amountCents:4000},{userId:"bea",amountCents:2000}]},
+  ]) assert.throws(()=>service.updateExpense(household.id,"alex",created.id as string,{...original,...change}),{reason:"conflict"});
+  assert.throws(()=>service.deleteExpense(household.id,"alex",created.id as string,{revision:paid.revision}),{reason:"conflict"});
+  assert.throws(()=>service.updateExpense(household.id,"alex",created.id as string,{...original,revision:created.revision}),{reason:"conflict"});
+  const beforeBalances=service.month(household.id,"alex","2026-09").balances;
+  service.leave(household.id,"bea");
+  join(service,household.id,"cam");
+  const metadata=service.updateExpense(household.id,"alex",created.id as string,{
+    ...original,title:"Corrected title",note:"Paid at the store",category:{...category,name:"Food"},date:"2026-09-29",
+  }).expense;
+  assert.equal(metadata.title,"Corrected title");
+  assert.equal(metadata.note,"Paid at the store");
+  assert.equal(metadata.category.name,"Food");
+  assert.equal(metadata.date,"2026-09-29");
+  assert.deepEqual(metadata.payments,paid.payments);
+  assert.deepEqual(metadata.splits,paid.splits,"membership changes cannot rewrite paid shares during metadata edits");
+  assert.deepEqual(service.month(household.id,"alex","2026-09").balances,beforeBalances);
+  assert.equal(service.expenses(destination.id,"alex").expenses.length,0);
+});
+
+test("individual payments and monthly balances survive closing and reopening the database", (t) => {
+  const folder=mkdtempSync(joinPath(tmpdir(),"penny-household-payments-"));
+  t.after(()=>rmSync(folder,{recursive:true,force:true}));
+  const path=joinPath(folder,"payments.sqlite");
+  const {db,service,household}=setup(path);
+  join(service,household.id,"bea");
+  const created=service.createExpense(household.id,"alex",expense(6000)).expense;
+  const paid=service.payExpense(household.id,"bea",created.id as string,{fromUserId:"bea",revision:created.revision}).expense;
+  db.close();
+  const reopened=openDatabase(path); t.after(()=>reopened.close());
+  const reloaded=createHouseholdService(reopened,security,()=>stamp);
+  assert.deepEqual(reloaded.getExpense(household.id,"alex",created.id as string).expense.payments,paid.payments);
+  assert.equal(reloaded.getExpense(household.id,"alex",created.id as string).expense.paymentsClosed,false);
+  assert.ok(reloaded.month(household.id,"alex","2026-09").balances.every((balance)=>balance.balanceCents===0));
+  assert.equal(reloaded.projection("bea","2026-09").transactions[0]?.shareCents,3000);
+  assert.throws(()=>reloaded.payExpense(household.id,"bea",created.id as string,{fromUserId:"bea",revision:paid.revision}),{reason:"conflict"});
+});
+
+test("legacy monthly reimbursements migrate without being mistaken for expense payments", (t) => {
+  const folder=mkdtempSync(joinPath(tmpdir(),"penny-household-payment-migration-"));
+  t.after(()=>rmSync(folder,{recursive:true,force:true}));
+  const path=joinPath(folder,"legacy.sqlite");
+  const {db,service,household,advance}=setup(path);
+  join(service,household.id,"bea"); join(service,household.id,"cam");
+  const created=service.createExpense(household.id,"alex",expense(9000)).expense;
+  advance("2026-09-30T12:00:00Z");
+  const monthly=service.reimburse(household.id,"bea","2026-09",{fromUserId:"bea",toUserId:"alex",amountCents:3000}).reimbursement;
+  db.close();
+  const legacy=new DatabaseSync(path);
+  legacy.exec("DROP INDEX household_expense_payment; ALTER TABLE household_reimbursements DROP COLUMN expense_id; PRAGMA user_version=1;");
+  legacy.close();
+  const upgraded=openDatabase(path);
+  const migrated=createHouseholdService(upgraded,security,()=>stamp);
+  const september=migrated.month(household.id,"cam","2026-09");
+  assert.equal(september.reimbursements[0]?.id,monthly.id);
+  assert.equal(september.reimbursements[0]?.expenseId,undefined);
+  assert.deepEqual(september.suggestions,[{fromUserId:"cam",toUserId:"alex",amountCents:3000}]);
+  const closed=migrated.getExpense(household.id,"cam",created.id as string).expense;
+  assert.deepEqual(closed.payments,[]);
+  assert.equal(closed.paymentsClosed,true);
+  assert.throws(()=>migrated.payExpense(household.id,"cam",created.id as string,{fromUserId:"cam",revision:closed.revision}),{reason:"conflict"});
+  const october=migrated.createExpense(household.id,"alex",expense(6000,"alex","2026-10-01")).expense;
+  const paid=migrated.payExpense(household.id,"cam",october.id as string,{fromUserId:"cam",revision:october.revision}).expense;
+  assert.equal(paid.payments[0]?.amountCents,2000);
+  upgraded.close();
+  const reopened=openDatabase(path); t.after(()=>reopened.close());
+  const reloaded=createHouseholdService(reopened,security,()=>stamp);
+  assert.deepEqual(reloaded.getExpense(household.id,"cam",october.id as string).expense.payments,paid.payments);
+  assert.equal(reloaded.getExpense(household.id,"cam",created.id as string).expense.paymentsClosed,true);
+  assert.deepEqual(reloaded.month(household.id,"cam","2026-09").balances,september.balances);
 });
 
 test("shared trips invite multiple accounts and split bookings made before the group existed", (t) => {
@@ -350,7 +531,7 @@ test("opening a pre-household database preserves private ledger and marks migrat
   old.close();
   const upgraded=openDatabase(path);
   t.after(()=>upgraded.close());
-  assert.equal(upgraded.prepare("PRAGMA user_version").get()!.user_version,1);
+  assert.equal(upgraded.prepare("PRAGMA user_version").get()!.user_version,2);
   assert.equal((upgraded.prepare("SELECT data FROM ledgers WHERE user_id='alex'").get()!.data as string),JSON.stringify(emptyLedger()));
   assert.equal(upgraded.prepare("SELECT count(*) AS n FROM household_members").get()!.n,0);
   assert.equal((upgraded.prepare("PRAGMA table_info(household_member_periods)").all() as { name: string }[]).some((column) => column.name === "joined_on"), true);
@@ -396,6 +577,18 @@ test("HTTP household routes enforce sessions and share receipts only with member
   const projection=await (await request(`/households/projection?year=${today.slice(0, 4)}`,"GET",undefined,bea.token)).json() as {transactions:{shareCents:number}[];scheduled:unknown[]};
   assert.equal(projection.transactions[0].shareCents,4000);
   assert.deepEqual(projection.scheduled, []);
+  const {expense:sharedExpense}=await e.json() as {expense:{id:string;revision:number;splits:{userId:string}[]}};
+  const fromUserId=sharedExpense.splits.find((share)=>share.userId!==household.creatorId)!.userId;
+  const paymentPath=`/households/${household.id}/expenses/${sharedExpense.id}/payments`;
+  const payment={fromUserId,revision:sharedExpense.revision};
+  assert.equal((await request(paymentPath,"POST",payment)).status,401);
+  assert.equal((await request(paymentPath,"POST",payment,outsider.token)).status,404);
+  const paidResponse=await request(paymentPath,"POST",payment,bea.token);
+  assert.equal(paidResponse.status,201,await paidResponse.clone().text());
+  const {expense:paidExpense}=await paidResponse.json() as {expense:{revision:number;payments:{fromUserId:string;amountCents:number}[];paymentsClosed:boolean}};
+  assert.deepEqual(paidExpense.payments.map(({fromUserId,amountCents})=>({fromUserId,amountCents})),[{fromUserId,amountCents:4000}]);
+  assert.equal(paidExpense.paymentsClosed,false);
+  assert.equal((await request(paymentPath,"POST",{...payment,revision:paidExpense.revision},bea.token)).status,409);
   const futureMonth = `${Number(today.slice(0, 4)) + 1}-01`;
   const recurring = await request(`/households/${household.id}/recurring`, "POST", {
     ...expense(6000, household.creatorId), date: undefined, nextDate: `${futureMonth}-28`, frequency: "monthly",

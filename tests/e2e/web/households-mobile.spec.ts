@@ -40,7 +40,6 @@ test("household essentials and management remain usable on a narrow phone", asyn
   await page.getByRole("button", { name: "Add expense", exact: true }).last().click();
   await expect(page.getByRole("button", { name: "Edit Groceries" })).toBeVisible();
   await page.getByRole("button", { name: "More actions for Groceries" }).click();
-  await expect(page.getByText("Split", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Change history" })).toBeVisible();
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
 });

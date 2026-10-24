@@ -14,6 +14,7 @@ export interface HouseholdService {
   expenses(householdId: string, userId: string, month?: string): unknown;
   getExpense(householdId: string, userId: string, expenseId: string): unknown;
   createExpense(householdId: string, userId: string, body: unknown): unknown;
+  payExpense(householdId: string, userId: string, expenseId: string, body: unknown): unknown;
   updateExpense(householdId: string, userId: string, expenseId: string, body: unknown): unknown;
   deleteExpense(householdId: string, userId: string, expenseId: string, body: unknown): unknown;
   month(householdId: string, userId: string, month: string): unknown;

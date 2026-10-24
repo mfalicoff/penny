@@ -17,7 +17,7 @@ export function openDatabase(databasePath: string) {
     CREATE TABLE IF NOT EXISTS household_invites (code_hash TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), expires_at INTEGER NOT NULL, used_at INTEGER);
     CREATE TABLE IF NOT EXISTS household_expenses (id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), title TEXT NOT NULL, total_cents INTEGER NOT NULL, expense_date TEXT NOT NULL, payer_id TEXT NOT NULL REFERENCES users(id), split_mode TEXT NOT NULL, category TEXT NOT NULL, note TEXT NOT NULL, account_id TEXT, receipt_id TEXT REFERENCES receipts(id), revision INTEGER NOT NULL, created_by TEXT NOT NULL REFERENCES users(id), created_at INTEGER NOT NULL, updated_by TEXT NOT NULL REFERENCES users(id), updated_at INTEGER NOT NULL, deleted_at INTEGER, recurring_id TEXT);
     CREATE TABLE IF NOT EXISTS household_splits (expense_id TEXT NOT NULL REFERENCES household_expenses(id), user_id TEXT NOT NULL REFERENCES users(id), amount_cents INTEGER NOT NULL, PRIMARY KEY (expense_id, user_id));
-    CREATE TABLE IF NOT EXISTS household_reimbursements (id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), month TEXT NOT NULL, from_user_id TEXT NOT NULL REFERENCES users(id), to_user_id TEXT NOT NULL REFERENCES users(id), amount_cents INTEGER NOT NULL, created_by TEXT NOT NULL REFERENCES users(id), created_at INTEGER NOT NULL);
+    CREATE TABLE IF NOT EXISTS household_reimbursements (id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), month TEXT NOT NULL, from_user_id TEXT NOT NULL REFERENCES users(id), to_user_id TEXT NOT NULL REFERENCES users(id), amount_cents INTEGER NOT NULL, created_by TEXT NOT NULL REFERENCES users(id), created_at INTEGER NOT NULL, expense_id TEXT REFERENCES household_expenses(id));
     CREATE TABLE IF NOT EXISTS household_audit (id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), expense_id TEXT, actor_id TEXT NOT NULL REFERENCES users(id), action TEXT NOT NULL, before_json TEXT, after_json TEXT, created_at INTEGER NOT NULL);
     CREATE TABLE IF NOT EXISTS household_recurring (id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), title TEXT NOT NULL, total_cents INTEGER NOT NULL, payer_id TEXT NOT NULL REFERENCES users(id), split_mode TEXT NOT NULL, allocations_json TEXT, category TEXT NOT NULL, note TEXT NOT NULL, account_id TEXT, receipt_id TEXT REFERENCES receipts(id), frequency TEXT NOT NULL, next_date TEXT NOT NULL, anchor_day INTEGER NOT NULL, active INTEGER NOT NULL, created_by TEXT NOT NULL REFERENCES users(id), revision INTEGER NOT NULL);
     CREATE UNIQUE INDEX IF NOT EXISTS household_recurring_occurrence ON household_expenses(recurring_id, expense_date) WHERE recurring_id IS NOT NULL;
@@ -26,11 +26,14 @@ export function openDatabase(databasePath: string) {
     CREATE TABLE IF NOT EXISTS push_devices (token TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id), session_hash TEXT NOT NULL REFERENCES sessions(token_hash) ON DELETE CASCADE, platform TEXT NOT NULL, updated_at INTEGER NOT NULL);
     CREATE TABLE IF NOT EXISTS push_outbox (id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id), household_id TEXT NOT NULL REFERENCES households(id), event_type TEXT NOT NULL, entity_id TEXT NOT NULL, payload TEXT NOT NULL, created_at INTEGER NOT NULL, sent_at INTEGER, attempts INTEGER NOT NULL DEFAULT 0, next_attempt_at INTEGER NOT NULL, last_error TEXT);
     CREATE TABLE IF NOT EXISTS push_deliveries (outbox_id TEXT NOT NULL REFERENCES push_outbox(id), token TEXT NOT NULL, sent_at INTEGER, attempts INTEGER NOT NULL DEFAULT 0, next_attempt_at INTEGER NOT NULL, ticket_id TEXT, receipt_checked_at INTEGER, PRIMARY KEY(outbox_id,token));
-    PRAGMA user_version=1;
   `);
     const memberPeriodColumns = db.prepare("PRAGMA table_info(household_member_periods)").all() as { name: string }[];
     if (!memberPeriodColumns.some((column) => column.name === "joined_on"))
       db.exec("ALTER TABLE household_member_periods ADD COLUMN joined_on TEXT");
+    const reimbursementColumns = db.prepare("PRAGMA table_info(household_reimbursements)").all() as { name: string }[];
+    if (!reimbursementColumns.some((column) => column.name === "expense_id"))
+      db.exec("ALTER TABLE household_reimbursements ADD COLUMN expense_id TEXT REFERENCES household_expenses(id)");
+    db.exec("CREATE UNIQUE INDEX IF NOT EXISTS household_expense_payment ON household_reimbursements(expense_id, from_user_id) WHERE expense_id IS NOT NULL; PRAGMA user_version=2;");
     return db;
   } catch (error) {
     db.close();

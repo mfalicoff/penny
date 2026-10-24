@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import { archiveHousehold, createInvite, getAudit, getHousehold, getMonth, leaveHousehold, listExpenses, listRecurring, reimburse, removeMember, renameHousehold,
+import { archiveHousehold, createInvite, getAudit, getHousehold, getMonth, leaveHousehold, listExpenses, listRecurring, payExpense, reimburse, removeMember, renameHousehold,
   type AuditEvent, type Household, type HouseholdExpense, type HouseholdMember, type HouseholdRecurring, type MonthRecap } from "../../data/households";
 import { dateKey, parseDate } from "../../domain/ledger";
 import { useHouseholds } from "../../providers/HouseholdProvider";
@@ -50,6 +50,8 @@ export default function HouseholdDetailScreen() {
   const [audit, setAudit] = useState<AuditEvent[] | null>(null);
   const [receipt, setReceipt] = useState<HouseholdExpense["receipt"]>();
   const [expenseActions, setExpenseActions] = useState<HouseholdExpense>();
+  const [payment, setPayment] = useState<{ expense: HouseholdExpense; fromUserId: string }>();
+  const [paymentError, setPaymentError] = useState("");
   const [showRecurring, setShowRecurring] = useState(false);
   const [showMembers, setShowMembers] = useState(false);
   const [invite, setInvite] = useState<{ code: string; expiresAt: number }>();
@@ -60,6 +62,7 @@ export default function HouseholdDetailScreen() {
   const [newName, setNewName] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const busyRef = useRef(false);
   const openedDeepLink = useRef(params.add === "1");
 
   const refresh = useCallback(async () => {
@@ -80,7 +83,7 @@ export default function HouseholdDetailScreen() {
   }, [id, month, params.expenseId, params.ruleId]);
   useEffect(() => { void Promise.resolve().then(refresh); }, [refresh]);
 
-  const myId = members.find((member) => member.email === email && !member.leftAt)?.userId;
+  const myId = members.find((member) => member.email === email && !member.leftAt && member.active !== false)?.userId;
   const visibleExpenses = household?.trip ? tripExpenses : recap?.expenses;
   const creator = household?.creatorId === myId;
   const name = (userId: string) => userId === myId ? "You" : members.find((member) => member.userId === userId)?.email ?? "Former member";
@@ -89,13 +92,51 @@ export default function HouseholdDetailScreen() {
   const [monthYear, monthNumber] = month.split("-").map(Number);
   const monthEnd = new Date(Date.UTC(monthYear, monthNumber, 0)).toISOString().slice(0, 10);
   const reimbursementsOpen = new Date().toISOString().slice(0, 10) >= monthEnd;
-  async function act(operation: () => Promise<unknown>, after?: () => void) {
-    if (busy) return;
+  async function act(operation: () => Promise<unknown>, after?: () => void, onFailure?: (message: string) => void) {
+    if (busyRef.current) return;
+    busyRef.current = true;
     setBusy(true); setError("");
     try { await operation(); after?.(); await refresh(); await refreshHouseholds(); }
-    catch (failure) { setError(failure instanceof Error ? failure.message : "Could not complete this action."); }
-    finally { setBusy(false); }
+    catch (failure) {
+      const message = failure instanceof Error ? failure.message : "Could not complete this action.";
+      if (onFailure) onFailure(message); else setError(message);
+    }
+    finally { busyRef.current = false; setBusy(false); }
   }
+  const isCurrentMember = (userId: string) => members.some((member) => member.userId === userId && !member.leftAt && member.active !== false);
+  const sharePaid = (expense: HouseholdExpense, userId: string) => expense.payments.some((item) => item.fromUserId === userId);
+  const canPayShare = (expense: HouseholdExpense, userId: string) => !!myId && !expense.paymentsClosed
+    && isCurrentMember(myId) && isCurrentMember(userId) && isCurrentMember(expense.payerUserId)
+    && userId !== expense.payerUserId && (myId === userId || myId === expense.payerUserId)
+    && expense.splits.some((split) => split.userId === userId && split.amountCents > 0) && !sharePaid(expense, userId);
+  function confirmPayment(expense: HouseholdExpense, fromUserId: string) {
+    if (busyRef.current || !canPayShare(expense, fromUserId)) return;
+    setExpenseActions(undefined);
+    setPaymentError("");
+    setPayment({ expense, fromUserId });
+  }
+  const currentPaymentExpense = payment && visibleExpenses?.find((expense) => expense.id === payment.expense.id);
+  const paymentStale = !!payment && (!currentPaymentExpense || currentPaymentExpense.revision !== payment.expense.revision
+    || !canPayShare(currentPaymentExpense, payment.fromUserId));
+  const shareStatus = (expense: HouseholdExpense, userId: string, amountCents: number) =>
+    userId === expense.payerUserId ? "Payer’s share" : amountCents <= 0 ? "No payment due"
+      : sharePaid(expense, userId) ? "Paid" : expense.paymentsClosed ? "Monthly settlement only" : "Unpaid";
+  const paymentSummary = (expense: HouseholdExpense) => {
+    const owing = expense.splits.filter((split) => split.userId !== expense.payerUserId && split.amountCents > 0);
+    const paid = owing.filter((split) => sharePaid(expense, split.userId)).length;
+    return expense.paymentsClosed ? "Monthly settlement started" : !owing.length ? "No payments due"
+      : paid === owing.length ? "All shares paid" : `${paid}/${owing.length} shares paid`;
+  };
+  const expenseShares = (expense: HouseholdExpense) => <View style={{ gap: 8 }}>
+    {expense.splits.map((split) => <View key={split.userId} style={[s.between, { flexWrap: "wrap" }]}>
+      <View style={{ flex: 1, minWidth: 120, gap: 3 }}>
+        <Text style={s.label}>{name(split.userId)} · {money(split.amountCents)}</Text>
+        <Text style={s.muted}>{shareStatus(expense, split.userId, split.amountCents)}</Text>
+      </View>
+      {canPayShare(expense, split.userId) && <Button title="Mark as paid" tone="quiet" disabled={busy}
+        onPress={() => confirmPayment(expense, split.userId)} />}
+    </View>)}
+  </View>;
   async function showAudit(expenseId: string) {
     try { setAudit((await getAudit(id, expenseId)).events); }
     catch (failure) { setError(failure instanceof Error ? failure.message : "Could not load changes."); }
@@ -161,7 +202,7 @@ export default function HouseholdDetailScreen() {
         <Text style={s.muted}>{compact ? "Unpaid:" : "Unpaid older months:"}</Text>
         {recap.overdueMonths.map((value) => <Button key={value} title={value} tone="quiet" onPress={() => setMonth(value)} />)}
       </View>}
-      {!compact && <Text style={s.muted}>Every month stands on its own. Reimbursements appear here, outside your spending reports.</Text>}
+      {!compact && <Text style={s.muted}>Every month stands on its own. Record individual expense shares as paid any time; payments reduce balances, not spending totals.</Text>}
       </View>
       <View style={[s.card, { gap: 14 }, compact && { padding: 16 }]}><Text style={s.heading}>{compact ? "Balances" : "Monthly recap"}</Text>
         {recap?.balances?.map((balance) => <View key={balance.userId} style={s.between}><Text numberOfLines={1} style={[s.label, { flex: 1 }]}>{name(balance.userId)}</Text>
@@ -170,7 +211,7 @@ export default function HouseholdDetailScreen() {
           </Text></View>)}
         {!recap?.balances?.length && <Text style={s.muted}>No balances this month.</Text>}
         {(!compact || !!recap?.suggestions?.length) && <Text style={[s.label, { marginTop: 8 }]}>{compact ? "To settle" : "Suggested reimbursements"}</Text>}
-        {!reimbursementsOpen && !!recap?.suggestions?.length && <Text style={s.muted}>{compact ? "Available at month end" : "Record reimbursements on the last day of the month or later."}</Text>}
+        <Text style={s.muted}>Mark an expense share as paid after sending money, even before month end. Monthly reimbursements cover only the remaining balance and are available on the last day of the month or later.</Text>
         {recap?.suggestions?.map((transfer, index) => <View key={`${transfer.fromUserId}:${transfer.toUserId}:${index}`} style={[s.between, { alignItems: "flex-start", flexWrap: "wrap" }]}>
           <Text style={[s.muted, { flex: 1 }]}>{name(transfer.fromUserId)} pays {name(transfer.toUserId)} {money(transfer.amountCents)}</Text>
           {reimbursementsOpen && (myId === transfer.fromUserId || myId === transfer.toUserId) && <Button title="Record paid" tone="quiet" disabled={busy} onPress={() => void act(() => reimburse(id, month, transfer))} />}
@@ -189,7 +230,8 @@ export default function HouseholdDetailScreen() {
           </Pressable>
           {compact && <IconButton icon="ellipsis-horizontal" label={`More actions for ${expense.title}`} onPress={() => setExpenseActions(expense)} />}
           </View>
-          {!compact && <Text style={s.muted}>{expense.splits.map((split) => `${name(split.userId)} ${money(split.amountCents)}`).join(" · ")}</Text>}
+          {compact ? <Text style={s.muted}>{paymentSummary(expense)}{myId && expense.splits.some((split) => split.userId === myId) ? ` · Your share: ${shareStatus(expense, myId, expense.splits.find((split) => split.userId === myId)!.amountCents)}` : ""}</Text>
+            : expenseShares(expense)}
           {!compact && <View style={[s.row, { flexWrap: "wrap" }]}><Button title="Change history" tone="quiet" onPress={() => void showAudit(expense.id)} />
             {expense.receipt && <Button title="View receipt" tone="quiet" onPress={() => setReceipt(expense.receipt)} />}</View>}
         </View>)}
@@ -211,13 +253,26 @@ export default function HouseholdDetailScreen() {
     {compact && showMembers && <Sheet visible title={household?.trip ? "People & settings" : "Members & settings"} onClose={() => setShowMembers(false)}>{membersContent}</Sheet>}
     {expenseActions && <Sheet visible title={expenseActions.title} onClose={() => setExpenseActions(undefined)}>
       <Text style={s.muted}>{expenseActions.category.name} · Paid by {name(expenseActions.payerUserId)}</Text>
-      <Text style={s.label}>Split</Text>
-      {expenseActions.splits.map((split) => <View key={split.userId} style={s.between}>
-        <Text numberOfLines={1} style={[s.muted, { flex: 1 }]}>{name(split.userId)}</Text>
-        <Text style={s.label}>{money(split.amountCents)}</Text>
-      </View>)}
+      <Text style={s.label}>Shares · {paymentSummary(expenseActions)}</Text>
+      {expenseShares(expenseActions)}
       <Button title="Change history" tone="quiet" onPress={() => { const expenseId = expenseActions.id; setExpenseActions(undefined); void showAudit(expenseId); }} />
       {expenseActions.receipt && <Button title="View receipt" tone="quiet" onPress={() => { setReceipt(expenseActions.receipt); setExpenseActions(undefined); }} />}
+    </Sheet>}
+    {payment && <Sheet visible title="Mark share as paid" onClose={() => { if (!busyRef.current) setPayment(undefined); }}>
+      <Text style={s.label}>{payment.expense.title}</Text>
+      <Text style={s.muted}>Sender: {name(payment.fromUserId)}</Text>
+      <Text style={s.muted}>Recipient: {name(payment.expense.payerUserId)}</Text>
+      <Text style={s.label}>Amount: {money(payment.expense.splits.find((split) => split.userId === payment.fromUserId)?.amountCents ?? 0)}</Text>
+      <Text style={s.muted}>This records a payment already made. It does not transfer money. The payment reduces the remaining monthly balance without changing spending totals.</Text>
+      {paymentError ? <Text accessibilityRole="alert" style={s.error}>{paymentError}</Text>
+        : paymentStale ? <Text accessibilityRole="alert" style={s.error}>This expense has changed or is no longer eligible. Close this sheet and reopen the expense to review it.</Text> : null}
+      <Button title={busy ? "Recording…" : "Mark as paid"} disabled={busy || paymentStale || !!paymentError}
+        onPress={() => {
+          if (busyRef.current || paymentStale || paymentError) return;
+          void act(() => payExpense(id, payment.expense.id, { fromUserId: payment.fromUserId, revision: payment.expense.revision }),
+            () => setPayment(undefined), (message) => { setPaymentError(message); void refresh(); });
+        }} />
+      <Button title="Cancel" tone="quiet" disabled={busy} onPress={() => setPayment(undefined)} />
     </Sheet>}
     {invite && <Sheet visible title={household?.trip ? "Invite to trip" : "Invite a member"} onClose={() => setInvite(undefined)}>
       <Text style={s.muted}>Share this code with someone who has a Penny account. It expires at {new Date(invite.expiresAt).toLocaleTimeString("en-CA", { hour: "numeric", minute: "2-digit" })}.</Text>

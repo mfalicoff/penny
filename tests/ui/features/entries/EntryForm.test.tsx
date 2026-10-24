@@ -173,6 +173,7 @@ test("editing a shared expense can move it to a personal trip", async () => {
   const members = ["alice", "bob"].map((id) => ({ userId: id, email: `${id}@example.com`, joinedAt: 1 }));
   const expense = { id: "shared-1", householdId: "home", title: "Lunch", totalCents: 2400,
     date: "2026-10-20", payerUserId: "alice", splitMode: "equal" as const, splits: [{ userId: "alice", amountCents: 1200 }, { userId: "bob", amountCents: 1200 }],
+    payments: [], paymentsClosed: false,
     category: { name: "Food & drinks", icon: "cafe-outline", color: "#E47850" }, note: "", revision: 0, createdBy: "alice", createdAt: 1, updatedBy: "alice", updatedAt: 1 };
   jest.mocked(deleteExpense).mockResolvedValue({ ok: true });
   const onSave = jest.fn().mockResolvedValue(undefined);
@@ -193,6 +194,7 @@ test("a failed shared removal rolls back the new personal copy", async () => {
   const members = [{ userId: "alice", email: "alice@example.com", joinedAt: 1 }];
   const expense = { id: "shared-1", householdId: "home", title: "Lunch", totalCents: 2400,
     date: "2026-10-20", payerUserId: "alice", splitMode: "equal" as const, splits: [{ userId: "alice", amountCents: 2400 }],
+    payments: [], paymentsClosed: false,
     category: { name: "Food & drinks", icon: "cafe-outline", color: "#E47850" }, note: "", revision: 0, createdBy: "alice", createdAt: 1, updatedBy: "alice", updatedAt: 1 };
   jest.mocked(deleteExpense).mockRejectedValueOnce(new Error("Shared expense changed"));
   const onDelete = jest.fn().mockResolvedValue(undefined);
@@ -214,6 +216,7 @@ test("editing a shared expense can move it to another shared group", async () =>
   const members = [{ userId: "alice", email: "alice@example.com", joinedAt: 1 }];
   const expense = { id: "shared-1", householdId: "home", title: "Lunch", totalCents: 2400,
     date: "2026-10-20", payerUserId: "alice", splitMode: "equal" as const, splits: [{ userId: "alice", amountCents: 2400 }],
+    payments: [], paymentsClosed: false,
     category: { name: "Food & drinks", icon: "cafe-outline", color: "#E47850" }, note: "", revision: 0, createdBy: "alice", createdAt: 1, updatedBy: "alice", updatedAt: 1 };
   jest.mocked(getHousehold).mockResolvedValue({ household: trip, members });
   jest.mocked(updateExpense).mockResolvedValue({ expense });

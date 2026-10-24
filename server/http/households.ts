@@ -22,6 +22,7 @@ export function createHouseholdRoutes(service: HouseholdService) {
   routes.get("/:id/expenses", (req,res) => res.json(service.expenses(req.params.id,actor(res),typeof req.query.month === "string" ? req.query.month : undefined)));
   routes.post("/:id/expenses", (req,res) => res.status(201).json(service.createExpense(req.params.id,actor(res),req.body)));
   routes.get("/:id/expenses/:expenseId", (req,res) => res.json(service.getExpense(req.params.id,actor(res),req.params.expenseId)));
+  routes.post("/:id/expenses/:expenseId/payments", (req,res) => res.status(201).json(service.payExpense(req.params.id,actor(res),req.params.expenseId,req.body)));
   routes.put("/:id/expenses/:expenseId", (req,res) => res.json(service.updateExpense(req.params.id,actor(res),req.params.expenseId,req.body)));
   routes.delete("/:id/expenses/:expenseId", (req,res) => res.json(service.deleteExpense(req.params.id,actor(res),req.params.expenseId,req.body)));
   routes.get("/:id/months/:month", (req,res) => res.json(service.month(req.params.id,actor(res),req.params.month)));

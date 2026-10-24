@@ -7,6 +7,8 @@ export type HouseholdExpense = {
   id: string; householdId: string; title: string; totalCents: number; date: string;
   payerUserId: string; splitMode: "equal" | "exact" | "percent";
   splits: { userId: string; amountCents: number }[];
+  payments: { fromUserId: string; amountCents: number; createdAt: number; createdBy: string }[];
+  paymentsClosed: boolean;
   category: { name: string; icon: string; color: string };
   note: string; accountId?: string; receiptId?: string; receipt?: Receipt;
   revision: number; createdAt: number; createdBy: string; updatedBy?: string; updatedAt?: number;
@@ -15,7 +17,7 @@ export type ExpenseInput = Pick<HouseholdExpense, "title" | "totalCents" | "date
   allocations?: ({ userId: string; amountCents: number } | { userId: string; percentBasisPoints: number })[];
   note?: string; accountId?: string; receiptId?: string; timezoneOffsetMinutes?: number;
 };
-export type Reimbursement = { id: string; householdId: string; fromUserId: string; toUserId: string; amountCents: number; month: string; createdAt: number; createdBy: string };
+export type Reimbursement = { id: string; householdId: string; fromUserId: string; toUserId: string; amountCents: number; month: string; createdAt: number; createdBy: string; expenseId?: string };
 export type Transfer = { fromUserId: string; toUserId: string; amountCents: number };
 export type MonthRecap = {
   month: string; expenses: HouseholdExpense[]; reimbursements: Reimbursement[];
@@ -53,6 +55,7 @@ export const getExpense = (householdId: string, expenseId: string) => json<{ exp
 export const createExpense = (householdId: string, input: ExpenseInput) => json<{ expense: HouseholdExpense }>(`/households/${id(householdId)}/expenses`, { method: "POST", body: body(input) });
 export const updateExpense = (householdId: string, expenseId: string, revision: number, input: ExpenseInput, targetHouseholdId?: string) => json<{ expense: HouseholdExpense }>(`/households/${id(householdId)}/expenses/${id(expenseId)}`, { method: "PUT", body: body({ ...input, revision, ...(targetHouseholdId ? { targetHouseholdId } : {}) }) });
 export const deleteExpense = (householdId: string, expenseId: string, revision: number) => json<{ ok: true }>(`/households/${id(householdId)}/expenses/${id(expenseId)}`, { method: "DELETE", body: body({ revision }) });
+export const payExpense = (householdId: string, expenseId: string, input: { fromUserId: string; revision: number }) => json<{ expense: HouseholdExpense }>(`/households/${id(householdId)}/expenses/${id(expenseId)}/payments`, { method: "POST", body: body(input) });
 export const getMonth = (householdId: string, month: string) => json<MonthRecap>(`/households/${id(householdId)}/months/${id(month)}`);
 export const reimburse = (householdId: string, month: string, transfer: Transfer) => json<{ reimbursement: Reimbursement }>(`/households/${id(householdId)}/months/${id(month)}/reimbursements`, { method: "POST", body: body(transfer) });
 export const getAudit = (householdId: string, expenseId?: string) => json<{ events: AuditEvent[] }>(`/households/${id(householdId)}/audit${expenseId ? `?expenseId=${id(expenseId)}` : ""}`);

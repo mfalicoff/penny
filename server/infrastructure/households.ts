@@ -113,7 +113,9 @@ export function createHouseholdService(db: DatabaseSync, security: Pick<Security
     if (!row || !unrestricted && !canSeeExpense(householdId, viewerId, expenseId)) fail("not_found", "Expense not found.");
     const shares = db.prepare("SELECT user_id, amount_cents FROM household_splits WHERE expense_id=? ORDER BY user_id").all(expenseId) as Row[];
     const receipt = row.receipt_id ? db.prepare("SELECT id,name,mime FROM receipts WHERE id=?").get(row.receipt_id as string) as Row | undefined : undefined;
-    return { id: row.id, householdId, title: row.title, totalCents: row.total_cents, date: row.expense_date, payerUserId: row.payer_id, splitMode: row.split_mode, splits: shares.map((s) => ({ userId: s.user_id, amountCents: s.amount_cents })), category: JSON.parse(row.category as string), note: row.note, ...(viewerId === row.payer_id && row.account_id ? { accountId: row.account_id } : {}), ...(receipt ? { receiptId: receipt.id, receipt: { id: receipt.id, name: receipt.name, mime: receipt.mime, uri: `/api/receipts/${receipt.id}` } } : {}), revision: row.revision, createdBy: row.created_by, createdAt: row.created_at, updatedBy: row.updated_by, updatedAt: row.updated_at, ...(row.recurring_id ? { recurringId: row.recurring_id } : {}) };
+    const payments = (db.prepare("SELECT from_user_id,amount_cents,created_at,created_by FROM household_reimbursements WHERE expense_id=? ORDER BY created_at,from_user_id").all(expenseId) as Row[]).map((payment) => ({ fromUserId: payment.from_user_id as string, amountCents: payment.amount_cents as number, createdAt: payment.created_at as number, createdBy: payment.created_by as string }));
+    const paymentsClosed = !!db.prepare("SELECT 1 FROM household_reimbursements WHERE household_id=? AND month=? AND expense_id IS NULL LIMIT 1").get(householdId, (row.expense_date as string).slice(0, 7));
+    return { id: row.id, householdId, title: row.title, totalCents: row.total_cents, date: row.expense_date, payerUserId: row.payer_id, splitMode: row.split_mode, splits: shares.map((s) => ({ userId: s.user_id, amountCents: s.amount_cents })), payments, paymentsClosed, category: JSON.parse(row.category as string), note: row.note, ...(viewerId === row.payer_id && row.account_id ? { accountId: row.account_id } : {}), ...(receipt ? { receiptId: receipt.id, receipt: { id: receipt.id, name: receipt.name, mime: receipt.mime, uri: `/api/receipts/${receipt.id}` } } : {}), revision: row.revision, createdBy: row.created_by, createdAt: row.created_at, updatedBy: row.updated_by, updatedAt: row.updated_at, ...(row.recurring_id ? { recurringId: row.recurring_id } : {}) };
   };
   const validateAccount = (payerId: string, actorId: string, accountId?: string) => {
     if (!accountId) return;
@@ -133,7 +135,7 @@ export function createHouseholdService(db: DatabaseSync, security: Pick<Security
     const rows = (monthValue ? db.prepare("SELECT id FROM household_expenses WHERE household_id=? AND deleted_at IS NULL AND expense_date LIKE ? ORDER BY expense_date DESC, created_at DESC").all(householdId, `${monthValue}-%`) : db.prepare("SELECT id FROM household_expenses WHERE household_id=? AND deleted_at IS NULL ORDER BY expense_date DESC, created_at DESC").all(householdId)) as Row[];
     return rows.flatMap((r) => { try { return [expense(householdId, r.id as string, userId)]; } catch (error) { if (error instanceof ApplicationError && error.reason === "not_found") return []; throw error; } });
   };
-  const listReimbursements = (householdId: string, monthValue: string) => (db.prepare("SELECT * FROM household_reimbursements WHERE household_id=? AND month=? ORDER BY created_at").all(householdId, monthValue) as Row[]).map((r) => ({ id: r.id, householdId, month: r.month, fromUserId: r.from_user_id, toUserId: r.to_user_id, amountCents: r.amount_cents, createdBy: r.created_by, createdAt: r.created_at }));
+  const listReimbursements = (householdId: string, monthValue: string) => (db.prepare("SELECT * FROM household_reimbursements WHERE household_id=? AND month=? ORDER BY created_at").all(householdId, monthValue) as Row[]).map((r) => ({ id: r.id, householdId, month: r.month, fromUserId: r.from_user_id, toUserId: r.to_user_id, amountCents: r.amount_cents, createdBy: r.created_by, createdAt: r.created_at, ...(r.expense_id ? { expenseId: r.expense_id as string } : {}) }));
   const recap = (householdId: string, userId: string, monthValue: string) => {
     requireMember(householdId, userId, true); parse(month, monthValue); const membership=member(householdId,userId,true)!; if(membership.left_at && monthValue > new Date(membership.left_at as number).toISOString().slice(0,7))fail("not_found","Month not found.");
     const expenses = listExpenses(householdId, userId, monthValue);
@@ -232,6 +234,30 @@ export function createHouseholdService(db: DatabaseSync, security: Pick<Security
     expenses(householdId: string,userId: string,monthValue?: string) { return {expenses:listExpenses(householdId,userId,monthValue)}; },
     getExpense(householdId: string,userId: string,expenseId: string) { requireMember(householdId,userId,true); return {expense:expense(householdId,expenseId,userId)}; },
     createExpense(householdId: string,userId: string,body: unknown) { requireMember(householdId,userId); const input=parse(expenseInput,body); return transaction(db,()=>({expense:createExpense(householdId,userId,input)})); },
+    payExpense(householdId: string,userId: string,expenseId: string,body: unknown) {
+      const input=parse(z.object({fromUserId:id,revision:z.number().int().nonnegative()}),body);
+      return transaction(db,()=>{
+        requireMember(householdId,userId);
+        const before=expense(householdId,expenseId,userId);
+        if(userId!==input.fromUserId && userId!==before.payerUserId) fail("forbidden","Only the debtor or expense payer can record this payment.");
+        if(input.fromUserId===before.payerUserId) fail("invalid","The payer cannot pay their own share.");
+        requireMember(householdId,input.fromUserId);
+        requireMember(householdId,before.payerUserId as string);
+        if(before.revision!==input.revision) fail("conflict","Expense changed. Refresh and try again.");
+        if(before.paymentsClosed) fail("conflict","This month already has monthly reimbursements. Settle the remaining monthly balance instead.");
+        if(before.payments.some((payment)=>payment.fromUserId===input.fromUserId)) fail("conflict","This share is already paid.");
+        const share=before.splits.find((part)=>part.userId===input.fromUserId);
+        if(!share || (share.amountCents as number)<=0) fail("invalid","Choose a member with a positive share.");
+        const idValue=security.randomId(16),stamp=now(),monthValue=(before.date as string).slice(0,7);
+        db.prepare("INSERT INTO household_reimbursements (id,household_id,month,from_user_id,to_user_id,amount_cents,created_by,created_at,expense_id) VALUES (?,?,?,?,?,?,?,?,?)")
+          .run(idValue,householdId,monthValue,input.fromUserId,before.payerUserId as string,share.amountCents as number,userId,stamp,expenseId);
+        db.prepare("UPDATE household_expenses SET revision=revision+1,updated_by=?,updated_at=? WHERE id=? AND household_id=? AND revision=?")
+          .run(userId,stamp,expenseId,householdId,input.revision);
+        const reimbursement={id:idValue,householdId,month:monthValue,fromUserId:input.fromUserId,toUserId:before.payerUserId,amountCents:share.amountCents,createdBy:userId,createdAt:stamp,expenseId};
+        audit(householdId,userId,"reimbursement.created",null,reimbursement,expenseId);
+        return {expense:expense(householdId,expenseId,userId)};
+      });
+    },
     updateExpense(householdId: string,userId: string,expenseId: string,body: unknown) {
       requireMember(householdId,userId);
       const input=parse(expenseInput.extend({revision:z.number().int().nonnegative(),targetHouseholdId:id.optional()}),body);
@@ -240,15 +266,20 @@ export function createHouseholdService(db: DatabaseSync, security: Pick<Security
       return transaction(db,()=>{
         const before=expense(householdId,expenseId,userId);
         if(before.revision!==input.revision) fail("conflict","Expense changed. Refresh and try again.");
+        const hasPayments=before.payments.length>0;
+        if(hasPayments && (destinationId!==householdId || input.payerUserId!==before.payerUserId || input.totalCents!==before.totalCents || input.date.slice(0,7)!==(before.date as string).slice(0,7)))
+          fail("conflict","Paid expenses cannot change payer, total, month or household.");
         if(destinationId!==householdId && household(householdId)?.currency!==household(destinationId)?.currency)
           fail("invalid","The destination must use the same currency.");
-        const memberIds=householdView(household(destinationId)!).trip ? currentIds(destinationId) : activeMemberIds(membershipPeriods(destinationId,input.timezoneOffsetMinutes),input.date);
-        if(!memberIds.includes(input.payerUserId)) fail("invalid","The payer must be a current household member.");
+        const memberIds=hasPayments ? before.splits.map((share)=>share.userId as string) : householdView(household(destinationId)!).trip ? currentIds(destinationId) : activeMemberIds(membershipPeriods(destinationId,input.timezoneOffsetMinutes),input.date);
+        if(!hasPayments && !memberIds.includes(input.payerUserId)) fail("invalid","The payer must be a current household member.");
         const storedAccount=db.prepare("SELECT payer_id,account_id FROM household_expenses WHERE id=? AND household_id=?").get(expenseId,householdId) as Row;
         const accountId=input.accountId ?? (userId!==input.payerUserId && storedAccount.payer_id===input.payerUserId ? storedAccount.account_id as string|undefined : undefined);
         validateAccount(input.payerUserId,userId,input.accountId);
         if(input.receiptId!==before.receiptId || destinationId===householdId) validateReceipt(destinationId,userId,input.receiptId);
         const shares=split(input.totalCents,input.splitMode,memberIds,input.allocations);
+        if(hasPayments && (shares.length!==before.splits.length || shares.some((share)=>!before.splits.some((previous)=>previous.userId===share.userId && previous.amountCents===share.amountCents))))
+          fail("conflict","Paid expenses cannot change share allocations.");
         db.prepare("UPDATE household_expenses SET household_id=?,title=?,total_cents=?,expense_date=?,payer_id=?,split_mode=?,category=?,note=?,account_id=?,receipt_id=?,revision=revision+1,updated_by=?,updated_at=? WHERE id=? AND household_id=? AND revision=?")
           .run(destinationId,input.title,input.totalCents,input.date,input.payerUserId,input.splitMode,json(input.category),input.note,accountId??null,input.receiptId??null,userId,now(),expenseId,householdId,input.revision);
         db.prepare("DELETE FROM household_splits WHERE expense_id=?").run(expenseId);
@@ -262,9 +293,9 @@ export function createHouseholdService(db: DatabaseSync, security: Pick<Security
         return {expense:after};
       });
     },
-    deleteExpense(householdId: string,userId: string,expenseId: string,body: unknown) { requireMember(householdId,userId); const {revision}=parse(z.object({revision:z.number().int().nonnegative()}),body); return transaction(db,()=>{ const before=expense(householdId,expenseId,userId); if(before.revision!==revision) fail("conflict","Expense changed. Refresh and try again."); db.prepare("UPDATE household_expenses SET deleted_at=?,updated_by=?,revision=revision+1 WHERE id=?").run(now(),userId,expenseId); audit(householdId,userId,"expense.deleted",{...before,accountId:undefined},null,expenseId); return {ok:true}; }); },
+    deleteExpense(householdId: string,userId: string,expenseId: string,body: unknown) { requireMember(householdId,userId); const {revision}=parse(z.object({revision:z.number().int().nonnegative()}),body); return transaction(db,()=>{ const before=expense(householdId,expenseId,userId); if(before.revision!==revision) fail("conflict","Expense changed. Refresh and try again."); if(before.payments.length) fail("conflict","Paid expenses cannot be deleted."); db.prepare("UPDATE household_expenses SET deleted_at=?,updated_by=?,revision=revision+1 WHERE id=?").run(now(),userId,expenseId); audit(householdId,userId,"expense.deleted",{...before,accountId:undefined},null,expenseId); return {ok:true}; }); },
     month(householdId: string,userId: string,monthValue: string) { const result=recap(householdId,userId,monthValue); const currentMonth=new Date(now()).toISOString().slice(0,7); const membership=member(householdId,userId,true)!; const leftMonth=membership.left_at?new Date(membership.left_at as number).toISOString().slice(0,7):undefined; const overdueMonths=allMonths(householdId).filter((m)=>m<currentMonth&&(!leftMonth||m<=leftMonth)&&recap(householdId,userId,m).suggestions.length>0).sort(); return {...result,overdueMonths}; },
-    reimburse(householdId: string,userId: string,monthValue: string,body: unknown) { requireMember(householdId,userId); parse(month,monthValue); const input=parse(reimbursementInput,body); if(input.fromUserId===input.toUserId) fail("invalid","Choose two different members."); if(userId!==input.fromUserId && userId!==input.toUserId) fail("forbidden","Only people involved can record a reimbursement."); const [year,monthNumber]=monthValue.split("-").map(Number); const lastDay=new Date(Date.UTC(year,monthNumber,0)).toISOString().slice(0,10); if(new Date(now()).toISOString().slice(0,10)<lastDay) fail("conflict","Record reimbursements on the last day of the month or later."); return transaction(db,()=>{ const suggestion=recap(householdId,userId,monthValue).suggestions.find((s)=>s.fromUserId===input.fromUserId&&s.toUserId===input.toUserId&&s.amountCents===input.amountCents); if(!suggestion) fail("conflict","This is no longer the full suggested reimbursement."); const idValue=security.randomId(16),stamp=now(); db.prepare("INSERT INTO household_reimbursements VALUES (?,?,?,?,?,?,?,?)").run(idValue,householdId,monthValue,input.fromUserId,input.toUserId,input.amountCents,userId,stamp); const result={id:idValue,householdId,month:monthValue,...input,createdBy:userId,createdAt:stamp}; audit(householdId,userId,"reimbursement.created",null,result); return {reimbursement:result}; }); },
+    reimburse(householdId: string,userId: string,monthValue: string,body: unknown) { requireMember(householdId,userId); parse(month,monthValue); const input=parse(reimbursementInput,body); if(input.fromUserId===input.toUserId) fail("invalid","Choose two different members."); if(userId!==input.fromUserId && userId!==input.toUserId) fail("forbidden","Only people involved can record a reimbursement."); const [year,monthNumber]=monthValue.split("-").map(Number); const lastDay=new Date(Date.UTC(year,monthNumber,0)).toISOString().slice(0,10); if(new Date(now()).toISOString().slice(0,10)<lastDay) fail("conflict","Record reimbursements on the last day of the month or later."); return transaction(db,()=>{ const suggestion=recap(householdId,userId,monthValue).suggestions.find((s)=>s.fromUserId===input.fromUserId&&s.toUserId===input.toUserId&&s.amountCents===input.amountCents); if(!suggestion) fail("conflict","This is no longer the full suggested reimbursement."); const idValue=security.randomId(16),stamp=now(); db.prepare("INSERT INTO household_reimbursements (id,household_id,month,from_user_id,to_user_id,amount_cents,created_by,created_at) VALUES (?,?,?,?,?,?,?,?)").run(idValue,householdId,monthValue,input.fromUserId,input.toUserId,input.amountCents,userId,stamp); const result={id:idValue,householdId,month:monthValue,...input,createdBy:userId,createdAt:stamp}; audit(householdId,userId,"reimbursement.created",null,result); return {reimbursement:result}; }); },
     audit(householdId: string,userId: string,expenseId?: string) { requireMember(householdId,userId,true); const rows=(expenseId?db.prepare("SELECT * FROM household_audit WHERE household_id=? AND expense_id=? ORDER BY created_at DESC, rowid DESC").all(householdId,expenseId):db.prepare("SELECT * FROM household_audit WHERE household_id=? ORDER BY created_at DESC, rowid DESC LIMIT 500").all(householdId)) as Row[]; const membership=member(householdId,userId,true)!; const visible=membership.left_at ? rows.filter((r)=>r.expense_id?canSeeExpense(householdId,userId,r.expense_id as string):(r.created_at as number)<=(membership.left_at as number)) : rows; return {events:visible.map((r)=>({id:r.id,householdId, ...(r.expense_id?{expenseId:r.expense_id}:{}),actorId:r.actor_id,action:r.action,before:r.before_json?JSON.parse(r.before_json as string):null,after:r.after_json?JSON.parse(r.after_json as string):null,createdAt:r.created_at}))}; },
     projection(userId: string, monthValue?: string, yearValue?: string) {
       if (monthValue) parse(month, monthValue);
