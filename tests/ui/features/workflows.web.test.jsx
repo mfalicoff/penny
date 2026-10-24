@@ -116,6 +116,40 @@ test.each([
   expect(body.textContent).toContain("Every little entry tells a story.");
 });
 
+test.each([
+  ["desktop", { compact: false, desktop: true }],
+  ["phone", { compact: true, desktop: false }],
+])("%s overview category filter combines with search and resets for an incompatible entry type", async (_name, responsive) => {
+  mockResponsive = responsive;
+  const date = ledger.transactions[0].date;
+  ledger.recurring = [];
+  ledger.transactions = [
+    { id: "groceries", title: "Market run", kind: "expense", categoryId: "groceries", date, total: 8000, share: 8000, note: "" },
+    { id: "coffee", title: "Coffee break", kind: "expense", categoryId: "food", date, total: 500, share: 500, note: "" },
+    { id: "pay", title: "Monthly pay", kind: "income", categoryId: "salary", date, total: 100000, share: 100000, note: "" },
+  ];
+  const body = await renderWeb(<Workspace><OverviewScreen /></Workspace>);
+  await click(button("Filter by category: All categories"));
+  await click(button("Groceries"));
+  expect(body.querySelector('[aria-label^="Edit Market run,"]')).not.toBeNull();
+  expect(body.querySelector('[aria-label^="Edit Coffee break,"]')).toBeNull();
+  expect(body.querySelector('[aria-label^="Edit Monthly pay,"]')).toBeNull();
+  expect(body.textContent).toContain("Expenses$85.00");
+  await fill("Search entries", "Coffee");
+  expect(body.textContent).toContain("No entries found.");
+  await fill("Search entries", "");
+  await click(button("Income"));
+  expect(button("Filter by category: All categories")).not.toBeNull();
+  expect(body.querySelector('[aria-label^="Edit Monthly pay,"]')).not.toBeNull();
+  await click(button("All"));
+  await click(button("Filter by category: All categories"));
+  await click(button("Groceries"));
+  await click(button("Filter by category: Groceries"));
+  await click(button("All categories"));
+  expect(body.querySelector('[aria-label^="Edit Coffee break,"]')).not.toBeNull();
+  expect(body.querySelector('[aria-label^="Edit Monthly pay,"]')).not.toBeNull();
+});
+
 test("new split recurring expense validates, saves cents and closes only after success", async () => {
   const save = jest.fn().mockRejectedValueOnce(new Error("Offline for test")).mockResolvedValue(undefined);
   const close = jest.fn();

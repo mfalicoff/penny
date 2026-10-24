@@ -193,7 +193,7 @@ test("monthly household projection previews recurring shares without recording e
   assert.equal(service.projection("alex", "2026-10").scheduled[0]?.accountId, "checking");
   const privateLedger = emptyLedger();
   const combined = ledgerWithHouseholds(privateLedger, projection.scheduled, [household]);
-  const overview = selectOverview(combined, { month: "2026-10", day: "2026-10-28", filter: "expense", search: "groceries" });
+  const overview = selectOverview(combined, { month: "2026-10", day: "2026-10-28", filter: "expense", categoryId: null, search: "groceries" });
   assert.equal(overview.visibleEntries.length, 1);
   assert.equal(overview.visibleEntries[0]?.share, 4500);
   assert.equal(overview.visibleEntries[0]?.date, "2026-10-28");
@@ -250,7 +250,7 @@ test("materialized and deleted household occurrences never appear again as previ
   assert.deepEqual(materialized.scheduled.map((entry) => entry.date).sort(), ["2026-10-19", "2026-10-26"]);
   const overview = selectOverview(
     ledgerWithHouseholds(emptyLedger(), [...materialized.transactions, ...materialized.scheduled] as ProjectedExpense[], [household]),
-    { month: "2026-10", day: null, filter: "all", search: "" },
+    { month: "2026-10", day: null, filter: "all", categoryId: null, search: "" },
   );
   assert.equal(overview.calendarEntries.length, 4);
   assert.equal(overview.summary.expense, 9000, "only the two recorded shares contribute to spending");

@@ -5,7 +5,7 @@ import { calendarMonth, selectOverview, shiftMonthKey } from "../../src/features
 
 const expense: Transaction = { id: "meal", title: "Lunch", kind: "expense", total: 4000, share: 1000, categoryId: "food", date: "2026-09-20", note: "With Alex" };
 const ledger = { ...emptyLedger(), transactions: [expense, { ...expense, id: "salary", title: "Payday", note: "", kind: "income" as const, categoryId: "salary", share: 50000, date: "2026-09-21" }, { ...expense, id: "last-month", date: "2026-08-31" }] };
-const filters = { month: "2026-09", day: null, filter: "all" as const, search: "" };
+const filters = { month: "2026-09", day: null, filter: "all" as const, categoryId: null, search: "" };
 
 test("overview totals use monthly personal shares independently of list filters", () => {
   const before = structuredClone(ledger);

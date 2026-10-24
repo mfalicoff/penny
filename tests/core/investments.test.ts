@@ -37,7 +37,7 @@ test("overview and flow separate contributions from spending, including cash def
     { ...transaction, id: "salary", kind: "income", categoryId: "salary", total: 500000, share: 500000 },
     { ...transaction, id: "rent", kind: "expense", categoryId: "home", total: 300000, share: 300000 },
   ];
-  const overview = selectOverview(ledger, { month: "2026-01", day: null, filter: "investment", search: "TFSA" });
+  const overview = selectOverview(ledger, { month: "2026-01", day: null, filter: "investment", categoryId: null, search: "TFSA" });
   assert.deepEqual(overview.summary, { income: 500000, expense: 300000, investment: 100000 });
   assert.deepEqual(overview.visibleEntries, [transaction]);
   assert.deepEqual(overview.spending.map((c) => [c.id, c.amount]), [["home", 300000]]);

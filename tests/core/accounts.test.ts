@@ -38,7 +38,7 @@ test("accounts link to recurring previews and materialized entries and can be se
   assert.equal(due.transactions.length, 3);
   assert.ok(due.transactions.every((t) => t.accountId === card.id));
   assert.deepEqual(materialize(due, "2026-03-01"), due);
-  const overview = selectOverview(due, { month: "2026-02", day: null, filter: "all", search: "visa" });
+  const overview = selectOverview(due, { month: "2026-02", day: null, filter: "all", categoryId: null, search: "visa" });
   assert.equal(overview.visibleEntries.length, 1);
   assert.equal(overview.summary.expense, 3000);
 });
