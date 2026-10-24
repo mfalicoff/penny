@@ -1,9 +1,10 @@
+import { useState } from "react";
 import { type EntryFormState } from "../../../providers/WorkspaceProvider";
 import { router } from "expo-router";
 import { isHouseholdTransaction } from "../../households/projection";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { dateKey, kinds, parseDate, type Ledger } from "../../../domain/ledger";
-import { Button, C, Field, Icon, Tag, s } from "../../../shared/ui";
+import { dateKey, kinds, parseDate, type Category, type Ledger } from "../../../domain/ledger";
+import { Button, C, Field, Icon, Sheet, Tag, s } from "../../../shared/ui";
 import { type OverviewEntry, type EntryFilter } from "../selectors";
 
 type EntryListProps = {
@@ -20,13 +21,16 @@ type EntryListProps = {
   setForm: (form: EntryFormState) => void;
   totalCount?: number;
   periodLabel?: string;
+  categoryFilter?: { value: Category | null; onChange: (id: string | null) => void };
 };
 
 export function EntryList({
   day, filter, search, setFilter, setSearch,
-  visibleEntries, grouped, ledger, compact, money, setForm, totalCount, periodLabel,
+  visibleEntries, grouped, ledger, compact, money, setForm, totalCount, periodLabel, categoryFilter,
 }: EntryListProps) {
   const a = makeStyles();
+  const [choosingCategory, setChoosingCategory] = useState(false);
+  const hasFilters = Boolean(search || day || filter !== "all" || categoryFilter?.value);
 
   return (
     <View style={[s.card, { padding: compact ? 16 : 24 }]}>
@@ -100,6 +104,32 @@ export function EntryList({
         onChangeText={setSearch}
         style={{ fontSize: 12, minHeight: 40, paddingVertical: 10 }}
       />
+      {categoryFilter && (
+        <View style={{ marginTop: 12, alignItems: "flex-start" }}>
+          <Pressable accessibilityRole="button"
+            accessibilityLabel={`Filter by category: ${categoryFilter.value?.name ?? "All categories"}`}
+            accessibilityState={{ expanded: choosingCategory, selected: categoryFilter.value !== null }}
+            onPress={() => setChoosingCategory(true)}
+            style={[s.chip, { minHeight: 44, maxWidth: "100%", borderRadius: 999 }, categoryFilter.value && s.chipActive]}>
+            <Icon name={categoryFilter.value?.icon ?? "pricetag-outline"} color={categoryFilter.value?.color ?? C.muted} size={17} />
+            <Text numberOfLines={1} style={{ color: C.ink, fontSize: 12, flexShrink: 1 }}>{categoryFilter.value?.name ?? "All categories"}</Text>
+            <Icon name="chevron-down" size={14} color={C.muted} />
+          </Pressable>
+          {choosingCategory && <Sheet visible title="Filter by category" onClose={() => setChoosingCategory(false)}>
+            {[{ id: null, name: "All categories", icon: "pricetag-outline", color: C.muted },
+              ...ledger.categories.filter((category) => filter === "all" || category.kind === filter)].map((category) => (
+              <Pressable key={category.id ?? "all"} accessibilityRole="button" accessibilityLabel={category.name}
+                accessibilityState={{ selected: (categoryFilter.value?.id ?? null) === category.id }}
+                onPress={() => { categoryFilter.onChange(category.id); setChoosingCategory(false); }}
+                style={[s.chip, { minHeight: 44 }, (categoryFilter.value?.id ?? null) === category.id && s.chipActive]}>
+                <Icon name={category.icon} color={category.color} size={18} />
+                <Text style={{ flex: 1, color: C.ink }}>{category.name}</Text>
+                {(categoryFilter.value?.id ?? null) === category.id && <Icon name="checkmark" color={C.accent} size={18} />}
+              </Pressable>
+            ))}
+          </Sheet>}
+        </View>
+      )}
       {visibleEntries.some((t) => t.scheduled) && (
         <Text style={[s.muted, { marginTop: 12 }]}>Scheduled entries are previews. Upcoming income counts toward the overview projection, but scheduled expenses and investments do not count until recorded. Tap a preview to edit its schedule.</Text>
       )}
@@ -253,16 +283,16 @@ export function EntryList({
               fontSize: 15,
             }}
           >
-            {search || day || filter !== "all"
+            {hasFilters
               ? "No entries found."
               : periodLabel ? `No recorded entries for ${periodLabel}.` : "Your next little moment starts here."}
           </Text>
           <Text style={[s.muted, { textAlign: "center" }]}>
-            {search || day || filter !== "all"
+            {hasFilters
               ? periodLabel ? "Try a different search, period, or filter." : "Try a different search, day, or filter."
               : periodLabel ? "Choose another period or add an entry." : "Add income, an expense, or an investment. We’ll take it from there."}
           </Text>
-          {!search && !day && filter === "all" && (
+          {!hasFilters && (
             <Button
               title={periodLabel ? "Add entry" : "Add your first entry"}
               icon="add"

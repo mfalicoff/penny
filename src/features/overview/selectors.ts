@@ -3,9 +3,9 @@ import { dateKey, nextOccurrence, parseDate, totals, type Kind, type Ledger, typ
 export type OverviewEntry = Transaction & { scheduled?: boolean };
 
 export type EntryFilter = "all" | Kind;
-export type OverviewFilters = { month: string; day: string | null; filter: EntryFilter; search: string; };
+export type OverviewFilters = { month: string; day: string | null; filter: EntryFilter; categoryId: string | null; search: string; };
 
-export function selectOverview(ledger: Ledger, { month, day, filter, search }: OverviewFilters) {
+export function selectOverview(ledger: Ledger, { month, day, filter, categoryId, search }: OverviewFilters) {
   const categories = new Map(ledger.categories.map((c) => [c.id, c]));
   const accounts = new Map(ledger.accounts.map((a) => [a.id, a]));
   const entries: OverviewEntry[] = ledger.transactions.filter((t) => t.date.startsWith(month));
@@ -19,6 +19,7 @@ export function selectOverview(ledger: Ledger, { month, day, filter, search }: O
   const query = search.toLowerCase();
   const visibleEntries = calendarEntries.filter((t) =>
     (!day || t.date === day) && (filter === "all" || t.kind === filter) &&
+    (categoryId === null || t.categoryId === categoryId) &&
     `${t.title} ${t.note} ${categories.get(t.categoryId)?.name ?? ""} ${accounts.get(t.accountId ?? "")?.name ?? ""}`.toLowerCase().includes(query),
   ).sort((a, b) => b.date.localeCompare(a.date));
   const grouped = new Map<string, OverviewEntry[]>();

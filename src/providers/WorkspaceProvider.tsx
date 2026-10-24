@@ -8,6 +8,7 @@ function useWorkspaceState() {
   const [month, setMonth] = useState(dateKey().slice(0, 7));
   const [day, setDay] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | Kind>("all");
+  const [categoryId, setCategoryId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [form, setForm] = useState<EntryFormState | null>(null);
   const [transactionFilters, setTransactionFilters] = useState<{
@@ -15,7 +16,7 @@ function useWorkspaceState() {
   }>({
     month: dateKey().slice(0, 7), period: "month", filter: "all", search: "", page: 0,
   });
-  return { month, setMonth, day, setDay, filter, setFilter, search, setSearch, form, setForm, transactionFilters, setTransactionFilters };
+  return { month, setMonth, day, setDay, filter, setFilter, categoryId, setCategoryId, search, setSearch, form, setForm, transactionFilters, setTransactionFilters };
 }
 
 const WorkspaceContext = createContext<ReturnType<typeof useWorkspaceState> | null>(null);

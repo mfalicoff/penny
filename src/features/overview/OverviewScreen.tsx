@@ -20,11 +20,13 @@ export default function OverviewScreen() {
   useTheme();
   const { ledger: privateLedger } = useLedger();
   const { projection, households, projectionByPeriod, loadProjection } = useHouseholds();
-  const { month, setMonth, day, setDay, filter, setFilter, search, setSearch, setForm } = useWorkspace();
+  const { month, setMonth, day, setDay, filter, setFilter, categoryId, setCategoryId, search, setSearch, setForm } = useWorkspace();
   const ledger = useMemo(() => ledgerWithHouseholds(privateLedger, [...projection, ...(projectionByPeriod[month]?.scheduled ?? [])], households), [privateLedger, projection, projectionByPeriod, month, households]);
   useEffect(() => { void loadProjection(month); }, [month, loadProjection]);
   const { compact, desktop } = useResponsive();
-  const { summaryEntries, expectedIncome, calendarEntries, summary, visibleEntries, grouped, spending } = useMemo(() => selectOverview(ledger, { month, day, filter, search }), [ledger, month, day, filter, search]);
+  const selectedCategory = ledger.categories.find((category) => category.id === categoryId && (filter === "all" || category.kind === filter)) ?? null;
+  const activeCategoryId = selectedCategory?.id ?? null;
+  const { summaryEntries, expectedIncome, calendarEntries, summary, visibleEntries, grouped, spending } = useMemo(() => selectOverview(ledger, { month, day, filter, categoryId: activeCategoryId, search }), [ledger, month, day, filter, activeCategoryId, search]);
   const monthLabel = parseDate(`${month}-01`).toLocaleDateString("en-CA", { month: "long", year: "numeric" });
   const money = (value: number) => currencyFormat(value, ledger.currency);
   function shiftMonth(delta: number) { setMonth(shiftMonthKey(month, delta)); setDay(null); }
@@ -77,6 +79,11 @@ export default function OverviewScreen() {
       <SpendingBreakdown {...{ spending, summary, desktop, money }} />
     </View>
     <MoneyFlowChart key={month} entries={summaryEntries} categories={ledger.categories} currency={ledger.currency} monthLabel={monthLabel} />
-    <EntryList {...{ day, filter, search, setFilter, setSearch, visibleEntries, grouped, ledger, compact, money, setForm }} />
+    <EntryList {...{ day, filter, search, setSearch, visibleEntries, grouped, ledger, compact, money, setForm }}
+      setFilter={(next) => {
+        setFilter(next);
+        if (next !== "all" && selectedCategory?.kind !== next) setCategoryId(null);
+      }}
+      categoryFilter={{ value: selectedCategory, onChange: setCategoryId }} />
   </View>);
 }
