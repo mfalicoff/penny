@@ -83,7 +83,7 @@ function useLedgerSession() {
           setPending(false);
           setReady(false);
           setEmail(null);
-          void forgetAccount();
+          await forgetAccount();
         } else if (error instanceof ApiError && error.status !== 0 || !cachedAddress)
           setSyncError(error instanceof Error ? error.message : "Could not load your account.");
       } finally {

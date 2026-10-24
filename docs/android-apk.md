@@ -15,7 +15,7 @@ The **Build Android APK and iOS IPA for TestFlight** GitHub Actions workflow run
 
    Commit the resulting `expo.extra.eas.projectId` and any `owner` changes in `app.json`. Link the existing project if one already holds this app's credentials. Keep the committed project ID stable.
 
-3. In the Expo project's **Environment variables** settings, add `EXPO_PUBLIC_API_URL` to the **production** environment with **Plain text** visibility. Use your server's reachable HTTPS origin, for example `https://penny.example.com`. The value is embedded in the APK and is not a secret. The `apk` profile explicitly selects this EAS environment; setting a variable only in GitHub Actions does not configure the cloud builder. A local `.env` is ignored during upload.
+3. Optionally set the initial server default by adding `EXPO_PUBLIC_API_URL` in the Expo project's **Environment variables**, in the **production** environment with **Plain text** visibility (for example `https://penny.example.com`). Users can select their own server from the mobile sign-in screen; the choice is stored per device. For the first release upgrading existing installs to device settings, keep the same value used by the previous APK so migration preserves their current server, session, and offline entries. The value is embedded in the APK and is not a secret. The `apk` profile explicitly selects this EAS environment; setting a variable only in GitHub Actions does not configure the cloud builder. A local `.env` is ignored during upload.
 
 4. Prepare signing credentials interactively:
 

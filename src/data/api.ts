@@ -1,9 +1,6 @@
-import { Platform } from "react-native";
+import { readServerConfiguration } from "./serverConnection";
 import { materialize, type Ledger } from "../domain/ledger";
 import { clearToken, getToken, setToken } from "./session";
-export const API_URL =
-  process.env.EXPO_PUBLIC_API_URL ||
-  (Platform.OS === "web" ? "" : "http://localhost:3001");
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -13,10 +10,13 @@ export class ApiError extends Error {
   }
 }
 export async function api(path: string, options: RequestInit = {}) {
-  const token = await getToken();
+  // Capture URL and credential namespace together, even if device settings change
+  // while an already-started request is reading its token.
+  const server = await readServerConfiguration();
+  const token = await getToken(server);
   let response: Response;
   try {
-    response = await fetch(`${API_URL}/api${path}`, {
+    response = await fetch(`${server.url}/api${path}`, {
       ...options,
       credentials: "include",
       headers: {

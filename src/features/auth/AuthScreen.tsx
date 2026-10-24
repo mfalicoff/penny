@@ -1,4 +1,5 @@
 import { OidcButton } from "./OidcButton";
+import { ServerConnection } from "../settings/ServerConnection";
 import { useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -79,6 +80,7 @@ export function Auth({
               A little clarity for your everyday money.
             </Text>
           </View>
+          <ServerConnection editable disabled={busy} onBusy={setBusy} />
           <View style={[s.card, { gap: 20, marginTop: 12 }]}>
             <Text style={s.heading}>
               {register ? "Make yourself at home." : "Welcome back."}

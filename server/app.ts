@@ -2,6 +2,7 @@ import { createOidcService } from "./application/oidc.ts";
 import type { OidcOptions } from "./application/ports.ts";
 import { createOidcProvider } from "./infrastructure/oidc.ts";
 import express from "express";
+import { readFileSync } from "node:fs";
 import cors from "cors";
 import { createAuthService } from "./application/auth.ts";
 import { createLedgerService } from "./application/ledger.ts";
@@ -18,6 +19,8 @@ import { createReceiptRoutes } from "./http/receipts.ts";
 import { createHouseholdRoutes } from "./http/households.ts";
 import { createPushRoutes } from "./http/push.ts";
 import { apiPolicy, errorHandler, requireSession } from "./http/middleware.ts";
+
+const { version } = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")) as { version: string };
 
 export interface AppOptions {
   databasePath: string;
@@ -52,6 +55,7 @@ export function createApp({
     }));
     app.use("/api", apiPolicy(origins), express.json({ limit: "20mb" }));
     app.get("/api/health", (_req, res) => res.json({ ok: true }));
+    app.get("/api/info", (_req, res) => res.json({ name: "penny", version }));
     app.use("/api/auth", authRoutes.publicRoutes);
     app.use("/api", requireSession(auth));
     app.use("/api/auth", authRoutes.protectedRoutes);

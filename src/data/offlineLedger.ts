@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { Ledger } from "../domain/ledger";
+import { serverStorageKey } from "./serverConnection";
 
 const activeAccountKey = "penny:active-account";
 const ledgerKey = (email: string) => `penny:ledger:${email.toLowerCase()}`;
@@ -7,19 +8,19 @@ const ledgerKey = (email: string) => `penny:ledger:${email.toLowerCase()}`;
 export type LocalLedger = { base: Ledger; local: Ledger };
 
 export async function readActiveAccount(): Promise<string | null> {
-  return AsyncStorage.getItem(activeAccountKey);
+  return AsyncStorage.getItem(await serverStorageKey(activeAccountKey));
 }
 
 export async function rememberAccount(email: string): Promise<void> {
-  await AsyncStorage.setItem(activeAccountKey, email);
+  await AsyncStorage.setItem(await serverStorageKey(activeAccountKey), email);
 }
 
 export async function forgetAccount(): Promise<void> {
-  await AsyncStorage.removeItem(activeAccountKey);
+  await AsyncStorage.removeItem(await serverStorageKey(activeAccountKey));
 }
 
 export async function readLocalLedger(email: string): Promise<LocalLedger | null> {
-  const stored = await AsyncStorage.getItem(ledgerKey(email));
+  const stored = await AsyncStorage.getItem(await serverStorageKey(ledgerKey(email)));
   if (!stored) return null;
   const value = JSON.parse(stored) as LocalLedger;
   if (!value?.base || !value?.local || value.base.version !== 4 || value.local.version !== 4)
@@ -28,11 +29,11 @@ export async function readLocalLedger(email: string): Promise<LocalLedger | null
 }
 
 export async function writeLocalLedger(email: string, value: LocalLedger): Promise<void> {
-  await AsyncStorage.setItem(ledgerKey(email), JSON.stringify(value));
+  await AsyncStorage.setItem(await serverStorageKey(ledgerKey(email)), JSON.stringify(value));
 }
 
 export async function removeLocalLedger(email: string): Promise<void> {
-  await AsyncStorage.removeItem(ledgerKey(email));
+  await AsyncStorage.removeItem(await serverStorageKey(ledgerKey(email)));
 }
 
 export function hasPendingChanges(value: LocalLedger): boolean {

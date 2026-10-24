@@ -119,7 +119,11 @@ Expo web runs on port 8081. `.env.example` points it at the API on port 3001 and
 
 ### iOS and Android
 
-Set `EXPO_PUBLIC_API_URL` to the server's reachable LAN URL or HTTPS hostname. `localhost` on a physical phone points at the phone, not your server. Use the same account on each device.
+On the mobile sign-in screen, choose **Change server**, enter your Penny server's base URL (without `/api`), and tap **Check server**. Penny checks the public `/api/info` endpoint, displays the server version, and enables **Use this server** only after a successful check. Use an HTTPS hostname, or a reachable LAN address for development; `localhost` on a physical phone points at the phone, not your server. Use the same account on each device.
+
+The selection is saved only on that device, survives app restarts and sign-out, and is shown in Settings. To switch servers, sync any pending entries and sign out first. Sessions and offline ledgers are isolated by server, including accounts with the same email address. Web has no server selector: the deployed web app uses the backend serving it (the build-time override above remains available for web development).
+
+`EXPO_PUBLIC_API_URL` now supplies the initial mobile default, falling back to `http://localhost:3001`. On the first launch after upgrading, Penny saves that address automatically and retains existing sessions and offline entries, without requiring a network check. Keep the previous build's `EXPO_PUBLIC_API_URL` for the first migration release; older builds did not store their embedded address separately. Later builds cannot override a device's saved selection. Deploy the updated backend before asking users to select a new server: older servers without `/api/info` cannot be verified, but existing migrated connections continue working.
 
 ```sh
 npm start
@@ -182,7 +186,7 @@ COOKIE_SECURE=true
 ALLOW_REGISTRATION=true
 ```
 
-Proxy the entire hostname to `penny:3001` (or the host's mapped port). The Docker web build uses the same origin for its API. Set the native client's `EXPO_PUBLIC_API_URL` to that HTTPS hostname when building it. Allow request bodies of at least 20 MB at the proxy for encoded receipt uploads.
+Proxy the entire hostname to `penny:3001` (or the host's mapped port). The Docker web build uses the same origin for its API. Mobile users can select that HTTPS hostname on the sign-in screen; optionally set it as the initial build default with `EXPO_PUBLIC_API_URL`. Allow request bodies of at least 20 MB at the proxy for encoded receipt uploads.
 
 After creating your account, set `ALLOW_REGISTRATION=false` and run `docker compose up -d` to disable additional signups. Accounts are separate; sharing a login across your own devices syncs that account's data.
 

@@ -1,4 +1,5 @@
 import { test } from "node:test";
+import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
 import { once } from "node:events";
 import type { AddressInfo } from "node:net";
@@ -34,6 +35,13 @@ const post = (body: unknown): RequestInit => ({ method: "POST", headers: { "Cont
 test("HTTP adapter preserves cookies, bearer precedence, API errors and security headers", async (t) => {
   const api = await start({ secureCookies: true });
   t.after(() => api.close());
+  const info = await api.request("/info");
+  assert.equal(info.status, 200);
+  assert.deepEqual(await info.json(), {
+    name: "penny",
+    version: JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version,
+  });
+  assert.equal(info.headers.get("cache-control"), "no-store");
   const health = await api.request("/health");
   assert.deepEqual(await health.json(), { ok: true });
   assert.equal(health.headers.get("cache-control"), "no-store");

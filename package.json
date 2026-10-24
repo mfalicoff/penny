@@ -71,6 +71,8 @@
     "test:ui:ios": "jest --runInBand --selectProjects ios",
     "test:ui:android": "jest --runInBand --selectProjects android",
     "test:e2e": "node scripts/run-playwright.mjs",
+    "test:simulator:ios": "node --experimental-strip-types --test tests/simulator/*.ios.test.mjs",
+    "test:emulator:android": "node --experimental-strip-types --test tests/simulator/*.android.test.mjs",
     "test:ui:watch": "jest --watch"
   },
   "private": true

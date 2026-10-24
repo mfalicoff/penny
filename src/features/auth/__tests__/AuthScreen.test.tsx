@@ -1,11 +1,30 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { signIn } from "../../../data/api";
 import { Auth } from "../AuthScreen";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { ServerConnectionProvider } from "../../../providers/ServerConnectionProvider";
 
 jest.mock("../../../data/api", () => ({ signIn: jest.fn() }));
 jest.mock("../OidcButton", () => ({ OidcButton: () => null }));
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(async () => { jest.clearAllMocks(); await AsyncStorage.clear(); });
+afterEach(() => jest.restoreAllMocks());
+
+test("switching servers discards the old server's credentials and registration draft", async () => {
+  jest.spyOn(globalThis, "fetch").mockResolvedValue({ ok: true, json: async () => ({ name: "penny", version: "2.0.0" }) } as Response);
+  await render(<ServerConnectionProvider><Auth onReady={jest.fn()} onDemo={jest.fn()} /></ServerConnectionProvider>);
+  await fireEvent.changeText(screen.getByLabelText("Email"), "old@example.com");
+  await fireEvent.changeText(screen.getByLabelText("Password"), "private old password");
+  await fireEvent.press(screen.getByRole("button", { name: "New here? Create an account" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Change server" }));
+  await fireEvent.changeText(screen.getByLabelText("Server URL"), "https://new.test");
+  await fireEvent.press(screen.getByRole("button", { name: "Check server" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Use this server" }));
+  expect(screen.getByLabelText("Email")).toHaveProp("value", "");
+  expect(screen.getByLabelText("Password")).toHaveProp("value", "");
+  expect(screen.getByRole("button", { name: "Sign in" })).toBeEnabled();
+  expect(signIn).not.toHaveBeenCalled();
+});
 
 test("signs in with a trimmed email and keeps the password private", async () => {
   jest.mocked(signIn).mockResolvedValue("alex@example.com");

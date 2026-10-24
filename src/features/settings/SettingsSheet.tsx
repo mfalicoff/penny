@@ -1,4 +1,5 @@
 import { router } from "expo-router";
+import { ServerConnection } from "./ServerConnection";
 import { Pressable, Text, View } from "react-native";
 import { changeCurrency } from "../../domain/commands";
 import { useLedger } from "../../providers/LedgerProvider";
@@ -36,6 +37,7 @@ export function SettingsSheet({ visible, onClose }: { visible: boolean; onClose:
         })}
       </View>
     </View>
+    <ServerConnection />
     <Text style={s.label}>Account currency</Text>
     <View style={[s.row, { flexWrap: "wrap" }]}>
       {["CAD", "USD", "EUR", "GBP"].map((currency) => <Button
