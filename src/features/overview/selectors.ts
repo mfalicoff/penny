@@ -11,7 +11,10 @@ export function selectOverview(ledger: Ledger, { month, day, filter, search }: O
   const monthEntries = ledger.transactions.filter((t) => t.date.startsWith(month));
   const scheduled = scheduledEntries(ledger, month);
   const calendarEntries: OverviewEntry[] = [...monthEntries, ...scheduled];
-  const summary = totals(monthEntries);
+  const scheduledIncome = scheduled.filter((entry) => entry.kind === "income");
+  const expectedIncome = scheduledIncome.reduce((sum, entry) => sum + entry.share, 0);
+  const summaryEntries: OverviewEntry[] = [...monthEntries, ...scheduledIncome];
+  const summary = totals(summaryEntries);
   const query = search.toLowerCase();
   const visibleEntries = calendarEntries.filter((t) =>
     (!day || t.date === day) && (filter === "all" || t.kind === filter) &&
@@ -30,7 +33,7 @@ export function selectOverview(ledger: Ledger, { month, day, filter, search }: O
   const spending = ledger.categories.filter((c) => c.kind === "expense")
     .map((c) => ({ ...c, amount: amounts.get(c.id) ?? 0 }))
     .filter((c) => c.amount > 0).sort((a, b) => b.amount - a.amount);
-  return { monthEntries, calendarEntries, summary, visibleEntries, grouped, spending };
+  return { monthEntries, calendarEntries, summaryEntries, expectedIncome, summary, visibleEntries, grouped, spending };
 }
 
 export function calendarMonth(month: string) {

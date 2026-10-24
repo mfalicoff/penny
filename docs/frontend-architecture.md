@@ -39,7 +39,7 @@ Commands return `(ledger: Ledger) => Ledger`; they must not mutate the input or 
 
 The session provider rejects overlapping saves, ignores results from an obsolete session, and cleans up timers and foreground listeners. Demo changes use the same commands locally. Do not add polling or direct ledger writes to screens.
 
-Overview selectors calculate monthly totals independently of the visible list's search/day/kind filters. Reports use integer-cent personal shares. Presentation components receive explicit props; they do not fetch data. Screen-local styles live with their components; reusable controls and tokens live in `shared/ui`.
+Overview selectors calculate monthly totals independently of the visible list's search/day/kind filters. `monthEntries` contains recorded entries; `calendarEntries` adds all scheduled previews; `summaryEntries` adds only scheduled income to recorded entries and feeds both summary cards and the money-flow chart. `expectedIncome` identifies the unrecorded portion and enables projection labeling. Preview generation reuses recurrence dates and occurrence IDs to avoid counting materialized payments twice, without mutating the ledger. Transactions reports remain recorded-only. Reports use integer-cent personal shares. Presentation components receive explicit props; they do not fetch data. Screen-local styles live with their components; reusable controls and tokens live in `shared/ui`.
 
 ## Native app lock
 

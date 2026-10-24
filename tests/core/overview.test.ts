@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { emptyLedger, type Transaction } from "../../src/domain/ledger.ts";
+import { emptyLedger, materialize, type Transaction } from "../../src/domain/ledger.ts";
 import { calendarMonth, selectOverview, shiftMonthKey } from "../../src/features/overview/selectors.ts";
 
 const expense: Transaction = { id: "meal", title: "Lunch", kind: "expense", total: 4000, share: 1000, categoryId: "food", date: "2026-09-20", note: "With Alex" };
@@ -70,4 +70,51 @@ test("previews respect paused schedules, weekly repeats, leap years, and recorde
   assert.equal(result.calendarEntries.filter((t) => t.date === "2024-02-29").length, 2);
   assert.equal(result.calendarEntries.filter((t) => t.date === "2024-02-09").length, 1);
   assert.equal(result.calendarEntries.some((t) => t.recurringId === "paused"), false);
+});
+
+test("twice-monthly income funds the overview before payday and is replaced by recorded pay", () => {
+  const pay = { ...expense, kind: "income" as const, title: "Pay", categoryId: "salary",
+    total: 200000, share: 200000, date: "2026-08-15", frequency: "monthly" as const, active: true };
+  const data = { ...emptyLedger(), transactions: [
+    { ...expense, total: 250000, share: 250000, date: "2026-09-01" },
+    { ...expense, id: "invest", kind: "investment" as const, total: 20000, share: 20000, date: "2026-09-01" },
+  ], recurring: [
+    { ...pay, id: "midmonth", anchorDay: 15, nextDate: "2026-09-15" },
+    { ...pay, id: "monthend", anchorDay: 31, nextDate: "2026-09-30" },
+    { ...pay, id: "paused", anchorDay: 1, nextDate: "2026-09-01", active: false },
+    { ...pay, id: "later", anchorDay: 1, nextDate: "2026-10-01" },
+    { ...expense, id: "rent", frequency: "monthly" as const, active: true, anchorDay: 30, nextDate: "2026-09-30" },
+    { ...pay, id: "future-invest", kind: "investment" as const, anchorDay: 30, nextDate: "2026-09-30" },
+  ] };
+  const before = structuredClone(data);
+  for (const [date, expectedIncome, receivedIncome] of [
+    ["2026-09-01", 400000, 0], ["2026-09-15", 200000, 200000], ["2026-09-30", 0, 400000],
+  ] as const) {
+    const current = materialize(data, date);
+    const result = selectOverview(current, { ...filters, day: "2026-09-01", filter: "expense", search: "missing" });
+    assert.equal(result.summary.income, 400000);
+    assert.equal(result.expectedIncome, expectedIncome);
+    assert.equal(result.summaryEntries.filter((entry) => entry.kind === "income").reduce((sum, entry) => sum + entry.share, 0), 400000);
+    assert.equal(result.monthEntries.filter((entry) => entry.kind === "income").reduce((sum, entry) => sum + entry.share, 0), receivedIncome);
+    if (date === "2026-09-01") {
+      assert.deepEqual(result.summary, { income: 400000, expense: 250000, investment: 20000 });
+      assert.equal(result.summary.income - result.summary.expense - result.summary.investment, 130000);
+    }
+  }
+  assert.deepEqual(data, before);
+});
+
+test("expected income uses scheduled shares, month boundaries and recorded occurrence deduplication", () => {
+  const pay = { ...expense, id: "pay", kind: "income" as const, categoryId: "salary",
+    total: 100000, share: 50000, date: "2024-01-31", frequency: "monthly" as const, active: true,
+    anchorDay: 31, nextDate: "2024-01-31" };
+  const data = { ...emptyLedger(), recurring: [pay] };
+  const february = selectOverview(data, { ...filters, month: "2024-02" });
+  assert.equal(february.expectedIncome, 50000);
+  assert.deepEqual(february.summaryEntries.map((entry) => entry.date), ["2024-02-29"]);
+  const recorded = { ...pay, id: "pay:2024-02-29", recurringId: pay.id, date: "2024-02-29", share: 60000 };
+  const result = selectOverview({ ...data, transactions: [recorded] }, { ...filters, month: "2024-02" });
+  assert.equal(result.expectedIncome, 0);
+  assert.equal(result.summary.income, 60000);
+  assert.deepEqual(result.summaryEntries, [recorded]);
 });

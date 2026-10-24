@@ -8,7 +8,7 @@ A little more clarity about your money. Track expenses, income, and investment c
 
 ## Your month, at a glance
 
-See what came in, what you spent, what you invested, and what's left for the month. Explore your calendar and category breakdown, then search and filter individual transactions.
+See what came in, what you spent, what you invested, and what's left for the month. The overview includes expected recurring income, so a late-month payday is part of your monthly picture before it arrives. Projected remaining is clearly labeled; transaction history stays recorded-only. Explore your calendar and category breakdown, then search and filter individual transactions.
 
 ## Follow your money
 

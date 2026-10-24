@@ -283,7 +283,7 @@ export function MoneyFlowChart({
             </Text>
             <Text style={{ color: C.muted, fontSize: 11, lineHeight: 18 }}>
               {flow.gap
-                ? `Expenses and investments exceed recorded income by ${money(flow.gap)}. “Beyond income” balances the diagram; its funding source is not recorded.`
+                ? `Expenses and investments exceed the income shown by ${money(flow.gap)}. “Beyond income” balances the diagram; its funding source is not recorded.`
                 : "Expenses include only your share of split receipts. Invested shows contributions. Left over is income minus expenses and investments, not an account balance."}
             </Text>
           </View>

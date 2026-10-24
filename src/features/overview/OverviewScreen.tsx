@@ -24,7 +24,7 @@ export default function OverviewScreen() {
   const { month, setMonth, day, setDay, filter, setFilter, search, setSearch, setForm } = useWorkspace();
   useEffect(() => { void loadProjection(month); }, [month, loadProjection]);
   const { compact, desktop } = useResponsive();
-  const { monthEntries, calendarEntries, summary, visibleEntries, grouped, spending } = useMemo(() => selectOverview(ledger, { month, day, filter, search }), [ledger, month, day, filter, search]);
+  const { summaryEntries, expectedIncome, calendarEntries, summary, visibleEntries, grouped, spending } = useMemo(() => selectOverview(ledger, { month, day, filter, search }), [ledger, month, day, filter, search]);
   const monthLabel = parseDate(`${month}-01`).toLocaleDateString("en-CA", { month: "long", year: "numeric" });
   const money = (value: number) => currencyFormat(value, ledger.currency);
   function shiftMonth(delta: number) { setMonth(shiftMonthKey(month, delta)); setDay(null); }
@@ -68,12 +68,15 @@ export default function OverviewScreen() {
       </Text>
     </View>
 
-    <SummaryCards summary={summary} compact={compact} money={money} />
+    <SummaryCards summary={summary} compact={compact} money={money} projected={expectedIncome > 0} />
+    {expectedIncome > 0 && <Text style={s.muted}>
+      Includes {money(expectedIncome)} in expected recurring income this month. Expenses and investments count recorded entries only. Projected remaining is not money available today.
+    </Text>}
     <View style={{ flexDirection: desktop ? "row" : "column", gap: 22, alignItems: "stretch" }}>
       <MonthCalendar monthEntries={calendarEntries} {...{ month, day, setDay, monthLabel, compact, desktop }} />
       <SpendingBreakdown {...{ spending, summary, desktop, money }} />
     </View>
-    <MoneyFlowChart key={month} entries={monthEntries} categories={ledger.categories} currency={ledger.currency} monthLabel={monthLabel} />
+    <MoneyFlowChart key={month} entries={summaryEntries} categories={ledger.categories} currency={ledger.currency} monthLabel={monthLabel} />
     <EntryList {...{ day, filter, search, setFilter, setSearch, visibleEntries, grouped, ledger, compact, money, setForm }} />
   </View>);
 }
