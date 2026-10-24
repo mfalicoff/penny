@@ -28,3 +28,21 @@ test("a shared member share appears in every personal report without changing pr
   expect(transactions.summary.expense).toBe(3000);
   expect(transactions.visibleEntries).toHaveLength(1);
 });
+
+test("household recurring previews show the member share in the calendar and search, not recorded spending", () => {
+  const preview: ProjectedExpense = {
+    ...expense, id: "rent:2026-09-30", title: "Rent", date: "2026-09-30",
+    recurringId: "rent", scheduled: true, totalCents: 300000, shareCents: 100000,
+  };
+  const privateLedger = emptyLedger();
+  const view = ledgerWithHouseholds(privateLedger, [expense, preview], [household]);
+  const overview = selectOverview(view, { month: "2026-09", day: "2026-09-30", filter: "expense", search: "rent" });
+  expect(overview.visibleEntries).toMatchObject([{
+    title: "Rent", date: "2026-09-30", share: 100000, scheduled: true, householdId: household.id,
+  }]);
+  expect(overview.calendarEntries.map((entry) => entry.date)).toEqual(["2026-09-20", "2026-09-30"]);
+  expect(overview.summary.expense).toBe(3000);
+  expect(overview.summaryEntries.map((entry) => entry.title)).toEqual(["Groceries"]);
+  expect(overview.spending).toMatchObject([{ amount: 3000 }]);
+  expect(privateLedger.transactions).toEqual([]);
+});

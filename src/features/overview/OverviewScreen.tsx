@@ -19,9 +19,9 @@ import { selectOverview, shiftMonthKey } from "./selectors";
 export default function OverviewScreen() {
   useTheme();
   const { ledger: privateLedger } = useLedger();
-  const { projection, households, loadProjection } = useHouseholds();
-  const ledger = useMemo(() => ledgerWithHouseholds(privateLedger, projection, households), [privateLedger, projection, households]);
+  const { projection, households, projectionByPeriod, loadProjection } = useHouseholds();
   const { month, setMonth, day, setDay, filter, setFilter, search, setSearch, setForm } = useWorkspace();
+  const ledger = useMemo(() => ledgerWithHouseholds(privateLedger, [...projection, ...(projectionByPeriod[month]?.scheduled ?? [])], households), [privateLedger, projection, projectionByPeriod, month, households]);
   useEffect(() => { void loadProjection(month); }, [month, loadProjection]);
   const { compact, desktop } = useResponsive();
   const { summaryEntries, expectedIncome, calendarEntries, summary, visibleEntries, grouped, spending } = useMemo(() => selectOverview(ledger, { month, day, filter, search }), [ledger, month, day, filter, search]);

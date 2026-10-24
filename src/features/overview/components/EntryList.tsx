@@ -127,11 +127,13 @@ export function EntryList({
                   accessibilityRole="button"
                   accessibilityLabel={`${t.scheduled ? "Edit schedule for" : "Edit"} ${t.title}, ${money(t.share)}`}
                   onPress={() => {
-                    if (t.scheduled) {
+                    if (isHouseholdTransaction(t)) {
+                      router.push(t.scheduled
+                        ? `/households/${encodeURIComponent(t.householdId)}?ruleId=${encodeURIComponent(t.recurringId ?? "")}&month=${t.date.slice(0, 7)}`
+                        : `/households/${encodeURIComponent(t.householdId)}/expenses/${encodeURIComponent(t.householdExpenseId)}`);
+                    } else if (t.scheduled) {
                       const rule = ledger.recurring.find((r) => r.id === t.recurringId);
                       if (rule) setForm({ rule });
-                    } else if (isHouseholdTransaction(t)) {
-                      router.push(`/households/${encodeURIComponent(t.householdId)}/expenses/${encodeURIComponent(t.householdExpenseId)}`);
                     } else setForm({ entry: t });
                   }}
                   key={t.id}

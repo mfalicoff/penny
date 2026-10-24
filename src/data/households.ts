@@ -26,6 +26,7 @@ export type ProjectedExpense = {
   id: string; householdId: string; householdName: string; householdCurrency?: string; title: string; date: string;
   totalCents: number; shareCents: number; category: { name: string; icon: string; color: string };
   note: string; receiptId?: string; receipt?: Receipt; payerUserId: string; accountId?: string;
+  scheduled?: boolean; recurringId?: string;
 };
 export type HouseholdRecurring = Omit<ExpenseInput, "date"> & {
   id: string; householdId: string; nextDate: string; frequency: "weekly" | "monthly" | "yearly";
@@ -55,7 +56,7 @@ export const deleteExpense = (householdId: string, expenseId: string, revision: 
 export const getMonth = (householdId: string, month: string) => json<MonthRecap>(`/households/${id(householdId)}/months/${id(month)}`);
 export const reimburse = (householdId: string, month: string, transfer: Transfer) => json<{ reimbursement: Reimbursement }>(`/households/${id(householdId)}/months/${id(month)}/reimbursements`, { method: "POST", body: body(transfer) });
 export const getAudit = (householdId: string, expenseId?: string) => json<{ events: AuditEvent[] }>(`/households/${id(householdId)}/audit${expenseId ? `?expenseId=${id(expenseId)}` : ""}`);
-export const getProjection = (period: string) => json<{ transactions: ProjectedExpense[] }>(`/households/projection?${period.length === 4 ? "year" : "month"}=${id(period)}`);
+export const getProjection = (period: string) => json<{ transactions: ProjectedExpense[]; scheduled: ProjectedExpense[] }>(`/households/projection?${period.length === 4 ? "year" : "month"}=${id(period)}`);
 export const listRecurring = (householdId: string) => json<{ rules: HouseholdRecurring[] }>(`/households/${id(householdId)}/recurring`);
 export const createRecurring = (householdId: string, input: ExpenseInput & { nextDate: string; frequency: HouseholdRecurring["frequency"] }) => json<{ rule: HouseholdRecurring }>(`/households/${id(householdId)}/recurring`, { method: "POST", body: body(input) });
 export const updateRecurring = (householdId: string, ruleId: string, revision: number, input: ExpenseInput & { nextDate: string; frequency: HouseholdRecurring["frequency"]; active: boolean }) => json<{ rule: HouseholdRecurring }>(`/households/${id(householdId)}/recurring/${id(ruleId)}`, { method: "PUT", body: body({ ...input, revision }) });

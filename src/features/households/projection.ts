@@ -1,7 +1,7 @@
 import type { ProjectedExpense, Household } from "../../data/households";
 import type { Category, Ledger, Transaction } from "../../domain/ledger";
 
-export type HouseholdTransaction = Transaction & { householdId: string; householdExpenseId: string };
+export type HouseholdTransaction = Transaction & { householdId: string; householdExpenseId: string; scheduled?: boolean };
 
 // A view of the private ledger. This must never be sent to the ledger snapshot API.
 export function ledgerWithHouseholds(ledger: Ledger, projection: ProjectedExpense[], households: Household[]): Ledger {
@@ -21,6 +21,7 @@ export function ledgerWithHouseholds(ledger: Ledger, projection: ProjectedExpens
       kind: "expense", title: item.title, date: item.date,
       total: item.totalCents, share: item.shareCents,
       categoryId, note: item.note, accountId: item.accountId, receipt: item.receipt,
+      recurringId: item.recurringId, scheduled: item.scheduled,
     };
     transactions.push(shared);
   }

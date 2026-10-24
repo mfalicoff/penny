@@ -10,6 +10,9 @@ import { security } from "../../server/infrastructure/security.ts";
 import { emptyLedger } from "../../src/domain/ledger.ts";
 import { createRepositories } from "../../server/infrastructure/repositories.ts";
 import { createLedgerService } from "../../server/application/ledger.ts";
+import { ledgerWithHouseholds } from "../../src/features/households/projection.ts";
+import { selectOverview } from "../../src/features/overview/selectors.ts";
+import type { ProjectedExpense } from "../../src/data/households";
 
 const stamp = Date.parse("2026-09-28T12:00:00Z");
 const category = { name: "Groceries", icon: "basket-outline", color: "#6C9C79" };
@@ -166,6 +169,131 @@ test("household currency and recurring occurrences use current membership", (t) 
   assert.deepEqual(expenses.map((e)=>e.splits.length),[3,2]);
 });
 
+test("monthly household projection previews recurring shares without recording expenses", (t) => {
+  const { db, service, household } = setup(); t.after(() => db.close());
+  join(service, household.id, "bea");
+  const ledger = emptyLedger();
+  ledger.accounts.push({ id: "checking", name: "Checking", type: "bank" });
+  db.prepare("UPDATE ledgers SET data=? WHERE user_id='alex'").run(JSON.stringify(ledger));
+  const rule = service.createRecurring(household.id, "alex", {
+    ...expense(9000), date: undefined, nextDate: "2026-10-28", frequency: "monthly", accountId: "checking",
+  }).rule;
+  const before = db.prepare("SELECT total_changes() AS changes").get()!.changes;
+  const projection = service.projection("bea", "2026-10");
+  assert.deepEqual(projection.transactions, []);
+  assert.deepEqual(projection.scheduled.map((entry) => ({
+    id: entry.id, date: entry.date, title: entry.title, householdId: entry.householdId,
+    totalCents: entry.totalCents, shareCents: entry.shareCents, payerUserId: entry.payerUserId,
+    scheduled: entry.scheduled, recurringId: entry.recurringId,
+  })), [{
+    id: `${rule.id}:2026-10-28`, date: "2026-10-28", title: "Groceries", householdId: household.id,
+    totalCents: 9000, shareCents: 4500, payerUserId: "alex", scheduled: true, recurringId: rule.id,
+  }]);
+  assert.equal(projection.scheduled[0]?.accountId, undefined, "another member cannot see the payer's account");
+  assert.equal(service.projection("alex", "2026-10").scheduled[0]?.accountId, "checking");
+  const privateLedger = emptyLedger();
+  const combined = ledgerWithHouseholds(privateLedger, projection.scheduled, [household]);
+  const overview = selectOverview(combined, { month: "2026-10", day: "2026-10-28", filter: "expense", search: "groceries" });
+  assert.equal(overview.visibleEntries.length, 1);
+  assert.equal(overview.visibleEntries[0]?.share, 4500);
+  assert.equal(overview.visibleEntries[0]?.date, "2026-10-28");
+  assert.equal(overview.visibleEntries[0]?.scheduled, true);
+  assert.equal(overview.visibleEntries[0]?.recurringId, rule.id);
+  assert.deepEqual(overview.summary, { income: 0, expense: 0, investment: 0 });
+  assert.deepEqual(overview.spending, []);
+  assert.deepEqual(overview.monthEntries, []);
+  assert.deepEqual(privateLedger.transactions, [], "the private ledger remains unmodified");
+  assert.equal(db.prepare("SELECT total_changes() AS changes").get()!.changes, before);
+  assert.equal(service.recurring(household.id, "alex").rules[0]?.nextDate, "2026-10-28");
+  assert.deepEqual(service.expenses(household.id, "bea").expenses, []);
+  assert.deepEqual(service.month(household.id, "bea", "2026-10").expenses, []);
+  assert.deepEqual(service.projection("bea").scheduled, []);
+  assert.deepEqual(service.projection("bea", undefined, "2026").scheduled, []);
+});
+
+test("monthly household previews retain month-end and leap-day anchors across repeated browsing", (t) => {
+  const { db, service, household } = setup(); t.after(() => db.close());
+  const monthly = service.createRecurring(household.id, "alex", {
+    ...expense(3100), date: undefined, nextDate: "2027-01-31", frequency: "monthly",
+  }).rule;
+  const yearly = service.createRecurring(household.id, "alex", {
+    ...expense(2900), date: undefined, nextDate: "2028-02-29", frequency: "yearly",
+  }).rule;
+  const before = db.prepare("SELECT total_changes() AS changes").get()!.changes;
+  for (const [month, date] of [
+    ["2027-03", "2027-03-31"], ["2027-02", "2027-02-28"],
+    ["2027-01", "2027-01-31"], ["2027-03", "2027-03-31"],
+  ]) {
+    assert.deepEqual(service.projection("alex", month).scheduled.filter((entry) => entry.recurringId === monthly.id)
+      .map((entry) => [entry.id, entry.date]), [[`${monthly.id}:${date}`, date]]);
+  }
+  for (const [month, date] of [["2029-02", "2029-02-28"], ["2032-02", "2032-02-29"]]) {
+    assert.deepEqual(service.projection("alex", month).scheduled.filter((entry) => entry.recurringId === yearly.id)
+      .map((entry) => entry.date), [date]);
+  }
+  assert.deepEqual(service.projection("alex", "2026-12").scheduled, [], "rules do not preview before their next occurrence");
+  assert.equal(db.prepare("SELECT total_changes() AS changes").get()!.changes, before);
+  assert.equal(service.recurring(household.id, "alex").rules.find((rule) => rule.id === monthly.id)?.nextDate, "2027-01-31");
+  assert.equal(service.recurring(household.id, "alex").rules.find((rule) => rule.id === yearly.id)?.nextDate, "2028-02-29");
+});
+
+test("materialized and deleted household occurrences never appear again as previews", (t) => {
+  const { db, service, household } = setup(); t.after(() => db.close());
+  join(service, household.id, "bea");
+  const input = { ...expense(9000), date: undefined, nextDate: "2026-10-05", frequency: "weekly" };
+  const rule = service.createRecurring(household.id, "alex", input).rule;
+  const preview = service.projection("bea", "2026-10");
+  assert.deepEqual(preview.scheduled.map((entry) => entry.date).sort(), ["2026-10-05", "2026-10-12", "2026-10-19", "2026-10-26"]);
+  assert.equal(service.runRecurring("2026-10-12").expenses.length, 2);
+  const materialized = service.projection("bea", "2026-10");
+  assert.deepEqual(materialized.transactions.map((entry) => entry.date).sort(), ["2026-10-05", "2026-10-12"]);
+  assert.deepEqual(materialized.scheduled.map((entry) => entry.date).sort(), ["2026-10-19", "2026-10-26"]);
+  const overview = selectOverview(
+    ledgerWithHouseholds(emptyLedger(), [...materialized.transactions, ...materialized.scheduled] as ProjectedExpense[], [household]),
+    { month: "2026-10", day: null, filter: "all", search: "" },
+  );
+  assert.equal(overview.calendarEntries.length, 4);
+  assert.equal(overview.summary.expense, 9000, "only the two recorded shares contribute to spending");
+  assert.equal(overview.spending.reduce((sum, entry) => sum + entry.amount, 0), 9000);
+  const first = service.expenses(household.id, "alex").expenses.find((entry) => entry.date === "2026-10-05")!;
+  service.deleteExpense(household.id, "alex", first.id as string, { revision: first.revision });
+  service.updateRecurring(household.id, "alex", rule.id, { ...input, active: true, revision: rule.revision });
+  const revisited = service.projection("bea", "2026-10");
+  assert.deepEqual(revisited.transactions.map((entry) => entry.date), ["2026-10-12"]);
+  assert.deepEqual(revisited.scheduled.map((entry) => entry.date).sort(), ["2026-10-19", "2026-10-26"],
+    "rewinding a rule cannot resurrect recorded or soft-deleted occurrences");
+});
+
+test("paused and deleted household recurring rules produce no monthly previews", (t) => {
+  const { db, service, household } = setup(); t.after(() => db.close());
+  const input = { ...expense(9000), date: undefined, nextDate: "2026-10-28", frequency: "monthly" };
+  const paused = service.createRecurring(household.id, "alex", input).rule;
+  const deleted = service.createRecurring(household.id, "alex", input).rule;
+  assert.equal(service.projection("alex", "2026-10").scheduled.length, 2);
+  service.updateRecurring(household.id, "alex", paused.id, { ...input, active: false, revision: paused.revision });
+  service.deleteRecurring(household.id, "alex", deleted.id, { revision: deleted.revision });
+  assert.deepEqual(service.projection("alex", "2026-10").scheduled, []);
+  assert.deepEqual(service.projection("alex", "2026-11").scheduled, []);
+});
+
+test("household previews use occurrence-date memberships without exposing schedules to departed members or outsiders", (t) => {
+  const { db, service, household, advance } = setup(); t.after(() => db.close());
+  join(service, household.id, "bea");
+  service.createRecurring(household.id, "alex", {
+    ...expense(9000), date: undefined, nextDate: "2026-10-05", frequency: "weekly", splitMode: "exact",
+    allocations: [{ userId: "alex", amountCents: 6000 }, { userId: "bea", amountCents: 3000 }],
+  });
+  advance("2026-10-07T12:00:00Z");
+  join(service, household.id, "cam");
+  advance("2026-10-15T12:00:00Z");
+  service.leave(household.id, "bea");
+  assert.deepEqual(service.projection("alex", "2026-10").scheduled.map((entry) => [entry.date, entry.shareCents]).sort(), [
+    ["2026-10-05", 6000], ["2026-10-12", 3000], ["2026-10-19", 4500], ["2026-10-26", 4500],
+  ], "stored allocations apply before membership changes, then fall back to equal shares");
+  assert.deepEqual(service.projection("bea", "2026-10"), { transactions: [], scheduled: [] });
+  assert.deepEqual(service.projection("outsider", "2026-10"), { transactions: [], scheduled: [] });
+});
+
 test("departed member sees only their own historical expense and receipt", (t) => {
   const {db,service,household,advance}=setup(); t.after(()=>db.close());
   join(service,household.id,"bea");
@@ -265,6 +393,22 @@ test("HTTP household routes enforce sessions and share receipts only with member
   assert.equal((await request(`/receipts/${receipt.id}`,"GET",undefined,bea.token)).status,200);
   assert.equal((await request(`/receipts/${receipt.id}`,"GET",undefined,outsider.token)).status,404);
   assert.equal((await request(`/households/${household.id}/expenses`,"GET",undefined,outsider.token)).status,404);
-  const projection=await (await request(`/households/projection?year=${today.slice(0, 4)}`,"GET",undefined,bea.token)).json() as {transactions:{shareCents:number}[]};
+  const projection=await (await request(`/households/projection?year=${today.slice(0, 4)}`,"GET",undefined,bea.token)).json() as {transactions:{shareCents:number}[];scheduled:unknown[]};
   assert.equal(projection.transactions[0].shareCents,4000);
+  assert.deepEqual(projection.scheduled, []);
+  const futureMonth = `${Number(today.slice(0, 4)) + 1}-01`;
+  const recurring = await request(`/households/${household.id}/recurring`, "POST", {
+    ...expense(6000, household.creatorId), date: undefined, nextDate: `${futureMonth}-28`, frequency: "monthly",
+  }, alex.token);
+  assert.equal(recurring.status, 201, await recurring.clone().text());
+  const { rule } = await recurring.json() as { rule: { id: string } };
+  const monthlyResponse = await request(`/households/projection?month=${futureMonth}`, "GET", undefined, bea.token);
+  assert.equal(monthlyResponse.status, 200);
+  const monthly = await monthlyResponse.json() as { transactions: unknown[]; scheduled: { id: string; date: string; shareCents: number; recurringId: string; scheduled: boolean }[] };
+  assert.deepEqual(monthly.transactions, []);
+  assert.deepEqual(monthly.scheduled.map(({ id, date, shareCents, recurringId, scheduled }) => ({ id, date, shareCents, recurringId, scheduled })), [{
+    id: `${rule.id}:${futureMonth}-28`, date: `${futureMonth}-28`, shareCents: 3000, recurringId: rule.id, scheduled: true,
+  }]);
+  const outsiderProjection = await (await request(`/households/projection?month=${futureMonth}`, "GET", undefined, outsider.token)).json();
+  assert.deepEqual(outsiderProjection, { transactions: [], scheduled: [] });
 });

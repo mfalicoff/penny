@@ -35,7 +35,7 @@ function describeAudit(event: AuditEvent, memberName: (id: string) => string, mo
 
 export default function HouseholdDetailScreen() {
   const { compact } = useResponsive();
-  const params = useLocalSearchParams<{ id: string; month?: string; expenseId?: string; add?: string }>();
+  const params = useLocalSearchParams<{ id: string; month?: string; expenseId?: string; ruleId?: string; add?: string }>();
   const id = String(params.id ?? "");
   const { email } = useLedger();
   const { refresh: refreshHouseholds } = useHouseholds();
@@ -72,9 +72,12 @@ export default function HouseholdDetailScreen() {
       if (params.expenseId && !openedDeepLink.current) {
         const match = result.expenses.find((item) => item.id === params.expenseId);
         if (match) { openedDeepLink.current = true; setForm(match); }
+      } else if (params.ruleId && !openedDeepLink.current) {
+        const match = schedules.rules.find((item) => item.id === params.ruleId);
+        if (match) { openedDeepLink.current = true; setRuleForm(match); }
       }
     } catch (failure) { setError(failure instanceof Error ? failure.message : "Could not load household."); }
-  }, [id, month, params.expenseId]);
+  }, [id, month, params.expenseId, params.ruleId]);
   useEffect(() => { void Promise.resolve().then(refresh); }, [refresh]);
 
   const myId = members.find((member) => member.email === email && !member.leftAt)?.userId;

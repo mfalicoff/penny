@@ -7,7 +7,7 @@ import type { Household, ProjectedExpense } from "../data/households";
 function useHouseholdState() {
   const { email, demo, ledger } = useLedger();
   const [households, setHouseholds] = useState<Household[]>([]);
-  const [byPeriod, setByPeriod] = useState<Record<string, ProjectedExpense[]>>({});
+  const [byPeriod, setByPeriod] = useState<Record<string, { transactions: ProjectedExpense[]; scheduled: ProjectedExpense[] }>>({});
   const [loading, setLoading] = useState(Boolean(email && !demo));
   const [error, setError] = useState("");
   const session = useRef(0);
@@ -23,7 +23,7 @@ function useHouseholdState() {
     try {
       const result = await householdsApi.getProjection(period);
       if (generation === session.current && sequence.current.get(period) === current)
-        setByPeriod((previous) => ({ ...previous, [period]: result.transactions }));
+        setByPeriod((previous) => ({ ...previous, [period]: result }));
     } catch (failure) {
       if (generation === session.current) setError(failure instanceof Error ? failure.message : "Could not load shared expenses.");
     }
@@ -63,11 +63,11 @@ function useHouseholdState() {
 
   const projection = useMemo(() => {
     const unique = new Map<string, ProjectedExpense>();
-    for (const group of Object.values(byPeriod)) for (const item of group) unique.set(`${item.householdId}:${item.id}`, item);
+    for (const group of Object.values(byPeriod)) for (const item of group.transactions) unique.set(`${item.householdId}:${item.id}`, item);
     return [...unique.values()];
   }, [byPeriod]);
 
-  return { households, projection, loading, error, refresh, loadProjection };
+  return { households, projection, projectionByPeriod: byPeriod, loading, error, refresh, loadProjection };
 }
 
 const HouseholdContext = createContext<ReturnType<typeof useHouseholdState> | null>(null);

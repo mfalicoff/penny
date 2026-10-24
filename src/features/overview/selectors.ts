@@ -8,8 +8,9 @@ export type OverviewFilters = { month: string; day: string | null; filter: Entry
 export function selectOverview(ledger: Ledger, { month, day, filter, search }: OverviewFilters) {
   const categories = new Map(ledger.categories.map((c) => [c.id, c]));
   const accounts = new Map(ledger.accounts.map((a) => [a.id, a]));
-  const monthEntries = ledger.transactions.filter((t) => t.date.startsWith(month));
-  const scheduled = scheduledEntries(ledger, month);
+  const entries: OverviewEntry[] = ledger.transactions.filter((t) => t.date.startsWith(month));
+  const monthEntries = entries.filter((t) => !t.scheduled);
+  const scheduled = [...scheduledEntries(ledger, month), ...entries.filter((t) => t.scheduled)];
   const calendarEntries: OverviewEntry[] = [...monthEntries, ...scheduled];
   const scheduledIncome = scheduled.filter((entry) => entry.kind === "income");
   const expectedIncome = scheduledIncome.reduce((sum, entry) => sum + entry.share, 0);
