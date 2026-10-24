@@ -42,10 +42,15 @@ It builds both **linux/amd64** and **linux/arm64** from the root Dockerfile. Pul
 
 Image tags:
 
+- `<package-version>-build.<run-number>.<run-attempt>` on every run, including manual runs and reruns; for example, `1.0.0-build.123.1`, then `1.0.0-build.124.1`, or `1.0.0-build.124.2` when rerunning build 124. No manual version bump or Git tag is needed. Pull requests generate this tag but do not publish it.
 - `latest` and `main` for builds on `main`.
-- `v1.2.3` for a matching Git tag (version tags do not move `latest`).
+- `1.2.3`, `1.2`, and `1` for a matching `v1.2.3` Git release tag. The image version label is `1.2.3`, without the Git tag's `v` prefix. Release tags do not move `latest`.
 - `sha-<full-commit-sha>` for identifying the source commit.
 - The branch name for manual runs on other branches.
+
+The build version uses `package.json` as its base and GitHub Actions' automatic run number and attempt as its suffix; it does not modify `package.json` or create Git commits or tags. Branch and pull request builds use this build version as the image version label. Tagged releases keep the stable release version label and also receive the unique build tag.
+
+Release tags must match `v` plus the version in `package.json`; shared CI checks reject mismatches before building. Use the full release tag to select a specific release; the minor and major tags move when another release in that series is published. See [Releases](releases.md#semantic-versioning-and-releases) for the release version bump and push commands.
 
 To deploy a published image, replace the `build:` block in `compose.yaml` with your image name:
 
