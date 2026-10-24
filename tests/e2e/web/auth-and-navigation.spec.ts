@@ -50,7 +50,7 @@ test("demo entry point, all feature routes, and compact navigation work", async 
     ["Overview", "Your money, at a glance."],
   ] as const;
   for (const [tab, heading] of routes) {
-    await page.getByRole("button", { name: tab }).click();
+    await page.getByRole("button", { name: tab, exact: true }).click();
     await expect(page.getByText(heading, { exact: true })).toBeVisible();
   }
 

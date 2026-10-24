@@ -87,6 +87,8 @@ npm run test:e2e:web
 
 The wrapper exports current JavaScript with a fixture API URL, starts the production web app/API on `127.0.0.1:4173`, and uses a fresh temporary SQLite database. It never reuses a running development server. Coverage includes registration/login, demo navigation, expense/income/investment entries, filters, receipts, accounts/categories/trips, recurring entries, settings and persistence. OIDC provider sign-in still needs an external identity provider; controlled OIDC behavior is covered at the service/API and UI layers.
 
+Use exact accessible-name matching for navigation buttons (`getByRole("button", { name: "Categories", exact: true })`). Substring matching also finds the overview's **Filter by category: All categories** pill.
+
 Playwright writes failure screenshots, video and traces to `test-results/web/`, and HTML to `test-results/web-report/`.
 
 ## Native workstation setup
