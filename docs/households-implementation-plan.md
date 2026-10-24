@@ -1,5 +1,7 @@
 # Household feature implementation plan
 
+[App showcase](../README.md) · [Documentation](README.md)
+
 Penny currently saves each person's private ledger as a JSON snapshot. Shared expenses should be stored separately on the server and projected into each member's transaction list. That prevents one member's normal sync from overwriting another member's edits.
 
 Each numbered item below is a separate task with a checkable result. Tasks are ordered by dependency.

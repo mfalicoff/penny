@@ -1,5 +1,7 @@
 # Testing strategy
 
+[App showcase](../README.md) · [Documentation](README.md)
+
 All executable tests live under `tests/`. Choose the lowest layer that proves the behavior; add an end-to-end journey only when an actual browser or native runtime matters. Jest's iOS/Android presets are not device tests, and a phone-sized browser is not a native app.
 
 ## Layout and ownership

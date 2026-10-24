@@ -1,344 +1,38 @@
 # Penny
 
-A simple expense, income, and investment contribution tracker for iOS, Android, and web, built with Expo / React Native. A self-hosted Node server stores accounts, transactions, recurring schedules, categories, and receipt files in SQLite.
+A little more clarity about your money. Track expenses, income, and investment contributions on **iOS, Android, and web**, with a self-hosted server that keeps your devices in sync.
 
-## What works
+[Try it locally](docs/development.md#run-the-complete-web-app) · [Self-host Penny](docs/deployment.md) · [Documentation](docs/README.md)
 
-- Add, edit, delete, search, and filter income, expenses, and investment contributions.
-- Investment contributions appear in a separate Invested total and are excluded from spending. Cash remaining is the month's income minus expenses and contributions; it is not an account balance. Contributions track money invested, not portfolio value or returns.
-- Monthly overview, calendar, category breakdown, and personal-share totals.
-- Interactive monthly Sankey diagram: income categories → monthly flow → expense categories, invested, and left over. Personal shares determine band widths. Outflows beyond recorded income are labeled explicitly; smaller expense categories are grouped without dropping their amounts. The chart scrolls horizontally on phones.
-- Attach a photo from your library or an image/PDF from files (up to 10 MB).
-- Split by equal shares, a personal amount, or a percentage. The original total and your share are both retained; reports count your share only.
-- Create permanent households with other Penny accounts. Record an expense once, split it equally or by exact amounts or percentages, and see only your share in personal transactions and reports. Each household has a monthly recap, reimbursements, recurring expenses, receipts, and change history.
-- Create a shared trip, invite other Penny accounts with a short-lived code, and add expenses together. Each person's share appears in their reports; the trip shows all its shared expenses and uses monthly balances for reimbursements. Existing personal trips can be shared while their earlier private expenses stay private.
-- Weekly, monthly, and yearly income, expenses, and investments; pause, resume, or remove a schedule.
-- Custom category names, colors, and icons.
-- Payment accounts: add bank accounts, credit cards, cash wallets, or other accounts in **Accounts** or directly from an entry. Assign or change the optional payment account on expenses, income, investments, and recurring schedules. Account names appear on entries and can be searched. Rename accounts freely; accounts linked to entries or schedules cannot be deleted until those links are reassigned. These are manually tracked accounts, with no bank connection or balance reconciliation.
-- Sign-in accounts and cross-device sync. Personal ledger changes are saved on the device while offline and sync when the server is reachable again. Revision checks retry server races and merge independent device edits.
-- Photos render in-app; web PDFs render in the browser; native PDFs open through the system share/open sheet.
-- A clearly labeled, temporary demo without an account.
+![Penny's monthly overview showing income, expenses, invested contributions, cash remaining, a spending calendar, and category totals.](docs/screenshots/overview.jpg)
 
-Existing ledgers upgrade to version 3 on read and persist that version on the next save. Payment accounts start empty, and historical entries stay unassigned. For version 1 ledgers, an Investments category is added unless one already exists or the 300-category limit is reached. Historical expenses retain their classification; edit an entry and select Investment to reclassify it. Editing a recurring occurrence does not change its schedule. Edit the recurring schedule to change future contributions or their payment account. Deploy the updated server alongside the client so payment accounts and investment entries can be saved.
+## Your month, at a glance
 
-## Shared households
+See what came in, what you spent, what you invested, and what's left for the month. Explore your calendar and category breakdown, then search and filter individual transactions.
 
-Sign in, open **Households**, and create a household. Its currency is your personal ledger currency. The creator can tap **Invite member** to generate a code that expires after 10 minutes; another signed-in person joins with that code. People can belong to more than one household. Everyone in a household must use the same currency. A personal ledger's currency cannot change while its owner is an active household member.
+## Follow your money
 
-Every active member is included in a new expense's equal split by default. You can enter exact amounts or percentages instead, including zero shares. Any active member can add or edit an expense, but only its payer can attach one of their private payment accounts. Household receipts are visible to members; payment account details remain private to the payer. Changes are recorded in the household audit history. Recurring household expenses are generated by the server, with each occurrence split among members active on its date. If membership changes, a recurring exact or percentage template falls back to an equal split for the new group.
+An interactive flow diagram connects income to spending and money left over. Split expenses count only your share, so the picture reflects your spending—not the whole bill.
 
-The day someone joins is eligible for household expenses, using the calendar date on their device when they joined. Expenses from earlier dates keep the membership that applied then.
+![Penny's money-flow diagram connecting salary and freelance income to expense categories and money left over.](docs/screenshots/sankey.jpg)
 
-The household's **Monthly recap** shows its recorded expenses, each member's balance, and full suggested reimbursements for that month. On the last calendar day of the month or later, tap **Record paid** to record a transfer immediately; the server uses UTC dates for this cutoff. Reimbursements have no payment-account choice and do not add a transaction or reduce anyone's reported spending. An unpaid month remains overdue independently of later months. A member can leave or be removed only after all of their monthly balances are settled; their previous expenses and audit history remain. The creator cannot leave while other active members remain. Archiving requires every monthly balance to be settled.
+## Add it, split it, keep the receipt
 
-## Shared trips
+Record an expense, income, or investment contribution. Split a bill equally, by amount, or by percentage; attach a photo or PDF; and make regular entries recurring.
 
-Sign in and open **Trips** to create a shared trip or join one with its invitation code. The creator opens the trip's **People** controls to generate a code and invite others. Any participant can add an expense, choose who paid, and split it equally, by amount, or by percentage. Trip expenses can be dated before or after the travel dates, including bookings made before the group was created. New expenses include the people currently in the trip; earlier expense splits do not change when someone joins later.
+<img src="docs/screenshots/add-entry.jpg" alt="Penny's phone-width entry form showing a 74.40 CAD dinner split between three people, with a personal share of 24.80 CAD." width="360">
 
-To invite people to a personal trip, open it and tap **Invite people**. Expenses already assigned to that personal trip remain private and appear in a separate section for you. Add new shared expenses in the shared trip for everyone to see. Trip expenses are shown together across dates, while reimbursements stay in separate monthly balances.
+*Screenshots use demo data in the web app. The entry form shows the phone-width web layout.*
 
-### Phone notifications
+## Personal finances, shared plans
 
-On iOS and Android, Penny requests notification permission and registers the signed-in device. Other active members receive a push for a new expense, an edited expense, or a recorded reimbursement; a recurring occurrence counts as a new expense. Tapping a notification opens the household and month. Signing out removes that session's device registration. Web does not register for push.
+- **Households and trips:** record shared expenses once, keep personal shares in your reports, and track balances and reimbursements.
+- **Your own organization:** customize categories and track payment accounts without connecting a bank.
+- **Across your devices:** save personal ledger changes offline and sync when reconnected. Shared actions and receipt uploads need a connection.
+- **A low-commitment look around:** choose **Take a look around with sample data** on the sign-in screen. The demo is temporary and needs no account.
 
-Push requires a new development or production mobile build with `expo-notifications`, the EAS project ID in `app.json`, and platform push credentials configured in EAS. Use `npx eas-cli@latest build --profile development --platform ios` or `--platform android` for a development build, or your production profile for distribution. Follow the [Expo push setup guide](https://docs.expo.dev/push-notifications/push-notifications-setup/) for Apple and Firebase credentials. Android remote push is unavailable in Expo Go. The server sends through the Expo Push Service and retries temporary failures; delivery still depends on device permission, platform credentials, and network access.
+Penny tracks investment contributions, not portfolio performance. It is not a bank-connected account-balance tracker. See [app behavior and current limits](docs/app-guide.md) for the details.
 
-### Upgrade an existing server
+## Run it or build on it
 
-1. Stop the server and back up the complete SQLite database, including its WAL files, or use SQLite's online backup API. For Compose, stop `penny` and back up the `penny-data` volume before replacing the image.
-2. Deploy the updated server first (`docker compose up -d --build` for the supplied setup). It creates the household tables on startup and leaves existing users, private ledgers, and receipts in place. Keep the same database volume.
-3. Check `/api/health`, sign in, and confirm an existing private ledger still loads. Then deploy the updated web app and new signed mobile builds. Restore the backed-up database with the server stopped if you need to roll back.
-
-The household implementation tasks and acceptance examples are in [docs/households-implementation-plan.md](docs/households-implementation-plan.md).
-
-## Run the complete web app
-
-Use Node **24 or newer** and npm. No external database service is required.
-
-```sh
-npm ci
-npm run build:web
-npm run server
-```
-
-Open **http://localhost:3001**. Create an account, or choose the sample-data demo. The server serves both the exported web app and `/api` endpoints. No `.env` is needed for this same-origin local setup.
-
-Data is saved to `data/penny.sqlite` by default. This directory is ignored by Git.
-
-## Nix / direnv development shell
-
-The pinned `flake.nix` / `flake.lock` environment provides Node 24 (including npm)
-and the SQLite CLI on Apple Silicon and Intel macOS, as well as Linux.
-It does not install dependencies, load `.env`, or start services automatically.
-
-On nix-darwin, enable direnv and its flake integration in your system configuration,
-then rebuild it:
-
-```nix
-programs.direnv = {
-  enable = true;
-  nix-direnv.enable = true;
-};
-```
-
-Ensure direnv is hooked into your interactive shell. If your configuration does not
-already do this, add `eval "$(direnv hook zsh)"` to `~/.zshrc` (or the equivalent
-hook for your shell), then open a new terminal.
-
-From the project directory:
-
-```sh
-direnv allow
-npm ci
-```
-
-Alternatively, use `nix develop` without direnv. After cloning, the flake files are
-already tracked; when adding these files to another Git checkout, stage
-`flake.nix` and `flake.lock` before using `nix develop` or `direnv allow`, because
-Nix ignores untracked files in Git flakes. Update the pinned toolchain deliberately
-with `nix flake update` and commit the resulting lockfile.
-
-The shell uses the existing npm lockfile; Expo and EAS CLIs remain project-local
-or invoked with `npx`. Xcode/Command Line Tools, simulators, and the Android SDK
-must be installed separately for local native builds. Watchman is optional and can
-be installed at the system level for filesystem watching. Existing `ANDROID_HOME` and
-other platform settings are left unchanged. For browser tests, install Chromium
-with `npx playwright install chromium` as described below (Linux may also need
-host browser dependencies).
-
-## Develop with live reload
-
-```sh
-cp .env.example .env
-npm run server
-# In a second terminal:
-npm run web
-```
-
-Expo web runs on port 8081. `.env.example` points it at the API on port 3001 and allows that origin. Restart Expo after changing `EXPO_PUBLIC_API_URL`; it is embedded in the client bundle at build time.
-
-### iOS and Android
-
-On the mobile sign-in screen, choose **Change server**, enter your Penny server's base URL (without `/api`), and tap **Check server**. Penny checks the public `/api/info` endpoint, displays the server version, and enables **Use this server** only after a successful check. Use an HTTPS hostname, or a reachable LAN address for development; `localhost` on a physical phone points at the phone, not your server. Use the same account on each device.
-
-The selection is saved only on that device, survives app restarts and sign-out, and is shown in Settings. To switch servers, sync any pending entries and sign out first. Sessions and offline ledgers are isolated by server, including accounts with the same email address. Web has no server selector: the deployed web app uses the backend serving it (the build-time override above remains available for web development).
-
-`EXPO_PUBLIC_API_URL` now supplies the initial mobile default, falling back to `http://localhost:3001`. On the first launch after upgrading, Penny saves that address automatically and retains existing sessions and offline entries, without requiring a network check. Keep the previous build's `EXPO_PUBLIC_API_URL` for the first migration release; older builds did not store their embedded address separately. Later builds cannot override a device's saved selection. Deploy the updated backend before asking users to select a new server: older servers without `/api/info` cannot be verified, but existing migrated connections continue working.
-
-```sh
-npm start
-# Open with an Expo Go version that supports SDK 57, or a development build.
-# With the respective platform development tools installed:
-npm run ios
-npm run android
-```
-
-Standalone mobile builds should use an HTTPS API endpoint. Development against plain HTTP depends on platform transport policies. The [mobile build workflow](.github/workflows/mobile-builds.yml) runs checks and builds a signed [Android APK](docs/android-apk.md) and [iOS IPA](docs/ios-ipa.md) through EAS on version tags or manual dispatch. It uploads the store signed IPA to TestFlight automatically. Complete the platform signing and App Store Connect setup in those guides before running it.
-
-## Semantic versioning and releases
-
-Penny uses [Semantic Versioning](https://semver.org/): **MAJOR.MINOR.PATCH**.
-
-- **Patch**: backward-compatible bug fixes.
-- **Minor**: backward-compatible features.
-- **Major**: breaking changes to supported behavior, API contracts, or stored-data compatibility.
-
-`package.json` is the version source of truth, starting at the existing `1.0.0`.
-`app.config.js` supplies that version to Expo for Android's `versionName` and
-iOS's `CFBundleShortVersionString`; the backend's `/api/info` also reads it.
-Other Expo settings remain in `app.json`. Do not add a separate version there.
-Store releases use three numeric components without leading zeros; prerelease
-and build suffixes are not supported by this release workflow because iOS
-requires a numeric marketing version. TestFlight builds use the same release
-version with distinct build numbers.
-
-After committing your changes and passing the application checks, run **one**
-of these commands from a clean working tree:
-
-```sh
-npm run release:patch  # 1.0.0 -> 1.0.1
-npm run release:minor  # 1.0.0 -> 1.1.0
-npm run release:major  # 1.0.0 -> 2.0.0
-```
-
-These use `npm version` to update `package.json` and `package-lock.json`, run
-the version consistency check, create a version commit, and create an annotated
-`vMAJOR.MINOR.PATCH` Git tag. They do not push or start a build locally.
-To publish from `main`:
-
-```sh
-git push origin main --follow-tags
-```
-
-The tag triggers the existing container and mobile workflows. Their shared CI
-checks run `npm run version:check`, rejecting invalid versions, lockfile drift,
-or tags that do not exactly match `v` plus the package version. Branch and manual
-builds also check version consistency but do not require a tag.
-
-EAS continues to increment Android `versionCode` and iOS `buildNumber` remotely
-for every build, independently of semantic versions. For local native builds,
-run `npx expo prebuild` after a version bump to refresh the ignored generated
-native projects; do not edit their version fields by hand.
-
-## OpenID Connect (OIDC) sign-in
-
-Penny supports one configurable OIDC provider alongside email/password login on web, iOS, and Android. Configure a client supporting Authorization Code with S256 PKCE and the `openid email profile` scopes. The provider must return a verified email (`email_verified: true`) in the ID token or UserInfo response.
-
-Set these **server-side** variables in `.env` (Compose forwards them automatically):
-
-```dotenv
-OIDC_ISSUER=https://identity.example.com/realms/penny
-OIDC_CLIENT_ID=penny
-OIDC_CLIENT_SECRET=your-server-only-secret
-OIDC_REDIRECT_URIS=https://penny.example.com/auth/callback,penny://auth/callback
-OIDC_LABEL=Single sign-on
-OIDC_ALLOW_REGISTRATION=true
-```
-
-Use the exact issuer URL advertised by your provider. Register each exact redirect URI with the provider; wildcards are unsupported. For web development add `http://localhost:8081/auth/callback` (or `http://localhost:3001/auth/callback` when serving the exported app). Web sign-in uses a popup and requires HTTPS or localhost; keep the popup and original window on the same origin. Your reverse proxy must serve the app at `/auth/callback`. Use `CORS_ORIGINS` to allow your web app's origin as usual.
-
-The client secret is optional for public clients. Confidential clients use `client_secret_post` authentication; configure that method at the provider. Never put this secret in an `EXPO_PUBLIC_` variable. Discovery, code exchange, signature/issuer/audience/expiry/nonce validation, and PKCE verification are performed by the server using [openid-client](https://github.com/panva/openid-client). Provider tokens are discarded after sign-in; Penny uses its existing 30-day HttpOnly cookie on web and SecureStore session on native.
-
-For mobile, install a new development or production build containing `expo-web-browser` and the `penny` URL scheme. OIDC cannot be tested in Expo Go. Native sign-in uses the system authentication browser ([Expo WebBrowser SDK 57 documentation](https://docs.expo.dev/versions/v57.0.0/sdk/webbrowser/)). The app must stay alive during sign-in; after a reload/restart or a 10-minute timeout, start again.
-
-New OIDC accounts are disabled by default. Set `OIDC_ALLOW_REGISTRATION=true` to provision an empty ledger on first sign-in, then set it back to `false` to allow only existing OIDC users. This is independent of password signup's `ALLOW_REGISTRATION`. Restrict who can access the client at your identity provider while provisioning is enabled. Existing users are identified by the stable `(issuer, subject)` pair, including after an email change. An existing account with the same email is **never automatically linked**; account linking/migration is not provided.
-
-Signing out revokes the Penny session; it does not sign out of the identity provider or other Penny devices. Sign-in attempts are single-use and held in server memory, so a server restart requires restarting sign-in. Run one API instance (as in the supplied SQLite/Compose deployment).
-
-## Self-host with Docker Compose
-
-The container serves the web app and API on port 3001. A named volume holds the database **including receipts**.
-
-```sh
-docker compose up -d --build
-```
-
-For LAN access, set `.env` with the actual browser origin, for example:
-
-```dotenv
-PORT=3001
-CORS_ORIGINS=http://192.168.1.50:3001
-COOKIE_SECURE=false
-ALLOW_REGISTRATION=true
-```
-
-For HTTPS behind your existing reverse proxy:
-
-```dotenv
-PORT=3001
-CORS_ORIGINS=https://penny.example.com
-COOKIE_SECURE=true
-ALLOW_REGISTRATION=true
-```
-
-Proxy the entire hostname to `penny:3001` (or the host's mapped port). The Docker web build uses the same origin for its API. Mobile users can select that HTTPS hostname on the sign-in screen; optionally set it as the initial build default with `EXPO_PUBLIC_API_URL`. Allow request bodies of at least 20 MB at the proxy for encoded receipt uploads.
-
-After creating your account, set `ALLOW_REGISTRATION=false` and run `docker compose up -d` to disable additional signups. Accounts are separate; sharing a login across your own devices syncs that account's data.
-
-### Automated container builds
-
-The **Build container image** workflow (`.github/workflows/docker-image.yml`) runs on pull requests to `main`, pushes to `main`, version tags such as `v1.2.3`, and manual runs from the Actions tab. Lint, type checks, and tests must pass before it builds the image.
-
-It builds both **linux/amd64** and **linux/arm64** from the root Dockerfile. Pull requests build without publishing. Pushes and manual runs publish to `ghcr.io/<owner>/<repository>` using the built-in `GITHUB_TOKEN`; no registry password or Docker Hub account is required. Owner/repository names are lowercased automatically.
-
-Image tags:
-
-- `latest` and `main` for builds on `main`.
-- `v1.2.3` for a matching Git tag (version tags do not move `latest`).
-- `sha-<full-commit-sha>` for identifying the source commit.
-- The branch name for manual runs on other branches.
-
-To deploy a published image, replace the `build:` block in `compose.yaml` with your image name:
-
-```yaml
-    image: ghcr.io/<owner>/<repository>:latest
-```
-
-Keep the existing environment variables, ports, and data volume, then run:
-
-```sh
-docker compose pull
-docker compose up -d
-```
-
-For a private GHCR package, authenticate the homelab to GHCR with a token allowed to read that package. Repository/organization policies must permit the workflow to write packages. This workflow builds and publishes images; it does not deploy to your server.
-
-### Backups
-
-Back up the `penny-data` volume. Stop the container during a filesystem backup so SQLite's database and WAL files are consistent; then restart it. Restore the full volume with the service stopped. Alternatively, use SQLite's online backup API. Receipt bytes, password hashes, sessions, and ledgers are all in the database. Keep backups private.
-
-## Sync and recurrence behavior
-
-The app caches each signed-in personal ledger on the device. A personal entry, account, category, trip, or schedule change is persisted locally before it appears as saved. Pending changes survive app restarts and sync on reconnect, foregrounding, or the 15-second active interval. Sync fetches the latest server revision, merges changes to separate records and fields, and retries revision races up to four times. If both devices change the same field, this device's pending value wins. The sync banner shows when changes are waiting or a retry is needed. Signing out is blocked until pending personal changes sync. Shared household actions and receipt uploads still require a connection.
-
-Recurring entries are materialized when a client syncs or saves, using that device's local calendar date. Missed dates catch up once. Monthly schedules retain their original day through short months (Jan 31 → Feb 28 → Mar 31). Pausing skips paused dates on resume. Deleting an occurrence does not regenerate it. Deleting a schedule preserves history. Editing an occurrence changes only that occurrence; remove/recreate a schedule to change its amount or cadence. Attachments belong to individual occurrences and are not copied onto future entries.
-
-## Implementation
-
-- `src/app/`: thin Expo Router entry points for real feature screens.
-- `src/shell/`: persistent responsive navigation and application composition.
-- `src/features/`: feature-owned screens, forms, presentation components and selectors.
-- `src/providers/`: session/ledger lifecycle and workspace state that survives navigation.
-- `src/domain/`: ledger types, integer-cent calculations, recurrence and immutable mutation commands.
-- `src/data/`: authenticated requests, revision retries, platform sessions and receipt I/O.
-- `src/shared/`: reusable UI primitives, responsive breakpoints and formatting.
-- `server/app.ts`: wires storage, services and Express middleware/routes together.
-- `server/http/`: thin routes, cookies, authentication middleware and HTTP error mapping.
-- `server/application/`: account, ledger and receipt operations with typed storage/security interfaces.
-- `server/validation/`: input schemas, ledger invariants and receipt signature checks.
-- `server/infrastructure/`: SQLite schema/repositories, atomic writes and password/token cryptography.
-- `server/index.ts`: process lifecycle, environment configuration and web hosting.
-
-See [Frontend architecture](docs/frontend-architecture.md) for ownership rules, the pattern for adding a feature, and the testing strategy.
-See [Backend architecture](docs/backend-architecture.md) for service boundaries, persistence guarantees, API regression coverage and the Hono assessment.
-
-The initial name, Penny, is a working name. The visual direction emphasizes warm neutral colors, calm hierarchy, quick feedback, and simple entry, inspired by your preferences rather than copied product assets.
-
-## Verification
-
-```sh
-npm run lint
-npm run typecheck
-npm test
-npm run build:web
-npx expo export --platform ios --platform android --output-dir /tmp/penny-native-export
-```
-
-`npm test` runs both Node core/API tests and Jest/Expo frontend behavior tests. The UI command runs the native interaction suite under both iOS and Android presets, plus web rendering tests. Use `npm run test:ui:ios` or `npm run test:ui:android` to target one platform while developing. These Jest projects exercise platform-specific JavaScript behavior; they do not launch a simulator or emulator.
-
-Run `npm run test:coverage` for core/API and all Jest-platform code coverage. Open `coverage/core/index.html` and `coverage/ui/index.html`; each directory also contains LCOV and JSON summaries. CI generates these reports instead of rerunning the same suites without coverage and uploads them as `code-coverage`. See [coverage boundaries and interpretation](docs/testing.md#code-coverage).
-
-See [Testing strategy](docs/testing.md) for the canonical layout, commands, native toolchain setup, platform coverage and CI policy. All tests live under `tests/core`, `tests/ui`, and `tests/e2e/{web,native}`; UI tests mirror source ownership without living in the application tree.
-
-Tests cover decimal validation, rounding, month-end and leap-year recurrence, immutable commands, stale edit/delete conflicts, category safeguards, draft conversion, monthly filtering, failed-save draft retention, session isolation, sync cleanup, API retries, route navigation and persistent drafts. Existing API integration tests cover authenticated two-session sync, stale revisions, account isolation, receipt ownership/uploads/downloads, untrusted origins, restart persistence and logout.
-
-### Browser integration tests
-
-Playwright runs the exported production web app and its API together against a new temporary SQLite database. The suite covers registration and login, the demo, navigation, expense/income/investment entry flows, search and filters, receipt upload and preview, category/account/trip management, recurring schedules, settings, and server-backed persistence. OIDC provider sign-in needs a configured identity provider and is covered by the existing OIDC service/API tests instead.
-
-Install Chromium once, then run the suite:
-
-```sh
-npx playwright install chromium
-npm run test:e2e:web
-```
-
-Both container and mobile release workflows use the same application checks: lint, typecheck, core/UI suites and browser E2E. Playwright writes evidence to `test-results/web/` and an HTML report to `test-results/web-report/`; CI uploads both as `playwright-report`.
-
-### Native end-to-end tests
-
-```sh
-npm run test:e2e:check -- all # Check tooling, images and development binaries; no device boot
-npm run test:e2e:ios
-npm run test:e2e:android
-npm run test:e2e:native      # Both native platforms, sequentially
-npm run test:all             # Core, UI, browser, iOS and Android
-```
-
-Native journeys use temporary devices, isolated in-memory backends and fresh JavaScript from Metro. They do not reuse personal app data. `test:all` requires macOS with both native toolchains; missing prerequisites fail explicitly. See the [native setup and coverage limits](docs/testing.md#native-workstation-setup) before running. Linux CI checks the iOS/Android Jest projects but does not claim native-device coverage.
-
-## Current limits
-
-This is a working first version. It does not yet include OCR, line-item receipt splitting, bank connections, scheduled push reminders, offline shared-household editing or receipt uploads, multiple currencies within one account, email verification, password recovery, or an account export UI. Currency is chosen before adding entries. Receipt files removed from entries are retained on the server; storage cleanup is not yet automated. Passwords are hashed with salted scrypt; sessions expire after 30 days. Deploy behind HTTPS or your private network/VPN.
-
-Web UI and API flows have been exercised locally. iOS/Android JavaScript bundles have been compiled; physical-device testing and signing remain. Docker configuration is provided; no Docker engine was available locally to run the container.
+Start with [local setup](docs/development.md) or [self-hosting](docs/deployment.md). For architecture, testing, configuration, and mobile releases, head to the [technical documentation](docs/README.md).

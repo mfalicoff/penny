@@ -1,5 +1,7 @@
 # Android APK builds
 
+[App showcase](../README.md) · [Documentation](README.md)
+
 The **Build Android APK and iOS IPA for TestFlight** GitHub Actions workflow runs manually from the Actions tab or when a version tag such as `v1.2.3` is pushed. It runs lint, type checks and tests, then starts Android and iOS EAS cloud builds. The Android job uploads `penny.apk` plus its SHA-256 checksum as a GitHub Actions artifact retained for 30 days. Download and unzip that artifact to install the APK on a phone. Builds use your Expo account's EAS build quota. See [iOS IPA builds](ios-ipa.md) for the Apple signing and TestFlight setup required by the other job.
 
 ## One-time setup
@@ -45,7 +47,7 @@ The **Build Android APK and iOS IPA for TestFlight** GitHub Actions workflow run
 
 The `apk` profile explicitly uses `credentialsSource: "remote"`, so EAS reuses the stored signing keystore on subsequent builds. CI passes `--freeze-credentials` and `--non-interactive`: missing or unusable credentials fail the build instead of being replaced during automation. Never delete or regenerate the keystore used for distributed APKs. Rotating `EXPO_TOKEN` is safe; it authenticates CI and is not the signing key.
 
-EAS stores the Android version counter remotely and `autoIncrement: true` raises it for each new build, including reruns. This avoids depending on GitHub run numbers or uncommitted version changes. Builds are serialized by the workflow. Install the APK with the higher version code over the existing app to preserve its installation and local data; do not uninstall first. For a new user-visible version, use the [semantic release commands](../README.md#semantic-versioning-and-releases); `app.config.js` reads the version from `package.json`, not `app.json`.
+EAS stores the Android version counter remotely and `autoIncrement: true` raises it for each new build, including reruns. This avoids depending on GitHub run numbers or uncommitted version changes. Builds are serialized by the workflow. Install the APK with the higher version code over the existing app to preserve its installation and local data; do not uninstall first. For a new user-visible version, use the [semantic release commands](releases.md#semantic-versioning-and-releases); `app.config.js` reads the version from `package.json`, not `app.json`.
 
 After the first release, verify an update by installing one APK, building another, and installing it over the first. The Android package and signing certificate must match, and the newer APK must have a higher version code. If you migrate from Google Play, its app signing key may differ from your upload key; the APK needs the key that signed the installed app.
 

@@ -1,5 +1,7 @@
 # Backend architecture
 
+[App showcase](../README.md) · [Documentation](README.md)
+
 Use this pattern for new work: **a thin HTTP route, an application service, validated input and a typed persistence boundary**.
 
 ## Ownership

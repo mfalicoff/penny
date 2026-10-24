@@ -1,5 +1,7 @@
 # Frontend architecture
 
+[App showcase](../README.md) · [Documentation](README.md)
+
 Use this formula for new work: **a thin route, a feature screen, local UI state, pure rules, and one shared persistence boundary**.
 
 ## Ownership
