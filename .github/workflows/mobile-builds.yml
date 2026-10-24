@@ -15,21 +15,17 @@ concurrency:
 
 jobs:
   checks:
-    name: Check application
+    uses: ./.github/workflows/tests.yml
+
+  eas-setup:
+    name: Check EAS setup
+    needs: checks
     runs-on: ubuntu-latest
-    timeout-minutes: 15
     steps:
       - name: Check out source
         uses: actions/checkout@v7
         with:
           persist-credentials: false
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          cache: npm
-
       - name: Check EAS setup
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
@@ -43,21 +39,9 @@ jobs:
             exit 1
           fi
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Check types
-        run: npm run typecheck
-
-      - name: Test
-        run: npm test
-
   apk:
     name: Build signed APK
-    needs: checks
+    needs: eas-setup
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
@@ -112,7 +96,7 @@ jobs:
 
   ipa:
     name: Build IPA and submit to TestFlight
-    needs: checks
+    needs: eas-setup
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:

@@ -33,13 +33,11 @@ module.exports = defineConfig([
     ["src/{data,shared,providers}/**/*.{ts,tsx}"],
     ["**/server/**", "**/features/**", "**/shell/**", "**/app/**"],
     "Infrastructure and shared code must not depend on screens, app composition or backend implementations.",
-    ["**/__tests__/**"],
   ),
   boundary(
     ["src/{features,shell,app}/**/*.{ts,tsx}"],
     ["**/server/**"],
     "Frontend code must communicate with the backend through the API.",
-    ["**/__tests__/**"],
   ),
   boundary(
     ["server/**/*.ts"],

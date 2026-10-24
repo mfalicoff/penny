@@ -1,6 +1,6 @@
 const shared = {
   clearMocks: true,
-  setupFilesAfterEnv: ["<rootDir>/tests/setup-ui.ts"],
+  setupFilesAfterEnv: ["<rootDir>/tests/ui/support/setup-ui.ts"],
 };
 
 module.exports = {
@@ -15,7 +15,7 @@ module.exports = {
           caller: { name: "metro", bundler: "metro", platform },
         }],
       },
-      testMatch: ["<rootDir>/src/**/__tests__/**/*.test.ts?(x)"],
+      testMatch: ["<rootDir>/tests/ui/**/*.test.ts?(x)"],
     }))),
     {
       ...shared,
@@ -27,8 +27,11 @@ module.exports = {
           caller: { name: "metro", bundler: "metro", platform: "web" },
         }],
       },
-      testMatch: ["<rootDir>/src/**/__tests__/**/*.web.test.jsx"],
+      testMatch: ["<rootDir>/tests/ui/**/*.web.test.jsx"],
     },
   ],
-  collectCoverageFrom: ["src/{features,providers,data}/**/*.{ts,tsx}", "!**/__tests__/**"],
+  collectCoverageFrom: ["src/**/*.{ts,tsx}", "!src/**/*.d.ts"],
+  coverageDirectory: "<rootDir>/coverage/ui",
+  coverageProvider: "babel",
+  coverageReporters: ["text-summary", "html", "lcovonly", "json-summary"],
 };

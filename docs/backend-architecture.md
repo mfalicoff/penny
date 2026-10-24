@@ -53,9 +53,9 @@ npm run typecheck
 npm run test:core
 ```
 
-`tests/server.test.ts` exercises real HTTP and SQLite for registration, login, two-device sync, stale revision conflicts, account/receipt isolation, uploads/downloads, invalid data, origin rejection, restart persistence and logout.
+`tests/core/server.test.ts` exercises real HTTP and SQLite for registration, login, two-device sync, stale revision conflicts, account/receipt isolation, uploads/downloads, invalid data, origin rejection, restart persistence and logout.
 
-`tests/server-boundaries.test.ts` covers cookie authentication, bearer precedence, cookie/security headers, API 404s, malformed/oversized JSON, CORS preflight, registration policy, rate limiting and concurrent signup. It also exercises the auth service without HTTP using an injected clock for exact session expiration, and verifies database rollback when initial-ledger creation fails. HTTP tests need permission to listen on a loopback port. All databases used by these tests are temporary or in memory.
+`tests/core/server-boundaries.test.ts` covers cookie authentication, bearer precedence, cookie/security headers, API 404s, malformed/oversized JSON, CORS preflight, registration policy, rate limiting and concurrent signup. It also exercises the auth service without HTTP using an injected clock for exact session expiration, and verifies database rollback when initial-ledger creation fails. HTTP tests need permission to listen on a loopback port. All databases used by these tests are temporary or in memory. See the [testing strategy](testing.md) for cross-platform ownership and execution.
 
 ## Hono assessment
 

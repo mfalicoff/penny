@@ -232,7 +232,7 @@ Recurring entries are materialized when a client syncs or saves, using that devi
 
 - `src/app/`: thin Expo Router entry points for real feature screens.
 - `src/shell/`: persistent responsive navigation and application composition.
-- `src/features/`: feature-owned screens, forms, presentation components, selectors and behavior tests.
+- `src/features/`: feature-owned screens, forms, presentation components and selectors.
 - `src/providers/`: session/ledger lifecycle and workspace state that survives navigation.
 - `src/domain/`: ledger types, integer-cent calculations, recurrence and immutable mutation commands.
 - `src/data/`: authenticated requests, revision retries, platform sessions and receipt I/O.
@@ -261,7 +261,9 @@ npx expo export --platform ios --platform android --output-dir /tmp/penny-native
 
 `npm test` runs both Node core/API tests and Jest/Expo frontend behavior tests. The UI command runs the native interaction suite under both iOS and Android presets, plus web rendering tests. Use `npm run test:ui:ios` or `npm run test:ui:android` to target one platform while developing. These Jest projects exercise platform-specific JavaScript behavior; they do not launch a simulator or emulator.
 
-See [Mobile testing](docs/mobile-testing.md) for the coverage map and native device smoke prerequisites.
+Run `npm run test:coverage` for core/API and all Jest-platform code coverage. Open `coverage/core/index.html` and `coverage/ui/index.html`; each directory also contains LCOV and JSON summaries. CI generates these reports instead of rerunning the same suites without coverage and uploads them as `code-coverage`. See [coverage boundaries and interpretation](docs/testing.md#code-coverage).
+
+See [Testing strategy](docs/testing.md) for the canonical layout, commands, native toolchain setup, platform coverage and CI policy. All tests live under `tests/core`, `tests/ui`, and `tests/e2e/{web,native}`; UI tests mirror source ownership without living in the application tree.
 
 Tests cover decimal validation, rounding, month-end and leap-year recurrence, immutable commands, stale edit/delete conflicts, category safeguards, draft conversion, monthly filtering, failed-save draft retention, session isolation, sync cleanup, API retries, route navigation and persistent drafts. Existing API integration tests cover authenticated two-session sync, stale revisions, account isolation, receipt ownership/uploads/downloads, untrusted origins, restart persistence and logout.
 
@@ -273,10 +275,22 @@ Install Chromium once, then run the suite:
 
 ```sh
 npx playwright install chromium
-npm run test:e2e
+npm run test:e2e:web
 ```
 
-The GitHub Actions check installs Chromium and runs `npm run test:e2e` before building the container. Playwright writes an HTML report and failure traces; CI uploads them as the `playwright-report` artifact.
+Both container and mobile release workflows use the same application checks: lint, typecheck, core/UI suites and browser E2E. Playwright writes evidence to `test-results/web/` and an HTML report to `test-results/web-report/`; CI uploads both as `playwright-report`.
+
+### Native end-to-end tests
+
+```sh
+npm run test:e2e:check -- all # Check tooling, images and development binaries; no device boot
+npm run test:e2e:ios
+npm run test:e2e:android
+npm run test:e2e:native      # Both native platforms, sequentially
+npm run test:all             # Core, UI, browser, iOS and Android
+```
+
+Native journeys use temporary devices, isolated in-memory backends and fresh JavaScript from Metro. They do not reuse personal app data. `test:all` requires macOS with both native toolchains; missing prerequisites fail explicitly. See the [native setup and coverage limits](docs/testing.md#native-workstation-setup) before running. Linux CI checks the iOS/Android Jest projects but does not claim native-device coverage.
 
 ## Current limits
 
