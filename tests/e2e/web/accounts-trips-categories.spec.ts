@@ -101,7 +101,7 @@ test("a category can be created from the entry picker and selected without losin
 
 test("custom categories can be created, edited, protected while in use, and deleted after reassignment", async ({ page }) => {
   await signUp(page);
-  await page.getByRole("button", { name: "Categories" }).click();
+  await page.getByRole("button", { name: "Categories", exact: true }).click();
   await page.getByRole("button", { name: "New category", exact: true }).click();
   await page.getByLabel("Category name").fill("Integration travel");
   await page.getByRole("button", { name: "airplane", exact: true }).click();
@@ -119,7 +119,7 @@ test("custom categories can be created, edited, protected while in use, and dele
   await chooseEntryOption(page, "Category", "Integration travel renamed");
   await page.getByRole("button", { name: "Add expense", exact: true }).click();
 
-  await page.getByRole("button", { name: "Categories" }).click();
+  await page.getByRole("button", { name: "Categories", exact: true }).click();
   await page.getByRole("button", { name: "Edit category Integration travel renamed" }).click();
   await expect(page.getByRole("button", { name: "Category is in use", exact: true })).toBeDisabled();
   await page.getByRole("button", { name: "Close dialog" }).click();
@@ -130,7 +130,7 @@ test("custom categories can be created, edited, protected while in use, and dele
   await chooseEntryOption(page, "Category", "Food & drinks");
   await page.getByRole("button", { name: "Save changes", exact: true }).click();
 
-  await page.getByRole("button", { name: "Categories" }).click();
+  await page.getByRole("button", { name: "Categories", exact: true }).click();
   await page.getByRole("button", { name: "Edit category Integration travel renamed" }).click();
   await page.getByRole("button", { name: "Delete unused category", exact: true }).click();
   await expect(page.getByRole("button", { name: "Edit category Integration travel renamed" })).toHaveCount(0);
