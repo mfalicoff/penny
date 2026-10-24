@@ -31,6 +31,12 @@
       "expo-notifications",
       "expo-web-browser",
       [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow Penny to use Face ID to protect your financial information."
+        }
+      ],
+      [
         "expo-widgets",
         {
           "widgets": [

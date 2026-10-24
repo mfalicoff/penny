@@ -1,14 +1,16 @@
 import { router } from "expo-router";
 import { ServerConnection } from "./ServerConnection";
-import { Pressable, Text, View } from "react-native";
+import { Platform, Pressable, Switch, Text, View } from "react-native";
 import { changeCurrency } from "../../domain/commands";
 import { useLedger } from "../../providers/LedgerProvider";
+import { useAppLock } from "../../providers/AppLockProvider";
 import { C, palettes, setTheme, themeOptions, useTheme } from "../../shared/theme";
 import { Button, Icon, Sheet, s } from "../../shared/ui";
 
 export function SettingsSheet({ visible, onClose }: { visible: boolean; onClose: () => void; }) {
   const { ledger, email, demo, commit, leaveDemo, logout } = useLedger();
   const theme = useTheme();
+  const appLock = useAppLock();
   return <Sheet visible={visible} title="Your personal space" onClose={onClose}>
     <Text style={s.muted}>{demo
       ? "You are exploring sample data. Nothing here changes your account."
@@ -37,6 +39,15 @@ export function SettingsSheet({ visible, onClose }: { visible: boolean; onClose:
         })}
       </View>
     </View>
+    {Platform.OS !== "web" && appLock && <View style={{ gap: 10 }}>
+      <View style={s.between}>
+        <Text style={s.label}>Biometric app lock</Text>
+        <Switch accessibilityLabel="Biometric app lock" value={appLock.enabled} disabled={appLock.busy}
+          trackColor={{ true: C.accent }} onValueChange={(value) => { void appLock.setEnabled(value); }} />
+      </View>
+      <Text style={s.muted}>Require Face ID or your fingerprint when opening Penny or returning from the background. Your device passcode can unlock the app if needed. Applies only to this device.</Text>
+      {appLock.error !== "" && <Text accessibilityRole="alert" style={s.muted}>{appLock.error}</Text>}
+    </View>}
     <ServerConnection />
     <Text style={s.label}>Account currency</Text>
     <View style={[s.row, { flexWrap: "wrap" }]}>

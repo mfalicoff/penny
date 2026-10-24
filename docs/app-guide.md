@@ -20,6 +20,17 @@ Detailed behavior behind the features shown in the [showcase](../README.md). Set
 - Sign-in accounts and cross-device sync. Personal ledger changes are saved on the device while offline and sync when the server is reachable again. Revision checks retry server races and merge independent device edits.
 - Photos render in-app; web PDFs render in the browser; native PDFs open through the system share/open sheet.
 - A clearly labeled, temporary demo without an account.
+- Mobile-only biometric app lock, configured in **Account settings → Biometric app lock**.
+
+## Mobile app protection
+
+Turn on **Biometric app lock** in account settings on iOS or Android. Enabling requires an enrolled Face ID, Touch ID, or Android Class 3 biometric and a successful biometric check. The preference is saved securely on that device, survives app restarts, and is not synced to other devices or reset by signing out. Web has no app-lock toggle.
+
+When enabled, Penny requires authentication at launch and after returning from the background. Your device passcode/PIN is allowed as a recovery method when unlocking or disabling protection. Cancellation or failed authentication leaves the app locked; use **Unlock Penny** to retry. Open dialogs and unfinished drafts are hidden while locked and restored after unlocking.
+
+This protects access to the app UI, not the server account or cached ledger with an additional encryption layer. Existing home-screen widgets and notification previews are outside the app lock; remove widgets or adjust system notification previews if they expose information you want hidden.
+
+Native builds must include `expo-local-authentication`. The app config plugin adds the iOS `NSFaceIDUsageDescription`; Android biometric permissions come from the library. No additional iOS entitlement, Apple Developer capability, or provisioning-profile update is needed for biometrics. Rebuild the native app after installing the module; an OTA update cannot add it, and Face ID cannot be tested in Expo Go. See [Expo's SDK 57 LocalAuthentication documentation](https://docs.expo.dev/versions/v57.0.0/sdk/local-authentication/).
 
 ## Shared households
 

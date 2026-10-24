@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import { C, getTheme, type ThemeColors } from "../theme";
 import { GlassSurface } from "./GlassSurface";
+import { useAppLock } from "../../providers/AppLockProvider";
 export { C } from "../theme";
 export const Icon = ({
   name,
@@ -144,11 +145,12 @@ export function Sheet({
   overlay?: React.ReactNode;
 }) {
   const { width } = useWindowDimensions();
+  const appLock = useAppLock();
   const narrowHeader = width < 360;
   const hasHeaderActions = headerActions != null;
   return (
     <Modal
-      visible={visible}
+      visible={visible && !appLock?.obscured}
       transparent
       animationType={Platform.OS === "web" ? "fade" : "slide"}
       onRequestClose={onClose}

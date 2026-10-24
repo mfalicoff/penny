@@ -13,6 +13,7 @@ Use this formula for new work: **a thin route, a feature screen, local UI state,
 | `src/features/<feature>/` | Screens, feature components, forms, draft conversion and selectors | Global session lifecycle |
 | `src/providers/LedgerProvider.tsx` | Authentication state, ledger snapshot, serialized saves, polling, foreground sync, save feedback | Form inputs, filtering or feature-specific mutations |
 | `src/providers/WorkspaceProvider.tsx` | Overview filters and entry-dialog selection that survive navigation | Server data or requests |
+| `src/providers/AppLockProvider.tsx` | Device-local biometric preference, authentication single-flight, launch/foreground locking | Server sign-in, ledger encryption or widget privacy |
 | `src/domain/` | Ledger types, money, recurrence and immutable mutation commands | React, Expo, network calls or platform APIs |
 | `src/data/` | API requests, revision retries, session credentials and receipt I/O | Presentation or navigation |
 | `src/shared/` | UI primitives, formatting and responsive breakpoints | Feature orchestration |
@@ -39,6 +40,14 @@ Commands return `(ledger: Ledger) => Ledger`; they must not mutate the input or 
 The session provider rejects overlapping saves, ignores results from an obsolete session, and cleans up timers and foreground listeners. Demo changes use the same commands locally. Do not add polling or direct ledger writes to screens.
 
 Overview selectors calculate monthly totals independently of the visible list's search/day/kind filters. Reports use integer-cent personal shares. Presentation components receive explicit props; they do not fetch data. Screen-local styles live with their components; reusable controls and tokens live in `shared/ui`.
+
+## Native app lock
+
+`AppLockProvider` sits above server/session providers. It reads `penny-app-lock` from SecureStore before `AppLockGate` admits account content. Read failures fail closed with a retry action. Once admitted, the session tree stays mounted while hidden so locking does not discard drafts. Shared `Sheet` dialogs also suppress their native modals while obscured, preventing an open sheet from covering the lock screen.
+
+The provider conceals content while inactive and locks on actual background transitions. iOS biometric-prompt inactive/active events do not trigger a second prompt. Authentication is single-flight; background transitions invalidate outstanding results, and enabling/disabling is committed only after successful authentication and a durable preference write. Enabling requires strong enrolled biometrics; later unlocking/disabling permits the OS device-credential fallback. The web provider is a passthrough and never imports the native authentication module.
+
+`app.json` configures the `expo-local-authentication` plugin's Face ID usage description; the module contributes Android biometric permissions. This requires a native rebuild, not new iOS entitlements. See [Mobile app protection](app-guide.md#mobile-app-protection) for recovery behavior and the widget/notification privacy boundary.
 
 ## Native glass surfaces
 
@@ -98,3 +107,9 @@ Native font loading is mocked globally; receipt I/O and preview are mocked in na
 - Used temporary demo data in a live development browser at desktop and 390-pixel phone widths. Verified chart selection, a $98 expense with a $49 personal share, monthly recurrence, pause/resume, category creation, settings, search, phone-width editing/saving and empty-month navigation.
 - No browser console warnings or errors appeared after a clean reload and those interactions. The phone document width matched its viewport (390 pixels).
 - No physical-device/simulator run or real receipt upload/PDF decoding was performed in this pass.
+
+### Biometric-lock verification on October 24, 2026
+
+- Lint and TypeScript checks passed; all 54 UI suites / 255 tests passed, including 18 native app-lock checks across iOS and Android.
+- Built and installed the iOS simulator app with no build warnings or errors. Verified the real Face ID prompt, authenticated enabling/disabling, relaunch protection, background relocking with an open settings sheet, failed recognition/cancellation remaining locked, and successful unlock/retry.
+- Android and web production bundles exported successfully. Android device prompts and physical-device biometrics/passcode fallback were not exercised.

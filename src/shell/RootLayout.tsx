@@ -10,6 +10,8 @@ import { C, Icon, s } from "../shared/ui";
 import { AppShell } from "./AppShell";
 import { WidgetClear } from "../widgets/WidgetClear";
 import { ServerConnectionProvider } from "../providers/ServerConnectionProvider";
+import { AppLockProvider } from "../providers/AppLockProvider";
+import { AppLockGate } from "./AppLockGate";
 
 function SessionGate() {
   const { checking, email, demo, sessionKey, login, openDemo } = useLedger();
@@ -23,5 +25,5 @@ function SessionGate() {
 
 export default function RootLayout() {
   if (isOidcCallback()) return <View style={{ flex: 1, justifyContent: "center", padding: 24 }}><Text>Completing sign-in… You can close this window and return to Penny.</Text></View>;
-  return <ThemeProvider><SafeAreaProvider><ServerConnectionProvider><LedgerProvider><SessionGate /></LedgerProvider></ServerConnectionProvider></SafeAreaProvider></ThemeProvider>;
+  return <ThemeProvider><SafeAreaProvider><AppLockProvider><AppLockGate><ServerConnectionProvider><LedgerProvider><SessionGate /></LedgerProvider></ServerConnectionProvider></AppLockGate></AppLockProvider></SafeAreaProvider></ThemeProvider>;
 }

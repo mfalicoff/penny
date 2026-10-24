@@ -20,6 +20,10 @@ jest.mock("../../../src/data/receipts", () => ({ saveReceipt: jest.fn() }));
 jest.mock("../../../src/features/receipts/ReceiptPreview", () => ({ ReceiptPreview: () => null }));
 jest.mock("../../../src/widgets/WidgetSync", () => ({ WidgetSync: () => null }));
 jest.mock("../../../src/widgets/WidgetClear", () => ({ WidgetClear: () => null }));
+jest.mock("expo-secure-store", () => ({
+  getItemAsync: jest.fn().mockResolvedValue(null),
+  setItemAsync: jest.fn().mockResolvedValue(undefined),
+}));
 
 beforeEach(() => {
   jest.mocked(api.whoAmI).mockResolvedValue("test@example.com");
@@ -29,7 +33,7 @@ afterEach(() => jest.useRealTimers());
 
 test("real routes render their feature and navigation preserves overview filters and session", async () => {
   await renderRouter({ _layout: RootLayout, index: Overview, recurring: Recurring, categories: Categories, accounts: Accounts, transactions: Transactions, trips: Trips });
-  expect(screen.getByText(/Your entries/)).toBeOnTheScreen();
+  expect(await screen.findByRole("button", { name: "Add entry" })).toBeOnTheScreen();
   await fireEvent.changeText(screen.getByLabelText("Search entries"), "coffee");
   await fireEvent.press(screen.getByRole("button", { name: "Transactions" }));
   expect(screen.getByText("Your transactions.")).toBeOnTheScreen();
@@ -59,8 +63,7 @@ test("real routes render their feature and navigation preserves overview filters
 
 test("deep linking opens the correct feature and an entry draft survives route changes", async () => {
   await renderRouter({ _layout: RootLayout, index: Overview, recurring: Recurring, categories: Categories, accounts: Accounts }, { initialUrl: "/recurring" });
-  expect(screen.getByText("Rent, payday, the usuals.")).toBeOnTheScreen();
-  await fireEvent.press(screen.getByRole("button", { name: "Add a recurring entry" }));
+  await fireEvent.press(await screen.findByRole("button", { name: "Add a recurring entry" }));
   await fireEvent.changeText(screen.getByLabelText("What was it for?"), "Unfinished draft");
   await act(async () => { router.navigate("/"); });
   expect(screen.getByLabelText("What was it for?")).toHaveDisplayValue("Unfinished draft");
@@ -73,7 +76,7 @@ test("trip navigation opens its overview and starts an assigned expense", async 
   ledger.trips.push({ id: "weekend", name: "Weekend away", startDate: "2026-09-10", endDate: "2026-09-12" });
   jest.mocked(api.fetchLedger).mockResolvedValue({ revision: 1, ledger });
   await renderRouter({ _layout: RootLayout, index: Overview, "trips/index": Trips, "trips/[id]": TripOverview }, { initialUrl: "/trips" });
-  await fireEvent.press(screen.getByRole("button", { name: "Open trip Weekend away" }));
+  await fireEvent.press(await screen.findByRole("button", { name: "Open trip Weekend away" }));
   expect(screen.getByText("By category")).toBeOnTheScreen();
   await fireEvent.press(screen.getByRole("button", { name: "Add expense to trip" }));
   expect(screen.getByRole("button", { name: "Trip: Weekend away" })).toBeOnTheScreen();
