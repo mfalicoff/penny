@@ -7,6 +7,7 @@ Detailed behavior behind the features shown in the [showcase](../README.md). Set
 ## Entries, reports, and accounts
 
 - Add, edit, delete, search, and filter income, expenses, and investment contributions.
+- Amounts and split percentages accept either a dot or a comma as the decimal separator (for example, `12.34` or `12,34`), with up to two decimal places. Thousands separators and mixed decimal separators are not accepted.
 - Investment contributions appear in a separate Invested total and are excluded from spending. Cash remaining is the month's income minus expenses and contributions; it is not an account balance. Contributions track money invested, not portfolio value or returns.
 - Monthly overview, calendar, category breakdown, and personal-share totals.
 - Interactive monthly Sankey diagram: income categories → monthly flow → expense categories, invested, and left over. Personal shares determine band widths. Outflows beyond recorded income are labeled explicitly; smaller expense categories are grouped without dropping their amounts. The chart scrolls horizontally on phones.

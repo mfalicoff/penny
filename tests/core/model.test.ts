@@ -13,13 +13,19 @@ import {
 test("money uses integer cents and rejects ambiguous or invalid input", () => {
   assert.equal(cents("10.29"), 1029);
   assert.equal(cents("0.10"), 10);
-  for (const value of ["-1", "1.234", "1e2", "NaN", "", "1,000"])
+  for (const [value, expected] of [
+    ["10,29", 1029], ["0,10", 10], ["12,3", 1230], ["12,", 1200],
+    [" 12,34 ", 1234], ["999999999,99", 99999999999],
+  ] as const) assert.equal(cents(value), expected);
+  for (const value of ["-1", "1.234", "1,234", "1e2", "NaN", "", "1,000", "1,2.3", "1.2,3", "1,,2", "1..2", "1000000000,00"])
     assert.throws(() => cents(value));
 });
 test("splits count only your share, with deterministic cent rounding", () => {
   assert.equal(personalShare(1000, "equal", "3"), 333);
   assert.equal(personalShare(1001, "percent", "50"), 501);
   assert.equal(personalShare(12000, "amount", "42.50"), 4250);
+  assert.equal(personalShare(12000, "amount", "42,50"), 4250);
+  assert.equal(personalShare(10000, "percent", "12,34"), 1234);
   assert.equal(personalShare(100, "amount", "0"), 0);
   assert.throws(() => personalShare(1000, "amount", "11"));
   assert.throws(() => personalShare(1000, "equal", "0"));

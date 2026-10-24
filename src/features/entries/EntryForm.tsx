@@ -178,7 +178,7 @@ export function EntryForm({
       householdId && selfId
         ? (householdSplit === "equal" ? calculateHouseholdSplits(cents(amount), { mode: "equal", memberIds: activeMembers.map((member) => member.userId) }).find((part) => part.userId === selfId)?.amountCents ?? 0
           : householdSplit === "exact" ? cents(allocations[selfId] || "0")
-            : Math.round(cents(amount) * Number(allocations[selfId] || "0") / 100)) / 100
+            : Math.round(cents(amount) * cents(allocations[selfId] || "0") / 10000)) / 100
         : personalShare(cents(amount), kind === "expense" ? split : "full", shareInput) / 100,
     );
   } catch { }

@@ -181,9 +181,10 @@ export function validDate(value: string): boolean {
 }
 // All monetary calculations use integer cents; never accumulate floating-point dollars.
 export function cents(value: string): number {
-  if (!/^\d{1,9}(\.\d{0,2})?$/.test(value.trim()))
+  value = value.trim();
+  if (!/^\d{1,9}([.,]\d{0,2})?$/.test(value))
     throw new Error("Enter an amount with up to two decimal places.");
-  const [whole, fraction = ""] = value.trim().split(".");
+  const [whole, fraction = ""] = value.split(/[.,]/);
   return Number(whole) * 100 + Number(fraction.padEnd(2, "0"));
 }
 export function personalShare(
