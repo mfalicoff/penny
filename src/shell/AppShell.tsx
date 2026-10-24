@@ -1,7 +1,7 @@
 import { Slot, router, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { EntryDialog } from "../features/entries/EntryDialog";
 import { SettingsSheet } from "../features/settings/SettingsSheet";
@@ -9,10 +9,12 @@ import { useLedger } from "../providers/LedgerProvider";
 import { useWorkspace } from "../providers/WorkspaceProvider";
 import { useTheme } from "../shared/theme";
 import { Button, C, Icon, IconButton, Sheet, s } from "../shared/ui";
+import { GlassProvider, GlassSurface, GlassTarget } from "../shared/ui/GlassSurface";
 import { useResponsive } from "../shared/useResponsive";
 import { SaveToast } from "./SaveToast";
 import { WidgetSync } from "../widgets/WidgetSync";
 type Tab = "Overview" | "Transactions" | "Households" | "Trips" | "Recurring" | "Categories" | "Accounts";
+const native = Platform.OS !== "web";
 const navigation: { tab: Tab; icon: string; mobileLabel: string }[] = [
   { tab: "Overview", icon: "grid-outline", mobileLabel: "Home" },
   { tab: "Transactions", icon: "list-outline", mobileLabel: "Entries" },
@@ -33,6 +35,8 @@ export function AppShell() {
   const { setForm } = useWorkspace();
   const [settings, setSettings] = React.useState(false);
   const [moreOpen, setMoreOpen] = React.useState(false);
+  const [headerHeight, setHeaderHeight] = React.useState(60);
+  const [navHeight, setNavHeight] = React.useState(86);
   const pathname = usePathname();
   const nestedMobileScreen = compact && (pathname.startsWith("/households/") || pathname.startsWith("/trips/"));
   const tab: Tab = pathname === "/transactions" ? "Transactions" : pathname.startsWith("/households") ? "Households" : pathname.startsWith("/trips") ? "Trips" : pathname === "/accounts" ? "Accounts" : pathname === "/recurring" ? "Recurring" : pathname === "/categories" ? "Categories" : "Overview";
@@ -88,7 +92,19 @@ export function AppShell() {
       </Pressable>}
     </View>
   );
+  const mobileHeader = !desktop && (
+    <GlassSurface style={a.mobileHeader} onLayout={native ? (event) => setHeaderHeight(event.nativeEvent.layout.height) : undefined}>
+      <View style={s.row}>
+        <View style={[a.logo, { width: 30, height: 30, borderRadius: 10 }]}>
+          <Icon name="leaf-outline" color="white" size={18} />
+        </View>
+        <Text style={[a.brand, { fontSize: 24 }]}>penny.</Text>
+      </View>
+      <IconButton icon="settings-outline" label="Account settings" onPress={() => setSettings(true)} />
+    </GlassSurface>
+  );
   return (
+    <GlassProvider>
     <SafeAreaView style={{ flex: 1, backgroundColor: C.bg }}>
       <WidgetSync />
       <StatusBar style={theme === "light" ? "dark" : "light"} />
@@ -148,32 +164,17 @@ export function AppShell() {
           </View>
         )}
         <View style={{ flex: 1 }}>
-          {!desktop && (
-            <View style={a.mobileHeader}>
-              <View style={s.row}>
-                <View
-                  style={[a.logo, { width: 30, height: 30, borderRadius: 10 }]}
-                >
-                  <Icon name="leaf-outline" color="white" size={18} />
-                </View>
-                <Text style={[a.brand, { fontSize: 24 }]}>penny.</Text>
-              </View>
-              <IconButton
-                icon="settings-outline"
-                label="Account settings"
-                onPress={() => setSettings(true)}
-              />
-            </View>
-          )}
+          {!native && mobileHeader}
+          <GlassTarget style={{ flex: 1, backgroundColor: C.bg }}>
           <ScrollView
             contentContainerStyle={{
               padding: compact ? 16 : 40,
-              paddingTop: compact ? 16 : 36,
+              paddingTop: native && !desktop ? headerHeight + 24 : compact ? 16 : 36,
               gap: compact ? 16 : 26,
               maxWidth: 1320,
               width: "100%",
               alignSelf: "center",
-              paddingBottom: compact ? 24 : 44,
+              paddingBottom: native && !desktop ? navHeight + 32 : compact ? 24 : 44,
             }}
           >
             {demo && (
@@ -305,7 +306,10 @@ export function AppShell() {
               </Text>
             </View>}
           </ScrollView>
-          {!desktop && nav(true)}
+          </GlassTarget>
+          {native && mobileHeader}
+          {!desktop && <GlassSurface style={native ? a.floatingNav : undefined}
+            onLayout={native ? (event) => setNavHeight(event.nativeEvent.layout.height) : undefined}>{nav(true)}</GlassSurface>}
         </View>
       </View>
       {toast !== "" && (
@@ -323,6 +327,7 @@ export function AppShell() {
         </Pressable>)}
       </Sheet>}
     </SafeAreaView>
+    </GlassProvider>
   );
 }
 
@@ -382,15 +387,24 @@ const makeStyles = () => StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderColor: C.line,
-    backgroundColor: C.chrome,
+    backgroundColor: native ? "transparent" : C.chrome,
+    ...(native ? { position: "absolute", top: 8, left: 12, right: 12, borderRadius: 20 } as const : {}),
   },
   mobileNav: {
     flexDirection: "row",
     justifyContent: "space-around",
-    backgroundColor: C.chrome,
+    backgroundColor: native ? "transparent" : C.chrome,
     padding: 10,
     borderTopWidth: 1,
     borderColor: C.line,
+  },
+  floatingNav: {
+    position: "absolute",
+    bottom: 10,
+    left: 12,
+    right: 12,
+    borderRadius: 24,
+    boxShadow: `0px 4px 18px ${C.shadow}`,
   },
   mobileNavItem: {
     flex: 1,

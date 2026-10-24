@@ -11,11 +11,13 @@
     "cors": "^2.8.6",
     "expo": "~57.0.25",
     "expo-asset": "~57.0.20",
+    "expo-blur": "~57.0.3",
     "expo-build-properties": "~57.0.22",
     "expo-constants": "~57.0.19",
     "expo-document-picker": "~57.0.2",
     "expo-file-system": "~57.0.7",
     "expo-font": "~57.0.4",
+    "expo-glass-effect": "~57.0.4",
     "expo-haptics": "~57.0.3",
     "expo-image-picker": "~57.0.20",
     "expo-linking": "~57.0.11",
@@ -91,13 +93,28 @@
   },
   "c8": {
     "all": true,
-    "src": ["server", "src/domain"],
-    "include": ["server/**/*.ts", "src/domain/**/*.ts"],
-    "exclude": ["**/*.d.ts"],
-    "extension": [".ts"],
+    "src": [
+      "server",
+      "src/domain"
+    ],
+    "include": [
+      "server/**/*.ts",
+      "src/domain/**/*.ts"
+    ],
+    "exclude": [
+      "**/*.d.ts"
+    ],
+    "extension": [
+      ".ts"
+    ],
     "reports-dir": "coverage/core",
     "temp-directory": "coverage/core/tmp",
-    "reporter": ["text-summary", "html", "lcovonly", "json-summary"]
+    "reporter": [
+      "text-summary",
+      "html",
+      "lcovonly",
+      "json-summary"
+    ]
   },
   "private": true
 }

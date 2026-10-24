@@ -38,6 +38,20 @@ The session provider rejects overlapping saves, ignores results from an obsolete
 
 Overview selectors calculate monthly totals independently of the visible list's search/day/kind filters. Reports use integer-cent personal shares. Presentation components receive explicit props; they do not fetch data. Screen-local styles live with their components; reusable controls and tokens live in `shared/ui`.
 
+## Native glass surfaces
+
+Mobile headers, bottom navigation and shared `Sheet` dialogs use `shared/ui/GlassSurface`. Ledger cards and form controls remain opaque for legibility. Web keeps its existing solid chrome.
+
+- **iOS 26+:** [Expo GlassEffect](https://docs.expo.dev/versions/v57.0.0/sdk/glass-effect/) renders native Liquid Glass only when both runtime capability checks pass. Earlier iOS versions use a frosted blur.
+- **Android 12+:** [Expo BlurView](https://docs.expo.dev/versions/v57.0.0/sdk/blur-view/) samples one shared `BlurTargetView` containing the scrolling page. Glass overlays stay outside the target to avoid recursive blur. Android uses a frosted-glass approximation, not Apple's Liquid Glass renderer.
+- **Fallbacks:** Android versions below API 31 and AMOLED appearance use solid theme-colored surfaces. iOS Reduce Transparency is checked before enabling effects and observed for live changes; a failed preference query leaves surfaces opaque. A sheet outside the workspace's glass provider also remains opaque.
+
+`GlassProvider` owns the sampled-content ref and accessibility preference. `GlassSurface` follows the app's selected light/dark palette rather than assuming the system theme. Floating navigation measures its height so scroll padding keeps the first and last controls reachable. Native modals slide instead of fading: setting a glass view or ancestor to zero opacity can prevent the iOS effect from rendering.
+
+Blur fallbacks place a theme-colored tint above the sampled image, not behind it. This preserves text contrast even if Android retains a bright sampled frame while a dialog is open during a dark-theme switch.
+
+After installing these native dependencies, rebuild the development apps with `npx expo run:ios` and `npx expo run:android`; a JavaScript reload or OTA update alone cannot add `expo-blur` to an existing binary.
+
 ## Adding a feature
 
 1. Add its screen under `src/features/<name>/` and a route export under `src/app/`.

@@ -15,6 +15,7 @@ import {
   type ViewStyle,
 } from "react-native";
 import { C, getTheme, type ThemeColors } from "../theme";
+import { GlassSurface } from "./GlassSurface";
 export { C } from "../theme";
 export const Icon = ({
   name,
@@ -149,14 +150,14 @@ export function Sheet({
     <Modal
       visible={visible}
       transparent
-      animationType="fade"
+      animationType={Platform.OS === "web" ? "fade" : "slide"}
       onRequestClose={onClose}
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={s.backdrop}
       >
-        <View
+        <GlassSurface
           accessibilityViewIsModal={!overlay}
           style={[s.sheet, { maxWidth: wide ? 780 : 520 }]}
         >
@@ -191,7 +192,7 @@ export function Sheet({
               {footer}
             </View>
           )}
-        </View>
+        </GlassSurface>
         {overlay && <View accessibilityViewIsModal style={[StyleSheet.absoluteFill, { zIndex: 30, elevation: 30, pointerEvents: "box-none" }]}>
           {overlay}
         </View>}
