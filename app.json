@@ -2,7 +2,6 @@
   "expo": {
     "name": "Penny",
     "slug": "penny-expense-tracker",
-    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/penny-icon.png",
     "userInterfaceStyle": "automatic",
