@@ -49,6 +49,28 @@ previous tag or a broken comparison link. Later release PRs bump from the last
 published version. The bootstrap SHA is ignored after the first release and
 does not need advancing.
 
+### First-run warnings and a successful no-op
+
+Before the first release, `Could not find releases`, `Expected 1 releases,
+only found 0`, `Missing 1 paths: .`, and `No version for path .` are expected
+bootstrap warnings. The `.` is the configured root package, not a missing
+directory. There is no prior GitHub Release or manifest version to find;
+`initial-version` selects the first proposed version rather than recording a
+previous release. Keep the manifest empty and leave `bootstrap-sha` unchanged.
+This follows Release Please's [manual bootstrap
+flow](https://github.com/googleapis/release-please/blob/v17.3.0/docs/manifest-releaser.md#bootstrap-manually)
+and [missing-release fallback](https://github.com/googleapis/release-please/blob/v17.3.0/src/manifest.ts#L597-L623).
+
+A successful run can still produce no PR: only releasable Conventional Commits
+after the bootstrap SHA drive the first release. Check the end of the log for
+`No commits for path: ., skipping`. Rerunning the same history will not change
+that result. Squash dependency updates with a final message such as
+`fix(deps): update all dependencies`, rather than `Update all dependencies`.
+The next push to `master` should then open the first **1.0.0** release PR, not
+publish a release immediately. Review and merge that generated PR to publish.
+Do not create a dummy tag or seed a fictitious previous version to silence the
+bootstrap warnings.
+
 ### Commit messages and version selection
 
 Use these prefixes in commits landing on `master`. With squash merges, the

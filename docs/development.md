@@ -110,6 +110,26 @@ Update them deliberately using Expo's SDK upgrade guidance and
 and verify web, iOS, and Android. When adding an SDK-managed dependency, keep the
 exclusion rule in `renovate.json` aligned with it.
 
+The toolchain runs TypeScript 7, ESLint 10, and Jest 30 without independently
+upgrading the Expo SDK:
+
+- `@typescript/native` aliases TypeScript 7 and supplies `tsc` for
+  `npm run typecheck`. The `typescript` dependency aliases
+  `@typescript/typescript6`, which supplies the compiler API required by
+  `typescript-eslint` and other tooling. Preserve this
+  [official side-by-side setup](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/#running-side-by-side-with-typescript-6.0)
+  until those tools support the new API.
+- `eslint.config.js` applies ESLint's
+  [`fixupConfigRules`](https://github.com/eslint/rewrite/tree/main/packages/compat)
+  adapter to Expo's plugins, preserving their rules on ESLint 10.
+- Jest 30 runs the existing `jest-expo` iOS, Android, and web projects.
+
+Some upstream Expo lint/test dependencies still declare older ESLint/Jest peer
+ranges, so `npm ci` emits peer warnings. The compatibility setup does not disable
+rules or tests. After dependency updates, run lint, typecheck, core/UI coverage,
+and browser E2E checks; install the matching Chromium build with
+`npx playwright install chromium` before browser checks.
+
 Validate configuration changes from the repository root:
 
 ```sh
