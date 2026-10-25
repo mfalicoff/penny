@@ -2,10 +2,9 @@ name: Build container image
 
 on:
   push:
-    branches: [main]
+    branches: [master]
     tags: ['v*.*.*']
   pull_request:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -71,7 +70,7 @@ jobs:
             type=semver,pattern={{major}}
             type=ref,event=pr
             type=sha,format=long
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' && github.event_name != 'pull_request' }}
 
       - name: Build and publish image
         uses: docker/build-push-action@v7
