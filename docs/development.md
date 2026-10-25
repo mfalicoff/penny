@@ -88,6 +88,32 @@ npm run android
 
 Standalone mobile builds should use an HTTPS API endpoint. Development against plain HTTP depends on platform transport policies. The [mobile build workflow](../.github/workflows/mobile-builds.yml) runs checks and builds a signed [Android APK](android-apk.md) and [iOS IPA](ios-ipa.md) through EAS on version tags or manual dispatch. It uploads the store signed IPA to TestFlight automatically. Complete the platform signing and App Store Connect setup in those guides before running it.
 
+## Dependency updates
+
+[`renovate.json`](../renovate.json) uses Renovate's recommended preset, including
+a Dependency Dashboard and related-package grouping. It checks npm dependencies
+and their lockfiles, GitHub Actions, Dockerfiles, and Docker Compose images.
+All pull requests require manual merging. Generated iOS and Android dependency
+files are not managed independently.
+
+To activate the hosted bot, merge the configuration into the default branch and
+install or enable the [Renovate GitHub App](https://github.com/apps/renovate) for
+this repository. No repository token or scheduled workflow is needed.
+See [Renovate onboarding](https://docs.renovatebot.com/getting-started/installing-onboarding/).
+
+Expo, React, React Native, their native libraries, and Expo-specific tooling are
+excluded from automated updates so their versions stay aligned with the Expo SDK.
+Update them deliberately using Expo's SDK upgrade guidance and
+`npx expo install --fix`, then commit both `package.json` and `package-lock.json`
+and verify web, iOS, and Android. When adding an SDK-managed dependency, keep the
+exclusion rule in `renovate.json` aligned with it.
+
+Validate configuration changes from the repository root:
+
+```sh
+npx --yes --package renovate -- renovate-config-validator --strict --no-global renovate.json
+```
+
 ## Implementation
 
 - `src/app/`: thin Expo Router entry points for real feature screens.
