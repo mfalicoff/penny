@@ -35,8 +35,10 @@ commit:
    merge the release PR. No local version commands or manual Actions run is
    needed.
 4. Release Please creates a matching `vMAJOR.MINOR.PATCH` tag and publishes a
-   GitHub Release with the changelog entry as its release notes. That tag
-   automatically starts the existing container and Android/iOS workflows.
+   GitHub Release with the changelog entry as its release notes. The tag starts
+   the container workflow; publishing the release starts the Android/iOS workflow.
+5. As each mobile build finishes, its job attaches `penny.apk` or `penny.ipa`
+   and the corresponding `.sha256` checksum to that release's **Assets**.
 
 The changelog groups features and fixes and links to their commits. After the
 first release, each version heading links to GitHub's comparison between the
@@ -116,7 +118,7 @@ Land the automation with a releasable commit such as
 setup commit waits until the next feature or fix lands.
 
 Do not substitute `GITHUB_TOKEN`: GitHub suppresses workflows triggered by
-PRs and tags created with that token, which would leave release PR checks and
+PRs, tags, and releases created with that token, which would leave release PR checks and
 release builds untriggered. The workflow fails explicitly when the dedicated
 secret is missing. See the
 [Release Please credential requirements](https://github.com/googleapis/release-please-action#github-credentials).
@@ -128,18 +130,27 @@ unambiguous.
 
 ### Builds, deployment, and recovery
 
-Tag-triggered shared CI runs `npm run version:check`, rejecting invalid
+Shared CI for release tags runs `npm run version:check`, rejecting invalid
 versions, lockfile drift, or tags that do not exactly match `v` plus the package
-version. Branch and manual builds also check consistency without requiring a
-tag. The GitHub Release is published before the downstream builds finish;
-a published release is not proof that its binaries or image are available.
-Monitor the container and mobile runs. If a build fails, rerun that failed
-workflow for the same tag instead of creating another release.
+version. Branch builds also check consistency without requiring a tag.
+The GitHub Release is published before the downstream builds finish;
+assets appear as each mobile build completes, not immediately on publication.
+Monitor the container and mobile runs. If a build or upload fails, rerun that
+failed job for the same release. Uploads replace assets with matching names,
+so reruns do not fail because an earlier build already uploaded them.
 
 The container workflow publishes to GHCR; it does not update a running
-self-hosted server. Android/iOS binaries remain Actions artifacts for 30 days,
-and iOS is submitted to TestFlight, not the App Store. See the platform and
-deployment guides for installation and rollout.
+self-hosted server. Android/iOS binaries and checksums are attached directly
+to the GitHub Release and also retained as Actions artifacts for 30 days.
+Manual mobile runs on branches only upload Actions artifacts; manual runs on
+tags attach assets to the existing release for that tag and fail the upload
+if no release exists. Pushing a tag alone no longer starts mobile builds:
+publish its GitHub Release instead.
+
+iOS is still submitted to TestFlight after its release assets are uploaded,
+not to the App Store. The store signed IPA is downloadable but cannot be
+installed directly; testers use TestFlight. See the platform and deployment
+guides for installation and rollout.
 
 For an expired or missing release token, replace the secret, then rerun the
 failed **Release Please** run. Merging a release PR with the generated

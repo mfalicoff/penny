@@ -1,8 +1,8 @@
 name: Build Android APK and iOS IPA for TestFlight
 
 on:
-  push:
-    tags: ['v*.*.*']
+  release:
+    types: [published]
   workflow_dispatch:
 
 permissions:
@@ -42,6 +42,8 @@ jobs:
   apk:
     name: Build signed APK
     needs: eas-setup
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
@@ -94,9 +96,21 @@ jobs:
           compression-level: 0
           retention-days: 30
 
+      - name: Attach APK to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          gh release upload "$RELEASE_TAG" \
+            artifacts/penny.apk artifacts/penny.apk.sha256 --clobber
+
   ipa:
     name: Build IPA and submit to TestFlight
     needs: eas-setup
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
@@ -164,6 +178,16 @@ jobs:
           if-no-files-found: error
           compression-level: 0
           retention-days: 30
+
+      - name: Attach IPA to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          gh release upload "$RELEASE_TAG" \
+            artifacts/penny.ipa artifacts/penny.ipa.sha256 --clobber
 
       - name: Configure App Store Connect app ID
         env:

@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      # A dedicated token lets generated PRs and tags trigger the existing
+      # A dedicated token lets generated PRs, tags, and releases trigger the
       # validation and build workflows; GITHUB_TOKEN suppresses those events.
       - name: Check release token
         env:
