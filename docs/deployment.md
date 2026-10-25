@@ -50,7 +50,7 @@ Image tags:
 
 The build version uses `package.json` as its base and GitHub Actions' automatic run number and attempt as its suffix; it does not modify `package.json` or create Git commits or tags. Branch and pull request builds use this build version as the image version label. Tagged releases keep the stable release version label and also receive the unique build tag.
 
-Release tags must match `v` plus the version in `package.json`; shared CI checks reject mismatches before building. Use the full release tag to select a specific release; the minor and major tags move when another release in that series is published. See [Releases](releases.md#semantic-versioning-and-releases) for the release version bump and push commands.
+Release tags must match `v` plus the version in `package.json`; shared CI checks reject mismatches before building. Use the full release tag to select a specific release; the minor and major tags move when another release in that series is published. [Release Please](releases.md#automated-release-flow) creates these tags and publishes release notes automatically when its release PR is merged.
 
 To deploy a published image, replace the `build:` block in `compose.yaml` with your image name:
 

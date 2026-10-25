@@ -43,7 +43,7 @@ The iOS CI build sets `EXPO_NO_CAPABILITY_SYNC=1` because EAS's capability-sync 
 
 CI passes `--non-interactive --freeze-credentials` to EAS Build, so missing or unusable signing credentials fail the iOS job. It checks `ASC_APP_ID` before building and submits the exact completed build ID with the stored App Store Connect API key. EAS increments the iOS build number remotely on each build, including reruns.
 
-The user-visible version comes from `package.json` through `app.config.js`. Use the [semantic release commands](releases.md#semantic-versioning-and-releases) to bump it and create the matching release tag. TestFlight reruns keep that version while EAS increments the build number.
+The user-visible version comes from `package.json` through `app.config.js`. Merge the [automated release PR](releases.md#automated-release-flow) to bump it, publish release notes, and create the matching tag that starts these builds. TestFlight reruns keep that version while EAS increments the build number.
 
 After submission, Apple processes the build before it appears under **App Store Connect → Penny → TestFlight**. Add it to an internal testing group to invite your App Store Connect team; enable automatic distribution there if those testers should receive each new build automatically. External testers require a TestFlight group and Apple's Beta App Review. If GitHub times out after submitting, check the EAS dashboard and App Store Connect before starting another build.
 

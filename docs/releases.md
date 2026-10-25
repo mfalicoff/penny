@@ -21,28 +21,108 @@ and build suffixes are not supported by this release workflow because iOS
 requires a numeric marketing version. TestFlight builds use the same release
 version with distinct build numbers.
 
-After committing your changes and passing the application checks, run **one**
-of these commands from a clean working tree:
+## Automated release flow
+
+The **Release Please** workflow (`.github/workflows/release-please.yml`) runs
+on pushes to `master`. It maintains a release PR instead of publishing every
+commit:
+
+1. Merge changes to `master` using Conventional Commit messages (see below).
+2. Release Please opens or updates a release PR with the next semantic version,
+   matching changes to `package.json` and `package-lock.json`, an updated
+   `.release-please-manifest.json`, and generated `CHANGELOG.md` entries.
+3. Review the proposed version and notes, wait for the existing PR checks, then
+   merge the release PR. No local version commands or manual Actions run is
+   needed.
+4. Release Please creates a matching `vMAJOR.MINOR.PATCH` tag and publishes a
+   GitHub Release with the changelog entry as its release notes. That tag
+   automatically starts the existing container and Android/iOS workflows.
+
+The changelog groups features and fixes and links to their commits. After the
+first release, each version heading links to GitHub's comparison between the
+previous and current release tags: the complete commit and file delta,
+including commits omitted from the summarized notes. The first automated
+release starts after the current remote `master` commit, `92f6bc3e6495278a28b0df59b8a55ab0806fc7b4`;
+the manifest starts empty because no version has been published yet.
+That first release publishes the existing `1.0.0` version without inventing a
+previous tag or a broken comparison link. Later release PRs bump from the last
+published version. The bootstrap SHA is ignored after the first release and
+does not need advancing.
+
+### Commit messages and version selection
+
+Use these prefixes in commits landing on `master`. With squash merges, the
+final squash commit message (normally the PR title) is what matters.
+
+| Message | Version change |
+| --- | --- |
+| `fix: correct expense totals` | Patch, e.g. `1.0.0` → `1.0.1` |
+| `feat: add household reports` | Minor, e.g. `1.0.0` → `1.1.0` |
+| `feat!: change the ledger API` | Major, e.g. `1.0.0` → `2.0.0` |
+
+Scopes such as `fix(auth): ...` are supported. A `BREAKING CHANGE:` footer also
+marks a major change. The highest applicable bump since the previous release
+wins. `docs:`, `test:`, and ordinary `chore:` commits do not trigger releases
+on their own; non-Conventional Commit messages do not drive version selection.
+They still appear in the full comparison once a release is made. Use
+`fix(deps): ...` for a dependency update that should ship as a patch.
+
+Do not run `npm version` or create release tags for routine releases: the
+release PR owns version bumps, the manifest, and the changelog. To correct the
+proposed version or notes before publishing, follow
+[Release Please's override instructions](https://github.com/googleapis/release-please#how-do-i-change-the-version-number).
+
+### One-time GitHub setup
+
+Create a dedicated fine-grained personal access token for this repository
+with **Contents: read/write**, **Pull requests: read/write**, and
+**Issues: read/write** permissions (Release Please manages release labels).
+Store it as the repository Actions secret **`RELEASE_PLEASE_TOKEN`**.
+Approve it in the organization if required, and renew it before it expires.
+An equivalent GitHub App installation token can be used if your organization
+already provisions one.
+
+To store the token without putting it in shell history, run this command and
+paste it at the prompt:
 
 ```sh
-npm run release:patch  # 1.0.0 -> 1.0.1
-npm run release:minor  # 1.0.0 -> 1.1.0
-npm run release:major  # 1.0.0 -> 2.0.0
+gh secret set RELEASE_PLEASE_TOKEN --repo mfalicoff/penny
 ```
 
-These use `npm version` to update `package.json` and `package-lock.json`, run
-the version consistency check, create a version commit, and create an annotated
-`vMAJOR.MINOR.PATCH` Git tag. They do not push or start a build locally.
-To publish from the default branch (`master`):
+Land the automation with a releasable commit such as
+`feat(ci): automate releases` to open the first release PR. A `chore:`-only
+setup commit waits until the next feature or fix lands.
 
-```sh
-git push origin master --follow-tags
-```
+Do not substitute `GITHUB_TOKEN`: GitHub suppresses workflows triggered by
+PRs and tags created with that token, which would leave release PR checks and
+release builds untriggered. The workflow fails explicitly when the dedicated
+secret is missing. See the
+[Release Please credential requirements](https://github.com/googleapis/release-please-action#github-credentials).
 
-The tag triggers the existing container and mobile workflows. Their shared CI
-checks run `npm run version:check`, rejecting invalid versions, lockfile drift,
-or tags that do not exactly match `v` plus the package version. Branch and manual
-builds also check version consistency but do not require a tag.
+Keep the existing `EXPO_TOKEN`, EAS signing credentials, and `ASC_APP_ID` setup
+from the platform guides. Protect `master` with the existing PR checks to gate
+release PR merges. Prefer squash merging so each PR's release intent is
+unambiguous.
+
+### Builds, deployment, and recovery
+
+Tag-triggered shared CI runs `npm run version:check`, rejecting invalid
+versions, lockfile drift, or tags that do not exactly match `v` plus the package
+version. Branch and manual builds also check consistency without requiring a
+tag. The GitHub Release is published before the downstream builds finish;
+a published release is not proof that its binaries or image are available.
+Monitor the container and mobile runs. If a build fails, rerun that failed
+workflow for the same tag instead of creating another release.
+
+The container workflow publishes to GHCR; it does not update a running
+self-hosted server. Android/iOS binaries remain Actions artifacts for 30 days,
+and iOS is submitted to TestFlight, not the App Store. See the platform and
+deployment guides for installation and rollout.
+
+For an expired or missing release token, replace the secret, then rerun the
+failed **Release Please** run. Merging a release PR with the generated
+`autorelease: pending` label intact lets Release Please recognize it and
+publish it; do not remove its release labels manually.
 
 EAS continues to increment Android `versionCode` and iOS `buildNumber` remotely
 for every build, independently of semantic versions. For local native builds,
