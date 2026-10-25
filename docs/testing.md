@@ -148,6 +148,14 @@ For a manual native smoke pass: launch a fresh development build, enter the demo
 
 `.github/workflows/tests.yml` is the reusable application check used by both container and mobile release workflows. It runs lint, typecheck, core tests and all three Jest projects via `npm run test:coverage`, then browser E2E on Node 24/Linux. It uploads code coverage as `code-coverage` and browser evidence as `playwright-report`, including available reports on failure. Each core/UI test runs once, with coverage enabled.
 
+The container workflow invokes these checks on every pull request, regardless of
+target branch, including Renovate and fork PRs. After checks pass, it builds
+`linux/amd64` and `linux/arm64` images without registry login or publication.
+New commits cancel superseded PR runs. Pushes to the default branch (`master`),
+release tags, and manual runs validate before publishing; only `master` updates
+the `latest` tag. Signed mobile builds and TestFlight submission remain limited
+to release tags and manual runs, never pull requests.
+
 Native device E2E is an explicit workstation/release gate, not an implied result of Linux CI or an EAS build. The repository does not provision Xcode runtimes, AVD images, `agent-device`, or native development binaries on hosted CI. Do not add a green job that skips missing devices; provision those prerequisites before moving native execution to a dedicated runner.
 
 ## Adding or changing tests

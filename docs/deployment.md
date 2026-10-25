@@ -36,14 +36,14 @@ After creating your account, set `ALLOW_REGISTRATION=false` and run `docker comp
 
 ### Automated container builds
 
-The **Build container image** workflow (`.github/workflows/docker-image.yml`) runs on pull requests to `main`, pushes to `main`, version tags such as `v1.2.3`, and manual runs from the Actions tab. Lint, type checks, and tests must pass before it builds the image.
+The **Build container image** workflow (`.github/workflows/docker-image.yml`) runs on pull requests targeting any branch, pushes to the default branch (`master`), version tags such as `v1.2.3`, and manual runs from the Actions tab. PR creation, reopening, and new commits trigger validation, including Renovate PRs. Lint, type checks, and tests must pass before it builds the image.
 
 It builds both **linux/amd64** and **linux/arm64** from the root Dockerfile. Pull requests build without publishing. Pushes and manual runs publish to `ghcr.io/<owner>/<repository>` using the built-in `GITHUB_TOKEN`; no registry password or Docker Hub account is required. Owner/repository names are lowercased automatically.
 
 Image tags:
 
 - `<package-version>-build.<run-number>.<run-attempt>` on every run, including manual runs and reruns; for example, `1.0.0-build.123.1`, then `1.0.0-build.124.1`, or `1.0.0-build.124.2` when rerunning build 124. No manual version bump or Git tag is needed. Pull requests generate this tag but do not publish it.
-- `latest` and `main` for builds on `main`.
+- `latest` and `master` for builds on `master`.
 - `1.2.3`, `1.2`, and `1` for a matching `v1.2.3` Git release tag. The image version label is `1.2.3`, without the Git tag's `v` prefix. Release tags do not move `latest`.
 - `sha-<full-commit-sha>` for identifying the source commit.
 - The branch name for manual runs on other branches.

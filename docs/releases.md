@@ -33,10 +33,10 @@ npm run release:major  # 1.0.0 -> 2.0.0
 These use `npm version` to update `package.json` and `package-lock.json`, run
 the version consistency check, create a version commit, and create an annotated
 `vMAJOR.MINOR.PATCH` Git tag. They do not push or start a build locally.
-To publish from `main`:
+To publish from the default branch (`master`):
 
 ```sh
-git push origin main --follow-tags
+git push origin master --follow-tags
 ```
 
 The tag triggers the existing container and mobile workflows. Their shared CI
