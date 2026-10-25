@@ -1,8 +1,9 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"],
+  "extends": ["config:recommended", "group:all"],
   "enabledManagers": ["npm", "github-actions", "dockerfile", "docker-compose"],
   "automerge": false,
+  "prConcurrentLimit": 1,
   "packageRules": [
     {
       "description": "Update Expo SDK dependencies together using expo install, not independent Renovate upgrades.",

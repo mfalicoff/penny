@@ -90,11 +90,13 @@ Standalone mobile builds should use an HTTPS API endpoint. Development against p
 
 ## Dependency updates
 
-[`renovate.json`](../renovate.json) uses Renovate's recommended preset, including
-a Dependency Dashboard and related-package grouping. It checks npm dependencies
-and their lockfiles, GitHub Actions, Dockerfiles, and Docker Compose images.
-All pull requests require manual merging. Generated iOS and Android dependency
-files are not managed independently.
+[`renovate.json`](../renovate.json) uses Renovate's recommended preset with a
+Dependency Dashboard. All regular updates, including major versions, are grouped
+into one pull request, with at most one regular Renovate PR open at a time.
+It checks npm dependencies and their lockfiles, GitHub Actions, Dockerfiles, and
+Docker Compose images. Security vulnerability PRs can bypass Renovate's concurrency
+limit. All pull requests require manual merging. Generated iOS and Android
+dependency files are not managed independently.
 
 To activate the hosted bot, merge the configuration into the default branch and
 install or enable the [Renovate GitHub App](https://github.com/apps/renovate) for
