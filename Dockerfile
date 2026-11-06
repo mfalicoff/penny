@@ -1,5 +1,5 @@
 # Web assets are architecture-independent; build them natively, even for ARM images.
-FROM --platform=$BUILDPLATFORM node:24-bookworm-slim AS build
+FROM --platform=$BUILDPLATFORM node:26-bookworm-slim AS build
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
@@ -8,7 +8,7 @@ ARG EXPO_PUBLIC_API_URL=""
 ENV EXPO_PUBLIC_API_URL=$EXPO_PUBLIC_API_URL
 RUN npm run build:web
 
-FROM node:24-bookworm-slim
+FROM node:26-bookworm-slim
 WORKDIR /app
 ENV NODE_ENV=production PORT=3001 DATABASE_PATH=/data/penny.sqlite
 COPY package*.json ./
