@@ -1,0 +1,666 @@
+{
+  "fileId": "124ca123-b2be-80ce-8008-e92b352e40f9",
+  "fileName": "New File 1",
+  "pages": {
+    "Penny · 00 Start here": "818fc2b6-4f0f-80e6-8008-e9304283ccbc",
+    "Penny · 01 Components": "818fc2b6-4f0f-80e6-8008-e9304b0b907e",
+    "Penny · 02 Screens & flows": "818fc2b6-4f0f-80e6-8008-e9306f94bfc1"
+  },
+  "screenCount": 79,
+  "viewerBoardCount": 79,
+  "componentCount": 75,
+  "componentIds": {
+    "Icon/add-outline": "818fc2b6-4f0f-80e6-8008-e9304b1a5b56",
+    "Icon/airplane-outline": "818fc2b6-4f0f-80e6-8008-e9304b2134fa",
+    "Icon/alert-circle-outline": "818fc2b6-4f0f-80e6-8008-e9304b27988a",
+    "Icon/arrow-down-outline": "818fc2b6-4f0f-80e6-8008-e9304b2ce9df",
+    "Icon/arrow-up-outline": "818fc2b6-4f0f-80e6-8008-e9304b32a4a1",
+    "Icon/basket-outline": "818fc2b6-4f0f-80e6-8008-e9304b38dffe",
+    "Icon/battery-full-outline": "818fc2b6-4f0f-80e6-8008-e9304b3ecb74",
+    "Icon/bus-outline": "818fc2b6-4f0f-80e6-8008-e9304b48a503",
+    "Icon/cafe-outline": "818fc2b6-4f0f-80e6-8008-e9304b4ea201",
+    "Icon/calendar-outline": "818fc2b6-4f0f-80e6-8008-e9304b5818b3",
+    "Icon/card-outline": "818fc2b6-4f0f-80e6-8008-e9304b5e8997",
+    "Icon/cash-outline": "818fc2b6-4f0f-80e6-8008-e9304b669c9a",
+    "Icon/checkmark-circle-outline": "818fc2b6-4f0f-80e6-8008-e9304b6cb9a1",
+    "Icon/checkmark-outline": "818fc2b6-4f0f-80e6-8008-e9304b71256d",
+    "Icon/chevron-back-outline": "818fc2b6-4f0f-80e6-8008-e9304b75ec53",
+    "Icon/chevron-down-outline": "818fc2b6-4f0f-80e6-8008-e9304b7a852c",
+    "Icon/chevron-forward-outline": "818fc2b6-4f0f-80e6-8008-e9304b7ff776",
+    "Icon/close-outline": "818fc2b6-4f0f-80e6-8008-e9304b850404",
+    "Icon/cloud-done-outline": "818fc2b6-4f0f-80e6-8008-e9304b8a28d8",
+    "Icon/cloud-offline-outline": "818fc2b6-4f0f-80e6-8008-e9304b8fc9f4",
+    "Icon/copy-outline": "818fc2b6-4f0f-80e6-8008-e9304b959bfa",
+    "Icon/create-outline": "818fc2b6-4f0f-80e6-8008-e9304b9ca91a",
+    "Icon/document-text-outline": "818fc2b6-4f0f-80e6-8008-e9304ba376a3",
+    "Icon/ellipsis-horizontal": "818fc2b6-4f0f-80e6-8008-e9304ba8c871",
+    "Icon/finger-print-outline": "818fc2b6-4f0f-80e6-8008-e9304bae2ebd",
+    "Icon/home-outline": "818fc2b6-4f0f-80e6-8008-e9304bb3b297",
+    "Icon/image-outline": "818fc2b6-4f0f-80e6-8008-e9304bbad903",
+    "Icon/key-outline": "818fc2b6-4f0f-80e6-8008-e9304bbfc822",
+    "Icon/leaf-outline": "818fc2b6-4f0f-80e6-8008-e9304bc53ab7",
+    "Icon/list-outline": "818fc2b6-4f0f-80e6-8008-e9304bcbff43",
+    "Icon/lock-closed-outline": "818fc2b6-4f0f-80e6-8008-e9304bd10661",
+    "Icon/log-out-outline": "818fc2b6-4f0f-80e6-8008-e9304bd7f718",
+    "Icon/moon-outline": "818fc2b6-4f0f-80e6-8008-e9304bdcc4b6",
+    "Icon/options-outline": "818fc2b6-4f0f-80e6-8008-e9304be52bc8",
+    "Icon/pause-outline": "818fc2b6-4f0f-80e6-8008-e9304bea5033",
+    "Icon/people-outline": "818fc2b6-4f0f-80e6-8008-e9304bf193be",
+    "Icon/person-add-outline": "818fc2b6-4f0f-80e6-8008-e9304bf7c38a",
+    "Icon/pie-chart-outline": "818fc2b6-4f0f-80e6-8008-e9304bfd604d",
+    "Icon/play-outline": "818fc2b6-4f0f-80e6-8008-e9304c027e66",
+    "Icon/pricetag-outline": "818fc2b6-4f0f-80e6-8008-e9304c07f6bd",
+    "Icon/receipt-outline": "818fc2b6-4f0f-80e6-8008-e9304c0f4a0f",
+    "Icon/repeat-outline": "818fc2b6-4f0f-80e6-8008-e9304c15ba49",
+    "Icon/search-outline": "818fc2b6-4f0f-80e6-8008-e9304c1b3f62",
+    "Icon/server-outline": "818fc2b6-4f0f-80e6-8008-e9304c210dea",
+    "Icon/settings-outline": "818fc2b6-4f0f-80e6-8008-e9304c2708ef",
+    "Icon/sunny-outline": "818fc2b6-4f0f-80e6-8008-e9304c2fa044",
+    "Icon/time-outline": "818fc2b6-4f0f-80e6-8008-e9304c354315",
+    "Icon/trash-outline": "818fc2b6-4f0f-80e6-8008-e9304c3c2b17",
+    "Icon/trending-up-outline": "818fc2b6-4f0f-80e6-8008-e9304c4351bb",
+    "Icon/wallet-outline": "818fc2b6-4f0f-80e6-8008-e9304c4977ed",
+    "Icon/wifi-outline": "818fc2b6-4f0f-80e6-8008-e9304c4f54c5",
+    "Button/Primary": "818fc2b6-4f0f-80e6-8008-e9304c65d3fb",
+    "Button/Secondary": "818fc2b6-4f0f-80e6-8008-e9304c7c3452",
+    "Button/Quiet": "818fc2b6-4f0f-80e6-8008-e9304c92d6ca",
+    "Button/Danger": "818fc2b6-4f0f-80e6-8008-e9304caa48fa",
+    "Button/Disabled": "818fc2b6-4f0f-80e6-8008-e9304cc26275",
+    "Button/Saving": "818fc2b6-4f0f-80e6-8008-e9304cda5d22",
+    "Field/Default": "818fc2b6-4f0f-80e6-8008-e9304cfc766e",
+    "Field/Focused": "818fc2b6-4f0f-80e6-8008-e9304d1fbc75",
+    "Field/Error": "818fc2b6-4f0f-80e6-8008-e9304d4e29a6",
+    "Row/Transaction": "818fc2b6-4f0f-80e6-8008-e9304d9d5cfe",
+    "Row/Menu": "818fc2b6-4f0f-80e6-8008-e9304ddc6d0f",
+    "Search": "818fc2b6-4f0f-80e6-8008-e9304e046527",
+    "Badge/Scheduled": "818fc2b6-4f0f-80e6-8008-e9304e1c86e2",
+    "Badge/Shared": "818fc2b6-4f0f-80e6-8008-e9304e3565b8",
+    "Badge/Pending": "818fc2b6-4f0f-80e6-8008-e9304e4ded37",
+    "Badge/Paid": "818fc2b6-4f0f-80e6-8008-e9304e675df9",
+    "Navigation/Home": "818fc2b6-4f0f-80e6-8008-e9304f52eb64",
+    "Navigation/Activity": "818fc2b6-4f0f-80e6-8008-e930505111ad",
+    "Navigation/Shared": "818fc2b6-4f0f-80e6-8008-e930516070be",
+    "Navigation/Trips": "818fc2b6-4f0f-80e6-8008-e9305284f813",
+    "Navigation/More": "818fc2b6-4f0f-80e6-8008-e93053b88cd9",
+    "Banner/Offline": "818fc2b6-4f0f-80e6-8008-e9305407e077",
+    "Banner/Error": "818fc2b6-4f0f-80e6-8008-e9305454d2c6",
+    "Toast/Saved": "818fc2b6-4f0f-80e6-8008-e930548dbe30"
+  },
+  "colorCount": 80,
+  "typographyCount": 0,
+  "matchedNodes": 3026,
+  "textCount": 1225,
+  "linkedInstances": 815,
+  "tokenBindings": 3729,
+  "interactionCount": 441,
+  "missing": [],
+  "duplicates": [],
+  "unmatched": [
+    {
+      "screen": "activity",
+      "layer": "Row / Transaction · Groceries",
+      "expected": 7,
+      "actual": 6
+    },
+    {
+      "screen": "activity",
+      "layer": "Row / Transaction · Coffee with Mira",
+      "expected": 7,
+      "actual": 6
+    },
+    {
+      "screen": "activity",
+      "layer": "Row / Transaction · Investment transfer",
+      "expected": 7,
+      "actual": 6
+    },
+    {
+      "screen": "filters",
+      "layer": "Row / Menu · Category",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "insights",
+      "layer": "Row / Menu",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "add-expense",
+      "layer": "Row / Menu",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "add-expense",
+      "layer": "Row / Menu",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "add-expense",
+      "layer": "Row / Menu",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "add-income",
+      "layer": "Row / Menu",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "add-income",
+      "layer": "Row / Menu",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "add-income",
+      "layer": "Row / Menu",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "add-investment",
+      "layer": "Row / Menu",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "add-investment",
+      "layer": "Row / Menu",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "add-investment",
+      "layer": "Row / Menu",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "entry-extras",
+      "layer": "Row / Menu",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "entry-extras",
+      "layer": "Row / Menu",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "entry-extras",
+      "layer": "Row / Menu",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "entry-extras",
+      "layer": "Row / Menu",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "edit-entry",
+      "layer": "Row / Menu · Category",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "edit-entry",
+      "layer": "Row / Menu · Date",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "edit-entry",
+      "layer": "Row / Menu · More details",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "category-picker",
+      "layer": "Row / Menu · Groceries",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "category-picker",
+      "layer": "Row / Menu · Food & drinks",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "category-picker",
+      "layer": "Row / Menu · Home",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "category-picker",
+      "layer": "Row / Menu · Transport",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "category-picker",
+      "layer": "Row / Menu · Shopping",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "account-picker",
+      "layer": "Row / Menu · Visa",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "account-picker",
+      "layer": "Row / Menu · Cash",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "account-picker",
+      "layer": "Row / Menu · No account",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "repeat-picker",
+      "layer": "Row / Menu · Just once",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "repeat-picker",
+      "layer": "Row / Menu · Weekly",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "repeat-picker",
+      "layer": "Row / Menu · Monthly",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "repeat-picker",
+      "layer": "Row / Menu · Yearly",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "trip-picker",
+      "layer": "Row / Menu · No trip",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "trip-picker",
+      "layer": "Row / Menu · Montréal weekend",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "household",
+      "layer": "Row / Transaction · Home supplies",
+      "expected": 7,
+      "actual": 6
+    },
+    {
+      "screen": "household",
+      "layer": "Row / Transaction · Internet",
+      "expected": 7,
+      "actual": 6
+    },
+    {
+      "screen": "shared-expense",
+      "layer": "Row / Menu · Split",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "shared-expense",
+      "layer": "Row / Menu · Category & date",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "shared-expense",
+      "layer": "Row / Menu · More details",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "shared-payer",
+      "layer": "Row / Menu · You",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "shared-payer",
+      "layer": "Row / Menu · Mira",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "shared-payer",
+      "layer": "Row / Menu · Alex",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "shared-expense-detail",
+      "layer": "Row / Menu · Receipt",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "shared-expense-detail",
+      "layer": "Row / Menu · Change history",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "people",
+      "layer": "Row / Menu · You",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "people",
+      "layer": "Row / Menu · Mira",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "people",
+      "layer": "Row / Menu · Alex",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "people",
+      "layer": "Row / Menu · Recurring expenses",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "people",
+      "layer": "Row / Menu · Change history",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "shared-trip",
+      "layer": "Row / Transaction · Apartment deposit",
+      "expected": 7,
+      "actual": 6
+    },
+    {
+      "screen": "shared-trip",
+      "layer": "Row / Transaction · Airport transfers",
+      "expected": 7,
+      "actual": 6
+    },
+    {
+      "screen": "personal-trip",
+      "layer": "Row / Transaction · Train tickets",
+      "expected": 7,
+      "actual": 6
+    },
+    {
+      "screen": "personal-trip",
+      "layer": "Row / Transaction · Dinner with friends",
+      "expected": 7,
+      "actual": 6
+    },
+    {
+      "screen": "trip-people",
+      "layer": "Row / Menu · You",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "trip-people",
+      "layer": "Row / Menu · Mira",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "trip-people",
+      "layer": "Row / Menu · Alex",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "more",
+      "layer": "Row / Menu · Recurring",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "more",
+      "layer": "Row / Menu · Categories",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "more",
+      "layer": "Row / Menu · Settings",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "recurring",
+      "layer": "Row / Transaction · Payday",
+      "expected": 7,
+      "actual": 6
+    },
+    {
+      "screen": "recurring",
+      "layer": "Row / Transaction · Transit pass",
+      "expected": 7,
+      "actual": 6
+    },
+    {
+      "screen": "recurring",
+      "layer": "Row / Transaction · Rent",
+      "expected": 7,
+      "actual": 6
+    },
+    {
+      "screen": "recurring-paused",
+      "layer": "Row / Transaction · Music subscription",
+      "expected": 7,
+      "actual": 6
+    },
+    {
+      "screen": "edit-schedule",
+      "layer": "Row / Menu · Account",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "accounts",
+      "layer": "Row / Menu · Visa",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "accounts",
+      "layer": "Row / Menu · Cash",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "account-form",
+      "layer": "Row / Menu · Credit card",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "account-form",
+      "layer": "Row / Menu · Cash wallet",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "account-form",
+      "layer": "Row / Menu · Other",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "categories",
+      "layer": "Row / Menu · Groceries",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "categories",
+      "layer": "Row / Menu · Food & drinks",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "categories",
+      "layer": "Row / Menu · Home",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "categories",
+      "layer": "Row / Menu · Transport",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "categories",
+      "layer": "Row / Menu · Shopping",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "settings",
+      "layer": "Row / Menu · Appearance",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "settings",
+      "layer": "Row / Menu · App lock",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "settings",
+      "layer": "Row / Menu · Penny server",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "settings",
+      "layer": "Row / Menu · Currency",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "appearance",
+      "layer": "Row / Menu · Light",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "appearance",
+      "layer": "Row / Menu · Dark",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "appearance",
+      "layer": "Row / Menu · AMOLED",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "appearance",
+      "layer": "Row / Menu · Catppuccin",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "server-info",
+      "layer": "58 · Connected server",
+      "expected": 8,
+      "actual": 7
+    },
+    {
+      "screen": "save-error",
+      "layer": "Row / Menu · Category",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "desktop",
+      "layer": "Row / Menu · Settings",
+      "expected": 5,
+      "actual": 4
+    },
+    {
+      "screen": "desktop",
+      "layer": "Row / Transaction · Coffee with Mira",
+      "expected": 7,
+      "actual": 6
+    },
+    {
+      "screen": "desktop",
+      "layer": "Row / Transaction · Investment transfer",
+      "expected": 7,
+      "actual": 6
+    },
+    {
+      "screen": "desktop",
+      "layer": "Row / Transaction · Payday",
+      "expected": 7,
+      "actual": 6
+    }
+  ],
+  "wrongFonts": [],
+  "overflow": [],
+  "unlinked": [],
+  "flows": [
+    {
+      "name": "Flow 1"
+    },
+    {
+      "name": "Flow 2"
+    },
+    {
+      "name": "Flow 3"
+    },
+    {
+      "name": "Flow 4"
+    },
+    {
+      "name": "Flow 5"
+    },
+    {
+      "name": "Flow 6"
+    },
+    {
+      "name": "Flow 7"
+    },
+    {
+      "name": "Flow 8"
+    }
+  ],
+  "validationErrors": [],
+  "status": "failed",
+  "verifiedAt": "2026-11-07T21:48:10.379Z"
+}

@@ -1,0 +1,1979 @@
+{
+  "add-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      }
+    ]
+  },
+  "airplane-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      }
+    ]
+  },
+  "alert-circle-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "butt"
+      },
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "path",
+        "fill": true,
+        "stroke": false,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 1,
+        "linecap": "butt"
+      }
+    ]
+  },
+  "arrow-down-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "polyline",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 48,
+        "linecap": "round"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 48,
+        "linecap": "round"
+      }
+    ]
+  },
+  "arrow-up-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "polyline",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 48,
+        "linecap": "round"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 48,
+        "linecap": "round"
+      }
+    ]
+  },
+  "basket-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "butt"
+      },
+      {
+        "tag": "polyline",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "butt"
+      }
+    ]
+  },
+  "battery-full-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "rect",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "square"
+      },
+      {
+        "tag": "rect",
+        "fill": true,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "square"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      }
+    ]
+  },
+  "bus-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "rect",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "rect",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "circle",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "butt"
+      },
+      {
+        "tag": "circle",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "butt"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      }
+    ]
+  },
+  "cafe-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      }
+    ]
+  },
+  "calendar-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "rect",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "butt"
+      },
+      {
+        "tag": "circle",
+        "fill": true,
+        "stroke": false,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 1,
+        "linecap": "butt"
+      },
+      {
+        "tag": "circle",
+        "fill": true,
+        "stroke": false,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 1,
+        "linecap": "butt"
+      },
+      {
+        "tag": "circle",
+        "fill": true,
+        "stroke": false,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 1,
+        "linecap": "butt"
+      },
+      {
+        "tag": "circle",
+        "fill": true,
+        "stroke": false,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 1,
+        "linecap": "butt"
+      },
+      {
+        "tag": "circle",
+        "fill": true,
+        "stroke": false,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 1,
+        "linecap": "butt"
+      },
+      {
+        "tag": "circle",
+        "fill": true,
+        "stroke": false,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 1,
+        "linecap": "butt"
+      },
+      {
+        "tag": "circle",
+        "fill": true,
+        "stroke": false,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 1,
+        "linecap": "butt"
+      },
+      {
+        "tag": "circle",
+        "fill": true,
+        "stroke": false,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 1,
+        "linecap": "butt"
+      },
+      {
+        "tag": "circle",
+        "fill": true,
+        "stroke": false,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 1,
+        "linecap": "butt"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "butt"
+      }
+    ]
+  },
+  "card-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "rect",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 60,
+        "linecap": "butt"
+      },
+      {
+        "tag": "rect",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 60,
+        "linecap": "butt"
+      }
+    ]
+  },
+  "cash-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "rect",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "butt"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "circle",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      }
+    ]
+  },
+  "checkmark-circle-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "butt"
+      },
+      {
+        "tag": "polyline",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      }
+    ]
+  },
+  "checkmark-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "polyline",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      }
+    ]
+  },
+  "chevron-back-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "polyline",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 48,
+        "linecap": "round"
+      }
+    ]
+  },
+  "chevron-down-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "polyline",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 48,
+        "linecap": "round"
+      }
+    ]
+  },
+  "chevron-forward-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "polyline",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 48,
+        "linecap": "round"
+      }
+    ]
+  },
+  "close-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      }
+    ]
+  },
+  "cloud-done-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "butt"
+      },
+      {
+        "tag": "polyline",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      }
+    ]
+  },
+  "cloud-offline-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      }
+    ]
+  },
+  "copy-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "rect",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "butt"
+      },
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      }
+    ]
+  },
+  "create-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "path",
+        "fill": true,
+        "stroke": false,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 1,
+        "linecap": "butt"
+      },
+      {
+        "tag": "path",
+        "fill": true,
+        "stroke": false,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 1,
+        "linecap": "butt"
+      }
+    ]
+  },
+  "document-text-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "butt"
+      },
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      }
+    ]
+  },
+  "ellipsis-horizontal": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "circle",
+        "fill": true,
+        "stroke": false,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 1,
+        "linecap": "butt"
+      },
+      {
+        "tag": "circle",
+        "fill": true,
+        "stroke": false,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 1,
+        "linecap": "butt"
+      },
+      {
+        "tag": "circle",
+        "fill": true,
+        "stroke": false,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 1,
+        "linecap": "butt"
+      }
+    ]
+  },
+  "finger-print-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "path",
+        "fill": true,
+        "stroke": false,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 1,
+        "linecap": "butt"
+      }
+    ]
+  },
+  "home-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "polyline",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      }
+    ]
+  },
+  "image-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "rect",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "butt"
+      },
+      {
+        "tag": "circle",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "butt"
+      },
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      }
+    ]
+  },
+  "key-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "butt"
+      }
+    ]
+  },
+  "leaf-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      }
+    ]
+  },
+  "list-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "circle",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "circle",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "circle",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      }
+    ]
+  },
+  "lock-closed-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "rect",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      }
+    ]
+  },
+  "log-out-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "polyline",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      }
+    ]
+  },
+  "moon-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      }
+    ]
+  },
+  "options-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "circle",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "circle",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "circle",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      }
+    ]
+  },
+  "pause-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "rect",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "rect",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      }
+    ]
+  },
+  "people-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "butt"
+      },
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      }
+    ]
+  },
+  "person-add-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "butt"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      }
+    ]
+  },
+  "pie-chart-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      }
+    ]
+  },
+  "play-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "butt"
+      }
+    ]
+  },
+  "pricetag-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "path",
+        "fill": true,
+        "stroke": false,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 1,
+        "linecap": "butt"
+      }
+    ]
+  },
+  "receipt-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "polyline",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "butt"
+      },
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "butt"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      }
+    ]
+  },
+  "repeat-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "polyline",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "polyline",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      }
+    ]
+  },
+  "search-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "butt"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      }
+    ]
+  },
+  "server-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "ellipse",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      }
+    ]
+  },
+  "settings-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      }
+    ]
+  },
+  "sunny-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "circle",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      }
+    ]
+  },
+  "time-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "butt"
+      },
+      {
+        "tag": "polyline",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      }
+    ]
+  },
+  "trash-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "line",
+        "fill": true,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "line",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      }
+    ]
+  },
+  "trending-up-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "polyline",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      }
+    ]
+  },
+  "wallet-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "rect",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "butt"
+      },
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "butt"
+      },
+      {
+        "tag": "path",
+        "fill": true,
+        "stroke": false,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 1,
+        "linecap": "butt"
+      }
+    ]
+  },
+  "wifi-outline": {
+    "viewBox": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "paths": [
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      },
+      {
+        "tag": "path",
+        "fill": false,
+        "stroke": true,
+        "fillOpacity": 1,
+        "strokeOpacity": 1,
+        "strokeWidth": 32,
+        "linecap": "round"
+      }
+    ]
+  }
+}
