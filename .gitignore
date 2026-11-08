@@ -58,3 +58,9 @@ public/pdf/
 coverage/
 playwright-report/
 test-results/
+
+# Backend build output and local tool caches
+.cache/
+**/bin/
+**/obj/
+**/TestResults/
