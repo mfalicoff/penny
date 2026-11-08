@@ -40,7 +40,10 @@ public sealed class BoundaryTests(ApiFixture fixture) : IntegrationTestBase(fixt
         body.ShouldContain("error");
         body.ShouldNotContain("synthetic-secret");
         body.ShouldNotContain("stack");
-        using var missing = await Client.GetAsync("/api/missing", Ct);
+        // Unknown routes are session-protected like the legacy server; see AuthTests.
+        var token = await RegisterAsync("boundary@example.test");
+        using var missingRequest = Authorized(HttpMethod.Get, "/api/missing", bearer: token);
+        using var missing = await Client.SendAsync(missingRequest, Ct);
         missing.StatusCode.ShouldBe(HttpStatusCode.NotFound);
         (await missing.Content.ReadFromJsonAsync<ApiError>(Ct))!.Error.ShouldNotBeNullOrEmpty();
     }

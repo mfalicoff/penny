@@ -1,6 +1,6 @@
 # Penny ASP.NET Core foundation
 
-MAZ-51 provides a separate controller-based .NET 10 service; MAZ-52 adds the EF Core product schema and migrations, the encrypted receipt file store and explicit SQLite snapshot/import/verification commands. The existing Expo/Node/SQLite application continues running unchanged. This service is not ready to replace it: auth, ledger, receipt and household HTTP workflows are owned by MAZ-53–61, and search population/matching belongs to MAZ-121. See the [import and recovery runbook](../../docs/migration/postgresql.md).
+MAZ-51 provides a separate controller-based .NET 10 service; MAZ-52 adds the EF Core product schema and migrations, the encrypted receipt file store and explicit SQLite snapshot/import/verification commands. The existing Expo/Node/SQLite application continues running unchanged. MAZ-53 adds password registration/login/me/logout (ASP.NET Core Identity password hashes; imported legacy scrypt accounts must reset their password), cookie and bearer sessions, origin/CORS policy and sign-in rate limiting ([authentication compatibility](../../docs/migration/authentication.md)). This service is not ready to replace it: OIDC, ledger, receipt and household HTTP workflows are owned by MAZ-54–61, and search population/matching belongs to MAZ-121. See the [import and recovery runbook](../../docs/migration/postgresql.md).
 
 ## Toolchain and layout
 
@@ -9,10 +9,10 @@ Install SDK **10.0.403** (pinned without roll-forward), Node 24 for the legacy c
 | Project | Owns |
 | --- | --- |
 | `src/Penny.Backend.Domain` | Framework-free failures and future domain rules |
-| `src/Penny.Backend.Application` | Use cases and persistence ports; no SQL/HTTP references |
+| `src/Penny.Backend.Application` | Use cases (password auth, initial ledger), persistence and security ports; no SQL/HTTP references |
 | `src/Penny.Backend.Persistence` | EF Core model (`PennyDbContext`) and migrations, repositories, read-only readiness probe, encrypted receipt store and SQLite import |
-| `src/Penny.Backend.Api` | Standard CreateBuilder/AddControllers/Build/MapControllers/Run flow, configuration, middleware and operational controllers |
-| `tests/Penny.Backend.UnitTests` | Configuration bounds/redaction and inward dependency checks |
+| `src/Penny.Backend.Api` | Standard CreateBuilder/AddControllers/Build/MapControllers/Run flow, configuration, session authentication, origin/CORS/rate-limit middleware, operational and auth controllers |
+| `tests/Penny.Backend.UnitTests` | Configuration bounds/redaction, password hasher, credential/token parity and inward dependency checks |
 | `tests/Penny.Backend.IntegrationTests` | One PostgreSQL container and shared WebApplicationFactory, real Kestrel/SQL, per-test compatibility metadata reset |
 
 Production projects live in `src/` and test projects in `tests/`, with matching solution folders. Within projects, responsibilities have their own folders and namespaces:
@@ -20,10 +20,10 @@ Production projects live in `src/` and test projects in `tests/`, with matching 
 ```text
 src/
   Penny.Backend.Api/
-    Configuration/  Contracts/  Controllers/  Errors/  Middleware/
+    Authentication/  Configuration/  Contracts/  Controllers/  Errors/  Middleware/
     Program.cs
   Penny.Backend.Application/
-    Abstractions/Persistence/
+    Abstractions/Persistence/  Abstractions/Security/  Authentication/  Ledgers/
   Penny.Backend.Domain/
     Errors/
   Penny.Backend.Persistence/
@@ -34,14 +34,14 @@ tests/
     Contracts/  Controllers/  Http/  Migrations/
     Infrastructure/Probes/
   Penny.Backend.UnitTests/
-    Architecture/  Configuration/
+    Architecture/  Authentication/  Configuration/
 ```
 
 DTOs, enums, fixtures and host helpers each have their own file. Namespace/folder alignment is checked by analyzers; keep new features within their owning project's folders.
 
 Tests use `whenCondition_MethodOrFunctionOrFlow_ShouldExpectedOutcome`, such as `whenDatabaseUnavailable_Readiness_ShouldReturnServiceUnavailable`.
 
-`dotnet.sh` runs from this directory and puts CLI/NuGet/temporary files under the repository's ignored `.cache/backend/`. Commands below run from the repository root. Product storage uses EF Core: entities live in `Schema/Entities/`, one `IEntityTypeConfiguration` per table in `Schema/Mappings/`, and generated migrations in `Migrations/`. Raw SQL is limited to the [documented inventory](../../docs/migration/postgresql.md#raw-sql-inventory). **To change the schema, follow [Changing the schema](../../docs/migration/postgresql.md#changing-the-schema)**: edit the model, run `dotnet ef migrations add`, review the script, update the importer if needed, test, then `migrate` and re-grant. Microsoft.Data.Sqlite 10.0.14 reads import sources only. Respawn 7.0.0 resets product data while preserving EF migration history; compatibility-destruction tests rebuild the schema when needed. Maintenance dispatch lives in API `Commands/`. Auth fakes/clock overrides are added only when corresponding features exist.
+`dotnet.sh` runs from this directory and puts CLI/NuGet/temporary files under the repository's ignored `.cache/backend/`. Commands below run from the repository root. Product storage uses EF Core: entities live in `Schema/Entities/`, one `IEntityTypeConfiguration` per table in `Schema/Mappings/`, and generated migrations in `Migrations/`. Raw SQL is limited to the [documented inventory](../../docs/migration/postgresql.md#raw-sql-inventory). **To change the schema, follow [Changing the schema](../../docs/migration/postgresql.md#changing-the-schema)**: edit the model, run `dotnet ef migrations add`, review the script, update the importer if needed, test, then `migrate` and re-grant. Microsoft.Data.Sqlite 10.0.14 reads import sources only. Respawn 7.0.0 resets product data while preserving EF migration history; compatibility-destruction tests rebuild the schema when needed. Maintenance dispatch lives in API `Commands/`. The shared test host pins time through `TestClock` (reset per test), uses secure cookies, and raises the sign-in rate limit; rate-limit, proxy and registration-policy tests start their own hosts on the same database.
 
 ## Start a local database and service
 
@@ -77,13 +77,18 @@ ASP.NET configuration/environment variables use double underscores; secrets are 
 | `Backend__MaxRequestBodyBytes` | 20 MiB; bounded 1–100,000,000; known/chunked bodies enforced by real Kestrel |
 | `Backend__RequestTimeoutSeconds` | 30; bounded 1–300; deadline cancels work and returns 503/Retry-After |
 | `Backend__ShutdownTimeoutSeconds` | 30; bounded 1–300; host drains existing requests within this bound |
+| `Auth__AllowRegistration` | `true`; legacy `ALLOW_REGISTRATION` |
+| `Auth__SecureCookies` | `false`; legacy `COOKIE_SECURE`. Set `true` behind HTTPS |
+| `Auth__AllowedOrigins` | `http://localhost:8081,http://localhost:3001`; legacy `CORS_ORIGINS`. Exact `scheme://host[:port]` origins |
+| `Auth__TrustedProxies` | Empty (trust no forwarding headers); comma-separated proxy IPs/CIDRs whose `X-Forwarded-For` is honored |
+| `Auth__RateLimitPermits` | 40 per 15-minute window per client for register+login; bounded 1–10,000 |
 | `ASPNETCORE_URLS`, `ASPNETCORE_ENVIRONMENT` | Standard host settings; development setup sets loopback/Development |
 
 Missing/invalid settings fail before listening, with a setting name and no credentials. An unavailable database allows liveness but fails readiness. Readiness checks PostgreSQL major 18, that applied EF migrations exactly match the build, incomplete import checkpoints and restricted runtime privileges; it issues no DDL. Failures return actionable, sanitized 503 JSON. Deployment must route traffic only after readiness succeeds. This operational probe does not establish product-route or search readiness.
 
 `migrate` exits without starting HTTP. It takes the shared advisory lock, refuses non-18 servers and databases whose history has migrations unknown to this build, and applies pending EF migrations (each in its own transaction; EF also locks the history table). It adopts fresh and MAZ-51 schema 1 databases. Lock/statement/connection waits are bounded; Ctrl+C cancels the operation. `snapshot-sqlite` and `import-sqlite` also exit without HTTP; the [runbook](../../docs/migration/postgresql.md) documents hash binding, dry run, atomic import/restart and reconciliation. Import and migration share the advisory lock. The migration role needs CREATE on the database (or ownership of an existing `penny` schema). Runtime credentials cannot execute migrations/imports.
 
-Errors preserve `{error:string}` with 400/401/403/404/409/413/500 mapping; timeouts/readiness add 503 and Retry-After. Both error and success responses have no-store/nosniff headers, including timeout responses. Unexpected errors return a generic message; structured logging records exception type/trace ID rather than exception text, credentials, SQL or financial request data. Client disconnect cancellation reaches controller/SQL operations; server deadlines use the original client token when writing the timeout response.
+Every endpoint and unknown route requires a session unless marked `[AllowAnonymous]`; see the [authentication compatibility notes](../../docs/migration/authentication.md) for sessions, cookies, origins, proxies and rate limits. Errors preserve `{error:string}` with 400/401/403/404/409/413/429/500 mapping; timeouts/readiness add 503 and Retry-After. Both error and success responses have no-store/nosniff headers, including timeout responses. Unexpected errors return a generic message; structured logging records exception type/trace ID rather than exception text, credentials, SQL or financial request data. Client disconnect cancellation reaches controller/SQL operations; server deadlines use the original client token when writing the timeout response.
 
 ## Verification and CI
 

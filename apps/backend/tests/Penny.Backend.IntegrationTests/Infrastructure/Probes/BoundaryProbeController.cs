@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Penny.Backend.Domain.Errors;
 
 namespace Penny.Backend.IntegrationTests.Infrastructure.Probes;
 
 // Loaded through ConfigureTestServices only, never part of the deployed API.
+[AllowAnonymous]
 [ApiController]
 [Route("api/test")]
 public sealed class BoundaryProbeController(ProbeSignals signals) : ControllerBase

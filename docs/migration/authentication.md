@@ -1,0 +1,47 @@
+# Password authentication and sessions (.NET)
+
+MAZ-53 ports password registration, login, `me` and logout from the legacy Node server (`server/application/auth.ts`, `server/http/auth.ts`, `server/http/middleware.ts`) to `apps/backend`. OIDC (`/api/auth/oidc*`) stays with MAZ-54. The legacy server keeps running unchanged; `contracts/openapi.json` still marks these operations `legacy` because Node implements them until cutover (MAZ-63/65).
+
+**Imported password accounts must reset their password.** The legacy scrypt hashes are not verified: the backend uses a maintained library format instead of custom cryptography. Imported **sessions** stay valid until their original expiry (at most 30 days), so signed-in devices keep working during that window. Imported rows are not rewritten; a legacy hash simply never verifies, and login returns the usual generic `401`. **There is no password reset flow yet** (neither server has one). Until one exists, affected users cannot sign in with a password once their imported sessions expire.
+
+## Compatibility
+
+| Area | Behavior (same as legacy unless noted) |
+| --- | --- |
+| Password hash | **Difference from legacy.** New and upgraded hashes use ASP.NET Core Identity `PasswordHasher` v3 (PBKDF2-HMAC-SHA512, 100,000 iterations, 128-bit salt embedded in the hash, base64), stored in `users.password`. `users.salt` is left empty for new accounts. Legacy scrypt hex hashes (Node `crypto.scrypt`) are **not** supported. |
+| Hash verification | Identity compares hashes in constant time. Missing users, empty OIDC-only passwords and legacy scrypt hashes are checked against a dummy hash, so they cost the same as a wrong password and all return the same `401`. When Identity reports that a hash uses outdated parameters, a successful login rewrites it, but only if the stored hash has not changed in the meantime. |
+| Email | Trimmed with JavaScript's whitespace set, ASCII-lowercased (plus U+212A → `k`), checked against zod 4's email pattern and limited to 254 UTF-16 units. Lookup and uniqueness are bytewise (`C` collation), as in SQLite. Legacy rows stored with uppercase letters stay unreachable by password login, exactly as before; they are not rewritten. |
+| Password | 10–256 UTF-16 code units, not trimmed. |
+| Register | Rate limit → JSON parse → policy (`403 Account registration is disabled on this server.`) → validation (`400 Enter a valid email and a password of 10–256 characters.`) → duplicate check (`409`). The user, ledger (revision 0, CAD) and the 12 default categories are inserted in one transaction. A concurrent registration for the same email waits on the unique index and gets the same `409`. Any other failure rolls back all rows and returns the generic 500. |
+| Login | Invalid input, unknown email and wrong password all return `401 Email or password is incorrect.` |
+| Tokens | 32 random bytes as lowercase hex (64 characters). Only SHA-256(token text) is stored in `sessions.token_hash`. |
+| Lifetime | 30 days from issue, with no sliding renewal. Valid while `expires_at > now`; time is truncated to whole milliseconds, so the boundary matches the legacy integer expiry. Issuing a session first deletes sessions with `expires_at < now`; their push devices are removed by the database cascade. |
+| Transport | Register/login return `{token,email}` and set `penny_session=<token>; HttpOnly; SameSite=Lax; Path=/api; Max-Age=2592000` (plus `Expires`), with `Secure` when configured. Logout deletes only the current session, expires the cookie and returns `{ok:true}`. ASP.NET writes cookie attribute names in lowercase; browsers treat them case-insensitively. |
+| Precedence | A well-formed `Authorization: Bearer <64 lowercase hex>` header always wins, even when the token is unknown or expired. A malformed header falls back to the first `penny_session` cookie. |
+| Protection | Every endpoint, and every unknown route, requires a session unless it is marked `[AllowAnonymous]` (health, info, ready, register, login and development docs). Anonymous requests get `401 Please sign in to continue.`; authenticated requests to unknown routes get `404 API route not found.` Public routes never read session storage, so liveness does not depend on PostgreSQL. |
+| Origin/CSRF | Any non-GET request whose `Origin` header is not in the allowed list gets `403 This origin is not allowed.` This includes preflights. Requests without an Origin header, such as native clients, are not checked. |
+| CORS | Allowed origins are reflected with `Access-Control-Allow-Credentials: true`. Preflight allows GET/HEAD/PUT/PATCH/POST/DELETE and any request header. |
+| Rate limit | Register and login share one fixed 15-minute window of 40 requests per client in each process. IPv6 clients are grouped by /56, and IPv4-mapped addresses count as IPv4. A blocked request gets `429 Too many attempts. Please try again in 15 minutes.` with `Retry-After`. **Difference:** the draft-8 `RateLimit`/`RateLimit-Policy` headers are not sent. Counters are in memory and are lost on restart, as before. |
+
+## Configuration
+
+| Setting | Legacy variable | Default / behavior |
+| --- | --- | --- |
+| `Auth__AllowRegistration` | `ALLOW_REGISTRATION` | `true`. Must be `true` or `false`. |
+| `Auth__SecureCookies` | `COOKIE_SECURE` | `false`. Set `true` whenever clients reach the API over HTTPS. |
+| `Auth__AllowedOrigins` | `CORS_ORIGINS` | `http://localhost:8081,http://localhost:3001`. A comma-separated list of exact browser origins (`scheme://host[:port]`). The host must be lowercase, with no path and no default port. Startup fails on any other form, so the CORS and origin checks cannot disagree. |
+| `Auth__TrustedProxies` | (none) | Empty. A comma-separated list of IPs or CIDR ranges. |
+| `Auth__RateLimitPermits` | (none) | `40` per 15 minutes; bounded 1–10,000. Tests use their own hosts. |
+
+Invalid values fail before the server listens, naming the setting.
+
+### Reverse proxies
+
+Like the legacy server, the backend trusts **no** forwarding headers by default, not even from loopback. Behind a reverse proxy, every client then shares the proxy's rate-limit bucket. Set `Auth__TrustedProxies` to the proxy's address, for example `Auth__TrustedProxies=10.0.0.2` or `172.18.0.0/16`. `X-Forwarded-For` is then honored for one hop from those addresses only. Never list networks that untrusted clients can connect from, because they could then pick their own rate-limit key. `X-Forwarded-Proto` is not used: cookie security is explicit through `Auth__SecureCookies`. The proxy must pass the browser's `Origin` header through unchanged.
+
+## Verification
+
+- Unit (`tests/Penny.Backend.UnitTests/Authentication`, `Configuration/AuthOptionsTests`): Identity hash round trip and format, rejection of legacy/empty/malformed hashes, rehash detection, zod email/length parity (cases cross-checked against zod 4.6.7), token hashing, IPv6 grouping and configuration validation.
+- Integration against real PostgreSQL 18 and Kestrel (`Controllers/AuthTests`, `Http/SecurityPolicyTests`, `Migrations/ImportedAuthTests`): register/login/me/logout over cookies and bearer tokens, stored token hashes, bearer precedence, per-session revocation and account isolation, exact millisecond expiry and expired-row purge, generic credential errors, upgrading weaker stored hashes on login, registration policy, concurrent registration (one 201, one 409, one user and ledger), rolled-back registration when the initial ledger fails, allowed and rejected origins and preflights, the 40-request window per host, proxy trust and liveness with the database down. The import test runs an imported SQLite account: its legacy scrypt hash is rejected with the generic error and left unchanged, imported sessions work until expiry, revoking one leaves other accounts' sessions, and expired-session purge cascades to push devices. It also checks that mixed-case legacy emails keep their legacy behavior.
+
+The legacy equivalents are `tests/core/server-boundaries.test.ts` and `tests/core/server.test.ts`.

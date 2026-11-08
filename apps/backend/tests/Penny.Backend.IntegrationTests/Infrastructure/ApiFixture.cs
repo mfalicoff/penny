@@ -181,6 +181,7 @@ public sealed class ApiFixture : IAsyncLifetime
         if (Directory.Exists(ReceiptRoot))
             Directory.Delete(ReceiptRoot, recursive: true);
         Factory.Services.GetRequiredService<ProbeSignals>().Reset();
+        Factory.Clock.Reset();
     }
 
     public async ValueTask DisposeAsync()

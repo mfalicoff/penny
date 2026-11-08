@@ -18,6 +18,7 @@ public sealed class ImportedRepositoryTests(ApiFixture fixture) : IntegrationTes
             .Create(Fixture.RuntimeConnection)
             .CreateDataSource();
         var accounts = new PostgresAccountRepository(runtime);
+        var sessions = new PostgresSessionRepository(runtime);
         var user = await accounts.FindByEmailAsync("Case@example.test", Ct);
         user!.Id.ShouldBe("legacy:user-01");
         user.Password.ShouldBe("synthetic-password-hash");
@@ -26,11 +27,11 @@ public sealed class ImportedRepositoryTests(ApiFixture fixture) : IntegrationTes
         (
             await accounts.FindByIdentityAsync("https://issuer.example.test", "subject-01", Ct)
         )!.Id.ShouldBe("oidc-user");
+        (await sessions.FindUserAsync("synthetic-session-hash", At(1793577600122), Ct)).ShouldBe(
+            user.Id
+        );
         (
-            await accounts.FindSessionUserAsync("synthetic-session-hash", At(1793577600122), Ct)
-        ).ShouldBe(user.Id);
-        (
-            await accounts.FindSessionUserAsync("synthetic-session-hash", At(1793577600123), Ct)
+            await sessions.FindUserAsync("synthetic-session-hash", At(1793577600123), Ct)
         ).ShouldBeNull();
         var receipts = new PostgresReceiptRepository(runtime, Fixture.Receipts);
         (await receipts.ReadAsync(user.Id, "receipt", Ct))!.Data.ShouldBe(

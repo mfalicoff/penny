@@ -22,7 +22,7 @@ Expo Router in `src/app/` exposes:
 
 | Location | Format and migration concern |
 | --- | --- |
-| SQLite `users`, `oidc_identities`, `sessions` | User IDs, scrypt hashes/salts, provider identities and hashed session tokens must survive backend replacement. |
+| SQLite `users`, `oidc_identities`, `sessions` | User IDs, provider identities and hashed session tokens must survive backend replacement. Scrypt hashes/salts are imported unchanged but not verified by .NET; password accounts must reset ([authentication](authentication.md)). |
 | SQLite `ledgers` | One JSON ledger per user and atomic integer revision. Reads upgrade v1–v3 in memory to v4; validated writes persist v4 and increment revision. |
 | SQLite `receipts` | Binary bytes and ownership; households may grant a member read access without transferring ownership. |
 | SQLite household, trip, member-period, invite, expense, split, recurring, reimbursement and audit tables | Server-owned shared state, history and per-entity revisions. |

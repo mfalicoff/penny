@@ -11,13 +11,22 @@ if (maintenance)
 builder.Services.AddControllers();
 builder.AddBackendServices();
 var app = builder.Build();
+app.UseForwardedHeaders();
 app.UseMiddleware<ApiBoundaryMiddleware>();
 app.UseRouting();
 app.UseRequestTimeouts();
+
+// Origin check first: CORS would answer a disallowed preflight itself, while the
+// legacy server refused it with 403.
+app.UseMiddleware<OriginPolicyMiddleware>();
+app.UseCors();
+app.UseRateLimiter();
+app.UseAuthentication();
+app.UseAuthorization();
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
-    app.MapScalarApiReference();
+    app.MapOpenApi().AllowAnonymous();
+    app.MapScalarApiReference().AllowAnonymous();
 }
 app.MapControllers();
 await app.RunAsync();
