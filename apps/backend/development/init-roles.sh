@@ -11,5 +11,6 @@ GRANT CREATE ON SCHEMA public TO penny_migrator;
 GRANT CONNECT ON DATABASE penny TO penny_runtime;
 CREATE SCHEMA penny AUTHORIZATION penny_migrator;
 GRANT USAGE ON SCHEMA penny TO penny_runtime;
-ALTER DEFAULT PRIVILEGES FOR ROLE penny_migrator IN SCHEMA penny GRANT SELECT ON TABLES TO penny_runtime;
+-- Metadata stays read-only. Product grants are applied explicitly after migration;
+-- see development/grant-runtime.sql, including when upgrading existing volumes.
 SQL

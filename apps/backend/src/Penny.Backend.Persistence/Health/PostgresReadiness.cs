@@ -1,62 +1,33 @@
+using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Penny.Backend.Application.Abstractions.Persistence;
 using Penny.Backend.Persistence.Schema;
 
 namespace Penny.Backend.Persistence.Health;
 
+// Read-only: never migrates, creates or repairs anything.
 public sealed class PostgresReadiness(NpgsqlDataSource source) : IStorageReadiness
 {
     public async Task<StorageStatus> CheckAsync(CancellationToken cancellationToken)
     {
         try
         {
-            await using var connection = await source.OpenConnectionAsync(cancellationToken);
-            await using var transaction = await connection.BeginTransactionAsync(
-                System.Data.IsolationLevel.RepeatableRead,
-                cancellationToken
-            );
-            await using var query = new NpgsqlCommand(
-                """
-                SELECT current_setting('server_version_num')::int,
-                       (SELECT extversion FROM pg_extension WHERE extname = 'pg_trgm' AND extnamespace = 'public'::regnamespace),
-                       to_regclass('penny.schema_version') IS NOT NULL,
-                       (SELECT rolsuper OR rolcreatedb OR rolcreaterole FROM pg_roles WHERE rolname = current_user)
-                         OR has_database_privilege(current_user, current_database(), 'CREATE')
-                """,
-                connection,
-                transaction
-            );
-            bool exists;
-            await using (var reader = await query.ExecuteReaderAsync(cancellationToken))
-            {
-                await reader.ReadAsync(cancellationToken);
-                if (reader.GetInt32(0) / 10000 != DatabaseSchema.PostgresMajor)
-                    return new(false, "postgres-version");
-                if (reader.IsDBNull(1) || reader.GetString(1) != DatabaseSchema.TrigramVersion)
-                    return new(false, "extension");
-                exists = reader.GetBoolean(2);
-                if (reader.GetBoolean(3))
-                    return new(false, "runtime-role");
-            }
-            if (!exists)
-                return new(false, "schema");
-            await using var version = new NpgsqlCommand(
-                """
-                SELECT version, has_schema_privilege(current_user, 'penny', 'CREATE'),
-                       has_schema_privilege(current_user, 'public', 'CREATE')
-                FROM penny.schema_version WHERE singleton = TRUE
-                """,
-                connection,
-                transaction
-            );
-            await using var row = await version.ExecuteReaderAsync(cancellationToken);
+            await using var context = PennyDbContext.Create(source);
+            await context.Database.OpenConnectionAsync(cancellationToken);
+            var connection = (NpgsqlConnection)context.Database.GetDbConnection();
+            if (connection.PostgreSqlVersion.Major != DatabaseSchema.PostgresMajor)
+                return new(false, "postgres-version");
+            if (await HasSchemaPrivilegesAsync(connection, cancellationToken))
+                return new(false, "runtime-role");
+            var applied = await context.Database.GetAppliedMigrationsAsync(cancellationToken);
             if (
-                !await row.ReadAsync(cancellationToken)
-                || row.GetInt32(0) != DatabaseSchema.Version
+                !applied
+                    .Order(StringComparer.Ordinal)
+                    .SequenceEqual(context.Database.GetMigrations().Order(StringComparer.Ordinal))
             )
                 return new(false, "schema");
-            if (row.GetBoolean(1) || row.GetBoolean(2))
-                return new(false, "runtime-role");
+            if (await context.SqliteImport.AnyAsync(i => i.Status != "complete", cancellationToken))
+                return new(false, "import");
             return new(true, "ready");
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -68,6 +39,10 @@ public sealed class PostgresReadiness(NpgsqlDataSource source) : IStorageReadine
         {
             return new(false, "permissions");
         }
+        catch (PostgresException error) when (error.SqlState == PostgresErrorCodes.UndefinedTable)
+        {
+            return new(false, "schema");
+        }
         catch (NpgsqlException)
         {
             return new(false, "unavailable");
@@ -76,5 +51,27 @@ public sealed class PostgresReadiness(NpgsqlDataSource source) : IStorageReadine
         {
             return new(false, "unavailable");
         }
+        catch (InvalidOperationException)
+        {
+            return new(false, "unavailable");
+        }
+    }
+
+    // The runtime role must not be able to change schema or administer the cluster.
+    private static async Task<bool> HasSchemaPrivilegesAsync(
+        NpgsqlConnection connection,
+        CancellationToken cancellationToken
+    )
+    {
+        await using var command = new NpgsqlCommand(
+            """
+            SELECT (SELECT rolsuper OR rolcreatedb OR rolcreaterole FROM pg_roles WHERE rolname = current_user)
+                OR has_database_privilege(current_user, current_database(), 'CREATE')
+                OR has_schema_privilege(current_user, 'public', 'CREATE')
+                OR COALESCE(has_schema_privilege(current_user, to_regnamespace('penny'), 'CREATE'), false)
+            """,
+            connection
+        );
+        return await command.ExecuteScalarAsync(cancellationToken) is true;
     }
 }

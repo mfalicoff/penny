@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using Penny.Backend.IntegrationTests.Infrastructure;
-using Penny.Backend.Persistence.Schema;
 using Shouldly;
 using Xunit;
 
@@ -11,14 +10,14 @@ public sealed class MigrationCommandTests(ApiFixture fixture) : IntegrationTestB
     [Fact]
     public async Task whenMigrationCredentialsProvided_MigrationCommand_ShouldPersistSchemaWithoutStartingHttp()
     {
-        await Fixture.SqlAsync("DROP SCHEMA penny CASCADE; DROP EXTENSION pg_trgm", Ct);
+        await Fixture.SqlAsync("DROP SCHEMA penny CASCADE", Ct);
         var result = await RunAsync(Fixture.MigrationConnection);
         result.ExitCode.ShouldBe(0, result.Error);
         result.Output.ShouldContain("migration complete");
         await using var query = Fixture.Admin.CreateCommand(
-            "SELECT version FROM penny.schema_version"
+            "SELECT count(*) FROM penny.\"__EFMigrationsHistory\""
         );
-        (await query.ExecuteScalarAsync(Ct)).ShouldBe(DatabaseSchema.Version);
+        (await query.ExecuteScalarAsync(Ct)).ShouldBe(1L);
     }
 
     [Fact]

@@ -58,10 +58,12 @@ public sealed class OperationsTests(ApiFixture fixture) : IntegrationTestBase(fi
     }
 
     [Theory]
-    [InlineData("DROP TABLE penny.schema_version", "schema")]
-    [InlineData("UPDATE penny.schema_version SET version=999", "schema")]
-    [InlineData("DROP EXTENSION pg_trgm", "pg_trgm")]
-    [InlineData("REVOKE SELECT ON penny.schema_version FROM penny_runtime", "grants")]
+    [InlineData("DELETE FROM penny.\"__EFMigrationsHistory\"", "schema")]
+    [InlineData(
+        """INSERT INTO penny."__EFMigrationsHistory" VALUES ('29990101000000_Future', '10.0.14')""",
+        "schema"
+    )]
+    [InlineData("""REVOKE SELECT ON penny."__EFMigrationsHistory" FROM penny_runtime""", "grants")]
     [InlineData("GRANT CREATE ON SCHEMA penny TO penny_runtime", "restricted")]
     [InlineData("GRANT CREATE ON DATABASE penny_tests TO penny_runtime", "restricted")]
     public async Task whenDatabaseIncompatible_Readiness_ShouldFailWhileLivenessSurvives(
@@ -114,7 +116,7 @@ public sealed class OperationsTests(ApiFixture fixture) : IntegrationTestBase(fi
         using var response = await client.GetAsync("/api/ready", Ct);
         response.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
         await using var check = Fixture.Admin.CreateCommand(
-            "SELECT to_regclass('penny.schema_version') IS NULL"
+            """SELECT to_regclass('penny."__EFMigrationsHistory"') IS NULL"""
         );
         (await check.ExecuteScalarAsync(Ct)).ShouldBe(true);
     }
@@ -127,7 +129,9 @@ public sealed class OperationsTests(ApiFixture fixture) : IntegrationTestBase(fi
             DatabaseMigrator.ApplyAsync(runtime, Ct)
         );
         error.SqlState.ShouldBe(PostgresErrorCodes.InsufficientPrivilege);
-        await using var update = runtime.CreateCommand("UPDATE penny.schema_version SET version=2");
+        await using var update = runtime.CreateCommand(
+            """UPDATE penny."__EFMigrationsHistory" SET "ProductVersion" = 'changed'"""
+        );
         var denied = await Should.ThrowAsync<PostgresException>(() =>
             update.ExecuteNonQueryAsync(Ct)
         );

@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Penny.Backend.Persistence.Schema;
 
@@ -5,67 +6,61 @@ namespace Penny.Backend.Persistence.Migrations;
 
 public static class DatabaseMigrator
 {
-    // This bootstrap owns compatibility metadata only. Product schema/import is MAZ-52.
+    // Applies pending EF Core migrations. EF takes its own lock on the history table;
+    // the advisory lock additionally excludes the SQLite importer for the whole run.
     public static async Task ApplyAsync(
         NpgsqlDataSource source,
         CancellationToken cancellationToken
     )
     {
-        await using var connection = await source.OpenConnectionAsync(cancellationToken);
-        await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
-        await using var command = new NpgsqlCommand(
-            "SET LOCAL lock_timeout = '5s'; SET LOCAL statement_timeout = '10s'",
-            connection,
-            transaction
+        await using var guard = await source.OpenConnectionAsync(cancellationToken);
+        if (guard.PostgreSqlVersion.Major != DatabaseSchema.PostgresMajor)
+            throw new InvalidOperationException(
+                "PostgreSQL 18 is required. No migration was applied."
+            );
+        await AcquireLockAsync(guard, cancellationToken);
+        try
+        {
+            await using var context = PennyDbContext.Create(guard);
+            context.Database.SetCommandTimeout(TimeSpan.FromMinutes(5));
+            var known = context.Database.GetMigrations().ToHashSet(StringComparer.Ordinal);
+            var applied = await context.Database.GetAppliedMigrationsAsync(cancellationToken);
+            if (applied.Any(migration => !known.Contains(migration)))
+                throw new InvalidOperationException(
+                    "Database schema is newer than this build. No migration was applied."
+                );
+            await context.Database.MigrateAsync(cancellationToken);
+        }
+        finally
+        {
+            await ReleaseLockAsync(guard);
+        }
+    }
+
+    // Session-level lock shared by `migrate` and `import-sqlite`.
+    internal static async Task AcquireLockAsync(NpgsqlConnection connection, CancellationToken ct)
+    {
+        await using var command = new NpgsqlCommand("SELECT pg_try_advisory_lock($1)", connection);
+        command.Parameters.Add(
+            new NpgsqlParameter<long> { TypedValue = DatabaseSchema.MigrationLock }
         );
-        await command.ExecuteNonQueryAsync(cancellationToken);
-        command.CommandText = "SELECT pg_try_advisory_xact_lock(@key)";
-        command.Parameters.AddWithValue("key", DatabaseSchema.MigrationLock);
-        if (await command.ExecuteScalarAsync(cancellationToken) is not true)
+        if (await command.ExecuteScalarAsync(ct) is not true)
             throw new InvalidOperationException(
-                "Another database migration holds the lock. Retry after it completes."
+                "Another database migration or import holds the lock. Retry after it completes."
             );
-        command.Parameters.Clear();
-        command.CommandText = "SHOW server_version_num";
-        var version = Convert.ToInt32(
-            await command.ExecuteScalarAsync(cancellationToken),
-            System.Globalization.CultureInfo.InvariantCulture
+    }
+
+    internal static async Task ReleaseLockAsync(NpgsqlConnection connection)
+    {
+        if (connection.State != System.Data.ConnectionState.Open)
+            return;
+        await using var command = new NpgsqlCommand("SELECT pg_advisory_unlock($1)", connection)
+        {
+            CommandTimeout = 5,
+        };
+        command.Parameters.Add(
+            new NpgsqlParameter<long> { TypedValue = DatabaseSchema.MigrationLock }
         );
-        if (version / 10000 != DatabaseSchema.PostgresMajor)
-            throw new InvalidOperationException(
-                "The backend requires PostgreSQL 18. No migration was applied."
-            );
-        command.CommandText = """
-            CREATE SCHEMA IF NOT EXISTS penny;
-            CREATE TABLE IF NOT EXISTS penny.schema_version (
-                singleton boolean PRIMARY KEY DEFAULT TRUE CHECK (singleton),
-                version integer NOT NULL CHECK (version > 0)
-            );
-            """;
-        await command.ExecuteNonQueryAsync(cancellationToken);
-        command.CommandText = "SELECT version FROM penny.schema_version WHERE singleton = TRUE";
-        var existing = await command.ExecuteScalarAsync(cancellationToken);
-        if (
-            existing is not null
-            && Convert.ToInt32(existing, System.Globalization.CultureInfo.InvariantCulture)
-                != DatabaseSchema.Version
-        )
-            throw new InvalidOperationException(
-                "Database schema version is incompatible. No migration was applied."
-            );
-        command.CommandText = """
-            CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public;
-            INSERT INTO penny.schema_version(singleton, version) VALUES (TRUE, 1) ON CONFLICT DO NOTHING;
-            """;
-        await command.ExecuteNonQueryAsync(cancellationToken);
-        command.CommandText =
-            "SELECT extversion FROM pg_extension WHERE extname = 'pg_trgm' AND extnamespace = 'public'::regnamespace";
-        if (
-            await command.ExecuteScalarAsync(cancellationToken) is not DatabaseSchema.TrigramVersion
-        )
-            throw new InvalidOperationException(
-                "pg_trgm is incompatible. No migration was applied."
-            );
-        await transaction.CommitAsync(cancellationToken);
+        await command.ExecuteNonQueryAsync(CancellationToken.None);
     }
 }
