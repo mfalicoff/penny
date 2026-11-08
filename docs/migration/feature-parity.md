@@ -4,6 +4,7 @@ Baseline: 2026-11-07, `master` at `0e58a8b`. Current implementation is the obser
 
 | Feature | Current source and test | Migration issue and required parity gate |
 | --- | --- | --- |
+| Backend hosting foundation | `apps/backend/`; xUnit unit and real Kestrel/PostgreSQL integration suites | MAZ-51 supplies health/info/readiness, bounded configuration, JSON error/cancellation/shutdown boundaries, explicit locked bootstrap migration and CI. Product schema/import and full financial/API parity remain MAZ-52–65. |
 | Password and OIDC, sessions, demo | `server/http/auth.ts`, `src/features/auth/`; `tests/core/server-boundaries.test.ts`, `tests/core/oidc.test.ts`, `tests/e2e/web/auth-and-navigation.spec.ts` | MAZ-53/54, 68, 84; same login/callback and account isolation across clients |
 | Personal ledger v1–v4, accounts, categories | `src/domain/ledger.ts`, `src/domain/commands.ts`; `tests/core/model.test.ts`, `tests/core/accounts.test.ts`, `tests/core/commands.test.ts` | MAZ-55, 70, 73/74, 86, 88/89; shared golden fixtures and legacy read/write |
 | Personal trips and investment entries | `src/domain/ledger.ts`, `src/features/trips/`; `tests/core/trips.test.ts`, `tests/core/investments.test.ts`, `tests/e2e/web/accounts-trips-categories.spec.ts` | MAZ-70, 73/76, 86, 88/93; no lost private history |

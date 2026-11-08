@@ -22,6 +22,8 @@ Shared expense/rule edits/deletes carry entity revision. Creation begins at zero
 
 ## Planned extension and drift gates
 
+MAZ-51 adds the .NET foundation's public `GET /api/ready`, marked `backend-foundation` in OpenAPI 1.2.0: 200 `{ok:true}` when the restricted PostgreSQL runtime has compatible schema/pg_trgm, otherwise sanitized 503 `{error:string}` with Retry-After. Liveness/info remain independent of database availability. The generated development document serves only implemented .NET controllers; no unfinished financial endpoints are advertised there.
+
 Search v1 uses authenticated `POST /api/v1/search/transactions`, explicit substring/hybrid modes, date order, authorization before count/page, signed cursor invalidation and explicit local pending/offline scope. [search.md](search.md) defines semantics, language, resource limits and examples. Legacy clients keep working unchanged. PostgreSQL storage is internal; [mapping/cutover](postgresql.md) preserves wire values and revisions.
 
 `tests/core/contracts.test.ts` checks exact implemented route coverage, unique operations/resolved refs, fixture schema subsets, v1–v4 upgrades, real HTTP/temporary SQLite cookie/ledger/409/shared-projection/share-payment behavior, substring fixtures and design trace coverage. UI tests consume the conflict fixture. This lightweight matcher is not a complete JSON Schema engine; Redocly validates the OpenAPI document separately. Service validation and real PostgreSQL cross-stack fixture consumption remain MAZ-52/62/64/121 gates. Do not report future PostgreSQL/Swift/browser behavior as verified by a schema or static storyboard.

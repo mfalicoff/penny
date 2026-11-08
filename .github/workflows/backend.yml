@@ -1,0 +1,68 @@
+name: Backend checks
+
+on:
+  pull_request:
+  push:
+    branches: [v2]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: .NET build, analyzers and PostgreSQL integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NUGET_PACKAGES: ${{ github.workspace }}/.cache/backend/nuget
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: apps/backend/global.json
+          cache: true
+          cache-dependency-path: |
+            apps/backend/src/**/packages.lock.json
+            apps/backend/tests/**/packages.lock.json
+      - name: Restore pinned tools
+        run: bash apps/backend/dotnet.sh tool restore
+      - name: Restore locked packages
+        run: bash apps/backend/dotnet.sh restore Penny.Backend.slnx --locked-mode
+      - name: Check formatting
+        run: bash apps/backend/dotnet.sh csharpier check .
+      - name: Check analyzers
+        run: bash apps/backend/dotnet.sh format analyzers Penny.Backend.slnx --verify-no-changes --no-restore
+      - name: Build
+        run: bash apps/backend/dotnet.sh build Penny.Backend.slnx --configuration Release --no-restore
+      - name: Unit and real PostgreSQL integration tests
+        run: bash apps/backend/dotnet.sh test --solution Penny.Backend.slnx --configuration Release --no-build --no-restore --report-trx --results-directory ../../test-results/backend
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: backend-test-results
+          path: test-results/backend/
+          if-no-files-found: warn
+
+  legacy:
+    name: Legacy lint and typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck

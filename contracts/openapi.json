@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Penny legacy compatibility API",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "description": "MAZ-50 compatibility baseline audited against master 0e58a8b on 2026-11-07. Existing routes are implemented in Node/SQLite; the additive search v1 route is planned for .NET/PostgreSQL (MAZ-121). See docs/migration/.",
     "license": {
       "name": "MIT",
@@ -4041,6 +4041,46 @@
           },
           "default": {
             "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ready": {
+      "get": {
+        "summary": "Check .NET PostgreSQL readiness",
+        "operationId": "getApiReady",
+        "security": [],
+        "x-implementation": "backend-foundation",
+        "responses": {
+          "200": {
+            "description": "Ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Database unavailable or incompatible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Database unavailable or incompatible",
             "content": {
               "application/json": {
                 "schema": {
