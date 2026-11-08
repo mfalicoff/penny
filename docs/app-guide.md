@@ -68,6 +68,6 @@ Browsing the overview does not record future income or advance schedules. When a
 
 ## Ledger upgrades
 
-Existing ledgers upgrade to version 3 on read and persist that version on the next save. Payment accounts start empty, and historical entries stay unassigned. For version 1 ledgers, an Investments category is added unless one already exists or the 300-category limit is reached. Historical expenses retain their classification; edit an entry and select Investment to reclassify it. Editing a recurring occurrence does not change its schedule. Edit the recurring schedule to change future contributions or their payment account. Deploy the updated server alongside the client so payment accounts and investment entries can be saved.
+Existing ledgers upgrade to version 4 on read and persist that version on the next save. Payment accounts and trips start empty when absent in older versions; historical entries stay unassigned. For version 1 ledgers, an Investments category is added unless one already exists or the 300-category limit is reached. Historical expenses retain their classification; edit an entry and select Investment to reclassify it. Editing a recurring occurrence does not change its schedule. Edit the recurring schedule to change future contributions or their payment account. Deploy the updated server alongside the client so payment accounts, trips and investment entries can be saved.
 
 

@@ -2,6 +2,8 @@
 
 [App showcase](../README.md) · [Documentation](README.md)
 
+This guide describes the running legacy Node/SQLite service. The accepted [v2 architecture](migration/architecture.md) replaces it with ASP.NET Core/PostgreSQL behind compatible wire contracts; see [storage and cutover](migration/postgresql.md). SQLite remains the import/rollback source.
+
 Use this pattern for new work: **a thin HTTP route, an application service, validated input and a typed persistence boundary**.
 
 ## Ownership
@@ -35,7 +37,7 @@ ESLint enforces the import direction: services cannot import HTTP or concrete st
 - Passwords use salted scrypt. Only SHA-256 session token hashes are stored. Session expiration is checked on every authenticated request; logout revokes just that session.
 - Ledger updates compare the expected revision and increment it in the same SQL statement. Receipt ownership is checked before the update. Never split revision checking into a separate read followed by an unconditional write.
 - Receipt reads and ownership checks always include the authenticated account ID. Receipt upload validation enforces allowed MIME types, file signatures and the existing 10 MB decoded limit.
-- Public health/login/register routes precede the authentication middleware. Protected routes and the API 404 handler follow it. Keep this order when adding routes.
+- Public health/info/login/register/OIDC routes precede authentication. `/api/info` identifies the server without credentials. Protected routes and the API 404 handler follow authentication.
 - Cookies, origin checks, CORS, the 20 MB JSON body limit, response headers, receipt URLs and JSON envelopes remain HTTP responsibilities. No API or database migration is needed for this refactor.
 
 ## Adding a capability
@@ -65,4 +67,4 @@ Keep Express for the current Node/SQLite deployment. This refactor addresses the
 
 [Hono RPC](https://hono.dev/docs/guides/rpc) can infer client input/output types from server routes. Its [Web-standard API](https://hono.dev/docs) and [Node adapter](https://hono.dev/docs/getting-started/nodejs) make it worth reconsidering if typed client contracts or a new deployment runtime becomes a concrete goal. Migrating HTTP alone would not make this backend edge-ready: synchronous Node SQLite, local database files, cryptography and Buffer-based receipt decoding still need compatible implementations.
 
-If a migration is chosen later, replace `http/`, app composition and hosting, and keep application services, validation rules and persistence interfaces. Run the existing API contract tests against the replacement; do not assume routing benchmarks predict end-to-end improvements for this application's database, password hashing and receipt workload.
+The v2 migration now selects ASP.NET Core/PostgreSQL rather than Hono. Preserve the service/domain boundaries and validate observable behavior using the shared contracts and real database tests. Routing benchmarks do not establish parity for database, password hashing or receipt workloads.

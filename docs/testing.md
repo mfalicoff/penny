@@ -146,6 +146,8 @@ For a manual native smoke pass: launch a fresh development build, enter the demo
 
 ## CI policy
 
+The reusable workflow also validates `contracts/openapi.json` with pinned Redocly CLI 2.76.0. `tests/core/contracts.test.ts` checks exact legacy route coverage (planned routes are marked separately), sanitized fixtures, local substring behavior and redesign trace completeness; UI tests consume the merge fixture. [Migration verification](migration/verification.md) distinguishes these legacy/specification checks from future real PostgreSQL/.NET/Swift/TanStack gates.
+
 `.github/workflows/tests.yml` is the reusable application check used by both container and mobile release workflows. It runs lint, typecheck, core tests and all three Jest projects via `npm run test:coverage`, then browser E2E on Node 24/Linux. It uploads code coverage as `code-coverage` and browser evidence as `playwright-report`, including available reports on failure. Each core/UI test runs once, with coverage enabled.
 
 The container workflow invokes these checks on every pull request, regardless of

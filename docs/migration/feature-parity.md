@@ -1,0 +1,24 @@
+# Feature and test traceability
+
+Baseline: 2026-11-07, `master` at `0e58a8b`. Current implementation is the observable contract. The issue numbers identify delivery work; the proposed gates do not claim those stacks exist yet.
+
+| Feature | Current source and test | Migration issue and required parity gate |
+| --- | --- | --- |
+| Password and OIDC, sessions, demo | `server/http/auth.ts`, `src/features/auth/`; `tests/core/server-boundaries.test.ts`, `tests/core/oidc.test.ts`, `tests/e2e/web/auth-and-navigation.spec.ts` | MAZ-53/54, 68, 84; same login/callback and account isolation across clients |
+| Personal ledger v1–v4, accounts, categories | `src/domain/ledger.ts`, `src/domain/commands.ts`; `tests/core/model.test.ts`, `tests/core/accounts.test.ts`, `tests/core/commands.test.ts` | MAZ-55, 70, 73/74, 86, 88/89; shared golden fixtures and legacy read/write |
+| Personal trips and investment entries | `src/domain/ledger.ts`, `src/features/trips/`; `tests/core/trips.test.ts`, `tests/core/investments.test.ts`, `tests/e2e/web/accounts-trips-categories.spec.ts` | MAZ-70, 73/76, 86, 88/93; no lost private history |
+| Personal recurrence, historical occurrences | `src/domain/ledger.ts`, `src/features/recurring/`; `tests/core/model.test.ts`, `tests/e2e/web/recurring.spec.ts` | MAZ-70/74, 86/90; local-date catch-up, anchor days, pause and deletion |
+| Durable personal offline sync and conflicts | `src/data/offlineLedger.ts`, `src/providers/LedgerProvider.tsx`; `tests/ui/data/offlineLedger.test.ts`, `tests/ui/providers/LedgerProvider.test.tsx` | MAZ-55, 71/72, 87; restart, reconnect, account isolation and same-field races |
+| Shared membership, trips, privacy | `server/infrastructure/households.ts`, `src/features/households/`; `tests/core/households-server.test.ts`, `tests/e2e/web/households-mobile.spec.ts` | MAZ-56, 75/76, 91/93; two users, historical membership and payer-only accounts |
+| Shared splits, reports, settlement, audit | `src/domain/households.ts`, `server/infrastructure/households.ts`; `tests/core/households-domain.test.ts`, `tests/core/households-server.test.ts` | MAZ-57/58, 75/77, 91/92; exact cents, no double count, monthly transfers |
+| Shared recurrence | `server/infrastructure/households.ts`; `tests/core/households-server.test.ts` | MAZ-59, 75, 91; server catch-up, membership change and idempotency |
+| Receipts | `server/application/receipts.ts`, `src/data/receipts*`; `tests/core/server.test.ts`, `tests/e2e/web/entries.spec.ts` | MAZ-60, 78, 94; ownership, decoding, preview and failure recovery |
+| Overview and charts | `src/features/overview/`; `tests/core/overview.test.ts`, `tests/core/moneyFlow.test.ts`, web UI tests | MAZ-77, 92; personal share totals and accessible equivalents |
+| Push and widgets | `server/application/push.ts`, `src/widgets/`; `tests/core/push-server.test.ts`, widget tests | MAZ-61, 79/80; simulator navigation plus physical APNs and WidgetKit checks |
+| Build, deployment and upgrade | `Dockerfile`, `compose.yaml`, `.github/workflows/`, `tests/e2e/web/` | MAZ-62–65, 72, 81/82, 95–98; SQLite-to-PostgreSQL import/recovery, TestFlight upgrade, real API browser and cross-client journeys |
+| PostgreSQL schema/import, outbox and recovery | `server/infrastructure/database.ts`, `repositories.ts`, `households.ts`, `push.ts`; `tests/core/server.test.ts`, `tests/core/push-server.test.ts` | MAZ-51/52/59/61/62/64/65; [schema/encoding and cutover gates](postgresql.md), real PG/pg_trgm, interrupted import, two workers and post-cutover replay |
+| Search v1 and local pending scope | `src/features/transactions/selectors.ts`; `tests/core/transactions.test.ts`, `tests/core/contracts.test.ts`, `contracts/fixtures/search-cases.json` | MAZ-121, 73/88, 71/87; [search contract](search.md), real PostgreSQL Unicode/FTS/index/authorization/cursor tests and offline reconnect |
+| Redesign: 79 specimens and 26 controls | `contracts/design-baseline.json`, local `docs/design/penny-redesign/`; `tests/core/contracts.test.ts` verifies trace completeness | MAZ-122/69/85 plus feature owners per specimen, MAZ-82/96 acceptance; [adaptations and known gaps](redesign.md), native sync failure remains MAZ-122 |
+| Biometric lock and signed-out server verification | `src/providers/AppLockProvider.tsx`, `src/data/serverConnection.ts`; `tests/ui/providers/AppLockProvider.test.tsx`, `tests/ui/data/serverConnection.test.ts`, native server-selection journeys | MAZ-67/68/69/72/85; lock conceals dialogs/drafts, candidate gets no credentials, original server storage namespace survives, web omits native controls |
+
+Migration impact: current `src/domain/households.ts` types describe some concepts differently from the actual HTTP envelopes in `src/data/households.ts`. Contract consumers use the wire fixtures and API schema, not an internal domain type, as their serialization source. Any deliberate API behavior change must update OpenAPI, fixtures and the compatibility policy in one change.

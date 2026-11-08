@@ -1,0 +1,3 @@
+# Future native iOS app
+
+This directory is reserved for MAZ-66 onward. Use Swift/SwiftUI, scoped UI/domain/data modules and native iPhone/iPad tests. Match OpenAPI, language-neutral fixtures and `contracts/design-baseline.json`; use real iOS 26 Liquid Glass with documented accessibility/older-OS adaptations. Preserve durable pending base/local snapshots and in-place Expo data migration before retirement. Run formatter/static analysis, build/unit/contract and XCUITest gates. APNs, widgets and TestFlight upgrades also require physical-device evidence. Never edit generated legacy ios/ projects. Root Expo guidance applies to the legacy app, not Swift here.
