@@ -16,6 +16,7 @@
 
 ## Architecture and testing
 
+- [V2 migration architecture](migration/architecture.md): SwiftUI/TanStack/.NET boundaries, PostgreSQL import and recovery, versioned search, redesign traceability and compatibility gates.
 - [Frontend architecture](frontend-architecture.md): routes, feature ownership, state and persistence boundaries, responsive navigation, and native glass surfaces.
 - [Backend architecture](backend-architecture.md): HTTP/application/storage boundaries, validation, persistence guarantees, and framework tradeoffs.
 - [Testing strategy](testing.md): test ownership, commands, coverage, browser/native setup, device isolation, and CI policy.

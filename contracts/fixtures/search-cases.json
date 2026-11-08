@@ -1,0 +1,345 @@
+{
+  "ledger": {
+    "version": 4,
+    "currency": "CAD",
+    "categories": [
+      {
+        "id": "food",
+        "name": "Food",
+        "icon": "cafe-outline",
+        "color": "#E47850",
+        "kind": "expense"
+      },
+      {
+        "id": "salary",
+        "name": "Salary",
+        "icon": "briefcase-outline",
+        "color": "#6C9C79",
+        "kind": "income"
+      }
+    ],
+    "transactions": [
+      {
+        "id": "a",
+        "title": "Coffee beans",
+        "date": "2026-11-02",
+        "kind": "expense",
+        "total": 1000,
+        "share": 500,
+        "categoryId": "food",
+        "note": "Morning",
+        "accountId": "card"
+      },
+      {
+        "id": "b",
+        "title": "Coffee beans",
+        "date": "2026-11-02",
+        "kind": "expense",
+        "total": 1000,
+        "share": 500,
+        "categoryId": "food",
+        "note": ""
+      },
+      {
+        "id": "c",
+        "title": "Café tickets",
+        "date": "2026-11-01",
+        "kind": "expense",
+        "total": 1000,
+        "share": 500,
+        "categoryId": "food",
+        "note": ""
+      },
+      {
+        "id": "d",
+        "title": "100%_saved\\path",
+        "date": "2026-11-02",
+        "kind": "expense",
+        "total": 1000,
+        "share": 500,
+        "categoryId": "food",
+        "note": ""
+      },
+      {
+        "id": "e",
+        "title": "Rent",
+        "date": "2026-11-02",
+        "kind": "expense",
+        "total": 1000,
+        "share": 500,
+        "categoryId": "food",
+        "note": "Old coffee note"
+      },
+      {
+        "id": "f",
+        "title": "Pay",
+        "date": "2026-11-03",
+        "kind": "income",
+        "total": 5000,
+        "share": 5000,
+        "categoryId": "salary",
+        "note": ""
+      }
+    ],
+    "recurring": [],
+    "accounts": [
+      {
+        "id": "card",
+        "name": "Travel Card",
+        "type": "credit"
+      }
+    ],
+    "trips": []
+  },
+  "substringCases": [
+    {
+      "query": " COFFEE ",
+      "ids": [
+        "a",
+        "b",
+        "e"
+      ]
+    },
+    {
+      "query": "travel card",
+      "ids": [
+        "a"
+      ]
+    },
+    {
+      "query": "cafe",
+      "ids": []
+    },
+    {
+      "query": "CAFÉ",
+      "ids": [
+        "c"
+      ]
+    },
+    {
+      "query": "100%_",
+      "ids": [
+        "d"
+      ]
+    },
+    {
+      "query": "beans morning",
+      "ids": [
+        "a"
+      ]
+    },
+    {
+      "query": "",
+      "kind": "income",
+      "ids": [
+        "f"
+      ]
+    },
+    {
+      "query": "coffee",
+      "day": "2026-11-02",
+      "ids": [
+        "a",
+        "b",
+        "e"
+      ]
+    },
+    {
+      "query": "coffee",
+      "page": 1,
+      "ids": [
+        "a",
+        "b",
+        "e"
+      ],
+      "totalCount": 3
+    }
+  ],
+  "foldCases": [
+    {
+      "input": "İ",
+      "expected": "i̇"
+    },
+    {
+      "input": "ΟΣ",
+      "expected": "ος"
+    },
+    {
+      "input": "Straße",
+      "expected": "straße"
+    },
+    {
+      "input": "CAFÉ",
+      "expected": "café"
+    },
+    {
+      "input": "CAFÉ",
+      "expected": "café"
+    }
+  ],
+  "plannedHybridCases": [
+    {
+      "query": "rats",
+      "document": "rat",
+      "substring": false,
+      "hybrid": true
+    },
+    {
+      "query": "the",
+      "document": "Coffee",
+      "substring": false,
+      "hybrid": false
+    },
+    {
+      "query": "%",
+      "document": "100% saved",
+      "substring": true,
+      "hybrid": true
+    }
+  ],
+  "pendingCases": [
+    {
+      "name": "pending create",
+      "baseIds": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f"
+      ],
+      "localCreate": {
+        "id": "g",
+        "title": "Coffee on train",
+        "date": "2026-11-02",
+        "kind": "expense",
+        "total": 1000,
+        "share": 500,
+        "categoryId": "food",
+        "note": ""
+      },
+      "query": "coffee",
+      "expectedIds": [
+        "a",
+        "b",
+        "e",
+        "g"
+      ]
+    },
+    {
+      "name": "pending edit stops matching",
+      "editId": "e",
+      "patch": {
+        "note": "Changed"
+      },
+      "query": "coffee",
+      "expectedIds": [
+        "a",
+        "b"
+      ]
+    },
+    {
+      "name": "pending delete suppresses hit",
+      "deleteId": "a",
+      "query": "coffee",
+      "expectedIds": [
+        "b",
+        "e"
+      ]
+    }
+  ],
+  "requests": [
+    {
+      "period": {
+        "month": "2026-11"
+      }
+    },
+    {
+      "query": "coffee",
+      "period": {
+        "year": "2026"
+      },
+      "day": "2026-11-02",
+      "kind": "expense",
+      "mode": "hybrid",
+      "sort": "date-desc",
+      "pageSize": 100
+    }
+  ],
+  "invalidRequests": [
+    {
+      "period": {
+        "month": "2026-11",
+        "year": "2026"
+      }
+    },
+    {
+      "period": {
+        "month": "1999-11"
+      }
+    },
+    {
+      "period": {
+        "year": "2101"
+      }
+    },
+    {
+      "period": {
+        "month": "2026-11"
+      },
+      "pageSize": 101
+    },
+    {
+      "period": {
+        "month": "2026-11"
+      },
+      "userId": "other"
+    },
+    {
+      "period": {
+        "month": "2026-11"
+      },
+      "query": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    }
+  ],
+  "response": {
+    "version": 1,
+    "scope": "server-recorded",
+    "ledgerRevision": 3,
+    "searchRevision": 8,
+    "items": [
+      {
+        "key": "personal:a",
+        "source": "personal",
+        "entry": {
+          "id": "a",
+          "title": "Coffee beans",
+          "date": "2026-11-02",
+          "kind": "expense",
+          "total": 1000,
+          "share": 500,
+          "categoryId": "food",
+          "note": "Morning",
+          "accountId": "card"
+        }
+      }
+    ],
+    "totalCount": 1,
+    "nextCursor": null
+  },
+  "requiredPostgresqlScenarios": [
+    "authorization-before-count",
+    "former-member-history",
+    "private-payer-account",
+    "literal-like-escaping",
+    "short-query-plan",
+    "hybrid-english-stemming",
+    "cursor-tamper",
+    "cursor-revocation",
+    "atomic-rejected-write",
+    "rename-reindex",
+    "projection-rebuild-restart",
+    "two-worker-claim",
+    "cutover-journal-replay"
+  ]
+}

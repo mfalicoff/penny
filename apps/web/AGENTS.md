@@ -1,0 +1,3 @@
+# Future browser app
+
+This directory is reserved for MAZ-83 onward. Use browser-native React/TypeScript, TanStack Router/Query and accessible DOM; shared calculations stay in the API. Match OpenAPI, parity fixtures and `contracts/design-baseline.json`. Preserve URLs, same-origin cookies and unsynced Expo browser data. Follow search pending/offline scope rules. Run lint, typecheck, unit/contracts and real .NET/PostgreSQL browser journeys on Chromium/Firefox/WebKit, phone/tablet/desktop and keyboard/accessibility cases. Root Expo navigation guidance applies to the legacy client, not this web app.

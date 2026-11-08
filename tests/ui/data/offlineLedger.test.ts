@@ -1,5 +1,18 @@
 import { emptyLedger, type Transaction } from "../../../src/domain/ledger";
 import { mergeLedger } from "../../../src/data/offlineLedger";
+import parity from "../../../contracts/fixtures/parity-cases.json";
+
+test("language-neutral conflict fixture preserves remote fields and local same-field edits", () => {
+  const original: Transaction = { id: "synthetic-entry", title: "Sample", kind: "expense", total: 1000,
+    categoryId: "food", date: "2026-10-01", ...parity.merge.base };
+  const base = { ...emptyLedger(), transactions: [original] };
+  const local = { ...base, transactions: [{ ...original, ...parity.merge.local }] };
+  const remote = { ...base, transactions: [{ ...original, ...parity.merge.remote }] };
+  const result = mergeLedger(base, local, remote).transactions[0];
+  expect({ note: result.note, share: result.share }).toEqual(parity.merge.expected);
+  const raced = { ...base, transactions: [{ ...remote.transactions[0], note: "Remote edit" }] };
+  expect(mergeLedger(base, local, raced).transactions[0].note).toBe(parity.merge.local.note);
+});
 
 test("reconnect merges independent device edits without dropping remote additions", () => {
   const original: Transaction = {

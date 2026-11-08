@@ -2,6 +2,8 @@
 
 [App showcase](../README.md) · [Documentation](README.md)
 
+This guide describes the running legacy Expo client. The accepted [v2 migration architecture](migration/architecture.md) defines the separate SwiftUI/TanStack clients, redesign and PostgreSQL API.
+
 Use this formula for new work: **a thin route, a feature screen, local UI state, pure rules, and one shared persistence boundary**.
 
 ## Ownership
@@ -35,7 +37,7 @@ Form input → pure draft validation → optional receipt upload
                             → updated snapshot or visible error
 ```
 
-Commands return `(ledger: Ledger) => Ledger`; they must not mutate the input or perform side effects. The API can replay them after a revision conflict. Generate IDs before constructing a command, preserve unrelated changes, and check edit conflicts against the original entity. A failed save preserves the displayed ledger and the form draft. There is no offline queue.
+Commands return `(ledger: Ledger) => Ledger`; they must not mutate the input or perform side effects. Generate IDs before constructing commands and preserve unrelated changes. Personal changes are persisted as per-account, per-server `{base,local}` v4 snapshots before save feedback, survive restarts and sync on reconnect/foreground/interval. Sync fetches the latest ledger and retries revision races using three-way field merge; local edited fields win same-field races. A failed local save retains the form draft; a failed sync retains durable pending changes. Shared actions and receipt uploads require connectivity. Signing out is blocked while personal changes remain pending.
 
 The session provider rejects overlapping saves, ignores results from an obsolete session, and cleans up timers and foreground listeners. Demo changes use the same commands locally. Do not add polling or direct ledger writes to screens.
 
