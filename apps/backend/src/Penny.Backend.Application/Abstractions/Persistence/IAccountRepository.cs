@@ -26,4 +26,15 @@ public interface IAccountRepository
         StoredLedger ledger,
         CancellationToken cancellationToken
     );
+
+    // Creates the user, its (issuer, subject) identity and its initial ledger in one
+    // transaction. False means the email or the identity already exists (including a
+    // concurrent sign-in that committed first); any other failure rolls back every row.
+    Task<bool> TryCreateOidcAsync(
+        StoredUser user,
+        string issuer,
+        string subject,
+        StoredLedger ledger,
+        CancellationToken cancellationToken
+    );
 }

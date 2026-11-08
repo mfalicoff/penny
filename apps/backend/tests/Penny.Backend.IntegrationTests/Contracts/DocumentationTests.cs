@@ -43,6 +43,9 @@ public sealed class DocumentationTests(ApiFixture fixture) : IntegrationTestBase
                 ("/api/auth/logout", "post", "postApiAuthLogout"),
                 ("/api/ledger", "get", "getApiLedger"),
                 ("/api/ledger", "put", "putApiLedger"),
+                ("/api/auth/oidc", "get", "getApiAuthOidc"),
+                ("/api/auth/oidc/start", "post", "postApiAuthOidcStart"),
+                ("/api/auth/oidc/complete", "post", "postApiAuthOidcComplete"),
             }
         )
             paths
@@ -60,7 +63,6 @@ public sealed class DocumentationTests(ApiFixture fixture) : IntegrationTestBase
                 .GetProperty("operationId")
                 .GetString()
                 .ShouldBe(contract[method]!["operationId"]!.GetValue<string>());
-        paths.TryGetProperty("/api/auth/oidc", out _).ShouldBeFalse();
         using var scalar = await Client.GetAsync("/scalar/v1", Ct);
         scalar.StatusCode.ShouldBe(HttpStatusCode.OK);
         (await scalar.Content.ReadAsStringAsync(Ct)).ShouldContain("scalar");

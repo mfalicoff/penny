@@ -11,6 +11,9 @@ public sealed class PostgresAccountRepository(NpgsqlDataSource source) : IAccoun
     // EF names the unique email index; a violation means the email is already taken.
     private const string EmailIndex = "IX_users_email";
 
+    // The (issuer, subject) primary key; a violation means the identity already exists.
+    private const string IdentityKey = "PK_oidc_identities";
+
     public async Task<StoredUser?> FindByEmailAsync(
         string email,
         CancellationToken cancellationToken
@@ -76,6 +79,37 @@ public sealed class PostgresAccountRepository(NpgsqlDataSource source) : IAccoun
     )
     {
         await using var context = PennyDbContext.Create(source);
+        AddAccount(context, user, ledger);
+        // One SaveChanges is one transaction. A concurrent insert of the same email
+        // waits on the unique index and fails once the first registration commits.
+        return await TrySaveAsync(context, [EmailIndex], cancellationToken);
+    }
+
+    public async Task<bool> TryCreateOidcAsync(
+        StoredUser user,
+        string issuer,
+        string subject,
+        StoredLedger ledger,
+        CancellationToken cancellationToken
+    )
+    {
+        await using var context = PennyDbContext.Create(source);
+        AddAccount(context, user, ledger);
+        context.OidcIdentities.Add(
+            new OidcIdentity
+            {
+                Issuer = issuer,
+                Subject = subject,
+                UserId = user.Id,
+            }
+        );
+        // A concurrent first sign-in for the same identity (or email) waits on the
+        // unique index and fails once the first one commits; all rows roll back.
+        return await TrySaveAsync(context, [EmailIndex, IdentityKey], cancellationToken);
+    }
+
+    private static void AddAccount(PennyDbContext context, StoredUser user, StoredLedger ledger)
+    {
         context.Users.Add(
             new User
             {
@@ -104,8 +138,14 @@ public sealed class PostgresAccountRepository(NpgsqlDataSource source) : IAccoun
                 Kind = category.Kind,
             })
         );
-        // One SaveChanges is one transaction. A concurrent insert of the same email
-        // waits on the unique index and fails once the first registration commits.
+    }
+
+    private static async Task<bool> TrySaveAsync(
+        PennyDbContext context,
+        string[] duplicateConstraints,
+        CancellationToken cancellationToken
+    )
+    {
         try
         {
             await context.SaveChangesAsync(cancellationToken);
@@ -116,8 +156,9 @@ public sealed class PostgresAccountRepository(NpgsqlDataSource source) : IAccoun
                     is PostgresException
                     {
                         SqlState: PostgresErrorCodes.UniqueViolation,
-                        ConstraintName: EmailIndex,
+                        ConstraintName: { } constraint,
                     }
+                && duplicateConstraints.Contains(constraint, StringComparer.Ordinal)
             )
         {
             return false;

@@ -14,6 +14,7 @@ public sealed class PennyDbContext(DbContextOptions<PennyDbContext> options) : D
     public DbSet<User> Users => Set<User>();
     public DbSet<OidcIdentity> OidcIdentities => Set<OidcIdentity>();
     public DbSet<Session> Sessions => Set<Session>();
+    public DbSet<OidcAttempt> OidcAttempts => Set<OidcAttempt>();
     public DbSet<Receipt> Receipts => Set<Receipt>();
     public DbSet<Household> Households => Set<Household>();
     public DbSet<HouseholdMemberPeriod> HouseholdMemberPeriods => Set<HouseholdMemberPeriod>();

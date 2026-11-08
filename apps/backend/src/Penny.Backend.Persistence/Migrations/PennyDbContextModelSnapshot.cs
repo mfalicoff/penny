@@ -1000,6 +1000,59 @@ namespace Penny.Backend.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.OidcAttempt", b =>
+                {
+                    b.Property<string>("TransactionHash")
+                        .HasColumnType("text")
+                        .HasColumnName("transaction_hash")
+                        .UseCollation("C");
+
+                    b.Property<string>("CodeVerifier")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("code_verifier")
+                        .UseCollation("C");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<string>("Nonce")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("nonce")
+                        .UseCollation("C");
+
+                    b.Property<string>("RedirectUri")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("redirect_uri")
+                        .UseCollation("C");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("state")
+                        .UseCollation("C");
+
+                    b.HasKey("TransactionHash");
+
+                    b.HasIndex("ExpiresAt");
+
+                    b.ToTable("oidc_attempts", "penny", t =>
+                        {
+                            t.HasCheckConstraint("CK_oidc_attempts_code_verifier", "length(code_verifier) BETWEEN 43 AND 128");
+
+                            t.HasCheckConstraint("CK_oidc_attempts_nonce", "length(nonce) BETWEEN 1 AND 256");
+
+                            t.HasCheckConstraint("CK_oidc_attempts_redirect_uri", "length(redirect_uri) BETWEEN 1 AND 2048");
+
+                            t.HasCheckConstraint("CK_oidc_attempts_state", "length(state) BETWEEN 1 AND 256");
+
+                            t.HasCheckConstraint("CK_oidc_attempts_transaction_hash", "transaction_hash ~ '^[0-9a-f]{64}$'");
+                        });
+                });
+
             modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.OidcIdentity", b =>
                 {
                     b.Property<string>("Issuer")

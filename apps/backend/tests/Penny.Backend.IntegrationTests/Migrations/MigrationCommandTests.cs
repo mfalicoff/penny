@@ -1,5 +1,7 @@
 using System.Diagnostics;
+using Microsoft.EntityFrameworkCore;
 using Penny.Backend.IntegrationTests.Infrastructure;
+using Penny.Backend.Persistence.Schema;
 using Shouldly;
 using Xunit;
 
@@ -17,7 +19,10 @@ public sealed class MigrationCommandTests(ApiFixture fixture) : IntegrationTestB
         await using var query = Fixture.Admin.CreateCommand(
             "SELECT count(*) FROM penny.\"__EFMigrationsHistory\""
         );
-        (await query.ExecuteScalarAsync(Ct)).ShouldBe(1L);
+        await using var context = PennyDbContext.Create(Fixture.Admin);
+        (await query.ExecuteScalarAsync(Ct)).ShouldBe(
+            (long)context.Database.GetMigrations().Count()
+        );
     }
 
     [Fact]
