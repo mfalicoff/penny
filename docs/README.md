@@ -18,6 +18,7 @@
 
 - [Frontend architecture](frontend-architecture.md): routes, feature ownership, state and persistence boundaries, responsive navigation, and native glass surfaces.
 - [Backend architecture](backend-architecture.md): HTTP/application/storage boundaries, validation, persistence guarantees, and framework tradeoffs.
+- [Backend API endpoints](api-endpoints.md): all 40 operations, authentication, request/response shapes, and compatibility notes for a Go or .NET migration.
 - [Testing strategy](testing.md): test ownership, commands, coverage, browser/native setup, device isolation, and CI policy.
 - [Household implementation plan](households-implementation-plan.md): original design tasks and acceptance examples. For current behavior, use the [app guide](app-guide.md#shared-households).
 
