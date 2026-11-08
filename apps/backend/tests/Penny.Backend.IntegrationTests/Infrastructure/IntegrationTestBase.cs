@@ -2,6 +2,8 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
+using Penny.Backend.Application.Authentication;
 using Xunit;
 
 namespace Penny.Backend.IntegrationTests.Infrastructure;
@@ -54,6 +56,21 @@ public abstract class IntegrationTestBase(ApiFixture fixture) : IAsyncLifetime
             .GetProperty("token")
             .GetString()!;
     }
+
+    // Issues a reset code in process, as the `reset-password` command does, using the
+    // host's pinned clock (the shared host unless another is given).
+    protected Task<IssuedPasswordReset> IssueResetAsync(
+        string email,
+        WebApplicationFactory<Program>? factory = null
+    ) =>
+        (factory ?? Fixture.Factory)
+            .Services.GetRequiredService<PasswordResetService>()
+            .IssueAsync(email, Ct);
+
+    protected Task<HttpResponseMessage> ResetPasswordAsync(
+        object body,
+        HttpClient? client = null
+    ) => (client ?? Client).PostAsJsonAsync("/api/auth/password-reset", body, Ct);
 
     protected static HttpRequestMessage Authorized(
         HttpMethod method,

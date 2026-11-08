@@ -80,7 +80,7 @@ internal static class MaintenanceCommand
         {
             Console.Error.WriteLine(error.Message);
             Console.Error.WriteLine(
-                "Usage: snapshot-sqlite SOURCE NEW_SNAPSHOT | import-sqlite SNAPSHOT --sha256 HASH [--dry-run|--resume|--verify]. See docs/migration/postgresql.md."
+                "Usage: snapshot-sqlite SOURCE NEW_SNAPSHOT | import-sqlite SNAPSHOT --sha256 HASH [--dry-run|--resume|--verify] | reset-password EMAIL. See docs/migration/postgresql.md."
             );
             return 1;
         }

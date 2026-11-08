@@ -112,6 +112,10 @@ public static class BackendServices
         services.AddSingleton<OidcService>();
     }
 
+    // Shared by the HTTP host and the `reset-password` maintenance command.
+    public static PasswordResetPolicy PasswordResetPolicyFor(AuthOptions auth) =>
+        new(TimeSpan.FromHours(auth.PasswordResetHours));
+
     private static void AddAuthServices(IServiceCollection services, AuthOptions auth)
     {
         services.AddSingleton(auth);
@@ -120,6 +124,9 @@ public static class BackendServices
         services.AddSingleton<IAccountRepository, PostgresAccountRepository>();
         services.AddSingleton<ISessionRepository, PostgresSessionRepository>();
         services.AddSingleton<AuthService>();
+        services.AddSingleton(PasswordResetPolicyFor(auth));
+        services.AddSingleton<IPasswordResetRepository, PostgresPasswordResetRepository>();
+        services.AddSingleton<PasswordResetService>();
         services
             .AddAuthentication()
             .AddScheme<AuthenticationSchemeOptions, SessionAuthenticationHandler>(

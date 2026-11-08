@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Penny legacy compatibility API",
-    "version": "1.2.0",
-    "description": "MAZ-50 compatibility baseline audited against master 0e58a8b on 2026-11-07. Existing routes are implemented in Node/SQLite; the additive search v1 route is planned for .NET/PostgreSQL (MAZ-121). See docs/migration/.",
+    "version": "1.3.0",
+    "description": "MAZ-50 compatibility baseline audited against master 0e58a8b on 2026-11-07. Existing routes are implemented in Node/SQLite; the additive search v1 route is planned for .NET/PostgreSQL (MAZ-121); operations marked `backend` (password reset, MAZ-123) exist only in the .NET backend. See docs/migration/.",
     "license": {
       "name": "MIT",
       "identifier": "MIT"
@@ -623,6 +623,98 @@
           }
         },
         "x-implementation": "legacy"
+      }
+    },
+    "/api/auth/password-reset": {
+      "post": {
+        "summary": "Redeem an operator-issued password reset code",
+        "operationId": "postApiAuthPasswordReset",
+        "description": "MAZ-123, .NET backend only (Node does not implement it). A server operator issues a single-use code with the `reset-password EMAIL` maintenance command and delivers it out of band; there is no email delivery. Redeeming it stores the new password as an ASP.NET Core Identity hash and revokes every session of the account; no session is issued, so the user then signs in normally. The request names no email, so responses never reveal whether an account exists. Unknown, malformed, used, superseded and expired codes share one 400 message. Shares the sign-in rate limit; the origin policy applies. See docs/migration/authentication.md#password-reset.",
+        "x-implementation": "backend",
+        "x-owner": "MAZ-123",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordReset"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password replaced and all sessions revoked.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`This reset code is invalid or has expired.` for any unusable code, `Enter a password of 10–256 characters.` for an invalid password (the code stays usable), or `Invalid JSON.`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON request body too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded (shared with sign-in).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/ledger": {
@@ -4145,6 +4237,25 @@
         },
         "required": [
           "email",
+          "password"
+        ]
+      },
+      "PasswordReset": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "description": "The 64-character lowercase hex reset code issued by the operator."
+          },
+          "password": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 256
+          }
+        },
+        "required": [
+          "token",
           "password"
         ]
       },

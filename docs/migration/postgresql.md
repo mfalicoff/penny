@@ -6,11 +6,11 @@ The schema is defined in code with **EF Core** (`Npgsql.EntityFrameworkCore.Post
 
 ## Target schema
 
-The legacy SQLite schema is an import source, not a template. PostgreSQL stores 22 product tables, the short-lived OIDC attempt table (MAZ-54), the import checkpoint and EF's `__EFMigrationsHistory`, all in schema `penny`.
+The legacy SQLite schema is an import source, not a template. PostgreSQL stores 22 product tables, the short-lived OIDC attempt table (MAZ-54), the password reset code table (MAZ-123), the import checkpoint and EF's `__EFMigrationsHistory`, all in schema `penny`.
 
 | Area | Tables | Notes |
 | --- | --- | --- |
-| Identity | `users`, `oidc_identities`, `sessions`, `oidc_attempts` | `oidc_attempts` holds pending OIDC sign-ins (hashed transaction, state, nonce, PKCE verifier, expiry); it is not imported (see [authentication](authentication.md#pending-attempts-in-postgresql)); scrypt password/salt text imported unchanged but not verified by .NET (accounts must reset; see [authentication](authentication.md)); new hashes are ASP.NET Core Identity v3 with an empty salt column; no automatic email linking; `sessions.expires_at` is `timestamptz` |
+| Identity | `users`, `oidc_identities`, `sessions`, `oidc_attempts`, `password_resets` | `oidc_attempts` holds pending OIDC sign-ins (hashed transaction, state, nonce, PKCE verifier, expiry); it is not imported (see [authentication](authentication.md#pending-attempts-in-postgresql)); `password_resets` (migration `AddPasswordResets`) holds SHA-256 of operator-issued reset codes, one per user (unique `user_id`), with `created_at`/`expires_at`; it is not imported; scrypt password/salt text imported unchanged but not verified by .NET (accounts reset with an operator-issued code; see [password reset](authentication.md#password-reset-maz-123)); new hashes are ASP.NET Core Identity v3 with an empty salt column; no automatic email linking; `sessions.expires_at` is `timestamptz` |
 | Receipts | `receipts` | Metadata only. Encrypted bytes live on the filesystem (see [Receipt storage](#receipt-storage)) |
 | Personal ledger | `ledgers`, `ledger_accounts`, `ledger_categories`, `ledger_trips`, `ledger_recurring`, `ledger_entries` | Typed v4 ledger. `ledgers` holds currency and the revision; children are keyed `(user_id, id)` |
 | Households | `households`, `household_member_periods`, `household_invites` | Trip households carry `trip_start`/`trip_end`; membership is periods only |
@@ -152,9 +152,10 @@ Databases created by the unreleased schema-2 SQL of earlier MAZ-52 drafts are no
 
 ## Cutover and forward-only recovery
 
-1. Rehearse on a production-shaped, sanitized SQLite copy. Compare all reports, authenticate migrated sessions, decrypt receipts and check shared totals. Exercise an interrupted import and resume.
+1. Rehearse on a production-shaped, sanitized SQLite copy. Compare all reports, authenticate migrated sessions, decrypt receipts and check shared totals. Exercise an interrupted import and resume, and one [password reset](authentication.md#password-reset-maz-123) of an imported password account (`reset-password`, redeem, sign in).
 2. Freeze **all** proxy mutations, auth/session/device writes and workers. Drain, stop Node and its workers, then snapshot and hash the final SQLite file. No dual writes.
 3. Import and verify into PostgreSQL and the receipt root. Verify existing Expo cookie/bearer/OIDC/receipt journeys and the v1–v4 guards. Switch the existing URL to .NET, then reopen writes.
+   **Imported password accounts:** legacy scrypt passwords stop working at the switch; imported sessions keep working until they expire (at most 30 days). Before or at the switch, tell every imported password user (`users` rows whose `password` and `salt` are both non-empty) that they must request a reset code from the operator to sign in with a password again, and how it will reach them. Operators may pre-issue codes after the final `--verify` with `reset-password EMAIL` (issuing touches only `password_resets`; redeeming changes `users`). There is one code per account, and each lasts `Auth__PasswordResetHours` (default 24 hours), so issue codes when you can deliver them, or re-issue later. OIDC users are unaffected.
 4. **Before reopening writes**, rollback means discarding the PostgreSQL target and receipt root and resuming Node on the untouched SQLite source.
 5. **After reopening writes, recovery is forward-only:** PostgreSQL point-in-time recovery (WAL archiving) plus receipt-root backups. There is no reverse export to SQLite and no mutation journal. Never restore the old SQLite snapshot over accepted data.
 

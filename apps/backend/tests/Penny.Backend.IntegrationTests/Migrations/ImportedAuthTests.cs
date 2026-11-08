@@ -111,6 +111,79 @@ public sealed class ImportedAuthTests(ApiFixture fixture) : IntegrationTestBase(
         (await MeAsync(bearer: other)).ShouldBe("new@example.test");
     }
 
+    [Fact]
+    public async Task whenImportedAccountsReset_PasswordResetFlow_ShouldAllowPasswordSignIn()
+    {
+        await ImportAsync();
+        Fixture.Factory.Clock.Set(DateTimeOffset.FromUnixTimeMilliseconds(ExpiredExpires + 1));
+        const string NewPassword = "my new penny password";
+
+        // A legacy scrypt account: the operator finds it with the sign-in email rule.
+        var legacy = await IssueResetAsync(" Imported@Example.TEST ");
+        legacy.HadPassword.ShouldBeTrue();
+        using (
+            var reset = await ResetPasswordAsync(
+                new { token = legacy.Token, password = NewPassword }
+            )
+        )
+            reset.StatusCode.ShouldBe(HttpStatusCode.OK);
+        (
+            await ScalarAsync(
+                "SELECT count(*) FROM penny.users WHERE id = 'imported-user' AND salt = '' AND password <> '' AND password <> '"
+                    + Hash
+                    + "'"
+            )
+        ).ShouldBe(1L);
+        // Its imported sessions are revoked; the old password still fails generically.
+        using (
+            var revoked = await Client.SendAsync(
+                Authorized(HttpMethod.Get, "/api/auth/me", bearer: ActiveToken),
+                Ct
+            )
+        )
+            revoked.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        (
+            await ScalarAsync("SELECT count(*) FROM penny.sessions WHERE user_id = 'imported-user'")
+        ).ShouldBe(0L);
+        using (
+            var old = await Client.PostAsJsonAsync(
+                "/api/auth/login",
+                new { email = "imported@example.test", password = Password },
+                Ct
+            )
+        )
+            old.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        var session = await LoginAsync("imported@example.test", NewPassword);
+        (await MeAsync(bearer: session)).ShouldBe("imported@example.test");
+
+        // An imported OIDC-only account (empty password) may add a password; its
+        // identity link is kept, and other accounts' sessions are untouched.
+        var oidc = await IssueResetAsync("case@example.test");
+        oidc.HadPassword.ShouldBeFalse();
+        using (
+            var added = await ResetPasswordAsync(new { token = oidc.Token, password = NewPassword })
+        )
+            added.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await LoginAsync("case@example.test", NewPassword);
+        (
+            await ScalarAsync(
+                "SELECT count(*) FROM penny.oidc_identities WHERE user_id = 'oidc-user'"
+            )
+        ).ShouldBe(1L);
+        (await MeAsync(bearer: session)).ShouldBe("imported@example.test");
+    }
+
+    private async Task<string> LoginAsync(string email, string password)
+    {
+        using var response = await Client.PostAsJsonAsync(
+            "/api/auth/login",
+            new { email, password },
+            Ct
+        );
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        return (await response.Content.ReadFromJsonAsync<SessionResponse>(Ct))!.Token;
+    }
+
     private async Task ImportAsync()
     {
         using var legacy = new LegacyDatabase();

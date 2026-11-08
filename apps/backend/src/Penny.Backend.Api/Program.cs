@@ -3,8 +3,15 @@ using Penny.Backend.Api.Configuration;
 using Penny.Backend.Api.Middleware;
 using Scalar.AspNetCore;
 
-var maintenance = args.FirstOrDefault() is "migrate" or "snapshot-sqlite" or "import-sqlite";
+var maintenance =
+    args.FirstOrDefault()
+    is "migrate"
+        or "snapshot-sqlite"
+        or "import-sqlite"
+        or PasswordResetCommand.Name;
 var builder = WebApplication.CreateBuilder(maintenance ? [] : args);
+if (args.FirstOrDefault() == PasswordResetCommand.Name)
+    return await PasswordResetCommand.RunAsync(args, builder.Configuration);
 if (maintenance)
     return await MaintenanceCommand.RunAsync(args, builder.Configuration);
 

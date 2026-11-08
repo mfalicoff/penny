@@ -6,7 +6,7 @@ Accepted revision: 2026-11-07. This specifies v2; it does not deploy replacement
 
 The running baseline is Expo SDK 57 (`src/`) and Node 24/Express (`server/`), with a same-origin exported web bundle and SQLite. **PostgreSQL is the committed v2 server database.** SQLite is the legacy import and rollback source. Device/browser durable stores remain local; they never connect to PostgreSQL.
 
-Preserve `/api` paths, camelCase JSON, ledger v4, arbitrary existing string IDs, integer revisions, session hashes/expiry, receipt IDs/bytes and shared visibility during coexistence. JSON key order is not a contract; array order and absent/null distinctions are. Search v1 is additive, defined in [search.md](search.md). Legacy scrypt password hashes are deliberately not verified by the .NET backend; those accounts must reset their password ([authentication](authentication.md)).
+Preserve `/api` paths, camelCase JSON, ledger v4, arbitrary existing string IDs, integer revisions, session hashes/expiry, receipt IDs/bytes and shared visibility during coexistence. JSON key order is not a contract; array order and absent/null distinctions are. Search v1 is additive, defined in [search.md](search.md). Legacy scrypt password hashes are deliberately not verified by the .NET backend; those accounts must reset their password with an operator-issued code ([password reset](authentication.md#password-reset-maz-123)).
 
 | Path | Ownership |
 | --- | --- |

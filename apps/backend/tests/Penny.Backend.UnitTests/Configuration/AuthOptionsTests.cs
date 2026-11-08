@@ -25,6 +25,7 @@ public sealed class AuthOptionsTests
         options.AllowedOrigins.ShouldBe(["http://localhost:8081", "http://localhost:3001"]);
         options.TrustedProxies.ShouldBeEmpty();
         options.RateLimitPermits.ShouldBe(40);
+        options.PasswordResetHours.ShouldBe(24);
     }
 
     [Fact]
@@ -54,9 +55,21 @@ public sealed class AuthOptionsTests
     [InlineData("Auth:AllowedOrigins", "*")]
     [InlineData("Auth:TrustedProxies", "proxy.internal")]
     [InlineData("Auth:RateLimitPermits", "0")]
+    [InlineData("Auth:PasswordResetHours", "0")]
+    [InlineData("Auth:PasswordResetHours", "169")]
+    [InlineData("Auth:PasswordResetHours", "1.5")]
     public void whenValueInvalid_Read_ShouldFailWithSettingName(string key, string value)
     {
         var error = Should.Throw<InvalidOperationException>(() => Read((key, value)));
         error.Message.ShouldContain(key);
     }
+
+    [Theory]
+    [InlineData("1", 1)]
+    [InlineData("168", 168)]
+    [InlineData(" 72 ", 72)]
+    public void whenResetLifetimeConfigured_Read_ShouldAcceptHoursWithinBounds(
+        string value,
+        int expected
+    ) => Read(("Auth:PasswordResetHours", value)).PasswordResetHours.ShouldBe(expected);
 }
