@@ -11,7 +11,7 @@ namespace Penny.Backend.IntegrationTests.Migrations;
 
 public sealed class ImportedAuthTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
-    // Synthetic credentials hashed by the legacy Node server (security.ts), not real data.
+    // Synthetic legacy scrypt credentials from the Node server (security.ts), not real data.
     private const string Password = "imported account password";
     private const string Salt = "5f1c0e7a9b3d2468ace0f1357924680b";
     private const string Hash =
@@ -28,7 +28,7 @@ public sealed class ImportedAuthTests(ApiFixture fixture) : IntegrationTestBase(
     private const long ExpiredExpires = 1793577600123; // also the base fixture session
 
     [Fact]
-    public async Task whenSqliteAccountImported_AuthFlow_ShouldKeepPasswordsSessionsAndCaseRules()
+    public async Task whenSqliteAccountImported_AuthFlow_ShouldKeepSessionsButRequirePasswordReset()
     {
         await ImportAsync();
         Fixture.Factory.Clock.Set(DateTimeOffset.FromUnixTimeMilliseconds(ExpiredExpires + 1));
@@ -44,18 +44,22 @@ public sealed class ImportedAuthTests(ApiFixture fixture) : IntegrationTestBase(
         )
             expired.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
 
-        // The stored scrypt hash verifies without rehashing; login trims and lowercases.
+        // Legacy scrypt hashes are no longer verified: the account must reset its
+        // password. The stored row is left untouched and the error stays generic.
         using var login = await Client.PostAsJsonAsync(
             "/api/auth/login",
             new { email = " Imported@Example.TEST", password = Password },
             Ct
         );
-        login.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var session = (await login.Content.ReadFromJsonAsync<SessionResponse>(Ct))!;
-        session.Email.ShouldBe("imported@example.test");
+        await AuthTests.ShouldBeErrorAsync(
+            login,
+            HttpStatusCode.Unauthorized,
+            "Email or password is incorrect."
+        );
         (await ScalarAsync("SELECT password FROM penny.users WHERE id = 'imported-user'")).ShouldBe(
             Hash
         );
+        var other = await RegisterAsync("new@example.test");
 
         // Issuing a session purges expired rows; their push devices cascade as in SQLite.
         (
@@ -89,7 +93,7 @@ public sealed class ImportedAuthTests(ApiFixture fixture) : IntegrationTestBase(
         );
         duplicate.StatusCode.ShouldBe(HttpStatusCode.Conflict);
 
-        // Revoking the imported session leaves the new one valid.
+        // Revoking the imported session leaves other accounts' sessions valid.
         using (
             var logout = await Client.SendAsync(
                 Authorized(HttpMethod.Post, "/api/auth/logout", bearer: ActiveToken),
@@ -104,7 +108,7 @@ public sealed class ImportedAuthTests(ApiFixture fixture) : IntegrationTestBase(
             )
         )
             revoked.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
-        (await MeAsync(bearer: session.Token)).ShouldBe("imported@example.test");
+        (await MeAsync(bearer: other)).ShouldBe("new@example.test");
     }
 
     private async Task ImportAsync()

@@ -8,6 +8,7 @@ using Penny.Backend.Api.Contracts;
 using Penny.Backend.Api.Errors;
 using Penny.Backend.Api.Middleware;
 using Penny.Backend.Application.Abstractions.Persistence;
+using Penny.Backend.Application.Abstractions.Security;
 using Penny.Backend.Application.Authentication;
 using Penny.Backend.Persistence.Configuration;
 using Penny.Backend.Persistence.Health;
@@ -69,7 +70,7 @@ public static class BackendServices
     {
         services.AddSingleton(auth);
         services.AddSingleton(new RegistrationPolicy(auth.AllowRegistration));
-        services.AddSingleton<LegacyPasswordHasher>();
+        services.AddSingleton<IPasswordHasher>(_ => new IdentityPasswordHasher());
         services.AddSingleton<IAccountRepository, PostgresAccountRepository>();
         services.AddSingleton<ISessionRepository, PostgresSessionRepository>();
         services.AddSingleton<AuthService>();

@@ -2,7 +2,10 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
+using Microsoft.AspNetCore.Identity;
+using Penny.Backend.Api.Authentication;
 using Penny.Backend.Api.Contracts;
+using Penny.Backend.Application.Abstractions.Security;
 using Penny.Backend.Application.Authentication;
 using Penny.Backend.IntegrationTests.Infrastructure;
 using Shouldly;
@@ -77,7 +80,8 @@ public sealed class AuthTests(ApiFixture fixture) : IntegrationTestBase(fixture)
                     Email
                 )
             )!;
-        hash.ShouldMatch("^[0-9a-f]{128}:[0-9a-f]{32}$");
+        hash.ShouldStartWith("AQAAAAI"); // Identity v3 hash, salt embedded
+        hash.ShouldEndWith(":");
 
         using var logout = await Client.SendAsync(
             Authorized(HttpMethod.Post, "/api/auth/logout", cookie: cookie),
@@ -371,6 +375,27 @@ public sealed class AuthTests(ApiFixture fixture) : IntegrationTestBase(fixture)
         using var request = Authorized(HttpMethod.Get, "/api/missing", bearer: token);
         using var authenticated = await Client.SendAsync(request, Ct);
         await ShouldBeErrorAsync(authenticated, HttpStatusCode.NotFound, "API route not found.");
+    }
+
+    [Fact]
+    public async Task whenStoredHashUsesFewerIterations_Login_ShouldUpgradeStoredHash()
+    {
+        await RegisterAsync(Email);
+        var weaker = new IdentityPasswordHasher(
+            new PasswordHasherOptions { IterationCount = 1000 }
+        ).Hash(TestPassword);
+        await using (
+            var update = Fixture.Admin.CreateCommand("UPDATE penny.users SET password = @hash")
+        )
+        {
+            update.Parameters.AddWithValue("hash", weaker);
+            await update.ExecuteNonQueryAsync(Ct);
+        }
+        await LoginAsync(Email);
+        var stored = (string)
+            (await ScalarAsync("SELECT password FROM penny.users WHERE email = @p", Email))!;
+        stored.ShouldNotBe(weaker);
+        new IdentityPasswordHasher().Verify(stored, TestPassword).ShouldBe(PasswordCheck.Success);
     }
 
     private async Task<string> LoginAsync(string email)

@@ -53,6 +53,22 @@ public sealed class PostgresAccountRepository(NpgsqlDataSource source) : IAccoun
             .SingleOrDefaultAsync(cancellationToken);
     }
 
+    public async Task UpdatePasswordAsync(
+        string userId,
+        string currentHash,
+        string newHash,
+        CancellationToken cancellationToken
+    )
+    {
+        await using var context = PennyDbContext.Create(source);
+        await context
+            .Users.Where(user => user.Id == userId && user.Password == currentHash)
+            .ExecuteUpdateAsync(
+                set => set.SetProperty(user => user.Password, newHash),
+                cancellationToken
+            );
+    }
+
     public async Task<bool> TryCreateAsync(
         StoredUser user,
         StoredLedger ledger,

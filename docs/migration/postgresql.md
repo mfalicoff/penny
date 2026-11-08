@@ -10,7 +10,7 @@ The legacy SQLite schema is an import source, not a template. PostgreSQL stores 
 
 | Area | Tables | Notes |
 | --- | --- | --- |
-| Identity | `users`, `oidc_identities`, `sessions` | scrypt password/salt text unchanged; no automatic email linking; `sessions.expires_at` is `timestamptz` |
+| Identity | `users`, `oidc_identities`, `sessions` | scrypt password/salt text imported unchanged but not verified by .NET (accounts must reset; see [authentication](authentication.md)); new hashes are ASP.NET Core Identity v3 with an empty salt column; no automatic email linking; `sessions.expires_at` is `timestamptz` |
 | Receipts | `receipts` | Metadata only. Encrypted bytes live on the filesystem (see [Receipt storage](#receipt-storage)) |
 | Personal ledger | `ledgers`, `ledger_accounts`, `ledger_categories`, `ledger_trips`, `ledger_recurring`, `ledger_entries` | Typed v4 ledger. `ledgers` holds currency and the revision; children are keyed `(user_id, id)` |
 | Households | `households`, `household_member_periods`, `household_invites` | Trip households carry `trip_start`/`trip_end`; membership is periods only |

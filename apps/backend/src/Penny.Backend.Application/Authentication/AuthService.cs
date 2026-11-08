@@ -1,15 +1,17 @@
 using Penny.Backend.Application.Abstractions.Persistence;
+using Penny.Backend.Application.Abstractions.Security;
 using Penny.Backend.Application.Ledgers;
 using Penny.Backend.Domain.Errors;
 
 namespace Penny.Backend.Application.Authentication;
 
 // Port of the legacy password auth service (server/application/auth.ts). Messages,
-// failure kinds and ordering are part of the client contract.
+// failure kinds and ordering are part of the client contract. Password hashes use
+// the new format only: accounts with legacy scrypt hashes must reset their password.
 public sealed class AuthService(
     IAccountRepository accounts,
     ISessionRepository sessions,
-    LegacyPasswordHasher passwords,
+    IPasswordHasher passwords,
     RegistrationPolicy policy,
     TimeProvider clock
 )
@@ -21,10 +23,6 @@ public sealed class AuthService(
     public const string RegistrationDisabled = "Account registration is disabled on this server.";
     public const string InvalidRegistration =
         "Enter a valid email and a password of 10–256 characters.";
-
-    // Used when no user matches, so unknown emails cost one full derivation too.
-    private static readonly string MissingSalt = new('0', 32);
-    private static readonly string MissingHash = new('0', 128);
 
     public async Task<IssuedSession> RegisterAsync(
         string? email,
@@ -40,12 +38,12 @@ public sealed class AuthService(
         if (await accounts.FindByEmailAsync(credentials.Email, cancellationToken) is not null)
             throw new BackendFailure(FailureKind.Conflict, DuplicateEmail);
         var userId = SessionTokens.NewId();
-        var salt = SessionTokens.NewId();
-        var hash = await passwords.HashAsync(credentials.Password, salt, cancellationToken);
+        // The hash embeds its own salt; the legacy salt column stays empty.
+        var hash = passwords.Hash(credentials.Password);
         // Another registration may commit while the password is hashed.
         if (
             !await accounts.TryCreateAsync(
-                new StoredUser(userId, credentials.Email, hash, salt),
+                new StoredUser(userId, credentials.Email, hash, ""),
                 InitialLedger.Create(),
                 cancellationToken
             )
@@ -64,14 +62,17 @@ public sealed class AuthService(
             Credentials.Normalize(email, password)
             ?? throw new BackendFailure(FailureKind.Unauthorized, InvalidCredentials);
         var user = await accounts.FindByEmailAsync(credentials.Email, cancellationToken);
-        var valid = await passwords.VerifyAsync(
-            credentials.Password,
-            user?.Salt ?? MissingSalt,
-            user?.Password ?? MissingHash,
-            cancellationToken
-        );
-        if (user is null || !valid)
+        // Always verify, so unknown emails cost the same as wrong passwords.
+        var check = passwords.Verify(user?.Password, credentials.Password);
+        if (user is null || check == PasswordCheck.Failed)
             throw new BackendFailure(FailureKind.Unauthorized, InvalidCredentials);
+        if (check == PasswordCheck.SuccessRehashNeeded)
+            await accounts.UpdatePasswordAsync(
+                user.Id,
+                user.Password,
+                passwords.Hash(credentials.Password),
+                cancellationToken
+            );
         return new(await IssueAsync(user.Id, cancellationToken), user.Email);
     }
 

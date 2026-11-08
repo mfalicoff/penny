@@ -1,6 +1,6 @@
 # Penny ASP.NET Core foundation
 
-MAZ-51 provides a separate controller-based .NET 10 service; MAZ-52 adds the EF Core product schema and migrations, the encrypted receipt file store and explicit SQLite snapshot/import/verification commands. The existing Expo/Node/SQLite application continues running unchanged. MAZ-53 adds legacy-compatible password registration/login/me/logout, cookie and bearer sessions, origin/CORS policy and sign-in rate limiting ([authentication compatibility](../../docs/migration/authentication.md)). This service is not ready to replace it: OIDC, ledger, receipt and household HTTP workflows are owned by MAZ-54–61, and search population/matching belongs to MAZ-121. See the [import and recovery runbook](../../docs/migration/postgresql.md).
+MAZ-51 provides a separate controller-based .NET 10 service; MAZ-52 adds the EF Core product schema and migrations, the encrypted receipt file store and explicit SQLite snapshot/import/verification commands. The existing Expo/Node/SQLite application continues running unchanged. MAZ-53 adds password registration/login/me/logout (ASP.NET Core Identity password hashes; imported legacy scrypt accounts must reset their password), cookie and bearer sessions, origin/CORS policy and sign-in rate limiting ([authentication compatibility](../../docs/migration/authentication.md)). This service is not ready to replace it: OIDC, ledger, receipt and household HTTP workflows are owned by MAZ-54–61, and search population/matching belongs to MAZ-121. See the [import and recovery runbook](../../docs/migration/postgresql.md).
 
 ## Toolchain and layout
 
@@ -9,10 +9,10 @@ Install SDK **10.0.403** (pinned without roll-forward), Node 24 for the legacy c
 | Project | Owns |
 | --- | --- |
 | `src/Penny.Backend.Domain` | Framework-free failures and future domain rules |
-| `src/Penny.Backend.Application` | Use cases (password auth, legacy scrypt, initial ledger) and persistence ports; no SQL/HTTP references |
+| `src/Penny.Backend.Application` | Use cases (password auth, initial ledger), persistence and security ports; no SQL/HTTP references |
 | `src/Penny.Backend.Persistence` | EF Core model (`PennyDbContext`) and migrations, repositories, read-only readiness probe, encrypted receipt store and SQLite import |
 | `src/Penny.Backend.Api` | Standard CreateBuilder/AddControllers/Build/MapControllers/Run flow, configuration, session authentication, origin/CORS/rate-limit middleware, operational and auth controllers |
-| `tests/Penny.Backend.UnitTests` | Configuration bounds/redaction, scrypt/credential/token parity and inward dependency checks |
+| `tests/Penny.Backend.UnitTests` | Configuration bounds/redaction, password hasher, credential/token parity and inward dependency checks |
 | `tests/Penny.Backend.IntegrationTests` | One PostgreSQL container and shared WebApplicationFactory, real Kestrel/SQL, per-test compatibility metadata reset |
 
 Production projects live in `src/` and test projects in `tests/`, with matching solution folders. Within projects, responsibilities have their own folders and namespaces:
@@ -23,7 +23,7 @@ src/
     Authentication/  Configuration/  Contracts/  Controllers/  Errors/  Middleware/
     Program.cs
   Penny.Backend.Application/
-    Abstractions/Persistence/  Authentication/  Ledgers/
+    Abstractions/Persistence/  Abstractions/Security/  Authentication/  Ledgers/
   Penny.Backend.Domain/
     Errors/
   Penny.Backend.Persistence/
