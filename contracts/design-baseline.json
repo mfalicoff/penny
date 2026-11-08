@@ -1288,8 +1288,8 @@
       "sourcePath": "docs/design/penny-redesign/screens/categories.svg",
       "nativeIssue": "MAZ-74",
       "webIssue": "MAZ-89",
-      "legacyRoute": "/accounts",
-      "legacyTest": "tests/core/accounts.test.ts",
+      "legacyRoute": "/categories",
+      "legacyTest": "tests/ui/features/categories/CategoryForm.test.tsx",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1309,8 +1309,8 @@
       "sourcePath": "docs/design/penny-redesign/screens/category-form.svg",
       "nativeIssue": "MAZ-74",
       "webIssue": "MAZ-89",
-      "legacyRoute": "/accounts",
-      "legacyTest": "tests/core/accounts.test.ts",
+      "legacyRoute": "/categories",
+      "legacyTest": "tests/ui/features/categories/CategoryForm.test.tsx",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
