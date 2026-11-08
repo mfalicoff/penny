@@ -81,10 +81,10 @@ Everything else is EF-generated or a LINQ query. Check-constraint and partial-in
 
 ## Concurrency and transactions
 
-- **Ledger compare-and-increment.** `PostgresLedgerRepository.TrySaveAsync` runs `UPDATE ledgers SET revision = revision + 1 WHERE user_id = @u AND revision = @expected` (an EF `ExecuteUpdate`), then applies a keyed diff of the children (insert, update, delete) in the same transaction. The row lock serializes concurrent savers. A loser re-evaluates the predicate after the winner commits, updates nothing, and gets `false` (HTTP 409). A stale writer changes nothing.
+- **Ledger compare-and-increment.** `PostgresLedgerRepository.TrySaveAsync` runs `UPDATE ledgers SET revision = revision + 1 WHERE user_id = @u AND revision = @expected` (an EF `ExecuteUpdate`), then reads the cross-aggregate facts the ledger service checks (household currencies, linked accounts, receipt ownership), and applies a keyed diff of the children (insert, update, delete) in the same transaction. The row lock serializes concurrent savers. A loser re-evaluates the predicate after the winner commits, updates nothing, and gets `false` (HTTP 409). A stale or rejected writer changes nothing. HTTP behavior, ordering and retry rules: [ledger sync](ledger.md).
 - **Lock order** for future shared writers: households sorted by ID, then affected users sorted by ID, then entities. Bound retries for deadlock and serialization failures, redo validation, and never replay external side effects.
 - **Workers** claim due rows with `FOR UPDATE SKIP LOCKED` and expiring lease owner/token columns (MAZ-59/61). Unique `(recurring_id, expense_date)` prevents duplicate occurrences. Notifications are delivered after commit, at least once.
-- **Search** is MAZ-121's: it can index typed `ledger_entries` directly and adds a projection only where shared visibility requires one, maintained in the same transaction as the write.
+- **Search** is MAZ-121's: it can index typed `ledger_entries` directly and adds a projection only where shared visibility requires one, maintained in the same transaction as the write. The ledger write path marks that seam in `PostgresLedgerRepository.TrySaveAsync` (before commit).
 
 ## Receipt storage
 

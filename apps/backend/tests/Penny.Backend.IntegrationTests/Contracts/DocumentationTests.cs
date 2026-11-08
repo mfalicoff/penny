@@ -41,6 +41,8 @@ public sealed class DocumentationTests(ApiFixture fixture) : IntegrationTestBase
                 ("/api/auth/login", "post", "postApiAuthLogin"),
                 ("/api/auth/me", "get", "getApiAuthMe"),
                 ("/api/auth/logout", "post", "postApiAuthLogout"),
+                ("/api/ledger", "get", "getApiLedger"),
+                ("/api/ledger", "put", "putApiLedger"),
             }
         )
             paths
@@ -49,8 +51,16 @@ public sealed class DocumentationTests(ApiFixture fixture) : IntegrationTestBase
                 .GetProperty("operationId")
                 .GetString()
                 .ShouldBe(operationId);
+        // Ledger operations keep the shared contract's operation IDs.
+        var contract = ContractFixtures.OpenApi()["paths"]!["/api/ledger"]!;
+        foreach (var method in new[] { "get", "put" })
+            paths
+                .GetProperty("/api/ledger")
+                .GetProperty(method)
+                .GetProperty("operationId")
+                .GetString()
+                .ShouldBe(contract[method]!["operationId"]!.GetValue<string>());
         paths.TryGetProperty("/api/auth/oidc", out _).ShouldBeFalse();
-        paths.TryGetProperty("/api/ledger", out _).ShouldBeFalse();
         using var scalar = await Client.GetAsync("/scalar/v1", Ct);
         scalar.StatusCode.ShouldBe(HttpStatusCode.OK);
         (await scalar.Content.ReadAsStringAsync(Ct)).ShouldContain("scalar");

@@ -69,14 +69,18 @@ public sealed class BoundaryTests(ApiFixture fixture) : IntegrationTestBase(fixt
     {
         using var known = await Client.PostAsync(
             "/api/test/body",
-            new StringContent(new string('x', 257)),
+            new StringContent(new string('x', TestApiFactory.MaxBodyBytes + 1)),
             Ct
         );
         known.StatusCode.ShouldBe(HttpStatusCode.RequestEntityTooLarge);
         using var chunked = new HttpRequestMessage(HttpMethod.Post, "/api/test/body");
         chunked.Headers.TransferEncodingChunked = true;
         chunked.Content = new StreamContent(
-            new MemoryStream(Encoding.UTF8.GetBytes("{\"value\":\"" + new string('x', 300) + "\"}"))
+            new MemoryStream(
+                Encoding.UTF8.GetBytes(
+                    "{\"value\":\"" + new string('x', TestApiFactory.MaxBodyBytes) + "\"}"
+                )
+            )
         );
         chunked.Content.Headers.ContentType = new("application/json");
         using var response = await Client.SendAsync(chunked, Ct);

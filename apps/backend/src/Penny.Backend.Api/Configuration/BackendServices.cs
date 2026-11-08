@@ -10,8 +10,10 @@ using Penny.Backend.Api.Middleware;
 using Penny.Backend.Application.Abstractions.Persistence;
 using Penny.Backend.Application.Abstractions.Security;
 using Penny.Backend.Application.Authentication;
+using Penny.Backend.Application.Ledgers;
 using Penny.Backend.Persistence.Configuration;
 using Penny.Backend.Persistence.Health;
+using Penny.Backend.Persistence.Receipts;
 using Penny.Backend.Persistence.Repositories;
 
 namespace Penny.Backend.Api.Configuration;
@@ -64,6 +66,20 @@ public static class BackendServices
         );
         builder.Services.AddOpenApi();
         AddAuthServices(builder.Services, AuthOptions.Read(configuration));
+        AddLedgerServices(builder.Services, configuration);
+    }
+
+    private static void AddLedgerServices(IServiceCollection services, IConfiguration configuration)
+    {
+        // Ledger reads open encrypted receipt names, so HTTP needs the receipt store.
+        var receipts = ReceiptStoreSettings.Create(
+            configuration["Receipts:Root"],
+            configuration["Receipts:MasterKey"]
+        );
+        services.AddSingleton(new ReceiptFileStore(receipts));
+        services.AddSingleton<IReceiptRepository, PostgresReceiptRepository>();
+        services.AddSingleton<ILedgerRepository, PostgresLedgerRepository>();
+        services.AddSingleton<LedgerService>();
     }
 
     private static void AddAuthServices(IServiceCollection services, AuthOptions auth)

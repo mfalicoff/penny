@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Security.Cryptography;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -11,6 +13,8 @@ public sealed class TestApiFactory(
     IReadOnlyDictionary<string, string>? settings = null
 ) : WebApplicationFactory<Program>
 {
+    public const int MaxBodyBytes = 65536;
+
     public TestClock Clock { get; } = new();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -19,7 +23,20 @@ public sealed class TestApiFactory(
         builder.UseSetting("ConnectionStrings:Postgres", connectionString);
         builder.UseSetting("Database:ConnectTimeoutSeconds", "1");
         builder.UseSetting("Database:CommandTimeoutSeconds", "1");
-        builder.UseSetting("Backend:MaxRequestBodyBytes", "256");
+        // Small enough for chunked/known-length 413 tests, large enough for ledgers.
+        builder.UseSetting(
+            "Backend:MaxRequestBodyBytes",
+            MaxBodyBytes.ToString(CultureInfo.InvariantCulture)
+        );
+        // Hosts that never touch receipts get an unused root and a throwaway key.
+        builder.UseSetting(
+            "Receipts:Root",
+            Path.Combine(Path.GetTempPath(), "penny-receipts-unused")
+        );
+        builder.UseSetting(
+            "Receipts:MasterKey",
+            Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))
+        );
         builder.UseSetting("Backend:RequestTimeoutSeconds", "2");
         builder.UseSetting("Backend:ShutdownTimeoutSeconds", "5");
         builder.UseSetting("Logging:LogLevel:Default", "None");

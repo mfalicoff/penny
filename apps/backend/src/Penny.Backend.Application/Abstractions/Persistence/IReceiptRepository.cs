@@ -7,4 +7,12 @@ public interface IReceiptRepository
         string receiptId,
         CancellationToken cancellationToken
     );
+
+    // Name and MIME of the user's own receipts among `receiptIds`, without reading
+    // the encrypted files. Ids the user does not own are absent from the result.
+    Task<IReadOnlyDictionary<string, StoredReceiptInfo>> DescribeAsync(
+        string userId,
+        IReadOnlyCollection<string> receiptIds,
+        CancellationToken cancellationToken
+    );
 }

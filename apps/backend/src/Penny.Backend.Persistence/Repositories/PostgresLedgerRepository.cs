@@ -94,10 +94,13 @@ public sealed class PostgresLedgerRepository(NpgsqlDataSource source) : ILedgerR
         string userId,
         long expectedRevision,
         StoredLedger ledger,
+        Action<LedgerWriteState> verify,
         CancellationToken cancellationToken
     )
     {
         await using var context = PennyDbContext.Create(source);
+        // READ COMMITTED. Disposing without commit rolls back (verify failures,
+        // cancellation and errors alike).
         await using var transaction = await context.Database.BeginTransactionAsync(
             cancellationToken
         );
@@ -111,6 +114,10 @@ public sealed class PostgresLedgerRepository(NpgsqlDataSource source) : ILedgerR
                         .SetProperty(row => row.Currency, ledger.Currency),
                 cancellationToken
             );
+        // Checks run even for a stale revision so their errors take precedence over
+        // the conflict, as in the legacy service. When the revision matched, the
+        // ledger row is locked, so these reads see every write committed before it.
+        verify(await ReadWriteStateAsync(context, userId, ledger, cancellationToken));
         if (updated != 1)
             return false;
         await SyncAsync(
@@ -203,8 +210,79 @@ public sealed class PostgresLedgerRepository(NpgsqlDataSource source) : ILedgerR
         );
         // EF orders the inserts, updates and deletes so foreign keys hold.
         await context.SaveChangesAsync(cancellationToken);
+        // Search seam (MAZ-121): any search projection of personal entries must be
+        // updated here, inside this transaction, so it never diverges from the
+        // committed revision. MAZ-55 builds no projection.
         await transaction.CommitAsync(cancellationToken);
         return true;
+    }
+
+    private static async Task<LedgerWriteState> ReadWriteStateAsync(
+        PennyDbContext context,
+        string userId,
+        StoredLedger ledger,
+        CancellationToken cancellationToken
+    )
+    {
+        var receiptIds = ledger
+            .Entries.Select(entry => entry.ReceiptId)
+            .OfType<string>()
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+        var householdIds = ledger
+            .Trips.Select(trip => trip.SharedHouseholdId)
+            .OfType<string>()
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+        // Active memberships of non-archived households, as the legacy query.
+        var currencies = await context
+            .HouseholdMemberPeriods.Where(member =>
+                member.UserId == userId && member.LeftAt == null
+            )
+            .Join(
+                context.Households.Where(household => household.ArchivedAt == null),
+                member => member.HouseholdId,
+                household => household.Id,
+                (_, household) => household.Currency
+            )
+            .Distinct()
+            .ToListAsync(cancellationToken);
+        // Household expenses and rules this user paid from a personal account.
+        var linkedAccounts = await context
+            .HouseholdExpenses.Where(expense =>
+                expense.PayerId == userId && expense.AccountId != null && expense.DeletedAt == null
+            )
+            .Select(expense => expense.AccountId!)
+            .Union(
+                context
+                    .HouseholdRecurring.Where(rule =>
+                        rule.PayerId == userId && rule.AccountId != null
+                    )
+                    .Select(rule => rule.AccountId!)
+            )
+            .ToListAsync(cancellationToken);
+        return new(
+            await context.LedgerAccounts.AnyAsync(row => row.UserId == userId, cancellationToken),
+            await context.LedgerTrips.AnyAsync(row => row.UserId == userId, cancellationToken),
+            currencies.ToHashSet(StringComparer.Ordinal),
+            linkedAccounts.ToHashSet(StringComparer.Ordinal),
+            receiptIds.Count == 0
+                ? new HashSet<string>(StringComparer.Ordinal)
+                : (
+                    await context
+                        .Receipts.Where(row => row.UserId == userId && receiptIds.Contains(row.Id))
+                        .Select(row => row.Id)
+                        .ToListAsync(cancellationToken)
+                ).ToHashSet(StringComparer.Ordinal),
+            householdIds.Count == 0
+                ? new HashSet<string>(StringComparer.Ordinal)
+                : (
+                    await context
+                        .Households.Where(row => householdIds.Contains(row.Id))
+                        .Select(row => row.Id)
+                        .ToListAsync(cancellationToken)
+                ).ToHashSet(StringComparer.Ordinal)
+        );
     }
 
     // Keyed diff of one child table: delete missing rows, update changed, insert new.
