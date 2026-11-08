@@ -3,6 +3,7 @@ using System.Net.Sockets;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
 using Penny.Backend.Api.Errors;
+using Penny.Backend.Api.Households;
 
 namespace Penny.Backend.Api.Authentication;
 
@@ -35,8 +36,18 @@ public static class AuthRateLimit
                 rejected.HttpContext.Response.Headers.RetryAfter = (
                     (int)Math.Ceiling(retryAfter.TotalSeconds)
                 ).ToString(System.Globalization.CultureInfo.InvariantCulture);
+            // One handler serves every policy; the invite limit keeps its legacy text.
+            var policy = rejected
+                .HttpContext.GetEndpoint()
+                ?.Metadata.GetMetadata<EnableRateLimitingAttribute>()
+                ?.PolicyName;
             return new ValueTask(
-                ApiErrors.WriteAsync(rejected.HttpContext, 429, Message, cancellationToken)
+                ApiErrors.WriteAsync(
+                    rejected.HttpContext,
+                    429,
+                    policy == InviteRateLimit.Policy ? InviteRateLimit.Message : Message,
+                    cancellationToken
+                )
             );
         };
     }

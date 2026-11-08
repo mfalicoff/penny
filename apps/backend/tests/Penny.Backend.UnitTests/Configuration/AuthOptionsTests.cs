@@ -26,6 +26,7 @@ public sealed class AuthOptionsTests
         options.TrustedProxies.ShouldBeEmpty();
         options.RateLimitPermits.ShouldBe(40);
         options.PasswordResetHours.ShouldBe(24);
+        options.InviteRateLimitPermits.ShouldBe(20);
     }
 
     [Fact]
@@ -58,6 +59,8 @@ public sealed class AuthOptionsTests
     [InlineData("Auth:PasswordResetHours", "0")]
     [InlineData("Auth:PasswordResetHours", "169")]
     [InlineData("Auth:PasswordResetHours", "1.5")]
+    [InlineData("Auth:InviteRateLimitPermits", "0")]
+    [InlineData("Auth:InviteRateLimitPermits", "10001")]
     public void whenValueInvalid_Read_ShouldFailWithSettingName(string key, string value)
     {
         var error = Should.Throw<InvalidOperationException>(() => Read((key, value)));
