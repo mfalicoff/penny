@@ -8,12 +8,37 @@ Install SDK **10.0.403** (pinned without roll-forward), Node 24 for the legacy c
 
 | Project | Owns |
 | --- | --- |
-| `Penny.Backend.Domain` | Framework-free failures and future domain rules |
-| `Penny.Backend.Application` | Use cases and persistence ports; no SQL/HTTP references |
-| `Penny.Backend.Persistence` | Npgsql pooling, read-only compatibility probes and explicit migration runner |
-| `Penny.Backend.Api` | Standard CreateBuilder/AddControllers/Build/MapControllers/Run flow, configuration, middleware and operational controllers |
-| `Penny.Backend.UnitTests` | Configuration bounds/redaction and inward dependency checks |
-| `Penny.Backend.IntegrationTests` | One PostgreSQL container and shared WebApplicationFactory, real Kestrel/SQL, per-test compatibility metadata reset |
+| `src/Penny.Backend.Domain` | Framework-free failures and future domain rules |
+| `src/Penny.Backend.Application` | Use cases and persistence ports; no SQL/HTTP references |
+| `src/Penny.Backend.Persistence` | Npgsql pooling, read-only compatibility probes and explicit migration runner |
+| `src/Penny.Backend.Api` | Standard CreateBuilder/AddControllers/Build/MapControllers/Run flow, configuration, middleware and operational controllers |
+| `tests/Penny.Backend.UnitTests` | Configuration bounds/redaction and inward dependency checks |
+| `tests/Penny.Backend.IntegrationTests` | One PostgreSQL container and shared WebApplicationFactory, real Kestrel/SQL, per-test compatibility metadata reset |
+
+Production projects live in `src/` and test projects in `tests/`, with matching solution folders. Within projects, responsibilities have their own folders and namespaces:
+
+```text
+src/
+  Penny.Backend.Api/
+    Configuration/  Contracts/  Controllers/  Errors/  Middleware/
+    Program.cs
+  Penny.Backend.Application/
+    Abstractions/Persistence/
+  Penny.Backend.Domain/
+    Errors/
+  Penny.Backend.Persistence/
+    Configuration/  Health/  Migrations/  Schema/
+tests/
+  Penny.Backend.IntegrationTests/
+    Contracts/  Controllers/  Http/  Migrations/
+    Infrastructure/Probes/
+  Penny.Backend.UnitTests/
+    Architecture/  Configuration/
+```
+
+DTOs, enums, fixtures and host helpers each have their own file. Namespace/folder alignment is checked by analyzers; keep new features within their owning project's folders.
+
+Tests use `whenCondition_MethodOrFunctionOrFlow_ShouldExpectedOutcome`, such as `whenDatabaseUnavailable_Readiness_ShouldReturnServiceUnavailable`.
 
 `dotnet.sh` runs from this directory and puts CLI/NuGet/temporary files under the repository's ignored `.cache/backend/`. Commands below run from the repository root. Product persistence/ORM choice is left to MAZ-52; this foundation uses Npgsql directly rather than adding an unused EF model. With no product tables yet, fixture reset restores compatibility metadata; MAZ-52 should introduce Respawn for product data while retaining migration history. Auth fakes/clock overrides are added only when corresponding features exist.
 
@@ -24,8 +49,8 @@ node apps/backend/development/setup.mjs
 docker compose --env-file apps/backend/.env -f apps/backend/compose.yaml up -d --wait
 bash apps/backend/dotnet.sh tool restore
 bash apps/backend/dotnet.sh restore Penny.Backend.slnx --locked-mode
-bash apps/backend/dotnet.sh run --project Penny.Backend.Api -- migrate
-bash apps/backend/dotnet.sh run --project Penny.Backend.Api
+bash apps/backend/dotnet.sh run --project src/Penny.Backend.Api -- migrate
+bash apps/backend/dotnet.sh run --project src/Penny.Backend.Api
 ```
 
 Setup creates `.env` with random, separate admin/migration/runtime passwords, mode 0600, and refuses to overwrite an existing file. `dotnet.sh run` loads that local file. Compose binds PostgreSQL to loopback port 5433; the API uses loopback port 5001, leaving the legacy server's 3001 untouched. Podman users can use a configured Compose provider. PostgreSQL **18.6** and the multi-platform image digest are pinned identically in Compose and `DatabaseSchema.Image`. PostgreSQL 18 stores the named volume at `/var/lib/postgresql`; do not reuse a legacy SQLite volume.

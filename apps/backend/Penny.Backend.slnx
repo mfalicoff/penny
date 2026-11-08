@@ -1,8 +1,12 @@
 <Solution>
-  <Project Path="Penny.Backend.Api/Penny.Backend.Api.csproj" />
-  <Project Path="Penny.Backend.Application/Penny.Backend.Application.csproj" />
-  <Project Path="Penny.Backend.Domain/Penny.Backend.Domain.csproj" />
-  <Project Path="Penny.Backend.IntegrationTests/Penny.Backend.IntegrationTests.csproj" />
-  <Project Path="Penny.Backend.Persistence/Penny.Backend.Persistence.csproj" />
-  <Project Path="Penny.Backend.UnitTests/Penny.Backend.UnitTests.csproj" />
+  <Folder Name="/src/">
+    <Project Path="src/Penny.Backend.Api/Penny.Backend.Api.csproj" />
+    <Project Path="src/Penny.Backend.Application/Penny.Backend.Application.csproj" />
+    <Project Path="src/Penny.Backend.Domain/Penny.Backend.Domain.csproj" />
+    <Project Path="src/Penny.Backend.Persistence/Penny.Backend.Persistence.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Penny.Backend.IntegrationTests/Penny.Backend.IntegrationTests.csproj" />
+    <Project Path="tests/Penny.Backend.UnitTests/Penny.Backend.UnitTests.csproj" />
+  </Folder>
 </Solution>

@@ -7,7 +7,7 @@ The user-supplied `.agents` and `.claude` integration-testing skills were commit
 | Check | Result |
 | --- | --- |
 | Pinned tool restore / NuGet `--locked-mode` | Passed in the working tree and a clean archived checkout |
-| CSharpier | 30 files checked, passed |
+| CSharpier | 41 files checked after the source/test layout revision, passed |
 | `dotnet format analyzers ... --verify-no-changes --no-restore` | Passed in both checkouts |
 | Release solution build | Passed, 0 warnings and 0 errors |
 | Unit/integration suite | 40 passed, 0 failed, 0 skipped; real PostgreSQL 18.6/pg_trgm and real Kestrel |
@@ -17,7 +17,11 @@ The user-supplied `.agents` and `.claude` integration-testing skills were commit
 | Shell / setup / workflow syntax | Bash syntax, Node syntax and workflow/Compose YAML parsing passed |
 | Staged whitespace | Passed |
 
-The clean copy lives at `.cache/backend/clean-checkout`, with independent CLI/NuGet/build caches. Its deep Unix path required an explicit `TESTINGPLATFORM_PIPE_DIRECTORY` pointing at the original workspace's `.cache/p`; the wrapper documents and supports this override. Formatting was checked against all 30 supported files, not an empty ignored file set. TRX reports remain under the corresponding `test-results/backend/` directories.
+The initial clean copy lives at `.cache/backend/clean-checkout`, with independent CLI/NuGet/build caches. Its deep Unix path required an explicit `TESTINGPLATFORM_PIPE_DIRECTORY` pointing at the original workspace's `.cache/p`; the wrapper documents and supports this override. Formatting was checked against the full supported file set, not an empty ignored file set. TRX reports remain under the corresponding `test-results/backend/` directories.
+
+The layout revision places production projects under `src/` and test projects under `tests/`, with responsibility-based folders and matching namespaces within every project. DTOs, enums, fixture classes and probe helpers are separate files. Solution folders, project references, CI package-cache paths, agent guidance and run commands were updated. Namespace/folder alignment is enforced by analyzer IDE0130. All 23 test methods (40 cases) use `whenCondition_MethodOrFunctionOrFlow_ShouldExpectedOutcome`, as requested. The unavailable-database test now generates its sentinel password, and Compose uses standard required-variable expressions rather than password-like diagnostic text.
+
+The revised layout was rechecked from a fresh staged-tree archive at `.cache/v51`: independent pinned tool/locked package restores, CSharpier on all 41 files, analyzers, Release build with zero warnings/errors, and all 40 test cases passed. Root lint/typecheck also passed after the naming changes.
 
 Tests cover boot configuration failures; bounded pooling/timeouts and logging redaction; missing/incompatible schema/extension, unavailable database and excessive runtime privileges; read-only startup/readiness; idempotent migration, advisory lock, incompatible-version rejection, non-superuser migration and denied runtime writes; actual CLI success/failure; 400/401/403/404/409/413/500 envelopes; malformed and chunked oversized bodies; client cancellation, server timeout response and graceful request draining; development OpenAPI/Scalar and production documentation gating.
 

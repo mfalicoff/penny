@@ -28,7 +28,9 @@ jobs:
         with:
           global-json-file: apps/backend/global.json
           cache: true
-          cache-dependency-path: apps/backend/**/packages.lock.json
+          cache-dependency-path: |
+            apps/backend/src/**/packages.lock.json
+            apps/backend/tests/**/packages.lock.json
       - name: Restore pinned tools
         run: bash apps/backend/dotnet.sh tool restore
       - name: Restore locked packages
