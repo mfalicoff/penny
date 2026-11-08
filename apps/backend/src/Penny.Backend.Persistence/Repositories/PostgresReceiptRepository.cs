@@ -32,4 +32,25 @@ public sealed class PostgresReceiptRepository(NpgsqlDataSource source, ReceiptFi
                 await files.ReadContentAsync(row, cancellationToken)
             );
     }
+
+    public async Task<IReadOnlyDictionary<string, StoredReceiptInfo>> DescribeAsync(
+        string userId,
+        IReadOnlyCollection<string> receiptIds,
+        CancellationToken cancellationToken
+    )
+    {
+        if (receiptIds.Count == 0)
+            return new Dictionary<string, StoredReceiptInfo>(StringComparer.Ordinal);
+        await using var context = PennyDbContext.Create(source);
+        var rows = await context
+            .Receipts.AsNoTracking()
+            .Where(receipt => receipt.UserId == userId && receiptIds.Contains(receipt.Id))
+            .ToListAsync(cancellationToken);
+        // Filenames are encrypted at rest; only the name is opened, never the file.
+        return rows.ToDictionary(
+            row => row.Id,
+            row => new StoredReceiptInfo(row.Id, files.ReadName(row), row.Mime),
+            StringComparer.Ordinal
+        );
+    }
 }

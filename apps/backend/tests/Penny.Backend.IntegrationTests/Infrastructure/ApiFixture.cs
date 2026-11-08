@@ -65,7 +65,15 @@ public sealed class ApiFixture : IAsyncLifetime
             Username = "penny_runtime",
             Password = password,
         }.ConnectionString;
-        Factory = new TestApiFactory(RuntimeConnection);
+        // The shared host opens receipts written through `Receipts`.
+        Factory = new TestApiFactory(
+            RuntimeConnection,
+            new Dictionary<string, string>
+            {
+                ["Receipts:Root"] = ReceiptRoot,
+                ["Receipts:MasterKey"] = ReceiptKey,
+            }
+        );
         Factory.UseKestrel(0);
         Factory.StartServer();
     }

@@ -52,11 +52,13 @@ public sealed class ImportedRepositoryTests(ApiFixture fixture) : IntegrationTes
         var outcomes = await Task.WhenAll(
             Enumerable
                 .Range(0, 2)
-                .Select(_ => ledgers.TrySaveAsync("oidc-user", expected.Revision, expected, Ct))
+                .Select(attempt =>
+                    ledgers.TrySaveAsync("oidc-user", expected.Revision, expected, _ => { }, Ct)
+                )
         );
         outcomes.Count(accepted => accepted).ShouldBe(1);
         (await ledgers.ReadAsync("oidc-user", Ct))!.Revision.ShouldBe(1);
-        (await ledgers.TrySaveAsync("oidc-user", 0, expected, Ct)).ShouldBeFalse();
+        (await ledgers.TrySaveAsync("oidc-user", 0, expected, _ => { }, Ct)).ShouldBeFalse();
     }
 
     [Fact]
@@ -88,7 +90,7 @@ public sealed class ImportedRepositoryTests(ApiFixture fixture) : IntegrationTes
             ],
         };
         (
-            await ledgers.TrySaveAsync("legacy:user-01", current.Revision, changed, Ct)
+            await ledgers.TrySaveAsync("legacy:user-01", current.Revision, changed, _ => { }, Ct)
         ).ShouldBeTrue();
         var saved = (await ledgers.ReadAsync("legacy:user-01", Ct))!;
         saved.Revision.ShouldBe(current.Revision + 1);
@@ -107,7 +109,7 @@ public sealed class ImportedRepositoryTests(ApiFixture fixture) : IntegrationTes
             );
         // A stale writer changes nothing.
         (
-            await ledgers.TrySaveAsync("legacy:user-01", current.Revision, current, Ct)
+            await ledgers.TrySaveAsync("legacy:user-01", current.Revision, current, _ => { }, Ct)
         ).ShouldBeFalse();
         (await ledgers.ReadAsync("legacy:user-01", Ct))!.Currency.ShouldBe("USD");
     }
@@ -118,7 +120,9 @@ public sealed class ImportedRepositoryTests(ApiFixture fixture) : IntegrationTes
         await ImportLegacyAsync();
         var ledgers = new PostgresLedgerRepository(Fixture.Admin);
         var expected = (await ledgers.ReadAsync("oidc-user", Ct))!;
-        (await ledgers.TrySaveAsync("oidc-user", expected.Revision, expected, Ct)).ShouldBeTrue();
+        (
+            await ledgers.TrySaveAsync("oidc-user", expected.Revision, expected, _ => { }, Ct)
+        ).ShouldBeTrue();
         await using var restored = await Fixture.RestoreBackupAsync(Ct);
         var restoredLedgers = new PostgresLedgerRepository(restored.Source);
         (await restoredLedgers.ReadAsync("oidc-user", Ct))!.Revision.ShouldBe(1);

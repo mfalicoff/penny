@@ -38,6 +38,22 @@ public sealed class OperationsTests(ApiFixture fixture) : IntegrationTestBase(fi
         error.Message.ShouldContain("ConnectionStrings__Postgres");
     }
 
+    [Theory]
+    [InlineData("Receipts:Root", "relative/receipts", "Receipts__Root")]
+    [InlineData("Receipts:MasterKey", "c2hvcnQ=", "Receipts__MasterKey")]
+    public async Task whenReceiptStoreConfigurationInvalid_CreateHost_ShouldIdentifyRequiredSetting(
+        string key,
+        string value,
+        string setting
+    )
+    {
+        await using var factory = Fixture.Factory.WithWebHostBuilder(builder =>
+            builder.UseSetting(key, value)
+        );
+        var error = Should.Throw<InvalidOperationException>(() => factory.CreateClient());
+        error.Message.ShouldContain(setting);
+    }
+
     [Fact]
     public async Task whenRestrictedDatabaseCompatible_OperationsFlow_ShouldReturnHealthyResponses()
     {

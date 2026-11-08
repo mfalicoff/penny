@@ -1,6 +1,6 @@
 # Penny ASP.NET Core foundation
 
-MAZ-51 provides a separate controller-based .NET 10 service; MAZ-52 adds the EF Core product schema and migrations, the encrypted receipt file store and explicit SQLite snapshot/import/verification commands. The existing Expo/Node/SQLite application continues running unchanged. MAZ-53 adds password registration/login/me/logout (ASP.NET Core Identity password hashes; imported legacy scrypt accounts must reset their password), cookie and bearer sessions, origin/CORS policy and sign-in rate limiting ([authentication compatibility](../../docs/migration/authentication.md)). This service is not ready to replace it: OIDC, ledger, receipt and household HTTP workflows are owned by MAZ-54–61, and search population/matching belongs to MAZ-121. See the [import and recovery runbook](../../docs/migration/postgresql.md).
+MAZ-51 provides a separate controller-based .NET 10 service; MAZ-52 adds the EF Core product schema and migrations, the encrypted receipt file store and explicit SQLite snapshot/import/verification commands. The existing Expo/Node/SQLite application continues running unchanged. MAZ-53 adds password registration/login/me/logout (ASP.NET Core Identity password hashes; imported legacy scrypt accounts must reset their password), cookie and bearer sessions, origin/CORS policy and sign-in rate limiting ([authentication compatibility](../../docs/migration/authentication.md)). MAZ-55 adds `GET`/`PUT /api/ledger` over the typed ledger: legacy v1–v4 validation and upgrades, receipt/account/household-currency checks and atomic compare-and-increment with 409 conflicts ([ledger sync](../../docs/migration/ledger.md)). This service is not ready to replace it: OIDC, receipt and household HTTP workflows are owned by MAZ-54 and MAZ-56–61, and search population/matching belongs to MAZ-121. See the [import and recovery runbook](../../docs/migration/postgresql.md).
 
 ## Toolchain and layout
 
@@ -8,8 +8,8 @@ Install SDK **10.0.403** (pinned without roll-forward), Node 24 for the legacy c
 
 | Project | Owns |
 | --- | --- |
-| `src/Penny.Backend.Domain` | Framework-free failures and future domain rules |
-| `src/Penny.Backend.Application` | Use cases (password auth, initial ledger), persistence and security ports; no SQL/HTTP references |
+| `src/Penny.Backend.Domain` | Framework-free failures and the v4 ledger document, validation (`LedgerReader`) and upgrade rules |
+| `src/Penny.Backend.Application` | Use cases (password auth, ledger read/save), persistence and security ports; no SQL/HTTP references |
 | `src/Penny.Backend.Persistence` | EF Core model (`PennyDbContext`) and migrations, repositories, read-only readiness probe, encrypted receipt store and SQLite import |
 | `src/Penny.Backend.Api` | Standard CreateBuilder/AddControllers/Build/MapControllers/Run flow, configuration, session authentication, origin/CORS/rate-limit middleware, operational and auth controllers |
 | `tests/Penny.Backend.UnitTests` | Configuration bounds/redaction, password hasher, credential/token parity and inward dependency checks |
@@ -20,12 +20,12 @@ Production projects live in `src/` and test projects in `tests/`, with matching 
 ```text
 src/
   Penny.Backend.Api/
-    Authentication/  Configuration/  Contracts/  Controllers/  Errors/  Middleware/
+    Authentication/  Configuration/  Contracts/  Controllers/  Errors/  Ledgers/  Middleware/
     Program.cs
   Penny.Backend.Application/
     Abstractions/Persistence/  Abstractions/Security/  Authentication/  Ledgers/
   Penny.Backend.Domain/
-    Errors/
+    Errors/  Ledgers/
   Penny.Backend.Persistence/
     Configuration/  Health/  Import/  Migrations/  Receipts/  Repositories/
     Schema/  Schema/Entities/  Schema/Mappings/
@@ -34,7 +34,7 @@ tests/
     Contracts/  Controllers/  Http/  Migrations/
     Infrastructure/Probes/
   Penny.Backend.UnitTests/
-    Architecture/  Authentication/  Configuration/
+    Architecture/  Authentication/  Configuration/  Ledgers/
 ```
 
 DTOs, enums, fixtures and host helpers each have their own file. Namespace/folder alignment is checked by analyzers; keep new features within their owning project's folders.
@@ -69,7 +69,7 @@ ASP.NET configuration/environment variables use double underscores; secrets are 
 | --- | --- |
 | `ConnectionStrings__Postgres` | Required for serving HTTP, restricted runtime credentials |
 | `ConnectionStrings__Migration` | Required only for the explicit `migrate` command; runtime startup does not resolve/use it |
-| `Receipts__Root` | Absolute directory for encrypted receipt files; required by `import-sqlite` (and MAZ-60 receipt routes) |
+| `Receipts__Root` | Absolute directory for encrypted receipt files; required by `import-sqlite` and, since MAZ-55, by the HTTP host (ledger reads open receipt names) |
 | `Receipts__MasterKey` | Base64 32-byte master key; per-file keys are derived from it with HKDF. Never rotated, never logged; back it up in the secret manager |
 | `Database__MaxPoolSize` | 20; bounded 1–100, minimum pool 0 |
 | `Database__ConnectTimeoutSeconds` | 5; bounded 1–30 |
