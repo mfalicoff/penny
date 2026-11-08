@@ -9,7 +9,8 @@ public sealed record AuthOptions(
     bool SecureCookies,
     IReadOnlyList<string> AllowedOrigins,
     IReadOnlyList<IPNetwork> TrustedProxies,
-    int RateLimitPermits
+    int RateLimitPermits,
+    int PasswordResetHours
 )
 {
     public const string DefaultOrigins = "http://localhost:8081,http://localhost:3001";
@@ -20,7 +21,9 @@ public sealed record AuthOptions(
             ReadBoolean(configuration, "Auth:SecureCookies", false),
             ReadOrigins(configuration["Auth:AllowedOrigins"] ?? DefaultOrigins),
             ReadNetworks(configuration["Auth:TrustedProxies"] ?? ""),
-            BackendOptions.ReadBounded(configuration, "Auth:RateLimitPermits", 40, 1, 10_000)
+            BackendOptions.ReadBounded(configuration, "Auth:RateLimitPermits", 40, 1, 10_000),
+            // Operator-issued reset codes (MAZ-123): 24 hours by default, at most 7 days.
+            BackendOptions.ReadBounded(configuration, "Auth:PasswordResetHours", 24, 1, 168)
         );
 
     private static bool ReadBoolean(IConfiguration configuration, string key, bool fallback)

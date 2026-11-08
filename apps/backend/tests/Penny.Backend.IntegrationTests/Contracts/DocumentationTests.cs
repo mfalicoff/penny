@@ -41,6 +41,7 @@ public sealed class DocumentationTests(ApiFixture fixture) : IntegrationTestBase
                 ("/api/auth/login", "post", "postApiAuthLogin"),
                 ("/api/auth/me", "get", "getApiAuthMe"),
                 ("/api/auth/logout", "post", "postApiAuthLogout"),
+                ("/api/auth/password-reset", "post", "postApiAuthPasswordReset"),
                 ("/api/ledger", "get", "getApiLedger"),
                 ("/api/ledger", "put", "putApiLedger"),
                 ("/api/auth/oidc", "get", "getApiAuthOidc"),
@@ -63,6 +64,10 @@ public sealed class DocumentationTests(ApiFixture fixture) : IntegrationTestBase
                 .GetProperty("operationId")
                 .GetString()
                 .ShouldBe(contract[method]!["operationId"]!.GetValue<string>());
+        // The .NET-only password reset (MAZ-123) is in the shared contract too.
+        var reset = ContractFixtures.OpenApi()["paths"]!["/api/auth/password-reset"]!["post"]!;
+        reset["operationId"]!.GetValue<string>().ShouldBe("postApiAuthPasswordReset");
+        reset["x-implementation"]!.GetValue<string>().ShouldBe("backend");
         using var scalar = await Client.GetAsync("/scalar/v1", Ct);
         scalar.StatusCode.ShouldBe(HttpStatusCode.OK);
         (await scalar.Content.ReadAsStringAsync(Ct)).ShouldContain("scalar");

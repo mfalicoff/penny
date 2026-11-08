@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -17,7 +18,8 @@ public static partial class SessionTokens
     public static string Hash(string token) =>
         Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
 
-    public static bool IsWellFormed(string? token) => token is not null && Format().IsMatch(token);
+    public static bool IsWellFormed([NotNullWhen(true)] string? token) =>
+        token is not null && Format().IsMatch(token);
 
     [GeneratedRegex("^[a-f0-9]{64}\\z", RegexOptions.CultureInvariant)]
     private static partial Regex Format();

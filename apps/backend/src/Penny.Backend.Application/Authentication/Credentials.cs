@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 
 namespace Penny.Backend.Application.Authentication;
@@ -45,17 +46,26 @@ public sealed partial record Credentials(string Email, string Password)
 
     public static Credentials? Normalize(string? email, string? password)
     {
-        if (email is null || password is null)
+        if (email is null || !IsValidPassword(password))
+            return null;
+        var normalized = NormalizeEmail(email);
+        return normalized is null ? null : new(normalized, password);
+    }
+
+    // The login email rule on its own: password resets find accounts exactly as
+    // sign-in does.
+    public static string? NormalizeEmail(string? email)
+    {
+        if (email is null)
             return null;
         var normalized = LowerCase(email.Trim(JavaScriptWhitespace));
-        if (
-            !EmailPattern().IsMatch(normalized)
-            || normalized.Length > MaxEmailLength
-            || password.Length is < MinPasswordLength or > MaxPasswordLength
-        )
-            return null;
-        return new(normalized, password);
+        return EmailPattern().IsMatch(normalized) && normalized.Length <= MaxEmailLength
+            ? normalized
+            : null;
     }
+
+    public static bool IsValidPassword([NotNullWhen(true)] string? password) =>
+        password is { Length: >= MinPasswordLength and <= MaxPasswordLength };
 
     // Legacy OIDC email rule `z.email().max(254).parse(email).toLowerCase()`: validated
     // as sent (no trimming), then lowercased. The pattern is ASCII-only, so ASCII

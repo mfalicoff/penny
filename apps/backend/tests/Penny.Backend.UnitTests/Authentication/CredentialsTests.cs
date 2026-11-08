@@ -54,4 +54,36 @@ public sealed class CredentialsTests
         Credentials.Normalize(null, Password).ShouldBeNull();
         Credentials.Normalize("a@b.co", Password)!.ToString().ShouldNotContain(Password);
     }
+
+    [Theory]
+    [InlineData(" PERSON@EXAMPLE.TEST ", "person@example.test")]
+    [InlineData("a@b.co\n", "a@b.co")]
+    [InlineData("a@b.c", null)]
+    [InlineData("", null)]
+    [InlineData(null, null)]
+    public void whenEmailGivenAlone_NormalizeEmail_ShouldMatchSignInRule(
+        string? email,
+        string? expected
+    )
+    {
+        Credentials.NormalizeEmail(email).ShouldBe(expected);
+        if (email is not null)
+            Credentials
+                .NormalizeEmail(email)
+                .ShouldBe(Credentials.Normalize(email, Password)?.Email);
+    }
+
+    [Theory]
+    [InlineData(null, false)]
+    [InlineData(9, false)]
+    [InlineData(10, true)]
+    [InlineData(256, true)]
+    [InlineData(257, false)]
+    public void whenPasswordLengthVaries_IsValidPassword_ShouldApplyRegistrationLimits(
+        int? length,
+        bool expected
+    ) =>
+        Credentials
+            .IsValidPassword(length is null ? null : new string('x', length.Value))
+            .ShouldBe(expected);
 }

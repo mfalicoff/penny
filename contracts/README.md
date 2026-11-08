@@ -1,6 +1,6 @@
 # Shared contracts
 
-`openapi.json` is OpenAPI 3.1, contract version 1.2.0. Legacy compatibility routes are marked `x-implementation: legacy`; `/api/ready` is `backend-foundation` (MAZ-51), and search v1 is `planned` (MAZ-121). The foundation serves health/info/readiness only; the other legacy routes are still supplied by Node pending their port. Preserve v4 ledger/session/ID/revision compatibility regardless of PostgreSQL storage.
+`openapi.json` is OpenAPI 3.1, contract version 1.3.0. Legacy compatibility routes are marked `x-implementation: legacy`; `/api/ready` is `backend-foundation` (MAZ-51), `POST /api/auth/password-reset` is `backend` (implemented only by .NET, MAZ-123), and search v1 is `planned` (MAZ-121). The foundation serves health/info/readiness only; the other legacy routes are still supplied by Node pending their port. Preserve v4 ledger/session/ID/revision compatibility regardless of PostgreSQL storage.
 
 - `fixtures/http-journey.json`: sanitized register/ledger/409/shared-projection examples exercised through real legacy HTTP/SQLite.
 - `fixtures/ledger-upgrades.json`: validated v1–v4 input and normalized v4 output.

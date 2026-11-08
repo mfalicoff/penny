@@ -11,9 +11,15 @@ namespace Penny.Backend.Api.Controllers;
 [ApiController]
 [Route("api/auth")]
 [ProducesResponseType<ApiError>(500)]
-public sealed class AuthController(AuthService auth, AuthOptions options, TimeProvider clock)
-    : ControllerBase
+public sealed class AuthController(
+    AuthService auth,
+    PasswordResetService resets,
+    AuthOptions options,
+    TimeProvider clock
+) : ControllerBase
 {
+    private static readonly string[] ResetFields = ["token", "password"];
+
     [AllowAnonymous]
     [EnableRateLimiting(AuthRateLimit.Policy)]
     [HttpPost("register", Name = "postApiAuthRegister")]
@@ -46,6 +52,23 @@ public sealed class AuthController(AuthService auth, AuthOptions options, TimePr
         var session = await auth.LoginAsync(email, password, cancellationToken);
         SessionCookie.Append(Response, session.Token, options.SecureCookies, clock);
         return Ok(new SessionResponse(session.Token, session.Email));
+    }
+
+    // MAZ-123, .NET only: redeems an operator-issued reset code. Every session of the
+    // account is revoked and no new one is issued; the user then signs in normally.
+    [AllowAnonymous]
+    [EnableRateLimiting(AuthRateLimit.Policy)]
+    [HttpPost("password-reset", Name = "postApiAuthPasswordReset")]
+    [ProducesResponseType<OkResponse>(200)]
+    [ProducesResponseType<ApiError>(400)]
+    [ProducesResponseType<ApiError>(403)]
+    [ProducesResponseType<ApiError>(413)]
+    [ProducesResponseType<ApiError>(429)]
+    public async Task<ActionResult<OkResponse>> ResetPassword(CancellationToken cancellationToken)
+    {
+        var fields = await JsonStringFields.ReadAsync(Request, ResetFields, cancellationToken);
+        await resets.CompleteAsync(fields[0], fields[1], cancellationToken);
+        return Ok(new OkResponse(true));
     }
 
     [HttpGet("me", Name = "getApiAuthMe")]

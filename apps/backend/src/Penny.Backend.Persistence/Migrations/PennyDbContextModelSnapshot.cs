@@ -1078,6 +1078,42 @@ namespace Penny.Backend.Persistence.Migrations
                     b.ToTable("oidc_identities", "penny");
                 });
 
+            modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.PasswordReset", b =>
+                {
+                    b.Property<string>("TokenHash")
+                        .HasColumnType("text")
+                        .HasColumnName("token_hash")
+                        .UseCollation("C");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("user_id")
+                        .UseCollation("C");
+
+                    b.HasKey("TokenHash");
+
+                    b.HasIndex("ExpiresAt");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("password_resets", "penny", t =>
+                        {
+                            t.HasCheckConstraint("CK_password_resets_expiry", "expires_at > created_at");
+
+                            t.HasCheckConstraint("CK_password_resets_token_hash", "token_hash ~ '^[0-9a-f]{64}$'");
+                        });
+                });
+
             modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.PushDelivery", b =>
                 {
                     b.Property<string>("OutboxId")
@@ -1673,6 +1709,14 @@ namespace Penny.Backend.Persistence.Migrations
                 });
 
             modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.OidcIdentity", b =>
+                {
+                    b.HasOne("Penny.Backend.Persistence.Schema.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.PasswordReset", b =>
                 {
                     b.HasOne("Penny.Backend.Persistence.Schema.Entities.User", null)
                         .WithMany()
