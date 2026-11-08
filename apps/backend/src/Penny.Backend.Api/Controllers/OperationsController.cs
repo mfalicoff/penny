@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Penny.Backend.Api.Contracts;
 using Penny.Backend.Application.Abstractions.Persistence;
 
 namespace Penny.Backend.Api.Controllers;
 
+[AllowAnonymous]
 [ApiController]
 [Route("api")]
 public sealed class OperationsController(IStorageReadiness readiness) : ControllerBase

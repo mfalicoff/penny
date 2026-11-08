@@ -9,6 +9,7 @@
     <ProjectReference Include="../../src/Penny.Backend.Domain/Penny.Backend.Domain.csproj" />
     <ProjectReference Include="../../src/Penny.Backend.Application/Penny.Backend.Application.csproj" />
     <ProjectReference Include="../../src/Penny.Backend.Persistence/Penny.Backend.Persistence.csproj" />
+    <ProjectReference Include="../../src/Penny.Backend.Api/Penny.Backend.Api.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="xunit.v3" />

@@ -34,6 +34,22 @@ public sealed class DocumentationTests(ApiFixture fixture) : IntegrationTestBase
             .GetProperty("responses")
             .TryGetProperty("503", out _)
             .ShouldBeTrue();
+        foreach (
+            var (path, method, operationId) in new[]
+            {
+                ("/api/auth/register", "post", "postApiAuthRegister"),
+                ("/api/auth/login", "post", "postApiAuthLogin"),
+                ("/api/auth/me", "get", "getApiAuthMe"),
+                ("/api/auth/logout", "post", "postApiAuthLogout"),
+            }
+        )
+            paths
+                .GetProperty(path)
+                .GetProperty(method)
+                .GetProperty("operationId")
+                .GetString()
+                .ShouldBe(operationId);
+        paths.TryGetProperty("/api/auth/oidc", out _).ShouldBeFalse();
         paths.TryGetProperty("/api/ledger", out _).ShouldBeFalse();
         using var scalar = await Client.GetAsync("/scalar/v1", Ct);
         scalar.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -50,8 +66,13 @@ public sealed class DocumentationTests(ApiFixture fixture) : IntegrationTestBase
         await using var production = Fixture.Factory.WithWebHostBuilder(builder =>
             builder.UseEnvironment("Production")
         );
-        using var client = production.CreateClient();
-        using var response = await client.GetAsync(path, Ct);
+        using var client = CreateClient(production);
+        // Unmapped routes require a session first (as in the legacy server), then 404.
+        using var anonymous = await client.GetAsync(path, Ct);
+        anonymous.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        var token = await RegisterAsync("docs@example.test", client);
+        using var request = Authorized(HttpMethod.Get, path, bearer: token);
+        using var response = await client.SendAsync(request, Ct);
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 }
