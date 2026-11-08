@@ -29,10 +29,10 @@ public sealed class OperationsController(IStorageReadiness readiness) : Controll
                 status.Code switch
                 {
                     "postgres-version" => "The backend requires PostgreSQL 18.",
-                    "extension" =>
-                        "Required pg_trgm extension is missing or incompatible. Run the explicit migration command.",
                     "schema" =>
                         "Database schema is missing or incompatible. Run the explicit migration command.",
+                    "import" =>
+                        "SQLite import is incomplete. Resume and verify the sealed snapshot before serving traffic.",
                     "runtime-role" =>
                         "Use a restricted runtime database role without schema creation privileges.",
                     "permissions" =>

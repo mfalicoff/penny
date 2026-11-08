@@ -1,44 +1,12 @@
+using Penny.Backend.Api.Commands;
 using Penny.Backend.Api.Configuration;
 using Penny.Backend.Api.Middleware;
-using Penny.Backend.Persistence.Configuration;
-using Penny.Backend.Persistence.Migrations;
 using Scalar.AspNetCore;
 
-var migrating = args.FirstOrDefault() == "migrate";
-var builder = WebApplication.CreateBuilder(migrating ? args.Skip(1).ToArray() : args);
-if (migrating)
-{
-    var settings = DatabaseSettings.Create(
-        builder.Configuration.GetConnectionString("Migration"),
-        maxPoolSize: 1
-    );
-    await using var source = settings.CreateDataSource();
-    using var stopping = new CancellationTokenSource();
-    Console.CancelKeyPress += (_, signal) =>
-    {
-        signal.Cancel = true;
-        stopping.Cancel();
-    };
-    try
-    {
-        await DatabaseMigrator.ApplyAsync(source, stopping.Token);
-        Console.WriteLine("Database foundation migration complete (schema 1).");
-        return 0;
-    }
-    catch (Exception error)
-        when (error
-                is Npgsql.NpgsqlException
-                    or TimeoutException
-                    or OperationCanceledException
-                    or InvalidOperationException
-        )
-    {
-        Console.Error.WriteLine(
-            "Database migration failed. Check connectivity, PostgreSQL 18/pg_trgm, schema compatibility, migration-role privileges and the migration lock. No credentials are logged."
-        );
-        return 1;
-    }
-}
+var maintenance = args.FirstOrDefault() is "migrate" or "snapshot-sqlite" or "import-sqlite";
+var builder = WebApplication.CreateBuilder(maintenance ? [] : args);
+if (maintenance)
+    return await MaintenanceCommand.RunAsync(args, builder.Configuration);
 
 builder.Services.AddControllers();
 builder.AddBackendServices();
