@@ -1,10 +1,10 @@
 # Penny ASP.NET Core foundation
 
-MAZ-51 provides a separate controller-based .NET 10 service; MAZ-52 adds the EF Core product schema and migrations, the encrypted receipt file store and explicit SQLite snapshot/import/verification commands. The existing Expo/Node/SQLite application continues running unchanged. MAZ-53 adds password registration/login/me/logout (ASP.NET Core Identity password hashes; imported legacy scrypt accounts must reset their password), cookie and bearer sessions, origin/CORS policy and sign-in rate limiting ([authentication compatibility](../../docs/migration/authentication.md)). MAZ-55 adds `GET`/`PUT /api/ledger` over the typed ledger: legacy v1–v4 validation and upgrades, receipt/account/household-currency checks and atomic compare-and-increment with 409 conflicts ([ledger sync](../../docs/migration/ledger.md)). This service is not ready to replace it: OIDC, receipt and household HTTP workflows are owned by MAZ-54 and MAZ-56–61, and search population/matching belongs to MAZ-121. See the [import and recovery runbook](../../docs/migration/postgresql.md).
+MAZ-51 provides a separate controller-based .NET 10 service; MAZ-52 adds the EF Core product schema and migrations, the encrypted receipt file store and explicit SQLite snapshot/import/verification commands. The existing Expo/Node/SQLite application continues running unchanged. MAZ-53 adds password registration/login/me/logout (ASP.NET Core Identity password hashes; imported legacy scrypt accounts must reset their password), cookie and bearer sessions, origin/CORS policy and sign-in rate limiting ([authentication compatibility](../../docs/migration/authentication.md)). MAZ-54 adds OIDC sign-in (discovery, Authorization Code with S256 PKCE, server-side code exchange, ID token validation, no automatic email linking) with pending attempts stored in PostgreSQL. MAZ-55 adds `GET`/`PUT /api/ledger` over the typed ledger: legacy v1–v4 validation and upgrades, receipt/account/household-currency checks and atomic compare-and-increment with 409 conflicts ([ledger sync](../../docs/migration/ledger.md)). This service is not ready to replace it: receipt and household HTTP workflows are owned by MAZ-56–61, and search population/matching belongs to MAZ-121. See the [import and recovery runbook](../../docs/migration/postgresql.md).
 
 ## Toolchain and layout
 
-Install SDK **10.0.403** (pinned without roll-forward), Node 24 for the legacy checks, and Docker or compatible Podman for PostgreSQL. Packages are centralized in `Directory.Packages.props`, locked per project, and restored only from nuget.org. Current pins: Npgsql 10.0.3, Npgsql.EntityFrameworkCore.PostgreSQL 10.0.3, EF Core Relational/Design and the `dotnet-ef` tool 10.0.14, ASP.NET OpenAPI/MVC Testing 10.0.14, Scalar 2.19.0, xUnit v3 4.0.2, Testcontainers 4.16.0 and CSharpier 1.3.0. Tests use the .NET 10 Microsoft.Testing.Platform runner; VSTest command-line flags are not supported.
+Install SDK **10.0.403** (pinned without roll-forward), Node 24 for the legacy checks, and Docker or compatible Podman for PostgreSQL. Packages are centralized in `Directory.Packages.props`, locked per project, and restored only from nuget.org. Current pins: Npgsql 10.0.3, Npgsql.EntityFrameworkCore.PostgreSQL 10.0.3, EF Core Relational/Design and the `dotnet-ef` tool 10.0.14, ASP.NET OpenAPI/MVC Testing 10.0.14, Scalar 2.19.0, Microsoft.IdentityModel.Protocols.OpenIdConnect and JsonWebTokens 8.23.0 (OIDC discovery and ID token validation), xUnit v3 4.0.2, Testcontainers 4.16.0 and CSharpier 1.3.0. Tests use the .NET 10 Microsoft.Testing.Platform runner; VSTest command-line flags are not supported.
 
 | Project | Owns |
 | --- | --- |
@@ -13,7 +13,7 @@ Install SDK **10.0.403** (pinned without roll-forward), Node 24 for the legacy c
 | `src/Penny.Backend.Persistence` | EF Core model (`PennyDbContext`) and migrations, repositories, read-only readiness probe, encrypted receipt store and SQLite import |
 | `src/Penny.Backend.Api` | Standard CreateBuilder/AddControllers/Build/MapControllers/Run flow, configuration, session authentication, origin/CORS/rate-limit middleware, operational and auth controllers |
 | `tests/Penny.Backend.UnitTests` | Configuration bounds/redaction, password hasher, credential/token parity and inward dependency checks |
-| `tests/Penny.Backend.IntegrationTests` | One PostgreSQL container and shared WebApplicationFactory, real Kestrel/SQL, per-test compatibility metadata reset |
+| `tests/Penny.Backend.IntegrationTests` | One PostgreSQL container and shared WebApplicationFactory, real Kestrel/SQL, per-test compatibility metadata reset, a local HTTPS fake OIDC provider (no external network) |
 
 Production projects live in `src/` and test projects in `tests/`, with matching solution folders. Within projects, responsibilities have their own folders and namespaces:
 
@@ -81,7 +81,11 @@ ASP.NET configuration/environment variables use double underscores; secrets are 
 | `Auth__SecureCookies` | `false`; legacy `COOKIE_SECURE`. Set `true` behind HTTPS |
 | `Auth__AllowedOrigins` | `http://localhost:8081,http://localhost:3001`; legacy `CORS_ORIGINS`. Exact `scheme://host[:port]` origins |
 | `Auth__TrustedProxies` | Empty (trust no forwarding headers); comma-separated proxy IPs/CIDRs whose `X-Forwarded-For` is honored |
-| `Auth__RateLimitPermits` | 40 per 15-minute window per client for register+login; bounded 1–10,000 |
+| `Auth__RateLimitPermits` | 40 per 15-minute window per client shared by register, login and OIDC start/complete; bounded 1–10,000 |
+| `Oidc__Issuer`, `Oidc__ClientId` | Unset (OIDC off); legacy `OIDC_ISSUER`, `OIDC_CLIENT_ID`. Setting either enables OIDC and requires both plus `Oidc__RedirectUris`. HTTPS issuer equal to the provider's advertised `issuer` |
+| `Oidc__ClientSecret` | Unset (public PKCE client); legacy `OIDC_CLIENT_SECRET`. Secret manager only; sent only to the token endpoint |
+| `Oidc__RedirectUris` | Legacy `OIDC_REDIRECT_URIS`. Comma-separated exact HTTPS, localhost HTTP or `penny://auth/callback` URIs |
+| `Oidc__Label`, `Oidc__AllowRegistration` | `Single sign-on`, `false`; legacy `OIDC_LABEL`, `OIDC_ALLOW_REGISTRATION` (must be `true`/`false`) |
 | `ASPNETCORE_URLS`, `ASPNETCORE_ENVIRONMENT` | Standard host settings; development setup sets loopback/Development |
 
 Missing/invalid settings fail before listening, with a setting name and no credentials. An unavailable database allows liveness but fails readiness. Readiness checks PostgreSQL major 18, that applied EF migrations exactly match the build, incomplete import checkpoints and restricted runtime privileges; it issues no DDL. Failures return actionable, sanitized 503 JSON. Deployment must route traffic only after readiness succeeds. This operational probe does not establish product-route or search readiness.

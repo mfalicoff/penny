@@ -94,7 +94,7 @@ For mobile, install a new development or production build containing `expo-web-b
 
 New OIDC accounts are disabled by default. Set `OIDC_ALLOW_REGISTRATION=true` to provision an empty ledger on first sign-in, then set it back to `false` to allow only existing OIDC users. This is independent of password signup's `ALLOW_REGISTRATION`. Restrict who can access the client at your identity provider while provisioning is enabled. Existing users are identified by the stable `(issuer, subject)` pair, including after an email change. An existing account with the same email is **never automatically linked**; account linking/migration is not provided.
 
-Signing out revokes the Penny session; it does not sign out of the identity provider or other Penny devices. Sign-in attempts are single-use and held in server memory, so a server restart requires restarting sign-in. Run one API instance (as in the supplied SQLite/Compose deployment).
+Signing out revokes the Penny session; it does not sign out of the identity provider or other Penny devices. Sign-in attempts are single-use and held in server memory, so a server restart requires restarting sign-in. Run one API instance (as in the supplied SQLite/Compose deployment). The .NET backend in `apps/backend` (not yet the production server) reads the same settings as `Oidc__Issuer`, `Oidc__ClientId`, `Oidc__ClientSecret`, `Oidc__RedirectUris`, `Oidc__Label` and `Oidc__AllowRegistration`, and stores attempts in PostgreSQL so they survive restarts; see [OIDC on the .NET backend](migration/authentication.md#openid-connect-maz-54) for provider requirements, public versus confidential clients and troubleshooting.
 
 ## Phone notifications
 

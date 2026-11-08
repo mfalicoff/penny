@@ -10,7 +10,8 @@ namespace Penny.Backend.IntegrationTests.Infrastructure;
 
 public sealed class TestApiFactory(
     string connectionString,
-    IReadOnlyDictionary<string, string>? settings = null
+    IReadOnlyDictionary<string, string>? settings = null,
+    Action<IServiceCollection>? services = null
 ) : WebApplicationFactory<Program>
 {
     public const int MaxBodyBytes = 65536;
@@ -46,11 +47,14 @@ public sealed class TestApiFactory(
         builder.UseSetting("Auth:RateLimitPermits", "10000");
         foreach (var (key, value) in settings ?? new Dictionary<string, string>())
             builder.UseSetting(key, value);
-        builder.ConfigureTestServices(services =>
+        builder.ConfigureTestServices(collection =>
         {
-            services.AddSingleton<TimeProvider>(Clock);
-            services.AddSingleton<ProbeSignals>();
-            services.AddControllers().AddApplicationPart(typeof(BoundaryProbeController).Assembly);
+            collection.AddSingleton<TimeProvider>(Clock);
+            collection.AddSingleton<ProbeSignals>();
+            collection
+                .AddControllers()
+                .AddApplicationPart(typeof(BoundaryProbeController).Assembly);
+            services?.Invoke(collection);
         });
     }
 }

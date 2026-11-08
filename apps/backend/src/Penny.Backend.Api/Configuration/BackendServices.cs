@@ -67,6 +67,7 @@ public static class BackendServices
         builder.Services.AddOpenApi();
         AddAuthServices(builder.Services, AuthOptions.Read(configuration));
         AddLedgerServices(builder.Services, configuration);
+        AddOidcServices(builder.Services, OidcOptions.Read(configuration));
     }
 
     private static void AddLedgerServices(IServiceCollection services, IConfiguration configuration)
@@ -80,6 +81,35 @@ public static class BackendServices
         services.AddSingleton<IReceiptRepository, PostgresReceiptRepository>();
         services.AddSingleton<ILedgerRepository, PostgresLedgerRepository>();
         services.AddSingleton<LedgerService>();
+    }
+
+    // OIDC services exist only when configured; the controller then answers 404.
+    private static void AddOidcServices(IServiceCollection services, OidcOptions? oidc)
+    {
+        if (oidc is null)
+            return;
+        services.AddSingleton(oidc);
+        services.AddSingleton(
+            new OidcSettings(oidc.Issuer, oidc.Label, oidc.RedirectUris, oidc.AllowRegistration)
+        );
+        // Provider calls follow no redirects, are bounded like the legacy 10-second
+        // timeout and are not logged (they carry codes, tokens and the client secret).
+        services
+            .AddHttpClient(
+                OidcProviderClient.HttpClientName,
+                client =>
+                {
+                    client.Timeout = TimeSpan.FromSeconds(10);
+                    client.MaxResponseContentBufferSize = 1024 * 1024;
+                }
+            )
+            .ConfigurePrimaryHttpMessageHandler(() =>
+                new SocketsHttpHandler { AllowAutoRedirect = false }
+            )
+            .RemoveAllLoggers();
+        services.AddSingleton<IOidcProvider, OidcProviderClient>();
+        services.AddSingleton<IOidcAttemptRepository, PostgresOidcAttemptRepository>();
+        services.AddSingleton<OidcService>();
     }
 
     private static void AddAuthServices(IServiceCollection services, AuthOptions auth)

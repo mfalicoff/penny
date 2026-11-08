@@ -23,6 +23,12 @@ public sealed class AuthService(
     public const string RegistrationDisabled = "Account registration is disabled on this server.";
     public const string InvalidRegistration =
         "Enter a valid email and a password of 10–256 characters.";
+    public const string OidcRegistrationDisabled =
+        "New single sign-on accounts are disabled on this server.";
+    public const string OidcEmailInUse =
+        "An account already uses this email. Sign in with its existing method; automatic account linking is disabled.";
+    public const string OidcAccountExists =
+        "This account already exists. Please try signing in again.";
 
     public async Task<IssuedSession> RegisterAsync(
         string? email,
@@ -74,6 +80,42 @@ public sealed class AuthService(
                 cancellationToken
             );
         return new(await IssueAsync(user.Id, cancellationToken), user.Email);
+    }
+
+    // Legacy `loginOidc`: accounts are found by the stable (issuer, subject) pair, so
+    // a changed provider email still signs in to the same account. An existing account
+    // with the same email is never linked automatically.
+    public async Task<IssuedSession> LoginOidcAsync(
+        VerifiedOidcIdentity identity,
+        bool allowRegistration,
+        CancellationToken cancellationToken
+    )
+    {
+        var existing = await accounts.FindByIdentityAsync(
+            identity.Issuer,
+            identity.Subject,
+            cancellationToken
+        );
+        if (existing is not null)
+            return new(await IssueAsync(existing.Id, cancellationToken), existing.Email);
+        if (!allowRegistration)
+            throw new BackendFailure(FailureKind.Forbidden, OidcRegistrationDisabled);
+        if (await accounts.FindByEmailAsync(identity.Email, cancellationToken) is not null)
+            throw new BackendFailure(FailureKind.Conflict, OidcEmailInUse);
+        var userId = SessionTokens.NewId();
+        // OIDC-only accounts have an empty password, which never verifies.
+        var user = new StoredUser(userId, identity.Email, "", SessionTokens.NewId());
+        if (
+            !await accounts.TryCreateOidcAsync(
+                user,
+                identity.Issuer,
+                identity.Subject,
+                InitialLedger.Create(),
+                cancellationToken
+            )
+        )
+            throw new BackendFailure(FailureKind.Conflict, OidcAccountExists);
+        return new(await IssueAsync(userId, cancellationToken), identity.Email);
     }
 
     // Returns null for a missing, malformed, unknown, expired or revoked token.

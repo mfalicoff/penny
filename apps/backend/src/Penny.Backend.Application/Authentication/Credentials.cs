@@ -57,6 +57,14 @@ public sealed partial record Credentials(string Email, string Password)
         return new(normalized, password);
     }
 
+    // Legacy OIDC email rule `z.email().max(254).parse(email).toLowerCase()`: validated
+    // as sent (no trimming), then lowercased. The pattern is ASCII-only, so ASCII
+    // lowercasing equals JavaScript's toLowerCase here.
+    public static string? NormalizeProviderEmail(string? email) =>
+        email is null || email.Length > MaxEmailLength || !EmailPattern().IsMatch(email)
+            ? null
+            : LowerCase(email);
+
     // The email pattern only accepts ASCII, and the only non-ASCII code point whose
     // JavaScript lowercase is ASCII is KELVIN SIGN (U+212A -> "k"). Every other
     // non-ASCII character fails the pattern either way, so this matches toLowerCase().
