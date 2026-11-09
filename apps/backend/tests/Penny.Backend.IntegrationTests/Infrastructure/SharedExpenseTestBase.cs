@@ -8,8 +8,8 @@ using Shouldly;
 namespace Penny.Backend.IntegrationTests.Infrastructure;
 
 // HTTP helpers for the shared-expense suites (MAZ-57). Rules (MAZ-59), monthly
-// reimbursements (MAZ-58) and receipts (MAZ-60) have no .NET write endpoints yet,
-// so they are seeded through the admin connection. All data is synthetic.
+// reimbursements (MAZ-58) and receipt rows are seeded through the admin connection
+// (the receipt suites use the MAZ-60 endpoints). All data is synthetic.
 public abstract class SharedExpenseTestBase(ApiFixture fixture) : HouseholdTestBase(fixture)
 {
     protected static readonly object Groceries = new

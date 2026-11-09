@@ -99,6 +99,41 @@ public sealed partial class ReceiptFileStore(ReceiptStoreSettings settings)
 
     public void Delete(string storagePath) => File.Delete(FullPath(storagePath));
 
+    // Every file in the two-level layout: stored receipts (`xx/<32 hex>`) and
+    // temporary files a crash left behind (`xx/<32 hex>.tmp-<16 hex>`). Anything else
+    // under the root is not the store's and is never listed or touched.
+    public IEnumerable<ReceiptStoreFile> ListFiles()
+    {
+        if (!Directory.Exists(settings.Root))
+            yield break;
+        foreach (var directory in Directory.EnumerateDirectories(settings.Root))
+        {
+            var prefix = Path.GetFileName(directory);
+            foreach (var path in Directory.EnumerateFiles(directory))
+            {
+                var relative = prefix + "/" + Path.GetFileName(path);
+                var temporary = TemporaryPathPattern().IsMatch(relative);
+                if (temporary || StoragePathPattern().IsMatch(relative))
+                    yield return new(
+                        relative,
+                        temporary,
+                        new DateTimeOffset(File.GetLastWriteTimeUtc(path), TimeSpan.Zero)
+                    );
+            }
+        }
+    }
+
+    public void Delete(ReceiptStoreFile file)
+    {
+        if (
+            !(file.Temporary ? TemporaryPathPattern() : StoragePathPattern()).IsMatch(
+                file.StoragePath
+            )
+        )
+            throw new InvalidOperationException("Receipt storage path is invalid.");
+        File.Delete(Path.Combine(settings.Root, file.StoragePath));
+    }
+
     private byte[] Open(Receipt row, byte[] nonce, byte[] sealedBytes, string part)
     {
         if (sealedBytes.Length < TagBytes)
@@ -153,4 +188,10 @@ public sealed partial class ReceiptFileStore(ReceiptStoreSettings settings)
 
     [GeneratedRegex("^[0-9a-f]{2}/[0-9a-f]{32}$", RegexOptions.CultureInvariant)]
     private static partial Regex StoragePathPattern();
+
+    [GeneratedRegex(
+        "^([0-9a-f]{2})/\\1[0-9a-f]{30}\\.tmp-[0-9a-f]{16}$",
+        RegexOptions.CultureInvariant
+    )]
+    private static partial Regex TemporaryPathPattern();
 }

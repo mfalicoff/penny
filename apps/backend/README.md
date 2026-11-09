@@ -70,7 +70,7 @@ ASP.NET configuration/environment variables use double underscores; secrets are 
 | --- | --- |
 | `ConnectionStrings__Postgres` | Required for serving HTTP, restricted runtime credentials |
 | `ConnectionStrings__Migration` | Required only for the explicit `migrate` command; runtime startup does not resolve/use it |
-| `Receipts__Root` | Absolute directory for encrypted receipt files; required by `import-sqlite` and, since MAZ-55, by the HTTP host (ledger reads open receipt names) |
+| `Receipts__Root` | Absolute directory for encrypted receipt files; required by `import-sqlite`, the receipt commands and, since MAZ-55, by the HTTP host (ledger reads open receipt names; MAZ-60 uploads and downloads). Back it up after the database dump |
 | `Receipts__MasterKey` | Base64 32-byte master key; per-file keys are derived from it with HKDF. Never rotated, never logged; back it up in the secret manager |
 | `Database__MaxPoolSize` | 20; bounded 1–100, minimum pool 0 |
 | `Database__ConnectTimeoutSeconds` | 5; bounded 1–30 |
@@ -108,6 +108,8 @@ bash apps/backend/dotnet.sh run --project src/Penny.Backend.Api -- reset-passwor
 ```
 
 `search-rebuild [--user USER_ID]` and `search-verify [--user USER_ID]` (MAZ-121) also exit without HTTP and use the runtime connection plus the receipt settings; rebuild also needs `Search__ModelDirectory`. Rebuild recomputes search documents (after `import-sqlite`, a normalization change or a model change) and embeds everything owed; verify changes nothing and exits 0 when current, 2 when stale. See [search](../../docs/migration/search.md#operations).
+
+`receipts-verify` and `receipts-sweep [--dry-run]` (MAZ-60) exit without HTTP and use the runtime connection plus the receipt settings. Verify decrypts every receipt file and name and checks its size, exiting 0 when intact and 2 when any file is missing or corrupt; run it after restoring a backup. Sweep removes files no row references once they are an hour old (interrupted uploads, rolled-back imports). Reports contain counts only. See [receipts](../../docs/migration/receipts.md#backup-and-restore).
 
 Every endpoint and unknown route requires a session unless marked `[AllowAnonymous]`; see the [authentication compatibility notes](../../docs/migration/authentication.md) for sessions, cookies, origins, proxies and rate limits. Errors preserve `{error:string}` with 400/401/403/404/409/413/429/500 mapping; timeouts/readiness add 503 and Retry-After. Both error and success responses have no-store/nosniff headers, including timeout responses. Unexpected errors return a generic message; structured logging records exception type/trace ID rather than exception text, credentials, SQL or financial request data. Client disconnect cancellation reaches controller/SQL operations; server deadlines use the original client token when writing the timeout response.
 

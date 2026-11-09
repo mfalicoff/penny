@@ -71,7 +71,7 @@ The write revision must match the stored revision; stale saves return 409. Revis
 | POST | `/api/receipts` | `{ name, mime, base64 }` | 201 `{ id, name, mime, uri }` |
 | GET | `/api/receipts/:id` | — | 200 raw file bytes with the stored Content-Type |
 
-Here `:id` is a receipt ID, and `uri` is `/api/receipts/<id>`. Supported MIME types are PDF, JPEG, PNG, WebP, GIF, HEIC, and HEIF. The decoded file limit is 10 MB; file signatures are checked. Downloads use inline Content-Disposition and a restrictive Content-Security-Policy. A receipt is readable by its owner or through an authorized household expense; inaccessible receipts return 404. There is no receipt list or delete endpoint.
+Here `:id` is a receipt ID, and `uri` is `/api/receipts/<id>`. Supported MIME types are PDF, JPEG, PNG, WebP, GIF, HEIC, and HEIF. The decoded file limit is 10 MB; file signatures are checked. Downloads use inline Content-Disposition and a restrictive Content-Security-Policy. A receipt is readable by its owner or through an authorized household expense; inaccessible receipts return 404. There is no receipt list or delete endpoint. Reverse proxies must accept 20 MB request bodies for uploads. The .NET backend keeps this contract over encrypted file storage; see [receipts](migration/receipts.md) for limits, access, proxy timeouts, backups and client preview behavior.
 
 ## Households and shared trips — session required (12)
 

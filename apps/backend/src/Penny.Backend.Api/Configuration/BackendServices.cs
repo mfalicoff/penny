@@ -17,6 +17,7 @@ using Penny.Backend.Application.Abstractions.Security;
 using Penny.Backend.Application.Authentication;
 using Penny.Backend.Application.Households;
 using Penny.Backend.Application.Ledgers;
+using Penny.Backend.Application.Receipts;
 using Penny.Backend.Application.Search;
 using Penny.Backend.Persistence.Configuration;
 using Penny.Backend.Persistence.Health;
@@ -155,6 +156,7 @@ public static class BackendServices
         );
         services.AddSingleton(new ReceiptFileStore(receipts));
         services.AddSingleton<IReceiptRepository, PostgresReceiptRepository>();
+        services.AddSingleton<ReceiptService>();
         services.AddSingleton<ILedgerRepository, PostgresLedgerRepository>();
         services.AddSingleton<LedgerService>();
     }

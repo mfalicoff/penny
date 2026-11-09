@@ -96,12 +96,12 @@ Everything else is EF-generated or a LINQ query. Check-constraint and partial-in
 
 ## Receipt storage
 
-Receipt files are encrypted on the filesystem; PostgreSQL stores only metadata (`receipts`). The store is `Receipts/ReceiptFileStore`; MAZ-60 builds upload, download, MIME/size validation and authorization on top of it.
+Receipt files are encrypted on the filesystem; PostgreSQL stores only metadata (`receipts`). The store is `Receipts/ReceiptFileStore`; MAZ-60 builds upload, download, MIME/size validation, authorization, `receipts-verify` and `receipts-sweep` on top of it ([receipts](receipts.md)).
 
 - **Key per file:** `HKDF-SHA256(master key, salt = receipts.key_salt [32 random bytes], info = "penny/receipt/v1")` produces a 256-bit AES-GCM key. The master key is never rotated, by decision.
 - **Encrypted file body *and* filename:** the body is written as `ciphertext || 16-byte tag` with `file_nonce`; the original filename is `name_encrypted` with `name_nonce`. The associated data binds each ciphertext to `(part, user_id, id)`, so files and names can't be swapped between rows.
 - **Layout:** `storage_path` is server-generated, `xx/<32 hex>` (checked by a constraint), relative to `Receipts__Root`. No user input reaches the path; raw paths are never exposed.
-- **Write order:** temp file (mode 0600), fsync, no-overwrite rename, then commit the metadata. A failure can leave an unreferenced file but never a row without its file. A crash between rename and commit leaves an orphan; MAZ-60 owns orphan sweeping.
+- **Write order:** temp file (mode 0600), fsync, no-overwrite rename, then commit the metadata. A failure can leave an unreferenced file but never a row without its file. A crash between rename and commit leaves an orphan, which `receipts-sweep` removes once it is an hour old ([backup and restore](receipts.md#backup-and-restore)).
 - **Configuration:** `Receipts__Root` (absolute directory) and `Receipts__MasterKey` (base64, 32 bytes) come from the secret manager. Losing the master key makes every receipt unreadable, so back it up separately from the data.
 
 ## Implemented MAZ-52 commands
