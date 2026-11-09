@@ -45,6 +45,9 @@ public sealed class TestApiFactory(
         builder.UseSetting("Search:RateLimitPermits", "10000");
         // Tests run the shared recurrence runner explicitly with the pinned clock.
         builder.UseSetting("Recurrence:Worker", "false");
+        // Tests run push delivery explicitly with deterministic fake providers; the real
+        // Expo and APNs transports are never called.
+        builder.UseSetting("Push:Worker", "false");
         builder.UseSetting("Backend:RequestTimeoutSeconds", "2");
         builder.UseSetting("Backend:ShutdownTimeoutSeconds", "5");
         builder.UseSetting("Logging:LogLevel:Default", "None");
