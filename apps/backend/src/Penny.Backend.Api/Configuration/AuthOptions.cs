@@ -10,7 +10,8 @@ public sealed record AuthOptions(
     IReadOnlyList<string> AllowedOrigins,
     IReadOnlyList<IPNetwork> TrustedProxies,
     int RateLimitPermits,
-    int PasswordResetHours
+    int PasswordResetHours,
+    int InviteRateLimitPermits
 )
 {
     public const string DefaultOrigins = "http://localhost:8081,http://localhost:3001";
@@ -23,7 +24,9 @@ public sealed record AuthOptions(
             ReadNetworks(configuration["Auth:TrustedProxies"] ?? ""),
             BackendOptions.ReadBounded(configuration, "Auth:RateLimitPermits", 40, 1, 10_000),
             // Operator-issued reset codes (MAZ-123): 24 hours by default, at most 7 days.
-            BackendOptions.ReadBounded(configuration, "Auth:PasswordResetHours", 24, 1, 168)
+            BackendOptions.ReadBounded(configuration, "Auth:PasswordResetHours", 24, 1, 168),
+            // Legacy invite limit (MAZ-56): 20 join attempts per 10 minutes per client.
+            BackendOptions.ReadBounded(configuration, "Auth:InviteRateLimitPermits", 20, 1, 10_000)
         );
 
     private static bool ReadBoolean(IConfiguration configuration, string key, bool fallback)

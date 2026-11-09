@@ -216,7 +216,8 @@ public static class LedgerReader
         );
     }
 
-    private static Dictionary<string, JsonElement> Fields(JsonElement value)
+    // The JSON helpers below are internal so HouseholdReader applies identical rules.
+    internal static Dictionary<string, JsonElement> Fields(JsonElement value)
     {
         Require(value.ValueKind == JsonValueKind.Object);
         var fields = new Dictionary<string, JsonElement>(StringComparer.Ordinal);
@@ -225,7 +226,7 @@ public static class LedgerReader
         return fields;
     }
 
-    private static JsonElement Required(Dictionary<string, JsonElement> fields, string name) =>
+    internal static JsonElement Required(Dictionary<string, JsonElement> fields, string name) =>
         fields.TryGetValue(name, out var value) ? value : throw new FormatException();
 
     private static List<T> List<T>(JsonElement value, int max, Func<JsonElement, T> read)
@@ -237,7 +238,7 @@ public static class LedgerReader
         return items;
     }
 
-    private static string Text(JsonElement value, int min, int max)
+    internal static string Text(JsonElement value, int min, int max)
     {
         Require(value.ValueKind == JsonValueKind.String);
         string text;
@@ -258,20 +259,20 @@ public static class LedgerReader
     private static string? OptionalId(Dictionary<string, JsonElement> fields, string name) =>
         fields.TryGetValue(name, out var value) ? Id(value) : null;
 
-    private static string Choice(JsonElement value, IReadOnlyList<string> choices)
+    internal static string Choice(JsonElement value, IReadOnlyList<string> choices)
     {
         var text = Text(value, 1, LedgerLimits.IdLength);
         Require(choices.Contains(text, StringComparer.Ordinal));
         return text;
     }
 
-    private static DateOnly Date(JsonElement value) =>
+    internal static DateOnly Date(JsonElement value) =>
         LedgerDates.TryParse(Text(value, 10, 10), out var date)
             ? date
             : throw new FormatException();
 
     // zod 4 `z.number().int()`: a finite JavaScript number that is a safe integer.
-    private static long Integer(JsonElement value, long min, long max)
+    internal static long Integer(JsonElement value, long min, long max)
     {
         Require(
             value.ValueKind == JsonValueKind.Number
@@ -292,7 +293,7 @@ public static class LedgerReader
             Require(seen.Add(id));
     }
 
-    private static void Require(bool valid)
+    internal static void Require(bool valid)
     {
         if (!valid)
             throw new FormatException();

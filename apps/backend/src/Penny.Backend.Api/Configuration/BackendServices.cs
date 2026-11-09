@@ -6,10 +6,12 @@ using Microsoft.AspNetCore.Mvc;
 using Penny.Backend.Api.Authentication;
 using Penny.Backend.Api.Contracts;
 using Penny.Backend.Api.Errors;
+using Penny.Backend.Api.Households;
 using Penny.Backend.Api.Middleware;
 using Penny.Backend.Application.Abstractions.Persistence;
 using Penny.Backend.Application.Abstractions.Security;
 using Penny.Backend.Application.Authentication;
+using Penny.Backend.Application.Households;
 using Penny.Backend.Application.Ledgers;
 using Penny.Backend.Persistence.Configuration;
 using Penny.Backend.Persistence.Health;
@@ -67,6 +69,8 @@ public static class BackendServices
         builder.Services.AddOpenApi();
         AddAuthServices(builder.Services, AuthOptions.Read(configuration));
         AddLedgerServices(builder.Services, configuration);
+        builder.Services.AddSingleton<IHouseholdRepository, PostgresHouseholdRepository>();
+        builder.Services.AddSingleton<HouseholdService>();
         AddOidcServices(builder.Services, OidcOptions.Read(configuration));
     }
 
@@ -148,7 +152,11 @@ public static class BackendServices
                     .WithMethods("GET", "HEAD", "PUT", "PATCH", "POST", "DELETE")
             )
         );
-        services.AddRateLimiter(limits => AuthRateLimit.Configure(limits, auth.RateLimitPermits));
+        services.AddRateLimiter(limits =>
+        {
+            AuthRateLimit.Configure(limits, auth.RateLimitPermits);
+            InviteRateLimit.Configure(limits, auth.InviteRateLimitPermits);
+        });
         services.Configure<ForwardedHeadersOptions>(forwarded =>
         {
             // Trust no proxy (not even loopback) unless configured, as the legacy server did.

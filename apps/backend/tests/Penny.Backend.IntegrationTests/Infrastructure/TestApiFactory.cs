@@ -42,9 +42,10 @@ public sealed class TestApiFactory(
         builder.UseSetting("Backend:ShutdownTimeoutSeconds", "5");
         builder.UseSetting("Logging:LogLevel:Default", "None");
         // Production-like cookies; the shared host must not exhaust the sign-in limit
-        // across tests, so rate-limit tests use their own host with the legacy 40.
+        // or invite limits across tests, so rate-limit tests use their own host.
         builder.UseSetting("Auth:SecureCookies", "true");
         builder.UseSetting("Auth:RateLimitPermits", "10000");
+        builder.UseSetting("Auth:InviteRateLimitPermits", "10000");
         foreach (var (key, value) in settings ?? new Dictionary<string, string>())
             builder.UseSetting(key, value);
         builder.ConfigureTestServices(collection =>

@@ -1,6 +1,6 @@
 # Penny ASP.NET Core foundation
 
-MAZ-51 provides a separate controller-based .NET 10 service; MAZ-52 adds the EF Core product schema and migrations, the encrypted receipt file store and explicit SQLite snapshot/import/verification commands. The existing Expo/Node/SQLite application continues running unchanged. MAZ-53 adds password registration/login/me/logout (ASP.NET Core Identity password hashes; imported legacy scrypt accounts must reset their password), cookie and bearer sessions, origin/CORS policy and sign-in rate limiting ([authentication compatibility](../../docs/migration/authentication.md)). MAZ-54 adds OIDC sign-in (discovery, Authorization Code with S256 PKCE, server-side code exchange, ID token validation, no automatic email linking) with pending attempts stored in PostgreSQL. MAZ-123 adds an operator-issued password reset (`reset-password EMAIL` maintenance command and `POST /api/auth/password-reset`) so imported legacy-scrypt accounts can set a new password ([password reset](../../docs/migration/authentication.md#password-reset-maz-123)). MAZ-55 adds `GET`/`PUT /api/ledger` over the typed ledger: legacy v1–v4 validation and upgrades, receipt/account/household-currency checks and atomic compare-and-increment with 409 conflicts ([ledger sync](../../docs/migration/ledger.md)). This service is not ready to replace it: receipt and household HTTP workflows are owned by MAZ-56–61, and search population/matching belongs to MAZ-121. See the [import and recovery runbook](../../docs/migration/postgresql.md).
+MAZ-51 provides a separate controller-based .NET 10 service; MAZ-52 adds the EF Core product schema and migrations, the encrypted receipt file store and explicit SQLite snapshot/import/verification commands. The existing Expo/Node/SQLite application continues running unchanged. MAZ-53 adds password registration/login/me/logout (ASP.NET Core Identity password hashes; imported legacy scrypt accounts must reset their password), cookie and bearer sessions, origin/CORS policy and sign-in rate limiting ([authentication compatibility](../../docs/migration/authentication.md)). MAZ-54 adds OIDC sign-in (discovery, Authorization Code with S256 PKCE, server-side code exchange, ID token validation, no automatic email linking) with pending attempts stored in PostgreSQL. MAZ-123 adds an operator-issued password reset (`reset-password EMAIL` maintenance command and `POST /api/auth/password-reset`) so imported legacy-scrypt accounts can set a new password ([password reset](../../docs/migration/authentication.md#password-reset-maz-123)). MAZ-55 adds `GET`/`PUT /api/ledger` over the typed ledger: legacy v1–v4 validation and upgrades, receipt/account/household-currency checks and atomic compare-and-increment with 409 conflicts ([ledger sync](../../docs/migration/ledger.md)). MAZ-56 adds household and shared-trip membership: create, list, detail, rename, trip dates, hashed expiring invite codes, join, leave, removal and archive with settlement and creator rules, transactional and locked against concurrent joins and ledger currency changes ([households](../../docs/migration/households.md)). This service is not ready to replace it: receipt and shared expense/settlement/recurrence/push workflows are owned by MAZ-57–61, and search population/matching belongs to MAZ-121. See the [import and recovery runbook](../../docs/migration/postgresql.md).
 
 ## Toolchain and layout
 
@@ -8,10 +8,10 @@ Install SDK **10.0.403** (pinned without roll-forward), Node 24 for the legacy c
 
 | Project | Owns |
 | --- | --- |
-| `src/Penny.Backend.Domain` | Framework-free failures and the v4 ledger document, validation (`LedgerReader`) and upgrade rules |
-| `src/Penny.Backend.Application` | Use cases (password auth, ledger read/save), persistence and security ports; no SQL/HTTP references |
+| `src/Penny.Backend.Domain` | Framework-free failures, the v4 ledger document, validation (`LedgerReader`) and upgrade rules, and household request schemas, join days and settlement (`Households`) |
+| `src/Penny.Backend.Application` | Use cases (password auth, ledger read/save, household membership), persistence and security ports; no SQL/HTTP references |
 | `src/Penny.Backend.Persistence` | EF Core model (`PennyDbContext`) and migrations, repositories, read-only readiness probe, encrypted receipt store and SQLite import |
-| `src/Penny.Backend.Api` | Standard CreateBuilder/AddControllers/Build/MapControllers/Run flow, configuration, session authentication, origin/CORS/rate-limit middleware, operational and auth controllers |
+| `src/Penny.Backend.Api` | Standard CreateBuilder/AddControllers/Build/MapControllers/Run flow, configuration, session authentication, origin/CORS/rate-limit middleware, operational, auth, ledger and household controllers |
 | `tests/Penny.Backend.UnitTests` | Configuration bounds/redaction, password hasher, credential/token parity and inward dependency checks |
 | `tests/Penny.Backend.IntegrationTests` | One PostgreSQL container and shared WebApplicationFactory, real Kestrel/SQL, per-test compatibility metadata reset, a local HTTPS fake OIDC provider (no external network) |
 
@@ -20,12 +20,12 @@ Production projects live in `src/` and test projects in `tests/`, with matching 
 ```text
 src/
   Penny.Backend.Api/
-    Authentication/  Configuration/  Contracts/  Controllers/  Errors/  Ledgers/  Middleware/
+    Authentication/  Configuration/  Contracts/  Controllers/  Errors/  Households/  Ledgers/  Middleware/
     Program.cs
   Penny.Backend.Application/
-    Abstractions/Persistence/  Abstractions/Security/  Authentication/  Ledgers/
+    Abstractions/Persistence/  Abstractions/Security/  Authentication/  Households/  Ledgers/
   Penny.Backend.Domain/
-    Errors/  Ledgers/
+    Errors/  Households/  Ledgers/
   Penny.Backend.Persistence/
     Configuration/  Health/  Import/  Migrations/  Receipts/  Repositories/
     Schema/  Schema/Entities/  Schema/Mappings/
@@ -34,14 +34,14 @@ tests/
     Contracts/  Controllers/  Http/  Migrations/
     Infrastructure/Probes/
   Penny.Backend.UnitTests/
-    Architecture/  Authentication/  Configuration/  Ledgers/
+    Architecture/  Authentication/  Configuration/  Households/  Ledgers/
 ```
 
 DTOs, enums, fixtures and host helpers each have their own file. Namespace/folder alignment is checked by analyzers; keep new features within their owning project's folders.
 
 Tests use `whenCondition_MethodOrFunctionOrFlow_ShouldExpectedOutcome`, such as `whenDatabaseUnavailable_Readiness_ShouldReturnServiceUnavailable`.
 
-`dotnet.sh` runs from this directory and puts CLI/NuGet/temporary files under the repository's ignored `.cache/backend/`. Commands below run from the repository root. Product storage uses EF Core: entities live in `Schema/Entities/`, one `IEntityTypeConfiguration` per table in `Schema/Mappings/`, and generated migrations in `Migrations/`. Raw SQL is limited to the [documented inventory](../../docs/migration/postgresql.md#raw-sql-inventory). **To change the schema, follow [Changing the schema](../../docs/migration/postgresql.md#changing-the-schema)**: edit the model, run `dotnet ef migrations add`, review the script, update the importer if needed, test, then `migrate` and re-grant. Microsoft.Data.Sqlite 10.0.14 reads import sources only. Respawn 7.0.0 resets product data while preserving EF migration history; compatibility-destruction tests rebuild the schema when needed. Maintenance dispatch lives in API `Commands/`. The shared test host pins time through `TestClock` (reset per test), uses secure cookies, and raises the sign-in rate limit; rate-limit, proxy and registration-policy tests start their own hosts on the same database.
+`dotnet.sh` runs from this directory and puts CLI/NuGet/temporary files under the repository's ignored `.cache/backend/`. Commands below run from the repository root. Product storage uses EF Core: entities live in `Schema/Entities/`, one `IEntityTypeConfiguration` per table in `Schema/Mappings/`, and generated migrations in `Migrations/`. Raw SQL is limited to the [documented inventory](../../docs/migration/postgresql.md#raw-sql-inventory). **To change the schema, follow [Changing the schema](../../docs/migration/postgresql.md#changing-the-schema)**: edit the model, run `dotnet ef migrations add`, review the script, update the importer if needed, test, then `migrate` and re-grant. Microsoft.Data.Sqlite 10.0.14 reads import sources only. Respawn 7.0.0 resets product data while preserving EF migration history; compatibility-destruction tests rebuild the schema when needed. Maintenance dispatch lives in API `Commands/`. The shared test host pins time through `TestClock` (reset per test), uses secure cookies, and raises the sign-in and invite rate limits; rate-limit, proxy and registration-policy tests start their own hosts on the same database.
 
 ## Start a local database and service
 
@@ -83,6 +83,7 @@ ASP.NET configuration/environment variables use double underscores; secrets are 
 | `Auth__TrustedProxies` | Empty (trust no forwarding headers); comma-separated proxy IPs/CIDRs whose `X-Forwarded-For` is honored |
 | `Auth__RateLimitPermits` | 40 per 15-minute window per client shared by register, login, OIDC start/complete and password reset; bounded 1–10,000 |
 | `Auth__PasswordResetHours` | 24; lifetime of operator-issued reset codes, bounded 1–168. Read by `reset-password` when it issues a code |
+| `Auth__InviteRateLimitPermits` | 20 join attempts per 10-minute window per client on `POST /api/households/join` (legacy invite limit); bounded 1–10,000 |
 | `Oidc__Issuer`, `Oidc__ClientId` | Unset (OIDC off); legacy `OIDC_ISSUER`, `OIDC_CLIENT_ID`. Setting either enables OIDC and requires both plus `Oidc__RedirectUris`. HTTPS issuer equal to the provider's advertised `issuer` |
 | `Oidc__ClientSecret` | Unset (public PKCE client); legacy `OIDC_CLIENT_SECRET`. Secret manager only; sent only to the token endpoint |
 | `Oidc__RedirectUris` | Legacy `OIDC_REDIRECT_URIS`. Comma-separated exact HTTPS, localhost HTTP or `penny://auth/callback` URIs |
