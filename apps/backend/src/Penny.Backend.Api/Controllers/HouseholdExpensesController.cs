@@ -8,8 +8,8 @@ namespace Penny.Backend.Api.Controllers;
 
 // Shared expenses, individual share payments and the personal projection (legacy
 // server/http/households.ts, MAZ-57). Session-protected by the fallback policy. Month
-// recaps, monthly reimbursements and audit history (MAZ-58) and shared recurrence
-// (MAZ-59) are not served yet; see docs/migration/shared-expenses.md.
+// recaps, monthly reimbursements and audit history (MAZ-58) are not served yet; see
+// docs/migration/shared-expenses.md. Shared recurrence is HouseholdRecurringController.
 [ApiController]
 [Route("api/households")]
 [ProducesResponseType<ApiError>(401)]

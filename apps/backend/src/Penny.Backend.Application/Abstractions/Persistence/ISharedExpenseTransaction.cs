@@ -84,4 +84,35 @@ public interface ISharedExpenseTransaction : IHouseholdTransaction
     // Dates within [from, to] for which the rule already recorded an occurrence,
     // including soft-deleted ones (a deleted occurrence stays consumed).
     Task<IReadOnlySet<DateOnly>> OccurrenceDatesAsync(string ruleId, DateOnly from, DateOnly to);
+
+    // Shared recurring rules (MAZ-59). Rule writers and the runner follow one lock
+    // order: the household row, then the payer's `ledgers` row when an account is
+    // validated, then the rule row (its compare-and-increment).
+
+    // The household's rules, ordered by next date, then id.
+    Task<IReadOnlyList<StoredRule>> ListRulesAsync(string householdId);
+
+    Task<StoredRule?> FindRuleAsync(string householdId, string ruleId);
+
+    Task AddRuleAsync(string ruleId, string householdId, RuleRecord record, string actorId);
+
+    // Compare-and-increment on the rule at `revision`, replacing its allocations.
+    // False when nothing matched (stale revision or deleted).
+    Task<bool> UpdateRuleAsync(string householdId, string ruleId, long revision, RuleRecord record);
+
+    // Deletes the rule and its allocations at `revision`; occurrences keep their
+    // `recurring_id`. False when nothing matched.
+    Task<bool> DeleteRuleAsync(string householdId, string ruleId, long revision);
+
+    // Runner step: moves the rule still leased to `leaseToken` from next date `from`
+    // to `to`, increments its revision and extends the lease to `leaseUntil`. The rule
+    // row stays locked until commit. False when the lease was lost or the next date
+    // changed; the runner then writes nothing.
+    Task<bool> AdvanceRuleAsync(
+        string ruleId,
+        string leaseToken,
+        DateOnly from,
+        DateOnly to,
+        DateTimeOffset leaseUntil
+    );
 }

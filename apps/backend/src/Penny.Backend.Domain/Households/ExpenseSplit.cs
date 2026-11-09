@@ -115,6 +115,27 @@ public static class ExpenseSplit
         return (shares, mode);
     }
 
+    // The split one occurrence records (runner) or previews (projection): `Recurring`,
+    // or an equal split among the active members when the stored rule cannot be
+    // applied (allocations of the wrong kind or that no longer add up, as an imported
+    // rule may have). `activeIds` must not be empty.
+    public static (IReadOnlyList<SplitShare> Shares, string SplitMode) Occurrence(
+        long totalCents,
+        string mode,
+        IReadOnlyList<SplitAllocation> allocations,
+        IReadOnlyList<string> activeIds
+    )
+    {
+        try
+        {
+            return Recurring(totalCents, mode, allocations, activeIds);
+        }
+        catch (ArgumentException) when (activeIds.Count > 0)
+        {
+            return (HouseholdSplits.Equal(totalCents, activeIds), Equal);
+        }
+    }
+
     private static IReadOnlyList<SplitShare> Calculate(Func<IReadOnlyList<SplitShare>> calculate)
     {
         try

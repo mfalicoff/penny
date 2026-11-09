@@ -33,6 +33,26 @@ public static partial class ExpenseReader
             )
         );
 
+    // Shared `recurringInput` (`expenseInput` without `date`, plus `nextDate` and
+    // `frequency`) for POST /api/households/{id}/recurring.
+    public static RecurringInput? ReadRecurring(JsonElement? body) => Read(body, Recurring);
+
+    // `recurringInput.extend({revision, active})` for PUT .../recurring/{ruleId}.
+    public static RecurringUpdate? ReadRecurringUpdate(JsonElement? body) =>
+        Read(
+            body,
+            fields =>
+            {
+                var active = LedgerReader.Required(fields, "active");
+                LedgerReader.Require(active.ValueKind is JsonValueKind.True or JsonValueKind.False);
+                return new RecurringUpdate(
+                    Recurring(fields),
+                    active.ValueKind == JsonValueKind.True,
+                    Revision(fields)
+                );
+            }
+        );
+
     // `{revision}` for DELETE; null when invalid.
     public static long? ReadRevision(JsonElement? body)
     {
@@ -84,6 +104,19 @@ public static partial class ExpenseReader
     }
 
     private static ExpenseInput Input(Dictionary<string, JsonElement> fields) =>
+        Input(fields, "date");
+
+    private static RecurringInput Recurring(Dictionary<string, JsonElement> fields) =>
+        new(
+            Input(fields, "nextDate"),
+            LedgerReader.Choice(
+                LedgerReader.Required(fields, "frequency"),
+                LedgerLimits.Frequencies
+            )
+        );
+
+    // The expense fields, with the calendar date read from `dateField`.
+    private static ExpenseInput Input(Dictionary<string, JsonElement> fields, string dateField) =>
         new(
             Trimmed(LedgerReader.Required(fields, "title"), TitleLength),
             LedgerReader.Integer(
@@ -91,7 +124,7 @@ public static partial class ExpenseReader
                 1,
                 LedgerLimits.MaxCents
             ),
-            LedgerReader.Date(LedgerReader.Required(fields, "date")),
+            LedgerReader.Date(LedgerReader.Required(fields, dateField)),
             Id(LedgerReader.Required(fields, "payerUserId")),
             LedgerReader.Choice(LedgerReader.Required(fields, "splitMode"), ExpenseSplit.Modes),
             fields.TryGetValue("allocations", out var allocations)
