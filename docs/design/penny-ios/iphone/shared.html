@@ -1,0 +1,59 @@
+<!-- @dsCard group="iPhone" name="Shared household" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Shared household</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<style>
+  .glow { --glow-1: rgba(47, 163, 107, .45); --glow-2: rgba(120, 200, 160, .35); --glow-3: rgba(80, 140, 230, .22); }
+  .dark .glow { --glow-1: rgba(47, 163, 107, .35); }
+  .head { position: relative; z-index: 1; padding: 112px 24px 0; text-align: center; }
+  .head .stack { justify-content: center; margin-bottom: 10px; }
+  .head .avatar { width: 44px; height: 44px; font-size: 16px; border-width: 3px; border-color: var(--bg); }
+  .head h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+  .head .owed { font-size: 15px; color: var(--label-2); margin-top: 14px; }
+  .head .big { font-size: 52px; font-weight: 700; letter-spacing: -0.04em; color: var(--income); line-height: 1.1; }
+  .actions { position: relative; z-index: 1; display: flex; gap: 10px; justify-content: center; margin-top: 16px; }
+  .seg { margin: 22px 16px 0; position: relative; z-index: 1; }
+  .who { width: 36px; height: 36px; font-size: 13px; border: 0; }
+  .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 8px; margin-top: 3px; }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <div class="island"></div>
+  <div class="status"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="scroll">
+    <div class="glow"></div>
+    <div class="navbar">
+      <div class="glass gbtn"><i data-i="chevron-back"></i></div>
+      <div class="grp"><div class="glass gbtn"><i data-i="person-add"></i></div><div class="glass gbtn"><i data-i="ellipsis-horizontal"></i></div></div>
+    </div>
+    <div class="head">
+      <div class="stack"><div class="avatar" style="background:#E4572E">MF</div><div class="avatar" style="background:#3B82F6">MI</div><div class="avatar" style="background:#2FA36B">JS</div></div>
+      <h1>Apartment</h1>
+      <div class="owed">November · you're owed</div>
+      <div class="big num">$142.50</div>
+    </div>
+    <div class="actions">
+      <div class="glass gcap tinted"><i data-i="checkmark-circle" style="width:19px;height:19px"></i>Record payment</div>
+      <div class="glass gcap"><i data-i="add" style="width:19px;height:19px"></i>Expense</div>
+    </div>
+    <div class="seg"><div class="on">Expenses</div><div>Balances</div><div>People</div></div>
+
+    <div class="day" style="display:flex;justify-content:space-between;padding:20px 20px 8px;font-size:13px;font-weight:600;color:var(--label-2);text-transform:uppercase;letter-spacing:.03em"><span>November</span><span class="num">$3,412.80 total</span></div>
+    <div class="list">
+      <div class="row"><div class="avatar who" style="background:#E4572E">MF</div><div class="t"><b>Rent</b><span>You paid · by rent share</span></div><div class="amt num">$2,900.00<span class="pos">+$1,450 owed</span></div></div>
+      <div class="row"><div class="avatar who" style="background:#3B82F6">MI</div><div class="t"><b>Hydro</b><span>Mira paid · split equally</span></div><div class="amt num">$96.30<span>−$32.10 you owe</span></div></div>
+      <div class="row"><div class="avatar who" style="background:#2FA36B">JS</div><div class="t"><b>Costco run</b><span>Jo paid · split equally</span><span class="badge" style="background:var(--income-soft);color:var(--income)"><i data-i="checkmark" style="width:12px;height:12px;--sw:60px"></i>Settled</span></div><div class="amt num">$184.20<span>$61.40 your share</span></div></div>
+    </div>
+  </div>
+  <div class="tabbar">
+    <div class="tabs glass">
+      <div class="tab"><i data-i="home"></i>Home</div>
+      <div class="tab"><i data-i="list"></i>Activity</div>
+      <div class="tab on"><i data-i="people"></i>Shared</div>
+      <div class="tab"><i data-i="airplane"></i>Trips</div>
+    </div>
+    <div class="fab glass tinted"><i data-i="add"></i></div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+</body></html>

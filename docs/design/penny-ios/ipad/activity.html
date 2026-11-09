@@ -1,0 +1,108 @@
+<!-- @dsCard group="iPad" name="Activity + detail" viewport="1290x914" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPad · Activity</title>
+<link rel="stylesheet" href="../assets/penny.css"><link rel="stylesheet" href="../assets/ipad.css"><script src="../assets/icons.js"></script>
+<style>
+  .col { position: absolute; left: 0; top: 0; bottom: 0; width: 400px; border-right: .5px solid var(--separator); }
+  .col .head { padding: 92px 20px 0; }
+  .col .search { margin: 12px 16px 0; height: 40px; border-radius: 12px; background: var(--fill); display: flex; align-items: center; gap: 8px; padding: 0 12px; color: var(--label-2); font-size: 16px; }
+  .col .search [data-i] { width: 17px; height: 17px; }
+  .chips { display: flex; gap: 8px; padding: 12px 16px 0; }
+  .day { display: flex; justify-content: space-between; padding: 18px 20px 6px; font-size: 12px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .03em; }
+  .row.sel { background: var(--tint-soft); }
+  .row.sel::before, .row.sel + .row::before { display: none; }
+  .detail { position: absolute; left: 400px; right: 0; top: 0; bottom: 0; }
+  .detail .glow { left: 0; right: 0; top: -200px; height: 520px; --glow-1: rgba(242, 169, 59, .45); --glow-2: rgba(255, 140, 80, .30); }
+  .d-in { position: relative; z-index: 1; padding: 96px 40px 0; }
+  .d-top { display: flex; align-items: center; gap: 14px; }
+  .d-top .ic { width: 52px; height: 52px; border-radius: 16px; }
+  .d-top .ic [data-i] { width: 26px; height: 26px; }
+  .d-top b { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; display: block; }
+  .d-top span { font-size: 15px; color: var(--label-2); }
+  .d-amt { font-size: 56px; font-weight: 700; letter-spacing: -0.04em; margin-top: 22px; line-height: 1; }
+  .d-amt small { font-size: 18px; font-weight: 500; color: var(--label-2); letter-spacing: 0; margin-left: 10px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 24px; }
+  .kv { display: flex; justify-content: space-between; padding: 13px 0; font-size: 15px; border-top: .5px solid var(--separator); }
+  .kv:first-of-type { border-top: 0; }
+  .kv span { color: var(--label-2); }
+  .kv b { font-weight: 600; }
+  .share { display: flex; align-items: center; gap: 10px; padding: 9px 0; font-size: 15px; }
+  .share .avatar { width: 30px; height: 30px; border: 0; }
+  .share .num { margin-left: auto; font-weight: 600; }
+  .receipt { height: 126px; border-radius: 14px; margin-top: 12px; background: repeating-linear-gradient(180deg, var(--surface-2) 0 14px, var(--surface) 14px 16px); border: .5px solid var(--separator); display: grid; place-items: center; color: var(--label-2); font-size: 14px; }
+</style></head>
+<body class="canvas">
+<div class="ipad">
+  <div class="status"><span>9:41  Mon Nov 9</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="glass sidebar">
+    <div class="brand"><div class="logo"><i data-i="leaf"></i></div>penny.</div>
+    <div class="nav"><i data-i="home"></i>Home</div>
+    <div class="nav on"><i data-i="list"></i>Activity</div>
+    <div class="nav"><i data-i="pie-chart"></i>Insights</div>
+    <div class="side-h">Together</div>
+    <div class="nav"><i data-i="people"></i>Apartment<span class="n">$142</span></div>
+    <div class="nav"><i data-i="airplane"></i>Lisbon trip<span class="n">3</span></div>
+    <div class="side-h">Manage</div>
+    <div class="nav"><i data-i="repeat"></i>Recurring</div>
+    <div class="nav"><i data-i="wallet"></i>Accounts</div>
+    <div class="nav"><i data-i="pricetag"></i>Categories</div>
+    <div class="side-foot"><div class="avatar" style="background:var(--tint)">MF</div><div><b>Max</b><span>Synced just now</span></div><i data-i="settings" style="margin-left:auto;color:var(--label-2)"></i></div>
+  </div>
+
+  <div class="main">
+    <div class="col">
+      <div class="head"><div class="largetitle">Activity</div></div>
+      <div class="search"><i data-i="search"></i>Search</div>
+      <div class="chips"><span class="pill on">All</span><span class="pill">Expenses</span><span class="pill">Income</span><span class="pill"><i data-i="options"></i></span></div>
+      <div class="day"><span>Today</span><span class="num">−$55.30</span></div>
+      <div class="list">
+        <div class="row"><div class="ic" style="background:var(--c-groceries)"><i data-i="basket"></i></div><div class="t"><b>Groceries</b><span>Main chequing</span></div><div class="amt num">−$48.90</div></div>
+        <div class="row sel"><div class="ic" style="background:var(--c-food)"><i data-i="cafe"></i></div><div class="t"><b>Coffee with Mira</b><span>Visa · split 2 ways</span></div><div class="amt num">−$6.40</div></div>
+      </div>
+      <div class="day"><span>Thu, Nov 6</span><span class="num">−$262.00</span></div>
+      <div class="list">
+        <div class="row"><div class="ic" style="background:var(--invest)"><i data-i="trending-up"></i></div><div class="t"><b>TFSA contribution</b><span>Main chequing</span></div><div class="amt num inv">$200.00</div></div>
+        <div class="row"><div class="ic" style="background:var(--c-transport)"><i data-i="bus"></i></div><div class="t"><b>Transit pass</b><span>Visa</span></div><div class="amt num">−$62.00</div></div>
+      </div>
+      <div class="day"><span>Sat, Nov 1</span><span class="num pos">+$1,750.00</span></div>
+      <div class="list">
+        <div class="row"><div class="ic" style="background:var(--income)"><i data-i="arrow-down"></i></div><div class="t"><b>Payday</b><span>Main chequing</span></div><div class="amt num pos">+$3,200.00</div></div>
+        <div class="row"><div class="ic" style="background:var(--c-home)"><i data-i="home"></i></div><div class="t"><b>Rent</b><span>Apartment</span></div><div class="amt num">−$1,450.00</div></div>
+      </div>
+    </div>
+
+    <div class="detail">
+      <div class="glow"></div>
+      <div class="toolbar" style="left:24px">
+        <div class="sp"></div>
+        <div class="glass gbtn"><i data-i="trash"></i></div>
+        <div class="glass gcap"><i data-i="create" style="width:18px;height:18px"></i>Edit</div>
+      </div>
+      <div class="d-in">
+        <div class="d-top"><div class="ic" style="background:var(--c-food)"><i data-i="cafe"></i></div><div><b>Coffee with Mira</b><span>Food &amp; drinks · Today, 8:42 AM</span></div></div>
+        <div class="d-amt num">−$6.40<small>your share of $12.80</small></div>
+        <div class="grid">
+          <div class="panel">
+            <h4>Details</h4>
+            <div style="margin-top:8px">
+              <div class="kv"><span>Account</span><b>Visa</b></div>
+              <div class="kv"><span>Repeats</span><b>Never</b></div>
+              <div class="kv"><span>Trip</span><b>—</b></div>
+              <div class="kv"><span>Note</span><b>Saturday catch-up</b></div>
+            </div>
+          </div>
+          <div class="panel">
+            <h4>Split <span>Equally · 2 ways</span></h4>
+            <div style="margin-top:8px">
+              <div class="share"><div class="avatar" style="background:var(--tint)">MF</div>You<span class="num">$6.40</span></div>
+              <div class="share"><div class="avatar" style="background:#3B82F6">MI</div>Mira<span class="num">$6.40</span></div>
+            </div>
+            <div class="receipt"><span style="display:flex;gap:6px;align-items:center"><i data-i="receipt" style="width:18px;height:18px"></i>receipt.jpg</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+</body></html>
