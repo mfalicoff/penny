@@ -68,7 +68,7 @@ The API exposes `/api/test/*` only when `TestControls__Enabled=true`. Every requ
 | Users | `POST /api/test/users {"label": "web"}` |
 | Reset | `POST /api/test/reset` |
 
-`push` rules are held for the MAZ-61 delivery worker, which consults the same registry before calling the provider; until it exists, push failures cannot be exercised in .NET. The legacy Node server has no controls.
+`push` rules apply to the MAZ-61 delivery worker, which consults the same registry before each provider call: `method` names the provider (`apns` or `expo`; any when unset), `abort` answers the call with a network retry, `status` 410 with an invalid token, 429/5xx with a retry and other 4xx with a permanent failure ([push](push.md#test-controls)). The legacy Node server has no controls.
 
 ### Production safety
 
@@ -122,6 +122,6 @@ podman run --rm -v "$PWD/contracts:/work/contracts:ro,z" -w /work/contracts/swif
 ## Limitations
 
 - Swift consumes fixtures by strict decoding and hashes only; no Swift behavior exists before MAZ-66/70.
-- `push` fault rules have no consumer until MAZ-61; receipts are not seeded because .NET receipts are MAZ-60.
+- Receipts are not seeded because .NET receipts are MAZ-60. `push` faults reach the delivery worker only when it runs in the environment (`Push__Worker`, on by default); real Expo or APNs calls are made only for devices a run registers.
 - Pinned time is frozen (no ticking clock); scenarios avoid same-day ties that would depend on generated ids.
 - The comparison covers the differential journey's 17 probes, not every route; OIDC and search are .NET-only or covered by their own suites.

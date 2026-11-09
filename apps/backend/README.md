@@ -94,6 +94,10 @@ ASP.NET configuration/environment variables use double underscores; secrets are 
 | `Search__RateLimitPermits` | 30 searches per minute per session; bounded 1–10,000 |
 | `Recurrence__Worker` | `true`; `false` stops this process from recording shared recurring occurrences. Any number of processes may run it (leases keep them apart); at least one must ([topology](../../docs/migration/shared-recurrence.md#deployment-topology)) |
 | `Recurrence__PollSeconds` | 60 (legacy timer); idle delay between runner passes, bounded 1–3,600 |
+| `Push__Worker` | `true`; `false` stops this process from delivering push notifications. Any number of processes may run it (leases keep them apart); at least one must ([push](../../docs/migration/push.md#delivery-outbox-leases-and-retries)) |
+| `Push__PollSeconds` | 15 (legacy timer); idle delay between delivery passes, bounded 1–3,600 |
+| `Push__Expo__Enabled` | `true`; `false` retires the legacy Expo transport only after the [migration gates](../../docs/migration/push.md#token-and-provider-migration) |
+| `Push__Apns__TeamId`, `Push__Apns__KeyId`, `Push__Apns__Topic`, `Push__Apns__PrivateKeyPath` or `Push__Apns__PrivateKey` | Unset (APNs off: native deliveries wait until configured or expired). All or none; the `.p8` key (path, mode 0600, or PEM from the secret manager) is validated at startup and never logged ([Apple credentials](../../docs/migration/push.md#apple-credentials)) |
 | `TestControls__Enabled` | `false`. MAZ-62 full-stack runs only: maps `/api/test/*` (clock, faults, users, reset) and the fault middleware. Startup fails in `Production`, without `TestControls__Token` (32+ characters) or when the `Postgres` database is outside `TestControls__DatabasePrefix` (default and minimum `penny_test`). `TestControls__OidcCertificate` pins the local test OIDC provider's certificate. See [test environment](../../docs/migration/test-environment.md#test-controls) |
 | `ASPNETCORE_URLS`, `ASPNETCORE_ENVIRONMENT` | Standard host settings; development setup sets loopback/Development |
 
@@ -106,6 +110,8 @@ Missing/invalid settings fail before listening, with a setting name and no crede
 ```sh
 bash apps/backend/dotnet.sh run --project src/Penny.Backend.Api -- reset-password person@example.com
 ```
+
+`push-smoke-apns DEVICE_TOKEN sandbox|production` (MAZ-61) exits without HTTP or the database: it sends one synthetic alert with the `Push__Apns__*` settings and prints `accepted` (exit 0) or a redacted reason code (exit 2). It is the [physical-device smoke test](../../docs/migration/push.md#physical-device-smoke-test).
 
 `search-rebuild [--user USER_ID]` and `search-verify [--user USER_ID]` (MAZ-121) also exit without HTTP and use the runtime connection plus the receipt settings; rebuild also needs `Search__ModelDirectory`. Rebuild recomputes search documents (after `import-sqlite`, a normalization change or a model change) and embeds everything owed; verify changes nothing and exits 0 when current, 2 when stale. See [search](../../docs/migration/search.md#operations).
 

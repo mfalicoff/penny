@@ -1133,6 +1133,11 @@ namespace Penny.Backend.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("attempts");
 
+                    b.Property<string>("LastError")
+                        .HasColumnType("text")
+                        .HasColumnName("last_error")
+                        .UseCollation("C");
+
                     b.Property<DateTimeOffset?>("LeaseExpiresAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("lease_expires_at");
@@ -1150,6 +1155,14 @@ namespace Penny.Backend.Persistence.Migrations
                     b.Property<DateTimeOffset>("NextAttemptAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("next_attempt_at");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("expo")
+                        .HasColumnName("provider")
+                        .UseCollation("C");
 
                     b.Property<DateTimeOffset?>("ReceiptCheckedAt")
                         .HasColumnType("timestamp with time zone")
@@ -1174,11 +1187,17 @@ namespace Penny.Backend.Persistence.Migrations
                         .HasDatabaseName("ix_push_deliveries_receipts")
                         .HasFilter("ticket_id IS NOT NULL AND receipt_checked_at IS NULL");
 
+                    b.HasIndex("Token")
+                        .HasDatabaseName("ix_push_deliveries_pending_token")
+                        .HasFilter("sent_at IS NULL");
+
                     b.ToTable("push_deliveries", "penny", t =>
                         {
                             t.HasCheckConstraint("ck_push_deliveries_attempts", "attempts >= 0");
 
                             t.HasCheckConstraint("ck_push_deliveries_lease", "(lease_owner IS NULL) = (lease_token IS NULL) AND (lease_token IS NULL) = (lease_expires_at IS NULL)");
+
+                            t.HasCheckConstraint("ck_push_deliveries_provider", "provider IN ('expo','apns')");
                         });
                 });
 
@@ -1189,10 +1208,23 @@ namespace Penny.Backend.Persistence.Migrations
                         .HasColumnName("token")
                         .UseCollation("C");
 
+                    b.Property<string>("Environment")
+                        .HasColumnType("text")
+                        .HasColumnName("environment")
+                        .UseCollation("C");
+
                     b.Property<string>("Platform")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("platform")
+                        .UseCollation("C");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("expo")
+                        .HasColumnName("provider")
                         .UseCollation("C");
 
                     b.Property<string>("SessionHash")
@@ -1220,6 +1252,8 @@ namespace Penny.Backend.Persistence.Migrations
                     b.ToTable("push_devices", "penny", t =>
                         {
                             t.HasCheckConstraint("ck_push_devices_platform", "platform IN ('ios','android')");
+
+                            t.HasCheckConstraint("ck_push_devices_provider", "(provider = 'expo' AND environment IS NULL) OR (provider = 'apns' AND platform = 'ios' AND environment IS NOT NULL AND environment IN ('sandbox','production'))");
                         });
                 });
 

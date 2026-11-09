@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Penny legacy compatibility API",
-    "version": "1.4.0",
+    "version": "1.5.0",
     "description": "MAZ-50 compatibility baseline audited against master 0e58a8b on 2026-11-07. Existing routes are implemented in Node/SQLite; operations marked `backend` exist only in the .NET backend: password reset (MAZ-123) and search v1 (MAZ-121). See docs/migration/.",
     "license": {
       "name": "MIT",
@@ -1051,7 +1051,7 @@
     },
     "/api/push/devices": {
       "post": {
-        "summary": "Register Expo push device",
+        "summary": "Register Expo or APNs push device",
         "operationId": "postApiPushDevices",
         "responses": {
           "201": {
@@ -1138,7 +1138,7 @@
         "x-implementation": "legacy"
       },
       "delete": {
-        "summary": "Remove Expo push device",
+        "summary": "Remove push device",
         "operationId": "deleteApiPushDevices",
         "responses": {
           "200": {
@@ -6322,10 +6322,11 @@
       },
       "PushDevice": {
         "type": "object",
+        "description": "Legacy Expo registration {token, platform}, or (MAZ-61, .NET only) a native APNs device token with provider \"apns\", platform \"ios\" and the APNs environment that issued it. Unknown keys are ignored.",
         "properties": {
           "token": {
             "type": "string",
-            "pattern": "^(Expo|Exponent)PushToken\\[[A-Za-z0-9_-]{1,180}\\]$"
+            "pattern": "^((Expo|Exponent)PushToken\\[[A-Za-z0-9_-]{1,180}\\]|([0-9A-Fa-f]{2}){32,100})$"
           },
           "platform": {
             "type": "string",
@@ -6333,6 +6334,22 @@
               "ios",
               "android"
             ]
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "expo",
+              "apns"
+            ],
+            "default": "expo"
+          },
+          "environment": {
+            "type": "string",
+            "enum": [
+              "sandbox",
+              "production"
+            ],
+            "description": "Required for apns; absent for expo."
           }
         },
         "required": [

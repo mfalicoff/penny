@@ -47,6 +47,8 @@ public sealed class DocumentationTests(ApiFixture fixture) : IntegrationTestBase
                 ("/api/auth/oidc", "get", "getApiAuthOidc"),
                 ("/api/auth/oidc/start", "post", "postApiAuthOidcStart"),
                 ("/api/auth/oidc/complete", "post", "postApiAuthOidcComplete"),
+                ("/api/push/devices", "post", "postApiPushDevices"),
+                ("/api/push/devices", "delete", "deleteApiPushDevices"),
             }
         )
             paths

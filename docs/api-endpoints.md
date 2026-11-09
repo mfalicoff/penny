@@ -159,10 +159,10 @@ Monthly reimbursements can be recorded on the last UTC day of the month or later
 
 | Method | Path | JSON body | Success |
 | --- | --- | --- | --- |
-| POST | `/api/push/devices` | `{ token, platform: "ios" or "android" }` | 201 `{ ok: true }` |
+| POST | `/api/push/devices` | `{ token, platform: "ios" or "android" }`; .NET also accepts native APNs `{ token, platform: "ios", provider: "apns", environment: "sandbox" or "production" }` | 201 `{ ok: true }` |
 | DELETE | `/api/push/devices` | `{ token }` | 200 `{ ok: true }` |
 
-These tokens are Expo push tokens, distinct from authentication tokens. Device registration/removal is associated with the authenticated user/session. There is no public endpoint to send notifications or run the delivery worker.
+These tokens are Expo push tokens (and, in .NET since MAZ-61, native APNs device tokens), distinct from authentication tokens; see [push](migration/push.md). Device registration/removal is associated with the authenticated user/session. There is no public endpoint to send notifications or run the delivery worker.
 
 ## Go / .NET migration checklist
 

@@ -9,6 +9,7 @@ using Penny.Backend.Api.Contracts;
 using Penny.Backend.Api.Errors;
 using Penny.Backend.Api.Households;
 using Penny.Backend.Api.Middleware;
+using Penny.Backend.Api.Push;
 using Penny.Backend.Api.Search;
 using Penny.Backend.Api.Testing;
 using Penny.Backend.Application.Abstractions.Persistence;
@@ -17,6 +18,7 @@ using Penny.Backend.Application.Abstractions.Security;
 using Penny.Backend.Application.Authentication;
 using Penny.Backend.Application.Households;
 using Penny.Backend.Application.Ledgers;
+using Penny.Backend.Application.Push;
 using Penny.Backend.Application.Receipts;
 using Penny.Backend.Application.Search;
 using Penny.Backend.Persistence.Configuration;
@@ -86,6 +88,7 @@ public static class BackendServices
         AddRecurrenceServices(builder.Services, RecurrenceOptions.Read(configuration));
         AddOidcServices(builder.Services, OidcOptions.Read(configuration), controls);
         AddSearchServices(builder.Services, SearchOptions.Read(configuration));
+        AddPushServices(builder.Services, PushOptions.Read(configuration), controls);
     }
 
     // MAZ-62 full-stack test controls: a pinnable clock, injected faults, unique users
@@ -133,6 +136,93 @@ public static class BackendServices
         if (recurrence.Worker)
             services.AddHostedService<SharedRecurrenceWorker>();
     }
+
+    // Push devices and delivery (MAZ-61): registration always; the outbox worker unless
+    // `Push__Worker=false`. Expo stays until retired; APNs only when configured. In
+    // full-stack test runs every provider call first consults the `push` faults.
+    private static void AddPushServices(
+        IServiceCollection services,
+        PushOptions push,
+        TestControlOptions controls
+    )
+    {
+        services.AddSingleton(push);
+        services.AddSingleton(new PushSettings(push.ExpoEnabled));
+        services.AddSingleton<IPushRepository, PostgresPushRepository>();
+        services.AddSingleton<PushDeviceService>();
+        // Provider calls are bounded, follow no redirects and are not logged (they
+        // carry device tokens and the APNs provider token).
+        services
+            .AddHttpClient(
+                ExpoTransport.HttpClientName,
+                client =>
+                {
+                    client.Timeout = TimeSpan.FromSeconds(10);
+                    client.MaxResponseContentBufferSize = 1024 * 1024;
+                }
+            )
+            .ConfigurePrimaryHttpMessageHandler(() =>
+                new SocketsHttpHandler { AllowAutoRedirect = false }
+            )
+            .RemoveAllLoggers();
+        services.AddSingleton(provider => new ExpoTransport(
+            provider
+                .GetRequiredService<IHttpClientFactory>()
+                .CreateClient(ExpoTransport.HttpClientName)
+        ));
+        services.AddSingleton<IPushReceiptChecker>(provider =>
+            provider.GetRequiredService<ExpoTransport>()
+        );
+        AddTransport<ExpoTransport>(services, controls);
+        if (push.Apns is { } apns)
+        {
+            services.AddSingleton(apns);
+            services.AddSingleton<ApnsProviderToken>();
+            services
+                .AddHttpClient(
+                    ApnsTransport.HttpClientName,
+                    client =>
+                    {
+                        client.Timeout = TimeSpan.FromSeconds(10);
+                        client.MaxResponseContentBufferSize = 64 * 1024;
+                        client.DefaultRequestVersion = System.Net.HttpVersion.Version20;
+                        client.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionExact;
+                    }
+                )
+                .ConfigurePrimaryHttpMessageHandler(() =>
+                    new SocketsHttpHandler
+                    {
+                        AllowAutoRedirect = false,
+                        EnableMultipleHttp2Connections = true,
+                        PooledConnectionIdleTimeout = TimeSpan.FromMinutes(30),
+                    }
+                )
+                .RemoveAllLoggers();
+            services.AddSingleton(provider => new ApnsTransport(
+                provider
+                    .GetRequiredService<IHttpClientFactory>()
+                    .CreateClient(ApnsTransport.HttpClientName),
+                apns,
+                provider.GetRequiredService<ApnsProviderToken>(),
+                provider.GetRequiredService<ILogger<ApnsTransport>>()
+            ));
+            AddTransport<ApnsTransport>(services, controls);
+        }
+        services.AddSingleton<PushDeliveryRunner>();
+        if (push.Worker)
+            services.AddHostedService<PushDeliveryWorker>();
+    }
+
+    private static void AddTransport<T>(IServiceCollection services, TestControlOptions controls)
+        where T : class, IPushTransport =>
+        services.AddSingleton<IPushTransport>(provider =>
+            controls.Enabled
+                ? new FaultInjectingPushTransport(
+                    provider.GetRequiredService<T>(),
+                    provider.GetRequiredService<FaultRegistry>()
+                )
+                : provider.GetRequiredService<T>()
+        );
 
     // The model is loaded and verified here, so a missing or altered file stops the
     // host before it listens.
