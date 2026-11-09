@@ -79,6 +79,7 @@ Everything else is EF-generated or a LINQ query. Check-constraint and partial-in
 | `SqliteImporter`: `has_table_privilege(...)` | Rejects runtime credentials before any import work |
 | `SqliteImporter`: `setval(... household_audit sort_order ...)` | Continues the identity after explicit legacy rowids |
 | `development/grant-runtime.sql`, `init-roles.sh` | Role and grant administration and `CREATE EXTENSION pg_trgm/vector` (administrator), outside the application |
+| `TestDataReset` (MAZ-62, test environments only): `DELETE FROM penny."<table>"` per EF table, children first | Clears a disposable `penny_test*` database between full-stack runs with the runtime role (which has DELETE, not TRUNCATE); table names come from the EF model and the database name is checked first ([test environment](test-environment.md#test-controls)) |
 | `SearchExtensions` (used by `DatabaseMigrator` and `PostgresReadiness`): `SELECT extname, extversion FROM pg_extension` | Search requires pgvector 0.8+ and pg_trgm before migrating; readiness reports `search-extensions` (MAZ-121) |
 | `PostgresSearchRepository`: `SELECT set_config('statement_timeout', ...), set_config('hnsw.iterative_scan', ...), set_config('hnsw.ef_search', ...), set_config('pg_trgm.word_similarity_threshold', ...)` | Transaction-local search settings (2-second statement timeout, filtering inside HNSW scans); the search queries themselves are LINQ (`EF.Functions.Like`, `TrigramsAreWordSimilar`, `TrigramsWordSimilarity`, pgvector `CosineDistance`) |
 

@@ -3,12 +3,14 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Timeouts;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Penny.Backend.Api.Authentication;
 using Penny.Backend.Api.Contracts;
 using Penny.Backend.Api.Errors;
 using Penny.Backend.Api.Households;
 using Penny.Backend.Api.Middleware;
 using Penny.Backend.Api.Search;
+using Penny.Backend.Api.Testing;
 using Penny.Backend.Application.Abstractions.Persistence;
 using Penny.Backend.Application.Abstractions.Search;
 using Penny.Backend.Application.Abstractions.Security;
@@ -21,6 +23,7 @@ using Penny.Backend.Persistence.Health;
 using Penny.Backend.Persistence.Receipts;
 using Penny.Backend.Persistence.Repositories;
 using Penny.Backend.Persistence.Search;
+using Penny.Backend.Persistence.Testing;
 
 namespace Penny.Backend.Api.Configuration;
 
@@ -37,7 +40,7 @@ public static class BackendServices
             BackendOptions.ReadBounded(configuration, "Database:CommandTimeoutSeconds", 5, 1, 30)
         );
         builder.Services.AddSingleton(options);
-        builder.Services.AddSingleton(TimeProvider.System);
+        var controls = AddTestControls(builder);
         builder.Services.AddSingleton(_ => database.CreateDataSource());
         builder.Services.AddSingleton<IStorageReadiness, PostgresReadiness>();
         builder.Services.Configure<ApiBehaviorOptions>(api =>
@@ -80,8 +83,40 @@ public static class BackendServices
         builder.Services.AddSingleton<SharedExpenseService>();
         builder.Services.AddSingleton<SettlementService>();
         AddRecurrenceServices(builder.Services, RecurrenceOptions.Read(configuration));
-        AddOidcServices(builder.Services, OidcOptions.Read(configuration));
+        AddOidcServices(builder.Services, OidcOptions.Read(configuration), controls);
         AddSearchServices(builder.Services, SearchOptions.Read(configuration));
+    }
+
+    // MAZ-62 full-stack test controls: a pinnable clock, injected faults, unique users
+    // and data reset. Off by default; TestControlOptions refuses Production. When off,
+    // the host keeps the system clock and has no `/api/test` controller.
+    private static TestControlOptions AddTestControls(WebApplicationBuilder builder)
+    {
+        var controls = TestControlOptions.Read(builder.Configuration, builder.Environment);
+        builder.Services.AddSingleton(controls);
+        builder
+            .Services.AddMvcCore()
+            .ConfigureApplicationPartManager(parts =>
+            {
+                foreach (
+                    var provider in parts
+                        .FeatureProviders.OfType<ControllerFeatureProvider>()
+                        .ToList()
+                )
+                    parts.FeatureProviders.Remove(provider);
+                parts.FeatureProviders.Add(new TestControlsFeatureProvider(controls.Enabled));
+            });
+        if (!controls.Enabled)
+        {
+            builder.Services.AddSingleton(TimeProvider.System);
+            return controls;
+        }
+        var clock = new ControllableClock();
+        builder.Services.AddSingleton(clock);
+        builder.Services.AddSingleton<TimeProvider>(clock);
+        builder.Services.AddSingleton<FaultRegistry>();
+        builder.Services.AddSingleton<TestDataReset>();
+        return controls;
     }
 
     // Shared recurrence (MAZ-59): rule writes always; the occurrence worker unless
@@ -125,7 +160,11 @@ public static class BackendServices
     }
 
     // OIDC services exist only when configured; the controller then answers 404.
-    private static void AddOidcServices(IServiceCollection services, OidcOptions? oidc)
+    private static void AddOidcServices(
+        IServiceCollection services,
+        OidcOptions? oidc,
+        TestControlOptions controls
+    )
     {
         if (oidc is null)
             return;
@@ -145,7 +184,29 @@ public static class BackendServices
                 }
             )
             .ConfigurePrimaryHttpMessageHandler(() =>
-                new SocketsHttpHandler { AllowAutoRedirect = false }
+                new SocketsHttpHandler
+                {
+                    AllowAutoRedirect = false,
+                    // Full-stack test runs only: also trust the local provider's
+                    // throwaway certificate, pinned by its SHA-256 (MAZ-62).
+                    SslOptions = controls.OidcCertificateHash is { } pinned
+                        ? new System.Net.Security.SslClientAuthenticationOptions
+                        {
+                            RemoteCertificateValidationCallback = (_, certificate, _, errors) =>
+                                errors == System.Net.Security.SslPolicyErrors.None
+                                || (
+                                    certificate is not null
+                                    && string.Equals(
+                                        certificate.GetCertHashString(
+                                            System.Security.Cryptography.HashAlgorithmName.SHA256
+                                        ),
+                                        pinned,
+                                        StringComparison.OrdinalIgnoreCase
+                                    )
+                                ),
+                        }
+                        : new System.Net.Security.SslClientAuthenticationOptions(),
+                }
             )
             .RemoveAllLoggers();
         services.AddSingleton<IOidcProvider, OidcProviderClient>();

@@ -1,6 +1,7 @@
 using Penny.Backend.Api.Commands;
 using Penny.Backend.Api.Configuration;
 using Penny.Backend.Api.Middleware;
+using Penny.Backend.Api.Testing;
 using Scalar.AspNetCore;
 
 var maintenance =
@@ -24,6 +25,10 @@ builder.AddBackendServices();
 var app = builder.Build();
 app.UseForwardedHeaders();
 app.UseMiddleware<ApiBoundaryMiddleware>();
+
+// MAZ-62: injected failures for full-stack test runs; never registered in Production.
+if (app.Services.GetRequiredService<TestControlOptions>().Enabled)
+    app.UseMiddleware<FaultInjectionMiddleware>();
 app.UseRouting();
 app.UseRequestTimeouts();
 

@@ -1,0 +1,1788 @@
+{
+  "generator": "scripts/fixtures/generate-golden.ts",
+  "description": "Three-way ledger merge (offline sync after a 409): base is the last synced server ledger, local the unsynced device ledger, remote the newer server ledger.",
+  "cases": [
+    {
+      "name": "independent fields both survive",
+      "base": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "lunch",
+            "title": "Lunch",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "food",
+            "date": "2026-10-01",
+            "note": ""
+          },
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          }
+        ]
+      },
+      "local": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "lunch",
+            "title": "Lunch",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "food",
+            "date": "2026-10-01",
+            "note": "Local note"
+          },
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          }
+        ]
+      },
+      "remote": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "lunch",
+            "title": "Lunch",
+            "kind": "expense",
+            "total": 1500,
+            "share": 1500,
+            "categoryId": "food",
+            "date": "2026-10-01",
+            "note": ""
+          },
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          }
+        ]
+      },
+      "expected": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "lunch",
+            "title": "Lunch",
+            "kind": "expense",
+            "total": 1500,
+            "share": 1500,
+            "categoryId": "food",
+            "date": "2026-10-01",
+            "note": "Local note"
+          },
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "same field: the local edit wins",
+      "base": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "lunch",
+            "title": "Lunch",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "food",
+            "date": "2026-10-01",
+            "note": ""
+          },
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          }
+        ]
+      },
+      "local": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "lunch",
+            "title": "Local lunch",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "food",
+            "date": "2026-10-01",
+            "note": ""
+          },
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          }
+        ]
+      },
+      "remote": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "lunch",
+            "title": "Remote lunch",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "food",
+            "date": "2026-10-01",
+            "note": ""
+          },
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          }
+        ]
+      },
+      "expected": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "lunch",
+            "title": "Local lunch",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "food",
+            "date": "2026-10-01",
+            "note": ""
+          },
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "local delete removes a remotely edited entry",
+      "base": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "lunch",
+            "title": "Lunch",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "food",
+            "date": "2026-10-01",
+            "note": ""
+          },
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          }
+        ]
+      },
+      "local": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          }
+        ]
+      },
+      "remote": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "lunch",
+            "title": "Lunch",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "food",
+            "date": "2026-10-01",
+            "note": "Remote"
+          },
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          }
+        ]
+      },
+      "expected": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "local edit restores an entry deleted remotely",
+      "base": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "lunch",
+            "title": "Lunch",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "food",
+            "date": "2026-10-01",
+            "note": ""
+          },
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          }
+        ]
+      },
+      "local": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "lunch",
+            "title": "Lunch",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "food",
+            "date": "2026-10-01",
+            "note": "Kept"
+          },
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          }
+        ]
+      },
+      "remote": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          }
+        ]
+      },
+      "expected": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          },
+          {
+            "id": "lunch",
+            "title": "Lunch",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "food",
+            "date": "2026-10-01",
+            "note": "Kept"
+          }
+        ]
+      }
+    },
+    {
+      "name": "unchanged local entry follows a remote delete",
+      "base": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "lunch",
+            "title": "Lunch",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "food",
+            "date": "2026-10-01",
+            "note": ""
+          },
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          }
+        ]
+      },
+      "local": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "lunch",
+            "title": "Lunch",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "food",
+            "date": "2026-10-01",
+            "note": ""
+          },
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          }
+        ]
+      },
+      "remote": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          }
+        ]
+      },
+      "expected": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "local create is appended after remote entries",
+      "base": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "lunch",
+            "title": "Lunch",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "food",
+            "date": "2026-10-01",
+            "note": ""
+          },
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          }
+        ]
+      },
+      "local": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "lunch",
+            "title": "Lunch",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "food",
+            "date": "2026-10-01",
+            "note": ""
+          },
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          },
+          {
+            "id": "new",
+            "title": "New",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          }
+        ]
+      },
+      "remote": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "lunch",
+            "title": "Lunch",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "food",
+            "date": "2026-10-01",
+            "note": ""
+          },
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          },
+          {
+            "id": "remote-new",
+            "title": "Remote new",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          }
+        ]
+      },
+      "expected": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "lunch",
+            "title": "Lunch",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "food",
+            "date": "2026-10-01",
+            "note": ""
+          },
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          },
+          {
+            "id": "remote-new",
+            "title": "Remote new",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          },
+          {
+            "id": "new",
+            "title": "New",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "local field removal (unlink account) survives a remote note",
+      "base": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "lunch",
+            "title": "Lunch",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "food",
+            "date": "2026-10-01",
+            "note": "",
+            "accountId": "chq"
+          },
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          }
+        ]
+      },
+      "local": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "lunch",
+            "title": "Lunch",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "food",
+            "date": "2026-10-01",
+            "note": ""
+          },
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          }
+        ]
+      },
+      "remote": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "lunch",
+            "title": "Lunch",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "food",
+            "date": "2026-10-01",
+            "note": "Remote",
+            "accountId": "chq"
+          },
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          }
+        ]
+      },
+      "expected": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "lunch",
+            "title": "Lunch",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "food",
+            "date": "2026-10-01",
+            "note": "Remote"
+          },
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "currency: local change wins, otherwise remote",
+      "base": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "lunch",
+            "title": "Lunch",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "food",
+            "date": "2026-10-01",
+            "note": ""
+          },
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          }
+        ]
+      },
+      "local": {
+        "version": 4,
+        "currency": "USD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "lunch",
+            "title": "Lunch",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "food",
+            "date": "2026-10-01",
+            "note": ""
+          },
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          }
+        ]
+      },
+      "remote": {
+        "version": 4,
+        "currency": "EUR",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "lunch",
+            "title": "Lunch",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "food",
+            "date": "2026-10-01",
+            "note": ""
+          },
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          }
+        ]
+      },
+      "expected": {
+        "version": 4,
+        "currency": "USD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "lunch",
+            "title": "Lunch",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "food",
+            "date": "2026-10-01",
+            "note": ""
+          },
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "remote currency change kept when local unchanged",
+      "base": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "lunch",
+            "title": "Lunch",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "food",
+            "date": "2026-10-01",
+            "note": ""
+          },
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          }
+        ]
+      },
+      "local": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "lunch",
+            "title": "Lunch",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "food",
+            "date": "2026-10-01",
+            "note": ""
+          },
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          }
+        ]
+      },
+      "remote": {
+        "version": 4,
+        "currency": "EUR",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "lunch",
+            "title": "Lunch",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "food",
+            "date": "2026-10-01",
+            "note": ""
+          },
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          }
+        ]
+      },
+      "expected": {
+        "version": 4,
+        "currency": "EUR",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "lunch",
+            "title": "Lunch",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "food",
+            "date": "2026-10-01",
+            "note": ""
+          },
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "category rename merges with an entry edit",
+      "base": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "lunch",
+            "title": "Lunch",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "food",
+            "date": "2026-10-01",
+            "note": ""
+          },
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          }
+        ]
+      },
+      "local": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "lunch",
+            "title": "Lunch",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "food",
+            "date": "2026-10-01",
+            "note": ""
+          },
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": "Airport"
+          }
+        ]
+      },
+      "remote": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Groceries & dining",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "lunch",
+            "title": "Lunch",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "food",
+            "date": "2026-10-01",
+            "note": ""
+          },
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": ""
+          }
+        ]
+      },
+      "expected": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Groceries & dining",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "lunch",
+            "title": "Lunch",
+            "kind": "expense",
+            "total": 1200,
+            "share": 1200,
+            "categoryId": "food",
+            "date": "2026-10-01",
+            "note": ""
+          },
+          {
+            "id": "taxi",
+            "title": "Taxi",
+            "kind": "expense",
+            "total": 2000,
+            "share": 2000,
+            "categoryId": "food",
+            "date": "2026-10-02",
+            "note": "Airport"
+          }
+        ]
+      }
+    }
+  ]
+}
