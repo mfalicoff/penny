@@ -664,7 +664,7 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
 
     // Legacy `canSeeExpense`: current members see every expense; former members only
     // those they have a share in.
-    private static bool CanSee(StoredMember membership, StoredExpense expense, string userId) =>
+    internal static bool CanSee(StoredMember membership, StoredExpense expense, string userId) =>
         membership.IsCurrent
         || expense.Splits.Any(share =>
             string.Equals(share.UserId, userId, StringComparison.Ordinal)
@@ -775,7 +775,9 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
 
     // Writes the audit row and, for events that notify (`month` set: created, updated
     // and payment events, as legacy), one push outbox row for every other current
-    // member, all in this transaction. The push worker is MAZ-61's.
+    // member, all in this transaction. Monthly reimbursements have no expense: their
+    // outbox rows use the event id as entity and omit `expenseId` from the payload, as
+    // legacy. The push worker is MAZ-61's.
     internal static async Task AuditAsync(
         ISharedExpenseTransaction store,
         string householdId,
@@ -783,7 +785,7 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
         string action,
         object? before,
         object? after,
-        string expenseId,
+        string? expenseId,
         string? notifyMonth,
         DateTimeOffset now
     )
@@ -822,7 +824,7 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
                     userId,
                     householdId,
                     action,
-                    expenseId,
+                    expenseId ?? eventId,
                     payload,
                     now
                 )),

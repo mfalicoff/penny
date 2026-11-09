@@ -1,0 +1,764 @@
+{
+  "description": "Golden monthly settlement cases for calculateMonthlyBalances and suggestReimbursements (src/domain/households.ts) and the .NET MonthlySettlement port. Amounts are integer cents; expenses with deletedAt are soft-deleted. Expected values were produced by the TypeScript implementation.",
+  "cases": [
+    {
+      "name": "one payer, equal shares among three",
+      "month": "2026-09",
+      "expenses": [
+        {
+          "id": "x1",
+          "date": "2026-09-28",
+          "payerUserId": "alex",
+          "totalCents": 9000,
+          "splits": [
+            {
+              "userId": "alex",
+              "amountCents": 3000
+            },
+            {
+              "userId": "bea",
+              "amountCents": 3000
+            },
+            {
+              "userId": "cam",
+              "amountCents": 3000
+            }
+          ]
+        }
+      ],
+      "reimbursements": [],
+      "expected": {
+        "balances": [
+          {
+            "userId": "alex",
+            "balanceCents": 6000
+          },
+          {
+            "userId": "bea",
+            "balanceCents": -3000
+          },
+          {
+            "userId": "cam",
+            "balanceCents": -3000
+          }
+        ],
+        "suggestions": [
+          {
+            "fromUserId": "bea",
+            "toUserId": "alex",
+            "amountCents": 3000
+          },
+          {
+            "fromUserId": "cam",
+            "toUserId": "alex",
+            "amountCents": 3000
+          }
+        ]
+      }
+    },
+    {
+      "name": "remainder cent stays with the lexically first member",
+      "month": "2026-09",
+      "expenses": [
+        {
+          "id": "x1",
+          "date": "2026-09-01",
+          "payerUserId": "cam",
+          "totalCents": 10000,
+          "splits": [
+            {
+              "userId": "alex",
+              "amountCents": 3334
+            },
+            {
+              "userId": "bea",
+              "amountCents": 3333
+            },
+            {
+              "userId": "cam",
+              "amountCents": 3333
+            }
+          ]
+        }
+      ],
+      "reimbursements": [],
+      "expected": {
+        "balances": [
+          {
+            "userId": "alex",
+            "balanceCents": -3334
+          },
+          {
+            "userId": "bea",
+            "balanceCents": -3333
+          },
+          {
+            "userId": "cam",
+            "balanceCents": 6667
+          }
+        ],
+        "suggestions": [
+          {
+            "fromUserId": "alex",
+            "toUserId": "cam",
+            "amountCents": 3334
+          },
+          {
+            "fromUserId": "bea",
+            "toUserId": "cam",
+            "amountCents": 3333
+          }
+        ]
+      }
+    },
+    {
+      "name": "individual payment settles one share",
+      "month": "2026-09",
+      "expenses": [
+        {
+          "id": "x1",
+          "date": "2026-09-28",
+          "payerUserId": "alex",
+          "totalCents": 9000,
+          "splits": [
+            {
+              "userId": "alex",
+              "amountCents": 3000
+            },
+            {
+              "userId": "bea",
+              "amountCents": 3000
+            },
+            {
+              "userId": "cam",
+              "amountCents": 3000
+            }
+          ]
+        }
+      ],
+      "reimbursements": [
+        {
+          "id": "p1",
+          "month": "2026-09",
+          "fromUserId": "bea",
+          "toUserId": "alex",
+          "amountCents": 3000
+        }
+      ],
+      "expected": {
+        "balances": [
+          {
+            "userId": "alex",
+            "balanceCents": 3000
+          },
+          {
+            "userId": "bea",
+            "balanceCents": 0
+          },
+          {
+            "userId": "cam",
+            "balanceCents": -3000
+          }
+        ],
+        "suggestions": [
+          {
+            "fromUserId": "cam",
+            "toUserId": "alex",
+            "amountCents": 3000
+          }
+        ]
+      }
+    },
+    {
+      "name": "partial then complete settlement nets every balance to zero",
+      "month": "2026-09",
+      "expenses": [
+        {
+          "id": "x1",
+          "date": "2026-09-02",
+          "payerUserId": "alex",
+          "totalCents": 6000,
+          "splits": [
+            {
+              "userId": "alex",
+              "amountCents": 3000
+            },
+            {
+              "userId": "bea",
+              "amountCents": 3000
+            }
+          ]
+        },
+        {
+          "id": "x2",
+          "date": "2026-09-03",
+          "payerUserId": "alex",
+          "totalCents": 6000,
+          "splits": [
+            {
+              "userId": "alex",
+              "amountCents": 3000
+            },
+            {
+              "userId": "bea",
+              "amountCents": 3000
+            }
+          ]
+        }
+      ],
+      "reimbursements": [
+        {
+          "id": "p1",
+          "month": "2026-09",
+          "fromUserId": "bea",
+          "toUserId": "alex",
+          "amountCents": 3000
+        },
+        {
+          "id": "m1",
+          "month": "2026-09",
+          "fromUserId": "bea",
+          "toUserId": "alex",
+          "amountCents": 3000
+        }
+      ],
+      "expected": {
+        "balances": [
+          {
+            "userId": "alex",
+            "balanceCents": 0
+          },
+          {
+            "userId": "bea",
+            "balanceCents": 0
+          }
+        ],
+        "suggestions": []
+      }
+    },
+    {
+      "name": "other months and deleted expenses are ignored",
+      "month": "2026-09",
+      "expenses": [
+        {
+          "id": "x1",
+          "date": "2026-09-30",
+          "payerUserId": "alex",
+          "totalCents": 4000,
+          "splits": [
+            {
+              "userId": "alex",
+              "amountCents": 2000
+            },
+            {
+              "userId": "bea",
+              "amountCents": 2000
+            }
+          ]
+        },
+        {
+          "id": "x2",
+          "date": "2026-10-01",
+          "payerUserId": "bea",
+          "totalCents": 9000,
+          "splits": [
+            {
+              "userId": "alex",
+              "amountCents": 4500
+            },
+            {
+              "userId": "bea",
+              "amountCents": 4500
+            }
+          ]
+        },
+        {
+          "id": "x3",
+          "date": "2026-09-15",
+          "payerUserId": "bea",
+          "totalCents": 7000,
+          "splits": [
+            {
+              "userId": "alex",
+              "amountCents": 3500
+            },
+            {
+              "userId": "bea",
+              "amountCents": 3500
+            }
+          ],
+          "deletedAt": 1
+        },
+        {
+          "id": "x4",
+          "date": "2026-08-31",
+          "payerUserId": "bea",
+          "totalCents": 5000,
+          "splits": [
+            {
+              "userId": "alex",
+              "amountCents": 2500
+            },
+            {
+              "userId": "bea",
+              "amountCents": 2500
+            }
+          ]
+        }
+      ],
+      "reimbursements": [
+        {
+          "id": "m1",
+          "month": "2026-08",
+          "fromUserId": "alex",
+          "toUserId": "bea",
+          "amountCents": 2500
+        },
+        {
+          "id": "m2",
+          "month": "2026-10",
+          "fromUserId": "alex",
+          "toUserId": "bea",
+          "amountCents": 4500
+        }
+      ],
+      "expected": {
+        "balances": [
+          {
+            "userId": "alex",
+            "balanceCents": 2000
+          },
+          {
+            "userId": "bea",
+            "balanceCents": -2000
+          }
+        ],
+        "suggestions": [
+          {
+            "fromUserId": "bea",
+            "toUserId": "alex",
+            "amountCents": 2000
+          }
+        ]
+      }
+    },
+    {
+      "name": "zero shares still produce a zero balance",
+      "month": "2026-09",
+      "expenses": [
+        {
+          "id": "x1",
+          "date": "2026-09-10",
+          "payerUserId": "alex",
+          "totalCents": 9000,
+          "splits": [
+            {
+              "userId": "alex",
+              "amountCents": 6000
+            },
+            {
+              "userId": "bea",
+              "amountCents": 0
+            },
+            {
+              "userId": "cam",
+              "amountCents": 3000
+            }
+          ]
+        }
+      ],
+      "reimbursements": [],
+      "expected": {
+        "balances": [
+          {
+            "userId": "alex",
+            "balanceCents": 3000
+          },
+          {
+            "userId": "bea",
+            "balanceCents": 0
+          },
+          {
+            "userId": "cam",
+            "balanceCents": -3000
+          }
+        ],
+        "suggestions": [
+          {
+            "fromUserId": "cam",
+            "toUserId": "alex",
+            "amountCents": 3000
+          }
+        ]
+      }
+    },
+    {
+      "name": "opposite debts in one month cancel",
+      "month": "2026-09",
+      "expenses": [
+        {
+          "id": "x1",
+          "date": "2026-09-10",
+          "payerUserId": "alex",
+          "totalCents": 5000,
+          "splits": [
+            {
+              "userId": "alex",
+              "amountCents": 2500
+            },
+            {
+              "userId": "bea",
+              "amountCents": 2500
+            }
+          ]
+        },
+        {
+          "id": "x2",
+          "date": "2026-09-11",
+          "payerUserId": "bea",
+          "totalCents": 5000,
+          "splits": [
+            {
+              "userId": "alex",
+              "amountCents": 2500
+            },
+            {
+              "userId": "bea",
+              "amountCents": 2500
+            }
+          ]
+        }
+      ],
+      "reimbursements": [],
+      "expected": {
+        "balances": [
+          {
+            "userId": "alex",
+            "balanceCents": 0
+          },
+          {
+            "userId": "bea",
+            "balanceCents": 0
+          }
+        ],
+        "suggestions": []
+      }
+    },
+    {
+      "name": "several debtors and creditors use few full transfers",
+      "month": "2026-09",
+      "expenses": [
+        {
+          "id": "x1",
+          "date": "2026-09-01",
+          "payerUserId": "alex",
+          "totalCents": 12000,
+          "splits": [
+            {
+              "userId": "alex",
+              "amountCents": 3000
+            },
+            {
+              "userId": "bea",
+              "amountCents": 3000
+            },
+            {
+              "userId": "cam",
+              "amountCents": 3000
+            },
+            {
+              "userId": "dev",
+              "amountCents": 3000
+            }
+          ]
+        },
+        {
+          "id": "x2",
+          "date": "2026-09-02",
+          "payerUserId": "bea",
+          "totalCents": 8000,
+          "splits": [
+            {
+              "userId": "alex",
+              "amountCents": 2000
+            },
+            {
+              "userId": "bea",
+              "amountCents": 2000
+            },
+            {
+              "userId": "cam",
+              "amountCents": 2000
+            },
+            {
+              "userId": "dev",
+              "amountCents": 2000
+            }
+          ]
+        },
+        {
+          "id": "x3",
+          "date": "2026-09-03",
+          "payerUserId": "cam",
+          "totalCents": 1001,
+          "splits": [
+            {
+              "userId": "alex",
+              "amountCents": 251
+            },
+            {
+              "userId": "bea",
+              "amountCents": 250
+            },
+            {
+              "userId": "cam",
+              "amountCents": 250
+            },
+            {
+              "userId": "dev",
+              "amountCents": 250
+            }
+          ]
+        }
+      ],
+      "reimbursements": [],
+      "expected": {
+        "balances": [
+          {
+            "userId": "alex",
+            "balanceCents": 6749
+          },
+          {
+            "userId": "bea",
+            "balanceCents": 2750
+          },
+          {
+            "userId": "cam",
+            "balanceCents": -4249
+          },
+          {
+            "userId": "dev",
+            "balanceCents": -5250
+          }
+        ],
+        "suggestions": [
+          {
+            "fromUserId": "dev",
+            "toUserId": "alex",
+            "amountCents": 5250
+          },
+          {
+            "fromUserId": "cam",
+            "toUserId": "alex",
+            "amountCents": 1499
+          },
+          {
+            "fromUserId": "cam",
+            "toUserId": "bea",
+            "amountCents": 2750
+          }
+        ]
+      }
+    },
+    {
+      "name": "equal debts and credits break ties by member id",
+      "month": "2026-09",
+      "expenses": [
+        {
+          "id": "x1",
+          "date": "2026-09-01",
+          "payerUserId": "dev",
+          "totalCents": 4000,
+          "splits": [
+            {
+              "userId": "alex",
+              "amountCents": 2000
+            },
+            {
+              "userId": "bea",
+              "amountCents": 2000
+            },
+            {
+              "userId": "cam",
+              "amountCents": 0
+            },
+            {
+              "userId": "dev",
+              "amountCents": 0
+            }
+          ]
+        },
+        {
+          "id": "x2",
+          "date": "2026-09-01",
+          "payerUserId": "cam",
+          "totalCents": 4000,
+          "splits": [
+            {
+              "userId": "alex",
+              "amountCents": 2000
+            },
+            {
+              "userId": "bea",
+              "amountCents": 2000
+            },
+            {
+              "userId": "cam",
+              "amountCents": 0
+            },
+            {
+              "userId": "dev",
+              "amountCents": 0
+            }
+          ]
+        }
+      ],
+      "reimbursements": [],
+      "expected": {
+        "balances": [
+          {
+            "userId": "alex",
+            "balanceCents": -4000
+          },
+          {
+            "userId": "bea",
+            "balanceCents": -4000
+          },
+          {
+            "userId": "cam",
+            "balanceCents": 4000
+          },
+          {
+            "userId": "dev",
+            "balanceCents": 4000
+          }
+        ],
+        "suggestions": [
+          {
+            "fromUserId": "alex",
+            "toUserId": "cam",
+            "amountCents": 4000
+          },
+          {
+            "fromUserId": "bea",
+            "toUserId": "dev",
+            "amountCents": 4000
+          }
+        ]
+      }
+    },
+    {
+      "name": "the largest amounts stay exact",
+      "month": "2026-12",
+      "expenses": [
+        {
+          "id": "x1",
+          "date": "2026-12-31",
+          "payerUserId": "alex",
+          "totalCents": 99999999999,
+          "splits": [
+            {
+              "userId": "alex",
+              "amountCents": 33333333333
+            },
+            {
+              "userId": "bea",
+              "amountCents": 33333333333
+            },
+            {
+              "userId": "cam",
+              "amountCents": 33333333333
+            }
+          ]
+        },
+        {
+          "id": "x2",
+          "date": "2026-12-01",
+          "payerUserId": "bea",
+          "totalCents": 99999999999,
+          "splits": [
+            {
+              "userId": "alex",
+              "amountCents": 99999999999
+            },
+            {
+              "userId": "bea",
+              "amountCents": 0
+            },
+            {
+              "userId": "cam",
+              "amountCents": 0
+            }
+          ]
+        }
+      ],
+      "reimbursements": [],
+      "expected": {
+        "balances": [
+          {
+            "userId": "alex",
+            "balanceCents": -33333333333
+          },
+          {
+            "userId": "bea",
+            "balanceCents": 66666666666
+          },
+          {
+            "userId": "cam",
+            "balanceCents": -33333333333
+          }
+        ],
+        "suggestions": [
+          {
+            "fromUserId": "alex",
+            "toUserId": "bea",
+            "amountCents": 33333333333
+          },
+          {
+            "fromUserId": "cam",
+            "toUserId": "bea",
+            "amountCents": 33333333333
+          }
+        ]
+      }
+    },
+    {
+      "name": "an empty month has no balances",
+      "month": "2026-09",
+      "expenses": [],
+      "reimbursements": [],
+      "expected": {
+        "balances": [],
+        "suggestions": []
+      }
+    }
+  ],
+  "suggestionErrors": [
+    {
+      "name": "balances that do not net to zero are rejected",
+      "balances": [
+        {
+          "userId": "alex",
+          "balanceCents": 100
+        },
+        {
+          "userId": "bea",
+          "balanceCents": -99
+        }
+      ]
+    },
+    {
+      "name": "a member listed twice is rejected",
+      "balances": [
+        {
+          "userId": "alex",
+          "balanceCents": 100
+        },
+        {
+          "userId": "alex",
+          "balanceCents": -100
+        }
+      ]
+    }
+  ]
+}

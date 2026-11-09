@@ -1,3 +1,5 @@
+using Penny.Backend.Domain.Households;
+
 namespace Penny.Backend.Application.Abstractions.Persistence;
 
 // Shared-expense operations inside one household unit of work. Writers follow the
@@ -63,6 +65,37 @@ public interface ISharedExpenseTransaction : IHouseholdTransaction
     Task<bool> AddPaymentAsync(StoredReimbursement payment, long revision);
 
     Task AddOutboxAsync(IReadOnlyList<StoredOutboxMessage> messages);
+
+    // Monthly settlement (MAZ-58). Reimbursement writers hold the household lock, like
+    // every expense and payment writer, so balances cannot change before commit.
+
+    // The household's reimbursements of `month` (monthly reimbursements and individual
+    // expense payments), oldest first, then id.
+    Task<IReadOnlyList<StoredReimbursement>> ListReimbursementsAsync(
+        string householdId,
+        string month
+    );
+
+    // Records a monthly reimbursement (`ExpenseId` null).
+    Task AddReimbursementAsync(StoredReimbursement reimbursement);
+
+    // The balance contributions a former member can see: live expenses in which they
+    // have a share, and reimbursements recorded by the time they left or involving them.
+    Task<IReadOnlyList<BalanceContribution>> VisibleBalancesAsync(
+        string householdId,
+        FormerMember viewer
+    );
+
+    // Audit events of the household, newest first (ties: later rows first), optionally
+    // of one expense, at most `limit` when given. A former member sees only events of
+    // expenses they have a share in (while the expense belongs to this household) and
+    // household events recorded by the time they left.
+    Task<IReadOnlyList<StoredAuditEvent>> AuditEventsAsync(
+        string householdId,
+        string? expenseId,
+        FormerMember? viewer,
+        int? limit
+    );
 
     // Search (MAZ-121): rewrites the expense's search document from its committed-to-be
     // row (removing it once deleted) and queues its embedding when the embedded text

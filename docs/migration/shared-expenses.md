@@ -4,7 +4,7 @@ The .NET backend serves the legacy shared-expense operations (`server/infrastruc
 
 Code: `Domain/Households` (`HouseholdSplits`, `ExpenseSplit`, `ExpenseReader`, `MembershipWindow`, `RecurringDates`), `Application/Households/SharedExpenseService` (rules, check order, audit, outbox), `Persistence/Repositories/PostgresSharedExpenseRepository` and `PostgresSharedExpenseTransaction` (transactions, locks, compare-and-increment), `Api/Controllers/HouseholdExpensesController`. Tests: `UnitTests/Households` (golden splits, readers, membership windows, recurrence dates) and the real-PostgreSQL `IntegrationTests/Controllers/SharedExpense*Tests`, `HouseholdProjectionTests` and `Migrations/ImportedSharedExpenseTests`.
 
-Not part of this port: month recaps, monthly reimbursements and the audit endpoint (MAZ-58), receipt upload/download (MAZ-60) and push delivery (MAZ-61); those routes still answer `404 API route not found.` in .NET. Shared recurring rule writes and the occurrence runner are MAZ-59 ([shared recurrence](shared-recurrence.md)); search is MAZ-121.
+Month recaps, monthly reimbursements and the audit endpoint are MAZ-58 ([settlement](settlement.md)). Not part of this port: receipt upload/download (MAZ-60) and push delivery (MAZ-61); those routes still answer `404 API route not found.` in .NET. Shared recurring rule writes and the occurrence runner are MAZ-59 ([shared recurrence](shared-recurrence.md)); search is MAZ-121.
 
 ## Endpoints
 
@@ -73,7 +73,7 @@ A `receiptId` must be the caller's own upload or a receipt a live expense of the
 
 ## Individual payments
 
-A payment settles one member's whole share early: it inserts a reimbursement linked to the expense (`expense_id`) from the debtor to the payer for the share amount, in the expense's month, and increments the expense revision. It counts in the month's balance (MAZ-56 settlement) but is never spending, so projections are unchanged. Once the month has a monthly reimbursement (MAZ-58), individual payments are closed for every expense of that month. A unique index on `(expense_id, from_user_id)` backs the already-paid check.
+A payment settles one member's whole share early: it inserts a reimbursement linked to the expense (`expense_id`) from the debtor to the payer for the share amount, in the expense's month, and increments the expense revision. It counts in the month's balance (MAZ-56 settlement) but is never spending, so projections are unchanged. Once the month has a monthly reimbursement ([MAZ-58](settlement.md#settlement-timing)), individual payments are closed for every expense of that month. A unique index on `(expense_id, from_user_id)` backs the already-paid check.
 
 ## Personal projection
 
@@ -96,7 +96,7 @@ Ledger saves never lock households, so these writers cannot deadlock with each o
 
 ## Audit and outbox
 
-Each write records its legacy audit row in the same transaction, with `expense_id`: `expense.created` (after: expense view), `expense.updated` (before/after), `expense.deleted` (before), `expense.moved` in the source household (before) plus `expense.created` in the destination (after), and `reimbursement.created` for payments (after: `{id, householdId, month, fromUserId, toUserId, amountCents, createdBy, createdAt, expenseId}`). Snapshots never include the payer's `accountId` or the receipt's encrypted filename. Created, updated and payment events also insert one `push_outbox` row per other current member (`{householdId, month, expenseId, eventId}`), exactly as legacy; delivery is MAZ-61. The audit endpoint is MAZ-58.
+Each write records its legacy audit row in the same transaction, with `expense_id`: `expense.created` (after: expense view), `expense.updated` (before/after), `expense.deleted` (before), `expense.moved` in the source household (before) plus `expense.created` in the destination (after), and `reimbursement.created` for payments (after: `{id, householdId, month, fromUserId, toUserId, amountCents, createdBy, createdAt, expenseId}`). Snapshots never include the payer's `accountId` or the receipt's encrypted filename. Created, updated and payment events also insert one `push_outbox` row per other current member (`{householdId, month, expenseId, eventId}`), exactly as legacy; delivery is MAZ-61. The audit endpoint is MAZ-58 ([settlement](settlement.md#audit-history)).
 
 ## Search (MAZ-121)
 

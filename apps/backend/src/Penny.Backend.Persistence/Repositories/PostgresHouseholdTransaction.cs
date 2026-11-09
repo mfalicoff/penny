@@ -93,10 +93,28 @@ internal class PostgresHouseholdTransaction(
                 .ThenBy(member => member.UserId, StringComparer.Ordinal),
         ];
 
-    public async Task<IReadOnlyList<BalanceContribution>> BalancesAsync(string householdId)
+    public Task<IReadOnlyList<BalanceContribution>> BalancesAsync(string householdId) =>
+        ContributionsAsync(householdId, null);
+
+    // Signed per-month amounts. With a former member, only what they can see: expenses
+    // in which they have a share, and reimbursements recorded by the time they left or
+    // involving them (legacy recap for a departed member).
+    protected async Task<IReadOnlyList<BalanceContribution>> ContributionsAsync(
+        string householdId,
+        FormerMember? viewer
+    )
     {
+        var viewerId = viewer?.UserId;
+        var leftAt = viewer?.LeftAt;
         var expenses = context.HouseholdExpenses.Where(expense =>
-            expense.HouseholdId == householdId && expense.DeletedAt == null
+            expense.HouseholdId == householdId
+            && expense.DeletedAt == null
+            && (
+                viewerId == null
+                || context.HouseholdSplits.Any(split =>
+                    split.ExpenseId == expense.Id && split.UserId == viewerId
+                )
+            )
         );
         var paid = await expenses
             .GroupBy(expense => new
@@ -144,6 +162,12 @@ internal class PostgresHouseholdTransaction(
         // Both monthly reimbursements and individual expense payments count.
         var reimbursements = context.HouseholdReimbursements.Where(reimbursement =>
             reimbursement.HouseholdId == householdId
+            && (
+                viewerId == null
+                || reimbursement.CreatedAt <= leftAt
+                || reimbursement.FromUserId == viewerId
+                || reimbursement.ToUserId == viewerId
+            )
         );
         var sent = await reimbursements
             .GroupBy(reimbursement => new { reimbursement.Month, reimbursement.FromUserId })
