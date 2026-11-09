@@ -127,6 +127,66 @@ Cursors are simple keyset positions, base64url-encoded: a format version, a hash
 - Rate limit: 30 requests per minute per session. SQL statement timeout: 2 seconds, with cancellation passed through.
 - Targets on the reference host with 100,000 personal entries per viewer plus shared expenses: p95 at most 300 ms for warm selective queries, and at most 1 s for broad queries and counts. MAZ-121 records `EXPLAIN (ANALYZE, BUFFERS)` evidence and p95 timings for short, common and selective queries, cold and warm, with concurrent writes.
 
+## Implementation (MAZ-121)
+
+Code: `Domain/Search` (`SearchText` normalization, `SearchReader`, `SearchDocumentText`), `Application/Search` (`SearchService`, `SearchCursor`, `SearchEmbeddingService`, `SearchTuning`), `Persistence/Search` (`SearchIndexer`, `OnnxTextEmbedder`), `Persistence/Repositories/PostgresSearchRepository`, `Api/Controllers/SearchController`, `Api/Search` (rate limit, embedding worker), `Api/Commands/SearchCommand`. Tests: `UnitTests/Search`, and on real PostgreSQL with the real model `IntegrationTests/Controllers/Search*Tests`, `Http/SearchPolicyTests`, `Migrations/SearchMaintenanceTests`.
+
+**Storage.** One derived table, `search_documents` (EF migration `AddSearchDocuments`), holds one row per personal entry (`user_id`, `entry_id`, foreign key to `ledger_entries`) and per live shared expense (`expense_id`, `household_id`, `payer_id`). Each row stores the result key, kind, date, the owner's share for personal rows, and the normalized texts: `title_text`, `document_text` (title, note, category) and `owner_text` (the same plus the account name). Personal rows match on `owner_text`; shared rows match on `owner_text` only when the viewer is the payer, otherwise on `document_text`. GIN `gin_trgm_ops` indexes cover both texts (LIKE and `<%`); an HNSW `vector_cosine_ops` index covers `embedding vector(384)`.
+
+**Write path.** `PostgresLedgerRepository.TrySaveAsync` stages the personal rows with the entry diff and saves them in the same transaction; only changed columns are written, so a category or account rename rewrites exactly the affected rows. It then rewrites the payer's account text in their shared expenses. `SharedExpenseService` create, update/move and delete call `IndexExpenseAsync` before commit (a deleted expense loses its row). Visibility is not stored: every search applies the household-view rule to `household_member_periods` and `household_splits` in the same SQL statement, so join, leave, removal and archive need no write and take effect at their commit. A rejected or conflicting write rolls everything back.
+
+**Embedding outbox.** A row whose embedded text (title, note, category; raw, whitespace-collapsed) changes gets `embedding = NULL` and `embedding_due_at` set, so a stale vector never matches. The hosted `SearchEmbeddingWorker` polls every second, leases up to 32 due rows (candidates first, then a conditional `UPDATE` that re-checks the lease after the row lock, so concurrent workers never share a row), embeds them and stores each vector only if the row is still leased and its text unchanged. Failures release the lease with backoff (2^attempts seconds, at most 10 minutes). Queries use only vectors made by the current model id.
+
+**Model.** `intfloat/multilingual-e5-small` at Hugging Face revision `614241f622f53c4eeff9890bdc4f31cfecc418b3`: `onnx/model.onnx` (fp32, 470 MB, SHA-256 `ca456c06b3a9505ddfd9131408916dd79290368331e7d76bb621f1cba6bc8665`) and `onnx/sentencepiece.bpe.model` (SHA-256 `cfc8146abe2a0488e9e2a0c56de7952f7c11ab059eca145a0a727afce0db2865`). `node apps/backend/development/download-model.mjs [DIR]` downloads them into the ignored `.cache/backend/models/multilingual-e5-small` and verifies the hashes; CI caches that directory. The host loads them from `Search__ModelDirectory` at startup and refuses to start when a file is missing or its hash differs. Tokenization uses Microsoft.ML.Tokenizers' SentencePiece tokenizer with the model's vocabulary layout (fairseq offset: piece *n* is id *n*+1, `<s>`=0, `</s>`=2, `<unk>`=3; verified against the Hugging Face tokenizer), inference ONNX Runtime 1.31.1 on the CPU, then the model card's mean pooling and L2 normalization (System.Numerics.Tensors). Queries are embedded as `query: ` + the normalized query, documents as `passage: ` + title, note and category. The int8 `model_qint8_avx512_vnni.onnx` was not used: it targets AVX-512 VNNI, which the reference i7-4790K lacks.
+
+**Query.** One REPEATABLE READ snapshot with transaction-local settings (`statement_timeout` 2 s, `hnsw.iterative_scan = relaxed_order`, `hnsw.ef_search = 200`, `pg_trgm.word_similarity_threshold = 0.6`). The meaning tier first reads the 200 closest authorized, filtered documents (HNSW with the filter inside the iterative scan) and keeps those at or above the threshold. Then each tier is a disjoint `UNION ALL` branch per source (title/text via LIKE, typo via `<%`, meaning via those ids), so each branch can use its index; `count(*)` and the keyset page run over the union. Scores are stored in millionths (`round(similarity × 10^6)`, an integer), which is the 6-decimal rounding of the spec in exact form.
+
+### Decisions to confirm
+
+- **Meaning threshold 0.82.** e5 cosine similarities are compressed (unrelated short texts score 0.77–0.83). On a labeled 18-query × 17-entry English/French set, the best fixed threshold for e5 was 0.84 (F1 0.78); the fallback `paraphrase-multilingual-MiniLM-L12-v2` did worse (best F1 0.73) and also failed "beverage" → "Coffee beans", so e5 stays. 0.82 is a little lower to keep "beverage" → "Coffee beans" and the cross-language fixtures; it lets some loosely related rows in at tier 4 (always ranked after text and typo matches, at most 200). The spec's example "boisson" → "coffee" scores about 0.80 and is **not** found; the fixtures use cross-language cases that are ("logement" → "Rent", "salaire" → "Pay"/Salary, "autobus" → "Bus pass", "medicine" → "Pharmacie", "apartment" → "Loyer … Appartement").
+- **The query is embedded after normalization** (lowercase, no accents), so the cursor hash of the normalized query binds the meaning tier too. Documents are embedded from their original text.
+- **The 200-result meaning cap applies after the request filters** (date, kind, source), not to all authorized results, so a filtered search still gets up to 200 meaning candidates.
+- **`match` is `null` for an empty query** (no tier applies); it is always present.
+- **Shared visibility follows the household view** (`SharedExpenseService.CanSee`): a current member sees every live expense, including ones without a share (`shareCents` 0); a former member sees those with a split row. Nothing is written at membership seams.
+- **Rate limit key.** The limiter runs before authentication, so it partitions by a hash of the presented session token; requests without a token are not limited by it and get 401.
+- **Errors.** 503 adds `Retry-After: 1`. Request JSON `null` values and unknown fields are 400 (`Invalid search request.`); a foreign or malformed cursor is 400 `Invalid search cursor.`. The query length is checked after trimming, so the OpenAPI schema has no `maxLength` for it.
+- **Maintenance commands** use the runtime connection with a 30-second statement bound and need the receipt settings (the repository serves search results too); `search-verify` exits 2 when anything is stale.
+
+### Operations
+
+- Extensions: the official pgvector image `pgvector/pgvector:0.8.7-pg18-trixie` (PostgreSQL 18.6, pgvector 0.8.7), digest `sha256:5895949dfcdf308eb0cd31c950c93c14895c77f33fbedfecf1fa511ab1d4bcd2`. `development/init-roles.sh` creates `pg_trgm` and `vector` in `public` for new volumes; for an existing database run `CREATE EXTENSION IF NOT EXISTS pg_trgm; CREATE EXTENSION IF NOT EXISTS vector;` as an administrator, then `migrate`. `migrate` refuses to run without pgvector 0.8+ and pg_trgm, and readiness answers 503 `search-extensions`. Managed hosts must offer pgvector 0.8 or later (iterative scans) on PostgreSQL 18; most major providers ship pgvector, but check the version.
+- `search-rebuild [--user USER_ID]` recomputes documents for everyone or one user (their entries and the shared expenses of every household they joined), queues embeddings that are missing or from another model, then embeds them in-process. Run it after `import-sqlite` (documents are derived and not imported), after a normalization change (fixture update) and after a model change.
+- `search-verify [--user USER_ID]` is read-only and prints `{Documents, Missing, Orphaned, StaleText, PendingEmbeddings, StaleModel}`; exit 0 when all are zero, 2 otherwise. Pending embeddings are normal for a few seconds after writes.
+- Settings: `Search__ModelDirectory` (required), `Search__EmbeddingWorker` (default `true`; set `false` on extra instances if only one should embed, though several may run), `Search__RateLimitPermits` (default 30 per minute per session).
+- Resources: the fp32 model file is 470 MB and is loaded once per process (resident memory was not measured separately); a query embedding about 3 ms; for 102,000 documents the table and its indexes take 367 MB, of which the HNSW index 104 MB.
+
+### Measured performance
+
+Host: AMD Ryzen 7 5800X (8 cores, 16 threads), 31 GB RAM, rootless Podman; PostgreSQL in the pinned image with default settings (shared_buffers 128 MB); .NET Release build, Kestrel over loopback, timings end to end per HTTP request. Data: 100,000 synthetic personal entries for one viewer (40 title families, 10-year date range) plus 2,000 shared expenses in one household, seeded by the explicit `SearchBenchmarkTests` (`--filter-class *SearchBenchmarkTests --explicit on`; nothing committed). "Cold" is the first request on a fresh host process and connection pool (PostgreSQL's own caches were warm: the container could not be restarted inside the test). "Concurrent writes" runs the same query while another client creates shared expenses in a loop. 40 warm runs per query.
+
+| Query | Results | Cold (ms) | Warm p50 (ms) | Warm p95 (ms) | p95 with concurrent writes (ms) |
+| --- | --- | --- | --- | --- | --- |
+| selective title ("espresso machine #5") | 2550 | 245 | 80 | 88 | 86 |
+| selective typo ("esspresso") | 2577 | 87 | 66 | 72 | 73 |
+| common word ("coffee") | 2550 | 49 | 42 | 50 | 56 |
+| meaning ("beverage") | 200 | 38 | 27 | 29 | 43 |
+| short ("a") | 87948 | 279 | 239 | 245 | 255 |
+| broad: empty query, all time, count | 103254 | 206 | 194 | 199 | 202 |
+| broad: empty query, amount-desc | 103960 | 204 | 191 | 196 | 201 |
+| filtered: "lunch" in 2024, expense | 256 | 75 | 52 | 58 | 58 |
+
+"Results" is `totalCount`: the selective title query also counts typo matches of the same title family (about 2,500 "Espresso machine #n" entries) and up to 200 meaning matches. All targets hold: warm selective p95 50–88 ms (target 300 ms), broad and count p95 196–245 ms (target 1 s); the worst cold request was 279 ms.
+
+Backfill: text documents for 102,000 rows in 16.0 s; embeddings for 102,000 rows in 300 s on the CPU (about 3 ms per document, batches of 16 across all cores) — about 5 minutes, well inside the 15–30 minutes estimated for the reference host, which has half the cores. Targets (300 ms warm selective, 1 s broad and counts) are met on this host; the reference i7-4790K is slower and was not measured.
+
+`EXPLAIN (ANALYZE, BUFFERS)` of the same repository code (auto_explain, warm, excerpts): server-side statement times for one search (meaning top-200 / count / page): selective "espresso machine #5" 8 / 39 / 39 ms, "coffee" 12 / 19 / 13 ms, "beverage" 4 / 13 / 8 ms, "a" 6 / 119 / 122 ms, empty query — / 102 / 117 ms. The remaining time per request is the query embedding (about 3 ms), loading the page's 51 rows, JSON and HTTP.
+
+- Meaning: `Limit (rows=200) -> Index Scan using ix_search_documents_embedding (Order By: embedding <=> $1; Filter: authorization, model)`, 5.7 ms, `Buffers: shared hit=2155 read=1016` — the authorization filter runs inside the HNSW scan.
+- Selective title/text and typo branches: `Bitmap Heap Scan on search_documents -> Bitmap Index Scan on ix_search_documents_owner_trgm` (275 and 2,550 candidate rows, 3–4 ms index time); shared branches `BitmapAnd(ix_search_documents_household, BitmapOr(owner_trgm, document_trgm))`; the meaning branch reads its 200 ids through `PK_search_documents`; the page is a `top-N heapsort` over the union.
+- Broad (empty query, 104,775 rows incl. concurrent-write rows): `Limit -> Sort (top-N heapsort, 45 kB) -> Append(Seq Scan on search_documents [personal, 100,000 rows, 23 ms], Index Scan using ix_search_documents_household [shared, with the visibility SubPlans])`, 117 ms, `Buffers: shared hit=33808 read=34334`. The count is the same scan without the sort (102 ms). Broad queries are dominated by reading every visible row; they stay well under 1 s here, but grow linearly with the viewer's data.
+
+The full auto_explain output (36 statements) is produced by the benchmark in `.cache/backend/search-benchmark.txt`.
+
 ## Offline, pending edits and demo
 
 - Clients keep their local search, using the same normalization with tiers 1–2 only (no typo or meaning matching offline).
@@ -134,11 +194,11 @@ Cursors are simple keyset positions, base64url-encoded: a format version, a hash
 - After sync, clients discard server pages and search again. Demo mode searches only its in-memory sample.
 - MAZ-73/88 build the client screens; MAZ-71/87 verify pending create, edit and delete, then reconnect.
 
-## Changes MAZ-121 must make to the contract
+## Contract changes (done in MAZ-121, contract 1.4.0)
 
-- Replace `SearchRequest` (`period`/`month`/`year`/`day`, `mode`) with the request above, and add `match` to `SearchItem`. Remove `ledgerRevision`, `searchRevision` and `scope` from `SearchResponse`.
-- Update `contracts/fixtures/search-cases.json`, including `foldCases`, to the normalization above, and add typo, meaning and relevance-order cases. Update `tests/core/contracts.test.ts`, which currently checks folding with JavaScript `toLowerCase()` alone.
-- Change the operation's `x-implementation` from `planned` to `backend` when implemented.
+- `SearchRequest` is the request above (`SearchPeriod`, `day` and `mode` are gone); `SearchItem` has `match`; `SearchResponse` no longer has `ledgerRevision`, `searchRevision` or `scope`.
+- `contracts/fixtures/search-cases.json` has the new `foldCases` (21 normalization cases, checked by the TypeScript reference normalizer `tests/core/search-normalization.ts` and the .NET `SearchTextTests`), a server ledger with title/text/typo/filter/sort/pagination cases and English, French and mixed-language meaning cases (run by `SearchFixtureTests` on real PostgreSQL with the real model). The legacy `substringCases` and `pendingCases` still describe the current app's local search, which is unchanged.
+- The operation is `x-implementation: backend`.
 
 ## Out of scope for v1
 

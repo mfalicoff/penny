@@ -1,4 +1,5 @@
 using Npgsql;
+using Pgvector.Npgsql;
 
 namespace Penny.Backend.Persistence.Configuration;
 
@@ -61,8 +62,13 @@ public sealed class DatabaseSettings
         return new DatabaseSettings(parsed);
     }
 
-    public NpgsqlDataSource CreateDataSource() =>
-        NpgsqlDataSource.Create(connection.ConnectionString);
+    // pgvector maps `vector` columns (search embeddings, MAZ-121).
+    public NpgsqlDataSource CreateDataSource()
+    {
+        var builder = new NpgsqlDataSourceBuilder(connection.ConnectionString);
+        builder.UseVector();
+        return builder.Build();
+    }
 
     public override string ToString() => "PostgreSQL settings (credentials redacted)";
 }

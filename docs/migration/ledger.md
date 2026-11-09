@@ -82,4 +82,4 @@ The typed schema has no position column (MAZ-52 decision). Reads return accounts
 
 ## Search seam (MAZ-121)
 
-MAZ-55 builds no search projection or index. `TrySaveAsync` marks the seam: when MAZ-121 adds a projection of personal entries, it must update it inside this same transaction, before commit, so search never diverges from the committed revision. Indexing `ledger_entries` directly needs no write-path change.
+MAZ-121 implements the seam: `TrySaveAsync` stages the personal `search_documents` rows (normalized title/document texts, embedding source) with the entry diff and saves them in the same transaction, then rewrites the payer's account text in their shared-expense documents, so search never diverges from the committed revision. Category and account renames rewrite every affected document; a rejected or conflicting save changes nothing. Embeddings follow through the outbox ([search](search.md#implementation-maz-121)).

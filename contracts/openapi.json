@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Penny legacy compatibility API",
-    "version": "1.3.0",
-    "description": "MAZ-50 compatibility baseline audited against master 0e58a8b on 2026-11-07. Existing routes are implemented in Node/SQLite; the additive search v1 route is planned for .NET/PostgreSQL (MAZ-121); operations marked `backend` (password reset, MAZ-123) exist only in the .NET backend. See docs/migration/.",
+    "version": "1.4.0",
+    "description": "MAZ-50 compatibility baseline audited against master 0e58a8b on 2026-11-07. Existing routes are implemented in Node/SQLite; operations marked `backend` exist only in the .NET backend: password reset (MAZ-123) and search v1 (MAZ-121). See docs/migration/.",
     "license": {
       "name": "MIT",
       "identifier": "MIT"
@@ -4025,11 +4025,11 @@
     },
     "/api/v1/search/transactions": {
       "post": {
-        "summary": "Search authorized recorded entries (planned v1)",
+        "summary": "Search authorized personal entries and shared expenses (v1)",
         "operationId": "searchTransactionsV1",
-        "x-implementation": "planned",
+        "x-implementation": "backend",
         "x-owner": "MAZ-121",
-        "description": "See docs/migration/search.md for canonical matching, authorization, cursor invalidation and local pending scope. Not implemented by Node.",
+        "description": "MAZ-121, .NET backend only (Node does not implement it; a 404 means the client falls back to local search). Matches by title or document substring (literal, after the shared normalization), by typo (pg_trgm word_similarity) and by meaning (multilingual embeddings, at most 200 closest authorized results). Authorization runs before matching, ranking, counting and paging: the viewer's own entries and the shared expenses visible under the household-view rules; a payer's account name matches only for the payer. Keyset cursors are bound to a hash of the normalized query, filters and sort. 30 requests per minute per session; 503 with Retry-After when the 2-second statement timeout fires. See docs/migration/search.md.",
         "requestBody": {
           "required": true,
           "content": {
@@ -4072,16 +4072,6 @@
             }
           },
           "403": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "409": {
             "description": "Error",
             "content": {
               "application/json": {
@@ -6410,77 +6400,54 @@
           "createdBy"
         ]
       },
-      "SearchPeriod": {
-        "oneOf": [
-          {
-            "type": "object",
-            "properties": {
-              "month": {
-                "type": "string",
-                "pattern": "^(20[0-9]{2}|2100)-(0[1-9]|1[0-2])$"
-              }
-            },
-            "required": [
-              "month"
-            ],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "year": {
-                "type": "string",
-                "pattern": "^(20[0-9]{2}|2100)$"
-              }
-            },
-            "required": [
-              "year"
-            ],
-            "additionalProperties": false
-          }
-        ]
-      },
       "SearchRequest": {
         "type": "object",
         "properties": {
           "query": {
             "type": "string",
-            "maxLength": 200,
             "default": "",
-            "description": "At most 200 UTF-16 code units; ECMAScript trim/lower rules."
+            "description": "Trimmed (ECMAScript trim), then at most 200 UTF-16 code units. Empty matches everything that passes the filters."
           },
-          "period": {
-            "$ref": "#/components/schemas/SearchPeriod"
-          },
-          "day": {
+          "from": {
             "type": "string",
             "format": "date",
-            "pattern": "^(20[0-9]{2}|2100)-[0-9]{2}-[0-9]{2}$"
+            "pattern": "^(20[0-9]{2}|2100)-[0-9]{2}-[0-9]{2}$",
+            "description": "Inclusive first calendar date. Omitting from and to searches all time."
+          },
+          "to": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^(20[0-9]{2}|2100)-[0-9]{2}-[0-9]{2}$",
+            "description": "Inclusive last calendar date; not before from."
           },
           "kind": {
             "type": "string",
             "enum": [
-              "all",
               "expense",
               "income",
               "investment"
             ],
-            "default": "all"
+            "description": "Default: every kind. Shared expenses are expenses."
           },
-          "mode": {
+          "source": {
             "type": "string",
             "enum": [
-              "substring",
-              "hybrid"
+              "personal",
+              "shared",
+              "all"
             ],
-            "default": "substring"
+            "default": "all"
           },
           "sort": {
             "type": "string",
             "enum": [
-              "date-desc"
+              "relevance",
+              "date-desc",
+              "date-asc",
+              "amount-desc",
+              "amount-asc"
             ],
-            "default": "date-desc"
+            "description": "Default relevance for a non-empty query, otherwise date-desc (relevance with an empty query is date-desc). Amount sorts use the viewer's share. Every sort ends with date descending, then key ascending."
           },
           "pageSize": {
             "type": "integer",
@@ -6491,14 +6458,12 @@
           "cursor": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 2048
+            "maxLength": 2048,
+            "description": "Opaque nextCursor of the previous page; 400 when it belongs to another query, filter or sort."
           }
         },
-        "required": [
-          "period"
-        ],
         "additionalProperties": false,
-        "description": "Planned search v1. day must be a real calendar date inside period; enforced by the service. Cursor binds this entire request and the authenticated viewer."
+        "description": "Search v1. Real calendar dates from 2000-01-01 to 2100-12-31 and from <= to are enforced by the service; unknown fields are rejected. The viewer is always the session's user."
       },
       "SearchItem": {
         "oneOf": [
@@ -6513,6 +6478,20 @@
                 "type": "string",
                 "const": "personal"
               },
+              "match": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "enum": [
+                  "title",
+                  "text",
+                  "typo",
+                  "meaning",
+                  null
+                ],
+                "description": "Best matching tier; null for an empty query."
+              },
               "entry": {
                 "$ref": "#/components/schemas/Entry"
               }
@@ -6520,6 +6499,7 @@
             "required": [
               "key",
               "source",
+              "match",
               "entry"
             ]
           },
@@ -6534,6 +6514,20 @@
                 "type": "string",
                 "const": "shared"
               },
+              "match": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "enum": [
+                  "title",
+                  "text",
+                  "typo",
+                  "meaning",
+                  null
+                ],
+                "description": "Best matching tier; null for an empty query."
+              },
               "entry": {
                 "$ref": "#/components/schemas/ProjectedExpense"
               }
@@ -6541,6 +6535,7 @@
             "required": [
               "key",
               "source",
+              "match",
               "entry"
             ]
           }
@@ -6553,20 +6548,6 @@
             "type": "integer",
             "const": 1
           },
-          "scope": {
-            "type": "string",
-            "const": "server-recorded"
-          },
-          "ledgerRevision": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 9007199254740991
-          },
-          "searchRevision": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 9007199254740991
-          },
           "items": {
             "type": "array",
             "items": {
@@ -6577,7 +6558,8 @@
           "totalCount": {
             "type": "integer",
             "minimum": 0,
-            "maximum": 9007199254740991
+            "maximum": 9007199254740991,
+            "description": "Authorized matching results, each counted once (meaning matches only within the 200-result cap). Not a money total."
           },
           "nextCursor": {
             "type": [
@@ -6589,9 +6571,6 @@
         },
         "required": [
           "version",
-          "scope",
-          "ledgerRevision",
-          "searchRevision",
           "items",
           "totalCount",
           "nextCursor"

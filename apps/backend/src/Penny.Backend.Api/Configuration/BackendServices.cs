@@ -8,15 +8,19 @@ using Penny.Backend.Api.Contracts;
 using Penny.Backend.Api.Errors;
 using Penny.Backend.Api.Households;
 using Penny.Backend.Api.Middleware;
+using Penny.Backend.Api.Search;
 using Penny.Backend.Application.Abstractions.Persistence;
+using Penny.Backend.Application.Abstractions.Search;
 using Penny.Backend.Application.Abstractions.Security;
 using Penny.Backend.Application.Authentication;
 using Penny.Backend.Application.Households;
 using Penny.Backend.Application.Ledgers;
+using Penny.Backend.Application.Search;
 using Penny.Backend.Persistence.Configuration;
 using Penny.Backend.Persistence.Health;
 using Penny.Backend.Persistence.Receipts;
 using Penny.Backend.Persistence.Repositories;
+using Penny.Backend.Persistence.Search;
 
 namespace Penny.Backend.Api.Configuration;
 
@@ -67,7 +71,7 @@ public static class BackendServices
             }
         );
         builder.Services.AddOpenApi();
-        AddAuthServices(builder.Services, AuthOptions.Read(configuration));
+        AddAuthServices(builder.Services, AuthOptions.Read(configuration), configuration);
         AddLedgerServices(builder.Services, configuration);
         builder.Services.AddSingleton<IHouseholdRepository, PostgresHouseholdRepository>();
         builder.Services.AddSingleton<HouseholdService>();
@@ -75,6 +79,20 @@ public static class BackendServices
         builder.Services.AddSingleton<ISharedExpenseRepository, PostgresSharedExpenseRepository>();
         builder.Services.AddSingleton<SharedExpenseService>();
         AddOidcServices(builder.Services, OidcOptions.Read(configuration));
+        AddSearchServices(builder.Services, SearchOptions.Read(configuration));
+    }
+
+    // The model is loaded and verified here, so a missing or altered file stops the
+    // host before it listens.
+    private static void AddSearchServices(IServiceCollection services, SearchOptions search)
+    {
+        services.AddSingleton(search);
+        services.AddSingleton<ITextEmbedder>(OnnxTextEmbedder.Load(search.ModelDirectory));
+        services.AddSingleton<ISearchRepository, PostgresSearchRepository>();
+        services.AddSingleton<SearchService>();
+        services.AddSingleton<SearchEmbeddingService>();
+        if (search.EmbeddingWorker)
+            services.AddHostedService<SearchEmbeddingWorker>();
     }
 
     private static void AddLedgerServices(IServiceCollection services, IConfiguration configuration)
@@ -123,7 +141,11 @@ public static class BackendServices
     public static PasswordResetPolicy PasswordResetPolicyFor(AuthOptions auth) =>
         new(TimeSpan.FromHours(auth.PasswordResetHours));
 
-    private static void AddAuthServices(IServiceCollection services, AuthOptions auth)
+    private static void AddAuthServices(
+        IServiceCollection services,
+        AuthOptions auth,
+        IConfiguration configuration
+    )
     {
         services.AddSingleton(auth);
         services.AddSingleton(new RegistrationPolicy(auth.AllowRegistration));
@@ -159,6 +181,7 @@ public static class BackendServices
         {
             AuthRateLimit.Configure(limits, auth.RateLimitPermits);
             InviteRateLimit.Configure(limits, auth.InviteRateLimitPermits);
+            SearchRateLimit.Configure(limits, SearchOptions.Read(configuration).RateLimitPermits);
         });
         services.Configure<ForwardedHeadersOptions>(forwarded =>
         {

@@ -4,6 +4,7 @@ using Penny.Backend.Domain.Households;
 using Penny.Backend.Persistence.Receipts;
 using Penny.Backend.Persistence.Schema;
 using Penny.Backend.Persistence.Schema.Entities;
+using Penny.Backend.Persistence.Search;
 
 namespace Penny.Backend.Persistence.Repositories;
 
@@ -242,6 +243,26 @@ internal sealed class PostgresSharedExpenseTransaction(
         await Context.SaveChangesAsync(Cancellation);
     }
 
+    public async Task IndexExpenseAsync(string expenseId) =>
+        await SearchIndexer.SyncExpensesAsync(
+            Context,
+            Context.HouseholdExpenses.Where(expense => expense.Id == expenseId),
+            Cancellation
+        );
+
+    // Live expenses by id with their households' names and currencies (search results;
+    // the caller has already authorized every id).
+    internal async Task<IReadOnlyList<StoredProjectedExpense>> ProjectedAsync(
+        IReadOnlyCollection<string> expenseIds
+    ) =>
+        await WithHouseholdsAsync(
+            await LoadAsync(
+                Context.HouseholdExpenses.Where(expense =>
+                    expense.DeletedAt == null && expenseIds.Contains(expense.Id)
+                )
+            )
+        );
+
     public async Task<IReadOnlyList<StoredProjectedExpense>> ProjectionAsync(
         string userId,
         DateOnly? from,
@@ -263,7 +284,13 @@ internal sealed class PostgresSharedExpenseTransaction(
             query = query.Where(expense =>
                 expense.ExpenseDate >= first && expense.ExpenseDate <= last
             );
-        var loaded = Newest(await LoadAsync(query));
+        return await WithHouseholdsAsync(Newest(await LoadAsync(query)));
+    }
+
+    private async Task<IReadOnlyList<StoredProjectedExpense>> WithHouseholdsAsync(
+        List<StoredExpense> loaded
+    )
+    {
         var householdIds = loaded.Select(expense => expense.HouseholdId).Distinct().ToList();
         var households = await Context
             .Households.AsNoTracking()

@@ -157,44 +157,109 @@
   ],
   "foldCases": [
     {
-      "input": "İ",
-      "expected": "i̇"
+      "name": "dotted capital I",
+      "input": "\u0130",
+      "expected": "i"
     },
     {
-      "input": "ΟΣ",
-      "expected": "ος"
+      "name": "Greek final sigma",
+      "input": "\u039f\u03a3",
+      "expected": "\u03bf\u03c3"
     },
     {
+      "name": "Greek final sigma in words",
+      "input": "\u039f\u0394\u039f\u03a3 \u039f\u0394\u039f\u03a3",
+      "expected": "\u03bf\u03b4\u03bf\u03c3 \u03bf\u03b4\u03bf\u03c3"
+    },
+    {
+      "name": "Greek tonos",
+      "input": "\u0386",
+      "expected": "\u03b1"
+    },
+    {
+      "name": "sharp s",
       "input": "Straße",
-      "expected": "straße"
+      "expected": "strasse"
     },
     {
+      "name": "capital sharp s",
+      "input": "\u1e9e",
+      "expected": "ss"
+    },
+    {
+      "name": "composed accent",
       "input": "CAFÉ",
-      "expected": "café"
+      "expected": "cafe"
     },
     {
-      "input": "CAFÉ",
-      "expected": "café"
-    }
-  ],
-  "plannedHybridCases": [
-    {
-      "query": "rats",
-      "document": "rat",
-      "substring": false,
-      "hybrid": true
+      "name": "decomposed accent",
+      "input": "CAFE\u0301",
+      "expected": "cafe"
     },
     {
-      "query": "the",
-      "document": "Coffee",
-      "substring": false,
-      "hybrid": false
+      "name": "French accents",
+      "input": "Crème Brûlée",
+      "expected": "creme brulee"
     },
     {
-      "query": "%",
-      "document": "100% saved",
-      "substring": true,
-      "hybrid": true
+      "name": "ligature",
+      "input": "\ufb01le",
+      "expected": "file"
+    },
+    {
+      "name": "full-width letters",
+      "input": "\uff23\uff2f\uff26\uff26\uff25\uff25",
+      "expected": "coffee"
+    },
+    {
+      "name": "emoji (variation selector is Mn)",
+      "input": "Coffee \u2615\ufe0f \ud83c\udf89",
+      "expected": "coffee \u2615 \ud83c\udf89"
+    },
+    {
+      "name": "Unicode whitespace",
+      "input": "  Coffee\t\u00a0beans\u2003 \n\u3000\u2028x\u0085y ",
+      "expected": "coffee beans x y"
+    },
+    {
+      "name": "byte order mark is not whitespace",
+      "input": "\ufeffcoffee",
+      "expected": "\ufeffcoffee"
+    },
+    {
+      "name": "compatibility digraph",
+      "input": "\u01c4",
+      "expected": "dz"
+    },
+    {
+      "name": "roman numeral",
+      "input": "\u216b",
+      "expected": "xii"
+    },
+    {
+      "name": "circled letter",
+      "input": "\u24b8",
+      "expected": "c"
+    },
+    {
+      "name": "supplementary-plane lowercase",
+      "input": "\ud801\udc00",
+      "expected": "\ud801\udc28"
+    },
+    {
+      "name": "Arabic vowel marks",
+      "input": "\u0645\u064f\u062d\u064e\u0645\u0651\u064e\u062f",
+      "expected": "\u0645\u062d\u0645\u062f"
+    },
+    {
+      "name": "Hangul syllable to jamo",
+      "input": "\ud55c",
+      "expected": "\u1112\u1161\u11ab"
+    },
+    {
+      "name": "empty after trim",
+      "input": " \u3000 ",
+      "expected": ""
     }
   ],
   "pendingCases": [
@@ -248,69 +313,585 @@
       ]
     }
   ],
-  "requests": [
-    {
-      "period": {
-        "month": "2026-11"
+  "serverLedger": {
+    "version": 4,
+    "currency": "CAD",
+    "categories": [
+      {
+        "id": "food",
+        "name": "Food",
+        "icon": "cafe-outline",
+        "color": "#E47850",
+        "kind": "expense"
+      },
+      {
+        "id": "home",
+        "name": "Housing",
+        "icon": "home-outline",
+        "color": "#5B7DB1",
+        "kind": "expense"
+      },
+      {
+        "id": "health",
+        "name": "Santé",
+        "icon": "medkit-outline",
+        "color": "#B15B7D",
+        "kind": "expense"
+      },
+      {
+        "id": "transport",
+        "name": "Transport",
+        "icon": "bus-outline",
+        "color": "#7DB15B",
+        "kind": "expense"
+      },
+      {
+        "id": "salary",
+        "name": "Salary",
+        "icon": "briefcase-outline",
+        "color": "#6C9C79",
+        "kind": "income"
+      },
+      {
+        "id": "invest",
+        "name": "Investments",
+        "icon": "trending-up-outline",
+        "color": "#9C796C",
+        "kind": "investment"
       }
+    ],
+    "transactions": [
+      {
+        "id": "s01",
+        "title": "Coffee beans",
+        "date": "2026-11-02",
+        "kind": "expense",
+        "total": 1000,
+        "share": 500,
+        "categoryId": "food",
+        "note": "Morning",
+        "accountId": "card"
+      },
+      {
+        "id": "s02",
+        "title": "Coffee beans",
+        "date": "2026-11-02",
+        "kind": "expense",
+        "total": 2400,
+        "share": 2400,
+        "categoryId": "food",
+        "note": ""
+      },
+      {
+        "id": "s03",
+        "title": "Café au lait",
+        "date": "2026-11-01",
+        "kind": "expense",
+        "total": 450,
+        "share": 450,
+        "categoryId": "food",
+        "note": ""
+      },
+      {
+        "id": "s04",
+        "title": "Rent",
+        "date": "2026-11-01",
+        "kind": "expense",
+        "total": 150000,
+        "share": 75000,
+        "categoryId": "home",
+        "note": "Old coffee note"
+      },
+      {
+        "id": "s05",
+        "title": "Loyer novembre",
+        "date": "2026-11-01",
+        "kind": "expense",
+        "total": 120000,
+        "share": 120000,
+        "categoryId": "home",
+        "note": "Appartement"
+      },
+      {
+        "id": "s06",
+        "title": "Pay",
+        "date": "2026-11-03",
+        "kind": "income",
+        "total": 500000,
+        "share": 500000,
+        "categoryId": "salary",
+        "note": ""
+      },
+      {
+        "id": "s07",
+        "title": "Bus pass",
+        "date": "2026-10-15",
+        "kind": "expense",
+        "total": 9700,
+        "share": 9700,
+        "categoryId": "transport",
+        "note": ""
+      },
+      {
+        "id": "s08",
+        "title": "Pharmacie",
+        "date": "2026-10-20",
+        "kind": "expense",
+        "total": 2300,
+        "share": 2300,
+        "categoryId": "health",
+        "note": "Médicaments"
+      },
+      {
+        "id": "s09",
+        "title": "100%_saved\\path",
+        "date": "2026-11-02",
+        "kind": "expense",
+        "total": 1000,
+        "share": 1000,
+        "categoryId": "food",
+        "note": ""
+      },
+      {
+        "id": "s10",
+        "title": "Groceries",
+        "date": "2025-12-20",
+        "kind": "expense",
+        "total": 8800,
+        "share": 8800,
+        "categoryId": "food",
+        "note": ""
+      },
+      {
+        "id": "s11",
+        "title": "Index fund",
+        "date": "2026-09-01",
+        "kind": "investment",
+        "total": 100000,
+        "share": 100000,
+        "categoryId": "invest",
+        "note": ""
+      }
+    ],
+    "recurring": [],
+    "accounts": [
+      {
+        "id": "card",
+        "name": "Travel Card",
+        "type": "credit"
+      }
+    ],
+    "trips": []
+  },
+  "lexicalCases": [
+    {
+      "name": "title before text, duplicates by key",
+      "request": {
+        "query": " COFFEE "
+      },
+      "keys": [
+        "personal:s01",
+        "personal:s02",
+        "personal:s04"
+      ],
+      "matches": [
+        "title",
+        "title",
+        "text"
+      ],
+      "meaningAllowedAfter": true
+    },
+    {
+      "name": "accents are ignored",
+      "request": {
+        "query": "CAFE"
+      },
+      "keys": [
+        "personal:s03"
+      ],
+      "matches": [
+        "title"
+      ],
+      "meaningAllowedAfter": true
+    },
+    {
+      "name": "account name for its owner",
+      "request": {
+        "query": "travel card"
+      },
+      "keys": [
+        "personal:s01"
+      ],
+      "matches": [
+        "text"
+      ],
+      "meaningAllowedAfter": true
+    },
+    {
+      "name": "cross-field document",
+      "request": {
+        "query": "beans morning"
+      },
+      "keys": [
+        "personal:s01"
+      ],
+      "matches": [
+        "text"
+      ],
+      "meaningAllowedAfter": true
+    },
+    {
+      "name": "literal percent and underscore",
+      "request": {
+        "query": "100%_"
+      },
+      "keys": [
+        "personal:s09"
+      ],
+      "matches": [
+        "title"
+      ],
+      "meaningAllowedAfter": true
+    },
+    {
+      "name": "literal backslash",
+      "request": {
+        "query": "d\\pa"
+      },
+      "keys": [
+        "personal:s09"
+      ],
+      "matches": [
+        "title"
+      ],
+      "meaningAllowedAfter": true
+    },
+    {
+      "name": "typo",
+      "request": {
+        "query": "cofee"
+      },
+      "keys": [
+        "personal:s01",
+        "personal:s02",
+        "personal:s04"
+      ],
+      "matches": [
+        "typo",
+        "typo",
+        "typo"
+      ],
+      "meaningAllowedAfter": true
+    },
+    {
+      "name": "typo in a French title",
+      "request": {
+        "query": "farmacie"
+      },
+      "keys": [
+        "personal:s08"
+      ],
+      "matches": [
+        "typo"
+      ],
+      "meaningAllowedAfter": true
+    },
+    {
+      "name": "short query has no typo tier",
+      "request": {
+        "query": "zq",
+        "source": "personal"
+      },
+      "keys": [],
+      "matches": [],
+      "meaningAllowedAfter": true
+    },
+    {
+      "name": "empty query, kind filter",
+      "request": {
+        "kind": "income"
+      },
+      "keys": [
+        "personal:s06"
+      ],
+      "matches": [
+        null
+      ],
+      "totalCount": 1
+    },
+    {
+      "name": "empty query, all time, date-desc",
+      "request": {},
+      "keys": [
+        "personal:s06",
+        "personal:s01",
+        "personal:s02",
+        "personal:s09",
+        "personal:s03",
+        "personal:s04",
+        "personal:s05",
+        "personal:s08",
+        "personal:s07",
+        "personal:s11",
+        "personal:s10"
+      ],
+      "totalCount": 11
+    },
+    {
+      "name": "date range",
+      "request": {
+        "from": "2026-10-01",
+        "to": "2026-10-31"
+      },
+      "keys": [
+        "personal:s08",
+        "personal:s07"
+      ],
+      "totalCount": 2
+    },
+    {
+      "name": "from only",
+      "request": {
+        "from": "2026-11-02",
+        "kind": "expense"
+      },
+      "keys": [
+        "personal:s01",
+        "personal:s02",
+        "personal:s09"
+      ],
+      "totalCount": 3
+    },
+    {
+      "name": "date-asc",
+      "request": {
+        "to": "2026-10-31",
+        "sort": "date-asc"
+      },
+      "keys": [
+        "personal:s10",
+        "personal:s11",
+        "personal:s07",
+        "personal:s08"
+      ],
+      "totalCount": 4
+    },
+    {
+      "name": "amount-desc uses the viewer share",
+      "request": {
+        "query": "coffee",
+        "sort": "amount-desc",
+        "source": "personal"
+      },
+      "keysPrefix": [
+        "personal:s04",
+        "personal:s02",
+        "personal:s01"
+      ]
+    },
+    {
+      "name": "amount-asc",
+      "request": {
+        "kind": "expense",
+        "from": "2026-11-01",
+        "sort": "amount-asc"
+      },
+      "keys": [
+        "personal:s03",
+        "personal:s01",
+        "personal:s09",
+        "personal:s02",
+        "personal:s04",
+        "personal:s05"
+      ],
+      "totalCount": 6
+    },
+    {
+      "name": "investment kind",
+      "request": {
+        "kind": "investment"
+      },
+      "keys": [
+        "personal:s11"
+      ],
+      "totalCount": 1
+    },
+    {
+      "name": "source shared only",
+      "request": {
+        "source": "shared"
+      },
+      "keys": [],
+      "totalCount": 0
+    }
+  ],
+  "meaningCases": [
+    {
+      "name": "English meaning",
+      "request": {
+        "query": "beverage"
+      },
+      "includes": [
+        "personal:s01",
+        "personal:s02"
+      ]
+    },
+    {
+      "name": "French query finds English housing",
+      "request": {
+        "query": "logement"
+      },
+      "includes": [
+        "personal:s04"
+      ]
+    },
+    {
+      "name": "French query finds English salary",
+      "request": {
+        "query": "salaire"
+      },
+      "includes": [
+        "personal:s06"
+      ]
+    },
+    {
+      "name": "French query finds English transport",
+      "request": {
+        "query": "autobus"
+      },
+      "includes": [
+        "personal:s07"
+      ]
+    },
+    {
+      "name": "English query finds French pharmacy",
+      "request": {
+        "query": "medicine"
+      },
+      "includes": [
+        "personal:s08"
+      ]
+    },
+    {
+      "name": "English query finds French rent",
+      "request": {
+        "query": "apartment"
+      },
+      "includes": [
+        "personal:s05"
+      ]
+    },
+    {
+      "name": "mixed-language query",
+      "request": {
+        "query": "rent appartement"
+      },
+      "includes": [
+        "personal:s04"
+      ],
+      "alsoIncludes": [
+        "personal:s05"
+      ]
+    },
+    {
+      "name": "meaning respects filters",
+      "request": {
+        "query": "beverage",
+        "kind": "income"
+      },
+      "keys": []
+    },
+    {
+      "name": "no meaning without letters or digits",
+      "request": {
+        "query": "%%%"
+      },
+      "keys": []
+    }
+  ],
+  "paginationCase": {
+    "request": {
+      "query": "coffee",
+      "source": "personal",
+      "pageSize": 1
+    },
+    "lexicalKeys": [
+      "personal:s01",
+      "personal:s02",
+      "personal:s04"
+    ]
+  },
+  "requests": [
+    {},
+    {
+      "query": "beverage",
+      "from": "2026-01-01",
+      "to": "2026-11-30",
+      "kind": "expense",
+      "source": "all",
+      "sort": "relevance",
+      "pageSize": 50
     },
     {
       "query": "coffee",
-      "period": {
-        "year": "2026"
-      },
-      "day": "2026-11-02",
-      "kind": "expense",
-      "mode": "hybrid",
-      "sort": "date-desc",
-      "pageSize": 100
+      "sort": "amount-asc",
+      "source": "shared",
+      "pageSize": 100,
+      "cursor": "eyJ2IjoxfQ"
     }
   ],
   "invalidRequests": [
     {
-      "period": {
-        "month": "2026-11",
-        "year": "2026"
-      }
+      "from": "2026-11-30",
+      "to": "2026-11-01"
     },
     {
-      "period": {
-        "month": "1999-11"
-      }
+      "from": "1999-12-31"
     },
     {
-      "period": {
-        "year": "2101"
-      }
+      "to": "2101-01-01"
     },
     {
-      "period": {
-        "month": "2026-11"
-      },
+      "from": "2026-02-30"
+    },
+    {
+      "pageSize": 0
+    },
+    {
       "pageSize": 101
     },
     {
-      "period": {
-        "month": "2026-11"
-      },
+      "pageSize": 1.5
+    },
+    {
+      "kind": "all"
+    },
+    {
+      "source": "everything"
+    },
+    {
+      "sort": "title"
+    },
+    {
       "userId": "other"
     },
     {
-      "period": {
-        "month": "2026-11"
-      },
+      "query": null
+    },
+    {
+      "cursor": ""
+    },
+    {
       "query": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
     }
   ],
   "response": {
     "version": 1,
-    "scope": "server-recorded",
-    "ledgerRevision": 3,
-    "searchRevision": 8,
     "items": [
       {
         "key": "personal:a",
         "source": "personal",
+        "match": "meaning",
         "entry": {
           "id": "a",
           "title": "Coffee beans",
@@ -326,20 +907,5 @@
     ],
     "totalCount": 1,
     "nextCursor": null
-  },
-  "requiredPostgresqlScenarios": [
-    "authorization-before-count",
-    "former-member-history",
-    "private-payer-account",
-    "literal-like-escaping",
-    "short-query-plan",
-    "hybrid-english-stemming",
-    "cursor-tamper",
-    "cursor-revocation",
-    "atomic-rejected-write",
-    "rename-reindex",
-    "projection-rebuild-restart",
-    "two-worker-claim",
-    "cutover-journal-replay"
-  ]
+  }
 }

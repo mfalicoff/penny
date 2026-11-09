@@ -55,6 +55,9 @@ public sealed partial class ApiBoundaryMiddleware(
             // Deliberately do not log exception text, request paths/bodies, credentials or SQL.
             if (status == 500)
                 RequestFailed(logger, error.GetType().Name, context.TraceIdentifier);
+            // A dependency timeout (search statement timeout) is retryable.
+            if (status == 503)
+                context.Response.Headers.RetryAfter = "1";
             await ApiErrors.WriteAsync(context, status, message);
         }
     }

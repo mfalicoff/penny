@@ -75,7 +75,7 @@ Every mutation runs in one READ COMMITTED transaction in `PostgresHouseholdRepos
 
 Verified with real PostgreSQL: eight accounts using one code at once (each joins exactly once), one account joining twice at once (one open period), join against archive, leave against removal, leave against archive, join against a ledger currency change, and join against invite replacement.
 
-**Search (MAZ-121).** No search projection exists yet. `HouseholdService` marks the seams in join, leave/removal and archive: when MAZ-121 adds membership-derived search visibility it must update it inside these transactions, before commit, so search access changes exactly when membership does.
+**Search (MAZ-121).** Search evaluates membership periods and splits inside its own query (the household-view rule), so join, leave/removal and archive write nothing for search: access changes exactly when these transactions commit ([search](search.md#implementation-maz-121)).
 
 ## Audit
 

@@ -125,8 +125,9 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
                     now
                 );
                 var created = await ViewAsync(store, householdId, expenseId, actorId);
-                // Search seam (MAZ-121): index the new expense and its shares for the
-                // members who may see it, here, before commit.
+                // Search (MAZ-121): the document is written before commit. Visibility is
+                // computed from periods and splits at query time, so it needs no rows.
+                await store.IndexExpenseAsync(expenseId);
                 await AuditAsync(
                     store,
                     householdId,
@@ -252,8 +253,9 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
                 )
                     throw new BackendFailure(FailureKind.Conflict, Changed);
                 var after = await ViewAsync(store, destinationId, expenseId, actorId);
-                // Search seam (MAZ-121): re-index the expense, its shares and, for a
-                // move, both households' visibility, here, before commit.
+                // Search (MAZ-121): rewrite the document (household, payer, texts) before
+                // commit; a move changes its household id and so who can see it.
+                await store.IndexExpenseAsync(expenseId);
                 if (!moving)
                 {
                     await AuditAsync(
@@ -326,7 +328,8 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
                     throw new BackendFailure(FailureKind.Conflict, PaidDelete);
                 if (!await store.DeleteExpenseAsync(householdId, expenseId, expected, actorId, now))
                     throw new BackendFailure(FailureKind.Conflict, Changed);
-                // Search seam (MAZ-121): remove the expense from search, here.
+                // Search (MAZ-121): the deleted expense leaves search before commit.
+                await store.IndexExpenseAsync(expenseId);
                 await AuditAsync(
                     store,
                     householdId,
@@ -472,34 +475,14 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
         );
     }
 
-    private static ProjectedExpenseView Projected(StoredProjectedExpense row, string userId)
-    {
-        var expense = row.Expense;
-        var share = expense.Splits.First(part =>
-            string.Equals(part.UserId, userId, StringComparison.Ordinal)
+    private static ProjectedExpenseView Projected(StoredProjectedExpense row, string userId) =>
+        ProjectedExpenseView.Recorded(
+            row,
+            userId,
+            row.Expense.Splits.First(part =>
+                string.Equals(part.UserId, userId, StringComparison.Ordinal)
+            ).AmountCents
         );
-        return new(
-            expense.Id,
-            expense.HouseholdId,
-            row.HouseholdName,
-            row.HouseholdCurrency,
-            expense.Title,
-            LedgerDates.Write(expense.Date),
-            expense.TotalCents,
-            share.AmountCents,
-            expense.PayerId,
-            expense.Category,
-            expense.Note,
-            expense.Receipt is { } receipt
-                ? ExpenseReceiptView.From(receipt.Id, receipt.Name, receipt.Mime)
-                : null,
-            string.Equals(userId, expense.PayerId, StringComparison.Ordinal)
-                ? expense.AccountId
-                : null,
-            null,
-            null
-        );
-    }
 
     // Previews of occurrences the rules would record in the month, using each
     // occurrence date's membership. Recorded and deleted occurrences are consumed.
