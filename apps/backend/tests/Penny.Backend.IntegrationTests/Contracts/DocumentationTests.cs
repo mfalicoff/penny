@@ -98,6 +98,9 @@ public sealed class DocumentationTests(ApiFixture fixture) : IntegrationTestBase
                 ("/api/households/{id}/months/{month}", "get"),
                 ("/api/households/{id}/months/{month}/reimbursements", "post"),
                 ("/api/households/{id}/audit", "get"),
+                // Receipt upload and download (MAZ-60).
+                ("/api/receipts", "post"),
+                ("/api/receipts/{id}", "get"),
             }
         )
         {
