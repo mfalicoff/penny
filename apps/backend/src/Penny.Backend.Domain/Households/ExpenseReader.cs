@@ -82,6 +82,23 @@ public static partial class ExpenseReader
             )
         );
 
+    // `reimbursementInput` (`{fromUserId, toUserId, amountCents}`) for POST
+    // .../months/{month}/reimbursements: ids 1–100, a positive amount up to the cent
+    // limit.
+    public static ReimbursementRequest? ReadReimbursement(JsonElement? body) =>
+        Read(
+            body,
+            fields => new ReimbursementRequest(
+                Id(LedgerReader.Required(fields, "fromUserId")),
+                Id(LedgerReader.Required(fields, "toUserId")),
+                LedgerReader.Integer(
+                    LedgerReader.Required(fields, "amountCents"),
+                    1,
+                    LedgerLimits.MaxCents
+                )
+            )
+        );
+
     // The `month` query: /^\d{4}-(0[1-9]|1[0-2])$/ with ASCII digits.
     public static bool IsMonth(string value) => MonthFormat().IsMatch(value);
 

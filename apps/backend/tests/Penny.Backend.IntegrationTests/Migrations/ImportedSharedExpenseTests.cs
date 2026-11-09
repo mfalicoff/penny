@@ -91,6 +91,63 @@ public sealed class ImportedSharedExpenseTests(ApiFixture fixture) : SharedExpen
         (await AuditCountAsync("h", "expense.updated")).ShouldBe(2L);
     }
 
+    [Fact]
+    public async Task whenSqliteSettlementImported_MonthAndAudit_ShouldReadThroughHttp()
+    {
+        await ImportAsync();
+        At(new DateTimeOffset(2026, 11, 8, 12, 0, 0, TimeSpan.Zero));
+
+        // The imported individual payment settles February 2024 (MAZ-58 recap).
+        var recap = await ExpectAsync(
+            HttpMethod.Get,
+            "/api/households/h/months/2024-02",
+            CreatorToken,
+            HttpStatusCode.OK
+        );
+        recap.GetProperty("expenses").EnumerateArray().Select(Id).ShouldBe(["e"]);
+        var payment = recap.GetProperty("reimbursements").EnumerateArray().Single();
+        Id(payment).ShouldBe("payment");
+        payment.GetProperty("expenseId").GetString().ShouldBe("e");
+        payment.GetProperty("createdAt").GetInt64().ShouldBe(1700000000001);
+        recap
+            .GetProperty("balances")
+            .EnumerateArray()
+            .Select(balance => balance.GetProperty("balanceCents").GetInt64())
+            .ShouldBe([0L, 0L]);
+        recap.GetProperty("suggestions").GetArrayLength().ShouldBe(0);
+        recap.GetProperty("overdue").GetBoolean().ShouldBeFalse();
+        recap.GetProperty("overdueMonths").GetArrayLength().ShouldBe(0);
+        // The former member left in November 2023 (UTC), so later months are not hers.
+        await ExpectErrorAsync(
+            HttpMethod.Get,
+            "/api/households/h/months/2024-02",
+            FormerToken,
+            HttpStatusCode.NotFound,
+            SettlementService.MonthNotFound
+        );
+
+        // Imported audit rows keep their source order (same instant: later row first)
+        // and are visible to the former member through her share.
+        foreach (var token in new[] { CreatorToken, FormerToken })
+        {
+            var events = (
+                await ExpectAsync(
+                    HttpMethod.Get,
+                    "/api/households/h/audit?expenseId=e",
+                    token,
+                    HttpStatusCode.OK
+                )
+            )
+                .GetProperty("events")
+                .EnumerateArray()
+                .ToList();
+            events.Select(Id).ShouldBe(["a-second", "z-first"]);
+            events[1].GetProperty("after").GetProperty("amount").GetInt64().ShouldBe(99999999999);
+            events[1].GetProperty("before").ValueKind.ShouldBe(System.Text.Json.JsonValueKind.Null);
+            events[0].GetProperty("createdAt").GetInt64().ShouldBe(1700000000001);
+        }
+    }
+
     private async Task ImportAsync()
     {
         using var legacy = new LegacyDatabase();

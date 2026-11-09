@@ -78,6 +78,7 @@ public static class BackendServices
         // Shared expenses show receipt names, so they use the receipt store too.
         builder.Services.AddSingleton<ISharedExpenseRepository, PostgresSharedExpenseRepository>();
         builder.Services.AddSingleton<SharedExpenseService>();
+        builder.Services.AddSingleton<SettlementService>();
         AddRecurrenceServices(builder.Services, RecurrenceOptions.Read(configuration));
         AddOidcServices(builder.Services, OidcOptions.Read(configuration));
         AddSearchServices(builder.Services, SearchOptions.Read(configuration));

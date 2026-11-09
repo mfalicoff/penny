@@ -244,6 +244,115 @@ internal sealed class PostgresSharedExpenseTransaction(
         await Context.SaveChangesAsync(Cancellation);
     }
 
+    public async Task<IReadOnlyList<StoredReimbursement>> ListReimbursementsAsync(
+        string householdId,
+        string month
+    ) =>
+        [
+            .. (
+                await Context
+                    .HouseholdReimbursements.AsNoTracking()
+                    .Where(reimbursement =>
+                        reimbursement.HouseholdId == householdId && reimbursement.Month == month
+                    )
+                    .ToListAsync(Cancellation)
+            )
+                .OrderBy(reimbursement => reimbursement.CreatedAt)
+                .ThenBy(reimbursement => reimbursement.Id, StringComparer.Ordinal)
+                .Select(reimbursement => new StoredReimbursement(
+                    reimbursement.Id,
+                    reimbursement.HouseholdId,
+                    reimbursement.Month,
+                    reimbursement.FromUserId,
+                    reimbursement.ToUserId,
+                    reimbursement.AmountCents,
+                    reimbursement.CreatedBy,
+                    reimbursement.CreatedAt,
+                    reimbursement.ExpenseId
+                )),
+        ];
+
+    public async Task AddReimbursementAsync(StoredReimbursement reimbursement)
+    {
+        if (reimbursement.ExpenseId is not null)
+            throw new ArgumentException(
+                "A monthly reimbursement has no expense.",
+                nameof(reimbursement)
+            );
+        Context.HouseholdReimbursements.Add(
+            new HouseholdReimbursement
+            {
+                Id = reimbursement.Id,
+                HouseholdId = reimbursement.HouseholdId,
+                Month = reimbursement.Month,
+                FromUserId = reimbursement.FromUserId,
+                ToUserId = reimbursement.ToUserId,
+                AmountCents = reimbursement.AmountCents,
+                CreatedBy = reimbursement.CreatedBy,
+                CreatedAt = reimbursement.CreatedAt,
+            }
+        );
+        await Context.SaveChangesAsync(Cancellation);
+    }
+
+    public Task<IReadOnlyList<BalanceContribution>> VisibleBalancesAsync(
+        string householdId,
+        FormerMember viewer
+    ) => ContributionsAsync(householdId, viewer);
+
+    public async Task<IReadOnlyList<StoredAuditEvent>> AuditEventsAsync(
+        string householdId,
+        string? expenseId,
+        FormerMember? viewer,
+        int? limit
+    )
+    {
+        var viewerId = viewer?.UserId;
+        var leftAt = viewer?.LeftAt;
+        // Legacy `canSeeExpense` for a former member: a share in the expense while it
+        // belongs to this household (deleted expenses included); other events up to
+        // the moment they left.
+        var events = Context
+            .HouseholdAudit.AsNoTracking()
+            .Where(entry =>
+                entry.HouseholdId == householdId
+                && (expenseId == null || entry.ExpenseId == expenseId)
+                && (
+                    viewerId == null
+                    || (
+                        entry.ExpenseId != null
+                            ? Context.HouseholdSplits.Any(split =>
+                                split.ExpenseId == entry.ExpenseId
+                                && split.UserId == viewerId
+                                && Context.HouseholdExpenses.Any(expense =>
+                                    expense.Id == split.ExpenseId
+                                    && expense.HouseholdId == householdId
+                                )
+                            )
+                            : entry.CreatedAt <= leftAt
+                    )
+                )
+            )
+            .OrderByDescending(entry => entry.CreatedAt)
+            .ThenByDescending(entry => entry.SortOrder);
+        var rows = await (limit is { } count ? events.Take(count) : events).ToListAsync(
+            Cancellation
+        );
+        return
+        [
+            .. rows.Select(entry => new StoredAuditEvent(
+                entry.Id,
+                entry.HouseholdId,
+                entry.ActorId,
+                entry.Action,
+                entry.BeforeJson,
+                entry.AfterJson,
+                entry.CreatedAt,
+                entry.ExpenseId
+            )),
+        ];
+    }
+
     public async Task IndexExpenseAsync(string expenseId) =>
         await SearchIndexer.SyncExpensesAsync(
             Context,

@@ -10,6 +10,7 @@ import {
   suggestReimbursements,
   type HouseholdMember,
   type HouseholdRecurring,
+  type HouseholdReimbursement,
   type SharedExpense,
   type SplitInput,
 } from "../../src/domain/households.ts";
@@ -35,6 +36,18 @@ test("golden split fixtures shared with the .NET backend", () => {
     if (item.error) assert.throws(() => calculateHouseholdSplits(item.totalCents, item.input), Error, item.name);
     else assert.deepEqual(calculateHouseholdSplits(item.totalCents, item.input), item.expected, item.name);
   }
+});
+
+test("golden monthly settlement fixtures shared with the .NET backend", () => {
+  const golden = JSON.parse(readFileSync(new URL("../../contracts/fixtures/settlement.json", import.meta.url), "utf8")) as {
+    cases: { name: string; month: string; expenses: SharedExpense[]; reimbursements: HouseholdReimbursement[]; expected: unknown }[];
+    suggestionErrors: { name: string; balances: { userId: string; balanceCents: number }[] }[];
+  };
+  for (const item of golden.cases) {
+    const balances = calculateMonthlyBalances(item.month, item.expenses, item.reimbursements);
+    assert.deepEqual({ balances, suggestions: suggestReimbursements(balances) }, item.expected, item.name);
+  }
+  for (const item of golden.suggestionErrors) assert.throws(() => suggestReimbursements(item.balances), Error, item.name);
 });
 
 test("equal splits give the remainder cent to stable member IDs", () => {

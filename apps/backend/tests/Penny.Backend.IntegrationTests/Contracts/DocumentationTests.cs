@@ -94,6 +94,10 @@ public sealed class DocumentationTests(ApiFixture fixture) : IntegrationTestBase
                 ("/api/households/{id}/recurring", "post"),
                 ("/api/households/{id}/recurring/{ruleId}", "put"),
                 ("/api/households/{id}/recurring/{ruleId}", "delete"),
+                // Month recaps, monthly reimbursements and audit history (MAZ-58).
+                ("/api/households/{id}/months/{month}", "get"),
+                ("/api/households/{id}/months/{month}/reimbursements", "post"),
+                ("/api/households/{id}/audit", "get"),
             }
         )
         {
@@ -106,13 +110,6 @@ public sealed class DocumentationTests(ApiFixture fixture) : IntegrationTestBase
                 .ShouldBe(operation["operationId"]!.GetValue<string>());
             operation["x-implementation"]!.GetValue<string>().ShouldBe("legacy");
         }
-        // Month, reimbursement and audit routes are not implemented in .NET yet
-        // (MAZ-58) and are not advertised.
-        paths.TryGetProperty("/api/households/{id}/months/{month}", out _).ShouldBeFalse();
-        paths
-            .TryGetProperty("/api/households/{id}/months/{month}/reimbursements", out _)
-            .ShouldBeFalse();
-        paths.TryGetProperty("/api/households/{id}/audit", out _).ShouldBeFalse();
         // The .NET-only password reset (MAZ-123) is in the shared contract too.
         var reset = ContractFixtures.OpenApi()["paths"]!["/api/auth/password-reset"]!["post"]!;
         reset["operationId"]!.GetValue<string>().ShouldBe("postApiAuthPasswordReset");

@@ -10,8 +10,9 @@ namespace Penny.Backend.Api.Controllers;
 
 // Household and shared-trip membership, invitations and archive (legacy
 // server/http/households.ts, MAZ-56). Session-protected by the fallback policy. Shared
-// expenses and the projection are in HouseholdExpensesController (MAZ-57); months,
-// audit and recurrence routes belong to MAZ-58/59. See docs/migration/households.md.
+// expenses and the projection are in HouseholdExpensesController (MAZ-57), months,
+// reimbursements and audit in HouseholdSettlementController (MAZ-58) and recurrence in
+// HouseholdRecurringController (MAZ-59). See docs/migration/households.md.
 [ApiController]
 [Route("api/households")]
 [ProducesResponseType<ApiError>(401)]
