@@ -89,6 +89,10 @@
     "test:e2e:native": "node scripts/run-native-tests.mjs all",
     "test:e2e:check": "node scripts/run-native-tests.mjs --check",
     "test:all": "npm test && npm run test:e2e:web && npm run test:e2e:native",
+    "test:fullstack": "node --test --test-concurrency=1 tests/fullstack/*.test.mjs",
+    "test-env": "node scripts/test-env/penny-env.mjs",
+    "fixtures:generate": "node --experimental-strip-types --no-warnings scripts/fixtures/generate-golden.ts",
+    "fixtures:check": "node --experimental-strip-types --no-warnings scripts/fixtures/generate-golden.ts --check",
     "test:ui:watch": "jest --watch"
   },
   "c8": {

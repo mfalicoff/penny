@@ -1,0 +1,1061 @@
+{
+  "version": 1,
+  "description": "Sanitized, deterministic full-stack seed scenarios (MAZ-62). Steps are language-neutral HTTP actions run by scripts/test-env/seed.mjs against the legacy Node/SQLite server or the .NET/PostgreSQL API. Users are created per run with unique .test emails and generated passwords; nothing here is a credential. References: \"$user:<alias>\", \"$household:<ref>\", \"$expense:<ref>\". Exotic characters are written as \\u escapes.",
+  "scenarios": [
+    {
+      "name": "empty",
+      "summary": "A newly registered account with the default ledger and no households.",
+      "clock": "2026-10-15T12:00:00Z",
+      "users": [
+        "solo"
+      ],
+      "steps": []
+    },
+    {
+      "name": "searchable-household",
+      "summary": "Two personal ledgers with duplicate titles, Unicode and decomposed accents, a category and account rename after entries exist, a three-person household where one member settles September and leaves (revoked membership, keeps history with split rows), an October unsettled balance and a scheduled shared rule for projections.",
+      "clock": "2026-10-15T12:00:00Z",
+      "users": [
+        "alex",
+        "bea",
+        "cam"
+      ],
+      "steps": [
+        {
+          "clock": "2026-09-01T12:00:00Z"
+        },
+        {
+          "as": "alex",
+          "ledger": {
+            "version": 4,
+            "currency": "CAD",
+            "categories": [
+              {
+                "id": "food",
+                "name": "Food",
+                "icon": "cafe-outline",
+                "color": "#E47850",
+                "kind": "expense"
+              },
+              {
+                "id": "home",
+                "name": "Housing",
+                "icon": "home-outline",
+                "color": "#5B7DB1",
+                "kind": "expense"
+              },
+              {
+                "id": "fun",
+                "name": "Fun",
+                "icon": "happy-outline",
+                "color": "#B15B7D",
+                "kind": "expense"
+              },
+              {
+                "id": "salary",
+                "name": "Salary",
+                "icon": "briefcase-outline",
+                "color": "#6C9C79",
+                "kind": "income"
+              },
+              {
+                "id": "invest",
+                "name": "Investments",
+                "icon": "trending-up-outline",
+                "color": "#678DB1",
+                "kind": "investment"
+              }
+            ],
+            "accounts": [
+              {
+                "id": "chq",
+                "name": "Chequing",
+                "type": "bank"
+              },
+              {
+                "id": "card",
+                "name": "Visa",
+                "type": "credit"
+              }
+            ],
+            "trips": [
+              {
+                "id": "t-quebec",
+                "name": "Qu\u00e9bec weekend",
+                "startDate": "2026-09-25",
+                "endDate": "2026-09-27"
+              }
+            ],
+            "transactions": [
+              {
+                "id": "p-coffee-1",
+                "title": "Coffee",
+                "kind": "expense",
+                "total": 450,
+                "share": 450,
+                "categoryId": "food",
+                "date": "2026-10-02",
+                "note": "Morning latte",
+                "accountId": "chq"
+              },
+              {
+                "id": "p-coffee-2",
+                "title": "Coffee",
+                "kind": "expense",
+                "total": 525,
+                "share": 525,
+                "categoryId": "food",
+                "date": "2026-10-09",
+                "note": ""
+              },
+              {
+                "id": "p-cafe",
+                "title": "Caf\u00e9 Cr\u00e8me",
+                "kind": "expense",
+                "total": 600,
+                "share": 600,
+                "categoryId": "food",
+                "date": "2026-10-05",
+                "note": "Rue Saint-Denis",
+                "accountId": "card"
+              },
+              {
+                "id": "p-lait",
+                "title": "Cafe\u0301 au lait",
+                "kind": "expense",
+                "total": 375,
+                "share": 375,
+                "categoryId": "food",
+                "date": "2026-10-06",
+                "note": ""
+              },
+              {
+                "id": "p-ramen",
+                "title": "\u6771\u4eac ramen",
+                "kind": "expense",
+                "total": 1800,
+                "share": 1800,
+                "categoryId": "food",
+                "date": "2026-09-20",
+                "note": ""
+              },
+              {
+                "id": "p-party",
+                "title": "\ud83c\udf89 Party supplies",
+                "kind": "expense",
+                "total": 3200,
+                "share": 1600,
+                "categoryId": "fun",
+                "date": "2026-09-27",
+                "note": "Birthday",
+                "tripId": "t-quebec"
+              },
+              {
+                "id": "p-rent",
+                "title": "Rent",
+                "kind": "expense",
+                "total": 120000,
+                "share": 120000,
+                "categoryId": "home",
+                "date": "2026-10-01",
+                "note": "",
+                "accountId": "chq"
+              },
+              {
+                "id": "p-facade",
+                "title": "Fa\u00e7ade repair",
+                "kind": "expense",
+                "total": 15000,
+                "share": 15000,
+                "categoryId": "home",
+                "date": "2026-09-12",
+                "note": "\u00dcn\u00efc\u00f6d\u00e9 note"
+              },
+              {
+                "id": "p-salary",
+                "title": "Salary",
+                "kind": "income",
+                "total": 450000,
+                "share": 450000,
+                "categoryId": "salary",
+                "date": "2026-09-30",
+                "note": "",
+                "accountId": "chq"
+              },
+              {
+                "id": "p-etf",
+                "title": "ETF purchase",
+                "kind": "investment",
+                "total": 50000,
+                "share": 50000,
+                "categoryId": "invest",
+                "date": "2026-10-03",
+                "note": ""
+              }
+            ],
+            "recurring": [
+              {
+                "id": "r-gym",
+                "title": "Gym",
+                "kind": "expense",
+                "total": 4000,
+                "share": 4000,
+                "categoryId": "fun",
+                "date": "2026-08-31",
+                "note": "",
+                "frequency": "monthly",
+                "nextDate": "2026-10-31",
+                "anchorDay": 31,
+                "active": true
+              },
+              {
+                "id": "r-paused",
+                "title": "Magazine",
+                "kind": "expense",
+                "total": 1299,
+                "share": 1299,
+                "categoryId": "fun",
+                "date": "2026-07-15",
+                "note": "",
+                "frequency": "monthly",
+                "nextDate": "2026-10-15",
+                "anchorDay": 15,
+                "active": false
+              }
+            ]
+          }
+        },
+        {
+          "as": "alex",
+          "rename": {
+            "categories": {
+              "food": "Groceries & dining"
+            },
+            "accounts": {
+              "chq": "Everyday chequing"
+            }
+          }
+        },
+        {
+          "as": "bea",
+          "ledger": {
+            "version": 4,
+            "currency": "CAD",
+            "categories": [
+              {
+                "id": "food",
+                "name": "Food",
+                "icon": "cafe-outline",
+                "color": "#E47850",
+                "kind": "expense"
+              }
+            ],
+            "accounts": [],
+            "trips": [],
+            "transactions": [
+              {
+                "id": "b-coffee",
+                "title": "Coffee",
+                "kind": "expense",
+                "total": 395,
+                "share": 395,
+                "categoryId": "food",
+                "date": "2026-10-04",
+                "note": "Private to bea"
+              }
+            ],
+            "recurring": []
+          }
+        },
+        {
+          "as": "alex",
+          "createHousehold": {
+            "ref": "maison",
+            "name": "Maison",
+            "currency": "CAD",
+            "timezoneOffsetMinutes": 0
+          }
+        },
+        {
+          "as": "alex",
+          "invite": {
+            "household": "maison",
+            "ref": "maison-code"
+          }
+        },
+        {
+          "as": "bea",
+          "join": {
+            "invite": "maison-code",
+            "timezoneOffsetMinutes": 0
+          }
+        },
+        {
+          "as": "cam",
+          "join": {
+            "invite": "maison-code",
+            "timezoneOffsetMinutes": 0
+          }
+        },
+        {
+          "as": "alex",
+          "expense": {
+            "household": "maison",
+            "ref": "groceries",
+            "body": {
+              "title": "Groceries",
+              "totalCents": 9000,
+              "date": "2026-09-05",
+              "payerUserId": "$user:alex",
+              "splitMode": "equal",
+              "category": {
+                "name": "Groceries",
+                "icon": "cart-outline",
+                "color": "#E47850"
+              },
+              "note": "Market run"
+            }
+          }
+        },
+        {
+          "as": "bea",
+          "expense": {
+            "household": "maison",
+            "ref": "hydro",
+            "body": {
+              "title": "\u00c9lectricit\u00e9",
+              "totalCents": 6001,
+              "date": "2026-09-10",
+              "payerUserId": "$user:bea",
+              "splitMode": "exact",
+              "allocations": [
+                {
+                  "userId": "$user:alex",
+                  "amountCents": 3000
+                },
+                {
+                  "userId": "$user:bea",
+                  "amountCents": 3001
+                },
+                {
+                  "userId": "$user:cam",
+                  "amountCents": 0
+                }
+              ],
+              "category": {
+                "name": "Utilities",
+                "icon": "flash-outline",
+                "color": "#5B7DB1"
+              }
+            }
+          }
+        },
+        {
+          "as": "alex",
+          "expense": {
+            "household": "maison",
+            "ref": "coffee",
+            "body": {
+              "title": "Coffee",
+              "totalCents": 1200,
+              "date": "2026-09-18",
+              "payerUserId": "$user:alex",
+              "splitMode": "exact",
+              "allocations": [
+                {
+                  "userId": "$user:alex",
+                  "amountCents": 600
+                },
+                {
+                  "userId": "$user:bea",
+                  "amountCents": 600
+                },
+                {
+                  "userId": "$user:cam",
+                  "amountCents": 0
+                }
+              ],
+              "category": {
+                "name": "Groceries",
+                "icon": "cart-outline",
+                "color": "#E47850"
+              }
+            }
+          }
+        },
+        {
+          "clock": "2026-10-02T12:00:00Z"
+        },
+        {
+          "as": "cam",
+          "reimburse": {
+            "household": "maison",
+            "month": "2026-09",
+            "fromUserId": "$user:cam",
+            "toUserId": "$user:alex",
+            "amountCents": 3000
+          }
+        },
+        {
+          "as": "cam",
+          "leave": {
+            "household": "maison"
+          }
+        },
+        {
+          "as": "bea",
+          "expense": {
+            "household": "maison",
+            "ref": "internet",
+            "body": {
+              "title": "Internet",
+              "totalCents": 8000,
+              "date": "2026-10-10",
+              "payerUserId": "$user:bea",
+              "splitMode": "equal",
+              "category": {
+                "name": "Utilities",
+                "icon": "flash-outline",
+                "color": "#5B7DB1"
+              }
+            }
+          }
+        },
+        {
+          "as": "alex",
+          "sharedRecurring": {
+            "household": "maison",
+            "ref": "streaming",
+            "body": {
+              "title": "Streaming",
+              "totalCents": 1600,
+              "payerUserId": "$user:alex",
+              "splitMode": "equal",
+              "category": {
+                "name": "Fun",
+                "icon": "tv-outline",
+                "color": "#B15B7D"
+              },
+              "nextDate": "2026-10-20",
+              "frequency": "monthly"
+            }
+          }
+        },
+        {
+          "as": "alex",
+          "createTrip": {
+            "ref": "lisbon",
+            "name": "Lisbon trip",
+            "currency": "CAD",
+            "startDate": "2026-11-02",
+            "endDate": "2026-11-08",
+            "timezoneOffsetMinutes": 0
+          }
+        },
+        {
+          "as": "alex",
+          "invite": {
+            "household": "lisbon",
+            "ref": "lisbon-code"
+          }
+        },
+        {
+          "as": "bea",
+          "join": {
+            "invite": "lisbon-code",
+            "timezoneOffsetMinutes": 0
+          }
+        },
+        {
+          "clock": "2026-10-15T12:00:00Z"
+        }
+      ],
+      "searchExpectations": [
+        {
+          "as": "alex",
+          "request": {
+            "query": "coffee"
+          },
+          "keys": [
+            "personal:p-coffee-2",
+            "personal:p-coffee-1",
+            "shared:$expense:coffee"
+          ],
+          "matches": [
+            "title",
+            "title",
+            "title"
+          ],
+          "meaningAllowedAfter": true,
+          "excludes": [
+            "personal:b-coffee"
+          ],
+          "why": "duplicate titles, personal before shared only by date, never another user's ledger"
+        },
+        {
+          "as": "alex",
+          "request": {
+            "query": "cafe"
+          },
+          "keys": [
+            "personal:p-lait",
+            "personal:p-cafe"
+          ],
+          "matches": [
+            "title",
+            "title"
+          ],
+          "meaningAllowedAfter": true,
+          "excludes": [],
+          "why": "precomposed and decomposed accents fold to the same text"
+        },
+        {
+          "as": "alex",
+          "request": {
+            "query": "creme"
+          },
+          "keys": [
+            "personal:p-cafe"
+          ],
+          "matches": [
+            "title"
+          ],
+          "meaningAllowedAfter": true,
+          "excludes": [],
+          "why": "accent folding"
+        },
+        {
+          "as": "alex",
+          "request": {
+            "query": "\u6771\u4eac"
+          },
+          "keys": [
+            "personal:p-ramen"
+          ],
+          "matches": [
+            "title"
+          ],
+          "meaningAllowedAfter": true,
+          "excludes": [],
+          "why": "CJK substring"
+        },
+        {
+          "as": "alex",
+          "request": {
+            "query": "groceries"
+          },
+          "keys": [
+            "shared:$expense:groceries",
+            "personal:p-coffee-2",
+            "personal:p-lait",
+            "personal:p-cafe",
+            "personal:p-coffee-1",
+            "personal:p-ramen",
+            "shared:$expense:coffee"
+          ],
+          "matches": [
+            "title",
+            "text",
+            "text",
+            "text",
+            "text",
+            "text",
+            "text"
+          ],
+          "meaningAllowedAfter": true,
+          "excludes": [],
+          "why": "a category renamed after its entries were written is searched by its current name"
+        },
+        {
+          "as": "alex",
+          "request": {
+            "query": "chequing"
+          },
+          "keys": [
+            "personal:p-coffee-1",
+            "personal:p-rent",
+            "personal:p-salary"
+          ],
+          "matches": [
+            "text",
+            "text",
+            "text"
+          ],
+          "meaningAllowedAfter": true,
+          "excludes": [],
+          "why": "a renamed account is searched by its current name"
+        },
+        {
+          "as": "alex",
+          "request": {
+            "query": "unicode"
+          },
+          "keys": [
+            "personal:p-facade"
+          ],
+          "matches": [
+            "text"
+          ],
+          "meaningAllowedAfter": true,
+          "excludes": [],
+          "why": "diacritics folded in notes"
+        },
+        {
+          "as": "alex",
+          "request": {
+            "query": ""
+          },
+          "keys": [
+            "shared:$expense:internet",
+            "personal:p-coffee-2",
+            "personal:p-lait",
+            "personal:p-cafe",
+            "personal:p-etf",
+            "personal:p-coffee-1",
+            "personal:p-rent",
+            "personal:p-salary",
+            "personal:p-party",
+            "personal:p-ramen",
+            "shared:$expense:coffee",
+            "personal:p-facade",
+            "shared:$expense:hydro",
+            "shared:$expense:groceries"
+          ],
+          "matches": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "meaningAllowedAfter": false,
+          "excludes": [
+            "personal:b-coffee"
+          ],
+          "why": "empty query lists everything visible, newest first"
+        },
+        {
+          "as": "bea",
+          "request": {
+            "query": "coffee"
+          },
+          "keys": [
+            "personal:b-coffee",
+            "shared:$expense:coffee"
+          ],
+          "matches": [
+            "title",
+            "title"
+          ],
+          "meaningAllowedAfter": true,
+          "excludes": [
+            "personal:p-coffee-1",
+            "personal:p-coffee-2"
+          ],
+          "why": "shared expenses are visible to members; personal ledgers are not"
+        },
+        {
+          "as": "bea",
+          "request": {
+            "query": ""
+          },
+          "keys": [
+            "shared:$expense:internet",
+            "personal:b-coffee",
+            "shared:$expense:coffee",
+            "shared:$expense:hydro",
+            "shared:$expense:groceries"
+          ],
+          "matches": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "meaningAllowedAfter": false,
+          "excludes": [],
+          "why": "member view"
+        },
+        {
+          "as": "cam",
+          "request": {
+            "query": ""
+          },
+          "keys": [
+            "shared:$expense:coffee",
+            "shared:$expense:hydro",
+            "shared:$expense:groceries"
+          ],
+          "matches": [
+            null,
+            null,
+            null
+          ],
+          "meaningAllowedAfter": false,
+          "excludes": [
+            "shared:$expense:internet"
+          ],
+          "why": "a former member keeps expenses with a split row (even a zero share) and loses later ones"
+        },
+        {
+          "as": "cam",
+          "request": {
+            "query": "electricite"
+          },
+          "keys": [
+            "shared:$expense:hydro"
+          ],
+          "matches": [
+            "title"
+          ],
+          "meaningAllowedAfter": true,
+          "excludes": [
+            "shared:$expense:internet"
+          ],
+          "why": "revoked membership still searches retained history"
+        }
+      ],
+      "pendingEdits": {
+        "as": "alex",
+        "description": "Unsynced local changes on top of alex's server ledger, for offline/pending search scope. Clients keep base and local snapshots; these are applied to local only.",
+        "create": [
+          {
+            "id": "p-pending",
+            "title": "Coffee to go",
+            "kind": "expense",
+            "total": 300,
+            "share": 300,
+            "categoryId": "food",
+            "date": "2026-10-14",
+            "note": ""
+          }
+        ],
+        "edit": [
+          {
+            "id": "p-coffee-2",
+            "patch": {
+              "title": "Espresso"
+            }
+          }
+        ],
+        "delete": [
+          "p-cafe"
+        ],
+        "localSearch": [
+          {
+            "query": "coffee",
+            "expectedIds": [
+              "p-pending",
+              "p-coffee-1"
+            ]
+          },
+          {
+            "query": "espresso",
+            "expectedIds": [
+              "p-coffee-2"
+            ]
+          },
+          {
+            "query": "cr\u00e8me",
+            "expectedIds": []
+          }
+        ]
+      }
+    },
+    {
+      "name": "differential",
+      "summary": "A clock-independent journey for legacy Node/SQLite versus .NET/PostgreSQL comparison: dates are \"$today\"/\"$month\" (the server's current day), so it runs on a legacy server at real time and on .NET with the clock pinned to the same day. Probes are compared after normalizing generated ids, tokens, codes and instants.",
+      "clock": "$now",
+      "users": [
+        "alex",
+        "bea"
+      ],
+      "steps": [
+        {
+          "as": "alex",
+          "ledger": {
+            "version": 4,
+            "currency": "CAD",
+            "categories": [
+              {
+                "id": "food",
+                "name": "Food",
+                "icon": "cafe-outline",
+                "color": "#E47850",
+                "kind": "expense"
+              },
+              {
+                "id": "salary",
+                "name": "Salary",
+                "icon": "briefcase-outline",
+                "color": "#6C9C79",
+                "kind": "income"
+              },
+              {
+                "id": "investments",
+                "name": "Investments",
+                "icon": "trending-up-outline",
+                "color": "#678DB1",
+                "kind": "investment"
+              }
+            ],
+            "accounts": [
+              {
+                "id": "chq",
+                "name": "Chequing",
+                "type": "bank"
+              }
+            ],
+            "trips": [],
+            "transactions": [
+              {
+                "id": "d-cafe",
+                "title": "Caf\u00e9 Cr\u00e8me",
+                "kind": "expense",
+                "total": 600,
+                "share": 300,
+                "categoryId": "food",
+                "date": "$today",
+                "note": "\u6771\u4eac",
+                "accountId": "chq"
+              },
+              {
+                "id": "d-salary",
+                "title": "Salary",
+                "kind": "income",
+                "total": 450000,
+                "share": 450000,
+                "categoryId": "salary",
+                "date": "$today",
+                "note": ""
+              }
+            ],
+            "recurring": []
+          }
+        },
+        {
+          "as": "alex",
+          "rename": {
+            "categories": {
+              "food": "Groceries & dining"
+            }
+          }
+        },
+        {
+          "as": "alex",
+          "createHousehold": {
+            "ref": "home",
+            "name": "Maison \u00e9t\u00e9",
+            "currency": "CAD",
+            "timezoneOffsetMinutes": 0
+          }
+        },
+        {
+          "as": "alex",
+          "invite": {
+            "household": "home",
+            "ref": "home-code"
+          }
+        },
+        {
+          "as": "bea",
+          "join": {
+            "invite": "home-code",
+            "timezoneOffsetMinutes": 0
+          }
+        },
+        {
+          "as": "alex",
+          "expense": {
+            "household": "home",
+            "ref": "groceries",
+            "body": {
+              "title": "Groceries",
+              "totalCents": 1000,
+              "date": "$today",
+              "payerUserId": "$user:alex",
+              "splitMode": "equal",
+              "category": {
+                "name": "Groceries",
+                "icon": "cart-outline",
+                "color": "#E47850"
+              },
+              "note": ""
+            }
+          }
+        },
+        {
+          "as": "bea",
+          "expense": {
+            "household": "home",
+            "ref": "hydro",
+            "body": {
+              "title": "\u00c9lectricit\u00e9",
+              "totalCents": 6001,
+              "date": "$today",
+              "payerUserId": "$user:bea",
+              "splitMode": "exact",
+              "allocations": [
+                {
+                  "userId": "$user:alex",
+                  "amountCents": 3000
+                },
+                {
+                  "userId": "$user:bea",
+                  "amountCents": 3001
+                }
+              ],
+              "category": {
+                "name": "Utilities",
+                "icon": "flash-outline",
+                "color": "#5B7DB1"
+              }
+            }
+          }
+        }
+      ],
+      "probes": [
+        {
+          "name": "ledger read",
+          "as": "alex",
+          "method": "GET",
+          "path": "/api/ledger"
+        },
+        {
+          "name": "stale ledger write",
+          "as": "alex",
+          "method": "PUT",
+          "path": "/api/ledger",
+          "body": {
+            "revision": 0,
+            "ledger": {
+              "version": 4,
+              "currency": "CAD",
+              "categories": [],
+              "accounts": [],
+              "trips": [],
+              "transactions": [],
+              "recurring": []
+            }
+          }
+        },
+        {
+          "name": "invalid ledger write",
+          "as": "alex",
+          "method": "PUT",
+          "path": "/api/ledger",
+          "body": {
+            "revision": 2,
+            "ledger": {
+              "version": 9
+            }
+          }
+        },
+        {
+          "name": "me",
+          "as": "bea",
+          "method": "GET",
+          "path": "/api/auth/me"
+        },
+        {
+          "name": "anonymous ledger",
+          "method": "GET",
+          "path": "/api/ledger"
+        },
+        {
+          "name": "unknown route",
+          "as": "alex",
+          "method": "GET",
+          "path": "/api/does-not-exist"
+        },
+        {
+          "name": "households",
+          "as": "bea",
+          "method": "GET",
+          "path": "/api/households"
+        },
+        {
+          "name": "household detail",
+          "as": "alex",
+          "method": "GET",
+          "path": "/api/households/$household:home"
+        },
+        {
+          "name": "expenses",
+          "as": "bea",
+          "method": "GET",
+          "path": "/api/households/$household:home/expenses?month=$month"
+        },
+        {
+          "name": "expense",
+          "as": "alex",
+          "method": "GET",
+          "path": "/api/households/$household:home/expenses/$expense:hydro"
+        },
+        {
+          "name": "projection",
+          "as": "alex",
+          "method": "GET",
+          "path": "/api/households/projection?month=$month"
+        },
+        {
+          "name": "month recap",
+          "as": "bea",
+          "method": "GET",
+          "path": "/api/households/$household:home/months/$month"
+        },
+        {
+          "name": "stale expense delete",
+          "as": "alex",
+          "method": "DELETE",
+          "path": "/api/households/$household:home/expenses/$expense:groceries",
+          "body": {
+            "revision": 5
+          }
+        },
+        {
+          "name": "share payment",
+          "as": "alex",
+          "method": "POST",
+          "path": "/api/households/$household:home/expenses/$expense:hydro/payments",
+          "body": {
+            "fromUserId": "$user:alex",
+            "revision": 0
+          }
+        },
+        {
+          "name": "duplicate share payment",
+          "as": "alex",
+          "method": "POST",
+          "path": "/api/households/$household:home/expenses/$expense:hydro/payments",
+          "body": {
+            "fromUserId": "$user:alex",
+            "revision": 1
+          }
+        },
+        {
+          "name": "outsider household",
+          "as": "alex",
+          "method": "GET",
+          "path": "/api/households/does-not-exist"
+        },
+        {
+          "name": "audit",
+          "as": "bea",
+          "method": "GET",
+          "path": "/api/households/$household:home/audit"
+        }
+      ]
+    }
+  ]
+}

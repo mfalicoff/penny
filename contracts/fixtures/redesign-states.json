@@ -1,0 +1,1124 @@
+{
+  "version": 1,
+  "description": "Deterministic data states for the 79 redesign specimens (contracts/design-baseline.json, MAZ-122). Each names a full-stack-seeds.json scenario and alias (or a client-only state), the view to open at the scenario clock, the appearances to capture (every palette unless the specimen pins one) and any injected fault or stale write. Clients capture these against a test environment; MAZ-122 owns the visual comparison.",
+  "clock": "2026-10-15T12:00:00Z",
+  "palettes": [
+    "light",
+    "dark",
+    "amoled",
+    "catppuccin"
+  ],
+  "totals": {
+    "alex-2026-10": {
+      "description": "alex, October 2026 at the scenario clock. Recorded counts entries dated in the month (personal shares plus recorded shared shares); projected adds the month's scheduled personal and shared occurrences after today. Income and spending are not an account balance.",
+      "recorded": {
+        "expenseCents": 125950,
+        "incomeCents": 0,
+        "investmentCents": 50000
+      },
+      "scheduled": [
+        {
+          "source": "shared",
+          "title": "Streaming",
+          "date": "2026-10-20",
+          "shareCents": 800
+        },
+        {
+          "source": "personal",
+          "title": "Gym",
+          "date": "2026-10-31",
+          "shareCents": 4000
+        }
+      ],
+      "projected": {
+        "expenseCents": 130750,
+        "incomeCents": 0,
+        "investmentCents": 50000
+      }
+    }
+  },
+  "states": [
+    {
+      "specimen": "home",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "home, October 2026",
+      "totals": "alex-2026-10"
+    },
+    {
+      "specimen": "activity",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "activity list, October 2026"
+    },
+    {
+      "specimen": "activity-expenses",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "activity filtered to expenses, October 2026"
+    },
+    {
+      "specimen": "filters",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "activity filters: kind, category, account, trip"
+    },
+    {
+      "specimen": "calendar",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "month calendar, October 2026"
+    },
+    {
+      "specimen": "insights",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "insights, October 2026",
+      "totals": "alex-2026-10"
+    },
+    {
+      "specimen": "money-flow",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "money flow, September 2026 (salary income and spending)"
+    },
+    {
+      "specimen": "add-expense",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "new expense draft"
+    },
+    {
+      "specimen": "add-income",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "new income draft"
+    },
+    {
+      "specimen": "add-investment",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "new investment draft"
+    },
+    {
+      "specimen": "entry-extras",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "entry draft with account, trip and note"
+    },
+    {
+      "specimen": "split",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "entry draft with a 50% personal share"
+    },
+    {
+      "specimen": "entry-detail",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "entry p-party (trip and shared personal share)"
+    },
+    {
+      "specimen": "edit-entry",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "editing entry p-coffee-1"
+    },
+    {
+      "specimen": "category-picker",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "category picker with renamed Groceries & dining"
+    },
+    {
+      "specimen": "account-picker",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "account picker with renamed Everyday chequing"
+    },
+    {
+      "specimen": "date-picker",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "date picker, October 2026"
+    },
+    {
+      "specimen": "repeat-picker",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "repeat picker for a monthly anchor-31 rule"
+    },
+    {
+      "specimen": "trip-picker",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "trip picker with Qu\u00e9bec weekend"
+    },
+    {
+      "specimen": "receipt-upload",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "receipt upload",
+      "blockedBy": "MAZ-60 (.NET receipts); legacy server only"
+    },
+    {
+      "specimen": "receipt",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "receipt preview",
+      "blockedBy": "MAZ-60 (.NET receipts); legacy server only"
+    },
+    {
+      "specimen": "shared",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "shared households and trips list"
+    },
+    {
+      "specimen": "household",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "household Maison"
+    },
+    {
+      "specimen": "balances",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "Maison balances, October 2026 (alex owes bea)",
+      "month": "2026-10"
+    },
+    {
+      "specimen": "shared-expense",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "new shared expense draft in Maison"
+    },
+    {
+      "specimen": "shared-split",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "exact split draft with a zero share"
+    },
+    {
+      "specimen": "shared-payer",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "payer picker in Maison"
+    },
+    {
+      "specimen": "shared-expense-detail",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "shared expense Groceries (September, settled by cam)"
+    },
+    {
+      "specimen": "record-share",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "bea",
+      "view": "record alex's share of Internet"
+    },
+    {
+      "specimen": "record-monthly",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "bea",
+      "view": "record October monthly transfer from alex",
+      "month": "2026-10"
+    },
+    {
+      "specimen": "people",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "Maison people: alex, bea, former member cam"
+    },
+    {
+      "specimen": "invite",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "Maison invite code"
+    },
+    {
+      "specimen": "household-create",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "empty",
+      "as": "solo",
+      "view": "create household form"
+    },
+    {
+      "specimen": "join-group",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "empty",
+      "as": "solo",
+      "view": "join with an invite code"
+    },
+    {
+      "specimen": "history",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "Maison audit history"
+    },
+    {
+      "specimen": "archive",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "archive Maison (blocked while October is unsettled)"
+    },
+    {
+      "specimen": "trips",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "trips: Qu\u00e9bec weekend (personal) and Lisbon trip (shared)"
+    },
+    {
+      "specimen": "shared-trip",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "shared trip Lisbon"
+    },
+    {
+      "specimen": "personal-trip",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "personal trip Qu\u00e9bec weekend"
+    },
+    {
+      "specimen": "trip-form",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "new trip form"
+    },
+    {
+      "specimen": "share-personal-trip",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "share Qu\u00e9bec weekend"
+    },
+    {
+      "specimen": "trip-people",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "Lisbon trip people"
+    },
+    {
+      "specimen": "trip-balances",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "Lisbon trip balances (none yet)"
+    },
+    {
+      "specimen": "more",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "more menu"
+    },
+    {
+      "specimen": "recurring",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "recurring: Gym and paused Magazine, shared Streaming"
+    },
+    {
+      "specimen": "recurring-paused",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "paused rule Magazine"
+    },
+    {
+      "specimen": "schedule",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "schedule, October 2026: Streaming 10-20 and Gym 10-31",
+      "totals": "alex-2026-10"
+    },
+    {
+      "specimen": "edit-schedule",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "editing Gym (anchor 31)"
+    },
+    {
+      "specimen": "accounts",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "accounts: Everyday chequing and Visa"
+    },
+    {
+      "specimen": "account-form",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "new account form"
+    },
+    {
+      "specimen": "account-edit",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "editing Everyday chequing"
+    },
+    {
+      "specimen": "categories",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "categories by kind"
+    },
+    {
+      "specimen": "category-form",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "new category form"
+    },
+    {
+      "specimen": "settings",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "settings"
+    },
+    {
+      "specimen": "appearance",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "appearance picker (all four palettes)"
+    },
+    {
+      "specimen": "app-lock-settings",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "app lock settings"
+    },
+    {
+      "specimen": "currency",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "currency CAD"
+    },
+    {
+      "specimen": "server-info",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "server information"
+    },
+    {
+      "specimen": "server-connect",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": null,
+      "client": "signed-out",
+      "view": "server URL entry (environment API URL)"
+    },
+    {
+      "specimen": "server-verified",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": null,
+      "client": "signed-out",
+      "view": "verified environment server"
+    },
+    {
+      "specimen": "sign-in",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "empty",
+      "as": "solo",
+      "client": "signed-out",
+      "view": "password sign-in"
+    },
+    {
+      "specimen": "create-account",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": null,
+      "client": "signed-out",
+      "view": "registration (unique test user)"
+    },
+    {
+      "specimen": "sign-in-sso",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": null,
+      "client": "signed-out",
+      "oidc": true,
+      "view": "single sign-on with the local test provider"
+    },
+    {
+      "specimen": "lock",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "app lock over home"
+    },
+    {
+      "specimen": "empty-home",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "empty",
+      "as": "solo",
+      "view": "home, October 2026, no entries"
+    },
+    {
+      "specimen": "search-empty",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "empty",
+      "as": "solo",
+      "view": "search with no results",
+      "search": {
+        "query": "zzzz"
+      }
+    },
+    {
+      "specimen": "demo-home",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": null,
+      "client": "demo",
+      "view": "demo ledger (no server)"
+    },
+    {
+      "specimen": "offline",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "home while the network fails",
+      "fault": {
+        "target": "http",
+        "abort": true
+      }
+    },
+    {
+      "specimen": "save-error",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "failed save of an entry edit",
+      "fault": {
+        "target": "http",
+        "method": "PUT",
+        "pathPrefix": "/api/ledger",
+        "status": 503,
+        "times": 1
+      },
+      "expect": {
+        "status": 503,
+        "retryStatus": 200
+      }
+    },
+    {
+      "specimen": "saved",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "save succeeded after retry",
+      "fault": {
+        "target": "http",
+        "method": "PUT",
+        "pathPrefix": "/api/ledger",
+        "status": 503,
+        "times": 1
+      },
+      "expect": {
+        "status": 503,
+        "retryStatus": 200
+      }
+    },
+    {
+      "specimen": "delete-entry",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "delete p-coffee-2 confirmation"
+    },
+    {
+      "specimen": "remove-schedule",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "remove Gym confirmation"
+    },
+    {
+      "specimen": "payment-stale",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "bea",
+      "view": "a second device records alex's Internet share with the revision it read before the first payment",
+      "staleWrite": {
+        "method": "POST",
+        "path": "/api/households/$household:maison/expenses/$expense:internet/payments",
+        "requests": [
+          {
+            "body": {
+              "fromUserId": "$user:alex",
+              "revision": 0
+            },
+            "expectStatus": 201
+          },
+          {
+            "body": {
+              "fromUserId": "$user:alex",
+              "revision": 0
+            },
+            "expectStatus": 409,
+            "expectError": "Expense changed. Refresh and try again."
+          }
+        ]
+      }
+    },
+    {
+      "specimen": "sign-out",
+      "platform": "iOS",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "sign out confirmation with no pending changes"
+    },
+    {
+      "specimen": "home-dark",
+      "platform": "iOS",
+      "appearances": [
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "home, October 2026",
+      "totals": "alex-2026-10"
+    },
+    {
+      "specimen": "home-amoled",
+      "platform": "iOS",
+      "appearances": [
+        "amoled"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "home, October 2026",
+      "totals": "alex-2026-10"
+    },
+    {
+      "specimen": "home-catppuccin",
+      "platform": "iOS",
+      "appearances": [
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "home, October 2026",
+      "totals": "alex-2026-10"
+    },
+    {
+      "specimen": "home-android",
+      "platform": "Android",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "home, October 2026 (Android reference, retiring)",
+      "totals": "alex-2026-10"
+    },
+    {
+      "specimen": "desktop",
+      "platform": "Desktop web",
+      "appearances": [
+        "light",
+        "dark",
+        "amoled",
+        "catppuccin"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "desktop web home, October 2026",
+      "totals": "alex-2026-10"
+    }
+  ]
+}
