@@ -1,0 +1,524 @@
+{
+  "description": "Golden shared-expense split cases for calculateHouseholdSplits (src/domain/households.ts) and the .NET HouseholdSplits port. Amounts are integer cents; `error: true` means the split is rejected.",
+  "cases": [
+    {
+      "name": "equal remainder goes to the lexically first members",
+      "totalCents": 10000,
+      "input": {
+        "mode": "equal",
+        "memberIds": [
+          "c",
+          "b",
+          "a"
+        ]
+      },
+      "expected": [
+        {
+          "userId": "a",
+          "amountCents": 3334
+        },
+        {
+          "userId": "b",
+          "amountCents": 3333
+        },
+        {
+          "userId": "c",
+          "amountCents": 3333
+        }
+      ]
+    },
+    {
+      "name": "equal split of one cent leaves zero shares",
+      "totalCents": 1,
+      "input": {
+        "mode": "equal",
+        "memberIds": [
+          "cam",
+          "alex",
+          "bea"
+        ]
+      },
+      "expected": [
+        {
+          "userId": "alex",
+          "amountCents": 1
+        },
+        {
+          "userId": "bea",
+          "amountCents": 0
+        },
+        {
+          "userId": "cam",
+          "amountCents": 0
+        }
+      ]
+    },
+    {
+      "name": "equal split of the largest total",
+      "totalCents": 99999999999,
+      "input": {
+        "mode": "equal",
+        "memberIds": [
+          "g",
+          "f",
+          "e",
+          "d",
+          "c",
+          "b",
+          "a"
+        ]
+      },
+      "expected": [
+        {
+          "userId": "a",
+          "amountCents": 14285714286
+        },
+        {
+          "userId": "b",
+          "amountCents": 14285714286
+        },
+        {
+          "userId": "c",
+          "amountCents": 14285714286
+        },
+        {
+          "userId": "d",
+          "amountCents": 14285714286
+        },
+        {
+          "userId": "e",
+          "amountCents": 14285714285
+        },
+        {
+          "userId": "f",
+          "amountCents": 14285714285
+        },
+        {
+          "userId": "g",
+          "amountCents": 14285714285
+        }
+      ]
+    },
+    {
+      "name": "equal split with one member",
+      "totalCents": 4321,
+      "input": {
+        "mode": "equal",
+        "memberIds": [
+          "solo"
+        ]
+      },
+      "expected": [
+        {
+          "userId": "solo",
+          "amountCents": 4321
+        }
+      ]
+    },
+    {
+      "name": "equal split rejects duplicate members",
+      "totalCents": 100,
+      "input": {
+        "mode": "equal",
+        "memberIds": [
+          "a",
+          "a"
+        ]
+      },
+      "error": true
+    },
+    {
+      "name": "equal split rejects no members",
+      "totalCents": 100,
+      "input": {
+        "mode": "equal",
+        "memberIds": []
+      },
+      "error": true
+    },
+    {
+      "name": "equal split rejects a zero total",
+      "totalCents": 0,
+      "input": {
+        "mode": "equal",
+        "memberIds": [
+          "a"
+        ]
+      },
+      "error": true
+    },
+    {
+      "name": "exact shares are reordered by member",
+      "totalCents": 10000,
+      "input": {
+        "mode": "exact",
+        "allocations": [
+          {
+            "userId": "b",
+            "amountCents": 7250
+          },
+          {
+            "userId": "a",
+            "amountCents": 2750
+          }
+        ]
+      },
+      "expected": [
+        {
+          "userId": "a",
+          "amountCents": 2750
+        },
+        {
+          "userId": "b",
+          "amountCents": 7250
+        }
+      ]
+    },
+    {
+      "name": "exact shares may be zero",
+      "totalCents": 9000,
+      "input": {
+        "mode": "exact",
+        "allocations": [
+          {
+            "userId": "alex",
+            "amountCents": 6000
+          },
+          {
+            "userId": "bea",
+            "amountCents": 0
+          },
+          {
+            "userId": "cam",
+            "amountCents": 3000
+          }
+        ]
+      },
+      "expected": [
+        {
+          "userId": "alex",
+          "amountCents": 6000
+        },
+        {
+          "userId": "bea",
+          "amountCents": 0
+        },
+        {
+          "userId": "cam",
+          "amountCents": 3000
+        }
+      ]
+    },
+    {
+      "name": "exact shares below the total are rejected",
+      "totalCents": 100,
+      "input": {
+        "mode": "exact",
+        "allocations": [
+          {
+            "userId": "a",
+            "amountCents": 99
+          }
+        ]
+      },
+      "error": true
+    },
+    {
+      "name": "exact shares above the total are rejected",
+      "totalCents": 100,
+      "input": {
+        "mode": "exact",
+        "allocations": [
+          {
+            "userId": "a",
+            "amountCents": 60
+          },
+          {
+            "userId": "b",
+            "amountCents": 41
+          }
+        ]
+      },
+      "error": true
+    },
+    {
+      "name": "percent rounding of one cent goes to the largest remainder",
+      "totalCents": 1,
+      "input": {
+        "mode": "percent",
+        "allocations": [
+          {
+            "userId": "c",
+            "percentBasisPoints": 3334
+          },
+          {
+            "userId": "b",
+            "percentBasisPoints": 3333
+          },
+          {
+            "userId": "a",
+            "percentBasisPoints": 3333
+          }
+        ]
+      },
+      "expected": [
+        {
+          "userId": "a",
+          "amountCents": 0
+        },
+        {
+          "userId": "b",
+          "amountCents": 0
+        },
+        {
+          "userId": "c",
+          "amountCents": 1
+        }
+      ]
+    },
+    {
+      "name": "percent halves give the odd cent to the first member",
+      "totalCents": 101,
+      "input": {
+        "mode": "percent",
+        "allocations": [
+          {
+            "userId": "a",
+            "percentBasisPoints": 5000
+          },
+          {
+            "userId": "b",
+            "percentBasisPoints": 5000
+          }
+        ]
+      },
+      "expected": [
+        {
+          "userId": "a",
+          "amountCents": 51
+        },
+        {
+          "userId": "b",
+          "amountCents": 50
+        }
+      ]
+    },
+    {
+      "name": "percent thirds of 100.00",
+      "totalCents": 10000,
+      "input": {
+        "mode": "percent",
+        "allocations": [
+          {
+            "userId": "alex",
+            "percentBasisPoints": 3334
+          },
+          {
+            "userId": "bea",
+            "percentBasisPoints": 3333
+          },
+          {
+            "userId": "cam",
+            "percentBasisPoints": 3333
+          }
+        ]
+      },
+      "expected": [
+        {
+          "userId": "alex",
+          "amountCents": 3334
+        },
+        {
+          "userId": "bea",
+          "amountCents": 3333
+        },
+        {
+          "userId": "cam",
+          "amountCents": 3333
+        }
+      ]
+    },
+    {
+      "name": "percent leftover ties go to the lower id",
+      "totalCents": 3,
+      "input": {
+        "mode": "percent",
+        "allocations": [
+          {
+            "userId": "c",
+            "percentBasisPoints": 3334
+          },
+          {
+            "userId": "b",
+            "percentBasisPoints": 3333
+          },
+          {
+            "userId": "a",
+            "percentBasisPoints": 3333
+          }
+        ]
+      },
+      "expected": [
+        {
+          "userId": "a",
+          "amountCents": 1
+        },
+        {
+          "userId": "b",
+          "amountCents": 1
+        },
+        {
+          "userId": "c",
+          "amountCents": 1
+        }
+      ]
+    },
+    {
+      "name": "percent of the largest total cannot overflow",
+      "totalCents": 99999999999,
+      "input": {
+        "mode": "percent",
+        "allocations": [
+          {
+            "userId": "a",
+            "percentBasisPoints": 3333
+          },
+          {
+            "userId": "b",
+            "percentBasisPoints": 3333
+          },
+          {
+            "userId": "c",
+            "percentBasisPoints": 3334
+          }
+        ]
+      },
+      "expected": [
+        {
+          "userId": "a",
+          "amountCents": 33330000000
+        },
+        {
+          "userId": "b",
+          "amountCents": 33330000000
+        },
+        {
+          "userId": "c",
+          "amountCents": 33339999999
+        }
+      ]
+    },
+    {
+      "name": "percent zero share",
+      "totalCents": 1000,
+      "input": {
+        "mode": "percent",
+        "allocations": [
+          {
+            "userId": "a",
+            "percentBasisPoints": 0
+          },
+          {
+            "userId": "b",
+            "percentBasisPoints": 10000
+          }
+        ]
+      },
+      "expected": [
+        {
+          "userId": "a",
+          "amountCents": 0
+        },
+        {
+          "userId": "b",
+          "amountCents": 1000
+        }
+      ]
+    },
+    {
+      "name": "percent fine-grained basis points",
+      "totalCents": 12345,
+      "input": {
+        "mode": "percent",
+        "allocations": [
+          {
+            "userId": "a",
+            "percentBasisPoints": 1
+          },
+          {
+            "userId": "b",
+            "percentBasisPoints": 4999
+          },
+          {
+            "userId": "c",
+            "percentBasisPoints": 5000
+          }
+        ]
+      },
+      "expected": [
+        {
+          "userId": "a",
+          "amountCents": 1
+        },
+        {
+          "userId": "b",
+          "amountCents": 6171
+        },
+        {
+          "userId": "c",
+          "amountCents": 6173
+        }
+      ]
+    },
+    {
+      "name": "percent below 100% is rejected",
+      "totalCents": 100,
+      "input": {
+        "mode": "percent",
+        "allocations": [
+          {
+            "userId": "a",
+            "percentBasisPoints": 9999
+          }
+        ]
+      },
+      "error": true
+    },
+    {
+      "name": "percent above 100% is rejected",
+      "totalCents": 100,
+      "input": {
+        "mode": "percent",
+        "allocations": [
+          {
+            "userId": "a",
+            "percentBasisPoints": 6000
+          },
+          {
+            "userId": "b",
+            "percentBasisPoints": 4001
+          }
+        ]
+      },
+      "error": true
+    },
+    {
+      "name": "percent duplicate members are rejected",
+      "totalCents": 100,
+      "input": {
+        "mode": "percent",
+        "allocations": [
+          {
+            "userId": "a",
+            "percentBasisPoints": 5000
+          },
+          {
+            "userId": "a",
+            "percentBasisPoints": 5000
+          }
+        ]
+      },
+      "error": true
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 namespace Penny.Backend.Application.Abstractions.Persistence;
 
-// A household audit row. `BeforeJson`/`AfterJson` are JSON text (stored as jsonb).
+// A household audit row. `BeforeJson`/`AfterJson` are JSON text (stored as jsonb);
+// `ExpenseId` links expense and payment events to their expense.
 public sealed record StoredAuditEvent(
     string Id,
     string HouseholdId,
@@ -8,5 +9,6 @@ public sealed record StoredAuditEvent(
     string Action,
     string? BeforeJson,
     string? AfterJson,
-    DateTimeOffset CreatedAt
+    DateTimeOffset CreatedAt,
+    string? ExpenseId = null
 );

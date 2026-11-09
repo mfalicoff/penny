@@ -112,6 +112,7 @@ Cursors are simple keyset positions, base64url-encoded: a format version, a hash
 - The viewer is always the authenticated session's user; requests never accept a user id.
 - Personal entries: only the viewer's own ledger.
 - Shared expenses: the expenses of households the viewer can see, under the same membership-period rules as the household views (MAZ-56/57), including history a former member may still see. Revoked access disappears on the next request.
+- MAZ-57 builds no search tables. `SharedExpenseService` marks seams in expense create, update/move and delete (with splits), and `HouseholdService` in join, leave/removal and archive: MAZ-121 updates its shared-expense documents and visibility at those points, inside the same transaction, before commit ([shared expenses](shared-expenses.md#search-maz-121)).
 - Authorization filters run in SQL **before** matching, ranking, counting and pagination, so counts and ordering never reveal hidden results.
 - The payer's account name is matched only when the viewer is the payer.
 
