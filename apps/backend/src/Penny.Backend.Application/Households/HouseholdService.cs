@@ -246,8 +246,8 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
             cancellationToken
         );
 
-    // Joining consumes the invite atomically: a code admits exactly one join, and a
-    // failed join (currency, already a member, cancellation) leaves it unused.
+    // Legacy invites admit any number of accounts until they expire (10 minutes) or
+    // a new invite replaces them; joining never consumes the code.
     public async Task<HouseholdView> JoinAsync(
         string userId,
         JsonElement? body,
@@ -263,11 +263,16 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
             {
                 var now = Now();
                 var invite = await store.FindInviteAsync(codeHash);
-                if (invite is null || invite.UsedAt is not null || invite.ExpiresAt <= now)
+                if (invite is null || invite.ExpiresAt <= now)
                     throw new BackendFailure(FailureKind.Invalid, InvalidInvite);
                 var householdId = invite.HouseholdId;
                 // Archived households accept no members (their invites are revoked).
-                if (!await store.LockAsync(householdId))
+                // Invite replacement and archive hold this lock, so re-reading the code
+                // under it proves it was not replaced or revoked in the meantime.
+                if (
+                    !await store.LockAsync(householdId)
+                    || await store.FindInviteAsync(codeHash) is null
+                )
                     throw new BackendFailure(FailureKind.Invalid, InvalidInvite);
                 var household =
                     await store.FindAsync(householdId, includeArchived: false)
@@ -279,8 +284,6 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
                     throw new BackendFailure(FailureKind.Invalid, HouseholdCurrency);
                 if (await store.MembershipAsync(householdId, userId) is { IsCurrent: true })
                     throw new BackendFailure(FailureKind.Conflict, AlreadyMember);
-                if (!await store.ClaimInviteAsync(codeHash, now))
-                    throw new BackendFailure(FailureKind.Invalid, InvalidInvite);
                 // A former member rejoins with a new period; earlier periods are kept.
                 await store.OpenPeriodAsync(
                     NewId(),

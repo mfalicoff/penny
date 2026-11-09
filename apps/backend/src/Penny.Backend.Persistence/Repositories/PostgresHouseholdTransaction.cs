@@ -176,21 +176,8 @@ internal sealed class PostgresHouseholdTransaction(
         context
             .HouseholdInvites.AsNoTracking()
             .Where(invite => invite.CodeHash == codeHash)
-            .Select(invite => new StoredInvite(invite.HouseholdId, invite.ExpiresAt, invite.UsedAt))
+            .Select(invite => new StoredInvite(invite.HouseholdId, invite.ExpiresAt))
             .SingleOrDefaultAsync(cancellationToken);
-
-    // The conditional update is the claim. A concurrent claimer of the same row blocks
-    // on its lock, re-evaluates the predicate after the first commits and updates
-    // nothing, so exactly one join sees one affected row.
-    public async Task<bool> ClaimInviteAsync(string codeHash, DateTimeOffset now) =>
-        await context
-            .HouseholdInvites.Where(invite =>
-                invite.CodeHash == codeHash && invite.UsedAt == null && invite.ExpiresAt > now
-            )
-            .ExecuteUpdateAsync(
-                set => set.SetProperty(invite => invite.UsedAt, now),
-                cancellationToken
-            ) == 1;
 
     public async Task ReplaceInviteAsync(
         string householdId,

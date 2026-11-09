@@ -60,7 +60,7 @@ public sealed class ImportedHouseholdTests(ApiFixture fixture) : HouseholdTestBa
             HouseholdService.NotFound
         );
 
-        // The imported invite still admits one account by its legacy hash.
+        // The imported invite still admits accounts by its legacy hash.
         var joined = (
             await ExpectAsync(
                 HttpMethod.Post,
@@ -71,6 +71,16 @@ public sealed class ImportedHouseholdTests(ApiFixture fixture) : HouseholdTestBa
             )
         ).GetProperty("household");
         joined.GetProperty("memberCount").GetInt32().ShouldBe(2);
+        // The former member rejoins with the same imported code; the imported period
+        // is kept. A new invite then replaces the imported one.
+        await ExpectAsync(
+            HttpMethod.Post,
+            "/api/households/join",
+            FormerToken,
+            HttpStatusCode.OK,
+            new { code = ImportedCode }
+        );
+        await InviteAsync("h", CreatorToken);
         await ExpectErrorAsync(
             HttpMethod.Post,
             "/api/households/join",
@@ -78,16 +88,6 @@ public sealed class ImportedHouseholdTests(ApiFixture fixture) : HouseholdTestBa
             HttpStatusCode.BadRequest,
             HouseholdService.InvalidInvite,
             new { code = ImportedCode }
-        );
-
-        // The former member rejoins with a new invite; the imported period is kept.
-        var code = await InviteAsync("h", CreatorToken);
-        await ExpectAsync(
-            HttpMethod.Post,
-            "/api/households/join",
-            FormerToken,
-            HttpStatusCode.OK,
-            new { code }
         );
         (
             await CountAsync(

@@ -1,7 +1,3 @@
 namespace Penny.Backend.Application.Abstractions.Persistence;
 
-public sealed record StoredInvite(
-    string HouseholdId,
-    DateTimeOffset ExpiresAt,
-    DateTimeOffset? UsedAt
-);
+public sealed record StoredInvite(string HouseholdId, DateTimeOffset ExpiresAt);

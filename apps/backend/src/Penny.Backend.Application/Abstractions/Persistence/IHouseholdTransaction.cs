@@ -34,11 +34,7 @@ public interface IHouseholdTransaction
 
     Task<StoredInvite?> FindInviteAsync(string codeHash);
 
-    // Marks an unused, unexpired invite used. False if another join consumed it first,
-    // or it expired or was replaced.
-    Task<bool> ClaimInviteAsync(string codeHash, DateTimeOffset now);
-
-    // Deletes the household's earlier invites (used or not) and stores this one.
+    // Deletes the household's earlier invites and stores this one.
     Task ReplaceInviteAsync(string householdId, string codeHash, DateTimeOffset expiresAt);
 
     Task DeleteInvitesAsync(string householdId);

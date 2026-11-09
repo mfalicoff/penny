@@ -35,7 +35,7 @@ Errors use `{error: string}`. Request bodies follow the legacy zod schemas: unkn
 | Create / create trip | body (`400 Invalid household data.`) → creator's ledger currency equals `currency` (`400 Household currency must match your ledger currency.` / `400 Trip currency must match your ledger currency.`) |
 | Rename / update trip | current member of an unarchived household (`404 Household not found.`) → creator (`403 Only the household creator can manage members.`) → body (`400`) → trip update on a regular household (`404 Trip not found.`) |
 | Invite / archive | member (`404`) → creator (`403`) → archive only: every month settled (`409 Settle all monthly balances before archiving.`) |
-| Join | body: `code` is 10 hex characters, any case (`400 Invalid household data.`) → code exists, unused and unexpired, household not archived (`400 Invite code is invalid or expired.`) → joiner's ledger currency equals the household's (`400 Household currency must match your ledger currency.`) → not already a current member (`409 You are already a member.`) |
+| Join | body: `code` is 10 hex characters, any case (`400 Invalid household data.`) → code exists and is unexpired (not replaced), household not archived (`400 Invite code is invalid or expired.`) → joiner's ledger currency equals the household's (`400 Household currency must match your ledger currency.`) → not already a current member (`409 You are already a member.`) |
 | Leave | current member (`404`) → creator with other current members (`409 The creator cannot leave while other members remain.`) → caller settled in every month (`409 Settle every monthly balance before leaving.`) |
 | Remove | caller is a current member (`404`) → caller is creator (`403`) → target is not the creator (`400 The creator cannot remove themselves.`) → target is a current member (`404`) → target settled (`409 Settle every monthly balance before leaving.`) |
 
@@ -56,7 +56,7 @@ Errors use `{error: string}`. Request bodies follow the legacy zod schemas: unkn
 - A code is 5 random bytes from the BCL `RandomNumberGenerator`, written as 10 upper-case hex characters. Only `SHA-256(code)` (lower-case hex, the legacy `hashToken`) is stored in `household_invites.code_hash`, so stored hashes cannot be replayed and imported invites keep working. Codes are accepted in any case.
 - A code expires 10 minutes after it is issued (`expiresAt` is Unix milliseconds; valid while `expiresAt > now`).
 - A household has one live code: issuing a new code deletes the previous ones.
-- **A code admits exactly one join.** The join marks it used (`used_at`) with a conditional update in the joining transaction. A join that fails for any reason (currency, already a member, cancellation, timeout) rolls back and leaves the code usable.
+- **A code admits any number of accounts** until it expires or is replaced, as in legacy, so one code can be shared with a group. Joining never consumes or marks it (`household_invites.used_at` stays empty). Each account still joins only once: a current member gets `409 You are already a member.`
 
 ## Shared trips and personal trip links
 
@@ -70,10 +70,10 @@ Every mutation runs in one READ COMMITTED transaction in `PostgresHouseholdRepos
 
 - **Household lock first.** Every membership writer (rename, trip, invite, join, leave, remove, archive) first locks the household row, then re-checks membership and creator rights inside the lock. Writers of one household therefore serialize; settlement checks see the committed state the change is based on. Shared-expense writers (MAZ-57/58) must take the same lock before changing splits or reimbursements, so the settlement check stays race-free.
 - **Ledger lock second.** Create and join lock the member's `ledgers` row (the row `PUT /api/ledger` compare-and-increments) before comparing currencies, so a concurrent ledger save that changes currency either commits first (the join then fails) or waits and then fails ledger check 5. A member can never end up in a household with a different currency.
-- **Invites last.** The join reads the invite, locks the household and ledger, then claims the invite with `UPDATE household_invites SET used_at = now WHERE code_hash = @h AND used_at IS NULL AND expires_at > now`. A concurrent claimer waits on the row lock, re-evaluates the predicate after the first commits and updates nothing, so exactly one join succeeds.
+- **Invite re-check under the lock.** The join reads the invite to find its household, locks the household, then reads the invite again. Issuing a new code and archiving hold the same household lock while they delete invites, so a code replaced or revoked by a concurrent request is rejected (`400 Invite code is invalid or expired.`) and never admits anyone after its replacement commits. Joins of one household serialize on the household lock, so concurrent joins of different accounts with one code each succeed exactly once, and the same account racing itself opens one period (the loser gets `409 You are already a member.`; the partial unique index on open periods is the backstop).
 - Locks are taken with EF `ExecuteUpdate` statements that rewrite a column with its own value; PostgreSQL holds the row lock until commit. This keeps the [raw SQL inventory](postgresql.md#raw-sql-inventory) unchanged, and the lock does not block foreign-key checks of rows that merely reference the household. The order (household, then the user's ledger, then invites and periods) matches the [documented lock order](postgresql.md#concurrency-and-transactions), and ledger saves never lock households, so these writers cannot deadlock with each other or with ledger saves. No request is retried by the server.
 
-Verified with real PostgreSQL: eight accounts redeeming one code at once (exactly one joins), one account joining twice at once (one open period), join against archive, leave against removal, leave against archive, join against a ledger currency change, and join against invite replacement.
+Verified with real PostgreSQL: eight accounts using one code at once (each joins exactly once), one account joining twice at once (one open period), join against archive, leave against removal, leave against archive, join against a ledger currency change, and join against invite replacement.
 
 **Search (MAZ-121).** No search projection exists yet. `HouseholdService` marks the seams in join, leave/removal and archive: when MAZ-121 adds membership-derived search visibility it must update it inside these transactions, before commit, so search access changes exactly when membership does.
 
@@ -87,7 +87,6 @@ Imported SQLite households work unchanged: `household_trips` became the trip ran
 
 ## Deliberate differences from the legacy service
 
-- **Single-use invite codes.** Legacy codes admitted any number of accounts until they expired or were replaced. Each code now admits one join; the creator issues a new code per person (issuing still replaces the previous code). Imported codes follow the new rule.
 - **Archived households.** Archiving now deletes outstanding invites, and a code for an archived household answers `400 Invite code is invalid or expired.` (legacy answered the same status with the misleading `Household currency must match your ledger currency.`).
 - **Concurrency.** Legacy SQLite serialized every write globally (`BEGIN IMMEDIATE` in one process); PostgreSQL serializes per household and per member ledger with row locks, with the same outcomes.
 - **Stored text.** Names containing NUL or unpaired UTF-16 surrogates are invalid (`400 Invalid household data.`) because PostgreSQL text cannot hold them; route ids containing them are `404`. Same rule as the ledger.

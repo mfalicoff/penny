@@ -11,12 +11,13 @@ namespace Penny.Backend.IntegrationTests.Controllers;
 public sealed class HouseholdMembershipTests(ApiFixture fixture) : HouseholdTestBase(fixture)
 {
     [Fact]
-    public async Task whenInviteExpiredReusedOrReplaced_JoinHousehold_ShouldRejectWithoutConsuming()
+    public async Task whenInviteReusedExpiredOrReplaced_JoinHousehold_ShouldAdmitUntilExpiryOrReplacement()
     {
         At(Noon);
         var (alex, _) = await AccountAsync("alex@example.test");
         var (bea, _) = await AccountAsync("bea@example.test");
         var (cam, _) = await AccountAsync("cam@example.test");
+        var (dan, _) = await AccountAsync("dan@example.test");
         var home = (await CreateHouseholdAsync(alex)).GetProperty("id").GetString()!;
 
         var invite = await ExpectAsync(
@@ -94,7 +95,7 @@ public sealed class HouseholdMembershipTests(ApiFixture fixture) : HouseholdTest
             new { code }
         );
 
-        // Codes are case-insensitive and single-use.
+        // Codes are case-insensitive and admit several accounts, as in legacy.
         var joined = (
             await ExpectAsync(
                 HttpMethod.Post,
@@ -106,17 +107,28 @@ public sealed class HouseholdMembershipTests(ApiFixture fixture) : HouseholdTest
         ).GetProperty("household");
         joined.GetProperty("id").GetString().ShouldBe(home);
         joined.GetProperty("memberCount").GetInt32().ShouldBe(2);
+        var reused = (
+            await ExpectAsync(
+                HttpMethod.Post,
+                "/api/households/join",
+                cam,
+                HttpStatusCode.OK,
+                new { code }
+            )
+        ).GetProperty("household");
+        reused.GetProperty("memberCount").GetInt32().ShouldBe(3);
+        // Each account still joins once.
         await ExpectErrorAsync(
             HttpMethod.Post,
             "/api/households/join",
-            cam,
-            HttpStatusCode.BadRequest,
-            HouseholdService.InvalidInvite,
+            bea,
+            HttpStatusCode.Conflict,
+            HouseholdService.AlreadyMember,
             new { code }
         );
         (
             await CountAsync(
-                $"SELECT count(*) FROM penny.household_invites WHERE household_id = '{home}' AND used_at IS NOT NULL"
+                $"SELECT count(*) FROM penny.household_invites WHERE household_id = '{home}' AND used_at IS NULL"
             )
         ).ShouldBe(1L);
 
@@ -126,7 +138,15 @@ public sealed class HouseholdMembershipTests(ApiFixture fixture) : HouseholdTest
         await ExpectErrorAsync(
             HttpMethod.Post,
             "/api/households/join",
-            cam,
+            dan,
+            HttpStatusCode.BadRequest,
+            HouseholdService.InvalidInvite,
+            new { code }
+        );
+        await ExpectErrorAsync(
+            HttpMethod.Post,
+            "/api/households/join",
+            dan,
             HttpStatusCode.BadRequest,
             HouseholdService.InvalidInvite,
             new { code = first }
@@ -142,7 +162,7 @@ public sealed class HouseholdMembershipTests(ApiFixture fixture) : HouseholdTest
         await ExpectErrorAsync(
             HttpMethod.Post,
             "/api/households/join",
-            cam,
+            dan,
             HttpStatusCode.BadRequest,
             HouseholdService.InvalidInvite,
             new { code = second }
@@ -152,7 +172,7 @@ public sealed class HouseholdMembershipTests(ApiFixture fixture) : HouseholdTest
         await ExpectAsync(
             HttpMethod.Post,
             "/api/households/join",
-            cam,
+            dan,
             HttpStatusCode.OK,
             new { code = third }
         );
@@ -160,7 +180,7 @@ public sealed class HouseholdMembershipTests(ApiFixture fixture) : HouseholdTest
             await CountAsync(
                 $"SELECT count(*) FROM penny.household_audit WHERE household_id = '{home}' AND action = 'member.joined'"
             )
-        ).ShouldBe(2L);
+        ).ShouldBe(3L);
         (
             await CountAsync(
                 $"SELECT count(*) FROM penny.household_audit WHERE household_id = '{home}' AND action = 'invite.created'"

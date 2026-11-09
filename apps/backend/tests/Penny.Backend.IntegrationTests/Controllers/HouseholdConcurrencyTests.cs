@@ -16,34 +16,53 @@ public sealed class HouseholdConcurrencyTests(ApiFixture fixture) : HouseholdTes
     private const int Rounds = 4;
 
     [Fact]
-    public async Task whenManyAccountsRedeemOneInvite_JoinHousehold_ShouldAdmitExactlyOne()
+    public async Task whenManyAccountsUseOneInvite_JoinHousehold_ShouldAdmitEachExactlyOnce()
     {
         var (alex, _) = await AccountAsync("alex@example.test");
-        var tokens = new List<string>();
+        var guests = new List<(string Token, string UserId)>();
         for (var index = 0; index < 8; index++)
-            tokens.Add((await AccountAsync($"guest{index}@example.test")).Token);
+            guests.Add(await AccountAsync($"guest{index}@example.test"));
         var home = (await CreateHouseholdAsync(alex)).GetProperty("id").GetString()!;
         var code = await InviteAsync(home, alex);
 
+        // Every guest sends its join twice at once; one code serves them all.
         var results = await Task.WhenAll(
-            tokens.Select(token => OutcomeAsync(JoinAsync(token, code)))
+            guests.SelectMany(guest =>
+                new[]
+                {
+                    OutcomeAsync(JoinAsync(guest.Token, code)),
+                    OutcomeAsync(JoinAsync(guest.Token, code)),
+                }
+            )
         );
 
-        results.Count(result => result.Status == HttpStatusCode.OK).ShouldBe(1);
+        results.Count(result => result.Status == HttpStatusCode.OK).ShouldBe(guests.Count);
         results
             .Where(result => result.Status != HttpStatusCode.OK)
             .ShouldAllBe(result =>
-                result.Status == HttpStatusCode.BadRequest
-                && result.Error == HouseholdService.InvalidInvite
+                result.Status == HttpStatusCode.Conflict
+                && result.Error == HouseholdService.AlreadyMember
             );
+        foreach (var (_, userId) in guests)
+            (
+                await CountAsync(
+                    $"SELECT count(*) FROM penny.household_member_periods WHERE household_id = '{home}' AND user_id = '{userId}'"
+                )
+            ).ShouldBe(1L);
         (
             await CountAsync(
                 $"SELECT count(*) FROM penny.household_member_periods WHERE household_id = '{home}' AND left_at IS NULL"
             )
-        ).ShouldBe(2L);
+        ).ShouldBe(guests.Count + 1L);
         (
             await CountAsync(
                 $"SELECT count(*) FROM penny.household_audit WHERE household_id = '{home}' AND action = 'member.joined'"
+            )
+        ).ShouldBe(guests.Count);
+        // The code is still live for the next person.
+        (
+            await CountAsync(
+                $"SELECT count(*) FROM penny.household_invites WHERE household_id = '{home}' AND used_at IS NULL"
             )
         ).ShouldBe(1L);
     }
@@ -62,11 +81,10 @@ public sealed class HouseholdConcurrencyTests(ApiFixture fixture) : HouseholdTes
                 OutcomeAsync(JoinAsync(bea, code))
             );
             results.Count(result => result.Status == HttpStatusCode.OK).ShouldBe(1);
-            // The loser waited on the household lock, then found itself admitted (or,
-            // had it read the invite later, the code consumed).
+            // The loser waited on the household lock, then found itself admitted.
             results.ShouldContain(result =>
-                result.Error == HouseholdService.AlreadyMember
-                || result.Error == HouseholdService.InvalidInvite
+                result.Status == HttpStatusCode.Conflict
+                && result.Error == HouseholdService.AlreadyMember
             );
             (
                 await CountAsync(
