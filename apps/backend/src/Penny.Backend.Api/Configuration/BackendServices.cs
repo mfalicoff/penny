@@ -245,6 +245,17 @@ public static class BackendServices
             configuration["Receipts:MasterKey"]
         );
         services.AddSingleton(new ReceiptFileStore(receipts));
+        // Readiness after PostgreSQL (MAZ-63): writable receipt root with free space.
+        var minimumFreeMegabytes = BackendOptions.ReadBounded(
+            configuration,
+            "Receipts:MinFreeMegabytes",
+            100,
+            0,
+            1_000_000
+        );
+        services.AddSingleton<IStorageReadiness>(
+            new ReceiptStorageReadiness(receipts, minimumFreeMegabytes * 1024L * 1024L)
+        );
         services.AddSingleton<IReceiptRepository, PostgresReceiptRepository>();
         services.AddSingleton<ReceiptService>();
         services.AddSingleton<ILedgerRepository, PostgresLedgerRepository>();
