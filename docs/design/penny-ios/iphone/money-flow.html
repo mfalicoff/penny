@@ -1,0 +1,55 @@
+<!-- @dsCard group="iPhone" name="Money flow (Sankey)" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Money flow</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script><script src="../assets/sankey.js"></script>
+<style>
+  .head { padding: 112px 20px 0; }
+  .head p { font-size: 15px; color: var(--label-2); margin-top: 2px; }
+  .totals { display: flex; gap: 22px; padding: 14px 20px 0; }
+  .totals div { font-size: 13px; color: var(--label-2); }
+  .totals b { display: block; font-size: 20px; font-weight: 700; color: var(--label); letter-spacing: -0.02em; margin-top: 2px; }
+  .chart { margin: 14px 16px 0; padding: 12px 0 10px; }
+  .colh { display: flex; justify-content: space-between; padding: 0 16px; font-size: 11px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .05em; }
+  .focus { margin: 10px 16px 0; padding: 12px 14px; display: flex; align-items: center; gap: 12px; }
+  .focus .t { flex: 1; } .focus b { font-size: 16px; display: block; } .focus span { font-size: 13px; color: var(--label-2); }
+  .focus .x { width: 28px; height: 28px; border-radius: 50%; background: var(--fill); display: grid; place-items: center; color: var(--label-2); }
+  .focus .x [data-i] { width: 15px; height: 15px; --sw: 48px; }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <div class="island"></div>
+  <div class="status"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="scroll">
+    <div class="navbar">
+      <div class="glass gbtn"><i data-i="chevron-back"></i></div>
+      <div class="glass gcap">November <i data-i="chevron-down" style="width:15px;height:15px;--sw:52px"></i></div>
+    </div>
+    <div class="head"><div class="largetitle">Money flow</div><p>From coming in to going out</p></div>
+    <div class="totals">
+      <div>Came in<b class="num pos">$3,200.00</b></div>
+      <div>Went out<b class="num">$2,083.35</b></div>
+      <div>Left over<b class="num">$1,116.65</b></div>
+    </div>
+    <div class="card chart">
+      <div class="colh"><span>Income</span><span>Where it goes</span></div>
+      <div id="sankey" style="padding:0 6px"></div>
+    </div>
+    <div class="card focus">
+      <div class="ic" style="background:var(--c-home)"><i data-i="home"></i></div>
+      <div class="t"><b>Home · <span class="num" style="font-size:16px;color:var(--label)">$1,450.00</span></b><span>45% of income · 77% of spending</span></div>
+      <div class="x"><i data-i="close"></i></div>
+    </div>
+  </div>
+  <div class="tabbar">
+    <div class="tabs glass">
+      <div class="tab on"><i data-i="home"></i>Home</div>
+      <div class="tab"><i data-i="list"></i>Activity</div>
+      <div class="tab"><i data-i="people"></i>Shared</div>
+      <div class="tab"><i data-i="airplane"></i>Trips</div>
+    </div>
+    <div class="fab glass tinted"><i data-i="add"></i></div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+<script>drawSankey(document.getElementById("sankey"), { width: 358, height: 388, band: 230, slot: 36, gap: 6, leftLabel: 74, rightLabel: 104, highlight: "home" });</script>
+</body></html>
