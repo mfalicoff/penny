@@ -43,7 +43,7 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
     private const string Created = "expense.created";
     private const string Updated = "expense.updated";
 
-    private static readonly JsonSerializerOptions AuditJson = new(JsonSerializerDefaults.Web)
+    internal static readonly JsonSerializerOptions AuditJson = new(JsonSerializerDefaults.Web)
     {
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     };
@@ -524,7 +524,7 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
                 if (!active.Contains(rule.PayerId, StringComparer.Ordinal))
                     continue;
                 var share = ExpenseSplit
-                    .Recurring(rule.TotalCents, rule.SplitMode, rule.Allocations, active)
+                    .Occurrence(rule.TotalCents, rule.SplitMode, rule.Allocations, active)
                     .Shares.FirstOrDefault(part =>
                         string.Equals(part.UserId, userId, StringComparison.Ordinal)
                     );
@@ -617,7 +617,7 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
 
     // Only the payer attaches their own account, and it must be in their ledger. The
     // ledger row stays locked, so the account cannot be deleted before commit.
-    private static async Task ValidateAccountAsync(
+    internal static async Task ValidateAccountAsync(
         ISharedExpenseTransaction store,
         string payerId,
         string actorId,
@@ -634,7 +634,7 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
 
     // A receipt is the actor's own upload, or one a live expense of the household
     // already shares with its members.
-    private static async Task ValidateReceiptAsync(
+    internal static async Task ValidateReceiptAsync(
         ISharedExpenseTransaction store,
         string householdId,
         string actorId,
@@ -651,7 +651,7 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
     }
 
     // Legacy `requireMember(..., historical = true)`: any membership, archived or not.
-    private static async Task<StoredMember> HistoricalMemberAsync(
+    internal static async Task<StoredMember> HistoricalMemberAsync(
         ISharedExpenseTransaction store,
         string householdId,
         string userId
@@ -672,7 +672,7 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
 
     // Legacy `requireMember`: a current member of an unarchived household, holding the
     // household lock for the rest of the unit.
-    private static async Task<StoredHousehold> RequireMemberAsync(
+    internal static async Task<StoredHousehold> RequireMemberAsync(
         ISharedExpenseTransaction store,
         string householdId,
         string userId
@@ -741,7 +741,7 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
             ? store.FindExpenseAsync(householdId, expenseId)
             : Task.FromResult<StoredExpense?>(null);
 
-    private static async Task<ExpenseView> ViewAsync(
+    internal static async Task<ExpenseView> ViewAsync(
         ISharedExpenseTransaction store,
         string householdId,
         string expenseId,
@@ -776,7 +776,7 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
     // Writes the audit row and, for events that notify (`month` set: created, updated
     // and payment events, as legacy), one push outbox row for every other current
     // member, all in this transaction. The push worker is MAZ-61's.
-    private static async Task AuditAsync(
+    internal static async Task AuditAsync(
         ISharedExpenseTransaction store,
         string householdId,
         string actorId,
@@ -833,10 +833,10 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
         date.ToString("yyyy-MM", CultureInfo.InvariantCulture);
 
     // Route values that PostgreSQL text cannot hold match nothing.
-    private static bool Storable(string id) => LedgerText.IsStorable(id);
+    internal static bool Storable(string id) => LedgerText.IsStorable(id);
 
     // Legacy `randomId(16)`: 16 random bytes as lower-case hex.
-    private static string NewId() => RandomNumberGenerator.GetHexString(32, lowercase: true);
+    internal static string NewId() => RandomNumberGenerator.GetHexString(32, lowercase: true);
 
     private DateTimeOffset Now() => MembershipDates.Truncate(clock.GetUtcNow());
 }

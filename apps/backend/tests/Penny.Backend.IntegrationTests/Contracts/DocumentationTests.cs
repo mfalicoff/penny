@@ -89,6 +89,11 @@ public sealed class DocumentationTests(ApiFixture fixture) : IntegrationTestBase
                 ("/api/households/{id}/expenses/{expenseId}", "put"),
                 ("/api/households/{id}/expenses/{expenseId}", "delete"),
                 ("/api/households/{id}/expenses/{expenseId}/payments", "post"),
+                // Shared recurring rules (MAZ-59).
+                ("/api/households/{id}/recurring", "get"),
+                ("/api/households/{id}/recurring", "post"),
+                ("/api/households/{id}/recurring/{ruleId}", "put"),
+                ("/api/households/{id}/recurring/{ruleId}", "delete"),
             }
         )
         {
@@ -101,14 +106,13 @@ public sealed class DocumentationTests(ApiFixture fixture) : IntegrationTestBase
                 .ShouldBe(operation["operationId"]!.GetValue<string>());
             operation["x-implementation"]!.GetValue<string>().ShouldBe("legacy");
         }
-        // Month, reimbursement, audit and recurrence routes are not implemented in
-        // .NET yet (MAZ-58/59) and are not advertised.
+        // Month, reimbursement and audit routes are not implemented in .NET yet
+        // (MAZ-58) and are not advertised.
         paths.TryGetProperty("/api/households/{id}/months/{month}", out _).ShouldBeFalse();
         paths
             .TryGetProperty("/api/households/{id}/months/{month}/reimbursements", out _)
             .ShouldBeFalse();
         paths.TryGetProperty("/api/households/{id}/audit", out _).ShouldBeFalse();
-        paths.TryGetProperty("/api/households/{id}/recurring", out _).ShouldBeFalse();
         // The .NET-only password reset (MAZ-123) is in the shared contract too.
         var reset = ContractFixtures.OpenApi()["paths"]!["/api/auth/password-reset"]!["post"]!;
         reset["operationId"]!.GetValue<string>().ShouldBe("postApiAuthPasswordReset");

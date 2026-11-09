@@ -127,6 +127,7 @@ internal sealed class PostgresSharedExpenseTransaction(
                 CreatedAt = now,
                 UpdatedBy = actorId,
                 UpdatedAt = now,
+                RecurringId = record.RecurringId,
             }
         );
         AddSplits(expenseId, record.Splits);
@@ -394,6 +395,190 @@ internal sealed class PostgresSharedExpenseTransaction(
                 .Select(expense => expense.ExpenseDate)
                 .ToListAsync(Cancellation)
         ).ToHashSet();
+
+    public async Task<IReadOnlyList<StoredRule>> ListRulesAsync(string householdId) =>
+        [
+            .. (
+                await LoadRulesAsync(
+                    Context.HouseholdRecurring.Where(rule => rule.HouseholdId == householdId)
+                )
+            )
+                .OrderBy(rule => rule.Values.NextDate)
+                .ThenBy(rule => rule.Id, StringComparer.Ordinal),
+        ];
+
+    public async Task<StoredRule?> FindRuleAsync(string householdId, string ruleId) =>
+        (
+            await LoadRulesAsync(
+                Context.HouseholdRecurring.Where(rule =>
+                    rule.Id == ruleId && rule.HouseholdId == householdId
+                )
+            )
+        ).SingleOrDefault();
+
+    public async Task AddRuleAsync(
+        string ruleId,
+        string householdId,
+        RuleRecord record,
+        string actorId
+    )
+    {
+        Context.HouseholdRecurring.Add(
+            new HouseholdRecurring
+            {
+                Id = ruleId,
+                HouseholdId = householdId,
+                Title = record.Title,
+                TotalCents = record.TotalCents,
+                PayerId = record.PayerId,
+                SplitMode = record.SplitMode,
+                CategoryName = record.Category.Name,
+                CategoryIcon = record.Category.Icon,
+                CategoryColor = record.Category.Color,
+                Note = record.Note,
+                AccountId = record.AccountId,
+                ReceiptId = record.ReceiptId,
+                Frequency = record.Frequency,
+                NextDate = record.NextDate,
+                AnchorDay = (short)record.AnchorDay,
+                Active = record.Active,
+                CreatedBy = actorId,
+                Revision = 0,
+            }
+        );
+        AddAllocations(ruleId, record.Allocations);
+        await Context.SaveChangesAsync(Cancellation);
+    }
+
+    public async Task<bool> UpdateRuleAsync(
+        string householdId,
+        string ruleId,
+        long revision,
+        RuleRecord record
+    )
+    {
+        var anchorDay = (short)record.AnchorDay;
+        var updated = await Context
+            .HouseholdRecurring.Where(rule =>
+                rule.Id == ruleId && rule.HouseholdId == householdId && rule.Revision == revision
+            )
+            .ExecuteUpdateAsync(
+                set =>
+                    set.SetProperty(rule => rule.Title, record.Title)
+                        .SetProperty(rule => rule.TotalCents, record.TotalCents)
+                        .SetProperty(rule => rule.PayerId, record.PayerId)
+                        .SetProperty(rule => rule.SplitMode, record.SplitMode)
+                        .SetProperty(rule => rule.CategoryName, record.Category.Name)
+                        .SetProperty(rule => rule.CategoryIcon, record.Category.Icon)
+                        .SetProperty(rule => rule.CategoryColor, record.Category.Color)
+                        .SetProperty(rule => rule.Note, record.Note)
+                        .SetProperty(rule => rule.AccountId, record.AccountId)
+                        .SetProperty(rule => rule.ReceiptId, record.ReceiptId)
+                        .SetProperty(rule => rule.Frequency, record.Frequency)
+                        .SetProperty(rule => rule.NextDate, record.NextDate)
+                        .SetProperty(rule => rule.AnchorDay, anchorDay)
+                        .SetProperty(rule => rule.Active, record.Active)
+                        .SetProperty(rule => rule.Revision, rule => rule.Revision + 1),
+                Cancellation
+            );
+        if (updated != 1)
+            return false;
+        await Context
+            .HouseholdRecurringAllocations.Where(allocation => allocation.RecurringId == ruleId)
+            .ExecuteDeleteAsync(Cancellation);
+        AddAllocations(ruleId, record.Allocations);
+        await Context.SaveChangesAsync(Cancellation);
+        return true;
+    }
+
+    // Allocations go with the rule (the only cascading foreign key besides devices).
+    public async Task<bool> DeleteRuleAsync(string householdId, string ruleId, long revision) =>
+        await Context
+            .HouseholdRecurring.Where(rule =>
+                rule.Id == ruleId && rule.HouseholdId == householdId && rule.Revision == revision
+            )
+            .ExecuteDeleteAsync(Cancellation) == 1;
+
+    public async Task<bool> AdvanceRuleAsync(
+        string ruleId,
+        string leaseToken,
+        DateOnly from,
+        DateOnly to,
+        DateTimeOffset leaseUntil
+    ) =>
+        await Context
+            .HouseholdRecurring.Where(rule =>
+                rule.Id == ruleId
+                && rule.LeaseToken == leaseToken
+                && rule.NextDate == from
+                && rule.Active
+            )
+            .ExecuteUpdateAsync(
+                set =>
+                    set.SetProperty(rule => rule.NextDate, to)
+                        .SetProperty(rule => rule.Revision, rule => rule.Revision + 1)
+                        .SetProperty(rule => rule.LeaseExpiresAt, leaseUntil),
+                Cancellation
+            ) == 1;
+
+    private void AddAllocations(string ruleId, IReadOnlyList<SplitAllocation> allocations) =>
+        Context.HouseholdRecurringAllocations.AddRange(
+            allocations.Select(allocation => new HouseholdRecurringAllocation
+            {
+                RecurringId = ruleId,
+                UserId = allocation.UserId,
+                AmountCents = allocation.AmountCents,
+                PercentBasisPoints = (int?)allocation.PercentBasisPoints,
+            })
+        );
+
+    // Rules with their allocations (ordered by member id), in two queries.
+    private async Task<List<StoredRule>> LoadRulesAsync(IQueryable<HouseholdRecurring> query)
+    {
+        var rows = await query.AsNoTracking().ToListAsync(Cancellation);
+        if (rows.Count == 0)
+            return [];
+        var ids = rows.Select(row => row.Id).ToList();
+        var allocations = (
+            await Context
+                .HouseholdRecurringAllocations.AsNoTracking()
+                .Where(allocation => ids.Contains(allocation.RecurringId))
+                .ToListAsync(Cancellation)
+        ).ToLookup(allocation => allocation.RecurringId, StringComparer.Ordinal);
+        return
+        [
+            .. rows.Select(row => new StoredRule(
+                row.Id,
+                row.HouseholdId,
+                new RuleRecord(
+                    row.Title,
+                    row.TotalCents,
+                    row.PayerId,
+                    row.SplitMode,
+                    [
+                        .. allocations[row.Id]
+                            .OrderBy(allocation => allocation.UserId, StringComparer.Ordinal)
+                            .Select(allocation => new SplitAllocation(
+                                allocation.UserId,
+                                allocation.AmountCents,
+                                allocation.PercentBasisPoints
+                            )),
+                    ],
+                    new ExpenseCategory(row.CategoryName, row.CategoryIcon, row.CategoryColor),
+                    row.Note,
+                    row.AccountId,
+                    row.ReceiptId,
+                    row.Frequency,
+                    row.NextDate,
+                    row.AnchorDay,
+                    row.Active
+                ),
+                row.CreatedBy,
+                row.Revision,
+                row.LeaseToken
+            )),
+        ];
+    }
 
     // The live expense at `revision`; an update through this query is the
     // compare-and-increment.

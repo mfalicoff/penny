@@ -4,7 +4,7 @@ The .NET backend serves the household and shared-trip **membership, invitation, 
 
 Code: `Domain/Households` (request schemas, local join day, settlement rule), `Application/Households/HouseholdService` (rules, check order, audit), `Persistence/Repositories/PostgresHouseholdRepository` and `PostgresHouseholdTransaction` (transactions and row locks), `Api/Controllers/HouseholdsController`, `Api/Households/InviteRateLimit`. Tests: `UnitTests/Households` and the real-PostgreSQL `IntegrationTests/Controllers/Household*Tests`, `Http/HouseholdPolicyTests` and `Migrations/ImportedHouseholdTests`.
 
-Shared expenses, splits, individual payments and the personal projection are served by MAZ-57 ([shared expenses](shared-expenses.md)). Monthly recap, reimbursements and the audit endpoint (MAZ-58), shared recurrence (MAZ-59), push (MAZ-61), search (MAZ-121) and email invitations (MAZ-124) are not part of this port; their .NET routes return `404 API route not found.`
+Shared expenses, splits, individual payments and the personal projection are served by MAZ-57 ([shared expenses](shared-expenses.md)). Shared recurrence is served by MAZ-59 ([shared recurrence](shared-recurrence.md)). Monthly recap, reimbursements and the audit endpoint (MAZ-58), push (MAZ-61), search (MAZ-121) and email invitations (MAZ-124) are not part of this port; their .NET routes return `404 API route not found.`
 
 ## Endpoints
 

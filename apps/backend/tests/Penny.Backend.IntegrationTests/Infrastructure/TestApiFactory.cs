@@ -43,6 +43,8 @@ public sealed class TestApiFactory(
         // Tests drive the embedding outbox explicitly; worker tests start their own host.
         builder.UseSetting("Search:EmbeddingWorker", "false");
         builder.UseSetting("Search:RateLimitPermits", "10000");
+        // Tests run the shared recurrence runner explicitly with the pinned clock.
+        builder.UseSetting("Recurrence:Worker", "false");
         builder.UseSetting("Backend:RequestTimeoutSeconds", "2");
         builder.UseSetting("Backend:ShutdownTimeoutSeconds", "5");
         builder.UseSetting("Logging:LogLevel:Default", "None");

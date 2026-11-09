@@ -78,8 +78,23 @@ public static class BackendServices
         // Shared expenses show receipt names, so they use the receipt store too.
         builder.Services.AddSingleton<ISharedExpenseRepository, PostgresSharedExpenseRepository>();
         builder.Services.AddSingleton<SharedExpenseService>();
+        AddRecurrenceServices(builder.Services, RecurrenceOptions.Read(configuration));
         AddOidcServices(builder.Services, OidcOptions.Read(configuration));
         AddSearchServices(builder.Services, SearchOptions.Read(configuration));
+    }
+
+    // Shared recurrence (MAZ-59): rule writes always; the occurrence worker unless
+    // `Recurrence__Worker=false`.
+    private static void AddRecurrenceServices(
+        IServiceCollection services,
+        RecurrenceOptions recurrence
+    )
+    {
+        services.AddSingleton(recurrence);
+        services.AddSingleton<SharedRecurrenceService>();
+        services.AddSingleton<SharedRecurrenceRunner>();
+        if (recurrence.Worker)
+            services.AddHostedService<SharedRecurrenceWorker>();
     }
 
     // The model is loaded and verified here, so a missing or altered file stops the
