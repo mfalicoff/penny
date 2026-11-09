@@ -5,6 +5,7 @@
 - `fixtures/http-journey.json`: sanitized register/ledger/409/shared-projection examples exercised through real legacy HTTP/SQLite.
 - `fixtures/ledger-upgrades.json`: validated v1–v4 input and normalized v4 output.
 - `fixtures/parity-cases.json`: cents, personal/shared rounding, anchor dates and three-way merge expectations.
+- `fixtures/shared-splits.json`: golden equal/exact/percentage split cases (integer cents, remainder allocation, zero shares, rejected totals) consumed by `tests/core/households-domain.test.ts` and the .NET `HouseholdSplitsTests`.
 - `fixtures/search-cases.json`: legacy substring/Unicode/pending cases, planned hybrid cases, request/response schemas and required real-PostgreSQL scenarios. Planned FTS cases are not executed against PostgreSQL here.
 - `fixtures/storage-mapping.json`: exact integer/time/binary/JSON encodings and import blockers for MAZ-52/62; no importer is supplied here.
 - `design-baseline.json`: 79 specimen traces, 26 complete control definitions, tokens, source hashes and MAZ-122 handoff limitations. The full design deliverable remains MAZ-122.

@@ -71,6 +71,9 @@ public static class BackendServices
         AddLedgerServices(builder.Services, configuration);
         builder.Services.AddSingleton<IHouseholdRepository, PostgresHouseholdRepository>();
         builder.Services.AddSingleton<HouseholdService>();
+        // Shared expenses show receipt names, so they use the receipt store too.
+        builder.Services.AddSingleton<ISharedExpenseRepository, PostgresSharedExpenseRepository>();
+        builder.Services.AddSingleton<SharedExpenseService>();
         AddOidcServices(builder.Services, OidcOptions.Read(configuration));
     }
 

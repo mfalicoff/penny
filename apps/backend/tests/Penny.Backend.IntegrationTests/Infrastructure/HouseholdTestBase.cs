@@ -8,9 +8,9 @@ using Shouldly;
 
 namespace Penny.Backend.IntegrationTests.Infrastructure;
 
-// HTTP helpers for the household suites. Shared expenses, splits and reimbursements
-// have no .NET endpoints yet (MAZ-57/58), so balances are seeded with SQL through the
-// admin connection. All data is synthetic.
+// HTTP helpers for the household suites. Membership tests seed balances with SQL
+// through the admin connection (monthly reimbursements have no .NET endpoint until
+// MAZ-58); shared-expense suites use SharedExpenseTestBase. All data is synthetic.
 public abstract class HouseholdTestBase(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
     protected static readonly DateTimeOffset Noon = new(2026, 9, 28, 12, 0, 0, TimeSpan.Zero);

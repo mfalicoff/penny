@@ -12,11 +12,16 @@ namespace Penny.Backend.Persistence.Repositories;
 // FOR NO KEY UPDATE lock until commit, exactly like the ledger compare-and-increment,
 // without raw SQL. Such locks conflict with each other and with ledger saves, but not
 // with foreign-key checks of rows that merely reference the household.
-internal sealed class PostgresHouseholdTransaction(
+internal class PostgresHouseholdTransaction(
     PennyDbContext context,
     CancellationToken cancellationToken
 ) : IHouseholdTransaction
 {
+    // For the shared-expense unit of work, which extends this one.
+    protected PennyDbContext Context => context;
+
+    protected CancellationToken Cancellation => cancellationToken;
+
     public async Task<IReadOnlyList<StoredHousehold>> ListAsync(string userId) =>
         await Project(
                 context
@@ -55,13 +60,7 @@ internal sealed class PostgresHouseholdTransaction(
 
     public async Task<string?> LockLedgerCurrencyAsync(string userId)
     {
-        var locked = await context
-            .Ledgers.Where(ledger => ledger.UserId == userId)
-            .ExecuteUpdateAsync(
-                set => set.SetProperty(ledger => ledger.Currency, ledger => ledger.Currency),
-                cancellationToken
-            );
-        if (locked != 1)
+        if (!await LockLedgerAsync(userId))
             return null;
         return await context
             .Ledgers.AsNoTracking()
@@ -69,6 +68,15 @@ internal sealed class PostgresHouseholdTransaction(
             .Select(ledger => ledger.Currency)
             .SingleAsync(cancellationToken);
     }
+
+    // Locks the user's `ledgers` row until the unit ends; false when there is none.
+    protected async Task<bool> LockLedgerAsync(string userId) =>
+        await context
+            .Ledgers.Where(ledger => ledger.UserId == userId)
+            .ExecuteUpdateAsync(
+                set => set.SetProperty(ledger => ledger.Currency, ledger => ledger.Currency),
+                cancellationToken
+            ) == 1;
 
     public async Task<StoredMember?> MembershipAsync(string householdId, string userId)
     {
@@ -295,6 +303,7 @@ internal sealed class PostgresHouseholdTransaction(
             {
                 Id = audit.Id,
                 HouseholdId = audit.HouseholdId,
+                ExpenseId = audit.ExpenseId,
                 ActorId = audit.ActorId,
                 Action = audit.Action,
                 BeforeJson = audit.BeforeJson,

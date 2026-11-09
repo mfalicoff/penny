@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import {
   activeMemberIds,
   calculateHouseholdSplits,
@@ -10,6 +11,7 @@ import {
   type HouseholdMember,
   type HouseholdRecurring,
   type SharedExpense,
+  type SplitInput,
 } from "../../src/domain/households.ts";
 
 function expense(
@@ -24,6 +26,16 @@ function expense(
     splits: calculateHouseholdSplits(totalCents, { mode: "equal", memberIds }),
   };
 }
+
+test("golden split fixtures shared with the .NET backend", () => {
+  const golden = JSON.parse(readFileSync(new URL("../../contracts/fixtures/shared-splits.json", import.meta.url), "utf8")) as {
+    cases: { name: string; totalCents: number; input: SplitInput; expected?: unknown; error?: true }[];
+  };
+  for (const item of golden.cases) {
+    if (item.error) assert.throws(() => calculateHouseholdSplits(item.totalCents, item.input), Error, item.name);
+    else assert.deepEqual(calculateHouseholdSplits(item.totalCents, item.input), item.expected, item.name);
+  }
+});
 
 test("equal splits give the remainder cent to stable member IDs", () => {
   assert.deepEqual(calculateHouseholdSplits(9000, { mode: "equal", memberIds: ["c", "a", "b"] }), [
