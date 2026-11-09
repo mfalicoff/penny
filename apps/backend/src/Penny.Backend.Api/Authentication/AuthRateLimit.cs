@@ -4,6 +4,7 @@ using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
 using Penny.Backend.Api.Errors;
 using Penny.Backend.Api.Households;
+using Penny.Backend.Api.Search;
 
 namespace Penny.Backend.Api.Authentication;
 
@@ -45,7 +46,12 @@ public static class AuthRateLimit
                 ApiErrors.WriteAsync(
                     rejected.HttpContext,
                     429,
-                    policy == InviteRateLimit.Policy ? InviteRateLimit.Message : Message,
+                    policy switch
+                    {
+                        InviteRateLimit.Policy => InviteRateLimit.Message,
+                        SearchRateLimit.Policy => SearchRateLimit.Message,
+                        _ => Message,
+                    },
                     cancellationToken
                 )
             );

@@ -20,9 +20,19 @@ public sealed class ApiFixture : IAsyncLifetime
         .WithPassword(Guid.NewGuid().ToString("N"))
         .Build();
 
+    public const string CreateExtensions =
+        "CREATE EXTENSION IF NOT EXISTS pg_trgm SCHEMA public; CREATE EXTENSION IF NOT EXISTS vector SCHEMA public";
+
     public NpgsqlDataSource Admin { get; private set; } = null!;
     public TestApiFactory Factory { get; private set; } = null!;
     public string RuntimeConnection { get; private set; } = "";
+
+    // Superuser connection to the test database (benchmark diagnostics only).
+    public string AdminConnection => postgres.GetConnectionString();
+
+    // The PostgreSQL server log (benchmark auto_explain plans).
+    public async Task<string> ServerLogAsync() => (await postgres.GetLogsAsync()).Stderr;
+
     public string MigrationConnection { get; private set; } = "";
     public string ReceiptRoot { get; } =
         System.IO.Path.Combine(
@@ -38,6 +48,8 @@ public sealed class ApiFixture : IAsyncLifetime
         var ct = TestContext.Current.CancellationToken;
         await postgres.StartAsync(ct);
         Admin = DatabaseSettings.Create(postgres.GetConnectionString()).CreateDataSource();
+        // The administrator creates the search extensions once (development/init-roles.sh).
+        await SqlAsync(CreateExtensions, ct);
         await DatabaseMigrator.ApplyAsync(Admin, ct);
         var password = Guid.NewGuid().ToString("N");
         var migrationPassword = Guid.NewGuid().ToString("N");
@@ -116,6 +128,8 @@ public sealed class ApiFixture : IAsyncLifetime
         );
         try
         {
+            await using (var create = copy.Source.CreateCommand(CreateExtensions))
+                await create.ExecuteNonQueryAsync(ct);
             var backup = await postgres.ExecAsync(
                 [
                     "pg_dump",

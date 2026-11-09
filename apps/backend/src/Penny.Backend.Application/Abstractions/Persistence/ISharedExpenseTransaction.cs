@@ -64,6 +64,11 @@ public interface ISharedExpenseTransaction : IHouseholdTransaction
 
     Task AddOutboxAsync(IReadOnlyList<StoredOutboxMessage> messages);
 
+    // Search (MAZ-121): rewrites the expense's search document from its committed-to-be
+    // row (removing it once deleted) and queues its embedding when the embedded text
+    // changed. Call after every expense write, before commit.
+    Task IndexExpenseAsync(string expenseId);
+
     // Live expenses in which the user has a share, in households they have ever
     // joined, dated within [from, to], newest date first.
     Task<IReadOnlyList<StoredProjectedExpense>> ProjectionAsync(

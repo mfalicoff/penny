@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Penny.Backend.Persistence.Schema;
+using Pgvector;
 
 #nullable disable
 
@@ -21,6 +22,8 @@ namespace Penny.Backend.Persistence.Migrations
                 .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
+            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "pg_trgm");
+            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "vector");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.Household", b =>
@@ -1383,6 +1386,168 @@ namespace Penny.Backend.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.SearchDocument", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("AmountCents")
+                        .HasColumnType("bigint")
+                        .HasColumnName("amount_cents");
+
+                    b.Property<string>("DocumentText")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("document_text")
+                        .UseCollation("C");
+
+                    b.Property<Vector>("Embedding")
+                        .HasColumnType("vector(384)")
+                        .HasColumnName("embedding");
+
+                    b.Property<int>("EmbeddingAttempts")
+                        .HasColumnType("integer")
+                        .HasColumnName("embedding_attempts");
+
+                    b.Property<DateTimeOffset?>("EmbeddingDueAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("embedding_due_at");
+
+                    b.Property<string>("EmbeddingModel")
+                        .HasColumnType("text")
+                        .HasColumnName("embedding_model")
+                        .UseCollation("C");
+
+                    b.Property<string>("EmbeddingSource")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("embedding_source")
+                        .UseCollation("C");
+
+                    b.Property<string>("EntryId")
+                        .HasColumnType("text")
+                        .HasColumnName("entry_id")
+                        .UseCollation("C");
+
+                    b.Property<string>("ExpenseId")
+                        .HasColumnType("text")
+                        .HasColumnName("expense_id")
+                        .UseCollation("C");
+
+                    b.Property<string>("HouseholdId")
+                        .HasColumnType("text")
+                        .HasColumnName("household_id")
+                        .UseCollation("C");
+
+                    b.Property<DateOnly>("ItemDate")
+                        .HasColumnType("date")
+                        .HasColumnName("item_date");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("kind")
+                        .UseCollation("C");
+
+                    b.Property<DateTimeOffset?>("LeaseExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lease_expires_at");
+
+                    b.Property<string>("LeaseToken")
+                        .HasColumnType("text")
+                        .HasColumnName("lease_token")
+                        .UseCollation("C");
+
+                    b.Property<string>("OwnerText")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("owner_text")
+                        .UseCollation("C");
+
+                    b.Property<string>("PayerId")
+                        .HasColumnType("text")
+                        .HasColumnName("payer_id")
+                        .UseCollation("C");
+
+                    b.Property<string>("ResultKey")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("result_key")
+                        .UseCollation("C");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("source")
+                        .UseCollation("C");
+
+                    b.Property<string>("TitleText")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("title_text")
+                        .UseCollation("C");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("text")
+                        .HasColumnName("user_id")
+                        .UseCollation("C");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentText")
+                        .HasDatabaseName("ix_search_documents_document_trgm");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("DocumentText"), "gin");
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("DocumentText"), new[] { "gin_trgm_ops" });
+
+                    b.HasIndex("Embedding")
+                        .HasDatabaseName("ix_search_documents_embedding");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Embedding"), "hnsw");
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("Embedding"), new[] { "vector_cosine_ops" });
+
+                    b.HasIndex("EmbeddingDueAt")
+                        .HasDatabaseName("ix_search_documents_embedding_due")
+                        .HasFilter("embedding_due_at IS NOT NULL");
+
+                    b.HasIndex("ExpenseId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_search_documents_expense");
+
+                    b.HasIndex("HouseholdId")
+                        .HasDatabaseName("ix_search_documents_household");
+
+                    b.HasIndex("OwnerText")
+                        .HasDatabaseName("ix_search_documents_owner_trgm");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("OwnerText"), "gin");
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("OwnerText"), new[] { "gin_trgm_ops" });
+
+                    b.HasIndex("UserId", "EntryId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_search_documents_entry");
+
+                    b.HasIndex("UserId", "ItemDate")
+                        .HasDatabaseName("ix_search_documents_user_date");
+
+                    b.ToTable("search_documents", "penny", t =>
+                        {
+                            t.HasCheckConstraint("ck_search_documents_attempts", "embedding_attempts >= 0");
+
+                            t.HasCheckConstraint("ck_search_documents_embedding", "(embedding IS NULL) = (embedding_model IS NULL)");
+
+                            t.HasCheckConstraint("ck_search_documents_kind", "kind IN ('income','expense','investment')");
+
+                            t.HasCheckConstraint("ck_search_documents_lease", "(lease_token IS NULL) = (lease_expires_at IS NULL)");
+
+                            t.HasCheckConstraint("ck_search_documents_shape", "(source = 'personal' AND user_id IS NOT NULL AND entry_id IS NOT NULL AND expense_id IS NULL AND household_id IS NULL AND payer_id IS NULL AND amount_cents IS NOT NULL AND result_key = 'personal:' || entry_id) OR (source = 'shared' AND user_id IS NULL AND entry_id IS NULL AND expense_id IS NOT NULL AND household_id IS NOT NULL AND payer_id IS NOT NULL AND amount_cents IS NULL AND kind = 'expense' AND result_key = 'shared:' || expense_id)");
+                        });
+                });
+
             modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.Session", b =>
                 {
                     b.Property<string>("TokenHash")
@@ -1765,6 +1930,17 @@ namespace Penny.Backend.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("UserId")
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.SearchDocument", b =>
+                {
+                    b.HasOne("Penny.Backend.Persistence.Schema.Entities.HouseholdExpense", null)
+                        .WithMany()
+                        .HasForeignKey("ExpenseId");
+
+                    b.HasOne("Penny.Backend.Persistence.Schema.Entities.LedgerEntry", null)
+                        .WithMany()
+                        .HasForeignKey("UserId", "EntryId");
                 });
 
             modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.Session", b =>

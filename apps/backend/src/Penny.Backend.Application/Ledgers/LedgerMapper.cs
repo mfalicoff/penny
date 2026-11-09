@@ -102,22 +102,7 @@ internal static class LedgerMapper
                     category.Kind
                 )),
             ],
-            [
-                .. ledger.Entries.Select(entry => new Entry(
-                    entry.Id,
-                    entry.Title,
-                    entry.Kind,
-                    entry.TotalCents,
-                    entry.ShareCents,
-                    entry.CategoryId,
-                    entry.AccountId,
-                    entry.TripId,
-                    entry.Date,
-                    entry.Note,
-                    entry.ReceiptId is null ? null : Receipt(entry.ReceiptId, receipts),
-                    entry.RecurringId
-                )),
-            ],
+            [.. ledger.Entries.Select(entry => ToEntry(entry, receipts))],
             [
                 .. ledger.Recurring.Select(rule => new RecurringRule(
                     rule.Id,
@@ -135,6 +120,26 @@ internal static class LedgerMapper
                     rule.Active
                 )),
             ]
+        );
+
+    // A stored entry with its receipt's name and MIME (search results use it too).
+    public static Entry ToEntry(
+        StoredEntry entry,
+        IReadOnlyDictionary<string, StoredReceiptInfo> receipts
+    ) =>
+        new(
+            entry.Id,
+            entry.Title,
+            entry.Kind,
+            entry.TotalCents,
+            entry.ShareCents,
+            entry.CategoryId,
+            entry.AccountId,
+            entry.TripId,
+            entry.Date,
+            entry.Note,
+            entry.ReceiptId is null ? null : Receipt(entry.ReceiptId, receipts),
+            entry.RecurringId
         );
 
     // Replaces client-sent receipt metadata with the stored receipt's.

@@ -7,6 +7,8 @@ const migration = randomBytes(24).toString("hex");
 const runtime = randomBytes(24).toString("hex");
 const receiptKey = randomBytes(32).toString("base64");
 // Encrypted receipt files for local imports; .cache/ is git-ignored.
+// The pinned search model (download-model.mjs); .cache/ is git-ignored.
+const modelDirectory = fileURLToPath(new URL("../../../.cache/backend/models/multilingual-e5-small", import.meta.url));
 const receiptRoot = fileURLToPath(new URL("../../../.cache/backend/receipts", import.meta.url));
 writeFileSync(new URL("../.env", import.meta.url), [
   `PENNY_ADMIN_PASSWORD=${admin}`,
@@ -16,6 +18,7 @@ writeFileSync(new URL("../.env", import.meta.url), [
   `ConnectionStrings__Migration='Host=127.0.0.1;Port=5433;Database=penny;Username=penny_migrator;Password=${migration};SSL Mode=Disable'`,
   `Receipts__Root='${receiptRoot}'`,
   `Receipts__MasterKey='${receiptKey}'`,
+  `Search__ModelDirectory='${modelDirectory}'`,
   "ASPNETCORE_ENVIRONMENT=Development",
   "ASPNETCORE_URLS=http://127.0.0.1:5001",
   "",

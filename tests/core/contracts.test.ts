@@ -10,6 +10,7 @@ import { calculateHouseholdSplits } from "../../src/domain/households.ts";
 import { ledgerWriteSchema } from "../../server/validation/ledger.ts";
 import { selectTransactions } from "../../src/features/transactions/selectors.ts";
 import { createHash } from "node:crypto";
+import { normalizeSearchText } from "./search-normalization.ts";
 
 const root = new URL("../../", import.meta.url);
 const fixture = (name: string) => JSON.parse(readFileSync(new URL(`contracts/fixtures/${name}`, root), "utf8"));
@@ -107,7 +108,6 @@ test("search fixtures preserve legacy substring, chronology and pending local sc
     if (item.totalCount !== undefined) assert.equal(selected.totalCount, item.totalCount);
     assert.deepEqual(selected.summary, select(cases.ledger, { query: "" }).summary, "query/kind never changes period totals");
   }
-  for (const item of cases.foldCases) assert.equal(item.input.toLowerCase(), item.expected);
   for (const item of cases.pendingCases) {
     const local = structuredClone(cases.ledger);
     if (item.localCreate) local.transactions.push(item.localCreate);
@@ -117,14 +117,56 @@ test("search fixtures preserve legacy substring, chronology and pending local sc
   }
 });
 
-test("planned search schemas accept examples and reject ambiguous, oversized and cross-user requests", () => {
+test("search v1 normalization fixtures match the reference normalizer", () => {
   const cases = fixture("search-cases.json");
-  for (const item of cases.requests) assert.ok(matchesSchema(spec.components.schemas.SearchRequest, item));
-  for (const item of cases.invalidRequests) assert.equal(matchesSchema(spec.components.schemas.SearchRequest, item), false, JSON.stringify(item));
+  assert.ok(cases.foldCases.length >= 20);
+  for (const item of cases.foldCases) assert.equal(normalizeSearchText(item.input), item.expected, item.name);
+  // Idempotent: normalized text normalizes to itself.
+  for (const item of cases.foldCases) assert.equal(normalizeSearchText(item.expected), item.expected, item.name);
+});
+
+test("search v1 title and text fixtures agree with local tiers 1-2 on the server ledger", () => {
+  const cases = fixture("search-cases.json");
+  const ledger = cases.serverLedger;
+  assert.equal(ledgerWriteSchema.safeParse({ revision: 0, ledger }).success, true);
+  const category = new Map(ledger.categories.map((item: any) => [item.id, item.name]));
+  const account = new Map(ledger.accounts.map((item: any) => [item.id, item.name]));
+  const local = (query: string) => {
+    const needle = normalizeSearchText(query);
+    return ledger.transactions
+      .map((entry: any) => {
+        const document = normalizeSearchText([entry.title, entry.note, category.get(entry.categoryId), entry.accountId ? account.get(entry.accountId) : ""].join(" "));
+        const tier = normalizeSearchText(entry.title).includes(needle) ? 1 : document.includes(needle) ? 2 : 0;
+        return { key: `personal:${entry.id}`, date: entry.date, tier };
+      })
+      .filter((item: any) => item.tier > 0)
+      .sort((a: any, b: any) => a.tier - b.tier || b.date.localeCompare(a.date) || (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
+  };
+  let checked = 0;
+  for (const item of cases.lexicalCases) {
+    if (!item.request.query || !item.matches?.length || item.matches.some((match: string) => match !== "title" && match !== "text")) continue;
+    const found = local(item.request.query);
+    assert.deepEqual(found.map((row: any) => row.key), item.keys, item.name);
+    assert.deepEqual(found.map((row: any) => (row.tier === 1 ? "title" : "text")), item.matches, item.name);
+    checked++;
+  }
+  assert.ok(checked >= 5);
+});
+
+test("search v1 schemas accept examples and reject invalid and cross-user requests", () => {
+  const cases = fixture("search-cases.json");
+  for (const item of cases.requests) assert.ok(matchesSchema(spec.components.schemas.SearchRequest, item), JSON.stringify(item));
+  // Schema-level rejections. Date order, real dates and the trimmed query length are
+  // service checks (the .NET tests send every invalid request).
+  const schemaInvalid = cases.invalidRequests.filter((item: any) =>
+    !("from" in item && "to" in item) && item.from !== "2026-02-30" && typeof item.query !== "string");
+  for (const item of schemaInvalid) assert.equal(matchesSchema(spec.components.schemas.SearchRequest, item), false, JSON.stringify(item));
   assert.ok(matchesSchema(spec.components.schemas.SearchResponse, cases.response));
   assert.equal(matchesSchema(spec.components.schemas.SearchResponse, { ...cases.response, nextCursor: 12 }), false);
   assert.equal(matchesSchema(spec.components.schemas.SearchResponse, { ...cases.response, items: [{ ...cases.response.items[0], source: "shared" }] }), false);
-  assert.equal(spec.paths["/api/v1/search/transactions"].post["x-implementation"], "planned");
+  assert.equal(matchesSchema(spec.components.schemas.SearchResponse, { ...cases.response, items: [{ ...cases.response.items[0], match: "fuzzy" }] }), false);
+  assert.equal(spec.paths["/api/v1/search/transactions"].post["x-implementation"], "backend");
+  assert.equal(spec.components.schemas.SearchPeriod, undefined);
 });
 
 test("design snapshot covers all 79 specimens and 26 controls with feature and acceptance owners", () => {

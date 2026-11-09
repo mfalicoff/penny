@@ -18,6 +18,8 @@ public static class DatabaseMigrator
             throw new InvalidOperationException(
                 "PostgreSQL 18 is required. No migration was applied."
             );
+        if (!await SearchExtensions.AvailableAsync(guard, cancellationToken))
+            throw new InvalidOperationException(SearchExtensions.Missing);
         await AcquireLockAsync(guard, cancellationToken);
         try
         {

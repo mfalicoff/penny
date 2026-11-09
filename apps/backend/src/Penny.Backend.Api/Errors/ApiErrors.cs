@@ -17,6 +17,7 @@ public static class ApiErrors
                     FailureKind.Forbidden => 403,
                     FailureKind.NotFound => 404,
                     FailureKind.Conflict => 409,
+                    FailureKind.Unavailable => 503,
                     _ => 500,
                 },
                 failure.Message

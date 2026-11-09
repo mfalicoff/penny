@@ -38,6 +38,11 @@ public sealed class TestApiFactory(
             "Receipts:MasterKey",
             Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))
         );
+        // The real pinned model, shared by every host in the process.
+        builder.UseSetting("Search:ModelDirectory", SearchModel.Directory);
+        // Tests drive the embedding outbox explicitly; worker tests start their own host.
+        builder.UseSetting("Search:EmbeddingWorker", "false");
+        builder.UseSetting("Search:RateLimitPermits", "10000");
         builder.UseSetting("Backend:RequestTimeoutSeconds", "2");
         builder.UseSetting("Backend:ShutdownTimeoutSeconds", "5");
         builder.UseSetting("Logging:LogLevel:Default", "None");

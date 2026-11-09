@@ -6,7 +6,7 @@ The schema is defined in code with **EF Core** (`Npgsql.EntityFrameworkCore.Post
 
 ## Target schema
 
-The legacy SQLite schema is an import source, not a template. PostgreSQL stores 22 product tables, the short-lived OIDC attempt table (MAZ-54), the password reset code table (MAZ-123), the import checkpoint and EF's `__EFMigrationsHistory`, all in schema `penny`.
+The legacy SQLite schema is an import source, not a template. PostgreSQL stores 22 product tables, the search document table (MAZ-121, derived and rebuildable), the short-lived OIDC attempt table (MAZ-54), the password reset code table (MAZ-123), the import checkpoint and EF's `__EFMigrationsHistory`, all in schema `penny`.
 
 | Area | Tables | Notes |
 | --- | --- | --- |
@@ -17,6 +17,7 @@ The legacy SQLite schema is an import source, not a template. PostgreSQL stores 
 | Shared expenses | `household_expenses`, `household_splits`, `household_reimbursements`, `household_recurring`, `household_recurring_allocations`, `household_audit` | Category is typed (`category_name/icon/color`); recurring allocations are rows, not JSON |
 | Push | `push_devices`, `push_outbox`, `push_deliveries` | Lease columns (`lease_owner/token/expires_at`) for MAZ-59/61 workers |
 | Import | `sqlite_import` | Singleton checkpoint; drop after the cutover observation window |
+| Search | `search_documents` | MAZ-121: normalized texts and embeddings of personal entries and live shared expenses; derived data, not imported (`search-rebuild`) |
 
 Mapping rules:
 
@@ -77,7 +78,9 @@ Everything else is EF-generated or a LINQ query. Check-constraint and partial-in
 | `PostgresReadiness`: role/privilege check (`pg_roles`, `has_*_privilege`) | Proves the runtime role cannot change schema |
 | `SqliteImporter`: `has_table_privilege(...)` | Rejects runtime credentials before any import work |
 | `SqliteImporter`: `setval(... household_audit sort_order ...)` | Continues the identity after explicit legacy rowids |
-| `development/grant-runtime.sql`, `init-roles.sh` | Role and grant administration, outside the application |
+| `development/grant-runtime.sql`, `init-roles.sh` | Role and grant administration and `CREATE EXTENSION pg_trgm/vector` (administrator), outside the application |
+| `SearchExtensions` (used by `DatabaseMigrator` and `PostgresReadiness`): `SELECT extname, extversion FROM pg_extension` | Search requires pgvector 0.8+ and pg_trgm before migrating; readiness reports `search-extensions` (MAZ-121) |
+| `PostgresSearchRepository`: `SELECT set_config('statement_timeout', ...), set_config('hnsw.iterative_scan', ...), set_config('hnsw.ef_search', ...), set_config('pg_trgm.word_similarity_threshold', ...)` | Transaction-local search settings (2-second statement timeout, filtering inside HNSW scans); the search queries themselves are LINQ (`EF.Functions.Like`, `TrigramsAreWordSimilar`, `TrigramsWordSimilarity`, pgvector `CosineDistance`) |
 
 ## Concurrency and transactions
 
@@ -86,7 +89,7 @@ Everything else is EF-generated or a LINQ query. Check-constraint and partial-in
 - **Household membership (MAZ-56)** follows that order: every membership writer locks the household row, then (for create and join) the member's `ledgers` row, then re-reads the invite under the household lock (so a replaced or revoked code is rejected) and opens or closes periods, all in one READ COMMITTED transaction. Row locks are EF `ExecuteUpdate` statements that rewrite a column with its own value, so no raw SQL is added. Shared-expense writers must take the household lock first so membership exits see settled balances. Details: [households](households.md#transactions-locking-and-concurrency).
 - **Shared expenses (MAZ-57)** follow the same order: the household row (both rows in ascending id for a move), then the payer's `ledgers` row when a payment account is validated, then the expense revision compare-and-increment (`UPDATE household_expenses ... WHERE revision = @expected`, an EF `ExecuteUpdate`), splits, reimbursements, audit and outbox rows, in one READ COMMITTED transaction. No schema change and no raw SQL were added. Details: [shared expenses](shared-expenses.md#transactions-locking-and-concurrency).
 - **Workers** claim due rows with `FOR UPDATE SKIP LOCKED` and expiring lease owner/token columns (MAZ-59/61). Unique `(recurring_id, expense_date)` prevents duplicate occurrences. Notifications are delivered after commit, at least once.
-- **Search** is MAZ-121's: it can index typed `ledger_entries` directly and adds a projection only where shared visibility requires one, maintained in the same transaction as the write. The ledger write path marks that seam in `PostgresLedgerRepository.TrySaveAsync` (before commit).
+- **Search (MAZ-121)** keeps `search_documents` (migration `AddSearchDocuments`: normalized texts, GIN `gin_trgm_ops` and HNSW `vector_cosine_ops` indexes, embedding outbox columns) in the same transaction as ledger saves and shared-expense writes. Visibility is evaluated at query time from periods and splits. The embedding worker claims due rows with an expiring lease through an EF `ExecuteUpdate` (a competing claim re-checks the lease after the row lock and skips the row), so no `SKIP LOCKED` SQL is needed. `import-sqlite` does not write search documents: run `search-rebuild` after an import ([search](search.md#operations)).
 
 ## Receipt storage
 
@@ -156,7 +159,7 @@ Databases created by the unreleased schema-2 SQL of earlier MAZ-52 drafts are no
 
 1. Rehearse on a production-shaped, sanitized SQLite copy. Compare all reports, authenticate migrated sessions, decrypt receipts and check shared totals. Exercise an interrupted import and resume, and one [password reset](authentication.md#password-reset-maz-123) of an imported password account (`reset-password`, redeem, sign in).
 2. Freeze **all** proxy mutations, auth/session/device writes and workers. Drain, stop Node and its workers, then snapshot and hash the final SQLite file. No dual writes.
-3. Import and verify into PostgreSQL and the receipt root. Verify existing Expo cookie/bearer/OIDC/receipt journeys and the v1–v4 guards. Switch the existing URL to .NET, then reopen writes.
+3. Import and verify into PostgreSQL and the receipt root, then run `search-rebuild` (search documents are derived, not imported) and `search-verify`. Verify existing Expo cookie/bearer/OIDC/receipt journeys and the v1–v4 guards. Switch the existing URL to .NET, then reopen writes.
    **Imported password accounts:** legacy scrypt passwords stop working at the switch; imported sessions keep working until they expire (at most 30 days). Before or at the switch, tell every imported password user (`users` rows whose `password` and `salt` are both non-empty) that they must request a reset code from the operator to sign in with a password again, and how it will reach them. Operators may pre-issue codes after the final `--verify` with `reset-password EMAIL` (issuing touches only `password_resets`; redeeming changes `users`). There is one code per account, and each lasts `Auth__PasswordResetHours` (default 24 hours), so issue codes when you can deliver them, or re-issue later. OIDC users are unaffected.
 4. **Before reopening writes**, rollback means discarding the PostgreSQL target and receipt root and resuming Node on the untouched SQLite source.
 5. **After reopening writes, recovery is forward-only:** PostgreSQL point-in-time recovery (WAL archiving) plus receipt-root backups. There is no reverse export to SQLite and no mutation journal. Never restore the old SQLite snapshot over accepted data.

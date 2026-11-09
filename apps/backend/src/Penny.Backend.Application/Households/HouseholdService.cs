@@ -201,8 +201,8 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
                 var now = Now();
                 await store.ArchiveAsync(householdId, now);
                 await store.DeleteInvitesAsync(householdId);
-                // Search seam (MAZ-121): archiving changes which shared rows members can
-                // search; update any membership-derived projection here, before commit.
+                // Search (MAZ-121): nothing to write. Archiving keeps history readable, and
+                // search evaluates membership periods in the query itself.
                 await AuditAsync(
                     store,
                     householdId,
@@ -292,8 +292,8 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
                     now,
                     MembershipDates.JoinedOn(now, input.TimezoneOffsetMinutes)
                 );
-                // Search seam (MAZ-121): the member can now search this household's
-                // shared rows; update any membership-derived projection here.
+                // Search (MAZ-121): nothing to write. Search evaluates this period in the
+                // query itself, so access starts exactly when this transaction commits.
                 await AuditAsync(
                     store,
                     householdId,
@@ -362,8 +362,8 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
             throw new BackendFailure(FailureKind.Conflict, UnsettledExit);
         var now = Now();
         await store.ClosePeriodAsync(householdId, userId, now);
-        // Search seam (MAZ-121): the member loses access to shared rows recorded after
-        // this instant; update any membership-derived projection here, before commit.
+        // Search (MAZ-121): nothing to write. Search evaluates periods and splits in
+        // the query itself, so access ends exactly when this transaction commits.
         await AuditAsync(store, householdId, actorId, action, new { userId }, null, now);
     }
 

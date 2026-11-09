@@ -19,6 +19,8 @@ public sealed class PostgresReadiness(NpgsqlDataSource source) : IStorageReadine
                 return new(false, "postgres-version");
             if (await HasSchemaPrivilegesAsync(connection, cancellationToken))
                 return new(false, "runtime-role");
+            if (!await SearchExtensions.AvailableAsync(connection, cancellationToken))
+                return new(false, "search-extensions");
             var applied = await context.Database.GetAppliedMigrationsAsync(cancellationToken);
             if (
                 !applied

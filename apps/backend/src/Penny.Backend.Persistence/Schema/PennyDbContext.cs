@@ -37,6 +37,7 @@ public sealed class PennyDbContext(DbContextOptions<PennyDbContext> options) : D
     public DbSet<PushOutboxMessage> PushOutbox => Set<PushOutboxMessage>();
     public DbSet<PushDelivery> PushDeliveries => Set<PushDelivery>();
     public DbSet<SqliteImportCheckpoint> SqliteImport => Set<SqliteImportCheckpoint>();
+    public DbSet<SearchDocument> SearchDocuments => Set<SearchDocument>();
 
     public static PennyDbContext Create(NpgsqlDataSource source) =>
         new(Configure(new DbContextOptionsBuilder<PennyDbContext>(), source).Options);
@@ -47,7 +48,7 @@ public sealed class PennyDbContext(DbContextOptions<PennyDbContext> options) : D
             new DbContextOptionsBuilder<PennyDbContext>()
                 .UseNpgsql(
                     connection,
-                    npgsql => npgsql.MigrationsHistoryTable(HistoryTable, SchemaName)
+                    npgsql => npgsql.MigrationsHistoryTable(HistoryTable, SchemaName).UseVector()
                 )
                 .Options
         );
@@ -58,7 +59,7 @@ public sealed class PennyDbContext(DbContextOptions<PennyDbContext> options) : D
     ) =>
         builder.UseNpgsql(
             source,
-            npgsql => npgsql.MigrationsHistoryTable(HistoryTable, SchemaName)
+            npgsql => npgsql.MigrationsHistoryTable(HistoryTable, SchemaName).UseVector()
         );
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
@@ -70,6 +71,9 @@ public sealed class PennyDbContext(DbContextOptions<PennyDbContext> options) : D
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema(SchemaName);
+        // Created by an administrator (search.md); migrations only require them.
+        modelBuilder.HasPostgresExtension(SearchSchema.Trigrams);
+        modelBuilder.HasPostgresExtension(SearchSchema.Vector);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(PennyDbContext).Assembly);
         foreach (var entity in modelBuilder.Model.GetEntityTypes())
         foreach (var property in entity.GetProperties())

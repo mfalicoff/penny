@@ -100,7 +100,7 @@ Each write records its legacy audit row in the same transaction, with `expense_i
 
 ## Search (MAZ-121)
 
-No search projection exists yet; MAZ-121 owns its schema and indexing. `SharedExpenseService` marks the seams in create, update/move and delete: when MAZ-121 adds shared-expense search documents it must update them **inside these transactions, before commit**, together with the membership seams MAZ-56 marked in join, leave/removal and archive, so search visibility changes exactly when expenses, splits or membership do. Search must index only fields each viewer may see and never the payer's account.
+MAZ-121: create, update/move and delete call `IndexExpenseAsync` **inside these transactions, before commit**, which writes (or removes) the expense's `search_documents` row: title/note/category texts for every member and, separately, the text with the payer's account name, matched only for the payer. Visibility is not stored: each search applies the household-view rule (current member, or a share) to periods and splits in SQL, so membership changes need no write. Embeddings never include the account name ([search](search.md#implementation-maz-121)).
 
 ## Imported data
 

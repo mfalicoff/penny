@@ -3,6 +3,7 @@ using Npgsql;
 using Penny.Backend.Application.Abstractions.Persistence;
 using Penny.Backend.Persistence.Schema;
 using Penny.Backend.Persistence.Schema.Entities;
+using Penny.Backend.Persistence.Search;
 
 namespace Penny.Backend.Persistence.Repositories;
 
@@ -208,11 +209,14 @@ public sealed class PostgresLedgerRepository(NpgsqlDataSource source) : ILedgerR
             row => row.Id,
             cancellationToken
         );
+        // Search (MAZ-121): personal documents follow the entries, categories and
+        // accounts in this transaction, so search never diverges from the committed
+        // revision; a category or account rename rewrites every affected document.
+        await SearchIndexer.StageLedgerAsync(context, userId, ledger, cancellationToken);
         // EF orders the inserts, updates and deletes so foreign keys hold.
         await context.SaveChangesAsync(cancellationToken);
-        // Search seam (MAZ-121): any search projection of personal entries must be
-        // updated here, inside this transaction, so it never diverges from the
-        // committed revision. MAZ-55 builds no projection.
+        // The payer sees their account name in their own shared expenses' documents.
+        await SearchIndexer.SyncPaidExpensesAsync(context, userId, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return true;
     }

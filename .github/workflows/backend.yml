@@ -17,7 +17,7 @@ jobs:
   backend:
     name: .NET build, analyzers and PostgreSQL integration
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     env:
       NUGET_PACKAGES: ${{ github.workspace }}/.cache/backend/nuget
     steps:
@@ -31,6 +31,18 @@ jobs:
           cache-dependency-path: |
             apps/backend/src/**/packages.lock.json
             apps/backend/tests/**/packages.lock.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      # The search embedding model (MAZ-121) is pinned by SHA-256 in the script and
+      # never committed; the cache key follows the script, which holds the hashes.
+      - name: Cache search model
+        uses: actions/cache@v6
+        with:
+          path: .cache/backend/models
+          key: search-model-${{ hashFiles('apps/backend/development/download-model.mjs') }}
+      - name: Download and verify search model
+        run: node apps/backend/development/download-model.mjs
       - name: Restore pinned tools
         run: bash apps/backend/dotnet.sh tool restore
       - name: Restore locked packages
