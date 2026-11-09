@@ -22,9 +22,11 @@ The searchable **document** of a result is its fields joined with single spaces:
 | Note | entry note | expense note |
 | Category | category name | the expense's category name |
 | Account | account name | the payer's account name, **for the payer only** |
-| Receipt text | later (MAZ-125) | later (MAZ-125), only for viewers who may see the receipt |
+| Receipt text | OCR text of the entry's receipts (MAZ-125) | OCR text of the expense's receipts (MAZ-125), **only for viewers who may see the receipt** |
 
 Missing fields are empty. Joining the fields keeps legacy cross-field matches: "beans morning" matches title "Coffee beans" with note "Morning".
+
+Receipt text is not implemented yet: MAZ-125 adds it. It is matched by all four tiers, but always under the receipt's visibility, never the entry's. A viewer who may see a shared expense but not its receipt can never match the expense through that receipt, and neither the match tier nor the ranking may reveal it.
 
 ## Text normalization
 
@@ -57,8 +59,9 @@ Substring matching is literal: the query is a bound parameter, and `%`, `_` and 
 
 - **Model:** a small **multilingual** sentence-embedding model that runs on the server's CPU through ONNX Runtime, so English and French match by meaning, including across languages ("boisson" finds "coffee", "beverage" finds "café"). Use `intfloat/multilingual-e5-small` (384 dimensions, MIT licence, trained for retrieval). It requires the prefixes `query: ` for search text and `passage: ` for indexed text. The fallback, if e5 underperforms on the fixtures, is `paraphrase-multilingual-MiniLM-L12-v2` (384 dimensions, Apache 2.0). The model file is pinned by SHA-256 and loaded at startup; startup fails clearly if it is missing or does not match. No text is sent to external services. Shared fixtures include English, French and mixed-language meaning cases.
 - **Embedded text:** title, note and category name. Account names are **never** embedded: a shared expense's embedding is used for every member, and the payer's private account name must not influence other members' results. Account names match only through tiers 1–3, and only for the payer.
+- **Receipt text (MAZ-125):** embedded **separately** from the entry, never mixed into the entry's embedding, because the entry's embedding is shared by everyone who may see the entry and a receipt can be more private than that. Long text is split into chunks that fit the model (at most 512 tokens each, with the `passage: ` prefix). Each chunk keeps its receipt id, so the meaning query applies the receipt's visibility inside the index scan, like the entry filter. A result's meaning score is the best of its entry embedding and the chunks of receipts the viewer may see. The 200-result cap counts results, not chunks.
 - **Storage:** a `vector(384)` column in the search tables, with an HNSW index (`pgvector`, cosine distance). Queries filter by authorization inside the index scan (pgvector iterative scans), never after ranking.
-- **Freshness:** normalized text and lexical indexes update in the same transaction as the write. Embeddings are computed by a background worker shortly after (target: under 10 seconds) through an outbox with retries. Until then, a new or edited result is found by tiers 1–3 only. Query embeddings are computed per request.
+- **Freshness:** normalized text and lexical indexes update in the same transaction as the write. Embeddings are computed by a background worker shortly after (target: under 10 seconds) through an outbox with retries. Until then, a new or edited result is found by tiers 1–3 only. Query embeddings are computed per request. Receipt text arrives later still: OCR runs after the upload commits (MAZ-125). Its normalized text is written in the OCR job's transaction, and its chunks go through the same embedding outbox. Deleting or replacing a receipt removes its text and chunks in the same transaction.
 - **Hardware target:** a modest self-hosted CPU (example: i7-4790K, 32 GB RAM). The multilingual model is larger than an English-only one (about 118M parameters, roughly 500 MB of RAM, less with an int8-quantized ONNX file). Expected costs: about 10–20 ms per query embedding, roughly 15–30 minutes to embed 100,000 entries on first backfill, and about 150 MB of vector index per 100,000 entries. Confirm with a timing test before release.
 
 ### Relevance
@@ -121,6 +124,7 @@ Cursors are simple keyset positions, base64url-encoded: a format version, a hash
 - Extensions: `pg_trgm` (included with PostgreSQL) and `vector` (pgvector). The pinned PostgreSQL 18 image changes to an official pgvector image for PostgreSQL 18, pinned by digest in Compose and `DatabaseSchema.Image`. An administrator creates the extensions once (`vector` is not a trusted extension). Migrations require them, and readiness checks their presence and versions.
 - Schema changes go through EF Core migrations. Personal entries and shared expenses keep their own tables; MAZ-121 adds normalized-document and embedding columns or side tables with GIN (`gin_trgm_ops`) and HNSW indexes. Category and account renames rewrite affected documents in the same transaction as the rename.
 - A `search-rebuild` maintenance command recomputes normalized text and embeddings for all users or one user: for backfill after import, model changes and normalization changes. A `search-verify` command reports rows whose stored text or model version is stale.
+- MAZ-125 adds receipt-text documents and receipt embedding chunks to the same derived storage, keyed by receipt. `search-rebuild` and `search-verify` must cover them too. Stored OCR text is reused; re-running OCR is MAZ-125's own backfill command.
 
 ## Limits and performance
 
