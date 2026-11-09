@@ -1,0 +1,77 @@
+<!-- @dsCard group="iPad" name="Add entry (form sheet)" viewport="1290x914" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPad · Add entry</title>
+<link rel="stylesheet" href="../assets/penny.css"><link rel="stylesheet" href="../assets/ipad.css"><script src="../assets/icons.js"></script>
+<style>
+  .behind { position: absolute; border: 0; width: 1290px; height: 914px; left: -40px; top: -40px; pointer-events: none; }
+  .scrim { position: absolute; inset: 0; background: var(--dim); z-index: 50; }
+  .form { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 760px; height: 620px; border-radius: 38px; background: var(--surface); z-index: 60; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,.25); }
+  .bar { display: flex; justify-content: space-between; align-items: center; padding: 16px 16px 0; }
+  .bar h2 { font-size: 17px; font-weight: 600; }
+  .gbtn.plain { background: var(--fill); box-shadow: none; border: 0; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding: 18px 26px 0; }
+  .amount { padding: 26px 0 6px; text-align: center; }
+  .amount .v { font-size: 64px; font-weight: 700; letter-spacing: -0.045em; line-height: 1.05; }
+  .amount .v .cur { opacity: .4; }
+  .amount .v .caret { display: inline-block; width: 3px; height: 52px; background: var(--tint); border-radius: 2px; vertical-align: -6px; margin-left: 3px; }
+  .amount .cad { display: inline-flex; margin-top: 6px; font-size: 13px; font-weight: 600; color: var(--label-2); background: var(--fill); padding: 4px 10px; border-radius: 10px; }
+  .field { margin-top: 18px; height: 48px; border-radius: 14px; background: var(--surface-2); display: flex; align-items: center; padding: 0 14px; font-size: 17px; }
+  .lbl { font-size: 13px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .03em; margin: 20px 4px 8px; }
+  .cats { display: flex; flex-wrap: wrap; gap: 8px; }
+  .cats .pill.on { background: var(--c-food); color: #fff; }
+  .opts { border-radius: 16px; background: var(--surface-2); }
+  .opt { display: flex; align-items: center; gap: 10px; height: 48px; padding: 0 14px; font-size: 16px; position: relative; }
+  .opt + .opt::before { content: ""; position: absolute; top: 0; left: 44px; right: 0; border-top: .5px solid var(--separator); }
+  .opt [data-i] { width: 20px; height: 20px; color: var(--label-2); }
+  .opt .v { margin-left: auto; color: var(--label-2); display: flex; align-items: center; gap: 4px; }
+  .opt .v b { color: var(--tint-text); font-weight: 600; }
+  .note { height: 70px; border-radius: 14px; background: var(--surface-2); padding: 12px 14px; font-size: 16px; color: var(--label-3); }
+  .kbd { position: absolute; left: 0; right: 0; bottom: 0; padding: 12px 26px 18px; font-size: 13px; color: var(--label-2); display: flex; gap: 16px; border-top: .5px solid var(--separator); }
+  .kbd kbd { font-family: inherit; font-size: 12px; font-weight: 600; background: var(--fill); border-radius: 6px; padding: 2px 7px; color: var(--label); }
+</style></head>
+<body class="canvas">
+<div class="ipad">
+  <iframe class="behind" src="home.html" scrolling="no"></iframe>
+  <div class="scrim"></div>
+
+  <div class="form">
+    <div class="bar">
+      <div class="gbtn plain"><i data-i="close"></i></div>
+      <div class="seg" style="width:300px"><div class="on">Expense</div><div>Income</div><div>Invest</div></div>
+      <div class="glass gcap tinted">Add expense</div>
+    </div>
+    <div class="cols">
+      <div>
+        <div class="amount">
+          <div class="v num"><span class="cur">$</span>74.40<span class="caret"></span></div>
+          <span class="cad">CAD</span>
+        </div>
+        <div class="field">Dinner with friends</div>
+        <div class="lbl">Category</div>
+        <div class="cats">
+          <span class="pill on"><i data-i="cafe"></i>Food &amp; drinks</span>
+          <span class="pill"><i data-i="basket"></i>Groceries</span>
+          <span class="pill"><i data-i="bus"></i>Transport</span>
+          <span class="pill"><i data-i="home"></i>Home</span>
+          <span class="pill"><i data-i="ellipsis-horizontal"></i>All</span>
+        </div>
+      </div>
+      <div>
+        <div class="lbl" style="margin-top:6px">Details</div>
+        <div class="opts">
+          <div class="opt"><i data-i="calendar"></i>Date<span class="v">Today</span></div>
+          <div class="opt"><i data-i="card"></i>Account<span class="v">Visa</span></div>
+          <div class="opt"><i data-i="people"></i>Split<span class="v">3 ways · <b class="num">$24.80</b> yours</span></div>
+          <div class="opt"><i data-i="repeat"></i>Repeat<span class="v">Never <i data-i="chevron-forward" class="chev"></i></span></div>
+          <div class="opt"><i data-i="airplane"></i>Trip<span class="v">None <i data-i="chevron-forward" class="chev"></i></span></div>
+          <div class="opt"><i data-i="receipt"></i>Receipt<span class="v">Add <i data-i="chevron-forward" class="chev"></i></span></div>
+        </div>
+        <div class="lbl">Note</div>
+        <div class="note">Anything you'd like to remember</div>
+      </div>
+    </div>
+    <div class="kbd"><span><kbd>⌘</kbd> <kbd>↩</kbd> Add</span><span><kbd>esc</kbd> Cancel</span><span><kbd>⇥</kbd> Next field</span></div>
+  </div>
+  <div class="home-ind" style="z-index:70"></div>
+</div>
+</body></html>

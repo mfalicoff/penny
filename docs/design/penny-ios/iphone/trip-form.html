@@ -1,0 +1,66 @@
+<!-- @dsCard group="iPhone" name="Trip form" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · New trip</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<style>
+  .mono { background: linear-gradient(180deg, #A8A29E, #78716C); }
+  .behind { position: absolute; inset: 0; background: var(--bg); }
+  .scrim { position: absolute; inset: 0; background: var(--dim); z-index: 5; }
+  .sheet { position: absolute; left: 6px; right: 6px; top: 62px; bottom: 6px; border-radius: 44px; background: var(--bg); z-index: 10; overflow: hidden; }
+  .grabber { width: 36px; height: 5px; border-radius: 3px; background: var(--label-3); opacity: .5; margin: 7px auto 0; }
+  .bar { display: flex; justify-content: space-between; align-items: center; padding: 6px 14px 0; }
+  .bar h2 { font-size: 17px; font-weight: 600; }
+  .gbtn.plain { background: var(--fill); box-shadow: none; border: 0; }
+  .wrap { padding: 0 16px; }
+  .name { margin-top: 18px; background: var(--surface); border-radius: 16px; height: 56px; display: flex; align-items: center; padding: 0 16px; font-size: 22px; font-weight: 600; }
+  .name .caret { width: 2px; height: 26px; background: var(--tint); margin-left: 2px; }
+  .lbl { font-size: 13px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .03em; margin: 20px 4px 8px; }
+  .group { border-radius: 16px; background: var(--surface); }
+  .opt { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 14px; font-size: 16px; position: relative; }
+  .opt + .opt::before { content: ""; position: absolute; top: 0; left: 44px; right: 0; border-top: .5px solid var(--separator); }
+  .opt > [data-i] { width: 20px; height: 20px; color: var(--label-2); }
+  .opt .v { margin-left: auto; display: flex; gap: 5px; align-items: center; }
+  .opt .date { background: var(--fill); padding: 6px 10px; border-radius: 8px; font-size: 15px; font-weight: 500; }
+  .opt .v.muted { color: var(--label-2); }
+  .opt .v [data-i] { width: 14px; height: 14px; }
+  .toggle { width: 51px; height: 31px; border-radius: 16px; background: var(--tint); position: relative; margin-left: auto; }
+  .toggle::after { content: ""; position: absolute; right: 2px; top: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,.2); }
+  .hint { font-size: 13px; color: var(--label-2); margin: 8px 4px 0; line-height: 18px; }
+  .opt .avatar { width: 30px; height: 30px; font-size: 11px; border: 0; }
+  .opt .tl { color: var(--tint-text); font-weight: 600; }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <div class="behind"></div><div class="scrim"></div>
+  <div class="island"></div>
+  <div class="status" style="color:#fff"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="bar">
+      <div class="gbtn plain"><i data-i="close"></i></div>
+      <h2>New trip</h2>
+      <div class="gbtn glass tinted"><i data-i="checkmark"></i></div>
+    </div>
+    <div class="wrap">
+      <div class="name">Lisbon<span class="caret"></span></div>
+
+      <div class="lbl">When</div>
+      <div class="group">
+        <div class="opt"><i data-i="calendar"></i>Starts<span class="v"><span class="date">Nov 12, 2026</span></span></div>
+        <div class="opt"><i data-i="calendar"></i>Ends<span class="v"><span class="date">Nov 19, 2026</span></span></div>
+        <div class="opt"><i data-i="cash"></i>Currency<span class="v muted">CAD <i data-i="lock-closed"></i></span></div>
+      </div>
+      <div class="hint">Expenses can be dated outside the trip — flights booked in October still count.</div>
+
+      <div class="lbl">People</div>
+      <div class="group">
+        <div class="opt"><i data-i="people"></i>Share with others<span class="toggle"></span></div>
+        <div class="opt"><span class="avatar mono">MF</span>You<span class="v muted">Organizer</span></div>
+        <div class="opt"><i data-i="person-add" style="color:var(--tint)"></i><span class="tl">Invite with a code</span><span class="v muted" style="font-size:14px">after saving</span></div>
+      </div>
+      <div class="hint">Everyone in a shared trip sees its shared expenses and their own share. Anything you added before sharing stays private to you.</div>
+    </div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+</body></html>

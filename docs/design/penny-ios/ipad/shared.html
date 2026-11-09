@@ -1,0 +1,104 @@
+<!-- @dsCard group="iPad" name="Shared household" viewport="1290x914" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPad · Household</title>
+<link rel="stylesheet" href="../assets/penny.css"><link rel="stylesheet" href="../assets/ipad.css"><script src="../assets/icons.js"></script>
+<style>
+  .mono { background: linear-gradient(180deg, #A8A29E, #78716C); }
+  .col { position: absolute; left: 0; top: 0; bottom: 0; width: 420px; border-right: .5px solid var(--separator); }
+  .col .head { padding: 92px 20px 0; display: flex; align-items: flex-end; justify-content: space-between; }
+  .col .head .stack .avatar { width: 30px; height: 30px; font-size: 11px; border-color: var(--bg); }
+  .col .head .stack .avatar + .avatar { margin-left: -6px; }
+  .col .sub { padding: 2px 20px 0; font-size: 15px; color: var(--label-2); }
+  .day { display: flex; justify-content: space-between; padding: 18px 20px 6px; font-size: 12px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .03em; }
+  .row .avatar { width: 36px; height: 36px; border: 0; font-size: 13px; }
+  .row.sel { background: var(--tint-soft); }
+  .row.sel::before, .row.sel + .row::before { display: none; }
+  .badge { display: inline-flex !important; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 8px; margin-top: 3px; background: var(--fill); color: var(--label-2) !important; }
+  .detail { position: absolute; left: 420px; right: 0; top: 0; bottom: 0; }
+  .detail .glow { left: 0; right: 0; top: -200px; height: 480px; --glow-1: rgba(47, 163, 107, .30); --glow-2: rgba(120, 200, 160, .25); --glow-3: rgba(80, 140, 230, .18); }
+  .d-in { position: relative; z-index: 1; padding: 96px 28px 0; }
+  .owed { font-size: 15px; color: var(--label-2); }
+  .owed .big { font-size: 56px; font-weight: 700; letter-spacing: -0.04em; color: var(--income); line-height: 1.05; margin-top: 2px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 22px; }
+  .bal { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: .5px solid var(--separator); font-size: 15px; }
+  .bal:first-of-type { border-top: 0; }
+  .bal .avatar { width: 30px; height: 30px; border: 0; font-size: 11px; }
+  .bal .v { margin-left: auto; font-weight: 600; text-align: right; }
+  .bal .v span { display: block; font-size: 12px; color: var(--label-2); font-weight: 500; }
+  .sugg { display: flex; align-items: center; gap: 8px; padding: 10px 0; border-top: .5px solid var(--separator); font-size: 15px; }
+  .sugg:first-of-type { border-top: 0; }
+  .sugg [data-i] { width: 14px; height: 14px; color: var(--label-3); transform: rotate(90deg); --sw: 48px; }
+  .sugg .v { margin-left: auto; font-weight: 600; }
+  .btn { height: 30px; padding: 0 12px; border-radius: 15px; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; background: var(--fill); color: var(--label-3); }
+  .tag { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 8px; background: color-mix(in srgb, var(--pending) 15%, transparent); color: var(--pending); }
+  .tag [data-i] { width: 13px; height: 13px; }
+  .sugg-in { margin-left: 14px; font-size: 13px; color: var(--label-2); }
+  .bal .v .btn, .bal .v .badge { display: inline-flex; }
+  .hint { font-size: 13px; color: var(--label-2); margin-top: 10px; line-height: 18px; }
+</style></head>
+<body class="canvas">
+<div class="ipad">
+  <div class="status"><span>9:41  Mon Nov 9</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="glass sidebar">
+    <div class="brand"><div class="logo"><i data-i="leaf"></i></div>penny.</div>
+    <div class="nav"><i data-i="home"></i>Home</div>
+    <div class="nav"><i data-i="list"></i>Activity</div>
+    <div class="nav"><i data-i="pie-chart"></i>Insights</div>
+    <div class="side-h">Together</div>
+    <div class="nav on"><i data-i="people"></i>Apartment<span class="n">$142</span></div>
+    <div class="nav"><i data-i="airplane"></i>Lisbon trip<span class="n">3</span></div>
+    <div class="side-h">Manage</div>
+    <div class="nav"><i data-i="repeat"></i>Recurring</div>
+    <div class="nav"><i data-i="wallet"></i>Accounts</div>
+    <div class="nav"><i data-i="pricetag"></i>Categories</div>
+    <div class="side-foot"><div class="avatar mono">MF</div><div><b>Max</b><span>Synced just now</span></div><i data-i="settings" style="margin-left:auto;color:var(--label-2)"></i></div>
+  </div>
+
+  <div class="main">
+    <div class="col">
+      <div class="head"><div class="largetitle">Apartment</div><div class="stack"><div class="avatar mono">MF</div><div class="avatar mono">MI</div><div class="avatar mono">JS</div></div></div>
+      <div class="sub">November · $3,180.50 in shared expenses</div>
+      <div class="day"><span>This week</span></div>
+      <div class="list">
+        <div class="row"><div class="avatar mono">MI</div><div class="t"><b>Hydro</b><span>Mira paid · split equally</span></div><div class="amt num">$96.30<span>$32.10 yours</span></div></div>
+        <div class="row sel"><div class="avatar mono">JS</div><div class="t"><b>Costco run</b><span>Jo paid · split equally</span></div><div class="amt num">$184.20<span>$61.40 yours</span></div></div>
+      </div>
+      <div class="day"><span>Earlier</span></div>
+      <div class="list">
+        <div class="row"><div class="avatar mono">MF</div><div class="t"><b>Rent</b><span>You paid · by rent share <span class="badge"><i data-i="repeat" style="width:12px;height:12px"></i>Monthly</span></span></div><div class="amt num">$2,900.00<span>$1,450 yours</span></div></div>
+      </div>
+    </div>
+
+    <div class="detail">
+      <div class="glow"></div>
+      <div class="toolbar" style="left:28px">
+        <div class="sp"></div>
+        <div class="glass gbtn"><i data-i="time"></i></div>
+        <div class="glass gbtn"><i data-i="person-add"></i></div>
+        <div class="glass gcap tinted"><i data-i="add" style="width:18px;height:18px;--sw:44px"></i>Expense</div>
+      </div>
+      <div class="d-in">
+        <div class="owed">November · you're owed<div class="big num">$142.50</div></div>
+        <div class="panel" style="margin-top:20px">
+          <h4>Balances <span class="tag"><i data-i="time"></i>Settles Nov 30</span></h4>
+          <div style="margin-top:8px">
+            <div class="bal"><div class="avatar mono">MF</div>You<span class="v num pos">+$142.50<span>gets back</span></span></div>
+            <div class="bal"><div class="avatar mono">MI</div>Mira<span class="sugg-in">pays you $110.40</span><span class="v num">−$110.40<span>owes</span></span></div>
+            <div class="bal"><div class="avatar mono">JS</div>Jo<span class="sugg-in">pays you $32.10</span><span class="v num">−$32.10<span>owes</span></span></div>
+          </div>
+          <div class="hint">Record paid opens on the last day of the month. Repay a single expense any time with Mark as paid.</div>
+        </div>
+        <div class="panel" style="margin-top:16px">
+          <h4>Costco run <span>Jo paid $184.20 · Nov 4</span></h4>
+          <div style="margin-top:8px">
+            <div class="bal"><div class="avatar mono">MF</div>You<span class="v num" style="display:flex;gap:10px;align-items:center">$61.40<span class="badge" style="background:var(--income-soft);color:var(--income)!important"><i data-i="checkmark" style="width:12px;height:12px;--sw:60px"></i>Paid</span></span></div>
+            <div class="bal"><div class="avatar mono">MI</div>Mira<span class="v num" style="display:flex;gap:10px;align-items:center">$61.40<span class="btn" style="background:var(--tint);color:#fff">Mark as paid</span></span></div>
+            <div class="bal"><div class="avatar mono">JS</div>Jo · payer<span class="v num">$61.40</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+</body></html>

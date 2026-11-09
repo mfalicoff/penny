@@ -1,0 +1,72 @@
+<!-- @dsCard group="iPhone" name="Offline" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Offline</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<style>
+  .hero { position: relative; z-index: 1; padding: 118px 24px 0; }
+  .big { font-size: 64px; font-weight: 700; letter-spacing: -0.045em; line-height: 1; margin-top: 6px; }
+  .big small { font-size: 34px; letter-spacing: -0.03em; opacity: .55; }
+  .sub { margin-top: 12px; font-size: 15px; color: var(--label-2); display: flex; align-items: center; gap: 8px; }
+  .sub b { color: var(--label); font-weight: 600; }
+  .flowcard { position: relative; z-index: 1; margin: 24px 16px 0; padding: 16px 18px 18px; border-radius: var(--r-card); }
+  .flowcard .h { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .flowcard .h b { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+  .ins { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 16px; background: var(--fill); font-size: 14px; font-weight: 600; color: var(--label); }
+  .ins [data-i] { width: 16px; height: 16px; color: var(--tint); --sw: 40px; }
+  .offline { position: absolute; top: 112px; left: 16px; right: 16px; height: 48px; border-radius: 24px; display: flex; align-items: center; gap: 10px; padding: 0 16px; z-index: 21; font-size: 15px; }
+  .offline [data-i] { width: 20px; height: 20px; color: var(--pending); }
+  .offline b { font-weight: 600; } .offline span { color: var(--label-2); margin-left: auto; font-size: 14px; }
+  .hero { padding-top: 176px !important; }
+  .wait { display: inline-flex !important; align-items: center; gap: 4px; color: var(--pending) !important; font-weight: 500; }
+  .wait [data-i] { width: 13px; height: 13px; --sw: 44px; }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <div class="island"></div>
+  <div class="status"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="scroll">
+    <div class="glow"></div>
+    <div class="navbar">
+      <div class="glass gcap">November <i data-i="chevron-down" style="width:15px;height:15px;--sw:52px"></i></div>
+      <div class="grp"><div class="glass gbtn"><i data-i="calendar"></i></div><div class="glass gbtn"><i data-i="settings"></i></div></div>
+    </div>
+
+    <div class="offline glass"><i data-i="cloud-offline"></i><b>Offline</b> · 2 changes waiting<span>Retry</span></div>
+    <div class="hero">
+      <div class="eyebrow">Left to spend</div>
+      <div class="big num">$1,116<small>.65</small></div>
+      <div class="sub"><span class="dot" style="background:var(--pending)"></span><span><b class="num">$3,366.65</b> projected · as of last sync</span></div>
+    </div>
+
+    <div class="flowcard glass">
+      <div class="h"><b>Follow your money <i data-i="chevron-forward" class="chev"></i></b><span class="ins"><i data-i="pie-chart"></i>Insights</span></div>
+      <div class="flow"><i style="width:58.8%;background:var(--label);opacity:.82"></i><i style="width:6.3%;background:var(--invest)"></i><i style="width:34.9%;background:var(--income)"></i></div>
+      <div class="legend" style="margin-top:12px">
+        <span><i class="dot" style="background:var(--label);opacity:.82"></i>Spent <b class="num">$1,883</b></span>
+        <span><i class="dot" style="background:var(--invest)"></i>Invested <b class="num">$200</b></span>
+        <span><i class="dot" style="background:var(--income)"></i>Left <b class="num">$1,117</b></span>
+      </div>
+    </div>
+
+    <div class="section-h"><h3>Recent</h3><a>See all</a></div>
+    <div class="list">
+      <div class="row"><div class="ic" style="background:var(--c-groceries)"><i data-i="basket"></i></div><div class="t"><b>Groceries</b><span class="wait"><i data-i="time"></i>Waiting to sync</span></div><div class="amt num">−$48.90</div></div>
+      <div class="row"><div class="ic" style="background:var(--c-food)"><i data-i="cafe"></i></div><div class="t"><b>Coffee with Mira</b><span class="wait"><i data-i="time"></i>Waiting to sync</span></div><div class="amt num">−$6.40</div></div>
+      <div class="row"><div class="ic" style="background:var(--invest)"><i data-i="trending-up"></i></div><div class="t"><b>TFSA contribution</b><span>Nov 6 · Main chequing</span></div><div class="amt num inv">$200.00</div></div>
+      <div class="row"><div class="ic" style="background:var(--c-transport)"><i data-i="bus"></i></div><div class="t"><b>Transit pass</b><span>Nov 6 · Visa</span></div><div class="amt num">−$62.00</div></div>
+      <div class="row"><div class="ic" style="background:var(--income)"><i data-i="arrow-down"></i></div><div class="t"><b>Payday</b><span>Nov 1 · Main chequing</span></div><div class="amt num pos">+$3,200.00</div></div>
+    </div>
+  </div>
+
+  <div class="tabbar">
+    <div class="tabs glass">
+      <div class="tab on"><i data-i="home"></i>Home</div>
+      <div class="tab"><i data-i="list"></i>Activity</div>
+      <div class="tab"><i data-i="people"></i>Shared</div>
+      <div class="tab"><i data-i="airplane"></i>Trips</div>
+    </div>
+    <div class="fab glass tinted"><i data-i="add"></i></div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+</body></html>

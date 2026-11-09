@@ -1,0 +1,71 @@
+<!-- @dsCard group="iPhone" name="Entry detail" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Entry detail</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<style>
+  .glow { --glow-1: rgba(224, 82, 156, .35); --glow-2: rgba(255, 170, 200, .30); --glow-3: rgba(255, 190, 150, .25); }
+  .top { position: relative; z-index: 1; padding: 118px 24px 0; }
+  .top .ic { width: 52px; height: 52px; border-radius: 16px; }
+  .top .ic [data-i] { width: 26px; height: 26px; }
+  .top h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; margin-top: 14px; }
+  .top .meta { font-size: 15px; color: var(--label-2); margin-top: 2px; }
+  .amt-h { font-size: 52px; font-weight: 700; letter-spacing: -0.04em; margin-top: 16px; line-height: 1; }
+  .amt-h small { display: block; font-size: 15px; font-weight: 500; letter-spacing: 0; color: var(--label-2); margin-top: 8px; }
+  .grp-h { padding: 22px 32px 6px; font-size: 13px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .03em; }
+  .kv { display: flex; justify-content: space-between; align-items: center; padding: 0 16px; height: 48px; font-size: 16px; position: relative; }
+  .kv + .kv::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; border-top: .5px solid var(--separator); }
+  .kv span { color: var(--label-2); }
+  .kv b { font-weight: 500; }
+  .two { display: grid; grid-template-columns: 1fr 112px; gap: 12px; margin: 0 16px; }
+  .two .list { margin: 0; }
+  .rcpt { border-radius: var(--r-card); background: var(--surface); padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; color: var(--label-2); }
+  .paper { width: 100%; height: 104px; border-radius: 10px; background: #FBFAF7; border: .5px solid var(--separator); padding: 10px 9px; display: flex; flex-direction: column; gap: 6px; }
+  .paper i { display: block; height: 4px; border-radius: 2px; background: #D9D5CE; }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <div class="island"></div>
+  <div class="status"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="scroll">
+    <div class="glow"></div>
+    <div class="navbar">
+      <div class="glass gbtn"><i data-i="chevron-back"></i></div>
+      <div class="grp"><div class="glass gbtn" style="color:var(--danger)"><i data-i="trash"></i></div><div class="glass gcap"><i data-i="create" style="width:18px;height:18px"></i>Edit</div></div>
+    </div>
+    <div class="top">
+      <div class="ic" style="background:var(--c-food)"><i data-i="cafe"></i></div>
+      <h1>Coffee with Mira</h1>
+      <div class="meta">Food &amp; drinks · Monday, Nov 9</div>
+      <div class="amt-h num">−$6.40<small>Your share of $12.80</small></div>
+    </div>
+
+    <div class="grp-h">Details</div>
+    <div class="list">
+      <div class="kv"><span>Account</span><b>Visa</b></div>
+      <div class="kv"><span>Repeats</span><b>Never</b></div>
+      <div class="kv"><span>Trip</span><b style="color:var(--label-3)">None</b></div>
+      <div class="kv"><span>Note</span><b>Catch-up at the café</b></div>
+    </div>
+
+    <div class="grp-h">Split &amp; receipt</div>
+    <div class="two">
+      <div class="list">
+        <div class="kv"><span>Split</span><b>Equally · 2 people</b></div>
+        <div class="kv"><span>Your share</span><b class="num">$6.40</b></div>
+        <div class="kv"><span>Total</span><b class="num">$12.80</b></div>
+      </div>
+      <div class="rcpt"><div class="paper"><i style="width:60%"></i><i></i><i style="width:80%"></i><i></i><i style="width:40%"></i><i style="width:70%;margin-top:auto"></i></div>receipt.jpg</div>
+    </div>
+  </div>
+  <div class="tabbar">
+    <div class="tabs glass">
+      <div class="tab"><i data-i="home"></i>Home</div>
+      <div class="tab on"><i data-i="list"></i>Activity</div>
+      <div class="tab"><i data-i="people"></i>Shared</div>
+      <div class="tab"><i data-i="airplane"></i>Trips</div>
+    </div>
+    <div class="fab glass tinted"><i data-i="add"></i></div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+</body></html>

@@ -1,0 +1,60 @@
+<!-- @dsCard group="iPhone" name="Trip detail" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Trip detail</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<style>
+  .mono { background: linear-gradient(180deg, #A8A29E, #78716C); }
+  .glow { --glow-1: rgba(80, 150, 230, .40); --glow-2: rgba(255, 190, 120, .35); --glow-3: rgba(255, 140, 120, .2); }
+  .head { position: relative; z-index: 1; padding: 108px 24px 0; text-align: center; }
+  .head h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.025em; }
+  .head .d { font-size: 15px; color: var(--label-2); margin-top: 2px; }
+  .head .big { font-size: 48px; font-weight: 700; letter-spacing: -0.04em; margin-top: 12px; line-height: 1.05; }
+  .head .yours { font-size: 15px; color: var(--label-2); margin-top: 4px; }
+  .head .yours b { color: var(--label); }
+  .seg { margin: 20px 16px 0; position: relative; z-index: 1; }
+  .lbl { display: flex; justify-content: space-between; padding: 18px 20px 8px; font-size: 13px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .03em; }
+  .lbl .pv { display: inline-flex; gap: 5px; align-items: center; text-transform: none; letter-spacing: 0; }
+  .lbl .pv [data-i] { width: 14px; height: 14px; }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <div class="island"></div>
+  <div class="status"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="scroll">
+    <div class="glow"></div>
+    <div class="navbar">
+      <div class="glass gbtn"><i data-i="chevron-back"></i></div>
+      <div style="display:flex;gap:8px"><div class="glass gbtn"><i data-i="person-add"></i></div><div class="glass gbtn"><i data-i="ellipsis-horizontal"></i></div></div>
+    </div>
+    <div class="head">
+      <h1>Lisbon</h1>
+      <div class="d">Nov 12–19 · 4 people</div>
+      <div class="big num">$1,284.30</div>
+      <div class="yours">trip total · your share <b class="num">$412.60</b></div>
+    </div>
+    <div class="seg"><div class="on">Expenses</div><div>Balances</div><div>People</div></div>
+
+    <div class="lbl"><span>Shared with everyone</span><span class="num">4 expenses</span></div>
+    <div class="list">
+      <div class="row"><div class="ic" style="background:var(--c-transport)"><i data-i="airplane"></i></div><div class="t"><b>Flights</b><span>Oct 2 · Sam paid · split 4 ways</span></div><div class="amt num">$824.00<span>$206.00 yours</span></div></div>
+      <div class="row"><div class="ic" style="background:var(--c-home)"><i data-i="home"></i></div><div class="t"><b>Apartment in Alfama</b><span>Oct 8 · you paid</span></div><div class="amt num">$368.00<span>$92.00 yours</span></div></div>
+      <div class="row"><div class="ic" style="background:var(--c-health)"><i data-i="heart"></i></div><div class="t"><b>Travel insurance</b><span>Nov 3 · Mira paid</span></div><div class="amt num">$22.30<span>$11.15 yours</span></div></div>
+    </div>
+
+    <div class="lbl"><span class="pv"><i data-i="lock-closed"></i>Only you</span><span>from before sharing</span></div>
+    <div class="list">
+      <div class="row"><div class="ic" style="background:var(--c-transport)"><i data-i="bus"></i></div><div class="t"><b>Airport train</b><span>Sep 28 · Visa</span></div><div class="amt num">$24.00</div></div>
+    </div>
+  </div>
+  <div class="tabbar">
+    <div class="tabs glass">
+      <div class="tab"><i data-i="home"></i>Home</div>
+      <div class="tab"><i data-i="list"></i>Activity</div>
+      <div class="tab"><i data-i="people"></i>Shared</div>
+      <div class="tab on"><i data-i="airplane"></i>Trips</div>
+    </div>
+    <div class="fab glass tinted"><i data-i="add"></i></div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+</body></html>

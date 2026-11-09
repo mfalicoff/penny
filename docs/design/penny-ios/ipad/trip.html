@@ -1,0 +1,98 @@
+<!-- @dsCard group="iPad" name="Trip" viewport="1290x914" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPad · Trip</title>
+<link rel="stylesheet" href="../assets/penny.css"><link rel="stylesheet" href="../assets/ipad.css"><script src="../assets/icons.js"></script>
+<style>
+  .mono { background: linear-gradient(180deg, #A8A29E, #78716C); }
+  .glow { left: 0; right: 200px; top: -160px; height: 520px; --glow-1: rgba(80, 150, 230, .38); --glow-2: rgba(255, 190, 120, .32); --glow-3: rgba(255, 140, 120, .2); }
+  .content { position: relative; z-index: 1; padding: 100px 24px 0; display: grid; grid-template-columns: 1.3fr 1fr; gap: 16px; }
+  .hero { padding: 4px 4px 0; }
+  .when { font-size: 13px; font-weight: 600; color: var(--pending); text-transform: uppercase; letter-spacing: .03em; }
+  .hero h1 { font-size: 40px; font-weight: 700; letter-spacing: -0.03em; }
+  .hero .d { font-size: 15px; color: var(--label-2); }
+  .totals { display: flex; gap: 34px; margin-top: 18px; }
+  .totals div { font-size: 14px; color: var(--label-2); }
+  .totals b { display: block; font-size: 34px; font-weight: 700; letter-spacing: -0.03em; color: var(--label); margin-top: 2px; }
+  .ppl .bal { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: .5px solid var(--separator); font-size: 15px; }
+  .ppl .bal:first-of-type { border-top: 0; }
+  .ppl .avatar { width: 30px; height: 30px; border: 0; font-size: 11px; }
+  .ppl .v { margin-left: auto; font-weight: 600; text-align: right; }
+  .ppl .v span { display: block; font-size: 12px; color: var(--label-2); font-weight: 500; }
+  .panel .list .row { padding-left: 20px; padding-right: 20px; }
+  .row .t span.pv { display: flex; }
+  .pv { display: inline-flex; gap: 5px; align-items: center; }
+  .pv [data-i] { width: 14px; height: 14px; }
+  .cats .cr { display: flex; align-items: center; gap: 10px; margin-top: 12px; font-size: 15px; font-weight: 600; }
+  .cats .ic { width: 30px; height: 30px; border-radius: 9px; }
+  .cats .ic [data-i] { width: 16px; height: 16px; }
+  .cats .bar { flex: 1; height: 6px; border-radius: 3px; background: var(--fill); overflow: hidden; }
+  .cats .bar i { display: block; height: 100%; border-radius: 3px; }
+  .cats .v { width: 80px; text-align: right; }
+</style></head>
+<body class="canvas">
+<div class="ipad">
+  <div class="status"><span>9:41  Mon Nov 9</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="glass sidebar">
+    <div class="brand"><div class="logo"><i data-i="leaf"></i></div>penny.</div>
+    <div class="nav"><i data-i="home"></i>Home</div>
+    <div class="nav"><i data-i="list"></i>Activity</div>
+    <div class="nav"><i data-i="pie-chart"></i>Insights</div>
+    <div class="side-h">Together</div>
+    <div class="nav"><i data-i="people"></i>Apartment<span class="n">$142</span></div>
+    <div class="nav on"><i data-i="airplane"></i>Lisbon trip<span class="n">3</span></div>
+    <div class="side-h">Manage</div>
+    <div class="nav"><i data-i="repeat"></i>Recurring</div>
+    <div class="nav"><i data-i="wallet"></i>Accounts</div>
+    <div class="nav"><i data-i="pricetag"></i>Categories</div>
+    <div class="side-foot"><div class="avatar mono">MF</div><div><b>Max</b><span>Synced just now</span></div><i data-i="settings" style="margin-left:auto;color:var(--label-2)"></i></div>
+  </div>
+
+  <div class="main">
+    <div class="glow"></div>
+    <div class="toolbar">
+      <div class="sp"></div>
+      <div class="glass gbtn"><i data-i="person-add"></i></div>
+      <div class="glass gbtn"><i data-i="ellipsis-horizontal"></i></div>
+      <div class="glass gcap tinted"><i data-i="add" style="width:19px;height:19px;--sw:44px"></i>Trip expense</div>
+    </div>
+    <div class="content">
+      <div class="hero">
+        <div class="when">In 3 days</div>
+        <h1>Lisbon</h1>
+        <div class="d">Nov 12–19, 2026 · shared with 3 people</div>
+        <div class="totals">
+          <div>Trip total<b class="num">$1,284.30</b></div>
+          <div>Your share<b class="num">$412.60</b></div>
+        </div>
+      </div>
+      <div class="panel ppl">
+        <h4>People <span>November balance</span></h4>
+        <div style="margin-top:6px">
+          <div class="bal"><div class="avatar mono">MF</div>You<span class="v num">−$38.20<span>owes</span></span></div>
+          <div class="bal"><div class="avatar mono">SK</div>Sam<span class="v num pos">+$412.00<span>gets back</span></span></div>
+          <div class="bal"><div class="avatar mono">MI</div>Mira<span class="v num">−$195.75<span>owes</span></span></div>
+          <div class="bal"><div class="avatar mono">AL</div>Alex<span class="v num">−$178.05<span>owes</span></span></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h4>Expenses <span>4 shared · 1 private</span></h4>
+        <div class="list">
+          <div class="row"><div class="ic" style="background:var(--c-transport)"><i data-i="airplane"></i></div><div class="t"><b>Flights</b><span>Oct 2 · Sam paid · split 4 ways</span></div><div class="amt num">$824.00<span>$206.00 yours</span></div></div>
+          <div class="row"><div class="ic" style="background:var(--c-home)"><i data-i="home"></i></div><div class="t"><b>Apartment in Alfama</b><span>Oct 8 · you paid</span></div><div class="amt num">$368.00<span>$92.00 yours</span></div></div>
+          <div class="row"><div class="ic" style="background:var(--c-health)"><i data-i="heart"></i></div><div class="t"><b>Travel insurance</b><span>Nov 3 · Mira paid</span></div><div class="amt num">$22.30<span>$11.15 yours</span></div></div>
+          <div class="row"><div class="ic" style="background:var(--c-transport)"><i data-i="bus"></i></div><div class="t"><b>Airport train</b><span class="pv"><i data-i="lock-closed"></i>Only you · Sep 28</span></div><div class="amt num">$24.00</div></div>
+        </div>
+      </div>
+      <div class="panel cats">
+        <h4>Your share by category</h4>
+        <div class="cr"><div class="ic" style="background:var(--c-transport)"><i data-i="airplane"></i></div><span style="width:90px">Travel</span><div class="bar"><i style="width:56%;background:var(--c-transport)"></i></div><span class="v num">$230.00</span></div>
+        <div class="cr"><div class="ic" style="background:var(--c-home)"><i data-i="home"></i></div><span style="width:90px">Stay</span><div class="bar"><i style="width:22%;background:var(--c-home)"></i></div><span class="v num">$92.00</span></div>
+        <div class="cr"><div class="ic" style="background:var(--c-health)"><i data-i="heart"></i></div><span style="width:90px">Insurance</span><div class="bar"><i style="width:3%;background:var(--c-health)"></i></div><span class="v num">$11.15</span></div>
+        <div style="font-size:13px;color:var(--label-2);margin-top:16px;line-height:18px">Balances settle per month, so October bookings and November meals are reimbursed separately.</div>
+      </div>
+    </div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+</body></html>

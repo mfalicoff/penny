@@ -1,0 +1,49 @@
+<!-- @dsCard group="iPhone" name="Sign out" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Sign out</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<style>
+
+  .scrim { position: absolute; inset: 0; background: var(--dim); z-index: 30; }
+  .alert { position: absolute; left: 34px; right: 34px; top: 50%; transform: translateY(-50%); border-radius: 34px; padding: 24px 20px 18px; z-index: 32; background: color-mix(in srgb, var(--surface) 94%, transparent); text-align: center; }
+  .alert .ai { width: 48px; height: 48px; border-radius: 15px; margin: 0 auto 12px; display: grid; place-items: center; }
+  .alert .ai [data-i] { width: 26px; height: 26px; }
+  .alert h2 { font-size: 19px; font-weight: 700; letter-spacing: -0.01em; }
+  .alert p { font-size: 14px; color: var(--label-2); line-height: 1.4; margin-top: 8px; }
+  .btns { display: flex; flex-direction: column; gap: 8px; margin-top: 18px; }
+  .b { height: 48px; border-radius: 24px; display: grid; place-items: center; font-size: 16px; font-weight: 600; background: var(--fill); color: var(--label); }
+  .b.red { background: var(--danger); color: #fff; }
+  .b.tint { background: var(--tint); color: #fff; }
+  .b.redtext { color: var(--danger); }
+  .head { padding: 112px 20px 0; }
+  .grp-h { font-size: 13px; color: var(--label-2); text-transform: uppercase; letter-spacing: .03em; font-weight: 600; padding: 22px 20px 8px; }
+  .srow { display: flex; align-items: center; gap: 12px; padding: 0 16px; height: 52px; font-size: 16px; position: relative; }
+  .srow + .srow::before { content: ""; position: absolute; top: 0; left: 60px; right: 0; border-top: .5px solid var(--separator); }
+  .srow .ic { width: 30px; height: 30px; border-radius: 8px; }
+  .srow .ic [data-i] { width: 17px; height: 17px; }
+  .srow .v { margin-left: auto; color: var(--label-2); }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <div class="island"></div>
+  <div class="status"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="scroll">
+    <div class="navbar"><div class="glass gbtn"><i data-i="chevron-back"></i></div></div>
+    <div class="head"><div class="largetitle">Settings</div></div>
+    <div class="grp-h">Account</div>
+    <div class="list">
+      <div class="srow"><div class="ic" style="background:#8E8A85"><i data-i="server"></i></div>Server<span class="v">penny.example.com</span></div>
+      <div class="srow"><div class="ic" style="background:#8E8A85"><i data-i="cloud-offline"></i></div>Sync<span class="v">2 waiting</span></div>
+      <div class="srow" style="color:var(--danger)"><div class="ic" style="background:var(--danger)"><i data-i="log-out"></i></div>Sign out</div>
+    </div>
+  </div>
+  <div class="scrim"></div>
+  <div class="alert glass">
+    <div class="ai" style="background:color-mix(in srgb, var(--pending) 16%, transparent);color:var(--pending)"><i data-i="cloud-offline"></i></div>
+    <h2>2 changes haven’t synced</h2>
+    <p>Signing out removes your entries from this iPhone. Synced entries stay safe on penny.example.com; these 2 would be lost.</p>
+    <div class="btns"><div class="b tint">Sync, then sign out</div><div class="b redtext">Sign out anyway</div><div class="b">Cancel</div></div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+</body></html>

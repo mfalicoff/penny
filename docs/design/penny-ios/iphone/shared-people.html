@@ -1,0 +1,63 @@
+<!-- @dsCard group="iPhone" name="Shared · people" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Household people</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<style>
+  .mono { background: linear-gradient(180deg, #A8A29E, #78716C); }
+  .title { position: absolute; top: 54px; left: 0; right: 0; height: 52px; display: grid; place-items: center; font-size: 17px; font-weight: 600; z-index: 21; pointer-events: none; }
+  .seg { margin: 116px 16px 0; }
+  .lbl { padding: 20px 20px 8px; font-size: 13px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .03em; }
+  .row .avatar { width: 36px; height: 36px; border: 0; font-size: 13px; }
+  .role { font-size: 13px; color: var(--label-2); font-weight: 500; }
+  .invite { margin: 0 16px; background: var(--surface); border-radius: var(--r-card); padding: 18px; text-align: center; }
+  .invite .code { font-size: 34px; font-weight: 700; letter-spacing: .12em; font-family: ui-monospace, "SF Mono", monospace; margin-top: 4px; }
+  .invite .exp { font-size: 13px; color: var(--pending); font-weight: 600; display: inline-flex; gap: 5px; align-items: center; margin-top: 4px; }
+  .invite .exp [data-i] { width: 14px; height: 14px; }
+  .invite .btns { display: flex; gap: 10px; margin-top: 14px; }
+  .invite .btns div { flex: 1; height: 44px; border-radius: 22px; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 600; font-size: 15px; background: var(--fill); }
+  .invite .btns .p { background: var(--tint); color: #fff; }
+  .invite .btns [data-i] { width: 17px; height: 17px; }
+  .foot { margin: 14px 20px 0; font-size: 13px; color: var(--label-2); line-height: 18px; }
+  .leave { margin: 14px 16px 0; }
+  .leave .row b { color: var(--label-3); }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <div class="island"></div>
+  <div class="status"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="scroll">
+    <div class="navbar">
+      <div class="glass gbtn"><i data-i="chevron-back"></i></div>
+      <div style="display:flex;gap:8px"><div class="glass gbtn"><i data-i="time"></i></div><div class="glass gbtn"><i data-i="ellipsis-horizontal"></i></div></div>
+    </div>
+    <div class="title">Apartment</div>
+    <div class="seg"><div>Expenses</div><div>Balances</div><div class="on">People</div></div>
+
+    <div class="lbl">3 members</div>
+    <div class="list">
+      <div class="row"><div class="avatar mono">MF</div><div class="t"><b>Max (you)</b><span>Created Sep 2</span></div><span class="role">Creator</span></div>
+      <div class="row"><div class="avatar mono">MI</div><div class="t"><b>Mira</b><span>Joined Sep 2</span></div><span class="role">Member</span></div>
+      <div class="row"><div class="avatar mono">JS</div><div class="t"><b>Jo</b><span>Joined Oct 14</span></div><span class="role">Member</span></div>
+    </div>
+
+    <div class="lbl">Invite someone</div>
+    <div class="invite">
+      <div style="font-size:15px;color:var(--label-2)">They enter this code in Shared → Join</div>
+      <div class="code">K7Q·4PM</div>
+      <div class="exp"><i data-i="time"></i>Expires in 9:42</div>
+      <div class="btns"><div><i data-i="copy"></i>Copy</div><div class="p"><i data-i="arrow-up"></i>Share</div></div>
+    </div>
+    <div class="foot">Everyone uses CAD. New members are included in equal splits from the day they join; earlier expenses don't change.</div>
+  </div>
+  <div class="tabbar">
+    <div class="tabs glass">
+      <div class="tab"><i data-i="home"></i>Home</div>
+      <div class="tab"><i data-i="list"></i>Activity</div>
+      <div class="tab on"><i data-i="people"></i>Shared</div>
+      <div class="tab"><i data-i="airplane"></i>Trips</div>
+    </div>
+    <div class="fab glass tinted"><i data-i="add"></i></div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+</body></html>
