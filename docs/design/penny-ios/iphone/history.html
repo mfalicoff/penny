@@ -1,0 +1,65 @@
+<!-- @dsCard group="iPhone" name="Shared · history" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Household history</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<style>
+  .mono { background: linear-gradient(180deg, #A8A29E, #78716C); }
+  .head { padding: 112px 20px 0; }
+  .head p { font-size: 15px; color: var(--label-2); margin-top: 2px; }
+  .chips { display: flex; gap: 8px; padding: 14px 16px 0; overflow: hidden; }
+  .day { padding: 20px 20px 8px; font-size: 13px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .03em; }
+  .ev { display: flex; gap: 12px; padding: 12px 16px; position: relative; align-items: flex-start; }
+  .ev + .ev::before { content: ""; position: absolute; top: 0; left: 64px; right: 0; border-top: .5px solid var(--separator); }
+  .ev .av { position: relative; flex: none; }
+  .ev .avatar { width: 36px; height: 36px; border: 0; font-size: 13px; }
+  .ev .badge { position: absolute; right: -4px; bottom: -4px; width: 20px; height: 20px; border-radius: 50%; background: var(--surface); display: grid; place-items: center; }
+  .ev .badge i { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; color: #fff; }
+  .ev .badge [data-i] { width: 11px; height: 11px; --sw: 56px; }
+  .ev .t { flex: 1; font-size: 15px; line-height: 20px; }
+  .ev .t b { font-weight: 600; }
+  .ev .t span { display: block; font-size: 13px; color: var(--label-2); margin-top: 2px; }
+  .ev .t s { color: var(--label-2); }
+  .ev .time { font-size: 13px; color: var(--label-3); }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <div class="island"></div>
+  <div class="status"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="scroll">
+    <div class="navbar"><div class="glass gbtn"><i data-i="chevron-back"></i></div><div></div></div>
+    <div class="head"><div class="largetitle">History</div><p>Apartment · every change, by everyone</p></div>
+    <div class="chips"><span class="pill on">All</span><span class="pill">Expenses</span><span class="pill">Payments</span><span class="pill">Members</span></div>
+
+    <div class="day">Today</div>
+    <div class="list">
+      <div class="ev"><div class="av"><div class="avatar mono">MI</div><span class="badge"><i style="background:var(--label-2)"><i data-i="add"></i></i></span></div><div class="t"><b>Mira</b> added <b>Hydro</b><span class="num">$96.30 · split equally</span></div><span class="time">8:12</span></div>
+    </div>
+
+    <div class="day">Sat, Nov 7</div>
+    <div class="list">
+      <div class="ev"><div class="av"><div class="avatar mono">MF</div><span class="badge"><i style="background:var(--income)"><i data-i="checkmark"></i></i></span></div><div class="t"><b>You</b> recorded Jo's payment<span class="num">$61.40 for Costco run</span></div><span class="time">18:40</span></div>
+      <div class="ev"><div class="av"><div class="avatar mono">JS</div><span class="badge"><i style="background:var(--label-2)"><i data-i="create"></i></i></span></div><div class="t"><b>Jo</b> edited <b>Costco run</b><span>Category <s>Shopping</s> → Groceries</span></div><span class="time">11:05</span></div>
+    </div>
+
+    <div class="day">Sun, Nov 1</div>
+    <div class="list">
+      <div class="ev"><div class="av"><div class="avatar mono">MF</div><span class="badge"><i style="background:var(--label-2)"><i data-i="repeat"></i></i></span></div><div class="t"><b>Rent</b> was added automatically<span class="num">$2,900.00 · monthly, by rent share</span></div><span class="time">0:00</span></div>
+    </div>
+
+    <div class="day">Wed, Oct 14</div>
+    <div class="list">
+      <div class="ev"><div class="av"><div class="avatar mono">JS</div><span class="badge"><i style="background:var(--label-2)"><i data-i="person-add"></i></i></span></div><div class="t"><b>Jo</b> joined the household<span>Included in new expenses from Oct 14</span></div><span class="time">19:22</span></div>
+    </div>
+  </div>
+  <div class="tabbar">
+    <div class="tabs glass">
+      <div class="tab"><i data-i="home"></i>Home</div>
+      <div class="tab"><i data-i="list"></i>Activity</div>
+      <div class="tab on"><i data-i="people"></i>Shared</div>
+      <div class="tab"><i data-i="airplane"></i>Trips</div>
+    </div>
+    <div class="fab glass tinted"><i data-i="add"></i></div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+</body></html>

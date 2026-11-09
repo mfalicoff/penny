@@ -1,0 +1,68 @@
+<!-- @dsCard group="iPhone" name="Insights" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Insights</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<style>
+  .head { padding: 112px 20px 0; }
+  .head p { font-size: 15px; color: var(--label-2); margin-top: 2px; }
+  .sum { margin: 16px 16px 0; padding: 18px; display: flex; gap: 18px; align-items: center; }
+  .donut { width: 128px; height: 128px; border-radius: 50%; flex: none; position: relative;
+    background: conic-gradient(var(--c-home) 0 77%, var(--c-groceries) 0 85.4%, var(--c-transport) 0 93.7%, var(--c-food) 0 98%, var(--c-shopping) 0 99.3%, var(--c-entertainment) 0 100%); }
+  .donut::after { content: ""; position: absolute; inset: 18px; border-radius: 50%; background: var(--surface); }
+  .donut div { position: absolute; inset: 0; z-index: 1; display: grid; place-content: center; text-align: center; }
+  .donut b { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+  .donut span { font-size: 11px; color: var(--label-2); font-weight: 600; }
+  .cmp b { display: block; font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+  .cmp p { font-size: 14px; color: var(--label-2); margin-top: 4px; line-height: 1.35; }
+  .bars { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; font-size: 12px; color: var(--label-2); }
+  .bars div { display: flex; align-items: center; gap: 8px; }
+  .bars i { display: block; height: 8px; border-radius: 4px; background: var(--label); }
+  .pct { font-size: 13px; color: var(--label-2); font-weight: 500; }
+  .row .t .mini { height: 4px; border-radius: 2px; background: var(--fill); margin-top: 6px; overflow: hidden; }
+  .row .t .mini i { display: block; height: 100%; border-radius: 2px; }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <div class="island"></div>
+  <div class="status"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="scroll">
+    <div class="navbar">
+      <div class="glass gbtn"><i data-i="chevron-back"></i></div>
+      <div class="glass gcap">November <i data-i="chevron-down" style="width:15px;height:15px;--sw:52px"></i></div>
+    </div>
+    <div class="head"><div class="largetitle">Insights</div><p>Spending · your share</p></div>
+
+    <div class="card sum">
+      <div class="donut"><div><b class="num">$1,883</b><span>SPENT</span></div></div>
+      <div class="cmp">
+        <b>$412 less than October</b>
+        <p>Mostly Food &amp; drinks and Shopping.</p>
+        <div class="bars">
+          <div><i style="width:96px;opacity:.82"></i>Nov</div>
+          <div><i style="width:117px;opacity:.3"></i>Oct</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-h"><h3>Categories</h3></div>
+    <div class="list">
+      <div class="row"><div class="ic" style="background:var(--c-home)"><i data-i="home"></i></div><div class="t"><b>Home</b><div class="mini"><i style="width:77%;background:var(--c-home)"></i></div></div><div class="amt num">$1,450.00<span>77%</span></div></div>
+      <div class="row"><div class="ic" style="background:var(--c-groceries)"><i data-i="basket"></i></div><div class="t"><b>Groceries</b><div class="mini"><i style="width:8.4%;background:var(--c-groceries)"></i></div></div><div class="amt num">$158.77<span>8%</span></div></div>
+      <div class="row"><div class="ic" style="background:var(--c-transport)"><i data-i="bus"></i></div><div class="t"><b>Transport</b><div class="mini"><i style="width:8.3%;background:var(--c-transport)"></i></div></div><div class="amt num">$156.00<span>8%</span></div></div>
+      <div class="row"><div class="ic" style="background:var(--c-food)"><i data-i="cafe"></i></div><div class="t"><b>Food &amp; drinks</b><div class="mini"><i style="width:4.3%;background:var(--c-food)"></i></div></div><div class="amt num">$80.60<span>4%</span></div></div>
+      <div class="row"><div class="ic" style="background:var(--c-shopping)"><i data-i="bag-handle"></i></div><div class="t"><b>Shopping</b><div class="mini"><i style="width:1.3%;background:var(--c-shopping)"></i></div></div><div class="amt num">$24.99<span>1%</span></div></div>
+      <div class="row"><div class="ic" style="background:var(--c-entertainment)"><i data-i="musical-notes"></i></div><div class="t"><b>Entertainment</b><div class="mini"><i style="width:.7%;background:#7A8F3A"></i></div></div><div class="amt num">$12.99<span>1%</span></div></div>
+    </div>
+  </div>
+  <div class="tabbar">
+    <div class="tabs glass">
+      <div class="tab on"><i data-i="home"></i>Home</div>
+      <div class="tab"><i data-i="list"></i>Activity</div>
+      <div class="tab"><i data-i="people"></i>Shared</div>
+      <div class="tab"><i data-i="airplane"></i>Trips</div>
+    </div>
+    <div class="fab glass tinted"><i data-i="add"></i></div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+</body></html>

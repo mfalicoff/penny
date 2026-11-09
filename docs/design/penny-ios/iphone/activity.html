@@ -8,6 +8,7 @@
   .day { display: flex; justify-content: space-between; padding: 22px 20px 8px; font-size: 13px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .03em; }
   .swipe { position: relative; overflow: hidden; }
   .swipe .row { background: var(--surface); margin-right: 148px; }
+  .swipe .row .t span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .acts { position: absolute; right: 0; top: 0; bottom: 0; display: flex; }
   .acts div { width: 74px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: #fff; font-size: 12px; font-weight: 600; }
   .acts [data-i] { width: 20px; height: 20px; }
@@ -40,13 +41,13 @@
       <div class="row"><div class="ic" style="background:var(--c-food)"><i data-i="cafe"></i></div><div class="t"><b>Coffee with Mira</b><span>Visa · split 2 ways</span></div><div class="amt num">−$6.40<span>of $12.80</span></div></div>
     </div>
 
-    <div class="day"><span>Thursday, Nov 6</span><span class="num">−$262.00</span></div>
+    <div class="day"><span>Friday, Nov 6</span><span class="num">−$262.00</span></div>
     <div class="list">
       <div class="row"><div class="ic" style="background:var(--invest)"><i data-i="trending-up"></i></div><div class="t"><b>TFSA contribution</b><span>Main chequing · monthly</span></div><div class="amt num inv">$200.00</div></div>
       <div class="row"><div class="ic" style="background:var(--c-transport)"><i data-i="bus"></i></div><div class="t"><b>Transit pass</b><span>Visa · monthly</span></div><div class="amt num">−$62.00</div></div>
     </div>
 
-    <div class="day"><span>Saturday, Nov 1</span><span class="num pos">+$1,750.00</span></div>
+    <div class="day"><span>Sunday, Nov 1</span><span class="num pos">+$1,750.00</span></div>
     <div class="list">
       <div class="row"><div class="ic" style="background:var(--income)"><i data-i="arrow-down"></i></div><div class="t"><b>Payday</b><span>Main chequing</span></div><div class="amt num pos">+$3,200.00</div></div>
       <div class="row"><div class="ic" style="background:var(--c-home)"><i data-i="home"></i></div><div class="t"><b>Rent</b><span>Apartment · you paid $2,900</span></div><div class="amt num">−$1,450.00<span>your share</span></div></div>

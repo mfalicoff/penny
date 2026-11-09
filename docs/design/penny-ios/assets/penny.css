@@ -27,6 +27,7 @@
   /* categories */
   /* category colors never reuse a semantic color (copper, green, indigo, amber, red) */
   --c-home: #3B82F6; --c-groceries: #0FA3A3; --c-transport: #64748B; --c-food: #E0529C; --c-shopping: #A0704C;
+  --c-entertainment: #7A8F3A; --c-health: #0E7490; --c-other: #8E8A85;
   /* glass */
   --glass: rgba(255, 255, 255, 0.62);
   --glass-strong: rgba(255, 255, 255, 0.78);
@@ -135,7 +136,7 @@ body.canvas { padding: 40px; display: flex; gap: 40px; align-items: flex-start; 
 .seg div { flex: 1; display: grid; place-items: center; font-size: 14px; font-weight: 600; border-radius: 17px; color: var(--label); }
 .seg .on { background: var(--surface); box-shadow: 0 2px 8px rgba(0,0,0,.10); }
 .dark .seg .on { background: #4A4744; }
-.avatar { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; color: #fff; border: 2px solid var(--surface); }
+.avatar { background: linear-gradient(180deg, #A8A29E, #78716C); width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; color: #fff; border: 2px solid var(--surface); }
 .stack { display: flex; } .stack .avatar + .avatar { margin-left: -9px; }
 
 /* hero glow background */
