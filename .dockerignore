@@ -7,3 +7,11 @@ data
 .env.*
 *.log
 tests
+# Not part of the legacy or web images (the API image builds from apps/backend).
+.cache
+.claude
+.direnv
+apps/backend
+apps/ios
+test-results
+deploy/.env

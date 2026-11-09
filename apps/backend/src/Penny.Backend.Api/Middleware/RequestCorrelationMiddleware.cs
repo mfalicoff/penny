@@ -23,9 +23,7 @@ public sealed partial class RequestCorrelationMiddleware(
             : Guid.NewGuid().ToString("N");
         context.TraceIdentifier = id;
         context.Response.Headers[Header] = id;
-        using var scope = logger.BeginScope(
-            new KeyValuePair<string, object>[] { new("RequestId", id) }
-        );
+        using var scope = logger.BeginScope("RequestId:{RequestId}", id);
         var started = Stopwatch.GetTimestamp();
         try
         {

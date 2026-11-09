@@ -49,6 +49,12 @@ public sealed class DatabaseSettings
             throw new InvalidOperationException(
                 "The PostgreSQL connection string requires Host, Database and Username."
             );
+        // MAZ-63: no Kerberos/GSS negotiation unless the operator asks for it; the
+        // default probe needs libgssapi, which the runtime image does not ship.
+        // (Npgsql's builder reports every known keyword as present, so ask a plain one.)
+        var given = new System.Data.Common.DbConnectionStringBuilder { ConnectionString = value };
+        if (!given.ContainsKey("GSS Encryption Mode") && !given.ContainsKey("GssEncryptionMode"))
+            parsed.GssEncryptionMode = GssEncryptionMode.Disable;
         parsed.Pooling = true;
         parsed.MinPoolSize = 0;
         parsed.MaxPoolSize = maxPoolSize;

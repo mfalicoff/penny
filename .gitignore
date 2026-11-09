@@ -64,3 +64,6 @@ test-results/
 **/bin/
 **/obj/
 **/TestResults/
+
+# Self-hosting secrets (MAZ-63)
+deploy/api.env

@@ -1,0 +1,135 @@
+# Penny self-hosting stack (MAZ-63): pinned PostgreSQL 18, a one-shot migration,
+# the .NET API and the nginx web front end on one origin.
+#
+#   sh deploy/init-env.sh https://penny.example.com   # once: writes deploy/.env (0600)
+#   docker compose -f deploy/compose.yaml up -d --wait
+#
+# Only `web` publishes a port. The API, migration and PostgreSQL are reachable only on
+# the internal network. Secrets come from deploy/.env (and the optional deploy/api.env)
+# and are passed to the one service that needs each of them. See docs/deployment.md.
+#
+# External PostgreSQL: set COMPOSE_PROFILES= (empty) and PENNY_DB_HOST/PORT/NAME,
+# PENNY_DB_SSL_MODE=VerifyFull and PENNY_DB_OPTIONS in deploy/.env; the bundled
+# `postgres` service is then not started.
+
+name: penny
+
+x-api: &api
+  image: ${PENNY_API_IMAGE:-ghcr.io/mfalicoff/penny-api:latest}
+  build:
+    context: ../apps/backend
+  read_only: true
+  tmpfs:
+    - /tmp:size=64m
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  networks: [penny]
+
+services:
+  postgres:
+    profiles: [bundled-postgres]
+    # PostgreSQL 18.6 with pgvector 0.8.7: the digest pinned in apps/backend/compose.yaml
+    # and DatabaseSchema.Image. Upgrades follow docs/deployment.md#upgrade-postgresql.
+    image: docker.io/pgvector/pgvector:0.8.7-pg18-trixie@sha256:5895949dfcdf308eb0cd31c950c93c14895c77f33fbedfecf1fa511ab1d4bcd2
+    environment:
+      POSTGRES_DB: ${PENNY_DB_NAME:-penny}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${PENNY_ADMIN_PASSWORD:?run deploy/init-env.sh first}
+      PENNY_MIGRATION_PASSWORD: ${PENNY_MIGRATION_PASSWORD:?run deploy/init-env.sh first}
+      PENNY_RUNTIME_PASSWORD: ${PENNY_RUNTIME_PASSWORD:?run deploy/init-env.sh first}
+    volumes:
+      - penny-postgres:/var/lib/postgresql
+      - ../apps/backend/development/init-roles.sh:/docker-entrypoint-initdb.d/10-penny-roles.sh:ro
+    shm_size: 256m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 30s
+    stop_grace_period: 60s
+    restart: unless-stopped
+    networks: [penny]
+
+  # Applies EF migrations under the migration advisory lock, then grant-runtime.sql,
+  # and exits. The API starts only after it succeeded.
+  migrate:
+    <<: *api
+    command: ["migrate", "--grant-runtime"]
+    environment:
+      ConnectionStrings__Migration: >-
+        Host=${PENNY_DB_HOST:-postgres};Port=${PENNY_DB_PORT:-5432};Database=${PENNY_DB_NAME:-penny};SSL Mode=${PENNY_DB_SSL_MODE:-Disable}${PENNY_DB_OPTIONS:-};Username=${PENNY_MIGRATION_USER:-penny_migrator};Password=${PENNY_MIGRATION_PASSWORD:?run deploy/init-env.sh first}
+    depends_on:
+      postgres:
+        condition: service_healthy
+        required: false
+    restart: "no"
+
+  api:
+    <<: *api
+    env_file:
+      - path: ./api.env
+        required: false
+    environment:
+      ConnectionStrings__Postgres: >-
+        Host=${PENNY_DB_HOST:-postgres};Port=${PENNY_DB_PORT:-5432};Database=${PENNY_DB_NAME:-penny};SSL Mode=${PENNY_DB_SSL_MODE:-Disable}${PENNY_DB_OPTIONS:-};Username=${PENNY_RUNTIME_USER:-penny_runtime};Password=${PENNY_RUNTIME_PASSWORD:?run deploy/init-env.sh first}
+      Receipts__MasterKey: ${PENNY_RECEIPT_KEY:?run deploy/init-env.sh first}
+      Auth__AllowedOrigins: ${PENNY_PUBLIC_ORIGIN:?set PENNY_PUBLIC_ORIGIN in deploy/.env}
+      Auth__SecureCookies: ${PENNY_SECURE_COOKIES:-true}
+      # Only the web container talks to the API; trusting its X-Forwarded-For gives
+      # rate limits the real client address (nginx replaces, never appends, it).
+      Auth__TrustedProxies: ${PENNY_SUBNET:-172.31.63.0/24}
+      Backend__ShutdownTimeoutSeconds: "30"
+    volumes:
+      - penny-receipts:/var/lib/penny/receipts
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "dotnet", "Penny.Backend.Api.dll", "health-probe"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    # Above Backend__ShutdownTimeoutSeconds, so in-flight requests and worker leases
+    # are released before the container is killed.
+    stop_grace_period: 45s
+    restart: unless-stopped
+
+  web:
+    image: ${PENNY_WEB_IMAGE:-ghcr.io/mfalicoff/penny-web:latest}
+    build:
+      context: ..
+      dockerfile: deploy/web/Dockerfile
+    environment:
+      PENNY_API_UPSTREAM: api:8080
+      PENNY_REAL_IP_FROM: ${PENNY_REAL_IP_FROM:-127.0.0.1/32}
+    ports:
+      - "${PENNY_BIND:-127.0.0.1}:${PENNY_PORT:-8080}:8080"
+    read_only: true
+    # Writable scratch for the unprivileged nginx user (rendered config, pid, temp).
+    volumes:
+      - type: tmpfs
+        target: /tmp
+        tmpfs: { size: 67108864, mode: 01777 }
+      - type: tmpfs
+        target: /etc/nginx/conf.d
+        tmpfs: { size: 1048576, mode: 01777 }
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    depends_on:
+      api:
+        condition: service_healthy
+    stop_grace_period: 15s
+    restart: unless-stopped
+    networks: [penny]
+
+networks:
+  penny:
+    ipam:
+      config:
+        - subnet: ${PENNY_SUBNET:-172.31.63.0/24}
+
+volumes:
+  penny-postgres:
+  penny-receipts:

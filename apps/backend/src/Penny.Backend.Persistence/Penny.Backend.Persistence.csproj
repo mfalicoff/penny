@@ -13,4 +13,11 @@
     <PackageReference Include="Microsoft.ML.Tokenizers" />
     <PackageReference Include="System.Numerics.Tensors" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- MAZ-63: the migrate command's grant-runtime option runs the same script operators run by hand. -->
+    <EmbeddedResource
+      Include="../../development/grant-runtime.sql"
+      LogicalName="Penny.Backend.Persistence.grant-runtime.sql"
+    />
+  </ItemGroup>
 </Project>

@@ -26,6 +26,43 @@ public sealed class MigrationCommandTests(ApiFixture fixture) : IntegrationTestB
     }
 
     [Fact]
+    public async Task whenGrantRuntimeRequested_MigrationCommand_ShouldLeaveRuntimeRoleReady()
+    {
+        // A fresh schema has no runtime grants: the shared runtime host is not ready
+        // until the same command that migrated also applied grant-runtime.sql.
+        await Fixture.SqlAsync("DROP SCHEMA penny CASCADE", Ct);
+        await Fixture.SqlAsync(
+            "CREATE SCHEMA penny AUTHORIZATION penny_migrator; GRANT USAGE ON SCHEMA penny TO penny_runtime",
+            Ct
+        );
+        var migrated = await RunAsync(Fixture.MigrationConnection);
+        migrated.ExitCode.ShouldBe(0, migrated.Error);
+        using (var before = await Client.GetAsync("/api/ready", Ct))
+            before.StatusCode.ShouldBe(System.Net.HttpStatusCode.ServiceUnavailable);
+        var granted = await RunAsync(Fixture.MigrationConnection, "--grant-runtime");
+        granted.ExitCode.ShouldBe(0, granted.Error);
+        granted.Output.ShouldContain("Runtime grants applied.");
+        using (var after = await Client.GetAsync("/api/ready", Ct))
+            after.StatusCode.ShouldBe(System.Net.HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public void whenGrantScriptEmbedded_RuntimeGrants_ShouldMatchRepositoryFile()
+    {
+        var file = Path.Combine(
+            AppContext.BaseDirectory,
+            "..",
+            "..",
+            "..",
+            "..",
+            "..",
+            "development",
+            "grant-runtime.sql"
+        );
+        Penny.Backend.Persistence.Migrations.RuntimeGrants.Sql().ShouldBe(File.ReadAllText(file));
+    }
+
+    [Fact]
     public async Task whenRuntimeCredentialsProvided_MigrationCommand_ShouldFailWithoutExposingSecrets()
     {
         var result = await RunAsync(Fixture.RuntimeConnection);
@@ -36,7 +73,8 @@ public sealed class MigrationCommandTests(ApiFixture fixture) : IntegrationTestB
     }
 
     private static async Task<(int ExitCode, string Output, string Error)> RunAsync(
-        string connection
+        string connection,
+        params string[] options
     )
     {
         var entry = typeof(Program).Assembly.Location;
@@ -50,6 +88,8 @@ public sealed class MigrationCommandTests(ApiFixture fixture) : IntegrationTestB
         };
         start.ArgumentList.Add(entry);
         start.ArgumentList.Add("migrate");
+        foreach (var option in options)
+            start.ArgumentList.Add(option);
         start.Environment["ConnectionStrings__Migration"] = connection;
         using var process = Process.Start(start)!;
         var output = process.StandardOutput.ReadToEndAsync(Ct);
