@@ -65,7 +65,8 @@ struct KeychainSessionStoreTests {
         ]
         #expect(keychain.copyData(legacy).0 == errSecSuccess)
         // A query without a class is refused, as SecItemCopyMatching does.
-        #expect(keychain.copyData([kSecAttrAccount as String: account, kSecReturnData as String: true]).0 == errSecParam)
+        #expect(
+            keychain.copyData([kSecAttrAccount as String: account, kSecReturnData as String: true]).0 == errSecParam)
     }
 
     @Test("whenDeviceLocked_KeychainSessionStore_ShouldReportUnavailableAndKeepTheItem")

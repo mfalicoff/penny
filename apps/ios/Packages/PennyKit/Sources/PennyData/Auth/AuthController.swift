@@ -16,6 +16,9 @@ public final class AuthController {
     /// The server sign-in uses. Nil only in Release before the person chooses one.
     public private(set) var server: SavedServer?
     public private(set) var singleSignOn: SingleSignOnStatus = .unknown
+    /// An account whose entries are still on this device because removing them failed at
+    /// sign-out. The signed-out screen says so and offers `removeUnremovedLocalData()`.
+    public private(set) var unremovedLocalData: AccountScope?
 
     @ObservationIgnored private let defaultServer: ServerURL?
     @ObservationIgnored private let sessions: any SessionStore
@@ -28,6 +31,8 @@ public final class AuthController {
     @ObservationIgnored private var generation = 0
     @ObservationIgnored private var pendingSingleSignOn: PendingSingleSignOn?
     @ObservationIgnored private var replayGuard = CallbackReplayGuard()
+    /// Moving local data after a launch-time email change; sign-out waits for it.
+    @ObservationIgnored private var emailMigration: Task<Void, Never>?
 
     /// Timeout for checking a candidate server, as in the legacy app.
     static let probeTimeout: TimeInterval = 10
@@ -66,16 +71,17 @@ public final class AuthController {
     public func restore() async {
         guard state == .restoring || state == .keychainUnavailable else { return }
         state = .restoring
-        if !preferences.hasLaunchedBefore {
-            // Keychain items survive app deletion; a reinstall starts signed out.
-            do { try sessions.deleteAll() } catch .unavailable {
-                state = .keychainUnavailable
-                return
-            } catch {}
-            preferences.markLaunched()
+        var purged = true
+        do { try purgeLeftoverSessionsIfNeeded() } catch .unavailable {
+            state = .keychainUnavailable
+            return
+        } catch {
+            // A leftover may be another person's session: restore nothing. The purge runs
+            // again before the next session is saved and at the next launch.
+            purged = false
         }
         server = preferences.savedServer() ?? defaultServer.map { SavedServer(server: $0) }
-        guard let server else {
+        guard let server, purged else {
             state = .signedOut(nil)
             return
         }
@@ -98,26 +104,52 @@ public final class AuthController {
 
     private func verify(_ account: SignedInAccount) async {
         guard let client = try? signedInClient(account) else { return }
+        let email: String
         do {
-            let me = try await client.me()
-            guard isCurrent(account) else { return }
-            if me.email.lowercased() == account.email.lowercased() {
-                var verified = account
-                verified.isVerified = true
-                state = .signedIn(verified)
-            } else if let session = try? ServerSession(
-                server: account.server, email: me.email, token: account.session.tokenForStorage)
-            {
-                // The token is the authority: show the account it belongs to, under its own
-                // scope, never the previously stored one.
-                try? sessions.save(session)
-                _ = activate(session, verified: true)
-            }
+            email = try await client.me().email
         } catch let error as APIError where error.requiresSignIn {
-            sessionDidExpire(for: account.scope)
+            // Ignored unless `account` is still the current session (not a newer sign-in,
+            // not a sign-out in progress).
+            sessionDidExpire(for: account)
+            return
         } catch {
             // Offline or a server problem: stay signed in with local data, unverified.
+            return
         }
+        guard case .signedIn = state, isCurrent(account) else { return }
+        if email.lowercased() == account.email.lowercased() {
+            var verified = account
+            verified.isVerified = true
+            state = .signedIn(verified)
+            return
+        }
+        let migration = Task { await adoptChangedEmail(email, for: account) }
+        emailMigration = migration
+        await migration.value
+        if emailMigration == migration { emailMigration = nil }
+    }
+
+    /// The token now belongs to another email (changed on the server). The token is the
+    /// authority, so the account moves to that email's scope, and its local data moves with
+    /// it first so unsynced work is neither orphaned nor shown under the old scope. If the
+    /// data cannot move, nothing changes: the account stays on the stored scope, unverified,
+    /// and the next launch tries again.
+    private func adoptChangedEmail(_ email: String, for account: SignedInAccount) async {
+        guard
+            let session = try? ServerSession(
+                server: account.server, email: email, token: account.session.tokenForStorage)
+        else { return }
+        do {
+            try await localData.moveLocalData(from: account.scope, to: session.scope)
+        } catch {
+            return
+        }
+        // Sign-out and "Sync, then sign out" wait for this migration, so the account is
+        // normally still current; if it expired meanwhile, its data already sits under the
+        // new scope, which is where the next sign-in (with the new email) looks.
+        guard case .signedIn = state, isCurrent(account) else { return }
+        try? sessions.save(session)
+        _ = activate(session, verified: true)
     }
 
     // MARK: Password
@@ -157,7 +189,7 @@ public final class AuthController {
             if attempt == generation { state = .signedOut(previous) }
             throw Self.failure(error, during: method, server: server.server)
         }
-        try await install(session, attempt: attempt, previous: previous)
+        try await install(session, previous: previous)
     }
 
     // MARK: Single sign-on
@@ -245,18 +277,23 @@ public final class AuthController {
             }
             throw Self.failure(error, during: .singleSignOn, server: server.server)
         }
-        try await install(session, attempt: attempt, previous: previous)
+        try await install(session, previous: previous)
         return .signedIn
     }
 
     // MARK: Expiry and sign-out
 
-    /// Call when any request for `scope` answers 401. Only the current account's own 401
-    /// ends its session; a late answer for an earlier account is ignored. Local work is
-    /// kept so signing in again as the same account picks it up.
-    public func sessionDidExpire(for scope: AccountScope) {
-        guard let account = state.account, account.scope == scope else { return }
-        try? sessions.delete(server: scope.server)
+    /// Call when a request made for `account` answers 401: pass the `state.account` the
+    /// request's client was made for. Only the current session's own 401 ends it. A late
+    /// answer for an earlier session is ignored, even one of the same account and server
+    /// (signed out and in again since), and so is one that arrives while signing out.
+    /// Local work is kept so signing in again as the same account picks it up.
+    ///
+    /// No request path calls this by itself yet: each feature that holds a client must call
+    /// it on `APIError.unauthorized` (see docs/ios-authentication.md).
+    public func sessionDidExpire(for account: SignedInAccount) {
+        guard case .signedIn = state, isCurrent(account) else { return }
+        try? sessions.delete(server: account.server)
         bump()
         state = .signedOut(.sessionExpired(email: account.email))
     }
@@ -278,45 +315,79 @@ public final class AuthController {
     public func signOut(discardingPendingChanges: Bool = false, removeEvenIfUnreachable: Bool = false)
         async throws(SignOutFailure)
     {
+        await finishEmailMigration()
         guard case .signedIn(let account) = state else { throw .notSignedIn }
         let pending = await localData.pendingChangeCount(for: account.scope)
-        guard isCurrent(account) else { throw .notSignedIn }
+        guard case .signedIn = state, isCurrent(account) else { throw .notSignedIn }
         if pending > 0, !discardingPendingChanges { throw .pendingChanges(count: pending) }
         guard let client = try? signedInClient(account) else { throw .notSignedIn }
 
+        // From here nothing started for the signed-in account applies: a launch check or a
+        // late 401 is dropped, and no second sign-out or other sign-in can start.
         state = .signingOut(account)
+        let signingOut = bump()
+        func stillSigningOut() -> Bool { generation == signingOut && state == .signingOut(account) }
+
         await devices.unregister(using: client)
+        guard stillSigningOut() else { throw .notSignedIn }
         do {
             try await client.logout()
         } catch let error as APIError where error.requiresSignIn {
             // Already ended on the server.
         } catch {
             if !removeEvenIfUnreachable {
-                if state == .signingOut(account) { state = .signedIn(account) }
+                if stillSigningOut() { activate(account.session, verified: account.isVerified) }
                 throw .serverUnreachable
             }
         }
+        guard stillSigningOut() else { throw .notSignedIn }
         try? sessions.delete(server: account.server)
         bump()
         state = .signedOut(.signedOut)
-        try? await localData.removeLocalData(for: account.scope)
+        do {
+            try await localData.removeLocalData(for: account.scope)
+        } catch {
+            // Signed out already (the server session is gone), but the entries are still on
+            // this device: say so and offer `removeUnremovedLocalData()`. Not if the same
+            // account signed in again meanwhile; it is its own data then.
+            if state.account?.scope != account.scope { unremovedLocalData = account.scope }
+        }
+    }
+
+    /// Tries again to remove the entries a sign-out could not remove (`unremovedLocalData`).
+    /// Leaves `unremovedLocalData` set when it fails again.
+    public func removeUnremovedLocalData() async {
+        guard let scope = unremovedLocalData else { return }
+        do {
+            try await localData.removeLocalData(for: scope)
+        } catch {
+            return
+        }
+        if unremovedLocalData == scope { unremovedLocalData = nil }
     }
 
     /// "Sync, then sign out".
     public func syncThenSignOut() async throws(SignOutFailure) {
+        await finishEmailMigration()
         guard case .signedIn(let account) = state, let client = try? signedInClient(account) else {
             throw .notSignedIn
         }
         do {
             try await localData.syncPendingChanges(for: account.scope, using: client)
         } catch let error as APIError where error.requiresSignIn {
-            sessionDidExpire(for: account.scope)
+            sessionDidExpire(for: account)
             throw .syncFailed
         } catch {
             throw .syncFailed
         }
-        guard isCurrent(account) else { throw .notSignedIn }
+        guard case .signedIn = state, isCurrent(account) else { throw .notSignedIn }
         try await signOut()
+    }
+
+    /// Waits for a launch-time email change to move the account's local data, so sign-out
+    /// counts, syncs and removes the scope that data ends up under.
+    private func finishEmailMigration() async {
+        while let migration = emailMigration { await migration.value }
     }
 
     // MARK: Server
@@ -397,13 +468,17 @@ public final class AuthController {
         return (server, reason)
     }
 
-    /// Saves and activates a new session, unless the attempt was superseded. A session the
-    /// Keychain refuses is revoked again, so no valid token is left behind unsaved.
-    private func install(_ session: ServerSession, attempt: Int, previous: SignedOutReason?) async throws(AuthFailure) {
-        guard attempt == generation, session.server == server?.server else {
-            try? await logoutQuietly(session)
-            throw Self.superseded
-        }
+    /// Saves and activates a new session. A session the Keychain refuses is revoked again, so
+    /// no valid token is left behind unsaved.
+    ///
+    /// No staleness check is needed: while `signingIn`, nothing can change the server or the
+    /// generation (`useServer`, expiry, sign-out and another sign-in all refuse), and the
+    /// session comes from a client configured for `server`.
+    private func install(_ session: ServerSession, previous: SignedOutReason?) async throws(AuthFailure) {
+        // A fresh-install purge that failed at launch runs again first, so leftovers never
+        // sit next to the new session. If it fails again, the next launch retries it (and
+        // that purge also removes this session: the person signs in once more).
+        try? purgeLeftoverSessionsIfNeeded()
         do {
             try sessions.save(session)
         } catch {
@@ -412,6 +487,15 @@ public final class AuthController {
             throw AuthFailure(.storage, "Couldn't keep you signed in on this device. Please try again.")
         }
         _ = activate(session, verified: true)
+    }
+
+    /// Keychain items survive app deletion, so the first launch after an install deletes
+    /// every saved session instead of restoring one nobody expects. Marked done only once
+    /// the deletion succeeded; until then every launch (and sign-in) tries again.
+    private func purgeLeftoverSessionsIfNeeded() throws(SessionStoreError) {
+        guard !preferences.hasLaunchedBefore else { return }
+        try sessions.deleteAll()
+        preferences.markLaunched()
     }
 
     private func logoutQuietly(_ session: ServerSession) async throws {
@@ -425,6 +509,8 @@ public final class AuthController {
     private func activate(_ session: ServerSession, verified: Bool) -> SignedInAccount {
         let account = SignedInAccount(session: session, generation: bump(), isVerified: verified)
         state = .signedIn(account)
+        // Entries a sign-out could not remove belong to this account again.
+        if unremovedLocalData == account.scope { unremovedLocalData = nil }
         return account
     }
 

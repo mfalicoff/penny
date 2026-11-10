@@ -116,6 +116,76 @@ struct AuthControllerTests {
         #expect(try sessions.load(server: AuthFixtures.server)?.email == "renamed@example.test")
     }
 
+    @Test("whenFreshInstallPurgeFails_AuthController_ShouldRestoreNothingAndRetryAtTheNextLaunch")
+    func freshInstallPurgeFails() async throws {
+        let keychain = FakeKeychain()
+        let sessions = KeychainSessionStore(backend: keychain)
+        try sessions.save(APIFixtures.session())
+        keychain.deleteStatus.withLock { $0 = errSecIO }
+        let preferences = EphemeralAuthPreferences(
+            server: SavedServer(server: AuthFixtures.server), launchedBefore: false)
+        let transport = Routes.transport(["GET /api/auth/me": Routes.json(#"{"email":"\#(email)"}"#)])
+        let controller = AuthFixtures.controller(transport: transport, sessions: sessions, preferences: preferences)
+        await controller.restore()
+        #expect(controller.state == .signedOut(nil))
+        #expect(!preferences.hasLaunchedBefore)
+        #expect(transport.sent.isEmpty)
+
+        keychain.deleteStatus.withLock { $0 = nil }
+        let relaunched = AuthFixtures.controller(transport: transport, sessions: sessions, preferences: preferences)
+        await relaunched.restore()
+        #expect(relaunched.state == .signedOut(nil))
+        #expect(preferences.hasLaunchedBefore)
+        #expect(try sessions.load(server: AuthFixtures.server) == nil)
+    }
+
+    @Test("whenFreshInstallPurgeFailedAtLaunch_AuthController_ShouldRetryItBeforeSavingANewSession")
+    func freshInstallPurgeRetriedAtSignIn() async throws {
+        let keychain = FakeKeychain()
+        let sessions = KeychainSessionStore(backend: keychain)
+        try sessions.save(APIFixtures.session(server: APIFixtures.otherServer))
+        keychain.deleteStatus.withLock { $0 = errSecIO }
+        let preferences = EphemeralAuthPreferences(
+            server: SavedServer(server: AuthFixtures.server), launchedBefore: false)
+        let controller = AuthFixtures.controller(
+            transport: Routes.transport(["POST /api/auth/login": Routes.json(Routes.session(email))]),
+            sessions: sessions, preferences: preferences)
+        await controller.restore()
+        keychain.deleteStatus.withLock { $0 = nil }
+        try await controller.signIn(email: email, password: "correct horse")
+        #expect(preferences.hasLaunchedBefore)
+        #expect(try sessions.load(server: APIFixtures.otherServer) == nil)
+        #expect(try sessions.load(server: AuthFixtures.server)?.email == email)
+    }
+
+    @Test("whenEmailChangedAtLaunch_AuthController_ShouldMoveTheOldScopesLocalDataToTheNewOne")
+    func restoreEmailChangedMovesLocalData() async throws {
+        let localData = FakeLocalData()
+        localData.pending.withLock { $0[scope] = 2 }
+        let renamed = AccountScope(server: AuthFixtures.server, email: "renamed@example.test")
+        let controller = AuthFixtures.controller(
+            transport: Routes.transport(["GET /api/auth/me": Routes.json(#"{"email":"renamed@example.test"}"#)]),
+            sessions: EphemeralSessionStore([APIFixtures.session()]), localData: localData)
+        await controller.restore()
+        #expect(controller.state.account?.scope == renamed)
+        #expect(localData.log.all == ["move \(email) -> renamed@example.test"])
+        #expect(await controller.pendingChangeCount() == 2)
+    }
+
+    @Test("whenLocalDataCannotMoveAfterAnEmailChange_AuthController_ShouldStayOnTheStoredScopeUnverified")
+    func restoreEmailChangedMoveFails() async throws {
+        let localData = FakeLocalData()
+        localData.moveError.withLock { $0 = CocoaError(.fileWriteUnknown) }
+        let sessions = EphemeralSessionStore([APIFixtures.session()])
+        let controller = AuthFixtures.controller(
+            transport: Routes.transport(["GET /api/auth/me": Routes.json(#"{"email":"renamed@example.test"}"#)]),
+            sessions: sessions, localData: localData)
+        await controller.restore()
+        #expect(controller.state.account?.scope == scope)
+        #expect(controller.state.account?.isVerified == false)
+        #expect(try sessions.load(server: AuthFixtures.server)?.email == email)
+    }
+
     @Test("whenSessionEndsWhileLaunchCheckIsInFlight_AuthController_ShouldIgnoreTheLateConfirmation")
     func restoreStaleAnswer() async throws {
         let gate = Gate()
@@ -129,7 +199,7 @@ struct AuthControllerTests {
             transport: transport, sessions: EphemeralSessionStore([APIFixtures.session()]))
         let restoring = Task { await controller.restore() }
         while transport.sent.isEmpty { await Task.yield() }
-        controller.sessionDidExpire(for: scope)
+        controller.sessionDidExpire(for: try #require(controller.state.account))
         gate.open()
         await restoring.value
         #expect(controller.state == .signedOut(.sessionExpired(email: email)))
@@ -301,13 +371,100 @@ struct AuthControllerTests {
 
     @Test("whenAnotherAccountsRequestAnswers401_AuthController_ShouldKeepTheCurrentAccount")
     func staleExpiryIgnored() async throws {
+        let other = "earlier@example.test"
         let controller = AuthFixtures.controller(
-            transport: Routes.transport(["POST /api/auth/login": Routes.json(Routes.session(email))]))
+            transport: Routes.transport([
+                "POST /api/auth/login": { request in
+                    let email = try APIFixtures.object(request.httpBody)["email"] as? String ?? ""
+                    return HTTPResult(status: 200, body: Data(Routes.session(email).utf8))
+                }
+            ]))
+        await controller.restore()
+        try await controller.signIn(email: other, password: "correct horse")
+        let earlier = try #require(controller.state.account)
+        controller.sessionDidExpire(for: earlier)
+        try await controller.signIn(email: email, password: "correct horse")
+        controller.sessionDidExpire(for: earlier)
+        #expect(controller.state.account?.scope == scope)
+    }
+
+    @Test("whenSignOutCannotRemoveLocalData_AuthController_ShouldSignOutAndOfferToRemoveItAgain")
+    func signOutRemovalFails() async throws {
+        let localData = FakeLocalData()
+        let (controller, _) = try await signedIn(
+            ["POST /api/auth/logout": Routes.json(#"{"ok":true}"#)], localData: localData)
+        localData.removeError.withLock { $0 = CocoaError(.fileWriteUnknown) }
+        try await controller.signOut()
+        #expect(controller.state == .signedOut(.signedOut))
+        #expect(controller.unremovedLocalData == scope)
+
+        await controller.removeUnremovedLocalData()
+        #expect(controller.unremovedLocalData == scope)
+        localData.removeError.withLock { $0 = nil }
+        await controller.removeUnremovedLocalData()
+        #expect(controller.unremovedLocalData == nil)
+        #expect(localData.log.all.filter { $0 == "remove \(email)" }.count == 3)
+    }
+
+    @Test("whenAnEarlierSessionOfTheSameAccountAnswers401_AuthController_ShouldKeepTheNewerSession")
+    func staleExpiryOfSameAccountIgnored() async throws {
+        let sessions = EphemeralSessionStore()
+        let controller = AuthFixtures.controller(
+            transport: Routes.transport(["POST /api/auth/login": Routes.json(Routes.session(email))]),
+            sessions: sessions)
         await controller.restore()
         try await controller.signIn(email: email, password: "correct horse")
-        controller.sessionDidExpire(for: AccountScope(server: AuthFixtures.server, email: "earlier@example.test"))
-        controller.sessionDidExpire(for: AccountScope(server: APIFixtures.otherServer, email: email))
-        #expect(controller.state.account?.scope == scope)
+        let first = try #require(controller.state.account)
+        controller.sessionDidExpire(for: first)
+        try await controller.signIn(email: email, password: "correct horse")
+        let second = try #require(controller.state.account)
+        // A late 401 for the first session must not end the second one.
+        controller.sessionDidExpire(for: first)
+        #expect(controller.state == .signedIn(second))
+        #expect(try sessions.load(server: AuthFixtures.server) != nil)
+    }
+
+    @Test("whenLaunchCheckAnswers401AfterTheSameAccountSignedInAgain_AuthController_ShouldKeepTheNewSession")
+    func staleLaunch401Ignored() async throws {
+        let gate = Gate()
+        let sessions = EphemeralSessionStore([APIFixtures.session()])
+        let transport = Routes.transport([
+            "GET /api/auth/me": { _ in
+                await gate.wait()
+                return HTTPResult(status: 401, body: Data("{}".utf8))
+            },
+            "POST /api/auth/login": Routes.json(Routes.session(email, token: AuthFixtures.otherToken)),
+        ])
+        let controller = AuthFixtures.controller(transport: transport, sessions: sessions)
+        let restoring = Task { await controller.restore() }
+        while transport.sent.isEmpty { await Task.yield() }
+        let restored = try #require(controller.state.account)
+        controller.sessionDidExpire(for: restored)
+        try await controller.signIn(email: email, password: "correct horse")
+        let current = try #require(controller.state.account)
+        gate.open()
+        await restoring.value
+        #expect(controller.state == .signedIn(current))
+        #expect(try sessions.load(server: AuthFixtures.server)?.tokenForStorage == AuthFixtures.otherToken)
+    }
+
+    @Test("whenSyncBeforeSignOutAnswers401AfterTheSameAccountSignedInAgain_AuthController_ShouldKeepTheNewSession")
+    func staleSync401Ignored() async throws {
+        let gate = Gate()
+        let localData = FakeLocalData()
+        let (controller, _) = try await signedIn([:], localData: localData)
+        localData.pending.withLock { $0[scope] = 1 }
+        localData.syncGate.withLock { $0 = gate }
+        localData.syncError.withLock { $0 = APIError.unauthorized(message: nil) }
+        let first = try #require(controller.state.account)
+        let syncing = Task { try await controller.syncThenSignOut() }
+        while !localData.log.all.contains("sync \(email)") { await Task.yield() }
+        controller.sessionDidExpire(for: first)
+        try await controller.signIn(email: email, password: "correct horse")
+        let current = try #require(controller.state.account)
+        gate.open()
+        await #expect(throws: SignOutFailure.self) { try await syncing.value }
+        #expect(controller.state == .signedIn(current))
     }
 
     @Test("whenSessionExpiresAndAnotherPersonSignsIn_AuthController_ShouldSwitchScopeAndForgetTheOldToken")
@@ -327,7 +484,7 @@ struct AuthControllerTests {
         await controller.restore()
         try await controller.signIn(email: email, password: "correct horse")
         let first = try #require(controller.state.account)
-        controller.sessionDidExpire(for: first.scope)
+        controller.sessionDidExpire(for: first)
         #expect(controller.state == .signedOut(.sessionExpired(email: email)))
         #expect(try sessions.load(server: AuthFixtures.server) == nil)
 
@@ -445,6 +602,77 @@ struct AuthControllerTests {
         let (controller, _) = try await signedIn(["POST /api/auth/logout": Routes.json(401, "{}")])
         try await controller.signOut()
         #expect(controller.state == .signedOut(.signedOut))
+    }
+
+    /// A saved session whose launch check (`/me`) and logout both wait for the test.
+    private func restoredWithHeldLaunchCheck(
+        me: Gate, logout: Gate, meStatus: Int, sessions: EphemeralSessionStore, localData: FakeLocalData
+    ) -> (AuthController, StubTransport) {
+        let email = email
+        let transport = Routes.transport(
+            [
+                "GET /api/auth/me": { _ in
+                    await me.wait()
+                    return HTTPResult(status: meStatus, body: Data(#"{"email":"\#(email)"}"#.utf8))
+                },
+                "POST /api/auth/logout": { _ in
+                    await logout.wait()
+                    return HTTPResult(status: 200, body: Data(#"{"ok":true}"#.utf8))
+                },
+                "POST /api/auth/login": Routes.json(Routes.session("other-person@example.test")),
+            ], log: localData.log)
+        let controller = AuthFixtures.controller(
+            transport: transport, sessions: sessions, localData: localData, log: localData.log)
+        return (controller, transport)
+    }
+
+    @Test("whenLaunchCheckConfirmsWhileSigningOut_AuthController_ShouldStaySigningOutAndRefuseASecondSignOut")
+    func launchConfirmationDuringSignOut() async throws {
+        let (me, logout) = (Gate(), Gate())
+        let localData = FakeLocalData()
+        let sessions = EphemeralSessionStore([APIFixtures.session()])
+        let (controller, _) = restoredWithHeldLaunchCheck(
+            me: me, logout: logout, meStatus: 200, sessions: sessions, localData: localData)
+        let restoring = Task { await controller.restore() }
+        while !localData.log.all.contains("GET /api/auth/me") { await Task.yield() }
+        let signingOut = Task { try await controller.signOut() }
+        while !localData.log.all.contains("POST /api/auth/logout") { await Task.yield() }
+        me.open()
+        await restoring.value
+        guard case .signingOut = controller.state else {
+            Issue.record("the launch check overwrote signing out: \(controller.state)")
+            logout.open()
+            return
+        }
+        await #expect(throws: SignOutFailure.notSignedIn) { try await controller.signOut() }
+        logout.open()
+        try await signingOut.value
+        #expect(controller.state == .signedOut(.signedOut))
+        #expect(localData.log.all.filter { $0 == "POST /api/auth/logout" }.count == 1)
+    }
+
+    @Test("whenLaunchCheckAnswers401WhileSigningOut_AuthController_ShouldNotLetAnotherAccountSignInUntilItEnds")
+    func launchExpiryDuringSignOut() async throws {
+        let (me, logout) = (Gate(), Gate())
+        let localData = FakeLocalData()
+        let sessions = EphemeralSessionStore([APIFixtures.session()])
+        let (controller, _) = restoredWithHeldLaunchCheck(
+            me: me, logout: logout, meStatus: 401, sessions: sessions, localData: localData)
+        let restoring = Task { await controller.restore() }
+        while !localData.log.all.contains("GET /api/auth/me") { await Task.yield() }
+        let signingOut = Task { try await controller.signOut() }
+        while !localData.log.all.contains("POST /api/auth/logout") { await Task.yield() }
+        me.open()
+        await restoring.value
+        // The sign-out in progress owns the state: nobody else can sign in under it.
+        await #expect(throws: AuthFailure.self) {
+            try await controller.signIn(email: "other-person@example.test", password: "another horse")
+        }
+        logout.open()
+        try await signingOut.value
+        #expect(controller.state == .signedOut(.signedOut))
+        #expect(!localData.log.all.contains("POST /api/auth/login"))
+        #expect(localData.log.all.filter { $0.hasPrefix("remove") } == ["remove \(email)"])
     }
 
     @Test("whenSignedOut_AuthController_ShouldRefuseSignOut")
