@@ -99,6 +99,20 @@ struct AppLockControllerTests {
         #expect(auth.prompts.count == 2)
     }
 
+    @Test("whenLaunchedInactive_AppLock_ShouldPromptOnceActiveButNotAgainAfterACancel")
+    func launchInactive() async {
+        let auth = FakeDeviceAuthenticator([.cancelled])
+        let lock = AppLockController(
+            store: EphemeralAppLockSettingStore(enabled: true), authenticator: auth, activity: .inactive)
+        await lock.start()
+        #expect(lock.status == .locked && auth.prompts.isEmpty, "no prompt while not in the foreground")
+        await lock.activityChanged(.active)
+        #expect(auth.prompts == [.unlock])
+        await lock.activityChanged(.inactive)
+        await lock.activityChanged(.active)
+        #expect(auth.prompts == [.unlock], "after a cancel the person taps Unlock; no prompt loop")
+    }
+
     @Test("whenDisabled_AppLock_ShouldNeverConceal")
     func disabled() async {
         let lock = AppLockController(store: EphemeralAppLockSettingStore(), authenticator: FakeDeviceAuthenticator())

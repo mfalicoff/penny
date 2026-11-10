@@ -100,14 +100,15 @@ public final class AppLockController {
         case .inactive:
             break
         case .active:
+            let returned = wasBackgrounded
+            wasBackgrounded = false
             if status == .unreadable {
                 await start()
-            } else if wasBackgrounded {
-                // The prompt itself makes the app inactive without backgrounding it, so only a
-                // real return from the background asks again by itself.
-                let returned = wasBackgrounded
-                wasBackgrounded = false
-                if status == .locked, returned || message == nil { await unlock() }
+            } else if status == .locked, returned || message == nil {
+                // The prompt itself makes the app inactive without backgrounding it. After a
+                // cancelled or failed prompt (a message is showing) only a real return from the
+                // background asks again by itself; otherwise the person taps Unlock.
+                await unlock()
             }
         }
     }
