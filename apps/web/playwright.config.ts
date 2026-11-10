@@ -3,7 +3,7 @@ import { defineConfig, devices } from "@playwright/test";
 // Smoke test of the production build served by `vite preview`, with /api mocked
 // per test. Real .NET/PostgreSQL cross-browser journeys are MAZ-95.
 // 4175 keeps clear of the legacy Expo Playwright server and `npm run dev` (4173).
-const port = 4175;
+const port = Number(process.env.PENNY_E2E_PORT ?? 4175);
 // Optional system browser, e.g. on NixOS where downloaded Playwright browsers can't run.
 const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE;
 
