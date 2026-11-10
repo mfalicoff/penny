@@ -1,0 +1,99 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useId, useRef, useState } from "react";
+import { logout } from "../../api/auth";
+import { ApiError } from "../../api/client";
+import { useAccountEmail } from "../../auth/account";
+import { endSession } from "../../auth/lifecycle";
+import { hasPendingChanges } from "../../auth/pendingChanges";
+import { Icon } from "../../design/Icon";
+import { describeAuthError } from "./AuthScreen";
+
+/** The signed-in account and its sign-out confirmation (redesign specimen "sign-out"). */
+export function AccountMenu() {
+  const email = useAccountEmail();
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const titleId = useId();
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  const opener = useRef<HTMLButtonElement>(null);
+
+  const signOut = useMutation({
+    mutationKey: ["auth", "logout"],
+    mutationFn: async () => {
+      if (await hasPendingChanges(email)) {
+        throw new Error("Your changes are still waiting to sync. Connect and retry before signing out.");
+      }
+      await logout();
+    },
+    onSuccess: () => endSession(queryClient),
+    onError: (failure) => {
+      setError(failure instanceof Error && !(failure instanceof ApiError) ? failure.message : describeAuthError(failure));
+    },
+  });
+
+  useEffect(() => {
+    if (open) cancelRef.current?.focus();
+  }, [open]);
+
+  function close() {
+    setOpen(false);
+    setError(null);
+    opener.current?.focus();
+  }
+
+  return (
+    <div className="account">
+      <p className="account__email" title={email}>
+        {email}
+      </p>
+      <button
+        ref={opener}
+        type="button"
+        className="button button--secondary"
+        onClick={() => {
+          setOpen(true);
+        }}
+      >
+        <Icon name="log-out" size={20} />
+        Sign out
+      </button>
+      {open ? (
+        <div
+          className="dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={titleId}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") close();
+          }}
+        >
+          <div className="dialog__panel">
+            <h2 id={titleId}>Sign out of Penny?</h2>
+            <p>This removes the data Penny kept in this browser tab. Your account and ledger stay on the server.</p>
+            {error ? (
+              <p className="form-error" role="alert">
+                {error}
+              </p>
+            ) : null}
+            <div className="dialog__actions">
+              <button ref={cancelRef} type="button" className="button button--secondary" onClick={close}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="button button--danger"
+                aria-disabled={signOut.isPending}
+                onClick={() => {
+                  if (!signOut.isPending) signOut.mutate();
+                }}
+              >
+                {signOut.isPending ? "Signing out…" : "Sign out"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}

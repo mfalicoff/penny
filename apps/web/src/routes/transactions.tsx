@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useId, type SyntheticEvent } from "react";
 import { z } from "zod";
+import { SearchResults } from "../features/search/SearchResults";
 
 /**
  * Typed, validated search parameters for `/transactions` (legacy route kept from the
@@ -47,10 +48,7 @@ function Transactions() {
           Search
         </button>
       </form>
-      <p aria-live="polite">
-        {q ? `Showing results for “${q}”` : "Showing all activity"}
-        {month ? ` in ${month}` : ""}.
-      </p>
+      <SearchResults query={q} month={month} />
     </>
   );
 }
