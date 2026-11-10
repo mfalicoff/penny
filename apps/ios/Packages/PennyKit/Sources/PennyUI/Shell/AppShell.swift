@@ -21,7 +21,10 @@ struct AppShell: View {
         }
         .environment(shell)
         .sheet(isPresented: $shell.route.isAddEntryPresented) {
-            AddEntrySheet().environment(shell)
+            EntryFormSheet(mode: .new).environment(shell)
+        }
+        .sheet(item: $shell.editingEntry) { request in
+            EntryFormSheet(mode: .edit(request.entry)).environment(shell)
         }
         .accessibilityIdentifier(shell.isDemo ? "root.demo" : "root.signedIn")
     }
@@ -118,6 +121,7 @@ struct DetailPage: View {
         case .household(let id): HouseholdDetailView(id: id)
         case .householdExpense(let household, let expense): HouseholdDetailView(id: household, expenseID: expense)
         case .trip(let id): TripDetailView(id: id)
+        case .entry(let id): EntryDetailView(id: id)
         }
     }
 }
@@ -223,31 +227,5 @@ private struct SidebarFooter: View {
         }
         .padding(Metrics.gutter)
         .accessibilityElement(children: .contain)
-    }
-}
-
-/// Add entry (`/entries/new`, the widget +). The entry form, keypad and save flow arrive with
-/// MAZ-73; the route already lands here so links and the + work.
-struct AddEntrySheet: View {
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            PennyStateView(
-                .unavailable, title: "Adding entries is coming",
-                message:
-                    "This build can't add entries yet. The + and penny://entries/new links will open the entry form here."
-            )
-            .navigationTitle("Add entry")
-            .toolbarTitleDisplayModeInline()
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Close", systemImage: "xmark") { dismiss() }
-                        .accessibilityIdentifier("addEntry.close")
-                }
-            }
-        }
-        .presentationDetents([.large])
-        .accessibilityIdentifier("screen.addEntry")
     }
 }
