@@ -1,9 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
-import { createContext, use, type ReactNode } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { createContext, use, useEffect, type ReactNode } from "react";
 import { sessionQuery } from "../api/auth";
 import { sessionNoticeKey } from "../api/keys";
 import { AuthScreen } from "../features/auth/AuthScreen";
-import type { SessionNotice } from "./lifecycle";
+import { clearPrivateData, type SessionNotice } from "./lifecycle";
 
 const AccountContext = createContext<string | null>(null);
 
@@ -31,7 +31,15 @@ export function useSessionNotice(): SessionNotice {
  * unmounted the moment the session ends, so no screen keeps showing private data.
  */
 export function AuthGate({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
   const session = useQuery(sessionQuery);
+  const signedOut = session.data === null;
+
+  // Screens that were still mounted when the session ended may have re-created private queries
+  // (and started fetching) before they unmounted. Sweep once they are gone.
+  useEffect(() => {
+    if (signedOut) clearPrivateData(queryClient);
+  }, [signedOut, queryClient]);
 
   if (session.isPending) {
     return (

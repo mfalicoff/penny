@@ -70,7 +70,7 @@ export const sessionQuery = queryOptions({
     } catch (error) {
       if (!(error instanceof ApiError && error.status === 401)) throw error;
       // Signed in a moment ago and now rejected: the session expired or ended elsewhere.
-      if (client.getQueryData(sessionKey)) await expireSession(client);
+      if (client.getQueryData(sessionKey)) await expireSession(client, { cancelSession: false });
       return null;
     }
   },

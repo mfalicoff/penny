@@ -6,6 +6,7 @@ import { useAccountEmail } from "../../auth/account";
 import { endSession } from "../../auth/lifecycle";
 import { hasPendingChanges } from "../../auth/pendingChanges";
 import { Icon } from "../../design/Icon";
+import { ModalDialog } from "../../design/ModalDialog";
 import { describeAuthError } from "./AuthScreen";
 
 /** The signed-in account and its sign-out confirmation (redesign specimen "sign-out"). */
@@ -59,40 +60,30 @@ export function AccountMenu() {
         Sign out
       </button>
       {open ? (
-        <div
-          className="dialog"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby={titleId}
-          onKeyDown={(event) => {
-            if (event.key === "Escape") close();
-          }}
-        >
-          <div className="dialog__panel">
-            <h2 id={titleId}>Sign out of Penny?</h2>
-            <p>This removes the data Penny kept in this browser tab. Your account and ledger stay on the server.</p>
-            {error ? (
-              <p className="form-error" role="alert">
-                {error}
-              </p>
-            ) : null}
-            <div className="dialog__actions">
-              <button ref={cancelRef} type="button" className="button button--secondary" onClick={close}>
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="button button--danger"
-                aria-disabled={signOut.isPending}
-                onClick={() => {
-                  if (!signOut.isPending) signOut.mutate();
-                }}
-              >
-                {signOut.isPending ? "Signing out…" : "Sign out"}
-              </button>
-            </div>
+        <ModalDialog labelledBy={titleId} onClose={close}>
+          <h2 id={titleId}>Sign out of Penny?</h2>
+          <p>This removes the data Penny kept in this browser tab. Your account and ledger stay on the server.</p>
+          {error ? (
+            <p className="form-error" role="alert">
+              {error}
+            </p>
+          ) : null}
+          <div className="dialog__actions">
+            <button ref={cancelRef} type="button" className="button button--secondary" onClick={close}>
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="button button--danger"
+              aria-disabled={signOut.isPending}
+              onClick={() => {
+                if (!signOut.isPending) signOut.mutate();
+              }}
+            >
+              {signOut.isPending ? "Signing out…" : "Sign out"}
+            </button>
           </div>
-        </div>
+        </ModalDialog>
       ) : null}
     </div>
   );

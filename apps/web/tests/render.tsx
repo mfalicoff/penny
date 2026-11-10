@@ -31,6 +31,7 @@ export function stubServer(override?: Override) {
     if (url === "/api/info") return json({ name: "penny", version: "2.0.0-test" });
     if (url === "/api/auth/me") return json({ email: ALEX });
     if (url === "/api/auth/oidc") return json({ enabled: false });
+    if (url === "/api/ledger") return json({ revision: 0, ledger: { currency: "CAD" } });
     if (url === "/api/v1/search/transactions") return json(emptySearch);
     return json({ error: "Not found." }, 404);
   });

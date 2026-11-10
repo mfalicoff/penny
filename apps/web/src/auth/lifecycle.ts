@@ -43,9 +43,11 @@ export async function endSession(queryClient: QueryClient): Promise<void> {
  * sign-in with a notice. Durable offline edits live outside Query, so they are untouched
  * and survive until the owner signs back in.
  */
-export function expireSession(queryClient: QueryClient): Promise<void> {
+export async function expireSession(queryClient: QueryClient, options: { cancelSession?: boolean } = {}): Promise<void> {
+  // A `/me` request still in flight must not restore the signed-in state when it resolves.
+  // The `/me` query itself passes `cancelSession: false`: it is the caller and is already settling.
+  if (options.cancelSession !== false) await dropInFlightSession(queryClient);
   queryClient.setQueryData(sessionKey, null);
   queryClient.setQueryData(sessionNoticeKey, "expired" satisfies SessionNotice);
   clearPrivateData(queryClient);
-  return Promise.resolve();
 }

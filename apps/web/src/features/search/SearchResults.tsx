@@ -1,5 +1,6 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { ApiError } from "../../api/client";
+import { ledgerCurrencyQuery } from "../../api/ledger";
 import { monthRange, searchTransactionsQuery } from "../../api/search";
 import type { SearchItem } from "../../api/schemas";
 import { useAccountEmail } from "../../auth/account";
@@ -16,19 +17,21 @@ function describeSearchError(error: unknown): string {
   return "Search failed.";
 }
 
-/** Amounts are integer cents from the API; personal entries use the ledger currency (CAD until MAZ-86's money module lands). */
-function formatCents(cents: number, currency: string): string {
-  return new Intl.NumberFormat("en-CA", { style: "currency", currency }).format(cents / 100);
+/** Amounts are integer cents. With no known currency the number is shown plain rather than under a wrong symbol. */
+function formatCents(cents: number, currency: string | undefined): string {
+  const options: Intl.NumberFormatOptions = currency ? { style: "currency", currency } : { minimumFractionDigits: 2, maximumFractionDigits: 2 };
+  return new Intl.NumberFormat("en-CA", options).format(cents / 100);
 }
 
-function describe(item: SearchItem) {
+/** Personal entries use the ledger's currency; shared ones use their household's. */
+function describe(item: SearchItem, ledgerCurrency: string | undefined) {
   if (item.source === "personal") {
-    return { title: item.entry.title, date: item.entry.date, amount: formatCents(item.entry.share, "CAD"), origin: "Personal" };
+    return { title: item.entry.title, date: item.entry.date, amount: formatCents(item.entry.share, ledgerCurrency), origin: "Personal" };
   }
   return {
     title: item.entry.title,
     date: item.entry.date,
-    amount: formatCents(item.entry.shareCents, item.entry.householdCurrency ?? "CAD"),
+    amount: formatCents(item.entry.shareCents, item.entry.householdCurrency ?? ledgerCurrency),
     origin: item.entry.householdName ? `Shared · ${item.entry.householdName}` : "Shared",
   };
 }
@@ -36,6 +39,7 @@ function describe(item: SearchItem) {
 export function SearchResults({ query, month }: { query: string | undefined; month: string | undefined }) {
   const email = useAccountEmail();
   const search = useInfiniteQuery(searchTransactionsQuery(email, { ...(query ? { query } : {}), ...monthRange(month) }));
+  const currency = useQuery(ledgerCurrencyQuery(email));
 
   if (search.isPending) {
     return (
@@ -44,7 +48,7 @@ export function SearchResults({ query, month }: { query: string | undefined; mon
       </p>
     );
   }
-  if (search.isError) {
+  if (search.data === undefined) {
     return (
       <div role="alert">
         <p>{describeSearchError(search.error)}</p>
@@ -63,6 +67,9 @@ export function SearchResults({ query, month }: { query: string | undefined; mon
 
   const items = search.data.pages.flatMap((page) => page.items);
   const total = search.data.pages[0]?.totalCount ?? 0;
+  // A failure after results loaded (a later page or a refresh) never discards them.
+  const pageFailed = search.isFetchNextPageError;
+  const refreshFailed = search.isRefetchError && !pageFailed;
   return (
     <section aria-label="Search results">
       <p role="status" aria-live="polite">
@@ -70,7 +77,7 @@ export function SearchResults({ query, month }: { query: string | undefined; mon
       </p>
       <ul className="results">
         {items.map((item) => {
-          const row = describe(item);
+          const row = describe(item, currency.data);
           return (
             <li key={item.key} className="results__row">
               <span className="results__title">{row.title}</span>
@@ -82,7 +89,22 @@ export function SearchResults({ query, month }: { query: string | undefined; mon
           );
         })}
       </ul>
-      {search.hasNextPage ? (
+      {pageFailed || refreshFailed ? (
+        <div role="alert">
+          <p>{describeSearchError(search.error)}</p>
+          <button
+            type="button"
+            className="button"
+            onClick={() => {
+              // Only the failed request is repeated: the next page, or one refresh.
+              if (pageFailed) void search.fetchNextPage();
+              else void search.refetch();
+            }}
+          >
+            {pageFailed ? "Try loading more again" : "Try again"}
+          </button>
+        </div>
+      ) : search.hasNextPage ? (
         <button
           type="button"
           className="button button--secondary"

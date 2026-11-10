@@ -172,36 +172,53 @@ function SsoButton() {
   const queryClient = useQueryClient();
   const config = useQuery(oidcConfigQuery);
   const [state, setState] = useState<"idle" | "waiting" | "cancelled" | "blocked" | "error">("idle");
+  const [mode, setMode] = useState<"popup" | "tab">("popup");
   const [message, setMessage] = useState<string | null>(null);
+  const [popupClosed, setPopupClosed] = useState(false);
   const abort = useRef<AbortController | null>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
 
   if (!config.data?.enabled) return null;
   const label = config.data.label ?? "Single sign-on";
+
+  const cancelled = () => {
+    setState("cancelled");
+    setMessage("Sign-in was cancelled. Nothing changed.");
+  };
+
+  function fail(error: unknown) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      cancelled();
+      return;
+    }
+    setState("error");
+    setMessage(describeAuthError(error));
+  }
 
   function onClick() {
     if (state === "waiting") return;
     const controller = new AbortController();
     abort.current = controller;
     setState("waiting");
+    setMode("popup");
     setMessage(null);
+    setPopupClosed(false);
     // signInWithPopup opens the window synchronously, before its first await.
-    signInWithPopup(controller.signal).then(
+    signInWithPopup({
+      signal: controller.signal,
+      onPopupClosed: () => {
+        setPopupClosed(true);
+      },
+    }).then(
       async (result) => {
-        if (result) {
-          await beginSession(queryClient, result.email);
-        } else {
-          setState("cancelled");
-          setMessage("Sign-in was cancelled. Nothing changed.");
-        }
+        if (result) await beginSession(queryClient, result.email);
+        else cancelled();
       },
       (error: unknown) => {
         if (error instanceof OidcError && error.code === "blocked") {
           setState("blocked");
           setMessage("Your browser blocked the sign-in window. Allow pop-ups for this site, or continue in this tab.");
         } else {
-          setState("error");
-          setMessage(describeAuthError(error));
+          fail(error);
         }
       },
     );
@@ -209,10 +226,9 @@ function SsoButton() {
 
   function continueInTab() {
     setState("waiting");
-    signInWithRedirect().catch((error: unknown) => {
-      setState("error");
-      setMessage(describeAuthError(error));
-    });
+    setMode("tab");
+    setMessage(null);
+    signInWithRedirect().catch(fail);
   }
 
   return (
@@ -220,20 +236,27 @@ function SsoButton() {
       <p className="auth__or" aria-hidden="true">
         or
       </p>
-      <button ref={buttonRef} type="button" className="button button--secondary button--block" onClick={onClick} aria-disabled={state === "waiting"}>
+      <button type="button" className="button button--secondary button--block" onClick={onClick} aria-disabled={state === "waiting"}>
         <Icon name="key" size={20} />
         {state === "waiting" ? `Waiting for ${label}…` : `Continue with ${label}`}
       </button>
-      {state === "waiting" ? (
-        <button
-          type="button"
-          className="link-button"
-          onClick={() => {
-            abort.current?.abort();
-          }}
-        >
-          Cancel sign-in
-        </button>
+      {state === "waiting" && mode === "popup" ? (
+        <>
+          {popupClosed ? (
+            <p className="notice" role="status">
+              The sign-in window looks closed. If you closed it, cancel and try again. If you are still signing in, keep going.
+            </p>
+          ) : null}
+          <button
+            type="button"
+            className="link-button"
+            onClick={() => {
+              abort.current?.abort();
+            }}
+          >
+            Cancel sign-in
+          </button>
+        </>
       ) : null}
       {message ? (
         <p className={state === "error" ? "form-error" : "notice"} role={state === "error" ? "alert" : "status"}>

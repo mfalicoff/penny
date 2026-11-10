@@ -20,12 +20,10 @@ export const CALLBACK_PATH = "/auth/callback";
 const CHANNEL_NAME = "penny-oidc";
 const POPUP_NAME = "penny-oidc";
 const STORAGE_KEY = "penny.oidc.attempt";
-/** After the popup reports closed, wait this long for a callback that may still arrive. */
-const CLOSE_GRACE_MS = 750;
 const CLOSE_POLL_MS = 400;
 const ACK_WAIT_MS = 500;
 
-export type OidcFailure = "blocked" | "no-attempt";
+export type OidcFailure = "blocked" | "no-attempt" | "expired";
 
 export class OidcError extends Error {
   readonly code: OidcFailure;
@@ -38,7 +36,7 @@ export class OidcError extends Error {
 
 const channelMessageSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("callback"), url: z.string().max(8192) }),
-  z.object({ type: z.literal("ack") }),
+  z.object({ type: z.literal("ack"), state: z.string() }),
 ]);
 
 export const oidcRedirectUri = () => `${window.location.origin}${CALLBACK_PATH}`;
@@ -53,51 +51,100 @@ function isOwnCallback(url: string): boolean {
   }
 }
 
+export interface PopupOptions {
+  signal?: AbortSignal;
+  /**
+   * Called (once) when the popup reports itself closed. That is only a hint: providers that
+   * send Cross-Origin-Opener-Policy make `popup.closed` read true while the user is still
+   * signing in, so it never ends the attempt. The UI tells the user and leaves cancelling to them.
+   */
+  onPopupClosed?: () => void;
+}
+
+type Outcome = { kind: "callback"; url: string } | { kind: "cancelled" } | { kind: "expired" };
+
+const expiredError = () => new OidcError("expired", "Sign-in took too long and expired. Please try again.");
+
 /**
- * Runs the popup flow. Resolves with the signed-in email, or `null` when the user
- * closed the popup or the provider reported a cancellation before returning.
- * Throws `OidcError("blocked")` when the browser refuses the popup, and `ApiError` for
- * server failures (state mismatch, expired attempt, unverified email, ...).
+ * Runs the popup flow. Resolves with the signed-in email, or `null` when the user cancelled
+ * (aborted the signal) before the provider returned.
+ * Throws `OidcError("blocked")` when the browser refuses the popup, `OidcError("expired")`
+ * when the attempt's `expiresAt` passes first, and `ApiError` for server failures
+ * (state mismatch, expired attempt, unverified email, ...).
+ * Once the callback has arrived the sign-in is completed and can no longer be cancelled, so the
+ * UI never reports a failure for a session the server already created.
  */
-export async function signInWithPopup(signal?: AbortSignal): Promise<{ email: string } | null> {
+export async function signInWithPopup(options: PopupOptions = {}): Promise<{ email: string } | null> {
+  const { signal, onPopupClosed } = options;
   // Must run synchronously inside the click handler or browsers block the window.
   const popup = window.open("about:blank", POPUP_NAME, "popup=yes,width=520,height=720");
   if (!popup) throw new OidcError("blocked", "Your browser blocked the sign-in window.");
 
   const channel = new BroadcastChannel(CHANNEL_NAME);
-  let finish: (url: string | null) => void = () => undefined;
-  const outcome = new Promise<string | null>((resolve) => {
-    finish = resolve;
+  let resolveOutcome: (outcome: Outcome) => void = () => undefined;
+  const outcome = new Promise<Outcome>((resolve) => {
+    resolveOutcome = resolve;
   });
+  // Set once the provider URL is known: only a callback carrying this attempt's `state` is ours.
+  let expectedState: string | null = null;
+  let settled = false;
+  const settle = (value: Outcome) => {
+    if (settled) return;
+    settled = true;
+    resolveOutcome(value);
+  };
   channel.onmessage = (event: MessageEvent<unknown>) => {
     const message = channelMessageSchema.safeParse(event.data);
-    if (message.success && message.data.type === "callback" && isOwnCallback(message.data.url)) {
-      channel.postMessage({ type: "ack" });
-      finish(message.data.url);
-    }
+    if (!message.success || message.data.type !== "callback" || settled) return;
+    const { url } = message.data;
+    if (expectedState === null || !isOwnCallback(url) || new URL(url).searchParams.get("state") !== expectedState) return;
+    channel.postMessage({ type: "ack", state: expectedState });
+    settle({ kind: "callback", url });
   };
 
-  let closeTimer: ReturnType<typeof setTimeout> | undefined;
+  let closedReported = false;
   const poll = setInterval(() => {
-    if (popup.closed && closeTimer === undefined) closeTimer = setTimeout(() => {
-        finish(null);
-      }, CLOSE_GRACE_MS);
+    if (popup.closed && !closedReported) {
+      closedReported = true;
+      onPopupClosed?.();
+    }
   }, CLOSE_POLL_MS);
   const onAbort = () => {
-    finish(null);
+    settle({ kind: "cancelled" });
   };
   signal?.addEventListener("abort", onAbort);
+  let expiry: ReturnType<typeof setTimeout> | undefined;
 
   try {
-    const challenge = await startOidc(oidcRedirectUri(), signal);
+    // Race the start request against cancellation, so Cancel works even if the request is slow.
+    const started = await Promise.race([
+      startOidc(oidcRedirectUri(), signal).catch((error: unknown) => {
+        if (signal?.aborted) return { kind: "cancelled" } as const;
+        throw error;
+      }),
+      outcome,
+    ]);
+    if ("kind" in started) return null;
+    const challenge = started;
+    if (challenge.expiresAt <= Date.now()) throw expiredError();
+    expectedState = new URL(challenge.authorizationUrl).searchParams.get("state");
+    expiry = setTimeout(
+      () => {
+        settle({ kind: "expired" });
+      },
+      Math.max(0, challenge.expiresAt - Date.now()),
+    );
     if (!popup.closed) popup.location.href = challenge.authorizationUrl;
-    const callbackUrl = await outcome;
-    if (callbackUrl === null) return null;
-    return await completeOidc(challenge.transaction, callbackUrl, signal);
+    const result = await outcome;
+    if (result.kind === "cancelled") return null;
+    if (result.kind === "expired") throw expiredError();
+    // Deliberately not abortable: the server may already be creating the session.
+    return await completeOidc(challenge.transaction, result.url);
   } finally {
+    settled = true;
     if (!popup.closed) popup.close();
     clearInterval(poll);
-    if (closeTimer !== undefined) clearTimeout(closeTimer);
+    if (expiry !== undefined) clearTimeout(expiry);
     signal?.removeEventListener("abort", onAbort);
     channel.close();
   }
@@ -116,6 +163,7 @@ export async function signInWithRedirect(signal?: AbortSignal): Promise<void> {
  */
 export function deliverCallback(url: string): Promise<boolean> {
   if (typeof BroadcastChannel === "undefined") return Promise.resolve(false);
+  const state = new URL(url).searchParams.get("state") ?? "";
   const channel = new BroadcastChannel(CHANNEL_NAME);
   return new Promise<boolean>((resolve) => {
     const timer = setTimeout(() => {
@@ -124,7 +172,7 @@ export function deliverCallback(url: string): Promise<boolean> {
     }, ACK_WAIT_MS);
     channel.onmessage = (event: MessageEvent<unknown>) => {
       const message = channelMessageSchema.safeParse(event.data);
-      if (message.success && message.data.type === "ack") {
+      if (message.success && message.data.type === "ack" && message.data.state === state) {
         clearTimeout(timer);
         channel.close();
         resolve(true);
@@ -142,6 +190,7 @@ export async function completeRedirectedSignIn(callbackUrl: string, signal?: Abo
   if (!parsed.success) {
     throw new OidcError("no-attempt", "This sign-in link is no longer valid. Start again from the sign-in page.");
   }
+  if (parsed.data.expiresAt <= Date.now()) throw expiredError();
   return completeOidc(parsed.data.transaction, callbackUrl, signal);
 }
 

@@ -34,7 +34,7 @@ async function mockApi(context: BrowserContext, options: { sso?: boolean } = {})
       case "/api/auth/oidc/start":
         return reply(200, {
           transaction: TRANSACTION,
-          authorizationUrl: `${PROVIDER}/authorize`,
+          authorizationUrl: `${PROVIDER}/authorize?state=s`,
           expiresAt: Date.now() + 600_000,
         });
       case "/api/auth/oidc/complete": {
@@ -155,7 +155,7 @@ test.describe("single sign-on popup", () => {
     expect(api.requests).toContain("POST /api/auth/oidc/complete");
   });
 
-  test("a closed popup is a cancellation and sign-in can be retried", async ({ page, context }) => {
+  test("a closed popup only shows a hint, and the user can cancel and retry", async ({ page, context }) => {
     await mockApi(context, { sso: true });
     await context.route(`${PROVIDER}/**`, (route) => route.fulfill({ contentType: "text/html", body: "<title>Acme SSO</title><p>Approve?</p>" }));
     await page.goto("/");
@@ -164,14 +164,18 @@ test.describe("single sign-on popup", () => {
     const popup = await popupPromise;
     await expect(popup.getByText("Approve?")).toBeVisible();
     await popup.close();
+    // Closed can also mean a COOP provider severed the window, so it is a hint, not a cancellation.
+    await expect(page.getByText(/sign-in window looks closed/)).toBeVisible();
+    await expect(page.getByText("Sign-in was cancelled. Nothing changed.")).toBeHidden();
+    await page.getByRole("button", { name: "Cancel sign-in" }).click();
     await expect(page.getByText("Sign-in was cancelled. Nothing changed.")).toBeVisible();
     await expect(page.getByRole("button", { name: "Continue with Acme SSO" })).toBeEnabled();
   });
 
-  test("shows the server's verdict when the callback state does not verify", async ({ page, context, baseURL }) => {
+  test("shows the server's verdict when the provider reports a failure", async ({ page, context, baseURL }) => {
     const api = await mockApi(context, { sso: true });
     api.complete = () => ({ status: 401, body: { error: "Sign-in could not be verified. Please try again and allow access to your verified email." } });
-    await mockProvider(context, baseURL ?? "", "?code=abc&state=forged");
+    await mockProvider(context, baseURL ?? "", "?error=access_denied&state=s");
     await page.goto("/");
     await page.getByRole("button", { name: "Continue with Acme SSO" }).click();
     await expect(page.getByRole("alert")).toContainText("Sign-in could not be verified");

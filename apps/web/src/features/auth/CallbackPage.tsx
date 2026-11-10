@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { beginSession } from "../../auth/lifecycle";
 import { completeRedirectedSignIn, deliverCallback } from "../../auth/oidc";
@@ -16,6 +16,7 @@ type State = { status: "working" } | { status: "handed-off" } | { status: "faile
 export function CallbackPage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const router = useRouter();
   const [state, setState] = useState<State>({ status: "working" });
   const started = useRef(false);
 
@@ -23,7 +24,8 @@ export function CallbackPage() {
     // StrictMode runs effects twice in development; the attempt is single-use.
     if (started.current) return;
     started.current = true;
-    const url = window.location.href;
+    // The router's location (path, query, hash) on this origin, as an absolute URL.
+    const url = new URL(router.state.location.href, window.location.origin).href;
     void (async () => {
       try {
         if (await deliverCallback(url)) {
@@ -38,7 +40,7 @@ export function CallbackPage() {
         setState({ status: "failed", message: describeAuthError(error) });
       }
     })();
-  }, [navigate, queryClient]);
+  }, [navigate, queryClient, router]);
 
   return (
     <main className="callback" id="main" tabIndex={-1}>

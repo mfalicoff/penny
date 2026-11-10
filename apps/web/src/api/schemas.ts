@@ -25,14 +25,28 @@ export const credentialsSchema = z.object({
  * returned for native clients. The browser ignores it and relies on the HttpOnly cookie,
  * so callers must never put it in state or storage.
  */
-export const sessionSchema = z.object({ token: z.string().regex(/^[a-f0-9]{64}$/), email: z.email() });
+// The token is validated only as non-empty: the browser discards it, so a format change there
+// must not fail a sign-in the server already completed.
+export const sessionSchema = z.object({ token: z.string().min(1), email: z.email() });
 export const meSchema = z.object({ email: z.email() });
 
 export const oidcConfigSchema = z.object({ enabled: z.boolean(), label: z.string().optional() });
 export const oidcStartSchema = z.object({ redirectUri: z.url() });
+/** The browser navigates to this address, so only https (and http on loopback, for local providers) is allowed. */
+export function isSafeAuthorizationUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    if (url.username || url.password) return false;
+    if (url.protocol === "https:") return true;
+    return url.protocol === "http:" && ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
+  } catch {
+    return false;
+  }
+}
+
 export const oidcChallengeSchema = z.object({
   transaction: z.string().regex(/^[a-f0-9]{64}$/),
-  authorizationUrl: z.url(),
+  authorizationUrl: z.url().refine(isSafeAuthorizationUrl, "The sign-in provider address must use https."),
   expiresAt: z.number().int(),
 });
 export const oidcCompleteSchema = z.object({
