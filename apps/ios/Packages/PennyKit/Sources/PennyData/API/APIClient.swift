@@ -55,8 +55,21 @@ public struct APIClient: Sendable {
     }
 
     public func signedOut() -> APIClient {
-        // A nil session cannot mismatch the server.
-        (try? APIClient(configuration: configuration, session: nil, transport: transport)) ?? self
+        Self.anonymous(configuration, transport: transport)
+    }
+
+    /// A client without a session, for server checks and sign-in. It cannot fail: a nil
+    /// session cannot belong to another server.
+    public static func anonymous(
+        _ configuration: APIConfiguration, transport: any HTTPTransport = URLSessionTransport()
+    ) -> APIClient {
+        APIClient(unchecked: configuration, transport: transport)
+    }
+
+    private init(unchecked configuration: APIConfiguration, transport: any HTTPTransport) {
+        self.configuration = configuration
+        self.session = nil
+        self.transport = transport
     }
 
     public var scope: AccountScope? { session?.scope }
@@ -76,6 +89,40 @@ public struct APIClient: Sendable {
 
     public func login(_ credentials: WireCredentials) async throws -> ServerSession {
         try makeSession(try await json(.post, "/api/auth/login", body: credentials, authenticated: false))
+    }
+
+    /// `GET /api/auth/oidc`. Needs no session; a 404 or `enabled: false` means no single sign-on.
+    public func oidcConfiguration() async throws -> WireOidcConfig {
+        try await json(.get, "/api/auth/oidc", authenticated: false)
+    }
+
+    /// `POST /api/auth/oidc/start`. `redirectUri` must be one the server lists exactly.
+    /// The transaction must be 64 lowercase hex characters and the authorization URL HTTPS
+    /// (plain HTTP only for a loopback provider), or the answer is `malformedResponse`.
+    public func startOidc(redirectUri: String) async throws -> WireOidcChallenge {
+        let challenge: WireOidcChallenge = try await json(
+            .post, "/api/auth/oidc/start", body: WireOidcStart(redirectUri: redirectUri), authenticated: false)
+        guard Self.isLowercaseHex64(challenge.transaction), challenge.authorizationURL != nil else {
+            throw APIError.malformedResponse
+        }
+        return challenge
+    }
+
+    /// `POST /api/auth/oidc/complete` with the transaction kept from `startOidc` and the full
+    /// callback URL. The server consumes the attempt before anything else, so a second call
+    /// with the same transaction always fails with 401.
+    public func completeOidc(transaction: String, callbackURL: URL) async throws -> ServerSession {
+        let callback = callbackURL.absoluteString
+        guard Self.isLowercaseHex64(transaction) else { throw APIError.invalidRequest(.invalidField("transaction")) }
+        guard callback.utf16.count <= 8192 else { throw APIError.invalidRequest(.invalidField("callbackUrl")) }
+        return try makeSession(
+            try await json(
+                .post, "/api/auth/oidc/complete",
+                body: WireOidcComplete(transaction: transaction, callbackUrl: callback), authenticated: false))
+    }
+
+    static func isLowercaseHex64(_ text: String) -> Bool {
+        text.utf8.count == 64 && text.utf8.allSatisfy { ($0 >= 48 && $0 <= 57) || ($0 >= 97 && $0 <= 102) }
     }
 
     public func me() async throws -> WireMe {

@@ -6,6 +6,8 @@
 // ledger `version` and snapshot `revision` are preserved as sent. Domain and view models
 // are built from them elsewhere (MAZ-70, 71, 73).
 
+public import Foundation
+
 public enum WireEntryKind: String, Codable, Equatable, Sendable {
     case income
     case expense
@@ -236,4 +238,54 @@ public struct WireProjectedExpense: Codable, Equatable, Sendable {
     public var scheduled: Bool?
     public var recurringId: String?
     public var receiptId: String?
+}
+
+/// `GET /api/auth/oidc`: whether single sign-on is configured on this server.
+public struct WireOidcConfig: Codable, Equatable, Sendable {
+    public var enabled: Bool
+    public var label: String?
+
+    public init(enabled: Bool, label: String? = nil) {
+        self.enabled = enabled
+        self.label = label
+    }
+}
+
+/// `POST /api/auth/oidc/start`: one pending sign-in attempt. `expiresAt` is Unix
+/// milliseconds. The transaction is a secret between this device and the server.
+public struct WireOidcChallenge: Decodable, Equatable, Sendable {
+    public var transaction: String
+    public var authorizationUrl: String
+    public var expiresAt: Int64
+
+    public init(transaction: String, authorizationUrl: String, expiresAt: Int64) {
+        self.transaction = transaction
+        self.authorizationUrl = authorizationUrl
+        self.expiresAt = expiresAt
+    }
+
+    /// The provider page to open in the system authentication session: HTTPS, or plain
+    /// HTTP only for a loopback provider in development. Nil for anything else.
+    public var authorizationURL: URL? {
+        guard let url = URL(string: authorizationUrl), let host = url.host?.lowercased(), !host.isEmpty else {
+            return nil
+        }
+        switch url.scheme?.lowercased() {
+        case "https": return url
+        case "http" where ["localhost", "127.0.0.1", "::1"].contains(host): return url
+        default: return nil
+        }
+    }
+
+    /// When the server forgets the attempt.
+    public var expiry: Date { Date(timeIntervalSince1970: TimeInterval(expiresAt) / 1000) }
+}
+
+struct WireOidcStart: Encodable, Sendable {
+    var redirectUri: String
+}
+
+struct WireOidcComplete: Encodable, Sendable {
+    var transaction: String
+    var callbackUrl: String
 }
