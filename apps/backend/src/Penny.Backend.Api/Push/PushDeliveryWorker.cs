@@ -1,4 +1,5 @@
 using Penny.Backend.Api.Configuration;
+using Penny.Backend.Application.Diagnostics;
 using Penny.Backend.Application.Push;
 
 namespace Penny.Backend.Api.Push;
@@ -27,7 +28,10 @@ public sealed partial class PushDeliveryWorker(
                 if (run.Accepted + run.Retried + run.Failed + run.InvalidTokens > 0)
                     Delivered(logger, run.Accepted, run.Retried, run.Failed, run.InvalidTokens);
                 foreach (var failure in run.Failures)
+                {
                     MessageFailed(logger, failure);
+                    BackendTelemetry.JobFailed(BackendTelemetry.PushDeliveryJob, failure);
+                }
                 var receipts = await runner.CheckReceiptsAsync(stoppingToken);
                 if (receipts > 0)
                     ReceiptsChecked(logger, receipts);
@@ -41,6 +45,7 @@ public sealed partial class PushDeliveryWorker(
             catch (Exception error)
             {
                 PassFailed(logger, error.GetType().Name);
+                BackendTelemetry.JobFailed(BackendTelemetry.PushDeliveryJob, error.GetType().Name);
             }
             try
             {
