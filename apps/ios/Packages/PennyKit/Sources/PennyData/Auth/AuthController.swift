@@ -308,22 +308,43 @@ public final class AuthController {
         return await localData.pendingChangeCount(for: account.scope)
     }
 
-    /// Signs out: refuses while changes are pending (unless discarded), unregisters this
-    /// device's push registration while the session still works, revokes the session on the
-    /// server, deletes the token and removes the account's local entries.
+    /// Signs out: refuses while more changes are pending than the person agreed to lose,
+    /// unregisters this device's push registration while the session still works, revokes the
+    /// session on the server, deletes the token and removes the account's local entries.
+    ///
+    /// The account's local data takes no saves from the moment it is counted
+    /// (`AccountLocalData.beginRemoval`) until it is removed, so a save made during sign-out
+    /// is refused (the draft stays) rather than acknowledged and then deleted. When sign-out
+    /// does not go ahead, saves resume.
     ///
     /// - Parameters:
-    ///   - discardingPendingChanges: "Sign out anyway": unsynced changes are lost.
+    ///   - consented: "Sign out anyway": how many unsynced changes the person agreed to lose
+    ///     (the count they were shown). More than that pending throws `pendingChanges` with
+    ///     the new count, so they are asked again.
     ///   - removeEvenIfUnreachable: sign out on this device when the server cannot be
     ///     reached; the server session then stays valid until it expires.
-    public func signOut(discardingPendingChanges: Bool = false, removeEvenIfUnreachable: Bool = false)
+    public func signOut(discardingUpTo consented: Int = 0, removeEvenIfUnreachable: Bool = false)
         async throws(SignOutFailure)
     {
         await finishEmailMigration()
         guard case .signedIn(let account) = state else { throw .notSignedIn }
-        let pending = await localData.pendingChangeCount(for: account.scope)
+        let pending = await localData.beginRemoval(for: account.scope)
+        do throws(SignOutFailure) {
+            try await signOut(
+                account, pending: pending, consented: consented, removeEvenIfUnreachable: removeEvenIfUnreachable)
+        } catch {
+            await localData.cancelRemoval(for: account.scope)
+            throw error
+        }
+    }
+
+    /// `signOut` once the account's local data is held for removal. Throws before anything is
+    /// removed; the caller then lifts the hold.
+    private func signOut(
+        _ account: SignedInAccount, pending: Int, consented: Int, removeEvenIfUnreachable: Bool
+    ) async throws(SignOutFailure) {
         guard case .signedIn = state, isCurrent(account) else { throw .notSignedIn }
-        if pending > 0, !discardingPendingChanges { throw .pendingChanges(count: pending) }
+        if pending > max(0, consented) { throw .pendingChanges(count: pending) }
         guard let client = try? signedInClient(account) else { throw .notSignedIn }
 
         // From here nothing started for the signed-in account applies: a launch check or a
@@ -353,7 +374,8 @@ public final class AuthController {
         } catch {
             // Signed out already (the server session is gone), but the entries are still on
             // this device: say so and offer `removeUnremovedLocalData()`. Not if the same
-            // account signed in again meanwhile; it is its own data then.
+            // account signed in again meanwhile; it is its own data then, so it takes saves.
+            await localData.cancelRemoval(for: account.scope)
             if state.account?.scope != account.scope { unremovedLocalData = account.scope }
         }
     }

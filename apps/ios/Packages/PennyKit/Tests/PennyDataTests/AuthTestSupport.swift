@@ -209,10 +209,21 @@ final class FakeLocalData: AccountLocalData {
         pending.withLock { $0[scope] = 0 }
     }
 
+    /// Sign-out holds per scope (`beginRemoval` not yet balanced by a removal or a cancel).
+    let holds = Mutex<[AccountScope: Int]>([:])
+
+    func beginRemoval(for scope: AccountScope) async -> Int {
+        holds.withLock { $0[scope, default: 0] += 1 }
+        return pending.withLock { $0[scope] ?? 0 }
+    }
+
+    func cancelRemoval(for scope: AccountScope) async { holds.withLock { $0[scope, default: 0] -= 1 } }
+
     func removeLocalData(for scope: AccountScope) async throws {
         log.record("remove \(scope.email)")
         if let error = removeError.withLock({ $0 }) { throw error }
         pending.withLock { $0[scope] = nil }
+        holds.withLock { $0[scope] = nil }
     }
 
     func moveLocalData(from old: AccountScope, to new: AccountScope) async throws {

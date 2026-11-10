@@ -196,7 +196,7 @@ The full auto_explain output (36 statements) is produced by the benchmark in `.c
 - Clients keep their local search, using the same normalization with tiers 1–2 only (no typo or meaning matching offline).
 - With pending local edits, or offline, clients search one complete local result set (durable local data plus cached shared projections) and label it "On this device". They never mix local rows into server pages.
 - After sync, clients discard server pages and search again. Demo mode searches only its in-memory sample.
-- MAZ-73/88 build the client screens; MAZ-71/87 verify pending create, edit and delete, then reconnect.
+- MAZ-73/88 build the client screens. MAZ-71 provides the native rules: `LedgerSyncModel.localSearch` over durable pending work, and `reconcile` drops a server page when a save or sync landed after the search started, or while changes are pending or the device is offline ([native offline sync](../ios-offline-sync.md#local-search-and-server-results)). MAZ-87 does the same for the browser.
 
 ## Contract changes (done in MAZ-121, contract 1.4.0)
 

@@ -11,8 +11,9 @@ The reference for reports and search is the pure TypeScript module MAZ-86 extrac
 | Concern | Owner | Notes |
 | --- | --- | --- |
 | Money parsing, personal shares, entry validation, ledger commands, personal recurrence, reports, local substring search | PennyDomain (MAZ-70) | Client-owned, as in the legacy app ([ADR 002](migration/architecture.md#adr-002-calculation-and-conflict-ownership)) |
-| Wire models, decoding, HTTP | PennyData (MAZ-67) | Maps `WireLedger` ↔ `Ledger` and `WireProjectedExpense` → `SharedExpenseShare`; the mapping itself is not part of MAZ-70 |
-| Durable `{base, local}` snapshots, three-way merge, sync and retries | MAZ-71 | Applies a `LedgerChange` to the latest local snapshot, then `Recurrence.materialize`, then persists before acknowledging |
+| Wire models, decoding, HTTP | PennyData (MAZ-67, 71) | `Ledger(wire:)` / `WireLedger(_:)` (MAZ-71, `PennyData/Offline/LedgerWireMapping.swift`); `WireProjectedExpense` → `SharedExpenseShare` is MAZ-75's |
+| Three-way merge, pending summary | PennyDomain (MAZ-71) | `LedgerMerge`, `PendingChanges` in `LedgerMerge.swift` ([offline sync](ios-offline-sync.md#conflict-policy)) |
+| Durable `{base, local}` snapshots, sync and retries | PennyData (MAZ-71) | `LedgerSyncEngine` applies a `LedgerChange` to the latest local snapshot, then `Recurrence.materialize`, then persists before acknowledging ([offline sync](ios-offline-sync.md)) |
 | Shared splits, settlement, shared recurrence and projection | Server (MAZ-56–59); Swift settlement MAZ-75 | PennyDomain only reads the caller's projected shares; it never splits or records shared expenses |
 | Search v1 folded normalization, typo and meaning tiers | Server (MAZ-121); iOS screens MAZ-73 | PennyDomain keeps the legacy local substring search |
 | Screens | MAZ-73, 74, 76, 77 | They call these rules and show `LedgerRuleError.message` |
@@ -27,6 +28,7 @@ The reference for reports and search is the pure TypeScript module MAZ-86 extrac
 | `EntryDraft.swift` | Form validation and the entry/rule a draft produces |
 | `LedgerValidation.swift` | `Ledger.violations` (the server's structural checks) and the v1–v3 upgrade |
 | `Reports.swift`, `LocalSearch.swift` | Month summary (recorded and projected), Activity, trip totals, shared projection join, local search and whole-ledger `search` |
+| `LedgerMerge.swift` | The offline three-way merge and `PendingChanges` (MAZ-71) |
 | `LedgerRuleError.swift`, `JavaScriptText.swift` | User-facing messages and the JavaScript string semantics the rules must reproduce |
 
 ## Money invariants
@@ -85,7 +87,7 @@ No fixture was added or changed. Known gaps, for the fixture owners rather than 
 
 - `manifest.json` still lists only `contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift` as the Swift consumer of these files (and MAZ-73 for `search-cases.json`); the generator's consumer table (`scripts/fixtures/generate-golden.ts`) should add `apps/ios/Packages/PennyKit/Tests/PennyDomainTests` when it is next regenerated.
 - There is no shared fixture for the entry draft rules, the command check order and messages, pause/resume, materialization or the projected formula with expected income; the Swift tests port the v2 TypeScript behavior (`tests/core/domain-rules.test.ts`) and the redesign totals. The message test pins every `LedgerRuleError` sentence word for word to the legacy source (`src/domain/ledger.ts`, `commands.ts`, `entryDraft.ts`), and the four new ones to the wording chosen here.
-- `merge-conflicts.json` is MAZ-71's; `shared-splits.json` and `settlement.json` are MAZ-75's.
+- `merge-conflicts.json` is consumed by MAZ-71's `LedgerMergeTests` (listed in the manifest); `shared-splits.json` and `settlement.json` are MAZ-75's.
 
 ## Compatibility decisions
 

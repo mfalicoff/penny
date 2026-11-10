@@ -1,5 +1,6 @@
 import PennyData
 import PennyDomain
+import PennyUI
 import Testing
 
 @testable import Penny
@@ -21,5 +22,13 @@ struct TestControlsTests {
     func noOverride() {
         #expect(TestControls.fromProcess(["PENNY_TEST_SERVER_URL": "not a url"]).apply(base) == base)
         #expect(TestControls.fromProcess([:]).apply(base) == base)
+    }
+
+    @Test("whenDemoVariableSet_TestControls_ShouldOpenTheDemoAtLaunchOnlyForOne")
+    @MainActor
+    func demo() {
+        #expect(TestControls.fromProcess(["PENNY_TEST_DEMO": "1"]).apply(AppServices.live()).startsInDemo)
+        #expect(!TestControls.fromProcess(["PENNY_TEST_DEMO": "yes"]).apply(AppServices.live()).startsInDemo)
+        #expect(!TestControls.fromProcess([:]).apply(AppServices.live()).startsInDemo)
     }
 }
