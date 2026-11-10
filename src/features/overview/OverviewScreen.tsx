@@ -26,7 +26,7 @@ export default function OverviewScreen() {
   const { compact, desktop } = useResponsive();
   const selectedCategory = ledger.categories.find((category) => category.id === categoryId && (filter === "all" || category.kind === filter)) ?? null;
   const activeCategoryId = selectedCategory?.id ?? null;
-  const { summaryEntries, expectedIncome, calendarEntries, summary, visibleEntries, grouped, spending } = useMemo(() => selectOverview(ledger, { month, day, filter, categoryId: activeCategoryId, search }), [ledger, month, day, filter, activeCategoryId, search]);
+  const { moneyFlowEntries, scheduled, expectedIncome, calendarEntries, recorded, summary, visibleEntries, grouped, spending } = useMemo(() => selectOverview(ledger, { month, day, filter, categoryId: activeCategoryId, search }), [ledger, month, day, filter, activeCategoryId, search]);
   const monthLabel = parseDate(`${month}-01`).toLocaleDateString("en-CA", { month: "long", year: "numeric" });
   const money = (value: number) => currencyFormat(value, ledger.currency);
   function shiftMonth(delta: number) { setMonth(shiftMonthKey(month, delta)); setDay(null); }
@@ -70,15 +70,15 @@ export default function OverviewScreen() {
       </Text>
     </View>
 
-    <SummaryCards summary={summary} compact={compact} money={money} projected={expectedIncome > 0} />
-    {expectedIncome > 0 && <Text style={s.muted}>
-      Includes {money(expectedIncome)} in expected recurring income this month. Expenses and investments count recorded entries only. Projected remaining is not money available today.
+    <SummaryCards summary={summary} compact={compact} money={money} projected={scheduled.length > 0} />
+    {scheduled.length > 0 && <Text style={s.muted}>
+      Includes scheduled income, expenses and investments this month that are not recorded yet{expectedIncome > 0 ? `, with ${money(expectedIncome)} in expected recurring income` : ""}. Projected remaining is not money available today.
     </Text>}
     <View style={{ flexDirection: desktop ? "row" : "column", gap: 22, alignItems: "stretch" }}>
       <MonthCalendar monthEntries={calendarEntries} {...{ month, day, setDay, monthLabel, compact, desktop }} />
-      <SpendingBreakdown {...{ spending, summary, desktop, money }} />
+      <SpendingBreakdown {...{ spending, desktop, money }} summary={recorded} />
     </View>
-    <MoneyFlowChart key={month} entries={summaryEntries} categories={ledger.categories} currency={ledger.currency} monthLabel={monthLabel} />
+    <MoneyFlowChart key={month} entries={moneyFlowEntries} categories={ledger.categories} currency={ledger.currency} monthLabel={monthLabel} />
     <EntryList {...{ day, filter, search, setSearch, visibleEntries, grouped, ledger, compact, money, setForm }}
       setFilter={(next) => {
         setFilter(next);

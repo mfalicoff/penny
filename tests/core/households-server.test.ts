@@ -380,7 +380,8 @@ test("monthly household projection previews recurring shares without recording e
   assert.equal(overview.visibleEntries[0]?.date, "2026-10-28");
   assert.equal(overview.visibleEntries[0]?.scheduled, true);
   assert.equal(overview.visibleEntries[0]?.recurringId, rule.id);
-  assert.deepEqual(overview.summary, { income: 0, expense: 0, investment: 0 });
+  assert.deepEqual(overview.recorded, { income: 0, expense: 0, investment: 0 });
+  assert.deepEqual(overview.summary, { income: 0, expense: 4500, investment: 0 }, "projected counts the scheduled share");
   assert.deepEqual(overview.spending, []);
   assert.deepEqual(overview.monthEntries, []);
   assert.deepEqual(privateLedger.transactions, [], "the private ledger remains unmodified");
@@ -434,7 +435,8 @@ test("materialized and deleted household occurrences never appear again as previ
     { month: "2026-10", day: null, filter: "all", categoryId: null, search: "" },
   );
   assert.equal(overview.calendarEntries.length, 4);
-  assert.equal(overview.summary.expense, 9000, "only the two recorded shares contribute to spending");
+  assert.equal(overview.recorded.expense, 9000, "only the two recorded shares are recorded spending");
+  assert.equal(overview.summary.expense, 18000, "projected adds the two remaining previews");
   assert.equal(overview.spending.reduce((sum, entry) => sum + entry.amount, 0), 9000);
   const first = service.expenses(household.id, "alex").expenses.find((entry) => entry.date === "2026-10-05")!;
   service.deleteExpense(household.id, "alex", first.id as string, { revision: first.revision });

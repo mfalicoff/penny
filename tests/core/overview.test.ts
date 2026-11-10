@@ -45,7 +45,7 @@ test("calendar handles leap years, Monday starts, six-week months and year bound
   assert.equal(shiftMonthKey("2026-01", -1), "2025-12");
 });
 
-test("future schedules appear in calendar and filtered lists without changing recorded totals or the ledger", () => {
+test("future schedules appear in calendar, filtered lists and projected totals without changing recorded totals or the ledger", () => {
   const rule = { ...expense, id: "rent", frequency: "monthly" as const, active: true, anchorDay: 31, nextDate: "2026-09-30" };
   const data = { ...ledger, recurring: [rule] };
   const before = structuredClone(data);
@@ -54,7 +54,9 @@ test("future schedules appear in calendar and filtered lists without changing re
   assert.equal(result.visibleEntries[0].scheduled, true);
   assert.equal(result.visibleEntries[0].recurringId, rule.id);
   assert.equal(result.visibleEntries[0].date, "2026-10-31");
-  assert.deepEqual(result.summary, { expense: 0, income: 0, investment: 0 });
+  assert.deepEqual(result.recorded, { expense: 0, income: 0, investment: 0 });
+  assert.deepEqual(result.summary, { expense: 1000, income: 0, investment: 0 }, "projected counts the scheduled expense");
+  assert.deepEqual(result.spending, [], "spending stays recorded-only");
   assert.equal(result.monthEntries.length, 0);
   assert.deepEqual(data, before);
 });
@@ -97,8 +99,12 @@ test("twice-monthly income funds the overview before payday and is replaced by r
     assert.equal(result.summaryEntries.filter((entry) => entry.kind === "income").reduce((sum, entry) => sum + entry.share, 0), 400000);
     assert.equal(result.monthEntries.filter((entry) => entry.kind === "income").reduce((sum, entry) => sum + entry.share, 0), receivedIncome);
     if (date === "2026-09-01") {
-      assert.deepEqual(result.summary, { income: 400000, expense: 250000, investment: 20000 });
-      assert.equal(result.summary.income - result.summary.expense - result.summary.investment, 130000);
+      // Projected adds scheduled rent (1,000) and the scheduled contribution (200,000) too.
+      assert.deepEqual(result.recorded, { income: 0, expense: 250000, investment: 20000 });
+      assert.deepEqual(result.summary, { income: 400000, expense: 251000, investment: 220000 });
+      assert.equal(result.summary.income - result.summary.expense - result.summary.investment, -71000);
+      // The money-flow chart keeps recorded entries plus expected income.
+      assert.deepEqual(result.moneyFlowEntries.map((entry) => entry.id).sort(), ["invest", "meal", "midmonth:2026-09-15", "monthend:2026-09-30"]);
     }
   }
   assert.deepEqual(data, before);

@@ -280,9 +280,9 @@ public struct MonthSummary: Hashable, Sendable {
     public let scheduled: [ReportEntry]
     /// Recorded only: the basis of **Left to spend**.
     public let recorded: KindTotals
-    /// Recorded plus the month's scheduled income (v2 `summarizeMonth` `projected`). Scheduled
-    /// expenses and investments are listed in `scheduled` but never added. The server's
-    /// redesign-states.json `projected` expense also adds them; that is a server-side figure.
+    /// Recorded plus every occurrence in `scheduled`: scheduled income, expenses and investment
+    /// contributions, personal and shared (v2 `summarizeMonth` `projected`, redesign-states.json
+    /// `projected`). The legacy app added scheduled income only (MAZ-139).
     public let projected: KindTotals
     /// The scheduled income included in `projected`: expected, not cash available today.
     public let expectedIncome: Int64
@@ -292,7 +292,7 @@ public struct MonthSummary: Hashable, Sendable {
     /// Left to spend: recorded income minus recorded expenses and contributions, signed
     /// (v2 `recordedNet`).
     public var recordedRemaining: Int64 { recorded.remaining }
-    /// Projected remaining: the same with expected income added, signed (v2 `projectedNet`).
+    /// Projected remaining: the same with every scheduled occurrence added, signed (v2 `projectedNet`).
     public var projectedRemaining: Int64 { projected.remaining }
 }
 
@@ -309,11 +309,10 @@ extension LedgerReport {
             $0.date != $1.date ? $0.date < $1.date : JavaScriptText.ordinalLess($0.id, $1.id)
         }
         let recordedTotals = KindTotals(recordedEntries)
-        // v2 `monthBreakdown`: projection adds scheduled income only; scheduled expenses and
-        // investments never count until recorded.
+        // v2 `monthBreakdown`: projection adds every scheduled occurrence (income, expenses and
+        // investments). A recorded occurrence has already replaced its preview, so none counts twice.
         let expectedIncome = scheduled.filter { $0.kind == .income }.reduce(0) { $0 + $1.share }
-        var projected = recordedTotals
-        projected.add(.income, expectedIncome)
+        let projected = KindTotals(recordedEntries + scheduled)
         return MonthSummary(
             month: month, recordedEntries: recordedEntries, scheduled: scheduled, recorded: recordedTotals,
             projected: projected, expectedIncome: expectedIncome, spending: spending(recordedEntries))

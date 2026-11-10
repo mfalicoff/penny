@@ -34,19 +34,30 @@ export function scheduledEntries(ledger: Ledger, month: string): OverviewEntry[]
 export function monthBreakdown(ledger: Ledger, month: string) {
   const entries: OverviewEntry[] = ledger.transactions.filter((t) => t.date.startsWith(month));
   const recordedEntries = entries.filter(isRecorded);
-  const scheduled = [...scheduledEntries(ledger, month), ...entries.filter((t) => t.scheduled)];
+  // A recorded occurrence replaces its preview: by id, or (for shared rows, whose recorded and
+  // preview ids differ) by household, rule and date.
+  const occurrence = (entry: OverviewEntry) =>
+    `${"householdId" in entry ? String(entry.householdId) : ""}|${entry.recurringId}|${entry.date}`;
+  const recordedIds = new Set(recordedEntries.map((entry) => entry.id));
+  const recordedOccurrences = new Set(recordedEntries.filter((entry) => entry.recurringId).map(occurrence));
+  const scheduled = [...scheduledEntries(ledger, month), ...entries.filter((t) => t.scheduled)].filter((entry) =>
+    !recordedIds.has(entry.id) && !(entry.recurringId && recordedOccurrences.has(occurrence(entry))));
   const scheduledIncome = scheduled.filter((entry) => entry.kind === "income");
   const expectedIncome = scheduledIncome.reduce((sum, entry) => sum + entry.share, 0);
-  // Projection adds scheduled income only; scheduled expenses and investments never count.
-  const summaryEntries: OverviewEntry[] = [...recordedEntries, ...scheduledIncome];
-  return { recordedEntries, scheduled, calendarEntries: [...recordedEntries, ...scheduled] as OverviewEntry[], expectedIncome, summaryEntries, summary: totals(summaryEntries) };
+  // Projected adds every scheduled occurrence of the month: income, expenses and investments,
+  // personal and shared. (The legacy app added scheduled income only.)
+  const summaryEntries: OverviewEntry[] = [...recordedEntries, ...scheduled];
+  // The money-flow chart keeps its legacy input: recorded entries plus expected income.
+  const moneyFlowEntries: OverviewEntry[] = [...recordedEntries, ...scheduledIncome];
+  return { recordedEntries, scheduled, calendarEntries: summaryEntries, expectedIncome, summaryEntries, moneyFlowEntries,
+    recorded: totals(recordedEntries), summary: totals(summaryEntries) };
 }
 
 export type MonthSummary = {
   recorded: KindTotals;
-  /** Scheduled income not yet recorded this month. */
+  /** Scheduled income not yet recorded this month (part of `projected`). */
   expectedIncome: number;
-  /** Recorded plus expected income; expenses and investments stay recorded-only. */
+  /** Recorded plus every scheduled occurrence not yet recorded this month (income, expenses, investments). */
   projected: KindTotals;
   /** `net` of each; signed. */
   recordedNet: number;
@@ -59,7 +70,6 @@ export const net = ({ income, expense, investment }: KindTotals) => income - exp
 
 // Integer cents of personal shares. Never mutates the ledger or advances schedules.
 export function summarizeMonth(ledger: Ledger, month: string): MonthSummary {
-  const { recordedEntries, summary: projected, expectedIncome } = monthBreakdown(ledger, month);
-  const recorded = totals(recordedEntries);
+  const { recorded, summary: projected, expectedIncome } = monthBreakdown(ledger, month);
   return { recorded, expectedIncome, projected, recordedNet: net(recorded), projectedNet: net(projected) };
 }
