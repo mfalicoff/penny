@@ -2,7 +2,9 @@
 // design-kit/src/styles.css is the single source of truth: its light block
 // (`:root, .pk-root`) and dark block (`.pk-dark`) become a `:root` block plus a
 // `prefers-color-scheme: dark` override, because the web follows the system
-// appearance (light and dark only; MAZ-132). Run with --check in CI.
+// appearance by default (light and dark only; MAZ-132). Settings › Appearance can
+// pin one: `<html data-theme="light|dark">` wins over the system (MAZ-85).
+// Run with --check in CI.
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
@@ -42,10 +44,19 @@ export function renderTokens(css: string): string {
     lines(light, "  "),
     "}",
     "",
+    ":root[data-theme=\"light\"] {",
+    "  color-scheme: light;",
+    "}",
+    "",
     "@media (prefers-color-scheme: dark) {",
-    "  :root {",
+    "  :root:not([data-theme=\"light\"]) {",
     lines(dark, "    "),
     "  }",
+    "}",
+    "",
+    ":root[data-theme=\"dark\"] {",
+    "  color-scheme: dark;",
+    lines(dark, "  "),
     "}",
     "",
   ].join("\n");

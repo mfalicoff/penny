@@ -41,8 +41,12 @@
   --pk-gutter: 16px;
 }
 
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --pk-bg: #000000;
     --pk-surface: #1A1918;
     --pk-surface-2: #232220;
@@ -68,4 +72,32 @@
     --pk-dim: rgba(0, 0, 0, 0.55);
     --pk-glow-copper: radial-gradient(40% 45% at 30% 45%, rgba(255,100,50,.42), transparent 70%), radial-gradient(35% 40% at 75% 35%, rgba(255,160,80,.22), transparent 70%), radial-gradient(35% 35% at 60% 75%, rgba(200,70,120,.25), transparent 70%);
   }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --pk-bg: #000000;
+  --pk-surface: #1A1918;
+  --pk-surface-2: #232220;
+  --pk-fill: rgba(150, 145, 138, 0.20);
+  --pk-separator: rgba(255, 250, 240, 0.12);
+  --pk-label: #F6F4F1;
+  --pk-label-2: #A39E97;
+  --pk-label-3: #6D6863;
+  --pk-tint: #FF6F3F;
+  --pk-tint-text: #FF8A5E;
+  --pk-tint-soft: rgba(255, 111, 63, 0.18);
+  --pk-income: #3DD07A;
+  --pk-income-soft: rgba(61, 208, 122, 0.16);
+  --pk-invest: #8E8BFF;
+  --pk-invest-soft: rgba(142, 139, 255, 0.18);
+  --pk-pending: #E0A040;
+  --pk-pending-soft: rgba(224, 160, 64, 0.18);
+  --pk-danger: #FF6B60;
+  --pk-danger-soft: rgba(255, 107, 96, 0.16);
+  --pk-glass: rgba(40, 38, 36, 0.58);
+  --pk-glass-edge: rgba(255, 255, 255, 0.16);
+  --pk-glass-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  --pk-dim: rgba(0, 0, 0, 0.55);
+  --pk-glow-copper: radial-gradient(40% 45% at 30% 45%, rgba(255,100,50,.42), transparent 70%), radial-gradient(35% 40% at 75% 35%, rgba(255,160,80,.22), transparent 70%), radial-gradient(35% 35% at 60% 75%, rgba(200,70,120,.25), transparent 70%);
 }

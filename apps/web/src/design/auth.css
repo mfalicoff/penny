@@ -179,21 +179,7 @@
   text-decoration: none;
 }
 
-/* Signed-in account and the sign-out confirmation. */
-.account {
-  display: grid;
-  gap: 8px;
-}
-
-.account__email {
-  margin: 0;
-  overflow: hidden;
-  color: var(--pk-label-2);
-  font-size: 0.8125rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
+/* Dialogs (sign-out confirmation, Add entry, the phone navigation drawer). */
 .dialog {
   position: fixed;
   inset: 0;
@@ -274,4 +260,9 @@
     align-content: center;
     padding: 56px 24px;
   }
+}
+
+.auth__demo {
+  display: grid;
+  gap: 4px;
 }

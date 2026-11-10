@@ -18,6 +18,15 @@ describe("design tokens", () => {
     expect(dark.filter((name) => !light.has(name))).toEqual([]);
   });
 
+  it("lets Settings pin light or dark over the system appearance", () => {
+    expect(generated).toContain(':root:not([data-theme="light"]) {');
+    expect(generated).toContain(':root[data-theme="dark"] {\n  color-scheme: dark;');
+    expect(generated).toContain(':root[data-theme="light"] {\n  color-scheme: light;');
+    const pinned = generated.slice(generated.indexOf(':root[data-theme="dark"]'));
+    const dark = declarations(extractBlock(kit, ".pk-dark"));
+    for (const [name, value] of dark) expect(pinned).toContain(`${name}: ${value};`);
+  });
+
   it("rejects unexpected declarations in a token block", () => {
     expect(() => declarations("--pk-a: 1; color: red;")).toThrow(/unexpected declaration/);
     expect(() => extractBlock(".x { }", ".pk-dark")).toThrow(/no ".pk-dark" block/);

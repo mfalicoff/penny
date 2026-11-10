@@ -6,6 +6,7 @@ import { ApiError } from "../../api/client";
 import { useSessionNotice } from "../../auth/account";
 import { beginSession } from "../../auth/lifecycle";
 import { OidcError, signInWithPopup, signInWithRedirect } from "../../auth/oidc";
+import { startDemo } from "../../demo/demo";
 import { Icon } from "../../design/Icon";
 
 type Mode = "sign-in" | "create-account";
@@ -49,6 +50,7 @@ export function AuthScreen() {
         ) : null}
         <CredentialsForm key={mode} mode={mode} />
         <SsoButton />
+        {creating ? null : <DemoButton />}
         <p className="auth__switch">
           {creating ? "Already have an account? " : "New here? "}
           <button
@@ -268,6 +270,30 @@ function SsoButton() {
           Continue in this tab
         </button>
       ) : null}
+    </div>
+  );
+}
+
+/** Temporary demo (MAZ-85): sample data in this tab only, without an account. */
+function DemoButton() {
+  const queryClient = useQueryClient();
+  const hintId = useId();
+  return (
+    <div className="auth__demo">
+      <button
+        type="button"
+        className="button button--secondary button--block"
+        aria-describedby={hintId}
+        onClick={() => {
+          void startDemo(queryClient);
+        }}
+      >
+        <Icon name="play" size={18} />
+        Explore a demo
+      </button>
+      <p id={hintId} className="field__hint">
+        Sample data in this tab only. Nothing is saved or sent to your server.
+      </p>
     </div>
   );
 }

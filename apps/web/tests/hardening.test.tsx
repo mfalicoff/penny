@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { isSafeAuthorizationUrl, sessionSchema } from "../src/api/schemas";
 import { sessionKey, userKey } from "../src/api/keys";
-import { ALEX, bodyOf, callsTo, json, renderApp, stubServer } from "./render";
+import { ALEX, bodyOf, callsTo, json, openSignOut, renderApp, stubServer } from "./render";
 
 const personal = (title: string) => ({
   key: `personal:${title}`,
@@ -125,7 +125,7 @@ describe("sign-out dialog is modal", () => {
     stubServer();
     const user = userEvent.setup();
     const { container } = renderApp("/");
-    await user.click(await screen.findByRole("button", { name: "Sign out" }));
+    await openSignOut(user);
     const dialog = screen.getByRole("dialog", { name: "Sign out of Penny?" });
     expect(container).toHaveAttribute("inert");
     const cancel = within(dialog).getByRole("button", { name: "Cancel" });

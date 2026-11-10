@@ -1,4 +1,5 @@
 import { expect, test, type BrowserContext, type Page } from "@playwright/test";
+import { signOut } from "./shell";
 
 // Real browser journeys for sign-in, SSO popups, expiry and sign-out against the production
 // build, with /api and the identity provider mocked. The same journeys against the real
@@ -105,9 +106,7 @@ test("password sign-in and sign-out, with failed-submit recovery and a keyboard-
   // The session credential is an HttpOnly cookie the API sets; scripts never see it.
   expect(await page.evaluate(() => JSON.stringify([document.cookie, Object.entries(localStorage), Object.entries(sessionStorage)]))).not.toContain(TOKEN);
 
-  await page.getByRole("button", { name: "Sign out" }).click();
-  await expect(page.getByRole("dialog", { name: "Sign out of Penny?" })).toBeVisible();
-  await page.getByRole("dialog").getByRole("button", { name: "Sign out" }).click();
+  await signOut(page);
   await expect(page.getByRole("heading", { level: 1, name: "Welcome back" })).toBeVisible();
   expect(api.requests).toContain("POST /api/auth/logout");
 

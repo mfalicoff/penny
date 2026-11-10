@@ -36,7 +36,7 @@ describe("app shell", () => {
     await user.tab();
     await user.tab();
     await user.tab();
-    expect(screen.getByRole("link", { name: "Activity" })).toHaveFocus();
+    expect(within(screen.getByRole("navigation", { name: "Main" })).getByRole("link", { name: "Activity" })).toHaveFocus();
     await user.keyboard("{Enter}");
     expect(await screen.findByRole("heading", { level: 1, name: "Activity" })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe("/transactions");

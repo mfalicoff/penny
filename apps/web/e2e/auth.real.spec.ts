@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { signOut } from "./shell";
 
 // The same journeys as auth.spec.ts against the real .NET API, PostgreSQL and the local
 // OIDC provider from the full-stack test environment (docs/migration/test-environment.md).
@@ -28,8 +29,7 @@ test("register, sign out, sign in with the wrong and right password, and expire 
   expect(session?.sameSite).toBe("Lax");
   expect(await page.evaluate(() => document.cookie)).not.toContain("penny_session");
 
-  await page.getByRole("button", { name: "Sign out" }).click();
-  await page.getByRole("dialog").getByRole("button", { name: "Sign out" }).click();
+  await signOut(page);
   await expect(page.getByRole("heading", { level: 1, name: "Welcome back" })).toBeVisible();
 
   await page.getByLabel("Email").fill(email);
