@@ -25,7 +25,7 @@ jest.mock("../../../src/data/api", () => ({
   ApiError: class extends Error {}, whoAmI: jest.fn(), fetchLedger: jest.fn(), saveSnapshot: jest.fn(), mutateLedger: jest.fn(), signIn: jest.fn(), signOut: jest.fn(),
 }));
 jest.mock("../../../src/data/receipts", () => ({ saveReceipt: jest.fn(), receiptUrl: jest.fn(), releaseReceiptUrl: jest.fn() }));
-jest.mock("../../../src/providers/HouseholdProvider", () => ({ useHouseholds: () => ({ households: [], projection: [], projectionByPeriod: {}, refresh: jest.fn(), loadProjection: jest.fn() }) }));
+jest.mock("../../../src/providers/HouseholdProvider", () => ({ useHouseholds: () => ({ ...mockHouseholds, refresh: jest.fn(), loadProjection: jest.fn() }) }));
 jest.mock("expo-router", () => ({ router: { navigate: jest.fn() } }));
 jest.mock("expo-document-picker", () => ({ getDocumentAsync: jest.fn() }));
 jest.mock("expo-image-picker", () => ({ launchImageLibraryAsync: jest.fn() }));
@@ -33,10 +33,12 @@ jest.mock("pdfjs-dist", () => ({ GlobalWorkerOptions: {}, getDocument: jest.fn()
 jest.mock("../../../src/shared/useResponsive", () => ({ useResponsive: () => mockResponsive }));
 
 let mockResponsive;
+let mockHouseholds;
 let ledger;
 
 beforeEach(async () => {
   await AsyncStorage.clear();
+  mockHouseholds = { households: [], projection: [], projectionByPeriod: {} };
   mockResponsive = { compact: false, desktop: true };
   ledger = demoLedger();
   api.whoAmI.mockResolvedValue("test@example.com");
@@ -148,6 +150,30 @@ test.each([
   await click(button("All categories"));
   expect(body.querySelector('[aria-label^="Edit Coffee break,"]')).not.toBeNull();
   expect(body.querySelector('[aria-label^="Edit Monthly pay,"]')).not.toBeNull();
+});
+
+test("overview shows recorded totals and Cash remaining even when something is scheduled this month", async () => {
+  const date = ledger.transactions[0].date;
+  const month = date.slice(0, 7);
+  ledger.recurring = [];
+  ledger.transactions = [
+    { id: "pay", title: "Monthly pay", kind: "income", categoryId: "salary", date, total: 100000, share: 100000, note: "" },
+    { id: "coffee", title: "Coffee break", kind: "expense", categoryId: "food", date, total: 500, share: 500, note: "" },
+  ];
+  mockHouseholds = {
+    households: [{ id: "h1", name: "Home", currency: ledger.currency, creatorId: "alice", createdAt: 1, memberCount: 2 }],
+    projection: [],
+    projectionByPeriod: { [month]: { scheduled: [{
+      id: `rent:${month}-28`, householdId: "h1", householdName: "Home", title: "Shared rent", date: `${month}-28`,
+      totalCents: 200000, shareCents: 100000, payerUserId: "alice", recurringId: "rent", scheduled: true,
+      category: { name: "Housing", icon: "home-outline", color: "#6C9C79" }, note: "",
+    }] } },
+  };
+  const body = await renderWeb(<Workspace><OverviewScreen /></Workspace>);
+  expect(body.textContent).toContain("Shared rent");
+  expect(body.textContent).toContain("Expenses$5.00");
+  expect(body.textContent).toContain("Cash remaining$995.00");
+  expect(body.textContent).not.toContain("Projected remaining");
 });
 
 test("new split recurring expense validates, saves cents and closes only after success", async () => {
