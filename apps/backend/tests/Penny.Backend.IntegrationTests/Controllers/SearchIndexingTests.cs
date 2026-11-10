@@ -138,6 +138,80 @@ public sealed class SearchIndexingTests(ApiFixture fixture) : SearchTestBase(fix
         (await CountAsync("SELECT count(*) FROM penny.search_documents")).ShouldBe(0);
     }
 
+    // MAZ-137: new entries and documents are bulk-copied after EF writes the rest of the
+    // save, so one save that adds, edits and deletes, with new entries referencing a
+    // category, account and trip created in the same save, must still index exactly.
+    [Fact]
+    public async Task whenSaveMixesNewEditedAndDeletedEntries_Search_ShouldIndexEveryChange()
+    {
+        var (token, _) = await AccountAsync("mixed@example.test");
+        await SeedLedgerAsync(token);
+        await CatchUpAsync();
+        await SaveLedgerAsync(
+            token,
+            ledger =>
+            {
+                ledger["categories"]!
+                    .AsArray()
+                    .Add(
+                        new JsonObject
+                        {
+                            ["id"] = "pets",
+                            ["name"] = "Quokkas",
+                            ["icon"] = "paw-outline",
+                            ["color"] = "#7D5BB1",
+                            ["kind"] = "expense",
+                        }
+                    );
+                ledger["accounts"]!
+                    .AsArray()
+                    .Add(
+                        new JsonObject
+                        {
+                            ["id"] = "wallet",
+                            ["name"] = "Zeppelin purse",
+                            ["type"] = "cash",
+                        }
+                    );
+                ledger["trips"]!
+                    .AsArray()
+                    .Add(
+                        new JsonObject
+                        {
+                            ["id"] = "rome",
+                            ["name"] = "Rome",
+                            ["startDate"] = "2026-11-01",
+                            ["endDate"] = "2026-11-08",
+                        }
+                    );
+                var entries = ledger["transactions"]!.AsArray();
+                entries.Remove(entries.Single(entry => entry!["id"]!.GetValue<string>() == "s02"));
+                entries.Single(entry => entry!["id"]!.GetValue<string>() == "s01")!["title"] =
+                    "Ground coffee";
+                var kibble = Entry("n1", "Kibble sack");
+                kibble["categoryId"] = "pets";
+                kibble["accountId"] = "wallet";
+                kibble["tripId"] = "rome";
+                entries.Add(kibble);
+                entries.Add(Entry("n2", "Zebra crossing"));
+            }
+        );
+
+        // One document per entry: 11 seeded, one deleted, two added.
+        (await CountAsync("SELECT count(*) FROM penny.search_documents")).ShouldBe(12);
+        (await CountAsync("SELECT count(*) FROM penny.ledger_entries")).ShouldBe(12);
+        Keys(await SearchAsync(token, new { query = "kibble" })).ShouldBe(["personal:n1"]);
+        Keys(await SearchAsync(token, new { query = "quokkas" })).ShouldBe(["personal:n1"]);
+        Keys(await SearchAsync(token, new { query = "zeppelin purse" })).ShouldBe(["personal:n1"]);
+        Keys(await SearchAsync(token, new { query = "zebra" })).ShouldBe(["personal:n2"]);
+        Keys(await SearchAsync(token, new { query = "ground coffee" }))
+            .ShouldContain("personal:s01");
+        Keys(await SearchAsync(token, new { query = "coffee beans" }))
+            .ShouldNotContain("personal:s02");
+        // The edit and both new entries wait for embeddings: the copied rows are due.
+        (await CatchUpAsync()).ShouldBe(3);
+    }
+
     [Fact]
     public async Task whenTwoWorkersClaim_EmbeddingOutbox_ShouldNeverShareARow()
     {
