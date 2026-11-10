@@ -11,10 +11,15 @@
 #   release-check  Release build; verifies production settings and no test controls
 #   launch         install and launch on clean iPhone and iPad simulators, with screenshots
 #   ci             lint, package-test, test and release-check
+#   ui-build       build the app and the XCUITest bundle (no simulator, no stack)
+#   ui-test [plan] XCUITest plan smoke|full|screenshots against the full-stack environment
+#                  on clean iPhone and iPad simulators (docs/ios-ui-tests.md)
 #
 # Xcode is pinned by apps/ios/.xcode-version. Outputs go to .cache/ios (git-ignored).
 # PENNY_IPHONE / PENNY_IPAD choose simulator device types (default: the newest iPhone
 # Pro and iPad Pro 11-inch the selected Xcode offers). PENNY_RUNTIME pins a runtime identifier.
+# ui-test: PENNY_UI_DEVICES (iphone, ipad or both), PENNY_STACK_BUILD=0 (reuse the API build),
+# PENNY_UPGRADE_FROM_APP (a previous Penny.app to upgrade from).
 set -euo pipefail
 
 IOS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -53,12 +58,12 @@ select_xcode() {
 
 xcb() {
   # Package tests and the app share one DerivedData so the simulator build is reused.
-  /usr/bin/xcodebuild -project "$PROJECT" -scheme "$SCHEME" -derivedDataPath "$DERIVED" \
+  /usr/bin/xcodebuild -project "$PROJECT" -scheme "${XCB_SCHEME:-$SCHEME}" -derivedDataPath "$DERIVED" \
     -clonedSourcePackagesDirPath "$CACHE/SourcePackages" -skipMacroValidation "$@"
 }
 
 swift_sources() {
-  find "$IOS_DIR/Penny" "$IOS_DIR/PennyTests" "$PACKAGE/Sources" "$PACKAGE/Tests" "$PACKAGE/Package.swift" \
+  find "$IOS_DIR/Penny" "$IOS_DIR/PennyTests" "$IOS_DIR/PennyUITests" "$PACKAGE/Sources" "$PACKAGE/Tests" "$PACKAGE/Package.swift" \
     -name '*.swift' -type f
 }
 
@@ -81,10 +86,26 @@ cmd_lint() {
     echo "error: PennyDesign must not depend on data or feature modules." >&2
     exit 1
   fi
+  # Identifiers only: the UI test runner links it, so it stays free of app code.
+  if grep -rnE '^\s*(public |internal |@testable )?import ' "$PACKAGE/Sources/PennyAccessibility"; then
+    echo "error: PennyAccessibility must not import anything." >&2
+    exit 1
+  fi
+  # UI tests drive the installed app through identifiers; they never import its modules.
+  if grep -rnE '^\s*(public |internal |@testable )?import (Penny|PennyDomain|PennyData|PennyDesign|PennyUI)\b' \
+    "$IOS_DIR/PennyUITests"; then
+    echo "error: PennyUITests may import PennyAccessibility only, not app modules." >&2
+    exit 1
+  fi
 
-  echo "==> property lists"
+  echo "==> property lists and test plans"
   /usr/bin/plutil -lint "$IOS_DIR/Configuration/Info.plist" "$IOS_DIR/Configuration/Penny.entitlements" \
     "$IOS_DIR/Penny/PrivacyInfo.xcprivacy"
+  # Test plans are JSON: converting them parses them strictly.
+  local plan
+  for plan in "$IOS_DIR"/TestPlans/*.xctestplan; do
+    /usr/bin/plutil -convert binary1 -o /dev/null "$plan" && echo "$plan: OK"
+  done
 }
 
 cmd_package_test() {
@@ -175,7 +196,7 @@ cmd_test() {
 assert_no_test_controls() {
   local file found=0
   while IFS= read -r -d "" file; do
-    if /usr/bin/strings -a "$file" | grep -qE "PENNY_TEST_SERVER_URL|PENNY_TEST_DEMO|TestControls"; then
+    if /usr/bin/strings -a "$file" | grep -qE "PENNY_TEST_[A-Z_]+|TestControls|TestStateReset|ContainerSeed"; then
       echo "error: $file contains test controls." >&2
       found=1
     fi
@@ -222,6 +243,87 @@ cmd_launch() {
   launch_on "$IPAD_ID" ipad
 }
 
+# --- XCUITest (MAZ-81, docs/ios-ui-tests.md) ---------------------------------------------
+
+# Without a running stack (PENNY_API_URL unset), starts the full-stack environment (.NET API,
+# PostgreSQL, local OIDC provider) around this same command, then copies its logs next to the
+# results. penny-env always tears the environment down, even when tests fail.
+cmd_ui_test() {
+  local plan="${1:-smoke}"
+  case "$plan" in
+    smoke | full | screenshots) ;;
+    *) echo "error: ui-test plan must be smoke, full or screenshots." >&2; exit 2 ;;
+  esac
+  if [[ -n "${PENNY_API_URL:-}" && -n "${PENNY_TEST_TOKEN:-}" ]]; then
+    ui_test_run "$plan"
+    return
+  fi
+  command -v node >/dev/null || { echo "error: ui-test needs Node to start the test stack." >&2; exit 1; }
+  local run_id status=0 out="$RESULTS/ui/$plan"
+  run_id="r$(/usr/bin/od -An -N5 -tx1 /dev/urandom | tr -d ' \n')"
+  local args=(run --run-id "$run_id" --oidc)
+  [[ "${PENNY_STACK_BUILD:-1}" == 0 ]] && args+=(--no-build)
+  node "$ROOT/scripts/test-env/penny-env.mjs" "${args[@]}" -- "$IOS_DIR/scripts/ios.sh" ui-test "$plan" || status=$?
+  if [[ -d "$ROOT/test-results/fullstack/$run_id" ]]; then
+    mkdir -p "$out"
+    rm -rf "$out/server"
+    cp -R "$ROOT/test-results/fullstack/$run_id" "$out/server"
+    echo "Server logs: $out/server"
+  fi
+  return "$status"
+}
+
+# Device names to run on: PENNY_UI_DEVICES ("iphone ipad" by default; either alone is fine).
+ui_devices() { echo "${PENNY_UI_DEVICES:-iphone ipad}"; }
+
+# Prepares a fresh simulator for UI tests: boots it and trusts the local OIDC provider's
+# throwaway certificate (single sign-on journeys). Nothing else is installed or granted:
+# tests set up permissions themselves.
+prepare_ui_device() {
+  local id="$1"
+  xcrun simctl bootstatus "$id" -b >/dev/null
+  if [[ -n "${PENNY_OIDC_CERTIFICATE:-}" && -f "$PENNY_OIDC_CERTIFICATE" ]]; then
+    xcrun simctl keychain "$id" add-root-cert "$PENNY_OIDC_CERTIFICATE"
+  fi
+  # Upgrade rehearsal: install and run the previous build first, so the plan's install of this
+  # build is an in-place upgrade over real stored state (UpgradeTests).
+  if [[ -n "${PENNY_UPGRADE_FROM_APP:-}" ]]; then
+    xcrun simctl install "$id" "$PENNY_UPGRADE_FROM_APP"
+    xcrun simctl launch "$id" com.mfalicoff.penny >/dev/null
+    sleep 5
+    xcrun simctl terminate "$id" com.mfalicoff.penny >/dev/null 2>&1 || true
+  fi
+}
+
+ui_test_run() {
+  local plan="$1" out="$RESULTS/ui/$1" failed=0 name id testplan only=()
+  testplan="$(tr '[:lower:]' '[:upper:]' <<< "${plan:0:1}")${plan:1}"
+  # PENNY_UI_ONLY: one test or class, e.g. PennyUITests/AuthJourneyTests (debugging).
+  [[ -n "${PENNY_UI_ONLY:-}" ]] && only=("-only-testing:$PENNY_UI_ONLY")
+  devices
+  rm -rf "$out"/*.xcresult "$out"/*-attachments
+  mkdir -p "$out"
+  XCB_SCHEME=PennyUITests xcb -configuration Debug -destination "id=$IPHONE_ID" build-for-testing
+  for name in $(ui_devices); do
+    if [[ $name == iphone ]]; then id="$IPHONE_ID"; else id="$IPAD_ID"; fi
+    prepare_ui_device "$id"
+    echo "==> UI tests ($testplan) on $name"
+    # xcodebuild hands TEST_RUNNER_* variables to the test runner without the prefix.
+    if ! TEST_RUNNER_PENNY_API_URL="$PENNY_API_URL" TEST_RUNNER_PENNY_TEST_TOKEN="$PENNY_TEST_TOKEN" \
+      TEST_RUNNER_PENNY_TEST_RUN="${PENNY_TEST_RUN:-local}" TEST_RUNNER_PENNY_OIDC_ISSUER="${PENNY_OIDC_ISSUER:-}" \
+      TEST_RUNNER_PENNY_UITEST_REQUIRE_STACK=1 TEST_RUNNER_PENNY_UITEST_UPGRADE="${PENNY_UPGRADE_FROM_APP:+1}" \
+      XCB_SCHEME=PennyUITests xcb -configuration Debug -destination "id=$id" -testPlan "$testplan" \
+      ${only[@]+"${only[@]}"} test-without-building -resultBundlePath "$out/$name.xcresult"; then
+      failed=1
+    fi
+    # Screenshots, failure recordings and the accessibility trees, browsable without Xcode.
+    xcrun xcresulttool export attachments --path "$out/$name.xcresult" --output-path "$out/$name-attachments" \
+      >/dev/null 2>&1 || mkdir -p "$out/$name-attachments"
+  done
+  echo "UI test results: $out"
+  return "$failed"
+}
+
 main() {
   sanitize_environment
   select_xcode
@@ -234,8 +336,10 @@ main() {
     test) cmd_test ;;
     release-check) cmd_release_check ;;
     launch) cmd_launch ;;
+    ui-test) cmd_ui_test "${2:-smoke}" ;;
+    ui-build) XCB_SCHEME=PennyUITests xcb -configuration Debug -destination 'generic/platform=iOS Simulator' build-for-testing ;;
     ci) cmd_lint; cmd_package_test; cmd_test; cmd_release_check ;;
-    *) sed -n '2,20p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2 ;;
+    *) sed -n '2,22p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2 ;;
   esac
 }
 
