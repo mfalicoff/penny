@@ -121,10 +121,10 @@ const Seeds = z.strictObject({
 
 const Totals = z.strictObject({ expenseCents: z.number().int(), incomeCents: z.number().int(), investmentCents: z.number().int() });
 const Redesign = z.strictObject({
-  version: z.literal(1),
+  version: z.literal(2),
   description: z.string(),
   clock: z.iso.datetime(),
-  palettes: z.array(z.string()).length(4),
+  palettes: z.array(z.enum(["light", "dark"])).length(2),
   totals: z.record(z.string(), z.strictObject({
     description: z.string(),
     recorded: Totals,
@@ -134,10 +134,10 @@ const Redesign = z.strictObject({
   states: z.array(z.strictObject({
     specimen: z.string(),
     platform: z.string(),
-    appearances: z.array(z.string()).min(1),
+    appearances: z.array(z.enum(["light", "dark"])).min(1),
     scenario: z.string().nullable(),
     as: z.string().optional(),
-    client: z.enum(["signed-out", "demo"]).optional(),
+    client: z.enum(["signed-out", "static"]).optional(),
     oidc: z.boolean().optional(),
     view: z.string().min(1),
     totals: z.string().optional(),
@@ -273,18 +273,19 @@ test("pending offline edits produce the published local search results", () => {
   }
 });
 
-test("redesign states cover all 79 specimens with seeded, consistent data", () => {
+test("redesign states cover all 61 cards with seeded, consistent data", () => {
   const states = parse(Redesign, "redesign-states.json");
   const baseline = JSON.parse(readFileSync(new URL("contracts/design-baseline.json", root), "utf8"));
   const seeds = parse(Seeds, "full-stack-seeds.json");
+  assert.deepEqual(states.palettes, baseline.appearances);
   assert.deepEqual(states.palettes, Object.keys(baseline.tokens.palettes));
   assert.deepEqual(states.states.map((item) => item.specimen), baseline.specimens.map((item: { id: string }) => item.id));
   for (const state of states.states) {
     const specimen = baseline.specimens.find((item: { id: string }) => item.id === state.specimen);
     assert.equal(state.platform, specimen.platform);
-    if (specimen.category === "Themes & platforms" && specimen.theme !== "light") assert.deepEqual(state.appearances, [specimen.theme]);
-    else assert.deepEqual(state.appearances, states.palettes, `${state.specimen} renders in all four appearances`);
-    for (const appearance of state.appearances) assert.ok(states.palettes.includes(appearance));
+    // A card drawn in dark (Home · Dark, the receipt viewer) pins it; every other card is captured in both.
+    if (specimen.theme !== "light") assert.deepEqual(state.appearances, [specimen.theme]);
+    else assert.deepEqual(state.appearances, states.palettes, `${state.specimen} renders in light and dark`);
     if (state.scenario === null) assert.ok(state.client, `${state.specimen} without a scenario is a client-only state`);
     else {
       const scenario = seeds.scenarios.find((item) => item.name === state.scenario);
@@ -293,7 +294,7 @@ test("redesign states cover all 79 specimens with seeded, consistent data", () =
     }
     if (state.totals) assert.ok(states.totals[state.totals]);
   }
-  for (const required of ["payment-stale", "save-error", "offline", "home-dark", "home-amoled", "home-catppuccin"])
+  for (const required of ["iphone-payment-stale", "iphone-save-error", "iphone-offline", "iphone-home-dark"])
     assert.ok(states.states.some((item) => item.specimen === required && (item.fault || item.staleWrite || item.appearances.length === 1)));
 
   // Recorded and projected totals recomputed from the seed itself.
