@@ -83,7 +83,7 @@ docker exec <api-container> dotnet Penny.Backend.Api.dll reset-password person@e
 - **Lost or leaked code:** run the command again; the new code supersedes the old one. An unused code expires on its own.
 - **After cutover:** see the [cutover runbook](postgresql.md#cutover-and-forward-only-recovery) step for imported password accounts.
 
-Clients: the web and native apps need a "reset password" screen that posts `{token, password}` and then shows the sign-in form (owned by MAZ-84 and MAZ-68). Until it ships, the endpoint can be called directly, for example `curl -X POST https://penny.example.com/api/auth/password-reset -H 'Content-Type: application/json' -d @reset.json` with `{"token":"…","password":"…"}` in a private file, by the user or with the user present choosing the password.
+Clients: the web and native apps need a "reset password" screen that posts `{token, password}` and then shows the sign-in form (native: MAZ-68; the web app has none yet, MAZ-84 shipped sign-in only). Until it ships, the endpoint can be called directly, for example `curl -X POST https://penny.example.com/api/auth/password-reset -H 'Content-Type: application/json' -d @reset.json` with `{"token":"…","password":"…"}` in a private file, by the user or with the user present choosing the password.
 
 ## OpenID Connect (MAZ-54)
 
