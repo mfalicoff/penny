@@ -90,13 +90,30 @@ struct Penny {
 
     /// Settings: the sheet from Home on iPhone, the detail column on iPad.
     func openSettings() throws {
+        popSettingsPages()
+        if element(AccessibilityID.Screen.settings).exists { return }
         if Device.isPad {
             try tap(AccessibilityID.Sidebar.settings)
-        } else if !element(AccessibilityID.Screen.settings).exists {
+        } else {
             try openHome()
             try tap(AccessibilityID.Home.settings)
         }
         try wait(for: AccessibilityID.Screen.settings)
+    }
+
+    private static let settingsPages = [
+        AccessibilityID.Screen.appearance, AccessibilityID.Screen.currency, AccessibilityID.Screen.appLock,
+        AccessibilityID.Screen.recurring, AccessibilityID.Screen.accounts, AccessibilityID.Screen.categories,
+    ]
+
+    /// Goes back from a page pushed inside Settings to the Settings list.
+    private func popSettingsPages() {
+        for _ in 0..<3 {
+            guard !element(AccessibilityID.Screen.settings).exists,
+                Self.settingsPages.contains(where: { element($0).exists })
+            else { return }
+            app.navigationBars.buttons.element(boundBy: 0).tap()
+        }
     }
 
     /// A Settings page (`SettingsRoute` raw value), from wherever the shell is.
@@ -108,12 +125,9 @@ struct Penny {
 
     /// Closes the iPhone Settings sheet if it is open (iPad has no sheet).
     func closeSettings() throws {
-        guard !Device.isPad, element(AccessibilityID.Screen.settings).exists else { return }
-        let done = element(AccessibilityID.Settings.done)
-        if !done.exists {
-            // On a pushed page: go back to the Settings list first.
-            app.navigationBars.buttons.firstMatch.tap()
-        }
+        guard !Device.isPad else { return }
+        popSettingsPages()
+        guard element(AccessibilityID.Screen.settings).exists else { return }
         try tap(AccessibilityID.Settings.done)
         try waitForAbsence(of: AccessibilityID.Screen.settings)
     }

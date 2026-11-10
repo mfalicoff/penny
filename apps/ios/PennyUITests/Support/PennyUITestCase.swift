@@ -139,22 +139,10 @@ class PennyUITestCase: XCTestCase {
         add(attachment)
     }
 
-    /// The accessibility tree, attached when a test fails (next to Xcode's own failure
-    /// screenshot and screen recording).
-    override func record(_ issue: XCTIssue) {
-        var issue = issue
-        if Thread.isMainThread {
-            let key = ObjectIdentifier(self)
-            let tree = MainActor.assumeIsolated { Self.states[key]?.current?.debugDescription }
-            if let tree {
-                let attachment = XCTAttachment(string: tree)
-                attachment.name = "accessibility-tree"
-                attachment.lifetime = .deleteOnSuccess
-                issue.add(attachment)
-            }
-        }
-        super.record(issue)
-    }
+    // Failure diagnostics: XCTest itself attaches the screenshot, the screen recording and the
+    // app's accessibility hierarchy to a failing UI test ("Collecting debug information to
+    // assist test failure triage"). Snapshotting the app again from `record(_:)` deadlocks
+    // async tests, so this class adds nothing there.
 }
 
 /// The simulator the runner is on.
