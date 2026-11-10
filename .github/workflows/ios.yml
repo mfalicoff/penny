@@ -10,6 +10,8 @@ on:
       - app.json
       - package.json
       - docs/ios-ipa.md
+      - apps/backend/**
+      - scripts/test-env/**
       - .github/workflows/ios.yml
   push:
     branches: [v2]
@@ -19,6 +21,8 @@ on:
       - app.json
       - package.json
       - docs/ios-ipa.md
+      - apps/backend/**
+      - scripts/test-env/**
       - .github/workflows/ios.yml
   workflow_dispatch:
 
@@ -56,4 +60,58 @@ jobs:
         with:
           name: ios-test-results
           path: test-results/ios/
+          if-no-files-found: warn
+
+  ui-smoke:
+    # Required PR check (MAZ-81): the Smoke XCUITest plan on clean iPhone and iPad simulators
+    # against the real .NET API on PostgreSQL with the local OIDC provider (MAZ-62's
+    # environment, started and torn down by `ios.sh ui-test`). docs/ios-ui-tests.md.
+    name: XCUITest smoke on iPhone and iPad against the full stack
+    runs-on: xcode-27
+    timeout-minutes: 60
+    env:
+      NUGET_PACKAGES: ${{ github.workspace }}/.cache/backend/nuget
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: apps/backend/global.json
+          cache: true
+          cache-dependency-path: |
+            apps/backend/src/**/packages.lock.json
+            apps/backend/tests/**/packages.lock.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Container runtime for PostgreSQL
+        # The stack runs PostgreSQL in a container, so the runner image must provide Docker or
+        # Podman. Fail early with a clear message rather than in the middle of the suite.
+        run: |
+          if docker version >/dev/null 2>&1 || podman version >/dev/null 2>&1; then exit 0; fi
+          echo "::error::The xcode-27 runner has no Docker or Podman; the UI suites need one (docs/ios-ui-tests.md#ci)."
+          exit 1
+      - name: Cache search model
+        uses: actions/cache@v6
+        with:
+          path: .cache/backend/models
+          key: search-model-${{ hashFiles('apps/backend/development/download-model.mjs') }}
+      - name: Download and verify search model
+        run: node apps/backend/development/download-model.mjs
+      - name: Restore locked packages
+        run: bash apps/backend/dotnet.sh restore Penny.Backend.slnx --locked-mode
+      - name: Smoke plan on clean iPhone and iPad simulators
+        run: apps/ios/scripts/ios.sh ui-test smoke
+      - name: Remove leftover environments
+        if: always()
+        run: node scripts/test-env/penny-env.mjs down --all
+      - name: Upload xcresult bundles, screenshots, recordings and server logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ios-ui-smoke
+          path: test-results/ios/ui/
           if-no-files-found: warn
