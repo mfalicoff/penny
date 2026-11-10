@@ -1,0 +1,132 @@
+import Foundation
+import PennyData
+import PennyDomain
+import SwiftUI
+
+/// Who the shell is showing: a signed-in account, or the temporary demo.
+enum ShellSession {
+    case account(AuthController, SignedInAccount)
+    case demo
+}
+
+/// The signed-in (or demo) shell's state: navigation, the month on screen, the workspace and
+/// the save toast. Shared by the iPhone and iPad layouts through the environment.
+@MainActor
+@Observable
+final class ShellModel {
+    var route = ShellRoute()
+    var month: MonthKey
+    /// The latest save, shown as a toast with Undo until it times out.
+    private(set) var toast: SavedChange?
+    /// Bumped on every save and every save failure, to drive haptics.
+    private(set) var savedCount = 0
+    private(set) var failedCount = 0
+
+    let workspace: any LedgerWorkspace
+    let session: ShellSession
+    let today: CalendarDate
+    /// Starts the demo from the empty Home (nil while in the demo).
+    let startDemo: (() -> Void)?
+    /// Ends the demo and discards everything in it (nil for an account).
+    let leaveDemo: (() -> Void)?
+
+    @ObservationIgnored private var toastTask: Task<Void, Never>?
+    static let toastDuration: Duration = .seconds(4)
+
+    init(
+        workspace: any LedgerWorkspace, session: ShellSession, today: CalendarDate,
+        startDemo: (() -> Void)? = nil, leaveDemo: (() -> Void)? = nil
+    ) {
+        self.workspace = workspace
+        self.session = session
+        self.today = today
+        self.startDemo = startDemo
+        self.leaveDemo = leaveDemo
+        month = MonthKey(today)
+    }
+
+    var isDemo: Bool { workspace.isDemo }
+
+    var account: SignedInAccount? {
+        if case .account(_, let account) = session { return account }
+        return nil
+    }
+
+    var auth: AuthController? {
+        if case .account(let auth, _) = session { return auth }
+        return nil
+    }
+
+    var currency: String { workspace.load.ledger?.currency.rawValue ?? Currency.cad.rawValue }
+
+    /// Saves `change`. On success shows the toast (with a success haptic); on failure returns
+    /// the failure so the caller keeps the draft and shows it (with an error haptic).
+    @discardableResult
+    func commit(_ change: LedgerChange, summary: ChangeSummary) async -> SaveFailure? {
+        switch await workspace.commit(change, summary: summary) {
+        case .success(let saved):
+            show(saved)
+            return nil
+        case .failure(let failure):
+            failedCount += 1
+            return failure
+        }
+    }
+
+    func undoToast() async -> SaveFailure? {
+        guard let toast else { return nil }
+        dismissToast()
+        if case .failure(let failure) = await workspace.undo(toast) {
+            failedCount += 1
+            return failure
+        }
+        return nil
+    }
+
+    func dismissToast() {
+        toastTask?.cancel()
+        toast = nil
+    }
+
+    private func show(_ saved: SavedChange) {
+        savedCount += 1
+        toast = saved
+        toastTask?.cancel()
+        toastTask = Task { [weak self] in
+            try? await Task.sleep(for: Self.toastDuration)
+            guard !Task.isCancelled, self?.toast?.id == saved.id else { return }
+            self?.toast = nil
+        }
+    }
+}
+
+/// Text for the sync status line in Settings and the iPad sidebar.
+enum SyncText {
+    static func line(_ status: SyncStatus, now: Date = Date()) -> String {
+        switch status {
+        case .upToDate(let date?): "Synced \(relative(date, now: now))"
+        case .upToDate(nil): "Synced"
+        case .syncing(let pending): "Syncing \(changes(pending))…"
+        case .offline(let pending, _): pending == 0 ? "Offline" : "Offline · \(changes(pending)) waiting"
+        case .failing(let pending, _): "Couldn't sync · \(changes(pending)) waiting"
+        case .signInRequired(let pending): "Sign in again to sync \(changes(pending))"
+        case .localOnly: "Demo · changes are temporary"
+        }
+    }
+
+    static func changes(_ count: Int) -> String { count == 1 ? "1 change" : "\(count) changes" }
+
+    static func relative(_ date: Date, now: Date) -> String {
+        now.timeIntervalSince(date) < 60 ? "just now" : date.formatted(.relative(presentation: .named))
+    }
+
+    static func symbol(_ status: SyncStatus) -> String {
+        switch status {
+        case .upToDate: "checkmark.icloud"
+        case .syncing: "arrow.triangle.2.circlepath.icloud"
+        case .offline: "icloud.slash"
+        case .failing, .signInRequired: "exclamationmark.icloud"
+        case .localOnly: "play.circle"
+        }
+    }
+}

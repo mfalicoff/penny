@@ -3,32 +3,54 @@ import PennyDesign
 public import PennyDomain
 public import SwiftUI
 
-/// The app's root: configuration errors, then the sign-in gate (MAZ-68). The MAZ-69 shell
-/// (tab bar on iPhone, split view on iPad) replaces the signed-in placeholder and presents
-/// `link`.
+/// The app's root: configuration errors, then the sign-in gate (MAZ-68) and the shell
+/// (MAZ-69). It owns what is per device rather than per account: the appearance, the app
+/// lock that covers everything, and deep links waiting for sign-in and unlock.
 public struct RootView: View {
     private let configuration: Result<AppConfiguration, AppConfiguration.Invalid>
-    @State private var link: DeepLink?
+    @State private var services: AppServices
+    @State private var appearance: AppearanceModel
+    @State private var inbox = DeepLinkInbox()
+    @Environment(\.scenePhase) private var scenePhase
 
-    public init(configuration: Result<AppConfiguration, AppConfiguration.Invalid>) {
+    public init(
+        configuration: Result<AppConfiguration, AppConfiguration.Invalid>, services: AppServices = .live()
+    ) {
         self.configuration = configuration
+        _services = State(initialValue: services)
+        _appearance = State(initialValue: AppearanceModel(preferences: services.preferences))
     }
 
     public var body: some View {
         Group {
             switch configuration {
-            case .success(let configuration): LaunchView(configuration: configuration, link: link)
+            case .success(let configuration):
+                LaunchView(configuration: configuration, inbox: $inbox, services: services)
             case .failure(let error): ConfigurationErrorView(error: error)
             }
         }
         .tint(PennyColor.tint)
+        .preferredColorScheme(appearance.colorScheme)
+        .environment(appearance)
+        .environment(services.lock)
+        .modifier(LockCover(lock: services.lock))
+        .task { await services.lock.start() }
+        .onChange(of: scenePhase, initial: true) { _, phase in
+            Task { await services.lock.activityChanged(Self.activity(phase)) }
+        }
         .onOpenURL { url in
-            let parsed = DeepLink(url: url) ?? .home
-            // Single sign-on callbacks return through the system authentication session,
-            // never through openURL. One arriving here was not requested by this app (or is a
-            // replay), so it is ignored rather than redeemed.
-            if case .authCallback = parsed { return }
-            link = parsed
+            // Unknown penny:// routes open Home. Single sign-on callbacks return through the
+            // system authentication session, never through openURL; one arriving here was not
+            // requested by this app (or is a replay), so the inbox ignores it.
+            inbox.receive(DeepLink(url: url) ?? .home)
+        }
+    }
+
+    static func activity(_ phase: ScenePhase) -> AppActivity {
+        switch phase {
+        case .active: .active
+        case .background: .background
+        default: .inactive
         }
     }
 }
@@ -37,18 +59,25 @@ struct LaunchView: View {
     @State private var auth: AuthController
     /// The signed-in account's offline ledger and sync state (MAZ-71).
     @State private var sync: LedgerSyncModel
-    let link: DeepLink?
+    @State private var demo: DemoWorkspace?
+    @Binding var inbox: DeepLinkInbox
+    let services: AppServices
 
-    init(configuration: AppConfiguration, link: DeepLink?, auth: AuthController? = nil) {
+    init(
+        configuration: AppConfiguration, inbox: Binding<DeepLinkInbox>, services: AppServices,
+        auth: AuthController? = nil
+    ) {
         let store = OfflineLedgerStore.standard()
         let auth = auth ?? AuthController(defaultServer: configuration.defaultServerURL, localData: store)
         _auth = State(initialValue: auth)
         _sync = State(initialValue: LedgerSyncModel(auth: auth, store: store))
-        self.link = link
+        _demo = State(initialValue: services.startsInDemo ? DemoWorkspace(today: services.today()) : nil)
+        _inbox = inbox
+        self.services = services
     }
 
     var body: some View {
-        AuthGate(auth: auth, link: link)
+        AuthGate(auth: auth, inbox: $inbox, services: services, demo: $demo)
             .ledgerSync(sync)
             .accessibilityIdentifier("root.launch")
     }
@@ -72,29 +101,6 @@ struct ConfigurationErrorView: View {
         case .invalidValue(let key): "This build has an invalid \(key) setting. Rebuild it from apps/ios."
         }
     }
-}
-
-#Preview("Sign in") {
-    LaunchView(
-        configuration: AppConfiguration(
-            environment: .development, defaultServerURL: nil, appGroup: AppIdentity.appGroup),
-        link: nil,
-        auth: AuthController(
-            defaultServer: nil, sessions: EphemeralSessionStore(),
-            preferences: EphemeralAuthPreferences(server: SavedServer(server: PreviewServer.url, version: "2.0.0"))))
-}
-
-#Preview("Choose a server") {
-    LaunchView(
-        configuration: AppConfiguration(
-            environment: .production, defaultServerURL: nil, appGroup: AppIdentity.appGroup),
-        link: nil,
-        auth: AuthController(
-            defaultServer: nil, sessions: EphemeralSessionStore(), preferences: EphemeralAuthPreferences()))
-}
-
-#Preview("Configuration error") {
-    RootView(configuration: .failure(.missing(AppConfiguration.Key.appGroup)))
 }
 
 enum PreviewServer {
