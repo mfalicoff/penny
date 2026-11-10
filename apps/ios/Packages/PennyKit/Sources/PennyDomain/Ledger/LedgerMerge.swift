@@ -14,8 +14,8 @@
 /// - Records this device created are appended after the server's, in local order.
 /// - Currency: a local change wins, otherwise the server's.
 ///
-/// Three v2 refinements keep personal recurrence from duplicating, overwriting or resurrecting
-/// occurrences when two devices both caught a rule up (docs/ios-offline-sync.md). An
+/// Four v2 refinements keep personal recurrence from duplicating, overwriting or resurrecting
+/// rules and occurrences when a device caught a rule up offline (docs/ios-offline-sync.md). An
 /// occurrence is "untouched" when it equals what its rule generates for its date.
 ///
 /// - When both sides advanced a rule's `nextDate`, the later one wins, so dates the server
@@ -25,6 +25,12 @@
 /// - An occurrence this device recorded by itself (unchanged from what the rule generated)
 ///   is dropped when the server's rule is already past its date and the server does not have
 ///   it: another device recorded it and then deleted it.
+/// - A rule the server deleted stays deleted when this device only caught it up (moved its
+///   `nextDate`), and the occurrences this device recorded for it, untouched, go with it. A
+///   rule edited here in any other field comes back, as any edited record does.
+///
+/// The legacy TypeScript merge has none of these, so the golden fixture (generated from it)
+/// cannot hold them; `LedgerMergeTests` covers them.
 ///
 /// The merge is pure. Callers materialize recurrence on the result (`Recurrence.materialize`).
 public enum LedgerMerge {
@@ -35,7 +41,10 @@ public enum LedgerMerge {
         result.trips = items(base.trips, local.trips, remote.trips)
         result.categories = items(base.categories, local.categories, remote.categories)
         result.recurring = keepConsumedDates(
-            items(base.recurring, local.recurring, remote.recurring), base: base, local: local, remote: remote)
+            items(
+                base.recurring, withoutCatchUpOfDeletedRules(base: base, local: local, remote: remote), remote.recurring
+            ),
+            base: base, local: local, remote: remote)
         // An occurrence both sides recorded is the same record: the server's copy (with any
         // edit made there) wins over this device's untouched one.
         let remoteEntries = Dictionary(remote.transactions.map { ($0.id, $0) }, uniquingKeysWith: { _, last in last })
@@ -47,7 +56,8 @@ public enum LedgerMerge {
             return theirs
         }
         result.transactions = dropConsumedOccurrences(
-            items(base.transactions, localEntries, remote.transactions), base: base, local: local, remote: remote)
+            items(base.transactions, localEntries, remote.transactions), base: base, local: local, remote: remote,
+            mergedRuleIDs: Set(result.recurring.map(\.id)))
         return result
     }
 
@@ -95,17 +105,32 @@ public enum LedgerMerge {
         }
     }
 
-    /// Drops occurrences this device recorded by itself that the server consumed and removed.
-    static func dropConsumedOccurrences(_ merged: [LedgerEntry], base: Ledger, local: Ledger, remote: Ledger)
-        -> [LedgerEntry]
-    {
+    /// `local.recurring` with each rule the server deleted put back to its base copy when this
+    /// device only caught it up (moved `nextDate`), so the merge sees it as unchanged and
+    /// follows the delete. A rule edited in any other field is left alone and comes back.
+    static func withoutCatchUpOfDeletedRules(base: Ledger, local: Ledger, remote: Ledger) -> [RecurringRule] {
+        local.recurring.map { rule in
+            guard remote.rule(id: rule.id) == nil, let before = base.rule(id: rule.id) else { return rule }
+            var caughtUp = before
+            caughtUp.nextDate = rule.nextDate
+            return caughtUp == rule ? before : rule
+        }
+    }
+
+    /// Drops occurrences this device recorded by itself that the server consumed and removed,
+    /// and those of a rule the server deleted that is not coming back (`mergedRuleIDs`).
+    static func dropConsumedOccurrences(
+        _ merged: [LedgerEntry], base: Ledger, local: Ledger, remote: Ledger, mergedRuleIDs: Set<String>
+    ) -> [LedgerEntry] {
         let baseIDs = Set(base.transactions.map(\.id))
         let remoteIDs = Set(remote.transactions.map(\.id))
         return merged.filter { entry in
             guard !baseIDs.contains(entry.id), !remoteIDs.contains(entry.id), let ruleID = entry.recurringId,
-                let date = untouchedOccurrenceDate(entry, base: base, local: local),
-                let serverRule = remote.rule(id: ruleID)
+                let date = untouchedOccurrenceDate(entry, base: base, local: local)
             else { return true }
+            guard let serverRule = remote.rule(id: ruleID) else {
+                return base.rule(id: ruleID) == nil || mergedRuleIDs.contains(ruleID)
+            }
             return serverRule.nextDate <= date
         }
     }

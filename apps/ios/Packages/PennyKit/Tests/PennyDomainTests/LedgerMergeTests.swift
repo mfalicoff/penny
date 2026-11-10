@@ -109,6 +109,48 @@ struct LedgerMergeTests {
         #expect(merged.rule(id: "rent")?.nextDate == .day("2026-12-01"))
     }
 
+    @Test("whenTheServerDeletedARuleThisDeviceOnlyCaughtUp_LedgerMerge_ShouldKeepTheRuleAndItsOccurrencesDeleted")
+    func remotelyDeletedRuleStaysDeleted() {
+        let base = Sample.ledger(recurring: [
+            Sample.rule("rent", start: "2026-10-06", next: "2026-11-06"),
+            Sample.rule("gym", start: "2026-10-20", next: "2026-11-20"),
+        ])
+        // Offline, the phone records rent:2026-11-06 and moves the rule to December.
+        let local = Recurrence.materialize(base, today: .day("2026-11-08"))
+        #expect(local.transactions.map(\.id) == ["rent:2026-11-06"])
+        var remote = base
+        remote.recurring.removeAll { $0.id == "rent" }
+        let merged = Recurrence.materialize(
+            LedgerMerge.merge(base: base, local: local, remote: remote), today: .day("2026-11-08"))
+        #expect(merged.recurring.map(\.id) == ["gym"])
+        #expect(merged.transactions.isEmpty)
+    }
+
+    @Test("whenTheServerDeletedARuleThisDeviceEdited_LedgerMerge_ShouldBringTheEditedRuleBack")
+    func editedRuleDeletedRemotelyComesBack() {
+        let base = Sample.ledger(recurring: [Sample.rule("rent", start: "2026-10-06", next: "2026-11-06")])
+        var local = Recurrence.materialize(base, today: .day("2026-11-08"))
+        local.recurring[0].note = "New lease"
+        var remote = base
+        remote.recurring.removeAll()
+        let merged = LedgerMerge.merge(base: base, local: local, remote: remote)
+        #expect(merged.recurring.map(\.note) == ["New lease"])
+        #expect(merged.rule(id: "rent")?.nextDate == .day("2026-12-06"))
+        #expect(merged.transactions.map(\.id) == ["rent:2026-11-06"])
+    }
+
+    @Test("whenTheServerDeletedARuleAndThisDeviceEditedItsOccurrence_LedgerMerge_ShouldKeepTheEditedOccurrence")
+    func editedOccurrenceOfDeletedRuleSurvives() {
+        let base = Sample.ledger(recurring: [Sample.rule("rent", start: "2026-10-06", next: "2026-11-06")])
+        var local = Recurrence.materialize(base, today: .day("2026-11-08"))
+        local.transactions[0].note = "Paid late"
+        var remote = base
+        remote.recurring.removeAll()
+        let merged = LedgerMerge.merge(base: base, local: local, remote: remote)
+        #expect(merged.recurring.isEmpty)
+        #expect(merged.transactions.map(\.note) == ["Paid late"])
+    }
+
     @Test("whenThisDeviceEditedAnOccurrenceTheServerDeleted_LedgerMerge_ShouldKeepTheEdit")
     func editedOccurrenceSurvives() {
         let base = Sample.ledger(recurring: [Sample.rule("rent", start: "2026-10-01", next: "2026-11-01")])

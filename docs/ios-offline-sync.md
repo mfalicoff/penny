@@ -86,6 +86,7 @@ Personal recurrence refinements (v2; not in the legacy merge), where an occurren
 - When both sides advanced a rule's `nextDate`, the later one wins, so a date already consumed is not recorded again.
 - An occurrence both devices recorded keeps the server's copy when this device's is untouched, so an edit made on the other device is kept.
 - An untouched occurrence this device recorded is dropped when the server's rule is already past its date and the server does not have it (recorded there and deleted).
+- A rule the server deleted stays deleted when this device only caught it up offline (its copy differs from the base only in `nextDate`), and the untouched occurrences this device recorded for it are dropped with it. A rule edited here in any other field comes back with its occurrences, as in the "Edited here, deleted on the server" row. The legacy TypeScript merge is unchanged; it would bring the caught-up rule back.
 
 Occurrence ids are `{ruleId}:{date}`, so materializing again after any merge adds nothing that exists. Golden cases: `contracts/fixtures/merge-conflicts.json`, plus the recurrence cases in `LedgerMergeTests`.
 
@@ -167,7 +168,7 @@ Drafts are view state: a failed save, an expiry or a reconnect never touches the
 
 | Suite | Covers |
 | --- | --- |
-| `LedgerMergeTests` (PennyDomainTests) | `merge-conflicts.json` and the parity merge case; every stored property merges; independent and same-field edits; both devices recording, editing or deleting the same occurrence; server-skipped dates; `PendingChanges` |
+| `LedgerMergeTests` (PennyDomainTests) | `merge-conflicts.json` and the parity merge case; every stored property merges; independent and same-field edits; both devices recording, editing or deleting the same occurrence; a rule deleted on the server after an offline catch-up (with and without a local edit of the rule or an occurrence); server-skipped dates; `PendingChanges` |
 | `OfflineLedgerStoreTests` (PennyDataTests) | Round trip and format 1, wrong account, interrupted write (stray temp file), disk full, backup exclusion, listing and removal; pending count, failed and expired "Sync, then sign out", email move |
 | `LedgerSyncEngineTests` | Kill and relaunch with pending work, offline create/edit/delete, save before download, rule refusals, new versus existing violations, failed disk writes before and after the server accepted, corrupt and newer-format copies and recovery, locked file, independent edits through a 409, same-field policy, repeated 409s then success, joined syncs, saves during a sync, 401, 503 then timeout then restart, 400, unknown server ledger version, another account's client, removal during sync, recurrence across midnight and devices |
 | `LedgerSyncModelTests` | Real `AuthController` with a fake server: first download, offline save then kill, relaunch and reconnect, session expiry and re-sign-in, sign-out refused with pending work (including an unreadable copy) and recovery, late answers after an account switch, backoff after 503, no automatic retry after 400, day change, foreground pull, search reconciliation and de-duplicated pages |
