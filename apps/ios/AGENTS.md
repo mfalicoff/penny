@@ -12,6 +12,7 @@ This is the SwiftUI iPhone/iPad app (MAZ-66 onward). Root Expo guidance applies 
 - Anything for tests only goes behind `#if PENNY_TEST_CONTROLS` (Debug only). `ios.sh release-check` fails if it reaches Release.
 - Follow `contracts/design-baseline.json`: light and dark only, SF Pro text styles (Dynamic Type) and SF Symbols, no bundled fonts. Use `PennyColor` semantic colors; copper is the only tint and expenses use the label color, never red. Liquid Glass (`.glassEffect`, `pennyGlass`) only on the control layer, with an opaque surface under Reduce Transparency; money and lists stay solid. When a token changes, change the baseline and `Tokens.swift` together.
 - Match OpenAPI and the fixtures through `PennyContracts`. Preserve durable pending base/local snapshots and in-place Expo data migration before retirement (MAZ-71/72).
+- Give every new screen a `screen.<name>` root and `<area>.<element>` identifiers (model ids, never indexes or titles, for rows), add each to `PennyAccessibility.AccessibilityID` in the same change, and keep UI tests (`PennyUITests`, XCTest with `test_when…` names) on identifiers and the real API, never mocks ([native UI tests](../../docs/ios-ui-tests.md)).
 - Use Swift Testing and name tests `whenCondition_Subject_ShouldOutcome`. Cover failure paths. Use fixture data, `.test` domains and loopback servers only; no personal financial data or credentials.
 - No third-party Swift packages without a pinned exact version, a committed `Package.resolved` and a reason in README.md.
 

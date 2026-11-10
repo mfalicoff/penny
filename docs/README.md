@@ -25,6 +25,7 @@
 - [Native sign-in and sessions](ios-authentication.md): password and single sign-on screens, the sign-in state machine, Keychain storage and accessibility, session restore, expiry and sign-out, OIDC callback setup and tests.
 - [Native offline ledger and sync](ios-offline-sync.md): the per-account file format and migrations, durable saves, the three-way merge and same-field policy, sync triggers and retries, failure recovery, sign-out protection, local search reconciliation and the sync state the UI binds to.
 - [Native ledger rules](ios-ledger-domain.md): PennyDomain ownership, integer-cent and calendar-date invariants, recurrence, ledger commands, recorded and projected reports, local search, fixtures and compatibility decisions.
+- [Native UI tests](ios-ui-tests.md): XCUITest plans against the full-stack environment, simulator provisioning, the OS/device matrix, accessibility identifiers, launch controls, upgrade seeds, artifacts, the flaky-test policy and debugging.
 - [Native app shell](ios-shell.md): iPhone and iPad navigation and deep links, components and tokens, supported devices and accessibility, settings, the biometric app lock, the temporary demo, named states and the sync-status interface for offline sync.
 - [Web app foundation](../apps/web/README.md): the React/Vite/TanStack browser client, pinned versions, route and data conventions, design-kit boundaries and web CI.
 - [Frontend architecture](frontend-architecture.md): routes, feature ownership, state and persistence boundaries, responsive navigation, and native glass surfaces.
