@@ -5,13 +5,15 @@ import { after, before, test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { request as httpsRequest } from "node:https";
 import {
-  buildApi, collectArtifacts, containerCli, control, down, downAll, label, statePath, up,
+  buildApi, collectArtifacts, containerCli, control, down, downAll, label, root, statePath, up,
 } from "../../scripts/test-env/environment.mjs";
 import { client, scenario, seed } from "../../scripts/test-env/seed.mjs";
-import { compareLegacy } from "../../scripts/test-env/compare.mjs";
+import { compareLegacy, writeParityReport } from "../../scripts/test-env/compare.mjs";
 import { clientId, startOidcProvider } from "../../scripts/test-env/oidc-provider.mjs";
+import { rehearseCutover } from "../../scripts/test-env/cutover.mjs";
 
 const started = [];
 const start = async (options = {}) => {
@@ -95,8 +97,22 @@ test("down --all sweeps runs whose runner crashed", { timeout: 300_000 }, async 
 test("legacy Node/SQLite and .NET/PostgreSQL agree on the differential journey", { timeout: 600_000 }, async () => {
   const state = await start({ worker: false });
   const report = await compareLegacy(state);
+  // Written before asserting so a failure leaves the readable diff (CI job summary
+  // and the fullstack-artifacts upload).
+  writeParityReport(report, join(root, "test-results/fullstack/parity"));
   assert.deepEqual(report.differences, []);
   assert.equal(report.summary.matching, report.summary.probes);
+});
+
+// MAZ-64: the documented cutover on synthetic production-shaped data. The report
+// (job summary and fullstack-artifacts) is written before these assertions.
+test("a legacy SQLite snapshot cuts over to .NET/PostgreSQL with every read intact", { timeout: 1_200_000 }, async () => {
+  const report = await rehearseCutover({ reportDirectory: join(root, "test-results/fullstack/cutover") });
+  assert.deepEqual(Object.entries(report.steps).filter(([, status]) => status !== 0), []);
+  assert.deepEqual(Object.entries(report.checks).filter(([, ok]) => !ok), []);
+  assert.deepEqual(report.differences, []);
+  assert.equal(report.summary.matching, report.summary.reads);
+  assert.ok(report.summary.sharedExpenses > 50 && report.summary.entries > 3000, "the dataset has production shape");
 });
 
 function getRedirect(url, ca) {

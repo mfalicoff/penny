@@ -50,15 +50,16 @@ export function client(apiUrl, { record } = {}) {
   };
 }
 
-const reference = /\$(user|household|expense):([a-z0-9-]+)|\$(today|month)\b/g;
+const reference = /\$(user|household|expense|rule|email):([a-z0-9-]+)|\$(today|month)\b/g;
 
-// Replaces "$user:alex", "$household:x", "$expense:x", "$today" and "$month" in
-// strings (whole values or inside paths) anywhere in a JSON value.
+// Replaces "$user:alex", "$household:x", "$expense:x", "$rule:x", "$email:alex",
+// "$today" and "$month" in strings (whole values or inside paths) anywhere in a JSON value.
 export function resolve(value, context) {
   if (typeof value === "string") {
     return value.replace(reference, (token, kind, ref, day) => {
       if (day) return day === "today" ? context.today : context.today.slice(0, 7);
-      const table = { user: context.userIds, household: context.households, expense: context.expenseIds }[kind];
+      const emails = Object.fromEntries(Object.entries(context.users ?? {}).map(([alias, user]) => [alias, user.email]));
+      const table = { user: context.userIds, household: context.households, expense: context.expenseIds, rule: context.rules ?? {}, email: emails }[kind];
       if (!(ref in table)) throw new Error(`Seed reference ${token} is not defined yet.`);
       return table[ref];
     });

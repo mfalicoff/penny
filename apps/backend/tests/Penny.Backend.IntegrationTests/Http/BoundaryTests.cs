@@ -88,6 +88,43 @@ public sealed class BoundaryTests(ApiFixture fixture) : IntegrationTestBase(fixt
         (await response.Content.ReadFromJsonAsync<ApiError>(Ct))!.Error.ShouldNotBeNullOrEmpty();
     }
 
+    // A client that uploads a body somewhat over the limit (a receipt a little too
+    // large) writes the whole body before reading the reply. Closing the connection
+    // with that body unread resets it and can discard the 413, so the client would
+    // see a network error instead of the legacy message. Every attempt must read it.
+    [Fact]
+    public async Task whenBodyModeratelyOverLimitIsSent_RequestBodyFlow_ShouldAlwaysDeliverPayloadTooLarge()
+    {
+        var body = new byte[TestApiFactory.MaxBodyBytes * 4];
+        for (var attempt = 0; attempt < 20; attempt++)
+        {
+            using var content = new ByteArrayContent(body);
+            content.Headers.ContentType = new("application/json");
+            using var response = await Client.PostAsync("/api/test/body", content, Ct);
+            response.StatusCode.ShouldBe(HttpStatusCode.RequestEntityTooLarge);
+            (await response.Content.ReadFromJsonAsync<ApiError>(Ct))!.Error.ShouldBe(
+                "The upload is too large."
+            );
+        }
+    }
+
+    // Draining is bounded: a declared body far over the limit is refused without
+    // waiting for (or reading) a single byte of it.
+    [Fact]
+    public async Task whenDeclaredBodyFarOverLimit_RequestBodyFlow_ShouldRefuseWithoutReading()
+    {
+        var address = Client.BaseAddress!;
+        using var tcp = new System.Net.Sockets.TcpClient();
+        await tcp.ConnectAsync(address.Host, address.Port, Ct);
+        await using var stream = tcp.GetStream();
+        var headers =
+            $"POST /api/test/body HTTP/1.1\r\nHost: {address.Authority}\r\nContent-Type: application/json\r\nContent-Length: 100000000\r\n\r\n";
+        await stream.WriteAsync(Encoding.ASCII.GetBytes(headers), Ct);
+        using var reader = new StreamReader(stream, Encoding.ASCII);
+        var status = await reader.ReadLineAsync(Ct).AsTask().WaitAsync(TimeSpan.FromSeconds(1), Ct);
+        status.ShouldBe("HTTP/1.1 413 Payload Too Large");
+    }
+
     [Fact]
     public async Task whenClientAborts_RequestFlow_ShouldCancelEndpointWork()
     {
