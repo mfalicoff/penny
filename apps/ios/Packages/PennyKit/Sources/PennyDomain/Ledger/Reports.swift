@@ -226,15 +226,15 @@ public struct LedgerReport: Sendable {
         }
         var recorded = ledger.transactions.map { ReportEntry(personal: $0, scheduled: false) }
         var occurrences = Set<String>()
-        let recordedShared = SharedExpenseShare.lastWins(shared.filter { !$0.scheduled })
-        for item in recordedShared {
+        var recordedIDs = Set<[UInt16]>()
+        for item in SharedExpenseShare.lastWins(shared.filter { !$0.scheduled }) {
             guard let entry = view(item) else { continue }
             recorded.append(entry)
+            recordedIDs.insert(Array(entry.id.utf16))
             if let rule = item.recurringId { occurrences.insert("\(item.householdId)|\(rule)|\(item.date)") }
         }
         // A recorded occurrence replaces its preview, even when the preview came from an older
         // response than the recorded row.
-        let recordedIDs = Set(recordedShared.map { Array(ReportEntry.sharedID($0).utf16) })
         var scheduled: [ReportEntry] = []
         for item in SharedExpenseShare.lastWins((sharedScheduled + shared).filter(\.scheduled)) {
             if let rule = item.recurringId, occurrences.contains("\(item.householdId)|\(rule)|\(item.date)") {
