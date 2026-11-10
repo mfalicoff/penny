@@ -180,6 +180,47 @@ final class FaultyFileSystem: LedgerFileSystem {
     func files(in directory: URL) throws -> [URL] { try base.files(in: directory) }
 }
 
+/// The real durable file system, except that the first write to `target` blocks (on the
+/// writer's thread, as a slow disk would) until `open()`, or fails when `failing`.
+final class GatedFileSystem: LedgerFileSystem {
+    let base = DurableFileSystem()
+    let target: URL
+    let failing: Bool
+    private let armed = Mutex(true)
+    private let entered = Mutex(false)
+    private let release = DispatchSemaphore(value: 0)
+
+    init(holding target: URL, failing: Bool = false) {
+        self.target = target.standardizedFileURL
+        self.failing = failing
+    }
+
+    /// Whether the held write has started and is waiting.
+    var isHolding: Bool { entered.withLock { $0 } }
+
+    func open() { release.signal() }
+
+    func write(_ data: Data, to url: URL) throws {
+        let hold =
+            url.standardizedFileURL == target
+            && armed.withLock { armed in
+                defer { armed = false }; return armed
+            }
+        if hold {
+            if failing { throw CocoaError(.fileWriteOutOfSpace) }
+            entered.withLock { $0 = true }
+            // Bounded, so a broken test fails instead of hanging.
+            _ = release.wait(timeout: .now() + 5)
+        }
+        try base.write(data, to: url)
+    }
+
+    func read(_ url: URL) throws -> Data? { try base.read(url) }
+    func remove(_ url: URL) throws { try base.remove(url) }
+    func move(_ source: URL, to destination: URL) throws { try base.move(source, to: destination) }
+    func files(in directory: URL) throws -> [URL] { try base.files(in: directory) }
+}
+
 /// A clock the test moves: the device's local calendar day.
 final class TestCalendar: Sendable {
     let day: Mutex<PennyDomain.CalendarDate>

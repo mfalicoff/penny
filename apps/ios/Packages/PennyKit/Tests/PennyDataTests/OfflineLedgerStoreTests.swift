@@ -141,6 +141,65 @@ struct OfflineLedgerStoreTests {
         #expect(try store.files.load(Offline.scope()) == nil)
     }
 
+    @Test("whenASaveArrivesOnTheOldScopeDuringAnEmailMove_OfflineLedgerStore_ShouldRefuseItOrMoveIt")
+    func saveDuringMove() async throws {
+        let newScope = Offline.scope("alex.new@example.test")
+        let gated = GatedFileSystem(holding: LedgerFileStore(directory: directory).url(for: newScope))
+        let store = Offline.store(directory, fileSystem: gated, calendar: calendar)
+        try store.files.save(snapshot(pending: [Offline.entry("taxi")]), for: Offline.scope())
+        let move = Task { try await store.moveLocalData(from: Offline.scope(), to: newScope) }
+        // The move has its snapshot and is writing it to the new scope.
+        await eventually("writing the new scope") { gated.isHolding }
+        let old = await store.engine(for: Offline.scope())
+        var saved: LocalLedgerSnapshot?
+        var refusal: LedgerSaveError?
+        do throws(LedgerSaveError) {
+            saved = try await old.commit(.saveEntry(Offline.entry("bus")))
+        } catch {
+            refusal = error
+        }
+        gated.open()
+        try await move.value
+
+        let moved = try #require(try store.files.load(newScope))
+        #expect(moved.pending.entryIDs.contains("taxi"))
+        #expect(try store.files.load(Offline.scope()) == nil)
+        if saved != nil {
+            #expect(moved.local.entry(id: "bus") != nil, "a save acknowledged on the old scope must not be lost")
+        } else {
+            #expect(refusal == .unavailable, "refused, so the draft is kept")
+        }
+    }
+
+    @Test("whenAnEmailMoveFails_OfflineLedgerStore_ShouldKeepTheOldScopeAndTakeSavesAgain")
+    func failedMoveLiftsTheHold() async throws {
+        let newScope = Offline.scope("alex.new@example.test")
+        let failing = GatedFileSystem(holding: LedgerFileStore(directory: directory).url(for: newScope), failing: true)
+        let store = Offline.store(directory, fileSystem: failing, calendar: calendar)
+        try store.files.save(snapshot(pending: [Offline.entry("taxi")]), for: Offline.scope())
+        await #expect(throws: LedgerStoreError.writeFailed) {
+            try await store.moveLocalData(from: Offline.scope(), to: newScope)
+        }
+        let old = await store.engine(for: Offline.scope())
+        try await old.commit(.saveEntry(Offline.entry("bus")))
+        #expect(try store.files.load(Offline.scope())?.pending.entryIDs == ["taxi", "bus"])
+        #expect(try store.files.load(newScope) == nil)
+    }
+
+    @Test("whenSigningOut_LedgerSyncEngine_ShouldRefuseSavesFromTheCountUntilRemovedOrCancelled")
+    func removalHoldsSaves() async throws {
+        let store = Offline.store(directory, calendar: calendar)
+        try store.files.save(snapshot(pending: [Offline.entry("taxi")]), for: Offline.scope())
+        #expect(await store.beginRemoval(for: Offline.scope()) == 1)
+        let engine = await store.engine(for: Offline.scope())
+        await #expect(throws: LedgerSaveError.unavailable) { try await engine.commit(.saveEntry(Offline.entry("bus"))) }
+        #expect(await store.pendingChangeCount(for: Offline.scope()) == 1, "nothing landed after the count")
+
+        await store.cancelRemoval(for: Offline.scope())
+        try await engine.commit(.saveEntry(Offline.entry("bus")))
+        #expect(await store.pendingChangeCount(for: Offline.scope()) == 2)
+    }
+
     @Test("whenTheAccountIsRemoved_OfflineLedgerStore_ShouldDeleteItsFilesIncludingSetAsideCopies")
     func removeLocalData() async throws {
         let store = Offline.store(directory, calendar: calendar)

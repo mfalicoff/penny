@@ -15,6 +15,10 @@ public import PennyDomain
 /// - **Isolation.** The engine only ever touches its own account's file, accepts only a
 ///   client of its own account, and does nothing after `remove()`, so a late answer cannot
 ///   recreate a removed account's data or reach another account.
+/// - **Holds.** While its data is being removed (`beginRemoval`, sign-out) or moved to a new
+///   email (`beginMove`), the engine refuses saves, recurrence catch-up and new syncs, so no
+///   save is acknowledged and then deleted or left behind. `endHold()` lifts a hold that did
+///   not finish.
 public actor LedgerSyncEngine {
     public nonisolated let scope: AccountScope
     private let files: LedgerFileStore
@@ -27,6 +31,9 @@ public actor LedgerSyncEngine {
     private var running: Task<SyncOutcome, Never>?
     private var lastOutcome: SyncOutcome?
     private var observers: [UUID: AsyncStream<LedgerEngineState>.Continuation] = [:]
+    /// Removals and moves in progress (`beginRemoval`, `beginMove`); saves and syncs are
+    /// refused while any is.
+    private var holds = 0
 
     /// Passes per sync: the first plus at most two for saves made while it ran.
     static let maxPasses = 3
@@ -103,6 +110,7 @@ public actor LedgerSyncEngine {
     /// snapshot. Due recurrence is materialized with the device's local date.
     @discardableResult
     public func commit(_ change: LedgerChange) throws(LedgerSaveError) -> LocalLedgerSnapshot {
+        guard holds == 0 else { throw .unavailable }
         switch load() {
         case .ready: break
         case .unreadable, .newerFormat: throw .storageUnreadable
@@ -136,7 +144,7 @@ public actor LedgerSyncEngine {
     /// Records occurrences that came due (after a day change, or at launch) without a save
     /// from the person. Does nothing when nothing is due or the copy is not ready.
     public func materializeDueOccurrences() {
-        guard load() == .ready, var next = snapshot else { return }
+        guard holds == 0, load() == .ready, var next = snapshot else { return }
         let local = Recurrence.materialize(next.local, today: today())
         guard local != next.local, local.violations.isEmpty else { return }
         next.local = local
@@ -152,6 +160,7 @@ public actor LedgerSyncEngine {
     @discardableResult
     public func sync(using client: APIClient) async -> SyncOutcome {
         if let running { return await running.value }
+        guard holds == 0 else { return .notReady }
         let task = Task { await self.run(client) }
         running = task
         publish()
@@ -247,6 +256,7 @@ public actor LedgerSyncEngine {
     /// Moves an unreadable copy aside (kept on disk until the account is removed) and starts
     /// again from the server. Only for `.unreadable`; a newer format is left alone.
     public func recoverUnreadableCopy(using client: APIClient) async -> SyncOutcome {
+        guard holds == 0 else { return .notReady }
         guard storage == .unreadable else { return storage == .ready ? await sync(using: client) : .notReady }
         do {
             try files.setAside(scope)
@@ -290,6 +300,34 @@ public actor LedgerSyncEngine {
         case .newerFormat(let format): throw .newerFormat(format)
         case .unreadable, .notLoaded: throw .unreadable
         }
+    }
+
+    /// Starts a removal (sign-out): refuses saves from now on and returns the pending count
+    /// in the same step, so the count the person agrees to lose is the count `remove()`
+    /// deletes; no save can land in between. Balance with `remove()` or `endHold()`.
+    public func beginRemoval() -> Int {
+        holds += 1
+        return pendingChangeCount()
+    }
+
+    /// Starts a move to another scope (email change): refuses saves and new syncs, waits for
+    /// a sync in flight, then returns the snapshot to `adopt`. Nothing can change it until
+    /// `remove()` or `endHold()`. On a throw the hold is already lifted.
+    func beginMove() async throws(LedgerStoreError) -> LocalLedgerSnapshot? {
+        holds += 1
+        if let running { _ = await running.value }
+        do {
+            return try storedSnapshot()
+        } catch {
+            endHold()
+            throw error
+        }
+    }
+
+    /// Lifts a hold from `beginRemoval` or `beginMove` that did not end in `remove()`
+    /// (sign-out refused or failed, move failed).
+    public func endHold() {
+        holds = max(0, holds - 1)
     }
 
     /// Removes the account's data from this device and stops: a sync in flight is cancelled

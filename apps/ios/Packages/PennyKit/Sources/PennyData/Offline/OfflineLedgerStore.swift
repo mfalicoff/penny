@@ -67,19 +67,38 @@ public actor OfflineLedgerStore: AccountLocalData {
         }
     }
 
+    public func beginRemoval(for scope: AccountScope) async -> Int {
+        await engine(for: scope).beginRemoval()
+    }
+
+    public func cancelRemoval(for scope: AccountScope) async {
+        await engines[scope]?.endHold()
+    }
+
     /// Removes the account's ledger file and any copy set aside. `AuthController` calls this
-    /// only after the pending-changes check or the person's "Sign out anyway".
+    /// only after `beginRemoval` and the pending-changes check or the person's "Sign out anyway".
     public func removeLocalData(for scope: AccountScope) async throws {
         try await engine(for: scope).remove()
         engines[scope] = nil
     }
 
+    /// Holds the old scope's engine (no saves or syncs) from the snapshot until its file is
+    /// removed, so a save cannot land on the old scope after the snapshot and be lost. The
+    /// hold is lifted when anything fails; the old scope then keeps everything.
     public func moveLocalData(from old: AccountScope, to new: AccountScope) async throws {
         guard old != new else { return }
         let source = engine(for: old)
-        guard let snapshot = try await source.storedSnapshot() else { return }
-        try await engine(for: new).adopt(snapshot)
-        try await source.remove()
+        guard let snapshot = try await source.beginMove() else {
+            await source.endHold()
+            return
+        }
+        do {
+            try await engine(for: new).adopt(snapshot)
+            try await source.remove()
+        } catch {
+            await source.endHold()
+            throw error
+        }
         engines[old] = nil
     }
 }

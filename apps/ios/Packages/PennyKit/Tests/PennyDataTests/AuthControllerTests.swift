@@ -551,9 +551,39 @@ struct AuthControllerTests {
         let (controller, _) = try await signedIn(
             ["POST /api/auth/logout": Routes.json(#"{"ok":true}"#)], localData: localData)
         localData.pending.withLock { $0[scope] = 2 }
-        try await controller.signOut(discardingPendingChanges: true)
+        try await controller.signOut(discardingUpTo: 2)
         #expect(controller.state == .signedOut(.signedOut))
         #expect(localData.log.all.contains("remove \(email)"))
+    }
+
+    @Test("whenMoreChangesArePendingThanThePersonAgreedToLose_AuthController_ShouldAskAgainAndRemoveNothing")
+    func signOutAnywayAsksAgain() async throws {
+        let localData = FakeLocalData()
+        let (controller, transport) = try await signedIn(
+            ["POST /api/auth/logout": Routes.json(#"{"ok":true}"#)], localData: localData)
+        // "Sign out anyway" was shown 2, and one more change was saved before it ran.
+        localData.pending.withLock { $0[scope] = 3 }
+        await #expect(throws: SignOutFailure.pendingChanges(count: 3)) {
+            try await controller.signOut(discardingUpTo: 2)
+        }
+        #expect(controller.state.account != nil)
+        #expect(transport.paths() == ["POST /api/auth/login"])
+        #expect(!localData.log.all.contains("remove \(email)"))
+        #expect(localData.holds.withLock { $0[scope] } == 0, "saves resume when sign-out does not go ahead")
+
+        // The sync caught up meanwhile: nothing left to lose, so no prompt.
+        localData.pending.withLock { $0[scope] = 0 }
+        try await controller.signOut(discardingUpTo: 2)
+        #expect(controller.state == .signedOut(.signedOut))
+    }
+
+    @Test("whenTheServerIsUnreachableAtSignOut_AuthController_ShouldLiftTheHoldOnSaves")
+    func unreachableSignOutLiftsTheHold() async throws {
+        let localData = FakeLocalData()
+        let (controller, _) = try await signedIn(
+            ["POST /api/auth/logout": Routes.fail(.notConnectedToInternet)], localData: localData)
+        await #expect(throws: SignOutFailure.serverUnreachable) { try await controller.signOut() }
+        #expect(localData.holds.withLock { $0[scope] } == 0)
     }
 
     @Test("whenSyncThenSignOut_AuthController_ShouldSyncFirst")

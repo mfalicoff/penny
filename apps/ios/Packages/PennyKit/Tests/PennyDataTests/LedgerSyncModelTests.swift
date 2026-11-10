@@ -142,6 +142,53 @@ struct LedgerSyncModelTests {
         #expect(harness.model.ledger?.entry(id: "taxi") != nil)
     }
 
+    @Test("whenASaveArrivesWhileSigningOut_SignOut_ShouldRefuseItRatherThanAcknowledgeAndDeleteIt")
+    func saveDuringSignOut() async throws {
+        try await signedIn()
+        let logout = harness.server.hold("POST /api/auth/logout")
+        let signOut = Task { try await harness.auth.signOut() }
+        await eventually("logout sent") { harness.server.log.all.contains("POST /api/auth/logout") }
+        // A save that reaches the engine after the pending count (here, while logout runs).
+        let engine = await harness.store.engine(for: Offline.scope())
+        await #expect(throws: LedgerSaveError.unavailable) {
+            try await engine.commit(.saveEntry(Offline.entry("taxi")))
+        }
+        logout.open()
+        try await signOut.value
+        #expect(harness.auth.state == .signedOut(.signedOut))
+        #expect(harness.store.storedScopes().isEmpty)
+    }
+
+    @Test("whenSignOutAnywayFindsMoreChangesThanAgreed_SignOut_ShouldAskAgainThenRemoveOnlyWithConsent")
+    func signOutAnywayWithNewChanges() async throws {
+        try await signedIn()
+        await harness.goOffline()
+        try await harness.model.save(.saveEntry(Offline.entry("taxi")))
+        // The person saw "1 change hasn't synced" and chose "Sign out anyway"; another save
+        // landed before it ran.
+        try await harness.model.save(.saveEntry(Offline.entry("bus")))
+        await #expect(throws: SignOutFailure.pendingChanges(count: 2)) {
+            try await harness.auth.signOut(discardingUpTo: 1, removeEvenIfUnreachable: true)
+        }
+        #expect(try harness.store.files.load(Offline.scope())?.pending.entryIDs == ["taxi", "bus"])
+        // Saves resume after the refusal.
+        try await harness.model.save(.saveEntry(Offline.entry("tram")))
+
+        try await harness.auth.signOut(discardingUpTo: 3, removeEvenIfUnreachable: true)
+        #expect(harness.auth.state == .signedOut(.signedOut))
+        #expect(harness.store.storedScopes().isEmpty)
+    }
+
+    @Test("whenTheServerIsUnreachableAtSignOut_SignOut_ShouldLetSavesContinue")
+    func unreachableSignOutResumesSaves() async throws {
+        try await signedIn()
+        harness.server.fail("POST /api/auth/logout", with: .offline)
+        await #expect(throws: SignOutFailure.serverUnreachable) { try await harness.auth.signOut() }
+        let engine = await harness.store.engine(for: Offline.scope())
+        try await engine.commit(.saveEntry(Offline.entry("taxi")))
+        #expect(try harness.store.files.load(Offline.scope())?.local.entry(id: "taxi") != nil)
+    }
+
     @Test("whenTheCopyIsUnreadable_SignOut_ShouldCountItAsPendingWork")
     func unreadableCopyCountsAsPending() async throws {
         try await signedIn()
