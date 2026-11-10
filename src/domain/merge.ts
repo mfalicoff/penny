@@ -1,4 +1,4 @@
-import type { Ledger } from "./ledger";
+import type { Ledger } from "./ledger.ts";
 
 // Three-way merge of an unsynced local ledger onto a newer server ledger (offline sync).
 // Golden cases: contracts/fixtures/merge-conflicts.json.

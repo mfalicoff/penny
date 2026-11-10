@@ -1,4 +1,5 @@
 using Penny.Backend.Api.Configuration;
+using Penny.Backend.Application.Diagnostics;
 using Penny.Backend.Application.Households;
 
 namespace Penny.Backend.Api.Households;
@@ -24,7 +25,10 @@ public sealed partial class SharedRecurrenceWorker(
                 if (run.Recorded > 0)
                     Recorded(logger, run.Recorded, run.Claimed);
                 foreach (var failure in run.Failures)
+                {
                     RuleFailed(logger, failure);
+                    BackendTelemetry.JobFailed(BackendTelemetry.RecurrenceJob, failure);
+                }
                 if (run.Claimed == SharedRecurrenceRunner.BatchSize && run.Failures.Count == 0)
                     continue;
             }
@@ -35,6 +39,7 @@ public sealed partial class SharedRecurrenceWorker(
             catch (Exception error)
             {
                 PassFailed(logger, error.GetType().Name);
+                BackendTelemetry.JobFailed(BackendTelemetry.RecurrenceJob, error.GetType().Name);
             }
             try
             {

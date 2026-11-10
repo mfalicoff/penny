@@ -1,6 +1,8 @@
-import { createRootRouteWithContext, Link, Outlet, type ErrorComponentProps } from "@tanstack/react-router";
+import { createRootRouteWithContext, Link, Outlet, useRouterState, type ErrorComponentProps } from "@tanstack/react-router";
 import type { RouterContext } from "../app/router";
 import { ServerStatus } from "../app/ServerStatus";
+import { AuthGate } from "../auth/account";
+import { AccountMenu } from "../features/auth/SignOut";
 import { Icon, type IconName } from "../design/Icon";
 
 export const Route = createRootRouteWithContext<RouterContext>()({
@@ -14,7 +16,18 @@ const NAV: { to: "/" | "/transactions"; label: string; icon: IconName }[] = [
   { to: "/transactions", label: "Activity", icon: "list" },
 ];
 
+/** Everything but the OIDC callback needs a signed-in account; the callback finishes sign-in itself. */
 function RootLayout() {
+  const isCallback = useRouterState({ select: (state) => state.location.pathname === "/auth/callback" });
+  if (isCallback) return <Outlet />;
+  return (
+    <AuthGate>
+      <Shell />
+    </AuthGate>
+  );
+}
+
+function Shell() {
   return (
     <div className="shell">
       <a className="skip-link" href="#main">
@@ -38,6 +51,7 @@ function RootLayout() {
           </ul>
         </nav>
         <ServerStatus />
+        <AccountMenu />
       </header>
       <main id="main" className="shell__main" tabIndex={-1}>
         <Outlet />

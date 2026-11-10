@@ -1,9 +1,9 @@
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
-import { json, renderApp, stubFetch } from "./render";
+import { bodyOf, callsTo, renderApp, stubServer } from "./render";
 
-const info = () => stubFetch((url) => (url === "/api/info" ? json({ name: "penny", version: "2.0.0-test" }) : json({ error: "Not found." }, 404)));
+const info = () => stubServer();
 
 describe("app shell", () => {
   it("renders Home with landmarks, a skip link and the server version", async () => {
@@ -20,7 +20,7 @@ describe("app shell", () => {
   });
 
   it("keeps rendering when the server is unavailable", async () => {
-    stubFetch(() => new Response("bad gateway", { status: 502 }));
+    stubServer((url) => (url === "/api/info" ? new Response("bad gateway", { status: 502 }) : undefined));
     renderApp("/");
     expect(await screen.findByText("Server unavailable")).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 1, name: "Home" })).toBeInTheDocument();
@@ -51,31 +51,39 @@ describe("app shell", () => {
 });
 
 describe("/transactions search parameters", () => {
-  it("reads typed parameters from a deep link", async () => {
-    info();
+  const searchBodies = (fetchMock: ReturnType<typeof stubServer>) =>
+    callsTo(fetchMock, "/api/v1/search/transactions").map((init) => bodyOf(init));
+
+  it("reads typed parameters from a deep link and searches with them", async () => {
+    const fetchMock = info();
     renderApp("/transactions?q=coffee&month=2026-11");
     expect(await screen.findByRole("searchbox", { name: "Search transactions" })).toHaveValue("coffee");
-    expect(screen.getByText("Showing results for “coffee” in 2026-11.")).toBeInTheDocument();
+    expect(await screen.findByText("No matching transactions.")).toBeInTheDocument();
+    expect(searchBodies(fetchMock)).toEqual([{ query: "coffee", from: "2026-11-01", to: "2026-11-30", pageSize: 50 }]);
   });
 
   it("drops invalid values instead of failing the page", async () => {
-    info();
+    const fetchMock = info();
     renderApp("/transactions?month=2026-13");
-    expect(await screen.findByText("Showing all activity.")).toBeInTheDocument();
+    expect(await screen.findByText("No matching transactions.")).toBeInTheDocument();
+    expect(searchBodies(fetchMock)).toEqual([{ pageSize: 50 }]);
   });
 
   it("writes the query to the URL and clears it again", async () => {
-    info();
+    const fetchMock = info();
     const user = userEvent.setup();
     const { router } = renderApp("/transactions?month=2026-11");
     const box = await screen.findByRole("searchbox", { name: "Search transactions" });
     await user.type(box, "  rent {Enter}");
-    expect(await screen.findByText("Showing results for “rent” in 2026-11.")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(searchBodies(fetchMock)).toContainEqual({ query: "rent", from: "2026-11-01", to: "2026-11-30", pageSize: 50 });
+    });
     expect(router.state.location.search).toEqual({ month: "2026-11", q: "rent" });
 
     await user.clear(screen.getByRole("searchbox", { name: "Search transactions" }));
     await user.click(screen.getByRole("button", { name: "Search" }));
-    expect(await screen.findByText("Showing all activity in 2026-11.")).toBeInTheDocument();
-    expect(router.state.location.search).toEqual({ month: "2026-11" });
+    await waitFor(() => {
+      expect(router.state.location.search).toEqual({ month: "2026-11" });
+    });
   });
 });
