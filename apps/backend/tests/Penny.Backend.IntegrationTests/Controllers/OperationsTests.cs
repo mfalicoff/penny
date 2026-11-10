@@ -18,6 +18,7 @@ public sealed class OperationsTests(ApiFixture fixture) : IntegrationTestBase(fi
     [InlineData("Backend:RequestTimeoutSeconds", "infinite")]
     [InlineData("Backend:ShutdownTimeoutSeconds", "301")]
     [InlineData("Database:MaxPoolSize", "101")]
+    [InlineData("Receipts:MinFreeMegabytes", "-1")]
     public async Task whenHostConfigurationInvalid_CreateHost_ShouldFailBeforeAcceptingRequests(
         string key,
         string value
@@ -122,6 +123,82 @@ public sealed class OperationsTests(ApiFixture fixture) : IntegrationTestBase(fi
         body.ShouldNotContain(password);
         body.ShouldNotContain("127.0.0.1");
     }
+
+    [Fact]
+    public async Task whenReceiptStorageWritable_Readiness_ShouldPassWithoutLeavingProbeFiles()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "penny-ready-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            await using var factory = ReceiptHost(root);
+            using var client = CreateClient(factory);
+            using var ready = await client.GetAsync("/api/ready", Ct);
+            ready.StatusCode.ShouldBe(HttpStatusCode.OK);
+            Directory.Exists(root).ShouldBeTrue();
+            Directory.EnumerateFileSystemEntries(root).ShouldBeEmpty();
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task whenReceiptStorageNotWritable_Readiness_ShouldFailWhileLivenessSurvives()
+    {
+        // A regular file where the receipt root's parent should be: no permission
+        // tricks, so this also fails when tests run as root.
+        var blocker = Path.GetTempFileName();
+        try
+        {
+            await using var factory = ReceiptHost(Path.Combine(blocker, "receipts"));
+            using var client = CreateClient(factory);
+            using var ready = await client.GetAsync("/api/ready", Ct);
+            ready.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
+            ready.Headers.RetryAfter!.Delta.ShouldBe(TimeSpan.FromSeconds(5));
+            var body = await ready.Content.ReadAsStringAsync(Ct);
+            body.ShouldContain("Receipts__Root");
+            body.ShouldNotContain(blocker);
+            using var live = await client.GetAsync("/api/health", Ct);
+            live.StatusCode.ShouldBe(HttpStatusCode.OK);
+        }
+        finally
+        {
+            File.Delete(blocker);
+        }
+    }
+
+    [Fact]
+    public async Task whenReceiptDiskBelowMinimum_Readiness_ShouldReturnServiceUnavailable()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "penny-ready-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            // 1,000,000 MiB (~1 TiB) exceeds any test runner's free space.
+            await using var factory = ReceiptHost(root, minFreeMegabytes: "1000000");
+            using var client = CreateClient(factory);
+            using var ready = await client.GetAsync("/api/ready", Ct);
+            ready.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
+            (await ready.Content.ReadFromJsonAsync<ApiError>(Ct))!.Error.ShouldContain(
+                "disk space"
+            );
+            Directory.EnumerateFileSystemEntries(root).ShouldBeEmpty();
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    private TestApiFactory ReceiptHost(string root, string minFreeMegabytes = "0") =>
+        new(
+            Fixture.RuntimeConnection,
+            new Dictionary<string, string>
+            {
+                ["Receipts:Root"] = root,
+                ["Receipts:MinFreeMegabytes"] = minFreeMegabytes,
+            }
+        );
 
     [Fact]
     public async Task whenSchemaMissing_StartupAndReadinessFlow_ShouldNotRunMigrations()

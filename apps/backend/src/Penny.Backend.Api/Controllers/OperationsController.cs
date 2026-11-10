@@ -8,7 +8,9 @@ namespace Penny.Backend.Api.Controllers;
 [AllowAnonymous]
 [ApiController]
 [Route("api")]
-public sealed class OperationsController(IStorageReadiness readiness) : ControllerBase
+// Readiness runs every registered probe in order (PostgreSQL, then receipt storage)
+// and reports the first failure.
+public sealed class OperationsController(IEnumerable<IStorageReadiness> probes) : ControllerBase
 {
     [HttpGet("health", Name = "getApiHealth")]
     public ActionResult<HealthResponse> Health() => Ok(new HealthResponse(true));
@@ -21,14 +23,23 @@ public sealed class OperationsController(IStorageReadiness readiness) : Controll
     [ProducesResponseType<ApiError>(503)]
     public async Task<IActionResult> Ready(CancellationToken cancellationToken)
     {
-        var status = await readiness.CheckAsync(cancellationToken);
-        if (status.Ready)
+        StorageStatus? failure = null;
+        foreach (var probe in probes)
+        {
+            var status = await probe.CheckAsync(cancellationToken);
+            if (!status.Ready)
+            {
+                failure = status;
+                break;
+            }
+        }
+        if (failure is null)
             return Ok(new HealthResponse(true));
         Response.Headers.RetryAfter = "5";
         return StatusCode(
             503,
             new ApiError(
-                status.Code switch
+                failure.Code switch
                 {
                     "postgres-version" => "The backend requires PostgreSQL 18.",
                     "schema" =>
@@ -39,6 +50,12 @@ public sealed class OperationsController(IStorageReadiness readiness) : Controll
                         "Use a restricted runtime database role without schema creation privileges.",
                     "permissions" =>
                         "Runtime database role cannot read compatibility metadata. Check its grants.",
+                    "search-extensions" =>
+                        "Database is missing the pg_trgm or vector extension. Create them as administrator.",
+                    "receipt-storage" =>
+                        "Receipt storage is not writable. Check the Receipts__Root volume and its permissions.",
+                    "disk-space" =>
+                        "Receipt storage is low on free disk space. Free space or grow the volume.",
                     _ => "Database is unavailable. Check connectivity and configuration.",
                 }
             )

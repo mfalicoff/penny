@@ -109,6 +109,9 @@ public sealed class OnnxTextEmbedder : ITextEmbedder, IDisposable
         var vocabulary = Path.Combine(directory, TokenizerFile);
         Verify(model, ModelSha256);
         Verify(vocabulary, TokenizerSha256);
+        // MAZ-63: no ONNX Runtime telemetry from a self-hosted financial service (it
+        // also tries to persist a device id, which fails on a read-only filesystem).
+        OrtEnv.Instance().DisableTelemetryEvents();
         using var options = new SessionOptions
         {
             GraphOptimizationLevel = GraphOptimizationLevel.ORT_ENABLE_ALL,

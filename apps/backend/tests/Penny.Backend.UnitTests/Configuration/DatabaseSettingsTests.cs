@@ -41,4 +41,21 @@ public sealed class DatabaseSettingsTests
         actual.IncludeErrorDetail.ShouldBeFalse();
         settings.ToString().ShouldNotContain("secret");
     }
+
+    [Theory]
+    [InlineData("", GssEncryptionMode.Disable)]
+    [InlineData(";GSS Encryption Mode=Require", GssEncryptionMode.Require)]
+    [InlineData(";GssEncryptionMode=Prefer", GssEncryptionMode.Prefer)]
+    public void whenGssEncryptionModeOmittedOrGiven_CreateDataSource_ShouldDisableOnlyByDefault(
+        string option,
+        GssEncryptionMode expected
+    )
+    {
+        using var source = DatabaseSettings
+            .Create("Host=localhost;Database=test;Username=test" + option)
+            .CreateDataSource();
+        new NpgsqlConnectionStringBuilder(source.ConnectionString).GssEncryptionMode.ShouldBe(
+            expected
+        );
+    }
 }

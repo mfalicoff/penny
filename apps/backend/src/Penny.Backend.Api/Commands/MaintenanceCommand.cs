@@ -43,7 +43,7 @@ internal static class MaintenanceCommand
                             _ => throw new ImportFailure("command-usage"),
                         };
             }
-            else if (args is not ["migrate"])
+            else if (args is not (["migrate"] or ["migrate", "--grant-runtime"]))
                 throw new ImportFailure("command-usage");
             var settings = DatabaseSettings.Create(
                 configuration.GetConnectionString("Migration"),
@@ -54,6 +54,11 @@ internal static class MaintenanceCommand
             {
                 await DatabaseMigrator.ApplyAsync(database, stopping.Token);
                 Console.WriteLine("Database migration complete.");
+                if (args is [_, "--grant-runtime"])
+                {
+                    await RuntimeGrants.ApplyAsync(database, stopping.Token);
+                    Console.WriteLine("Runtime grants applied.");
+                }
             }
             else
             {
@@ -80,7 +85,7 @@ internal static class MaintenanceCommand
         {
             Console.Error.WriteLine(error.Message);
             Console.Error.WriteLine(
-                "Usage: snapshot-sqlite SOURCE NEW_SNAPSHOT | import-sqlite SNAPSHOT --sha256 HASH [--dry-run|--resume|--verify] | reset-password EMAIL. See docs/migration/postgresql.md."
+                "Usage: migrate [--grant-runtime] | snapshot-sqlite SOURCE NEW_SNAPSHOT | import-sqlite SNAPSHOT --sha256 HASH [--dry-run|--resume|--verify] | reset-password EMAIL. See docs/migration/postgresql.md."
             );
             return 1;
         }

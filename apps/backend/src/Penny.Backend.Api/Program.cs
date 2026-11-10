@@ -4,6 +4,9 @@ using Penny.Backend.Api.Middleware;
 using Penny.Backend.Api.Testing;
 using Scalar.AspNetCore;
 
+if (args.FirstOrDefault() == HealthProbeCommand.Name)
+    return await HealthProbeCommand.RunAsync(args);
+
 var maintenance =
     args.FirstOrDefault()
     is "migrate"
@@ -31,6 +34,7 @@ builder.Services.AddControllers();
 builder.AddBackendServices();
 var app = builder.Build();
 app.UseForwardedHeaders();
+app.UseMiddleware<RequestCorrelationMiddleware>();
 app.UseMiddleware<ApiBoundaryMiddleware>();
 
 // MAZ-62: injected failures for full-stack test runs; never registered in Production.
