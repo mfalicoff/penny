@@ -18,7 +18,7 @@ IDs are opaque existing strings, not necessarily UUIDs. Calendar dates are real 
 
 Shared expense/rule edits/deletes carry entity revision. Creation begins at zero. Envelopes are lowercase `{household}`, `{expense}`, `{reimbursement}`, `{rule}`. `POST /households/{id}/expenses/{expenseId}/payments` accepts `{fromUserId,revision}` and returns 201 `{expense}` with `payments` and `paymentsClosed`; test stale/duplicate/settled shares. Optional `targetHouseholdId` moves expenses without changing identity under existing restrictions.
 
-`GET /households/projection?month=YYYY-MM` or `year=YYYY` returns `{transactions,scheduled}`. Recorded entries use totalCents/shareCents; month-only previews carry scheduled/recurringId and never count as recorded spending. Shared rows remain separate from private ledger entries. Payer account references are omitted for other viewers; reimbursements record existing payments and never create spending. Former-member history follows server eligibility, not just presence of a cached row.
+`GET /households/projection?month=YYYY-MM` or `year=YYYY` returns `{transactions,scheduled}`. Recorded entries use totalCents/shareCents and carry `recurringId` when a shared rule recorded them (MAZ-139); month-only previews carry scheduled/recurringId and never count as recorded spending. Shared rows remain separate from private ledger entries. Payer account references are omitted for other viewers; reimbursements record existing payments and never create spending. Former-member history follows server eligibility, not just presence of a cached row.
 
 ## Planned extension and drift gates
 

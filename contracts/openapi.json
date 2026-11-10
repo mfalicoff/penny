@@ -5841,7 +5841,8 @@
           "recurringId": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 100
+            "maxLength": 100,
+            "description": "The shared rule: on previews (`scheduled: true`) and, since MAZ-139, on recorded occurrences the rule recorded. Omitted for one-off expenses. Clients match a recorded row to a cached preview by householdId, recurringId and date."
           },
           "receiptId": {
             "type": "string",

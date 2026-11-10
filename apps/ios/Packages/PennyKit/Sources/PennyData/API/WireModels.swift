@@ -236,6 +236,8 @@ public struct WireProjectedExpense: Codable, Equatable, Sendable {
     public var receipt: WireReceipt?
     public var accountId: String?
     public var scheduled: Bool?
+    /// The shared rule: on previews, and on recorded occurrences it recorded (MAZ-139; older
+    /// servers omit it there). Previews are matched to recorded rows by household, rule and date.
     public var recurringId: String?
     public var receiptId: String?
 }

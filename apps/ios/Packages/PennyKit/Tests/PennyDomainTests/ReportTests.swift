@@ -79,12 +79,35 @@ struct ReportTests {
         }
     }
 
-    static func streaming(_ date: String = "2026-10-20", scheduled: Bool = true) -> SharedExpenseShare {
+    /// A shared Streaming occurrence as both servers send it: a preview has the id
+    /// `{rule}:{date}`, `scheduled: true` and `recurringId`; a recorded occurrence has the
+    /// expense's random id and, since MAZ-139, the rule as `recurringId`. `recurringId: nil`
+    /// is a recorded row from an older server.
+    static func streaming(
+        _ date: String = "2026-10-20", scheduled: Bool = true, recurringId: String? = "streaming"
+    ) -> SharedExpenseShare {
         SharedExpenseShare(
-            id: scheduled ? "streaming:\(date)" : "occ-\(date)", householdId: "maison", currency: .cad,
-            title: "Streaming", date: .day(date), total: 1600, share: 800,
-            category: .init(name: "Fun", icon: "tv-outline", color: "#B15B7D"), recurringId: "streaming",
+            id: scheduled ? "streaming:\(date)" : "4f1c9a7e2b6d8035e9a1c4f7b2d6e803", householdId: "maison",
+            currency: .cad, title: "Streaming", date: .day(date), total: 1600, share: 800,
+            category: .init(name: "Fun", icon: "tv-outline", color: "#B15B7D"), recurringId: recurringId,
             scheduled: scheduled)
+    }
+
+    /// Parity with v2 `monthBreakdown`: a personal preview is replaced only by the entry with its
+    /// occurrence id `{rule}:{date}`. An edited entry keeps `recurringId` but not its occurrence.
+    @Test("whenRuleEntryWasMovedOntoAScheduledDate_MonthSummary_ShouldStillCountThatOccurrence")
+    func personalPreviewMatchesByIDOnly() throws {
+        let month = try #require(Self.october)
+        // Created on 2026-10-01 with a random id, then moved to 2026-10-08.
+        let weekly = Sample.rule("weekly", start: "2026-10-01", next: "2026-10-08", frequency: .weekly, share: 1000)
+        let moved = Sample.entry("random-id", "2026-10-08", share: 1000, recurringId: "weekly")
+        let summary = LedgerReport(ledger: Sample.ledger(transactions: [moved], recurring: [weekly])).month(month)
+        #expect(summary.recorded.expense == 1000)
+        #expect(
+            summary.scheduled.map(\.date) == [
+                .day("2026-10-08"), .day("2026-10-15"), .day("2026-10-22"), .day("2026-10-29"),
+            ])
+        #expect(summary.projected.expense == 5000)
     }
 
     @Test("whenSeededHousehold_MonthSummary_ShouldMatchRedesignRecordedAndProjectedTotals")
@@ -142,6 +165,19 @@ struct ReportTests {
         // Shared categories are matched by look and appear once.
         #expect(after.categories.filter { $0.name == "Utilities" }.count == 1)
         #expect(after.month(month).spending.map(\.amount) == [4000, 800])
+        // A recorded row from an older server has no `recurringId`: it cannot be matched to the
+        // cached preview, so both count until the preview response is refreshed.
+        let legacy = LedgerReport(
+            ledger: ledger, shared: [Self.streaming(scheduled: false, recurringId: nil)],
+            sharedScheduled: [Self.streaming()])
+        #expect(legacy.month(month).recorded.expense == 800)
+        #expect(legacy.month(month).projected.expense == 1600)
+        // Another household's preview of a rule with the same id and date is a different occurrence.
+        var other = Self.streaming()
+        other.householdId = "cabin"
+        let twoHomes = LedgerReport(
+            ledger: ledger, shared: [Self.streaming(scheduled: false)], sharedScheduled: [Self.streaming(), other])
+        #expect(twoHomes.month(month).projected.expense == 1600)
     }
 
     /// Legacy `HouseholdProvider` kept the projection in a `Map` and called `unique.set` for
