@@ -16,7 +16,7 @@ Status as of 2026-11-10, based on `v2` at `a77653c` (MAZ-63).
 | Old clients | Every v1–v4 case of `ledger-upgrades.json` is written over HTTP and stored as the legacy upgrade output; unknown future versions are refused without a write | `Contracts/LedgerUpgradeFixtureTests.cs` | `backend` |
 | Schema upgrades | A database populated through the API is taken back to each earlier migration, upgraded with `DatabaseMigrator` and runtime grants (plus `search-rebuild`), then fully read and written by a new host | `Migrations/PopulatedUpgradeTests.cs` | `backend` |
 | Post-cutover recovery | Base backup, accepted writes, a restore point, then "incident" writes. A second PostgreSQL instance recovered from archived WAL to the restore point keeps every accepted write, sessions and receipts, and none of the incident writes | `Migrations/PointInTimeRecoveryTests.cs` | `backend` |
-| Large ledger and concurrency | One entry over `LedgerLimits.MaxTransactions` is refused before any write. Eight users with 5,000-entry ledgers sync concurrently and stay isolated, within a p95 budget. Eight racing writers produce exactly one winner. The full-limit write, read and edit check is `Explicit` until [MAZ-137](https://linear.app/mfalicoff/issue/MAZ-137) | `Http/LargeLedgerTests.cs` | `backend` (the full-limit write is run by hand) |
+| Large ledger and concurrency | One entry over `LedgerLimits.MaxTransactions` is refused before any write. Eight users with 5,000-entry ledgers sync concurrently and stay isolated, within a p95 budget. Eight racing writers produce exactly one winner. A ledger at the limit is written, read and edited, and its first write finishes within the 30 s production request deadline ([MAZ-137](https://linear.app/mfalicoff/issue/MAZ-137)) | `Http/LargeLedgerTests.cs` | `backend` |
 | Oversized bodies | Uploads moderately over the limit always receive a readable 413; bodies far over the limit are refused without being read | `Http/BoundaryTests.cs` | `backend` |
 | Feature suites | Concurrency, isolation, malformed input, outbox recovery, import and backup/restore (see [coverage](#regression-coverage)) | `apps/backend/tests/` | `backend` |
 | Golden fixtures | Generated fixtures are current; hand-written ones are pinned by manifest hash; Swift decodes them strictly | `npm run fixtures:check`, `contracts/swift` | `fullstack`, `swift-contracts` |
@@ -139,14 +139,14 @@ With rootless Podman, set `DOCKER_HOST=unix://$XDG_RUNTIME_DIR/podman/podman.soc
 
 ## Baseline timings
 
-These are wall-clock times from local runs (AMD Ryzen, 8 GB RAM, rootless Podman) on 2026-11-09 and 10; hosted CI passed in 3 min 40 s (backend) and 3 min (fullstack). The large-ledger budgets are generous upper bounds that catch a pathological regression, not runner noise. Search latency targets remain in [search](search.md#measured-performance).
+These are wall-clock times from local runs (AMD Ryzen, 8 GB RAM, rootless Podman) on 2026-11-09 and 10; hosted CI passed in 3 min 40 s (backend) and 3 min (fullstack). The large-ledger budgets are generous upper bounds that catch a pathological regression, not runner noise, except the full-ledger write budget, which stays below the production request deadline. Search latency targets remain in [search](search.md#measured-performance).
 
 | Run | Time | Budget |
 | --- | --- | --- |
 | Full .NET suite before MAZ-64 (442 unit, 333 integration tests) | Unit 4.6 s; integration 3 min 46 s | — |
 | Release journey, including container start | 18 s | — |
-| First write of a 100,000-entry ledger (`Explicit`) | **47.9 s** alone; over 100 s on the shared test database after the full suite (see [limitations](#known-limitations)) | 60 s, run by hand |
-| Read of that ledger / one-entry edit | 0.46 s / 2.9 s | 20 s / 60 s |
+| First write of a 100,000-entry ledger | Before MAZ-137: 47.9 s alone, over 100 s on the shared test database after the full suite. After MAZ-137 (bulk `COPY` of new rows), on a slower 2-core Intel i5-4690 VM where the old path took 80.3 s: **12.9–14.2 s** alone, **9.8 s** after the full suite | 25 s (below the 30 s request deadline) |
+| Read of that ledger / one-entry edit | 0.46 s / 2.9 s (after MAZ-137 on the slower VM: 0.5–1.4 s / 3.4–6.9 s) | 20 s / 25 s |
 | 8 users × 5,000 entries, 4 concurrent read+write rounds | p50 1.39 s, p95 1.53 s, max 1.83 s | p95 15 s |
 | Populated upgrade, per earlier migration | About 11 s, including `search-rebuild` | — |
 | Point-in-time recovery rehearsal | About 27 s | — |
@@ -171,7 +171,6 @@ The large-ledger checks print their timings to the test output (`MAZ-64 baseline
 
 ## Known limitations
 
-- **Writing a full 100,000-entry ledger for the first time takes about 48 s locally, longer than the default 30 s request timeout** (`Backend__RequestTimeoutSeconds`). Such a write would therefore fail with 503 in production. EF inserts each new row individually: about 18 s for the entries and 27 s for their search documents, measured by phase. One-entry edits of the same ledger take 2.9 s and reads 0.5 s. Imports do not go through this path. The fix (bulk inserts, or a longer deadline for ledger writes) is [MAZ-137](https://linear.app/mfalicoff/issue/MAZ-137). Until then the full-limit test is `Explicit` and run by hand (`--filter-method '*whenLedgerAtTransactionLimit*'`, budget 60 s). The over-limit refusal and the concurrency check run in CI.
 - Chunked uploads over the limit are cut off at the limit; only bodies with a declared length can be read and discarded first. A chunked client that keeps writing may see a reset instead of the 413.
 - The comparison runs one scenario at real time. Clock-dependent behavior (month cutoffs, recurrence catch-up) is compared through the cutover rehearsal's past-dated dataset, the .NET suites and the golden fixtures.
 - The cutover rehearsal's shared rules start after the rehearsal, so legacy's 60-second recurrence timer cannot race the snapshot. Recorded occurrences are covered by `SharedRecurrenceTests` and the import tests.

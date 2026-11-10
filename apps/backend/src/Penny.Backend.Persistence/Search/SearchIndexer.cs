@@ -150,12 +150,14 @@ internal static class SearchIndexer
 
     // Stages inserts, updates and deletes that make `scope` equal `expected`; the
     // caller saves. Result keys are unique within a scope (one user's entries, or a
-    // set of expenses).
+    // set of expenses). With `inserts`, new documents (already due for embedding) are
+    // collected there for the caller to copy in bulk instead of tracked.
     public static async Task<(int Written, int Removed)> StageAsync(
         PennyDbContext context,
         IQueryable<SearchDocument> scope,
         IReadOnlyList<ExpectedDocument> expected,
-        CancellationToken cancellationToken
+        CancellationToken cancellationToken,
+        List<SearchDocument>? inserts = null
     )
     {
         var stored = await StoredAsync(scope, cancellationToken);
@@ -164,7 +166,10 @@ internal static class SearchIndexer
         {
             if (!stored.Remove(document.ResultKey, out var current))
             {
-                context.SearchDocuments.Add(New(document));
+                if (inserts is not null)
+                    inserts.Add(New(document));
+                else
+                    context.SearchDocuments.Add(New(document));
                 written++;
                 continue;
             }
@@ -201,12 +206,14 @@ internal static class SearchIndexer
         return (written, stored.Count);
     }
 
-    // Personal documents of a ledger save, staged before the save so EF orders them
-    // around the entry inserts and deletes they reference.
+    // Personal documents of a ledger save, staged before the save so EF orders the
+    // updates and deletes around the entry deletes they reference. New documents go to
+    // `inserts`; the caller copies them after the new entries (MAZ-137).
     public static Task<(int Written, int Removed)> StageLedgerAsync(
         PennyDbContext context,
         string userId,
         StoredLedger ledger,
+        List<SearchDocument> inserts,
         CancellationToken cancellationToken
     ) =>
         StageAsync(
@@ -226,7 +233,8 @@ internal static class SearchIndexer
                     StringComparer.Ordinal
                 )
             ),
-            cancellationToken
+            cancellationToken,
+            inserts
         );
 
     // Shared documents in `expenses` (live or deleted), staged and saved. Deleted
