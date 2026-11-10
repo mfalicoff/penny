@@ -93,7 +93,11 @@ public sealed class TestControlsTests(ApiFixture fixture) : IntegrationTestBase(
         using (var missing = await client.GetAsync("/api/test/state", Ct))
             missing.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
         using var wrong = new HttpRequestMessage(HttpMethod.Post, "/api/test/reset");
-        wrong.Headers.Add(TestControlsController.TokenHeader, Token[..^1] + "0");
+        // Always differs from Token: a random token can itself end in "0".
+        wrong.Headers.Add(
+            TestControlsController.TokenHeader,
+            Token[..^1] + (Token[^1] == '0' ? "1" : "0")
+        );
         using (var response = await client.SendAsync(wrong, Ct))
             response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
         (await SendAsync(client, Control(HttpMethod.Get, "state")))

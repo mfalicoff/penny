@@ -21,6 +21,7 @@
 - [ASP.NET Core backend foundation](../apps/backend/README.md): pinned .NET/PostgreSQL setup, explicit migrations, readiness, real database tests and backend CI.
 - [Native iOS app](../apps/ios/README.md): Xcode 27.2 and iOS 26 setup, simulator build and test commands, module ownership, environments, signing, App Group and upgrade continuity, and iOS CI.
 - [Native API client](ios-api-client.md): wire models, contract updates, server-scoped credentials, error and retry conventions, ledger, receipts and search.
+- [Web app foundation](../apps/web/README.md): the React/Vite/TanStack browser client, pinned versions, route and data conventions, design-kit boundaries and web CI.
 - [Frontend architecture](frontend-architecture.md): routes, feature ownership, state and persistence boundaries, responsive navigation, and native glass surfaces.
 - [Backend architecture](backend-architecture.md): HTTP/application/storage boundaries, validation, persistence guarantees, and framework tradeoffs.
 - [Backend API endpoints](api-endpoints.md): all 40 operations, authentication, request/response shapes, and compatibility notes for a Go or .NET migration.
