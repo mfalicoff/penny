@@ -53,6 +53,14 @@ public protocol LedgerFileSystem: Sendable {
     func move(_ source: URL, to destination: URL) throws
     /// The files in a directory; empty when it does not exist.
     func files(in directory: URL) throws -> [URL]
+    /// When the file was last written, or nil when that cannot be read.
+    func modificationDate(of url: URL) -> Date?
+}
+
+extension LedgerFileSystem {
+    public func modificationDate(of url: URL) -> Date? {
+        (try? FileManager.default.attributesOfItem(atPath: url.path))?[.modificationDate] as? Date
+    }
 }
 
 /// Files under Application Support, written through a temporary file that is flushed to
@@ -250,15 +258,35 @@ public struct LedgerFileStore: Sendable {
         }
     }
 
-    /// Removes the account's ledger and any copies set aside by `setAside`.
+    /// Whether `file` is a durable write's temporary file (`.ledger-<hash>.json.<uuid>.tmp`),
+    /// for the account named `name` when given.
+    static func isTemporary(_ file: String, for name: String? = nil) -> Bool {
+        guard file.hasPrefix(".ledger-"), file.hasSuffix(".tmp") else { return false }
+        return name.map { file.hasPrefix(".\($0).") } ?? true
+    }
+
+    /// Removes the account's ledger, any copies set aside by `setAside`, and temporary files
+    /// an interrupted write left for it (they hold the account's ledger too).
     public func remove(_ scope: AccountScope) throws(LedgerStoreError) {
         let name = fileName(for: scope)
         do {
-            for file in try fileSystem.files(in: directory) where file.lastPathComponent.hasPrefix(name) {
+            for file in try fileSystem.files(in: directory)
+            where file.lastPathComponent.hasPrefix(name) || Self.isTemporary(file.lastPathComponent, for: name) {
                 try fileSystem.remove(file)
             }
         } catch {
             throw .writeFailed
+        }
+    }
+
+    /// Removes temporary files that writes interrupted by a crash or power loss left behind
+    /// (a write that returns removes its own). Only files older than `age`, so a write still
+    /// in progress is never touched. Best effort: a stray file is never read.
+    public func removeStaleTemporaryFiles(olderThan age: TimeInterval = 60) {
+        let cutoff = Date().addingTimeInterval(-age)
+        for file in (try? fileSystem.files(in: directory)) ?? [] where Self.isTemporary(file.lastPathComponent) {
+            guard let written = fileSystem.modificationDate(of: file), written < cutoff else { continue }
+            try? fileSystem.remove(file)
         }
     }
 

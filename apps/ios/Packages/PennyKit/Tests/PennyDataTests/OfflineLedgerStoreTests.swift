@@ -200,6 +200,40 @@ struct OfflineLedgerStoreTests {
         #expect(await store.pendingChangeCount(for: Offline.scope()) == 2)
     }
 
+    @Test("whenAWriteWasInterruptedBeforeSignOut_OfflineLedgerStore_ShouldRemoveItsTemporaryFilesToo")
+    func removalDeletesTemporaryFiles() async throws {
+        let store = Offline.store(directory, calendar: calendar)
+        try store.files.save(snapshot(), for: Offline.scope())
+        try store.files.save(snapshot(), for: Offline.scope(Offline.sam))
+        let mine = ".\(store.files.url(for: Offline.scope()).lastPathComponent).\(UUID().uuidString).tmp"
+        try Data(#"{"format":1,"server":"#.utf8).write(to: directory.appendingPathComponent(mine))
+        try await store.removeLocalData(for: Offline.scope())
+        #expect(
+            try FileManager.default.contentsOfDirectory(atPath: directory.path) == [
+                store.files.url(for: Offline.scope(Offline.sam)).lastPathComponent
+            ])
+    }
+
+    @Test("whenTheStoreOpensWithStaleTemporaryFiles_OfflineLedgerStore_ShouldSweepThem")
+    func openingSweepsTemporaryFiles() throws {
+        let files = LedgerFileStore(directory: directory)
+        try files.save(snapshot(), for: Offline.scope())
+        let name = files.url(for: Offline.scope()).lastPathComponent
+        // Left by a crash an hour ago, and one a write in progress has just created.
+        let stale = directory.appendingPathComponent(".\(name).\(UUID().uuidString).tmp")
+        let inProgress = directory.appendingPathComponent(".\(name).\(UUID().uuidString).tmp")
+        try Data("partial".utf8).write(to: stale)
+        try Data("partial".utf8).write(to: inProgress)
+        try FileManager.default.setAttributes(
+            [.modificationDate: Date(timeIntervalSinceNow: -3600)], ofItemAtPath: stale.path)
+        _ = Offline.store(directory, calendar: calendar)
+        #expect(
+            Set(try FileManager.default.contentsOfDirectory(atPath: directory.path)) == [
+                name, inProgress.lastPathComponent,
+            ])
+        #expect(try files.load(Offline.scope()) == snapshot())
+    }
+
     @Test("whenTheAccountIsRemoved_OfflineLedgerStore_ShouldDeleteItsFilesIncludingSetAsideCopies")
     func removeLocalData() async throws {
         let store = Offline.store(directory, calendar: calendar)

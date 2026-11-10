@@ -31,6 +31,8 @@ public actor OfflineLedgerStore: AccountLocalData {
         self.today = today
         self.now = now
         self.retry = retry
+        // Opening the store clears what crashed writes left (their temporary files).
+        files.removeStaleTemporaryFiles()
     }
 
     /// The store in Application Support (`LedgerFileStore.defaultDirectory`).
