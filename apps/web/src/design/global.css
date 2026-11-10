@@ -1,6 +1,8 @@
 @import "./fonts.css";
 @import "./tokens.css";
 @import "./auth.css";
+@import "./components.css";
+@import "./shell.css";
 
 *,
 *::before,
@@ -63,103 +65,6 @@ body {
   height: 100%;
 }
 
-/* Shell: a sidebar on wide windows, a top bar on narrow ones (MAZ-85 owns the full design). */
-.skip-link {
-  position: absolute;
-  inset-inline-start: var(--pk-gutter);
-  top: -100px;
-  z-index: 10;
-  padding: 8px 12px;
-  border-radius: var(--pk-r-field);
-  background: var(--pk-surface);
-  color: var(--pk-label);
-}
-
-.skip-link:focus {
-  top: 8px;
-}
-
-.shell {
-  display: grid;
-  grid-template-columns: 1fr;
-  min-height: 100dvh;
-}
-
-.shell__sidebar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px;
-  padding: 12px var(--pk-gutter);
-  border-bottom: 0.5px solid var(--pk-separator);
-  background: var(--pk-surface-2);
-}
-
-.brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: var(--pk-label);
-  text-decoration: none;
-}
-
-.brand .icon {
-  color: var(--pk-tint);
-}
-
-.nav {
-  display: flex;
-  gap: 4px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.nav a {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 44px;
-  padding: 0 12px;
-  border-radius: var(--pk-r-row);
-  color: var(--pk-label-2);
-  font-weight: 500;
-  text-decoration: none;
-}
-
-.nav a:hover {
-  background: var(--pk-fill);
-}
-
-.nav a[aria-current="page"] {
-  background: var(--pk-tint-soft);
-  color: var(--pk-tint-text);
-}
-
-.server-status {
-  margin-inline-start: auto;
-  color: var(--pk-label-2);
-  font-size: 0.8125rem;
-}
-
-.server-status--error {
-  color: var(--pk-danger);
-}
-
-.shell__main {
-  padding: 24px var(--pk-gutter);
-  outline: none;
-}
-
-.shell__main h1 {
-  margin: 0 0 16px;
-  font-size: 1.75rem;
-  letter-spacing: -0.02em;
-}
-
 .search-form {
   display: flex;
   flex-wrap: wrap;
@@ -196,33 +101,4 @@ body {
   font: inherit;
   font-weight: 600;
   cursor: pointer;
-}
-
-@media (min-width: 900px) {
-  .shell {
-    grid-template-columns: 248px 1fr;
-  }
-
-  .shell__sidebar {
-    flex-direction: column;
-    flex-wrap: nowrap;
-    align-items: stretch;
-    border-bottom: 0;
-    border-inline-end: 0.5px solid var(--pk-separator);
-    padding: 20px 12px;
-  }
-
-  .nav {
-    flex-direction: column;
-  }
-
-  .server-status {
-    margin-inline-start: 0;
-    margin-top: auto;
-    padding: 0 12px;
-  }
-
-  .shell__main {
-    padding: 32px 40px;
-  }
 }

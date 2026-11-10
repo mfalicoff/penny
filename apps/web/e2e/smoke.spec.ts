@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { openSettings } from "./shell";
 
 /** Collects console errors, page errors and failed requests for the whole test. */
 function watchForErrors(page: Page) {
@@ -22,7 +23,9 @@ test("production build renders Home with the bundled font and no console errors"
   const errors = watchForErrors(page);
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1, name: "Home" })).toBeVisible();
-  await expect(page.getByText("2.0.0-e2e")).toBeVisible();
+  await openSettings(page);
+  await page.getByRole("link", { name: "Server" }).click();
+  await expect(page.getByText("Version 2.0.0-e2e")).toBeVisible();
 
   const inter = await page.evaluate(async () => {
     await document.fonts.ready;
@@ -64,6 +67,6 @@ test("the layout fits a 320px window without horizontal scrolling", async ({ pag
 test("an unavailable server is reported without breaking the page", async ({ page }) => {
   await page.route("/api/info", (route) => route.fulfill({ status: 503, json: { error: "Service unavailable." } }));
   await page.goto("/");
-  await expect(page.getByText("Server unavailable")).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText("Can't reach your Penny server")).toBeVisible({ timeout: 15_000 });
   await expect(page.getByRole("heading", { level: 1, name: "Home" })).toBeVisible();
 });

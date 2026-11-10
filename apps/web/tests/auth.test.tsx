@@ -3,7 +3,8 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { sessionKey, userKey } from "../src/api/keys";
 import { registerPendingChanges } from "../src/auth/pendingChanges";
-import { ALEX, bodyOf, callsTo, emptySearch, json, renderApp, stubServer, wasCalled } from "./render";
+import { searchTransactionsQuery } from "../src/api/search";
+import { ALEX, bodyOf, callsTo, emptySearch, json, openSignOut, renderApp, stubServer, wasCalled } from "./render";
 
 const token = "a".repeat(64);
 const BOB = "bob@example.test";
@@ -214,7 +215,7 @@ describe("session expiry and sign-out", () => {
     const user = userEvent.setup();
     const { queryClient } = renderApp("/transactions");
     expect(await screen.findByText("Coffee")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Sign out" }));
+    await openSignOut(user);
     const dialog = screen.getByRole("dialog", { name: "Sign out of Penny?" });
     expect(within(dialog).getByRole("button", { name: "Cancel" })).toHaveFocus();
     await user.click(within(dialog).getByRole("button", { name: "Sign out" }));
@@ -229,7 +230,7 @@ describe("session expiry and sign-out", () => {
     fakeApi(ALEX);
     const user = userEvent.setup();
     renderApp("/");
-    await user.click(await screen.findByRole("button", { name: "Sign out" }));
+    await openSignOut(user);
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Sign out" })).toHaveFocus();
@@ -240,11 +241,11 @@ describe("session expiry and sign-out", () => {
     const unregister = registerPendingChanges((email) => email === ALEX);
     const user = userEvent.setup();
     renderApp("/");
-    await user.click(await screen.findByRole("button", { name: "Sign out" }));
+    await openSignOut(user);
     await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Sign out" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Your changes are still waiting to sync");
     expect(wasCalled(fetchMock, "/api/auth/logout")).toBe(false);
-    expect(screen.getByRole("heading", { level: 1, name: "Home" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Settings" })).toBeInTheDocument();
     unregister();
   });
 
@@ -252,10 +253,10 @@ describe("session expiry and sign-out", () => {
     stubServer((url) => (url === "/api/auth/logout" ? json({ error: "boom" }, 500) : undefined));
     const user = userEvent.setup();
     renderApp("/");
-    await user.click(await screen.findByRole("button", { name: "Sign out" }));
+    await openSignOut(user);
     await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Sign out" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("The server had a problem");
-    expect(screen.getByRole("heading", { level: 1, name: "Home" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Settings" })).toBeInTheDocument();
   });
 });
 
@@ -282,9 +283,10 @@ describe("account isolation", () => {
     const user = userEvent.setup();
     const { queryClient } = renderApp("/transactions");
     expect(await screen.findByText("Alex coffee")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Sign out" }));
+    await openSignOut(user);
     await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Sign out" }));
     await signIn(user, BOB);
+    await user.click(within(await screen.findByRole("navigation", { name: "Main" })).getByRole("link", { name: "Activity" }));
     expect(await screen.findByText("Bob rent")).toBeInTheDocument();
     expect(screen.queryByText("Alex coffee")).not.toBeInTheDocument();
     expect(bodies).toEqual([ALEX, BOB]);
@@ -301,7 +303,9 @@ describe("account isolation", () => {
     const user = userEvent.setup();
     const { queryClient } = renderApp("/transactions");
     expect(await screen.findByText("Searching…")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Sign out" }));
+    // Sign-out lives in Settings. Keep a search in flight there too, so the late reply has somewhere to land.
+    void queryClient.infiniteQuery(searchTransactionsQuery(ALEX, { query: "secret" })).catch(() => undefined);
+    await openSignOut(user);
     await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Sign out" }));
     expect(await screen.findByRole("heading", { level: 1, name: "Welcome back" })).toBeInTheDocument();
     release(json(search("Alex secret")));
@@ -333,7 +337,7 @@ describe("account isolation", () => {
     await waitFor(() => {
       expect(calls).toBe(2);
     });
-    await user.click(screen.getByRole("button", { name: "Sign out" }));
+    await openSignOut(user);
     await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Sign out" }));
     expect(await screen.findByRole("heading", { level: 1, name: "Welcome back" })).toBeInTheDocument();
     release(json({ email: ALEX }));
