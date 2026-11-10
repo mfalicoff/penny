@@ -24,6 +24,7 @@
 - [Native API client](ios-api-client.md): wire models, contract updates, server-scoped credentials, error and retry conventions, ledger, receipts and search.
 - [Native sign-in and sessions](ios-authentication.md): password and single sign-on screens, the sign-in state machine, Keychain storage and accessibility, session restore, expiry and sign-out, OIDC callback setup and tests.
 - [Native ledger rules](ios-ledger-domain.md): PennyDomain ownership, integer-cent and calendar-date invariants, recurrence, ledger commands, recorded and projected reports, local search, fixtures and compatibility decisions.
+- [Native app shell](ios-shell.md): iPhone and iPad navigation and deep links, components and tokens, supported devices and accessibility, settings, the biometric app lock, the temporary demo, named states and the sync-status interface for offline sync.
 - [Web app foundation](../apps/web/README.md): the React/Vite/TanStack browser client, pinned versions, route and data conventions, design-kit boundaries and web CI.
 - [Frontend architecture](frontend-architecture.md): routes, feature ownership, state and persistence boundaries, responsive navigation, and native glass surfaces.
 - [Backend architecture](backend-architecture.md): HTTP/application/storage boundaries, validation, persistence guarantees, and framework tradeoffs.

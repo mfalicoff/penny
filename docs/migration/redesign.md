@@ -67,3 +67,13 @@ Every card has its feature owners and a planned MAZ-82/96 acceptance scenario. W
 Adapt the fixed card viewports to safe areas, iPhone landscape, iPad split and multicolumn, and resizable browser windows; validate 320px through desktop rather than copying fixed geometry. Test Dynamic Type and VoiceOver, keyboard and focus, scrolling above Save, contrast on the hero glow, reduced motion and transparency, and native pickers. These are acceptance requirements, not evidence of device execution.
 
 The cards are static HTML rendered with Inter and Ionicons as stand-ins for SF Pro and SF Symbols. No implementation has been visually compared with them yet; MAZ-122 owns that comparison. Larger text, a real keyboard and focus, native pickers, app lock and server-search loading states still need implementation validation, and MAZ-82/96 can't substitute card checks for those gates.
+
+## Native implementation notes (MAZ-69)
+
+The SwiftUI shell, settings, lock and demo are described in [native app shell](../ios-shell.md). Adaptations from the cards:
+
+- **Add entry on iPhone** is the system tab bar's separate circular button (a `Tab` with the search role), so it is real iOS 26 Liquid Glass and follows system accessibility. iOS can't tint one tab item, so the + is not copper as on the card.
+- **iPad** uses the same navigation state in a `NavigationSplitView`; Settings and the Manage pages open in the detail column instead of a sheet. In compact widths (Slide Over, narrow Split View) the iPad uses the iPhone tab bar.
+- **Lock after** (Immediately, 1 minute, 5 minutes on `iphone-app-lock`) is MAZ-133 and not in this build; the lock applies immediately, as in the legacy app.
+- **The lock screen** shows no amount; the card's blurred hero behind the lock is not drawn, so nothing of the ledger is visible while locked.
+- Screens owned by feature issues (Add entry, households, insights, the money flow, the iPad dashboard panels) show a named "not available yet" state, and every legacy route still lands on its destination.
