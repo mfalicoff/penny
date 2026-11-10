@@ -300,18 +300,70 @@ struct LedgerChangeTests {
         }
     }
 
-    @Test("whenEveryErrorCase_Message_ShouldBeAUserSentence")
+    /// The exact legacy sentence for every case, copied from `src/domain/ledger.ts`
+    /// (`cents`, `personalShare`), `src/domain/commands.ts` and
+    /// `src/features/entries/entryDraft.ts`. The switch is exhaustive, so a new case cannot be
+    /// added without its sentence here.
+    static func legacyMessage(_ error: LedgerRuleError) -> String {
+        switch error {
+        case .invalidAmount: "Enter an amount with up to two decimal places."
+        case .invalidSplitPeople: "Split between 2 and 100 people."
+        case .invalidPercentage: "Your percentage must be between 0 and 100."
+        case .shareExceedsTotal: "Your share cannot exceed the receipt total."
+        case .zeroAmount: "Enter an amount greater than zero."
+        case .invalidDate: "Use a valid date between 2000 and 2100, in YYYY-MM-DD format."
+        case .missingTitle: "Add a name for this entry."
+        case .chooseCategory: "Choose a category."
+        case .chooseRepeat: "Choose a repeat schedule."
+        case .entryChangedOnAnotherDevice:
+            "This entry changed on another device. Close this form and reopen the entry to review the latest version."
+        case .entryChangedBeforeDelete: "This entry changed on another device. Reopen it before deleting."
+        case .scheduleChangedOnAnotherDevice:
+            "This schedule changed on another device. Close this form and reopen it to review the latest version."
+        case .tripChangedOnAnotherDevice: "This trip changed on another device. Reopen it before editing."
+        case .accountChangedOnAnotherDevice: "This account changed on another device. Reopen it before editing."
+        case .categoryChangedOnAnotherDevice: "This category changed on another device. Reopen it before editing."
+        case .accountRemoved: "This payment account was removed on another device. Choose another account."
+        case .categoryRemoved: "This category was removed on another device. Choose another category."
+        case .tripUnavailable: "This trip is no longer available. Choose another trip."
+        case .tripHasEntries: "This trip has expenses. Reassign them before deleting it."
+        case .categoryHasEntries: "This category has entries. Keep it to preserve your history."
+        case .accountHasEntries: "This account has entries or schedules. Reassign them before deleting it."
+        case .invalidTripName: "Give your trip a name of up to 80 characters."
+        case .invalidTripDates: "Choose valid trip dates, with the end on or after the start."
+        case .duplicateTripName: "You already have a trip with this name."
+        case .tooManyTrips: "You can add up to 300 trips."
+        case .invalidAccountName: "Give your account a name of up to 50 characters."
+        case .duplicateAccountName: "You already have an account with this name."
+        case .tooManyAccounts: "You can add up to 300 accounts."
+        case .duplicateCategoryName: "You already have a category with this name."
+        case .currencyLocked: "Currency can only be changed before adding entries."
+        // No legacy sentence exists for these four (LedgerRuleError's doc comment); they are
+        // pinned to the wording chosen in docs/ios-ledger-domain.md.
+        case .invalidCategoryName: "Give your category a name of up to 50 characters."
+        case .tooManyCategories: "You can add up to 300 categories."
+        case .categoryKindInUse: "This category has entries. Keep its type to preserve your history."
+        case .scheduleAfterLedgerRange:
+            "This schedule would repeat after 2100. Choose an earlier date, or choose Does not repeat."
+        }
+    }
+
+    @Test("whenEveryErrorCase_Message_ShouldBeTheLegacySentenceWordForWord")
     func messages() {
         let all: [LedgerRuleError] = [
             .invalidAmount, .invalidSplitPeople, .invalidPercentage, .shareExceedsTotal, .zeroAmount, .invalidDate,
-            .missingTitle, .chooseCategory, .chooseRepeat, .entryChangedOnAnotherDevice, .entryChangedBeforeDelete,
-            .scheduleChangedOnAnotherDevice, .tripChangedOnAnotherDevice, .accountChangedOnAnotherDevice,
-            .categoryChangedOnAnotherDevice, .accountRemoved, .categoryRemoved, .tripUnavailable, .tripHasEntries,
-            .categoryHasEntries, .accountHasEntries, .invalidTripName, .invalidTripDates, .duplicateTripName,
-            .tooManyTrips, .invalidAccountName, .duplicateAccountName, .tooManyAccounts, .invalidCategoryName,
-            .duplicateCategoryName, .tooManyCategories, .categoryKindInUse, .currencyLocked,
+            .missingTitle, .chooseCategory, .chooseRepeat, .scheduleAfterLedgerRange, .entryChangedOnAnotherDevice,
+            .entryChangedBeforeDelete, .scheduleChangedOnAnotherDevice, .tripChangedOnAnotherDevice,
+            .accountChangedOnAnotherDevice, .categoryChangedOnAnotherDevice, .accountRemoved, .categoryRemoved,
+            .tripUnavailable, .tripHasEntries, .categoryHasEntries, .accountHasEntries, .invalidTripName,
+            .invalidTripDates, .duplicateTripName, .tooManyTrips, .invalidAccountName, .duplicateAccountName,
+            .tooManyAccounts, .invalidCategoryName, .duplicateCategoryName, .tooManyCategories, .categoryKindInUse,
+            .currencyLocked,
         ]
+        for error in all {
+            #expect(error.message == Self.legacyMessage(error), "\(error)")
+            #expect(error.description == error.message)
+        }
         #expect(Set(all.map(\.message)).count == all.count)
-        #expect(all.allSatisfy { $0.message.hasSuffix(".") && $0.description == $0.message })
     }
 }

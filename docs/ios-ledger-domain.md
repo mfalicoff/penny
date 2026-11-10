@@ -73,12 +73,12 @@ Optional fields (`accountId`, `tripId`, `receipt`, `recurringId`, `sharedHouseho
 
 ## Fixtures
 
-Consumed read-only through `PennyContracts` (strict models, manifest hashes): `money.json` (parse, shares, stored bounds), `recurrence.json` (next dates and 12-step sequences), `parity-cases.json` (money, shares, anchor dates), `ledger-upgrades.json` (v1–v4 upgrade, and every expected ledger passes `violations`), `full-stack-seeds.json` (alex's seeded ledger and its pending create/edit/delete local searches) and `redesign-states.json` (`alex-2026-10` recorded, scheduled and projected totals). `search-cases.json` has no strict Swift model yet, so its legacy `ledger`, `substringCases` and `pendingCases` are read with a lenient test model.
+Consumed read-only through `PennyContracts` (strict models, manifest hashes): `money.json` (parse, shares, stored bounds), `recurrence.json` (next dates and 12-step sequences), `parity-cases.json` (money, shares, anchor dates), `ledger-upgrades.json` (v1–v4 upgrade, and every expected ledger passes `violations`), `full-stack-seeds.json` (alex's seeded ledger, the Maison expenses and the `streaming` shared rule, and its pending create/edit/delete local searches) and `redesign-states.json` (`alex-2026-10` recorded, scheduled and projected totals). The redesign test builds every input from the seed, including the shared preview (from the rule's `nextDate`, frequency and equal split among the members active then), and uses `redesign-states.json` only for the assertions. `search-cases.json` has no strict Swift model yet, so its legacy `ledger`, `substringCases` and `pendingCases` are read with a lenient test model.
 
 No fixture was added or changed. Known gaps, for the fixture owners rather than invented here:
 
 - `manifest.json` still lists only `contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift` as the Swift consumer of these files (and MAZ-73 for `search-cases.json`); the generator's consumer table (`scripts/fixtures/generate-golden.ts`) should add `apps/ios/Packages/PennyKit/Tests/PennyDomainTests` when it is next regenerated.
-- There is no shared fixture for the entry draft rules, the command check order and messages, pause/resume, materialization or the projected formula with expected income; the Swift tests port the legacy behavior and the redesign total.
+- There is no shared fixture for the entry draft rules, the command check order and messages, pause/resume, materialization or the projected formula with expected income; the Swift tests port the legacy behavior and the redesign total. The message test pins every `LedgerRuleError` sentence word for word to the legacy source (`src/domain/ledger.ts`, `commands.ts`, `entryDraft.ts`), and the four new ones to the wording chosen here.
 - `merge-conflicts.json` is MAZ-71's; `shared-splits.json` and `settlement.json` are MAZ-75's.
 
 ## Compatibility decisions

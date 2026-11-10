@@ -41,6 +41,44 @@ struct ReportTests {
         }
     }
 
+    /// The server's October previews of alex's seeded shared rules, built from the seed's
+    /// `sharedRecurring` inputs (not from the expected totals): each occurrence from the rule's
+    /// `nextDate` through the month end, id `{rule}:{date}`, alex's equal share among the
+    /// members active then (cam left on 2026-10-02). The occurrence dates use the personal
+    /// recurrence step, which is the same monthly rule for this seed (recurrence.json).
+    static func alexSharedScheduled(_ scenario: SeedFixture.Scenario, through month: MonthKey) throws
+        -> [SharedExpenseShare]
+    {
+        try scenario.steps.flatMap { step -> [SharedExpenseShare] in
+            guard step["as"] == .string("alex"), case .object(let recurring) = step["sharedRecurring"],
+                case .string(let household) = recurring["household"], case .string(let ref) = recurring["ref"],
+                case .object(let body) = recurring["body"], case .string(let title) = body["title"],
+                case .number(let totalNumber) = body["totalCents"], body["splitMode"] == .string("equal"),
+                case .string(let next) = body["nextDate"], case .string(let frequencyText) = body["frequency"],
+                case .object(let category) = body["category"], case .string(let name) = category["name"],
+                case .string(let icon) = category["icon"], case .string(let color) = category["color"]
+            else { return [] }
+            let total = try #require(Int64(exactly: totalNumber))
+            let frequency = try #require(RecurrenceFrequency(rawValue: frequencyText))
+            var date = try ContractLedger.date(next)
+            let anchor = date.day
+            var result: [SharedExpenseShare] = []
+            while date <= month.last {
+                let members: Int64 = date < .day("2026-10-02") ? 3 : 2
+                try #require(total % members == 0, "the seed's equal splits divide exactly")
+                if date >= month.first {
+                    result.append(
+                        SharedExpenseShare(
+                            id: "\(ref):\(date)", householdId: household, currency: .cad, title: title, date: date,
+                            total: total, share: total / members,
+                            category: .init(name: name, icon: icon, color: color), recurringId: ref, scheduled: true))
+                }
+                date = Recurrence.next(after: date, frequency: frequency, anchorDay: anchor)
+            }
+            return result
+        }
+    }
+
     static func streaming(_ date: String = "2026-10-20", scheduled: Bool = true) -> SharedExpenseShare {
         SharedExpenseShare(
             id: scheduled ? "streaming:\(date)" : "occ-\(date)", householdId: "maison", currency: .cad,
@@ -54,16 +92,14 @@ struct ReportTests {
         let states = try Fixtures.decode(RedesignStates.self, from: "redesign-states.json")
         let expected = try #require(states.totals["alex-2026-10"])
         let (scenario, ledger) = try ContractLedger.alexSeed()
-        let sharedScheduled = expected.scheduled.filter { $0.source == "shared" }.map { item in
-            SharedExpenseShare(
-                id: "streaming:\(item.date)", householdId: "maison", currency: .cad, title: item.title,
-                date: .day(item.date), total: item.shareCents * 2, share: item.shareCents,
-                category: .init(name: "Fun", icon: "tv-outline", color: "#B15B7D"), recurringId: "streaming",
-                scheduled: true)
-        }
+        let october = try #require(Self.october)
+        // Every input comes from the seed (full-stack-seeds.json); only the assertions use the
+        // expected totals.
+        let sharedScheduled = try Self.alexSharedScheduled(scenario, through: october)
+        #expect(sharedScheduled.map(\.id) == ["streaming:2026-10-20"])
         let report = LedgerReport(
             ledger: ledger, shared: try Self.alexShared(scenario), sharedScheduled: sharedScheduled)
-        let month = report.month(try #require(Self.october))
+        let month = report.month(october)
         func totals(_ amounts: RedesignStates.Amounts) -> KindTotals {
             KindTotals(expense: amounts.expenseCents, income: amounts.incomeCents, investment: amounts.investmentCents)
         }
