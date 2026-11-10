@@ -16,6 +16,8 @@ All executable tests live under `tests/`. Choose the lowest layer that proves th
 
 Do not add tests under `src/`, root `e2e/`, or generated `ios/` and `android/` directories. Keep runner configuration at the root and executable command wrappers in `scripts/`. Core/UI files use `*.test.ts(x)`; real-DOM UI cases use `*.web.test.jsx`; browser journeys use `*.spec.ts`; native entry points use `*.ios.test.mjs` / `*.android.test.mjs`.
 
+These rules cover the legacy Expo/Node app. The v2 browser app in `apps/web/` has its own runner and layout: colocated `src/**/*.test.ts(x)`, app-level tests in `apps/web/tests/` and a Playwright smoke in `apps/web/e2e/`. Its CI is `.github/workflows/web.yml` ([web app](../apps/web/README.md#ci)).
+
 ## Commands
 
 Use Node 24 and the committed npm lockfile (`npm ci`).

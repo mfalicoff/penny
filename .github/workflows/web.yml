@@ -1,0 +1,60 @@
+name: Web checks
+
+on:
+  pull_request:
+  push:
+    branches: [v2]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: web-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    name: Web lint, types, tests, build and browser smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Check design tokens against design-kit
+        run: npm run design:check
+      - name: Lint
+        run: npm run lint
+      - name: Check types
+        run: npm run typecheck
+      - name: Unit and component tests
+        run: npm test
+      # No secrets or API URL are available to this job: the bundle must build
+      # and verify without them (scripts/verify-dist.ts).
+      - name: Production build and artifact verification
+        run: npm run build
+      - name: Check the generated route tree is committed
+        run: git diff --exit-code -- src/routeTree.gen.ts
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Browser smoke test of the production build
+        run: npm run test:e2e
+      - name: Upload browser evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: web-playwright-report
+          path: |
+            apps/web/test-results/
+          if-no-files-found: ignore
