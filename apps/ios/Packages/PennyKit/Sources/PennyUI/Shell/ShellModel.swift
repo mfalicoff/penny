@@ -30,12 +30,25 @@ final class ShellModel {
     /// Ends the demo and discards everything in it (nil for an account).
     let leaveDemo: (() -> Void)?
 
+    // MARK: Entries and Activity (MAZ-73)
+
+    /// Unsaved entry drafts kept when a form closed without Save or Discard.
+    var drafts = EntryDraftShelf()
+    /// The entry being edited in the entry form sheet, from Activity or the entry detail.
+    var editingEntry: EntryEditRequest?
+    /// Activity's filters and query, kept while switching tabs.
+    var activityFilters: ActivityFilters
+    /// Activity's server search (MAZ-121) for an account; local only in the demo.
+    let activitySearch: ActivitySearchModel
+    /// Attaches a receipt to an entry draft (MAZ-78 provides it; nil until then).
+    var attachReceipt: ((ReceiptSource) async -> Result<ReceiptReference, SaveFailure>)?
+
     @ObservationIgnored private var toastTask: Task<Void, Never>?
     static let toastDuration: Duration = .seconds(4)
 
     init(
         workspace: any LedgerWorkspace, session: ShellSession, today: CalendarDate,
-        startDemo: (() -> Void)? = nil, leaveDemo: (() -> Void)? = nil
+        startDemo: (() -> Void)? = nil, leaveDemo: (() -> Void)? = nil, search: (any EntrySearchService)? = nil
     ) {
         self.workspace = workspace
         self.session = session
@@ -43,6 +56,8 @@ final class ShellModel {
         self.startDemo = startDemo
         self.leaveDemo = leaveDemo
         month = MonthKey(today)
+        activityFilters = ActivityFilters(period: .month(MonthKey(today)))
+        activitySearch = ActivitySearchModel(service: workspace.isDemo ? nil : search)
     }
 
     var isDemo: Bool { workspace.isDemo }

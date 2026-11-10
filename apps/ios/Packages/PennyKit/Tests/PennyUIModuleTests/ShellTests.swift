@@ -73,13 +73,13 @@ struct ShellTests {
         #expect(CurrencyPolicy.options.map(\.rawValue) == ["CAD", "USD", "EUR", "GBP"])
     }
 
-    @Test("whenEntriesAreGrouped_ActivityView_ShouldKeepOrderAndTotalEachDaysNet")
+    @Test("whenEntriesAreGrouped_ActivityDay_ShouldKeepOrderAndTotalEachDaysNet")
     func dayGroups() throws {
         let report = LedgerReport(ledger: DemoLedger.make(today: today))
         let page = report.activity(.month(MonthKey(today)))
-        let days = ActivityView.days(page.entries)
+        let days = ActivityDay.group(page.entries)
         #expect(days.flatMap(\.entries) == page.entries)
-        #expect(Set(days.map(\.day)).count == days.count)
+        #expect(Set(days.map(\.date)).count == days.count)
         let first = try #require(days.first)
         let expected = first.entries.reduce(Int64(0)) { $0 + ($1.kind == .income ? $1.share : -$1.share) }
         #expect(first.net == expected)

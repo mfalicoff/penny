@@ -52,7 +52,8 @@ struct AuthGate: View {
                         makeModel: {
                             ShellModel(
                                 workspace: services.accountWorkspace(account, sync), session: .account(auth, account),
-                                today: services.today(), startDemo: startDemo)
+                                today: services.today(), startDemo: startDemo,
+                                search: auth.client.map { AccountEntrySearch(model: sync, client: $0) })
                         }
                     )
                     .id(account.scope)
