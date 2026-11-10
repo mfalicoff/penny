@@ -3,8 +3,9 @@ import PennyDesign
 public import PennyDomain
 public import SwiftUI
 
-/// The app's root. A placeholder for the MAZ-69 shell (tab bar on iPhone, split view on
-/// iPad); it already owns deep-link handling so the shell only has to present `link`.
+/// The app's root: configuration errors, then the sign-in gate (MAZ-68). The MAZ-69 shell
+/// (tab bar on iPhone, split view on iPad) replaces the signed-in placeholder and presents
+/// `link`.
 public struct RootView: View {
     private let configuration: Result<AppConfiguration, AppConfiguration.Invalid>
     @State private var link: DeepLink?
@@ -21,40 +22,29 @@ public struct RootView: View {
             }
         }
         .tint(PennyColor.tint)
-        .onOpenURL { url in link = DeepLink(url: url) ?? .home }
+        .onOpenURL { url in
+            let parsed = DeepLink(url: url) ?? .home
+            // Single sign-on callbacks return through the system authentication session,
+            // never through openURL. One arriving here was not requested by this app (or is a
+            // replay), so it is ignored rather than redeemed.
+            if case .authCallback = parsed { return }
+            link = parsed
+        }
     }
 }
 
 struct LaunchView: View {
-    let configuration: AppConfiguration
+    @State private var auth: AuthController
     let link: DeepLink?
 
+    init(configuration: AppConfiguration, link: DeepLink?, auth: AuthController? = nil) {
+        _auth = State(initialValue: auth ?? AuthController(defaultServer: configuration.defaultServerURL))
+        self.link = link
+    }
+
     var body: some View {
-        VStack(spacing: Metrics.gutter) {
-            Image(systemName: "leaf")
-                .font(.system(size: 34, weight: .semibold))
-                .foregroundStyle(.white)
-                .frame(width: 64, height: 64)
-                .background(PennyColor.tint, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-                .accessibilityHidden(true)
-            Text("penny.")
-                .font(PennyFont.style(.largeTitle))
-                .foregroundStyle(PennyColor.label)
-                .accessibilityAddTraits(.isHeader)
-            Text("The native app is being built.")
-                .font(PennyFont.style(.subhead))
-                .foregroundStyle(PennyColor.secondaryLabel)
-            if let link {
-                Text(String(describing: link))
-                    .font(PennyFont.style(.footnote))
-                    .foregroundStyle(PennyColor.tertiaryLabel)
-                    .accessibilityIdentifier("root.deepLink")
-            }
-        }
-        .padding(Metrics.gutter)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(PennyColor.background)
-        .accessibilityIdentifier("root.launch")
+        AuthGate(auth: auth, link: link)
+            .accessibilityIdentifier("root.launch")
     }
 }
 
@@ -78,12 +68,31 @@ struct ConfigurationErrorView: View {
     }
 }
 
-#Preview("Launch") {
-    RootView(
-        configuration: .success(
-            AppConfiguration(environment: .development, defaultServerURL: nil, appGroup: AppIdentity.appGroup)))
+#Preview("Sign in") {
+    LaunchView(
+        configuration: AppConfiguration(
+            environment: .development, defaultServerURL: nil, appGroup: AppIdentity.appGroup),
+        link: nil,
+        auth: AuthController(
+            defaultServer: nil, sessions: EphemeralSessionStore(),
+            preferences: EphemeralAuthPreferences(server: SavedServer(server: PreviewServer.url, version: "2.0.0"))))
+}
+
+#Preview("Choose a server") {
+    LaunchView(
+        configuration: AppConfiguration(
+            environment: .production, defaultServerURL: nil, appGroup: AppIdentity.appGroup),
+        link: nil,
+        auth: AuthController(
+            defaultServer: nil, sessions: EphemeralSessionStore(), preferences: EphemeralAuthPreferences()))
 }
 
 #Preview("Configuration error") {
     RootView(configuration: .failure(.missing(AppConfiguration.Key.appGroup)))
+}
+
+enum PreviewServer {
+    static var url: ServerURL {
+        do { return try ServerURL("https://penny.example.com") } catch { preconditionFailure("Invalid preview server") }
+    }
 }
