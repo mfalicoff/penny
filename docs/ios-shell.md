@@ -2,7 +2,7 @@
 
 [Documentation](README.md) · [Native iOS app](../apps/ios/README.md) · [Redesign baseline](migration/redesign.md) · [Native sign-in](ios-authentication.md)
 
-This page describes the SwiftUI shell that MAZ-69 adds to `apps/ios`: the navigation for iPhone and iPad, the shared components, the settings, the biometric app lock, the temporary demo and the loading, empty, offline and error states. It follows the iOS-native redesign in [`docs/design/penny-ios`](design/penny-ios/README.md) and [`contracts/design-baseline.json`](../contracts/design-baseline.json) (MAZ-132). The feature screens behind it (entries, households, trips, recurring, insights) belong to MAZ-73 to MAZ-77.
+This page describes the SwiftUI shell that MAZ-69 adds to `apps/ios`: the navigation for iPhone and iPad, the shared components, the settings, the biometric app lock, the temporary demo and the loading, empty, offline and error states. It follows the iOS-native redesign in [`docs/design/penny-ios`](design/penny-ios/README.md) and [`contracts/design-baseline.json`](../contracts/design-baseline.json) (MAZ-132). The feature screens behind it (entries, households, trips, recurring, insights) belong to MAZ-73 to MAZ-77; Accounts, Categories and Recurring are described in [organize](ios-organize.md) (MAZ-74).
 
 > MAZ-69's description predates MAZ-132. It names AMOLED and Catppuccin, DM Sans, a More tab, 52px controls and 48px targets, and Penpot specimen names. The baseline replaced those decisions: light and dark only, SF Pro and SF Symbols, Home / Activity / Shared / Trips with Settings as a sheet, and the design-kit sizes (44pt minimum target). This implementation follows the baseline. The table at the end maps the old specimen names to the cards.
 
