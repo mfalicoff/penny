@@ -5,12 +5,13 @@ import { after, before, test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { request as httpsRequest } from "node:https";
 import {
-  buildApi, collectArtifacts, containerCli, control, down, downAll, label, statePath, up,
+  buildApi, collectArtifacts, containerCli, control, down, downAll, label, root, statePath, up,
 } from "../../scripts/test-env/environment.mjs";
 import { client, scenario, seed } from "../../scripts/test-env/seed.mjs";
-import { compareLegacy } from "../../scripts/test-env/compare.mjs";
+import { compareLegacy, writeParityReport } from "../../scripts/test-env/compare.mjs";
 import { clientId, startOidcProvider } from "../../scripts/test-env/oidc-provider.mjs";
 
 const started = [];
@@ -95,6 +96,9 @@ test("down --all sweeps runs whose runner crashed", { timeout: 300_000 }, async 
 test("legacy Node/SQLite and .NET/PostgreSQL agree on the differential journey", { timeout: 600_000 }, async () => {
   const state = await start({ worker: false });
   const report = await compareLegacy(state);
+  // Written before asserting so a failure leaves the readable diff (CI job summary
+  // and the fullstack-artifacts upload).
+  writeParityReport(report, join(root, "test-results/fullstack/parity"));
   assert.deepEqual(report.differences, []);
   assert.equal(report.summary.matching, report.summary.probes);
 });

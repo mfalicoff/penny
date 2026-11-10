@@ -4,7 +4,7 @@
 // documented deliberate one. SQLite is used only here, as the legacy reference; v2
 // database tests always use PostgreSQL.
 import { spawn } from "node:child_process";
-import { mkdtempSync, rmSync } from "node:fs";
+import { appendFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { control, freePort, root } from "./environment.mjs";
@@ -60,6 +60,7 @@ export function normalize(value, context, key) {
       ...Object.entries(context.userIds).map(([alias, id]) => [id, `<user:${alias}>`]),
       ...Object.entries(context.households).map(([name, id]) => [id, `<household:${name}>`]),
       ...Object.entries(context.expenseIds).map(([name, id]) => [id, `<expense:${name}>`]),
+      ...Object.entries(context.rules ?? {}).map(([name, id]) => [id, `<rule:${name}>`]),
       ...Object.entries(context.users).map(([alias, user]) => [user.email, `<email:${alias}>`]),
       ...Object.entries(context.users).map(([alias, user]) => [user.token, `<token:${alias}>`]),
     ];
@@ -104,6 +105,13 @@ async function probe(apiUrl, context, item) {
   return { status, body: normalize(body, context) };
 }
 
+// A registered difference covers its path and everything below it; "*" matches one
+// segment (an array index or key), so list positions need not be hard-coded.
+export function knownPath(pattern) {
+  const source = pattern.split("/").map((part) => part === "*" ? "[^/]+" : part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("/");
+  return new RegExp(`^${source}(?:/|$)`);
+}
+
 /**
  * @param {object} state a running .NET environment (environment.mjs)
  * @returns {Promise<{summary: object, differences: string[], results: object[]}>}
@@ -126,17 +134,51 @@ export async function compareLegacy(state, { scenario = "differential", legacy }
       const left = await probe(server.url, legacyContext, item);
       const right = await probe(state.apiUrl, dotnetContext, item);
       const found = differences(left, right).filter((difference) =>
-        !known.some((allowed) => allowed.probe === item.name && difference.path.startsWith(allowed.path)));
-      results.push({ probe: item.name, legacy: left, dotnet: right, differences: found });
+        !known.some((allowed) => allowed.probe === item.name && knownPath(allowed.path).test(difference.path)));
+      results.push({ probe: item.name, method: item.method, path: item.path, legacy: left, dotnet: right, differences: found });
       for (const difference of found)
         reported.push(`${item.name} ${difference.path}: legacy ${JSON.stringify(difference.legacy)} vs .NET ${JSON.stringify(difference.dotnet)}`);
     }
     return {
       summary: { scenario, probes: definition.probes.length, matching: results.filter((item) => !item.differences.length).length, knownDifferences: known.length },
+      knownDifferences: known,
       differences: reported,
       results,
     };
   } finally {
     if (!legacy) await server.stop();
   }
+}
+
+/**
+ * Writes the comparison as `parity-report.json` and a readable `parity-report.md` in
+ * `directory`, and appends the Markdown to the GitHub job summary when one is set, so a
+ * failing CI run shows which probe and field diverged without downloading artifacts.
+ * Bodies are already normalized: ids, tokens, emails and instants are placeholders.
+ */
+export function writeParityReport(report, directory, summaryFile = process.env.GITHUB_STEP_SUMMARY) {
+  mkdirSync(directory, { recursive: true });
+  writeFileSync(join(directory, "parity-report.json"), JSON.stringify(report, null, 2) + "\n");
+  const { summary } = report;
+  const cell = (value) => String(value).replaceAll("|", "\\|").replaceAll("\n", " ");
+  const lines = [
+    `## Legacy versus .NET parity (${summary.scenario})`,
+    "",
+    `${summary.matching}/${summary.probes} probes match; ${summary.knownDifferences} registered differences.`,
+    "",
+    "| Probe | Request | Legacy | .NET | Result |",
+    "| --- | --- | --- | --- | --- |",
+    ...report.results.map((item) =>
+      `| ${cell(item.probe)} | ${cell(`${item.method} ${item.path}`)} | ${item.legacy.status} | ${item.dotnet.status} | ${item.differences.length ? `**${item.differences.length} differ**` : "match"} |`),
+  ];
+  if (report.differences.length)
+    lines.push("", "### Unregistered differences", "", ...report.differences.map((line) => `- \`${cell(line)}\``),
+      "", "Fix the .NET behavior, or, if the change is deliberate, document it and register it in `knownDifferences` (docs/migration/parity-report.md#triage).");
+  if (report.knownDifferences?.length)
+    lines.push("", "### Registered differences", "", "| Probe | Path | Reason |", "| --- | --- | --- |",
+      ...report.knownDifferences.map((item) => `| ${cell(item.probe)} | \`${cell(item.path)}\` | ${cell(item.reason)} |`));
+  const markdown = lines.join("\n") + "\n";
+  writeFileSync(join(directory, "parity-report.md"), markdown);
+  if (summaryFile) appendFileSync(summaryFile, markdown);
+  return markdown;
 }

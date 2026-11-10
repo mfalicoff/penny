@@ -220,12 +220,12 @@ test("full-stack seeds are well formed, sanitized and internally consistent", ()
   assert.doesNotMatch(raw, /@(?!penny\.test)[a-z0-9.-]+\.[a-z]{2,}/i);
   assert.doesNotMatch(raw, /"(password|token|code)"\s*:/);
   for (const scenario of seeds.scenarios) {
-    const defined = { user: new Set(scenario.users), household: new Set<string>(), expense: new Set<string>(), invite: new Set<string>() };
+    const defined = { user: new Set(scenario.users), email: new Set(scenario.users), household: new Set<string>(), expense: new Set<string>(), rule: new Set<string>(), invite: new Set<string>() };
     for (const step of scenario.steps) {
       if ("as" in step) assert.ok(defined.user.has(step.as), `${scenario.name}: unknown alias ${step.as}`);
-      const refs = JSON.stringify(step).match(/\$(user|household|expense):[a-z0-9-]+/g) ?? [];
+      const refs = JSON.stringify(step).match(/\$(user|email|household|expense|rule):[a-z0-9-]+/g) ?? [];
       for (const ref of refs) {
-        const [kind, name] = ref.slice(1).split(":") as ["user" | "household" | "expense", string];
+        const [kind, name] = ref.slice(1).split(":") as ["user" | "email" | "household" | "expense" | "rule", string];
         assert.ok(defined[kind].has(name), `${scenario.name}: ${ref} used before it is defined`);
       }
       if ("createHousehold" in step) defined.household.add(step.createHousehold.ref);
@@ -236,11 +236,12 @@ test("full-stack seeds are well formed, sanitized and internally consistent", ()
       }
       if ("join" in step) assert.ok(defined.invite.has(step.join.invite));
       if ("expense" in step) defined.expense.add(step.expense.ref);
+      if ("sharedRecurring" in step) defined.rule.add(step.sharedRecurring.ref);
     }
     for (const probe of scenario.probes ?? []) {
       if (probe.as) assert.ok(defined.user.has(probe.as), `${probe.name}: alias`);
-      for (const ref of JSON.stringify(probe).match(/\$(user|household|expense):[a-z0-9-]+/g) ?? []) {
-        const [kind, name] = ref.slice(1).split(":") as ["user" | "household" | "expense", string];
+      for (const ref of JSON.stringify(probe).match(/\$(user|email|household|expense|rule):[a-z0-9-]+/g) ?? []) {
+        const [kind, name] = ref.slice(1).split(":") as ["user" | "email" | "household" | "expense" | "rule", string];
         assert.ok(defined[kind].has(name), `${probe.name}: ${ref}`);
       }
     }

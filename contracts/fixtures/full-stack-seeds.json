@@ -774,7 +774,7 @@
     },
     {
       "name": "differential",
-      "summary": "A clock-independent journey for legacy Node/SQLite versus .NET/PostgreSQL comparison: dates are \"$today\"/\"$month\" (the server's current day), so it runs on a legacy server at real time and on .NET with the clock pinned to the same day. Probes are compared after normalizing generated ids, tokens, codes and instants.",
+      "summary": "A clock-independent journey for legacy Node/SQLite versus .NET/PostgreSQL comparison: dates are \"$today\"/\"$month\" (the server's current day), so it runs on a legacy server at real time and on .NET with the clock pinned to the same day. Probes are compared after normalizing generated ids, tokens, codes and instants. Equal splits use totals divisible by the member count: remainder cents go to the lexically first generated user id, which differs between the two servers (the rule itself is pinned by shared-splits.json).",
       "clock": "$now",
       "users": [
         "alex",
@@ -922,6 +922,52 @@
               }
             }
           }
+        },
+        {
+          "as": "bea",
+          "sharedRecurring": {
+            "household": "home",
+            "ref": "rent",
+            "body": {
+              "title": "Loyer",
+              "totalCents": 120000,
+              "payerUserId": "$user:bea",
+              "splitMode": "equal",
+              "category": {
+                "name": "Home",
+                "icon": "home-outline",
+                "color": "#678DB1"
+              },
+              "note": "",
+              "nextDate": "2027-02-01",
+              "frequency": "monthly"
+            }
+          }
+        },
+        {
+          "as": "alex",
+          "createTrip": {
+            "ref": "coast",
+            "name": "C\u00f4te",
+            "currency": "CAD",
+            "startDate": "2027-01-10",
+            "endDate": "2027-01-15",
+            "timezoneOffsetMinutes": 0
+          }
+        },
+        {
+          "as": "alex",
+          "invite": {
+            "household": "coast",
+            "ref": "coast-code"
+          }
+        },
+        {
+          "as": "bea",
+          "join": {
+            "invite": "coast-code",
+            "timezoneOffsetMinutes": 0
+          }
         }
       ],
       "probes": [
@@ -1054,6 +1100,396 @@
           "as": "bea",
           "method": "GET",
           "path": "/api/households/$household:home/audit"
+        },
+        {
+          "name": "health",
+          "method": "GET",
+          "path": "/api/health"
+        },
+        {
+          "name": "info",
+          "method": "GET",
+          "path": "/api/info"
+        },
+        {
+          "name": "anonymous household create",
+          "method": "POST",
+          "path": "/api/households",
+          "body": {
+            "name": "Nope",
+            "currency": "CAD"
+          }
+        },
+        {
+          "name": "anonymous receipt upload",
+          "method": "POST",
+          "path": "/api/receipts",
+          "body": {
+            "name": "a.pdf",
+            "mime": "application/pdf",
+            "base64": "JVBERi0="
+          }
+        },
+        {
+          "name": "invalid registration",
+          "method": "POST",
+          "path": "/api/auth/register",
+          "body": {
+            "email": "not-an-email"
+          }
+        },
+        {
+          "name": "invalid expense create",
+          "as": "alex",
+          "method": "POST",
+          "path": "/api/households/$household:home/expenses",
+          "body": {
+            "title": "Mismatch",
+            "totalCents": 1000,
+            "date": "$today",
+            "payerUserId": "$user:alex",
+            "splitMode": "exact",
+            "allocations": [
+              {
+                "userId": "$user:alex",
+                "amountCents": 100
+              },
+              {
+                "userId": "$user:bea",
+                "amountCents": 100
+              }
+            ],
+            "category": {
+              "name": "Groceries",
+              "icon": "cart-outline",
+              "color": "#E47850"
+            },
+            "note": ""
+          }
+        },
+        {
+          "name": "expense create",
+          "as": "bea",
+          "method": "POST",
+          "path": "/api/households/$household:home/expenses",
+          "body": {
+            "title": "Internet",
+            "totalCents": 8000,
+            "date": "$today",
+            "payerUserId": "$user:bea",
+            "splitMode": "equal",
+            "category": {
+              "name": "Utilities",
+              "icon": "flash-outline",
+              "color": "#5B7DB1"
+            },
+            "note": "fibre"
+          }
+        },
+        {
+          "name": "stale expense update",
+          "as": "alex",
+          "method": "PUT",
+          "path": "/api/households/$household:home/expenses/$expense:groceries",
+          "body": {
+            "title": "Groceries",
+            "totalCents": 1200,
+            "date": "$today",
+            "payerUserId": "$user:alex",
+            "splitMode": "equal",
+            "category": {
+              "name": "Groceries",
+              "icon": "cart-outline",
+              "color": "#E47850"
+            },
+            "note": "",
+            "revision": 9
+          }
+        },
+        {
+          "name": "expense update",
+          "as": "alex",
+          "method": "PUT",
+          "path": "/api/households/$household:home/expenses/$expense:groceries",
+          "body": {
+            "title": "Groceries",
+            "totalCents": 1202,
+            "date": "$today",
+            "payerUserId": "$user:alex",
+            "splitMode": "equal",
+            "category": {
+              "name": "Groceries",
+              "icon": "cart-outline",
+              "color": "#E47850"
+            },
+            "note": "edited",
+            "revision": 0
+          }
+        },
+        {
+          "name": "expenses after edits",
+          "as": "alex",
+          "method": "GET",
+          "path": "/api/households/$household:home/expenses?month=$month"
+        },
+        {
+          "name": "recurring rules",
+          "as": "alex",
+          "method": "GET",
+          "path": "/api/households/$household:home/recurring"
+        },
+        {
+          "name": "invalid rule create",
+          "as": "alex",
+          "method": "POST",
+          "path": "/api/households/$household:home/recurring",
+          "body": {
+            "title": "",
+            "totalCents": 120000,
+            "payerUserId": "$user:alex",
+            "splitMode": "equal",
+            "category": {
+              "name": "Home",
+              "icon": "home-outline",
+              "color": "#678DB1"
+            },
+            "note": "",
+            "nextDate": "2027-02-01",
+            "frequency": "monthly"
+          }
+        },
+        {
+          "name": "stale rule update",
+          "as": "alex",
+          "method": "PUT",
+          "path": "/api/households/$household:home/recurring/$rule:rent",
+          "body": {
+            "title": "Loyer",
+            "totalCents": 120000,
+            "payerUserId": "$user:bea",
+            "splitMode": "equal",
+            "category": {
+              "name": "Home",
+              "icon": "home-outline",
+              "color": "#678DB1"
+            },
+            "note": "",
+            "nextDate": "2027-02-01",
+            "frequency": "monthly",
+            "revision": 7,
+            "active": true
+          }
+        },
+        {
+          "name": "rule pause",
+          "as": "alex",
+          "method": "PUT",
+          "path": "/api/households/$household:home/recurring/$rule:rent",
+          "body": {
+            "title": "Loyer",
+            "totalCents": 120000,
+            "payerUserId": "$user:bea",
+            "splitMode": "equal",
+            "category": {
+              "name": "Home",
+              "icon": "home-outline",
+              "color": "#678DB1"
+            },
+            "note": "",
+            "nextDate": "2027-02-01",
+            "frequency": "monthly",
+            "revision": 0,
+            "active": false
+          }
+        },
+        {
+          "name": "stale rule delete",
+          "as": "bea",
+          "method": "DELETE",
+          "path": "/api/households/$household:home/recurring/$rule:rent",
+          "body": {
+            "revision": 0
+          }
+        },
+        {
+          "name": "invalid reimbursement",
+          "as": "bea",
+          "method": "POST",
+          "path": "/api/households/$household:home/months/$month/reimbursements",
+          "body": {
+            "fromUserId": "$user:bea",
+            "toUserId": "$user:bea",
+            "amountCents": 100
+          }
+        },
+        {
+          "name": "household rename",
+          "as": "alex",
+          "method": "PATCH",
+          "path": "/api/households/$household:home",
+          "body": {
+            "name": "Maison hiver"
+          }
+        },
+        {
+          "name": "invalid household rename",
+          "as": "alex",
+          "method": "PATCH",
+          "path": "/api/households/$household:home",
+          "body": {
+            "name": ""
+          }
+        },
+        {
+          "name": "member rename refused",
+          "as": "bea",
+          "method": "PATCH",
+          "path": "/api/households/$household:home",
+          "body": {
+            "name": "Mine now"
+          }
+        },
+        {
+          "name": "member invite refused",
+          "as": "bea",
+          "method": "POST",
+          "path": "/api/households/$household:home/invites"
+        },
+        {
+          "name": "member removes creator refused",
+          "as": "bea",
+          "method": "DELETE",
+          "path": "/api/households/$household:home/members/$user:alex"
+        },
+        {
+          "name": "trip create",
+          "as": "bea",
+          "method": "POST",
+          "path": "/api/households/trips",
+          "body": {
+            "name": "Ski",
+            "currency": "CAD",
+            "startDate": "2027-02-05",
+            "endDate": "2027-02-07",
+            "timezoneOffsetMinutes": 0
+          }
+        },
+        {
+          "name": "invalid trip create",
+          "as": "bea",
+          "method": "POST",
+          "path": "/api/households/trips",
+          "body": {
+            "name": "Ski",
+            "currency": "CAD",
+            "startDate": "2027-02-07",
+            "endDate": "2027-02-05",
+            "timezoneOffsetMinutes": 0
+          }
+        },
+        {
+          "name": "trip detail",
+          "as": "bea",
+          "method": "GET",
+          "path": "/api/households/$household:coast"
+        },
+        {
+          "name": "trip edit",
+          "as": "alex",
+          "method": "PATCH",
+          "path": "/api/households/$household:coast/trip",
+          "body": {
+            "name": "C\u00f4te nord",
+            "startDate": "2027-01-11",
+            "endDate": "2027-01-16"
+          }
+        },
+        {
+          "name": "invalid trip edit",
+          "as": "alex",
+          "method": "PATCH",
+          "path": "/api/households/$household:coast/trip",
+          "body": {
+            "name": "C\u00f4te",
+            "startDate": "2027-01-16",
+            "endDate": "2027-01-11"
+          }
+        },
+        {
+          "name": "trip leave",
+          "as": "bea",
+          "method": "POST",
+          "path": "/api/households/$household:coast/leave"
+        },
+        {
+          "name": "trip after leaving",
+          "as": "bea",
+          "method": "GET",
+          "path": "/api/households/$household:coast"
+        },
+        {
+          "name": "trip archive",
+          "as": "alex",
+          "method": "POST",
+          "path": "/api/households/$household:coast/archive"
+        },
+        {
+          "name": "households after archive",
+          "as": "alex",
+          "method": "GET",
+          "path": "/api/households"
+        },
+        {
+          "name": "audit after edits",
+          "as": "alex",
+          "method": "GET",
+          "path": "/api/households/$household:home/audit"
+        },
+        {
+          "name": "missing receipt",
+          "as": "alex",
+          "method": "GET",
+          "path": "/api/receipts/does-not-exist"
+        },
+        {
+          "name": "invalid receipt upload",
+          "as": "alex",
+          "method": "POST",
+          "path": "/api/receipts",
+          "body": {
+            "name": "tool.exe",
+            "mime": "application/x-msdownload",
+            "base64": "TVo="
+          }
+        },
+        {
+          "name": "logout",
+          "as": "bea",
+          "method": "POST",
+          "path": "/api/auth/logout"
+        },
+        {
+          "name": "me after logout",
+          "as": "bea",
+          "method": "GET",
+          "path": "/api/auth/me"
+        }
+      ],
+      "knownDifferences": [
+        {
+          "probe": "rule pause",
+          "path": "/body/rule/anchorDay",
+          "reason": "Deliberate (docs/migration/shared-recurrence.md#deliberate-differences): .NET returns and audits the stored rule including anchorDay, so clients can show the anchored day; legacy echoed the request without it."
+        },
+        {
+          "probe": "audit",
+          "path": "/body/events/*/after/anchorDay",
+          "reason": "Deliberate (docs/migration/shared-recurrence.md#deliberate-differences): .NET returns and audits the stored rule including anchorDay, so clients can show the anchored day; legacy echoed the request without it."
+        },
+        {
+          "probe": "audit after edits",
+          "path": "/body/events/*/after/anchorDay",
+          "reason": "Deliberate (docs/migration/shared-recurrence.md#deliberate-differences): .NET returns and audits the stored rule including anchorDay, so clients can show the anchored day; legacy echoed the request without it."
         }
       ]
     }

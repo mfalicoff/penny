@@ -8,14 +8,16 @@
 //   node scripts/test-env/penny-env.mjs seed <scenario> | artifacts [dir] | compare
 //   node scripts/test-env/penny-env.mjs down [--all]
 //
-// Commands act on the most recent environment unless --run-id ID is given.
+// Commands act on the most recent environment unless --run-id ID is given. `compare`
+// runs the `differential` scenario by default and writes test-results/fullstack/parity/.
 import { spawn } from "node:child_process";
+import { join } from "node:path";
 import {
-  collectArtifacts, control, down, downAll, readState, runnerEnvironment, up,
+  collectArtifacts, control, down, downAll, readState, root, runnerEnvironment, up,
 } from "./environment.mjs";
 import { scenario, seed } from "./seed.mjs";
 import { startOidcProvider } from "./oidc-provider.mjs";
-import { compareLegacy } from "./compare.mjs";
+import { compareLegacy, writeParityReport } from "./compare.mjs";
 
 function parse(argv) {
   const separator = argv.indexOf("--");
@@ -156,8 +158,9 @@ async function main() {
       console.log(collectArtifacts(readState(id), positional[0]));
       return;
     case "compare": {
-      const report = await compareLegacy(readState(id), { scenario: positional[0] ?? "searchable-household" });
+      const report = await compareLegacy(readState(id), { scenario: positional[0] ?? "differential" });
       console.log(JSON.stringify(report.summary, null, 2));
+      writeParityReport(report, join(root, "test-results/fullstack/parity"));
       if (report.differences.length) {
         for (const difference of report.differences) console.error(difference);
         process.exitCode = 1;
