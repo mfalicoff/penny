@@ -54,7 +54,9 @@ ENV ASPNETCORE_ENVIRONMENT=Production \
 COPY --from=model --chown=root:root --chmod=0644 /model/ /opt/penny/model/
 COPY --from=build --chown=root:root /app/ /opt/penny/app/
 # The receipt volume is the only writable application path; the app user owns it.
-RUN install -d -o "$APP_UID" -g "$APP_UID" -m 0700 /var/lib/penny/receipts
+# /var/lib/penny/cutover is the mount point of the one-time cutover volume (MAZ-65,
+# deploy/compose.cutover.yaml): an empty named volume takes this owner and mode.
+RUN install -d -o "$APP_UID" -g "$APP_UID" -m 0700 /var/lib/penny/receipts /var/lib/penny/cutover
 WORKDIR /opt/penny/app
 USER $APP_UID
 VOLUME ["/var/lib/penny/receipts"]
