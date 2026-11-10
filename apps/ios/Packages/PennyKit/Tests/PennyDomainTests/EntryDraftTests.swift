@@ -116,4 +116,33 @@ struct EntryDraftTests {
             try draft.buildSchedule(categories: Self.categories, original: rule)
         }
     }
+
+    /// The server stores `nextDate` only through 2100-12-31. A new repeating draft whose
+    /// second occurrence would fall later could never sync, so it is refused with the person's
+    /// input kept, instead of failing later as "Invalid ledger data.".
+    @Test("whenRepeatingDraftsNextDateIsAfter2100_Build_ShouldRefuseBeforeSaving")
+    func scheduleAfterLedgerRange() throws {
+        func build(_ date: String, _ frequency: RecurrenceFrequency?, editing: LedgerEntry? = nil)
+            throws(LedgerRuleError)
+            -> RecurringRule?
+        {
+            let draft = EntryDraft(
+                kind: .expense, title: "Gym", amount: "40", date: date, categoryId: "food", frequency: frequency)
+            return try draft.build(categories: Self.categories, editing: editing, makeID: Self.ids()).rule
+        }
+        for (date, frequency) in [
+            ("2100-12-15", RecurrenceFrequency.monthly), ("2100-12-25", .weekly), ("2100-01-01", .yearly),
+        ] {
+            #expect(throws: LedgerRuleError.scheduleAfterLedgerRange, "\(date) \(frequency)") {
+                try build(date, frequency)
+            }
+        }
+        #expect(try build("2100-12-24", .weekly)?.nextDate == .day("2100-12-31"))
+        #expect(try build("2100-11-30", .monthly)?.nextDate == .day("2100-12-30"))
+        #expect(try build("2100-12-31", nil) == nil, "a one-off entry on the last day is fine")
+        // Editing ignores the repeat choice, so there is no rule to refuse.
+        let occurrence = Sample.entry("gym:2100-12-31", "2100-12-31", recurringId: "gym")
+        #expect(try build("2100-12-31", .monthly, editing: occurrence) == nil)
+        #expect(LedgerRuleError.scheduleAfterLedgerRange.message.hasSuffix("."))
+    }
 }

@@ -156,4 +156,16 @@ struct RecurrenceTests {
         #expect(CalendarDate(instant, in: toronto) == .day("2026-02-28"))
         #expect(CalendarDate(instant, in: tokyo) == .day("2026-03-01"))
     }
+
+    /// Known limitation kept from legacy (docs/ios-ledger-domain.md): materializing in 2100 can
+    /// move `nextDate` past the ledger range. There is no legacy error path there, so the rule
+    /// advances and `Ledger.violations` names it, so a client can still refuse to acknowledge it.
+    @Test("whenMaterializingInLate2100_Materialize_ShouldAdvancePastTheRangeAndViolationsNameIt")
+    func materializePastLedgerRange() {
+        let ledger = Sample.ledger(recurring: [Sample.rule("gym", start: "2100-11-30", next: "2100-12-30")])
+        let next = Recurrence.materialize(ledger, today: .day("2100-12-31"))
+        #expect(next.transactions.map(\.id) == ["gym:2100-12-30"])
+        #expect(next.recurring[0].nextDate == .day("2101-01-30"))
+        #expect(next.violations == [.dateOutOfRange("gym")])
+    }
 }

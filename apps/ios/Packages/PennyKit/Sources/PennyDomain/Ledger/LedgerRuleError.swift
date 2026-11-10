@@ -2,11 +2,12 @@
 /// the Expo app, the web client and this one explain the same failure the same way. A caller
 /// shows `message`, keeps the user's draft and offers the next step.
 ///
-/// Three cases have no legacy command check and so no legacy sentence: `invalidCategoryName`
+/// Four cases have no legacy command check and so no legacy sentence: `invalidCategoryName`
 /// (the legacy form refused an empty name and capped input at 50), `tooManyCategories` and
 /// `categoryKindInUse` (the legacy server refused both as "Invalid ledger data." only after
-/// sync). They follow the wording of their account and trip counterparts
-/// (docs/ios-ledger-domain.md, "Compatibility decisions").
+/// sync) follow the wording of their account and trip counterparts; `scheduleAfterLedgerRange`
+/// (a new schedule whose next date is after 2100, which the server also refused only after
+/// sync) follows the date message (docs/ios-ledger-domain.md, "Compatibility decisions").
 public enum LedgerRuleError: Error, Hashable, Sendable, CustomStringConvertible {
     case invalidAmount
     case invalidSplitPeople
@@ -17,6 +18,7 @@ public enum LedgerRuleError: Error, Hashable, Sendable, CustomStringConvertible 
     case missingTitle
     case chooseCategory
     case chooseRepeat
+    case scheduleAfterLedgerRange
 
     case entryChangedOnAnotherDevice
     case entryChangedBeforeDelete
@@ -57,6 +59,8 @@ public enum LedgerRuleError: Error, Hashable, Sendable, CustomStringConvertible 
         case .missingTitle: "Add a name for this entry."
         case .chooseCategory: "Choose a category."
         case .chooseRepeat: "Choose a repeat schedule."
+        case .scheduleAfterLedgerRange:
+            "This schedule would repeat after 2100. Choose an earlier date, or choose Does not repeat."
         case .entryChangedOnAnotherDevice:
             "This entry changed on another device. Close this form and reopen the entry to review the latest version."
         case .entryChangedBeforeDelete: "This entry changed on another device. Reopen it before deleting."
