@@ -44,8 +44,7 @@ struct WireModelTests {
         #expect(entry.total == 99_999_999_999)
         #expect(entry.date == "2026-02-28")
         #expect(entry.accountId == nil)
-        let object = try #require(
-            try JSONSerialization.jsonObject(with: JSONEncoder().encode(entry)) as? [String: Any])
+        let object = try APIFixtures.object(JSONEncoder().encode(entry))
         #expect(object["accountId"] == nil)
         #expect(object["date"] as? String == "2026-02-28")
     }
@@ -117,8 +116,7 @@ struct WireModelTests {
     @Test("whenOptionalsAreNil_SearchRequest_ShouldOmitThemFromJSON")
     func requestOmitsNil() throws {
         let request = SearchRequest(query: "coffee", sort: .amountAscending, pageSize: 10)
-        let object = try #require(
-            try JSONSerialization.jsonObject(with: JSONEncoder().encode(request)) as? [String: Any])
+        let object = try APIFixtures.object(JSONEncoder().encode(request))
         #expect(Set(object.keys) == ["query", "sort", "pageSize"])
         #expect(object["sort"] as? String == "amount-asc")
     }

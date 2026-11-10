@@ -13,7 +13,7 @@ struct SearchClientTests {
         let request = try #require(transport.sent.first)
         #expect(request.httpMethod == "POST")
         #expect(request.url?.path == "/api/v1/search/transactions")
-        let body = try #require(try JSONSerialization.jsonObject(with: #require(request.httpBody)) as? [String: Any])
+        let body = try APIFixtures.object(request.httpBody)
         #expect(body["query"] as? String == "coffee")
     }
 

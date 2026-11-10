@@ -216,7 +216,7 @@ struct APIClientTests {
         }
         let request = try #require(transport.sent.first)
         #expect(request.httpMethod == "PUT")
-        let body = try #require(try JSONSerialization.jsonObject(with: #require(request.httpBody)) as? [String: Any])
+        let body = try APIFixtures.object(request.httpBody)
         #expect(body["revision"] as? Int == 0)
     }
 
@@ -231,7 +231,7 @@ struct APIClientTests {
         #expect(receipt.id == "r1")
         let request = try #require(transport.sent.first)
         #expect(request.timeoutInterval == 120)
-        let body = try #require(try JSONSerialization.jsonObject(with: #require(request.httpBody)) as? [String: Any])
+        let body = try APIFixtures.object(request.httpBody)
         #expect(body["base64"] as? String == "AQID")
         #expect(body["mime"] as? String == "image/png")
     }

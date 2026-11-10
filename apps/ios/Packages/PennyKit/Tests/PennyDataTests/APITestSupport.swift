@@ -27,6 +27,12 @@ final class StubTransport: HTTPTransport {
 }
 
 enum APIFixtures {
+    /// A JSON object body (no nested `#require`, which the macro cannot expand).
+    static func object(_ data: Data?) throws -> [String: Any] {
+        let data = try #require(data)
+        return try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+    }
+
     static let server = serverURL("https://penny.example.test")
     static let otherServer = serverURL("https://other.example.test")
     static let token = String(repeating: "ab", count: 32)
