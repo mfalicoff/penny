@@ -8,6 +8,12 @@ public protocol AccountLocalData: Sendable {
     /// Sends pending changes now ("Sync, then sign out"). Throws when they could not all be
     /// sent; nothing is removed in that case.
     func syncPendingChanges(for scope: AccountScope, using client: APIClient) async throws
+    /// Starts sign-out: from now on the account takes no new saves, and the pending count is
+    /// returned in the same step, so nothing saved after the count can be removed with it.
+    /// Balance with `removeLocalData` or `cancelRemoval`.
+    func beginRemoval(for scope: AccountScope) async -> Int
+    /// Sign-out did not go ahead (refused, failed or the account changed): saves resume.
+    func cancelRemoval(for scope: AccountScope) async
     /// Removes the account's entries from this device after sign-out. Synced entries stay
     /// on the server. When it throws, `AuthController.unremovedLocalData` names the scope
     /// so the person can try again.
@@ -24,6 +30,8 @@ public struct NoLocalAccountData: AccountLocalData {
     public init() {}
     public func pendingChangeCount(for scope: AccountScope) async -> Int { 0 }
     public func syncPendingChanges(for scope: AccountScope, using client: APIClient) async throws {}
+    public func beginRemoval(for scope: AccountScope) async -> Int { 0 }
+    public func cancelRemoval(for scope: AccountScope) async {}
     public func removeLocalData(for scope: AccountScope) async throws {}
     public func moveLocalData(from old: AccountScope, to new: AccountScope) async throws {}
 }

@@ -3,6 +3,12 @@ public struct SearchPage: Equatable, Sendable {
     public let scope: AccountScope
     public let request: SearchRequest
     public let response: SearchResponse
+
+    public init(scope: AccountScope, request: SearchRequest, response: SearchResponse) {
+        self.scope = scope
+        self.request = request
+        self.response = response
+    }
 }
 
 /// Runs searches for one account and keeps stale answers out of the UI.

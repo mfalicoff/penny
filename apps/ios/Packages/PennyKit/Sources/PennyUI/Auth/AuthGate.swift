@@ -3,35 +3,60 @@ import PennyDesign
 import PennyDomain
 import SwiftUI
 
-/// Shows the signed-out flow, the launch states or the signed-in content for the auth
-/// state. The signed-in content is a placeholder until the MAZ-69 shell replaces it.
+/// Shows the signed-out flow, the launch states, the signed-in shell or the demo for the auth
+/// state. The demo replaces whatever is shown until it ends, and never touches the account or
+/// the offline ledger: only a signed-in account's shell is given the sync model.
 struct AuthGate: View {
     let auth: AuthController
-    let link: DeepLink?
+    /// The app's one offline ledger and sync model (MAZ-71), read by each account's shell
+    /// through `AccountWorkspace`.
+    let sync: LedgerSyncModel
+    @Binding var inbox: DeepLinkInbox
+    let services: AppServices
+    @Binding var demo: DemoWorkspace?
 
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         Group {
-            switch auth.state {
-            case .restoring:
-                ProgressView("Opening Penny…")
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(PennyColor.background)
-                    .accessibilityIdentifier("auth.restoring")
-            case .keychainUnavailable:
-                ContentUnavailableView {
-                    Label("Unlock to continue", systemImage: "lock")
-                } description: {
-                    Text("Penny keeps your sign-in in the Keychain, which opens after you unlock this device.")
-                } actions: {
-                    Button("Try again") { Task { await auth.restore() } }
+            if let demo {
+                ShellHost(
+                    inbox: $inbox,
+                    makeModel: {
+                        ShellModel(
+                            workspace: demo, session: .demo, today: services.today(), leaveDemo: { self.demo = nil })
+                    }
+                )
+                .id(ObjectIdentifier(demo))
+            } else {
+                switch auth.state {
+                case .restoring:
+                    ProgressView("Opening Penny…")
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(PennyColor.background)
+                        .accessibilityIdentifier("auth.restoring")
+                case .keychainUnavailable:
+                    ContentUnavailableView {
+                        Label("Unlock to continue", systemImage: "lock")
+                    } description: {
+                        Text("Penny keeps your sign-in in the Keychain, which opens after you unlock this device.")
+                    } actions: {
+                        Button("Try again") { Task { await auth.restore() } }
+                    }
+                    .accessibilityIdentifier("auth.keychainUnavailable")
+                case .signedOut, .signingIn:
+                    SignedOutFlow(auth: auth, onTryDemo: startDemo)
+                case .signedIn(let account), .signingOut(let account):
+                    ShellHost(
+                        inbox: $inbox,
+                        makeModel: {
+                            ShellModel(
+                                workspace: services.accountWorkspace(account, sync), session: .account(auth, account),
+                                today: services.today(), startDemo: startDemo)
+                        }
+                    )
+                    .id(account.scope)
                 }
-                .accessibilityIdentifier("auth.keychainUnavailable")
-            case .signedOut, .signingIn:
-                SignedOutFlow(auth: auth)
-            case .signedIn(let account), .signingOut(let account):
-                SignedInPlaceholder(auth: auth, account: account, link: link)
             }
         }
         .task { await auth.restore() }
@@ -39,11 +64,46 @@ struct AuthGate: View {
             if scenePhase == .active, auth.state == .keychainUnavailable { Task { await auth.restore() } }
         }
     }
+
+    private func startDemo() {
+        demo = DemoWorkspace(today: services.today())
+    }
 }
 
-/// Sign in, create an account and choose a server.
+/// Creates the shell's model once and hands it pending deep links when the app is unlocked.
+struct ShellHost: View {
+    @Binding var inbox: DeepLinkInbox
+    let makeModel: () -> ShellModel
+    @State private var model: ShellModel?
+    @Environment(AppLockController.self) private var lock
+
+    var body: some View {
+        Group {
+            if let model {
+                AppShell(shell: model)
+            } else {
+                Color.clear
+            }
+        }
+        .onAppear {
+            if model == nil { model = makeModel() }
+            deliver()
+        }
+        .onChange(of: inbox) { deliver() }
+        .onChange(of: lock.conceals) { deliver() }
+    }
+
+    /// Opens a waiting link once the shell exists and the lock is open; never behind the lock.
+    private func deliver() {
+        guard let model, let link = inbox.take(ready: !lock.conceals) else { return }
+        model.route.open(link)
+    }
+}
+
+/// Sign in, create an account and choose a server, with the temporary demo at the bottom.
 struct SignedOutFlow: View {
     let auth: AuthController
+    var onTryDemo: (() -> Void)?
 
     enum Route: Hashable { case createAccount, server }
 
@@ -60,6 +120,20 @@ struct SignedOutFlow: View {
                         onSwitchMode: { path.append(.createAccount) })
                 }
             }
+            .safeAreaInset(edge: .bottom) {
+                if let onTryDemo {
+                    Button(action: onTryDemo) {
+                        Label("Take a look around with sample data", systemImage: "play.fill")
+                            .font(.subheadline.weight(.semibold))
+                            .frame(minHeight: Metrics.minTouchTarget)
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(PennyColor.tintText)
+                    .padding(.bottom, 8)
+                    .accessibilityHint("Opens a temporary demo. Nothing is saved.")
+                    .accessibilityIdentifier("auth.tryDemo")
+                }
+            }
             .navigationDestination(for: Route.self) { route in
                 switch route {
                 case .createAccount:
@@ -70,38 +144,5 @@ struct SignedOutFlow: View {
                 }
             }
         }
-    }
-}
-
-/// Signed-in content until MAZ-69: the account, its read-only server and sign-out.
-struct SignedInPlaceholder: View {
-    let auth: AuthController
-    let account: SignedInAccount
-    let link: DeepLink?
-
-    var body: some View {
-        NavigationStack {
-            List {
-                Section {
-                    LabeledContent("Signed in as", value: account.email)
-                        .accessibilityIdentifier("home.account")
-                    NavigationLink("Server") { ServerInfoView(account: account, server: auth.server) }
-                        .accessibilityIdentifier("home.serverInfo")
-                } footer: {
-                    Text("The native app is being built.")
-                }
-                if let link {
-                    Section {
-                        Text(String(describing: link))
-                            .font(PennyFont.style(.footnote))
-                            .foregroundStyle(PennyColor.tertiaryLabel)
-                            .accessibilityIdentifier("root.deepLink")
-                    }
-                }
-                Section { SignOutButton(auth: auth) }
-            }
-            .navigationTitle("Penny")
-        }
-        .accessibilityIdentifier("root.signedIn")
     }
 }
