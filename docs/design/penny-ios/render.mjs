@@ -8,7 +8,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const root = dirname(fileURLToPath(import.meta.url));
 const scale = Number(process.argv[2] ?? 2);
 const filter = process.argv[3] ?? "";
-const files = ["system", "iphone", "ipad"].flatMap((dir) =>
+const files = ["system", "iphone", "ipad", "web"].flatMap((dir) =>
   readdirSync(join(root, dir)).filter((f) => f.endsWith(".html")).map((f) => join(dir, f)),
 ).filter((f) => f.includes(filter));
 

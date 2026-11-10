@@ -1,6 +1,6 @@
 # Penny for iOS: native redesign proposal
 
-This proposal targets iPhone and iPad only. It replaces the warm card-heavy "web app" look (in both the current app and the [penny-redesign](../penny-redesign/README.md) Penpot proposal) with a design that feels native to iOS 26.
+This proposal targets iPhone and iPad, plus the desktop web app (Expo web and the self-hosted server). It replaces the warm card-heavy "web app" look (in both the current app and the [penny-redesign](../penny-redesign/README.md) Penpot proposal) with a design that feels native to iOS 26.
 
 Each screen is a standalone HTML file with a `@dsCard` marker, so the folder can be imported straight into a Claude Design design-system project. Rendered PNGs are in [previews/](previews/).
 
@@ -14,8 +14,9 @@ Each screen is a standalone HTML file with a `@dsCard` marker, so the folder can
 | iPhone · organize & settings | [settings](iphone/settings.html), [recurring](iphone/recurring.html), [schedule-detail](iphone/schedule-detail.html), [accounts](iphone/accounts.html), [account-form](iphone/account-form.html), [categories](iphone/categories.html), [category-form](iphone/category-form.html), [appearance](iphone/appearance.html), [app-lock](iphone/app-lock.html) |
 | iPhone · access & states | [sign-in](iphone/sign-in.html), [create-account](iphone/create-account.html), [server-connect](iphone/server-connect.html), [lock](iphone/lock.html), [empty-home](iphone/empty-home.html), [offline](iphone/offline.html), [save-error](iphone/save-error.html), [saved-toast](iphone/saved-toast.html), [sign-out](iphone/sign-out.html) |
 | iPad | [home](ipad/home.html), [activity](ipad/activity.html), [add-entry](ipad/add-entry.html), [shared](ipad/shared.html), [trip](ipad/trip.html), [settings](ipad/settings.html) |
+| Web (desktop browser) | [home](web/home.html), [activity](web/activity.html), [insights](web/insights.html), [household](web/household.html), [trips](web/trips.html), [settings](web/settings.html), [add-entry](web/add-entry.html), [sign-in](web/sign-in.html) |
 
-53 cards in total. Sheets that open over another screen (calendar, add income, split, category picker and others) embed that screen in an iframe, so they stay in sync with it.
+61 cards in total. Sheets that open over another screen (calendar, add income, split, category picker and others) embed that screen in an iframe, so they stay in sync with it.
 
 ## Direction
 
@@ -47,6 +48,20 @@ Each screen is a standalone HTML file with a `@dsCard` marker, so the folder can
   - Each failure keeps the user's work and names the next step: an offline banner with pending rows, a save error that keeps the draft, a sign-out warning about unsynced changes, and a confirmation before deleting a shared expense for everyone.
   - Saving shows a toast with Undo instead of a success screen.
 - **Widgets:** both existing small widgets are restyled, and medium and Lock Screen widgets are added. The new sizes need `supportedFamilies` extended in the widget config.
+
+## Web (desktop browser)
+
+The web app uses the same tokens, color rules and money semantics as the iOS app, adapted for a mouse, a keyboard and wide screens:
+
+- **Shell:** a persistent left sidebar (Home, Activity, Insights; Together lists each household and trip; Manage). A top bar holds the page title, the month switcher, a ⌘K search and a copper **Add entry** button (N). Glass is limited to small floating elements over the hero glow; panels are solid.
+- **Home:** the Left to spend hero with Came in / Spent / Invested tiles, Coming up, a large Sankey (hover a band to focus), and By category.
+- **Activity:** a dense table grouped by day with daily totals, multi-select checkboxes, row actions on hover, and a detail panel on the right instead of a new page. Keyboard: ↑↓, ↵, E, ⌫, X.
+- **Insights:** the full-width Sankey with a click-to-focus band, a category table comparing with last month, and a six-month in/spent chart.
+- **Household:** an expenses table (paid by, split, total, your share, status) with Balances, Suggested payments and an overdue month beside it. Recording a payment still states that Penny never moves money.
+- **Trips:** the next trip as a feature card with its expenses (private "Only you" entries marked), then a grid of other trips and a New trip card.
+- **Settings:** a section list and detail panes. Includes Reduce transparency and the read-only server.
+- **Add entry:** a centered two-column dialog (amount, name and categories on the left; date, account, split, repeat, trip and a receipt drop zone on the right) with ⌘↵ to save and Esc to cancel.
+- **Sign in:** split screen with the brand and a Left to spend preview on the left, and the server chip, email, SSO and Create account on the right.
 
 ## Implementation notes (Expo SDK 57)
 
