@@ -94,3 +94,4 @@ Imported SQLite households work unchanged: `household_trips` became the trip ran
 - **Rate limit.** The invite limit is configurable (`Auth__InviteRateLimitPermits`, default 20) and sends `Retry-After` without the draft-8 `RateLimit` headers.
 - **Period end.** A period never ends before it began (a guard against clock differences between instances); legacy SQLite had no such check.
 - Instants are stored as `timestamptz` truncated to whole milliseconds, so responses keep the legacy millisecond values.
+- **One leave instant.** Legacy wrote a leave to `household_members.left_at` and `household_member_periods.left_at` from two separate clock readings, so they could differ by a millisecond. The importer keeps the period, so an imported former member's `leftAt` can be a few milliseconds later than legacy reported. New leaves record one instant. The [cutover rehearsal](parity-report.md#cutover-rehearsal) allows only this difference, at most 50 ms.

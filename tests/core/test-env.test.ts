@@ -3,10 +3,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { X509Certificate } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { databaseName, postgresImage, runnerEnvironment, validRunId } from "../../scripts/test-env/environment.mjs";
 import { applyPendingEdits, resolve } from "../../scripts/test-env/seed.mjs";
-import { differences, normalize } from "../../scripts/test-env/compare.mjs";
+import { differences, knownPath, normalize, writeParityReport } from "../../scripts/test-env/compare.mjs";
 import { selfSignedCertificate } from "../../scripts/test-env/oidc-provider.mjs";
 
 test("run ids are restricted before they name containers and databases", () => {
@@ -33,6 +35,19 @@ test("seed references resolve whole values, embedded paths and dates", () => {
   assert.deepEqual(resolve({ payer: "$user:alex", list: ["$household:home"], date: "$today" }, context), { payer: "u1", list: ["h1"], date: "2026-11-09" });
   assert.equal(resolve("/api/households/$household:home/expenses/$expense:lunch?month=$month", context), "/api/households/h1/expenses/e1?month=2026-11");
   assert.throws(() => resolve("$user:bea", context), /not defined/);
+  const later = { ...context, rules: { rent: "r1" }, users: { alex: { email: "alex.r1@penny.test" } } };
+  assert.equal(resolve("/api/households/$household:home/recurring/$rule:rent", later), "/api/households/h1/recurring/r1");
+  assert.equal(resolve("$email:alex", later), "alex.r1@penny.test");
+  assert.throws(() => resolve("$rule:gym", later), /not defined/);
+});
+
+test("registered differences match their path, descendants and wildcard segments only", () => {
+  const pattern = knownPath("/body/events/*/after/anchorDay");
+  assert.ok(pattern.test("/body/events/5/after/anchorDay"));
+  assert.ok(pattern.test("/body/events/5/after/anchorDay/nested"));
+  assert.equal(pattern.test("/body/events/5/after/anchorDayX"), false);
+  assert.equal(pattern.test("/body/events/5/before/anchorDay"), false);
+  assert.equal(knownPath("/a.b").test("/aXb"), false);
 });
 
 test("pending edits apply delete, edit and create to a copy", () => {
@@ -73,4 +88,29 @@ test("the local OIDC provider's certificate is a valid self-signed loopback cert
   assert.equal(certificate.checkHost("localhost"), "localhost");
   assert.ok(certificate.verify(certificate.publicKey));
   assert.ok(new Date(certificate.validTo).getTime() > Date.now());
+});
+
+test("parity reports name each diverging probe and registered reason without raw values leaking", () => {
+  const directory = mkdtempSync(join(tmpdir(), "penny-parity-"));
+  try {
+    const summaryFile = join(directory, "summary.md");
+    const report = {
+      summary: { scenario: "differential", probes: 2, matching: 1, knownDifferences: 1 },
+      knownDifferences: [{ probe: "rule", path: "/body/rule/anchorDay", reason: "Deliberate | stored rule" }],
+      differences: ["me /body/email: legacy \"<email:bea>\" vs .NET null"],
+      results: [
+        { probe: "rule", method: "PUT", path: "/api/x", legacy: { status: 200 }, dotnet: { status: 200 }, differences: [] },
+        { probe: "me", method: "GET", path: "/api/auth/me", legacy: { status: 200 }, dotnet: { status: 401 }, differences: [{}] },
+      ],
+    };
+    const markdown = writeParityReport(report, join(directory, "out"), summaryFile);
+    assert.match(markdown, /1\/2 probes match; 1 registered differences/);
+    assert.match(markdown, /\| me \| GET \/api\/auth\/me \| 200 \| 401 \| \*\*1 differ\*\* \|/);
+    assert.match(markdown, /### Unregistered differences/);
+    assert.match(markdown, /Deliberate \\\| stored rule/, "pipes in reasons are escaped");
+    assert.equal(readFileSync(summaryFile, "utf8"), markdown);
+    assert.deepEqual(JSON.parse(readFileSync(join(directory, "out", "parity-report.json"), "utf8")), report);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
 });

@@ -163,7 +163,9 @@ release tags, and manual runs validate before publishing; only `master` updates
 the `latest` tag. Signed mobile builds and TestFlight submission remain limited
 to release tags and manual runs, never pull requests.
 
-Native device E2E is an explicit workstation/release gate, not an implied result of Linux CI or an EAS build. The repository does not provision Xcode runtimes, AVD images, `agent-device`, or native development binaries on hosted CI. Do not add a green job that skips missing devices; provision those prerequisites before moving native execution to a dedicated runner.
+The native SwiftUI app has its own workflow, `.github/workflows/ios.yml` (MAZ-66), on the GitHub `xcode-27` image. It runs on pull requests that touch `apps/ios/`, `contracts/`, `app.json`, `package.json` or `docs/ios-ipa.md`: swift-format and module-boundary lint, PennyKit tests on the macOS host, app and PennyKit tests on newly created iPhone and iPad simulators, a Release build that must exclude test controls, and a launch with screenshots on both simulators. It uploads `ios-test-results`. Run the same steps locally with `apps/ios/scripts/ios.sh ci` ([native app](../apps/ios/README.md#commands)). XCUITest journeys arrive with MAZ-81.
+
+Legacy Expo native device E2E is an explicit workstation/release gate, not an implied result of Linux CI or an EAS build. The repository does not provision Xcode runtimes, AVD images, `agent-device`, or native development binaries on hosted CI. Do not add a green job that skips missing devices; provision those prerequisites before moving native execution to a dedicated runner.
 
 ## Adding or changing tests
 

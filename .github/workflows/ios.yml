@@ -1,0 +1,59 @@
+name: iOS checks
+
+# The native SwiftUI app (apps/ios, MAZ-66). Runs when the app or anything its tests read
+# changes: the legacy identity in app.json, the design baseline, fixtures and signing docs.
+on:
+  pull_request:
+    paths:
+      - apps/ios/**
+      - contracts/**
+      - app.json
+      - package.json
+      - docs/ios-ipa.md
+      - .github/workflows/ios.yml
+  push:
+    branches: [v2]
+    paths:
+      - apps/ios/**
+      - contracts/**
+      - app.json
+      - package.json
+      - docs/ios-ipa.md
+      - .github/workflows/ios.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ios:
+    name: Swift format, build, iPhone/iPad tests and Release check
+    # Apple Silicon image with Xcode 27; scripts/ios.sh selects the exact version pinned in
+    # apps/ios/.xcode-version and fails if the image does not have it.
+    runs-on: xcode-27
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Lint (swift-format, module boundaries, property lists)
+        run: apps/ios/scripts/ios.sh lint
+      - name: PennyKit tests on the macOS host
+        run: apps/ios/scripts/ios.sh package-test
+      - name: App and PennyKit tests on clean iPhone and iPad simulators
+        run: apps/ios/scripts/ios.sh test
+      - name: Release configuration excludes test controls
+        run: apps/ios/scripts/ios.sh release-check
+      - name: Launch on clean iPhone and iPad simulators
+        run: apps/ios/scripts/ios.sh launch
+      - name: Upload test results and launch screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ios-test-results
+          path: test-results/ios/
+          if-no-files-found: warn
