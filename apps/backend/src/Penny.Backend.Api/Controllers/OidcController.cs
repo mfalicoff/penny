@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Penny.Backend.Api.Authentication;
 using Penny.Backend.Api.Configuration;
 using Penny.Backend.Api.Contracts;
+using Penny.Backend.Api.Observability;
 using Penny.Backend.Application.Authentication;
 using Penny.Backend.Domain.Errors;
 
@@ -64,8 +65,18 @@ public sealed class OidcController(
     [ProducesResponseType<ApiError>(429)]
     public async Task<ActionResult<SessionResponse>> Complete(CancellationToken cancellationToken)
     {
-        var fields = await JsonStringFields.ReadAsync(Request, CompleteFields, cancellationToken);
-        var session = await Configured().CompleteAsync(fields[0], fields[1], cancellationToken);
+        var session = await Measured.SignInAsync(
+            Measured.Oidc,
+            async () =>
+            {
+                var fields = await JsonStringFields.ReadAsync(
+                    Request,
+                    CompleteFields,
+                    cancellationToken
+                );
+                return await Configured().CompleteAsync(fields[0], fields[1], cancellationToken);
+            }
+        );
         SessionCookie.Append(Response, session.Token, options.SecureCookies, clock);
         return Ok(new SessionResponse(session.Token, session.Email));
     }

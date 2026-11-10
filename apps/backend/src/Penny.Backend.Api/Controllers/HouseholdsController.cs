@@ -4,6 +4,7 @@ using Penny.Backend.Api.Authentication;
 using Penny.Backend.Api.Contracts;
 using Penny.Backend.Api.Households;
 using Penny.Backend.Api.Ledgers;
+using Penny.Backend.Api.Observability;
 using Penny.Backend.Application.Households;
 
 namespace Penny.Backend.Api.Controllers;
@@ -60,16 +61,16 @@ public sealed class HouseholdsController(HouseholdService households) : Controll
         CancellationToken cancellationToken
     )
     {
-        using var body = await LedgerBody.ReadAsync(Request, cancellationToken);
-        return Ok(
-            Envelope(
-                await households.JoinAsync(
-                    User.Session().UserId,
-                    body?.RootElement,
-                    cancellationToken
-                )
-            )
-        );
+        var joined = await Measured.JoinAsync(async () =>
+        {
+            using var body = await LedgerBody.ReadAsync(Request, cancellationToken);
+            return await households.JoinAsync(
+                User.Session().UserId,
+                body?.RootElement,
+                cancellationToken
+            );
+        });
+        return Ok(Envelope(joined));
     }
 
     [HttpGet("{id}", Name = "getApiHouseholdsId")]

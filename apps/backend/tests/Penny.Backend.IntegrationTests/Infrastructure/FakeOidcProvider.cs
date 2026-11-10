@@ -104,15 +104,19 @@ public sealed class FakeOidcProvider : IAsyncLifetime
 
     public TestApiFactory CreateApi(
         string connectionString,
-        IReadOnlyDictionary<string, string>? settings = null
+        IReadOnlyDictionary<string, string>? settings = null,
+        Action<IServiceCollection>? configure = null
     ) =>
         new(
             connectionString,
             settings ?? Settings(),
             services =>
+            {
                 services
                     .AddHttpClient(OidcProviderClient.HttpClientName)
-                    .ConfigurePrimaryHttpMessageHandler(CreateHandler)
+                    .ConfigurePrimaryHttpMessageHandler(CreateHandler);
+                configure?.Invoke(services);
+            }
         );
 
     // Plays the user approving sign-in at the provider and returns the redirect the

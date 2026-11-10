@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Penny.Backend.Api.Errors;
 using Penny.Backend.Api.Households;
 using Penny.Backend.Api.Search;
+using Penny.Backend.Application.Diagnostics;
 
 namespace Penny.Backend.Api.Authentication;
 
@@ -42,6 +43,7 @@ public static class AuthRateLimit
                 .HttpContext.GetEndpoint()
                 ?.Metadata.GetMetadata<EnableRateLimitingAttribute>()
                 ?.PolicyName;
+            BackendTelemetry.RateLimitRejected(policy ?? Policy);
             return new ValueTask(
                 ApiErrors.WriteAsync(
                     rejected.HttpContext,

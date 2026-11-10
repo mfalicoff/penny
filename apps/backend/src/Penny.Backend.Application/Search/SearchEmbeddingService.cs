@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using Penny.Backend.Application.Abstractions.Persistence;
 using Penny.Backend.Application.Abstractions.Search;
+using Penny.Backend.Application.Diagnostics;
 
 namespace Penny.Backend.Application.Search;
 
@@ -32,6 +33,12 @@ public sealed class SearchEmbeddingService(
         );
         if (work.Count == 0)
             return 0;
+        using var activity = BackendTelemetry.StartJob(
+            BackendTelemetry.SearchEmbeddingJob,
+            work.Count
+        );
+        foreach (var item in work)
+            BackendTelemetry.JobPickedUp(BackendTelemetry.SearchEmbeddingJob, now - item.DueAt);
         IReadOnlyList<float[]> vectors;
         try
         {
@@ -39,6 +46,7 @@ public sealed class SearchEmbeddingService(
         }
         catch (Exception error) when (error is not OperationCanceledException)
         {
+            BackendTelemetry.Failed(activity, error.GetType().Name);
             var attempts = work.Max(item => item.Attempts);
             await search.ReleaseEmbeddingsAsync(
                 token,
