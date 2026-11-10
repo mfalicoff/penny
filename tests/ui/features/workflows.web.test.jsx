@@ -176,6 +176,20 @@ test("overview shows recorded totals and Cash remaining even when something is s
   expect(body.textContent).not.toContain("Projected remaining");
 });
 
+test("overview cards leave out scheduled personal income and expenses", async () => {
+  // The demo rules (monthly salary income and rent) next fall on the 1st of next month.
+  ledger.transactions = [];
+  const body = await renderWeb(<Workspace><OverviewScreen /></Workspace>);
+  await click(button("Next month"));
+  expect(body.textContent).toContain("Monthly salary");
+  expect(body.textContent).toContain("Rent");
+  expect(body.textContent).toContain("Income$0.00");
+  expect(body.textContent).toContain("Expenses$0.00");
+  expect(body.textContent).toContain("Cash remaining$0.00");
+  expect(body.textContent).toContain("not counted in the totals until recorded");
+  expect(body.textContent).not.toContain("Projected remaining");
+});
+
 test("new split recurring expense validates, saves cents and closes only after success", async () => {
   const save = jest.fn().mockRejectedValueOnce(new Error("Offline for test")).mockResolvedValue(undefined);
   const close = jest.fn();
