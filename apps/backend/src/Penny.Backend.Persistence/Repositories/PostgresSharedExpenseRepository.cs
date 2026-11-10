@@ -74,7 +74,7 @@ public sealed class PostgresSharedExpenseRepository(NpgsqlDataSource source, Rec
             .Where(rule => candidates.Contains(rule.Id) && rule.LeaseToken == leaseToken)
             .OrderBy(rule => rule.NextDate)
             .ThenBy(rule => rule.Id)
-            .Select(rule => new RuleClaim(rule.Id, rule.HouseholdId))
+            .Select(rule => new RuleClaim(rule.Id, rule.HouseholdId, rule.NextDate))
             .ToListAsync(cancellationToken);
     }
 

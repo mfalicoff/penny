@@ -1,3 +1,4 @@
+using Penny.Backend.Application.Diagnostics;
 using Penny.Backend.Application.Search;
 
 namespace Penny.Backend.Api.Search;
@@ -28,6 +29,10 @@ public sealed partial class SearchEmbeddingWorker(
             catch (Exception error)
             {
                 Failed(logger, error.GetType().Name);
+                BackendTelemetry.JobFailed(
+                    BackendTelemetry.SearchEmbeddingJob,
+                    error.GetType().Name
+                );
             }
             try
             {

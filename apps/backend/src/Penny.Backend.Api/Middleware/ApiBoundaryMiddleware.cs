@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.AspNetCore.Http.Features;
 using Penny.Backend.Api.Configuration;
 using Penny.Backend.Api.Errors;
@@ -54,8 +55,14 @@ public sealed partial class ApiBoundaryMiddleware(
         {
             var (status, message) = ApiErrors.Map(error);
             // Deliberately do not log exception text, request paths/bodies, credentials or SQL.
+            // The W3C trace id (MAZ-127) finds the request trace; "-" when not traced.
             if (status == 500)
-                RequestFailed(logger, error.GetType().Name, context.TraceIdentifier);
+                RequestFailed(
+                    logger,
+                    error.GetType().Name,
+                    context.TraceIdentifier,
+                    Activity.Current?.TraceId.ToHexString() ?? "-"
+                );
             // A dependency timeout (search statement timeout) is retryable.
             if (status == 503)
                 context.Response.Headers.RetryAfter = "1";
@@ -104,7 +111,12 @@ public sealed partial class ApiBoundaryMiddleware(
 
     [LoggerMessage(
         Level = LogLevel.Error,
-        Message = "API request failed ({ExceptionType}); trace {TraceId}"
+        Message = "API request failed ({ExceptionType}); request {RequestId}, trace {TraceId}"
     )]
-    private static partial void RequestFailed(ILogger logger, string exceptionType, string traceId);
+    private static partial void RequestFailed(
+        ILogger logger,
+        string exceptionType,
+        string requestId,
+        string traceId
+    );
 }
