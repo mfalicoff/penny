@@ -13,7 +13,8 @@
 // PENNY_SMOKE_KEEP=1 leaves the environment running after a failure.
 import { spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { mkdirSync, readFileSync, rmSync, appendFileSync } from "node:fs";
+import { Buffer } from "node:buffer";
+import { appendFileSync, mkdirSync, rmSync } from "node:fs";
 import { createServer } from "node:net";
 import { fileURLToPath } from "node:url";
 import path from "node:path";

@@ -2,7 +2,7 @@
 
 [App showcase](../README.md) · [Documentation](README.md)
 
-Run release commands from the repository root. Platform-specific credentials and distribution instructions live in [Android APK builds](android-apk.md) and [iOS IPA and TestFlight builds](ios-ipa.md). Container publishing is covered in [Self-hosting](deployment.md#automated-container-builds).
+Run release commands from the repository root. Platform-specific credentials and distribution instructions live in [Android APK builds](android-apk.md) and [iOS IPA and TestFlight builds](ios-ipa.md). Container publishing is covered in [Self-hosting](deployment.md#container-images-and-releases).
 
 ## Semantic versioning and releases
 

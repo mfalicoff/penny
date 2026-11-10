@@ -5,7 +5,8 @@
 ## Run and operate Penny
 
 - [Development](development.md): local web setup, Nix/direnv, live reload, connecting iOS and Android, and the source layout.
-- [Self-hosting and configuration](deployment.md): Docker Compose, reverse proxies and HTTPS, container images, backups, OIDC, push notifications, and server upgrades.
+- [Self-hosting and configuration](deployment.md): the .NET/PostgreSQL Compose stack, reverse proxies and HTTPS, configuration, external PostgreSQL, container images, upgrades and rollback, OIDC, push notifications, and the legacy Node deployment.
+- [Operations runbook](operations.md): health and readiness, JSON logs and request ids, connections and disk, backup and restore drills, index and search maintenance, PostgreSQL roles, extensions and version policy, write reconciliation, and failure runbooks.
 - [App behavior and limits](app-guide.md): personal-share calculations, payment accounts, households, trips, reimbursements, offline sync, recurrence, and ledger upgrades.
 
 ## Build and release
