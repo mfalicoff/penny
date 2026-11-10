@@ -1,4 +1,4 @@
-public import Foundation
+import Foundation
 
 // Search v1 wire types (MAZ-121, docs/migration/search.md): `POST /api/v1/search/transactions`.
 

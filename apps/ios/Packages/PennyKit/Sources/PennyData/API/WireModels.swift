@@ -1,5 +1,3 @@
-public import Foundation
-
 // Wire models for the Penny HTTP API (contracts/openapi.json, contract 1.5.0).
 //
 // These types mirror the JSON exactly and carry no presentation state. Money is integer

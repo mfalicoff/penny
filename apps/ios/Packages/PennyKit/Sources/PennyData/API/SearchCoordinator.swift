@@ -1,5 +1,3 @@
-public import Foundation
-
 /// A page of results tagged with what it answers, so a caller can also check it itself.
 public struct SearchPage: Equatable, Sendable {
     public let scope: AccountScope

@@ -1,4 +1,3 @@
-public import Foundation
 public import PennyDomain
 
 /// A bearer token bound to the one server that issued it. `APIClient` sends it only to
