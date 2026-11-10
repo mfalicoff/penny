@@ -175,7 +175,7 @@ cmd_test() {
 assert_no_test_controls() {
   local file found=0
   while IFS= read -r -d "" file; do
-    if /usr/bin/strings -a "$file" | grep -qE "PENNY_TEST_SERVER_URL|PENNY_TEST_DEMO|TestControls"; then
+    if /usr/bin/strings -a "$file" | grep -qE "PENNY_TEST_SERVER_URL|PENNY_TEST_DEMO|PENNY_TEST_EXPO_FIXTURE|TestControls"; then
       echo "error: $file contains test controls." >&2
       found=1
     fi

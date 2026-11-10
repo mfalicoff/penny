@@ -88,7 +88,7 @@ PennyDesign keeps the tokens of the baseline (`Tokens.swift`, checked by `TokenB
 
 | Setting | Where it's stored | Behavior |
 | --- | --- | --- |
-| Appearance: System (default), Light, Dark | `UserDefaults` (`penny.appearance`), this device only | Applied at the root with `preferredColorScheme`. A legacy `amoled` or `catppuccin` theme maps to Dark, `AppearancePreference(legacy:)`; MAZ-72 imports the Expo value. Text size follows the device. |
+| Appearance: System (default), Light, Dark | `UserDefaults` (`penny.appearance`), this device only | Applied at the root with `preferredColorScheme`. A legacy `amoled` or `catppuccin` theme maps to Dark, `AppearancePreference(legacy:)`; The Expo value is imported at the first native launch ([Expo upgrade](ios-expo-migration.md)). Text size follows the device. |
 | Currency: CAD, USD, EUR or GBP | The ledger (through the workspace) | The four currencies `contracts/openapi.json` allows. Locked, with the legacy message, once the ledger has entries or recurring rules, as the ledger rule does; locked while in an active household ("Currency is locked while you're in a household."), which the server enforces (`Your ledger currency must match your active households.`). The household count comes from MAZ-75; until then only the ledger rule applies on the device. A change shows the save toast; a failure shows the save error and keeps the choice to retry. |
 | Face ID lock | Keychain, this device only, not synced | See [App lock](#app-lock). |
 | Server | The saved server (MAZ-68) | Read-only while signed in: "Sign out to change servers." |
@@ -105,7 +105,7 @@ The legacy `AppLockProvider`, ported to `AppLockController` with the same rules:
 - **Turning it on or off** asks for biometrics first (turning on accepts biometrics only, so the person proves the sensor works for them; turning off and unlocking accept the passcode too). The new value is saved before it takes effect; if saving fails, the previous setting stays and the screen says so.
 - **Recovery.** Unlocking accepts the device passcode, so a biometric lockout or a removed face or finger doesn't lock the person out. A device with no passcode can't verify anyone: the lock screen says to set a passcode in Settings, then unlock.
 - **Privacy outside the app.** Widgets and notification previews aren't covered by the lock; the setting says so. MAZ-79/80 keep their contents non-sensitive.
-- The setting is in the Keychain (`com.mfalicoff.penny.app-lock`, `AfterFirstUnlockThisDeviceOnly`, not synchronizable). MAZ-72 imports the Expo app's `penny-app-lock` value.
+- The setting is in the Keychain (`com.mfalicoff.penny.app-lock`, `AfterFirstUnlockThisDeviceOnly`, not synchronizable). The Expo app's `penny-app-lock` value is imported before the lock first reads its setting: on (or damaged) turns the native lock on, and until the Expo value can be read and saved, the lock's read fails so the app stays concealed (`ExpoImportingLockStore`, [Expo upgrade](ios-expo-migration.md)).
 
 ## Demo
 

@@ -17,11 +17,26 @@
 
         var serverURL: ServerURL?
         var startsInDemo = false
+        /// `PENNY_TEST_EXPO_FIXTURE=upgrade`: stage Expo data for an in-place upgrade rehearsal
+        /// and import nothing at this launch (`ExpoUpgradeFixture`, docs/ios-expo-migration.md).
+        var stagesExpoFixture = false
 
         static func fromProcess(_ environment: [String: String] = ProcessInfo.processInfo.environment) -> TestControls {
             TestControls(
                 serverURL: environment[serverURLVariable].flatMap { try? ServerURL($0) },
-                startsInDemo: environment[demoVariable] == "1")
+                startsInDemo: environment[demoVariable] == "1",
+                stagesExpoFixture: environment[ExpoUpgradeFixture.variable] == "upgrade")
+        }
+
+        /// Stages the Expo fixture when asked; returns whether it did, so this launch skips the import.
+        func stageExpoFixture() -> Bool {
+            guard stagesExpoFixture else { return false }
+            do {
+                try ExpoUpgradeFixture.stage(server: serverURL?.description ?? ExpoUpgradeFixture.defaultServer)
+            } catch {
+                preconditionFailure("Could not stage the Expo upgrade fixture: \(error)")
+            }
+            return true
         }
 
         func apply(_ configuration: AppConfiguration) -> AppConfiguration {
