@@ -1,0 +1,49 @@
+<!-- @dsCard group="iPhone" name="Delete confirmation" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Delete</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<style>
+
+  .scrim { position: absolute; inset: 0; background: var(--dim); z-index: 30; }
+  .alert { position: absolute; left: 34px; right: 34px; top: 50%; transform: translateY(-50%); border-radius: 34px; padding: 24px 20px 18px; z-index: 32; background: color-mix(in srgb, var(--surface) 94%, transparent); text-align: center; }
+  .alert .ai { width: 48px; height: 48px; border-radius: 15px; margin: 0 auto 12px; display: grid; place-items: center; }
+  .alert .ai [data-i] { width: 26px; height: 26px; }
+  .alert h2 { font-size: 19px; font-weight: 700; letter-spacing: -0.01em; }
+  .alert p { font-size: 14px; color: var(--label-2); line-height: 1.4; margin-top: 8px; }
+  .btns { display: flex; flex-direction: column; gap: 8px; margin-top: 18px; }
+  .b { height: 48px; border-radius: 24px; display: grid; place-items: center; font-size: 16px; font-weight: 600; background: var(--fill); color: var(--label); }
+  .b.red { background: var(--danger); color: #fff; }
+  .b.tint { background: var(--tint); color: #fff; }
+  .b.redtext { color: var(--danger); }
+  .head { padding: 112px 20px 0; }
+  .day { display: flex; justify-content: space-between; padding: 22px 20px 8px; font-size: 13px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .03em; }
+  .sheet { position: absolute; left: 10px; right: 10px; bottom: 10px; border-radius: 40px; padding: 22px 18px 18px; z-index: 32; background: color-mix(in srgb, var(--surface) 94%, transparent); }
+  .sheet .who { display: flex; gap: 12px; align-items: center; }
+  .sheet .who b { font-size: 17px; display: block; } .sheet .who span { font-size: 13px; color: var(--label-2); }
+  .sheet .note { display: flex; gap: 10px; margin-top: 16px; padding: 12px 14px; border-radius: 16px; background: var(--fill); font-size: 14px; line-height: 1.4; }
+  .sheet .note [data-i] { width: 20px; height: 20px; color: var(--label-2); flex: none; margin-top: 1px; }
+  .stack .avatar { width: 30px; height: 30px; font-size: 11px; border-width: 2px; border-color: var(--surface); }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <div class="island"></div>
+  <div class="status"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="scroll">
+    <div class="navbar"><div></div><div class="grp"><div class="glass gbtn"><i data-i="options"></i></div></div></div>
+    <div class="head"><div class="largetitle">Activity</div></div>
+    <div class="day"><span>Sunday, Nov 1</span><span class="num">+$1,750.00</span></div>
+    <div class="list">
+      <div class="row"><div class="ic" style="background:var(--income)"><i data-i="arrow-down"></i></div><div class="t"><b>Payday</b><span>Main chequing</span></div><div class="amt num pos">+$3,200.00</div></div>
+      <div class="row"><div class="ic" style="background:var(--c-home)"><i data-i="home"></i></div><div class="t"><b>Rent</b><span>Apartment · you paid</span></div><div class="amt num ">−$1,450.00</div></div>
+    </div>
+  </div>
+  <div class="scrim"></div>
+  <div class="sheet glass">
+    <div class="who"><div class="ic" style="background:var(--c-home)"><i data-i="home"></i></div><div style="flex:1"><b>Delete “Rent”?</b><span>$2,900.00 · Nov 1 · Apartment</span></div>
+      <div class="stack"><div class="avatar">MF</div><div class="avatar">MI</div><div class="avatar">JS</div></div></div>
+    <div class="note"><i data-i="people"></i><span>This expense is shared. Deleting it removes it for Mira and Jo too, and recalculates November balances.</span></div>
+    <div class="btns"><div class="b red">Delete for everyone</div><div class="b">Cancel</div></div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+</body></html>

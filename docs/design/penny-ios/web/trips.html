@@ -1,0 +1,62 @@
+<!-- @dsCard group="Web" name="Trips" viewport="1520x980" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · Web · Trips</title>
+<link rel="stylesheet" href="../assets/penny.css"><link rel="stylesheet" href="../assets/web.css">
+<script src="../assets/icons.js"></script><script src="../assets/sankey.js"></script><script src="../assets/web.js"></script>
+<style>
+  .feature { display: grid; grid-template-columns: 1.2fr 1fr; gap: 18px; overflow: hidden; padding: 0; }
+  .feature .l { padding: 26px; position: relative; }
+  .feature .l::before { content: ""; position: absolute; inset: -60px; background: radial-gradient(45% 55% at 25% 40%, rgba(59,130,246,.30), transparent 70%), radial-gradient(40% 50% at 70% 60%, rgba(255,160,90,.30), transparent 70%); filter: blur(30px); }
+  .feature .l > * { position: relative; }
+  .feature h2 { font-size: 34px; font-weight: 700; letter-spacing: -0.03em; margin-top: 6px; }
+  .feature .meta { color: var(--label-2); font-size: 14px; margin-top: 2px; }
+  .feature .nums { display: flex; gap: 32px; margin-top: 22px; }
+  .feature .nums div { font-size: 13px; color: var(--label-2); }
+  .feature .nums b { display: block; font-size: 24px; color: var(--label); font-weight: 700; letter-spacing: -0.02em; margin-top: 2px; }
+  .feature .r { padding: 18px 20px 18px 0; }
+  .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 18px; }
+  .tc { padding: 18px; }
+  .tc .top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .tc .ic { width: 38px; height: 38px; border-radius: 12px; background: var(--fill); color: var(--label); }
+  .tc b.n { display: block; font-size: 17px; margin-top: 14px; }
+  .tc span.d { font-size: 13px; color: var(--label-2); }
+  .tc .tot { margin-top: 14px; font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+  .new { border: 1.5px dashed var(--label-3); background: transparent; box-shadow: none; display: grid; place-items: center; color: var(--label-2); font-weight: 600; font-size: 14px; }
+</style></head>
+<body class="canvas">
+<div class="browser" data-active="trips" data-url="penny.example.com/trips">
+  <main class="wmain">
+    <div class="wtop"><h1>Trips</h1><div class="sp"></div>
+      <div class="wsearch"><i data-i="search"></i>Search entries<kbd>⌘K</kbd></div>
+      <div class="btn primary"><i data-i="add"></i>Add entry <kbd>N</kbd></div></div>
+    <div class="wbody">
+      <div class="panel feature">
+        <div class="l">
+          <span class="tag" style="background:var(--surface)">In 3 days · Shared</span>
+          <h2>Lisbon</h2>
+          <div class="meta">Nov 12–19, 2026 · 4 people</div>
+          <div class="nums"><div>Trip total<b class="num">$1,284.30</b></div><div>Your share<b class="num">$412.60</b></div><div>You owe<b class="num">$38.20</b></div></div>
+          <div style="display:flex;gap:8px;margin-top:22px"><span class="btn primary"><i data-i="add"></i>Trip expense</span><span class="btn">Open trip</span></div>
+        </div>
+        <div class="r">
+          <table class="tbl">
+            <thead><tr><th>Expense</th><th>Paid by</th><th class="r">Yours</th></tr></thead>
+            <tbody>
+              <tr><td><div class="cell"><div class="ic" style="background:var(--c-transport)"><i data-i="airplane"></i></div><b>Flights</b></div></td><td class="muted">Sam · 4 ways</td><td class="r num">$206.00</td></tr>
+              <tr><td><div class="cell"><div class="ic" style="background:var(--c-home)"><i data-i="home"></i></div><b>Apartment in Alfama</b></div></td><td class="muted">You</td><td class="r num">$92.00</td></tr>
+              <tr><td><div class="cell"><div class="ic" style="background:var(--c-health)"><i data-i="heart"></i></div><b>Travel insurance</b></div></td><td class="muted">Mira</td><td class="r num">$11.15</td></tr>
+              <tr><td><div class="cell"><div class="ic" style="background:var(--c-transport)"><i data-i="bus"></i></div><b>Airport train</b><span class="tag"><i data-i="lock-closed"></i>Only you</span></div></td><td class="muted">You</td><td class="r num">$24.00</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="cards">
+        <div class="panel tc"><div class="top"><div class="ic"><i data-i="airplane"></i></div><span class="tag">Personal</span></div><b class="n">Ski week</b><span class="d">Feb 14–21, 2027 · upcoming</span><div class="tot num">$640.00</div></div>
+        <div class="panel tc"><div class="top"><div class="ic"><i data-i="airplane"></i></div><span class="tag">Personal</span></div><b class="n">Montréal weekend</b><span class="d">Oct 3–5, 2026</span><div class="tot num">$186.40</div></div>
+        <div class="panel tc"><div class="top"><div class="ic"><i data-i="airplane"></i></div><span class="tag inc"><i data-i="checkmark"></i>Settled</span></div><b class="n">Cottage weekend</b><span class="d">Aug 22–24, 2026 · shared</span><div class="tot num">$238.75</div></div>
+        <div class="panel tc new"><span style="display:flex;gap:6px;align-items:center"><i data-i="add" style="width:16px;height:16px"></i>New trip</span></div>
+      </div>
+    </div>
+  </main>
+</div>
+</body></html>

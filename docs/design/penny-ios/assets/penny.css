@@ -1,0 +1,153 @@
+/* Penny for iOS — design tokens and component styles for the proposal renders.
+   Production typeface is SF Pro (system). Inter is bundled only so previews render off-device. */
+@font-face { font-family: "PennyPreview"; src: url("Inter.ttf") format("truetype"); font-weight: 100 900; }
+
+:root {
+  --font: -apple-system, "SF Pro Text", "PennyPreview", system-ui, sans-serif;
+  /* surfaces */
+  --bg: #F2F1EE;
+  --surface: #FFFFFF;
+  --surface-2: #F7F6F3;
+  --fill: rgba(120, 116, 110, 0.12);
+  --separator: rgba(60, 56, 50, 0.13);
+  /* text */
+  --label: #16120F;
+  --label-2: #6F6A64;
+  --label-3: #A9A49D;
+  /* brand + semantics */
+  --tint: #E4572E;          /* Penny copper — actions, selection, brand */
+  --tint-text: #C2461F;     /* copper for small text on light surfaces (4.6:1) */
+  --tint-soft: rgba(228, 87, 46, 0.12);
+  --income: #1E8E4E;
+  --income-soft: rgba(30, 142, 78, 0.12);
+  --invest: #5B57D1;
+  --invest-soft: rgba(91, 87, 209, 0.12);
+  --pending: #B7791F;
+  --danger: #D93B30;
+  /* categories */
+  /* category colors never reuse a semantic color (copper, green, indigo, amber, red) */
+  --c-home: #3B82F6; --c-groceries: #0FA3A3; --c-transport: #64748B; --c-food: #E0529C; --c-shopping: #A0704C;
+  --c-entertainment: #7A8F3A; --c-health: #0E7490; --c-other: #8E8A85;
+  /* glass */
+  --glass: rgba(255, 255, 255, 0.62);
+  --glass-strong: rgba(255, 255, 255, 0.78);
+  --glass-edge: rgba(255, 255, 255, 0.9);
+  --glass-shadow: 0 10px 30px rgba(40, 30, 20, 0.10), 0 1px 2px rgba(40, 30, 20, 0.06);
+  --dim: rgba(20, 14, 10, 0.28);
+  /* hero glow */
+  --glow-1: rgba(255, 138, 76, 0.55);
+  --glow-2: rgba(255, 196, 120, 0.45);
+  --glow-3: rgba(255, 120, 150, 0.28);
+  /* radii */
+  --r-card: 26px; --r-row: 14px; --r-field: 12px;
+}
+
+.dark {
+  --bg: #000000;
+  --surface: #1A1918;
+  --surface-2: #232220;
+  --fill: rgba(150, 145, 138, 0.20);
+  --separator: rgba(255, 250, 240, 0.12);
+  --label: #F6F4F1;
+  --label-2: #A39E97;
+  --label-3: #6D6863;
+  --tint: #FF6F3F;
+  --tint-text: #FF8A5E;
+  --tint-soft: rgba(255, 111, 63, 0.18);
+  --income: #3DD07A;
+  --income-soft: rgba(61, 208, 122, 0.16);
+  --invest: #8E8BFF;
+  --invest-soft: rgba(142, 139, 255, 0.18);
+  --pending: #E0A040;
+  --danger: #FF6B60;
+  --glass: rgba(40, 38, 36, 0.58);
+  --glass-strong: rgba(48, 46, 44, 0.75);
+  --glass-edge: rgba(255, 255, 255, 0.16);
+  --glass-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  --dim: rgba(0, 0, 0, 0.55);
+  --glow-1: rgba(255, 100, 50, 0.42);
+  --glow-2: rgba(255, 160, 80, 0.22);
+  --glow-3: rgba(200, 70, 120, 0.25);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: #E7E5E1; font-family: var(--font); color: var(--label); -webkit-font-smoothing: antialiased; }
+body.canvas { padding: 40px; display: flex; gap: 40px; align-items: flex-start; flex-wrap: wrap; }
+[data-i] { display: inline-flex; width: 22px; height: 22px; flex: none; }
+[data-i] svg { width: 100%; height: 100%; }
+.num { font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+
+/* ---------- device frames ---------- */
+.iphone { width: 402px; height: 874px; border-radius: 56px; overflow: hidden; position: relative; background: var(--bg); box-shadow: 0 0 0 10px #1b1a19, 0 30px 60px rgba(0,0,0,.25); }
+.ipad { width: 1210px; height: 834px; border-radius: 30px; overflow: hidden; position: relative; background: var(--bg); box-shadow: 0 0 0 14px #1b1a19, 0 30px 60px rgba(0,0,0,.25); }
+.status { position: absolute; top: 0; left: 0; right: 0; height: 54px; display: flex; align-items: center; justify-content: space-between; padding: 0 34px 0 46px; font-weight: 600; font-size: 16px; z-index: 30; }
+.status .r { display: flex; gap: 6px; align-items: center; }
+.status [data-i] { width: 18px; height: 18px; --sw: 40px; }
+.island { position: absolute; top: 11px; left: 50%; transform: translateX(-50%); width: 124px; height: 36px; background: #000; border-radius: 20px; z-index: 31; }
+.ipad .status { height: 30px; padding: 0 24px; font-size: 13px; }
+.home-ind { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); width: 140px; height: 5px; border-radius: 3px; background: var(--label); opacity: .85; z-index: 40; }
+.scroll { position: absolute; inset: 0; overflow: hidden; }
+
+/* ---------- glass ---------- */
+.glass { background: var(--glass); backdrop-filter: blur(22px) saturate(190%); -webkit-backdrop-filter: blur(22px) saturate(190%); border: 0.5px solid var(--glass-edge); box-shadow: inset 0 1px 0 var(--glass-edge), var(--glass-shadow); }
+.gbtn { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; color: var(--label); }
+.gbtn [data-i] { width: 21px; height: 21px; }
+.gcap { height: 44px; border-radius: 22px; display: inline-flex; align-items: center; gap: 6px; padding: 0 16px; font-weight: 600; font-size: 16px; color: var(--label); }
+.tinted { background: color-mix(in srgb, var(--tint) 88%, transparent); color: #fff; border-color: rgba(255,255,255,.35); box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 8px 22px color-mix(in srgb, var(--tint) 40%, transparent); }
+
+/* ---------- nav bar ---------- */
+.navbar { position: absolute; top: 54px; left: 0; right: 0; height: 52px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; z-index: 20; }
+.navbar .grp { display: flex; gap: 8px; }
+.largetitle { font-size: 34px; font-weight: 700; letter-spacing: -0.025em; line-height: 41px; }
+.eyebrow { font-size: 13px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .04em; }
+
+/* ---------- tab bar (iOS 26 floating) ---------- */
+.tabbar { position: absolute; left: 16px; right: 16px; bottom: 26px; display: flex; gap: 10px; align-items: center; z-index: 25; }
+.tabs { flex: 1; height: 62px; border-radius: 31px; display: flex; align-items: center; padding: 4px; }
+.tab { flex: 1; height: 54px; border-radius: 27px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 10.5px; font-weight: 600; color: var(--label); }
+.tab [data-i] { width: 24px; height: 24px; }
+.tab.on { color: var(--tint); background: var(--fill); }
+.fab { width: 62px; height: 62px; border-radius: 50%; display: grid; place-items: center; }
+.fab [data-i] { width: 28px; height: 28px; --sw: 44px; }
+
+/* ---------- content ---------- */
+.section-h { display: flex; justify-content: space-between; align-items: baseline; padding: 0 20px; margin: 26px 0 10px; }
+.section-h h3 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+.section-h a { font-size: 15px; font-weight: 500; color: var(--tint-text); text-decoration: none; }
+.card { background: var(--surface); border-radius: var(--r-card); margin: 0 16px; }
+.list { background: var(--surface); border-radius: var(--r-card); margin: 0 16px; overflow: hidden; }
+.row { display: flex; align-items: center; gap: 12px; padding: 11px 16px; min-height: 60px; position: relative; }
+.row + .row::before { content: ""; position: absolute; top: 0; left: 64px; right: 0; border-top: 0.5px solid var(--separator); }
+.ic { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; color: #fff; flex: none; }
+.ic [data-i] { width: 19px; height: 19px; --sw: 40px; }
+.row .t { flex: 1; min-width: 0; }
+.row .t b { display: block; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+.row .t span { display: block; font-size: 13px; color: var(--label-2); margin-top: 1px; }
+.row .amt { text-align: right; font-size: 16px; font-weight: 600; }
+.row .amt span { display: block; font-size: 12px; color: var(--label-2); font-weight: 500; margin-top: 1px; }
+.pos { color: var(--income); }
+.inv { color: var(--invest); }
+.chev { color: var(--label-3); width: 14px !important; height: 14px !important; --sw: 56px; }
+.pill { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px; border-radius: 17px; font-size: 14px; font-weight: 600; background: var(--fill); color: var(--label); white-space: nowrap; }
+.pill.on { background: var(--label); color: var(--surface); }
+.pill [data-i] { width: 16px; height: 16px; --sw: 44px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
+.seg { display: flex; background: var(--fill); border-radius: 20px; padding: 3px; height: 40px; }
+.seg div { flex: 1; display: grid; place-items: center; font-size: 14px; font-weight: 600; border-radius: 17px; color: var(--label); }
+.seg .on { background: var(--surface); box-shadow: 0 2px 8px rgba(0,0,0,.10); }
+.dark .seg .on { background: #4A4744; }
+.avatar { background: linear-gradient(180deg, #A8A29E, #78716C); width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; color: #fff; border: 2px solid var(--surface); }
+.stack { display: flex; } .stack .avatar + .avatar { margin-left: -9px; }
+
+/* hero glow background */
+.glow { position: absolute; left: -80px; right: -80px; top: -120px; height: 520px; z-index: 0; filter: blur(50px); pointer-events: none;
+  background: radial-gradient(40% 45% at 30% 45%, var(--glow-1), transparent 70%), radial-gradient(35% 40% at 75% 35%, var(--glow-2), transparent 70%), radial-gradient(35% 35% at 60% 75%, var(--glow-3), transparent 70%); }
+
+/* flow bar */
+.flow { display: flex; height: 12px; border-radius: 6px; overflow: hidden; gap: 3px; }
+.flow i { display: block; height: 100%; border-radius: 3px; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; color: var(--label-2); }
+.legend b { color: var(--label); font-weight: 600; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.iphone, .ipad { color: var(--label); }
+.row .t .badge { display: inline-flex; }

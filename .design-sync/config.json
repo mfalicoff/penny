@@ -1,0 +1,165 @@
+{
+  "projectId": "173b576e-aa32-44dc-9f83-23f0ea8df538",
+  "shape": "package",
+  "pkg": "@penny/ios-kit",
+  "globalName": "PennyKit",
+  "buildCmd": "cd design-kit && npm ci && npm run build",
+  "cssEntry": "dist/styles.css",
+  "componentSrcMap": {
+    "Screen": "src/components/chrome.tsx",
+    "TabBar": "src/components/chrome.tsx",
+    "Sidebar": "src/components/chrome.tsx",
+    "Sheet": "src/components/chrome.tsx",
+    "AmountEntry": "src/components/chrome.tsx",
+    "Keypad": "src/components/chrome.tsx",
+    "Banner": "src/components/chrome.tsx",
+    "Toast": "src/components/chrome.tsx",
+    "GlassButton": "src/components/controls.tsx",
+    "Button": "src/components/controls.tsx",
+    "Toolbar": "src/components/controls.tsx",
+    "LargeTitle": "src/components/controls.tsx",
+    "SectionHeader": "src/components/controls.tsx",
+    "Pill": "src/components/controls.tsx",
+    "PillGroup": "src/components/controls.tsx",
+    "SegmentedControl": "src/components/controls.tsx",
+    "Switch": "src/components/controls.tsx",
+    "TextField": "src/components/controls.tsx",
+    "Badge": "src/components/controls.tsx",
+    "Avatar": "src/components/controls.tsx",
+    "AvatarStack": "src/components/controls.tsx",
+    "PennyRoot": "src/components/foundation.tsx",
+    "Icon": "src/components/foundation.tsx",
+    "CategoryIcon": "src/components/foundation.tsx",
+    "Money": "src/components/foundation.tsx",
+    "HeroAmount": "src/components/foundation.tsx",
+    "List": "src/components/lists.tsx",
+    "ListRow": "src/components/lists.tsx",
+    "TransactionRow": "src/components/lists.tsx",
+    "Card": "src/components/lists.tsx",
+    "FlowBar": "src/components/money.tsx",
+    "FlowCard": "src/components/money.tsx",
+    "MoneyFlow": "src/components/money.tsx",
+    "Stat": "src/components/money.tsx",
+    "Kbd": "src/components/web.tsx",
+    "WebFrame": "src/components/web.tsx",
+    "WebSidebar": "src/components/web.tsx",
+    "TopBar": "src/components/web.tsx",
+    "WebButton": "src/components/web.tsx",
+    "SearchField": "src/components/web.tsx",
+    "DataTable": "src/components/web.tsx",
+    "Dialog": "src/components/web.tsx"
+  },
+  "provider": {
+    "component": "PennyRoot",
+    "props": {
+      "theme": "light"
+    }
+  },
+  "overrides": {
+    "TransactionRow": {
+      "cardMode": "column"
+    },
+    "HeroAmount": {
+      "cardMode": "column"
+    },
+    "Screen": {
+      "cardMode": "single",
+      "viewport": "440x900"
+    },
+    "Toolbar": {
+      "cardMode": "column"
+    },
+    "LargeTitle": {
+      "cardMode": "column"
+    },
+    "SectionHeader": {
+      "cardMode": "column"
+    },
+    "Card": {
+      "cardMode": "column"
+    },
+    "List": {
+      "cardMode": "column"
+    },
+    "ListRow": {
+      "cardMode": "column"
+    },
+    "Sidebar": {
+      "cardMode": "single",
+      "viewport": "320x700"
+    },
+    "Sheet": {
+      "cardMode": "column"
+    },
+    "MoneyFlow": {
+      "cardMode": "column"
+    },
+    "TabBar": {
+      "cardMode": "column"
+    },
+    "GlassButton": {
+      "cardMode": "column"
+    },
+    "FlowCard": {
+      "cardMode": "column"
+    },
+    "Keypad": {
+      "cardMode": "column"
+    },
+    "Pill": {
+      "cardMode": "column"
+    },
+    "Banner": {
+      "cardMode": "column"
+    },
+    "Toast": {
+      "cardMode": "column"
+    },
+    "CategoryIcon": {
+      "cardMode": "column"
+    },
+    "Icon": {
+      "cardMode": "column"
+    },
+    "PennyRoot": {
+      "cardMode": "column"
+    },
+    "AmountEntry": {
+      "cardMode": "column"
+    },
+    "PillGroup": {
+      "cardMode": "column"
+    },
+    "SegmentedControl": {
+      "cardMode": "column"
+    },
+    "TextField": {
+      "cardMode": "column"
+    },
+    "FlowBar": {
+      "cardMode": "column"
+    },
+    "Stat": {
+      "cardMode": "column"
+    },
+    "WebFrame": {
+      "cardMode": "single",
+      "viewport": "1520x980"
+    },
+    "WebSidebar": {
+      "cardMode": "single",
+      "viewport": "300x760"
+    },
+    "TopBar": {
+      "cardMode": "single",
+      "viewport": "1240x300"
+    },
+    "DataTable": {
+      "cardMode": "column"
+    },
+    "Dialog": {
+      "cardMode": "column"
+    }
+  },
+  "readmeHeader": ".design-sync/conventions.md"
+}

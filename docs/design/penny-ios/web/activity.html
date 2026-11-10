@@ -1,0 +1,84 @@
+<!-- @dsCard group="Web" name="Activity table + detail" viewport="1520x980" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · Web · Activity</title>
+<link rel="stylesheet" href="../assets/penny.css"><link rel="stylesheet" href="../assets/web.css">
+<script src="../assets/icons.js"></script><script src="../assets/web.js"></script>
+<style>
+  .split { display: grid; grid-template-columns: minmax(0,1fr) 320px; gap: 18px; }
+  .bar2 { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+  .bar2 .sp { flex: 1; }
+  .sum { font-size: 13px; color: var(--label-2); }
+  .sum b { color: var(--label); }
+  .det h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; margin-top: 10px; }
+  .det .amt { font-size: 40px; font-weight: 700; letter-spacing: -0.04em; margin-top: 12px; }
+  .det .amt small { font-size: 14px; color: var(--label-2); font-weight: 500; letter-spacing: 0; margin-left: 6px; }
+  .kv { display: flex; justify-content: space-between; padding: 9px 0; font-size: 14px; border-top: .5px solid var(--separator); }
+  .kv span { color: var(--label-2); }
+  .receipt { height: 96px; border-radius: 12px; margin-top: 12px; background: repeating-linear-gradient(180deg, var(--surface-2) 0 12px, var(--surface) 12px 14px); box-shadow: inset 0 0 0 .5px var(--separator); display: grid; place-items: center; color: var(--label-2); font-size: 13px; }
+  .acts { display: flex; gap: 8px; margin-top: 16px; }
+  .rowacts { display: inline-flex; gap: 2px; color: var(--label-2); }
+  .rowacts [data-i] { width: 15px; height: 15px; }
+</style></head>
+<body class="canvas">
+<div class="browser" data-active="activity" data-url="penny.example.com/activity">
+  <main class="wmain">
+    <div class="wtop">
+      <h1>Activity</h1>
+      <div class="month"><i><i data-i="chevron-back"></i></i><span>November 2026</span><i><i data-i="chevron-forward"></i></i></div>
+      <div class="sp"></div>
+      <div class="wsearch"><i data-i="search"></i>Search entries<kbd>⌘K</kbd></div>
+      <div class="btn primary"><i data-i="add"></i>Add entry <kbd>N</kbd></div>
+    </div>
+    <div class="wbody">
+      <div class="split">
+        <div>
+          <div class="bar2">
+            <div class="wchips"><span class="wchip on">All</span><span class="wchip">Expenses</span><span class="wchip">Income</span><span class="wchip">Investments</span><span class="wchip"><i data-i="options"></i>Filters</span></div>
+            <div class="sp"></div>
+            <span class="sum">24 entries · spent <b class="num">$1,883.35</b> · in <b class="num pos">$3,200.00</b></span>
+            <div class="btn icon"><i data-i="document-text"></i></div>
+          </div>
+          <div class="panel" style="padding:12px 4px;overflow:hidden">
+            <table class="tbl">
+              <thead><tr><th style="width:34px"></th><th>Entry</th><th>Account</th><th>Split</th><th class="r">Amount</th><th style="width:40px"></th></tr></thead>
+              <tbody>
+                <tr class="group"><td colspan="5">Today · Monday, Nov 9</td><td class="r num">−$55.30</td></tr>
+                <tr class="hover"><td><span class="chk"></span></td><td><div class="cell"><div class="ic" style="background:var(--c-groceries)"><i data-i="basket"></i></div><b>Groceries</b></div></td><td class="muted">Main chequing</td><td class="muted">—</td><td class="r num"><b>−$48.90</b></td><td class="r"><span class="rowacts"><i data-i="create"></i><i data-i="trash"></i></span></td></tr>
+                <tr class="sel"><td><span class="chk"></span></td><td><div class="cell"><div class="ic" style="background:var(--c-food)"><i data-i="cafe"></i></div><b>Coffee with Mira</b></div></td><td class="muted">Visa</td><td class="muted">2 people</td><td class="r num"><b>−$6.40</b></td><td></td></tr>
+                <tr class="group"><td colspan="5">Friday, Nov 6</td><td class="r num">−$262.00</td></tr>
+                <tr><td><span class="chk"></span></td><td><div class="cell"><div class="ic" style="background:var(--invest)"><i data-i="trending-up"></i></div><b>TFSA contribution</b><span class="tag"><i data-i="repeat"></i>Monthly</span></div></td><td class="muted">Main chequing</td><td class="muted">—</td><td class="r num inv"><b>$200.00</b></td><td></td></tr>
+                <tr><td><span class="chk"></span></td><td><div class="cell"><div class="ic" style="background:var(--c-transport)"><i data-i="bus"></i></div><b>Transit pass</b><span class="tag"><i data-i="repeat"></i>Monthly</span></div></td><td class="muted">Visa</td><td class="muted">—</td><td class="r num"><b>−$62.00</b></td><td></td></tr>
+                <tr class="group"><td colspan="5">Wednesday, Nov 4</td><td class="r num">−$61.40</td></tr>
+                <tr><td><span class="chk"></span></td><td><div class="cell"><div class="ic" style="background:var(--c-groceries)"><i data-i="basket"></i></div><b>Costco run</b><span class="tag">Apartment</span></div></td><td class="muted">—</td><td class="muted">Jo paid · 3 ways</td><td class="r num"><b>−$61.40</b></td><td></td></tr>
+                <tr class="group"><td colspan="5">Sunday, Nov 1</td><td class="r num pos">+$1,750.00</td></tr>
+                <tr><td><span class="chk"></span></td><td><div class="cell"><div class="ic" style="background:var(--income)"><i data-i="briefcase"></i></div><b>Payday</b></div></td><td class="muted">Main chequing</td><td class="muted">—</td><td class="r num pos"><b>+$3,200.00</b></td><td></td></tr>
+                <tr><td><span class="chk"></span></td><td><div class="cell"><div class="ic" style="background:var(--c-home)"><i data-i="home"></i></div><b>Rent</b><span class="tag">Apartment</span></div></td><td class="muted">Main chequing</td><td class="muted">You paid</td><td class="r num"><b>−$1,450.00</b></td><td></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="hint" style="margin-top:12px"><kbd>↑</kbd><kbd>↓</kbd> move · <kbd>↵</kbd> open · <kbd>E</kbd> edit · <kbd>⌫</kbd> delete · <kbd>X</kbd> select</div>
+        </div>
+
+        <aside class="panel det">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div class="ic" style="width:44px;height:44px;border-radius:13px;background:var(--c-food)"><i data-i="cafe" style="width:22px;height:22px"></i></div>
+            <div class="btn icon"><i data-i="close"></i></div>
+          </div>
+          <h2>Coffee with Mira</h2>
+          <div style="font-size:14px;color:var(--label-2)">Food &amp; drinks · Today, 8:42 AM</div>
+          <div class="amt num">−$6.40<small>your share of $12.80</small></div>
+          <div style="margin-top:16px">
+            <div class="kv"><span>Account</span><b>Visa</b></div>
+            <div class="kv"><span>Split</span><b>Equally · 2 people</b></div>
+            <div class="kv"><span>Repeats</span><b>Never</b></div>
+            <div class="kv"><span>Trip</span><b>—</b></div>
+            <div class="kv"><span>Note</span><b>Saturday catch-up</b></div>
+          </div>
+          <div class="receipt"><span style="display:flex;gap:6px;align-items:center"><i data-i="receipt" style="width:16px;height:16px"></i>receipt.jpg · 1.2 MB</span></div>
+          <div class="acts"><div class="btn" style="flex:1;justify-content:center"><i data-i="create"></i>Edit <kbd>E</kbd></div><div class="btn icon danger"><i data-i="trash"></i></div></div>
+        </aside>
+      </div>
+    </div>
+  </main>
+</div>
+</body></html>

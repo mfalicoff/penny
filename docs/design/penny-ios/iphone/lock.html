@@ -1,0 +1,37 @@
+<!-- @dsCard group="iPhone" name="App lock" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · App lock</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<style>
+
+  .blur { position: absolute; inset: 0; filter: blur(26px) saturate(140%); transform: scale(1.1); }
+  .blur .glow { top: -80px; }
+  .fake { position: relative; padding: 140px 24px; }
+  .fake .big { font-size: 64px; font-weight: 700; letter-spacing: -0.045em; }
+  .fake .card { height: 120px; margin: 24px 0 0; } .fake .list { height: 300px; margin: 24px 0 0; }
+  .veil { position: absolute; inset: 0; background: color-mix(in srgb, var(--bg) 45%, transparent); }
+  .center { position: absolute; left: 0; right: 0; top: 250px; text-align: center; z-index: 5; }
+  .logo { width: 64px; height: 64px; border-radius: 19px; background: var(--tint); color: #fff; display: grid; place-items: center; margin: 0 auto; }
+  .logo [data-i] { width: 34px; height: 34px; }
+  h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; margin-top: 18px; }
+  p { font-size: 16px; color: var(--label-2); margin-top: 6px; }
+  .faceid { width: 84px; height: 84px; margin: 44px auto 0; border-radius: 26px; display: grid; place-items: center; color: var(--label); }
+  .faceid [data-i] { width: 42px; height: 42px; --sw: 28px; }
+  .cta { position: absolute; left: 24px; right: 24px; bottom: 60px; height: 54px; border-radius: 27px; justify-content: center; font-size: 17px; display: flex; z-index: 5; }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <div class="blur"><div class="glow"></div><div class="fake"><div class="big">$1,116.65</div><div class="card"></div><div class="list"></div></div></div>
+  <div class="veil"></div>
+  <div class="island"></div>
+  <div class="status"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="center">
+    <div class="logo"><i data-i="lock-closed"></i></div>
+    <h1>Penny is locked</h1>
+    <p>Use Face ID to see your money.</p>
+    <div class="glass faceid"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="width:46px;height:46px"><path d="M4 14V9a5 5 0 0 1 5-5h5M34 4h5a5 5 0 0 1 5 5v5M44 34v5a5 5 0 0 1-5 5h-5M14 44H9a5 5 0 0 1-5-5v-5"/><path d="M16 17v4M32 17v4M24 17v10h-2M17 32c4 3.5 10 3.5 14 0"/></svg></div>
+  </div>
+  <div class="glass gcap tinted cta">Unlock with Face ID</div>
+  <div class="home-ind"></div>
+</div>
+</body></html>
