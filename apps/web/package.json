@@ -1,0 +1,52 @@
+{
+  "name": "@penny/web",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Penny v2 browser app: React, TypeScript, Vite, TanStack Router and TanStack Query (MAZ-83).",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && node scripts/verify-dist.ts",
+    "preview": "vite preview",
+    "design:sync": "node scripts/sync-design.ts",
+    "design:check": "node scripts/sync-design.ts --check",
+    "lint": "eslint --max-warnings=0 .",
+    "typecheck": "tsc -b --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "check": "npm run design:check && npm run lint && npm run typecheck && npm run test && npm run build"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "5.107.1",
+    "@tanstack/react-router": "1.170.46",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@tanstack/eslint-plugin-query": "5.107.1",
+    "@tanstack/eslint-plugin-router": "1.162.0",
+    "@tanstack/router-plugin": "1.169.0",
+    "@playwright/test": "1.64.1",
+    "@testing-library/jest-dom": "7.0.1",
+    "@testing-library/react": "16.3.3",
+    "@testing-library/user-event": "14.6.8",
+    "@types/node": "24.19.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.3.0",
+    "eslint": "10.14.0",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "globals": "17.14.0",
+    "jsdom": "31.0.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.2",
+    "vite": "8.3.7",
+    "vitest": "5.1.0"
+  }
+}

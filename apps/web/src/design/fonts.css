@@ -1,0 +1,8 @@
+/* Inter (OFL 1.1, design-kit/fonts) is the web face; the license ships at /licenses/Inter-OFL.txt. */
+@font-face {
+  font-family: "Inter";
+  src: url("@design-kit/fonts/Inter.ttf") format("truetype");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}

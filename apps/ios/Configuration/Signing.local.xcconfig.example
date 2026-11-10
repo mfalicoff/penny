@@ -1,0 +1,3 @@
+// Copy to Signing.local.xcconfig (git-ignored) to build for a device or archive.
+// Use the Apple team that owns com.mfalicoff.penny in App Store Connect.
+DEVELOPMENT_TEAM = ABCDE12345

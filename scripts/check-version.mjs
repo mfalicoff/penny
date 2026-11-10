@@ -13,6 +13,13 @@ if (lock.version !== version || lock.packages?.[""]?.version !== version) {
   throw new Error("package-lock.json version must match package.json. Use npm version to update both files.");
 }
 
+// The native iOS app (MAZ-66) ships the same version; release-please updates this line.
+const xcconfig = readFileSync(new URL("../apps/ios/Configuration/Version.xcconfig", import.meta.url), "utf8");
+const nativeVersion = xcconfig.match(/^MARKETING_VERSION = (\S+) \/\/ x-release-please-version$/m)?.[1];
+if (nativeVersion !== version) {
+  throw new Error(`apps/ios/Configuration/Version.xcconfig MARKETING_VERSION must be ${version}; found ${nativeVersion ?? "none"}.`);
+}
+
 const ref = process.env.GITHUB_REF;
 if (ref?.startsWith("refs/tags/") && ref !== `refs/tags/v${version}`) {
   throw new Error(`Release tag must be v${version}; received ${ref.slice("refs/tags/".length)}.`);
