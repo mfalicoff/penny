@@ -187,6 +187,10 @@ public sealed class PostgresLedgerRepository(NpgsqlDataSource source) : ILedgerR
             row => row.Id,
             cancellationToken
         );
+        // New entries and their search documents skip the change tracker and are copied
+        // in bulk after the save (MAZ-137); updates and deletes stay with EF.
+        var newEntries = new List<LedgerEntry>();
+        var newDocuments = new List<SearchDocument>();
         await SyncAsync(
             context.LedgerEntries,
             userId,
@@ -207,14 +211,25 @@ public sealed class PostgresLedgerRepository(NpgsqlDataSource source) : ILedgerR
                 RecurringId = entry.RecurringId,
             }),
             row => row.Id,
-            cancellationToken
+            cancellationToken,
+            newEntries
         );
         // Search (MAZ-121): personal documents follow the entries, categories and
         // accounts in this transaction, so search never diverges from the committed
         // revision; a category or account rename rewrites every affected document.
-        await SearchIndexer.StageLedgerAsync(context, userId, ledger, cancellationToken);
-        // EF orders the inserts, updates and deletes so foreign keys hold.
+        await SearchIndexer.StageLedgerAsync(
+            context,
+            userId,
+            ledger,
+            newDocuments,
+            cancellationToken
+        );
+        // EF orders the inserts, updates and deletes so foreign keys hold. The copied
+        // rows come after: the categories, accounts, trips and receipts they reference
+        // exist by then, and nothing EF deletes can reference a new entry.
         await context.SaveChangesAsync(cancellationToken);
+        await BulkInsert.CopyAsync(context, newEntries, cancellationToken);
+        await BulkInsert.CopyAsync(context, newDocuments, cancellationToken);
         // The payer sees their account name in their own shared expenses' documents.
         await SearchIndexer.SyncPaidExpensesAsync(context, userId, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
@@ -290,12 +305,14 @@ public sealed class PostgresLedgerRepository(NpgsqlDataSource source) : ILedgerR
     }
 
     // Keyed diff of one child table: delete missing rows, update changed, insert new.
+    // With `inserts`, new rows are collected there for a bulk copy instead of tracked.
     private static async Task SyncAsync<T>(
         DbSet<T> table,
         string userId,
         IEnumerable<T> desired,
         Func<T, string> key,
-        CancellationToken cancellationToken
+        CancellationToken cancellationToken,
+        List<T>? inserts = null
     )
         where T : class
     {
@@ -307,6 +324,8 @@ public sealed class PostgresLedgerRepository(NpgsqlDataSource source) : ILedgerR
         foreach (var row in desired)
             if (existing.Remove(key(row), out var current))
                 table.Entry(current).CurrentValues.SetValues(row);
+            else if (inserts is not null)
+                inserts.Add(row);
             else
                 table.Add(row);
         table.RemoveRange(existing.Values);

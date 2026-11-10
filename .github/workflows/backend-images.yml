@@ -10,6 +10,10 @@ on:
       - 'apps/backend/**'
       - 'deploy/**'
       - 'scripts/deploy-smoke.mjs'
+      - 'scripts/cutover-drill.mjs'
+      - 'scripts/test-env/**'
+      - 'server/**'
+      - 'Dockerfile'
       - 'src/**'
       - 'assets/**'
       - 'app.json'
@@ -42,7 +46,7 @@ jobs:
           - arch: arm64
             runner: ubuntu-24.04-arm
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v7
         with:
@@ -93,6 +97,33 @@ jobs:
         with:
           name: deploy-smoke-${{ matrix.arch }}
           path: smoke-${{ matrix.arch }}.log
+          if-no-files-found: warn
+      # MAZ-65: docs/cutover.md end to end, from the legacy image to these images.
+      - name: Build legacy image
+        if: matrix.arch == 'amd64'
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/${{ matrix.arch }}
+          load: true
+          tags: penny-legacy:ci
+          cache-from: type=gha,scope=legacy-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=legacy-${{ matrix.arch }}
+      - name: Cutover drill
+        if: matrix.arch == 'amd64'
+        env:
+          PENNY_DRILL_LEGACY_IMAGE: penny-legacy:ci
+          PENNY_DRILL_API_IMAGE: penny-api:ci
+          PENNY_DRILL_WEB_IMAGE: penny-web:ci
+        run: node scripts/cutover-drill.mjs | tee cutover-drill.log
+      - name: Upload cutover drill report
+        if: always() && matrix.arch == 'amd64'
+        uses: actions/upload-artifact@v7
+        with:
+          name: cutover-drill
+          path: |
+            cutover-drill.log
+            test-results/cutover-drill/
           if-no-files-found: warn
 
   publish:

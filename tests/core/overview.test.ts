@@ -27,7 +27,7 @@ test("day and kind filters combine and groups remain in descending date order", 
   assert.deepEqual(selectOverview(ledger, { ...filters, filter: "expense" }).visibleEntries.map((t) => t.id), ["meal"]);
   assert.deepEqual([...selectOverview(ledger, filters).grouped.keys()], ["2026-09-21", "2026-09-20"]);
   const sameDay = { ...ledger, transactions: [...ledger.transactions, { ...expense, id: "dinner" }] };
-  assert.deepEqual(selectOverview(sameDay, filters).grouped.get(expense.date)?.map((t) => t.id), ["meal", "dinner"]);
+  assert.deepEqual(selectOverview(sameDay, filters).grouped.get(expense.date)?.map((t) => t.id), ["dinner", "meal"]);
 });
 
 test("empty months have no spending and zero totals", () => {

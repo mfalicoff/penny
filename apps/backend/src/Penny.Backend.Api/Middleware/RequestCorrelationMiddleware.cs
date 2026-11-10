@@ -15,6 +15,7 @@ public sealed partial class RequestCorrelationMiddleware(
 {
     public const string Header = "X-Request-Id";
     public const int MaxLength = 64;
+    public const string RequestIdAttribute = "penny.request_id";
 
     public async Task InvokeAsync(HttpContext context)
     {
@@ -23,6 +24,8 @@ public sealed partial class RequestCorrelationMiddleware(
             : Guid.NewGuid().ToString("N");
         context.TraceIdentifier = id;
         context.Response.Headers[Header] = id;
+        // MAZ-127: the request span carries the id, so a user report finds its trace.
+        Activity.Current?.SetTag(RequestIdAttribute, id);
         using var scope = logger.BeginScope("RequestId:{RequestId}", id);
         var started = Stopwatch.GetTimestamp();
         try

@@ -596,7 +596,8 @@ public sealed class PostgresSearchRepository(NpgsqlDataSource source, ReceiptFil
             .Select(document => new EmbeddingWork(
                 document.Id,
                 document.EmbeddingSource,
-                document.EmbeddingAttempts
+                document.EmbeddingAttempts,
+                document.EmbeddingDueAt!.Value
             ))
             .ToListAsync(cancellationToken);
     }

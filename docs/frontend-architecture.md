@@ -16,7 +16,7 @@ Use this formula for new work: **a thin route, a feature screen, local UI state,
 | `src/providers/LedgerProvider.tsx` | Authentication state, ledger snapshot, serialized saves, polling, foreground sync, save feedback | Form inputs, filtering or feature-specific mutations |
 | `src/providers/WorkspaceProvider.tsx` | Overview filters and entry-dialog selection that survive navigation | Server data or requests |
 | `src/providers/AppLockProvider.tsx` | Device-local biometric preference, authentication single-flight, launch/foreground locking | Server sign-in, ledger encryption or widget privacy |
-| `src/domain/` | Ledger types, money, recurrence and immutable mutation commands | React, Expo, network calls or platform APIs |
+| `src/domain/` | Ledger types, money, recurrence, immutable commands, merge, search, recorded/projected summaries and pure selectors (`selectors/`); see [domain rules](migration/domain-rules.md) | React, Expo, network calls or platform APIs |
 | `src/data/` | API requests, revision retries, session credentials and receipt I/O | Presentation or navigation |
 | `src/shared/` | UI primitives, formatting and responsive breakpoints | Feature orchestration |
 

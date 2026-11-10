@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Penny.Backend.Api.Authentication;
 using Penny.Backend.Api.Contracts;
 using Penny.Backend.Api.Ledgers;
+using Penny.Backend.Api.Observability;
 using Penny.Backend.Application.Ledgers;
 
 namespace Penny.Backend.Api.Controllers;
@@ -37,10 +38,9 @@ public sealed class LedgerController(LedgerService ledgers) : ControllerBase
     )
     {
         using var body = await LedgerBody.ReadAsync(Request, cancellationToken);
-        return Ok(
-            LedgerSnapshotResponse.From(
-                await ledgers.SaveAsync(User.Session().UserId, body?.RootElement, cancellationToken)
-            )
+        var saved = await Measured.LedgerSaveAsync(() =>
+            ledgers.SaveAsync(User.Session().UserId, body?.RootElement, cancellationToken)
         );
+        return Ok(LedgerSnapshotResponse.From(saved));
     }
 }
