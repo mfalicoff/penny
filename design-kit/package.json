@@ -1,0 +1,29 @@
+{
+  "name": "@penny/ios-kit",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Web reference kit of Penny's iOS 26 redesign (docs/design/penny-ios), for Claude Design. Not used by the React Native app.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" },
+    "./styles.css": "./dist/styles.css"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.2",
+    "esbuild": "^0.25.0",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "typescript": "^5.9.0"
+  }
+}
