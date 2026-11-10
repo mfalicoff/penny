@@ -9,12 +9,12 @@ The Swift API client lives in `apps/ios/Packages/PennyKit/Sources/PennyData/API`
 | `WireModels.swift` | Wire types: ledger snapshot, entries, categories, accounts, trips, receipts, session, server info, projected shared expenses |
 | `Search.swift` | Search v1 request, response, items and client-side limits |
 | `Session.swift` | `ServerSession` (token bound to one server) and `AccountScope` (server + account partition) |
-| `APIClient.swift` | Async client: info, register, login, me, logout, ledger get/put, receipt upload/download, search |
+| `APIClient.swift` | Async client: info, register, login, OIDC availability/start/complete, me, logout, ledger get/put, receipt upload/download, search |
 | `SearchCoordinator.swift` | Latest-query-wins paging and stale-answer protection |
 | `Errors.swift` | `APIError` |
 | `Transport.swift` | `HTTPTransport` and the production `URLSessionTransport` |
 
-OIDC sign-in, password reset, households, push registration and the shared-expense routes are not in this client yet; MAZ-68, 79, 75 and 76 add them with the same conventions.
+The OIDC routes (`oidcConfiguration`, `startOidc`, `completeOidc`) arrived with MAZ-68; sign-in, the Keychain and session handling built on this client are in [native sign-in](ios-authentication.md). Password reset (`POST /api/auth/password-reset`, whose native screen is still open), households, push registration and the shared-expense routes are not in this client yet; they follow the same conventions (MAZ-79, 75, 76).
 
 ## Models and contract updates
 
@@ -33,17 +33,17 @@ Wire rules the models preserve: money is integer cents (`Int64`, never `Double`)
 
 ## Configuration and credentials
 
-`APIConfiguration(server:)` holds a normalized `ServerURL` (MAZ-66) plus bounded timeouts: 30 s for JSON requests and 120 s for receipt transfer by default, clamped to 1-120 s. Debug builds may default to a local server; Release has none (`AppConfiguration`, MAZ-68 chooses one).
+`APIConfiguration(server:)` holds a normalized `ServerURL` (MAZ-66) plus bounded timeouts: 30 s for JSON requests and 120 s for receipt transfer by default, clamped to 1-120 s. Debug builds may default to a local server; Release has none: people choose and verify one at the server-connect screen ([native sign-in](ios-authentication.md#server-choice)).
 
 Credentials are scoped to the server that issued them:
 
 - `ServerSession` pairs the bearer token with its `ServerURL`; the token must be 64 lowercase hex characters and is redacted from `description`.
 - `APIClient` refuses (`invalidRequest(.wrongServer)`) to be created with a session from another server, and `signedIn(as:)` checks the same.
 - `URLSessionTransport` never follows redirects, so a redirect cannot carry the token to another host, and uses an ephemeral session with no cookie, credential or URL cache storage. The `Set-Cookie` the server also sends is ignored; the app authenticates with `Authorization: Bearer`.
-- Unauthenticated calls (`info`, `login`, `register`) never send a token.
+- Unauthenticated calls (`info`, `login`, `register`, the OIDC routes) never send a token. `APIClient.anonymous(_:transport:)` makes a client that has none.
 - The client does not log. `APIError` carries status and the server's message, never a request or credential.
 
-Persisting the token (Keychain, per server) is MAZ-68.
+The token is persisted per server in the Keychain by `KeychainSessionStore` ([native sign-in](ios-authentication.md#keychain-storage)).
 
 ## Errors and retries
 
