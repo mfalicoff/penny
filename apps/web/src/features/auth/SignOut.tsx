@@ -9,8 +9,8 @@ import { Icon } from "../../design/Icon";
 import { ModalDialog } from "../../design/ModalDialog";
 import { describeAuthError } from "./AuthScreen";
 
-/** The signed-in account and its sign-out confirmation (redesign specimen "sign-out"). */
-export function AccountMenu() {
+/** Sign out and its confirmation (redesign specimen "sign-out"), shown in Settings › Account. */
+export function SignOutButton() {
   const email = useAccountEmail();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -44,14 +44,11 @@ export function AccountMenu() {
   }
 
   return (
-    <div className="account">
-      <p className="account__email" title={email}>
-        {email}
-      </p>
+    <>
       <button
         ref={opener}
         type="button"
-        className="button button--secondary"
+        className="wbtn wbtn--danger-quiet"
         onClick={() => {
           setOpen(true);
         }}
@@ -85,6 +82,6 @@ export function AccountMenu() {
           </div>
         </ModalDialog>
       ) : null}
-    </div>
+    </>
   );
 }

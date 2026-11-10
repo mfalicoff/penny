@@ -9,7 +9,7 @@ export type { EntryFilter, OverviewEntry };
 export type OverviewFilters = { month: string; day: string | null; filter: EntryFilter; categoryId: string | null; search: string; };
 
 export function selectOverview(ledger: Ledger, { month, day, filter, categoryId, search }: OverviewFilters) {
-  const { recordedEntries: monthEntries, calendarEntries, summaryEntries, expectedIncome, summary } = monthBreakdown(ledger, month);
+  const { recordedEntries: monthEntries, scheduled, calendarEntries, summaryEntries, moneyFlowEntries, expectedIncome, recorded, summary } = monthBreakdown(ledger, month);
   const matches = searchMatcher(search, searchLookups(ledger));
   const visibleEntries = calendarEntries.filter((t) =>
     (!day || t.date === day) && (filter === "all" || t.kind === filter) &&
@@ -28,5 +28,5 @@ export function selectOverview(ledger: Ledger, { month, day, filter, categoryId,
   const spending = ledger.categories.filter((c) => c.kind === "expense")
     .map((c) => ({ ...c, amount: amounts.get(c.id) ?? 0 }))
     .filter((c) => c.amount > 0).sort((a, b) => b.amount - a.amount);
-  return { monthEntries, calendarEntries, summaryEntries, expectedIncome, summary, visibleEntries, grouped, spending };
+  return { monthEntries, scheduled, calendarEntries, summaryEntries, moneyFlowEntries, expectedIncome, recorded, summary, visibleEntries, grouped, spending };
 }

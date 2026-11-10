@@ -120,26 +120,53 @@ const rent: Recurring = { id: "rent", title: "Rent", kind: "expense", total: 100
 const pay: Recurring = { ...rent, id: "pay", title: "Pay", kind: "income", total: 300000, share: 300000, categoryId: "salary", nextDate: "2026-10-15", anchorDay: 15 };
 const invest: Recurring = { ...rent, id: "etf", title: "ETF", kind: "investment", total: 50000, share: 50000, categoryId: "investments", nextDate: "2026-10-10", anchorDay: 10 };
 
-test("projection counts only scheduled income; expenses and investments stay recorded-only", () => {
+test("projection adds every scheduled occurrence; recorded totals and expected income stay apart", () => {
   const ledger: Ledger = { ...base(), recurring: [rent, pay, invest], transactions: [{ ...base().transactions[0]!, date: "2026-10-02", share: 1000 }] };
   const before = structuredClone(ledger);
   const summary = summarizeMonth(ledger, "2026-10");
   assert.deepEqual(summary.recorded, { income: 0, expense: 1000, investment: 0 });
   assert.equal(summary.expectedIncome, 300000);
-  assert.deepEqual(summary.projected, { income: 300000, expense: 1000, investment: 0 });
+  // Rent (2026-10-31), pay and the ETF contribution are all scheduled this month.
+  assert.deepEqual(summary.projected, { income: 300000, expense: 101000, investment: 50000 });
   assert.equal(summary.recordedNet, -1000);
-  assert.equal(summary.projectedNet, 299000);
+  assert.equal(summary.projectedNet, 300000 - 101000 - 50000);
   assert.deepEqual(ledger, before);
   // Agrees with the overview selector the screens use.
   const overview = selectOverview(ledger, { month: "2026-10", day: null, filter: "all", categoryId: null, search: "" });
   assert.deepEqual(overview.summary, summary.projected);
+  assert.deepEqual(overview.recorded, summary.recorded);
   assert.equal(overview.expectedIncome, summary.expectedIncome);
-  // Recording the occurrence moves it from expected to recorded exactly once.
+  // Recording the occurrences moves them from scheduled to recorded exactly once.
   const recorded = summarizeMonth(materialize(ledger, "2026-10-31"), "2026-10");
   assert.equal(recorded.expectedIncome, 0);
-  assert.equal(recorded.recorded.income, 300000);
-  assert.equal(recorded.recorded.investment, 50000);
+  assert.deepEqual(recorded.recorded, { income: 300000, expense: 101000, investment: 50000 });
+  assert.deepEqual(recorded.projected, recorded.recorded);
   assert.equal(recorded.recordedNet, 300000 - 1000 - 50000 - 100000);
+  assert.equal(recorded.projectedNet, summary.projectedNet);
+  // Part way through the month only what is still ahead is scheduled.
+  const mid = summarizeMonth(materialize(ledger, "2026-10-12"), "2026-10");
+  assert.deepEqual(mid.recorded, { income: 0, expense: 1000, investment: 50000 });
+  assert.deepEqual(mid.projected, summary.projected);
+});
+
+test("a recorded shared occurrence replaces its preview in projected totals", () => {
+  const shared = (id: string, scheduled: boolean) => ({ id: `household:h:${id}`, householdId: "h", householdExpenseId: id,
+    title: "Streaming", kind: "expense", total: 1600, share: 800, categoryId: "fun", date: "2026-10-20", note: "",
+    recurringId: "streaming", ...(scheduled && { scheduled: true }) }) as Transaction;
+  const preview = shared("streaming:2026-10-20", true);
+  const pending: Ledger = { ...base(), transactions: [preview] };
+  assert.deepEqual(summarizeMonth(pending, "2026-10").recorded, { income: 0, expense: 0, investment: 0 });
+  assert.deepEqual(summarizeMonth(pending, "2026-10").projected, { income: 0, expense: 800, investment: 0 });
+  // The runner recorded it; a cached preview of the same household rule and date is not counted again.
+  const done: Ledger = { ...base(), transactions: [shared("occ-1", false), preview] };
+  const summary = summarizeMonth(done, "2026-10");
+  assert.deepEqual(summary.recorded, { income: 0, expense: 800, investment: 0 });
+  assert.deepEqual(summary.projected, summary.recorded);
+  const overview = selectOverview(done, { month: "2026-10", day: null, filter: "all", categoryId: null, search: "" });
+  assert.deepEqual(overview.calendarEntries.map((entry) => entry.id), ["household:h:occ-1"]);
+  // Another household's rule with the same id and date is a different occurrence.
+  const other = { ...preview, id: "household:k:streaming:2026-10-20", householdId: "k" } as Transaction;
+  assert.equal(summarizeMonth({ ...done, transactions: [...done.transactions, other] }, "2026-10").projected.expense, 1600);
 });
 
 test("investment contributions are not spending and personal shares drive totals and flow", () => {
@@ -212,36 +239,50 @@ test("search fixtures: local substring, deterministic order and pending edits/re
   assert.ok(searchEntries(renamed, "grocer").length > 0);
 });
 
-test("redesign fixture: recorded and projected totals match summarizeMonth plus the shared share", () => {
+test("redesign fixture: recorded and projected totals match summarizeMonth", () => {
   const states = fixture("redesign-states.json");
   const seeds = fixture("full-stack-seeds.json");
   const scenario = seeds.scenarios.find((item: { name: string }) => item.name === "searchable-household");
   const ledger = ([...scenario.steps].reverse().find((step: { as?: string; ledger?: Ledger }) => step.ledger && step.as === "alex") as { ledger: Ledger }).ledger;
   const month = "2026-10";
   const expected = states.totals["alex-2026-10"];
-  // The fixture also counts alex's recorded shared shares, which are not in the private ledger.
+  // Every input comes from the seed; only the assertions use redesign-states.json. alex's
+  // recorded shared shares and the shared rule's previews join the private ledger as the
+  // Overview does (ledgerWithHouseholds): previews flagged `scheduled`.
   const members = (when: string) => when < "2026-10-02" ? ["alex", "bea", "cam"] : ["alex", "bea"];
-  let shared = 0;
+  const alexShare = (totalCents: number, date: string) =>
+    calculateHouseholdSplits(totalCents, { mode: "equal", memberIds: members(date) }).find((item) => item.userId === "alex")!.amountCents;
+  const view: Ledger = structuredClone(ledger);
   for (const step of scenario.steps) {
-    if (!step.expense) continue;
-    const body = step.expense.body as { date: string; totalCents: number; splitMode: string; allocations?: { userId: string; amountCents: number }[] };
-    if (!body.date.startsWith(month)) continue;
-    const splits = body.splitMode === "equal"
-      ? calculateHouseholdSplits(body.totalCents, { mode: "equal", memberIds: members(body.date) })
-      : body.allocations!.map((item) => ({ userId: item.userId.replace("$user:", ""), amountCents: item.amountCents }));
-    shared += splits.find((item) => item.userId === "alex")?.amountCents ?? 0;
+    if (step.expense) {
+      const body = step.expense.body as { title: string; date: string; totalCents: number; splitMode: string; allocations?: { userId: string; amountCents: number }[] };
+      const share = body.splitMode === "equal" ? alexShare(body.totalCents, body.date)
+        : body.allocations!.find((item) => item.userId === "$user:alex")?.amountCents ?? 0;
+      view.transactions.push({ id: `household:maison:${step.expense.ref}`, title: body.title, kind: "expense", total: body.totalCents, share, categoryId: "shared", date: body.date, note: "" });
+    }
+    if (step.as === "alex" && step.sharedRecurring) {
+      const rule = step.sharedRecurring;
+      let date: string = rule.body.nextDate;
+      const anchor = Number(date.slice(8));
+      while (date <= `${month}-31`) {
+        if (date.startsWith(month)) {
+          view.transactions.push({ id: `household:${rule.household}:${rule.ref}:${date}`, title: rule.body.title, kind: "expense",
+            total: rule.body.totalCents, share: alexShare(rule.body.totalCents, date), categoryId: "shared", date, note: "",
+            recurringId: rule.ref, scheduled: true } as Transaction);
+        }
+        date = nextOccurrence(date, rule.body.frequency, anchor);
+      }
+    }
   }
-  const summary = summarizeMonth(ledger, month);
-  assert.equal(summary.recorded.expense + shared, expected.recorded.expenseCents);
-  assert.equal(summary.recorded.income, expected.recorded.incomeCents);
-  assert.equal(summary.recorded.investment, expected.recorded.investmentCents);
-  // Projected income and investment agree with the fixture. The fixture's projected expense adds
-  // scheduled spending (personal and shared); the client projection deliberately excludes it.
-  assert.equal(summary.projected.income, expected.projected.incomeCents);
-  assert.equal(summary.projected.investment, expected.projected.investmentCents);
-  const sumShares = (items: { shareCents: number }[]) => items.reduce((sum, item) => sum + item.shareCents, 0);
-  const personalScheduled = scheduledEntries(ledger, month).filter((entry) => entry.kind === "expense").reduce((sum, entry) => sum + entry.share, 0);
-  assert.equal(personalScheduled, sumShares(expected.scheduled.filter((item: { source: string }) => item.source === "personal")));
-  assert.equal(expected.projected.expenseCents - expected.recorded.expenseCents, sumShares(expected.scheduled));
-  assert.equal(summary.projected.expense, summary.recorded.expense, "client projection excludes scheduled expenses");
+  const summary = summarizeMonth(view, month);
+  const totalsOf = (amounts: { expenseCents: number; incomeCents: number; investmentCents: number }) =>
+    ({ income: amounts.incomeCents, expense: amounts.expenseCents, investment: amounts.investmentCents });
+  assert.deepEqual(summary.recorded, totalsOf(expected.recorded));
+  assert.deepEqual(summary.projected, totalsOf(expected.projected));
+  assert.equal(summary.expectedIncome, 0);
+  assert.equal(summary.recordedNet, -175950);
+  assert.equal(summary.projectedNet, -180750);
+  const overview = selectOverview(view, { month, day: null, filter: "all", categoryId: null, search: "" });
+  assert.deepEqual(overview.scheduled.map((entry) => `${entry.title} ${entry.date} ${entry.share}`).sort(),
+    expected.scheduled.map((item: { title: string; date: string; shareCents: number }) => `${item.title} ${item.date} ${item.shareCents}`).sort());
 });

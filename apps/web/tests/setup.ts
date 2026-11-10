@@ -1,6 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
 import { afterEach, beforeEach, vi } from "vitest";
+import { stopDemo } from "../src/demo/demo";
 
 // Any console error or warning during a test is a failure: rendering must be clean.
 let messages: string[] = [];
@@ -19,6 +20,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  stopDemo();
   if (messages.length > 0) {
     throw new Error(`Unexpected console output:\n${messages.join("\n")}`);
   }

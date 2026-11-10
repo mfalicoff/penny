@@ -25,6 +25,19 @@ export interface ApiRequestInit {
   signal?: AbortSignal;
 }
 
+/**
+ * Where requests go. Normally the network; the temporary demo (src/demo) swaps in an in-memory
+ * server so nothing it does reaches, or is read from, the real API.
+ */
+export type Transport = (path: `/api/${string}`, request: { method: string; body: unknown; signal: AbortSignal | null }) => Promise<Response>;
+
+let transport: Transport | null = null;
+
+/** Routes every request to `next` instead of the network, or back to the network with `null`. */
+export function setTransport(next: Transport | null): void {
+  transport = next;
+}
+
 const errorBody = (value: unknown): string | undefined =>
   typeof value === "object" && value !== null && "error" in value && typeof value.error === "string"
     ? value.error
@@ -45,13 +58,15 @@ export async function apiFetch<Schema extends z.ZodType>(
 
   let response: Response;
   try {
-    response = await fetch(path, {
-      method: init.method ?? "GET",
-      headers,
-      credentials: "same-origin",
-      body: init.body === undefined ? null : JSON.stringify(init.body),
-      signal: init.signal ?? null,
-    });
+    response = transport
+      ? await transport(path, { method: init.method ?? "GET", body: init.body, signal: init.signal ?? null })
+      : await fetch(path, {
+          method: init.method ?? "GET",
+          headers,
+          credentials: "same-origin",
+          body: init.body === undefined ? null : JSON.stringify(init.body),
+          signal: init.signal ?? null,
+        });
   } catch (cause) {
     if (cause instanceof DOMException && cause.name === "AbortError") throw cause;
     throw new ApiError(0, "Penny can't reach the server.", { cause });

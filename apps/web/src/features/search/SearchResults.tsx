@@ -4,6 +4,7 @@ import { ledgerCurrencyQuery } from "../../api/ledger";
 import { monthRange, searchTransactionsQuery } from "../../api/search";
 import type { SearchItem } from "../../api/schemas";
 import { useAccountEmail } from "../../auth/account";
+import { formatCents } from "../../design/Money";
 
 function describeSearchError(error: unknown): string {
   if (error instanceof ApiError) {
@@ -15,12 +16,6 @@ function describeSearchError(error: unknown): string {
     return error.message;
   }
   return "Search failed.";
-}
-
-/** Amounts are integer cents. With no known currency the number is shown plain rather than under a wrong symbol. */
-function formatCents(cents: number, currency: string | undefined): string {
-  const options: Intl.NumberFormatOptions = currency ? { style: "currency", currency } : { minimumFractionDigits: 2, maximumFractionDigits: 2 };
-  return new Intl.NumberFormat("en-CA", options).format(cents / 100);
 }
 
 /** Personal entries use the ledger's currency; shared ones use their household's. */

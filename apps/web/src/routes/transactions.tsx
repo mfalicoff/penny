@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useId, type SyntheticEvent } from "react";
+import type { SyntheticEvent } from "react";
 import { z } from "zod";
 import { SearchResults } from "../features/search/SearchResults";
 
@@ -20,6 +20,7 @@ export const transactionsSearchSchema = z.object({
 export type TransactionsSearch = z.infer<typeof transactionsSearchSchema>;
 
 export const Route = createFileRoute("/transactions")({
+  staticData: { title: "Activity", search: false },
   validateSearch: transactionsSearchSchema,
   component: Transactions,
 });
@@ -27,7 +28,6 @@ export const Route = createFileRoute("/transactions")({
 function Transactions() {
   const { q, month } = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
-  const inputId = useId();
 
   function onSubmit(event: SyntheticEvent<HTMLFormElement, SubmitEvent>) {
     event.preventDefault();
@@ -37,18 +37,17 @@ function Transactions() {
   }
 
   return (
-    <>
-      <h1>Activity</h1>
+    <div className="page">
       <form role="search" className="search-form" onSubmit={onSubmit}>
         <div className="field">
-          <label htmlFor={inputId}>Search transactions</label>
-          <input id={inputId} name="q" type="search" defaultValue={q ?? ""} key={q ?? ""} autoComplete="off" />
+          <label htmlFor="activity-search">Search transactions</label>
+          <input id="activity-search" name="q" type="search" defaultValue={q ?? ""} key={q ?? ""} autoComplete="off" />
         </div>
         <button type="submit" className="button">
           Search
         </button>
       </form>
       <SearchResults query={q} month={month} />
-    </>
+    </div>
   );
 }
