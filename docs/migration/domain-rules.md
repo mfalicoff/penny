@@ -11,7 +11,7 @@
 | `merge.ts` | Three-way offline merge: independent field merges, optional-field deletion, local deletes and creates |
 | `households.ts` | Shared split, monthly balance and suggested-reimbursement rules (server-owned results; same code in tests) |
 | `search.ts` | Local, durable offline/demo search: case-insensitive substring over title, note, category and account names, ordered by date descending then id |
-| `summary.ts` | `summarizeMonth`: recorded versus projected totals and remaining amounts |
+| `summary.ts` | Shared month breakdown (`monthBreakdown`, `scheduledEntries`), `summarizeMonth` and signed `net`; `calendar.ts` holds month helpers. Layering: `calendar` and `summary` sit below `search` and `selectors/`, never the reverse |
 | `selectors/` | Overview, Activity (`transactions`), trip and money-flow selectors. `src/features/**/selectors.ts` and `moneyFlow.ts` re-export these so existing screens are unchanged |
 
 The wire format (HTTP envelopes in `src/data/`, `contracts/openapi.json`) is converted explicitly at the data layer; domain types are never serialized as the API contract.
@@ -24,9 +24,9 @@ Files under `src/domain/` may import only other relative files inside `src/domai
 
 - Money is integer cents; floats are never accumulated. Rounding is half-up (`Math.round`) and a personal share never exceeds the receipt total.
 - Dates are `YYYY-MM-DD` calendar strings; recurrence keeps the anchor day through short months and leap years.
-- Recorded versus projected (`summarizeMonth`): recorded counts entries already in the ledger; projected adds only scheduled income (`expectedIncome`). Scheduled expenses and investments are never projected into totals. `remaining` is income minus expenses minus investment contributions (signed). Investments are not spending. The server's `redesign-states.json` `projected` figures additionally include scheduled shared/personal expenses; that is a different, server-side presentation and is asserted separately.
-- Activity (`selectTransactions`, `searchEntries`) is recorded-only; scheduled previews are never history.
-- Search is a plain lowercase substring, no accent folding (search v1 on the server folds; see [search](search.md)). Pending local edits, renames and deletions are reflected because search runs on the local ledger.
+- Recorded versus projected (`summarizeMonth`): recorded counts entries already in the ledger; projected adds only scheduled income (`expectedIncome`). Scheduled expenses and investments are never projected into totals. `net` (`recordedNet`, `projectedNet`) is income minus expenses minus investment contributions, signed; money flow's `remaining` is `max(0, net)` and its `gap` is `max(0, -net)`. Investments are not spending. The server's `redesign-states.json` `projected` figures additionally include scheduled shared/personal expenses; that is a different, server-side presentation and is asserted separately.
+- Activity (`selectTransactions`, `searchEntries`) is recorded-only; scheduled occurrences (including shared ones flagged `scheduled` in the merged household view) are never history.
+- Search is a trimmed, case-insensitive substring over the fields joined with single spaces (the search v1 "document", so "beans morning" crosses fields), lowercased once per query, ordered date descending then id ascending in Overview, Activity, trips and search; no accent folding (search v1 on the server folds; see [search](search.md)). Pending local edits, renames and deletions are reflected because search runs on the local ledger.
 - Merge: a local-edited field wins, untouched remote fields survive, a field removed locally is removed.
 
 ## Shared fixture maintenance

@@ -1,9 +1,10 @@
 import type { Ledger, Trip, Transaction } from "../ledger.ts";
+import { byDateDescThenId } from "../search.ts";
 
 export function tripOverview(ledger: Ledger, trip: Trip) {
   const expenses = ledger.transactions
     .filter((entry) => entry.kind === "expense" && entry.tripId === trip.id)
-    .sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id));
+    .sort(byDateDescThenId);
   const byCategory = new Map<string, number>();
   for (const entry of expenses)
     byCategory.set(entry.categoryId, (byCategory.get(entry.categoryId) ?? 0) + entry.share);

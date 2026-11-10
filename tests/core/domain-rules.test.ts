@@ -3,14 +3,17 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join, resolve, sep } from "node:path";
+import { fileURLToPath } from "node:url";
 import { cents, emptyLedger, materialize, nextOccurrence, personalShare, type Ledger, type Recurring, type Transaction } from "../../src/domain/ledger.ts";
 import { mergeLedger } from "../../src/domain/merge.ts";
+import { calculateHouseholdSplits } from "../../src/domain/households.ts";
 import { searchEntries } from "../../src/domain/search.ts";
-import { summarizeMonth } from "../../src/domain/summary.ts";
+import { scheduledEntries, summarizeMonth } from "../../src/domain/summary.ts";
 import { calendarMonth, selectOverview, shiftMonthKey } from "../../src/domain/selectors/overview.ts";
 import { selectTransactions } from "../../src/domain/selectors/transactions.ts";
 import { buildMoneyFlow } from "../../src/domain/selectors/moneyFlow.ts";
+import { tripOverview } from "../../src/domain/selectors/trips.ts";
 
 const root = new URL("../../", import.meta.url);
 const fixture = (name: string) => JSON.parse(readFileSync(new URL(`contracts/fixtures/${name}`, root), "utf8"));
@@ -21,7 +24,7 @@ function sources(dir: string): string[] {
 }
 
 test("src/domain imports only relative files inside src/domain", () => {
-  const domain = new URL("src/domain/", root).pathname;
+  const domain = fileURLToPath(new URL("src/domain", root));
   const files = sources(domain);
   assert.ok(files.length >= 8);
   for (const file of files) {
@@ -29,8 +32,8 @@ test("src/domain imports only relative files inside src/domain", () => {
     for (const match of text.matchAll(/(?:from|import)\s*\(?\s*["']([^"']+)["']/g)) {
       const specifier = match[1]!;
       assert.ok(specifier.startsWith("."), `${file} imports package ${specifier}`);
-      const target = join(file, "..", specifier);
-      assert.ok(target.startsWith(domain.slice(0, -1)), `${file} escapes src/domain via ${specifier}`);
+      const target = resolve(dirname(file), specifier);
+      assert.ok(target === domain || target.startsWith(domain + sep),`${file} escapes src/domain via ${specifier}`);
     }
     assert.doesNotMatch(text, /\b(?:process\.env|AsyncStorage|expo-)/, file);
   }
@@ -124,8 +127,8 @@ test("projection counts only scheduled income; expenses and investments stay rec
   assert.deepEqual(summary.recorded, { income: 0, expense: 1000, investment: 0 });
   assert.equal(summary.expectedIncome, 300000);
   assert.deepEqual(summary.projected, { income: 300000, expense: 1000, investment: 0 });
-  assert.equal(summary.recordedRemaining, -1000);
-  assert.equal(summary.projectedRemaining, 299000);
+  assert.equal(summary.recordedNet, -1000);
+  assert.equal(summary.projectedNet, 299000);
   assert.deepEqual(ledger, before);
   // Agrees with the overview selector the screens use.
   const overview = selectOverview(ledger, { month: "2026-10", day: null, filter: "all", categoryId: null, search: "" });
@@ -136,7 +139,7 @@ test("projection counts only scheduled income; expenses and investments stay rec
   assert.equal(recorded.expectedIncome, 0);
   assert.equal(recorded.recorded.income, 300000);
   assert.equal(recorded.recorded.investment, 50000);
-  assert.equal(recorded.recordedRemaining, 300000 - 1000 - 50000 - 100000);
+  assert.equal(recorded.recordedNet, 300000 - 1000 - 50000 - 100000);
 });
 
 test("investment contributions are not spending and personal shares drive totals and flow", () => {
@@ -152,11 +155,40 @@ test("investment contributions are not spending and personal shares drive totals
 });
 
 test("recorded-only Activity ignores scheduled previews and projected totals", () => {
-  const ledger: Ledger = { ...base(), recurring: [rent] };
-  const result = selectTransactions(ledger, { month: "2026-10", period: "month", filter: "all", search: "", page: 0 });
-  assert.equal(result.totalCount, 0);
-  assert.deepEqual(result.summary, { income: 0, expense: 0, investment: 0 });
-  assert.deepEqual(searchEntries(ledger, "rent"), []);
+  const recordedRent: Transaction = { id: "rent:2026-09-30", title: "Rent", kind: "expense", total: 100000, share: 100000, categoryId: "home", date: "2026-09-30", note: "", recurringId: "rent" };
+  const sharedScheduled = { id: "household:h:x", title: "Rent split", kind: "expense", total: 9000, share: 4500, categoryId: "home", date: "2026-10-28", note: "", scheduled: true } as Transaction;
+  const ledger: Ledger = { ...base(), recurring: [rent], transactions: [...base().transactions, recordedRent, sharedScheduled] };
+  assert.ok(scheduledEntries(ledger, "2026-10").length > 0, "October has a scheduled preview");
+  const filters = { month: "2026-10", period: "month" as const, filter: "all" as const, search: "", page: 0 };
+  const october = selectTransactions(ledger, filters);
+  assert.equal(october.totalCount, 0, "nothing is recorded in October");
+  assert.deepEqual(october.summary, { income: 0, expense: 0, investment: 0 });
+  const september = selectTransactions(ledger, { ...filters, month: "2026-09" });
+  assert.deepEqual(september.visibleEntries.map((entry) => entry.id), ["rent:2026-09-30", "t"]);
+  assert.deepEqual(september.summary, { income: 0, expense: 101000, investment: 0 });
+  assert.deepEqual(searchEntries(ledger, "rent").map((entry) => entry.id), ["rent:2026-09-30"]);
+});
+
+test("one ordering everywhere: date descending, then id ascending", () => {
+  const entry = (id: string, date: string): Transaction => ({ id, title: "Same", kind: "expense", total: 100, share: 100, categoryId: "food", date, note: "", tripId: "trip" });
+  const ledger: Ledger = { ...emptyLedger(), transactions: [entry("b", "2026-09-02"), entry("a", "2026-09-01"), entry("c", "2026-09-02"), entry("a2", "2026-09-02")] };
+  const expected = ["a2", "b", "c", "a"];
+  assert.deepEqual(searchEntries(ledger, "same").map((item) => item.id), expected);
+  assert.deepEqual(selectOverview(ledger, { month: "2026-09", day: null, filter: "all", categoryId: null, search: "same" }).visibleEntries.map((item) => item.id), expected);
+  assert.deepEqual(tripOverview(ledger, { id: "trip", name: "T", startDate: "2026-09-01", endDate: "2026-09-30" }).expenses.map((item) => item.id), expected);
+});
+
+test("every screen trims and lowercases the query identically", () => {
+  const ledger = base();
+  const overview = (search: string) => selectOverview(ledger, { month: "2026-09", day: null, filter: "all", categoryId: null, search }).visibleEntries.map((item) => item.id);
+  const activity = (search: string) => selectTransactions(ledger, { month: "2026-09", period: "month", filter: "all", search, page: 0 }).visibleEntries.map((item) => item.id);
+  for (const query of ["lunch ", "  LUNCH", "lunch with", "with alex", "Lunch With"]) {
+    assert.deepEqual(overview(query), ["t"], query);
+    assert.deepEqual(activity(query), ["t"], query);
+    assert.deepEqual(searchEntries(ledger, query).map((item) => item.id), ["t"], query);
+  }
+  // Fields are joined by single spaces (search v1 contract), so a query cannot skip a field.
+  assert.deepEqual(overview("lunch  with"), []);
 });
 
 test("search fixtures: local substring, deterministic order and pending edits/renames/deletions", () => {
@@ -164,9 +196,9 @@ test("search fixtures: local substring, deterministic order and pending edits/re
   for (const item of cases.substringCases) {
     const found = searchEntries(cases.ledger, item.query, { ...(item.kind && { kind: item.kind }), ...(item.day && { day: item.day }) });
     assert.deepEqual(found.map((entry) => entry.id), item.ids, item.query);
-    const sorted = [...found].sort((a, b) => b.date.localeCompare(a.date) || a.id.localeCompare(b.id));
-    assert.deepEqual(found, sorted);
   }
+  // Independent expectation: "coffee" hits a, b, e, all dated 2026-11-02 and tied, so id order.
+  assert.deepEqual(searchEntries(cases.ledger, "coffee").map((entry) => entry.id), ["a", "b", "e"]);
   for (const item of cases.pendingCases) {
     const local: Ledger = structuredClone(cases.ledger);
     if (item.localCreate) local.transactions.push(item.localCreate);
@@ -180,16 +212,36 @@ test("search fixtures: local substring, deterministic order and pending edits/re
   assert.ok(searchEntries(renamed, "grocer").length > 0);
 });
 
-test("redesign fixture: recorded vs projected totals match summarizeMonth", () => {
+test("redesign fixture: recorded and projected totals match summarizeMonth plus the shared share", () => {
   const states = fixture("redesign-states.json");
   const seeds = fixture("full-stack-seeds.json");
   const scenario = seeds.scenarios.find((item: { name: string }) => item.name === "searchable-household");
   const ledger = ([...scenario.steps].reverse().find((step: { as?: string; ledger?: Ledger }) => step.ledger && step.as === "alex") as { ledger: Ledger }).ledger;
-  const summary = summarizeMonth(ledger, "2026-10");
-  const personal = states.totals["alex-2026-10"].scheduled.find((item: { source: string }) => item.source === "personal");
-  // Personal projection: the fixture's projected expense adds scheduled spending, which the
-  // client summary deliberately excludes; income and investment agree.
-  assert.equal(summary.recorded.investment, states.totals["alex-2026-10"].recorded.investmentCents);
-  assert.equal(summary.projected.expense, summary.recorded.expense);
-  assert.ok(personal.shareCents > 0);
+  const month = "2026-10";
+  const expected = states.totals["alex-2026-10"];
+  // The fixture also counts alex's recorded shared shares, which are not in the private ledger.
+  const members = (when: string) => when < "2026-10-02" ? ["alex", "bea", "cam"] : ["alex", "bea"];
+  let shared = 0;
+  for (const step of scenario.steps) {
+    if (!step.expense) continue;
+    const body = step.expense.body as { date: string; totalCents: number; splitMode: string; allocations?: { userId: string; amountCents: number }[] };
+    if (!body.date.startsWith(month)) continue;
+    const splits = body.splitMode === "equal"
+      ? calculateHouseholdSplits(body.totalCents, { mode: "equal", memberIds: members(body.date) })
+      : body.allocations!.map((item) => ({ userId: item.userId.replace("$user:", ""), amountCents: item.amountCents }));
+    shared += splits.find((item) => item.userId === "alex")?.amountCents ?? 0;
+  }
+  const summary = summarizeMonth(ledger, month);
+  assert.equal(summary.recorded.expense + shared, expected.recorded.expenseCents);
+  assert.equal(summary.recorded.income, expected.recorded.incomeCents);
+  assert.equal(summary.recorded.investment, expected.recorded.investmentCents);
+  // Projected income and investment agree with the fixture. The fixture's projected expense adds
+  // scheduled spending (personal and shared); the client projection deliberately excludes it.
+  assert.equal(summary.projected.income, expected.projected.incomeCents);
+  assert.equal(summary.projected.investment, expected.projected.investmentCents);
+  const sumShares = (items: { shareCents: number }[]) => items.reduce((sum, item) => sum + item.shareCents, 0);
+  const personalScheduled = scheduledEntries(ledger, month).filter((entry) => entry.kind === "expense").reduce((sum, entry) => sum + entry.share, 0);
+  assert.equal(personalScheduled, sumShares(expected.scheduled.filter((item: { source: string }) => item.source === "personal")));
+  assert.equal(expected.projected.expenseCents - expected.recorded.expenseCents, sumShares(expected.scheduled));
+  assert.equal(summary.projected.expense, summary.recorded.expense, "client projection excludes scheduled expenses");
 });

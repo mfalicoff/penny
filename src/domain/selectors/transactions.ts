@@ -1,6 +1,7 @@
-import { byDateDescThenId, matchesSearch, searchLookups } from "../search.ts";
+import { shiftMonthKey } from "../calendar.ts";
 import { totals, type Ledger, type Transaction } from "../ledger.ts";
-import { shiftMonthKey, type EntryFilter } from "./overview.ts";
+import { byDateDescThenId, searchLookups, searchMatcher, type EntryFilter } from "../search.ts";
+import { isRecorded } from "../summary.ts";
 
 export type TransactionFilters = {
   month: string;
@@ -20,12 +21,11 @@ export function shiftTransactionPeriod(month: string, period: TransactionFilters
 export function selectTransactions(ledger: Ledger, filters: TransactionFilters) {
   const prefix = filters.period === "year" ? filters.month.slice(0, 4) : filters.month;
   // Only recorded transactions contribute to history and totals, including recorded recurring entries.
-  const periodEntries = ledger.transactions.filter((entry) => entry.date.startsWith(`${prefix}-`));
+  const periodEntries = ledger.transactions.filter((entry) => isRecorded(entry) && entry.date.startsWith(`${prefix}-`));
   const summary = totals(periodEntries);
-  const lookups = searchLookups(ledger);
-  const query = filters.search.trim();
+  const matchesQuery = searchMatcher(filters.search, searchLookups(ledger));
   const matches = periodEntries.filter((entry) =>
-    (filters.filter === "all" || entry.kind === filters.filter) && matchesSearch(entry, query, lookups),
+    (filters.filter === "all" || entry.kind === filters.filter) && matchesQuery(entry),
   ).sort(byDateDescThenId);
   const pageCount = Math.max(1, Math.ceil(matches.length / PAGE_SIZE));
   const page = Math.max(0, Math.min(filters.page, pageCount - 1));
