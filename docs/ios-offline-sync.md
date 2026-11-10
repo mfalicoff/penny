@@ -15,6 +15,8 @@ The native app keeps each signed-in account's personal ledger on the device, sav
 | `SystemNetworkMonitor`, `SystemCalendarDayMonitor`, `SyncBackoff` | `PennyData/Offline/SyncTriggers.swift` | Reconnect and day-change triggers, retry delays |
 | `SearchResults` | `PennyData/Offline/SearchResults.swift` | Server search pages without repeated rows |
 | `View.ledgerSync(_:)` | `PennyUI/Sync/LedgerSyncLifecycle.swift` | Puts the model in the environment, starts it, forwards scene phase |
+| `AccountWorkspace` | `PennyData/Workspace/AccountWorkspace.swift` | The shell's `LedgerWorkspace` for a signed-in account, over the model ([native shell](ios-shell.md#sync-status)) |
+| `LedgerChange.revert` | `PennyDomain/Ledger/LedgerRevert.swift` | The inverse change the shell's Undo saves |
 
 ## Persistence schema
 
@@ -136,7 +138,7 @@ Shared household actions and receipt uploads are not queued: they call `AuthCont
 
 ## Sync state for the UI
 
-`LaunchView` creates one `OfflineLedgerStore.standard()` and one `LedgerSyncModel`, passes the store to `AuthController` and applies `.ledgerSync(model)`. Views read it with `@Environment(LedgerSyncModel.self)`.
+`LaunchView` creates one `OfflineLedgerStore.standard()` and one `LedgerSyncModel` for the app, passes the store to `AuthController` and applies `.ledgerSync(model)`. The MAZ-69 shell does not read the model directly: `AuthGate` hands it to `AppServices.accountWorkspace`, which wraps it in an `AccountWorkspace` for each signed-in account's shell. That adapter maps the phase to the shell's load and sync status, `SyncIssue` to the banner's problem and `LedgerSaveError` to the form's `SaveFailure`, routes Retry to `syncNow()` and the load error's action to `recoverUnreadableStorage()` (unreadable copy) or a re-read (locked copy), and implements Undo by saving `LedgerChange.revert`. The full mapping is in [native shell, Sync status](ios-shell.md#sync-status). The demo never receives the model. Other views can still read it with `@Environment(LedgerSyncModel.self)`.
 
 | API | Use |
 | --- | --- |
@@ -145,7 +147,7 @@ Shared household actions and receipt uploads are not queued: they call `AuthCont
 | `state.pending.count`, `state.pending.entryIDs`, `state.pending.deletedEntryIDs` | "Offline · 2 changes waiting", "Waiting to sync" rows |
 | `state.lastSyncedAt` | "As of last sync" |
 | `isOnline`, `canUseOnlineOnlyActions` | Network banner, disabling shared actions and receipt uploads |
-| `save(_:) async throws(LedgerSaveError) -> SaveReceipt` | Save; on error show `LedgerSaveError.message` and keep the draft; `receipt.savedOffline` picks "Saved on this device" |
+| `save(_:) async throws(LedgerSaveError) -> SaveReceipt` | Save; on error show `LedgerSaveError.message` and keep the draft; `receipt.savedOffline` can pick "Saved on this device" (the shell's toast does not use it yet; its offline banner says the same) |
 | `syncNow()` | Retry button |
 | `recoverUnreadableStorage()` | Recovery action for `storageUnreadable` |
 | `sceneDidBecomeActive()`, `sceneDidEnterBackground()` | Already called by `.ledgerSync(_:)` |
@@ -169,5 +171,7 @@ Drafts are view state: a failed save, an expiry or a reconnect never touches the
 | `OfflineLedgerStoreTests` (PennyDataTests) | Round trip and format 1, wrong account, interrupted write (stray temp file), disk full, backup exclusion, listing and removal; pending count, failed and expired "Sync, then sign out", email move |
 | `LedgerSyncEngineTests` | Kill and relaunch with pending work, offline create/edit/delete, save before download, rule refusals, new versus existing violations, failed disk writes before and after the server accepted, corrupt and newer-format copies and recovery, locked file, independent edits through a 409, same-field policy, repeated 409s then success, joined syncs, saves during a sync, 401, 503 then timeout then restart, 400, unknown server ledger version, another account's client, removal during sync, recurrence across midnight and devices |
 | `LedgerSyncModelTests` | Real `AuthController` with a fake server: first download, offline save then kill, relaunch and reconnect, session expiry and re-sign-in, sign-out refused with pending work (including an unreadable copy) and recovery, late answers after an account switch, backoff after 503, no automatic retry after 400, day change, foreground pull, search reconciliation and de-duplicated pages |
+| `AccountWorkspaceTests` | The shell adapter over the same harness: phase, issue, storage and save-error mapping; an offline save shown as pending, on disk, then synced on reconnect; refused saves; Undo synced, refused after another device's edit, and only once; session expiry; unreadable-copy recovery through `reload()`; nothing shown or saved for another account |
+| `LedgerRevertTests` (PennyDomainTests) | Undo restores the ledger exactly, keeps unrelated work synced since, refuses a record changed since and a currency under entries |
 
-Run `apps/ios/scripts/ios.sh package-test`; `ios.sh ci` also runs them on clean iPhone and iPad simulators. The simulator journey against the real .NET/PostgreSQL stack (offline save, relaunch, sync and search refresh, with the full-stack test environment's fault controls) needs XCUITest and is MAZ-81's; the redesign screens that show these states are MAZ-69/73.
+Run `apps/ios/scripts/ios.sh package-test`; `ios.sh ci` also runs them on clean iPhone and iPad simulators. The simulator journey against the real .NET/PostgreSQL stack (offline save, relaunch, sync and search refresh, with the full-stack test environment's fault controls) needs XCUITest and is MAZ-81's; the shell shows these states through `AccountWorkspace` ([native shell](ios-shell.md#sync-status)), and the entry screens are MAZ-73.

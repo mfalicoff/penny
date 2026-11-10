@@ -14,11 +14,11 @@ This page describes the SwiftUI shell that MAZ-69 adds to `apps/ios`: the naviga
 | PennyDomain | `Demo/DemoLedger.swift` | The made-up sample ledger, dated around today, with `demo-` ids |
 | PennyData | `AppLock/` | `AppLockController`, the `DeviceAuthenticator` protocol and its LocalAuthentication implementation, and the Keychain setting store |
 | PennyData | `Preferences/DevicePreferences.swift` | Appearance (system, light, dark) and the legacy theme mapping |
-| PennyData | `Workspace/` | The `LedgerWorkspace` protocol and `SyncStatus` (the interface MAZ-71 implements), `DemoWorkspace`, `UnavailableWorkspace` and `FixedWorkspace` |
+| PennyData | `Workspace/` | The `LedgerWorkspace` protocol and `SyncStatus`, `AccountWorkspace` (a signed-in account over the MAZ-71 offline engine), `DemoWorkspace` and `FixedWorkspace` |
 | PennyDesign | `Components/` | `MoneyText`, `MoneyFormat`, `HeroAmount`, `GlassIconButton`, `GlassCapsuleButton`, `PennyButton`, `PennyMark`, `pennyCard`, `StatusBanner`, `SaveToast`, `PennyStateView`, `CategoryIcon`, `CategoryStyle`, `ControlSize` |
 | PennyUI | `Shell/`, `Home/`, `Activity/`, `Together/`, `Settings/`, `Specimens.swift` | The shell (tab bar and split view), Home, Activity, Shared, Trips, Settings and its pages, the lock cover, the toast and banners, and Xcode previews named after the cards |
 
-`RootView` owns what is per device: the appearance, the lock that covers everything and the deep-link inbox. `AuthGate` shows the sign-in flow, the shell for a signed-in account, or the demo.
+`RootView` owns what is per device: the appearance, the lock that covers everything and the deep-link inbox. `LaunchView` owns the app's one `OfflineLedgerStore` and `LedgerSyncModel` (MAZ-71) and keeps `.ledgerSync` attached. `AuthGate` shows the sign-in flow, the shell for a signed-in account (an `AccountWorkspace` over that model), or the demo.
 
 ## Navigation
 
@@ -127,14 +127,15 @@ Limitations: the demo has no households, so Shared shows its "coming" state; Add
 | Empty | Home (`empty-home`), Activity, Trips, Recurring, Accounts | Says what will appear and how to start |
 | Offline | Banner on Home, Activity and Trips | "Offline · N changes waiting", that changes are saved on the device, and Retry. Waiting rows say "Waiting to sync" and Projected says "as of last sync" |
 | Sync error | Same banner | "Couldn't sync · N changes waiting", the workspace's message and Retry |
-| Load error | Full screen | The message and Try again |
+| Load error | Full screen | The message and Try again; for a copy on the device that can't be read, Download again ([below](#sync-status)) |
 | Save error | Inside the form (`save-error`) | "Couldn't save", the reason, "Your draft is kept", Try again; an error haptic |
 | Saved | Toast above the tab bar (`saved-toast`) | The change and its detail, Undo, a success haptic, a VoiceOver announcement; it disappears after four seconds |
-| Not available yet | Shared, household links, Add entry, and a signed-in account before MAZ-71 | Says what isn't in this build yet, instead of an empty screen that looks broken |
+| Not available yet | Shared, household links, Add entry | Says what isn't in this build yet, instead of an empty screen that looks broken |
+| Can't open your entries | A copy on the device written by a newer Penny | Says to update Penny; the copy is left untouched |
 
-## Sync status interface (for MAZ-71)
+## Sync status
 
-The shell binds only to `LedgerWorkspace` (`PennyData/Workspace/LedgerWorkspace.swift`). MAZ-71's offline store and sync engine implements it and returns it from `AppServices.accountWorkspace`; nothing in the shell stores or syncs anything.
+The shell binds only to `LedgerWorkspace` (`PennyData/Workspace/LedgerWorkspace.swift`); nothing in the shell stores or syncs anything. For a signed-in account, `AppServices.accountWorkspace` returns an `AccountWorkspace` (`PennyData/Workspace/AccountWorkspace.swift`) over MAZ-71's offline ledger and sync engine ([offline sync](ios-offline-sync.md)).
 
 ```swift
 @MainActor
@@ -153,10 +154,52 @@ public protocol LedgerWorkspace: AnyObject, Observable {
 
 - `commit` succeeds once the change is kept on the device (offline included). Reaching the server is reported through `sync`, never as a save failure. A failure means nothing was kept: `.rule(LedgerRuleError)`, `.server(WorkspaceProblem)` for changes that need the server, `.storage` or `.unavailable`.
 - `undo` reverts the toast's change and fails when it can no longer be undone.
-- The implementation is an `@Observable` class, so SwiftUI follows changes to `load`, `sync` and `pendingEntryIDs`.
-- It should also implement `AccountLocalData` (MAZ-68) so sign-out sees the same pending count.
+- Implementations are `@Observable` classes, so SwiftUI follows changes to `load`, `sync` and `pendingEntryIDs`.
 
-Until MAZ-71 lands, a signed-in account gets `UnavailableWorkspace`: a named "Not available yet" state, and every save fails with "Your draft is kept". `FixedWorkspace` puts the shell in any state for previews and tests.
+### The signed-in account: `AccountWorkspace`
+
+`AccountWorkspace` stores nothing. It reads the app's one `LedgerSyncModel` and translates:
+
+- **One model per app.** `LaunchView` creates the `OfflineLedgerStore` and the `LedgerSyncModel` once, passes the store to `AuthController` (so sign-out sees the pending count) and keeps `.ledgerSync(model)` attached, which starts the model and forwards foreground and background. `AuthGate` gives the model to `AppServices.accountWorkspace` for each account shell; one `AccountWorkspace` is made per shell (the shell is rebuilt for another account).
+- **Only its own account.** It shows the model's ledger and pending rows only while the model's `state.scope` is its account. Otherwise it is loading and refuses saves, so a late update for a previous account never appears.
+- **The demo never touches it.** `DemoWorkspace` is not given the model, and nothing in the demo writes to the store.
+
+| `LedgerSyncState.phase` | `sync` | `load` without a ledger yet |
+| --- | --- | --- |
+| `upToDate` | `.upToDate(lastSynced:)` | loading |
+| `loading`, `syncing`, `pending` | `.syncing(pending:)` ("Syncing…" with nothing waiting) | loading |
+| `offline`, `failed(.offline)` | `.offline(pending:lastSynced:)` | failed, offline: "Connect to the internet to download your entries." |
+| `failed(issue)` | `.failing(pending:problem:)` | failed with the same problem |
+| `sessionExpired` | `.signInRequired(pending:)` | failed, session expired |
+| `storageUnavailable` (locked before first unlock) | `.failing`, storage | failed, storage; Try again reads it again |
+| `storageUnreadable` | `.failing`, `storageUnreadable` | failed even with a ledger shown before: **Download again** runs `recoverUnreadableStorage()` (the copy is set aside, not deleted) |
+| `storageNewerFormat` | `.failing`, storage | `.unavailable`: "Update Penny to open them" (even with a ledger) |
+
+Once a ledger exists, `load` is `.ready(ledger)` in every other phase, so offline and failing states keep showing the device's copy with the banner.
+
+| `SyncIssue` | `WorkspaceProblem.kind` |
+| --- | --- |
+| `offline` | `offline` |
+| `serverUnreachable` | `unreachable` |
+| `serverUnavailable` | `server` |
+| `rejected(message)` | `server`, with the server's message |
+| `conflictRetriesExhausted` | `conflict` |
+| `incompatibleServerData` | `server` ("Update Penny to sync") |
+| `storageWriteFailed` | `storage` |
+
+| `LedgerSaveError` | `SaveFailure` |
+| --- | --- |
+| `rule(error)` | `.rule(error)` |
+| `writeFailed`, `storageUnreadable` | `.storage(message)` |
+| `invalid`, `notLoaded`, `unavailable` | `.unavailable(message)` |
+
+`.server` is not produced: shared expenses and receipts are online-only and never go through the offline ledger. Every failure leaves the ledger as it was, so the form keeps the draft.
+
+Retry in the banner calls `syncNow()` (or reads a locked copy again); Try again on a load error calls `reload()`.
+
+**Undo.** A save offers Undo only when the saved ledger is exactly the change applied to the ledger on screen (nothing synced or came due in between). Undo saves `LedgerChange.revert(after, to: before)` through the model, so it is on disk, pending and synced like any save. It puts back only the records the change touched, at their old place, and is refused ("This change can't be undone anymore…") when one of them changed since (on this device or synced from another), when a currency change would apply under entries, or when the result would break a ledger rule such as an entry using a removed account. Only the latest change can be undone, once.
+
+`FixedWorkspace` puts the shell in any state for previews and tests.
 
 ## Specimens
 
@@ -184,9 +227,11 @@ Swift Testing, run by `apps/ios/scripts/ios.sh package-test` on the Mac and `ios
 
 - `ShellRouteTests` (PennyDomain): every legacy link's destination and Back path, sheets closing for a link, per-tab stacks, reselecting a tab, the iPad sidebar mapping, the tab list against the baseline, links held until sign-in and unlock (`DeepLinkInboxTests`), the demo ledger (valid, current month, `demo-` ids) and the currencies against `contracts/openapi.json`.
 - `AppLockControllerTests` (PennyData): failed and closed-Keychain reads stay concealed, launch and return prompts, cancel and failure messages, stale answers after backgrounding, single-flight unlock, no flash during Penny's own prompt, durable on/off with failed authentication and failed saves, backgrounding while turning on, missing enrolment and passcode; the Keychain store with a fake Keychain; appearance persistence and the legacy theme mapping.
-- `WorkspaceTests` (PennyData): demo isolation, Undo, refused changes keeping the ledger, the not-yet workspace refusing saves, sync status counts.
+- `WorkspaceTests` (PennyData): demo isolation, Undo, refused changes keeping the ledger, sync status counts.
+- `AccountWorkspaceTests` (PennyData): the phase, sync issue, storage and save error mapping; with the MAZ-71 fake server and a real `AuthController` and `LedgerSyncModel`: an offline save shown at once as pending, kept on disk and synced on reconnect; a refused save changing nothing; Undo saved and synced, refused after another device edited the record, and only once; session expiry asking for sign-in with the count; an unreadable copy recovered through Try again; nothing shown or saved for another account.
+- `LedgerRevertTests` (PennyDomain): Undo of adds, edits, deletes and other records restores the ledger exactly (order included), keeps unrelated work synced since, and is refused for a record changed since or a currency under entries.
 - `MoneyFormatTests` (PennyDesign): signs, spoken amounts, hero cents in two locales, icon and color mapping, minimum targets.
-- `ShellTests` (PennyUI): the toast and haptic counters, save failures without a toast, Undo, the demo's lack of account and server, the currency lock reasons, Activity day groups, sync text, Projected text, scene-phase mapping, appearance persistence, the month list.
+- `ShellTests` (PennyUI): the toast and haptic counters, save failures without a toast, Undo, the demo's lack of account and server, the currency lock reasons, Activity day groups, sync text, the load error action, Projected text, scene-phase mapping, appearance persistence, the month list.
 - `AppLockSettingKeychainTests` (app-hosted): the setting in the real simulator Keychain.
 
 Not automated yet: XCUITest journeys for every screen, Dynamic Type sizes, dark mode, keyboard dismissal and the lock over sheets (MAZ-81/82), and visual comparison with the cards (MAZ-122).
