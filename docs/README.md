@@ -19,6 +19,7 @@
 
 - [V2 migration architecture](migration/architecture.md): SwiftUI/TanStack/.NET boundaries, PostgreSQL import and recovery, versioned search, redesign traceability and compatibility gates.
 - [ASP.NET Core backend foundation](../apps/backend/README.md): pinned .NET/PostgreSQL setup, explicit migrations, readiness, real database tests and backend CI.
+- [Native iOS app](../apps/ios/README.md): Xcode 27.2 and iOS 26 setup, simulator build and test commands, module ownership, environments, signing, App Group and upgrade continuity, and iOS CI.
 - [Frontend architecture](frontend-architecture.md): routes, feature ownership, state and persistence boundaries, responsive navigation, and native glass surfaces.
 - [Backend architecture](backend-architecture.md): HTTP/application/storage boundaries, validation, persistence guarantees, and framework tradeoffs.
 - [Backend API endpoints](api-endpoints.md): all 40 operations, authentication, request/response shapes, and compatibility notes for a Go or .NET migration.

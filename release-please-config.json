@@ -6,7 +6,13 @@
       "release-type": "node",
       "initial-version": "1.0.0",
       "include-component-in-tag": false,
-      "include-v-in-tag": true
+      "include-v-in-tag": true,
+      "extra-files": [
+        {
+          "type": "generic",
+          "path": "apps/ios/Configuration/Version.xcconfig"
+        }
+      ]
     }
   }
 }

@@ -74,3 +74,8 @@ ds-bundle/
 .design-sync/.cache/
 .design-sync/learnings/
 .design-sync/node_modules
+
+# Native iOS app (MAZ-66): per-developer signing and Xcode user state
+apps/ios/Configuration/Signing.local.xcconfig
+xcuserdata/
+*.xcuserstate

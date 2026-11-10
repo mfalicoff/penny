@@ -1,0 +1,18 @@
+#include "Project.xcconfig"
+
+// PENNY_TEST_CONTROLS compiles Penny/TestControls.swift (launch overrides for tests and
+// XCUITest). Release never defines it, and scripts/ios.sh release-check verifies that.
+SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG PENNY_TEST_CONTROLS
+SWIFT_OPTIMIZATION_LEVEL = -Onone
+SWIFT_COMPILATION_MODE = singlefile
+GCC_OPTIMIZATION_LEVEL = 0
+GCC_PREPROCESSOR_DEFINITIONS = DEBUG=1
+ONLY_ACTIVE_ARCH = YES
+ENABLE_TESTABILITY = YES
+DEBUG_INFORMATION_FORMAT = dwarf
+MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE
+
+PENNY_ENVIRONMENT = development
+// The legacy app's default (src/data/serverConnection.ts). `/$()/` stops xcconfig
+// reading `//` as a comment.
+PENNY_DEFAULT_SERVER_URL = http:/$()/localhost:3001
