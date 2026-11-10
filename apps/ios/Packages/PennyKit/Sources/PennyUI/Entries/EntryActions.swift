@@ -168,6 +168,11 @@ enum EntryText {
         PennyColor.category(CategoryStyle.color(forCategoryID: categoryId))
     }
 
+    /// Uses the stored color, so categories made on this device or another app draw in their own color.
+    static func color(_ category: LedgerCategory?, id categoryId: String) -> Color {
+        category.map { PennyColor.category($0.paletteColor) } ?? color(categoryId)
+    }
+
     /// "Today", "Yesterday", "Sun, Nov 15".
     static func day(_ day: CalendarDate, today: CalendarDate) -> String {
         if day == today { return "Today" }

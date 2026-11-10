@@ -143,6 +143,18 @@ struct OrganizeFormTests {
         #expect(workspace.load.ledger?.violations.isEmpty == true)
     }
 
+    @Test("whenCreatedFromAPickerSearch_CategoryForm_ShouldStartWithTheTrimmedSearchText")
+    func suggestedName() async throws {
+        let workspace = Self.workspace()
+        let model = CategoryFormModel(kind: .expense, name: "  Pets ", makeID: { "cat-pets" })
+        #expect(model.name == "Pets" && model.isNew)
+        let saved = try #require(await model.save(with: Self.commit(workspace)))
+        #expect(saved.id == "cat-pets" && saved.name == "Pets" && saved.kind == .expense)
+
+        let food = try #require(Ledger.defaultCategories.first { $0.id == "food" })
+        #expect(CategoryFormModel(category: food, name: "Ignored").name == food.name, "an edit keeps the stored name")
+    }
+
     @Test("whenALegacyCategoryIsRenamed_CategoryForm_ShouldKeepItsStoredColor")
     func legacyColorKept() async throws {
         let workspace = Self.workspace()

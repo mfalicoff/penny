@@ -11,7 +11,7 @@ How the iPhone and iPad app adds, edits, deletes, finds and filters personal ent
 | Save flow over any workspace | `PennyData/Entries/EntryFormModel.swift` | `EntryFormModelTests` (including an offline save through `AccountWorkspace` and the fake server) |
 | Server search state (MAZ-121), paging, reconciliation | `PennyData/Search/ActivitySearch.swift` | `ActivitySearchModelTests` |
 | Entry sheet, keypad, pickers, split, More details | `PennyUI/Entries/` | `EntryFlowTests` |
-| Inline account and category creation | `PennyUI/Entries/EntryPickerInlineCreate.swift` | — (to be consolidated with MAZ-74's account and category forms) |
+| Inline account and category creation | The pickers present MAZ-74's `AccountFormSheet` and `CategoryFormSheet` (`PennyUI/Organize/`, the category form prefilled with the search text) and select the saved record; see [organize](ios-organize.md) | `OrganizeFormTests`, `EntryFormModelTests` |
 | Activity list, chips, search scope, filters sheet | `PennyUI/Activity/` | `EntryFlowTests` |
 
 Previews of every card this issue owns are in `PennyUI/Entries/EntrySpecimens.swift`, named after their cards.
@@ -65,9 +65,9 @@ Previews of every card this issue owns are in `PennyUI/Entries/EntrySpecimens.sw
 
 ## Accessibility identifiers
 
-Screens: `screen.addEntry`, `screen.editEntry`, `screen.categoryPicker`, `screen.accountPicker`, `screen.datePicker`, `screen.split`, `screen.entryExtras`, `screen.inlineAccount`, `screen.inlineCategory`, `screen.entryDetail`, `screen.activity`, `screen.activityFilters`.
+Screens: `screen.addEntry`, `screen.editEntry`, `screen.categoryPicker`, `screen.accountPicker`, `screen.datePicker`, `screen.split`, `screen.entryExtras`, `screen.accountForm` and `screen.categoryForm` (inline creation, see [organize](ios-organize.md)), `screen.entryDetail`, `screen.activity`, `screen.activityFilters`.
 
-Controls: `entryForm.{kind,amount,title,category.<id>,moreCategories,date,account,split,details,save,close,discard,keepDraft,discardDraft,restoredDraft,reviewLatest,conflict,deleted,retry,futureDate}`, `banner.saveError`, `keypad.{0-9,separator,delete}`, `categoryPicker.{<id>,new,edit,close}`, `accountPicker.{none,<id>,new}`, `datePicker.{calendar,today,yesterday,done}`, `split.{mode,people,input,share,error,done,cancel}`, `entryExtras.{repeat,note,trip.none,trip.<id>,removeReceipt,receiptPhoto,receiptFile}`, `inlineAccount.{name,type,save,error}`, `inlineCategory.{name,save,error}`, `entryDetail.{edit,delete,receipt}`, `deleteEntry.{confirm,cancel}`, `activity.{filters,period,filter.<all|expense|income|investment>,category.<all|id>,totals,edit,delete,loadMore,showMore,searching,searchEmpty,searchAllMonths,clearFilters,searchError,searchRetry,scope.server,scope.device}`, `filters.{period,month.previous,month.next,year.previous,year.next,oneDay,day,kind,category,clear,done}`, and the existing `entry.<id>` rows.
+Controls: `entryForm.{kind,amount,title,category.<id>,moreCategories,date,account,split,details,save,close,discard,keepDraft,discardDraft,restoredDraft,reviewLatest,conflict,deleted,retry,futureDate}`, `banner.saveError`, `keypad.{0-9,separator,delete}`, `categoryPicker.{<id>,new,edit,close}`, `accountPicker.{none,<id>,new}`, `datePicker.{calendar,today,yesterday,done}`, `split.{mode,people,input,share,error,done,cancel}`, `entryExtras.{repeat,note,trip.none,trip.<id>,removeReceipt,receiptPhoto,receiptFile}`, `entryDetail.{edit,delete,receipt}`, `deleteEntry.{confirm,cancel}`, `activity.{filters,period,filter.<all|expense|income|investment>,category.<all|id>,totals,edit,delete,loadMore,showMore,searching,searchEmpty,searchAllMonths,clearFilters,searchError,searchRetry,scope.server,scope.device}`, `filters.{period,month.previous,month.next,year.previous,year.next,oneDay,day,kind,category,clear,done}`, and the existing `entry.<id>` rows.
 
 ## Simulator scenarios (for MAZ-81/82)
 

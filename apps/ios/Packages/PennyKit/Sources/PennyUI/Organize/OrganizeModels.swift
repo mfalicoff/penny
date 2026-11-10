@@ -88,10 +88,13 @@ final class CategoryFormModel {
     private(set) var failure: SaveFailure?
     private(set) var isSaving = false
 
-    init(category: LedgerCategory? = nil, kind: EntryKind = .expense, makeID: () -> String = OrganizeID.make) {
+    init(
+        category: LedgerCategory? = nil, kind: EntryKind = .expense, name suggestedName: String = "",
+        makeID: () -> String = OrganizeID.make
+    ) {
         original = category
         id = category?.id ?? makeID()
-        name = category?.name ?? ""
+        name = category?.name ?? suggestedName.trimmingCharacters(in: .whitespacesAndNewlines)
         self.kind = category?.kind ?? kind
         color = category?.color ?? CategoryStyle.hex(CategoryStyle.pickerColors[0])
         icon = category?.icon ?? "pricetag-outline"

@@ -33,7 +33,9 @@ struct EntryDetailView: View {
         return List {
             Section {
                 VStack(alignment: .leading, spacing: 8) {
-                    CategoryIcon(symbol: EntryText.symbol(category), color: EntryText.color(entry.categoryId), size: 52)
+                    CategoryIcon(
+                        symbol: EntryText.symbol(category), color: EntryText.color(category, id: entry.categoryId),
+                        size: 52)
                     Text(entry.title).font(.title.weight(.bold)).foregroundStyle(PennyColor.label)
                     Text("\(category?.name ?? "No category") · \(DayText.long(entry.date, today: shell.today))")
                         .font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)

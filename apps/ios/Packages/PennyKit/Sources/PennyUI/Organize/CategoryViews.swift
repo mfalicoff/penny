@@ -118,8 +118,11 @@ struct CategoryFormSheet: View {
     @FocusState private var nameFocused: Bool
     private let onSaved: ((LedgerCategory) -> Void)?
 
-    init(category: LedgerCategory? = nil, kind: EntryKind = .expense, onSaved: ((LedgerCategory) -> Void)? = nil) {
-        _model = State(initialValue: CategoryFormModel(category: category, kind: kind))
+    init(
+        category: LedgerCategory? = nil, kind: EntryKind = .expense, name: String = "",
+        onSaved: ((LedgerCategory) -> Void)? = nil
+    ) {
+        _model = State(initialValue: CategoryFormModel(category: category, kind: kind, name: name))
         self.onSaved = onSaved
     }
 

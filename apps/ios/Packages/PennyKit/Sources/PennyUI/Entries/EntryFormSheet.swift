@@ -573,7 +573,7 @@ struct EntryCategoryChips: View {
 
     private func chip(_ category: LedgerCategory) -> some View {
         let selected = category.id == selection
-        let color = EntryText.color(category.id)
+        let color = EntryText.color(category, id: category.id)
         return Button {
             selection = category.id
         } label: {

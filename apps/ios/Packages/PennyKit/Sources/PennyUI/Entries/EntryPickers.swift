@@ -7,6 +7,7 @@ import SwiftUI
 /// `category-picker`: every category of the entry's kind, most used first, with search, a
 /// New tile (inline creation, the draft stays) and Edit categories (Settings).
 struct EntryCategoryPickerSheet: View {
+    @Environment(ShellModel.self) private var shell
     @Environment(\.dismiss) private var dismiss
     let kind: EntryKind
     @Binding var selection: String
@@ -47,10 +48,11 @@ struct EntryCategoryPickerSheet: View {
                 }
             }
             .sheet(isPresented: $creating) {
-                InlineCategoryCreateSheet(kind: kind, suggestedName: query) { id in
-                    selection = id
+                CategoryFormSheet(kind: kind, name: query) { category in
+                    selection = category.id
                     dismiss()
                 }
+                .environment(shell)
             }
         }
         .presentationDetents([.medium, .large])
@@ -111,7 +113,8 @@ struct EntryCategoryPickerSheet: View {
                     .foregroundStyle(.white)
                     .frame(width: 56, height: 56)
                     .background(
-                        EntryText.color(category.id), in: RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        EntryText.color(category, id: category.id),
+                        in: RoundedRectangle(cornerRadius: 16, style: .continuous)
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 19, style: .continuous)
@@ -134,6 +137,7 @@ struct EntryCategoryPickerSheet: View {
 /// `account-picker`: None or one of the ledger's payment accounts (labels, never balances),
 /// and New account (inline creation; the draft stays).
 struct EntryAccountPicker: View {
+    @Environment(ShellModel.self) private var shell
     @Environment(\.dismiss) private var dismiss
     @Binding var selection: String?
     let ledger: Ledger
@@ -163,10 +167,11 @@ struct EntryAccountPicker: View {
         .navigationTitle("Account")
         .toolbarTitleDisplayModeInline()
         .sheet(isPresented: $creating) {
-            InlineAccountCreateSheet { id in
-                selection = id
+            AccountFormSheet { account in
+                selection = account.id
                 dismiss()
             }
+            .environment(shell)
         }
         .accessibilityIdentifier("screen.accountPicker")
     }
