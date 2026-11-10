@@ -13,8 +13,11 @@ public struct KindTotals: Hashable, Sendable {
         self.investment = investment
     }
 
-    /// Sums `share`, never `total` (legacy `totals`). Int64 cannot overflow here: 100,000
-    /// entries of at most 99,999,999,999 cents stay below 2^63.
+    /// Sums `share`, never `total` (legacy `totals`). Every row a report holds has a share of
+    /// at most `Money.maxCents` (99,999,999,999): personal rows because a ledger with any other
+    /// amount fails `Ledger.violations` and is never stored, shared rows because `LedgerReport`
+    /// leaves out-of-range wire rows out. So a sum cannot overflow Int64 below about 92 million
+    /// rows, far beyond 100,000 entries, 1,000 rules' previews and any projection response.
     public init(_ entries: some Sequence<ReportEntry>) {
         self = .zero
         for entry in entries { add(entry.kind, entry.share) }
@@ -126,8 +129,10 @@ public struct ReportEntry: Hashable, Sendable, Identifiable {
         self.scheduled = scheduled
     }
 
+    static func sharedID(_ item: SharedExpenseShare) -> String { "household:\(item.householdId):\(item.id)" }
+
     init(shared item: SharedExpenseShare) {
-        id = "household:\(item.householdId):\(item.id)"
+        id = ReportEntry.sharedID(item)
         source = .shared(householdId: item.householdId, expenseId: item.id)
         kind = .expense
         title = item.title
@@ -153,6 +158,23 @@ extension SharedExpenseShare {
     static func categoryID(_ category: Category) -> String {
         "household-category:\(category.name):\(category.icon):\(category.color)"
     }
+
+    /// One row per view id, in first-seen order, holding the last copy (a JavaScript `Map`
+    /// filled with `set`). Ids compare by UTF-16 code units, like `Map` keys.
+    static func lastWins(_ items: [SharedExpenseShare]) -> [SharedExpenseShare] {
+        var positions: [[UInt16]: Int] = [:]
+        var result: [SharedExpenseShare] = []
+        for item in items {
+            let key = Array(ReportEntry.sharedID(item).utf16)
+            if let position = positions[key] {
+                result[position] = item
+            } else {
+                positions[key] = result.count
+                result.append(item)
+            }
+        }
+        return result
+    }
 }
 
 /// Spending in one category.
@@ -173,6 +195,16 @@ public struct LedgerReport: Sendable {
     let categoryNames: [String: String]
     let accountNames: [String: String]
 
+    /// Shared projection deduplication: a row repeated across period responses (same household
+    /// and id) appears once, at the position its id was first seen, with the values of its *last*
+    /// copy, as the legacy `Map` with `unique.set` did; so the caller passes older responses
+    /// first. The last copy decides everything, its currency and amounts too. A recorded
+    /// occurrence replaces its preview, and a preview never repeats a recorded row's id.
+    ///
+    /// Shared amounts come from the wire, so a row outside the ledger's stored bounds (total
+    /// 1...`Money.maxCents`, share 0...total: the same bounds the server stores) is left out, as
+    /// is a row in another currency than the ledger.
+    ///
     /// - Parameters:
     ///   - shared: recorded shared shares; may repeat rows from several period responses.
     ///   - sharedScheduled: the server's month previews of shared rules.
@@ -181,7 +213,8 @@ public struct LedgerReport: Sendable {
         var categories = ledger.categories
         var categoryIDs = Set(categories.map(\.id))
         func view(_ item: SharedExpenseShare) -> ReportEntry? {
-            guard item.currency == ledger.currency else { return nil }
+            guard item.currency == ledger.currency, Money.isValidAmounts(total: item.total, share: item.share)
+            else { return nil }
             let entry = ReportEntry(shared: item)
             if categoryIDs.insert(entry.categoryId).inserted {
                 categories.append(
@@ -192,21 +225,24 @@ public struct LedgerReport: Sendable {
             return entry
         }
         var recorded = ledger.transactions.map { ReportEntry(personal: $0, scheduled: false) }
-        var seen = Set<String>()
         var occurrences = Set<String>()
-        for item in shared where !item.scheduled {
-            guard let entry = view(item), seen.insert(entry.id).inserted else { continue }
+        let recordedShared = SharedExpenseShare.lastWins(shared.filter { !$0.scheduled })
+        for item in recordedShared {
+            guard let entry = view(item) else { continue }
             recorded.append(entry)
             if let rule = item.recurringId { occurrences.insert("\(item.householdId)|\(rule)|\(item.date)") }
         }
         // A recorded occurrence replaces its preview, even when the preview came from an older
-        // response than the recorded row (shared projection deduplication).
+        // response than the recorded row.
+        let recordedIDs = Set(recordedShared.map { Array(ReportEntry.sharedID($0).utf16) })
         var scheduled: [ReportEntry] = []
-        for item in sharedScheduled + shared where item.scheduled {
+        for item in SharedExpenseShare.lastWins((sharedScheduled + shared).filter(\.scheduled)) {
             if let rule = item.recurringId, occurrences.contains("\(item.householdId)|\(rule)|\(item.date)") {
                 continue
             }
-            guard let entry = view(item), seen.insert(entry.id).inserted else { continue }
+            guard !recordedIDs.contains(Array(ReportEntry.sharedID(item).utf16)), let entry = view(item) else {
+                continue
+            }
             var preview = entry
             preview.scheduled = true
             scheduled.append(preview)

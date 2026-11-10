@@ -29,7 +29,7 @@ MAZ-70 ports the personal ledger rules of the legacy app (`src/domain/ledger.ts`
 
 ## Money invariants
 
-- Every amount is `Int64` cents. No rule uses `Double` or `Decimal`. Totals of 100,000 entries at the maximum amount stay below 2^63.
+- Every amount is `Int64` cents. No rule uses `Double` or `Decimal`. Every row a report sums is within the stored bounds (personal rows because a ledger outside them fails `violations`; shared rows because `LedgerReport` leaves out a wire row outside them), so a sum overflows only past about 92 million rows at the maximum amount.
 - `Money.cents` accepts 1–9 ASCII digits, then optionally `.` or `,` and up to two decimals, after JavaScript `trim()` (which trims U+FEFF and U+3000 but not U+0085). Signs, exponents, grouping, non-ASCII digits and a leading separator are refused. Input of any length is refused without overflow.
 - A stored amount has `total` 1…99,999,999,999 and `share` 0…`total`; income and investments always have `share == total`.
 - Equal and percentage shares round half up in integers: `(2n + d) / (2d)`. $10.01 split three ways is $3.34. This equals the legacy `Math.round` of a double for every valid input (the property tests check every head count 2–100 and a sweep of basis points at the boundary totals).
@@ -63,7 +63,7 @@ Optional fields (`accountId`, `tripId`, `receipt`, `recurringId`, `sharedHouseho
 - **Recorded** (`MonthSummary.recorded`): personal entries plus recorded shared shares dated in the month. **Left to spend** is `recordedRemaining = income − expense − investment` (negative when more went out). It is not an account balance.
 - **Scheduled**: previews of active personal rules and the server's shared previews in the month, oldest first.
 - **Projected** (`projected`, `projectedRemaining`): recorded plus every scheduled occurrence of every kind. **Expected income** (`expectedIncome`) is the scheduled income included in it. Once an occurrence is recorded, it replaces its preview, so income is never counted twice.
-- **Shared projection deduplication**: a shared expense repeated across period responses counts once (by household and id); a shared preview whose rule already recorded that date is dropped, even when the preview came from an older response; shares in another currency than the ledger are left out.
+- **Shared projection deduplication**: a shared expense repeated across period responses counts once (by household and id, compared by code units), at the position its id was first seen and with the values of its last copy, as the legacy `HouseholdProvider` `Map` with `unique.set` did (pass older responses first); the last copy's currency and amounts decide. Previews repeat the same way. A shared preview whose rule already recorded that date is dropped, even when the preview came from an older response; shares in another currency than the ledger, and shared rows whose total is not 1…99,999,999,999 or whose share is not 0…total (the bounds the server stores), are left out.
 - **Activity** (`activity`): recorded entries only, personal and shared, never previews. The month or year totals ignore the query, kind and day filters. Order is date descending, then id in ordinal order; 50 per page, page clamped.
 - **Investments** are contributions, reported separately from spending. **Trips** sum personal expense shares and receipt totals.
 

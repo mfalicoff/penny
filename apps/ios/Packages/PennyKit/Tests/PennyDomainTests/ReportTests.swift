@@ -105,6 +105,69 @@ struct ReportTests {
         #expect(after.month(month).spending.map(\.amount) == [4000, 800])
     }
 
+    /// Legacy `HouseholdProvider` kept the projection in a `Map` and called `unique.set` for
+    /// every row: the last copy's values win, at the position the id was first seen.
+    @Test("whenASharedRowRepeatsWithNewValues_LedgerReport_ShouldKeepTheLastCopyAtTheFirstPosition")
+    func sharedProjectionLastWins() throws {
+        let month = try #require(Self.october)
+        let category = SharedExpenseShare.Category(name: "Utilities", icon: "flash-outline", color: "#5B7DB1")
+        func share(_ id: String, title: String, share: Int64, currency: Currency = .cad) -> SharedExpenseShare {
+            SharedExpenseShare(
+                id: id, householdId: "maison", currency: currency, title: title, date: .day("2026-10-10"), total: 8000,
+                share: share, category: category)
+        }
+        // An older response, then a newer one after bea edited Internet.
+        let report = LedgerReport(
+            ledger: Sample.ledger(),
+            shared: [
+                share("internet", title: "Internet", share: 4000), share("water", title: "Water", share: 1000),
+                share("internet", title: "Internet (fibre)", share: 3000),
+            ])
+        #expect(report.recorded.map(\.id) == ["household:maison:internet", "household:maison:water"])
+        #expect(report.recorded.map(\.title) == ["Internet (fibre)", "Water"])
+        #expect(report.month(month).recorded.expense == 4000)
+        // The last copy decides, also when it is in another currency than the ledger.
+        let moved = LedgerReport(
+            ledger: Sample.ledger(),
+            shared: [
+                share("internet", title: "Internet", share: 4000),
+                share("internet", title: "I", share: 1, currency: .eur),
+            ])
+        #expect(moved.recorded.isEmpty)
+        // Previews repeat the same way.
+        var newer = Self.streaming()
+        newer.share = 700
+        let previews = LedgerReport(ledger: Sample.ledger(), sharedScheduled: [Self.streaming(), newer])
+        #expect(previews.month(month).scheduled.map(\.share) == [700])
+    }
+
+    /// Shared amounts come from the wire. A row outside the ledger's stored bounds (total
+    /// 1...99,999,999,999, share 0...total, as the server stores them) is refused, so no sum traps.
+    @Test("whenASharedRowIsOutOfTheMoneyBounds_LedgerReport_ShouldLeaveItOutInsteadOfOverflowing")
+    func sharedMoneyBounds() throws {
+        let month = try #require(Self.october)
+        func row(_ id: String, total: Int64, share: Int64, scheduled: Bool = false) -> SharedExpenseShare {
+            SharedExpenseShare(
+                id: id, householdId: "maison", currency: .cad, title: id, date: .day("2026-10-10"), total: total,
+                share: share, category: .init(name: "Fun", icon: "i", color: "#B15B7D"), scheduled: scheduled)
+        }
+        let max = Money.maxCents
+        let report = LedgerReport(
+            ledger: Sample.ledger(),
+            shared: [
+                row("huge", total: .max, share: .max), row("huge2", total: .max, share: .max),
+                row("over", total: max + 1, share: 1), row("negative", total: 100, share: -1),
+                row("exceeds", total: 100, share: 101), row("zero", total: 0, share: 0),
+                row("ok", total: max, share: max),
+            ],
+            sharedScheduled: [row("future", total: .max, share: .max, scheduled: true)])
+        let summary = report.month(month)
+        #expect(report.recorded.map(\.id) == ["household:maison:ok"])
+        #expect(summary.recorded.expense == max && summary.projected.expense == max)
+        #expect(summary.scheduled.isEmpty)
+        #expect(report.activity(.year(2026)).summary.expense == max)
+    }
+
     @Test("whenIncomeIsScheduled_MonthSummary_ShouldShowItAsExpectedAndOnlyInProjected")
     func expectedIncome() throws {
         let month = try #require(MonthKey("2026-11"))
