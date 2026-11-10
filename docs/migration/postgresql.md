@@ -161,6 +161,8 @@ Databases created by the unreleased schema-2 SQL of earlier MAZ-52 drafts are no
 
 ## Cutover and forward-only recovery
 
+The operator checklist for the production Compose stack, with exact commands, go/no-go gates, rollback, the observation and compatibility windows and Node retirement, is [Cutover](../cutover.md) (MAZ-65). Its `deploy/compose.cutover.yaml` service runs the commands below with the legacy volume mounted read-only, and `scripts/cutover-drill.mjs` drills it on release images. The contract it implements:
+
 1. Rehearse on a production-shaped, sanitized SQLite copy (the automated [cutover rehearsal](parity-report.md#cutover-rehearsal) runs these steps on synthetic data in CI). Compare all reports, authenticate migrated sessions, decrypt receipts and check shared totals. Exercise an interrupted import and resume, and one [password reset](authentication.md#password-reset-maz-123) of an imported password account (`reset-password`, redeem, sign in).
 2. Freeze **all** proxy mutations, auth/session/device writes and workers. Drain, stop Node and its workers, then snapshot and hash the final SQLite file. No dual writes.
 3. Import and verify into PostgreSQL and the receipt root, then run `search-rebuild` (search documents are derived, not imported) and `search-verify`. Verify existing Expo cookie/bearer/OIDC/receipt journeys and the v1–v4 guards. Switch the existing URL to .NET, then reopen writes.

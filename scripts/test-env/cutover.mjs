@@ -271,7 +271,7 @@ export function reads(context) {
 
 // Ledger lists have no stored order (docs/migration/ledger.md#storage-mapping-and-read-order).
 const unordered = new Set(["accounts", "trips", "categories", "recurring", "transactions"]);
-function canonical(value, key) {
+export function canonical(value, key) {
   if (Array.isArray(value)) {
     const items = value.map((item) => canonical(item));
     return unordered.has(key) && items.every((item) => typeof item?.id === "string")
@@ -282,7 +282,7 @@ function canonical(value, key) {
   return value;
 }
 
-async function read(url, item) {
+export async function read(url, item) {
   const response = await fetch(url + item.path, { headers: { authorization: `Bearer ${item.token}` } });
   const text = await response.text();
   return { status: response.status, body: canonical(text ? JSON.parse(text) : null) };
