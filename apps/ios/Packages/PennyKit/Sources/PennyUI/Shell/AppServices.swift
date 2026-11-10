@@ -16,6 +16,9 @@ public struct AppServices {
     public var accountWorkspace: (SignedInAccount) -> any LedgerWorkspace
     /// Today's local date (the device's calendar day).
     public var today: () -> CalendarDate
+    /// Opens the temporary demo at launch. Only Debug test controls set it (UI tests and
+    /// screenshots without a server).
+    public var startsInDemo = false
 
     public init(
         preferences: any DevicePreferences, lock: AppLockController,

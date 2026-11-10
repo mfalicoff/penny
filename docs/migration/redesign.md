@@ -72,7 +72,7 @@ The cards are static HTML rendered with Inter and Ionicons as stand-ins for SF P
 
 The SwiftUI shell, settings, lock and demo are described in [native app shell](../ios-shell.md). Adaptations from the cards:
 
-- **Add entry on iPhone** is the system tab bar's separate circular button (a `Tab` with the search role), so it is real iOS 26 Liquid Glass and follows system accessibility. iOS can't tint one tab item, so the + is not copper as on the card.
+- **Add entry on iPhone** is a `Tab` with the search role in the system tab bar, so it is real Liquid Glass and follows system accessibility. On the simulator it renders as a fifth item inside the bar, not as the card's separate copper circle; a custom separate button over the system bar is a follow-up for MAZ-122's comparison.
 - **iPad** uses the same navigation state in a `NavigationSplitView`; Settings and the Manage pages open in the detail column instead of a sheet. In compact widths (Slide Over, narrow Split View) the iPad uses the iPhone tab bar.
 - **Lock after** (Immediately, 1 minute, 5 minutes on `iphone-app-lock`) is MAZ-133 and not in this build; the lock applies immediately, as in the legacy app.
 - **The lock screen** shows no amount; the card's blurred hero behind the lock is not drawn, so nothing of the ledger is visible while locked.

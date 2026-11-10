@@ -25,7 +25,7 @@ This page describes the SwiftUI shell that MAZ-69 adds to `apps/ios`: the naviga
 ### iPhone (and any compact width)
 
 - The system iOS 26 `TabView`: **Home**, **Activity**, **Shared** and **Trips**, a floating Liquid Glass tab bar. There is no More tab.
-- **Add entry** is the separate circular button at the trailing end of the tab bar. It is a `Tab` with the search role, which is how iOS 26 draws a separate glass button there; selecting it opens the Add entry sheet and never becomes the selected tab. iOS doesn't let one tab item have its own tint, so the + is not copper. This is a recorded adaptation ([redesign](migration/redesign.md#native-implementation-notes-maz-69)).
+- **Add entry** is the separate circular button at the trailing end of the tab bar. It is a `Tab` with the search role; selecting it opens the Add entry sheet and never becomes the selected tab. On the iOS 26 and 27 simulators it renders as a fifth item inside the glass bar ("Add entry"), not as a separate copper circle, and iOS doesn't let one tab item have its own tint. This is a recorded adaptation ([redesign](migration/redesign.md#native-implementation-notes-maz-69)).
 - **Settings** opens as a sheet from the gear button in Home's toolbar. Recurring, Accounts and Categories (the old More tab) are its Manage pages.
 - Each tab keeps its own navigation stack. Choosing the tab that is already shown returns it to its root.
 
@@ -114,6 +114,8 @@ The legacy `AppLockProvider`, ported to `AppLockController` with the same rules:
 - Its ledger (`DemoLedger`) is made up and built fresh each time. It lives only in a `DemoWorkspace` object: never written to disk, never sent to a server, never mixed with an account's data, and gone when the demo ends. Two demos never share changes.
 - It shows a banner on every root screen, "Demo · Changes are temporary", with Leave. Settings shows "Demo account" and Leave demo, and has no server or sign-out.
 - Changes follow the real rules (the currency lock, for example) and show the save toast with Undo.
+
+In Debug builds, launching with `PENNY_TEST_DEMO=1` (a test control, compiled out of Release) opens the demo directly, so UI tests and screenshots reach the shell without a server.
 
 Limitations: the demo has no households, so Shared shows its "coming" state; Add entry is not available yet (MAZ-73), so the demo can't add entries; and a demo started from an empty Home replaces the account's screens until Leave demo, which returns to them unchanged.
 

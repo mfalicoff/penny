@@ -66,6 +66,7 @@ struct LaunchView: View {
         auth: AuthController? = nil
     ) {
         _auth = State(initialValue: auth ?? AuthController(defaultServer: configuration.defaultServerURL))
+        _demo = State(initialValue: services.startsInDemo ? DemoWorkspace(today: services.today()) : nil)
         _inbox = inbox
         self.services = services
     }

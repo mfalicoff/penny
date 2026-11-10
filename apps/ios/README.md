@@ -77,7 +77,7 @@ UI tests (XCUITest) belong to MAZ-81; the WidgetKit extension target to MAZ-80 (
 
 `PennyData.AppConfiguration` reads these values at launch and fails, showing an error screen, rather than guessing when one is missing or malformed. Release must not have a default server.
 
-Test controls (`Penny/TestControls.swift`) let tests start the app against a test server: set `PENNY_TEST_SERVER_URL` in the launch environment, for example to the [full-stack test environment](../../docs/migration/test-environment.md). They exist only in Debug. `ios.sh release-check` builds Release and fails if any file in the bundle contains the test-control names, or if the Release Info.plist is not `production` without a default server.
+Test controls (`Penny/TestControls.swift`) let tests start the app against a test server: set `PENNY_TEST_SERVER_URL` in the launch environment, for example to the [full-stack test environment](../../docs/migration/test-environment.md). `PENNY_TEST_DEMO=1` opens the temporary demo at launch ([native shell](../../docs/ios-shell.md#demo)). They exist only in Debug. `ios.sh release-check` builds Release and fails if any file in the bundle contains the test-control names, or if the Release Info.plist is not `production` without a default server.
 
 ## Minimum OS and Liquid Glass
 
