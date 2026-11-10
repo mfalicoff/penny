@@ -26,6 +26,7 @@
 - [Native offline ledger and sync](ios-offline-sync.md): the per-account file format and migrations, durable saves, the three-way merge and same-field policy, sync triggers and retries, failure recovery, sign-out protection, local search reconciliation and the sync state the UI binds to.
 - [Native ledger rules](ios-ledger-domain.md): PennyDomain ownership, integer-cent and calendar-date invariants, recurrence, ledger commands, recorded and projected reports, local search, fixtures and compatibility decisions.
 - [Native app shell](ios-shell.md): iPhone and iPad navigation and deep links, components and tokens, supported devices and accessibility, settings, the biometric app lock, the temporary demo, named states and the sync-status interface for offline sync.
+- [Native entries, Activity and search](ios-entries.md): adding, editing and deleting entries, splits and investments, drafts and conflicts, Activity filters, server and on-device search, accessibility identifiers and simulator scenarios.
 - [Web app foundation](../apps/web/README.md): the React/Vite/TanStack browser client, pinned versions, route and data conventions, design-kit boundaries and web CI.
 - [Frontend architecture](frontend-architecture.md): routes, feature ownership, state and persistence boundaries, responsive navigation, and native glass surfaces.
 - [Backend architecture](backend-architecture.md): HTTP/application/storage boundaries, validation, persistence guarantees, and framework tradeoffs.
