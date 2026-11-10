@@ -61,6 +61,15 @@ struct SignInView: View {
                         text: "Your session for \(expiredEmail) ended. Sign in again to keep syncing; "
                             + "changes on this device are kept.", tone: .notice)
                 }
+                if let leftover = auth.unremovedLocalData, mode == .signIn {
+                    VStack(alignment: .leading, spacing: 8) {
+                        AuthMessage(text: Self.unremovedMessage(email: leftover.email))
+                        Button("Remove them now") { Task { await auth.removeUnremovedLocalData() } }
+                            .font(PennyFont.style(.subhead).weight(.semibold))
+                            .frame(minHeight: Metrics.minTouchTarget)
+                            .accessibilityIdentifier("auth.removeLeftoverData")
+                    }
+                }
                 fields
                 if let failure { AuthMessage(text: failure) }
                 if let notice { AuthMessage(text: notice, tone: .notice) }
@@ -95,6 +104,10 @@ struct SignInView: View {
         .onAppear {
             if email.isEmpty, let expiredEmail { email = expiredEmail }
         }
+    }
+
+    static func unremovedMessage(email: String) -> String {
+        "You're signed out, but entries for \(email) couldn't be removed from this device."
     }
 
     private var fields: some View {

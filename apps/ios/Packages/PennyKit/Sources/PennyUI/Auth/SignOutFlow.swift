@@ -10,6 +10,8 @@ struct SignOutButton: View {
     let auth: AuthController
 
     @State private var pending = 0
+    /// How many unsynced changes the person agreed to lose ("Sign out anyway"), 0 otherwise.
+    @State private var discardConsent = 0
     @State private var confirming = false
     @State private var problem: Problem?
 
@@ -46,12 +48,19 @@ struct SignOutButton: View {
             Self.title(pending: pending, host: host), isPresented: $confirming, titleVisibility: .visible
         ) {
             if pending > 0 {
-                Button("Sync, then sign out") { run(.syncThenSignOut) }
+                Button("Sync, then sign out") {
+                    discardConsent = 0
+                    run(.syncThenSignOut)
+                }
                 Button("Sign out anyway", role: .destructive) {
+                    discardConsent = pending
                     run(.signOut(discard: true, evenIfUnreachable: false))
                 }
             } else {
-                Button("Sign out", role: .destructive) { run(.signOut(discard: false, evenIfUnreachable: false)) }
+                Button("Sign out", role: .destructive) {
+                    discardConsent = 0
+                    run(.signOut(discard: false, evenIfUnreachable: false))
+                }
             }
             Button("Cancel", role: .cancel) {}
         } message: {
@@ -62,10 +71,8 @@ struct SignOutButton: View {
             isPresented: Binding(get: { problem != nil }, set: { if !$0 { problem = nil } }), presenting: problem
         ) { problem in
             if problem == .unreachable {
-                Button("Try again") { run(.signOut(discard: pending > 0, evenIfUnreachable: false)) }
-                Button("Remove from this device", role: .destructive) {
-                    run(.signOut(discard: pending > 0, evenIfUnreachable: true))
-                }
+                Button("Try again") { run(.retry(evenIfUnreachable: false)) }
+                Button("Remove from this device", role: .destructive) { run(.retry(evenIfUnreachable: true)) }
             }
             Button("Cancel", role: .cancel) {}
         } message: { problem in
@@ -92,9 +99,18 @@ struct SignOutButton: View {
                 + "\(pending == 1 ? "this one" : "these \(pending)") would be lost."
     }
 
+    /// Whether a retry after "Couldn't reach" discards the changes pending now: only when the
+    /// person agreed to lose at least that many. Changes made since are never discarded
+    /// silently; sign-out then asks again with the new count.
+    static func discardsOnRetry(pendingNow: Int, consented: Int) -> Bool {
+        pendingNow > 0 && pendingNow <= consented
+    }
+
     enum Action {
         case syncThenSignOut
         case signOut(discard: Bool, evenIfUnreachable: Bool)
+        /// Again after the server was unreachable, with the pending count read at that moment.
+        case retry(evenIfUnreachable: Bool)
     }
 
     private func run(_ action: Action) {
@@ -106,6 +122,12 @@ struct SignOutButton: View {
                 case .signOut(let discard, let evenIfUnreachable):
                     try await auth.signOut(
                         discardingPendingChanges: discard, removeEvenIfUnreachable: evenIfUnreachable)
+                case .retry(let evenIfUnreachable):
+                    let pendingNow = await auth.pendingChangeCount()
+                    try await auth.signOut(
+                        discardingPendingChanges: Self.discardsOnRetry(
+                            pendingNow: pendingNow, consented: discardConsent),
+                        removeEvenIfUnreachable: evenIfUnreachable)
                 }
             } catch {
                 switch error {

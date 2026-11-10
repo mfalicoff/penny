@@ -18,6 +18,25 @@ struct AuthViewTests {
             SignOutButton.message(pending: 0, host: "penny.example.test").contains("stay safe on penny.example.test"))
     }
 
+    @Test("whenRetryingAfterTheServerWasUnreachable_SignOutButton_ShouldDiscardOnlyWhatThePersonAgreedToLose")
+    func retryUsesThePendingCountNow() {
+        // "Sign out" with nothing pending, then a change was made before "Try again".
+        #expect(!SignOutButton.discardsOnRetry(pendingNow: 1, consented: 0))
+        // "Sign out anyway" for 2, and one more change since: ask again instead.
+        #expect(!SignOutButton.discardsOnRetry(pendingNow: 3, consented: 2))
+        // "Sign out anyway" for 2, and they synced meanwhile: nothing left to discard.
+        #expect(!SignOutButton.discardsOnRetry(pendingNow: 0, consented: 2))
+        #expect(SignOutButton.discardsOnRetry(pendingNow: 2, consented: 2))
+    }
+
+    @Test("whenServerChipHasAChangeButton_ServerChip_ShouldLabelTheServerOnItsOwn")
+    func chipLabel() throws {
+        let server = try #require(server)
+        #expect(ServerChip.label(SavedServer(server: server)) == "Server penny.example.test:8443")
+        #expect(ServerChip.label(nil) == "No server chosen")
+        #expect(SignInView.unremovedMessage(email: "a@example.test").contains("a@example.test"))
+    }
+
     @Test("whenServerVerified_ServerConnectView_ShouldListItsSignInMethods")
     func methods() throws {
         let server = try #require(server)

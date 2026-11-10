@@ -28,14 +28,20 @@ struct ServerChip: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            Image(systemName: server?.server.url.scheme == "https" ? "lock.fill" : "server.rack")
-                .foregroundStyle(PennyColor.secondaryLabel)
-                .accessibilityHidden(true)
-            Text(server.map { ServerText.host($0.server) } ?? "No server chosen")
-                .font(PennyFont.style(.subhead))
-                .foregroundStyle(PennyColor.label)
-                .lineLimit(1)
-                .truncationMode(.middle)
+            // The server is one element and the button another, so VoiceOver reads the
+            // server and can still reach and activate "Change".
+            HStack(spacing: 8) {
+                Image(systemName: server?.server.url.scheme == "https" ? "lock.fill" : "server.rack")
+                    .foregroundStyle(PennyColor.secondaryLabel)
+                Text(server.map { ServerText.host($0.server) } ?? "No server chosen")
+                    .font(PennyFont.style(.subhead))
+                    .foregroundStyle(PennyColor.label)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Self.label(server))
+            .accessibilityIdentifier("auth.server")
             if let onChange {
                 Button(server == nil ? "Choose" : "Change", action: onChange)
                     .font(PennyFont.style(.subhead).weight(.semibold))
@@ -46,9 +52,11 @@ struct ServerChip: View {
         .padding(.horizontal, 14)
         .frame(minHeight: Metrics.minTouchTarget)
         .pennyGlass()
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(server.map { "Server \(ServerText.host($0.server))" } ?? "No server chosen")
-        .accessibilityIdentifier("auth.server")
+        .accessibilityElement(children: .contain)
+    }
+
+    static func label(_ server: SavedServer?) -> String {
+        server.map { "Server \(ServerText.host($0.server))" } ?? "No server chosen"
     }
 }
 
