@@ -55,7 +55,7 @@ CI runs the same steps on the GitHub `xcode-27` (Apple Silicon) image in [`.gith
 | `Configuration/` | xcconfig files (shared, Debug, Release, per target, version), `Info.plist` additions and entitlements | MAZ-66; signing changes need [Apple-side updates](#signing-and-entitlements) |
 | `Penny/` | The app entry point, Debug-only test controls, the asset catalog (icon, accent color) and the privacy manifest. Keep it thin: features belong in PennyKit. | MAZ-66, then MAZ-69 |
 | `PennyTests/` | Unit tests hosted in the built app: bundle identity, URL scheme, platforms, configuration, App Group, test controls | MAZ-66 |
-| `Packages/PennyKit/Sources/PennyDomain` | Platform-neutral rules: deep links, server URLs, app identity. Later the ported money, recurrence and merge rules (MAZ-70, 71). | MAZ-66, 70 |
+| `Packages/PennyKit/Sources/PennyDomain` | Platform-neutral rules: deep links, server URLs, app identity, and in `Ledger/` the ported money, date, recurrence, ledger command, report and local search rules ([ledger rules](../../docs/ios-ledger-domain.md)). Later the offline merge (MAZ-71). | MAZ-66, 70 |
 | `Packages/PennyKit/Sources/PennyData` | Configuration, the App Group container, the API client and wire models (`API/`, [API client](../../docs/ios-api-client.md)), and later persistence and migration from Expo storage (MAZ-71, 72) | MAZ-66, 67 |
 | `Packages/PennyKit/Sources/PennyDesign` | Design tokens, colors, type and Liquid Glass helpers; later the shared components (MAZ-69) | MAZ-66, 69 |
 | `Packages/PennyKit/Sources/PennyUI` | Screens and the app shell. A placeholder root view until MAZ-69. | MAZ-69 onward |
