@@ -1,0 +1,57 @@
+<!-- @dsCard group="Web" name="Sign in" viewport="1520x980" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · Web · Sign in</title>
+<link rel="stylesheet" href="../assets/penny.css"><link rel="stylesheet" href="../assets/web.css">
+<script src="../assets/icons.js"></script><script src="../assets/sankey.js"></script><script src="../assets/web.js"></script>
+<style>
+  .split { display: grid; grid-template-columns: 1fr 1fr; height: 100%; width: 100%; }
+  .brand { position: relative; overflow: hidden; padding: 56px; display: flex; flex-direction: column; }
+  .brand::before { content: ""; position: absolute; inset: -80px; background: var(--glow-pk, radial-gradient(40% 45% at 30% 40%, rgba(255,138,76,.55), transparent 70%), radial-gradient(35% 40% at 70% 65%, rgba(255,196,120,.45), transparent 70%), radial-gradient(35% 35% at 45% 85%, rgba(255,120,150,.28), transparent 70%)); filter: blur(40px); }
+  .brand > * { position: relative; }
+  .brand h1 { font-size: 52px; font-weight: 700; letter-spacing: -0.04em; line-height: 1.05; margin-top: auto; }
+  .brand p { font-size: 17px; color: var(--label-2); margin-top: 14px; max-width: 420px; }
+  .mini { margin-top: 36px; width: 380px; padding: 18px; border-radius: 22px; }
+  .formside { display: grid; place-items: center; background: var(--surface); }
+  .form { width: 380px; }
+  .form h2 { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
+  .form .sub { color: var(--label-2); font-size: 15px; margin-top: 4px; }
+  .srv { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; padding: 6px 12px; border-radius: 16px; background: var(--fill); margin-bottom: 22px; }
+  .srv a { color: var(--tint-text); font-weight: 600; }
+  .fld { margin-top: 12px; border-radius: 12px; background: var(--surface-2); box-shadow: inset 0 0 0 .5px var(--separator); padding: 8px 14px; }
+  .fld span { display: block; font-size: 12px; color: var(--label-2); }
+  .fld div { font-size: 16px; margin-top: 2px; }
+  .big { width: 100%; height: 46px; justify-content: center; font-size: 15.5px; margin-top: 18px; border-radius: 12px; }
+  .or { display: flex; align-items: center; gap: 12px; color: var(--label-3); font-size: 12px; margin: 16px 0; }
+  .or::before, .or::after { content: ""; flex: 1; border-top: .5px solid var(--separator); }
+</style></head>
+<body class="canvas">
+<div class="browser" data-noside data-url="penny.example.com/sign-in">
+  <main class="wmain">
+    <div class="split">
+      <div class="brand">
+        <div class="wbrand" style="padding:0"><span class="logo"><i data-i="leaf"></i></span>penny.</div>
+        <h1>A little more clarity<br>about your money.</h1>
+        <p>Personal and shared expenses on your own server. Penny never connects to your bank.</p>
+        <div class="mini glass">
+          <div class="eyebrow">Left to spend</div>
+          <div class="num" style="font-size:40px;font-weight:700;letter-spacing:-0.04em;margin-top:4px">$1,116<span style="font-size:22px;opacity:.55">.65</span></div>
+          <div class="flow" style="margin-top:12px"><i style="width:58.8%;background:var(--label);opacity:.82"></i><i style="width:6.3%;background:var(--invest)"></i><i style="width:34.9%;background:var(--income)"></i></div>
+        </div>
+      </div>
+      <div class="formside">
+        <div class="form">
+          <div class="srv"><i data-i="server" style="width:14px;height:14px"></i>penny.example.com · <a>Change</a></div>
+          <h2>Welcome back</h2>
+          <div class="sub">Sign in to see your month.</div>
+          <div class="fld"><span>Email</span><div>max@example.com</div></div>
+          <div class="fld"><span>Password</span><div style="color:var(--label-3)">Your password</div></div>
+          <div class="btn primary big">Sign in</div>
+          <div class="or">or</div>
+          <div class="btn big" style="margin-top:0"><i data-i="key"></i>Continue with SSO</div>
+          <div style="text-align:center;font-size:14px;color:var(--label-2);margin-top:20px">New here? <b style="color:var(--tint-text)">Create an account</b></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</body></html>
