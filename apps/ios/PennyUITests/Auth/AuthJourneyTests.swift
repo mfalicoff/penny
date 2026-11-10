@@ -43,6 +43,7 @@ final class AuthJourneyTests: PennyUITestCase {
     func test_whenSingleSignOnSucceeds_SignIn_ShouldOpenTheShell() async throws {
         let stack = try await stack()
         guard stack.configuration.oidcIssuer != nil else { throw XCTSkip("The stack runs without --oidc.") }
+        try await stack.unpinClock()
         try await stack.setSingleSignOnProvider(["fail": NSNull(), "emailVerified": true])
         let penny = try await launch()
 
@@ -56,6 +57,7 @@ final class AuthJourneyTests: PennyUITestCase {
     func test_whenSingleSignOnIsCancelled_SignIn_ShouldStayAndExplain() async throws {
         let stack = try await stack()
         guard stack.configuration.oidcIssuer != nil else { throw XCTSkip("The stack runs without --oidc.") }
+        try await stack.unpinClock()
         // The provider shows an error page instead of approving, so the sheet stays open.
         try await stack.setSingleSignOnProvider(["fail": "authorize"])
         addTeardownBlock { @MainActor in try? await stack.setSingleSignOnProvider(["fail": NSNull()]) }
@@ -111,7 +113,7 @@ final class AuthJourneyTests: PennyUITestCase {
         try penny.wait(for: AccessibilityID.Home.empty)
         try penny.openSettingsPage("currency", screen: AccessibilityID.Screen.currency)
         // The ledger is loaded; from here the server drops every ledger request.
-        try await stack.setFaults([.offline("/api/ledger")])
+        try await stack.setFaults([FaultRule(method: "PUT", pathPrefix: "/api/ledger", abort: true)])
         try penny.tap(AccessibilityID.Settings.currency("EUR"))
         try penny.waitForSelection(AccessibilityID.Settings.currency("EUR"))
         try penny.openSettings()

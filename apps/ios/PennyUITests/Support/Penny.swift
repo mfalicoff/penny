@@ -54,6 +54,26 @@ struct Penny {
         let field = try wait(for: id)
         field.tap()
         field.typeText(text)
+        // New-password fields can drop fast input while the system's password suggestions
+        // appear; a secure field shows one bullet per character, so check and retype slowly.
+        guard field.elementType == .secureTextField else { return }
+        let typed = (field.value as? String)?.count ?? 0
+        guard typed != text.count else { return }
+        field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: max(typed, 1)))
+        // Paste instead (the edit menu's Paste is a user action: no paste prompt).
+        UIPasteboard.general.string = text
+        field.press(forDuration: 1.2)
+        let paste = [app.menuItems["Paste"], app.buttons["Paste"]].first { $0.waitForExistence(timeout: 3) }
+        if let paste {
+            paste.tap()
+        } else {
+            for character in text { field.typeText(String(character)) }
+        }
+        UIPasteboard.general.string = ""
+        let retyped = (field.value as? String)?.count ?? 0
+        guard retyped == text.count else {
+            throw UIExpectationFailed(description: "\(id) holds \(retyped) of \(text.count) typed characters")
+        }
     }
 
     /// The text a field holds.
@@ -82,20 +102,31 @@ struct Penny {
     func openActivity() throws {
         if Device.isPad {
             try tap(AccessibilityID.Sidebar.item("activity"))
+            try wait(for: AccessibilityID.Screen.activity, timeout: 30)
         } else {
-            try tabButton("Activity", id: AccessibilityID.Tab.tab("activity")).tap()
+            try selectTab("Activity", id: AccessibilityID.Tab.tab("activity"), screen: AccessibilityID.Screen.activity)
         }
-        try wait(for: AccessibilityID.Screen.activity)
+    }
+
+    /// Selects an iPhone tab and waits for its screen. A tap that lands while the floating
+    /// tab bar is still settling after launch or a sheet is ignored, so it is retried.
+    private func selectTab(_ title: String, id: String, screen: String) throws {
+        let button = try tabButton(title, id: id)
+        for _ in 0..<3 {
+            button.tap()
+            if element(screen).waitForExistence(timeout: 8) { return }
+        }
+        throw UIExpectationFailed(description: "The \(title) tab did not open \(screen)")
     }
 
     func openHome() throws {
         if Device.isPad {
             try tap(AccessibilityID.Sidebar.item("home"))
+            try wait(for: AccessibilityID.Screen.home)
         } else {
             try closeSettings()
-            try tabButton("Home", id: AccessibilityID.Tab.tab("home")).tap()
+            try selectTab("Home", id: AccessibilityID.Tab.tab("home"), screen: AccessibilityID.Screen.home)
         }
-        try wait(for: AccessibilityID.Screen.home)
     }
 
     /// Settings: the sheet from Home on iPhone, the detail column on iPad.
@@ -143,11 +174,11 @@ struct Penny {
         try waitForAbsence(of: AccessibilityID.Screen.settings)
     }
 
-    /// The tab bar button. SwiftUI applies a `Tab`'s identifier (`id`, `tab.<AppTab>`) to the
-    /// tab's content as well as its bar item, so the bar item is found by its fixed title.
+    /// The tab bar button (`tab.<AppTab>`). Only buttons are matched: the iOS 26+ floating tab
+    /// bar is exposed as a toolbar, and the identifier must not match the tab's content.
     private func tabButton(_ title: String, id: String) throws -> XCUIElement {
-        let byID = app.tabBars.buttons.matching(identifier: id).firstMatch
-        if byID.exists { return byID }
+        let byID = app.buttons.matching(identifier: id).firstMatch
+        if byID.waitForExistence(timeout: 5) { return byID }
         let button = app.tabBars.buttons[title]
         guard button.waitForExistence(timeout: Penny.timeout) else {
             throw UIExpectationFailed(description: "No \(title) tab")

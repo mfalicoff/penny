@@ -16,7 +16,7 @@ final class NetworkFailureTests: PennyUITestCase {
         try penny.wait(for: AccessibilityID.Home.empty)
         try penny.openSettingsPage("currency", screen: AccessibilityID.Screen.currency)
         // The ledger is loaded; from here the server drops every ledger request.
-        try await stack.setFaults([.offline("/api/ledger")])
+        try await stack.setFaults([FaultRule(method: "PUT", pathPrefix: "/api/ledger", abort: true)])
         try penny.tap(AccessibilityID.Settings.currency("USD"))
         try penny.waitForSelection(AccessibilityID.Settings.currency("USD"))
         try penny.closeSettings()

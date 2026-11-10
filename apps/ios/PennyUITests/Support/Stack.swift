@@ -111,6 +111,11 @@ struct Stack {
 
     func setClock(_ iso: String) async throws { _ = try await control("PUT", "clock", body: ["now": iso]) }
 
+    /// Back to real time. Single sign-on needs it: the API's `Date` header is real time while
+    /// the attempt's `expiresAt` follows the pinned clock, so a pinned past date makes the app
+    /// see an already-expired attempt ("Sign-in expired").
+    func unpinClock() async throws { _ = try await control("DELETE", "clock") }
+
     func setFaults(_ rules: [FaultRule]) async throws {
         _ = try await control("PUT", "faults", body: ["rules": rules.map(\.json)])
     }
