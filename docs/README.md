@@ -6,6 +6,7 @@
 
 - [Development](development.md): local web setup, Nix/direnv, live reload, connecting iOS and Android, and the source layout.
 - [Self-hosting and configuration](deployment.md): the .NET/PostgreSQL Compose stack, reverse proxies and HTTPS, configuration, external PostgreSQL, container images, upgrades and rollback, OIDC, push notifications, and the legacy Node deployment.
+- [Cutover from Node/SQLite](cutover.md): the one-time move to .NET/PostgreSQL behind the same address: settings mapping, production-copy rehearsal, the window step by step, go/no-go and rollback, observation and compatibility windows, Node retirement, the cutover drill and release notes.
 - [Operations runbook](operations.md): health and readiness, JSON logs and request ids, connections and disk, backup and restore drills, index and search maintenance, PostgreSQL roles, extensions and version policy, write reconciliation, and failure runbooks.
 - [App behavior and limits](app-guide.md): personal-share calculations, payment accounts, households, trips, reimbursements, offline sync, recurrence, and ledger upgrades.
 
@@ -20,6 +21,7 @@
 - [V2 migration architecture](migration/architecture.md): SwiftUI/TanStack/.NET boundaries, PostgreSQL import and recovery, versioned search, redesign traceability and compatibility gates.
 - [ASP.NET Core backend foundation](../apps/backend/README.md): pinned .NET/PostgreSQL setup, explicit migrations, readiness, real database tests and backend CI.
 - [Native iOS app](../apps/ios/README.md): Xcode 27.2 and iOS 26 setup, simulator build and test commands, module ownership, environments, signing, App Group and upgrade continuity, and iOS CI.
+- [Native API client](ios-api-client.md): wire models, contract updates, server-scoped credentials, error and retry conventions, ledger, receipts and search.
 - [Web app foundation](../apps/web/README.md): the React/Vite/TanStack browser client, pinned versions, route and data conventions, design-kit boundaries and web CI.
 - [Frontend architecture](frontend-architecture.md): routes, feature ownership, state and persistence boundaries, responsive navigation, and native glass surfaces.
 - [Backend architecture](backend-architecture.md): HTTP/application/storage boundaries, validation, persistence guarantees, and framework tradeoffs.

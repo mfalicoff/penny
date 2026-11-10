@@ -1,4 +1,5 @@
 using Penny.Backend.Application.Abstractions.Persistence;
+using Penny.Backend.Application.Diagnostics;
 using Penny.Backend.Domain.Households;
 
 namespace Penny.Backend.Application.Households;
@@ -51,8 +52,17 @@ public sealed class SharedRecurrenceRunner(ISharedExpenseRepository expenses, Ti
         );
         var recorded = 0;
         var failures = new List<string>();
+        using var activity =
+            claims.Count > 0
+                ? BackendTelemetry.StartJob(BackendTelemetry.RecurrenceJob, claims.Count)
+                : null;
         foreach (var claim in claims)
         {
+            // Occurrence dates are UTC days, owed from the start of the day.
+            BackendTelemetry.JobPickedUp(
+                BackendTelemetry.RecurrenceJob,
+                now - new DateTimeOffset(claim.NextDate, TimeOnly.MinValue, TimeSpan.Zero)
+            );
             try
             {
                 recorded += await CatchUpAsync(claim, token, cancellationToken);
@@ -60,6 +70,7 @@ public sealed class SharedRecurrenceRunner(ISharedExpenseRepository expenses, Ti
             catch (Exception error) when (error is not OperationCanceledException)
             {
                 failures.Add(error.GetType().Name);
+                BackendTelemetry.Failed(activity, error.GetType().Name);
                 continue;
             }
             await expenses.ReleaseRuleAsync(claim.RuleId, token, cancellationToken);

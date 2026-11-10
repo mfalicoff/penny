@@ -26,7 +26,7 @@ The `api` container's health check runs `dotnet Penny.Backend.Api.dll health-pro
 | `receipt-storage` | "Receipt storage is not writable…" | [Receipt volume](#receipt-volume-not-writable-or-full) |
 | `disk-space` | "Receipt storage is low on free disk space…" | [Receipt volume](#receipt-volume-not-writable-or-full) |
 
-Suggested alerts: `/api/ready` non-200 for 2 minutes; any `"LogLevel":"Error"` or `"Critical"` line; PostgreSQL volume above 80% full; backups older than a day; `search-verify` or `receipts-verify` exiting non-zero in a scheduled run. Dashboards and OpenTelemetry metrics are planned separately (MAZ-126, MAZ-128).
+Suggested alerts: `/api/ready` non-200 for 2 minutes; any `"LogLevel":"Error"` or `"Critical"` line; PostgreSQL volume above 80% full; backups older than a day; `search-verify` or `receipts-verify` exiting non-zero in a scheduled run. With [telemetry](#telemetry-opentelemetry) on, also alert on `penny.job.failures`, `penny.job.lag` and 5xx `http.server.request.duration`; dashboards and client error monitoring are planned separately (MAZ-126, MAZ-128).
 
 ## Logs
 
@@ -36,12 +36,61 @@ The API writes one JSON object per line to stdout (`docker compose logs api`):
 {"Timestamp":"2026-11-09T23:58:27.113Z","EventId":180337991,"LogLevel":"Information","Category":"Penny.Backend.Api.Middleware.RequestCorrelationMiddleware","Message":"HTTP GET api/health responded 200 in 321.7 ms","State":{"Method":"GET","Route":"api/health","StatusCode":200,"ElapsedMilliseconds":321.6696,"{OriginalFormat}":"HTTP {Method} {Route} responded {StatusCode} in {ElapsedMilliseconds:0.0} ms"},"Scopes":[{"Message":"ConnectionId:0HNPUNLCAQ8QQ","ConnectionId":"0HNPUNLCAQ8QQ"},{"Message":"RequestId:abc-123","RequestId":"abc-123","{OriginalFormat}":"RequestId:{RequestId}"}]}
 ```
 
-- **Correlation.** nginx sends its `$request_id` as `X-Request-Id`; the API keeps a well-formed id (1–64 of `A–Z a–z 0–9 - _ . :`) or issues one, uses it as the trace identifier, returns it in the `X-Request-Id` response header and puts `RequestId` in the scope of every line written for that request. Users reporting a failure can give you the response header. 500 errors log `API request failed (<ExceptionType>); trace <RequestId>`.
+- **Correlation.** nginx sends its `$request_id` as `X-Request-Id`; the API keeps a well-formed id (1–64 of `A–Z a–z 0–9 - _ . :`) or issues one, uses it as the trace identifier, returns it in the `X-Request-Id` response header and puts `RequestId` in the scope of every line written for that request. Users reporting a failure can give you the response header. 500 errors log `API request failed (<ExceptionType>); request <RequestId>, trace <TraceId>`, where `<TraceId>` is the W3C trace id (`-` when the request was not traced); with [telemetry](#telemetry-opentelemetry) on, search traces by either id.
 - **Access line.** One `Information` line per request with the method, the **route template** (for example `api/households/{id}`), status and duration. 499 means the client disconnected.
 - **Never logged:** request or response bodies, query strings, concrete paths, cookies, bearer tokens, passwords, reset or invite codes, OIDC codes and tokens, APNs/Expo tokens, connection strings, SQL parameter values, exception messages and stack traces from request handling, search text and financial text. ASP.NET's own request logging (which includes raw paths) is turned off. Workers log counts, provider reason codes and exception types only. Tests enforce this for search, password reset and the access log.
 - **Levels.** `Logging__LogLevel__Default=Warning` in `api.env` drops the access lines. Startup and shutdown lines come from `Microsoft.Hosting.Lifetime`.
 - **Retention.** Configure your container runtime's log rotation (for Docker, the `json-file` driver's `max-size`/`max-file` options or a log shipper). Logs contain email-free operational data but should still be kept private.
 - **Other services.** nginx writes its standard access log (client address, path, status) to stdout, and PostgreSQL its server log. The nginx access log contains concrete paths and query strings; restrict it accordingly.
+
+## Telemetry (OpenTelemetry)
+
+MAZ-127. The API can send **traces, metrics and logs** over OTLP to your OpenTelemetry Collector or Grafana Alloy (and from there to Tempo, Mimir/Prometheus and Loki). It is **off** unless `OTEL_EXPORTER_OTLP_ENDPOINT` is set in `deploy/api.env`; then all three signals are on. Only the HTTP host exports; maintenance commands (`migrate`, `search-rebuild`, …) do not. The collector must be reachable from the `api` container (run it on the `penny` network or give its host address).
+
+```sh
+# deploy/api.env
+OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy:4317
+OTEL_RESOURCE_ATTRIBUTES=deployment.environment.name=home
+# OTEL_EXPORTER_OTLP_HEADERS=Authorization=Basic%20…   (a secret: keep api.env mode 0600)
+```
+
+| Setting | Default | Notes |
+| --- | --- | --- |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | unset (telemetry off) | Absolute `http://` or `https://` URL without credentials, query or fragment. For `grpc`, the collector address (`:4317`); for `http/protobuf`, the base URL (`:4318`) to which `/v1/traces`, `/v1/metrics` and `/v1/logs` are appended |
+| `OTEL_EXPORTER_OTLP_PROTOCOL` | `grpc` | `grpc` or `http/protobuf` |
+| `OTEL_EXPORTER_OTLP_HEADERS` | none | Comma-separated `key=value` pairs (values URL-encoded) sent with every export, typically authentication. A secret |
+| `OTEL_EXPORTER_OTLP_TIMEOUT` | 10000 | Milliseconds per export attempt |
+| `OTEL_EXPORTER_OTLP_{TRACES,METRICS,LOGS}_{ENDPOINT,PROTOCOL,HEADERS,TIMEOUT}` | the general value | Per-signal overrides. A per-signal endpoint is used as given (include `/v1/traces` etc. for `http/protobuf`) and needs the general endpoint set too |
+| `OTEL_SERVICE_NAME` | `penny-backend` | Otherwise taken from `service.name` in `OTEL_RESOURCE_ATTRIBUTES`. `service.version` is the build version |
+| `OTEL_RESOURCE_ATTRIBUTES` | none | `key=value,…`, for example `deployment.environment.name=home,service.instance.id=api-1` |
+| `OTEL_TRACES_SAMPLER` / `OTEL_TRACES_SAMPLER_ARG` | `parentbased_always_on` | `always_on`, `always_off`, `traceidratio`, `parentbased_always_on`, `parentbased_always_off` or `parentbased_traceidratio`; the argument is a ratio from 0 to 1, for the ratio samplers only. Parent-based samplers follow the sampled flag of an incoming `traceparent` |
+| `OTEL_METRIC_EXPORT_INTERVAL` | 60000 | Milliseconds between metric exports |
+| `OTEL_BSP_SCHEDULE_DELAY` / `OTEL_BLRP_SCHEDULE_DELAY` | 5000 / 1000 | Milliseconds between span / log batch exports |
+| `OTEL_SDK_DISABLED` | `false` | `true` turns telemetry off even with an endpoint |
+
+Other standard `OTEL_*` variables the .NET SDK supports (batch sizes, attribute limits, compression, certificates) work as OpenTelemetry documents them. The settings in the table are checked at startup: an invalid endpoint, protocol, header list, timeout, sampler, ratio, interval or resource attribute list stops the API before it listens, with a message that names the variable and never echoes its value.
+
+Export runs in the background, in batches. A slow, failing or unreachable collector never fails or delays a request: the exporter gives up after its timeout and drops that batch (tests check this against a collector that accepts connections and never answers). Nothing is buffered on disk, so a collector outage is a gap in your data, not a growing queue.
+
+### What each signal contains
+
+- **Traces.** One server span per request, named by method and **route template** (`PUT api/ledger`), with the standard HTTP server attributes (such as `http.request.method`, `http.route`, `http.response.status_code`, `url.scheme`, `server.address`, `network.protocol.version`, `user_agent.original`) and `penny.request_id` (the `X-Request-Id`). Its children are a span per PostgreSQL command (`db.query.text` is the parameterized statement; `db.namespace`, `server.address`) and a span per outgoing HTTP call to the OIDC provider, APNs or Expo (`url.full` is reduced to the origin, such as `https://api.push.apple.com`). Failed requests carry the error status and `error.type` (the status code). An incoming W3C `traceparent` is honoured, so a client's trace continues into the API, and outgoing provider calls pass the trace context on. Background workers trace each pass that claimed work as `push.delivery`, `push.receipts`, `search.embedding` or `recurrence` (attributes `penny.job`, `penny.job.items` and, on failure, `error.type`), with their SQL as children. `/api/health` and `/api/ready` requests and idle worker polls are not traced.
+- **Metrics.** ASP.NET Core and Kestrel (`http.server.request.duration`, `http.server.active_requests`, `kestrel.*`, `aspnetcore.routing.*`, `aspnetcore.rate_limiting.*`, `aspnetcore.diagnostics.exceptions`), outgoing HTTP (`http.client.request.duration` and related), the .NET runtime (`dotnet.gc.*`, `dotnet.thread_pool.*`, `dotnet.process.*` and related) and the Npgsql pool (`db.client.connection.*`, `db.client.operation.duration`, pool name `penny-backend`). App metrics:
+
+  | Metric | Attributes | Meaning |
+  | --- | --- | --- |
+  | `penny.auth.sign_ins` | `penny.auth.method` (`password`, `oidc`, `registration`), `penny.outcome` (`success`, `failure`), and on failure `error.type` (`invalid`, `unauthorized`, `forbidden`, `not_found`, `conflict`, `error`) | Sign-in attempts |
+  | `penny.rate_limit.rejections` | `penny.rate_limit.policy` (`auth`, `invites`, `search`) | Requests refused with 429 |
+  | `penny.ledger.conflicts` | none | `PUT /api/ledger` refused with 409 (stale revision) |
+  | `penny.household.joins` | `penny.outcome`, and on failure `error.type` | Invite-code joins |
+  | `penny.job.lag` (seconds, histogram) | `penny.job` (`push.delivery`, `search.embedding`, `recurrence`) | Time from when work became due (push message created, embedding owed, start of the occurrence's UTC day) to when a worker claimed it |
+  | `penny.job.items` | `penny.job` | Items claimed by worker passes |
+  | `penny.job.failures` | `penny.job`, `error.type` (exception type name) | Failed items or passes; each is retried |
+- **Logs.** The same structured `ILogger` records as the console, at the same levels (`Logging__LogLevel__*`): the formatted message, its template and structured values, the `RequestId` scope, and the trace and span ids of the request or worker pass that wrote them, so a Loki line links to its Tempo trace.
+
+### Privacy guarantees
+
+The [log rules](#logs) apply to every signal. Spans and metrics carry ids, route templates, status codes, fixed vocabularies and exception type names, never user content. No signal contains passwords, session or bearer tokens, cookies, invite or reset codes, OIDC codes or tokens, client secrets, APNs or Expo device tokens, connection strings, SQL parameter values, request or response bodies, query strings or concrete paths, search text, emails, names, notes or amounts. Exception messages and stack traces are not recorded on spans. Integration tests run registration, sign-in, ledger saves and conflicts, household invites and joins, password reset, search, OIDC sign-in and an unexpected error with telemetry on. They fail if any of those values appears in any exported span, metric or log record.
 
 ## Shutdown and restarts
 

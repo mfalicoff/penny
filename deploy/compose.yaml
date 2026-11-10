@@ -42,7 +42,10 @@ services:
       - ../apps/backend/development/init-roles.sh:/docker-entrypoint-initdb.d/10-penny-roles.sh:ro
     shm_size: 256m
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d \"$${POSTGRES_DB}\""]
+      # Over TCP: on first start the image runs its init scripts on a socket-only
+      # server and then restarts, so a socket check would pass before the real server
+      # is up and `migrate` could connect into the restart.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U postgres -d \"$${POSTGRES_DB}\""]
       interval: 5s
       timeout: 3s
       retries: 30
