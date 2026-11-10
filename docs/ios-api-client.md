@@ -56,7 +56,7 @@ Branch on the `APIError` case, never on message text.
 | `unauthorized` | 401 | The session ended; sign in again (`requiresSignIn`) |
 | `forbidden` | 403 | Origin or permission; do not retry |
 | `notFound` | 404 | Absent or private; on search it means the server lacks search v1, use local search |
-| `conflict` | 409 | Stale revision: nothing changed. Refetch `ledger()`, merge (MAZ-71) and write again |
+| `conflict` | 409 | Stale revision: nothing changed. Refetch `ledger()`, merge and write again (`LedgerSyncEngine`, [offline sync](ios-offline-sync.md)) |
 | `payloadTooLarge` | 413 | Reduce the body |
 | `rateLimited`, `unavailable` | 429, 503 | Wait `retryAfter` seconds, then retry. A 503 never acknowledges a write |
 | `server` | other 5xx | Retry with backoff |
@@ -65,7 +65,7 @@ Branch on the `APIError` case, never on message text.
 
 Cancelling the calling task throws `CancellationError` (not an `APIError`); a response that arrives after cancellation is dropped.
 
-The client never retries by itself. `isRetryable` tells a caller whether repeating the request can help. Reads (`ledger`, `info`, `receipt`, `search`) may be retried with backoff. A ledger write is a whole-ledger compare-and-swap on `revision`, so repeating it after an ambiguous failure (timeout, lost connection) either applies once or answers 409; the pending-change queue (MAZ-71) owns that decision.
+The client never retries by itself. `isRetryable` tells a caller whether repeating the request can help. Reads (`ledger`, `info`, `receipt`, `search`) may be retried with backoff. A ledger write is a whole-ledger compare-and-swap on `revision`, so repeating it after an ambiguous failure (timeout, lost connection) either applies once or answers 409; the offline sync engine (MAZ-71, [offline sync](ios-offline-sync.md#sync)) owns that decision and re-merges after a 409.
 
 ## Ledger and receipts
 

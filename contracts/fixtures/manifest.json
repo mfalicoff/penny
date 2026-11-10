@@ -61,7 +61,8 @@
         ],
         "csharp": "not applicable: the server never merges; it rejects stale writes with 409 (http-journey.json)",
         "swift": [
-          "contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"
+          "contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift",
+          "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/LedgerMergeTests.swift"
         ]
       }
     },
