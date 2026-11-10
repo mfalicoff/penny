@@ -1,7 +1,9 @@
 import Foundation
-import PennyData
+import LocalAuthentication
 import Security
 import Testing
+
+@testable import PennyData
 
 /// A scripted biometric check. Each prompt takes the next result; with `holdPrompts`, a prompt
 /// waits until `finish` so a test can background the app mid-prompt.
@@ -13,7 +15,9 @@ final class FakeDeviceAuthenticator: DeviceAuthenticator {
     var holdPrompts = false
     private(set) var prompts: [AuthenticationPurpose] = []
     private(set) var cancels = 0
-    private var held: CheckedContinuation<AuthenticationResult, Never>?
+    /// Prompts waiting for `finish`, oldest first (a cancelled prompt can still be waiting
+    /// for its answer when the next one opens).
+    private var held: [CheckedContinuation<AuthenticationResult, Never>] = []
 
     init(_ results: [AuthenticationResult] = []) {
         self.results = results
@@ -25,14 +29,16 @@ final class FakeDeviceAuthenticator: DeviceAuthenticator {
         prompts.append(purpose)
         let next = results.isEmpty ? .cancelled : results.removeFirst()
         guard holdPrompts else { return next }
-        return await withCheckedContinuation { held = $0 }
+        return await withCheckedContinuation { held.append($0) }
     }
 
-    var isHolding: Bool { held != nil }
+    var isHolding: Bool { !held.isEmpty }
+    var heldCount: Int { held.count }
 
+    /// Answers the oldest waiting prompt.
     func finish(_ result: AuthenticationResult) {
-        held?.resume(returning: result)
-        held = nil
+        guard !held.isEmpty else { return }
+        held.removeFirst().resume(returning: result)
     }
 
     func cancel() { cancels += 1 }
@@ -233,6 +239,16 @@ struct AppLockControllerTests {
         await change.value
         #expect(store.stored)
         #expect(lock.status == .locked)
+    }
+
+    @Test("whenAFailedCheckGivesNoError_LocalDeviceAuthenticator_ShouldNotReportSuccess")
+    func nilErrorIsNotSuccess() {
+        // canEvaluatePolicy false, or evaluatePolicy success=false, without an error.
+        #expect(LocalDeviceAuthenticator.failure(nil) == .unavailable)
+        #expect(LocalDeviceAuthenticator.failure(LAError(.userCancel)) == .cancelled)
+        #expect(LocalDeviceAuthenticator.failure(LAError(.authenticationFailed)) == .failed)
+        #expect(LocalDeviceAuthenticator.failure(LAError(.biometryLockout)) == .lockout)
+        #expect(LocalDeviceAuthenticator.failure(CocoaError(.featureUnsupported)) == .failed)
     }
 
     @Test("whenTheDeviceHasNoPasscode_AppLock_ShouldNameTheRecoveryStep")

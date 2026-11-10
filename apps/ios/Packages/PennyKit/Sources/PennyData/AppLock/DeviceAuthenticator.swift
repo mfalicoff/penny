@@ -77,7 +77,7 @@ public final class LocalDeviceAuthenticator: DeviceAuthenticator {
     public func canEnable() -> AuthenticationResult {
         var error: NSError?
         if LAContext().canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) { return .success }
-        return Self.result(error)
+        return Self.failure(error)
     }
 
     public func authenticate(_ purpose: AuthenticationPurpose, reason: String) async -> AuthenticationResult {
@@ -89,10 +89,10 @@ public final class LocalDeviceAuthenticator: DeviceAuthenticator {
         let policy: LAPolicy =
             purpose == .enable ? .deviceOwnerAuthenticationWithBiometrics : .deviceOwnerAuthentication
         var error: NSError?
-        guard context.canEvaluatePolicy(policy, error: &error) else { return Self.result(error) }
+        guard context.canEvaluatePolicy(policy, error: &error) else { return Self.failure(error) }
         let result = await withCheckedContinuation { (continuation: CheckedContinuation<AuthenticationResult, Never>) in
             context.evaluatePolicy(policy, localizedReason: reason) { success, error in
-                continuation.resume(returning: success ? .success : Self.result(error))
+                continuation.resume(returning: success ? .success : Self.failure(error))
             }
         }
         if self.context === context { self.context = nil }
@@ -104,8 +104,12 @@ public final class LocalDeviceAuthenticator: DeviceAuthenticator {
         context = nil
     }
 
-    nonisolated static func result(_ error: (any Error)?) -> AuthenticationResult {
-        guard let error = error as? LAError else { return error == nil ? .success : .failed }
+    /// The result of a check that did not succeed (`canEvaluatePolicy` false, or
+    /// `evaluatePolicy` answering `success == false`). Never `.success`: with no error to say
+    /// why, the check is treated as unavailable, so a missing error can never unlock.
+    nonisolated static func failure(_ error: (any Error)?) -> AuthenticationResult {
+        guard let error else { return .unavailable }
+        guard let error = error as? LAError else { return .failed }
         switch error.code {
         case .userCancel, .systemCancel, .appCancel, .userFallback, .notInteractive: return .cancelled
         case .authenticationFailed: return .failed
