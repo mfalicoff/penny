@@ -280,16 +280,19 @@ public struct MonthSummary: Hashable, Sendable {
     public let scheduled: [ReportEntry]
     /// Recorded only: the basis of **Left to spend**.
     public let recorded: KindTotals
-    /// Recorded plus every scheduled occurrence of the month (redesign-states.json `projected`).
+    /// Recorded plus the month's scheduled income (v2 `summarizeMonth` `projected`). Scheduled
+    /// expenses and investments are listed in `scheduled` but never added. The server's
+    /// redesign-states.json `projected` expense also adds them; that is a server-side figure.
     public let projected: KindTotals
     /// The scheduled income included in `projected`: expected, not cash available today.
     public let expectedIncome: Int64
     /// Recorded spending by category (largest first).
     public let spending: [CategoryAmount]
 
-    /// Left to spend: recorded income minus recorded expenses and contributions.
+    /// Left to spend: recorded income minus recorded expenses and contributions, signed
+    /// (v2 `recordedNet`).
     public var recordedRemaining: Int64 { recorded.remaining }
-    /// Projected remaining: the same with every scheduled occurrence counted.
+    /// Projected remaining: the same with expected income added, signed (v2 `projectedNet`).
     public var projectedRemaining: Int64 { projected.remaining }
 }
 
@@ -306,26 +309,28 @@ extension LedgerReport {
             $0.date != $1.date ? $0.date < $1.date : JavaScriptText.ordinalLess($0.id, $1.id)
         }
         let recordedTotals = KindTotals(recordedEntries)
+        // v2 `monthBreakdown`: projection adds scheduled income only; scheduled expenses and
+        // investments never count until recorded.
+        let expectedIncome = scheduled.filter { $0.kind == .income }.reduce(0) { $0 + $1.share }
         var projected = recordedTotals
-        for entry in scheduled { projected.add(entry.kind, entry.share) }
+        projected.add(.income, expectedIncome)
         return MonthSummary(
             month: month, recordedEntries: recordedEntries, scheduled: scheduled, recorded: recordedTotals,
-            projected: projected, expectedIncome: scheduled.filter { $0.kind == .income }.reduce(0) { $0 + $1.share },
-            spending: spending(recordedEntries))
+            projected: projected, expectedIncome: expectedIncome, spending: spending(recordedEntries))
     }
 
     /// Home's entry list: recorded and scheduled rows of the month that match the filters,
-    /// newest first. Filters never change the month's totals. The query is not trimmed, as in
-    /// legacy `selectOverview` (Activity trims it).
+    /// newest first then id. Filters never change the month's totals. The query is trimmed, as
+    /// on every screen (v2 `searchMatcher`).
     public func monthEntries(
         _ summary: MonthSummary, query: String = "", kind: EntryKind? = nil, day: CalendarDate? = nil,
         categoryId: String? = nil
     ) -> [ReportEntry] {
-        (summary.recordedEntries + summary.scheduled)
+        let matches = matcher(query)
+        return (summary.recordedEntries + summary.scheduled)
             .filter {
                 (day == nil || $0.date == day) && (kind == nil || $0.kind == kind)
-                    && (categoryId == nil || $0.categoryId == categoryId)
-                    && matches($0, query: query, trimsQuery: false)
+                    && (categoryId == nil || $0.categoryId == categoryId) && matches($0)
             }
             .sorted(by: ReportEntry.newestFirst)
     }
@@ -377,8 +382,9 @@ extension LedgerReport {
         _ period: ActivityPeriod, query: String = "", kind: EntryKind? = nil, day: CalendarDate? = nil, page: Int = 0
     ) -> ActivityPage {
         let periodEntries = recorded.filter { period.contains($0.date) }
+        let matchesQuery = matcher(query)
         let matches = periodEntries.filter {
-            (kind == nil || $0.kind == kind) && (day == nil || $0.date == day) && self.matches($0, query: query)
+            (kind == nil || $0.kind == kind) && (day == nil || $0.date == day) && matchesQuery($0)
         }
         .sorted(by: ReportEntry.newestFirst)
         let size = LedgerReport.activityPageSize
@@ -392,7 +398,8 @@ extension LedgerReport {
 
 /// A personal trip's spending. Only personal expenses belong to trips.
 public struct TripSummary: Hashable, Sendable {
-    /// Newest first, then id descending (legacy `tripOverview` order).
+    /// Newest first, then id ascending: the one order of every list (v2 `byDateDescThenId`;
+    /// the old `tripOverview` broke ties by id descending).
     public let expenses: [LedgerEntry]
     public let spending: [CategoryAmount]
     /// Your shares: what counts toward trip spending.
@@ -404,7 +411,7 @@ public struct TripSummary: Hashable, Sendable {
 extension LedgerReport {
     public func trip(_ trip: Trip) -> TripSummary {
         let expenses = ledger.transactions.filter { $0.kind == .expense && $0.tripId == trip.id }
-            .sorted { $0.date != $1.date ? $0.date > $1.date : JavaScriptText.ordinalLess($1.id, $0.id) }
+            .sorted { $0.date != $1.date ? $0.date > $1.date : JavaScriptText.ordinalLess($0.id, $1.id) }
         return TripSummary(
             expenses: expenses, spending: spending(expenses.map { ReportEntry(personal: $0, scheduled: false) }),
             total: expenses.reduce(0) { $0 + $1.share }, receiptTotal: expenses.reduce(0) { $0 + $1.total })

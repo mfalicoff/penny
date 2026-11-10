@@ -95,22 +95,47 @@ struct LocalSearchTests {
             LocalSearch.matches(query: "rent old", title: "Rent", note: "Old note", categoryName: "", accountName: ""))
     }
 
-    /// Legacy Activity (`selectTransactions`) trimmed the query; Home (`selectOverview`) did not,
-    /// so on Home surrounding spaces are part of the substring.
-    @Test("whenQueryHasSurroundingSpaces_HomeAndActivity_ShouldTrimOnlyOnActivityLikeLegacy")
-    func homeDoesNotTrim() throws {
-        let month = try #require(MonthKey("2026-11"))
+    /// v2 `searchMatcher` (src/domain/search.ts): Home, Activity and whole-ledger search trim
+    /// and lowercase the query identically (the old `selectOverview` did not trim). Fields are
+    /// joined by single spaces, so a query can cross fields but cannot skip one.
+    @Test("whenQueryHasSurroundingSpacesOrCrossesFields_HomeActivityAndSearch_ShouldMatchIdentically")
+    func everyScreenTrims() throws {
+        let month = try #require(MonthKey("2026-09"))
         let report = LedgerReport(
-            ledger: Sample.ledger(transactions: [Sample.entry("coffee", "2026-11-02", title: "Coffee")]))
+            ledger: Sample.ledger(transactions: [
+                Sample.entry("t", "2026-09-20", title: "Lunch", note: "With Alex", accountId: "visa")
+            ]))
         let home = report.month(month)
-        #expect(report.activity(.month(month), query: " coffee ").entries.map(\.id) == ["coffee"])
-        #expect(report.monthEntries(home, query: " coffee").isEmpty, "nothing precedes the title")
-        #expect(report.monthEntries(home, query: "coffee ").map(\.id) == ["coffee"], "the joining space follows it")
-        #expect(report.monthEntries(home, query: "   ").isEmpty, "a blank query is not empty on Home")
-        #expect(report.monthEntries(home, query: " ").map(\.id) == ["coffee"])
-        #expect(report.monthEntries(home, query: "").map(\.id) == ["coffee"])
-        #expect(
-            !LocalSearch.matches(
-                query: " coffee", title: "Coffee", note: "", categoryName: "", accountName: "", trimsQuery: false))
+        for query in [
+            "lunch ", "  LUNCH", "lunch with", "with alex", "Lunch With", "alex food & drinks visa", " ", "   ", "",
+        ] {
+            #expect(report.monthEntries(home, query: query).map(\.id) == ["t"], "home \(query.debugDescription)")
+            #expect(report.activity(.month(month), query: query).entries.map(\.id) == ["t"], "activity \(query)")
+            #expect(report.search(query).map(\.id) == ["t"], "search \(query.debugDescription)")
+        }
+        #expect(report.monthEntries(home, query: "lunch  with").isEmpty, "one space joins the fields")
+        #expect(report.search("lunch  with").isEmpty)
+    }
+
+    /// v2 `searchEntries`: recorded entries of the whole ledger (any month), filtered by kind
+    /// and day, newest first then id. It has no pages, so the paged case lists every match.
+    @Test("whenLegacySubstringCase_Search_ShouldMatchSearchFixtureAcrossTheLedger")
+    func searchEntries() throws {
+        let cases = try LocalSearchCases.load()
+        let report = LedgerReport(ledger: try ContractLedger.ledger(cases.ledger))
+        for item in cases.substringCases {
+            let found = report.search(
+                item.query, kind: try item.kind.map(ContractLedger.kind), day: try item.day.map(ContractLedger.date))
+            #expect(found.map(\.id) == item.ids, "query \(item.query.debugDescription)")
+        }
+        // Independent expectation: "coffee" hits a, b and e, all dated 2026-11-02, so id order.
+        #expect(report.search("coffee").map(\.id) == ["a", "b", "e"])
+        // Previews are never history; a recorded occurrence is, in any month.
+        let ledger = Sample.ledger(
+            transactions: [Sample.entry("rent:2026-09-30", "2026-09-30", title: "Rent", recurringId: "rent")],
+            recurring: [Sample.rule("rent", start: "2026-09-30", next: "2026-10-31", anchorDay: 31)])
+        let rent = LedgerReport(ledger: ledger, sharedScheduled: [ReportTests.streaming("2026-10-20")])
+        #expect(rent.search("r").map(\.id) == ["rent:2026-09-30"])
+        #expect(rent.month(try #require(MonthKey("2026-10"))).scheduled.count == 2, "both previews exist")
     }
 }

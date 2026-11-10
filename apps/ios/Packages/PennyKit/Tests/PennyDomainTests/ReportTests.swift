@@ -104,13 +104,21 @@ struct ReportTests {
             KindTotals(expense: amounts.expenseCents, income: amounts.incomeCents, investment: amounts.investmentCents)
         }
         #expect(month.recorded == totals(expected.recorded))
-        #expect(month.projected == totals(expected.projected))
+        // v2 `summarizeMonth` projects scheduled income only. The fixture's projected expense
+        // also adds the scheduled spending (a server-side presentation): it equals recorded plus
+        // the scheduled previews listed below, which PennyDomain reports but never adds.
+        #expect(month.projected.income == expected.projected.incomeCents)
+        #expect(month.projected.investment == expected.projected.investmentCents)
+        #expect(month.projected.expense == month.recorded.expense, "scheduled expenses are never projected")
+        #expect(
+            expected.projected.expenseCents - expected.recorded.expenseCents
+                == month.scheduled.reduce(0) { $0 + $1.share })
         let scheduled = month.scheduled.map {
             "\($0.source == .personal ? "personal" : "shared") \($0.title) \($0.date) \($0.share)"
         }
         #expect(scheduled == expected.scheduled.map { "\($0.source) \($0.title) \($0.date) \($0.shareCents)" })
         #expect(month.expectedIncome == 0)
-        #expect(month.recordedRemaining == -175_950 && month.projectedRemaining == -180_750)
+        #expect(month.recordedRemaining == -175_950 && month.projectedRemaining == -175_950)
         #expect(month.recorded.investment == 50_000, "the ETF purchase is a contribution, not spending")
     }
 
@@ -125,12 +133,11 @@ struct ReportTests {
         let before = LedgerReport(
             ledger: ledger, shared: [internet, internet], sharedScheduled: [Self.streaming(), Self.streaming()])
         #expect(before.month(month).recorded.expense == 4000)
-        #expect(before.month(month).projected.expense == 4800)
+        #expect(before.month(month).scheduled.map(\.share) == [800], "the twice-fetched preview is listed once")
         // The runner records the occurrence; an older preview response is still cached.
         let after = LedgerReport(
             ledger: ledger, shared: [internet, Self.streaming(scheduled: false)], sharedScheduled: [Self.streaming()])
         #expect(after.month(month).recorded.expense == 4800)
-        #expect(after.month(month).projected.expense == 4800)
         #expect(after.month(month).scheduled.isEmpty)
         // Shared rows in another currency are left out instead of mixing currencies.
         var euro = internet
@@ -223,6 +230,45 @@ struct ReportTests {
         var paused = ledger
         paused.recurring[0].active = false
         #expect(LedgerReport(ledger: paused).month(month).projected == before.recorded)
+    }
+
+    /// v2 `summarizeMonth` (src/domain/summary.ts, tests/core/domain-rules.test.ts): projected
+    /// adds scheduled income only; scheduled expenses and investments stay out until recorded.
+    @Test("whenExpensesAndInvestmentsAreScheduled_MonthSummary_ShouldProjectOnlyScheduledIncome")
+    func projectionCountsOnlyIncome() throws {
+        let october = try #require(Self.october)
+        let rent = Sample.rule("rent", start: "2026-09-01", next: "2026-09-30", anchorDay: 31, share: 100_000)
+        let pay = Sample.rule("pay", start: "2026-09-15", next: "2026-10-15", share: 300_000, kind: .income)
+        let etf = Sample.rule("etf", start: "2026-09-10", next: "2026-10-10", share: 50000, kind: .investment)
+        let ledger = Sample.ledger(
+            transactions: [Sample.entry("t", "2026-10-02", share: 1000, total: 2000)], recurring: [rent, pay, etf])
+        let summary = LedgerReport(ledger: ledger).month(october)
+        #expect(summary.scheduled.map(\.id) == ["etf:2026-10-10", "pay:2026-10-15", "rent:2026-10-31"])
+        #expect(summary.recorded == KindTotals(expense: 1000, income: 0, investment: 0))
+        #expect(summary.expectedIncome == 300_000)
+        #expect(summary.projected == KindTotals(expense: 1000, income: 300_000, investment: 0))
+        #expect(summary.recordedRemaining == -1000 && summary.projectedRemaining == 299_000)
+        // Recording the occurrences moves income from expected to recorded exactly once.
+        let recorded = LedgerReport(ledger: Recurrence.materialize(ledger, today: .day("2026-10-31"))).month(october)
+        #expect(recorded.expectedIncome == 0 && recorded.scheduled.isEmpty)
+        #expect(recorded.recorded == KindTotals(expense: 101_000, income: 300_000, investment: 50000))
+        #expect(recorded.recordedRemaining == 300_000 - 1000 - 50000 - 100_000)
+        #expect(recorded.projected == recorded.recorded)
+    }
+
+    /// v2 `byDateDescThenId` (src/domain/search.ts): Home, Activity, search and trips share one
+    /// order. Trips used to break date ties by id descending.
+    @Test("whenDatesTie_HomeActivitySearchAndTrips_ShouldOrderByDateDescendingThenId")
+    func oneOrdering() throws {
+        let month = try #require(MonthKey("2026-11"))
+        let entries = [("b", "2026-11-02"), ("a", "2026-11-01"), ("c", "2026-11-02"), ("a2", "2026-11-02")]
+            .map { Sample.entry($0.0, $0.1, title: "Same", tripId: "lisbon") }
+        let report = LedgerReport(ledger: Sample.ledger(transactions: entries))
+        let expected = ["a2", "b", "c", "a"]
+        #expect(report.search("same").map(\.id) == expected)
+        #expect(report.monthEntries(report.month(month), query: "same").map(\.id) == expected)
+        #expect(report.activity(.month(month), query: "same").entries.map(\.id) == expected)
+        #expect(report.trip(Sample.lisbon).expenses.map(\.id) == expected)
     }
 
     @Test("whenEntriesAreSplit_Reports_ShouldCountPersonalSharesNotReceiptTotals")

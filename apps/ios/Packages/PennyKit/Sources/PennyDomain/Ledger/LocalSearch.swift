@@ -1,25 +1,31 @@
 /// The local search the current app uses for offline, pending and demo data
-/// (search-cases.json `substringCases` and `pendingCases`).
+/// (search-cases.json `substringCases` and `pendingCases`); v2 `searchMatcher` in
+/// src/domain/search.ts (docs/migration/domain-rules.md).
 ///
-/// A row matches when the query, lowercased, is an exact substring of
-/// `"{title} {note} {category name} {account name}"` lowercased. Activity trims the query
-/// first (legacy `selectTransactions`); Home does not (legacy `selectOverview`), so there a
-/// leading or trailing space is part of the substring. Joining the fields keeps cross-field
-/// matches ("beans morning" finds title "Coffee beans" with note "Morning"). There is no
-/// accent folding ("cafe" does not find "Café"), and `%`, `_` and `\` are ordinary
-/// characters. The folded normalization and typo/meaning tiers of server search v1
-/// (`foldCases`, MAZ-121) are not applied here; MAZ-73 owns them on iOS.
+/// A row matches when the query, trimmed with JavaScript's `trim` and lowercased, is an exact
+/// substring of its one search document, `"{title} {note} {category name} {account name}"`
+/// lowercased. Every screen (Home, Activity, whole-ledger search) uses the same rule. Joining
+/// the fields with single spaces keeps cross-field matches ("beans morning" finds title
+/// "Coffee beans" with note "Morning"), but a query cannot skip a field ("lunch  with" with
+/// two spaces does not find "Lunch" / "With Alex"). There is no accent folding ("cafe" does
+/// not find "Café"), and `%`, `_` and `\` are ordinary characters. The folded normalization
+/// and typo/meaning tiers of server search v1 (`foldCases`, MAZ-121) are not applied here;
+/// MAZ-73 owns them on iOS.
 public enum LocalSearch {
     /// The haystack's fields, in the legacy order. Missing fields are empty.
-    /// - Parameter trimsQuery: whether to trim the query with JavaScript's `trim` first
-    ///   (Activity and offline search), or keep it as typed (Home's month list).
     public static func matches(
-        query: String, title: String, note: String, categoryName: String, accountName: String,
-        trimsQuery: Bool = true
+        query: String, title: String, note: String, categoryName: String, accountName: String
     ) -> Bool {
-        let needle = JavaScriptText.lowercase(trimsQuery ? JavaScriptText.trim(query) : query)
-        let haystack = JavaScriptText.lowercase("\(title) \(note) \(categoryName) \(accountName)")
-        return JavaScriptText.includes(haystack, needle)
+        JavaScriptText.includes(
+            document(title: title, note: note, categoryName: categoryName, accountName: accountName), needle(query))
+    }
+
+    /// The query as matched: trimmed, then lowercased. Compute it once per query.
+    static func needle(_ query: String) -> String { JavaScriptText.lowercase(JavaScriptText.trim(query)) }
+
+    /// The fields joined with single spaces, lowercased.
+    static func document(title: String, note: String, categoryName: String, accountName: String) -> String {
+        JavaScriptText.lowercase("\(title) \(note) \(categoryName) \(accountName)")
     }
 
     /// Whether to show local results instead of server pages. With pending local changes, or
@@ -35,9 +41,24 @@ extension LedgerReport {
     /// `LocalSearch.matches` over a report row: shared rows search their shared category, and
     /// the account name only when the row names one of the caller's accounts (only the payer's
     /// shares carry one).
-    public func matches(_ entry: ReportEntry, query: String, trimsQuery: Bool = true) -> Bool {
-        LocalSearch.matches(
-            query: query, title: entry.title, note: entry.note, categoryName: categoryName(entry.categoryId),
-            accountName: accountName(entry.accountId), trimsQuery: trimsQuery)
+    public func matches(_ entry: ReportEntry, query: String) -> Bool { matcher(query)(entry) }
+
+    /// One predicate per query (v2 `searchMatcher`): the query is trimmed and lowercased once.
+    func matcher(_ query: String) -> (ReportEntry) -> Bool {
+        let needle = LocalSearch.needle(query)
+        return { entry in
+            JavaScriptText.includes(
+                LocalSearch.document(
+                    title: entry.title, note: entry.note, categoryName: categoryName(entry.categoryId),
+                    accountName: accountName(entry.accountId)), needle)
+        }
+    }
+
+    /// v2 `searchEntries`: the recorded entries of the whole report (personal and shared, any
+    /// date, never previews) that match the query, kind and day, newest first then id.
+    public func search(_ query: String, kind: EntryKind? = nil, day: CalendarDate? = nil) -> [ReportEntry] {
+        let matches = matcher(query)
+        return recorded.filter { (kind == nil || $0.kind == kind) && (day == nil || $0.date == day) && matches($0) }
+            .sorted(by: ReportEntry.newestFirst)
     }
 }

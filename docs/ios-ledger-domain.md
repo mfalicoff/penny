@@ -1,8 +1,10 @@
 # Native ledger rules (PennyDomain)
 
-[Documentation](README.md) · [Native iOS app](../apps/ios/README.md) · [API client](ios-api-client.md) · [Ledger sync](migration/ledger.md)
+[Documentation](README.md) · [Native iOS app](../apps/ios/README.md) · [API client](ios-api-client.md) · [Ledger sync](migration/ledger.md) · [TypeScript domain rules](migration/domain-rules.md)
 
 MAZ-70 ports the personal ledger rules of the legacy app (`src/domain/ledger.ts`, `src/domain/commands.ts`, `src/features/entries/entryDraft.ts`, the overview, transactions and trip selectors and `src/features/households/projection.ts`) to pure Swift in `apps/ios/Packages/PennyKit/Sources/PennyDomain/Ledger/`. The rules have no I/O, no UI, no clock and no randomness: callers pass today's date and generated ids. They are checked against the shared golden fixtures in `contracts/fixtures` and Swift Testing boundary tests in `Tests/PennyDomainTests`.
+
+The reference for reports and search is the pure TypeScript module MAZ-86 extracted on v2 ([domain rules](migration/domain-rules.md)): `src/domain/summary.ts` (`monthBreakdown`, `summarizeMonth`, `isRecorded`), `search.ts` (`searchMatcher`, `byDateDescThenId`, `searchEntries`) and `selectors/` (overview, transactions, trips), tested in `tests/core/domain-rules.test.ts`. Where that module changed the old selectors, PennyDomain follows the new module.
 
 ## Ownership
 
@@ -24,7 +26,7 @@ MAZ-70 ports the personal ledger rules of the legacy app (`src/domain/ledger.ts`
 | `LedgerChange.swift` | Entry, schedule, trip, account, category and currency commands |
 | `EntryDraft.swift` | Form validation and the entry/rule a draft produces |
 | `LedgerValidation.swift` | `Ledger.violations` (the server's structural checks) and the v1–v3 upgrade |
-| `Reports.swift`, `LocalSearch.swift` | Month summary (recorded and projected), Activity, trip totals, shared projection join and local search |
+| `Reports.swift`, `LocalSearch.swift` | Month summary (recorded and projected), Activity, trip totals, shared projection join, local search and whole-ledger `search` |
 | `LedgerRuleError.swift`, `JavaScriptText.swift` | User-facing messages and the JavaScript string semantics the rules must reproduce |
 
 ## Money invariants
@@ -60,16 +62,20 @@ Optional fields (`accountId`, `tripId`, `receipt`, `recurringId`, `sharedHouseho
 
 `LedgerReport(ledger:shared:sharedScheduled:)` joins the personal ledger with the caller's shared shares from the server projection. It is a read model and is never saved.
 
-- **Recorded** (`MonthSummary.recorded`): personal entries plus recorded shared shares dated in the month. **Left to spend** is `recordedRemaining = income − expense − investment` (negative when more went out). It is not an account balance.
+- **Recorded** (`MonthSummary.recorded`): personal entries plus recorded shared shares dated in the month. **Left to spend** is `recordedRemaining = income − expense − investment` (TypeScript `recordedNet`; negative when more went out). It is not an account balance.
 - **Scheduled**: previews of active personal rules and the server's shared previews in the month, oldest first.
-- **Projected** (`projected`, `projectedRemaining`): recorded plus every scheduled occurrence of every kind. **Expected income** (`expectedIncome`) is the scheduled income included in it. Once an occurrence is recorded, it replaces its preview, so income is never counted twice.
+- **Projected** (`projected`, `projectedRemaining`, TypeScript `summarizeMonth` `projected`/`projectedNet`): recorded plus the month's scheduled income (**Expected income**, `expectedIncome`). Scheduled expenses and investments are listed in `scheduled` but never added until recorded. Once an occurrence is recorded, it replaces its preview, so income is never counted twice.
 - **Shared projection deduplication**: a shared expense repeated across period responses counts once (by household and id, compared by code units), at the position its id was first seen and with the values of its last copy, as the legacy `HouseholdProvider` `Map` with `unique.set` did (pass older responses first); the last copy's currency and amounts decide. Previews repeat the same way. A shared preview whose rule already recorded that date is dropped, even when the preview came from an older response; shares in another currency than the ledger, and shared rows whose total is not 1…99,999,999,999 or whose share is not 0…total (the bounds the server stores), are left out.
-- **Activity** (`activity`): recorded entries only, personal and shared, never previews. The month or year totals ignore the query, kind and day filters. Order is date descending, then id in ordinal order; 50 per page, page clamped.
+- **Home** (`monthEntries`): the month's recorded and scheduled rows that match the day, kind, category and query filters. The filters never change the totals.
+- **Activity** (`activity`): recorded entries only, personal and shared, never previews. The month or year totals ignore the query, kind and day filters. 50 per page, page clamped.
+- **Search** (`search`, TypeScript `searchEntries`): recorded entries of the whole report, any date, filtered by query, kind and day.
+- **One order**: Home, Activity, search and trip expenses all sort by date descending, then id ascending (TypeScript `byDateDescThenId`); scheduled previews in `MonthSummary.scheduled` are oldest first.
 - **Investments** are contributions, reported separately from spending. **Trips** sum personal expense shares and receipt totals.
+- **Not ported here**: money flow (`selectors/moneyFlow.ts`, unchanged by MAZ-86) and the calendar grid helper `calendarMonth` belong to the Home screens (MAZ-77); `CalendarDate.mondayBasedWeekday` and `MonthKey` already give their inputs.
 
 ## Local search
 
-`LocalSearch.matches` is the legacy offline/demo search: the lowercased query must be an exact UTF-16 substring of `"{title} {note} {category} {account}"` lowercased. Activity trims the query first (legacy `selectTransactions`); Home's month list does not (legacy `selectOverview`), so there `" coffee"` does not find a row titled "Coffee" and a blank query of spaces is not empty. "cafe" does not find "Café"; `%`, `_` and `\` are plain characters. Shared rows search their shared category and, for the payer only, their account. With pending local changes, offline, or without server search v1, the client searches its local snapshot (`LocalSearch.searchesLocally`), so an unsynced create, edit or delete is never hidden or revived by a server page; local and server rows are never mixed ([search](migration/search.md#offline-pending-edits-and-demo)).
+`LocalSearch.matches` is the offline/demo search (TypeScript `searchMatcher`): the query, trimmed with JavaScript `trim` and lowercased once, must be an exact UTF-16 substring of one search document, `"{title} {note} {category} {account}"` lowercased. Home, Activity and `search` use the same matcher, so `" coffee"` finds a row titled "Coffee" everywhere and a query of spaces matches everything. Because the fields are joined with single spaces, "beans morning" finds title "Coffee beans" with note "Morning", but "lunch  with" (two spaces) does not cross a field. "cafe" does not find "Café"; `%`, `_` and `\` are plain characters. Shared rows search their shared category and, for the payer only, their account. With pending local changes, offline, or without server search v1, the client searches its local snapshot (`LocalSearch.searchesLocally`), so an unsynced create, edit or delete is never hidden or revived by a server page; local and server rows are never mixed ([search](migration/search.md#offline-pending-edits-and-demo)).
 
 ## Fixtures
 
@@ -78,14 +84,14 @@ Consumed read-only through `PennyContracts` (strict models, manifest hashes): `m
 No fixture was added or changed. Known gaps, for the fixture owners rather than invented here:
 
 - `manifest.json` still lists only `contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift` as the Swift consumer of these files (and MAZ-73 for `search-cases.json`); the generator's consumer table (`scripts/fixtures/generate-golden.ts`) should add `apps/ios/Packages/PennyKit/Tests/PennyDomainTests` when it is next regenerated.
-- There is no shared fixture for the entry draft rules, the command check order and messages, pause/resume, materialization or the projected formula with expected income; the Swift tests port the legacy behavior and the redesign total. The message test pins every `LedgerRuleError` sentence word for word to the legacy source (`src/domain/ledger.ts`, `commands.ts`, `entryDraft.ts`), and the four new ones to the wording chosen here.
+- There is no shared fixture for the entry draft rules, the command check order and messages, pause/resume, materialization or the projected formula with expected income; the Swift tests port the v2 TypeScript behavior (`tests/core/domain-rules.test.ts`) and the redesign totals. The message test pins every `LedgerRuleError` sentence word for word to the legacy source (`src/domain/ledger.ts`, `commands.ts`, `entryDraft.ts`), and the four new ones to the wording chosen here.
 - `merge-conflicts.json` is MAZ-71's; `shared-splits.json` and `settlement.json` are MAZ-75's.
 
 ## Compatibility decisions
 
-- **Projected counts every scheduled kind.** The legacy overview added only scheduled income to its summary. The shared `redesign-states.json` total (agreed with web and C#) adds scheduled expenses too (Gym and Streaming in `alex-2026-10`); PennyDomain follows the fixture, and still reports expected income separately.
+- **Projected counts scheduled income only**, as v2 `summarizeMonth`. The server's `redesign-states.json` `projected` expense also adds the scheduled spending (Gym and Streaming in `alex-2026-10`); that is a server-side presentation. `ReportTests` asserts the fixture's recorded totals and projected income and investment exactly, and that its projected expense is recorded plus the shares of `MonthSummary.scheduled`, as `tests/core/domain-rules.test.ts` does.
 - **Recorded counts every entry dated in the month.** Income dated after today counting toward Projected rather than Left to spend is MAZ-136 and not implemented here.
-- **Ordinal id order.** Ties sort by UTF-16 code units, not `localeCompare`, so order never depends on the device's ICU data. For the lowercase ASCII ids the clients generate, the two agree on letters and digits.
+- **Ordinal id order.** Ties sort by UTF-16 code units, not `localeCompare` (which `byDateDescThenId` uses), so order never depends on the device's ICU data. For the lowercase ASCII ids the clients generate, the two agree on letters and digits; they can differ for mixed case or punctuation (`localeCompare` puts "a" before "B" and `:` before digits).
 - **Head counts are plain integers.** `" 4 "`, `"4.0"` and `"004"` are accepted like `Number()`; `"1e1"`, `"0x3"` and `"+3"` are refused (the legacy `Number()` accepted them; a native field never produces them).
 - **Final sigma.** Swift's `lowercased()` maps a final "Σ" to "σ" where JavaScript gives "ς"; local substring search can differ only for that letter.
 - **Value equality.** Stale checks compare values, not `JSON.stringify` text, so key order can no longer cause a false "changed on another device". Strings compare by canonical equivalence there; names and search compare code units, as before.
