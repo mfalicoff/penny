@@ -431,7 +431,8 @@ public struct ExpoMigration: Sendable {
     }
 
     private func importSessions(
-        _ values: [String: String], servers: Set<String>, legacyServer: String, into journal: inout ExpoMigrationJournal,
+        _ values: [String: String], servers: Set<String>, legacyServer: String,
+        into journal: inout ExpoMigrationJournal,
         report: inout ExpoMigrationReport
     ) {
         for text in servers.sorted() where !journal.sessions.contains(text) {
@@ -453,7 +454,8 @@ public struct ExpoMigration: Sendable {
             }
             let emailKey = ExpoLegacyFormat.storageKey(
                 ExpoLegacyFormat.activeAccountKey, server: text, legacyServer: legacyServer)
-            guard let email = values[emailKey], let session = try? ServerSession(server: server, email: email, token: token)
+            guard let email = values[emailKey],
+                let session = try? ServerSession(server: server, email: email, token: token)
             else {
                 // The Expo app had forgotten the account (its session had expired) or the token
                 // is not one the server issues: sign in again.

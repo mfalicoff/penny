@@ -40,7 +40,9 @@ final class ExpoKeychain: KeychainBackend {
 
     func update(_ query: [String: Any], _ attributes: [String: Any]) -> OSStatus {
         if let forced = forcedStatus.withLock({ $0 }) { return forced }
-        guard let id = Self.id(query), let data = attributes[kSecValueData as String] as? Data else { return errSecParam }
+        guard let id = Self.id(query), let data = attributes[kSecValueData as String] as? Data else {
+            return errSecParam
+        }
         return items.withLock { items in
             guard items[id] != nil else { return errSecItemNotFound }
             items[id] = data
@@ -62,7 +64,9 @@ final class ExpoKeychain: KeychainBackend {
 
     /// Plants an item the way SecureStore before SDK 50 did (service `app`).
     func putLegacy(_ value: String, forKey key: String) {
-        items.withLock { $0["\(ExpoSecureStore.legacyService)|\(Data(key.utf8).base64EncodedString())"] = Data(value.utf8) }
+        items.withLock {
+            $0["\(ExpoSecureStore.legacyService)|\(Data(key.utf8).base64EncodedString())"] = Data(value.utf8)
+        }
     }
 
     var count: Int { items.withLock { $0.count } }

@@ -126,7 +126,9 @@ struct ExpoMigrationTests {
     let other = APIFixtures.serverURL(ExpoInstall.otherServer)
 
     var synced: PennyDomain.Ledger { Offline.ledger([Offline.entry("lunch")]) }
-    var withPending: PennyDomain.Ledger { Offline.ledger([Offline.entry("lunch"), Offline.entry("taxi", title: "Taxi")]) }
+    var withPending: PennyDomain.Ledger {
+        Offline.ledger([Offline.entry("lunch"), Offline.entry("taxi", title: "Taxi")])
+    }
 
     /// A typical Expo install: lock on, AMOLED theme, one signed-in account with an unsynced entry.
     func stageTypicalInstall(token: String = APIFixtures.token) throws {
@@ -253,12 +255,18 @@ struct ExpoMigrationTests {
         install.migration().run()
         // The person went back to the Expo build, which synced the taxi and saved a new entry offline.
         try install.stageLedger(
-            alex, base: withPending, local: Offline.ledger([Offline.entry("lunch"), Offline.entry("taxi", title: "Taxi"),
-            Offline.entry("cinema")]))
+            alex, base: withPending,
+            local: Offline.ledger([
+                Offline.entry("lunch"), Offline.entry("taxi", title: "Taxi"),
+                Offline.entry("cinema"),
+            ]))
         install.advance(60)
         let report = install.migration().run()
         #expect(report.accounts.map(\.outcome) == [.merged(pendingChanges: 1)])
-        #expect(try install.ledgers.load(Offline.scope())?.local.transactions.map(\.id).sorted() == ["cinema", "lunch", "taxi"])
+        #expect(
+            try install.ledgers.load(Offline.scope())?.local.transactions.map(\.id).sorted() == [
+                "cinema", "lunch", "taxi",
+            ])
         #expect(install.migration().run().accounts.map(\.outcome) == [.waitingForSync])
     }
 
@@ -343,7 +351,8 @@ struct ExpoMigrationTests {
 
         // Even after alex syncs, the damaged record and the Expo data around it stay.
         let store = OfflineLedgerStore(
-            files: install.ledgers, today: TestCalendar("2026-11-05").today, now: { Date(timeIntervalSince1970: 1_800_000_000) },
+            files: install.ledgers, today: TestCalendar("2026-11-05").today,
+            now: { Date(timeIntervalSince1970: 1_800_000_000) },
             retry: .immediate())
         #expect(await store.engine(for: Offline.scope()).sync(using: try Offline.client(ledgerServer)) == .synced)
         let after = install.migration().run()
