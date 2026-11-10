@@ -23,22 +23,28 @@ extension Ledger {
     /// Typed values already guarantee the enumerations and real calendar days, so this checks
     /// the rest. A client runs it before it acknowledges a save, so an edit that could never
     /// sync is refused while the person still has the form open. Empty means valid.
+    ///
+    /// Every string field also has to be storable (.NET `LedgerText.IsStorable`): a NUL is
+    /// refused, as on the server. The rule's other half, unpaired UTF-16 surrogates, cannot be
+    /// represented in a Swift `String`, so the type already guarantees it.
     public var violations: [LedgerViolation] {
         var found: [LedgerViolation] = []
-        func id(_ value: String, _ list: String) {
-            if !(1...100).contains(JavaScriptText.length(value)) { found.append(.invalidID(list)) }
+        /// zod `z.string().min(min).max(max)` plus `IsStorable`, on the string itself.
+        func text(_ value: String, _ range: ClosedRange<Int>) -> Bool {
+            range.contains(JavaScriptText.length(value)) && JavaScriptText.isStorable(value)
         }
+        func id(_ value: String, _ list: String) {
+            if !text(value, 1...Ledger.maxIDLength) { found.append(.invalidID(list)) }
+        }
+        // Ids compare as UTF-16 code units on the server (`StringComparer.Ordinal`); a Swift
+        // `Set<String>` would merge canonically equivalent ids, so uniqueness is checked on the
+        // code units. Lengths are checked on the ids themselves.
         func unique(_ ids: [String], _ list: String) {
-            if Set(ids).count != ids.count { found.append(.duplicateID(list)) }
+            if Set(ids.map { Array($0.utf16) }).count != ids.count { found.append(.duplicateID(list)) }
             for value in ids { id(value, list) }
         }
         func date(_ value: CalendarDate, _ owner: String) {
             if !value.isWithinLedgerRange { found.append(.dateOutOfRange(owner)) }
-        }
-        // Ids compare as code units on the server; Swift `Set<String>` would merge canonically
-        // equivalent ids, so uniqueness is checked on the UTF-16 form.
-        func codeUnits(_ values: [String]) -> [String] {
-            values.map { $0.utf16.map(String.init).joined(separator: ",") }
         }
 
         if accounts.count > Ledger.maxAccounts { found.append(.tooMany("accounts")) }
@@ -47,27 +53,26 @@ extension Ledger {
         if transactions.count > Ledger.maxEntries { found.append(.tooMany("transactions")) }
         if recurring.count > Ledger.maxRules { found.append(.tooMany("recurring")) }
 
-        unique(codeUnits(accounts.map(\.id)), "accounts")
-        unique(codeUnits(trips.map(\.id)), "trips")
-        unique(codeUnits(categories.map(\.id)), "categories")
-        unique(codeUnits(transactions.map(\.id)), "transactions")
-        unique(codeUnits(recurring.map(\.id)), "recurring")
+        unique(accounts.map(\.id), "accounts")
+        unique(trips.map(\.id), "trips")
+        unique(categories.map(\.id), "categories")
+        unique(transactions.map(\.id), "transactions")
+        unique(recurring.map(\.id), "recurring")
 
-        for account in accounts where !(1...50).contains(JavaScriptText.length(JavaScriptText.trim(account.name))) {
+        // Names are trimmed before their length is checked; trimming never removes a NUL.
+        for account in accounts where !text(JavaScriptText.trim(account.name), 1...50) {
             found.append(.invalidName(account.id))
         }
         for trip in trips {
-            if !(1...80).contains(JavaScriptText.length(JavaScriptText.trim(trip.name))) {
-                found.append(.invalidName(trip.id))
-            }
+            if !text(JavaScriptText.trim(trip.name), 1...80) { found.append(.invalidName(trip.id)) }
             date(trip.startDate, trip.id)
             date(trip.endDate, trip.id)
             if trip.endDate < trip.startDate { found.append(.invalidTripDates(trip.id)) }
             if let household = trip.sharedHouseholdId { id(household, "trips") }
         }
         for category in categories {
-            if !(1...50).contains(JavaScriptText.length(category.name)) { found.append(.invalidName(category.id)) }
-            if JavaScriptText.length(category.icon) > 80 { found.append(.invalidText(category.id)) }
+            if !text(category.name, 1...50) { found.append(.invalidName(category.id)) }
+            if !text(category.icon, 0...80) { found.append(.invalidText(category.id)) }
             if !Ledger.isHexColor(category.color) { found.append(.invalidColor(category.id)) }
         }
 
@@ -79,9 +84,7 @@ extension Ledger {
             _ owner: String, kind: EntryKind, total: Int64, share: Int64, categoryId: String, accountId: String?,
             title: String, note: String, on day: CalendarDate
         ) {
-            if !(1...100).contains(JavaScriptText.length(title)) || JavaScriptText.length(note) > 1000 {
-                found.append(.invalidText(owner))
-            }
+            if !text(title, 1...100) || !text(note, 0...1000) { found.append(.invalidText(owner)) }
             if !Money.isValidAmounts(total: total, share: share) { found.append(.invalidAmounts(owner)) }
             if kind != .expense, share != total { found.append(.invalidShare(owner)) }
             if kinds[categoryId] != kind { found.append(.invalidCategory(owner)) }
@@ -102,9 +105,7 @@ extension Ledger {
             if let recurringId = entry.recurringId { id(recurringId, entry.id) }
             if let receipt = entry.receipt {
                 id(receipt.id, entry.id)
-                if JavaScriptText.length(receipt.name) > 255 || JavaScriptText.length(receipt.mime) > 100
-                    || JavaScriptText.length(receipt.uri) > 500
-                {
+                if !text(receipt.name, 0...255) || !text(receipt.mime, 0...100) || !text(receipt.uri, 0...500) {
                     found.append(.invalidText(entry.id))
                 }
             }

@@ -24,6 +24,12 @@ enum JavaScriptText {
     /// `String.prototype.length`: UTF-16 code units, which the wire limits count.
     static func length(_ text: String) -> Int { text.utf16.count }
 
+    /// .NET `LedgerText.IsStorable`: PostgreSQL text cannot hold NUL or unpaired surrogates,
+    /// so the server refuses both. A Swift `String` is always well-formed Unicode: it cannot
+    /// hold an unpaired surrogate at all (bridging from `NSString` repairs one to U+FFFD, and
+    /// `JSONDecoder` refuses a lone `\uD83D` escape), so only the NUL half can occur here.
+    static func isStorable(_ text: String) -> Bool { !text.utf16.contains(0) }
+
     /// `String.prototype.toLowerCase`: locale-independent full Unicode lowercase. Swift's
     /// `lowercased()` applies the same per-scalar mappings; it differs only in the
     /// context-dependent Greek final sigma, which JavaScript lowercases to "ς" and Swift to "σ".

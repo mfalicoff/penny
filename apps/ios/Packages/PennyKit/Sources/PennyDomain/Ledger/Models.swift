@@ -179,6 +179,8 @@ public struct Ledger: Hashable, Sendable {
     public static let maxCategories = 300
     public static let maxEntries = 100_000
     public static let maxRules = 1_000
+    /// The longest id, in UTF-16 code units (`LedgerLimits.IdLength`, zod `max(100)`).
+    public static let maxIDLength = 100
 
     public var currency: Currency
     public var accounts: [PaymentAccount]
