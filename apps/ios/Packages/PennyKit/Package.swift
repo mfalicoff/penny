@@ -40,7 +40,11 @@ let package = Package(
             dependencies: ["PennyDomain", "PennyContracts"],
             swiftSettings: strict
         ),
-        .testTarget(name: "PennyDataTests", dependencies: ["PennyData"], swiftSettings: strict),
+        .testTarget(
+            name: "PennyDataTests",
+            dependencies: ["PennyData", "PennyContracts"],
+            swiftSettings: strict
+        ),
         .testTarget(name: "PennyDesignTests", dependencies: ["PennyDesign"], swiftSettings: strict),
         .testTarget(name: "PennyUIModuleTests", dependencies: ["PennyUI"], swiftSettings: mainActorByDefault),
     ]

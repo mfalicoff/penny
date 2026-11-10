@@ -139,6 +139,7 @@ Copy `deploy/api.env.example` to `deploy/api.env` (mode 0600, git-ignored). It i
 | `Receipts__MinFreeMegabytes` | 100 | Readiness fails (`disk-space`) below this much free space on the receipt volume |
 | `Search__RateLimitPermits` | 30 | Searches per session per minute |
 | `Logging__LogLevel__Default` | `Information` | `Warning` drops the per-request access line |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` and the other standard `OTEL_*` variables | off | Traces, metrics and logs over OTLP to an OpenTelemetry Collector or Grafana Alloy ([telemetry](operations.md#telemetry-opentelemetry)) |
 
 The image already sets `ASPNETCORE_ENVIRONMENT=Production`, `ASPNETCORE_HTTP_PORTS=8080`, `Search__ModelDirectory=/opt/penny/model` (the pinned, SHA-256-verified embedding model), `Receipts__Root=/var/lib/penny/receipts`, JSON console logs and `DOTNET_EnableDiagnostics=0`. Production serves no OpenAPI or Scalar routes and never enables the test controls.
 
@@ -233,6 +234,6 @@ Until the cutover, the legacy server keeps its own image (`ghcr.io/<owner>/<repo
 docker compose up -d --build
 ```
 
-Configure it in the root `.env` (`PORT`, `CORS_ORIGINS`, `COOKIE_SECURE`, `ALLOW_REGISTRATION`, `OIDC_*`). Proxy the whole hostname to port 3001, and allow request bodies of at least 20 MB. Back up the `penny-data` volume with the container stopped (SQLite database and WAL files together), or use SQLite's online backup API. To move its data to v2, follow the [import runbook](migration/postgresql.md#implemented-maz-52-commands): `snapshot-sqlite` seals the final SQLite file, and `import-sqlite` loads it into PostgreSQL. **Retain the sealed SQLite snapshot, its SHA-256 and the original volume through the observation window.** Before writes reopen on v2, rolling back means discarding the PostgreSQL target and receipt volume and restarting Node on the untouched source. After that, recovery is forward-only.
+Configure it in the root `.env` (`PORT`, `CORS_ORIGINS`, `COOKIE_SECURE`, `ALLOW_REGISTRATION`, `OIDC_*`). Proxy the whole hostname to port 3001, and allow request bodies of at least 20 MB. Back up the `penny-data` volume with the container stopped (SQLite database and WAL files together), or use SQLite's online backup API. To move its data to v2, follow the [cutover checklist](cutover.md): `snapshot-sqlite` seals the final SQLite file, and `import-sqlite` loads it into PostgreSQL, both through the `cutover` service of `deploy/compose.cutover.yaml`. **Retain the sealed SQLite snapshot, its SHA-256 and the original volume through the observation window.** Before writes reopen on v2, rolling back means discarding the PostgreSQL target and receipt volume and restarting Node on the untouched source. After that, recovery is forward-only.
 
 For client-side data upgrades, see [Ledger upgrades](app-guide.md#ledger-upgrades). For signed mobile distribution and release tags, see [Releases](releases.md).

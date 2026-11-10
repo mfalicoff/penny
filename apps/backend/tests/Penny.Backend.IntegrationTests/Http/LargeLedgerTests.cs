@@ -16,9 +16,11 @@ namespace Penny.Backend.IntegrationTests.Http;
 // budgets are deliberately generous upper bounds, several times the measured
 // baseline in docs/migration/parity-report.md#baseline-timings: they catch a
 // pathological regression (a quadratic write, a lost index), not normal runner noise.
+// The full-ledger write budget is the exception: it is capped below the production
+// request deadline, because a slower write would fail in production.
 public sealed class LargeLedgerTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
-    private static readonly TimeSpan FullWriteBudget = TimeSpan.FromSeconds(60);
+    private static readonly TimeSpan FullWriteBudget = TimeSpan.FromSeconds(25);
     private static readonly TimeSpan FullReadBudget = TimeSpan.FromSeconds(20);
     private static readonly TimeSpan ConcurrentRequestBudget = TimeSpan.FromSeconds(15);
 
@@ -44,12 +46,10 @@ public sealed class LargeLedgerTests(ApiFixture fixture) : IntegrationTestBase(f
         stored["ledger"]!["transactions"]!.AsArray().ShouldBeEmpty();
     }
 
-    // Explicit until MAZ-137: the first write of a full ledger takes about 48 s on an idle
-    // database and over 100 s on the shared test database after the rest of the suite,
-    // beyond the 30 s production request deadline. MAZ-137 makes this write fast,
-    // lowers FullWriteBudget below the deadline and removes `Explicit`. Run it with
-    // `--filter-method '*whenLedgerAtTransactionLimit*'`.
-    [Fact(Explicit = true)]
+    // Every CI run. The first write of a full ledger bulk-copies its new entries and
+    // search documents (MAZ-137); it must finish within the production request
+    // deadline (`Backend:RequestTimeoutSeconds`, 30 s), so its budget stays below it.
+    [Fact]
     public async Task whenLedgerAtTransactionLimit_LedgerFlow_ShouldWriteReadAndRefuseOneMore()
     {
         await using var host = LargeHost();
