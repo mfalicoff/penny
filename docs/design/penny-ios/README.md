@@ -1,6 +1,6 @@
 # Penny for iOS: native redesign proposal
 
-This proposal targets iPhone and iPad, plus the desktop web app (Expo web and the self-hosted server). It replaces the warm card-heavy "web app" look (in both the current app and the [penny-redesign](../penny-redesign/README.md) Penpot proposal) with a design that feels native to iOS 26.
+This proposal targets iPhone and iPad (the SwiftUI app in `apps/ios`) and the desktop web app (`apps/web`). It replaces the warm card-heavy look of both the current Expo app and the earlier Penpot proposal (which this change removes) with a design that feels native to iOS 26.
 
 Each screen is a standalone HTML file with a `@dsCard` marker, so the folder can be imported straight into a Claude Design design-system project. Rendered PNGs are in [previews/](previews/).
 
@@ -63,13 +63,12 @@ The web app uses the same tokens, color rules and money semantics as the iOS app
 - **Add entry:** a centered two-column dialog (amount, name and categories on the left; date, account, split, repeat, trip and a receipt drop zone on the right) with ⌘↵ to save and Esc to cancel.
 - **Sign in:** split screen with the brand and a Left to spend preview on the left, and the server chip, email, SSO and Create account on the right.
 
-## Implementation notes (Expo SDK 57)
+## Implementation notes (v2)
 
-- Native tabs and sidebar: `expo-router` native tabs give the iOS 26 floating tab bar for free. Check the [SDK 57 router docs](https://docs.expo.dev/versions/v57.0.0/) for the current API before implementing.
-- Glass: `expo-glass-effect` (already a dependency) provides the real material. The CSS blur here only approximates it.
-- SwiftUI controls: `@expo/ui` (already a dependency) can render the native segmented picker, menus, and the date picker.
-- Themes: this proposal defines light and dark, which follow the system setting. AMOLED becomes unnecessary because dark mode already uses a true-black background. Catppuccin could stay as an optional accent color rather than a full palette.
-- Remove Android-specific and web-specific layout code paths once iOS is the only target.
+- **iOS (`apps/ios`, SwiftUI):** use the system `TabView` (iOS 26 floating tab bar plus a separate add action) on iPhone and `NavigationSplitView` on iPad. Use real Liquid Glass (`.glassEffect`) only on toolbars, the tab bar and floating controls; the CSS blur in these cards only approximates it. SF Pro and SF Symbols replace Inter and Ionicons. Use `.sheet` with detents for entry flows, `.swipeActions` for edit and delete, and `.searchable` for search.
+- **Web (`apps/web`, React):** `design-kit/` (`@penny/ios-kit`) is a React reference of these components, including the web shell (WebFrame, WebSidebar, TopBar, DataTable, Dialog). Its tokens and `pk-*` classes can be ported directly; the shared money calculations stay in the API.
+- **Themes:** light and dark follow the system setting. Dark already uses a true-black background, so AMOLED is unnecessary; Catppuccin could stay as an optional accent rather than a full palette.
+- **Baseline contract:** `contracts/design-baseline.json` (79 specimens and 26 controls, MAZ-122) still describes the Penpot proposal. Re-baselining it on these cards is follow-up work.
 
 ## Rendering
 
