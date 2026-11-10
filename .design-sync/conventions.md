@@ -1,6 +1,6 @@
 # Penny iOS kit: how to build with it
 
-Penny is a personal and shared expense tracker for iPhone and iPad (iOS 26, Liquid Glass). These components are a web reference of the native app. Design iPhone screens at 402×874 and iPad landscape at 1210×834, using one screenful per artboard.
+Penny is a personal and shared expense tracker for iPhone and iPad (iOS 26, Liquid Glass). These components are a web reference of the native app. Design iPhone screens at 402×874, iPad landscape at 1210×834 and the desktop web app at 1440×900, using one screenful per artboard.
 
 ## Setup
 - Wrap every design in `PennyRoot` (`theme="light"` or `"dark"`). It applies the Inter font, the `--pk-bg` background, text color and the dark-mode tokens. Without it, components render in browser defaults.
@@ -18,6 +18,11 @@ Penny is a personal and shared expense tracker for iPhone and iPad (iOS 26, Liqu
   </Screen>
 </PennyRoot>
 ```
+
+## Web (desktop browser)
+- Use `WebFrame` with a `WebSidebar` (main: Home, Activity, Insights; Together: each household and trip; Manage) and `TopBar` first in its children (title, month, ⌘K search, one copper primary action). Put content in a `<div style={{ padding: "22px 32px 0" }}>`.
+- Web replaces sheets with a centered `Dialog` (passed as `WebFrame` `overlay`), and long lists with `DataTable` (day groups with totals, right-aligned money). Open entry details in a right-hand side panel (`Card inset={false}`), not a new page.
+- Use `WebButton` (36px) on web instead of `Button`, and `Kbd` to show keyboard shortcuts next to the actions they trigger.
 
 ## Color rules (one meaning per color)
 - `--pk-tint` (copper) is for actions and selection only: the primary button, the save ✓, the + button, switches and links. Use one copper primary action per screen.

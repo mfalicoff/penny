@@ -252,3 +252,54 @@
 .pk-screen--ipad .pk-screen__body { padding-top: 30px; }
 .pk-screen__bottom { position: absolute; left: 16px; right: 16px; bottom: 26px; z-index: 25; }
 .pk-screen__home { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); width: 140px; height: 5px; border-radius: 3px; background: var(--pk-label); opacity: .85; z-index: 40; }
+
+/* ---------- web (desktop browser) ---------- */
+.pk-kbd { font: 600 11px var(--pk-font); color: var(--pk-label-2); background: var(--pk-fill); border-radius: 5px; padding: 2px 6px; white-space: nowrap; }
+.pk-web { width: 1440px; height: 900px; border-radius: 14px; overflow: hidden; position: relative; background: var(--pk-bg); color: var(--pk-label); font-family: var(--pk-font); box-shadow: 0 0 0 1px rgba(0,0,0,.18), 0 30px 70px rgba(0,0,0,.22); display: flex; flex-direction: column; }
+.pk-web--bare { box-shadow: none; border-radius: 0; }
+.pk-web__chrome { height: 40px; flex: none; background: #E4E2DE; display: flex; align-items: center; gap: 14px; padding: 0 14px; border-bottom: 1px solid rgba(0,0,0,.08); }
+.pk-dark .pk-web__chrome { background: #1E1D1C; border-color: rgba(255,255,255,.06); }
+.pk-web__lights { display: flex; gap: 7px; } .pk-web__lights i { width: 12px; height: 12px; border-radius: 50%; background: #FF5F57; }
+.pk-web__lights i:nth-child(2) { background: #FEBC2E; } .pk-web__lights i:nth-child(3) { background: #28C840; }
+.pk-web__url { flex: 1; max-width: 520px; margin: 0 auto; height: 26px; border-radius: 8px; background: rgba(255,255,255,.7); display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12.5px; color: var(--pk-label-2); }
+.pk-dark .pk-web__url { background: rgba(255,255,255,.08); }
+.pk-web__page { flex: 1; min-height: 0; display: flex; }
+.pk-web__main { flex: 1; min-width: 0; position: relative; overflow: hidden; }
+.pk-web__glow { position: absolute; left: 0; right: 0; top: -220px; height: 560px; filter: blur(50px); pointer-events: none; z-index: 0; }
+.pk-web__body { position: relative; z-index: 1; padding: 22px 32px 0; }
+.pk-wside { width: 248px; flex: none; padding: 18px 12px; display: flex; flex-direction: column; border-right: .5px solid var(--pk-separator); background: color-mix(in srgb, var(--pk-surface) 55%, var(--pk-bg)); }
+.pk-wnav { display: flex; align-items: center; gap: 11px; height: 36px; padding: 0 10px; border-radius: 10px; font: 500 14.5px var(--pk-font); color: var(--pk-label); background: none; border: 0; width: 100%; text-align: left; cursor: pointer; }
+.pk-wnav .pk-icon { color: var(--pk-label-2); }
+.pk-wnav:hover { background: var(--pk-fill); }
+.pk-wnav--on, .pk-wnav--on:hover { background: var(--pk-surface); box-shadow: 0 1px 3px rgba(0,0,0,.08); font-weight: 600; }
+.pk-dark .pk-wnav--on { background: var(--pk-surface-2); }
+.pk-wnav--on .pk-icon { color: var(--pk-tint); }
+.pk-wnav__end { margin-left: auto; font-size: 12.5px; color: var(--pk-label-2); font-weight: 500; }
+.pk-topbar { position: relative; z-index: 3; display: flex; align-items: center; gap: 10px; padding: 18px 32px 0; }
+.pk-topbar h1 { margin: 0 8px 0 0; font-size: 28px; font-weight: 700; letter-spacing: -0.025em; }
+.pk-topbar__sp { flex: 1; }
+.pk-wbtn { height: 36px; border-radius: 10px; display: inline-flex; align-items: center; gap: 7px; padding: 0 14px; font: 600 14px var(--pk-font); color: var(--pk-label); background: var(--pk-surface); border: 0; box-shadow: 0 0 0 .5px var(--pk-separator), 0 1px 2px rgba(0,0,0,.05); white-space: nowrap; cursor: pointer; }
+.pk-wbtn--icon { width: 36px; padding: 0; justify-content: center; }
+.pk-wbtn--primary { background: var(--pk-tint); color: #fff; box-shadow: 0 4px 14px color-mix(in srgb, var(--pk-tint) 35%, transparent); }
+.pk-wbtn--primary .pk-kbd { background: rgba(255,255,255,.22); color: rgba(255,255,255,.9); }
+.pk-month { display: inline-flex; align-items: center; height: 36px; border-radius: 10px; background: var(--pk-surface); box-shadow: 0 0 0 .5px var(--pk-separator); }
+.pk-month > span { padding: 0 12px; font-size: 14px; font-weight: 600; }
+.pk-month button { width: 32px; height: 36px; display: grid; place-items: center; color: var(--pk-label-2); background: none; border: 0; cursor: pointer; }
+.pk-search { height: 36px; width: 260px; border-radius: 10px; background: var(--pk-fill); display: flex; align-items: center; gap: 8px; padding: 0 10px 0 12px; font-size: 14px; color: var(--pk-label-2); }
+.pk-search .pk-kbd { margin-left: auto; background: var(--pk-surface); }
+.pk-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.pk-table th { text-align: left; font-size: 11.5px; font-weight: 600; color: var(--pk-label-2); text-transform: uppercase; letter-spacing: .04em; padding: 0 12px 8px; border-bottom: .5px solid var(--pk-separator); white-space: nowrap; }
+.pk-table td { padding: 9px 12px; border-bottom: .5px solid var(--pk-separator); vertical-align: middle; white-space: nowrap; }
+.pk-table tr:last-child td { border-bottom: 0; }
+.pk-table .pk-r { text-align: right; }
+.pk-table .pk-muted { color: var(--pk-label-2); }
+.pk-table tbody tr:hover td { background: var(--pk-fill); }
+.pk-table tr.pk-sel td, .pk-table tr.pk-sel:hover td { background: var(--pk-tint-soft); }
+.pk-table tr.pk-group td { background: var(--pk-surface-2); font-size: 12px; font-weight: 600; color: var(--pk-label-2); text-transform: uppercase; letter-spacing: .03em; padding: 7px 12px; }
+.pk-table__wrap { background: var(--pk-surface); border-radius: 20px; padding: 12px 4px; box-shadow: 0 0 0 .5px var(--pk-separator); overflow: hidden; }
+.pk-dialog { background: var(--pk-surface); border-radius: 22px; box-shadow: 0 30px 80px rgba(0,0,0,.28), 0 0 0 .5px var(--pk-separator); overflow: hidden; }
+.pk-dialog__head { display: flex; align-items: center; gap: 10px; padding: 16px 18px; border-bottom: .5px solid var(--pk-separator); }
+.pk-dialog__head h3 { margin: 0; font-size: 17px; font-weight: 700; flex: 1; }
+.pk-dialog__body { padding: 18px; }
+.pk-dialog__foot { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-top: .5px solid var(--pk-separator); background: var(--pk-surface-2); }
+.pk-dialog__hint { font-size: 12px; color: var(--pk-label-2); display: flex; align-items: center; gap: 6px; flex: 1; }

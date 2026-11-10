@@ -39,7 +39,15 @@
     "FlowBar": "src/components/money.tsx",
     "FlowCard": "src/components/money.tsx",
     "MoneyFlow": "src/components/money.tsx",
-    "Stat": "src/components/money.tsx"
+    "Stat": "src/components/money.tsx",
+    "Kbd": "src/components/web.tsx",
+    "WebFrame": "src/components/web.tsx",
+    "WebSidebar": "src/components/web.tsx",
+    "TopBar": "src/components/web.tsx",
+    "WebButton": "src/components/web.tsx",
+    "SearchField": "src/components/web.tsx",
+    "DataTable": "src/components/web.tsx",
+    "Dialog": "src/components/web.tsx"
   },
   "provider": {
     "component": "PennyRoot",
@@ -132,6 +140,24 @@
       "cardMode": "column"
     },
     "Stat": {
+      "cardMode": "column"
+    },
+    "WebFrame": {
+      "cardMode": "single",
+      "viewport": "1520x980"
+    },
+    "WebSidebar": {
+      "cardMode": "single",
+      "viewport": "300x760"
+    },
+    "TopBar": {
+      "cardMode": "single",
+      "viewport": "1240x300"
+    },
+    "DataTable": {
+      "cardMode": "column"
+    },
+    "Dialog": {
       "cardMode": "column"
     }
   },
