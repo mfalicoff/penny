@@ -75,6 +75,7 @@ Imported SQLite data works unchanged through HTTP (`ImportedSharedExpenseTests`)
 ## Deliberate differences from the legacy service
 
 - **Former members' audit limit.** Legacy took the newest 500 household events and then removed those a former member may not see, so they could get fewer than 500 although older visible events existed. .NET filters first and then returns the newest 500 visible events.
+- **A former member's own `member.left`.** Legacy read the clock twice when someone left, once for `left_at` and once for the audit row, so the event was hidden from that member whenever the millisecond ticked in between. .NET records both at one instant, so the member always sees it (`AuditTests.whenMemberLeft_Audit_ShouldShowOnlyTheirHistory`). Because the legacy result depends on timing, the differential comparison does not probe a former member's household audit.
 - **Audit redaction on read.** Legacy returned imported or old snapshots unchanged, including plaintext receipt filenames. .NET removes `accountId` and `receipt.name` from every snapshot it returns.
 - **Ordering ties.** Reimbursements with the same instant are ordered by id; balances and suggestion ties use ordinal id order (legacy `localeCompare`), identical for generated lower-case hex and imported ids.
 - **Concurrency.** Legacy SQLite serialized every write globally; PostgreSQL serializes per household with the same outcomes.

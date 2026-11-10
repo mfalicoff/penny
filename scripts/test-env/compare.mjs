@@ -10,34 +10,43 @@ import { join } from "node:path";
 import { control, freePort, root } from "./environment.mjs";
 import { client, resolve, scenario as findScenario, seed } from "./seed.mjs";
 
-/** Starts the legacy server on a temporary SQLite database. */
-export async function startLegacy() {
+/**
+ * Starts the legacy server on a temporary SQLite database. `clockFile` preloads
+ * legacy-clock.mjs so the server's time follows that file (cutover rehearsal).
+ * `stop({ keep: true })` stops the server but keeps `databasePath`; `remove()`
+ * deletes it.
+ */
+export async function startLegacy({ clockFile } = {}) {
   const directory = mkdtempSync(join(tmpdir(), "penny-legacy-"));
+  const databasePath = join(directory, "penny.sqlite");
   const port = await freePort();
-  const child = spawn(process.execPath, ["--no-warnings", "--experimental-strip-types", "server/index.ts"], {
+  const preload = clockFile ? ["--import", join(root, "scripts/test-env/legacy-clock.mjs")] : [];
+  const child = spawn(process.execPath, ["--no-warnings", "--experimental-strip-types", ...preload, "server/index.ts"], {
     cwd: root,
     stdio: ["ignore", "ignore", "pipe"],
     env: {
       ...process.env,
-      HOST: "127.0.0.1", PORT: String(port), DATABASE_PATH: join(directory, "penny.sqlite"),
+      HOST: "127.0.0.1", PORT: String(port), DATABASE_PATH: databasePath,
       ALLOW_REGISTRATION: "true", COOKIE_SECURE: "false", CORS_ORIGINS: "http://127.0.0.1:4173",
       OIDC_ISSUER: "", OIDC_CLIENT_ID: "",
+      ...(clockFile ? { PENNY_LEGACY_CLOCK_FILE: clockFile } : {}),
     },
   });
   let stderr = "";
   child.stderr.on("data", (chunk) => { stderr += chunk; });
   const url = `http://127.0.0.1:${port}`;
-  const stop = async () => {
+  const remove = () => rmSync(directory, { recursive: true, force: true });
+  const stop = async ({ keep = false } = {}) => {
     if (child.exitCode === null) {
       child.kill("SIGTERM");
       await new Promise((done) => child.once("exit", done));
     }
-    rmSync(directory, { recursive: true, force: true });
+    if (!keep) remove();
   };
   for (let attempt = 0; attempt < 120; attempt++) {
     if (child.exitCode !== null) break;
     try {
-      if ((await fetch(`${url}/api/health`)).ok) return { url, stop };
+      if ((await fetch(`${url}/api/health`)).ok) return { url, stop, remove, databasePath };
     } catch {
       // Not listening yet.
     }

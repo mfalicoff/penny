@@ -14,10 +14,25 @@ namespace Penny.Backend.IntegrationTests.Infrastructure;
 
 public sealed class ApiFixture : IAsyncLifetime
 {
+    // Port of the second PostgreSQL instance the point-in-time recovery rehearsal starts
+    // inside this container (published now, listened on only during that test).
+    public const int RecoveryPort = 5433;
+
+    // WAL archive used by the recovery rehearsal. Segments are copied only while the
+    // directory exists, so other tests pay nothing and nothing accumulates.
+    public const string WalArchive = "/var/lib/postgresql/wal-archive";
+
     private readonly PostgreSqlContainer postgres = new PostgreSqlBuilder(DatabaseSchema.Image)
         .WithDatabase("penny_tests")
         .WithUsername("foundation_admin")
         .WithPassword(Guid.NewGuid().ToString("N"))
+        .WithCommand(
+            "-c",
+            "archive_mode=on",
+            "-c",
+            $"archive_command=if [ -d {WalArchive} ]; then test ! -f {WalArchive}/%f && cp %p {WalArchive}/%f; fi"
+        )
+        .WithPortBinding(RecoveryPort, true)
         .Build();
 
     public const string CreateExtensions =
@@ -108,6 +123,25 @@ public sealed class ApiFixture : IAsyncLifetime
         await using var command = Admin.CreateCommand(sql);
         await command.ExecuteNonQueryAsync(ct);
     }
+
+    // Runs a command in the PostgreSQL container, failing with its output on error.
+    public async Task<string> ExecAsync(IList<string> command, CancellationToken ct)
+    {
+        var result = await postgres.ExecAsync(command, ct);
+        if (result.ExitCode != 0)
+            throw new InvalidOperationException(
+                $"Container command failed ({result.ExitCode}): {result.Stderr}{result.Stdout}"
+            );
+        return result.Stdout;
+    }
+
+    // `connection` (any role of the test database) pointed at the recovery instance.
+    public string RecoveredConnection(string connection) =>
+        new NpgsqlConnectionStringBuilder(connection)
+        {
+            Host = postgres.Hostname,
+            Port = postgres.GetMappedPublicPort(RecoveryPort),
+        }.ConnectionString;
 
     public async Task<RestoredDatabase> RestoreBackupAsync(CancellationToken ct)
     {

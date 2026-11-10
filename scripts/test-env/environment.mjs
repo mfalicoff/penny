@@ -206,6 +206,29 @@ export async function up(options = {}) {
     run(cli, ["exec", "-i", state.container, "psql", "-U", "postgres", "-d", state.database, "--set=ON_ERROR_STOP=1", "-q"], {
       input: readFileSync(join(backend, "development/grant-runtime.sql"), "utf8"),
     });
+    const receiptKey = randomBytes(32).toString("base64");
+    // `prepare` runs against the migrated, empty database before the API starts (the
+    // cutover rehearsal imports a legacy snapshot here). `command` runs an API
+    // maintenance command with the run's credentials and receipt store; its result is
+    // returned to the caller as `state.prepared` and never written to env.json.
+    let prepared;
+    if (options.prepare) {
+      const settings = {
+        ConnectionStrings__Migration: connection("penny_migrator", secrets.migration),
+        ConnectionStrings__Postgres: connection("penny_runtime", secrets.runtime),
+        Receipts__Root: state.receiptRoot,
+        Receipts__MasterKey: receiptKey,
+        Search__ModelDirectory: modelDirectory,
+      };
+      const command = (args) => {
+        const result = spawnSync("bash", [join(backend, "dotnet.sh"), apiDll, ...args], {
+          cwd: backend, encoding: "utf8", env: { ...process.env, ...settings }, maxBuffer: 64 * 1024 * 1024,
+        });
+        return { status: result.status, stdout: result.stdout, stderr: result.stderr };
+      };
+      mkdirSync(state.receiptRoot, { recursive: true, mode: 0o700 });
+      prepared = await options.prepare({ command, receiptRoot: state.receiptRoot });
+    }
     state.apiPort = options.port ?? await freePort(host);
     state.apiUrl = `http://${host === "0.0.0.0" ? "127.0.0.1" : host}:${state.apiPort}`;
     state.origins = options.origins ?? [
@@ -223,7 +246,7 @@ export async function up(options = {}) {
         ASPNETCORE_URLS: `http://${host}:${state.apiPort}`,
         ConnectionStrings__Postgres: connection("penny_runtime", secrets.runtime),
         Receipts__Root: state.receiptRoot,
-        Receipts__MasterKey: randomBytes(32).toString("base64"),
+        Receipts__MasterKey: receiptKey,
         Search__ModelDirectory: modelDirectory,
         Search__RateLimitPermits: "10000",
         Auth__RateLimitPermits: "10000",
@@ -256,6 +279,7 @@ export async function up(options = {}) {
       const response = await fetch(`${state.apiUrl}/api/ready`);
       return response.ok;
     }, { timeoutMs: 120_000, what: "the API to become ready" });
+    if (prepared !== undefined) Object.defineProperty(state, "prepared", { value: prepared, enumerable: false });
     return state;
   } catch (error) {
     error.logs = existsSync(state.apiLog) ? readFileSync(state.apiLog, "utf8").split("\n").slice(-20).join("\n") : "";

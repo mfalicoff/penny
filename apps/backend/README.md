@@ -77,7 +77,7 @@ ASP.NET configuration/environment variables use double underscores; secrets are 
 | `Database__MaxPoolSize` | 20; bounded 1–100, minimum pool 0 |
 | `Database__ConnectTimeoutSeconds` | 5; bounded 1–30 |
 | `Database__CommandTimeoutSeconds` | 5; bounded 1–30; cancellation timeout 1 second |
-| `Backend__MaxRequestBodyBytes` | 20 MiB; bounded 1–100,000,000; known/chunked bodies enforced by real Kestrel |
+| `Backend__MaxRequestBodyBytes` | 20 MiB; bounded 1–100,000,000; known/chunked bodies enforced by real Kestrel. A declared body up to a quarter of the limit (at least 1 MiB) too large is read and discarded before the 413, within the request deadline, so clients that send the whole body first still receive the error; larger ones are refused unread |
 | `Backend__RequestTimeoutSeconds` | 30; bounded 1–300; deadline cancels work and returns 503/Retry-After |
 | `Backend__ShutdownTimeoutSeconds` | 30; bounded 1–300; host drains existing requests within this bound |
 | `Auth__AllowRegistration` | `true`; legacy `ALLOW_REGISTRATION` |

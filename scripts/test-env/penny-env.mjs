@@ -5,7 +5,7 @@
 //   node scripts/test-env/penny-env.mjs run [--seed NAME] [--oidc] -- <command...>
 //   node scripts/test-env/penny-env.mjs status | env | reset | clock <ISO|reset> | user [label]
 //   node scripts/test-env/penny-env.mjs fault '<json rule>' | fault clear
-//   node scripts/test-env/penny-env.mjs seed <scenario> | artifacts [dir] | compare
+//   node scripts/test-env/penny-env.mjs seed <scenario> | artifacts [dir] | compare | cutover [--no-build]
 //   node scripts/test-env/penny-env.mjs down [--all]
 //
 // Commands act on the most recent environment unless --run-id ID is given. `compare`
@@ -18,6 +18,7 @@ import {
 import { scenario, seed } from "./seed.mjs";
 import { startOidcProvider } from "./oidc-provider.mjs";
 import { compareLegacy, writeParityReport } from "./compare.mjs";
+import { rehearseCutover } from "./cutover.mjs";
 
 function parse(argv) {
   const separator = argv.indexOf("--");
@@ -157,6 +158,14 @@ async function main() {
     case "artifacts":
       console.log(collectArtifacts(readState(id), positional[0]));
       return;
+    case "cutover": {
+      // Needs no running environment: starts legacy and a fresh .NET environment itself.
+      const report = await rehearseCutover({ build: !flags["no-build"] });
+      console.log(JSON.stringify({ summary: report.summary, steps: report.steps, checks: report.checks, timings: report.timings }, null, 2));
+      for (const difference of report.differences.slice(0, 50)) console.error(difference);
+      if (report.differences.length || Object.values(report.checks).some((ok) => !ok)) process.exitCode = 1;
+      return;
+    }
     case "compare": {
       const report = await compareLegacy(readState(id), { scenario: positional[0] ?? "differential" });
       console.log(JSON.stringify(report.summary, null, 2));
@@ -182,7 +191,7 @@ function help() {
     "  up [--seed NAME] [--host 0.0.0.0] [--port N] [--origins a,b] [--oidc] [--no-build] [--no-worker] [--run-id ID]",
     "  run [up options] [--keep] -- <command...>   start, run, collect artifacts, always tear down",
     "  status | env | reset | clock <ISO|reset> | user [label] | fault '<json>'|clear | seed <scenario>",
-    "  artifacts [dir] | compare [scenario] | down [--all]",
+    "  artifacts [dir] | compare [scenario] | cutover [--no-build] | down [--all]",
   ].join("\n");
 }
 

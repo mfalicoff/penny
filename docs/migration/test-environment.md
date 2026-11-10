@@ -127,4 +127,4 @@ podman run --rm -v "$PWD/contracts:/work/contracts:ro,z" -w /work/contracts/swif
 - Swift consumes fixtures by strict decoding and hashes only; no Swift behavior exists before MAZ-66/70.
 - Receipts are not seeded because .NET receipts are MAZ-60. `push` faults reach the delivery worker only when it runs in the environment (`Push__Worker`, on by default); real Expo or APNs calls are made only for devices a run registers.
 - Pinned time is frozen (no ticking clock); scenarios avoid same-day ties that would depend on generated ids.
-- The comparison covers the differential journey's 52 probes: every legacy operation except the seven listed in [parity report](parity-report.md#operations-not-compared), which `tests/core/parity-coverage.test.ts` keeps accountable. Search and password reset are .NET-only.
+- The comparison covers the differential journey's 79 probes, including outsider and former-member calls: every legacy operation except the seven listed in [parity report](parity-report.md#operations-not-compared), which `tests/core/parity-coverage.test.ts` keeps accountable. Search and password reset are .NET-only.
