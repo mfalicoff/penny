@@ -98,7 +98,7 @@ Browsers must ignore HTTPS errors for the provider origin (Playwright `ignoreHTT
 
 `money`, `recurrence` and `merge-conflicts` are generated from the legacy TypeScript rules by `npm run fixtures:generate`; `npm run fixtures:check` (CI) fails if any generated file or the manifest is stale. Generation reads no clock, randomness or locale; the TS suite regenerates under UTC+14, UTC−3:30 and Lord Howe and compares bytes. Hand-written fixtures are covered by the manifest hash, so an edit must regenerate the manifest, which every language checks. All consumers decode into strict typed models (zod `strictObject`, `System.Text.Json` with unmapped members disallowed and required members enforced, Swift `Codable` with a re-encode comparison), so an unknown, missing or mistyped field fails everywhere. `FullStackSeedTests` also seeds the scenario twice and compares normalized ledgers and projections.
 
-The Swift package (`contracts/swift`, Swift 6, no dependencies) supplies the models, loader and hashes; behavior assertions are added by MAZ-70 (ledger, recurrence), 71 (sync), 73 (search) and 75 (shared money) as they port the rules.
+The Swift package (`contracts/swift`, Swift 6, no dependencies) supplies the models, loader and hashes; behavior assertions are added by MAZ-70 (ledger, recurrence, reports and local search: `apps/ios/Packages/PennyKit/Tests/PennyDomainTests`, [ledger rules](../ios-ledger-domain.md#fixtures)), 71 (sync), 73 (search) and 75 (shared money) as they port the rules.
 
 ## Redesign specimens
 
