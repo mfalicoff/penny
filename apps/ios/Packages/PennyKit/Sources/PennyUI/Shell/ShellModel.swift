@@ -106,6 +106,7 @@ enum SyncText {
         switch status {
         case .upToDate(let date?): "Synced \(relative(date, now: now))"
         case .upToDate(nil): "Synced"
+        case .syncing(0): "Syncing…"
         case .syncing(let pending): "Syncing \(changes(pending))…"
         case .offline(let pending, _): pending == 0 ? "Offline" : "Offline · \(changes(pending)) waiting"
         case .failing(let pending, _): "Couldn't sync · \(changes(pending)) waiting"

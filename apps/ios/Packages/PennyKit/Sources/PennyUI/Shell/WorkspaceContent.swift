@@ -4,7 +4,8 @@ import PennyDomain
 import SwiftUI
 
 /// Shows `content` for a loaded ledger, and a named state otherwise: loading, a load error
-/// with Retry (offline or not), or "not available yet" before MAZ-71.
+/// with its next step (Try again, or Download again for a copy that can't be read), or a copy
+/// this build can't open.
 struct WorkspaceContent<Content: View>: View {
     @Environment(ShellModel.self) private var shell
     @ViewBuilder let content: (Ledger) -> Content
@@ -19,11 +20,15 @@ struct WorkspaceContent<Content: View>: View {
             PennyStateView(
                 problem.kind == .offline ? .offline : .error,
                 title: problem.kind == .offline ? "You're offline" : "Couldn't load your entries",
-                message: problem.message, actionTitle: "Try again"
+                message: problem.message, actionTitle: Self.actionTitle(problem)
             ) { Task { await shell.workspace.reload() } }
         case .unavailable(let message):
-            PennyStateView(.unavailable, title: "Not available yet", message: message)
+            PennyStateView(.unavailable, title: "Can't open your entries", message: message)
         }
+    }
+
+    static func actionTitle(_ problem: WorkspaceProblem) -> String {
+        problem.kind == .storageUnreadable ? "Download again" : "Try again"
     }
 }
 

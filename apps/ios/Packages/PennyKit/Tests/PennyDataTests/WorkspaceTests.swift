@@ -44,18 +44,6 @@ struct WorkspaceTests {
         #expect(SaveFailure.rule(.currencyLocked).message == "Currency can only be changed before adding entries.")
     }
 
-    @Test("whenSignedInBeforeOfflineSync_UnavailableWorkspace_ShouldRefuseSavesAndKeepTheDraft")
-    func unavailable() async {
-        let workspace = UnavailableWorkspace()
-        let result = await workspace.commit(.changeCurrency(.usd), summary: ChangeSummary(title: "x"))
-        guard case .failure(.unavailable(let message)) = result else {
-            Issue.record("expected an unavailable failure")
-            return
-        }
-        #expect(message.contains("draft is kept"))
-        #expect(workspace.load == .unavailable(UnavailableWorkspace.message))
-    }
-
     @Test("whenStatusesCompared_SyncStatus_ShouldCountPendingAndFlagOnlyProblems")
     func status() {
         let problem = WorkspaceProblem(.server, "The server didn't respond.")

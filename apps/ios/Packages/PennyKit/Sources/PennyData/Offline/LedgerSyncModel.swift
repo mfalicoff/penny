@@ -41,6 +41,13 @@ public struct LedgerSyncState: Equatable, Sendable {
     /// The account the state describes (also for `.sessionExpired`).
     public var scope: AccountScope?
 
+    public init(phase: Phase, pending: PendingChanges, lastSyncedAt: Date?, scope: AccountScope?) {
+        self.phase = phase
+        self.pending = pending
+        self.lastSyncedAt = lastSyncedAt
+        self.scope = scope
+    }
+
     public static let signedOut = LedgerSyncState(phase: .signedOut, pending: .none, lastSyncedAt: nil, scope: nil)
 
     public var hasPendingChanges: Bool { !pending.isEmpty }

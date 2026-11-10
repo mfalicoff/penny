@@ -5,10 +5,10 @@ public import PennyDomain
 /// What the shell needs from the ledger behind it: the current snapshot, whether changes have
 /// reached the server, and a way to save a change. The UI binds only to this protocol.
 ///
-/// Two implementations exist today: `DemoWorkspace` (the isolated sample data) and
-/// `UnavailableWorkspace` (a signed-in account before MAZ-71). MAZ-71's offline store and
-/// sync engine provides the signed-in one; it owns persistence, the pending queue, merging
-/// and retries. Nothing here stores or syncs anything. See docs/ios-shell.md, "Sync status".
+/// Two implementations run in the app: `DemoWorkspace` (the isolated sample data) and
+/// `AccountWorkspace`, which presents a signed-in account through the MAZ-71 offline engine
+/// (`LedgerSyncModel`); the engine owns persistence, the pending queue, merging and retries.
+/// `FixedWorkspace` is for previews and tests. See docs/ios-shell.md, "Sync status".
 @MainActor
 public protocol LedgerWorkspace: AnyObject, Observable {
     /// The ledger to show.
@@ -42,7 +42,8 @@ public enum LedgerLoad: Equatable, Sendable {
     case ready(Ledger)
     /// Nothing could be shown. The message names the next step.
     case failed(WorkspaceProblem)
-    /// This build can't show the account's ledger yet (before MAZ-71).
+    /// The ledger can't be opened by this build (this device's copy was written by a newer
+    /// version of Penny). The message names the next step.
     case unavailable(String)
 
     public var ledger: Ledger? {
@@ -85,6 +86,9 @@ public enum SyncStatus: Equatable, Sendable {
 public struct WorkspaceProblem: Equatable, Sendable {
     public enum Kind: Equatable, Sendable {
         case offline, unreachable, server, conflict, sessionExpired, storage
+        /// This device's copy can't be read. The load error's action downloads the ledger
+        /// again (`LedgerWorkspace.reload()`); the unreadable copy is set aside, not deleted.
+        case storageUnreadable
     }
 
     public var kind: Kind
@@ -132,7 +136,8 @@ public enum SaveFailure: Error, Equatable, Sendable {
     case server(WorkspaceProblem)
     /// The change could not be kept on this device.
     case storage(String)
-    /// Saving isn't possible in this build or state (before MAZ-71, or Undo too late).
+    /// Saving isn't possible in this state (the ledger is still loading, the session changed,
+    /// or Undo came too late).
     case unavailable(String)
 
     public var message: String {

@@ -4,9 +4,13 @@ import PennyDomain
 import SwiftUI
 
 /// Shows the signed-out flow, the launch states, the signed-in shell or the demo for the auth
-/// state. The demo replaces whatever is shown until it ends, and never touches the account.
+/// state. The demo replaces whatever is shown until it ends, and never touches the account or
+/// the offline ledger: only a signed-in account's shell is given the sync model.
 struct AuthGate: View {
     let auth: AuthController
+    /// The app's one offline ledger and sync model (MAZ-71), read by each account's shell
+    /// through `AccountWorkspace`.
+    let sync: LedgerSyncModel
     @Binding var inbox: DeepLinkInbox
     let services: AppServices
     @Binding var demo: DemoWorkspace?
@@ -47,7 +51,7 @@ struct AuthGate: View {
                         inbox: $inbox,
                         makeModel: {
                             ShellModel(
-                                workspace: services.accountWorkspace(account), session: .account(auth, account),
+                                workspace: services.accountWorkspace(account, sync), session: .account(auth, account),
                                 today: services.today(), startDemo: startDemo)
                         }
                     )

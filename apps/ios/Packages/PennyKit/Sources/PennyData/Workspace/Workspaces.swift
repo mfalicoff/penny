@@ -46,32 +46,6 @@ public final class DemoWorkspace: LedgerWorkspace {
     public func reload() async {}
 }
 
-/// A signed-in account before MAZ-71 provides the offline store and sync engine: it shows a
-/// named state instead of guessing, and refuses every save without losing the draft.
-@MainActor
-@Observable
-public final class UnavailableWorkspace: LedgerWorkspace {
-    public static let message = "Your entries will appear here once this build can sync them."
-
-    public let load: LedgerLoad = .unavailable(UnavailableWorkspace.message)
-    public let sync: SyncStatus = .upToDate(lastSynced: nil)
-    public let pendingEntryIDs: Set<String> = []
-    public let isDemo = false
-
-    public init() {}
-
-    public func commit(_ change: LedgerChange, summary: ChangeSummary) async -> Result<SavedChange, SaveFailure> {
-        .failure(.unavailable("This build can't save to your account yet. Your draft is kept."))
-    }
-
-    public func undo(_ change: SavedChange) async -> Result<Void, SaveFailure> {
-        .failure(.unavailable("This change can't be undone anymore."))
-    }
-
-    public func syncNow() async {}
-    public func reload() async {}
-}
-
 /// A workspace with a fixed state, for previews, specimens and tests: offline with pending
 /// rows, a failing server, a failed load, or a save that fails. It never stores anything.
 @MainActor

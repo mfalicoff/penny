@@ -11,9 +11,9 @@ public struct AppServices {
     public var preferences: any DevicePreferences
     /// The biometric lock. One per app process.
     public var lock: AppLockController
-    /// The ledger behind a signed-in account. MAZ-71 replaces the default with its offline
-    /// store and sync engine; until then the account shows a named "not yet" state.
-    public var accountWorkspace: (SignedInAccount) -> any LedgerWorkspace
+    /// The ledger behind a signed-in account, given the app's one offline sync model (MAZ-71,
+    /// created by `LaunchView`). The default presents the account through `AccountWorkspace`.
+    public var accountWorkspace: (SignedInAccount, LedgerSyncModel) -> any LedgerWorkspace
     /// Today's local date (the device's calendar day).
     public var today: () -> CalendarDate
     /// Opens the temporary demo at launch. Only Debug test controls set it (UI tests and
@@ -22,7 +22,9 @@ public struct AppServices {
 
     public init(
         preferences: any DevicePreferences, lock: AppLockController,
-        accountWorkspace: @escaping (SignedInAccount) -> any LedgerWorkspace,
+        accountWorkspace: @escaping (SignedInAccount, LedgerSyncModel) -> any LedgerWorkspace = {
+            AccountWorkspace(model: $1, scope: $0.scope)
+        },
         today: @escaping () -> CalendarDate = { CalendarDate(Date()) }
     ) {
         self.preferences = preferences
@@ -32,9 +34,7 @@ public struct AppServices {
     }
 
     public static func live() -> AppServices {
-        AppServices(
-            preferences: UserDefaultsDevicePreferences(), lock: AppLockController(),
-            accountWorkspace: { _ in UnavailableWorkspace() })
+        AppServices(preferences: UserDefaultsDevicePreferences(), lock: AppLockController())
     }
 }
 

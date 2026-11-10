@@ -77,7 +77,7 @@ struct LaunchView: View {
     }
 
     var body: some View {
-        AuthGate(auth: auth, inbox: $inbox, services: services, demo: $demo)
+        AuthGate(auth: auth, sync: sync, inbox: $inbox, services: services, demo: $demo)
             .ledgerSync(sync)
             .accessibilityIdentifier("root.launch")
     }

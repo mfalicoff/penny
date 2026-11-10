@@ -91,9 +91,19 @@ struct ShellTests {
         #expect(SyncText.line(.upToDate(lastSynced: now.addingTimeInterval(-5)), now: now) == "Synced just now")
         #expect(SyncText.line(.offline(pending: 2, lastSynced: nil)) == "Offline · 2 changes waiting")
         #expect(SyncText.line(.syncing(pending: 1)) == "Syncing 1 change…")
+        #expect(SyncText.line(.syncing(pending: 0)) == "Syncing…", "the first download has nothing waiting")
+        #expect(SyncText.line(.signInRequired(pending: 2)) == "Sign in again to sync 2 changes")
         #expect(SyncBanner.title(.offline(pending: 1, lastSynced: nil)) == "Offline · 1 change waiting")
         let problem = WorkspaceProblem(.server, "Penny will try again.")
         #expect(SyncBanner.message(.failing(pending: 1, problem: problem)) == "Penny will try again.")
+    }
+
+    @Test("whenTheCopyOnThisDeviceCantBeRead_WorkspaceContent_ShouldOfferToDownloadItAgain")
+    func loadErrorAction() {
+        let unreadable = WorkspaceProblem(.storageUnreadable, "Your entries on this device can't be read.")
+        #expect(WorkspaceContent<EmptyView>.actionTitle(unreadable) == "Download again")
+        #expect(WorkspaceContent<EmptyView>.actionTitle(WorkspaceProblem(.offline, "Offline.")) == "Try again")
+        #expect(WorkspaceContent<EmptyView>.actionTitle(WorkspaceProblem(.storage, "Locked.")) == "Try again")
     }
 
     @Test("whenChangesWaitOrPayIsExpected_HomeView_ShouldSayWhatProjectedIncludes")
