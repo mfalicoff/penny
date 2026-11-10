@@ -22,7 +22,7 @@ struct SettingsView: View {
             Section("Manage") {
                 row(.recurring, symbol: "repeat", value: ledger.map { "\($0.recurring.count)" })
                 row(.accounts, symbol: "wallet.bifold", value: ledger.map { "\($0.accounts.count)" })
-                row(.categories, symbol: "tag", value: nil)
+                row(.categories, symbol: "tag", value: ledger.map { "\($0.categories.count)" })
             }
             Section {
                 row(.appearance, symbol: "sun.max", value: appearance.preference.title)
