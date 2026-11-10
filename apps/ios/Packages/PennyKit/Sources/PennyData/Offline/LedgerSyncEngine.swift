@@ -117,7 +117,10 @@ public actor LedgerSyncEngine {
             throw .rule(error)
         }
         let local = Recurrence.materialize(changed, today: today())
-        let violations = local.violations
+        // Only problems this change introduces: a ledger that already breaks a rule (the 2100
+        // recurrence limit, docs/ios-ledger-domain.md) must not block every later save.
+        let existing = Set(next.local.violations)
+        let violations = local.violations.filter { !existing.contains($0) }
         guard violations.isEmpty else { throw .invalid(violations) }
         next.local = local
         do {

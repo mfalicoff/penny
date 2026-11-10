@@ -94,6 +94,22 @@ struct LedgerSyncEngineTests {
         #expect(await engine.state.snapshot == before)
     }
 
+    @Test("whenAChangeWouldMakeALedgerTheServerRefuses_Engine_ShouldRefuseOnlyNewProblems")
+    func violations() async throws {
+        // A paused rule already past 2100 (the known recurrence limit) must not block saves.
+        server.edit(Offline.alex) { ledger in
+            var rule = Offline.rule("old", next: "2101-01-01")
+            rule.active = false
+            ledger.recurring = [rule]
+        }
+        let engine = try await synced()
+        try await engine.commit(.saveEntry(Offline.entry("taxi")))
+        await #expect(throws: LedgerSaveError.invalid([.invalidText("long")])) {
+            try await engine.commit(.saveEntry(Offline.entry("long", title: String(repeating: "x", count: 101))))
+        }
+        #expect(await engine.state.pending.entryIDs == ["taxi"])
+    }
+
     // MARK: Disk failures
 
     @Test("whenTheDiskWriteFails_Engine_ShouldNotAcknowledgeTheSave")

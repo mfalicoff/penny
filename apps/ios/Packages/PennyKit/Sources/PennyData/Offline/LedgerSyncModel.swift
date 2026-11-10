@@ -259,6 +259,9 @@ public final class LedgerSyncModel {
         switch outcome {
         case .synced:
             failures = 0
+            // Saves kept arriving while the sync ran (it stops after a few passes): send the
+            // rest shortly rather than waiting for the next trigger.
+            if engineState?.pending.isEmpty == false { scheduleRetry(after: backoff.initial) }
         case .sessionExpired:
             auth.sessionDidExpire(for: account)
         case .failed(let issue):

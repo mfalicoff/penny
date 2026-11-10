@@ -46,7 +46,7 @@ Each account (`AccountScope`: server URL and lowercased email) has one JSON file
 1. Refuse if the ledger was never downloaded (`notLoaded`), the copy is unreadable (`storageUnreadable`) or the account is signing out or switching (`unavailable`).
 2. Apply the change to `local`. A rule refusal (`LedgerRuleError`, including "changed on another device" stale checks) throws `rule(_)`.
 3. `Recurrence.materialize` with the device's local date.
-4. Refuse a ledger the server would reject (`Ledger.violations`): `invalid(_)`.
+4. Refuse a change that introduces a problem the server would reject (`Ledger.violations` not already present before the change): `invalid(_)`. A ledger that already breaks a rule, such as a rule past 2100, does not block later saves.
 5. Write the file. A failed write throws `writeFailed`; the ledger on screen and on disk are unchanged, so the person keeps the draft.
 6. Return a `SaveReceipt` (`savedOffline` when it is waiting for the network) and start a sync.
 
@@ -167,7 +167,7 @@ Drafts are view state: a failed save, an expiry or a reconnect never touches the
 | --- | --- |
 | `LedgerMergeTests` (PennyDomainTests) | `merge-conflicts.json` and the parity merge case; every stored property merges; independent and same-field edits; both devices recording, editing or deleting the same occurrence; server-skipped dates; `PendingChanges` |
 | `OfflineLedgerStoreTests` (PennyDataTests) | Round trip and format 1, wrong account, interrupted write (stray temp file), disk full, backup exclusion, listing and removal; pending count, failed and expired "Sync, then sign out", email move |
-| `LedgerSyncEngineTests` | Kill and relaunch with pending work, offline create/edit/delete, save before download, rule refusals, failed disk writes before and after the server accepted, corrupt and newer-format copies and recovery, locked file, independent edits through a 409, same-field policy, repeated 409s then success, joined syncs, saves during a sync, 401, 503 then timeout then restart, 400, unknown server ledger version, another account's client, removal during sync, recurrence across midnight and devices |
+| `LedgerSyncEngineTests` | Kill and relaunch with pending work, offline create/edit/delete, save before download, rule refusals, new versus existing violations, failed disk writes before and after the server accepted, corrupt and newer-format copies and recovery, locked file, independent edits through a 409, same-field policy, repeated 409s then success, joined syncs, saves during a sync, 401, 503 then timeout then restart, 400, unknown server ledger version, another account's client, removal during sync, recurrence across midnight and devices |
 | `LedgerSyncModelTests` | Real `AuthController` with a fake server: first download, offline save then kill, relaunch and reconnect, session expiry and re-sign-in, sign-out refused with pending work (including an unreadable copy) and recovery, late answers after an account switch, backoff after 503, no automatic retry after 400, day change, foreground pull, search reconciliation and de-duplicated pages |
 
 Run `apps/ios/scripts/ios.sh package-test`; `ios.sh ci` also runs them on clean iPhone and iPad simulators. The simulator journey against the real .NET/PostgreSQL stack (offline save, relaunch, sync and search refresh, with the full-stack test environment's fault controls) needs XCUITest and is MAZ-81's; the redesign screens that show these states are MAZ-69/73.
