@@ -40,6 +40,34 @@ struct KeychainSessionStoreTests {
         #expect(try store.load(server: APIFixtures.server) == second)
     }
 
+    @Test("whenAnEarlierBuildSavedWithOtherAccessibility_KeychainSessionStore_ShouldMoveTheItemToThisDeviceOnly")
+    func updateMovesAccessibility() throws {
+        let record = #"{"version":1,"server":"\#(account)","email":"a@example.test","token":"\#(APIFixtures.token)"}"#
+        keychain.put(account: account, data: Data(record.utf8), accessible: kSecAttrAccessibleWhenUnlocked)
+        try store.save(APIFixtures.session())
+        #expect(keychain.items().count == 1)
+        let item = try #require(keychain.items()[account])
+        #expect(
+            item.attributes[kSecAttrAccessible as String] == kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly as String)
+        #expect(try store.load(server: APIFixtures.server) == APIFixtures.session())
+    }
+
+    @Test("whenItemIsOutsideTheDataProtectionKeychain_KeychainSessionStore_ShouldNotReadOrDeleteIt")
+    func legacyKeychainItemIgnored() throws {
+        let record = #"{"version":1,"server":"\#(account)","email":"a@example.test","token":"\#(APIFixtures.token)"}"#
+        keychain.put(account: account, data: Data(record.utf8), dataProtection: false)
+        #expect(try store.load(server: APIFixtures.server) == nil)
+        try store.deleteAll()
+        // The fake keeps the keychains apart as SecItem does: the store's queries never reach it.
+        let legacy: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: KeychainSessionStore.service,
+            kSecAttrAccount as String: account, kSecReturnData as String: true,
+        ]
+        #expect(keychain.copyData(legacy).0 == errSecSuccess)
+        // A query without a class is refused, as SecItemCopyMatching does.
+        #expect(keychain.copyData([kSecAttrAccount as String: account, kSecReturnData as String: true]).0 == errSecParam)
+    }
+
     @Test("whenDeviceLocked_KeychainSessionStore_ShouldReportUnavailableAndKeepTheItem")
     func locked() throws {
         try store.save(APIFixtures.session())

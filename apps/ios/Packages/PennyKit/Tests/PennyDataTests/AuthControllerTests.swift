@@ -349,7 +349,8 @@ struct AuthControllerTests {
     ) async throws -> (AuthController, StubTransport) {
         var all = routes
         all["POST /api/auth/login"] = Routes.json(Routes.session(email))
-        let transport = Routes.transport(all)
+        // Requests, device registration and local data share one ordered log.
+        let transport = Routes.transport(all, log: localData.log)
         let controller = AuthFixtures.controller(
             transport: transport, sessions: sessions, localData: localData, log: localData.log)
         await controller.restore()
@@ -365,7 +366,10 @@ struct AuthControllerTests {
             ["POST /api/auth/logout": Routes.json(#"{"ok":true}"#)], localData: localData, sessions: sessions)
         try await controller.signOut()
         #expect(controller.state == .signedOut(.signedOut))
-        #expect(localData.log.all == ["unregister \(email)", "remove \(email)"])
+        #expect(
+            localData.log.all == [
+                "POST /api/auth/login", "unregister \(email)", "POST /api/auth/logout", "remove \(email)",
+            ])
         #expect(transport.paths().last == "POST /api/auth/logout")
         #expect(transport.sent.last?.value(forHTTPHeaderField: "Authorization") == "Bearer \(APIFixtures.token)")
         #expect(try sessions.load(server: AuthFixtures.server) == nil)
@@ -381,7 +385,7 @@ struct AuthControllerTests {
         await #expect(throws: SignOutFailure.pendingChanges(count: 2)) { try await controller.signOut() }
         #expect(controller.state.account != nil)
         #expect(transport.paths() == ["POST /api/auth/login"])
-        #expect(localData.log.all.isEmpty)
+        #expect(localData.log.all == ["POST /api/auth/login"])
     }
 
     @Test("whenSignOutAnyway_AuthController_ShouldDiscardPendingChanges")
@@ -402,7 +406,11 @@ struct AuthControllerTests {
             ["POST /api/auth/logout": Routes.json(#"{"ok":true}"#)], localData: localData)
         localData.pending.withLock { $0[scope] = 2 }
         try await controller.syncThenSignOut()
-        #expect(localData.log.all.first == "sync \(email)")
+        #expect(
+            localData.log.all == [
+                "POST /api/auth/login", "sync \(email)", "unregister \(email)", "POST /api/auth/logout",
+                "remove \(email)",
+            ])
         #expect(controller.state == .signedOut(.signedOut))
     }
 
