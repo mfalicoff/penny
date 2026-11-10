@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Npgsql;
 using Pgvector.Npgsql;
 
@@ -68,11 +69,26 @@ public sealed class DatabaseSettings
         return new DatabaseSettings(parsed);
     }
 
-    // pgvector maps `vector` columns (search embeddings, MAZ-121).
+    // Names the pool in Npgsql metrics (never the connection string, MAZ-127).
+    public const string DataSourceName = "penny-backend";
+
+    // pgvector maps `vector` columns (search embeddings, MAZ-121). Npgsql spans
+    // (MAZ-127, exported only when the host enables OpenTelemetry) cover commands run
+    // inside a request or worker span, so idle worker polling records none. Statements
+    // carry no parameter values: Npgsql never records them and LogParameters is off.
     public NpgsqlDataSource CreateDataSource()
     {
-        var builder = new NpgsqlDataSourceBuilder(connection.ConnectionString);
+        var builder = new NpgsqlDataSourceBuilder(connection.ConnectionString)
+        {
+            Name = DataSourceName,
+        };
         builder.UseVector();
+        builder.ConfigureTracing(tracing =>
+            tracing
+                .ConfigureCommandFilter(_ => Activity.Current is not null)
+                .ConfigureBatchFilter(_ => Activity.Current is not null)
+                .EnableFirstResponseEvent(false)
+        );
         return builder.Build();
     }
 

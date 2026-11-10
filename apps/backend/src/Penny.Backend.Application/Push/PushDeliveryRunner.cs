@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using Penny.Backend.Application.Abstractions.Persistence;
+using Penny.Backend.Application.Diagnostics;
 
 namespace Penny.Backend.Application.Push;
 
@@ -76,8 +77,16 @@ public sealed class PushDeliveryRunner(
         );
         var failures = new List<string>();
         var planned = new List<(PushClaim Claim, IReadOnlyList<PushDispatch> Dispatches)>();
+        using var activity =
+            claims.Count > 0
+                ? BackendTelemetry.StartJob(BackendTelemetry.PushDeliveryJob, claims.Count)
+                : null;
         foreach (var claim in claims)
         {
+            BackendTelemetry.JobPickedUp(
+                BackendTelemetry.PushDeliveryJob,
+                claimedAt - claim.CreatedAt
+            );
             try
             {
                 var now = clock.GetUtcNow();
@@ -160,6 +169,8 @@ public sealed class PushDeliveryRunner(
                 }
             }
         }
+        if (failures.Count > 0)
+            BackendTelemetry.Failed(activity, failures[0]);
         return new(claims.Count, accepted, retried, failed, invalid, failures);
     }
 
@@ -196,6 +207,10 @@ public sealed class PushDeliveryRunner(
         );
         if (claims.Count == 0)
             return 0;
+        using var activity = BackendTelemetry.StartJob(
+            BackendTelemetry.PushReceiptsJob,
+            claims.Count
+        );
         IReadOnlyDictionary<string, PushReceiptStatus>? found;
         try
         {
@@ -206,6 +221,9 @@ public sealed class PushDeliveryRunner(
         }
         catch (Exception error) when (error is not OperationCanceledException)
         {
+            // The receipts are retried; the failure is counted, not thrown.
+            BackendTelemetry.Failed(activity, error.GetType().Name);
+            BackendTelemetry.JobFailed(BackendTelemetry.PushReceiptsJob, error.GetType().Name);
             found = null;
         }
         now = clock.GetUtcNow();

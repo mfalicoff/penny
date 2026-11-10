@@ -1,6 +1,7 @@
 using Penny.Backend.Api.Commands;
 using Penny.Backend.Api.Configuration;
 using Penny.Backend.Api.Middleware;
+using Penny.Backend.Api.Observability;
 using Penny.Backend.Api.Testing;
 using Scalar.AspNetCore;
 
@@ -31,6 +32,7 @@ if (maintenance)
     return await MaintenanceCommand.RunAsync(args, builder.Configuration);
 
 builder.Services.AddControllers();
+builder.AddBackendTelemetry();
 builder.AddBackendServices();
 var app = builder.Build();
 app.UseForwardedHeaders();

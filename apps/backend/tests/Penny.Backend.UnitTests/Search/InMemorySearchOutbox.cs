@@ -29,7 +29,8 @@ internal sealed class InMemorySearchOutbox : ISearchRepository
             .. claimed.Select(row => new EmbeddingWork(
                 row.Key,
                 row.Value.Passage,
-                row.Value.Attempts
+                row.Value.Attempts,
+                row.Value.Due!.Value
             )),
         ]);
     }
