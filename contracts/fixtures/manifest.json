@@ -4,11 +4,12 @@
   "fixtures": [
     {
       "file": "full-stack-seeds.json",
-      "sha256": "8df855139b7f0982181b7acfc838ddef5eef76697057b769aeeb669bc2cdb4a9",
+      "sha256": "9cba3b7820204c6ea144e11c491edf04337fc932cf80391cf6fdee1065190bb0",
       "generatedBy": null,
       "consumers": {
         "typescript": [
           "tests/core/golden-fixtures.test.ts",
+          "tests/core/parity-coverage.test.ts",
           "tests/fullstack/environment.test.mjs"
         ],
         "csharp": [
@@ -42,7 +43,8 @@
           "tests/core/contracts.test.ts"
         ],
         "csharp": [
-          "apps/backend/tests/Penny.Backend.UnitTests/Ledgers/LedgerReaderTests.cs"
+          "apps/backend/tests/Penny.Backend.UnitTests/Ledgers/LedgerReaderTests.cs",
+          "apps/backend/tests/Penny.Backend.IntegrationTests/Contracts/LedgerUpgradeFixtureTests.cs"
         ],
         "swift": [
           "contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"

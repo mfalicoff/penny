@@ -110,6 +110,9 @@ The Swift package (`contracts/swift`, Swift 6, no dependencies) supplies the mod
 
 ## Artifacts and CI
 
+The comparison writes `test-results/fullstack/parity/parity-report.{md,json}` (normalized bodies only) and, in GitHub Actions, appends the Markdown table to the job summary. Triage is in the [parity report](parity-report.md#triage).
+
+
 `run` and the full-stack suite copy `api.log`, `postgres.log` and `environment.json` (no token or passwords) to `test-results/fullstack/<run id>/`. CI (`.github/workflows/backend.yml`) runs `fixtures:check` and `npm run test:fullstack` in the `fullstack` job, always sweeps leftovers with `down --all` and uploads `test-results/fullstack/`; the `swift-contracts` job runs `swift test --package-path contracts/swift` in the digest-pinned `swift:6.2-noble` image. Reproduce locally with the same commands; for the Swift job without a Mac:
 
 ```sh
@@ -124,4 +127,4 @@ podman run --rm -v "$PWD/contracts:/work/contracts:ro,z" -w /work/contracts/swif
 - Swift consumes fixtures by strict decoding and hashes only; no Swift behavior exists before MAZ-66/70.
 - Receipts are not seeded because .NET receipts are MAZ-60. `push` faults reach the delivery worker only when it runs in the environment (`Push__Worker`, on by default); real Expo or APNs calls are made only for devices a run registers.
 - Pinned time is frozen (no ticking clock); scenarios avoid same-day ties that would depend on generated ids.
-- The comparison covers the differential journey's 17 probes, not every route; OIDC and search are .NET-only or covered by their own suites.
+- The comparison covers the differential journey's 79 probes, including outsider and former-member calls: every legacy operation except the seven listed in [parity report](parity-report.md#operations-not-compared), which `tests/core/parity-coverage.test.ts` keeps accountable. Search and password reset are .NET-only.
