@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, mkdtempSync, rmSync } from "node:fs";
+import { readFileSync, readdirSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { once } from "node:events";
@@ -169,22 +169,80 @@ test("search v1 schemas accept examples and reject invalid and cross-user reques
   assert.equal(spec.components.schemas.SearchPeriod, undefined);
 });
 
-test("design snapshot covers all 79 specimens and 26 controls with feature and acceptance owners", () => {
+test("design baseline traces every penny-ios card and design-kit control to feature and acceptance owners", () => {
   const baseline = JSON.parse(readFileSync(new URL("contracts/design-baseline.json", root), "utf8"));
-  assert.equal(baseline.specimens.length, 79);
-  assert.equal(new Set(baseline.specimens.map((item: any) => item.id)).size, 79);
-  assert.equal(baseline.controls.length, 26);
-  assert.equal(new Set(baseline.controls.map((item: any) => item.name)).size, 26);
-  for (const item of [...baseline.specimens, ...baseline.controls]) {
-    assert.match(item.nativeIssue, /^MAZ-\d+$/);
-    assert.match(item.webIssue, /^MAZ-\d+$/);
-    assert.equal(item.acceptance.native, "MAZ-82");
-    assert.equal(item.acceptance.web, "MAZ-96");
-    assert.ok(item.acceptance.scenario.length > 20);
-    if (item.legacyTest) assert.ok(readFileSync(new URL(item.legacyTest, root)).length);
+  const file = (path: string) => readFileSync(new URL(path, root));
+  const hash = (path: string) => createHash("sha256").update(file(path)).digest("hex");
+  assert.equal(baseline.version, 2);
+  assert.equal(baseline.design.source, "docs/design/penny-ios");
+
+  // Cards: exactly the @dsCard files on disk, with their marker, viewport and hash.
+  const cardFiles = ["iphone", "ipad", "web", "system"].flatMap((dir) =>
+    readdirSync(new URL(`docs/design/penny-ios/${dir}/`, root)).filter((name) => name.endsWith(".html")).map((name) => `docs/design/penny-ios/${dir}/${name}`));
+  assert.equal(baseline.specimens.length, 61);
+  assert.deepEqual(baseline.specimens.map((item: any) => item.sourcePath).sort(), cardFiles.sort());
+  assert.equal(new Set(baseline.specimens.map((item: any) => item.id)).size, 61);
+  for (const item of baseline.specimens) {
+    const [, dir, name] = item.sourcePath.match(/penny-ios\/(\w+)\/([\w-]+)\.html$/);
+    assert.equal(item.id, `${dir}-${name}`, "stable id is <folder>-<file>");
+    const marker = file(item.sourcePath).toString("utf8").split("\n")[0];
+    assert.equal(marker, `<!-- @dsCard group="${item.group}" name="${item.name}" viewport="${item.viewport.w}x${item.viewport.h}" -->`);
+    assert.equal(item.sha256, hash(item.sourcePath), `${item.id} changed: re-sync the baseline`);
+    assert.ok(["light", "dark"].includes(item.theme));
+    if (item.platform === "iPhone" || item.platform === "iPad") assert.match(item.nativeIssue, /^MAZ-\d+$/);
+    if (item.platform === "Web") assert.match(item.webIssue, /^MAZ-\d+$/);
   }
-  assert.equal(baseline.specimens.find((item: any) => item.id === "home-android").status, "legacy-reference");
-  assert.deepEqual(Object.keys(baseline.tokens.palettes).sort(), ["amoled", "catppuccin", "dark", "light"]);
+  assert.deepEqual(Object.fromEntries(["iPhone", "iPad", "Web", "System"].map((platform) =>
+    [platform, baseline.specimens.filter((item: any) => item.platform === platform).length])), { iPhone: 45, iPad: 6, Web: 8, System: 2 });
+
+  // Controls: exactly the documented design-kit components, at the source Claude Design syncs.
+  const sync = JSON.parse(file(".design-sync/config.json").toString("utf8"));
+  const kitDocs = readdirSync(new URL("design-kit/docs/", root)).filter((name) => name.endsWith(".md")).map((name) => name.slice(0, -3));
+  assert.equal(baseline.controls.length, 42);
+  assert.deepEqual(baseline.controls.map((item: any) => item.name).sort(), kitDocs.sort());
+  for (const item of baseline.controls) {
+    assert.equal(item.source, `design-kit/${sync.componentSrcMap[item.name]}`);
+    assert.match(file(item.source).toString("utf8"), new RegExp(`export function ${item.name}\\b`));
+    assert.equal(item.sha256, hash(item.docPath), `${item.name} docs changed: re-sync the baseline`);
+    assert.equal(item.nativeIssue === null, item.category === "Web", `${item.name}: only web-shell controls have no native owner`);
+  }
+
+  for (const item of [...baseline.specimens, ...baseline.controls]) {
+    assert.ok(item.nativeIssue || item.webIssue);
+    for (const side of ["native", "web"] as const) {
+      const owner = item[`${side}Issue`];
+      if (owner === null) assert.equal(item.acceptance[side], null);
+      else {
+        assert.match(owner, /^MAZ-\d+$/);
+        assert.equal(item.acceptance[side], side === "native" ? "MAZ-82" : "MAZ-96");
+      }
+    }
+    assert.ok(item.acceptance.scenario.length > 20);
+    if (item.legacyTest) assert.ok(file(item.legacyTest).length);
+  }
+
+  for (const source of baseline.sources) assert.equal(source.sha256, hash(source.path), `${source.path} changed: re-sync the baseline`);
+  assert.deepEqual(baseline.appearances, ["light", "dark"]);
+  assert.deepEqual(Object.keys(baseline.tokens.palettes), baseline.appearances);
+  assert.deepEqual(Object.keys(baseline.tokens.palettes.dark), Object.keys(baseline.tokens.palettes.light));
+  assert.equal(baseline.tokens.fonts.web.family, "Inter");
+  assert.equal(baseline.tokens.icons.ios.family, "SF Symbols");
+
+  // Every legacy Expo Router screen keeps a destination on each platform.
+  const routeFiles = (dir: string): string[] => readdirSync(new URL(dir, root), { withFileTypes: true }).flatMap((entry) =>
+    entry.isDirectory() ? routeFiles(`${dir}${entry.name}/`) : entry.name.startsWith("_") ? [] : [`${dir}${entry.name}`]);
+  assert.deepEqual(baseline.navigation.legacyRoutes.map((item: any) => item.file).sort(), routeFiles("src/app/").sort());
+  for (const item of baseline.navigation.legacyRoutes) for (const platform of ["iPhone", "iPad", "web"]) assert.ok(item[platform], `${item.route} on ${platform}`);
+  for (const item of baseline.specimens) if (item.legacyRoute) assert.ok(baseline.navigation.legacyRoutes.some((route: any) => route.route === item.legacyRoute), item.legacyRoute);
+
+  // New behavior the design implies is filed, and the cards point back at it.
+  const ids = new Set(baseline.specimens.map((item: any) => item.id));
+  for (const behavior of baseline.behaviorIssues) for (const id of behavior.specimens) {
+    assert.ok(ids.has(id), id);
+    assert.ok(baseline.specimens.find((item: any) => item.id === id).behaviorIssues.includes(behavior.issue), `${id} lists ${behavior.issue}`);
+  }
+  for (const item of baseline.specimens) for (const issue of item.behaviorIssues ?? [])
+    assert.ok(baseline.behaviorIssues.some((behavior: any) => behavior.issue === issue && behavior.specimens.includes(item.id)));
 });
 
 test("storage fixtures preserve exact cents, millisecond dates, binary receipts and explicit import blockers", () => {

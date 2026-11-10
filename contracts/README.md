@@ -11,10 +11,10 @@
 - `fixtures/storage-mapping.json`: exact integer/time/binary/JSON encodings and import blockers for MAZ-52/62; no importer is supplied here.
 - `fixtures/money.json`, `fixtures/recurrence.json`, `fixtures/merge-conflicts.json` (MAZ-62): golden integer-cent parsing/shares/bounds, anchored recurrence and three-way offline merge cases, **generated** from the legacy TypeScript rules by `npm run fixtures:generate` (`scripts/fixtures/generate-golden.ts`); never edit them by hand.
 - `fixtures/full-stack-seeds.json` (MAZ-62): deterministic seed scenarios (`empty`, `searchable-household`, `differential`) run over HTTP by `scripts/test-env/seed.mjs` and by the .NET `FullStackSeedTests`, with search expectations, pending offline edits and legacy-comparison probes.
-- `fixtures/redesign-states.json` (MAZ-62): the data state, appearances and failure recipe for each of the 79 redesign specimens, and recorded/projected totals.
+- `fixtures/redesign-states.json` (MAZ-62): the data state, appearances and failure recipe for each of the 61 redesign cards, and recorded/projected totals.
 - `fixtures/manifest.json` (MAZ-62): SHA-256 and consumers of every fixture; regenerate it (`npm run fixtures:generate`) after any fixture edit. TypeScript, C# and Swift verify the hashes.
 - `swift/` (MAZ-62): the `PennyContracts` Swift package (strict `Codable` fixture models, loader, manifest hashes) for the native app.
-- `design-baseline.json`: 79 specimen traces, 26 complete control definitions, tokens, source hashes and MAZ-122 handoff limitations. The full design deliverable remains MAZ-122.
+- `design-baseline.json` (MAZ-132): traces for the 61 `docs/design/penny-ios` cards and 42 `design-kit` controls, tokens, navigation and legacy route map, decisions, behavior issues and source hashes. Visual comparison of implementations remains MAZ-122.
 
 Run `npm run test:core`, `npm run test:ui`, `npm run lint`, `npm run typecheck` and `npm run fixtures:check`; `npm run test:fullstack` and `swift test --package-path contracts/swift` cover the full-stack environment and Swift ([test environment](../docs/migration/test-environment.md)). Validate the document with `npm exec --yes --package @redocly/cli@2.76.0 -- redocly lint contracts/openapi.json` (also in CI). The lightweight fixture matcher covers this document's exercised subset; it is not a general JSON Schema validator. Fixtures are consumed through strict typed models in C#, Swift and TypeScript, and old/new real HTTP behavior is compared by the `differential` scenario (MAZ-62).
 

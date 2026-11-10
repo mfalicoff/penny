@@ -33,9 +33,9 @@ MAZ-72 proves in-place iOS migration of SecureStore/AsyncStorage/App Group data 
 
 ## ADR 004: redesign and platform scope
 
-The existing 79 specimens and 26 controls are the visual/interaction baseline in [design-baseline.json](../../contracts/design-baseline.json) and [redesign.md](redesign.md). Home / Activity / Shared / Trips / More replace inconsistent labels while preserving deep links. More contains Recurring, Accounts, Categories and Settings. Four appearances, DM Sans/OFL, leaf/Ionicons assets, inline categories and progressive entry details apply to iOS/web. Native iOS 26 Liquid Glass is required with explicit OS/accessibility adaptations. Android's specimen remains reference only; MAZ-98 retires Android.
+The iOS-native redesign ([docs/design/penny-ios](../design/penny-ios/README.md), 61 cards, and the 42-component [design-kit](../../design-kit/package.json), synced to the [Penny Claude Design project](https://claude.ai/design/p/173b576e-aa32-44dc-9f83-23f0ea8df538)) is the visual and interaction baseline, traced in [design-baseline.json](../../contracts/design-baseline.json) and [redesign.md](redesign.md). On iPhone, Home / Activity / Shared / Trips tabs and a separate add button replace More; Recurring, Accounts, Categories and Settings open in a Settings sheet, and every legacy deep link keeps a destination. Light and dark follow the system; SF Pro and SF Symbols on iOS, Inter and Ionicons on the web. Native iOS 26 Liquid Glass is required on the control layer, with explicit OS and accessibility adaptations. There is no Android baseline; MAZ-98 retires Android.
 
-MAZ-122 owns versioning the full deliverable and completing Penpot synchronization. This snapshot records source hashes, every specimen/control owner and acceptance scenario; it does not assert native verification passed. MAZ-69/85 own controls; MAZ-82/96 own visual/functional release gates.
+MAZ-132 re-baselined the contract on these cards; MAZ-122 owns the visual comparison of implementations against them. The contract records card and source hashes, every card and control owner and acceptance scenario; it does not assert any implementation matches. MAZ-69/85 own controls; MAZ-82/96 own visual/functional release gates.
 
 ## Execution sequence and gates
 

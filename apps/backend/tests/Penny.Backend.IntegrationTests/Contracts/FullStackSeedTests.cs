@@ -250,10 +250,10 @@ public sealed partial class FullStackSeedTests(ApiFixture fixture) : SearchTestB
     {
         var context = await SeedAsync(Scenario("searchable-household"));
         var states = ContractFixtures.Read("redesign-states.json");
-        // payment-stale: a share payment against an outdated expense revision is refused.
+        // iphone-payment-stale: a share payment against an outdated expense revision is refused.
         var stale = states["states"]!
             .AsArray()
-            .Single(item => item!["specimen"]!.GetValue<string>() == "payment-stale")![
+            .Single(item => item!["specimen"]!.GetValue<string>() == "iphone-payment-stale")![
             "staleWrite"
         ]!;
         foreach (var request in stale["requests"]!.AsArray())

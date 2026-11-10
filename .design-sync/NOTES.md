@@ -12,7 +12,7 @@
 
 - **Web shell:** `web.tsx` holds the desktop components (WebFrame, WebSidebar, TopBar, WebButton, SearchField, DataTable, Dialog, Kbd). `TopBar` previews are page-width, so its card is `single` with all variants stacked in one export.
 - **CSS gotcha:** scope descendant selectors with `>` when a component contains `Icon`. A bare `.pk-month span` rule once padded the icon span to zero width and hid the chevrons.
-- **Branch:** this work targets `v2`, where the native app is SwiftUI (`apps/ios`) and the web app is React (`apps/web`). `contracts/design-baseline.json` still describes the removed Penpot proposal (MAZ-122).
+- **Branch:** this work targets `v2`, where the native app is SwiftUI (`apps/ios`) and the web app is React (`apps/web`). `contracts/design-baseline.json` traces these cards and the kit (MAZ-132); its tests check card and doc hashes, so update it with any card or component change.
 
 ## Known render warns
 - None open. All 34 components render cleanly with authored previews graded good.
