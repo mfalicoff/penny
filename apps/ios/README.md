@@ -56,9 +56,9 @@ CI runs the same steps on the GitHub `xcode-27` (Apple Silicon) image in [`.gith
 | `Penny/` | The app entry point, Debug-only test controls, the asset catalog (icon, accent color) and the privacy manifest. Keep it thin: features belong in PennyKit. | MAZ-66, then MAZ-69 |
 | `PennyTests/` | Unit tests hosted in the built app: bundle identity, URL scheme, platforms, configuration, App Group, test controls | MAZ-66 |
 | `Packages/PennyKit/Sources/PennyDomain` | Platform-neutral rules: deep links, server URLs, app identity, and in `Ledger/` the ported money, date, recurrence, ledger command, report and local search rules ([ledger rules](../../docs/ios-ledger-domain.md)). Later the offline merge (MAZ-71). | MAZ-66, 70 |
-| `Packages/PennyKit/Sources/PennyData` | Configuration, the App Group container, the API client and wire models (`API/`, [API client](../../docs/ios-api-client.md)), and later persistence and migration from Expo storage (MAZ-71, 72) | MAZ-66, 67 |
+| `Packages/PennyKit/Sources/PennyData` | Configuration, the App Group container, the API client and wire models (`API/`, [API client](../../docs/ios-api-client.md)), the sign-in state machine and Keychain session store (`Auth/`, [native sign-in](../../docs/ios-authentication.md)), and later persistence and migration from Expo storage (MAZ-71, 72) | MAZ-66, 67, 68 |
 | `Packages/PennyKit/Sources/PennyDesign` | Design tokens, colors, type and Liquid Glass helpers; later the shared components (MAZ-69) | MAZ-66, 69 |
-| `Packages/PennyKit/Sources/PennyUI` | Screens and the app shell. A placeholder root view until MAZ-69. | MAZ-69 onward |
+| `Packages/PennyKit/Sources/PennyUI` | Screens and the app shell: the sign-in, create-account, server and sign-out screens (`Auth/`, MAZ-68) and a signed-in placeholder until the MAZ-69 shell | MAZ-68, 69 onward |
 | `Packages/PennyKit/Tests` | One test target per module. PennyDomain, PennyData and PennyDesign tests also run on the Mac host. | each module's owner |
 | `scripts/ios.sh` | The commands above | MAZ-66 |
 
@@ -71,7 +71,7 @@ UI tests (XCUITest) belong to MAZ-81; the WidgetKit extension target to MAZ-80 (
 | | Debug | Release |
 | --- | --- | --- |
 | `PennyEnvironment` (Info.plist) | `development` | `production` |
-| Default server | `http://localhost:3001` (the legacy app's default) | none: people connect their own server (MAZ-68) |
+| Default server | `http://localhost:3001` (the legacy app's default) | none: the app opens at server connect ([native sign-in](../../docs/ios-authentication.md#server-choice)) |
 | Test controls | compiled in (`PENNY_TEST_CONTROLS`) | compiled out |
 | Optimization | `-Onone`, testable | `-O`, whole module |
 
