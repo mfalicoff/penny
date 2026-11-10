@@ -114,11 +114,28 @@ struct ShellTests {
         #expect(HomeView.projectedLine(summary, currency: "CAD", pending: 2).hasSuffix("as of last sync"))
     }
 
-    @Test("whenScenePhaseChanges_RootView_ShouldTellTheLock")
-    func scenePhase() {
-        #expect(RootView.activity(.active) == .active)
-        #expect(RootView.activity(.inactive) == .inactive)
-        #expect(RootView.activity(.background) == .background)
+    @Test("whenTheSceneLeavesTheForeground_RootView_ShouldCoverTheAppInTheSameUpdate")
+    @MainActor
+    func scenePhaseLocksSynchronously() async {
+        let lock = AppLockController(
+            store: EphemeralAppLockSettingStore(enabled: true), authenticator: SucceedingAuthenticator())
+        await lock.start()
+        #expect(lock.status == .unlocked)
+        #expect(!lock.conceals)
+
+        // No await between the phase change and the checks: the app-switcher snapshot does
+        // not wait for a task.
+        RootView.forward(.inactive, to: lock)
+        #expect(lock.activity == .inactive)
+        #expect(lock.conceals)
+        RootView.forward(.background, to: lock)
+        #expect(lock.activity == .background)
+        #expect(lock.status == .locked)
+        #expect(lock.conceals)
+
+        RootView.forward(.active, to: lock)
+        await eventually { lock.status == .unlocked }
+        #expect(!lock.conceals)
     }
 
     @Test("whenAppearanceIsChosen_AppearanceModel_ShouldPersistAndApplyIt")
@@ -138,4 +155,23 @@ struct ShellTests {
         #expect(months.first == MonthKey(today))
         #expect(months.last == MonthKey(today).shifted(by: -11))
     }
+}
+
+/// A device check that always succeeds at once.
+@MainActor
+private final class SucceedingAuthenticator: DeviceAuthenticator {
+    var biometry: BiometryKind { .faceID }
+    func canEnable() -> AuthenticationResult { .success }
+    func authenticate(_ purpose: AuthenticationPurpose, reason: String) async -> AuthenticationResult { .success }
+    func cancel() {}
+}
+
+/// Waits (up to two seconds) for work started in a task to reach a state.
+@MainActor
+private func eventually(_ condition: @MainActor () -> Bool) async {
+    for _ in 0..<400 {
+        if condition() { return }
+        try? await Task.sleep(for: .milliseconds(5))
+    }
+    Issue.record("Timed out")
 }

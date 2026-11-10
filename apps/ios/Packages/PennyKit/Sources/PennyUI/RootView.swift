@@ -36,7 +36,7 @@ public struct RootView: View {
         .modifier(LockCover(lock: services.lock))
         .task { await services.lock.start() }
         .onChange(of: scenePhase, initial: true) { _, phase in
-            Task { await services.lock.activityChanged(Self.activity(phase)) }
+            Self.forward(phase, to: services.lock)
         }
         .onOpenURL { url in
             // Unknown penny:// routes open Home. Single sign-on callbacks return through the
@@ -44,6 +44,18 @@ public struct RootView: View {
             // requested by this app (or is a replay), so the inbox ignores it.
             inbox.receive(DeepLink(url: url) ?? .home)
         }
+    }
+
+    /// Tells the lock about a scene-phase change. Inactive and background are applied in the
+    /// same update, so the cover is drawn before the system takes the app-switcher snapshot;
+    /// only `.active`, which may prompt, waits for a task.
+    static func forward(_ phase: ScenePhase, to lock: AppLockController) {
+        let activity = activity(phase)
+        guard activity == .active else {
+            lock.setActivity(activity)
+            return
+        }
+        Task { await lock.activityChanged(.active) }
     }
 
     static func activity(_ phase: ScenePhase) -> AppActivity {

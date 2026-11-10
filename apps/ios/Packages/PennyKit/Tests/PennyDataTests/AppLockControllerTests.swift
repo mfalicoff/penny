@@ -144,6 +144,33 @@ struct AppLockControllerTests {
         #expect(lock.conceals)
     }
 
+    @Test("whenTheAppReturnsBeforeTheCancelledPromptAnswers_AppLock_ShouldPromptAgainAndIgnoreTheStaleAnswer")
+    func quickBackgroundAndReturn() async {
+        let auth = FakeDeviceAuthenticator()
+        auth.holdPrompts = true
+        let lock = AppLockController(store: EphemeralAppLockSettingStore(enabled: true), authenticator: auth)
+        let launch = Task { await lock.start() }
+        while !auth.isHolding { await Task.yield() }
+        // Background and back before the cancelled prompt's answer arrives.
+        await lock.activityChanged(.background)
+        #expect(!lock.isBusy, "backgrounding ends the prompt's hold")
+        let back = Task { await lock.activityChanged(.active) }
+        for _ in 0..<1000 where auth.heldCount < 2 { await Task.yield() }
+        #expect(auth.prompts == [.unlock, .unlock], "the return asks again")
+        #expect(lock.isBusy)
+
+        auth.finish(.success)  // the stale prompt answers late, even with a success
+        await launch.value
+        #expect(lock.status == .locked, "a pre-background answer never unlocks")
+        #expect(lock.isBusy, "and does not end the new prompt's hold")
+        #expect(lock.message == nil)
+
+        auth.finish(.success)
+        await back.value
+        #expect(lock.status == .unlocked)
+        #expect(!lock.isBusy)
+    }
+
     @Test("whenUnlockIsTappedTwice_AppLock_ShouldShowOnePrompt")
     func singleFlight() async {
         let auth = FakeDeviceAuthenticator([.cancelled, .success])

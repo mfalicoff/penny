@@ -12,7 +12,10 @@ public enum AppActivity: Equatable, Sendable {
 /// - It conceals, never unmounts: the lock is drawn over the app (and over its sheets), so an
 ///   unsaved draft survives locking.
 /// - One prompt at a time. Going to the background cancels the prompt and invalidates its
-///   answer, so a success from before backgrounding never unlocks a later session.
+///   answer, so a success from before backgrounding never unlocks a later session, and ends
+///   the one-at-a-time hold at once, so a return that beats the cancellation still prompts.
+/// - Inactive and background are applied synchronously (`setActivity`), so the cover is up
+///   before the app-switcher snapshot.
 /// - The on/off setting changes only after the person authenticates and the new value is
 ///   saved; a failed save leaves the previous setting in force.
 ///
@@ -89,15 +92,27 @@ public final class AppLockController {
         }
     }
 
-    public func activityChanged(_ next: AppActivity) async {
+    /// Records the scene's activity at once. Call it directly (not from a `Task`) when the
+    /// scene becomes inactive or goes to the background, so the cover is up in the same
+    /// update, before the system takes the app-switcher snapshot. Going to the background
+    /// cancels a prompt and ends its single-flight hold, so a quick return can prompt again;
+    /// the cancelled prompt's late answer is dropped by its generation and never unlocks.
+    public func setActivity(_ next: AppActivity) {
         activity = next
+        guard next == .background else { return }
+        generation += 1
+        wasBackgrounded = true
+        isBusy = false
+        authenticator.cancel()
+        if isEnabled, status == .unlocked { status = .locked }
+    }
+
+    /// `setActivity`, then on `.active` reads a setting that was unreadable, or prompts when
+    /// the app came back locked.
+    public func activityChanged(_ next: AppActivity) async {
+        setActivity(next)
         switch next {
-        case .background:
-            generation += 1
-            wasBackgrounded = true
-            authenticator.cancel()
-            if isEnabled, status == .unlocked { status = .locked }
-        case .inactive:
+        case .background, .inactive:
             break
         case .active:
             let returned = wasBackgrounded
@@ -116,9 +131,8 @@ public final class AppLockController {
     /// Asks for biometrics (or the passcode) and opens the app on success.
     public func unlock() async {
         guard status == .locked, !isBusy, activity == .active else { return }
-        isBusy = true
-        defer { isBusy = false }
-        let attempt = generation
+        let attempt = beginBusy()
+        defer { endBusy(attempt) }
         let result = await authenticator.authenticate(.unlock, reason: "Unlock Penny")
         guard attempt == generation, status == .locked else { return }
         if result == .success {
@@ -140,9 +154,8 @@ public final class AppLockController {
                 return
             }
         }
-        isBusy = true
-        defer { isBusy = false }
-        let attempt = generation
+        let attempt = beginBusy()
+        defer { endBusy(attempt) }
         let purpose: AuthenticationPurpose = next ? .enable : .disable
         let result = await authenticator.authenticate(
             purpose, reason: next ? "Turn on the lock for Penny" : "Turn off the lock for Penny")
@@ -159,6 +172,18 @@ public final class AppLockController {
         isEnabled = next
         // Backgrounded while saving: the app must come back locked.
         if next, attempt != generation || activity == .background { status = .locked }
+    }
+
+    /// Marks a prompt or setting change in progress and returns its generation.
+    private func beginBusy() -> Int {
+        isBusy = true
+        return generation
+    }
+
+    /// Ends the hold from `beginBusy`, unless the app went to the background since: that
+    /// already ended it, and a newer prompt may hold it now.
+    private func endBusy(_ attempt: Int) {
+        if attempt == generation { isBusy = false }
     }
 
     static let deviceName = "device"
