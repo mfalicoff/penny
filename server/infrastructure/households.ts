@@ -309,7 +309,9 @@ export function createHouseholdService(db: DatabaseSync, security: Pick<Security
         const e = expense(r.household_id as string, r.id as string, userId);
         const share = e.splits.find((s) => s.userId === userId);
         if (!share) return [];
-        return [{id:e.id,householdId:e.householdId,householdName:household(e.householdId as string,true)?.name,householdCurrency:household(e.householdId as string,true)?.currency,title:e.title,date:e.date,totalCents:e.totalCents,shareCents:share.amountCents,payerUserId:e.payerUserId,category:e.category,note:e.note,...(e.receipt?{receipt:e.receipt}:{}),...(e.accountId?{accountId:e.accountId}:{})}];
+        // `recurringId` (the shared rule that recorded this occurrence) lets clients drop a cached
+        // preview of the same household, rule and date; recorded ids are random, unlike preview ids.
+        return [{id:e.id,householdId:e.householdId,householdName:household(e.householdId as string,true)?.name,householdCurrency:household(e.householdId as string,true)?.currency,title:e.title,date:e.date,totalCents:e.totalCents,shareCents:share.amountCents,payerUserId:e.payerUserId,category:e.category,note:e.note,...(e.receipt?{receipt:e.receipt}:{}),...(e.accountId?{accountId:e.accountId}:{}),...(e.recurringId?{recurringId:e.recurringId as string}:{})}];
       });
       if (!monthValue) return { transactions, scheduled: [] };
       const firstDate = `${monthValue}-01`;

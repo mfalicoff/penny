@@ -252,4 +252,47 @@ public sealed class SharedRecurrenceRunnerTests(ApiFixture fixture)
         mine.GetProperty("accountId").GetString().ShouldBe("visa");
         (await OccurrencesAsync(ruleId)).ShouldBe(["2027-01-05"]);
     }
+
+    // MAZ-139: clients drop a cached preview when a recorded row has the same household,
+    // `recurringId` and date. Recorded ids are random, so the rule id must be sent.
+    [Fact]
+    public async Task whenOccurrenceRecorded_Projection_ShouldCarryTheRuleIdOnTheRecordedShare()
+    {
+        var (alex, alexId, bea, _, home) = await HomeAsync();
+        var ruleId = Id(await CreateRuleAsync(home, alex, Rule(9000, alexId, "2027-01-05")));
+        At(Utc("2027-01-01"));
+        var preview = (await ProjectionAsync(bea, "?month=2027-01"))
+            .GetProperty("scheduled")
+            .EnumerateArray()
+            .ShouldHaveSingleItem();
+        (await RunAtAsync(Utc("2027-01-05"))).ShouldBe(1);
+        await CreateExpenseAsync(home, alex, Expense(2000, alexId, "2027-01-05"));
+
+        var rows = (await ProjectionAsync(bea, "?month=2027-01"))
+            .GetProperty("transactions")
+            .EnumerateArray()
+            .ToList();
+        rows.Count.ShouldBe(2);
+        var recorded = rows.Single(row => row.TryGetProperty("recurringId", out _));
+        recorded.GetProperty("recurringId").GetString().ShouldBe(ruleId);
+        recorded
+            .GetProperty("recurringId")
+            .GetString()
+            .ShouldBe(preview.GetProperty("recurringId").GetString());
+        recorded.GetProperty("date").GetString().ShouldBe(preview.GetProperty("date").GetString());
+        recorded.GetProperty("householdId").GetString().ShouldBe(home);
+        Id(recorded).ShouldNotBe(Id(preview));
+        recorded.TryGetProperty("scheduled", out _).ShouldBeFalse();
+        // A one-off expense has no rule and carries no `recurringId`.
+        rows.Single(row => !row.TryGetProperty("recurringId", out _))
+            .GetProperty("shareCents")
+            .GetInt64()
+            .ShouldBe(1000);
+        // Year projections carry it too.
+        (await ProjectionAsync(bea, "?year=2027"))
+            .GetProperty("transactions")
+            .EnumerateArray()
+            .Count(row => row.TryGetProperty("recurringId", out var id) && id.GetString() == ruleId)
+            .ShouldBe(1);
+    }
 }

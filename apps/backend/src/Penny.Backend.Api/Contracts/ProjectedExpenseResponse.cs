@@ -4,8 +4,9 @@ using Penny.Backend.Application.Households;
 namespace Penny.Backend.Api.Contracts;
 
 // Contract schema `ProjectedExpense`. Recorded rows carry `receipt` when one is
-// linked; scheduled rows carry `scheduled: true` and `recurringId`. `accountId`
-// reaches only the payer.
+// linked; scheduled rows carry `scheduled: true`. `recurringId` is the shared rule
+// on previews and on recorded occurrences it recorded. `accountId` reaches only
+// the payer.
 public sealed record ProjectedExpenseResponse(
     string Id,
     string HouseholdId,

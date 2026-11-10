@@ -14,6 +14,8 @@ import { calendarMonth, selectOverview, shiftMonthKey } from "../../src/domain/s
 import { selectTransactions } from "../../src/domain/selectors/transactions.ts";
 import { buildMoneyFlow } from "../../src/domain/selectors/moneyFlow.ts";
 import { tripOverview } from "../../src/domain/selectors/trips.ts";
+import { ledgerWithHouseholds } from "../../src/features/households/projection.ts";
+import type { ProjectedExpense } from "../../src/data/households.ts";
 
 const root = new URL("../../", import.meta.url);
 const fixture = (name: string) => JSON.parse(readFileSync(new URL(`contracts/fixtures/${name}`, root), "utf8"));
@@ -149,24 +151,47 @@ test("projection adds every scheduled occurrence; recorded totals and expected i
   assert.deepEqual(mid.projected, summary.projected);
 });
 
+test("a personal preview is replaced only by the entry with its occurrence id", () => {
+  // The rule's first entry was created on 2026-10-01 (random id) and later moved to 2026-10-08;
+  // edits keep recurringId. The 2026-10-08 occurrence is still due: its id `weekly:2026-10-08`
+  // is not in the ledger, so it stays scheduled (Swift `Recurrence.previews` agrees).
+  const weekly: Recurring = { ...rent, id: "weekly", total: 1000, share: 1000, frequency: "weekly", anchorDay: 1, date: "2026-10-01", nextDate: "2026-10-08" };
+  const first: Transaction = { id: "random-id", title: "Rent", kind: "expense", total: 1000, share: 1000, categoryId: "home", date: "2026-10-08", note: "", recurringId: "weekly" };
+  const summary = summarizeMonth({ ...base(), recurring: [weekly], transactions: [first] }, "2026-10");
+  assert.deepEqual(summary.recorded, { income: 0, expense: 1000, investment: 0 });
+  assert.equal(summary.projected.expense, 5000);
+  // Once recorded under its occurrence id, the preview is replaced.
+  const recorded: Transaction = { ...first, id: "weekly:2026-10-15", date: "2026-10-15" };
+  assert.equal(summarizeMonth({ ...base(), recurring: [weekly], transactions: [first, recorded] }, "2026-10").projected.expense, 5000);
+});
+
 test("a recorded shared occurrence replaces its preview in projected totals", () => {
-  const shared = (id: string, scheduled: boolean) => ({ id: `household:h:${id}`, householdId: "h", householdExpenseId: id,
-    title: "Streaming", kind: "expense", total: 1600, share: 800, categoryId: "fun", date: "2026-10-20", note: "",
-    recurringId: "streaming", ...(scheduled && { scheduled: true }) }) as Transaction;
-  const preview = shared("streaming:2026-10-20", true);
-  const pending: Ledger = { ...base(), transactions: [preview] };
-  assert.deepEqual(summarizeMonth(pending, "2026-10").recorded, { income: 0, expense: 0, investment: 0 });
-  assert.deepEqual(summarizeMonth(pending, "2026-10").projected, { income: 0, expense: 800, investment: 0 });
+  // Rows shaped as both servers send them (GET /api/households/projection): a preview has the id
+  // `{rule}:{date}`, `scheduled` and `recurringId`; a recorded occurrence has the expense's
+  // random id and, since MAZ-139, its rule as `recurringId`.
+  const row = (fields: Partial<ProjectedExpense>): ProjectedExpense => ({ id: "x", householdId: "h", householdName: "Home", householdCurrency: "CAD",
+    title: "Streaming", date: "2026-10-20", totalCents: 1600, shareCents: 800, payerUserId: "bea",
+    category: { name: "Fun", icon: "tv-outline", color: "#B15B7D" }, note: "", ...fields });
+  const preview = row({ id: "streaming:2026-10-20", scheduled: true, recurringId: "streaming" });
+  const recorded = row({ id: "9d2f4c1a7b3e6f805a2c9d4e1b7f3a60", recurringId: "streaming" });
+  const view = (rows: ProjectedExpense[]) => ledgerWithHouseholds(base(), rows, []);
+  assert.deepEqual(summarizeMonth(view([preview]), "2026-10").recorded, { income: 0, expense: 0, investment: 0 });
+  assert.equal(summarizeMonth(view([preview]), "2026-10").projected.expense, 800);
   // The runner recorded it; a cached preview of the same household rule and date is not counted again.
-  const done: Ledger = { ...base(), transactions: [shared("occ-1", false), preview] };
+  const done = view([recorded, preview]);
   const summary = summarizeMonth(done, "2026-10");
   assert.deepEqual(summary.recorded, { income: 0, expense: 800, investment: 0 });
   assert.deepEqual(summary.projected, summary.recorded);
   const overview = selectOverview(done, { month: "2026-10", day: null, filter: "all", categoryId: null, search: "" });
-  assert.deepEqual(overview.calendarEntries.map((entry) => entry.id), ["household:h:occ-1"]);
+  assert.deepEqual(overview.calendarEntries.map((entry) => entry.id).filter((id) => id.startsWith("household:")),
+    [`household:h:${recorded.id}`]);
   // Another household's rule with the same id and date is a different occurrence.
-  const other = { ...preview, id: "household:k:streaming:2026-10-20", householdId: "k" } as Transaction;
-  assert.equal(summarizeMonth({ ...done, transactions: [...done.transactions, other] }, "2026-10").projected.expense, 1600);
+  const other = row({ ...preview, householdId: "k" });
+  assert.equal(summarizeMonth(view([recorded, preview, other]), "2026-10").projected.expense, 1600);
+  // An older server sent recorded rows without `recurringId`: nothing links them to the preview,
+  // so both count until the preview response is refreshed (the server then omits the preview).
+  const { recurringId: _omitted, ...legacy } = recorded;
+  assert.equal(summarizeMonth(view([legacy, preview]), "2026-10").projected.expense, 1600);
 });
 
 test("investment contributions are not spending and personal shares drive totals and flow", () => {

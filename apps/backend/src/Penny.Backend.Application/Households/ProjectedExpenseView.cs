@@ -6,8 +6,10 @@ using Penny.Backend.Domain.Ledgers;
 namespace Penny.Backend.Application.Households;
 
 // Legacy `ProjectedExpense`: the viewer's share of a recorded shared expense, or of a
-// scheduled occurrence (`Scheduled`, `RecurringId`; month projections only). Shares
-// stay separate from the personal ledger. `AccountId` reaches only the payer.
+// scheduled occurrence (`Scheduled`; month projections only). `RecurringId` names the
+// shared rule on previews and on recorded occurrences the rule recorded (MAZ-139), so
+// clients drop a cached preview of the same household, rule and date. Shares stay
+// separate from the personal ledger. `AccountId` reaches only the payer.
 public sealed record ProjectedExpenseView(
     string Id,
     string HouseholdId,
@@ -55,7 +57,7 @@ public sealed record ProjectedExpenseView(
                 ? expense.AccountId
                 : null,
             null,
-            null
+            expense.RecurringId
         );
     }
 }
