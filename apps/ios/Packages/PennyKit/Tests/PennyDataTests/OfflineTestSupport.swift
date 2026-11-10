@@ -183,11 +183,13 @@ final class FaultyFileSystem: LedgerFileSystem {
 /// The real durable file system, except that the first write to `target` blocks (on the
 /// writer's thread, as a slow disk would) until `open()`, or fails when `failing`.
 final class GatedFileSystem: LedgerFileSystem {
+    enum Hold: Sendable { case notYet, holding, opened, timedOut }
+
     let base = DurableFileSystem()
     let target: URL
     let failing: Bool
     private let armed = Mutex(true)
-    private let entered = Mutex(false)
+    private let hold = Mutex(Hold.notYet)
     private let release = DispatchSemaphore(value: 0)
 
     init(holding target: URL, failing: Bool = false) {
@@ -195,22 +197,28 @@ final class GatedFileSystem: LedgerFileSystem {
         self.failing = failing
     }
 
-    /// Whether the held write has started and is waiting.
-    var isHolding: Bool { entered.withLock { $0 } }
+    /// Whether the held write has started and is still waiting.
+    var isHolding: Bool { hold.withLock { $0 } == .holding }
+
+    /// Whether the held write gave up waiting and went ahead before `open()`.
+    var timedOut: Bool { hold.withLock { $0 } == .timedOut }
 
     func open() { release.signal() }
 
     func write(_ data: Data, to url: URL) throws {
-        let hold =
+        let held =
             url.standardizedFileURL == target
             && armed.withLock { armed in
                 defer { armed = false }; return armed
             }
-        if hold {
+        if held {
             if failing { throw CocoaError(.fileWriteOutOfSpace) }
-            entered.withLock { $0 = true }
-            // Bounded, so a broken test fails instead of hanging.
-            _ = release.wait(timeout: .now() + 5)
+            hold.withLock { $0 = .holding }
+            // Bounded, so a broken test fails instead of hanging, but long: on a loaded CI
+            // simulator the test can take seconds to reach `open()`, and a write that went
+            // ahead early would end the move before the test acts on it (see `timedOut`).
+            let result = release.wait(timeout: .now() + 60)
+            hold.withLock { $0 = result == .success ? .opened : .timedOut }
         }
         try base.write(data, to: url)
     }
@@ -310,12 +318,17 @@ extension PennyDomain.CalendarDate {
     }
 }
 
-/// Waits (up to two seconds) for asynchronous work driven by the model to reach a state.
+/// Waits for asynchronous work driven by the model to reach a state, polling every 5 ms.
+/// The limit is wall-clock time, not a number of polls: on a loaded CI simulator a 5 ms sleep
+/// can take far longer and the suites run 10–20 times slower than on a Mac, so the limit is
+/// generous. A wait that succeeds returns as soon as the state is reached.
 @MainActor
 func eventually(_ what: Comment, _ condition: @MainActor () async -> Bool) async {
-    for _ in 0..<400 {
+    let deadline = ContinuousClock.now + .seconds(30)
+    while ContinuousClock.now < deadline {
         if await condition() { return }
         try? await Task.sleep(for: .milliseconds(5))
     }
+    if await condition() { return }
     Issue.record("Timed out waiting: \(what)")
 }

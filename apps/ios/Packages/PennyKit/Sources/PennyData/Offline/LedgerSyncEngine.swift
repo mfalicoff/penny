@@ -161,13 +161,23 @@ public actor LedgerSyncEngine {
     public func sync(using client: APIClient) async -> SyncOutcome {
         if let running { return await running.value }
         guard holds == 0 else { return .notReady }
-        let task = Task { await self.run(client) }
+        let task = Task { await self.runToEnd(client) }
         running = task
         publish()
         let outcome = await task.value
+        publish()
+        return outcome
+    }
+
+    /// Runs the sync and ends it in the same actor step as its last pass, so no caller can
+    /// join a sync that has already finished. (Ending it only when the first caller resumed
+    /// left a window in which `recoverUnreadableCopy` joined the `.notReady` sync that had run
+    /// on the unreadable copy, and the ledger was never downloaded again.) The end is
+    /// published when that caller resumes, as before.
+    private func runToEnd(_ client: APIClient) async -> SyncOutcome {
+        let outcome = await run(client)
         running = nil
         if storage != .removed { lastOutcome = outcome }
-        publish()
         return outcome
     }
 

@@ -158,8 +158,13 @@ struct OfflineLedgerStoreTests {
         } catch {
             refusal = error
         }
+        // The save must have arrived while the move was still waiting. Had the write gone ahead
+        // (`timedOut`), the move would have ended first and `engine(for:)` would have made a
+        // fresh engine for the emptied old scope, which refuses with `.notLoaded`.
+        let heldThroughTheSave = gated.isHolding
         gated.open()
         try await move.value
+        try #require(heldThroughTheSave, "the save arrived after the move ended (timed out: \(gated.timedOut))")
 
         let moved = try #require(try store.files.load(newScope))
         #expect(moved.pending.entryIDs.contains("taxi"))
