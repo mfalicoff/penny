@@ -315,7 +315,8 @@ extension LedgerReport {
     }
 
     /// Home's entry list: recorded and scheduled rows of the month that match the filters,
-    /// newest first. Filters never change the month's totals.
+    /// newest first. Filters never change the month's totals. The query is not trimmed, as in
+    /// legacy `selectOverview` (Activity trims it).
     public func monthEntries(
         _ summary: MonthSummary, query: String = "", kind: EntryKind? = nil, day: CalendarDate? = nil,
         categoryId: String? = nil
@@ -323,7 +324,8 @@ extension LedgerReport {
         (summary.recordedEntries + summary.scheduled)
             .filter {
                 (day == nil || $0.date == day) && (kind == nil || $0.kind == kind)
-                    && (categoryId == nil || $0.categoryId == categoryId) && matches($0, query: query)
+                    && (categoryId == nil || $0.categoryId == categoryId)
+                    && matches($0, query: query, trimsQuery: false)
             }
             .sorted(by: ReportEntry.newestFirst)
     }

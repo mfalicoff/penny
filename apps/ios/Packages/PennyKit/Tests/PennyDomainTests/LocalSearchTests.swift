@@ -94,4 +94,23 @@ struct LocalSearchTests {
         #expect(
             LocalSearch.matches(query: "rent old", title: "Rent", note: "Old note", categoryName: "", accountName: ""))
     }
+
+    /// Legacy Activity (`selectTransactions`) trimmed the query; Home (`selectOverview`) did not,
+    /// so on Home surrounding spaces are part of the substring.
+    @Test("whenQueryHasSurroundingSpaces_HomeAndActivity_ShouldTrimOnlyOnActivityLikeLegacy")
+    func homeDoesNotTrim() throws {
+        let month = try #require(MonthKey("2026-11"))
+        let report = LedgerReport(
+            ledger: Sample.ledger(transactions: [Sample.entry("coffee", "2026-11-02", title: "Coffee")]))
+        let home = report.month(month)
+        #expect(report.activity(.month(month), query: " coffee ").entries.map(\.id) == ["coffee"])
+        #expect(report.monthEntries(home, query: " coffee").isEmpty, "nothing precedes the title")
+        #expect(report.monthEntries(home, query: "coffee ").map(\.id) == ["coffee"], "the joining space follows it")
+        #expect(report.monthEntries(home, query: "   ").isEmpty, "a blank query is not empty on Home")
+        #expect(report.monthEntries(home, query: " ").map(\.id) == ["coffee"])
+        #expect(report.monthEntries(home, query: "").map(\.id) == ["coffee"])
+        #expect(
+            !LocalSearch.matches(
+                query: " coffee", title: "Coffee", note: "", categoryName: "", accountName: "", trimsQuery: false))
+    }
 }

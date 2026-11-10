@@ -69,7 +69,7 @@ Optional fields (`accountId`, `tripId`, `receipt`, `recurringId`, `sharedHouseho
 
 ## Local search
 
-`LocalSearch.matches` is the legacy offline/demo search: the trimmed, lowercased query must be an exact UTF-16 substring of `"{title} {note} {category} {account}"` lowercased. "cafe" does not find "Café"; `%`, `_` and `\` are plain characters. Shared rows search their shared category and, for the payer only, their account. With pending local changes, offline, or without server search v1, the client searches its local snapshot (`LocalSearch.searchesLocally`), so an unsynced create, edit or delete is never hidden or revived by a server page; local and server rows are never mixed ([search](migration/search.md#offline-pending-edits-and-demo)).
+`LocalSearch.matches` is the legacy offline/demo search: the lowercased query must be an exact UTF-16 substring of `"{title} {note} {category} {account}"` lowercased. Activity trims the query first (legacy `selectTransactions`); Home's month list does not (legacy `selectOverview`), so there `" coffee"` does not find a row titled "Coffee" and a blank query of spaces is not empty. "cafe" does not find "Café"; `%`, `_` and `\` are plain characters. Shared rows search their shared category and, for the payer only, their account. With pending local changes, offline, or without server search v1, the client searches its local snapshot (`LocalSearch.searchesLocally`), so an unsynced create, edit or delete is never hidden or revived by a server page; local and server rows are never mixed ([search](migration/search.md#offline-pending-edits-and-demo)).
 
 ## Fixtures
 
