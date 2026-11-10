@@ -225,6 +225,9 @@ public final class AuthController {
         let client = anonymousClient(server.server)
         func reset() { if attempt == generation { state = .signedOut(previous) } }
 
+        // The attempt is measured from when it was requested, on the device clock, for the
+        // lifetime the server states on its own clock: a skewed device clock cancels out.
+        let requestedAt = now()
         let challenge: WireOidcChallenge
         do {
             challenge = try await client.startOidc(redirectUri: SingleSignOnRedirect.uri)
@@ -238,12 +241,13 @@ public final class AuthController {
             reset()
             throw Self.failure(APIError.malformedResponse, during: .singleSignOn, server: server.server)
         }
-        guard challenge.expiry > now() else {
+        let deadline = challenge.lifetime.map { requestedAt.addingTimeInterval($0) }
+        guard deadline.map({ $0 > now() }) ?? true else {
             reset()
             throw AuthFailure(.singleSignOnExpired, "Sign-in expired. Please try again.")
         }
         let pending = PendingSingleSignOn(
-            id: attempt, server: server.server, transaction: challenge.transaction, expiry: challenge.expiry)
+            id: attempt, server: server.server, transaction: challenge.transaction, deadline: deadline)
         pendingSingleSignOn = pending
 
         let callback: URL
@@ -263,7 +267,7 @@ public final class AuthController {
             reset()
             throw AuthFailure(.callbackRejected, "This sign-in response was not accepted. Please try again.")
         }
-        guard pending.expiry > now() else {
+        guard pending.deadline.map({ $0 > now() }) ?? true else {
             reset()
             throw AuthFailure(.singleSignOnExpired, "Sign-in expired. Please try again.")
         }

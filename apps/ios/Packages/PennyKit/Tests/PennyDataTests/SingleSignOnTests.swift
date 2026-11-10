@@ -9,11 +9,13 @@ import Testing
 struct SingleSignOnTests {
     private let email = "contract-user@example.test"
 
-    private func routes(complete: Routes.Answer? = nil, challenge: String = AuthFixtures.challenge())
-        -> StubTransport
-    {
+    /// `serverDate` is the start response's `Date` header: the server's clock.
+    private func routes(
+        complete: Routes.Answer? = nil, challenge: String = AuthFixtures.challenge(),
+        serverDate: String? = AuthFixtures.serverDate
+    ) -> StubTransport {
         Routes.transport([
-            "POST /api/auth/oidc/start": Routes.json(challenge),
+            "POST /api/auth/oidc/start": Routes.json(200, challenge, headers: serverDate.map { ["date": $0] } ?? [:]),
             "POST /api/auth/oidc/complete": complete ?? Routes.json(Routes.session("contract-user@example.test")),
         ])
     }
@@ -136,6 +138,57 @@ struct SingleSignOnTests {
         #expect(!transport.paths().contains("POST /api/auth/oidc/complete"))
     }
 
+    @Test("whenDeviceClockIsFast_SingleSignOn_ShouldMeasureTheAttemptOnTheServersClockAndSignIn")
+    func deviceClockFast() async throws {
+        // The device is an hour ahead; the server gives the attempt 10 minutes from its own clock.
+        let clock = Clock(1_800_003_600)
+        let transport = routes(challenge: AuthFixtures.challenge(expiresAt: 1_800_000_600_000))
+        let controller = AuthController(
+            defaultServer: AuthFixtures.server, sessions: EphemeralSessionStore(),
+            preferences: EphemeralAuthPreferences(), transport: transport, now: { clock.now })
+        await controller.restore()
+        let authenticator = FakeAuthenticator { _ in
+            clock.advance(120)
+            guard let url = URL(string: "penny://auth/callback?state=s1&code=c1") else { throw URLError(.badURL) }
+            return url
+        }
+        #expect(try await controller.signInWithSingleSignOn(using: authenticator) == .signedIn)
+        #expect(transport.paths().contains("POST /api/auth/oidc/complete"))
+    }
+
+    @Test("whenDeviceClockIsSlow_SingleSignOn_ShouldStillStopAnAttemptTheServerHasForgotten")
+    func deviceClockSlow() async throws {
+        // The device is an hour behind, so the absolute expiry would look valid for 70 minutes.
+        let clock = Clock(1_799_996_400)
+        let transport = routes(challenge: AuthFixtures.challenge(expiresAt: 1_800_000_600_000))
+        let controller = AuthController(
+            defaultServer: AuthFixtures.server, sessions: EphemeralSessionStore(),
+            preferences: EphemeralAuthPreferences(), transport: transport, now: { clock.now })
+        await controller.restore()
+        let authenticator = FakeAuthenticator { _ in
+            clock.advance(11 * 60)
+            guard let url = URL(string: "penny://auth/callback?state=s1&code=c1") else { throw URLError(.badURL) }
+            return url
+        }
+        await #expect(throws: AuthFailure(.singleSignOnExpired, "Sign-in expired. Please try again.")) {
+            try await controller.signInWithSingleSignOn(using: authenticator)
+        }
+        #expect(!transport.paths().contains("POST /api/auth/oidc/complete"))
+    }
+
+    @Test("whenServerSendsNoDate_SingleSignOn_ShouldLeaveExpiryToTheServer")
+    func noServerDate() async throws {
+        // Without the server's clock the device cannot judge an absolute expiry; the server's
+        // own check on complete decides.
+        let clock = Clock(1_800_003_600)
+        let transport = routes(challenge: AuthFixtures.challenge(expiresAt: 1_800_000_600_000), serverDate: nil)
+        let controller = AuthController(
+            defaultServer: AuthFixtures.server, sessions: EphemeralSessionStore(),
+            preferences: EphemeralAuthPreferences(), transport: transport, now: { clock.now })
+        await controller.restore()
+        #expect(try await controller.signInWithSingleSignOn(using: FakeAuthenticator.callback()) == .signedIn)
+    }
+
     @Test("whenProviderPageIsNotHTTPS_SingleSignOn_ShouldRefuseToOpenIt")
     func insecureProvider() async throws {
         let controller = AuthFixtures.controller(
@@ -182,6 +235,21 @@ struct SingleSignOnTests {
         await #expect(throws: APIError.malformedResponse) {
             try await client.startOidc(redirectUri: "penny://auth/callback")
         }
+    }
+
+    @Test("whenStartAnswers_APIClient_ShouldReadTheServersClockFromTheDateHeader")
+    func startReadsServerDate() async throws {
+        let dated = StubTransport(headers: ["date": AuthFixtures.serverDate], json: AuthFixtures.challenge())
+        let challenge = try await APIFixtures.client(session: nil, transport: dated)
+            .startOidc(redirectUri: "penny://auth/callback")
+        #expect(challenge.serverDate == Date(timeIntervalSince1970: 1_800_000_000))
+        #expect(challenge.lifetime == 2_302_444_800)
+
+        let garbled = StubTransport(headers: ["date": "yesterday"], json: AuthFixtures.challenge())
+        let undated = try await APIFixtures.client(session: nil, transport: garbled)
+            .startOidc(redirectUri: "penny://auth/callback")
+        #expect(undated.serverDate == nil)
+        #expect(undated.lifetime == nil)
     }
 
     @Test("whenCompletingWithAnOversizedCallback_APIClient_ShouldRefuseBeforeSending")

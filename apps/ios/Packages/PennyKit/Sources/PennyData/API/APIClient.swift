@@ -99,13 +99,28 @@ public struct APIClient: Sendable {
     /// `POST /api/auth/oidc/start`. `redirectUri` must be one the server lists exactly.
     /// The transaction must be 64 lowercase hex characters and the authorization URL HTTPS
     /// (plain HTTP only for a loopback provider), or the answer is `malformedResponse`.
+    /// `serverDate` carries the response's `Date` header, so the attempt's lifetime can be
+    /// measured without trusting the device clock.
     public func startOidc(redirectUri: String) async throws -> WireOidcChallenge {
-        let challenge: WireOidcChallenge = try await json(
-            .post, "/api/auth/oidc/start", body: WireOidcStart(redirectUri: redirectUri), authenticated: false)
+        let result = try await perform(
+            .post, "/api/auth/oidc/start", body: try JSONEncoder().encode(WireOidcStart(redirectUri: redirectUri)),
+            authenticated: false)
+        var challenge: WireOidcChallenge = try decode(result.body)
         guard Self.isLowercaseHex64(challenge.transaction), challenge.authorizationURL != nil else {
             throw APIError.malformedResponse
         }
+        challenge.serverDate = Self.httpDate(result.headers["date"])
         return challenge
+    }
+
+    /// Parses an IMF-fixdate `Date` header ("Sun, 06 Nov 1994 08:49:37 GMT"); nil otherwise.
+    static func httpDate(_ text: String?) -> Date? {
+        guard let text else { return nil }
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(identifier: "GMT")
+        formatter.dateFormat = "EEE, dd MMM yyyy HH:mm:ss 'GMT'"
+        return formatter.date(from: text.trimmingCharacters(in: .whitespaces))
     }
 
     /// `POST /api/auth/oidc/complete` with the transaction kept from `startOidc` and the full

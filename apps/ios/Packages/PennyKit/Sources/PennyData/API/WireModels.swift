@@ -252,16 +252,32 @@ public struct WireOidcConfig: Codable, Equatable, Sendable {
 }
 
 /// `POST /api/auth/oidc/start`: one pending sign-in attempt. `expiresAt` is Unix
-/// milliseconds. The transaction is a secret between this device and the server.
+/// milliseconds on the server's clock. The transaction is a secret between this device and
+/// the server.
 public struct WireOidcChallenge: Decodable, Equatable, Sendable {
     public var transaction: String
     public var authorizationUrl: String
     public var expiresAt: Int64
+    /// The response's `Date` header (the server's clock when it answered), when it sent one.
+    /// Not part of the body.
+    public var serverDate: Date?
 
-    public init(transaction: String, authorizationUrl: String, expiresAt: Int64) {
+    enum CodingKeys: String, CodingKey {
+        case transaction, authorizationUrl, expiresAt
+    }
+
+    public init(transaction: String, authorizationUrl: String, expiresAt: Int64, serverDate: Date? = nil) {
         self.transaction = transaction
         self.authorizationUrl = authorizationUrl
         self.expiresAt = expiresAt
+        self.serverDate = serverDate
+    }
+
+    /// How long the server keeps the attempt, measured on the server's clock alone, so a
+    /// device clock that is off does not matter. Nil without a `Date` header: the device
+    /// then cannot judge the absolute `expiresAt`, and the server's own check decides.
+    public var lifetime: TimeInterval? {
+        serverDate.map { expiry.timeIntervalSince($0) }
     }
 
     /// The provider page to open in the system authentication session: HTTPS, or plain

@@ -42,7 +42,9 @@ struct PendingSingleSignOn: Equatable {
     let id: Int
     let server: ServerURL
     let transaction: String
-    let expiry: Date
+    /// When the attempt ends on the device clock (request time + the server-stated lifetime).
+    /// Nil when the server sent no `Date`: its own check on complete then decides.
+    let deadline: Date?
 }
 
 /// Remembers callbacks already sent, so the same callback URL is never redeemed twice even

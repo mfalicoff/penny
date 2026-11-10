@@ -255,6 +255,8 @@ enum AuthFixtures {
     static let otherToken = String(repeating: "cd", count: 32)
     static let transaction = String(repeating: "0f", count: 32)
     static let info = #"{"name":"penny","version":"2.0.0"}"#
+    /// The `Date` header for 1_800_000_000 s, the fixture clock.
+    static let serverDate = "Fri, 15 Jan 2027 08:00:00 GMT"
 
     static func challenge(expiresAt: Int64 = 4_102_444_800_000, url: String = "https://id.example.test/authorize")
         -> String
