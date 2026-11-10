@@ -1,0 +1,67 @@
+<!-- @dsCard group="iPhone" name="Shared · balances" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Household balances</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<style>
+  .mono { background: linear-gradient(180deg, #A8A29E, #78716C); }
+  .title { position: absolute; top: 54px; left: 0; right: 0; height: 52px; display: grid; place-items: center; font-size: 17px; font-weight: 600; z-index: 21; pointer-events: none; }
+  .seg { margin: 116px 16px 0; }
+  .lbl { display: flex; justify-content: space-between; align-items: center; padding: 20px 20px 8px; font-size: 13px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .03em; }
+  .tag { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; text-transform: none; letter-spacing: 0; padding: 3px 8px; border-radius: 8px; background: color-mix(in srgb, var(--pending) 15%, transparent); color: var(--pending); }
+  .tag [data-i] { width: 13px; height: 13px; --sw: 44px; }
+  .row .avatar { width: 36px; height: 36px; border: 0; font-size: 13px; }
+  .row .amt b { font-weight: 600; }
+  .sugg { display: flex; align-items: center; gap: 10px; padding: 12px 16px; position: relative; }
+  .sugg + .sugg::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; border-top: .5px solid var(--separator); }
+  .sugg .who { flex: 1; font-size: 15px; display: flex; align-items: center; gap: 6px; }
+  .sugg .who [data-i] { width: 15px; height: 15px; color: var(--label-3); --sw: 48px; }
+  .sugg .v { font-weight: 600; font-size: 16px; }
+  .btn { height: 32px; padding: 0 12px; border-radius: 16px; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; }
+  .btn.on { background: var(--tint); color: #fff; }
+  .btn.off { background: var(--fill); color: var(--label-3); }
+  .note { margin: 10px 20px 0; font-size: 13px; color: var(--label-2); line-height: 18px; display: flex; gap: 8px; }
+  .note [data-i] { width: 16px; height: 16px; flex: none; margin-top: 1px; }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <div class="island"></div>
+  <div class="status"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="scroll">
+    <div class="navbar">
+      <div class="glass gbtn"><i data-i="chevron-back"></i></div>
+      <div class="grp" style="display:flex;gap:8px"><div class="glass gbtn"><i data-i="time"></i></div><div class="glass gbtn"><i data-i="ellipsis-horizontal"></i></div></div>
+    </div>
+    <div class="title">Apartment</div>
+    <div class="seg"><div>Expenses</div><div class="on">Balances</div><div>People</div></div>
+
+    <div class="lbl"><span>November</span><span class="tag"><i data-i="time"></i>Settles Nov 30</span></div>
+    <div class="list">
+      <div class="row"><div class="avatar mono">MF</div><div class="t"><b>You</b><span>Paid $2,900 · share $1,529.40</span></div><div class="amt num pos">+$142.50<span>gets back</span></div></div>
+      <div class="row"><div class="avatar mono">MI</div><div class="t"><b>Mira</b><span>Paid $96.30</span></div><div class="amt num">−$110.40<span>owes</span></div></div>
+      <div class="row"><div class="avatar mono">JS</div><div class="t"><b>Jo</b><span>Paid $184.20 · $61.40 repaid</span></div><div class="amt num">−$32.10<span>owes</span></div></div>
+    </div>
+
+    <div class="lbl"><span>Suggested payments</span></div>
+    <div class="list">
+      <div class="sugg"><span class="who">Mira <i data-i="arrow-up" style="transform:rotate(90deg)"></i> You</span><span class="v num">$110.40</span><span class="btn off">Record paid</span></div>
+      <div class="sugg"><span class="who">Jo <i data-i="arrow-up" style="transform:rotate(90deg)"></i> You</span><span class="v num">$32.10</span><span class="btn off">Record paid</span></div>
+    </div>
+    <div class="note"><i data-i="time"></i><span>Monthly payments open on the last day of the month. To repay a single expense now, use <b>Mark as paid</b> on its share.</span></div>
+
+    <div class="lbl"><span>October</span><span class="tag" style="background:color-mix(in srgb,var(--danger) 13%,transparent);color:var(--danger)"><i data-i="alert-circle"></i>Overdue</span></div>
+    <div class="list">
+      <div class="sugg"><span class="who">Jo <i data-i="arrow-up" style="transform:rotate(90deg)"></i> Mira</span><span class="v num">$18.00</span><span class="btn on">Record paid</span></div>
+    </div>
+  </div>
+  <div class="tabbar">
+    <div class="tabs glass">
+      <div class="tab"><i data-i="home"></i>Home</div>
+      <div class="tab"><i data-i="list"></i>Activity</div>
+      <div class="tab on"><i data-i="people"></i>Shared</div>
+      <div class="tab"><i data-i="airplane"></i>Trips</div>
+    </div>
+    <div class="fab glass tinted"><i data-i="add"></i></div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+</body></html>

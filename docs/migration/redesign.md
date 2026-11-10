@@ -1,27 +1,69 @@
 # Redesign baseline and adaptations
 
-The [existing Penpot proposal](https://design.penpot.app/?screen=viewer&file-id=124ca123-b2be-80ce-8008-e92b352e40f9&page-id=818fc2b6-4f0f-80e6-8008-e9306f94bfc1&index=0) and local `docs/design/penny-redesign/` proposal define v2's visual/interaction baseline. [design-baseline.json](../../contracts/design-baseline.json) captures all **79 specimens, 26 full control definitions and semantic tokens**, source paths/hashes, feature issues, legacy routes/tests and future acceptance owners. This is an architecture snapshot; MAZ-122 versions the full generator, assets, SVGs, previews and reports and reconciles Penpot before implementation relies on them. Source paths there are handoff locations, not claims those local-only files are already in this branch.
+The iOS-native redesign in [`docs/design/penny-ios/`](../design/penny-ios/README.md) is v2's visual and interaction baseline. It has 61 cards for iPhone, iPad, web and system, and the [`design-kit/`](../../design-kit/package.json) component kit (`@penny/ios-kit`, 42 components). Both are synced to the [Penny Claude Design project](https://claude.ai/design/p/173b576e-aa32-44dc-9f83-23f0ea8df538); read [`.design-sync/NOTES.md`](../../.design-sync/NOTES.md) before re-syncing. It replaces the earlier Penpot proposal (`docs/design/penny-redesign/`, removed in #30).
 
-Sources captured: `README.md`, `tokens.json`, `scene.json`, `screen-inventory.json`, `preview.html`, `validation.json`, `native-validation.json`, DM Sans OFL and Ionicons MIT license. Screen SVGs live under `screens/<id>.svg`; generation uses `design.mjs`, `flows.mjs`, `build.mjs` and verification uses `verify.mjs`. Preserve the leaf mark and licensed Ionicons family. Bundle DM Sans and its OFL license in each replacement client (MAZ-69/85); preserve scale/weights and support user text scaling rather than fixed storyboard metrics.
+[design-baseline.json](../../contracts/design-baseline.json) (version 2, MAZ-132) records:
+
+- every card, with a stable id (`<folder>-<file>`, for example `iphone-home`), its `@dsCard` group, name and viewport, source path and SHA-256;
+- the native and web feature issues for each card, its legacy route and test, and its MAZ-82/96 acceptance scenario;
+- the 42 design-kit controls, with their source file, docs page and hash;
+- the tokens (`--pk-*` in `design-kit/src/styles.css`), fonts, icons, materials, navigation and legacy route map;
+- the decisions below, the behavior issues the design implies, and known gaps.
+
+`tests/core/contracts.test.ts` checks the baseline against the files on disk: the card list, markers and hashes, the kit components and Claude Design source map, the source hashes, and that every Expo Router screen under `src/app/` keeps a destination. After a design change, update the affected entries and hashes in the same change.
+
+## Decisions (MAZ-132)
+
+| Topic | Decision |
+| --- | --- |
+| Baseline | `docs/design/penny-ios` and `design-kit` replace Penpot. MAZ-122 is rewritten around the new cards and owns the visual comparison of implementations. |
+| Appearances | Light and dark only, following the system setting. Dark is true black, so AMOLED is dropped. Catppuccin is dropped, not kept as an accent. A saved legacy `amoled` or `catppuccin` preference migrates to dark (MAZ-72/87). |
+| Navigation | iPhone: a floating glass tab bar with Home, Activity, Shared and Trips, plus a separate tinted **+** button. More goes away: Recurring, Accounts, Categories and Settings open from the settings button on Home, as a sheet. iPad: `NavigationSplitView` with a glass sidebar listing households and trips. Web: a persistent sidebar and a top bar with ⌘K search and Add entry. |
+| Fonts and icons | iOS: SF Pro with Dynamic Type styles, and SF Symbols. Web: Inter, bundled with its OFL license (`design-kit/fonts/`), and Ionicons v7 outline (MIT, `design-kit/src/icons.ts`). |
+| Android | No card. The legacy Android app is retired under MAZ-98 and has no redesign baseline. |
+
+## Legacy deep links
+
+Every legacy route keeps a destination. Details, pickers and confirmations are sheets on iOS and panels or dialogs on the web; don't turn each card into a new public URL.
+
+| Route | iPhone | iPad and web |
+| --- | --- | --- |
+| `/` | Home tab | Home |
+| `/transactions` | Activity tab | Activity |
+| `/entries/new` (also the widget **+**) | Add entry sheet | Add entry form sheet or dialog |
+| `/accounts`, `/categories`, `/recurring` | Settings sheet › page | Settings › page |
+| `/households`, `/households/[id]` | Shared tab, household | Sidebar › Together, household |
+| `/households/[id]/expenses/[expenseId]` | household › expense detail | household with the expense in the detail pane |
+| `/trips`, `/trips/[id]` | Trips tab, trip | Trips (web) or sidebar (iPad), trip |
+| `/auth/callback` | OIDC callback, then Home | OIDC callback, then Home |
 
 ## Interaction baseline
 
 | Concern | Required behavior | Owners and acceptance |
 | --- | --- | --- |
-| Navigation | Home / Activity / Shared / Trips / More; Recurring, Accounts, Categories, Settings under More; stable add action and existing deep links | MAZ-69/85, MAZ-82/96 |
-| Home/analysis | Forest summary, warm-white canvas, terracotta actions; recorded remaining separate from projected remaining and explicit expected income; investments are contributions | MAZ-77/92, overview/money-flow fixtures |
-| Entry/Activity | Inline frequent category controls plus All categories; selected category stays visible; labeled account/date; progressive More details for split/receipt/recurrence/trip/note; keyboard-safe stable Save | MAZ-73/88, draft/error/duplicate-submit journeys |
-| Shared/trips | Expenses / Balances / People; original total/payer/shares; viewer share in personal totals; monthly and per-share payment restrictions; recording a payment does not transfer money | MAZ-75/76/91/93, two-user settlement/privacy journeys |
-| Feedback | Durable personal save, pending scope, retained drafts, clear stale-payment recovery, toast/haptic; success specimen normally returns to source with feedback | MAZ-71/73/87/88, restart/reconnect/failure journeys |
-| Access | Biometric lock conceals content and open dialogs while preserving drafts; signed-out credential-free server verification; signed-in server read-only; web uses current origin and omits native controls | MAZ-69/85, MAZ-67/68, existing AppLock/ServerConnection tests |
-| Themes/assets | Light / Dark / AMOLED / Catppuccin, semantic status colors accompanied by text/icons, DM Sans/OFL, leaf/Ionicons/MIT | MAZ-69/85, all feature visual gates |
+| Home and analysis | **Left to spend** leads as one hero amount, with Projected directly under it. One Follow your money card opens the money flow (Sankey) and Insights. Income and spending are not an account balance; investments are contributions. | MAZ-77/92, overview and money-flow fixtures |
+| Entry and Activity | Add entry is a sheet with a large amount and an always-visible keypad on iPhone (a keyboard form on iPad and web). Expense, Income and Invest are a segmented control; three category chips; labeled Date, Account and Split rows; receipt, repeat and trip under one disclosure row; Save in the toolbar. Activity groups by day with a daily net, filter chips and a bottom search field; edit and delete are swipe actions (row actions on web). | MAZ-73/88, draft, error and duplicate-submit journeys |
+| Shared and trips | A household opens with members and your balance, then Record payment and Expense. Expenses, Balances and People are tabs. Recording a payment states that Penny doesn't move money. A stale payment shows the old and new amounts and offers only Review expense. Shared trips keep pre-sharing entries in an Only you section. | MAZ-75/76/91/93, two-user settlement and privacy journeys |
+| Organize | Accounts are labels with usage counts and no balances; an account in use can't be removed, and the reason is shown. Recurring rows show cadence and next date, with pause and remove as swipe actions. The category color picker offers only the category palette. | MAZ-74/89/90 |
+| Feedback | Each failure keeps the user's work and names the next step: offline banner with pending rows, save error that keeps the draft, sign-out warning about unsynced changes, and confirmation before deleting a shared expense for everyone. Saving shows a toast with Undo. | MAZ-69/71/85/87 |
+| Access | Face ID lock conceals content and open sheets while keeping drafts. Signed-out server verification needs no credentials; the server is read-only when signed in. The web uses the current origin and has no lock. | MAZ-68/69/84/85 |
+| Color | Copper is the only brand and action tint. Green means income, indigo investments, amber pending or expected, red errors and destructive actions. Expenses use the label color. Category colors never reuse a meaning color, and meaning is always also shown in text or an icon. | MAZ-69/85, all feature visual gates |
 
-Native iOS 26 Liquid Glass is a **strict requirement** for floating tabs, toolbar controls, search, selection and primary actions. SwiftUI uses the real system material; Penpot blur/highlight values are static approximations. Financial content stays legible and opaque where appropriate. Reduced transparency uses opaque high-contrast surfaces; reduced motion avoids unnecessary transitions. AMOLED can use solid surfaces for its black appearance; document the exception in visual acceptance. MAZ-66 fixes minimum OS support before builds; if iOS below 26 is supported, use an explicit frosted/opaque adaptation and test it separately, never claim it is native Liquid Glass. Web uses accessible DOM/CSS materials with visible keyboard focus and reduced-motion/transparency adaptations.
+Native iOS 26 Liquid Glass is required on the control layer only: the tab bar, toolbars, the month picker, search and floating buttons. Money and lists stay on solid surfaces. SwiftUI uses the real material (`.glassEffect`); the CSS blur in the cards only approximates it. Reduce Transparency uses opaque high-contrast surfaces, and Reduce Motion avoids unnecessary transitions. MAZ-66 fixes the minimum OS before builds; if iOS below 26 is supported, document the fallback material.
 
-## Screen coverage and limits
+## New behavior
 
-Every specimen has a native/web feature owner and planned MAZ-82/96 acceptance scenario in the JSON matrix. The 26 controls belong to MAZ-69/85 and the same acceptance gates. `home-android` is **legacy/reference only** under MAZ-98, never a new Android implementation requirement. Details/pickers/confirmations can be native sheets or nested web routes; do not turn every specimen into a new public URL. Preserve `/`, `/transactions`, `/entries/new`, account/category/recurring, household/trip detail and `/auth/callback` deep links.
+The design implies behavior the legacy app doesn't have. Each item is filed and linked from the cards' `behaviorIssues`:
 
-Adapt the 390px frames to safe areas, iPhone landscape, iPad split/multicolumn and resizable browser layouts. Proposed web breakpoints: <768 one column, 768–1099 compact rail/two columns, >=1100 sidebar/grid; validate 320px through desktop rather than copying fixed geometry. Test Dynamic Type/VoiceOver, keyboard/focus, scrolling above Save, contrast on changing backdrops, reduced motion/transparency and native pickers. These are acceptance requirements, not evidence of device execution.
+- MAZ-133: a Face ID **Lock after** delay (Immediately, 1 minute, 5 minutes).
+- MAZ-134: Add entry category chips ordered by recent use.
+- MAZ-135: medium and Lock Screen widgets, and restyled small widgets.
+- MAZ-136: income dated after today counts toward Projected, not Left to spend.
 
-The local report records 79 destinations with no declared broken targets or containment violations. **Native Penpot validation failed with 89 unmatched-node findings** after partial material/category synchronization. MAZ-122 must explain validator discrepancies versus missing design work, complete sync without changing stable board IDs, and publish new evidence. Static inputs, representative detail links and screenshot contrast samples are not exhaustive functional/accessibility tests. iPad, larger text, actual keyboard/focus, native picker/lock and PostgreSQL search/loading/offline behavior still require implementation validation. MAZ-82/96 cannot substitute storyboard checks for these gates.
+## Coverage and limits
+
+Every card has its feature owners and a planned MAZ-82/96 acceptance scenario. Web-shell controls (`WebFrame`, `WebSidebar`, `TopBar`, `DataTable`, `Dialog` and the rest of the Web category) have no native owner; `system-widgets` has no web owner. [redesign-states.json](../../contracts/fixtures/redesign-states.json) gives each card its seeded data state in light and dark ([test environment](test-environment.md#redesign-specimens)).
+
+Adapt the fixed card viewports to safe areas, iPhone landscape, iPad split and multicolumn, and resizable browser windows; validate 320px through desktop rather than copying fixed geometry. Test Dynamic Type and VoiceOver, keyboard and focus, scrolling above Save, contrast on the hero glow, reduced motion and transparency, and native pickers. These are acceptance requirements, not evidence of device execution.
+
+The cards are static HTML rendered with Inter and Ionicons as stand-ins for SF Pro and SF Symbols. No implementation has been visually compared with them yet; MAZ-122 owns that comparison. Larger text, a real keyboard and focus, native pickers, app lock and server-search loading states still need implementation validation, and MAZ-82/96 can't substitute card checks for those gates.

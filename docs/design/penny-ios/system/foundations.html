@@ -1,0 +1,81 @@
+<!-- @dsCard group="Foundations" name="Color, type & components" viewport="1240x780" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · Foundations</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<style>
+  body.canvas { display: block; background: var(--bg); }
+  h1 { font-size: 34px; font-weight: 700; letter-spacing: -0.03em; }
+  h2 { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--label-2); margin: 30px 0 12px; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .sw { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+  .s { border-radius: 16px; overflow: hidden; background: var(--surface); font-size: 12px; }
+  .s i { display: block; height: 56px; }
+  .s div { padding: 8px 10px; } .s b { display: block; font-size: 13px; } .s span { color: var(--label-2); font-family: ui-monospace, monospace; font-size: 11px; }
+  .pane { padding: 20px; border-radius: 26px; }
+  .type div { display: flex; align-items: baseline; gap: 16px; padding: 6px 0; }
+  .type span { width: 150px; font-size: 12px; color: var(--label-2); flex: none; }
+  .comp { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .mat { position: relative; height: 150px; border-radius: 22px; overflow: hidden; background: var(--surface); }
+  .mat .glow { top: -60px; height: 260px; left: 0; right: 0; }
+  .mat .glass { position: absolute; }
+</style></head>
+<body class="canvas">
+  <h1>Penny for iOS — foundations</h1>
+  <p style="color:var(--label-2);margin-top:6px;font-size:15px">Native iOS 26: SF Pro, SF Symbols, Liquid Glass for controls only, content on solid surfaces. One brand tint (copper) + semantic money colors.</p>
+
+  <h2>Color · light / dark</h2>
+  <div class="cols">
+    <div class="sw">
+      <div class="s"><i style="background:#E4572E"></i><div><b>Tint</b><span>#E4572E</span></div></div>
+      <div class="s"><i style="background:#1E8E4E"></i><div><b>Income</b><span>#1E8E4E</span></div></div>
+      <div class="s"><i style="background:#5B57D1"></i><div><b>Invest</b><span>#5B57D1</span></div></div>
+      <div class="s"><i style="background:#B7791F"></i><div><b>Pending</b><span>#B7791F</span></div></div>
+      <div class="s"><i style="background:#D93B30"></i><div><b>Danger</b><span>#D93B30</span></div></div>
+      <div class="s"><i style="background:#F2F1EE;border-bottom:.5px solid #ddd"></i><div><b>Bg</b><span>#F2F1EE</span></div></div>
+    </div>
+    <div class="sw">
+      <div class="s"><i style="background:#FF6F3F"></i><div><b>Tint</b><span>#FF6F3F</span></div></div>
+      <div class="s"><i style="background:#3DD07A"></i><div><b>Income</b><span>#3DD07A</span></div></div>
+      <div class="s"><i style="background:#8E8BFF"></i><div><b>Invest</b><span>#8E8BFF</span></div></div>
+      <div class="s"><i style="background:#E0A040"></i><div><b>Pending</b><span>#E0A040</span></div></div>
+      <div class="s"><i style="background:#FF6B60"></i><div><b>Danger</b><span>#FF6B60</span></div></div>
+      <div class="s"><i style="background:#000"></i><div><b>Bg</b><span>#000000</span></div></div>
+    </div>
+  </div>
+  <p style="font-size:13px;color:var(--label-2);margin-top:10px">Expenses use the primary label color, not red — red is reserved for errors and destructive actions. Category colors never reuse a meaning color: <span class="dot" style="background:var(--c-home)"></span> Home <span class="dot" style="background:var(--c-groceries)"></span> Groceries <span class="dot" style="background:var(--c-transport)"></span> Transport <span class="dot" style="background:var(--c-food)"></span> Food <span class="dot" style="background:var(--c-shopping)"></span> Shopping (user-pickable).</p>
+
+  <div class="cols">
+    <div>
+      <h2>Type · SF Pro (Dynamic Type styles)</h2>
+      <div class="pane card type" style="margin:0">
+        <div><span>Hero amount · 64 Bold</span><b class="num" style="font-size:52px;letter-spacing:-.045em">$1,116<small style="opacity:.5;font-size:28px">.65</small></b></div>
+        <div><span>Large Title · 34 Bold</span><b style="font-size:34px;letter-spacing:-.025em">Activity</b></div>
+        <div><span>Title 2 · 22 Bold</span><b style="font-size:22px">Spending</b></div>
+        <div><span>Headline · 17 Semibold</span><b style="font-size:17px">Coffee with Mira</b></div>
+        <div><span>Body · 17 Regular</span><span style="font-size:17px;width:auto;color:var(--label)">Dinner with friends</span></div>
+        <div><span>Subhead · 15</span><span style="font-size:15px;width:auto">Visa · split 2 ways</span></div>
+        <div><span>Footnote · 13 Semibold caps</span><span class="eyebrow" style="width:auto">Left to spend</span></div>
+      </div>
+    </div>
+    <div>
+      <h2>Material · Liquid Glass on controls, solid content</h2>
+      <div class="mat"><div class="glow"></div>
+        <div class="glass gcap" style="left:20px;top:20px">November <i data-i="chevron-down" style="width:15px;height:15px"></i></div>
+        <div class="glass gbtn" style="left:170px;top:20px"><i data-i="settings"></i></div>
+        <div class="glass gcap tinted" style="left:226px;top:20px"><i data-i="add" style="width:18px;height:18px"></i>Add entry</div>
+        <div class="tabs glass" style="position:absolute;left:20px;right:20px;bottom:18px;display:flex;height:58px;border-radius:29px;padding:4px">
+          <div class="tab on"><i data-i="home"></i>Home</div><div class="tab"><i data-i="list"></i>Activity</div><div class="tab"><i data-i="people"></i>Shared</div><div class="tab"><i data-i="airplane"></i>Trips</div>
+        </div>
+      </div>
+      <h2>Components</h2>
+      <div class="comp">
+        <span class="pill on">All</span><span class="pill">Expenses</span><span class="pill" style="background:var(--c-food);color:#fff"><i data-i="cafe"></i>Food</span>
+        <div class="seg" style="width:240px"><div class="on">Expense</div><div>Income</div><div>Invest</div></div>
+      </div>
+      <div class="list" style="margin:14px 0 0">
+        <div class="row"><div class="ic" style="background:var(--c-groceries)"><i data-i="basket"></i></div><div class="t"><b>Transaction row</b><span>Meta · account</span></div><div class="amt num">−$48.90</div></div>
+        <div class="row"><div class="ic" style="background:var(--income)"><i data-i="arrow-down"></i></div><div class="t"><b>Income row</b><span>Signed, green</span></div><div class="amt num pos">+$3,200.00</div></div>
+      </div>
+    </div>
+  </div>
+</body></html>

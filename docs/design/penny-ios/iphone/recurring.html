@@ -1,0 +1,73 @@
+<!-- @dsCard group="iPhone" name="Recurring" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Recurring</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<style>
+  .behind { position: absolute; inset: 0; background: var(--bg); }
+  .scrim { position: absolute; inset: 0; background: var(--dim); z-index: 5; }
+  .sheet { position: absolute; left: 6px; right: 6px; top: 62px; bottom: 6px; border-radius: 44px; background: var(--bg); z-index: 10; overflow: hidden; }
+  .sheet.back { top: 50px; left: 18px; right: 18px; opacity: .9; z-index: 8; background: var(--surface-2); }
+  .sheet.front { top: 74px; z-index: 12; }
+  .grabber { width: 36px; height: 5px; border-radius: 3px; background: var(--label-3); opacity: .5; margin: 7px auto 0; }
+  .bar { display: flex; justify-content: space-between; align-items: center; padding: 6px 14px 0; height: 56px; }
+  .bar h2 { font-size: 17px; font-weight: 600; }
+  .bar .side { width: 96px; display: flex; gap: 8px; } .bar .side.r { justify-content: flex-end; width: auto; min-width: 96px; }
+  .gbtn.plain { background: var(--fill); box-shadow: none; border: 0; }
+  .ltitle { font-size: 30px; font-weight: 700; letter-spacing: -0.025em; padding: 4px 22px 0; }
+  .lsub { font-size: 15px; color: var(--label-2); padding: 2px 22px 0; }
+  .gh { padding: 22px 32px 7px; font-size: 13px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .03em; display: flex; justify-content: space-between; }
+  .gf { padding: 7px 32px 0; font-size: 13px; color: var(--label-2); line-height: 1.4; }
+  .glist { background: var(--surface); border-radius: 22px; margin: 0 16px; overflow: hidden; }
+  .sr { display: flex; align-items: center; gap: 12px; min-height: 50px; padding: 8px 16px; position: relative; font-size: 17px; }
+  .sr + .sr::before { content: ""; position: absolute; top: 0; left: 58px; right: 0; border-top: .5px solid var(--separator); }
+  .sr.noi + .sr::before, .sr.noi::before { left: 16px; }
+  .si { width: 30px; height: 30px; border-radius: 8px; background: var(--fill); display: grid; place-items: center; color: var(--label); flex: none; }
+  .si [data-i] { width: 18px; height: 18px; --sw: 40px; }
+  .sr .tx { flex: 1; min-width: 0; } .sr .tx small { display: block; font-size: 13px; color: var(--label-2); margin-top: 1px; }
+  .sr .v { margin-left: auto; color: var(--label-2); display: flex; align-items: center; gap: 6px; font-size: 16px; white-space: nowrap; }
+  .sw { width: 51px; height: 31px; border-radius: 16px; background: var(--fill); position: relative; flex: none; margin-left: auto; }
+  .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.2); }
+  .sw.on { background: var(--tint); } .sw.on::after { left: 22px; }
+  .check { color: var(--tint); margin-left: auto; } .check[data-i] { width: 20px; height: 20px; --sw: 48px; }
+  .danger { color: var(--danger); }
+  .tag { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 8px; background: var(--fill); color: var(--label-2); }
+  .tag [data-i] { width: 11px; height: 11px; --sw: 60px; }
+  .field { margin: 0 16px; background: var(--surface); border-radius: 16px; height: 52px; display: flex; align-items: center; padding: 0 16px; font-size: 17px; }
+  .field .cur { width: 2px; height: 22px; background: var(--tint); margin-left: 1px; border-radius: 1px; }
+  .seg.in { margin: 0 16px; }
+
+  .row .chev { margin-left: 2px; }
+  .row .t span.tag { display: inline-flex; margin-top: 4px; }
+  .gh { padding-top: 18px; }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <div class="behind"><div class="glow"></div></div>
+  <div class="scrim"></div>
+  <div class="island"></div>
+  <div class="status" style="color:#fff"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="bar"><div class="side"><div class="glass gbtn"><i data-i="chevron-back"></i></div></div><h2></h2><div class="side r"><div class="glass gbtn"><i data-i="add"></i></div></div></div>
+    <div class="ltitle">Recurring</div>
+    <div class="lsub">Penny records these on their date.</div>
+    <div class="gh"><span>Income</span></div>
+    <div class="list">
+      <div class="row"><div class="ic" style="background:var(--income)"><i data-i="arrow-down"></i></div><div class="t"><b>Payday</b><span>Monthly · next Nov 15</span></div><div class="amt num pos">+$2,250.00</div><i data-i="chevron-forward" class="chev"></i></div>
+    </div>
+    <div class="gh"><span>Expenses</span></div>
+    <div class="list">
+      <div class="row"><div class="ic" style="background:var(--c-home)"><i data-i="receipt"></i></div><div class="t"><b>Internet</b><span>Monthly · next Nov 18 · Visa</span></div><div class="amt num ">−$65.00</div><i data-i="chevron-forward" class="chev"></i></div>
+      <div class="row"><div class="ic" style="background:var(--c-food)"><i data-i="play"></i></div><div class="t"><b>Streaming</b><span>Monthly · next Nov 22 · Visa</span></div><div class="amt num ">−$18.99</div><i data-i="chevron-forward" class="chev"></i></div>
+      <div class="row"><div class="ic" style="background:var(--c-transport)"><i data-i="bus"></i></div><div class="t"><b>Transit pass</b><span>Monthly · next Dec 6</span></div><div class="amt num ">−$62.00</div><i data-i="chevron-forward" class="chev"></i></div>
+      <div class="row"><div class="ic" style="background:var(--c-groceries);opacity:.5"><i data-i="leaf"></i></div><div class="t"><b style="color:var(--label-2)">Gym</b><span class="tag"><i data-i="pause"></i>Paused · monthly</span></div><div class="amt num" style="color:var(--label-2)">−$45.00</div><i data-i="chevron-forward" class="chev"></i></div>
+    </div>
+    <div class="gh"><span>Investments</span></div>
+    <div class="list">
+      <div class="row"><div class="ic" style="background:var(--invest)"><i data-i="trending-up"></i></div><div class="t"><b>TFSA contribution</b><span>Monthly · next Dec 6</span></div><div class="amt num inv">$200.00</div><i data-i="chevron-forward" class="chev"></i></div>
+    </div>
+    <div class="gf">Swipe a schedule to pause or remove it. Removing keeps past entries.</div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+</body></html>

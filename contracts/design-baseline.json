@@ -1,220 +1,441 @@
 {
-  "version": 1,
-  "capturedAt": "2026-11-07",
+  "version": 2,
+  "capturedAt": "2026-11-09",
   "handoffIssue": "MAZ-122",
-  "penpot": "https://design.penpot.app/?screen=viewer&file-id=124ca123-b2be-80ce-8008-e92b352e40f9&page-id=818fc2b6-4f0f-80e6-8008-e9306f94bfc1&index=0",
-  "status": "local baseline; full asset versioning and Penpot sync remain MAZ-122",
+  "design": {
+    "source": "docs/design/penny-ios",
+    "kit": "design-kit",
+    "claudeDesign": "https://claude.ai/design/p/173b576e-aa32-44dc-9f83-23f0ea8df538",
+    "previews": "node docs/design/penny-ios/render.mjs 2"
+  },
+  "status": "baseline on the iOS-native redesign (MAZ-132); visual comparison against implementations remains MAZ-122",
+  "appearances": [
+    "light",
+    "dark"
+  ],
+  "decisions": [
+    {
+      "topic": "baseline",
+      "decision": "docs/design/penny-ios and design-kit replace the Penpot proposal (docs/design/penny-redesign, removed in #30)."
+    },
+    {
+      "topic": "appearances",
+      "decision": "Light and dark only, following the system setting. Dark is true black, so AMOLED is dropped; Catppuccin is dropped and not kept as an accent. A saved legacy amoled or catppuccin preference migrates to dark (MAZ-72/87)."
+    },
+    {
+      "topic": "navigation",
+      "decision": "iPhone tabs Home, Activity, Shared and Trips with a separate add button; More is replaced by a Settings sheet. Every legacy route keeps a destination (navigation.legacyRoutes)."
+    },
+    {
+      "topic": "fonts and icons",
+      "decision": "iOS uses SF Pro with Dynamic Type and SF Symbols. Web uses Inter (bundled with its OFL license) and Ionicons v7 outline (MIT)."
+    },
+    {
+      "topic": "Android",
+      "decision": "No Android card; the legacy Android app is retired under MAZ-98 and has no redesign baseline."
+    }
+  ],
+  "behaviorIssues": [
+    {
+      "issue": "MAZ-133",
+      "title": "Face ID lock delay setting",
+      "specimens": [
+        "iphone-app-lock"
+      ]
+    },
+    {
+      "issue": "MAZ-134",
+      "title": "Add entry category shortcuts ordered by recent use",
+      "specimens": [
+        "iphone-add-expense",
+        "iphone-add-income",
+        "ipad-add-entry",
+        "web-add-entry"
+      ]
+    },
+    {
+      "issue": "MAZ-135",
+      "title": "Medium and Lock Screen widgets; restyled small widgets",
+      "specimens": [
+        "system-widgets"
+      ]
+    },
+    {
+      "issue": "MAZ-136",
+      "title": "Income dated after today counts toward Projected",
+      "specimens": [
+        "iphone-home",
+        "iphone-add-income"
+      ]
+    }
+  ],
   "sources": [
     {
-      "path": "docs/design/penny-redesign/README.md",
-      "sha256": "a7a8bae3a95d3ae2e1dfa19d6a922718dd040c989a7ec4adbdf5291474684a1e"
+      "path": "docs/design/penny-ios/README.md",
+      "sha256": "7919c1136047889540f9d18675abc2358496f7b9391080bc44341aedabe7cc8c"
     },
     {
-      "path": "docs/design/penny-redesign/tokens.json",
-      "sha256": "ce427f8a8b116b9653c5ce48e0f648d87f8d30f910142fb47e2dc589e1f98c72"
+      "path": "docs/design/penny-ios/render.mjs",
+      "sha256": "1a8e2897dc2b39d97e19b98d3ccd3e303e34288ae143b5e8d3dab429d63ef669"
     },
     {
-      "path": "docs/design/penny-redesign/scene.json",
-      "sha256": "b33ec54ff28cd4de6d8b792e990d619821bb816e71492463fcd8bf89ec2c2036"
+      "path": "docs/design/penny-ios/assets/penny.css",
+      "sha256": "a70d13ea4dfbd42e2ba57ef4d4003c8c6fce960c245504ab1d582e0a0800f7da"
     },
     {
-      "path": "docs/design/penny-redesign/screen-inventory.json",
-      "sha256": "5aad735fd37ced20a401f791afaad3fd9997c0c764ba3979710ec06d66dcdec4"
+      "path": "docs/design/penny-ios/assets/ipad.css",
+      "sha256": "99e60a4bcc4889448736d7a592392d1b48cb903cdb01ee222e74716421318f87"
     },
     {
-      "path": "docs/design/penny-redesign/preview.html",
-      "sha256": "77b2a8624d06098d57a87a7df8a8bba404effdf5d2a2543e659778801222bff9"
+      "path": "docs/design/penny-ios/assets/web.css",
+      "sha256": "45bdce8f54c776fa7c5d19f22403bfd5806884a93b814a45441da8aff04eed42"
     },
     {
-      "path": "docs/design/penny-redesign/validation.json",
-      "sha256": "7033d5d5fa349831a18988e66ecf4679f4298c01d4eba6d8a62abcf532f75571"
+      "path": "docs/design/penny-ios/assets/icons.js",
+      "sha256": "d8ba85fa7030535dcabe133e5efc52580c50c235f908d922d702b203e4a5e7a0"
     },
     {
-      "path": "docs/design/penny-redesign/native-validation.json",
-      "sha256": "bcad2f9afa9e7aef68e0fe9ef424a4b919e7a65a956891ea3beeebc4d5c3bbc9"
+      "path": "docs/design/penny-ios/assets/sankey.js",
+      "sha256": "ba9d666946f60ae1594dc1cc8e103d076a15696a00f0bf31d56bc235ab6d8588"
     },
     {
-      "path": "docs/design/penny-redesign/assets/DM-Sans-OFL.txt",
-      "sha256": "9af36190332437f5ecd09974de43c1f7c77a310a996cdd8ceb25628b458840e1"
+      "path": "docs/design/penny-ios/assets/web.js",
+      "sha256": "83e12f1802157809e4d68648737f4fad80bb445fc45e4626b99e8885292a4d23"
     },
     {
-      "path": "docs/design/penny-redesign/assets/IONIC-LICENSE",
-      "sha256": "c89dabc60b2e4e1a04b33bd7010b5a56bb4725ffe8c00d793a5ae009fbbfebd8"
+      "path": "docs/design/penny-ios/assets/Inter-OFL.txt",
+      "sha256": "5b9321a4298cfeb6b34354164a1c3afc3db114569984c502b9b35d988fd58c57"
+    },
+    {
+      "path": "design-kit/src/styles.css",
+      "sha256": "cac10489d98cc7a179cbf9d74c4bc1e34a194936d53b9812224b5d29e38d50ad"
+    },
+    {
+      "path": "design-kit/src/icons.ts",
+      "sha256": "2daac34d07599ed14e91145ceb44c41ff6b92d92e8b15b5b90f3a450ddffde07"
+    },
+    {
+      "path": "design-kit/src/index.ts",
+      "sha256": "d19f1906575b8e925941a052c3e9fbdbb0bce5586708a54c7245adcc9bd7e2e2"
+    },
+    {
+      "path": "design-kit/fonts/Inter-OFL.txt",
+      "sha256": "5b9321a4298cfeb6b34354164a1c3afc3db114569984c502b9b35d988fd58c57"
+    },
+    {
+      "path": ".design-sync/config.json",
+      "sha256": "8119d6bfbce94fbb2dfe4b074fd102d4d1b928f85cd2426e844672291f8db9ad"
+    },
+    {
+      "path": ".design-sync/NOTES.md",
+      "sha256": "e75cd91e706e617e8a066ce38664aece25abf775bd465dbf58defe9b6f0d04a3"
     }
   ],
   "tokens": {
-    "name": "Penny design proposal",
-    "version": 2,
-    "fontFamily": "DM Sans",
-    "palettes": {
-      "light": {
-        "bg": "#F7F6F2",
-        "paper": "#FFFFFF",
-        "ink": "#223C32",
-        "muted": "#627369",
-        "line": "#DCE3DC",
-        "accent": "#B74F32",
-        "onAccent": "#FFFFFF",
-        "mint": "#EDF3EC",
-        "pale": "#F0F1EB",
-        "green": "#28664F",
-        "blue": "#356986",
-        "orange": "#F9ECE4",
-        "danger": "#AE3939",
-        "dangerBg": "#FCECEC",
-        "amber": "#79531E",
-        "amberBg": "#FFF2D8",
-        "hero": "#244B3B",
-        "onHero": "#FFFFFF",
-        "heroMuted": "#CFDED2",
-        "overlay": "#26372F"
+    "name": "Penny for iOS",
+    "source": "design-kit/src/styles.css",
+    "prefix": "--pk-",
+    "fonts": {
+      "ios": {
+        "family": "SF Pro",
+        "note": "system font with Dynamic Type text styles"
       },
-      "dark": {
-        "bg": "#171E1A",
-        "paper": "#222D26",
-        "ink": "#F1F5EE",
-        "muted": "#AFBFB1",
-        "line": "#435348",
-        "accent": "#F09B75",
-        "onAccent": "#2D1B12",
-        "mint": "#2C4033",
-        "pale": "#2B352D",
-        "green": "#A3D8B2",
-        "blue": "#A4CAE5",
-        "orange": "#49352A",
-        "danger": "#FFAEA6",
-        "dangerBg": "#492A2C",
-        "amber": "#F4CB82",
-        "amberBg": "#3E3423",
-        "hero": "#2A4736",
-        "onHero": "#F1F5EE",
-        "heroMuted": "#C8DBCC",
-        "overlay": "#000000"
+      "web": {
+        "family": "Inter",
+        "fallback": "system-ui, sans-serif",
+        "file": "design-kit/fonts/Inter.ttf",
+        "license": "design-kit/fonts/Inter-OFL.txt"
+      }
+    },
+    "icons": {
+      "ios": {
+        "family": "SF Symbols"
       },
-      "amoled": {
-        "bg": "#000000",
-        "paper": "#101410",
-        "ink": "#F4F8F1",
-        "muted": "#AFBBAE",
-        "line": "#303A30",
-        "accent": "#F7A07A",
-        "onAccent": "#28170F",
-        "mint": "#172B1D",
-        "pale": "#161E17",
-        "green": "#A2DCB4",
-        "blue": "#A6CEEF",
-        "orange": "#302016",
-        "danger": "#FFAEA6",
-        "dangerBg": "#321719",
-        "amber": "#F4CB82",
-        "amberBg": "#2D2417",
-        "hero": "#14271B",
-        "onHero": "#F4F8F1",
-        "heroMuted": "#C4D8C6",
-        "overlay": "#000000"
-      },
-      "catppuccin": {
-        "bg": "#1E1E2E",
-        "paper": "#272739",
-        "ink": "#CDD6F4",
-        "muted": "#BAC2DE",
-        "line": "#45475A",
-        "accent": "#CBA6F7",
-        "onAccent": "#1E1E2E",
-        "mint": "#303A39",
-        "pale": "#313244",
-        "green": "#A6E3A1",
-        "blue": "#89B4FA",
-        "orange": "#3D324D",
-        "danger": "#F38BA8",
-        "dangerBg": "#432B3A",
-        "amber": "#F9E2AF",
-        "amberBg": "#403A32",
-        "hero": "#303044",
-        "onHero": "#CDD6F4",
-        "heroMuted": "#BAC2DE",
-        "overlay": "#11111B"
+      "web": {
+        "family": "Ionicons v7 outline",
+        "source": "design-kit/src/icons.ts",
+        "license": "MIT"
       }
     },
     "typeScale": {
-      "display": [
-        40,
-        48,
-        600
+      "hero": [
+        64,
+        700
       ],
-      "title": [
-        30,
-        36,
-        600
+      "largeTitle": [
+        34,
+        700
       ],
-      "heading": [
-        20,
-        26,
+      "title2": [
+        22,
+        700
+      ],
+      "headline": [
+        17,
         600
       ],
       "body": [
-        15,
-        21,
-        400
-      ],
-      "label": [
-        13,
-        18,
-        600
-      ],
-      "caption": [
-        12,
         17,
         400
+      ],
+      "subhead": [
+        15,
+        400
+      ],
+      "footnote": [
+        13,
+        600
       ]
     },
-    "spacing": [
-      4,
-      8,
-      12,
-      16,
-      20,
-      24,
-      32,
-      40,
-      48
-    ],
     "radius": {
-      "control": 26,
-      "card": 20,
-      "sheet": 28
+      "card": 26,
+      "row": 14,
+      "field": 12
     },
-    "controlHeight": 52,
-    "minTouchTarget": 48,
-    "gutter": 24,
+    "gutter": 16,
+    "minTouchTarget": 44,
+    "palettes": {
+      "light": {
+        "bg": "#F2F1EE",
+        "surface": "#FFFFFF",
+        "surface-2": "#F7F6F3",
+        "fill": "rgba(120, 116, 110, 0.12)",
+        "separator": "rgba(60, 56, 50, 0.13)",
+        "label": "#16120F",
+        "label-2": "#6F6A64",
+        "label-3": "#A9A49D",
+        "tint": "#E4572E",
+        "tint-text": "#C2461F",
+        "tint-soft": "rgba(228, 87, 46, 0.12)",
+        "income": "#1E8E4E",
+        "income-soft": "rgba(30, 142, 78, 0.12)",
+        "invest": "#5B57D1",
+        "invest-soft": "rgba(91, 87, 209, 0.12)",
+        "pending": "#B7791F",
+        "pending-soft": "rgba(183, 121, 31, 0.13)",
+        "danger": "#D93B30",
+        "danger-soft": "rgba(217, 59, 48, 0.10)",
+        "glass": "rgba(255, 255, 255, 0.62)",
+        "glass-edge": "rgba(255, 255, 255, 0.9)",
+        "dim": "rgba(20, 14, 10, 0.28)"
+      },
+      "dark": {
+        "bg": "#000000",
+        "surface": "#1A1918",
+        "surface-2": "#232220",
+        "fill": "rgba(150, 145, 138, 0.20)",
+        "separator": "rgba(255, 250, 240, 0.12)",
+        "label": "#F6F4F1",
+        "label-2": "#A39E97",
+        "label-3": "#6D6863",
+        "tint": "#FF6F3F",
+        "tint-text": "#FF8A5E",
+        "tint-soft": "rgba(255, 111, 63, 0.18)",
+        "income": "#3DD07A",
+        "income-soft": "rgba(61, 208, 122, 0.16)",
+        "invest": "#8E8BFF",
+        "invest-soft": "rgba(142, 139, 255, 0.18)",
+        "pending": "#E0A040",
+        "pending-soft": "rgba(224, 160, 64, 0.18)",
+        "danger": "#FF6B60",
+        "danger-soft": "rgba(255, 107, 96, 0.16)",
+        "glass": "rgba(40, 38, 36, 0.58)",
+        "glass-edge": "rgba(255, 255, 255, 0.16)",
+        "dim": "rgba(0, 0, 0, 0.55)"
+      }
+    },
+    "categoryColors": {
+      "home": "#3B82F6",
+      "groceries": "#0FA3A3",
+      "transport": "#64748B",
+      "food": "#E0529C",
+      "shopping": "#A0704C",
+      "entertainment": "#7A8F3A",
+      "health": "#0E7490",
+      "other": "#8E8A85"
+    },
+    "meaning": {
+      "tint": "actions, selection and brand",
+      "income": "income, money left and owed to you",
+      "invest": "investment contributions",
+      "pending": "expected, waiting or scheduled",
+      "danger": "errors and destructive actions only",
+      "expense": "expenses use the normal label color, never red"
+    },
     "materials": {
-      "requirement": "Native iOS 26 Liquid Glass",
-      "regular": {
-        "backgroundBlur": 24,
-        "fillOpacity": 0.68
-      },
-      "tinted": {
-        "backgroundBlur": 24,
-        "fillOpacity": 0.96
-      },
-      "selected": {
-        "backgroundBlur": 12,
-        "fillOpacity": 0.76
-      },
-      "note": "Static Penpot approximation. Use the native iOS 26 material and interaction behavior in the application."
+      "requirement": "Native iOS 26 Liquid Glass on the control layer only: tab bar, toolbars, month picker, search and floating buttons. Money and lists stay on solid surfaces.",
+      "note": "The --pk-glass values are a CSS approximation for the cards and web; use .glassEffect in SwiftUI and opaque surfaces under Reduce Transparency."
     }
+  },
+  "navigation": {
+    "iPhone": {
+      "tabs": [
+        "Home",
+        "Activity",
+        "Shared",
+        "Trips"
+      ],
+      "addAction": "separate tinted + button, always available",
+      "settings": "sheet from the settings button on Home; replaces the More tab"
+    },
+    "iPad": {
+      "layout": "NavigationSplitView with a floating glass sidebar listing households and trips"
+    },
+    "web": {
+      "layout": "persistent left sidebar (Home, Activity, Insights; Together; Manage) with a top bar, ⌘K search and Add entry (N)"
+    },
+    "legacyRoutes": [
+      {
+        "route": "/",
+        "file": "src/app/index.tsx",
+        "iPhone": "Home tab",
+        "iPad": "Home",
+        "web": "Home"
+      },
+      {
+        "route": "/transactions",
+        "file": "src/app/transactions.tsx",
+        "iPhone": "Activity tab",
+        "iPad": "Activity",
+        "web": "Activity"
+      },
+      {
+        "route": "/entries/new",
+        "file": "src/app/entries/new.tsx",
+        "iPhone": "Add entry sheet over the current tab",
+        "iPad": "Add entry form sheet",
+        "web": "Add entry dialog over the current page"
+      },
+      {
+        "route": "/accounts",
+        "file": "src/app/accounts.tsx",
+        "iPhone": "Settings sheet › Accounts",
+        "iPad": "Settings › Accounts",
+        "web": "Settings › Accounts"
+      },
+      {
+        "route": "/categories",
+        "file": "src/app/categories.tsx",
+        "iPhone": "Settings sheet › Categories",
+        "iPad": "Settings › Categories",
+        "web": "Settings › Categories"
+      },
+      {
+        "route": "/recurring",
+        "file": "src/app/recurring.tsx",
+        "iPhone": "Settings sheet › Recurring",
+        "iPad": "Settings › Recurring",
+        "web": "Settings › Recurring"
+      },
+      {
+        "route": "/households",
+        "file": "src/app/households/index.tsx",
+        "iPhone": "Shared tab",
+        "iPad": "Sidebar › Together",
+        "web": "Sidebar › Together"
+      },
+      {
+        "route": "/households/[id]",
+        "file": "src/app/households/[id]/index.tsx",
+        "iPhone": "Shared tab › household",
+        "iPad": "Sidebar household",
+        "web": "Household page"
+      },
+      {
+        "route": "/households/[id]/expenses/[expenseId]",
+        "file": "src/app/households/[id]/expenses/[expenseId].tsx",
+        "iPhone": "household › expense detail",
+        "iPad": "household with the expense in the detail pane",
+        "web": "Household page with the expense in the detail panel"
+      },
+      {
+        "route": "/trips",
+        "file": "src/app/trips/index.tsx",
+        "iPhone": "Trips tab",
+        "iPad": "Sidebar › Together",
+        "web": "Trips"
+      },
+      {
+        "route": "/trips/[id]",
+        "file": "src/app/trips/[id].tsx",
+        "iPhone": "Trips tab › trip",
+        "iPad": "Sidebar trip",
+        "web": "Trips › trip"
+      },
+      {
+        "route": "/auth/callback",
+        "file": "src/app/auth/callback.tsx",
+        "iPhone": "OIDC callback, then Home",
+        "iPad": "OIDC callback, then Home",
+        "web": "OIDC callback, then Home"
+      }
+    ]
   },
   "specimens": [
     {
-      "id": "home",
-      "name": "01 · Home",
-      "category": "Daily money",
-      "w": 390,
-      "h": 844,
+      "id": "system-foundations",
+      "name": "Color, type & components",
+      "group": "Foundations",
+      "platform": "System",
+      "category": "System",
+      "viewport": {
+        "w": 1240,
+        "h": 780
+      },
       "theme": "light",
-      "platform": "iOS",
-      "note": "Home separates recorded remaining from projected remaining. Income and spending figures are not an account balance. Calendar and money-flow tools move into Explore your month.",
-      "sourcePath": "docs/design/penny-redesign/screens/home.svg",
+      "sourcePath": "docs/design/penny-ios/system/foundations.html",
+      "sha256": "43a653af79f3f9fbb6b9687713775565630aca9a9678746729fdf9a25f7de900",
+      "nativeIssue": "MAZ-69",
+      "webIssue": "MAZ-85",
+      "legacyRoute": null,
+      "legacyTest": null,
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "tokens, meaning colors, contrast in light and dark, reduced transparency"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "system-widgets",
+      "name": "Home & Lock Screen widgets",
+      "group": "Widgets",
+      "platform": "System",
+      "category": "System",
+      "viewport": {
+        "w": 900,
+        "h": 670
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/system/widgets.html",
+      "sha256": "5474147b47bef15ad8b307a96f89b3e25805b6a1e15d04db197cb3d472f29a99",
+      "nativeIssue": "MAZ-80",
+      "webIssue": null,
+      "legacyRoute": "/entries/new",
+      "legacyTest": "tests/ui/widgets/widgetData.test.ts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": null,
+        "scenario": "safe shared snapshot, families, deep links and light and dark rendering"
+      },
+      "behaviorIssues": [
+        "MAZ-135"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "iphone-home",
+      "name": "Home",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Daily money",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/home.html",
+      "sha256": "a3b8a1d02909b44cfcc51f0edece652b62c37e1e0e8078f2d9134e8c7566d33a",
       "nativeIssue": "MAZ-77",
       "webIssue": "MAZ-92",
       "legacyRoute": "/",
@@ -224,1551 +445,24 @@
         "web": "MAZ-96",
         "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
       },
+      "behaviorIssues": [
+        "MAZ-136"
+      ],
       "status": "planned"
     },
     {
-      "id": "activity",
-      "name": "02 · Activity",
+      "id": "iphone-home-dark",
+      "name": "Home · Dark",
+      "group": "iPhone",
+      "platform": "iPhone",
       "category": "Daily money",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "Keep category filtering directly on the list: All, frequent categories and Filters. Filters exposes the complete category list. Category buttons filter in place during implementation; this storyboard uses a representative filtered result. Filters never change the period totals.",
-      "sourcePath": "docs/design/penny-redesign/screens/activity.svg",
-      "nativeIssue": "MAZ-73",
-      "webIssue": "MAZ-88",
-      "legacyRoute": "/transactions",
-      "legacyTest": "tests/core/transactions.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "inline categories, substring/hybrid and scoped offline search"
+      "viewport": {
+        "w": 482,
+        "h": 954
       },
-      "status": "planned"
-    },
-    {
-      "id": "activity-expenses",
-      "name": "03 · Activity / expenses",
-      "category": "Daily money",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/activity-expenses.svg",
-      "nativeIssue": "MAZ-73",
-      "webIssue": "MAZ-88",
-      "legacyRoute": "/transactions",
-      "legacyTest": "tests/core/transactions.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "inline categories, substring/hybrid and scoped offline search"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "filters",
-      "name": "04 · Activity filters",
-      "category": "Daily money",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/filters.svg",
-      "nativeIssue": "MAZ-73",
-      "webIssue": "MAZ-88",
-      "legacyRoute": "/transactions",
-      "legacyTest": "tests/core/transactions.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "inline categories, substring/hybrid and scoped offline search"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "calendar",
-      "name": "05 · Calendar",
-      "category": "Daily money",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "Calendar selection filters the entry list. Scheduled previews have a named state and never look like recorded entries.",
-      "sourcePath": "docs/design/penny-redesign/screens/calendar.svg",
-      "nativeIssue": "MAZ-77",
-      "webIssue": "MAZ-92",
-      "legacyRoute": "/",
-      "legacyTest": "tests/core/overview.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "insights",
-      "name": "06 · Month insights",
-      "category": "Daily money",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/insights.svg",
-      "nativeIssue": "MAZ-77",
-      "webIssue": "MAZ-92",
-      "legacyRoute": "/",
-      "legacyTest": "tests/core/overview.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "money-flow",
-      "name": "07 · Money flow",
-      "category": "Daily money",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "Replaces the phone-width horizontal Sankey with a readable stacked flow. Segment widths use exact amounts. A future expanded Sankey can remain available on desktop.",
-      "sourcePath": "docs/design/penny-redesign/screens/money-flow.svg",
-      "nativeIssue": "MAZ-77",
-      "webIssue": "MAZ-92",
-      "legacyRoute": "/",
-      "legacyTest": "tests/core/overview.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "add-expense",
-      "name": "08 · Add expense",
-      "category": "Entry flows",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "Frequent categories are selected inline without a popup or page change. All categories opens the full list only when needed. Chips are static in this storyboard; implementation updates the selection in place and keeps the selected category visible even when it is not frequent. Keyboard scrolls above the save action. Failed saves preserve the draft.",
-      "sourcePath": "docs/design/penny-redesign/screens/add-expense.svg",
-      "nativeIssue": "MAZ-73",
-      "webIssue": "MAZ-88",
-      "legacyRoute": "/entries/new",
-      "legacyTest": "tests/ui/features/entries/EntryForm.test.tsx",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "retain draft through pickers/failure, exact cents and duplicate-submit prevention"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "add-income",
-      "name": "09 · Add income",
-      "category": "Entry flows",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "Frequent categories are selected inline without a popup or page change. All categories opens the full list only when needed. Chips are static in this storyboard; implementation updates the selection in place and keeps the selected category visible even when it is not frequent. Keyboard scrolls above the save action. Failed saves preserve the draft.",
-      "sourcePath": "docs/design/penny-redesign/screens/add-income.svg",
-      "nativeIssue": "MAZ-73",
-      "webIssue": "MAZ-88",
-      "legacyRoute": "/entries/new",
-      "legacyTest": "tests/ui/features/entries/EntryForm.test.tsx",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "retain draft through pickers/failure, exact cents and duplicate-submit prevention"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "add-investment",
-      "name": "10 · Add investment",
-      "category": "Entry flows",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "Frequent categories are selected inline without a popup or page change. All categories opens the full list only when needed. Chips are static in this storyboard; implementation updates the selection in place and keeps the selected category visible even when it is not frequent. Keyboard scrolls above the save action. Failed saves preserve the draft.",
-      "sourcePath": "docs/design/penny-redesign/screens/add-investment.svg",
-      "nativeIssue": "MAZ-73",
-      "webIssue": "MAZ-88",
-      "legacyRoute": "/entries/new",
-      "legacyTest": "tests/ui/features/entries/EntryForm.test.tsx",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "retain draft through pickers/failure, exact cents and duplicate-submit prevention"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "entry-extras",
-      "name": "11 · Entry / more details",
-      "category": "Entry flows",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/entry-extras.svg",
-      "nativeIssue": "MAZ-73",
-      "webIssue": "MAZ-88",
-      "legacyRoute": "/entries/new",
-      "legacyTest": "tests/ui/features/entries/EntryForm.test.tsx",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "retain draft through pickers/failure, exact cents and duplicate-submit prevention"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "split",
-      "name": "12 · Personal split",
-      "category": "Entry flows",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/split.svg",
-      "nativeIssue": "MAZ-73",
-      "webIssue": "MAZ-88",
-      "legacyRoute": "/entries/new",
-      "legacyTest": "tests/ui/features/entries/EntryForm.test.tsx",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "retain draft through pickers/failure, exact cents and duplicate-submit prevention"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "entry-detail",
-      "name": "13 · Entry details",
-      "category": "Entry flows",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/entry-detail.svg",
-      "nativeIssue": "MAZ-73",
-      "webIssue": "MAZ-88",
-      "legacyRoute": "/entries/new",
-      "legacyTest": "tests/ui/features/entries/EntryForm.test.tsx",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "retain draft through pickers/failure, exact cents and duplicate-submit prevention"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "edit-entry",
-      "name": "14 · Edit entry",
-      "category": "Entry flows",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "Frequent categories are selected inline without a popup or page change. All categories opens the full list only when needed. Chips are static in this storyboard; implementation updates the selection in place and keeps the selected category visible even when it is not frequent. Keyboard scrolls above the save action. Failed saves preserve the draft.",
-      "sourcePath": "docs/design/penny-redesign/screens/edit-entry.svg",
-      "nativeIssue": "MAZ-73",
-      "webIssue": "MAZ-88",
-      "legacyRoute": "/entries/new",
-      "legacyTest": "tests/ui/features/entries/EntryForm.test.tsx",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "retain draft through pickers/failure, exact cents and duplicate-submit prevention"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "category-picker",
-      "name": "15 · Choose category",
-      "category": "Entry flows",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/category-picker.svg",
-      "nativeIssue": "MAZ-73",
-      "webIssue": "MAZ-88",
-      "legacyRoute": "/entries/new",
-      "legacyTest": "tests/ui/features/entries/EntryForm.test.tsx",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "retain draft through pickers/failure, exact cents and duplicate-submit prevention"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "account-picker",
-      "name": "16 · Choose account",
-      "category": "Entry flows",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/account-picker.svg",
-      "nativeIssue": "MAZ-73",
-      "webIssue": "MAZ-88",
-      "legacyRoute": "/entries/new",
-      "legacyTest": "tests/ui/features/entries/EntryForm.test.tsx",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "retain draft through pickers/failure, exact cents and duplicate-submit prevention"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "date-picker",
-      "name": "17 · Choose date",
-      "category": "Entry flows",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "Use the platform date picker at implementation time. This screen specifies the selected value and save behavior, not a custom OS dialog.",
-      "sourcePath": "docs/design/penny-redesign/screens/date-picker.svg",
-      "nativeIssue": "MAZ-73",
-      "webIssue": "MAZ-88",
-      "legacyRoute": "/entries/new",
-      "legacyTest": "tests/ui/features/entries/EntryForm.test.tsx",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "retain draft through pickers/failure, exact cents and duplicate-submit prevention"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "repeat-picker",
-      "name": "18 · Repeat options",
-      "category": "Entry flows",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/repeat-picker.svg",
-      "nativeIssue": "MAZ-73",
-      "webIssue": "MAZ-88",
-      "legacyRoute": "/entries/new",
-      "legacyTest": "tests/ui/features/entries/EntryForm.test.tsx",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "retain draft through pickers/failure, exact cents and duplicate-submit prevention"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "trip-picker",
-      "name": "19 · Choose trip",
-      "category": "Entry flows",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/trip-picker.svg",
-      "nativeIssue": "MAZ-73",
-      "webIssue": "MAZ-88",
-      "legacyRoute": "/entries/new",
-      "legacyTest": "tests/ui/features/entries/EntryForm.test.tsx",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "retain draft through pickers/failure, exact cents and duplicate-submit prevention"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "receipt-upload",
-      "name": "20 · Add receipt",
-      "category": "Entry flows",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/receipt-upload.svg",
-      "nativeIssue": "MAZ-78",
-      "webIssue": "MAZ-94",
-      "legacyRoute": "/entries/new",
-      "legacyTest": "tests/e2e/web/entries.spec.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "private/shared upload, real decoding, cancellation and expiry"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "receipt",
-      "name": "21 · Receipt preview",
-      "category": "Entry flows",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "The receipt content is clearly fictional. Native PDFs open/share through the system; web uses its paginated PDF viewer. Image receipts use an in-app image viewer.",
-      "sourcePath": "docs/design/penny-redesign/screens/receipt.svg",
-      "nativeIssue": "MAZ-78",
-      "webIssue": "MAZ-94",
-      "legacyRoute": "/entries/new",
-      "legacyTest": "tests/e2e/web/entries.spec.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "private/shared upload, real decoding, cancellation and expiry"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "shared",
-      "name": "22 · Shared households",
-      "category": "Shared money",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "Household balances remain separate by month. A previous unpaid month remains visible even after the calendar moves on.",
-      "sourcePath": "docs/design/penny-redesign/screens/shared.svg",
-      "nativeIssue": "MAZ-75",
-      "webIssue": "MAZ-91",
-      "legacyRoute": "/households",
-      "legacyTest": "tests/core/households-server.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "two users, payer privacy, stale/settled payment and historical membership"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "household",
-      "name": "23 · Household / expenses",
-      "category": "Shared money",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/household.svg",
-      "nativeIssue": "MAZ-75",
-      "webIssue": "MAZ-91",
-      "legacyRoute": "/households",
-      "legacyTest": "tests/core/households-server.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "two users, payer privacy, stale/settled payment and historical membership"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "balances",
-      "name": "24 · Monthly balances",
-      "category": "Shared money",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "Monthly recording is available from the last calendar day of the month. Current-month early payment is recorded on an individual expense share instead. The second $60 suggestion to Alex remains in the scrollable list.",
-      "sourcePath": "docs/design/penny-redesign/screens/balances.svg",
-      "nativeIssue": "MAZ-75",
-      "webIssue": "MAZ-91",
-      "legacyRoute": "/households",
-      "legacyTest": "tests/core/households-server.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "two users, payer privacy, stale/settled payment and historical membership"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "shared-expense",
-      "name": "25 · Add shared expense",
-      "category": "Shared money",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "Only the payer can attach one of their private accounts. Members see the receipt, payer, total, shares, and history; the payer’s account details stay private.",
-      "sourcePath": "docs/design/penny-redesign/screens/shared-expense.svg",
-      "nativeIssue": "MAZ-75",
-      "webIssue": "MAZ-91",
-      "legacyRoute": "/households",
-      "legacyTest": "tests/core/households-server.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "two users, payer privacy, stale/settled payment and historical membership"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "shared-split",
-      "name": "26 · Split among members",
-      "category": "Shared money",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "Amount and percent modes expose one field per eligible member, including zero shares. Show allocated and remaining totals; disable save until allocations equal the receipt.",
-      "sourcePath": "docs/design/penny-redesign/screens/shared-split.svg",
-      "nativeIssue": "MAZ-75",
-      "webIssue": "MAZ-91",
-      "legacyRoute": "/households",
-      "legacyTest": "tests/core/households-server.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "two users, payer privacy, stale/settled payment and historical membership"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "shared-payer",
-      "name": "27 · Choose payer",
-      "category": "Shared money",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/shared-payer.svg",
-      "nativeIssue": "MAZ-75",
-      "webIssue": "MAZ-91",
-      "legacyRoute": "/households",
-      "legacyTest": "tests/core/households-server.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "two users, payer privacy, stale/settled payment and historical membership"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "shared-expense-detail",
-      "name": "28 · Shared expense details",
-      "category": "Shared money",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "Paid shares lock the payer, total, allocation, month and deletion. Details that do not affect the settled amount remain editable.",
-      "sourcePath": "docs/design/penny-redesign/screens/shared-expense-detail.svg",
-      "nativeIssue": "MAZ-75",
-      "webIssue": "MAZ-91",
-      "legacyRoute": "/households",
-      "legacyTest": "tests/core/households-server.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "two users, payer privacy, stale/settled payment and historical membership"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "record-share",
-      "name": "29 · Record paid share",
-      "category": "Shared money",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "The full eligible share is confirmed. Either the repaying member or original payer may record it. Stale or ineligible payments require reopening the latest expense.",
-      "sourcePath": "docs/design/penny-redesign/screens/record-share.svg",
-      "nativeIssue": "MAZ-75",
-      "webIssue": "MAZ-91",
-      "legacyRoute": "/households",
-      "legacyTest": "tests/core/households-server.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "two users, payer privacy, stale/settled payment and historical membership"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "record-monthly",
-      "name": "30 · Record monthly payment",
-      "category": "Shared money",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "Once a monthly reimbursement exists, individual payment recording closes for that month to prevent double counting.",
-      "sourcePath": "docs/design/penny-redesign/screens/record-monthly.svg",
-      "nativeIssue": "MAZ-75",
-      "webIssue": "MAZ-91",
-      "legacyRoute": "/households",
-      "legacyTest": "tests/core/households-server.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "two users, payer privacy, stale/settled payment and historical membership"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "people",
-      "name": "31 · People & household settings",
-      "category": "Shared money",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "Creator-only actions include invitation, rename, remove and archive. Remove or leave is blocked while monthly balances remain outstanding; past expenses stay unchanged.",
-      "sourcePath": "docs/design/penny-redesign/screens/people.svg",
-      "nativeIssue": "MAZ-75",
-      "webIssue": "MAZ-91",
-      "legacyRoute": "/households",
-      "legacyTest": "tests/core/households-server.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "two users, payer privacy, stale/settled payment and historical membership"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "invite",
-      "name": "32 · Invite with a code",
-      "category": "Shared money",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/invite.svg",
-      "nativeIssue": "MAZ-75",
-      "webIssue": "MAZ-91",
-      "legacyRoute": "/households",
-      "legacyTest": "tests/core/households-server.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "two users, payer privacy, stale/settled payment and historical membership"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "household-create",
-      "name": "33 · Create household",
-      "category": "Shared money",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/household-create.svg",
-      "nativeIssue": "MAZ-75",
-      "webIssue": "MAZ-91",
-      "legacyRoute": "/households",
-      "legacyTest": "tests/core/households-server.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "two users, payer privacy, stale/settled payment and historical membership"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "join-group",
-      "name": "34 · Join with a code",
-      "category": "Shared money",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/join-group.svg",
-      "nativeIssue": "MAZ-75",
-      "webIssue": "MAZ-91",
-      "legacyRoute": "/households",
-      "legacyTest": "tests/core/households-server.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "two users, payer privacy, stale/settled payment and historical membership"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "history",
-      "name": "35 · Change history",
-      "category": "Shared money",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/history.svg",
-      "nativeIssue": "MAZ-75",
-      "webIssue": "MAZ-91",
-      "legacyRoute": "/households",
-      "legacyTest": "tests/core/households-server.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "two users, payer privacy, stale/settled payment and historical membership"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "archive",
-      "name": "36 · Archive household / guard",
-      "category": "Shared money",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/archive.svg",
-      "nativeIssue": "MAZ-75",
-      "webIssue": "MAZ-91",
-      "legacyRoute": "/households",
-      "legacyTest": "tests/core/households-server.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "two users, payer privacy, stale/settled payment and historical membership"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "trips",
-      "name": "37 · Trips",
-      "category": "Trips",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/trips.svg",
-      "nativeIssue": "MAZ-76",
-      "webIssue": "MAZ-93",
-      "legacyRoute": "/trips",
-      "legacyTest": "tests/core/trips.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "private history on conversion and monthly settlement without duplicate totals"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "shared-trip",
-      "name": "38 · Shared trip",
-      "category": "Trips",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "Trip totals span travel dates; reimbursements remain monthly. Expenses that predate sharing stay private. Bookings outside trip dates remain allowed.",
-      "sourcePath": "docs/design/penny-redesign/screens/shared-trip.svg",
-      "nativeIssue": "MAZ-76",
-      "webIssue": "MAZ-93",
-      "legacyRoute": "/trips",
-      "legacyTest": "tests/core/trips.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "private history on conversion and monthly settlement without duplicate totals"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "personal-trip",
-      "name": "39 · Personal trip",
-      "category": "Trips",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/personal-trip.svg",
-      "nativeIssue": "MAZ-76",
-      "webIssue": "MAZ-93",
-      "legacyRoute": "/trips",
-      "legacyTest": "tests/core/trips.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "private history on conversion and monthly settlement without duplicate totals"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "trip-form",
-      "name": "40 · Create trip",
-      "category": "Trips",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/trip-form.svg",
-      "nativeIssue": "MAZ-76",
-      "webIssue": "MAZ-93",
-      "legacyRoute": "/trips",
-      "legacyTest": "tests/core/trips.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "private history on conversion and monthly settlement without duplicate totals"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "share-personal-trip",
-      "name": "41 · Share a personal trip",
-      "category": "Trips",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/share-personal-trip.svg",
-      "nativeIssue": "MAZ-76",
-      "webIssue": "MAZ-93",
-      "legacyRoute": "/trips",
-      "legacyTest": "tests/core/trips.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "private history on conversion and monthly settlement without duplicate totals"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "trip-people",
-      "name": "42 · Trip people",
-      "category": "Trips",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/trip-people.svg",
-      "nativeIssue": "MAZ-76",
-      "webIssue": "MAZ-93",
-      "legacyRoute": "/trips",
-      "legacyTest": "tests/core/trips.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "private history on conversion and monthly settlement without duplicate totals"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "trip-balances",
-      "name": "43 · Trip monthly balances",
-      "category": "Trips",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "For $1,260 split three ways: you paid $360 and owe $60; Mira paid $900 and is owed $480; Alex paid $0 and owes $420. Individual examples preserve this accounting.",
-      "sourcePath": "docs/design/penny-redesign/screens/trip-balances.svg",
-      "nativeIssue": "MAZ-76",
-      "webIssue": "MAZ-93",
-      "legacyRoute": "/trips",
-      "legacyTest": "tests/core/trips.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "private history on conversion and monthly settlement without duplicate totals"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "more",
-      "name": "44 · More",
-      "category": "Organization",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/more.svg",
-      "nativeIssue": "MAZ-69",
-      "webIssue": "MAZ-85",
-      "legacyRoute": "/",
-      "legacyTest": "tests/ui/features/settings/SettingsSheet.test.tsx",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "four appearances, local pending scope, demo isolation, toast/haptic and retained draft"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "recurring",
-      "name": "45 · Recurring",
-      "category": "Organization",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "Each schedule has one detail entry point. Pause, resume and remove live in the detail screen so they do not compete on every list row.",
-      "sourcePath": "docs/design/penny-redesign/screens/recurring.svg",
-      "nativeIssue": "MAZ-74",
-      "webIssue": "MAZ-90",
-      "legacyRoute": "/recurring",
-      "legacyTest": "tests/core/model.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "anchor dates, pause/resume, occurrence identity and removal confirmation"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "recurring-paused",
-      "name": "46 · Recurring / paused",
-      "category": "Organization",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/recurring-paused.svg",
-      "nativeIssue": "MAZ-74",
-      "webIssue": "MAZ-90",
-      "legacyRoute": "/recurring",
-      "legacyTest": "tests/core/model.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "anchor dates, pause/resume, occurrence identity and removal confirmation"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "schedule",
-      "name": "47 · Schedule details",
-      "category": "Organization",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/schedule.svg",
-      "nativeIssue": "MAZ-74",
-      "webIssue": "MAZ-90",
-      "legacyRoute": "/recurring",
-      "legacyTest": "tests/core/model.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "anchor dates, pause/resume, occurrence identity and removal confirmation"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "edit-schedule",
-      "name": "48 · Edit recurring entry",
-      "category": "Organization",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/edit-schedule.svg",
-      "nativeIssue": "MAZ-74",
-      "webIssue": "MAZ-90",
-      "legacyRoute": "/recurring",
-      "legacyTest": "tests/core/model.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "anchor dates, pause/resume, occurrence identity and removal confirmation"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "accounts",
-      "name": "49 · Accounts",
-      "category": "Organization",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/accounts.svg",
-      "nativeIssue": "MAZ-74",
-      "webIssue": "MAZ-89",
-      "legacyRoute": "/accounts",
-      "legacyTest": "tests/core/accounts.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "inline creation, account-use guard and category reassignment"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "account-form",
-      "name": "50 · Add account",
-      "category": "Organization",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/account-form.svg",
-      "nativeIssue": "MAZ-74",
-      "webIssue": "MAZ-89",
-      "legacyRoute": "/accounts",
-      "legacyTest": "tests/core/accounts.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "inline creation, account-use guard and category reassignment"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "account-edit",
-      "name": "51 · Edit account / in use",
-      "category": "Organization",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/account-edit.svg",
-      "nativeIssue": "MAZ-74",
-      "webIssue": "MAZ-89",
-      "legacyRoute": "/accounts",
-      "legacyTest": "tests/core/accounts.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "inline creation, account-use guard and category reassignment"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "categories",
-      "name": "52 · Categories",
-      "category": "Organization",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/categories.svg",
-      "nativeIssue": "MAZ-74",
-      "webIssue": "MAZ-89",
-      "legacyRoute": "/categories",
-      "legacyTest": "tests/ui/features/categories/CategoryForm.test.tsx",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "inline creation, account-use guard and category reassignment"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "category-form",
-      "name": "53 · Edit category",
-      "category": "Organization",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/category-form.svg",
-      "nativeIssue": "MAZ-74",
-      "webIssue": "MAZ-89",
-      "legacyRoute": "/categories",
-      "legacyTest": "tests/ui/features/categories/CategoryForm.test.tsx",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "inline creation, account-use guard and category reassignment"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "settings",
-      "name": "54 · Settings",
-      "category": "Settings & access",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "App lock and server selection are native-only controls. On web omit them and use the current origin. Do not expose a server editor over an active workspace.",
-      "sourcePath": "docs/design/penny-redesign/screens/settings.svg",
-      "nativeIssue": "MAZ-69",
-      "webIssue": "MAZ-85",
-      "legacyRoute": "/",
-      "legacyTest": "tests/ui/features/settings/SettingsSheet.test.tsx",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "four appearances, local pending scope, demo isolation, toast/haptic and retained draft"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "appearance",
-      "name": "55 · Appearance",
-      "category": "Settings & access",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/appearance.svg",
-      "nativeIssue": "MAZ-69",
-      "webIssue": "MAZ-85",
-      "legacyRoute": "/",
-      "legacyTest": "tests/ui/features/settings/SettingsSheet.test.tsx",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "four appearances, local pending scope, demo isolation, toast/haptic and retained draft"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "app-lock-settings",
-      "name": "56 · App lock settings",
-      "category": "Settings & access",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/app-lock-settings.svg",
-      "nativeIssue": "MAZ-69",
-      "webIssue": "MAZ-85",
-      "legacyRoute": "/",
-      "legacyTest": "tests/ui/providers/AppLockProvider.test.tsx",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "native lock hides dialogs; signed-out credential-free verification; omit on web"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "currency",
-      "name": "57 · Currency / locked state",
-      "category": "Settings & access",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/currency.svg",
-      "nativeIssue": "MAZ-69",
-      "webIssue": "MAZ-85",
-      "legacyRoute": "/",
-      "legacyTest": "tests/ui/features/settings/SettingsSheet.test.tsx",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "four appearances, local pending scope, demo isolation, toast/haptic and retained draft"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "server-info",
-      "name": "58 · Connected server",
-      "category": "Settings & access",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/server-info.svg",
-      "nativeIssue": "MAZ-69",
-      "webIssue": "MAZ-85",
-      "legacyRoute": "/",
-      "legacyTest": "tests/ui/providers/AppLockProvider.test.tsx",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "native lock hides dialogs; signed-out credential-free verification; omit on web"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "server-connect",
-      "name": "59 · Select server / signed out",
-      "category": "Settings & access",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/server-connect.svg",
-      "nativeIssue": "MAZ-69",
-      "webIssue": "MAZ-85",
-      "legacyRoute": "/",
-      "legacyTest": "tests/ui/providers/AppLockProvider.test.tsx",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "native lock hides dialogs; signed-out credential-free verification; omit on web"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "server-verified",
-      "name": "60 · Server verified",
-      "category": "Settings & access",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/server-verified.svg",
-      "nativeIssue": "MAZ-69",
-      "webIssue": "MAZ-85",
-      "legacyRoute": "/",
-      "legacyTest": "tests/ui/providers/AppLockProvider.test.tsx",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "native lock hides dialogs; signed-out credential-free verification; omit on web"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "sign-in",
-      "name": "61 · Sign in",
-      "category": "Settings & access",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "Native server entry point is shown here. Web uses its own origin. Show the server’s OIDC action only when configured; the optional SSO specimen documents that variation.",
-      "sourcePath": "docs/design/penny-redesign/screens/sign-in.svg",
-      "nativeIssue": "MAZ-68",
-      "webIssue": "MAZ-84",
-      "legacyRoute": "/auth/callback",
-      "legacyTest": "tests/ui/features/auth/AuthScreen.test.tsx",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "SSO/password restoration, cancellation and pending-sign-out guard"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "create-account",
-      "name": "62 · Create account",
-      "category": "Settings & access",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "Native server entry point is shown here. Web uses its own origin. Show the server’s OIDC action only when configured; the optional SSO specimen documents that variation.",
-      "sourcePath": "docs/design/penny-redesign/screens/create-account.svg",
-      "nativeIssue": "MAZ-68",
-      "webIssue": "MAZ-84",
-      "legacyRoute": "/auth/callback",
-      "legacyTest": "tests/ui/features/auth/AuthScreen.test.tsx",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "SSO/password restoration, cancellation and pending-sign-out guard"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "sign-in-sso",
-      "name": "63 · Sign in / server SSO",
-      "category": "Settings & access",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/sign-in-sso.svg",
-      "nativeIssue": "MAZ-68",
-      "webIssue": "MAZ-84",
-      "legacyRoute": "/auth/callback",
-      "legacyTest": "tests/ui/features/auth/AuthScreen.test.tsx",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "SSO/password restoration, cancellation and pending-sign-out guard"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "lock",
-      "name": "64 · Penny is locked",
-      "category": "Settings & access",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "While locked, hide all ledger content and open dialogs. Failed authentication keeps this screen visible; retry uses the same button. Do not replace the operating system biometric prompt with an app imitation.",
-      "sourcePath": "docs/design/penny-redesign/screens/lock.svg",
-      "nativeIssue": "MAZ-69",
-      "webIssue": "MAZ-85",
-      "legacyRoute": "/",
-      "legacyTest": "tests/ui/providers/AppLockProvider.test.tsx",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "native lock hides dialogs; signed-out credential-free verification; omit on web"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "empty-home",
-      "name": "65 · First entry / empty home",
-      "category": "States",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "A first-use state does not show meaningless zero-value charts. Currency can still be selected before the first entry.",
-      "sourcePath": "docs/design/penny-redesign/screens/empty-home.svg",
-      "nativeIssue": "MAZ-77",
-      "webIssue": "MAZ-92",
-      "legacyRoute": "/",
-      "legacyTest": "tests/core/overview.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "search-empty",
-      "name": "66 · No matching activity",
-      "category": "States",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/search-empty.svg",
-      "nativeIssue": "MAZ-73",
-      "webIssue": "MAZ-88",
-      "legacyRoute": "/transactions",
-      "legacyTest": "tests/core/transactions.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "inline categories, substring/hybrid and scoped offline search"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "demo-home",
-      "name": "67 · Demo / temporary sample data",
-      "category": "States",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "Home separates recorded remaining from projected remaining. Income and spending figures are not an account balance. Calendar and money-flow tools move into Explore your month.",
-      "sourcePath": "docs/design/penny-redesign/screens/demo-home.svg",
-      "nativeIssue": "MAZ-69",
-      "webIssue": "MAZ-85",
-      "legacyRoute": "/",
-      "legacyTest": "tests/ui/features/settings/SettingsSheet.test.tsx",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "four appearances, local pending scope, demo isolation, toast/haptic and retained draft"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "offline",
-      "name": "68 · Saved offline",
-      "category": "States",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/offline.svg",
-      "nativeIssue": "MAZ-69",
-      "webIssue": "MAZ-85",
-      "legacyRoute": "/",
-      "legacyTest": "tests/ui/features/settings/SettingsSheet.test.tsx",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "four appearances, local pending scope, demo isolation, toast/haptic and retained draft"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "save-error",
-      "name": "69 · Save error / draft retained",
-      "category": "States",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/save-error.svg",
-      "nativeIssue": "MAZ-69",
-      "webIssue": "MAZ-85",
-      "legacyRoute": "/",
-      "legacyTest": "tests/ui/features/settings/SettingsSheet.test.tsx",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "four appearances, local pending scope, demo isolation, toast/haptic and retained draft"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "saved",
-      "name": "73 · Expense saved",
-      "category": "States",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "This expanded success specimen documents feedback. In normal use, return directly to the source screen with a brief save toast and native haptic rather than interrupting with a dedicated success screen.",
-      "sourcePath": "docs/design/penny-redesign/screens/saved.svg",
-      "nativeIssue": "MAZ-69",
-      "webIssue": "MAZ-85",
-      "legacyRoute": "/",
-      "legacyTest": "tests/ui/features/settings/SettingsSheet.test.tsx",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "four appearances, local pending scope, demo isolation, toast/haptic and retained draft"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "delete-entry",
-      "name": "74 · Delete entry",
-      "category": "States",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/delete-entry.svg",
-      "nativeIssue": "MAZ-73",
-      "webIssue": "MAZ-88",
-      "legacyRoute": "/entries/new",
-      "legacyTest": "tests/ui/features/entries/EntryForm.test.tsx",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "retain draft through pickers/failure, exact cents and duplicate-submit prevention"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "remove-schedule",
-      "name": "75 · Remove schedule",
-      "category": "States",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/remove-schedule.svg",
-      "nativeIssue": "MAZ-74",
-      "webIssue": "MAZ-90",
-      "legacyRoute": "/recurring",
-      "legacyTest": "tests/core/model.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "anchor dates, pause/resume, occurrence identity and removal confirmation"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "payment-stale",
-      "name": "76 · Payment changed / retry",
-      "category": "States",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "",
-      "sourcePath": "docs/design/penny-redesign/screens/payment-stale.svg",
-      "nativeIssue": "MAZ-75",
-      "webIssue": "MAZ-91",
-      "legacyRoute": "/households",
-      "legacyTest": "tests/core/households-server.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "two users, payer privacy, stale/settled payment and historical membership"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "sign-out",
-      "name": "79 · Sign out / synced",
-      "category": "States",
-      "w": 390,
-      "h": 844,
-      "theme": "light",
-      "platform": "iOS",
-      "note": "When personal changes are pending, replace the sign-out action with a disabled action and an explanation linking to Sync status.",
-      "sourcePath": "docs/design/penny-redesign/screens/sign-out.svg",
-      "nativeIssue": "MAZ-68",
-      "webIssue": "MAZ-84",
-      "legacyRoute": "/auth/callback",
-      "legacyTest": "tests/ui/features/auth/AuthScreen.test.tsx",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "SSO/password restoration, cancellation and pending-sign-out guard"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "home-dark",
-      "name": "70 · Home / Dark",
-      "category": "Themes & platforms",
-      "w": 390,
-      "h": 844,
       "theme": "dark",
-      "platform": "iOS",
-      "note": "Home separates recorded remaining from projected remaining. Income and spending figures are not an account balance. Calendar and money-flow tools move into Explore your month.",
-      "sourcePath": "docs/design/penny-redesign/screens/home-dark.svg",
+      "sourcePath": "docs/design/penny-ios/iphone/home-dark.html",
+      "sha256": "d7bd83222e5abb383a86eda8e34a57787a1b3c026286a895c5048e85e26b9e62",
       "nativeIssue": "MAZ-77",
       "webIssue": "MAZ-92",
       "legacyRoute": "/",
@@ -1781,78 +475,18 @@
       "status": "planned"
     },
     {
-      "id": "home-amoled",
-      "name": "71 · Home / AMOLED",
-      "category": "Themes & platforms",
-      "w": 390,
-      "h": 844,
-      "theme": "amoled",
-      "platform": "iOS",
-      "note": "Home separates recorded remaining from projected remaining. Income and spending figures are not an account balance. Calendar and money-flow tools move into Explore your month.",
-      "sourcePath": "docs/design/penny-redesign/screens/home-amoled.svg",
-      "nativeIssue": "MAZ-77",
-      "webIssue": "MAZ-92",
-      "legacyRoute": "/",
-      "legacyTest": "tests/core/overview.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
+      "id": "iphone-money-flow",
+      "name": "Money flow (Sankey)",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Daily money",
+      "viewport": {
+        "w": 482,
+        "h": 954
       },
-      "status": "planned"
-    },
-    {
-      "id": "home-catppuccin",
-      "name": "72 · Home / Catppuccin",
-      "category": "Themes & platforms",
-      "w": 390,
-      "h": 844,
-      "theme": "catppuccin",
-      "platform": "iOS",
-      "note": "Home separates recorded remaining from projected remaining. Income and spending figures are not an account balance. Calendar and money-flow tools move into Explore your month.",
-      "sourcePath": "docs/design/penny-redesign/screens/home-catppuccin.svg",
-      "nativeIssue": "MAZ-77",
-      "webIssue": "MAZ-92",
-      "legacyRoute": "/",
-      "legacyTest": "tests/core/overview.test.ts",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
-      },
-      "status": "planned"
-    },
-    {
-      "id": "home-android",
-      "name": "77 · Home / Android",
-      "category": "Themes & platforms",
-      "w": 390,
-      "h": 844,
       "theme": "light",
-      "platform": "Android",
-      "note": "Home separates recorded remaining from projected remaining. Income and spending figures are not an account balance. Calendar and money-flow tools move into Explore your month.",
-      "sourcePath": "docs/design/penny-redesign/screens/home-android.svg",
-      "nativeIssue": "MAZ-98",
-      "webIssue": "MAZ-98",
-      "legacyRoute": "/",
-      "legacyTest": "tests/ui/shell/navigation.test.tsx",
-      "acceptance": {
-        "native": "MAZ-82",
-        "web": "MAZ-96",
-        "scenario": "reference only: preserve Android retirement, no new implementation"
-      },
-      "status": "legacy-reference"
-    },
-    {
-      "id": "desktop",
-      "name": "78 · Desktop overview",
-      "category": "Themes & platforms",
-      "w": 1440,
-      "h": 1000,
-      "theme": "light",
-      "platform": "Desktop web",
-      "note": "At ≥1100px use the sidebar and a 12-column content area. At 768–1099px use a compact rail and two content columns. Below 768px keep the mobile navigation and one column. These are proposal breakpoints, subject to device testing.",
-      "sourcePath": "docs/design/penny-redesign/screens/desktop.svg",
+      "sourcePath": "docs/design/penny-ios/iphone/money-flow.html",
+      "sha256": "295bfbec37b62fb2a83030bfb3c75745973c978dfa226c024a07c57c0f3b9d3f",
       "nativeIssue": "MAZ-77",
       "webIssue": "MAZ-92",
       "legacyRoute": "/",
@@ -1861,2195 +495,1963 @@
         "native": "MAZ-82",
         "web": "MAZ-96",
         "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-insights",
+      "name": "Insights",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Daily money",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/insights.html",
+      "sha256": "3bdcff942eaec95b9a01cb733c022f4240d5dda0ab5476110af84df61b0673c7",
+      "nativeIssue": "MAZ-77",
+      "webIssue": "MAZ-92",
+      "legacyRoute": "/",
+      "legacyTest": "tests/core/overview.test.ts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-calendar",
+      "name": "Calendar sheet",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Daily money",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/calendar.html",
+      "sha256": "eedc5c0de50b33499aa8f002223815ad2da0c05f96122fb911aef6847c85098c",
+      "nativeIssue": "MAZ-77",
+      "webIssue": "MAZ-92",
+      "legacyRoute": "/",
+      "legacyTest": "tests/core/overview.test.ts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-activity",
+      "name": "Activity",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Daily money",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/activity.html",
+      "sha256": "c8d20915a16d3bb9f5943d69d975d2bdfc27b8fd3c616b4c542eb5224e4589fa",
+      "nativeIssue": "MAZ-73",
+      "webIssue": "MAZ-88",
+      "legacyRoute": "/transactions",
+      "legacyTest": "tests/core/transactions.test.ts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "day grouping, filters, server search with pending local scope, swipe or row actions"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-search-empty",
+      "name": "Search, no results",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Daily money",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/search-empty.html",
+      "sha256": "d6472be0eabdc118fc4cf78d4b7d463f3f0bae9418101d288c766400adc19c80",
+      "nativeIssue": "MAZ-73",
+      "webIssue": "MAZ-88",
+      "legacyRoute": "/transactions",
+      "legacyTest": "tests/core/transactions.test.ts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "day grouping, filters, server search with pending local scope, swipe or row actions"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-add-expense",
+      "name": "Add expense",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Entries",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/add-expense.html",
+      "sha256": "98d49806d95f9b06211842781de743dfb38646597a6e5e4440282a1ebb91d2df",
+      "nativeIssue": "MAZ-73",
+      "webIssue": "MAZ-88",
+      "legacyRoute": "/entries/new",
+      "legacyTest": "tests/ui/features/entries/EntryForm.test.tsx",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "three-tap expense, retained draft, keyboard-safe save, duplicate-submit and validation"
+      },
+      "behaviorIssues": [
+        "MAZ-134"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "iphone-add-income",
+      "name": "Add income",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Entries",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/add-income.html",
+      "sha256": "91d2d069a0e99185550036223805c76bc51626b68dcafb36b0474e2333e5bcd5",
+      "nativeIssue": "MAZ-73",
+      "webIssue": "MAZ-88",
+      "legacyRoute": "/entries/new",
+      "legacyTest": "tests/ui/features/entries/EntryForm.test.tsx",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "three-tap expense, retained draft, keyboard-safe save, duplicate-submit and validation"
+      },
+      "behaviorIssues": [
+        "MAZ-134",
+        "MAZ-136"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "iphone-entry-extras",
+      "name": "Entry · more details",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Entries",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/entry-extras.html",
+      "sha256": "53802bf53ab3203dc705e7b8d2c3edb5207ed73788317d64b395cbd08444ac70",
+      "nativeIssue": "MAZ-73",
+      "webIssue": "MAZ-88",
+      "legacyRoute": "/entries/new",
+      "legacyTest": "tests/ui/features/entries/EntryForm.test.tsx",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "three-tap expense, retained draft, keyboard-safe save, duplicate-submit and validation"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-split",
+      "name": "Split",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Entries",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/split.html",
+      "sha256": "041240854898aa74b11330d441b9a03713e73ed7a972ff94f3febbfdce14aad5",
+      "nativeIssue": "MAZ-73",
+      "webIssue": "MAZ-88",
+      "legacyRoute": "/entries/new",
+      "legacyTest": "tests/ui/features/entries/EntryForm.test.tsx",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "three-tap expense, retained draft, keyboard-safe save, duplicate-submit and validation"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-category-picker",
+      "name": "Category picker",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Entries",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/category-picker.html",
+      "sha256": "b22929de6429bd59441f325f417b421383c3897aca39d036204376ca5e6546ce",
+      "nativeIssue": "MAZ-73",
+      "webIssue": "MAZ-88",
+      "legacyRoute": "/entries/new",
+      "legacyTest": "tests/ui/features/entries/EntryForm.test.tsx",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "three-tap expense, retained draft, keyboard-safe save, duplicate-submit and validation"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-entry-detail",
+      "name": "Entry detail",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Entries",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/entry-detail.html",
+      "sha256": "9d9e04e4db899d4d038364b41f19cbe875614c3a4ea13108d9b017ab5356f5af",
+      "nativeIssue": "MAZ-73",
+      "webIssue": "MAZ-88",
+      "legacyRoute": "/entries/new",
+      "legacyTest": "tests/ui/features/entries/EntryForm.test.tsx",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "three-tap expense, retained draft, keyboard-safe save, duplicate-submit and validation"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-receipt",
+      "name": "Receipt viewer",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Entries",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "dark",
+      "sourcePath": "docs/design/penny-ios/iphone/receipt.html",
+      "sha256": "08b74fe26bd5ea6015932cd48eddab90615559ded294ff21461ed9b8184a6b5d",
+      "nativeIssue": "MAZ-78",
+      "webIssue": "MAZ-94",
+      "legacyRoute": "/entries/new",
+      "legacyTest": "tests/e2e/web/entries.spec.ts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "upload, preview, download and removal with size, type and offline limits"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-delete-confirm",
+      "name": "Delete confirmation",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Entries",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/delete-confirm.html",
+      "sha256": "d2ae193a55d84eea7ea0dc827d2ca1483c1e863e28ec15dd42d4f5b9e5773d59",
+      "nativeIssue": "MAZ-73",
+      "webIssue": "MAZ-88",
+      "legacyRoute": "/entries/new",
+      "legacyTest": "tests/ui/features/entries/EntryForm.test.tsx",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "three-tap expense, retained draft, keyboard-safe save, duplicate-submit and validation"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-shared-list",
+      "name": "Shared · groups",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Shared",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/shared-list.html",
+      "sha256": "3cea95d3654f37ac887b63b23397a85d2ea513556285696f38046bc045f8441d",
+      "nativeIssue": "MAZ-75",
+      "webIssue": "MAZ-91",
+      "legacyRoute": "/households",
+      "legacyTest": "tests/core/households-server.test.ts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "two-user shared expense, balances, payment recording, privacy and stale revisions"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-shared",
+      "name": "Shared household",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Shared",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/shared.html",
+      "sha256": "68c09ccc28c112d615dfdd725d8f2c9ed33ce06f6b78a68c47724d40c932c7d8",
+      "nativeIssue": "MAZ-75",
+      "webIssue": "MAZ-91",
+      "legacyRoute": "/households",
+      "legacyTest": "tests/core/households-server.test.ts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "two-user shared expense, balances, payment recording, privacy and stale revisions"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-shared-balances",
+      "name": "Shared · balances",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Shared",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/shared-balances.html",
+      "sha256": "17450bc668774199d854d328b17aee98a1bc58c768d205231756a05a990a4204",
+      "nativeIssue": "MAZ-75",
+      "webIssue": "MAZ-91",
+      "legacyRoute": "/households",
+      "legacyTest": "tests/core/households-server.test.ts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "two-user shared expense, balances, payment recording, privacy and stale revisions"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-shared-people",
+      "name": "Shared · people",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Shared",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/shared-people.html",
+      "sha256": "8b92a9cebad20985de38293b7721a0015509e42d85a8af63f84a827e8531ff39",
+      "nativeIssue": "MAZ-75",
+      "webIssue": "MAZ-91",
+      "legacyRoute": "/households",
+      "legacyTest": "tests/core/households-server.test.ts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "two-user shared expense, balances, payment recording, privacy and stale revisions"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-shared-expense-add",
+      "name": "Shared · add expense",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Shared",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/shared-expense-add.html",
+      "sha256": "fb5c5f71a646fd264d6cca99954df0c2b73fd99a5552f9595c4a3d574a76dfdf",
+      "nativeIssue": "MAZ-75",
+      "webIssue": "MAZ-91",
+      "legacyRoute": "/households",
+      "legacyTest": "tests/core/households-server.test.ts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "two-user shared expense, balances, payment recording, privacy and stale revisions"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-record-payment",
+      "name": "Shared · record payment",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Shared",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/record-payment.html",
+      "sha256": "a610a79a0b139ceafb9a06f297957383e6a016521f202d04dd634634b5ee760a",
+      "nativeIssue": "MAZ-75",
+      "webIssue": "MAZ-91",
+      "legacyRoute": "/households",
+      "legacyTest": "tests/core/households-server.test.ts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "two-user shared expense, balances, payment recording, privacy and stale revisions"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-payment-stale",
+      "name": "Payment changed",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Shared",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/payment-stale.html",
+      "sha256": "33e2d7c59d9c7e1a9f5841602d0cd359de8058088f3d29e3545312ed42bb819b",
+      "nativeIssue": "MAZ-75",
+      "webIssue": "MAZ-91",
+      "legacyRoute": "/households",
+      "legacyTest": "tests/core/households-server.test.ts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "two-user shared expense, balances, payment recording, privacy and stale revisions"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-household-create",
+      "name": "Shared · create or join",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Shared",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/household-create.html",
+      "sha256": "48f82df3da954abc0cc99cab718b0bb54ad0778cd1d64245ea99a19604c0ea7d",
+      "nativeIssue": "MAZ-75",
+      "webIssue": "MAZ-91",
+      "legacyRoute": "/households",
+      "legacyTest": "tests/core/households-server.test.ts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "two-user shared expense, balances, payment recording, privacy and stale revisions"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-history",
+      "name": "Shared · history",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Shared",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/history.html",
+      "sha256": "a20c89bdb421f2a3349192c2c7cb1fad3f73fecd70ae62296b6e559f373d98b9",
+      "nativeIssue": "MAZ-75",
+      "webIssue": "MAZ-91",
+      "legacyRoute": "/households",
+      "legacyTest": "tests/core/households-server.test.ts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "two-user shared expense, balances, payment recording, privacy and stale revisions"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-trips",
+      "name": "Trips",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Trips",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/trips.html",
+      "sha256": "d19a1b5bfa450fa16d72860ef3247315728cd3207e4aecb2ef181e335fefd5d3",
+      "nativeIssue": "MAZ-76",
+      "webIssue": "MAZ-93",
+      "legacyRoute": "/trips",
+      "legacyTest": "tests/core/trips.test.ts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "personal and shared trips, Only you entries, membership and balances"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-trip-detail",
+      "name": "Trip detail",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Trips",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/trip-detail.html",
+      "sha256": "cb48f21004224045d973583c6d9b2456ae185c19585d5c85beaccbb850702002",
+      "nativeIssue": "MAZ-76",
+      "webIssue": "MAZ-93",
+      "legacyRoute": "/trips",
+      "legacyTest": "tests/core/trips.test.ts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "personal and shared trips, Only you entries, membership and balances"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-trip-form",
+      "name": "Trip form",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Trips",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/trip-form.html",
+      "sha256": "d1c48c5e52af25908876280f5b328926fab0e9e7eb9c71d7e4b2a52b8505cdb4",
+      "nativeIssue": "MAZ-76",
+      "webIssue": "MAZ-93",
+      "legacyRoute": "/trips",
+      "legacyTest": "tests/core/trips.test.ts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "personal and shared trips, Only you entries, membership and balances"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-settings",
+      "name": "Settings",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Organize & settings",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/settings.html",
+      "sha256": "dad7b83d8d3165b24049ea91d5ecd7a0450c15e5625e9b2ea21980f7e8e3e87b",
+      "nativeIssue": "MAZ-69",
+      "webIssue": "MAZ-85",
+      "legacyRoute": "/",
+      "legacyTest": "tests/ui/features/settings/SettingsSheet.test.tsx",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "settings sheet or pane, persistence, larger text, VoiceOver and keyboard"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-recurring",
+      "name": "Recurring",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Organize & settings",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/recurring.html",
+      "sha256": "794190bb4152c1aab16abff386aba46e7cb335bb58e2ad0c29cea6d282e90291",
+      "nativeIssue": "MAZ-74",
+      "webIssue": "MAZ-90",
+      "legacyRoute": "/recurring",
+      "legacyTest": "tests/core/model.test.ts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "cadence, next date, pause and remove, anchor-31 rules"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-schedule-detail",
+      "name": "Schedule detail",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Organize & settings",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/schedule-detail.html",
+      "sha256": "8152d7b9fb43883f6e12d811ec9ff6c3b298e5e12cf4e495e7eee5e2b11daf1d",
+      "nativeIssue": "MAZ-74",
+      "webIssue": "MAZ-90",
+      "legacyRoute": "/recurring",
+      "legacyTest": "tests/core/model.test.ts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "cadence, next date, pause and remove, anchor-31 rules"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-accounts",
+      "name": "Accounts",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Organize & settings",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/accounts.html",
+      "sha256": "986088f4c4cacf48bfd94dd7d6b3c313b31ccdb7d4c87d3b9216762e0f1138d9",
+      "nativeIssue": "MAZ-74",
+      "webIssue": "MAZ-89",
+      "legacyRoute": "/accounts",
+      "legacyTest": "tests/core/accounts.test.ts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "label-only accounts with usage counts; in-use accounts cannot be removed"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-account-form",
+      "name": "Account form",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Organize & settings",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/account-form.html",
+      "sha256": "94f766b78e365477ef16f174b6adcc3bd689f49a6608d74358f246f24fd5b092",
+      "nativeIssue": "MAZ-74",
+      "webIssue": "MAZ-89",
+      "legacyRoute": "/accounts",
+      "legacyTest": "tests/core/accounts.test.ts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "label-only accounts with usage counts; in-use accounts cannot be removed"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-categories",
+      "name": "Categories",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Organize & settings",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/categories.html",
+      "sha256": "4421bbd8f4cce37facc4fe1de6c50b84c26ba59ed75db2e926a20eaa1e5a2a2a",
+      "nativeIssue": "MAZ-74",
+      "webIssue": "MAZ-89",
+      "legacyRoute": "/categories",
+      "legacyTest": "tests/ui/features/categories/CategoryForm.test.tsx",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "category palette only, kinds, rename merge and in-use protection"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-category-form",
+      "name": "Category form",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Organize & settings",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/category-form.html",
+      "sha256": "03a90a5723b6db50e1aacf72b7d2c19d68aba33e6286b752dc806a4fe7a28488",
+      "nativeIssue": "MAZ-74",
+      "webIssue": "MAZ-89",
+      "legacyRoute": "/categories",
+      "legacyTest": "tests/ui/features/categories/CategoryForm.test.tsx",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "category palette only, kinds, rename merge and in-use protection"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-appearance",
+      "name": "Appearance",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Organize & settings",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/appearance.html",
+      "sha256": "5e8877ca50b7570badecfa7f219dce1242f033417f072fe16672e769fca11394",
+      "nativeIssue": "MAZ-69",
+      "webIssue": "MAZ-85",
+      "legacyRoute": "/",
+      "legacyTest": "tests/ui/features/settings/SettingsSheet.test.tsx",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "settings sheet or pane, persistence, larger text, VoiceOver and keyboard"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-app-lock",
+      "name": "Face ID lock",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Organize & settings",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/app-lock.html",
+      "sha256": "677a70a66605dbb72cc559fdf67655b50afb84245a8c423f84a4877ab85a8eba",
+      "nativeIssue": "MAZ-69",
+      "webIssue": "MAZ-85",
+      "legacyRoute": "/",
+      "legacyTest": "tests/ui/providers/AppLockProvider.test.tsx",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "biometric lock conceals content and open sheets while keeping drafts"
+      },
+      "behaviorIssues": [
+        "MAZ-133"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "iphone-sign-in",
+      "name": "Sign in",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Access & states",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/sign-in.html",
+      "sha256": "d7f3436ba111ae374ac76df62fee511bbcf74141b2272ef969bdfeb243dcb4f0",
+      "nativeIssue": "MAZ-68",
+      "webIssue": "MAZ-84",
+      "legacyRoute": "/auth/callback",
+      "legacyTest": "tests/ui/features/auth/AuthScreen.test.tsx",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "password and OIDC sign-in, registration, sign-out with pending changes"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-create-account",
+      "name": "Create account",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Access & states",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/create-account.html",
+      "sha256": "ac3c6672e6f8797381bb81c385d90e76a3bbf845409a0af00438a0398a038003",
+      "nativeIssue": "MAZ-68",
+      "webIssue": "MAZ-84",
+      "legacyRoute": "/auth/callback",
+      "legacyTest": "tests/ui/features/auth/AuthScreen.test.tsx",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "password and OIDC sign-in, registration, sign-out with pending changes"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-server-connect",
+      "name": "Server connect",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Access & states",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/server-connect.html",
+      "sha256": "81ab82240611c9ed6b87610818fc620ad3ef6d050cbb90589bd9ae1d5a932176",
+      "nativeIssue": "MAZ-69",
+      "webIssue": "MAZ-85",
+      "legacyRoute": "/",
+      "legacyTest": "tests/ui/data/serverConnection.test.ts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "signed-out credential-free server verification; read-only server when signed in"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-lock",
+      "name": "App lock",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Access & states",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/lock.html",
+      "sha256": "8fc053a7adb30732f54d494b63b7e2c3ca6ea06bb2d5e3f5d2dee00c93c860c3",
+      "nativeIssue": "MAZ-69",
+      "webIssue": "MAZ-85",
+      "legacyRoute": "/",
+      "legacyTest": "tests/ui/providers/AppLockProvider.test.tsx",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "biometric lock conceals content and open sheets while keeping drafts"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-empty-home",
+      "name": "Empty Home",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Access & states",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/empty-home.html",
+      "sha256": "879c4441648a86660b7dd959bb751898d06e2f3bc3e55cfca1cd8276b02a9e93",
+      "nativeIssue": "MAZ-77",
+      "webIssue": "MAZ-92",
+      "legacyRoute": "/",
+      "legacyTest": "tests/core/overview.test.ts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-offline",
+      "name": "Offline",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Access & states",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/offline.html",
+      "sha256": "0f6342bdefeb7670531e0bc4507246826b9dee0cea110081c610495c50b2dc4d",
+      "nativeIssue": "MAZ-71",
+      "webIssue": "MAZ-87",
+      "legacyRoute": "/",
+      "legacyTest": "tests/ui/data/offlineLedger.test.ts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "offline banner, pending rows, reconnect and conflict-safe sync"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-save-error",
+      "name": "Save error",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Access & states",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/save-error.html",
+      "sha256": "7b966c7c142054f2c51e6c8bf641d130fd2d2abe08c6fba59fa885d71f719a7f",
+      "nativeIssue": "MAZ-69",
+      "webIssue": "MAZ-85",
+      "legacyRoute": "/",
+      "legacyTest": "tests/ui/features/settings/SettingsSheet.test.tsx",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "draft kept on failure, retry, toast with Undo and announcement"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-saved-toast",
+      "name": "Saved toast",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Access & states",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/saved-toast.html",
+      "sha256": "ea36dff93db7f5870b4daf156e959a13dd4c61c7fa6b0ae3d0cfd329c552b081",
+      "nativeIssue": "MAZ-69",
+      "webIssue": "MAZ-85",
+      "legacyRoute": "/",
+      "legacyTest": "tests/ui/features/settings/SettingsSheet.test.tsx",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "draft kept on failure, retry, toast with Undo and announcement"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-sign-out",
+      "name": "Sign out",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Access & states",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/sign-out.html",
+      "sha256": "a7b9d0662d99280d516d45cd02db1498d1608176678c49914af204f3eb6b3c2c",
+      "nativeIssue": "MAZ-68",
+      "webIssue": "MAZ-84",
+      "legacyRoute": "/auth/callback",
+      "legacyTest": "tests/ui/features/auth/AuthScreen.test.tsx",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "password and OIDC sign-in, registration, sign-out with pending changes"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "ipad-home",
+      "name": "Home",
+      "group": "iPad",
+      "platform": "iPad",
+      "category": "iPad",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/ipad/home.html",
+      "sha256": "66502f73418007473c6932c677b29ab03501366a303a7b3ef985d69ab2b0afde",
+      "nativeIssue": "MAZ-77",
+      "webIssue": "MAZ-92",
+      "legacyRoute": "/",
+      "legacyTest": "tests/core/overview.test.ts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "ipad-activity",
+      "name": "Activity + detail",
+      "group": "iPad",
+      "platform": "iPad",
+      "category": "iPad",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/ipad/activity.html",
+      "sha256": "6f56b81f193f97c377f6305743e51e499369f533d000959c5eecfb77876ee993",
+      "nativeIssue": "MAZ-73",
+      "webIssue": "MAZ-88",
+      "legacyRoute": "/transactions",
+      "legacyTest": "tests/core/transactions.test.ts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "day grouping, filters, server search with pending local scope, swipe or row actions"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "ipad-add-entry",
+      "name": "Add entry (form sheet)",
+      "group": "iPad",
+      "platform": "iPad",
+      "category": "iPad",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/ipad/add-entry.html",
+      "sha256": "63f739da730f8282570b13a64e9433a73ec6c2a872e212828f17ce5e0e597971",
+      "nativeIssue": "MAZ-73",
+      "webIssue": "MAZ-88",
+      "legacyRoute": "/entries/new",
+      "legacyTest": "tests/ui/features/entries/EntryForm.test.tsx",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "three-tap expense, retained draft, keyboard-safe save, duplicate-submit and validation"
+      },
+      "behaviorIssues": [
+        "MAZ-134"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ipad-shared",
+      "name": "Shared household",
+      "group": "iPad",
+      "platform": "iPad",
+      "category": "iPad",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/ipad/shared.html",
+      "sha256": "54e4c8d6742721fa12faffe9a82f6b1c5fd0eec4c898c3066c592b538b341284",
+      "nativeIssue": "MAZ-75",
+      "webIssue": "MAZ-91",
+      "legacyRoute": "/households",
+      "legacyTest": "tests/core/households-server.test.ts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "two-user shared expense, balances, payment recording, privacy and stale revisions"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "ipad-trip",
+      "name": "Trip",
+      "group": "iPad",
+      "platform": "iPad",
+      "category": "iPad",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/ipad/trip.html",
+      "sha256": "5a0f9cfeb5f9a5b2a1ac297c15283f556beea58e1bf4b0a870b9e020f2c86372",
+      "nativeIssue": "MAZ-76",
+      "webIssue": "MAZ-93",
+      "legacyRoute": "/trips",
+      "legacyTest": "tests/core/trips.test.ts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "personal and shared trips, Only you entries, membership and balances"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "ipad-settings",
+      "name": "Settings",
+      "group": "iPad",
+      "platform": "iPad",
+      "category": "iPad",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/ipad/settings.html",
+      "sha256": "8edf0f1e534cd7637c0e5a2e7bc808bb13e9c73d8c02139433e8db560bef2283",
+      "nativeIssue": "MAZ-69",
+      "webIssue": "MAZ-85",
+      "legacyRoute": "/",
+      "legacyTest": "tests/ui/features/settings/SettingsSheet.test.tsx",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "settings sheet or pane, persistence, larger text, VoiceOver and keyboard"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-home",
+      "name": "Home dashboard",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/home.html",
+      "sha256": "cf067ffbd70d4a2edfae86340d346e09ff7d964d1b158533b044a0204ced3f48",
+      "nativeIssue": "MAZ-77",
+      "webIssue": "MAZ-92",
+      "legacyRoute": "/",
+      "legacyTest": "tests/core/overview.test.ts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-activity",
+      "name": "Activity table + detail",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/activity.html",
+      "sha256": "0f81e00619ae7aee0fe1582311f055acaaf172964ad9fdc25f0de3e98fe83213",
+      "nativeIssue": "MAZ-73",
+      "webIssue": "MAZ-88",
+      "legacyRoute": "/transactions",
+      "legacyTest": "tests/core/transactions.test.ts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "day grouping, filters, server search with pending local scope, swipe or row actions"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-insights",
+      "name": "Insights + money flow",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/insights.html",
+      "sha256": "c39a37d5ed78a9e901b26901ed7de075008f1e62b20369dac2bd2c074c95d94c",
+      "nativeIssue": "MAZ-77",
+      "webIssue": "MAZ-92",
+      "legacyRoute": "/",
+      "legacyTest": "tests/core/overview.test.ts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-household",
+      "name": "Household",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/household.html",
+      "sha256": "3f74ae3bc52e7a6e6eb477c6922f7b754b92529f80dd7a6d9457f6c45d1a4842",
+      "nativeIssue": "MAZ-75",
+      "webIssue": "MAZ-91",
+      "legacyRoute": "/households",
+      "legacyTest": "tests/core/households-server.test.ts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "two-user shared expense, balances, payment recording, privacy and stale revisions"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-trips",
+      "name": "Trips",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/trips.html",
+      "sha256": "f063311a3f09134529adcbd47cdefab207d21921acef583b8caabbf28621d65c",
+      "nativeIssue": "MAZ-76",
+      "webIssue": "MAZ-93",
+      "legacyRoute": "/trips",
+      "legacyTest": "tests/core/trips.test.ts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "personal and shared trips, Only you entries, membership and balances"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-settings",
+      "name": "Settings",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/settings.html",
+      "sha256": "72ca73fd5bc80c3e8e2e853932cc6d953e40d442531b1b1439d8aae15eb8eb62",
+      "nativeIssue": "MAZ-69",
+      "webIssue": "MAZ-85",
+      "legacyRoute": "/",
+      "legacyTest": "tests/ui/features/settings/SettingsSheet.test.tsx",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "settings sheet or pane, persistence, larger text, VoiceOver and keyboard"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-add-entry",
+      "name": "Add entry dialog",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/add-entry.html",
+      "sha256": "11eb4f70c432ea5fa0dcf1e2683ece9328164f135af29fc6422d6283f7d2fe49",
+      "nativeIssue": "MAZ-73",
+      "webIssue": "MAZ-88",
+      "legacyRoute": "/entries/new",
+      "legacyTest": "tests/ui/features/entries/EntryForm.test.tsx",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "three-tap expense, retained draft, keyboard-safe save, duplicate-submit and validation"
+      },
+      "behaviorIssues": [
+        "MAZ-134"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "web-sign-in",
+      "name": "Sign in",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/sign-in.html",
+      "sha256": "31152c36d2b961a68bf0694be509ccddcc4751db79296c60d518023365118ad0",
+      "nativeIssue": "MAZ-68",
+      "webIssue": "MAZ-84",
+      "legacyRoute": "/auth/callback",
+      "legacyTest": "tests/ui/features/auth/AuthScreen.test.tsx",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "password and OIDC sign-in, registration, sign-out with pending changes"
       },
       "status": "planned"
     }
   ],
   "controls": [
     {
-      "name": "Button/Primary",
-      "definition": {
-        "kind": "board",
-        "name": "Button/Primary",
-        "x": 0,
-        "y": 0,
-        "w": 342,
-        "h": 52,
-        "fill": "accent",
-        "children": [
-          {
-            "kind": "text",
-            "name": "Label",
-            "text": "Continue",
-            "x": 16,
-            "y": 15,
-            "w": 310,
-            "h": 21,
-            "size": 15,
-            "weight": 600,
-            "color": "onAccent",
-            "lineHeight": 1.35,
-            "align": "center"
-          }
-        ],
-        "radius": 26,
-        "role": "button",
-        "material": "glass-tinted",
-        "layout": {
-          "dir": "row",
-          "alignItems": "center",
-          "justifyContent": "center",
-          "padding": 16
-        }
-      },
+      "name": "AmountEntry",
+      "category": "Inputs",
+      "source": "design-kit/src/components/chrome.tsx",
+      "docPath": "design-kit/docs/AmountEntry.md",
+      "sha256": "1724f5474b91e17b7cdf5d2d648b37eddd79b11fef1051486febcd2cc6698b31",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
-        "scenario": "states, focus/VoiceOver, larger text, keyboard, contrast and native material/adaptations"
+        "scenario": "states, focus and VoiceOver, Dynamic Type, keyboard, contrast and native Liquid Glass adaptations"
       }
     },
     {
-      "name": "Button/Secondary",
-      "definition": {
-        "kind": "board",
-        "name": "Button/Secondary",
-        "x": 0,
-        "y": 0,
-        "w": 342,
-        "h": 52,
-        "fill": "paper",
-        "children": [
-          {
-            "kind": "text",
-            "name": "Label",
-            "text": "Continue",
-            "x": 16,
-            "y": 15,
-            "w": 310,
-            "h": 21,
-            "size": 15,
-            "weight": 600,
-            "color": "ink",
-            "lineHeight": 1.35,
-            "align": "center"
-          }
-        ],
-        "radius": 26,
-        "role": "button",
-        "material": "glass",
-        "layout": {
-          "dir": "row",
-          "alignItems": "center",
-          "justifyContent": "center",
-          "padding": 16
-        }
-      },
+      "name": "Avatar",
+      "category": "Foundations",
+      "source": "design-kit/src/components/controls.tsx",
+      "docPath": "design-kit/docs/Avatar.md",
+      "sha256": "d8c52f468d246a41e52a191230fcdd41c3cfe122bccaccd703798215694891bc",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
-        "scenario": "states, focus/VoiceOver, larger text, keyboard, contrast and native material/adaptations"
+        "scenario": "states, focus and VoiceOver, Dynamic Type, keyboard, contrast and native Liquid Glass adaptations"
       }
     },
     {
-      "name": "Button/Quiet",
-      "definition": {
-        "kind": "board",
-        "name": "Button/Quiet",
-        "x": 0,
-        "y": 0,
-        "w": 342,
-        "h": 52,
-        "fill": "bg",
-        "children": [
-          {
-            "kind": "text",
-            "name": "Label",
-            "text": "Continue",
-            "x": 16,
-            "y": 15,
-            "w": 310,
-            "h": 21,
-            "size": 15,
-            "weight": 600,
-            "color": "ink",
-            "lineHeight": 1.35,
-            "align": "center"
-          }
-        ],
-        "radius": 26,
-        "role": "button",
-        "layout": {
-          "dir": "row",
-          "alignItems": "center",
-          "justifyContent": "center",
-          "padding": 16
-        }
-      },
+      "name": "AvatarStack",
+      "category": "Foundations",
+      "source": "design-kit/src/components/controls.tsx",
+      "docPath": "design-kit/docs/AvatarStack.md",
+      "sha256": "df4cfa8382346d586beb81d04b34502cc0ef247bfc8303c85bcee6e804429053",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
-        "scenario": "states, focus/VoiceOver, larger text, keyboard, contrast and native material/adaptations"
+        "scenario": "states, focus and VoiceOver, Dynamic Type, keyboard, contrast and native Liquid Glass adaptations"
       }
     },
     {
-      "name": "Button/Danger",
-      "definition": {
-        "kind": "board",
-        "name": "Button/Danger",
-        "x": 0,
-        "y": 0,
-        "w": 342,
-        "h": 52,
-        "fill": "dangerBg",
-        "children": [
-          {
-            "kind": "text",
-            "name": "Label",
-            "text": "Continue",
-            "x": 16,
-            "y": 15,
-            "w": 310,
-            "h": 21,
-            "size": 15,
-            "weight": 600,
-            "color": "danger",
-            "lineHeight": 1.35,
-            "align": "center"
-          }
-        ],
-        "radius": 26,
-        "role": "button",
-        "material": "glass",
-        "layout": {
-          "dir": "row",
-          "alignItems": "center",
-          "justifyContent": "center",
-          "padding": 16
-        }
-      },
+      "name": "Badge",
+      "category": "Foundations",
+      "source": "design-kit/src/components/controls.tsx",
+      "docPath": "design-kit/docs/Badge.md",
+      "sha256": "0f08febfdf69038a7054fad44a87e7c01660318e10bae328d6eeeb47683f93d4",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
-        "scenario": "states, focus/VoiceOver, larger text, keyboard, contrast and native material/adaptations"
+        "scenario": "states, focus and VoiceOver, Dynamic Type, keyboard, contrast and native Liquid Glass adaptations"
       }
     },
     {
-      "name": "Button/Disabled",
-      "definition": {
-        "kind": "board",
-        "name": "Button/Disabled",
-        "x": 0,
-        "y": 0,
-        "w": 342,
-        "h": 52,
-        "fill": "line",
-        "children": [
-          {
-            "kind": "text",
-            "name": "Label",
-            "text": "Continue",
-            "x": 16,
-            "y": 15,
-            "w": 310,
-            "h": 21,
-            "size": 15,
-            "weight": 600,
-            "color": "muted",
-            "lineHeight": 1.35,
-            "align": "center"
-          }
-        ],
-        "radius": 26,
-        "role": "button",
-        "layout": {
-          "dir": "row",
-          "alignItems": "center",
-          "justifyContent": "center",
-          "padding": 16
-        }
-      },
+      "name": "Banner",
+      "category": "Feedback",
+      "source": "design-kit/src/components/chrome.tsx",
+      "docPath": "design-kit/docs/Banner.md",
+      "sha256": "628b85330d303e44076df1d960e5aac334b8bacf70d46e87f83d46d5ea7ffcdb",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
-        "scenario": "states, focus/VoiceOver, larger text, keyboard, contrast and native material/adaptations"
+        "scenario": "states, focus and VoiceOver, Dynamic Type, keyboard, contrast and native Liquid Glass adaptations"
       }
     },
     {
-      "name": "Button/Saving",
-      "definition": {
-        "kind": "board",
-        "name": "Button/Saving",
-        "x": 0,
-        "y": 0,
-        "w": 342,
-        "h": 52,
-        "fill": "accent",
-        "children": [
-          {
-            "kind": "text",
-            "name": "Label",
-            "text": "Saving…",
-            "x": 16,
-            "y": 15,
-            "w": 310,
-            "h": 21,
-            "size": 15,
-            "weight": 600,
-            "color": "onAccent",
-            "lineHeight": 1.35,
-            "align": "center"
-          }
-        ],
-        "radius": 26,
-        "role": "button",
-        "material": "glass-tinted",
-        "layout": {
-          "dir": "row",
-          "alignItems": "center",
-          "justifyContent": "center",
-          "padding": 16
-        }
-      },
+      "name": "Button",
+      "category": "Inputs",
+      "source": "design-kit/src/components/controls.tsx",
+      "docPath": "design-kit/docs/Button.md",
+      "sha256": "8619cf79c4a400e9d9bff769881423045caacef00c3333792ef8876e40b79644",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
-        "scenario": "states, focus/VoiceOver, larger text, keyboard, contrast and native material/adaptations"
+        "scenario": "states, focus and VoiceOver, Dynamic Type, keyboard, contrast and native Liquid Glass adaptations"
       }
     },
     {
-      "name": "Field/Default",
-      "definition": {
-        "kind": "board",
-        "name": "Field/Default",
-        "x": 0,
-        "y": 0,
-        "w": 342,
-        "h": 80,
-        "fill": null,
-        "children": [
-          {
-            "kind": "text",
-            "name": "Label",
-            "text": "Label",
-            "x": 0,
-            "y": 0,
-            "w": 342,
-            "h": 19,
-            "size": 13,
-            "weight": 500,
-            "color": "ink",
-            "lineHeight": 1.35
-          },
-          {
-            "kind": "rect",
-            "name": "Input",
-            "x": 0,
-            "y": 25,
-            "w": 342,
-            "h": 52,
-            "fill": "paper",
-            "radius": 14,
-            "stroke": "line",
-            "strokeWidth": 1
-          },
-          {
-            "kind": "text",
-            "name": "Value",
-            "text": "Your value",
-            "x": 16,
-            "y": 41,
-            "w": 310,
-            "h": 21,
-            "size": 15,
-            "weight": 400,
-            "color": "ink",
-            "lineHeight": 1.35
-          }
-        ],
-        "radius": 0
-      },
+      "name": "Card",
+      "category": "Layout",
+      "source": "design-kit/src/components/lists.tsx",
+      "docPath": "design-kit/docs/Card.md",
+      "sha256": "6c6f6e598f262f355c1daa03aad7c8512e116780a4d7cf6c40cef398faa329c4",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
-        "scenario": "states, focus/VoiceOver, larger text, keyboard, contrast and native material/adaptations"
+        "scenario": "states, focus and VoiceOver, Dynamic Type, keyboard, contrast and native Liquid Glass adaptations"
       }
     },
     {
-      "name": "Field/Focused",
-      "definition": {
-        "kind": "board",
-        "name": "Field/Focused",
-        "x": 0,
-        "y": 0,
-        "w": 342,
-        "h": 80,
-        "fill": null,
-        "children": [
-          {
-            "kind": "text",
-            "name": "Label",
-            "text": "Label",
-            "x": 0,
-            "y": 0,
-            "w": 342,
-            "h": 19,
-            "size": 13,
-            "weight": 500,
-            "color": "ink",
-            "lineHeight": 1.35
-          },
-          {
-            "kind": "rect",
-            "name": "Input",
-            "x": 0,
-            "y": 25,
-            "w": 342,
-            "h": 52,
-            "fill": "paper",
-            "radius": 14,
-            "stroke": "accent",
-            "strokeWidth": 2
-          },
-          {
-            "kind": "text",
-            "name": "Value",
-            "text": "Your value",
-            "x": 16,
-            "y": 41,
-            "w": 310,
-            "h": 21,
-            "size": 15,
-            "weight": 400,
-            "color": "ink",
-            "lineHeight": 1.35
-          }
-        ],
-        "radius": 0
-      },
+      "name": "CategoryIcon",
+      "category": "Foundations",
+      "source": "design-kit/src/components/foundation.tsx",
+      "docPath": "design-kit/docs/CategoryIcon.md",
+      "sha256": "c79d1da87c6b1403250d99e65abb607d5ef4d176b38ae94af87406039c4ef650",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
-        "scenario": "states, focus/VoiceOver, larger text, keyboard, contrast and native material/adaptations"
+        "scenario": "states, focus and VoiceOver, Dynamic Type, keyboard, contrast and native Liquid Glass adaptations"
       }
     },
     {
-      "name": "Field/Error",
-      "definition": {
-        "kind": "board",
-        "name": "Field/Error",
-        "x": 0,
-        "y": 0,
-        "w": 342,
-        "h": 104,
-        "fill": null,
-        "children": [
-          {
-            "kind": "text",
-            "name": "Label",
-            "text": "Label",
-            "x": 0,
-            "y": 0,
-            "w": 342,
-            "h": 19,
-            "size": 13,
-            "weight": 500,
-            "color": "ink",
-            "lineHeight": 1.35
-          },
-          {
-            "kind": "rect",
-            "name": "Input",
-            "x": 0,
-            "y": 25,
-            "w": 342,
-            "h": 52,
-            "fill": "paper",
-            "radius": 14,
-            "stroke": "danger",
-            "strokeWidth": 2
-          },
-          {
-            "kind": "text",
-            "name": "Value",
-            "text": "Your value",
-            "x": 16,
-            "y": 41,
-            "w": 310,
-            "h": 21,
-            "size": 15,
-            "weight": 400,
-            "color": "ink",
-            "lineHeight": 1.35
-          },
-          {
-            "kind": "text",
-            "name": "Error",
-            "text": "Enter a valid value.",
-            "x": 0,
-            "y": 84,
-            "w": 342,
-            "h": 17,
-            "size": 12,
-            "weight": 400,
-            "color": "danger",
-            "lineHeight": 1.35
-          }
-        ],
-        "radius": 0
-      },
-      "nativeIssue": "MAZ-69",
+      "name": "DataTable",
+      "category": "Web",
+      "source": "design-kit/src/components/web.tsx",
+      "docPath": "design-kit/docs/DataTable.md",
+      "sha256": "79b16e4b987ff846673e598953c1970500698244fbff00d3e698d67177d84178",
+      "nativeIssue": null,
       "webIssue": "MAZ-85",
       "acceptance": {
-        "native": "MAZ-82",
+        "native": null,
         "web": "MAZ-96",
-        "scenario": "states, focus/VoiceOver, larger text, keyboard, contrast and native material/adaptations"
+        "scenario": "pointer and keyboard use, focus order, shortcuts, contrast and resizable layouts"
       }
     },
     {
-      "name": "Row/Transaction",
-      "definition": {
-        "kind": "board",
-        "name": "Row/Transaction",
-        "x": 0,
-        "y": 0,
-        "w": 342,
-        "h": 72,
-        "fill": null,
-        "children": [
-          {
-            "kind": "rect",
-            "name": "Icon background",
-            "x": 0,
-            "y": 14,
-            "w": 40,
-            "h": 40,
-            "fill": "mint",
-            "radius": 13
-          },
-          {
-            "kind": "icon",
-            "name": "Icon",
-            "icon": "basket-outline",
-            "x": 9,
-            "y": 23,
-            "w": 22,
-            "h": 22,
-            "color": "green"
-          },
-          {
-            "kind": "text",
-            "name": "Title",
-            "text": "Groceries",
-            "x": 54,
-            "y": 14,
-            "w": 172,
-            "h": 21,
-            "size": 15,
-            "weight": 600,
-            "color": "ink",
-            "lineHeight": 1.35
-          },
-          {
-            "kind": "text",
-            "name": "Subtitle",
-            "text": "Groceries · Main chequing",
-            "x": 54,
-            "y": 38,
-            "w": 180,
-            "h": 17,
-            "size": 12,
-            "weight": 400,
-            "color": "muted",
-            "lineHeight": 1.35
-          },
-          {
-            "kind": "text",
-            "name": "Amount",
-            "text": "−$48.90",
-            "x": 232,
-            "y": 14,
-            "w": 110,
-            "h": 21,
-            "size": 15,
-            "weight": 600,
-            "color": "ink",
-            "lineHeight": 1.35,
-            "align": "right"
-          },
-          {
-            "kind": "text",
-            "name": "Footnote",
-            "text": "Your share",
-            "x": 240,
-            "y": 38,
-            "w": 102,
-            "h": 16,
-            "size": 11,
-            "weight": 400,
-            "color": "muted",
-            "lineHeight": 1.35,
-            "align": "right"
-          },
-          {
-            "kind": "rect",
-            "name": "Divider",
-            "x": 54,
-            "y": 71,
-            "w": 288,
-            "h": 1,
-            "fill": "line",
-            "radius": 0
-          }
-        ],
-        "radius": 0
-      },
-      "nativeIssue": "MAZ-69",
+      "name": "Dialog",
+      "category": "Web",
+      "source": "design-kit/src/components/web.tsx",
+      "docPath": "design-kit/docs/Dialog.md",
+      "sha256": "53899fcda4f84cb89a7e0493d3f06259db0d9df496d8f4574626e3b69d0f1341",
+      "nativeIssue": null,
       "webIssue": "MAZ-85",
       "acceptance": {
-        "native": "MAZ-82",
+        "native": null,
         "web": "MAZ-96",
-        "scenario": "states, focus/VoiceOver, larger text, keyboard, contrast and native material/adaptations"
+        "scenario": "pointer and keyboard use, focus order, shortcuts, contrast and resizable layouts"
       }
     },
     {
-      "name": "Row/Menu",
-      "definition": {
-        "kind": "board",
-        "name": "Row/Menu",
-        "x": 0,
-        "y": 0,
-        "w": 342,
-        "h": 64,
-        "fill": null,
-        "children": [
-          {
-            "kind": "icon",
-            "name": "Icon",
-            "icon": "wallet-outline",
-            "x": 0,
-            "y": 20,
-            "w": 23,
-            "h": 23,
-            "color": "green"
-          },
-          {
-            "kind": "text",
-            "name": "Title",
-            "text": "Accounts",
-            "x": 38,
-            "y": 12,
-            "w": 266,
-            "h": 21,
-            "size": 15,
-            "weight": 600,
-            "color": "ink",
-            "lineHeight": 1.35
-          },
-          {
-            "kind": "text",
-            "name": "Subtitle",
-            "text": "Where you pay from",
-            "x": 38,
-            "y": 35,
-            "w": 266,
-            "h": 17,
-            "size": 12,
-            "weight": 400,
-            "color": "muted",
-            "lineHeight": 1.35
-          },
-          {
-            "kind": "icon",
-            "name": "Icon/chevron-forward-outline",
-            "icon": "chevron-forward-outline",
-            "x": 322,
-            "y": 23,
-            "w": 18,
-            "h": 18,
-            "color": "muted"
-          },
-          {
-            "kind": "rect",
-            "name": "Divider",
-            "x": 38,
-            "y": 63,
-            "w": 304,
-            "h": 1,
-            "fill": "line",
-            "radius": 0
-          }
-        ],
-        "radius": 0
-      },
+      "name": "FlowBar",
+      "category": "Money",
+      "source": "design-kit/src/components/money.tsx",
+      "docPath": "design-kit/docs/FlowBar.md",
+      "sha256": "5a221bdef80f2add029bc388245237f6cd3698cf487ee886d3a6fcb892a62652",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
-        "scenario": "states, focus/VoiceOver, larger text, keyboard, contrast and native material/adaptations"
+        "scenario": "states, focus and VoiceOver, Dynamic Type, keyboard, contrast and native Liquid Glass adaptations"
       }
     },
     {
-      "name": "Search",
-      "definition": {
-        "kind": "board",
-        "name": "Search",
-        "x": 0,
-        "y": 0,
-        "w": 342,
-        "h": 48,
-        "fill": "paper",
-        "children": [
-          {
-            "kind": "icon",
-            "name": "Icon/search-outline",
-            "icon": "search-outline",
-            "x": 14,
-            "y": 14,
-            "w": 20,
-            "h": 20,
-            "color": "muted"
-          },
-          {
-            "kind": "text",
-            "name": "Placeholder",
-            "text": "Search entries",
-            "x": 44,
-            "y": 14,
-            "w": 282,
-            "h": 21,
-            "size": 15,
-            "weight": 400,
-            "color": "muted",
-            "lineHeight": 1.35
-          }
-        ],
-        "radius": 24,
-        "material": "glass"
-      },
+      "name": "FlowCard",
+      "category": "Money",
+      "source": "design-kit/src/components/money.tsx",
+      "docPath": "design-kit/docs/FlowCard.md",
+      "sha256": "a0ddefa4f711dc0084441e0e40afc46366ea59d6195cb9977d464c155455dee9",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
-        "scenario": "states, focus/VoiceOver, larger text, keyboard, contrast and native material/adaptations"
+        "scenario": "states, focus and VoiceOver, Dynamic Type, keyboard, contrast and native Liquid Glass adaptations"
       }
     },
     {
-      "name": "Category/Default",
-      "definition": {
-        "kind": "board",
-        "name": "Category/Default",
-        "x": 0,
-        "y": 0,
-        "w": 78,
-        "h": 60,
-        "fill": "paper",
-        "children": [
-          {
-            "kind": "icon",
-            "name": "Icon",
-            "icon": "basket-outline",
-            "x": 29,
-            "y": 8,
-            "w": 20,
-            "h": 20,
-            "color": "muted"
-          },
-          {
-            "kind": "text",
-            "name": "Label",
-            "text": "Groceries",
-            "x": 6,
-            "y": 36,
-            "w": 66,
-            "h": 17,
-            "size": 12,
-            "weight": 500,
-            "color": "ink",
-            "lineHeight": 1.35,
-            "align": "center"
-          }
-        ],
-        "radius": 20,
-        "stroke": "line",
-        "material": "glass"
-      },
+      "name": "GlassButton",
+      "category": "Inputs",
+      "source": "design-kit/src/components/controls.tsx",
+      "docPath": "design-kit/docs/GlassButton.md",
+      "sha256": "184f40a3e854ca896b8276fac97b544b40d2d1c3e74c0d77a2ffae1cab511a5b",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
-        "scenario": "states, focus/VoiceOver, larger text, keyboard, contrast and native material/adaptations"
+        "scenario": "states, focus and VoiceOver, Dynamic Type, keyboard, contrast and native Liquid Glass adaptations"
       }
     },
     {
-      "name": "Category/Selected",
-      "definition": {
-        "kind": "board",
-        "name": "Category/Selected",
-        "x": 0,
-        "y": 0,
-        "w": 78,
-        "h": 60,
-        "fill": "mint",
-        "children": [
-          {
-            "kind": "icon",
-            "name": "Icon",
-            "icon": "basket-outline",
-            "x": 29,
-            "y": 8,
-            "w": 20,
-            "h": 20,
-            "color": "green"
-          },
-          {
-            "kind": "text",
-            "name": "Label",
-            "text": "Groceries",
-            "x": 6,
-            "y": 36,
-            "w": 66,
-            "h": 17,
-            "size": 12,
-            "weight": 600,
-            "color": "green",
-            "lineHeight": 1.35,
-            "align": "center"
-          }
-        ],
-        "radius": 20,
-        "stroke": "green",
-        "material": "glass-selected"
-      },
+      "name": "HeroAmount",
+      "category": "Money",
+      "source": "design-kit/src/components/foundation.tsx",
+      "docPath": "design-kit/docs/HeroAmount.md",
+      "sha256": "34eba5d50903a7c621d7cf845f82908c4a11b0a5ebb8af3788ab8d2123e8617c",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
-        "scenario": "states, focus/VoiceOver, larger text, keyboard, contrast and native material/adaptations"
+        "scenario": "states, focus and VoiceOver, Dynamic Type, keyboard, contrast and native Liquid Glass adaptations"
       }
     },
     {
-      "name": "Badge/Scheduled",
-      "definition": {
-        "kind": "board",
-        "name": "Badge/Scheduled",
-        "x": 0,
-        "y": 0,
-        "w": 86,
-        "h": 26,
-        "fill": "pale",
-        "children": [
-          {
-            "kind": "text",
-            "name": "Label",
-            "text": "Scheduled",
-            "x": 6,
-            "y": 5,
-            "w": 74,
-            "h": 16,
-            "size": 11,
-            "weight": 600,
-            "color": "muted",
-            "lineHeight": 1.35,
-            "align": "center"
-          }
-        ],
-        "radius": 8
-      },
+      "name": "Icon",
+      "category": "Foundations",
+      "source": "design-kit/src/components/foundation.tsx",
+      "docPath": "design-kit/docs/Icon.md",
+      "sha256": "8abcb2b59ac3efe40949f95a08c9a29558935511231811a2f328f71febb5e604",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
-        "scenario": "states, focus/VoiceOver, larger text, keyboard, contrast and native material/adaptations"
+        "scenario": "states, focus and VoiceOver, Dynamic Type, keyboard, contrast and native Liquid Glass adaptations"
       }
     },
     {
-      "name": "Badge/Shared",
-      "definition": {
-        "kind": "board",
-        "name": "Badge/Shared",
-        "x": 0,
-        "y": 0,
-        "w": 86,
-        "h": 26,
-        "fill": "mint",
-        "children": [
-          {
-            "kind": "text",
-            "name": "Label",
-            "text": "Shared",
-            "x": 6,
-            "y": 5,
-            "w": 74,
-            "h": 16,
-            "size": 11,
-            "weight": 600,
-            "color": "green",
-            "lineHeight": 1.35,
-            "align": "center"
-          }
-        ],
-        "radius": 8
-      },
-      "nativeIssue": "MAZ-69",
+      "name": "Kbd",
+      "category": "Web",
+      "source": "design-kit/src/components/web.tsx",
+      "docPath": "design-kit/docs/Kbd.md",
+      "sha256": "ea598dc07760fad3b45d581e31020e94840f2c4913ea438310c0e08a1bd5c20a",
+      "nativeIssue": null,
       "webIssue": "MAZ-85",
       "acceptance": {
-        "native": "MAZ-82",
+        "native": null,
         "web": "MAZ-96",
-        "scenario": "states, focus/VoiceOver, larger text, keyboard, contrast and native material/adaptations"
+        "scenario": "pointer and keyboard use, focus order, shortcuts, contrast and resizable layouts"
       }
     },
     {
-      "name": "Badge/Pending",
-      "definition": {
-        "kind": "board",
-        "name": "Badge/Pending",
-        "x": 0,
-        "y": 0,
-        "w": 86,
-        "h": 26,
-        "fill": "amberBg",
-        "children": [
-          {
-            "kind": "text",
-            "name": "Label",
-            "text": "Pending",
-            "x": 6,
-            "y": 5,
-            "w": 74,
-            "h": 16,
-            "size": 11,
-            "weight": 600,
-            "color": "amber",
-            "lineHeight": 1.35,
-            "align": "center"
-          }
-        ],
-        "radius": 8
-      },
+      "name": "Keypad",
+      "category": "Inputs",
+      "source": "design-kit/src/components/chrome.tsx",
+      "docPath": "design-kit/docs/Keypad.md",
+      "sha256": "88b10fa3327a95a0683f7c7fd82ec4a7a73adb9b915cea420822fa57f4f74c63",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
-        "scenario": "states, focus/VoiceOver, larger text, keyboard, contrast and native material/adaptations"
+        "scenario": "states, focus and VoiceOver, Dynamic Type, keyboard, contrast and native Liquid Glass adaptations"
       }
     },
     {
-      "name": "Badge/Paid",
-      "definition": {
-        "kind": "board",
-        "name": "Badge/Paid",
-        "x": 0,
-        "y": 0,
-        "w": 86,
-        "h": 26,
-        "fill": "mint",
-        "children": [
-          {
-            "kind": "text",
-            "name": "Label",
-            "text": "Paid",
-            "x": 6,
-            "y": 5,
-            "w": 74,
-            "h": 16,
-            "size": 11,
-            "weight": 600,
-            "color": "green",
-            "lineHeight": 1.35,
-            "align": "center"
-          }
-        ],
-        "radius": 8
-      },
+      "name": "LargeTitle",
+      "category": "Layout",
+      "source": "design-kit/src/components/controls.tsx",
+      "docPath": "design-kit/docs/LargeTitle.md",
+      "sha256": "5f0dbe9190c2b0557ae4b971005d7e8be773db311b64f92e1024571d78bd9bf5",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
-        "scenario": "states, focus/VoiceOver, larger text, keyboard, contrast and native material/adaptations"
+        "scenario": "states, focus and VoiceOver, Dynamic Type, keyboard, contrast and native Liquid Glass adaptations"
       }
     },
     {
-      "name": "Navigation/Home",
-      "definition": {
-        "kind": "board",
-        "name": "Navigation/Home",
-        "x": 0,
-        "y": 0,
-        "w": 358,
-        "h": 64,
-        "fill": "paper",
-        "children": [
-          {
-            "kind": "board",
-            "name": "Tab/Home",
-            "x": 0,
-            "y": 4,
-            "w": 71.6,
-            "h": 56,
-            "fill": null,
-            "children": [
-              {
-                "kind": "rect",
-                "name": "Selected",
-                "x": 5.8,
-                "y": 2,
-                "w": 60,
-                "h": 48,
-                "fill": "mint",
-                "radius": 24,
-                "material": "glass-selected"
-              },
-              {
-                "kind": "icon",
-                "name": "Icon/home-outline",
-                "icon": "home-outline",
-                "x": 24.8,
-                "y": 8,
-                "w": 22,
-                "h": 22,
-                "color": "green"
-              },
-              {
-                "kind": "text",
-                "name": "Home",
-                "text": "Home",
-                "x": 2,
-                "y": 36,
-                "w": 67.6,
-                "h": 16,
-                "size": 11,
-                "weight": 600,
-                "color": "green",
-                "lineHeight": 1.35,
-                "align": "center"
-              }
-            ],
-            "radius": 0,
-            "target": "home"
-          },
-          {
-            "kind": "board",
-            "name": "Tab/Activity",
-            "x": 71.6,
-            "y": 4,
-            "w": 71.6,
-            "h": 56,
-            "fill": null,
-            "children": [
-              {
-                "kind": "icon",
-                "name": "Icon/list-outline",
-                "icon": "list-outline",
-                "x": 24.8,
-                "y": 8,
-                "w": 22,
-                "h": 22,
-                "color": "muted"
-              },
-              {
-                "kind": "text",
-                "name": "Activity",
-                "text": "Activity",
-                "x": 2,
-                "y": 36,
-                "w": 67.6,
-                "h": 16,
-                "size": 11,
-                "weight": 400,
-                "color": "muted",
-                "lineHeight": 1.35,
-                "align": "center"
-              }
-            ],
-            "radius": 0,
-            "target": "activity"
-          },
-          {
-            "kind": "board",
-            "name": "Tab/Shared",
-            "x": 143.2,
-            "y": 4,
-            "w": 71.6,
-            "h": 56,
-            "fill": null,
-            "children": [
-              {
-                "kind": "icon",
-                "name": "Icon/people-outline",
-                "icon": "people-outline",
-                "x": 24.8,
-                "y": 8,
-                "w": 22,
-                "h": 22,
-                "color": "muted"
-              },
-              {
-                "kind": "text",
-                "name": "Shared",
-                "text": "Shared",
-                "x": 2,
-                "y": 36,
-                "w": 67.6,
-                "h": 16,
-                "size": 11,
-                "weight": 400,
-                "color": "muted",
-                "lineHeight": 1.35,
-                "align": "center"
-              }
-            ],
-            "radius": 0,
-            "target": "shared"
-          },
-          {
-            "kind": "board",
-            "name": "Tab/Trips",
-            "x": 214.79999999999998,
-            "y": 4,
-            "w": 71.6,
-            "h": 56,
-            "fill": null,
-            "children": [
-              {
-                "kind": "icon",
-                "name": "Icon/airplane-outline",
-                "icon": "airplane-outline",
-                "x": 24.8,
-                "y": 8,
-                "w": 22,
-                "h": 22,
-                "color": "muted"
-              },
-              {
-                "kind": "text",
-                "name": "Trips",
-                "text": "Trips",
-                "x": 2,
-                "y": 36,
-                "w": 67.6,
-                "h": 16,
-                "size": 11,
-                "weight": 400,
-                "color": "muted",
-                "lineHeight": 1.35,
-                "align": "center"
-              }
-            ],
-            "radius": 0,
-            "target": "trips"
-          },
-          {
-            "kind": "board",
-            "name": "Tab/More",
-            "x": 286.4,
-            "y": 4,
-            "w": 71.6,
-            "h": 56,
-            "fill": null,
-            "children": [
-              {
-                "kind": "icon",
-                "name": "Icon/ellipsis-horizontal",
-                "icon": "ellipsis-horizontal",
-                "x": 24.8,
-                "y": 8,
-                "w": 22,
-                "h": 22,
-                "color": "muted"
-              },
-              {
-                "kind": "text",
-                "name": "More",
-                "text": "More",
-                "x": 2,
-                "y": 36,
-                "w": 67.6,
-                "h": 16,
-                "size": 11,
-                "weight": 400,
-                "color": "muted",
-                "lineHeight": 1.35,
-                "align": "center"
-              }
-            ],
-            "radius": 0,
-            "target": "more"
-          }
-        ],
-        "radius": 32,
-        "material": "glass"
-      },
+      "name": "List",
+      "category": "Layout",
+      "source": "design-kit/src/components/lists.tsx",
+      "docPath": "design-kit/docs/List.md",
+      "sha256": "adea7082ba794eb8e4a94bc40e533c307286560c399112efd08ca9e845f0094f",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
-        "scenario": "states, focus/VoiceOver, larger text, keyboard, contrast and native material/adaptations"
+        "scenario": "states, focus and VoiceOver, Dynamic Type, keyboard, contrast and native Liquid Glass adaptations"
       }
     },
     {
-      "name": "Navigation/Activity",
-      "definition": {
-        "kind": "board",
-        "name": "Navigation/Activity",
-        "x": 0,
-        "y": 0,
-        "w": 358,
-        "h": 64,
-        "fill": "paper",
-        "children": [
-          {
-            "kind": "board",
-            "name": "Tab/Home",
-            "x": 0,
-            "y": 4,
-            "w": 71.6,
-            "h": 56,
-            "fill": null,
-            "children": [
-              {
-                "kind": "icon",
-                "name": "Icon/home-outline",
-                "icon": "home-outline",
-                "x": 24.8,
-                "y": 8,
-                "w": 22,
-                "h": 22,
-                "color": "muted"
-              },
-              {
-                "kind": "text",
-                "name": "Home",
-                "text": "Home",
-                "x": 2,
-                "y": 36,
-                "w": 67.6,
-                "h": 16,
-                "size": 11,
-                "weight": 400,
-                "color": "muted",
-                "lineHeight": 1.35,
-                "align": "center"
-              }
-            ],
-            "radius": 0,
-            "target": "home"
-          },
-          {
-            "kind": "board",
-            "name": "Tab/Activity",
-            "x": 71.6,
-            "y": 4,
-            "w": 71.6,
-            "h": 56,
-            "fill": null,
-            "children": [
-              {
-                "kind": "rect",
-                "name": "Selected",
-                "x": 5.8,
-                "y": 2,
-                "w": 60,
-                "h": 48,
-                "fill": "mint",
-                "radius": 24,
-                "material": "glass-selected"
-              },
-              {
-                "kind": "icon",
-                "name": "Icon/list-outline",
-                "icon": "list-outline",
-                "x": 24.8,
-                "y": 8,
-                "w": 22,
-                "h": 22,
-                "color": "green"
-              },
-              {
-                "kind": "text",
-                "name": "Activity",
-                "text": "Activity",
-                "x": 2,
-                "y": 36,
-                "w": 67.6,
-                "h": 16,
-                "size": 11,
-                "weight": 600,
-                "color": "green",
-                "lineHeight": 1.35,
-                "align": "center"
-              }
-            ],
-            "radius": 0,
-            "target": "activity"
-          },
-          {
-            "kind": "board",
-            "name": "Tab/Shared",
-            "x": 143.2,
-            "y": 4,
-            "w": 71.6,
-            "h": 56,
-            "fill": null,
-            "children": [
-              {
-                "kind": "icon",
-                "name": "Icon/people-outline",
-                "icon": "people-outline",
-                "x": 24.8,
-                "y": 8,
-                "w": 22,
-                "h": 22,
-                "color": "muted"
-              },
-              {
-                "kind": "text",
-                "name": "Shared",
-                "text": "Shared",
-                "x": 2,
-                "y": 36,
-                "w": 67.6,
-                "h": 16,
-                "size": 11,
-                "weight": 400,
-                "color": "muted",
-                "lineHeight": 1.35,
-                "align": "center"
-              }
-            ],
-            "radius": 0,
-            "target": "shared"
-          },
-          {
-            "kind": "board",
-            "name": "Tab/Trips",
-            "x": 214.79999999999998,
-            "y": 4,
-            "w": 71.6,
-            "h": 56,
-            "fill": null,
-            "children": [
-              {
-                "kind": "icon",
-                "name": "Icon/airplane-outline",
-                "icon": "airplane-outline",
-                "x": 24.8,
-                "y": 8,
-                "w": 22,
-                "h": 22,
-                "color": "muted"
-              },
-              {
-                "kind": "text",
-                "name": "Trips",
-                "text": "Trips",
-                "x": 2,
-                "y": 36,
-                "w": 67.6,
-                "h": 16,
-                "size": 11,
-                "weight": 400,
-                "color": "muted",
-                "lineHeight": 1.35,
-                "align": "center"
-              }
-            ],
-            "radius": 0,
-            "target": "trips"
-          },
-          {
-            "kind": "board",
-            "name": "Tab/More",
-            "x": 286.4,
-            "y": 4,
-            "w": 71.6,
-            "h": 56,
-            "fill": null,
-            "children": [
-              {
-                "kind": "icon",
-                "name": "Icon/ellipsis-horizontal",
-                "icon": "ellipsis-horizontal",
-                "x": 24.8,
-                "y": 8,
-                "w": 22,
-                "h": 22,
-                "color": "muted"
-              },
-              {
-                "kind": "text",
-                "name": "More",
-                "text": "More",
-                "x": 2,
-                "y": 36,
-                "w": 67.6,
-                "h": 16,
-                "size": 11,
-                "weight": 400,
-                "color": "muted",
-                "lineHeight": 1.35,
-                "align": "center"
-              }
-            ],
-            "radius": 0,
-            "target": "more"
-          }
-        ],
-        "radius": 32,
-        "material": "glass"
-      },
+      "name": "ListRow",
+      "category": "Layout",
+      "source": "design-kit/src/components/lists.tsx",
+      "docPath": "design-kit/docs/ListRow.md",
+      "sha256": "1c854a3223e8b50bcae174b083dee010264b8d7d100cce76810087db55428e82",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
-        "scenario": "states, focus/VoiceOver, larger text, keyboard, contrast and native material/adaptations"
+        "scenario": "states, focus and VoiceOver, Dynamic Type, keyboard, contrast and native Liquid Glass adaptations"
       }
     },
     {
-      "name": "Navigation/Shared",
-      "definition": {
-        "kind": "board",
-        "name": "Navigation/Shared",
-        "x": 0,
-        "y": 0,
-        "w": 358,
-        "h": 64,
-        "fill": "paper",
-        "children": [
-          {
-            "kind": "board",
-            "name": "Tab/Home",
-            "x": 0,
-            "y": 4,
-            "w": 71.6,
-            "h": 56,
-            "fill": null,
-            "children": [
-              {
-                "kind": "icon",
-                "name": "Icon/home-outline",
-                "icon": "home-outline",
-                "x": 24.8,
-                "y": 8,
-                "w": 22,
-                "h": 22,
-                "color": "muted"
-              },
-              {
-                "kind": "text",
-                "name": "Home",
-                "text": "Home",
-                "x": 2,
-                "y": 36,
-                "w": 67.6,
-                "h": 16,
-                "size": 11,
-                "weight": 400,
-                "color": "muted",
-                "lineHeight": 1.35,
-                "align": "center"
-              }
-            ],
-            "radius": 0,
-            "target": "home"
-          },
-          {
-            "kind": "board",
-            "name": "Tab/Activity",
-            "x": 71.6,
-            "y": 4,
-            "w": 71.6,
-            "h": 56,
-            "fill": null,
-            "children": [
-              {
-                "kind": "icon",
-                "name": "Icon/list-outline",
-                "icon": "list-outline",
-                "x": 24.8,
-                "y": 8,
-                "w": 22,
-                "h": 22,
-                "color": "muted"
-              },
-              {
-                "kind": "text",
-                "name": "Activity",
-                "text": "Activity",
-                "x": 2,
-                "y": 36,
-                "w": 67.6,
-                "h": 16,
-                "size": 11,
-                "weight": 400,
-                "color": "muted",
-                "lineHeight": 1.35,
-                "align": "center"
-              }
-            ],
-            "radius": 0,
-            "target": "activity"
-          },
-          {
-            "kind": "board",
-            "name": "Tab/Shared",
-            "x": 143.2,
-            "y": 4,
-            "w": 71.6,
-            "h": 56,
-            "fill": null,
-            "children": [
-              {
-                "kind": "rect",
-                "name": "Selected",
-                "x": 5.8,
-                "y": 2,
-                "w": 60,
-                "h": 48,
-                "fill": "mint",
-                "radius": 24,
-                "material": "glass-selected"
-              },
-              {
-                "kind": "icon",
-                "name": "Icon/people-outline",
-                "icon": "people-outline",
-                "x": 24.8,
-                "y": 8,
-                "w": 22,
-                "h": 22,
-                "color": "green"
-              },
-              {
-                "kind": "text",
-                "name": "Shared",
-                "text": "Shared",
-                "x": 2,
-                "y": 36,
-                "w": 67.6,
-                "h": 16,
-                "size": 11,
-                "weight": 600,
-                "color": "green",
-                "lineHeight": 1.35,
-                "align": "center"
-              }
-            ],
-            "radius": 0,
-            "target": "shared"
-          },
-          {
-            "kind": "board",
-            "name": "Tab/Trips",
-            "x": 214.79999999999998,
-            "y": 4,
-            "w": 71.6,
-            "h": 56,
-            "fill": null,
-            "children": [
-              {
-                "kind": "icon",
-                "name": "Icon/airplane-outline",
-                "icon": "airplane-outline",
-                "x": 24.8,
-                "y": 8,
-                "w": 22,
-                "h": 22,
-                "color": "muted"
-              },
-              {
-                "kind": "text",
-                "name": "Trips",
-                "text": "Trips",
-                "x": 2,
-                "y": 36,
-                "w": 67.6,
-                "h": 16,
-                "size": 11,
-                "weight": 400,
-                "color": "muted",
-                "lineHeight": 1.35,
-                "align": "center"
-              }
-            ],
-            "radius": 0,
-            "target": "trips"
-          },
-          {
-            "kind": "board",
-            "name": "Tab/More",
-            "x": 286.4,
-            "y": 4,
-            "w": 71.6,
-            "h": 56,
-            "fill": null,
-            "children": [
-              {
-                "kind": "icon",
-                "name": "Icon/ellipsis-horizontal",
-                "icon": "ellipsis-horizontal",
-                "x": 24.8,
-                "y": 8,
-                "w": 22,
-                "h": 22,
-                "color": "muted"
-              },
-              {
-                "kind": "text",
-                "name": "More",
-                "text": "More",
-                "x": 2,
-                "y": 36,
-                "w": 67.6,
-                "h": 16,
-                "size": 11,
-                "weight": 400,
-                "color": "muted",
-                "lineHeight": 1.35,
-                "align": "center"
-              }
-            ],
-            "radius": 0,
-            "target": "more"
-          }
-        ],
-        "radius": 32,
-        "material": "glass"
-      },
+      "name": "Money",
+      "category": "Foundations",
+      "source": "design-kit/src/components/foundation.tsx",
+      "docPath": "design-kit/docs/Money.md",
+      "sha256": "24f77556e374840562729d03d5c80ace3afa86f9688d11005a57ea04287b44ba",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
-        "scenario": "states, focus/VoiceOver, larger text, keyboard, contrast and native material/adaptations"
+        "scenario": "states, focus and VoiceOver, Dynamic Type, keyboard, contrast and native Liquid Glass adaptations"
       }
     },
     {
-      "name": "Navigation/Trips",
-      "definition": {
-        "kind": "board",
-        "name": "Navigation/Trips",
-        "x": 0,
-        "y": 0,
-        "w": 358,
-        "h": 64,
-        "fill": "paper",
-        "children": [
-          {
-            "kind": "board",
-            "name": "Tab/Home",
-            "x": 0,
-            "y": 4,
-            "w": 71.6,
-            "h": 56,
-            "fill": null,
-            "children": [
-              {
-                "kind": "icon",
-                "name": "Icon/home-outline",
-                "icon": "home-outline",
-                "x": 24.8,
-                "y": 8,
-                "w": 22,
-                "h": 22,
-                "color": "muted"
-              },
-              {
-                "kind": "text",
-                "name": "Home",
-                "text": "Home",
-                "x": 2,
-                "y": 36,
-                "w": 67.6,
-                "h": 16,
-                "size": 11,
-                "weight": 400,
-                "color": "muted",
-                "lineHeight": 1.35,
-                "align": "center"
-              }
-            ],
-            "radius": 0,
-            "target": "home"
-          },
-          {
-            "kind": "board",
-            "name": "Tab/Activity",
-            "x": 71.6,
-            "y": 4,
-            "w": 71.6,
-            "h": 56,
-            "fill": null,
-            "children": [
-              {
-                "kind": "icon",
-                "name": "Icon/list-outline",
-                "icon": "list-outline",
-                "x": 24.8,
-                "y": 8,
-                "w": 22,
-                "h": 22,
-                "color": "muted"
-              },
-              {
-                "kind": "text",
-                "name": "Activity",
-                "text": "Activity",
-                "x": 2,
-                "y": 36,
-                "w": 67.6,
-                "h": 16,
-                "size": 11,
-                "weight": 400,
-                "color": "muted",
-                "lineHeight": 1.35,
-                "align": "center"
-              }
-            ],
-            "radius": 0,
-            "target": "activity"
-          },
-          {
-            "kind": "board",
-            "name": "Tab/Shared",
-            "x": 143.2,
-            "y": 4,
-            "w": 71.6,
-            "h": 56,
-            "fill": null,
-            "children": [
-              {
-                "kind": "icon",
-                "name": "Icon/people-outline",
-                "icon": "people-outline",
-                "x": 24.8,
-                "y": 8,
-                "w": 22,
-                "h": 22,
-                "color": "muted"
-              },
-              {
-                "kind": "text",
-                "name": "Shared",
-                "text": "Shared",
-                "x": 2,
-                "y": 36,
-                "w": 67.6,
-                "h": 16,
-                "size": 11,
-                "weight": 400,
-                "color": "muted",
-                "lineHeight": 1.35,
-                "align": "center"
-              }
-            ],
-            "radius": 0,
-            "target": "shared"
-          },
-          {
-            "kind": "board",
-            "name": "Tab/Trips",
-            "x": 214.79999999999998,
-            "y": 4,
-            "w": 71.6,
-            "h": 56,
-            "fill": null,
-            "children": [
-              {
-                "kind": "rect",
-                "name": "Selected",
-                "x": 5.8,
-                "y": 2,
-                "w": 60,
-                "h": 48,
-                "fill": "mint",
-                "radius": 24,
-                "material": "glass-selected"
-              },
-              {
-                "kind": "icon",
-                "name": "Icon/airplane-outline",
-                "icon": "airplane-outline",
-                "x": 24.8,
-                "y": 8,
-                "w": 22,
-                "h": 22,
-                "color": "green"
-              },
-              {
-                "kind": "text",
-                "name": "Trips",
-                "text": "Trips",
-                "x": 2,
-                "y": 36,
-                "w": 67.6,
-                "h": 16,
-                "size": 11,
-                "weight": 600,
-                "color": "green",
-                "lineHeight": 1.35,
-                "align": "center"
-              }
-            ],
-            "radius": 0,
-            "target": "trips"
-          },
-          {
-            "kind": "board",
-            "name": "Tab/More",
-            "x": 286.4,
-            "y": 4,
-            "w": 71.6,
-            "h": 56,
-            "fill": null,
-            "children": [
-              {
-                "kind": "icon",
-                "name": "Icon/ellipsis-horizontal",
-                "icon": "ellipsis-horizontal",
-                "x": 24.8,
-                "y": 8,
-                "w": 22,
-                "h": 22,
-                "color": "muted"
-              },
-              {
-                "kind": "text",
-                "name": "More",
-                "text": "More",
-                "x": 2,
-                "y": 36,
-                "w": 67.6,
-                "h": 16,
-                "size": 11,
-                "weight": 400,
-                "color": "muted",
-                "lineHeight": 1.35,
-                "align": "center"
-              }
-            ],
-            "radius": 0,
-            "target": "more"
-          }
-        ],
-        "radius": 32,
-        "material": "glass"
-      },
+      "name": "MoneyFlow",
+      "category": "Money",
+      "source": "design-kit/src/components/money.tsx",
+      "docPath": "design-kit/docs/MoneyFlow.md",
+      "sha256": "19da82f4ae09e8593c8450ede13377a7980cff8818febb238331bda4cb4b39f0",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
-        "scenario": "states, focus/VoiceOver, larger text, keyboard, contrast and native material/adaptations"
+        "scenario": "states, focus and VoiceOver, Dynamic Type, keyboard, contrast and native Liquid Glass adaptations"
       }
     },
     {
-      "name": "Navigation/More",
-      "definition": {
-        "kind": "board",
-        "name": "Navigation/More",
-        "x": 0,
-        "y": 0,
-        "w": 358,
-        "h": 64,
-        "fill": "paper",
-        "children": [
-          {
-            "kind": "board",
-            "name": "Tab/Home",
-            "x": 0,
-            "y": 4,
-            "w": 71.6,
-            "h": 56,
-            "fill": null,
-            "children": [
-              {
-                "kind": "icon",
-                "name": "Icon/home-outline",
-                "icon": "home-outline",
-                "x": 24.8,
-                "y": 8,
-                "w": 22,
-                "h": 22,
-                "color": "muted"
-              },
-              {
-                "kind": "text",
-                "name": "Home",
-                "text": "Home",
-                "x": 2,
-                "y": 36,
-                "w": 67.6,
-                "h": 16,
-                "size": 11,
-                "weight": 400,
-                "color": "muted",
-                "lineHeight": 1.35,
-                "align": "center"
-              }
-            ],
-            "radius": 0,
-            "target": "home"
-          },
-          {
-            "kind": "board",
-            "name": "Tab/Activity",
-            "x": 71.6,
-            "y": 4,
-            "w": 71.6,
-            "h": 56,
-            "fill": null,
-            "children": [
-              {
-                "kind": "icon",
-                "name": "Icon/list-outline",
-                "icon": "list-outline",
-                "x": 24.8,
-                "y": 8,
-                "w": 22,
-                "h": 22,
-                "color": "muted"
-              },
-              {
-                "kind": "text",
-                "name": "Activity",
-                "text": "Activity",
-                "x": 2,
-                "y": 36,
-                "w": 67.6,
-                "h": 16,
-                "size": 11,
-                "weight": 400,
-                "color": "muted",
-                "lineHeight": 1.35,
-                "align": "center"
-              }
-            ],
-            "radius": 0,
-            "target": "activity"
-          },
-          {
-            "kind": "board",
-            "name": "Tab/Shared",
-            "x": 143.2,
-            "y": 4,
-            "w": 71.6,
-            "h": 56,
-            "fill": null,
-            "children": [
-              {
-                "kind": "icon",
-                "name": "Icon/people-outline",
-                "icon": "people-outline",
-                "x": 24.8,
-                "y": 8,
-                "w": 22,
-                "h": 22,
-                "color": "muted"
-              },
-              {
-                "kind": "text",
-                "name": "Shared",
-                "text": "Shared",
-                "x": 2,
-                "y": 36,
-                "w": 67.6,
-                "h": 16,
-                "size": 11,
-                "weight": 400,
-                "color": "muted",
-                "lineHeight": 1.35,
-                "align": "center"
-              }
-            ],
-            "radius": 0,
-            "target": "shared"
-          },
-          {
-            "kind": "board",
-            "name": "Tab/Trips",
-            "x": 214.79999999999998,
-            "y": 4,
-            "w": 71.6,
-            "h": 56,
-            "fill": null,
-            "children": [
-              {
-                "kind": "icon",
-                "name": "Icon/airplane-outline",
-                "icon": "airplane-outline",
-                "x": 24.8,
-                "y": 8,
-                "w": 22,
-                "h": 22,
-                "color": "muted"
-              },
-              {
-                "kind": "text",
-                "name": "Trips",
-                "text": "Trips",
-                "x": 2,
-                "y": 36,
-                "w": 67.6,
-                "h": 16,
-                "size": 11,
-                "weight": 400,
-                "color": "muted",
-                "lineHeight": 1.35,
-                "align": "center"
-              }
-            ],
-            "radius": 0,
-            "target": "trips"
-          },
-          {
-            "kind": "board",
-            "name": "Tab/More",
-            "x": 286.4,
-            "y": 4,
-            "w": 71.6,
-            "h": 56,
-            "fill": null,
-            "children": [
-              {
-                "kind": "rect",
-                "name": "Selected",
-                "x": 5.8,
-                "y": 2,
-                "w": 60,
-                "h": 48,
-                "fill": "mint",
-                "radius": 24,
-                "material": "glass-selected"
-              },
-              {
-                "kind": "icon",
-                "name": "Icon/ellipsis-horizontal",
-                "icon": "ellipsis-horizontal",
-                "x": 24.8,
-                "y": 8,
-                "w": 22,
-                "h": 22,
-                "color": "green"
-              },
-              {
-                "kind": "text",
-                "name": "More",
-                "text": "More",
-                "x": 2,
-                "y": 36,
-                "w": 67.6,
-                "h": 16,
-                "size": 11,
-                "weight": 600,
-                "color": "green",
-                "lineHeight": 1.35,
-                "align": "center"
-              }
-            ],
-            "radius": 0,
-            "target": "more"
-          }
-        ],
-        "radius": 32,
-        "material": "glass"
-      },
+      "name": "PennyRoot",
+      "category": "Foundations",
+      "source": "design-kit/src/components/foundation.tsx",
+      "docPath": "design-kit/docs/PennyRoot.md",
+      "sha256": "90d49536f4939f2ea9733bf318c151ea8ae0c9dbb90e3b30152c801095cca0d0",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
-        "scenario": "states, focus/VoiceOver, larger text, keyboard, contrast and native material/adaptations"
+        "scenario": "states, focus and VoiceOver, Dynamic Type, keyboard, contrast and native Liquid Glass adaptations"
       }
     },
     {
-      "name": "Banner/Offline",
-      "definition": {
-        "kind": "board",
-        "name": "Banner/Offline",
-        "x": 0,
-        "y": 0,
-        "w": 342,
-        "h": 74,
-        "fill": "amberBg",
-        "children": [
-          {
-            "kind": "icon",
-            "name": "Icon/cloud-offline-outline",
-            "icon": "cloud-offline-outline",
-            "x": 14,
-            "y": 15,
-            "w": 22,
-            "h": 22,
-            "color": "amber"
-          },
-          {
-            "kind": "text",
-            "name": "Title",
-            "text": "Saved on this device",
-            "x": 48,
-            "y": 12,
-            "w": 278,
-            "h": 19,
-            "size": 13,
-            "weight": 600,
-            "color": "amber",
-            "lineHeight": 1.35
-          },
-          {
-            "kind": "text",
-            "name": "Subtitle",
-            "text": "Waiting to sync. Your entries are safe.",
-            "x": 48,
-            "y": 35,
-            "w": 278,
-            "h": 17,
-            "size": 12,
-            "weight": 400,
-            "color": "amber",
-            "lineHeight": 1.35
-          }
-        ],
-        "radius": 14
-      },
+      "name": "Pill",
+      "category": "Inputs",
+      "source": "design-kit/src/components/controls.tsx",
+      "docPath": "design-kit/docs/Pill.md",
+      "sha256": "a603ad4209ad352f761517c29ab4f0cbb85f4f1e519331d904f99083e85d3f7e",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
-        "scenario": "states, focus/VoiceOver, larger text, keyboard, contrast and native material/adaptations"
+        "scenario": "states, focus and VoiceOver, Dynamic Type, keyboard, contrast and native Liquid Glass adaptations"
       }
     },
     {
-      "name": "Banner/Error",
-      "definition": {
-        "kind": "board",
-        "name": "Banner/Error",
-        "x": 0,
-        "y": 0,
-        "w": 342,
-        "h": 74,
-        "fill": "dangerBg",
-        "children": [
-          {
-            "kind": "icon",
-            "name": "Icon/alert-circle-outline",
-            "icon": "alert-circle-outline",
-            "x": 14,
-            "y": 15,
-            "w": 22,
-            "h": 22,
-            "color": "danger"
-          },
-          {
-            "kind": "text",
-            "name": "Title",
-            "text": "Couldn’t save your changes",
-            "x": 48,
-            "y": 12,
-            "w": 278,
-            "h": 19,
-            "size": 13,
-            "weight": 600,
-            "color": "danger",
-            "lineHeight": 1.35
-          },
-          {
-            "kind": "text",
-            "name": "Subtitle",
-            "text": "Your draft is still here. Try again.",
-            "x": 48,
-            "y": 35,
-            "w": 278,
-            "h": 17,
-            "size": 12,
-            "weight": 400,
-            "color": "danger",
-            "lineHeight": 1.35
-          }
-        ],
-        "radius": 14
-      },
+      "name": "PillGroup",
+      "category": "Inputs",
+      "source": "design-kit/src/components/controls.tsx",
+      "docPath": "design-kit/docs/PillGroup.md",
+      "sha256": "d08a141d60ed13af693f57d4be2821bcef3b2238b4d52ffdf039a71bffa2ff21",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
-        "scenario": "states, focus/VoiceOver, larger text, keyboard, contrast and native material/adaptations"
+        "scenario": "states, focus and VoiceOver, Dynamic Type, keyboard, contrast and native Liquid Glass adaptations"
       }
     },
     {
-      "name": "Toast/Saved",
-      "definition": {
-        "kind": "board",
-        "name": "Toast/Saved",
-        "x": 0,
-        "y": 0,
-        "w": 342,
-        "h": 52,
-        "fill": "hero",
-        "children": [
-          {
-            "kind": "icon",
-            "name": "Icon/checkmark-circle-outline",
-            "icon": "checkmark-circle-outline",
-            "x": 16,
-            "y": 15,
-            "w": 22,
-            "h": 22,
-            "color": "onHero"
-          },
-          {
-            "kind": "text",
-            "name": "Label",
-            "text": "Expense added",
-            "x": 50,
-            "y": 16,
-            "w": 276,
-            "h": 20,
-            "size": 14,
-            "weight": 600,
-            "color": "onHero",
-            "lineHeight": 1.35
-          }
-        ],
-        "radius": 14
-      },
+      "name": "Screen",
+      "category": "Layout",
+      "source": "design-kit/src/components/chrome.tsx",
+      "docPath": "design-kit/docs/Screen.md",
+      "sha256": "67ba95095a6cc56e084713f88f6b90e883e82c27aea11f40724e0738987b90f6",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
-        "scenario": "states, focus/VoiceOver, larger text, keyboard, contrast and native material/adaptations"
+        "scenario": "states, focus and VoiceOver, Dynamic Type, keyboard, contrast and native Liquid Glass adaptations"
+      }
+    },
+    {
+      "name": "SearchField",
+      "category": "Web",
+      "source": "design-kit/src/components/web.tsx",
+      "docPath": "design-kit/docs/SearchField.md",
+      "sha256": "bc74cefa8923b91a6e9a7a6e8b84f268b707fa9d50e988edf19701e9d8f84b51",
+      "nativeIssue": null,
+      "webIssue": "MAZ-85",
+      "acceptance": {
+        "native": null,
+        "web": "MAZ-96",
+        "scenario": "pointer and keyboard use, focus order, shortcuts, contrast and resizable layouts"
+      }
+    },
+    {
+      "name": "SectionHeader",
+      "category": "Layout",
+      "source": "design-kit/src/components/controls.tsx",
+      "docPath": "design-kit/docs/SectionHeader.md",
+      "sha256": "b4a1230be94794d16d76aafe1aa750528aedbb2db5ae432f910a6e89fdc95932",
+      "nativeIssue": "MAZ-69",
+      "webIssue": "MAZ-85",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "states, focus and VoiceOver, Dynamic Type, keyboard, contrast and native Liquid Glass adaptations"
+      }
+    },
+    {
+      "name": "SegmentedControl",
+      "category": "Inputs",
+      "source": "design-kit/src/components/controls.tsx",
+      "docPath": "design-kit/docs/SegmentedControl.md",
+      "sha256": "028f68714c4113d507aeebd687ff954498a5fe1bfb2dbed2942094dea551881d",
+      "nativeIssue": "MAZ-69",
+      "webIssue": "MAZ-85",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "states, focus and VoiceOver, Dynamic Type, keyboard, contrast and native Liquid Glass adaptations"
+      }
+    },
+    {
+      "name": "Sheet",
+      "category": "Feedback",
+      "source": "design-kit/src/components/chrome.tsx",
+      "docPath": "design-kit/docs/Sheet.md",
+      "sha256": "7acd4803768643192858dcf6434161d58f4a1008c9ce62db5a0b6027b776d683",
+      "nativeIssue": "MAZ-69",
+      "webIssue": "MAZ-85",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "states, focus and VoiceOver, Dynamic Type, keyboard, contrast and native Liquid Glass adaptations"
+      }
+    },
+    {
+      "name": "Sidebar",
+      "category": "Navigation",
+      "source": "design-kit/src/components/chrome.tsx",
+      "docPath": "design-kit/docs/Sidebar.md",
+      "sha256": "acaf293802ed83a50315c74c86620e8dad8dcc595acdd7b86214555a683f2e3f",
+      "nativeIssue": "MAZ-69",
+      "webIssue": "MAZ-85",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "states, focus and VoiceOver, Dynamic Type, keyboard, contrast and native Liquid Glass adaptations"
+      }
+    },
+    {
+      "name": "Stat",
+      "category": "Money",
+      "source": "design-kit/src/components/money.tsx",
+      "docPath": "design-kit/docs/Stat.md",
+      "sha256": "46789ef2e2ca761164e4184b2e83d23bca8d2075594d6b80a492368d35d23d59",
+      "nativeIssue": "MAZ-69",
+      "webIssue": "MAZ-85",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "states, focus and VoiceOver, Dynamic Type, keyboard, contrast and native Liquid Glass adaptations"
+      }
+    },
+    {
+      "name": "Switch",
+      "category": "Inputs",
+      "source": "design-kit/src/components/controls.tsx",
+      "docPath": "design-kit/docs/Switch.md",
+      "sha256": "46d8fb7259989b20a3118e747773562c5cbfe207e3e5931df2a7ec862b6db4b6",
+      "nativeIssue": "MAZ-69",
+      "webIssue": "MAZ-85",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "states, focus and VoiceOver, Dynamic Type, keyboard, contrast and native Liquid Glass adaptations"
+      }
+    },
+    {
+      "name": "TabBar",
+      "category": "Navigation",
+      "source": "design-kit/src/components/chrome.tsx",
+      "docPath": "design-kit/docs/TabBar.md",
+      "sha256": "791e25612d44a0dd6abceb720b5259126bcc19ae615e5411a4d7ed986c1e9229",
+      "nativeIssue": "MAZ-69",
+      "webIssue": "MAZ-85",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "states, focus and VoiceOver, Dynamic Type, keyboard, contrast and native Liquid Glass adaptations"
+      }
+    },
+    {
+      "name": "TextField",
+      "category": "Inputs",
+      "source": "design-kit/src/components/controls.tsx",
+      "docPath": "design-kit/docs/TextField.md",
+      "sha256": "9ab832040555e8d27a80c8f36bd8c5d146f6536d559713866e8b386cee5fe91e",
+      "nativeIssue": "MAZ-69",
+      "webIssue": "MAZ-85",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "states, focus and VoiceOver, Dynamic Type, keyboard, contrast and native Liquid Glass adaptations"
+      }
+    },
+    {
+      "name": "Toast",
+      "category": "Feedback",
+      "source": "design-kit/src/components/chrome.tsx",
+      "docPath": "design-kit/docs/Toast.md",
+      "sha256": "2bf9b8134e693c3112aef914ca3415c296729406de5ca228e11adbfb3984e51b",
+      "nativeIssue": "MAZ-69",
+      "webIssue": "MAZ-85",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "states, focus and VoiceOver, Dynamic Type, keyboard, contrast and native Liquid Glass adaptations"
+      }
+    },
+    {
+      "name": "Toolbar",
+      "category": "Layout",
+      "source": "design-kit/src/components/controls.tsx",
+      "docPath": "design-kit/docs/Toolbar.md",
+      "sha256": "b962283db6ff2ef882310231383dcdd8e7a6d3efdc60bd056b4407e33b508366",
+      "nativeIssue": "MAZ-69",
+      "webIssue": "MAZ-85",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "states, focus and VoiceOver, Dynamic Type, keyboard, contrast and native Liquid Glass adaptations"
+      }
+    },
+    {
+      "name": "TopBar",
+      "category": "Web",
+      "source": "design-kit/src/components/web.tsx",
+      "docPath": "design-kit/docs/TopBar.md",
+      "sha256": "e51a00c3fea786f7f53512092fcd525a4935c65003ef66ba8f6199b24d95bcef",
+      "nativeIssue": null,
+      "webIssue": "MAZ-85",
+      "acceptance": {
+        "native": null,
+        "web": "MAZ-96",
+        "scenario": "pointer and keyboard use, focus order, shortcuts, contrast and resizable layouts"
+      }
+    },
+    {
+      "name": "TransactionRow",
+      "category": "Layout",
+      "source": "design-kit/src/components/lists.tsx",
+      "docPath": "design-kit/docs/TransactionRow.md",
+      "sha256": "8f21a29c13ca8ea34ed27d747b0ae066b0d6d9feeef203465e17febec9e75ee3",
+      "nativeIssue": "MAZ-69",
+      "webIssue": "MAZ-85",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "states, focus and VoiceOver, Dynamic Type, keyboard, contrast and native Liquid Glass adaptations"
+      }
+    },
+    {
+      "name": "WebButton",
+      "category": "Web",
+      "source": "design-kit/src/components/web.tsx",
+      "docPath": "design-kit/docs/WebButton.md",
+      "sha256": "aee8e0e1014047ddbb18dd3682c745cf99b808c88ea2550874e686f058a038a0",
+      "nativeIssue": null,
+      "webIssue": "MAZ-85",
+      "acceptance": {
+        "native": null,
+        "web": "MAZ-96",
+        "scenario": "pointer and keyboard use, focus order, shortcuts, contrast and resizable layouts"
+      }
+    },
+    {
+      "name": "WebFrame",
+      "category": "Web",
+      "source": "design-kit/src/components/web.tsx",
+      "docPath": "design-kit/docs/WebFrame.md",
+      "sha256": "38585aae067170518e55a6bc9040d9caa017e65ced95f18234f7415be0268705",
+      "nativeIssue": null,
+      "webIssue": "MAZ-85",
+      "acceptance": {
+        "native": null,
+        "web": "MAZ-96",
+        "scenario": "pointer and keyboard use, focus order, shortcuts, contrast and resizable layouts"
+      }
+    },
+    {
+      "name": "WebSidebar",
+      "category": "Web",
+      "source": "design-kit/src/components/web.tsx",
+      "docPath": "design-kit/docs/WebSidebar.md",
+      "sha256": "1f3c3738d39c9a25eaa225b2bd256bebb39a328a421038d980e69d70d58728cd",
+      "nativeIssue": null,
+      "webIssue": "MAZ-85",
+      "acceptance": {
+        "native": null,
+        "web": "MAZ-96",
+        "scenario": "pointer and keyboard use, focus order, shortcuts, contrast and resizable layouts"
       }
     }
   ],
   "knownGaps": [
-    "native-validation.json failed: 89 unmatched nodes; MAZ-122 investigates and resynchronizes",
-    "iPad, large text, real keyboard/focus, native pickers, app lock and server-search/loading states need implementation validation"
+    "Cards are static HTML; CSS blur only approximates Liquid Glass, and Inter and Ionicons stand in for SF Pro and SF Symbols.",
+    "No visual comparison of implementations exists yet; MAZ-122 owns it.",
+    "Larger text, real keyboard and focus, native pickers, app lock and server-search loading states need implementation validation (MAZ-82/96)."
   ]
 }

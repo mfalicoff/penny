@@ -1,0 +1,79 @@
+<!-- @dsCard group="Web" name="Home dashboard" viewport="1520x980" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · Web · Home</title>
+<link rel="stylesheet" href="../assets/penny.css"><link rel="stylesheet" href="../assets/web.css">
+<script src="../assets/icons.js"></script><script src="../assets/sankey.js"></script><script src="../assets/web.js"></script>
+<style>
+  .row1 { display: grid; grid-template-columns: minmax(0,1fr) 360px; gap: 18px; align-items: stretch; }
+  .hero { padding: 6px 4px 0; }
+  .big { font-size: 72px; font-weight: 700; letter-spacing: -0.045em; line-height: 1; margin-top: 8px; }
+  .big small { font-size: 38px; opacity: .55; }
+  .sub { margin-top: 12px; font-size: 15px; color: var(--label-2); display: flex; gap: 8px; align-items: center; }
+  .sub b { color: var(--label); }
+  .stats { display: flex; gap: 12px; margin-top: 22px; }
+  .stat { flex: 1; padding: 14px 16px; border-radius: 16px; }
+  .stat span { font-size: 13px; color: var(--label-2); display: flex; align-items: center; gap: 6px; }
+  .stat b { display: block; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin-top: 4px; }
+  .row2 { display: grid; grid-template-columns: minmax(0,1fr) 360px; gap: 18px; margin-top: 18px; }
+  .catrow { display: flex; align-items: center; gap: 12px; padding: 8px 0; }
+  .catrow .ic { width: 30px; height: 30px; border-radius: 9px; }
+  .catrow .ic [data-i] { width: 16px; height: 16px; }
+  .catrow .t { flex: 1; font-size: 14px; font-weight: 600; }
+  .catrow .bar { height: 5px; border-radius: 3px; background: var(--fill); margin-top: 5px; overflow: hidden; }
+  .catrow .bar i { display: block; height: 100%; border-radius: 3px; }
+  .catrow .v { font-size: 14px; font-weight: 600; }
+  .up .row { min-height: 50px; padding: 8px 0; }
+  .up .row + .row::before { left: 48px; }
+  .up .ic { width: 32px; height: 32px; border-radius: 10px; }
+</style></head>
+<body class="canvas">
+<div class="browser" data-active="home" data-url="penny.example.com">
+  <main class="wmain">
+    <div class="glow"></div>
+    <div class="wtop">
+      <h1>Home</h1>
+      <div class="month"><i><i data-i="chevron-back"></i></i><span>November 2026</span><i><i data-i="chevron-forward"></i></i></div>
+      <div class="sp"></div>
+      <div class="wsearch"><i data-i="search"></i>Search entries<kbd>⌘K</kbd></div>
+      <div class="btn primary"><i data-i="add"></i>Add entry <kbd>N</kbd></div>
+    </div>
+    <div class="wbody">
+      <div class="row1">
+        <div class="hero">
+          <div class="eyebrow">Left to spend</div>
+          <div class="big num">$1,116<small>.65</small></div>
+          <div class="sub"><span class="dot" style="background:var(--pending)"></span><span><b class="num">$3,366.65</b> projected · includes $2,250 expected pay on Nov 15</span></div>
+          <div class="stats">
+            <div class="stat glass"><span><i class="dot" style="background:var(--income)"></i>Came in</span><b class="num">$3,200.00</b></div>
+            <div class="stat glass"><span><i class="dot" style="background:var(--label);opacity:.82"></i>Spent · your share</span><b class="num">$1,883.35</b></div>
+            <div class="stat glass"><span><i class="dot" style="background:var(--invest)"></i>Invested</span><b class="num">$200.00</b></div>
+          </div>
+        </div>
+        <div class="panel up">
+          <div class="ph"><h4>Coming up</h4><a>Recurring</a></div>
+          <div class="row"><div class="ic" style="background:var(--income)"><i data-i="briefcase"></i></div><div class="t"><b>Payday</b><span>Nov 15 · expected</span></div><div class="amt num pos">+$2,250.00</div></div>
+          <div class="row"><div class="ic" style="background:var(--c-home)"><i data-i="wifi"></i></div><div class="t"><b>Internet</b><span>Nov 18 · Visa</span></div><div class="amt num">−$65.00</div></div>
+          <div class="row"><div class="ic" style="background:var(--c-entertainment)"><i data-i="play"></i></div><div class="t"><b>Streaming</b><span>Nov 22 · Visa</span></div><div class="amt num">−$18.99</div></div>
+        </div>
+      </div>
+
+      <div class="row2">
+        <div class="panel">
+          <div class="ph"><h4>Follow your money</h4><span>Hover a band to focus · <a>Open full view</a></span></div>
+          <div id="sankey" style="display:flex;justify-content:center"></div>
+        </div>
+        <div class="panel">
+          <div class="ph"><h4>By category</h4><span>Your share</span></div>
+          <div class="catrow"><div class="ic" style="background:var(--c-home)"><i data-i="home"></i></div><div class="t">Home<div class="bar"><i style="width:77%;background:var(--c-home)"></i></div></div><div class="v num">$1,450.00</div></div>
+          <div class="catrow"><div class="ic" style="background:var(--c-groceries)"><i data-i="basket"></i></div><div class="t">Groceries<div class="bar"><i style="width:8.4%;background:var(--c-groceries)"></i></div></div><div class="v num">$158.77</div></div>
+          <div class="catrow"><div class="ic" style="background:var(--c-transport)"><i data-i="bus"></i></div><div class="t">Transport<div class="bar"><i style="width:8.3%;background:var(--c-transport)"></i></div></div><div class="v num">$156.00</div></div>
+          <div class="catrow"><div class="ic" style="background:var(--c-food)"><i data-i="cafe"></i></div><div class="t">Food &amp; drinks<div class="bar"><i style="width:4.3%;background:var(--c-food)"></i></div></div><div class="v num">$80.60</div></div>
+          <div class="catrow"><div class="ic" style="background:var(--c-shopping)"><i data-i="bag-handle"></i></div><div class="t">Shopping<div class="bar"><i style="width:1.3%;background:var(--c-shopping)"></i></div></div><div class="v num">$24.99</div></div>
+          <div class="catrow"><div class="ic" style="background:var(--c-entertainment)"><i data-i="musical-notes"></i></div><div class="t">Entertainment<div class="bar"><i style="width:.7%;background:var(--c-entertainment)"></i></div></div><div class="v num">$12.99</div></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<script>drawSankey(document.getElementById("sankey"), { width: 690, height: 330, band: 170, slot: 34, gap: 5, leftLabel: 100, rightLabel: 130, highlight: "groceries" });</script>
+</body></html>

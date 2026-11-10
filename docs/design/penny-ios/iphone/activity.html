@@ -1,0 +1,63 @@
+<!-- @dsCard group="iPhone" name="Activity" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Activity</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<style>
+  .head { padding: 112px 20px 0; }
+  .chips { display: flex; gap: 8px; padding: 14px 16px 0; overflow: hidden; }
+  .day { display: flex; justify-content: space-between; padding: 22px 20px 8px; font-size: 13px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .03em; }
+  .swipe { position: relative; overflow: hidden; }
+  .swipe .row { background: var(--surface); margin-right: 148px; }
+  .swipe .row .t span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .acts { position: absolute; right: 0; top: 0; bottom: 0; display: flex; }
+  .acts div { width: 74px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: #fff; font-size: 12px; font-weight: 600; }
+  .acts [data-i] { width: 20px; height: 20px; }
+  .searchbar { position: absolute; left: 16px; right: 16px; bottom: 26px; display: flex; gap: 10px; z-index: 25; }
+  .search { flex: 1; height: 52px; border-radius: 26px; display: flex; align-items: center; gap: 8px; padding: 0 18px; color: var(--label-2); font-size: 17px; }
+  .search [data-i] { width: 19px; height: 19px; }
+  .tabmini { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; }
+  .tabmini [data-i] { width: 24px; height: 24px; }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <div class="island"></div>
+  <div class="status"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="scroll">
+    <div class="navbar">
+      <div></div>
+      <div class="grp"><div class="glass gbtn"><i data-i="options"></i></div></div>
+    </div>
+    <div class="head"><div class="largetitle">Activity</div></div>
+    <div class="chips">
+      <span class="pill on">All</span><span class="pill">Expenses</span><span class="pill">Income</span><span class="pill">Investments</span><span class="pill"><i data-i="calendar"></i>November</span>
+    </div>
+
+    <div class="day"><span>Today</span><span class="num">−$55.30</span></div>
+    <div class="list">
+      <div class="swipe">
+        <div class="row"><div class="ic" style="background:var(--c-groceries)"><i data-i="basket"></i></div><div class="t"><b>Groceries</b><span>Main chequing</span></div><div class="amt num">−$48.90</div></div>
+        <div class="acts"><div style="background:#8E8A85"><i data-i="create"></i>Edit</div><div style="background:var(--danger)"><i data-i="trash"></i>Delete</div></div>
+      </div>
+      <div class="row"><div class="ic" style="background:var(--c-food)"><i data-i="cafe"></i></div><div class="t"><b>Coffee with Mira</b><span>Visa · split 2 ways</span></div><div class="amt num">−$6.40<span>of $12.80</span></div></div>
+    </div>
+
+    <div class="day"><span>Friday, Nov 6</span><span class="num">−$262.00</span></div>
+    <div class="list">
+      <div class="row"><div class="ic" style="background:var(--invest)"><i data-i="trending-up"></i></div><div class="t"><b>TFSA contribution</b><span>Main chequing · monthly</span></div><div class="amt num inv">$200.00</div></div>
+      <div class="row"><div class="ic" style="background:var(--c-transport)"><i data-i="bus"></i></div><div class="t"><b>Transit pass</b><span>Visa · monthly</span></div><div class="amt num">−$62.00</div></div>
+    </div>
+
+    <div class="day"><span>Sunday, Nov 1</span><span class="num pos">+$1,750.00</span></div>
+    <div class="list">
+      <div class="row"><div class="ic" style="background:var(--income)"><i data-i="arrow-down"></i></div><div class="t"><b>Payday</b><span>Main chequing</span></div><div class="amt num pos">+$3,200.00</div></div>
+      <div class="row"><div class="ic" style="background:var(--c-home)"><i data-i="home"></i></div><div class="t"><b>Rent</b><span>Apartment · you paid $2,900</span></div><div class="amt num">−$1,450.00<span>your share</span></div></div>
+    </div>
+  </div>
+
+  <div class="searchbar">
+    <div class="glass tabmini"><i data-i="chevron-back"></i></div>
+    <div class="glass search"><i data-i="search"></i>Search activity</div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+</body></html>

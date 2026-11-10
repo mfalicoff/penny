@@ -1,0 +1,62 @@
+<!-- @dsCard group="iPhone" name="Empty Home" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Empty Home</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<style>
+
+  .hero { position: relative; z-index: 1; padding: 118px 24px 0; }
+  .big { font-size: 64px; font-weight: 700; letter-spacing: -0.045em; line-height: 1; margin-top: 6px; color: var(--label-3); }
+  .sub { margin-top: 12px; font-size: 15px; color: var(--label-2); }
+  .start { position: relative; z-index: 1; margin: 28px 16px 0; padding: 22px 20px; border-radius: var(--r-card); }
+  .start h3 { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+  .start p { font-size: 15px; color: var(--label-2); margin-top: 4px; line-height: 1.4; }
+  .kinds { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 18px; }
+  .kind { background: var(--surface); border-radius: 18px; padding: 14px 12px; font-size: 15px; font-weight: 600; }
+  .kind .ic { width: 34px; height: 34px; margin-bottom: 10px; }
+  .kind span { display: block; font-size: 12px; font-weight: 500; color: var(--label-2); margin-top: 2px; }
+  .sample { display: flex; align-items: center; gap: 12px; margin: 14px 16px 0; padding: 14px 16px; }
+  .sample [data-i] { width: 22px; height: 22px; color: var(--tint); }
+  .sample .t { flex: 1; } .sample b { display: block; font-size: 16px; } .sample span { font-size: 13px; color: var(--label-2); }
+  .empty { text-align: center; color: var(--label-2); font-size: 15px; padding: 26px 40px; }
+  .empty [data-i] { width: 30px; height: 30px; color: var(--label-3); margin-bottom: 8px; }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <div class="island"></div>
+  <div class="status"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="scroll">
+    <div class="glow" style="opacity:.6"></div>
+    <div class="navbar">
+      <div class="glass gcap">November <i data-i="chevron-down" style="width:15px;height:15px;--sw:52px"></i></div>
+      <div class="grp"><div class="glass gbtn"><i data-i="settings"></i></div></div>
+    </div>
+    <div class="hero">
+      <div class="eyebrow">Left to spend</div>
+      <div class="big num">$0</div>
+      <div class="sub">Your month fills in as you add entries.</div>
+    </div>
+    <div class="start glass">
+      <h3>Add your first entry</h3>
+      <p>Start with what came in this month, then what went out.</p>
+      <div class="kinds">
+        <div class="kind"><div class="ic" style="background:var(--income)"><i data-i="arrow-down"></i></div>Income<span>Pay, refunds</span></div>
+        <div class="kind"><div class="ic" style="background:var(--label);color:var(--surface)"><i data-i="arrow-up"></i></div>Expense<span>Spending</span></div>
+        <div class="kind"><div class="ic" style="background:var(--invest)"><i data-i="trending-up"></i></div>Invest<span>Contributions</span></div>
+      </div>
+    </div>
+    <div class="card sample"><i data-i="play"></i><div class="t"><b>Try with sample data</b><span>Explore first. Nothing is saved.</span></div><i data-i="chevron-forward" class="chev"></i></div>
+    <div class="section-h"><h3>Recent</h3></div>
+    <div class="empty"><i data-i="list"></i><br>Nothing yet. New entries show up here.</div>
+  </div>
+  <div class="tabbar">
+    <div class="tabs glass">
+      <div class="tab on"><i data-i="home"></i>Home</div>
+      <div class="tab"><i data-i="list"></i>Activity</div>
+      <div class="tab"><i data-i="people"></i>Shared</div>
+      <div class="tab"><i data-i="airplane"></i>Trips</div>
+    </div>
+    <div class="fab glass tinted"><i data-i="add"></i></div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+</body></html>

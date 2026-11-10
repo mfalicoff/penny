@@ -1,0 +1,67 @@
+<!-- @dsCard group="iPhone" name="Trips" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Trips</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<style>
+  .mono { background: linear-gradient(180deg, #A8A29E, #78716C); }
+  .glow { --glow-1: rgba(80, 150, 230, .38); --glow-2: rgba(255, 190, 120, .35); --glow-3: rgba(255, 140, 120, .22); }
+  .head { position: relative; z-index: 1; padding: 112px 20px 0; }
+  .hero { position: relative; z-index: 1; margin: 16px 16px 0; padding: 18px; border-radius: var(--r-card); }
+  .hero .top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .hero .when { font-size: 13px; font-weight: 600; color: var(--pending); text-transform: uppercase; letter-spacing: .03em; }
+  .hero h2 { font-size: 28px; font-weight: 700; letter-spacing: -0.025em; margin-top: 2px; }
+  .hero .d { font-size: 15px; color: var(--label-2); margin-top: 2px; }
+  .hero .stack .avatar { width: 30px; height: 30px; font-size: 11px; border-color: var(--surface); }
+  .hero .bot { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 18px; }
+  .hero .bot div { font-size: 13px; color: var(--label-2); }
+  .hero .bot b { display: block; font-size: 24px; font-weight: 700; color: var(--label); letter-spacing: -0.02em; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 8px; background: var(--fill); color: var(--label-2); }
+  .chip [data-i] { width: 13px; height: 13px; }
+  .lbl { padding: 22px 20px 8px; font-size: 13px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .03em; }
+  .ic.trip { background: var(--fill); color: var(--label); }
+  .row .t span .chip { display: inline-flex; margin-left: 4px; padding: 1px 7px; vertical-align: 1px; }
+  .hero .stack .avatar + .avatar { margin-left: -5px; }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <div class="island"></div>
+  <div class="status"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="scroll">
+    <div class="glow"></div>
+    <div class="navbar"><div></div><div style="display:flex;gap:8px"><div class="glass gbtn"><i data-i="key"></i></div><div class="glass gbtn"><i data-i="add"></i></div></div></div>
+    <div class="head"><div class="largetitle">Trips</div></div>
+
+    <div class="hero glass">
+      <div class="top">
+        <div><div class="when">In 3 days</div><h2>Lisbon</h2><div class="d">Nov 12–19 · 4 people</div></div>
+        <div class="stack"><div class="avatar mono">MF</div><div class="avatar mono">MI</div><div class="avatar mono">SK</div><div class="avatar mono">AL</div></div>
+      </div>
+      <div class="bot">
+        <div>Your share so far<b class="num">$412.60</b></div>
+        <span class="chip"><i data-i="people"></i>Shared</span>
+      </div>
+    </div>
+
+    <div class="lbl">Upcoming</div>
+    <div class="list">
+      <div class="row"><div class="ic trip"><i data-i="airplane"></i></div><div class="t"><b>Ski week</b><span>Feb 14–21, 2027 <span class="chip">Personal</span></span></div><div class="amt num">$640.00</div><i data-i="chevron-forward" class="chev"></i></div>
+    </div>
+
+    <div class="lbl">Past</div>
+    <div class="list">
+      <div class="row"><div class="ic trip"><i data-i="airplane"></i></div><div class="t"><b>Montréal weekend</b><span>Oct 3–5 <span class="chip">Personal</span></span></div><div class="amt num">$186.40</div><i data-i="chevron-forward" class="chev"></i></div>
+      <div class="row"><div class="ic trip"><i data-i="airplane"></i></div><div class="t"><b>Cottage weekend</b><span>Aug 22–24 <span class="chip">Shared</span></span></div><div class="amt num">$238.75</div><i data-i="chevron-forward" class="chev"></i></div>
+    </div>
+  </div>
+  <div class="tabbar">
+    <div class="tabs glass">
+      <div class="tab"><i data-i="home"></i>Home</div>
+      <div class="tab"><i data-i="list"></i>Activity</div>
+      <div class="tab"><i data-i="people"></i>Shared</div>
+      <div class="tab on"><i data-i="airplane"></i>Trips</div>
+    </div>
+    <div class="fab glass tinted"><i data-i="add"></i></div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+</body></html>

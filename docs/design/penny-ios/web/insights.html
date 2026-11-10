@@ -1,0 +1,62 @@
+<!-- @dsCard group="Web" name="Insights + money flow" viewport="1520x980" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · Web · Insights</title>
+<link rel="stylesheet" href="../assets/penny.css"><link rel="stylesheet" href="../assets/web.css">
+<script src="../assets/icons.js"></script><script src="../assets/sankey.js"></script><script src="../assets/web.js"></script>
+<style>
+  .stats { display: flex; gap: 40px; margin-bottom: 18px; }
+  .stats div { font-size: 13px; color: var(--label-2); }
+  .stats b { display: block; font-size: 26px; font-weight: 700; color: var(--label); letter-spacing: -0.02em; margin-top: 2px; }
+  .low { display: grid; grid-template-columns: minmax(0,1fr) 400px; gap: 18px; margin-top: 18px; }
+  .months { display: flex; align-items: flex-end; gap: 18px; height: 150px; padding: 0 6px; }
+  .months .m { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; color: var(--label-2); }
+  .months .bars { display: flex; gap: 4px; align-items: flex-end; height: 120px; }
+  .months .bars i { width: 14px; border-radius: 4px 4px 2px 2px; }
+  .delta { font-size: 13px; font-weight: 600; }
+</style></head>
+<body class="canvas">
+<div class="browser" data-active="insights" data-url="penny.example.com/insights">
+  <main class="wmain">
+    <div class="wtop">
+      <h1>Insights</h1>
+      <div class="month"><i><i data-i="chevron-back"></i></i><span>November 2026</span><i><i data-i="chevron-forward"></i></i></div>
+      <div class="sp"></div>
+      <div class="wsearch"><i data-i="search"></i>Search entries<kbd>⌘K</kbd></div>
+      <div class="btn primary"><i data-i="add"></i>Add entry <kbd>N</kbd></div>
+    </div>
+    <div class="wbody">
+      <div class="stats">
+        <div>Came in<b class="num">$3,200.00</b></div>
+        <div>Went out<b class="num">$2,083.35</b></div>
+        <div>Left over<b class="num">$1,116.65</b></div>
+        <div>vs October<b class="num" style="font-size:20px;margin-top:8px">$412 less spent</b></div>
+      </div>
+      <div class="panel">
+        <div class="ph"><h4>Follow your money</h4><span>Home selected · click a band or label to focus, again to clear</span></div>
+        <div id="sankey" style="display:flex;justify-content:center"></div>
+      </div>
+      <div class="low">
+        <div class="panel" style="padding:14px 8px">
+          <table class="tbl">
+            <thead><tr><th>Category</th><th class="r">November</th><th class="r">October</th><th class="r">Change</th><th class="r">Of spending</th></tr></thead>
+            <tbody>
+              <tr class="sel"><td><div class="cell"><div class="ic" style="background:var(--c-home)"><i data-i="home"></i></div><b>Home</b></div></td><td class="r num"><b>$1,450.00</b></td><td class="r num muted">$1,450.00</td><td class="r num muted">—</td><td class="r num">77%</td></tr>
+              <tr><td><div class="cell"><div class="ic" style="background:var(--c-groceries)"><i data-i="basket"></i></div><b>Groceries</b></div></td><td class="r num"><b>$158.77</b></td><td class="r num muted">$302.40</td><td class="r num delta">↓ $143.63</td><td class="r num">8%</td></tr>
+              <tr><td><div class="cell"><div class="ic" style="background:var(--c-transport)"><i data-i="bus"></i></div><b>Transport</b></div></td><td class="r num"><b>$156.00</b></td><td class="r num muted">$124.00</td><td class="r num delta">↑ $32.00</td><td class="r num">8%</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="panel">
+          <div class="ph"><h4>Last 6 months</h4><span><i class="dot" style="background:var(--income)"></i> in &nbsp; <i class="dot" style="background:var(--label);opacity:.8"></i> spent</span></div>
+          <div class="months" id="months"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<script>
+  drawSankey(document.getElementById("sankey"), { width: 1000, height: 330, band: 180, slot: 34, gap: 5, leftLabel: 140, rightLabel: 160, highlight: "home" });
+  const data = [["Jun",3200,2410],["Jul",3200,2650],["Aug",3650,2380],["Sep",3200,2210],["Oct",3200,2295],["Nov",3200,1883]];
+  document.getElementById("months").innerHTML = data.map(([m,i,s]) => '<div class="m"><div class="bars"><i style="height:'+(i/3700*120)+'px;background:var(--income)"></i><i style="height:'+(s/3700*120)+'px;background:var(--label);opacity:.8"></i></div>'+m+'</div>').join("");
+</script>
+</body></html>

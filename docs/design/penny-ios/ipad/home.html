@@ -1,0 +1,98 @@
+<!-- @dsCard group="iPad" name="Home" viewport="1290x914" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPad · Home</title>
+<link rel="stylesheet" href="../assets/penny.css"><link rel="stylesheet" href="../assets/ipad.css"><script src="../assets/icons.js"></script><script src="../assets/sankey.js"></script>
+<style>
+  .glow { left: 0; right: 200px; top: -160px; height: 560px; }
+  .content { position: relative; z-index: 1; padding: 100px 24px 0; display: grid; grid-template-columns: 1.15fr 1fr 1fr; gap: 16px; }
+  .hero { grid-column: span 2; padding: 6px 4px 0; }
+  .big { font-size: 76px; font-weight: 700; letter-spacing: -0.045em; line-height: 1; margin-top: 8px; }
+  .big small { font-size: 40px; opacity: .55; }
+  .sub { margin-top: 12px; font-size: 15px; color: var(--label-2); display: flex; gap: 8px; align-items: center; }
+  .sub b { color: var(--label); }
+  .flowwrap { margin-top: 22px; padding: 18px; border-radius: 22px; }
+  .chart { display: flex; align-items: flex-end; gap: 3px; height: 300px; margin-top: 16px; }
+  .chart i { flex: 1; border-radius: 4px 4px 2px 2px; background: color-mix(in srgb, var(--tint) 30%, transparent); }
+  .chart i.hi { background: var(--tint); }
+  .chart i.future { background: var(--fill); }
+  .axis { display: flex; justify-content: space-between; font-size: 12px; color: var(--label-2); margin-top: 8px; }
+  .catrow { display: flex; align-items: center; gap: 12px; margin-top: 14px; }
+  .catrow .ic { width: 32px; height: 32px; border-radius: 10px; }
+  .catrow .t { flex: 1; font-size: 15px; font-weight: 600; }
+  .catrow .t .bar { height: 6px; border-radius: 3px; background: var(--fill); margin-top: 6px; overflow: hidden; }
+  .catrow .t .bar i { display: block; height: 100%; border-radius: 3px; }
+  .catrow .v { font-size: 15px; font-weight: 600; }
+  .up .row { min-height: 56px; }
+</style></head>
+<body class="canvas">
+<div class="ipad">
+  <div class="status"><span>9:41  Mon Nov 9</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="glass sidebar">
+    <div class="brand"><div class="logo"><i data-i="leaf"></i></div>penny.</div>
+    <div class="nav on"><i data-i="home"></i>Home</div>
+    <div class="nav"><i data-i="list"></i>Activity</div>
+    <div class="nav"><i data-i="pie-chart"></i>Insights</div>
+    <div class="side-h">Together</div>
+    <div class="nav"><i data-i="people"></i>Apartment<span class="n">$142</span></div>
+    <div class="nav"><i data-i="airplane"></i>Lisbon trip<span class="n">3</span></div>
+    <div class="side-h">Manage</div>
+    <div class="nav"><i data-i="repeat"></i>Recurring</div>
+    <div class="nav"><i data-i="wallet"></i>Accounts</div>
+    <div class="nav"><i data-i="pricetag"></i>Categories</div>
+    <div class="side-foot"><div class="avatar">MF</div><div><b>Max</b><span>Synced just now</span></div><i data-i="settings" style="margin-left:auto;color:var(--label-2)"></i></div>
+  </div>
+
+  <div class="main">
+    <div class="glow"></div>
+    <div class="toolbar">
+      <div class="glass gbtn"><i data-i="chevron-back"></i></div>
+      <div class="glass gcap">November 2026 <i data-i="chevron-down" style="width:15px;height:15px;--sw:52px"></i></div>
+      <div class="glass gbtn"><i data-i="chevron-forward"></i></div>
+      <div class="sp"></div>
+      <div class="glass gbtn"><i data-i="search"></i></div>
+      <div class="glass gcap tinted"><i data-i="add" style="width:19px;height:19px;--sw:44px"></i>Add entry</div>
+    </div>
+
+    <div class="content">
+      <div class="hero">
+        <div class="eyebrow">Left to spend</div>
+        <div class="big num">$1,116<small>.65</small></div>
+        <div class="sub"><span class="dot" style="background:var(--pending)"></span><span><b class="num">$3,366.65</b> projected · includes $2,250 expected pay on Nov 15</span></div>
+        <div class="legend" style="margin-top:18px;font-size:14px">
+          <span><i class="dot" style="background:var(--income)"></i>Income <b class="num">$3,200.00</b></span>
+          <span><i class="dot" style="background:var(--label);opacity:.82"></i>Spent · your share <b class="num">$1,883.35</b></span>
+          <span><i class="dot" style="background:var(--invest)"></i>Invested <b class="num">$200.00</b></span>
+        </div>
+      </div>
+
+      <div class="panel up">
+        <h4>Coming up <span>Recurring</span></h4>
+        <div class="list">
+          <div class="row"><div class="ic" style="background:var(--income)"><i data-i="arrow-down"></i></div><div class="t"><b>Payday</b><span>Nov 15 · expected</span></div><div class="amt num pos">+$2,250</div></div>
+          <div class="row"><div class="ic" style="background:#8E8A85"><i data-i="wifi"></i></div><div class="t"><b>Internet</b><span>Nov 18</span></div><div class="amt num">−$65.00</div></div>
+          <div class="row"><div class="ic" style="background:var(--c-shopping)"><i data-i="play"></i></div><div class="t"><b>Streaming</b><span>Nov 22</span></div><div class="amt num">−$18.99</div></div>
+        </div>
+      </div>
+
+      <div class="panel" style="grid-column: span 2">
+        <h4>Follow your money <span style="display:flex;align-items:center;gap:4px">Tap a band to focus <i data-i="chevron-forward" class="chev"></i></span></h4>
+        <div id="sankey" style="margin-top:6px"></div>
+      </div>
+
+      <div class="panel">
+        <h4>Daily spending <span>Avg $62.78</span></h4>
+        <div class="chart" id="chart"></div>
+        <div class="axis"><span>Nov 1</span><span>15</span><span>30</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+<script>
+  const days = [1450,0,12,0,48,262,0,22,55, ...Array(21).fill(0)]; // today is Nov 9
+  const max = 300, h = 300;
+  drawSankey(document.getElementById("sankey"), { width: 559, height: 330, band: 160, slot: 31, gap: 5, leftLabel: 96, rightLabel: 130 });
+  document.getElementById("chart").innerHTML = days.map((v, i) =>
+    `<i class="${i > 8 ? "future" : v > 200 ? "hi" : ""}" style="height:${i > 8 ? 4 : Math.max(4, Math.min(v, max) / max * h)}px"></i>`).join("");
+</script>
+</body></html>

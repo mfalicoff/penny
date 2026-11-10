@@ -1,0 +1,51 @@
+<!-- @dsCard group="iPhone" name="Search, no results" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Search empty</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<style>
+
+  .head { padding: 112px 20px 0; }
+  .chips { display: flex; gap: 8px; padding: 14px 16px 0; }
+  .pill .x { width: 14px; height: 14px; --sw: 56px; opacity: .7; }
+  .none { text-align: center; padding: 70px 36px 0; }
+  .none .em { width: 64px; height: 64px; border-radius: 20px; background: var(--fill); display: grid; place-items: center; margin: 0 auto; color: var(--label-2); }
+  .none .em [data-i] { width: 30px; height: 30px; }
+  .none h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin-top: 18px; }
+  .none p { font-size: 15px; color: var(--label-2); margin-top: 6px; line-height: 1.4; }
+  .acts { display: flex; flex-direction: column; gap: 10px; align-items: center; margin-top: 22px; }
+  .acts .gcap { font-size: 15px; }
+  .searchbar { position: absolute; left: 16px; right: 16px; bottom: 26px; display: flex; gap: 10px; z-index: 25; }
+  .search { flex: 1; height: 52px; border-radius: 26px; display: flex; align-items: center; gap: 8px; padding: 0 14px 0 18px; font-size: 17px; }
+  .search [data-i] { width: 19px; height: 19px; color: var(--label-2); }
+  .search .clear { margin-left: auto; width: 22px; height: 22px; border-radius: 50%; background: var(--label-3); color: var(--surface); display: grid; place-items: center; }
+  .search .clear [data-i] { width: 13px; height: 13px; color: var(--surface); --sw: 60px; }
+  .caret { display: inline-block; width: 2px; height: 22px; background: var(--tint); margin-left: 1px; vertical-align: -4px; }
+  .tabmini { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; }
+  .tabmini [data-i] { width: 22px; height: 22px; }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <div class="island"></div>
+  <div class="status"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="scroll">
+    <div class="head"><div class="largetitle">Activity</div></div>
+    <div class="chips">
+      <span class="pill on">Expenses <i data-i="close" class="x"></i></span><span class="pill on"><i data-i="calendar"></i>November <i data-i="close" class="x"></i></span>
+    </div>
+    <div class="none">
+      <div class="em"><i data-i="search"></i></div>
+      <h2>No results for “sushi”</h2>
+      <p>Nothing matches in November expenses. Try another word, or search everything.</p>
+      <div class="acts">
+        <div class="glass gcap tinted">Search all months</div>
+        <div class="glass gcap">Clear filters</div>
+      </div>
+    </div>
+  </div>
+  <div class="searchbar">
+    <div class="glass tabmini"><i data-i="close"></i></div>
+    <div class="glass search"><i data-i="search"></i><span>sushi<span class="caret"></span></span><span class="clear"><i data-i="close"></i></span></div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+</body></html>

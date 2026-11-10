@@ -67,3 +67,10 @@ test-results/
 
 # Self-hosting secrets (MAZ-63)
 deploy/api.env
+
+# design-sync
+.ds-sync/
+ds-bundle/
+.design-sync/.cache/
+.design-sync/learnings/
+.design-sync/node_modules

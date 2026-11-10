@@ -1,0 +1,71 @@
+<!-- @dsCard group="iPhone" name="Shared · groups" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Shared groups</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<style>
+  .head { padding: 112px 20px 0; }
+  .head p { font-size: 15px; color: var(--label-2); margin-top: 4px; }
+  .head p b { color: var(--income); font-weight: 600; }
+  .mono { background: linear-gradient(180deg, #A8A29E, #78716C); }
+  .grp { margin: 0 16px 10px; background: var(--surface); border-radius: var(--r-card); padding: 16px; display: flex; gap: 14px; align-items: center; }
+  .grp .gi { width: 48px; height: 48px; border-radius: 15px; background: var(--fill); display: grid; place-items: center; flex: none; }
+  .grp .gi [data-i] { width: 24px; height: 24px; }
+  .grp .t { flex: 1; min-width: 0; }
+  .grp .t b { font-size: 17px; font-weight: 600; display: block; }
+  .grp .t .m { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 13px; color: var(--label-2); }
+  .grp .stack .avatar { width: 26px; height: 26px; font-size: 9px; letter-spacing: -0.02em; border-width: 1.5px; border-color: var(--surface); }
+  .grp .stack .avatar + .avatar { margin-left: -4px; }
+  .bal { text-align: right; font-size: 13px; color: var(--label-2); }
+  .bal b { display: block; font-size: 17px; font-weight: 600; color: var(--label); }
+  .bal b.pos { color: var(--income); }
+  .lbl { padding: 18px 20px 8px; font-size: 13px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .03em; }
+  .act .ic { background: var(--tint-soft); color: var(--tint); }
+  .act .t b { color: var(--tint-text); }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <div class="island"></div>
+  <div class="status"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="scroll">
+    <div class="navbar"><div></div><div class="grp" style="all:unset;display:flex;gap:8px"><div class="glass gbtn"><i data-i="add"></i></div></div></div>
+    <div class="head"><div class="largetitle">Shared</div><p>November · you're owed <b class="num">$104.30</b> overall</p></div>
+
+    <div class="lbl">Households</div>
+    <div class="grp">
+      <div class="gi"><i data-i="home"></i></div>
+      <div class="t"><b>Apartment</b><div class="m"><div class="stack"><div class="avatar mono">MF</div><div class="avatar mono">MI</div><div class="avatar mono">JS</div></div>3 members</div></div>
+      <div class="bal">you're owed<b class="num pos">$142.50</b></div>
+      <i data-i="chevron-forward" class="chev"></i>
+    </div>
+
+    <div class="lbl">Trips</div>
+    <div class="grp">
+      <div class="gi"><i data-i="airplane"></i></div>
+      <div class="t"><b>Lisbon</b><div class="m"><div class="stack"><div class="avatar mono">MF</div><div class="avatar mono">MI</div><div class="avatar mono">SK</div><div class="avatar mono">AL</div></div>Nov 12–19</div></div>
+      <div class="bal">you owe<b class="num">$38.20</b></div>
+      <i data-i="chevron-forward" class="chev"></i>
+    </div>
+    <div class="grp">
+      <div class="gi"><i data-i="airplane"></i></div>
+      <div class="t"><b>Cottage weekend</b><div class="m"><div class="stack"><div class="avatar mono">MF</div><div class="avatar mono">JS</div></div>Aug 22–24</div></div>
+      <div class="bal"><b style="font-size:15px;color:var(--label-2);display:flex;gap:4px;align-items:center"><i data-i="checkmark-circle" style="width:16px;height:16px"></i>Settled</b></div>
+      <i data-i="chevron-forward" class="chev"></i>
+    </div>
+
+    <div class="list act" style="margin-top:16px">
+      <div class="row"><div class="ic"><i data-i="key"></i></div><div class="t"><b>Join with a code</b><span>Someone shared an invite code with you</span></div></div>
+      <div class="row"><div class="ic"><i data-i="person-add"></i></div><div class="t"><b>New household</b><span>Split rent, bills and groceries every month</span></div></div>
+    </div>
+  </div>
+  <div class="tabbar">
+    <div class="tabs glass">
+      <div class="tab"><i data-i="home"></i>Home</div>
+      <div class="tab"><i data-i="list"></i>Activity</div>
+      <div class="tab on"><i data-i="people"></i>Shared</div>
+      <div class="tab"><i data-i="airplane"></i>Trips</div>
+    </div>
+    <div class="fab glass tinted"><i data-i="add"></i></div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+</body></html>
