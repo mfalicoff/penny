@@ -10,12 +10,52 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AccountsRouteImport } from './routes/accounts'
+import { Route as CategoriesRouteImport } from './routes/categories'
+import { Route as InsightsRouteImport } from './routes/insights'
+import { Route as RecurringRouteImport } from './routes/recurring'
+import { Route as SettingsRouteRouteImport } from './routes/settings/route'
 import { Route as TransactionsRouteImport } from './routes/transactions'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as EntriesNewRouteImport } from './routes/entries/new'
+import { Route as HouseholdsIndexRouteImport } from './routes/households/index'
+import { Route as SettingsIndexRouteImport } from './routes/settings/index'
+import { Route as SettingsAppearanceRouteImport } from './routes/settings/appearance'
+import { Route as SettingsCurrencyRouteImport } from './routes/settings/currency'
+import { Route as SettingsServerRouteImport } from './routes/settings/server'
+import { Route as TripsIndexRouteImport } from './routes/trips/index'
+import { Route as TripsIdRouteImport } from './routes/trips/$id'
+import { Route as HouseholdsIdIndexRouteImport } from './routes/households/$id/index'
+import { Route as HouseholdsIdExpensesExpenseIdRouteImport } from './routes/households/$id/expenses/$expenseId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountsRoute = AccountsRouteImport.update({
+  id: '/accounts',
+  path: '/accounts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CategoriesRoute = CategoriesRouteImport.update({
+  id: '/categories',
+  path: '/categories',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InsightsRoute = InsightsRouteImport.update({
+  id: '/insights',
+  path: '/insights',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecurringRoute = RecurringRouteImport.update({
+  id: '/recurring',
+  path: '/recurring',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRouteRoute = SettingsRouteRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TransactionsRoute = TransactionsRouteImport.update({
@@ -28,35 +68,195 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EntriesNewRoute = EntriesNewRouteImport.update({
+  id: '/entries/new',
+  path: '/entries/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HouseholdsIndexRoute = HouseholdsIndexRouteImport.update({
+  id: '/households/',
+  path: '/households/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsIndexRoute = SettingsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SettingsRouteRoute,
+} as any)
+const SettingsAppearanceRoute = SettingsAppearanceRouteImport.update({
+  id: '/appearance',
+  path: '/appearance',
+  getParentRoute: () => SettingsRouteRoute,
+} as any)
+const SettingsCurrencyRoute = SettingsCurrencyRouteImport.update({
+  id: '/currency',
+  path: '/currency',
+  getParentRoute: () => SettingsRouteRoute,
+} as any)
+const SettingsServerRoute = SettingsServerRouteImport.update({
+  id: '/server',
+  path: '/server',
+  getParentRoute: () => SettingsRouteRoute,
+} as any)
+const TripsIndexRoute = TripsIndexRouteImport.update({
+  id: '/trips/',
+  path: '/trips/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TripsIdRoute = TripsIdRouteImport.update({
+  id: '/trips/$id',
+  path: '/trips/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HouseholdsIdIndexRoute = HouseholdsIdIndexRouteImport.update({
+  id: '/households/$id/',
+  path: '/households/$id/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HouseholdsIdExpensesExpenseIdRoute =
+  HouseholdsIdExpensesExpenseIdRouteImport.update({
+    id: '/households/$id/expenses/$expenseId',
+    path: '/households/$id/expenses/$expenseId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/settings': typeof SettingsRouteRouteWithChildren
+  '/accounts': typeof AccountsRoute
+  '/categories': typeof CategoriesRoute
+  '/insights': typeof InsightsRoute
+  '/recurring': typeof RecurringRoute
   '/transactions': typeof TransactionsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/entries/new': typeof EntriesNewRoute
+  '/settings/appearance': typeof SettingsAppearanceRoute
+  '/settings/currency': typeof SettingsCurrencyRoute
+  '/settings/server': typeof SettingsServerRoute
+  '/trips/$id': typeof TripsIdRoute
+  '/households/': typeof HouseholdsIndexRoute
+  '/settings/': typeof SettingsIndexRoute
+  '/trips/': typeof TripsIndexRoute
+  '/households/$id/': typeof HouseholdsIdIndexRoute
+  '/households/$id/expenses/$expenseId': typeof HouseholdsIdExpensesExpenseIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/accounts': typeof AccountsRoute
+  '/categories': typeof CategoriesRoute
+  '/insights': typeof InsightsRoute
+  '/recurring': typeof RecurringRoute
   '/transactions': typeof TransactionsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/entries/new': typeof EntriesNewRoute
+  '/settings/appearance': typeof SettingsAppearanceRoute
+  '/settings/currency': typeof SettingsCurrencyRoute
+  '/settings/server': typeof SettingsServerRoute
+  '/trips/$id': typeof TripsIdRoute
+  '/households': typeof HouseholdsIndexRoute
+  '/settings': typeof SettingsIndexRoute
+  '/trips': typeof TripsIndexRoute
+  '/households/$id': typeof HouseholdsIdIndexRoute
+  '/households/$id/expenses/$expenseId': typeof HouseholdsIdExpensesExpenseIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/settings': typeof SettingsRouteRouteWithChildren
+  '/accounts': typeof AccountsRoute
+  '/categories': typeof CategoriesRoute
+  '/insights': typeof InsightsRoute
+  '/recurring': typeof RecurringRoute
   '/transactions': typeof TransactionsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/entries/new': typeof EntriesNewRoute
+  '/settings/appearance': typeof SettingsAppearanceRoute
+  '/settings/currency': typeof SettingsCurrencyRoute
+  '/settings/server': typeof SettingsServerRoute
+  '/trips/$id': typeof TripsIdRoute
+  '/households/': typeof HouseholdsIndexRoute
+  '/settings/': typeof SettingsIndexRoute
+  '/trips/': typeof TripsIndexRoute
+  '/households/$id/': typeof HouseholdsIdIndexRoute
+  '/households/$id/expenses/$expenseId': typeof HouseholdsIdExpensesExpenseIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/transactions' | '/auth/callback'
+  fullPaths:
+    | '/'
+    | '/settings'
+    | '/accounts'
+    | '/categories'
+    | '/insights'
+    | '/recurring'
+    | '/transactions'
+    | '/auth/callback'
+    | '/entries/new'
+    | '/settings/appearance'
+    | '/settings/currency'
+    | '/settings/server'
+    | '/trips/$id'
+    | '/households/'
+    | '/settings/'
+    | '/trips/'
+    | '/households/$id/'
+    | '/households/$id/expenses/$expenseId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/transactions' | '/auth/callback'
-  id: '__root__' | '/' | '/transactions' | '/auth/callback'
+  to:
+    | '/'
+    | '/accounts'
+    | '/categories'
+    | '/insights'
+    | '/recurring'
+    | '/transactions'
+    | '/auth/callback'
+    | '/entries/new'
+    | '/settings/appearance'
+    | '/settings/currency'
+    | '/settings/server'
+    | '/trips/$id'
+    | '/households'
+    | '/settings'
+    | '/trips'
+    | '/households/$id'
+    | '/households/$id/expenses/$expenseId'
+  id:
+    | '__root__'
+    | '/'
+    | '/settings'
+    | '/accounts'
+    | '/categories'
+    | '/insights'
+    | '/recurring'
+    | '/transactions'
+    | '/auth/callback'
+    | '/entries/new'
+    | '/settings/appearance'
+    | '/settings/currency'
+    | '/settings/server'
+    | '/trips/$id'
+    | '/households/'
+    | '/settings/'
+    | '/trips/'
+    | '/households/$id/'
+    | '/households/$id/expenses/$expenseId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  SettingsRouteRoute: typeof SettingsRouteRouteWithChildren
+  AccountsRoute: typeof AccountsRoute
+  CategoriesRoute: typeof CategoriesRoute
+  InsightsRoute: typeof InsightsRoute
+  RecurringRoute: typeof RecurringRoute
   TransactionsRoute: typeof TransactionsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
+  EntriesNewRoute: typeof EntriesNewRoute
+  TripsIdRoute: typeof TripsIdRoute
+  HouseholdsIndexRoute: typeof HouseholdsIndexRoute
+  TripsIndexRoute: typeof TripsIndexRoute
+  HouseholdsIdIndexRoute: typeof HouseholdsIdIndexRoute
+  HouseholdsIdExpensesExpenseIdRoute: typeof HouseholdsIdExpensesExpenseIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -66,6 +266,41 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/accounts': {
+      id: '/accounts'
+      path: '/accounts'
+      fullPath: '/accounts'
+      preLoaderRoute: typeof AccountsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/categories': {
+      id: '/categories'
+      path: '/categories'
+      fullPath: '/categories'
+      preLoaderRoute: typeof CategoriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/insights': {
+      id: '/insights'
+      path: '/insights'
+      fullPath: '/insights'
+      preLoaderRoute: typeof InsightsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recurring': {
+      id: '/recurring'
+      path: '/recurring'
+      fullPath: '/recurring'
+      preLoaderRoute: typeof RecurringRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/transactions': {
@@ -82,13 +317,112 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/entries/new': {
+      id: '/entries/new'
+      path: '/entries/new'
+      fullPath: '/entries/new'
+      preLoaderRoute: typeof EntriesNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/households/': {
+      id: '/households/'
+      path: '/households'
+      fullPath: '/households/'
+      preLoaderRoute: typeof HouseholdsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/': {
+      id: '/settings/'
+      path: '/'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof SettingsIndexRouteImport
+      parentRoute: typeof SettingsRouteRoute
+    }
+    '/settings/appearance': {
+      id: '/settings/appearance'
+      path: '/appearance'
+      fullPath: '/settings/appearance'
+      preLoaderRoute: typeof SettingsAppearanceRouteImport
+      parentRoute: typeof SettingsRouteRoute
+    }
+    '/settings/currency': {
+      id: '/settings/currency'
+      path: '/currency'
+      fullPath: '/settings/currency'
+      preLoaderRoute: typeof SettingsCurrencyRouteImport
+      parentRoute: typeof SettingsRouteRoute
+    }
+    '/settings/server': {
+      id: '/settings/server'
+      path: '/server'
+      fullPath: '/settings/server'
+      preLoaderRoute: typeof SettingsServerRouteImport
+      parentRoute: typeof SettingsRouteRoute
+    }
+    '/trips/': {
+      id: '/trips/'
+      path: '/trips'
+      fullPath: '/trips/'
+      preLoaderRoute: typeof TripsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/trips/$id': {
+      id: '/trips/$id'
+      path: '/trips/$id'
+      fullPath: '/trips/$id'
+      preLoaderRoute: typeof TripsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/households/$id/': {
+      id: '/households/$id/'
+      path: '/households/$id'
+      fullPath: '/households/$id/'
+      preLoaderRoute: typeof HouseholdsIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/households/$id/expenses/$expenseId': {
+      id: '/households/$id/expenses/$expenseId'
+      path: '/households/$id/expenses/$expenseId'
+      fullPath: '/households/$id/expenses/$expenseId'
+      preLoaderRoute: typeof HouseholdsIdExpensesExpenseIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface SettingsRouteRouteChildren {
+  SettingsAppearanceRoute: typeof SettingsAppearanceRoute
+  SettingsCurrencyRoute: typeof SettingsCurrencyRoute
+  SettingsServerRoute: typeof SettingsServerRoute
+  SettingsIndexRoute: typeof SettingsIndexRoute
+}
+
+const SettingsRouteRouteChildren: SettingsRouteRouteChildren = {
+  SettingsAppearanceRoute: SettingsAppearanceRoute,
+  SettingsCurrencyRoute: SettingsCurrencyRoute,
+  SettingsServerRoute: SettingsServerRoute,
+  SettingsIndexRoute: SettingsIndexRoute,
+}
+
+const SettingsRouteRouteWithChildren = SettingsRouteRoute._addFileChildren(
+  SettingsRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  SettingsRouteRoute: SettingsRouteRouteWithChildren,
+  AccountsRoute: AccountsRoute,
+  CategoriesRoute: CategoriesRoute,
+  InsightsRoute: InsightsRoute,
+  RecurringRoute: RecurringRoute,
   TransactionsRoute: TransactionsRoute,
   AuthCallbackRoute: AuthCallbackRoute,
+  EntriesNewRoute: EntriesNewRoute,
+  TripsIdRoute: TripsIdRoute,
+  HouseholdsIndexRoute: HouseholdsIndexRoute,
+  TripsIndexRoute: TripsIndexRoute,
+  HouseholdsIdIndexRoute: HouseholdsIdIndexRoute,
+  HouseholdsIdExpensesExpenseIdRoute: HouseholdsIdExpensesExpenseIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

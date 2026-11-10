@@ -23,3 +23,12 @@ declare module "@tanstack/react-router" {
     router: ReturnType<typeof createAppRouter>;
   }
 }
+
+declare module "@tanstack/react-router" {
+  interface StaticDataRouteOption {
+    /** Page title for the top bar `<h1>` and the document title (MAZ-85 shell). */
+    title?: string;
+    /** Show the top bar's search field. Default true; Activity has its own. */
+    search?: boolean;
+  }
+}

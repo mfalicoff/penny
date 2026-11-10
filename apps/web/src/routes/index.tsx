@@ -1,14 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { HomePage } from "../features/home/HomePage";
 
 export const Route = createFileRoute("/")({
-  component: Home,
+  staticData: { title: "Home" },
+  component: HomePage,
 });
-
-function Home() {
-  return (
-    <>
-      <h1>Home</h1>
-      <p>The redesigned overview arrives with MAZ-85 and MAZ-92.</p>
-    </>
-  );
-}
