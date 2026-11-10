@@ -36,7 +36,17 @@ struct Penny {
         }
     }
 
+    /// Taps an element, scrolling the screen's list down to it when it is below the fold
+    /// (lazy lists only create rows near the visible area).
     func tap(_ id: String, timeout: TimeInterval = Penny.timeout) throws {
+        let target = element(id)
+        if !target.waitForExistence(timeout: min(timeout, 5)) {
+            let list =
+                app.collectionViews.firstMatch.exists ? app.collectionViews.firstMatch : app.scrollViews.firstMatch
+            for _ in 0..<4 where !target.exists && list.exists {
+                list.swipeUp()
+            }
+        }
         try wait(for: id, timeout: timeout).tap()
     }
 
@@ -108,10 +118,11 @@ struct Penny {
 
     /// Goes back from a page pushed inside Settings to the Settings list.
     private func popSettingsPages() {
+        // One query for all pages: each element query costs about a second.
+        let page = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier IN %@", Self.settingsPages)).firstMatch
         for _ in 0..<3 {
-            guard !element(AccessibilityID.Screen.settings).exists,
-                Self.settingsPages.contains(where: { element($0).exists })
-            else { return }
+            guard page.exists, !element(AccessibilityID.Screen.settings).exists else { return }
             app.navigationBars.buttons.element(boundBy: 0).tap()
         }
     }
@@ -132,11 +143,11 @@ struct Penny {
         try waitForAbsence(of: AccessibilityID.Screen.settings)
     }
 
-    /// The tab bar button: SwiftUI does not always carry a `Tab`'s identifier onto the
-    /// system tab bar item, so the label is the fallback (tab titles are fixed copy).
+    /// The tab bar button. SwiftUI applies a `Tab`'s identifier (`id`, `tab.<AppTab>`) to the
+    /// tab's content as well as its bar item, so the bar item is found by its fixed title.
     private func tabButton(_ title: String, id: String) throws -> XCUIElement {
-        let byID = element(id)
-        if byID.exists, byID.isHittable { return byID }
+        let byID = app.tabBars.buttons.matching(identifier: id).firstMatch
+        if byID.exists { return byID }
         let button = app.tabBars.buttons[title]
         guard button.waitForExistence(timeout: Penny.timeout) else {
             throw UIExpectationFailed(description: "No \(title) tab")

@@ -62,8 +62,16 @@ final class AuthJourneyTests: PennyUITestCase {
         let penny = try await launch()
 
         try penny.tap(AccessibilityID.Auth.singleSignOn)
-        let cancel = penny.app.buttons["Cancel"]
-        XCTAssertTrue(cancel.waitForExistence(timeout: 30), "The sign-in sheet did not open")
+        // The authentication sheet is a system view; its Cancel shows in the app's tree or
+        // SpringBoard's depending on the OS.
+        let deadline = Date().addingTimeInterval(30)
+        var cancel: XCUIElement?
+        while cancel == nil, Date() < deadline {
+            cancel = [penny.app, Penny.springboard].map { $0.buttons["Cancel"] }.first { $0.exists }
+            if cancel == nil { _ = penny.app.buttons["Cancel"].waitForExistence(timeout: 2) }
+        }
+        guard let cancel else { throw UIExpectationFailed(description: "The sign-in sheet did not open") }
+        screenshot("single-sign-on-sheet")
         cancel.tap()
 
         try penny.wait(for: AccessibilityID.Auth.notice)
@@ -100,8 +108,10 @@ final class AuthJourneyTests: PennyUITestCase {
         let penny = try await launch()
         try penny.signIn(email: account.email, password: account.password)
 
-        try await stack.setFaults([.offline("/api/ledger")])
+        try penny.wait(for: AccessibilityID.Home.empty)
         try penny.openSettingsPage("currency", screen: AccessibilityID.Screen.currency)
+        // The ledger is loaded; from here the server drops every ledger request.
+        try await stack.setFaults([.offline("/api/ledger")])
         try penny.tap(AccessibilityID.Settings.currency("EUR"))
         try penny.waitForSelection(AccessibilityID.Settings.currency("EUR"))
         try penny.openSettings()

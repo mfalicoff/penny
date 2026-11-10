@@ -13,8 +13,10 @@ final class NetworkFailureTests: PennyUITestCase {
         let penny = try await launch()
         try penny.signIn(email: account.email, password: account.password)
 
-        try await stack.setFaults([.offline("/api/ledger")])
+        try penny.wait(for: AccessibilityID.Home.empty)
         try penny.openSettingsPage("currency", screen: AccessibilityID.Screen.currency)
+        // The ledger is loaded; from here the server drops every ledger request.
+        try await stack.setFaults([.offline("/api/ledger")])
         try penny.tap(AccessibilityID.Settings.currency("USD"))
         try penny.waitForSelection(AccessibilityID.Settings.currency("USD"))
         try penny.closeSettings()
