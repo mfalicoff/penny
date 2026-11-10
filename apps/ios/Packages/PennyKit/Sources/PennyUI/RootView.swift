@@ -35,15 +35,21 @@ public struct RootView: View {
 
 struct LaunchView: View {
     @State private var auth: AuthController
+    /// The signed-in account's offline ledger and sync state (MAZ-71).
+    @State private var sync: LedgerSyncModel
     let link: DeepLink?
 
     init(configuration: AppConfiguration, link: DeepLink?, auth: AuthController? = nil) {
-        _auth = State(initialValue: auth ?? AuthController(defaultServer: configuration.defaultServerURL))
+        let store = OfflineLedgerStore.standard()
+        let auth = auth ?? AuthController(defaultServer: configuration.defaultServerURL, localData: store)
+        _auth = State(initialValue: auth)
+        _sync = State(initialValue: LedgerSyncModel(auth: auth, store: store))
         self.link = link
     }
 
     var body: some View {
         AuthGate(auth: auth, link: link)
+            .ledgerSync(sync)
             .accessibilityIdentifier("root.launch")
     }
 }
