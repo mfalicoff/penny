@@ -1,0 +1,33 @@
+// Settings shared by every target. Target files add identity and signing; the
+// Debug/Release files add the environment. Keep build settings here, not in the project.
+#include "Version.xcconfig"
+
+SDKROOT = iphoneos
+SUPPORTED_PLATFORMS = iphoneos iphonesimulator
+// iOS 26 is the minimum: the redesign requires system Liquid Glass (README.md#minimum-os).
+IPHONEOS_DEPLOYMENT_TARGET = 26.0
+// 1 = iPhone, 2 = iPad. No Mac Catalyst or visionOS.
+TARGETED_DEVICE_FAMILY = 1,2
+SUPPORTS_MACCATALYST = NO
+SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO
+SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO
+
+SWIFT_VERSION = 6.0
+SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor
+SWIFT_STRICT_CONCURRENCY = complete
+SWIFT_UPCOMING_FEATURE_EXISTENTIAL_ANY = YES
+SWIFT_TREAT_WARNINGS_AS_ERRORS = YES
+GCC_TREAT_WARNINGS_AS_ERRORS = YES
+SWIFT_EMIT_LOC_STRINGS = YES
+LOCALIZATION_PREFERS_STRING_CATALOGS = YES
+ENABLE_USER_SCRIPT_SANDBOXING = YES
+ENABLE_MODULE_VERIFIER = YES
+DEAD_CODE_STRIPPING = YES
+CLANG_ANALYZER_NONNULL = YES
+CLANG_ENABLE_MODULES = YES
+CLANG_ENABLE_OBJC_ARC = YES
+ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES
+STRING_CATALOG_GENERATE_SYMBOLS = YES
+
+// Values substituted into Penny/Info.plist; read by PennyData.AppConfiguration.
+PENNY_APP_GROUP = group.com.mfalicoff.penny

@@ -1,0 +1,13 @@
+#include "Project.xcconfig"
+
+SWIFT_ACTIVE_COMPILATION_CONDITIONS =
+SWIFT_OPTIMIZATION_LEVEL = -O
+SWIFT_COMPILATION_MODE = wholemodule
+VALIDATE_PRODUCT = YES
+ENABLE_TESTABILITY = NO
+DEBUG_INFORMATION_FORMAT = dwarf-with-dsym
+MTL_ENABLE_DEBUG_INFO = NO
+
+PENNY_ENVIRONMENT = production
+// None: people connect to their own self-hosted server (MAZ-68).
+PENNY_DEFAULT_SERVER_URL =

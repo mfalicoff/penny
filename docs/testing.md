@@ -16,6 +16,8 @@ All executable tests live under `tests/`. Choose the lowest layer that proves th
 
 Do not add tests under `src/`, root `e2e/`, or generated `ios/` and `android/` directories. Keep runner configuration at the root and executable command wrappers in `scripts/`. Core/UI files use `*.test.ts(x)`; real-DOM UI cases use `*.web.test.jsx`; browser journeys use `*.spec.ts`; native entry points use `*.ios.test.mjs` / `*.android.test.mjs`.
 
+These rules cover the legacy Expo/Node app. The v2 browser app in `apps/web/` has its own runner and layout: colocated `src/**/*.test.ts(x)`, app-level tests in `apps/web/tests/` and a Playwright smoke in `apps/web/e2e/`. Its CI is `.github/workflows/web.yml` ([web app](../apps/web/README.md#ci)).
+
 ## Commands
 
 Use Node 24 and the committed npm lockfile (`npm ci`).
@@ -161,7 +163,9 @@ release tags, and manual runs validate before publishing; only `master` updates
 the `latest` tag. Signed mobile builds and TestFlight submission remain limited
 to release tags and manual runs, never pull requests.
 
-Native device E2E is an explicit workstation/release gate, not an implied result of Linux CI or an EAS build. The repository does not provision Xcode runtimes, AVD images, `agent-device`, or native development binaries on hosted CI. Do not add a green job that skips missing devices; provision those prerequisites before moving native execution to a dedicated runner.
+The native SwiftUI app has its own workflow, `.github/workflows/ios.yml` (MAZ-66), on the GitHub `xcode-27` image. It runs on pull requests that touch `apps/ios/`, `contracts/`, `app.json`, `package.json` or `docs/ios-ipa.md`: swift-format and module-boundary lint, PennyKit tests on the macOS host, app and PennyKit tests on newly created iPhone and iPad simulators, a Release build that must exclude test controls, and a launch with screenshots on both simulators. It uploads `ios-test-results`. Run the same steps locally with `apps/ios/scripts/ios.sh ci` ([native app](../apps/ios/README.md#commands)). XCUITest journeys arrive with MAZ-81.
+
+Legacy Expo native device E2E is an explicit workstation/release gate, not an implied result of Linux CI or an EAS build. The repository does not provision Xcode runtimes, AVD images, `agent-device`, or native development binaries on hosted CI. Do not add a green job that skips missing devices; provision those prerequisites before moving native execution to a dedicated runner.
 
 ## Adding or changing tests
 
