@@ -56,11 +56,39 @@ final class SmokeJourneyTests: PennyUITestCase {
     /// Home → Add expense → Saved → Activity (MAZ-81 "Additional verification").
     @MainActor
     func test_whenExpenseAddedFromHome_Journey_ShouldShowSavedAndListItInActivity() async throws {
-        // TODO(MAZ-73): the entry form, keypad and save flow replace the placeholder Add entry
-        // sheet. Once they land: sign in a fresh account, tap `tab.add` (iPhone) or
-        // `sidebar.add` (iPad), enter an amount and title, save, wait for `toast.saved`, open
-        // Activity, find `entry.<id>` and confirm the server ledger has it
-        // (`Stack.waitForLedger`). Keep it in the Smoke plan.
-        throw XCTSkip("Needs the MAZ-73 entry form; the v2 Add entry sheet is a placeholder.")
+        let stack = try await stack()
+        let account = try await makeAccount("add-expense")
+        let penny = try await launch()
+        try penny.signIn(email: account.email, password: account.password)
+        try penny.wait(for: AccessibilityID.Home.empty)
+
+        // Add expense: amount and title; the most used expense category is preselected.
+        let title = "Smoke lunch \(Device.name)"
+        try penny.openAddEntry()
+        try penny.enterAmount("12.34")
+        try penny.type(title, into: AccessibilityID.EntryForm.title)
+        screenshot("add-expense-filled")
+        try penny.tap(AccessibilityID.EntryForm.save)
+
+        // Saved: the sheet closes and the toast confirms.
+        try penny.wait(for: AccessibilityID.Feedback.savedToast)
+        try penny.waitForAbsence(of: AccessibilityID.Screen.addEntry)
+        screenshot("expense-saved")
+
+        // The write reaches the real API with the typed amount, title and kind.
+        let ledger = try await stack.waitForLedger(token: account.token, timeout: 30) { ledger in
+            (ledger["transactions"] as? [[String: Any]] ?? []).contains { $0["title"] as? String == title }
+        }
+        let saved = try XCTUnwrap(
+            (ledger["transactions"] as? [[String: Any]])?.first { $0["title"] as? String == title })
+        let entryID = try XCTUnwrap(saved["id"] as? String)
+        XCTAssertEqual(saved["kind"] as? String, "expense")
+        XCTAssertEqual(saved["total"] as? Int, 1234, "saved transaction: \(saved)")
+        XCTAssertEqual(saved["share"] as? Int, 1234, "an unsplit expense is all yours")
+
+        // Activity lists it.
+        try penny.openActivity()
+        try penny.waitForEntry(entryID)
+        screenshot("activity-with-new-expense")
     }
 }

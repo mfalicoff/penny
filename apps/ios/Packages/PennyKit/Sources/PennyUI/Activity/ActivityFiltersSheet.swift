@@ -26,11 +26,15 @@ struct ActivityFiltersSheet: View {
                     .accessibilityIdentifier("filters.period")
                     switch filters.period {
                     case .month(let month):
-                        stepper(MonthPicker.title(month, long: true), id: "filters.month") { delta in
+                        stepper(
+                            MonthPicker.title(month, long: true), previousID: "filters.month.previous",
+                            nextID: "filters.month.next"
+                        ) { delta in
                             if let next = month.shifted(by: delta) { shell.activityFilters.period = .month(next) }
                         }
                     case .year(let year):
-                        stepper(String(year), id: "filters.year") { delta in
+                        stepper(String(year), previousID: "filters.year.previous", nextID: "filters.year.next") {
+                            delta in
                             let next = year + delta
                             if (2000...2100).contains(next) { shell.activityFilters.period = .year(next) }
                         }
@@ -144,17 +148,19 @@ struct ActivityFiltersSheet: View {
         return DayText.date(range.from ?? .earliest)...DayText.date(range.to ?? .latest)
     }
 
-    private func stepper(_ title: String, id: String, step: @escaping (Int) -> Void) -> some View {
+    private func stepper(_ title: String, previousID: String, nextID: String, step: @escaping (Int) -> Void)
+        -> some View
+    {
         HStack {
             Button("Previous", systemImage: "chevron.left") { step(-1) }
                 .labelStyle(.iconOnly)
-                .accessibilityIdentifier("\(id).previous")
+                .accessibilityIdentifier(previousID)
             Spacer()
             Text(title).font(.body.weight(.semibold))
             Spacer()
             Button("Next", systemImage: "chevron.right") { step(1) }
                 .labelStyle(.iconOnly)
-                .accessibilityIdentifier("\(id).next")
+                .accessibilityIdentifier(nextID)
         }
         .buttonStyle(.borderless)
     }

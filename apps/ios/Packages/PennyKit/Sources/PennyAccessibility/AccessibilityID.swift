@@ -38,10 +38,26 @@ public enum AccessibilityID {
         public static let accounts = "screen.accounts"
         public static let categories = "screen.categories"
         public static let lock = "screen.lock"
+        // Entries and Activity (MAZ-73).
+        public static let editEntry = "screen.editEntry"
+        public static let entryDetail = "screen.entryDetail"
+        public static let activityFilters = "screen.activityFilters"
+        public static let categoryPicker = "screen.categoryPicker"
+        public static let accountPicker = "screen.accountPicker"
+        public static let datePicker = "screen.datePicker"
+        public static let split = "screen.split"
+        public static let entryExtras = "screen.entryExtras"
+        // Accounts, categories and schedules (MAZ-74).
+        public static let accountForm = "screen.accountForm"
+        public static let categoryForm = "screen.categoryForm"
+        public static let schedule = "screen.schedule"
+        public static let scheduleForm = "screen.scheduleForm"
 
         static let all = [
             home, activity, shared, household, householdExpense, trips, trip, addEntry, settings, appearance, currency,
             appLock, recurring, accounts, categories, lock,
+            editEntry, entryDetail, activityFilters, categoryPicker, accountPicker, datePicker, split, entryExtras,
+            accountForm, categoryForm, schedule, scheduleForm,
         ]
     }
 
@@ -152,11 +168,55 @@ public enum AccessibilityID {
         static let prefixes = ["entry.", "trip."]
     }
 
-    /// Add entry (MAZ-73 replaces the placeholder sheet).
-    public enum AddEntry {
-        public static let close = "addEntry.close"
+    /// The add and edit entry sheet (MAZ-73). `keypad(_:)` takes a digit, `separator` or `delete`
+    /// (the iPhone keypad; iPad types into `amount`); `category(_:)` takes a category id.
+    public enum EntryForm {
+        public static let kind = "entryForm.kind"
+        public static let amount = "entryForm.amount"
+        public static let title = "entryForm.title"
+        public static let account = "entryForm.account"
+        public static let date = "entryForm.date"
+        public static let save = "entryForm.save"
+        public static let close = "entryForm.close"
+        public static let discard = "entryForm.discard"
+        public static let retry = "entryForm.retry"
+        public static func keypad(_ key: String) -> String { "keypad.\(key)" }
+        public static func category(_ id: String) -> String { "entryForm.category.\(id)" }
 
-        static let all = [close]
+        static let all = [kind, amount, title, account, date, save, close, discard, retry]
+        static let prefixes = ["keypad.", "entryForm.category."]
+    }
+
+    /// Activity and its filters (MAZ-73). `kindFilter(_:)` takes an `EntryKind` raw value or `all`.
+    public enum Activity {
+        public static let filters = "activity.filters"
+        public static let totals = "activity.totals"
+        public static let searchEmpty = "activity.searchEmpty"
+        public static let deleteConfirm = "deleteEntry.confirm"
+        public static func kindFilter(_ rawValue: String) -> String { "activity.filter.\(rawValue)" }
+
+        static let all = [filters, totals, searchEmpty, deleteConfirm]
+        static let prefixes = ["activity.filter."]
+    }
+
+    /// Accounts, categories and recurring schedules (MAZ-74). Rows take the model id.
+    public enum Organize {
+        public static let addAccount = "accounts.add"
+        public static let addCategory = "categories.add"
+        public static let addSchedule = "recurring.add"
+        public static let accountName = "accountForm.name"
+        public static let accountSave = "accountForm.save"
+        public static let categoryName = "categoryForm.name"
+        public static let categorySave = "categoryForm.save"
+        public static let scheduleSave = "scheduleForm.save"
+        public static func account(_ id: String) -> String { "account.\(id)" }
+        public static func category(_ id: String) -> String { "category.\(id)" }
+        public static func schedule(_ id: String) -> String { "schedule.\(id)" }
+
+        static let all = [
+            addAccount, addCategory, addSchedule, accountName, accountSave, categoryName, categorySave, scheduleSave,
+        ]
+        static let prefixes = ["account.", "category.", "schedule."]
     }
 
     /// Banners, toasts and named states.
@@ -183,10 +243,11 @@ public enum AccessibilityID {
 
     /// Every fixed identifier, for the convention and drift tests.
     public static let fixed: [String] =
-        Screen.all + Root.all + Auth.all + Server.all + Tab.all + Sidebar.all + Home.all + Settings.all + AddEntry.all
-        + Feedback.all + Lock.all
+        Screen.all + Root.all + Auth.all + Server.all + Tab.all + Sidebar.all + Home.all + Settings.all + EntryForm.all
+        + Activity.all + Organize.all + Feedback.all + Lock.all
 
     /// Prefixes of identifiers that end in a model id or raw value.
     public static let dynamicPrefixes: [String] =
-        Tab.prefixes + Sidebar.prefixes + Settings.prefixes + Row.prefixes + Feedback.prefixes
+        Tab.prefixes + Sidebar.prefixes + Settings.prefixes + Row.prefixes + Feedback.prefixes + EntryForm.prefixes
+        + Activity.prefixes + Organize.prefixes
 }

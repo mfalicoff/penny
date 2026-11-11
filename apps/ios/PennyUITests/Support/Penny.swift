@@ -186,6 +186,32 @@ struct Penny {
         return button
     }
 
+    // MARK: Entries
+
+    /// Opens the Add entry sheet: the tab bar's add button on iPhone, the sidebar's on iPad.
+    /// A tap that lands while the floating tab bar is still settling is ignored, so it is retried.
+    func openAddEntry() throws {
+        let button =
+            Device.isPad
+            ? try wait(for: AccessibilityID.Sidebar.add) : try tabButton("Add entry", id: AccessibilityID.Tab.add)
+        for _ in 0..<3 {
+            button.tap()
+            if element(AccessibilityID.Screen.addEntry).waitForExistence(timeout: 8) { return }
+        }
+        throw UIExpectationFailed(description: "Add entry did not open \(AccessibilityID.Screen.addEntry)")
+    }
+
+    /// Types an amount such as "12.34": the in-sheet keypad on iPhone, the keyboard on iPad.
+    func enterAmount(_ amount: String) throws {
+        if Device.isPad {
+            try type(amount, into: AccessibilityID.EntryForm.amount)
+            return
+        }
+        for character in amount {
+            try tap(AccessibilityID.EntryForm.keypad(character == "." ? "separator" : String(character)))
+        }
+    }
+
     // MARK: Data on screen
 
     /// Waits for an entry row, pulling to refresh while the background sync catches up.

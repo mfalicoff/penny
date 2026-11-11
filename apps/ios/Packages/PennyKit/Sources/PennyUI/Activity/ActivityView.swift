@@ -349,8 +349,9 @@ private struct ActivityChips: View {
     }
 
     private func kindChip(_ title: String, _ value: EntryKind?) -> some View {
-        ActivityChip(title: title, selected: filters.kind == value) { filters.kind = value }
-            .accessibilityIdentifier("activity.filter.\(value?.rawValue ?? "all")")
+        let key = value?.rawValue ?? "all"
+        return ActivityChip(title: title, selected: filters.kind == value) { filters.kind = value }
+            .accessibilityIdentifier("activity.filter.\(key)")
     }
 }
 

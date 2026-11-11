@@ -177,7 +177,8 @@ struct EntryAccountPicker: View {
     }
 
     private func row(_ id: String?, title: String, symbol: String) -> some View {
-        Button {
+        let key = id ?? "none"
+        return Button {
             selection = id
             dismiss()
         } label: {
@@ -193,7 +194,7 @@ struct EntryAccountPicker: View {
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(selection == id ? .isSelected : [])
-        .accessibilityIdentifier("accountPicker.\(id ?? "none")")
+        .accessibilityIdentifier("accountPicker.\(key)")
     }
 
     static func symbol(_ type: AccountType) -> String {
@@ -518,6 +519,7 @@ struct EntryExtrasView: View {
 
     private func tripRow(_ id: String?, name: String) -> some View {
         let selected = model.draft.tripId == id
+        let key = id ?? "none"
         return Button {
             model.editor.draft.tripId = id
         } label: {
@@ -532,6 +534,6 @@ struct EntryExtrasView: View {
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(selected ? .isSelected : [])
-        .accessibilityIdentifier("entryExtras.trip.\(id ?? "none")")
+        .accessibilityIdentifier("entryExtras.trip.\(key)")
     }
 }
