@@ -79,3 +79,7 @@ ds-bundle/
 apps/ios/Configuration/Signing.local.xcconfig
 xcuserdata/
 *.xcuserstate
+
+# Nix build outputs
+result
+result-*

@@ -2,7 +2,7 @@
 
 [App showcase](../README.md) · [Documentation](README.md) · [Operations runbook](operations.md)
 
-Penny v2 runs as a .NET API with PostgreSQL 18, behind an nginx front end that serves the web app and forwards `/api/` on the same origin. This page covers installing, configuring, upgrading and rolling back that stack. Day-to-day monitoring, backups, PostgreSQL maintenance and incident runbooks are in [Operations](operations.md). The legacy Node/SQLite server remains available until the cutover; see [Legacy Node/SQLite deployment](#legacy-nodesqlite-deployment). For local development, see [Development](development.md).
+Penny v2 runs as a .NET API with PostgreSQL 18, behind an nginx front end that serves the web app and forwards `/api/` on the same origin. This page covers installing, configuring, upgrading and rolling back that stack. Day-to-day monitoring, backups, PostgreSQL maintenance and incident runbooks are in [Operations](operations.md). The legacy Node/SQLite server remains available until the cutover; see [Legacy Node/SQLite deployment](#legacy-nodesqlite-deployment). For local development, see [Development](development.md). On NixOS, use the flake's module instead: [Self-hosting on NixOS](nixos.md).
 
 Run commands from the repository root of a checkout of the release you deploy (the Compose file mounts `apps/backend/development/init-roles.sh` from it).
 
