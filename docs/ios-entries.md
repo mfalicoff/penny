@@ -40,14 +40,14 @@ Previews of every card this issue owns are in `PennyUI/Entries/EntrySpecimens.sw
 - A failed save (storage full, ledger still loading) keeps the draft and offers Try again.
 - **Stale edit:** if the entry changed on another device after the form opened, the save is refused (`entryChangedOnAnotherDevice`); the banner offers **Review latest**, which reopens the form on the current version. If it was deleted elsewhere, the form says so and closes. A stale delete is refused the same way (`entryChangedBeforeDelete`). Nothing is overwritten.
 - Removed account, category or trip: refused with the legacy message naming the field to choose again.
-- **Closing with changes** asks: Discard changes, Keep as draft, or Keep editing. Swipe-to-dismiss is disabled while there are changes. If something else replaces the sheet (a deep link, Settings, Edit categories), the draft is kept on the shell's shelf (`EntryDraftShelf`, one for a new entry and one per edited entry) and comes back with "Your unsaved entry is back" and Discard. Drafts live in memory only; quitting the app drops them.
+- **Closing with changes** asks: Discard changes, Keep as draft, or Keep editing. Swipe-to-dismiss is disabled while there are changes. If something else replaces the sheet (a deep link, Settings, Edit categories), the draft is kept on the shell's shelf (`EntryDraftShelf`, one for a new entry and one per edited entry) and comes back with "Your unsaved entry is back" and Discard. Drafts are stored on this device per account (`<ledger file>.drafts`, written durably beside the ledger), so they survive quitting the app; they are removed with the account at sign-out and move with it on an email change. A draft whose save is still running stays on the shelf until that save succeeds, so if a deep link replaced the sheet and the save then fails, the draft comes back.
 - **Offline:** saving works the same; the entry is on this device and the row says "Waiting to sync" until the server has it.
 
 ## Activity
 
 - Recorded entries (never scheduled previews) grouped by day, newest first, each day with its net (income minus spending and contributions, your shares). The period's Spent / Came in / Invested totals sit above the list; filters and search never change them.
 - **Filters:** kind chips (All, Expenses, Income, Investments), the period chip and the Filters sheet (month, year or all time; one day; type; category). With a type chosen, its four most used categories appear as chips with All categories. The month follows Home's month picker.
-- **Rows:** tap for the detail (a shared expense opens its household); swipe for Edit and Delete. Delete always asks first and offers Undo in the toast.
+- **Rows:** tap for the detail (a shared expense opens its household); swipe for Edit and Delete. Delete always asks first and offers Undo in the toast. On iPad (regular width) the list is a 400 pt column and a personal entry opens beside it, highlighted, as on the `ipad/activity` card; deleting it clears the detail. In a narrow width the detail is pushed.
 - **Long ledgers:** local results render 200 rows at a time and add more as the list nears the end; the search index normalizes each row once per ledger change, and only when there is a query.
 
 ### Search
@@ -85,6 +85,5 @@ Each runs on a clean iPhone and iPad simulator against the [full-stack test envi
 ## Not done yet
 
 - Receipt picking and upload: More details shows and removes an attached receipt, and calls `ShellModel.attachReceipt` when one is set; MAZ-78 provides it.
-- iPad Activity uses push navigation for the detail, not a list-plus-detail split.
 - Category chips order by count of use; ordering by recent use is MAZ-134.
 - Offline search does not include shared expenses (they are not cached on the device yet).

@@ -69,7 +69,7 @@ log show --last 1d --predicate 'subsystem == "com.mfalicoff.penny" AND category 
 xcrun simctl spawn booted log show --last 1h --predicate 'subsystem == "com.mfalicoff.penny" AND category == "ExpoMigration"'
 ```
 
-The journal file shows which records were imported and retired. The report is not shown on a screen yet (a Settings diagnostics row is follow-up work for the Settings owner).
+The journal file shows which records were imported and retired. When the import needs the person, Settings starts with a row that says what happened and what to do (`ExpoImportNotice`, accessibility id `settings.expoImport`): a locked device or an unopenable store ("Unlock this device and reopen Penny"), a native ledger that couldn't be written ("Free some space"), a record whose server is unknown ("Choose the server you used"), or a damaged or newer record (kept untouched; updating Penny may import it). Nothing shows when there was nothing to import, the import finished, or it waits for a sync.
 
 ## User guidance
 

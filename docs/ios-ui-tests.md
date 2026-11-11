@@ -136,8 +136,8 @@ Tests find elements only by identifier, never by visible text (except system-pro
 ## Findings and known issues
 
 - **Fixed**: `AdaptiveColor.color` (PennyDesign) trapped when SwiftUI resolved a color on its async render thread (main-actor closure under the module's default isolation); it crashed sign-in, account creation and offline journeys. The getter is now `nonisolated`.
-- **Open**: on iPad, going back from Settings › Currency in the detail column crashed once in SwiftUI (`NavigationColumnState.boundPathChange`, `swift_unexpectedError`) in `test_whenChangesArePending_SignOut…`; it did not reproduce in isolation. The settings path binding of the split view (`SplitShell`, MAZ-69) needs a look.
-- **Open**: at the largest accessibility text size the demo banner on iPhone wraps its title mid-word ("Change-s"); see the `large-text` screenshots.
+- **Mitigated, not confirmed**: on iPad, going back from Settings › Currency in the detail column crashed once in SwiftUI (`NavigationColumnState.boundPathChange`, `swift_unexpectedError`) in `test_whenChangesArePending_SignOut…`; it did not reproduce in isolation. The Settings stack in the split view's detail column (`SplitShell`) was the only one without its own identity, so the column could carry another stack's state (a `[DetailRoute]` path) into its `[SettingsRoute]` path; it now has one, like the tab and Manage stacks (MAZ-141). Watch the `full` plan on iPad for a recurrence.
+- **Fixed**: at the largest accessibility text size the demo banner on iPhone wrapped its title mid-word ("Change-s"). At accessibility sizes `StatusBanner` puts its action under the text, so the title has the full width and wraps between words (MAZ-141); check the `large-text` screenshots.
 
 ## Debugging
 

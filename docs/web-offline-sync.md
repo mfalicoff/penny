@@ -2,7 +2,7 @@
 
 [Documentation](README.md) · [Web app](../apps/web/README.md) · [Native offline sync](ios-offline-sync.md) · [Server ledger sync](migration/ledger.md) · [Domain rules](migration/domain-rules.md)
 
-The v2 web app (`apps/web`) keeps each signed-in account's personal ledger in the browser, saves to it while offline, and syncs it with the server's whole-ledger `GET`/`PUT /api/ledger`. It follows the native engine's rules ([native offline sync](ios-offline-sync.md)) and the shared TypeScript merge and recurrence (`src/domain/merge.ts`, `src/domain/ledger.ts`, [ADR 002](migration/architecture.md#adr-002-calculation-and-conflict-ownership)), with the native app's recurrence refinements on top (`apps/web/src/offline/merge.ts`, MAZ-90). The server never merges: it refuses a stale revision with 409.
+The v2 web app (`apps/web`) keeps each signed-in account's personal ledger in the browser, saves to it while offline, and syncs it with the server's whole-ledger `GET`/`PUT /api/ledger`. It follows the native engine's rules ([native offline sync](ios-offline-sync.md)) and the shared TypeScript merge and recurrence (`src/domain/merge.ts`, `src/domain/ledger.ts`, [ADR 002](migration/architecture.md#adr-002-calculation-and-conflict-ownership)), which carries the native app's recurrence refinements (MAZ-90; moved into the shared module by MAZ-141, `apps/web/src/offline/merge.ts` re-exports it). The server never merges: it refuses a stale revision with 409.
 
 TanStack Query is **not** the offline store. Query keeps server copies that can always be fetched again; pending work lives only in IndexedDB, so clearing or refetching Query (sign-out, expiry, `clearPrivateData`, a 401) never erases it.
 
@@ -12,7 +12,7 @@ TanStack Query is **not** the offline store. Query keeps server copies that can 
 | `openIndexedDb`, `MemoryLedgerDatabase` | `src/offline/database.ts` | The `penny-offline` database (atomic read-modify-write per key, `durability: "strict"`), and the in-memory stand-in used for tests and when the browser blocks storage |
 | `LedgerRecord`, `parseRecord` | `src/offline/record.ts` | The stored record (format 1), account scope and keys; unreadable, misplaced and newer-format copies |
 | `parseLedger`, `normalizeLedger` | `src/offline/wire.ts` | Wire ledger checks (v4; v1–v3 upgraded from an old local copy only), unknown fields kept |
-| `mergeOfflineLedger` | `src/offline/merge.ts` | The shared three-way merge plus the native recurrence refinements (below), used for every sync, the merge of saves that landed during a sync, and the legacy import |
+| `mergeOfflineLedger` | `src/offline/merge.ts` | The shared three-way merge (`src/domain/merge.ts`), with the native recurrence refinements (below), used for every sync, the merge of saves that landed during a sync, and the legacy import |
 | `pendingChanges` | `src/offline/pending.ts` | "N changes waiting", the entries and schedules waiting to sync, and the entries deleted here |
 | `readLegacyCopy`, `removeLegacyCopy`, `setLegacyCopyAside` | `src/offline/legacy.ts` | The Expo web app's `localStorage` copy |
 | `withLock`, `openLedgerChannel` | `src/offline/coordination.ts` | Web Locks (one sync per account across tabs) and the `penny-offline-ledger` BroadcastChannel |
@@ -87,7 +87,7 @@ The `PUT` is a whole-ledger compare-and-swap, so repeating it after an ambiguous
 
 The same as the native app and the legacy app, field by field and by record id in every list: a record only the server changed takes the server's version; different fields changed on each side both survive; **the same field changed on both sides takes this browser's value**; deleted here and edited on the server is deleted; edited here and deleted on the server comes back with this browser's version; created here is appended; a currency change here wins. Occurrence ids are `{ruleId}:{date}`, so materializing after any merge adds nothing that exists.
 
-Recurrence refinements (MAZ-90, the same four as the native `LedgerMerge`; the shared `src/domain/merge.ts` stays unchanged for the legacy app). An occurrence is "untouched" when it equals what its rule (here or in the base) generates for its date, ignoring key order:
+Recurrence refinements (MAZ-90, the same four as the native `LedgerMerge`; in the shared `src/domain/merge.ts` since MAZ-141, so the legacy app and the golden `merge-conflicts.json` cases have them too). An occurrence is "untouched" when it equals what its rule (here or in the base) generates for its date, ignoring key order:
 
 - When both sides advanced a rule's `nextDate`, the later one wins, so a date the server already consumed is not recorded again.
 - An occurrence both sides recorded keeps the server's copy when this browser's is untouched, so an edit made on the other device survives.

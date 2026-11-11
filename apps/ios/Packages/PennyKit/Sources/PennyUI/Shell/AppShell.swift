@@ -151,10 +151,14 @@ private struct SplitShell: View {
             }
             .id(page)
         case .settings:
+            // Its own identity, like the tab and Manage stacks: the column then never reuses
+            // another stack's state (a [DetailRoute] path) for this [SettingsRoute] one
+            // (MAZ-141: a crash going back from Currency, `NavigationColumnState.boundPathChange`).
             NavigationStack(path: $shell.route.settingsPath) {
                 SettingsView()
                     .navigationDestination(for: SettingsRoute.self) { SettingsPage(route: $0) }
             }
+            .id(SidebarItem.settings)
         }
     }
 }

@@ -535,7 +535,8 @@ struct AuthControllerTests {
     private func signedIn(
         _ routes: [String: Routes.Answer], localData: FakeLocalData = FakeLocalData(),
         sessions: EphemeralSessionStore = EphemeralSessionStore(),
-        preferences: EphemeralAuthPreferences = EphemeralAuthPreferences(server: SavedServer(server: AuthFixtures.server))
+        preferences: EphemeralAuthPreferences = EphemeralAuthPreferences(
+            server: SavedServer(server: AuthFixtures.server))
     ) async throws -> (AuthController, StubTransport) {
         var all = routes
         all["POST /api/auth/login"] = Routes.json(Routes.session(email))

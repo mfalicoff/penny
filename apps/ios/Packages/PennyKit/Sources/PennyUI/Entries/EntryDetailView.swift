@@ -9,6 +9,9 @@ struct EntryDetailView: View {
     @Environment(ShellModel.self) private var shell
     @Environment(\.dismiss) private var dismiss
     let id: String
+    /// After a delete: shown beside the iPad Activity list, the selection clears; pushed, the
+    /// page closes (the default).
+    var onDeleted: (() -> Void)?
     @State private var deleting: LedgerEntry?
 
     var body: some View {
@@ -90,7 +93,9 @@ struct EntryDetailView: View {
                     .accessibilityIdentifier("entryDetail.edit")
             }
         }
-        .deleteEntryConfirmation($deleting) { dismiss() }
+        .deleteEntryConfirmation($deleting) {
+            if let onDeleted { onDeleted() } else { dismiss() }
+        }
     }
 
     private func detail(_ title: String, _ value: String?) -> some View {

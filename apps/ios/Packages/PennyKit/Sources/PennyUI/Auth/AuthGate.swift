@@ -55,7 +55,8 @@ struct AuthGate: View {
                             ShellModel(
                                 workspace: services.accountWorkspace(account, sync), session: .account(auth, account),
                                 today: services.today(), startDemo: startDemo,
-                                search: auth.client.map { AccountEntrySearch(model: sync, client: $0) })
+                                search: auth.client.map { AccountEntrySearch(model: sync, client: $0) },
+                                expoImport: services.expoMigration.flatMap(ExpoImportNotice.init))
                         }
                     )
                     .id(account.scope)

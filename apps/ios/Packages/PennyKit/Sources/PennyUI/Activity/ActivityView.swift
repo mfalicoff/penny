@@ -13,12 +13,26 @@ import SwiftUI
 /// normalization and says so. Rows open the entry; swipe for Edit and Delete (confirmed).
 struct ActivityView: View {
     @Environment(ShellModel.self) private var shell
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var filtersPresented = false
+
+    /// The list column's width on iPad (`ipad/activity` card).
+    static let listWidth: Double = 400
 
     var body: some View {
         @Bindable var shell = shell
-        WorkspaceContent { ledger in
-            ActivityList(ledger: ledger, showFilters: { filtersPresented = true })
+        Group {
+            // iPad (regular width): the list with the chosen entry beside it, as the redesign's
+            // iPad card shows; iPhone and narrow splits push the entry instead.
+            if sizeClass == .regular {
+                HStack(spacing: 0) {
+                    list(selects: true).frame(width: Self.listWidth)
+                    Divider()
+                    ActivitySelectionDetail().frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+            } else {
+                list(selects: false)
+            }
         }
         .background(PennyColor.background)
         .navigationTitle("Activity")
@@ -42,6 +56,26 @@ struct ActivityView: View {
             if case .month(let month) = shell.activityFilters.period, month != shell.month { shell.month = month }
         }
         .accessibilityIdentifier("screen.activity")
+    }
+
+    private func list(selects: Bool) -> some View {
+        WorkspaceContent { ledger in
+            ActivityList(ledger: ledger, selects: selects, showFilters: { filtersPresented = true })
+        }
+    }
+}
+
+/// The iPad detail beside the Activity list: the chosen personal entry, or a hint.
+private struct ActivitySelectionDetail: View {
+    @Environment(ShellModel.self) private var shell
+
+    var body: some View {
+        if let id = shell.activitySelection {
+            EntryDetailView(id: id, onDeleted: { shell.activitySelection = nil }).id(id)
+        } else {
+            PennyStateView(.empty, title: "No entry selected", message: "Choose an entry to see its details here.")
+                .accessibilityIdentifier("activity.noSelection")
+        }
     }
 }
 
@@ -74,6 +108,8 @@ final class ActivityLocalCache {
 private struct ActivityList: View {
     @Environment(ShellModel.self) private var shell
     let ledger: Ledger
+    /// iPad: a personal entry opens beside the list (`ShellModel.activitySelection`).
+    let selects: Bool
     let showFilters: () -> Void
     @State private var cache = ActivityLocalCache()
     /// Local rows drawn so far; more appear as the list nears its end (100,000-entry ledgers).
@@ -140,8 +176,22 @@ private struct ActivityList: View {
     @ViewBuilder
     private func row(_ entry: ReportEntry, report: LedgerReport, currency: String, isLast: Bool) -> some View {
         let personal = entry.source == .personal ? ledger.entry(id: entry.id) : nil
-        NavigationLink(value: ActivityRoute.destination(entry)) {
-            EntryRow(entry: entry, report: report, currency: currency)
+        Group {
+            if selects, let personal {
+                Button {
+                    shell.activitySelection = personal.id
+                } label: {
+                    EntryRow(entry: entry, report: report, currency: currency)
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(shell.activitySelection == personal.id ? .isSelected : [])
+                .listRowBackground(
+                    shell.activitySelection == personal.id ? PaletteToken.tintSoft.value.color : nil)
+            } else {
+                NavigationLink(value: ActivityRoute.destination(entry)) {
+                    EntryRow(entry: entry, report: report, currency: currency)
+                }
+            }
         }
         .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 12))
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
