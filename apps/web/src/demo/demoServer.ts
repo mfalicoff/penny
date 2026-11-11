@@ -1,3 +1,4 @@
+import { initialCategories } from "@domain/ledger.ts";
 import type { Transport } from "../api/client";
 import type { SearchItem, SearchRequest } from "../api/schemas";
 
@@ -35,7 +36,7 @@ export function sampleEntries(today = new Date()): DemoEntry[] {
     ["A new read", 2499, "shopping", 2],
     ["Weekend groceries", 7235, "groceries", 6],
     ["Design project", 65000, "freelance", 8, 65000, "income"],
-    ["Index fund", 20000, "investing", 10, 20000, "investment"],
+    ["Index fund", 20000, "investments", 10, 20000, "investment"],
     ["Music streaming", 1299, "fun", 3],
   ];
   return rows.map(([title, total, categoryId, offset, share = total, kind = "expense"], index) => ({
@@ -51,6 +52,20 @@ export function sampleEntries(today = new Date()): DemoEntry[] {
 }
 
 /**
+ * Two schedules due on the month's last day (MAZ-92), so the demo's Home shows a projected
+ * remaining with expected recurring income and something coming up. Previews only: the demo never
+ * records them.
+ */
+export function sampleSchedules(today = new Date()) {
+  const last = dateKey(new Date(today.getFullYear(), today.getMonth() + 1, 0));
+  const anchorDay = Number(last.slice(8));
+  const rule = (id: string, title: string, kind: Kind, total: number, categoryId: string) => ({
+    id, title, kind, total, share: total, categoryId, date: last, note: "", frequency: "monthly", nextDate: last, anchorDay, active: true,
+  });
+  return [rule("demo-rule-1", "Design retainer", "income", 40000, "freelance"), rule("demo-rule-2", "Phone plan", "expense", 4500, "other")];
+}
+
+/**
  * An in-memory stand-in for the parts of the API the web app uses, for the temporary demo. It
  * keeps the API's rules that matter to the UI (revision conflicts, cursor paging) and answers
  * everything else with 404, so a screen that needs a real server says so instead of guessing.
@@ -63,9 +78,10 @@ export function createDemoServer(today = new Date()): Transport {
       currency: "CAD",
       accounts: [],
       trips: [],
-      categories: [],
+      // The legacy defaults, so the demo's categories have names, colors and icons.
+      categories: initialCategories.map((category) => ({ ...category })),
       transactions: sampleEntries(today),
-      recurring: [] as unknown[],
+      recurring: sampleSchedules(today),
     } as Record<string, unknown> & { transactions: DemoEntry[] },
   };
 

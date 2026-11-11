@@ -61,7 +61,7 @@ export const sharedRow = ({ id, title, date, shareCents, totalCents = shareCents
   note: "",
 });
 
-export function ledgerServer(initial: Partial<Ledger> = {}, options: { shared?: ReturnType<typeof sharedRow>[]; search?: (body: Record<string, unknown>) => object[] } = {}) {
+export function ledgerServer(initial: Partial<Ledger> = {}, options: { shared?: ReturnType<typeof sharedRow>[]; scheduled?: object[]; search?: (body: Record<string, unknown>) => object[] } = {}) {
   const state = {
     revision: 3,
     ledger: richLedger(initial),
@@ -89,7 +89,8 @@ export function ledgerServer(initial: Partial<Ledger> = {}, options: { shared?: 
       const month = /month=([\d-]+)/.exec(url)?.[1];
       const year = /year=(\d+)/.exec(url)?.[1];
       const rows = state.shared.filter((row) => (!month || row.date.startsWith(month)) && (!year || row.date.startsWith(year)));
-      return json({ transactions: rows, scheduled: [] });
+      const scheduled = (options.scheduled ?? []).filter((row) => !month || (row as { date: string }).date.startsWith(month));
+      return json({ transactions: rows, scheduled });
     }
     if (url === "/api/v1/search/transactions") {
       if (state.down) throw new TypeError("Failed to fetch");

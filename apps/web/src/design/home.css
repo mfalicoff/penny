@@ -1,0 +1,778 @@
+/*
+ * Home and Insights (MAZ-92): specimens `home`, `home-dark`, `home-amoled`, `home-catppuccin`,
+ * `desktop`, `empty-home`, `calendar`, `insights`, `money-flow`; web cards `web-home` and
+ * `web-insights`. Every value comes from the --pk-* tokens, so each appearance follows them.
+ * Phones get one column; 768px and up two; 1100px and up the 12-column desktop overview.
+ */
+
+.home,
+.insights {
+  gap: 20px;
+}
+
+.panel__title {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.section-title {
+  margin: 8px 0 0;
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.text-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 36px;
+  color: var(--pk-tint-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.text-link:hover {
+  text-decoration: underline;
+}
+
+.month-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+
+.empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* ---------- layout ---------- */
+.home-top,
+.explore__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  min-width: 0;
+}
+
+.explore {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+@media (min-width: 768px) {
+  .home-top,
+  .explore__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hero,
+  .explore__wide {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 1100px) {
+  .home-top,
+  .explore__grid {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+
+  .hero {
+    grid-column: 1 / span 8;
+  }
+
+  .home-coming {
+    grid-column: 9 / span 4;
+  }
+
+  .home-flow {
+    grid-column: 1 / span 5;
+  }
+
+  .home-recent {
+    grid-column: 6 / span 7;
+  }
+
+  .calendar {
+    grid-column: 1 / span 7;
+  }
+
+  .breakdown {
+    grid-column: 8 / span 5;
+  }
+
+  .explore__wide {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ---------- hero ---------- */
+.hero {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 4px 2px;
+}
+
+.hero__label {
+  margin: 0;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.hero__amount {
+  margin: 0;
+  font-size: clamp(2.5rem, 9vw, 4rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  overflow-wrap: anywhere;
+}
+
+.hero__over,
+.hero__projected {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  margin: 0;
+  color: var(--pk-label-2);
+}
+
+.hero__projected strong {
+  color: var(--pk-label);
+}
+
+.hero__dot,
+.tile__dot {
+  display: inline-block;
+  flex: none;
+  width: 8px;
+  height: 8px;
+  margin-inline-end: 6px;
+  border-radius: 50%;
+  background: var(--pk-pending);
+}
+
+.tile__dot--income {
+  background: var(--pk-income);
+}
+
+.tile__dot--expense {
+  background: var(--pk-label);
+}
+
+.tile__dot--investment {
+  background: var(--pk-invest);
+}
+
+.tile__dot--danger {
+  background: var(--pk-danger);
+}
+
+.hero__tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+  gap: 10px;
+  margin: 8px 0 0;
+}
+
+.tile {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: var(--pk-surface);
+  box-shadow: 0 0 0 0.5px var(--pk-separator);
+}
+
+.tile dt {
+  display: flex;
+  align-items: center;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+}
+
+.tile dd {
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- coming up and rows ---------- */
+.coming {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.coming__row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 2px 12px;
+  padding: 8px 0;
+}
+
+.coming__row + .coming__row {
+  border-top: 0.5px solid var(--pk-separator);
+}
+
+.coming__row .category-dot {
+  grid-row: 1 / span 2;
+}
+
+.coming__title {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.coming__meta {
+  grid-column: 2;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+}
+
+.coming__amount {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+}
+
+.home-rows {
+  margin: 0;
+}
+
+.activity-row__main--static {
+  cursor: default;
+}
+
+.activity-row__main--static:hover {
+  background: none;
+}
+
+/* ---------- compact flow summary ---------- */
+.summary-bar {
+  display: flex;
+  gap: 4px;
+  height: 14px;
+  overflow: hidden;
+  border-radius: 7px;
+  background: var(--pk-fill);
+}
+
+.summary-bar__part {
+  min-width: 4px;
+  border-radius: 7px;
+}
+
+.summary-bar__part--expense {
+  background: var(--pk-label-2);
+}
+
+.summary-bar__part--investment {
+  background: var(--pk-invest);
+}
+
+.summary-bar__part--left {
+  background: var(--pk-income);
+}
+
+.summary-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 0;
+}
+
+.summary-legend > div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.summary-legend dt {
+  display: flex;
+  align-items: center;
+  color: var(--pk-label-2);
+}
+
+.summary-legend dd {
+  margin: 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- calendar ---------- */
+.calendar__grid {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.calendar__grid th {
+  padding-bottom: 6px;
+  color: var(--pk-label-2);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.calendar__grid td {
+  padding: 2px;
+  text-align: center;
+}
+
+.calendar__day {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 3px;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 4px 0;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  color: var(--pk-label);
+  font: inherit;
+  cursor: pointer;
+}
+
+.calendar__day:hover {
+  background: var(--pk-surface-2);
+}
+
+.calendar__day--future .calendar__number {
+  color: var(--pk-label-2);
+}
+
+.calendar__day--today .calendar__number {
+  color: var(--pk-tint-text);
+  font-weight: 700;
+}
+
+.calendar__day--on,
+.calendar__day--on:hover {
+  background: var(--pk-tint);
+}
+
+.calendar__day--on .calendar__number {
+  color: #fff;
+  font-weight: 700;
+}
+
+.calendar__number {
+  font-size: 0.9375rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.calendar__dots {
+  display: flex;
+  gap: 3px;
+  min-height: 6px;
+}
+
+.calendar__dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.calendar__dot--expense {
+  background: var(--pk-label-2);
+}
+
+.calendar__dot--income {
+  background: var(--pk-income);
+}
+
+.calendar__dot--investment {
+  background: var(--pk-invest);
+}
+
+.calendar__dot--scheduled {
+  box-shadow: inset 0 0 0 1.5px var(--pk-pending);
+}
+
+.calendar__day--on .calendar__dot {
+  outline: 1px solid #fff;
+}
+
+.calendar__legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 14px;
+  margin: 0;
+  padding: 0;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  list-style: none;
+}
+
+.calendar__legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ---------- category breakdown ---------- */
+.breakdown__list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.breakdown__row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 12px;
+  width: 100%;
+  min-height: 52px;
+  padding: 6px 4px;
+  border: 0;
+  border-radius: var(--pk-r-row);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+}
+
+button.breakdown__row {
+  cursor: pointer;
+}
+
+button.breakdown__row:hover {
+  background: var(--pk-surface-2);
+}
+
+.breakdown__row--on {
+  background: var(--pk-tint-soft);
+}
+
+.breakdown__row .category-dot {
+  grid-row: 1 / span 2;
+}
+
+.breakdown__name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.breakdown__amount {
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+.breakdown__track {
+  grid-column: 2 / span 2;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--pk-fill);
+}
+
+.breakdown__fill {
+  display: block;
+  height: 100%;
+  min-width: 2px;
+  border-radius: 3px;
+}
+
+/* ---------- money flow ---------- */
+.flow {
+  container-type: inline-size;
+}
+
+.flow__hint {
+  font-size: 0.8125rem;
+}
+
+.flow__totals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 28px;
+  margin: 0;
+}
+
+.flow__totals dt {
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+}
+
+.flow__totals dd {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.flow__focus {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: var(--pk-r-row);
+  background: var(--pk-surface-2);
+}
+
+.flow__swatch {
+  display: inline-block;
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.flow__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.flow__middle {
+  fill: var(--pk-label);
+}
+
+.flow-node {
+  cursor: pointer;
+  outline: none;
+}
+
+.flow-node path {
+  transition: fill-opacity 0.15s;
+}
+
+.flow-node__ring {
+  fill: transparent;
+  stroke: transparent;
+  stroke-width: 2;
+}
+
+.flow-node--on .flow-node__ring {
+  fill: var(--pk-fill);
+}
+
+.flow-node:focus-visible .flow-node__ring {
+  stroke: var(--pk-tint);
+}
+
+.flow-node--dim text {
+  opacity: 0.45;
+}
+
+.flow-node__label {
+  fill: var(--pk-label);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.flow-node__amount {
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.flow__stacked {
+  display: none;
+  gap: 6px;
+}
+
+.flow__bar-label {
+  margin: 0;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+}
+
+.flow__bar {
+  display: flex;
+  gap: 2px;
+  height: 18px;
+  overflow: hidden;
+  border-radius: 6px;
+}
+
+.flow__segment {
+  min-width: 3px;
+  transition: opacity 0.15s;
+}
+
+.flow__segment--dim {
+  opacity: 0.2;
+}
+
+.flow__legend {
+  display: grid;
+  gap: 2px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.flow__item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: var(--pk-r-row);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.flow__item:hover {
+  background: var(--pk-surface-2);
+}
+
+.flow__item--on {
+  background: var(--pk-fill);
+}
+
+.flow__item-label {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.flow__item-amount {
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+/* Phones and narrow cards: the stacked flow, which fits 320px without horizontal scrolling. */
+@container (max-width: 559px) {
+  .flow__sankey {
+    display: none;
+  }
+
+  .flow__stacked {
+    display: grid;
+  }
+}
+
+.flow__table summary {
+  min-height: 36px;
+  color: var(--pk-tint-text);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ---------- tables ---------- */
+.table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.table-scroll table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+.table-scroll th,
+.table-scroll td {
+  padding: 8px 10px;
+  border-bottom: 0.5px solid var(--pk-separator);
+  text-align: start;
+  overflow-wrap: anywhere;
+}
+
+.table-scroll thead th {
+  color: var(--pk-label-2);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.table-scroll .num {
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+  white-space: nowrap;
+}
+
+.table-scroll tbody th {
+  font-weight: 600;
+}
+
+.category-compare__name {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ---------- Insights ---------- */
+.insights__totals {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+  gap: 12px;
+  margin: 0;
+}
+
+.insights__totals dt {
+  color: var(--pk-label-2);
+  font-size: 0.875rem;
+}
+
+.insights__totals dd {
+  margin: 0;
+  font-size: 1.625rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+.month-list__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.month-list__filters .choices--segmented {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+@media (forced-colors: active) {
+  .calendar__dot,
+  .flow__segment,
+  .summary-bar__part,
+  .breakdown__fill,
+  .tile__dot,
+  .hero__dot {
+    forced-color-adjust: none;
+    border: 1px solid CanvasText;
+  }
+
+  .flow-node:focus-visible .flow-node__ring {
+    stroke: Highlight;
+  }
+}

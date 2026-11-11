@@ -7,5 +7,5 @@ import { HomePage } from "../../features/home/HomePage";
  */
 export const Route = createFileRoute("/entries/new")({
   staticData: { title: "Home" },
-  component: HomePage,
+  component: () => <HomePage search={{}} />,
 });
