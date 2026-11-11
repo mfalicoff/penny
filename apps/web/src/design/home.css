@@ -61,6 +61,16 @@
   min-width: 0;
 }
 
+/* Panels keep their content at the top when a grid row makes them taller. */
+.home-top > .card,
+.explore__grid > .card {
+  align-content: start;
+}
+
+.flow .card__head {
+  flex-wrap: wrap;
+}
+
 .explore {
   display: grid;
   gap: 12px;
@@ -142,12 +152,12 @@
 
 .hero__over,
 .hero__projected {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 6px;
   margin: 0;
   color: var(--pk-label-2);
+}
+
+.hero__dot {
+  vertical-align: 0.1em;
 }
 
 .hero__projected strong {
@@ -543,6 +553,12 @@ button.breakdown__row:hover {
   width: 10px;
   height: 10px;
   border-radius: 3px;
+}
+
+.flow__sankey {
+  width: 100%;
+  max-width: 920px;
+  margin-inline: auto;
 }
 
 .flow__svg {
