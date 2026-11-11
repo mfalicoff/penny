@@ -4,6 +4,7 @@
 @import "./components.css";
 @import "./shell.css";
 @import "./shared.css";
+@import "./recurring.css";
 
 *,
 *::before,

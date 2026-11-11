@@ -453,6 +453,41 @@ describe("several tabs", () => {
     expect(two.engine.getState().ledger).toEqual(server.ledger);
   });
 
+  it("doesn't bring back a schedule deleted on another device after this browser caught it up offline", async () => {
+    // Oct 31: the browser syncs a rule due Nov 1.
+    const server = new FakeServer(ledger({ recurring: [rule("pass", { nextDate: "2026-11-01" })] }));
+    const db = new MemoryLedgerDatabase();
+    let today = "2026-10-31";
+    const first = openTab({ server, db, today: () => today });
+    await settled(first);
+    expect(server.puts).toHaveLength(0);
+    first.engine.stop();
+
+    // Nov 10, offline: a reload records the Nov 1 occurrence and moves the rule on, on this device only.
+    today = "2026-11-10";
+    server.reachable = false;
+    const tab = openTab({ server, db, today: () => today, online: false });
+    await settled(tab);
+    expect(tab.engine.getState().ledger?.transactions.map((item) => item.id)).toEqual(["pass:2026-11-01"]);
+    expect(tab.engine.getState().pending.ruleIds).toEqual(["pass"]);
+
+    // Meanwhile the phone deletes the schedule (it never recorded Nov 1).
+    server.otherDevice((value) => ({ ...value, recurring: [] }));
+
+    server.reachable = true;
+    tab.network.online = true;
+    await tab.engine.syncNow();
+    expect(server.ledger.recurring).toEqual([]);
+    expect(server.ledger.transactions).toEqual([]);
+    expect(tab.engine.getState().ledger?.recurring).toEqual([]);
+    expect(tab.engine.getState().pending.count).toBe(0);
+    // Nothing comes back on later passes or days either.
+    today = "2026-12-05";
+    await tab.engine.syncNow();
+    expect(server.ledger.recurring).toEqual([]);
+    expect(server.ledger.transactions).toEqual([]);
+  });
+
   it("never records the same recurring occurrence twice across tabs and devices", async () => {
     const server = new FakeServer(ledger({ recurring: [rule("pass", { nextDate: "2026-11-01" })] }));
     const db = new MemoryLedgerDatabase();

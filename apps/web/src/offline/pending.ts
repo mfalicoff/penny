@@ -12,9 +12,11 @@ export interface PendingSummary {
   entryIds: string[];
   /** Entries deleted here and not synced. */
   deletedEntryIds: string[];
+  /** Recurring schedules created, edited, paused or resumed here and not synced (MAZ-90). */
+  ruleIds: string[];
 }
 
-export const NOTHING_PENDING: PendingSummary = Object.freeze({ count: 0, entryIds: [], deletedEntryIds: [] });
+export const NOTHING_PENDING: PendingSummary = Object.freeze({ count: 0, entryIds: [], deletedEntryIds: [], ruleIds: [] });
 
 type Item = { id: string };
 
@@ -28,11 +30,13 @@ function diff(base: readonly Item[], local: readonly Item[]) {
 
 export function pendingChanges(base: Ledger, local: Ledger): PendingSummary {
   let count = base.currency === local.currency ? 0 : 1;
-  for (const list of ["accounts", "trips", "categories", "recurring"] as const) {
+  for (const list of ["accounts", "trips", "categories"] as const) {
     const { changed, deleted } = diff(base[list], local[list]);
     count += changed.length + deleted.length;
   }
+  const rules = diff(base.recurring, local.recurring);
+  count += rules.changed.length + rules.deleted.length;
   const entries = diff(base.transactions, local.transactions);
   count += entries.changed.length + entries.deleted.length;
-  return count === 0 ? NOTHING_PENDING : { count, entryIds: entries.changed, deletedEntryIds: entries.deleted };
+  return count === 0 ? NOTHING_PENDING : { count, entryIds: entries.changed, deletedEntryIds: entries.deleted, ruleIds: rules.changed };
 }
