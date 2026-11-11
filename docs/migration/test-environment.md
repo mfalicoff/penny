@@ -16,6 +16,18 @@ bash apps/backend/dotnet.sh restore Penny.Backend.slnx --locked-mode
 
 No `apps/backend/.env` is needed or read: every run generates its own passwords, control token and receipt key. Podman users can set `PENNY_CONTAINER_CLI=podman` (the runner otherwise tries `docker`, then `podman`).
 
+### Without a container runtime
+
+Where Linux containers are unavailable (GitHub-hosted macOS runners), `PENNY_POSTGRES=native` replaces the container with a private PostgreSQL 18 cluster per run. Its binaries come from the flake, not the dev shell, so entering the project never fetches a database:
+
+```bash
+nix build .#test-postgres --out-link .cache/test-postgres   # PostgreSQL 18 with pg_trgm and pgvector
+export PENNY_POSTGRES=native PENNY_POSTGRES_BIN="$PWD/.cache/test-postgres/bin"
+node scripts/test-env/penny-env.mjs up
+```
+
+Each run `initdb`s a cluster in `.cache/test-env/<id>/pgdata` (random admin password, scram authentication, loopback TCP only, no Unix socket, durability off like the container's tmpfs), creates the database and applies the same `init-roles.sh`, and `down` stops it with `pg_ctl` and deletes it. It still never connects to a server it did not create. Any PostgreSQL 18 with pgvector 0.8 or later works through `PENNY_POSTGRES_BIN` (or `pg_config` on `PATH`); the nixpkgs pgvector can trail the pinned image's, so the container stays the reference for backend CI.
+
 ## One command
 
 ```sh
@@ -75,7 +87,7 @@ The API exposes `/api/test/*` only when `TestControls__Enabled=true`. Every requ
 - Off unless explicitly enabled; when off the controller is removed from MVC and the fault middleware is not registered, so `/api/test/*` is an unknown route (401 anonymous, 404 signed in).
 - The host refuses to start with controls enabled in the `Production` environment, without a 32+ character token, or when `ConnectionStrings__Postgres` names a database outside `TestControls__DatabasePrefix` (default and minimum `penny_test`).
 - Reset re-checks the connected database name and refuses anything outside the prefix.
-- The runner never accepts a connection string: it only talks to the container it created. Fixtures contain only synthetic `.test` data; the runner writes no secrets to artifacts.
+- The runner never accepts a connection string: it only talks to the container or native cluster it created. Fixtures contain only synthetic `.test` data; the runner writes no secrets to artifacts.
 
 Tests: `TestControlOptionsTests`, `FaultRegistryTests`, `TestControlsTests` (absent when disabled, refused in Production, token, clock reaching sessions, exact fault counts under concurrency, aborts, invalid rules, reset and the prefix guard).
 

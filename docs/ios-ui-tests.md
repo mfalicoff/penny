@@ -25,7 +25,7 @@ apps/ios/scripts/ios.sh ui-test screenshots  # appearance and accessibility capt
 apps/ios/scripts/ios.sh ui-build             # compile the app and the UI tests only
 ```
 
-`ui-test` needs what the full-stack environment needs (Docker or Podman, the .NET SDK, Node 24 and the search model; see [prerequisites](migration/test-environment.md#prerequisites)) plus Xcode 27.2. Without `PENNY_API_URL` it runs `penny-env run --oidc` around itself: the environment is created, the plan runs, server logs are collected and everything is torn down, also on failure. With an environment already up (`PENNY_API_URL`, `PENNY_TEST_TOKEN` and `PENNY_TEST_RUN` exported, for example from `npm run test-env -- env`), it uses that one.
+`ui-test` needs what the full-stack environment needs (Docker or Podman, or the [native PostgreSQL mode](migration/test-environment.md#without-a-container-runtime); the .NET SDK, Node 24 and the search model; see [prerequisites](migration/test-environment.md#prerequisites)) plus Xcode 27.2. Without `PENNY_API_URL` it runs `penny-env run --oidc` around itself: the environment is created, the plan runs, server logs are collected and everything is torn down, also on failure. With an environment already up (`PENNY_API_URL`, `PENNY_TEST_TOKEN` and `PENNY_TEST_RUN` exported, for example from `npm run test-env -- env`), it uses that one.
 
 | Variable | Effect |
 | --- | --- |
@@ -148,7 +148,7 @@ Tests find elements only by identifier, never by visible text (except system-pro
 
 ## CI
 
-`ios.yml` job `ui-smoke` (every PR touching the app, the contracts, the backend or the test environment) and `ios-ui-matrix.yml` (nightly at 07:17 UTC, on published releases, and on demand with a choice of plans) run on the `xcode-27` runner and upload `test-results/ios/ui/`. The stack runs PostgreSQL in a container, so **the runner must provide Docker or Podman**; both jobs check that first and fail with a clear message otherwise. GitHub-hosted Apple Silicon macOS runners cannot run Linux containers; use a self-hosted runner with Podman (as on the development Macs) for these jobs.
+`ios.yml` job `ui-smoke` (every PR touching the app, the contracts, the backend or the test environment) and `ios-ui-matrix.yml` (nightly at 07:17 UTC, on published releases, and on demand with a choice of plans) run on the `xcode-27` runner and upload `test-results/ios/ui/`. GitHub-hosted Apple Silicon macOS runners cannot run Linux containers, so both jobs install Nix, build `.#test-postgres` (PostgreSQL 18 with pgvector, locked by `flake.lock`) and run the stack with `PENNY_POSTGRES=native` ([without a container runtime](migration/test-environment.md#without-a-container-runtime)). Locally, `ios.sh ui-test` uses Docker or Podman as before, or the same native mode when those two variables are set.
 
 ## Privacy
 

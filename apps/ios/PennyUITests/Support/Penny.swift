@@ -209,9 +209,22 @@ struct Penny {
             try type(amount, into: AccessibilityID.EntryForm.amount)
             return
         }
-        for character in amount {
-            try tap(AccessibilityID.EntryForm.keypad(character == "." ? "separator" : String(character)))
+        // A tap that lands while the sheet is still presenting can be dropped, so the display
+        // (its accessibility value is the typed amount) is checked and the entry retried once.
+        let display = element(AccessibilityID.EntryForm.amount)
+        for attempt in 0..<2 {
+            if attempt > 0 {
+                for _ in 0..<((display.value as? String)?.count ?? 0) + 1 {
+                    try tap(AccessibilityID.EntryForm.keypad("delete"))
+                }
+            }
+            for character in amount {
+                try tap(AccessibilityID.EntryForm.keypad(character == "." ? "separator" : String(character)))
+            }
+            if display.value as? String == amount { return }
         }
+        throw UIExpectationFailed(
+            description: "The amount shows \(display.value as? String ?? "nothing") instead of \(amount)")
     }
 
     // MARK: Data on screen
