@@ -82,6 +82,8 @@ struct EntryRow: View {
         if let account = entry.accountId.flatMap(report.ledger.account(id:)) { parts.append(account.name) }
         if entry.share != entry.total { parts.append("your share") }
         if parts.count == 1, let category { parts.append(category.name) }
+        // A preview is not recorded: it never reads as money that moved (MAZ-77).
+        if entry.scheduled { parts.append(entry.kind == .income ? "expected" : "scheduled") }
         return parts.joined(separator: " · ")
     }
 }

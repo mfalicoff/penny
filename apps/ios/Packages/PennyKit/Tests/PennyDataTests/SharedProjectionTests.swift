@@ -50,7 +50,8 @@ struct SharedProjectionTests {
     }
 
     static func answer(recorded: [String] = [], scheduled: [String] = []) throws -> WireHouseholdProjection {
-        let json = #"{"transactions":[\#(recorded.joined(separator: ","))],"scheduled":[\#(scheduled.joined(separator: ","))]}"#
+        let json =
+            #"{"transactions":[\#(recorded.joined(separator: ","))],"scheduled":[\#(scheduled.joined(separator: ","))]}"#
         return try JSONDecoder().decode(WireHouseholdProjection.self, from: Data(json.utf8))
     }
 
@@ -99,7 +100,9 @@ struct SharedProjectionTests {
         await model.refresh(Self.november)
         let revision = model.revision
         await model.refresh(Self.november)
-        #expect(model.status(for: Self.november) == .failed("You're offline. Shared expenses update when you're back online."))
+        #expect(
+            model.status(for: Self.november)
+                == .failed("You're offline. Shared expenses update when you're back online."))
         #expect(model.shares(currency: .cad).recorded.count == 1)
         #expect(model.revision == revision, "nothing changed, so a cached report stays valid")
     }

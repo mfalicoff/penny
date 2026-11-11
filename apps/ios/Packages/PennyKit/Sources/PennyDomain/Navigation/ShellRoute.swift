@@ -20,6 +20,13 @@ public enum DetailRoute: Hashable, Sendable {
     case trip(id: String)
     /// A personal entry's detail (Activity, MAZ-73).
     case entry(id: String)
+    /// Home's analysis pages for the month on screen (MAZ-77): the money flow, Insights
+    /// (spending by category), the calendar, and one category's entries. They follow the
+    /// shell's month, so they are pages of the Home stack rather than deep-link destinations.
+    case moneyFlow
+    case insights
+    case calendar
+    case categorySpending(categoryIds: [String], title: String)
 }
 
 /// Pages inside Settings. The first three are the old More tab's "Manage" pages, which the
