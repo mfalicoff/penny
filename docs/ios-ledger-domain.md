@@ -73,7 +73,7 @@ Optional fields (`accountId`, `tripId`, `receipt`, `recurringId`, `sharedHouseho
 - **Search** (`search`, TypeScript `searchEntries`): recorded entries of the whole report, any date, filtered by query, kind and day.
 - **One order**: Home, Activity, search and trip expenses all sort by date descending, then id ascending (TypeScript `byDateDescThenId`); scheduled previews in `MonthSummary.scheduled` are oldest first.
 - **Investments** are contributions, reported separately from spending. **Trips** sum personal expense shares and receipt totals.
-- **Not ported here**: money flow (`selectors/moneyFlow.ts`, unchanged by MAZ-86) and the calendar grid helper `calendarMonth` belong to the Home screens (MAZ-77); `CalendarDate.mondayBasedWeekday` and `MonthKey` already give their inputs.
+- **Overview (MAZ-77)**: the money flow (`selectors/moneyFlow.ts`), the calendar grid (`calendarMonth`), the category breakdown and the month comparison are in `Ledger/Overview.swift`, derived from `MonthSummary` ([native overview](ios-overview.md)). The native flow is recorded-only and keeps at most five rows per column.
 
 ## Local search
 

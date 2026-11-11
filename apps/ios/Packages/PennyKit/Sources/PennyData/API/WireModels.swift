@@ -242,6 +242,18 @@ public struct WireProjectedExpense: Codable, Equatable, Sendable {
     public var receiptId: String?
 }
 
+/// `GET /api/households/projection`: the caller's recorded shares (`transactions`) and the
+/// month's previews of shared rules (`scheduled`), across every household they are in.
+public struct WireHouseholdProjection: Codable, Equatable, Sendable {
+    public var transactions: [WireProjectedExpense]
+    public var scheduled: [WireProjectedExpense]
+
+    public init(transactions: [WireProjectedExpense] = [], scheduled: [WireProjectedExpense] = []) {
+        self.transactions = transactions
+        self.scheduled = scheduled
+    }
+}
+
 /// `GET /api/auth/oidc`: whether single sign-on is configured on this server.
 public struct WireOidcConfig: Codable, Equatable, Sendable {
     public var enabled: Bool

@@ -52,12 +52,18 @@ public enum AccessibilityID {
         public static let categoryForm = "screen.categoryForm"
         public static let schedule = "screen.schedule"
         public static let scheduleForm = "screen.scheduleForm"
+        // Overview, calendar and money flow (MAZ-77).
+        public static let moneyFlow = "screen.moneyFlow"
+        public static let insights = "screen.insights"
+        public static let calendar = "screen.calendar"
+        public static let categorySpending = "screen.categorySpending"
 
         static let all = [
             home, activity, shared, household, householdExpense, trips, trip, addEntry, settings, appearance, currency,
             appLock, recurring, accounts, categories, lock,
             editEntry, entryDetail, activityFilters, categoryPicker, accountPicker, datePicker, split, entryExtras,
             accountForm, categoryForm, schedule, scheduleForm,
+            moneyFlow, insights, calendar, categorySpending,
         ]
     }
 
@@ -137,8 +143,70 @@ public enum AccessibilityID {
         public static let empty = "home.empty"
         public static let emptyAdd = "emptyHome.add"
         public static let emptyDemo = "emptyHome.demo"
+        // MAZ-77: projected and expected income, Explore your month, the iPad dashboard panels.
+        public static let projected = "home.projected"
+        public static let expectedIncome = "home.expectedIncome"
+        public static let explore = "home.explore"
+        public static let exploreCalendar = "home.exploreCalendar"
+        public static let exploreInsights = "home.exploreInsights"
+        public static let exploreMoneyFlow = "home.exploreMoneyFlow"
+        public static let totals = "home.totals"
+        public static let comingUp = "home.comingUp"
+        public static let dailySpending = "home.dailySpending"
+        public static let sharedNotice = "home.sharedNotice"
 
-        static let all = [settings, hero, month, flow, recent, empty, emptyAdd, emptyDemo]
+        static let all = [
+            settings, hero, month, flow, recent, empty, emptyAdd, emptyDemo,
+            projected, expectedIncome, explore, exploreCalendar, exploreInsights, exploreMoneyFlow, totals, comingUp,
+            dailySpending, sharedNotice,
+        ]
+    }
+
+    /// The money flow, Insights, a category's spending and the calendar (MAZ-77). Flow rows and
+    /// categories end in their id with any character outside `[A-Za-z0-9_-]` written as `-`
+    /// (`moneyFlow.node.expense-food`); calendar days end in `YYYY-MM-DD`.
+    public enum Overview {
+        public static let flowTotals = "moneyFlow.totals"
+        public static let flowChart = "moneyFlow.chart"
+        public static let flowFocus = "moneyFlow.focus"
+        public static let flowFocusClear = "moneyFlow.focusClear"
+        public static let flowDetails = "moneyFlow.details"
+        public static let insightsComparison = "insights.comparison"
+        public static let insightsDonut = "insights.donut"
+        public static let categoryTotal = "categorySpending.total"
+        public static let calendarPrevious = "calendar.previous"
+        public static let calendarNext = "calendar.next"
+        public static let calendarToday = "calendar.today"
+        public static let calendarTotals = "calendar.totals"
+        public static let calendarGrid = "calendar.grid"
+        public static let calendarDayTotal = "calendar.dayTotal"
+        public static let calendarDayEntries = "calendar.dayEntries"
+
+        /// A chart label of the money flow (`MoneyFlow.Node.id`).
+        public static func flowNode(_ id: String) -> String { "moneyFlow.node.\(segment(id))" }
+        /// A row of the money flow's value list.
+        public static func flowRow(_ id: String) -> String { "moneyFlow.row.\(segment(id))" }
+        /// An Insights category row (category id).
+        public static func category(_ id: String) -> String { "insights.category.\(segment(id))" }
+        /// A calendar day, `YYYY-MM-DD`.
+        public static func day(_ date: String) -> String { "calendar.day.\(date)" }
+
+        static func segment(_ id: String) -> String {
+            String(
+                id.unicodeScalars.map { scalar -> Character in
+                    let allowed =
+                        ("a"..."z").contains(scalar) || ("A"..."Z").contains(scalar) || ("0"..."9").contains(scalar)
+                        || scalar == "_" || scalar == "-"
+                    return allowed ? Character(scalar) : "-"
+                })
+        }
+
+        static let all = [
+            flowTotals, flowChart, flowFocus, flowFocusClear, flowDetails, insightsComparison, insightsDonut,
+            categoryTotal, calendarPrevious, calendarNext, calendarToday, calendarTotals, calendarGrid,
+            calendarDayTotal, calendarDayEntries,
+        ]
+        static let prefixes = ["moneyFlow.node.", "moneyFlow.row.", "insights.category.", "calendar.day."]
     }
 
     /// Settings and its pages. `row(_:)` takes a `SettingsRoute` raw value.
@@ -248,10 +316,10 @@ public enum AccessibilityID {
     /// Every fixed identifier, for the convention and drift tests.
     public static let fixed: [String] =
         Screen.all + Root.all + Auth.all + Server.all + Tab.all + Sidebar.all + Home.all + Settings.all + EntryForm.all
-        + Activity.all + Organize.all + Feedback.all + Lock.all
+        + Activity.all + Organize.all + Feedback.all + Lock.all + Overview.all
 
     /// Prefixes of identifiers that end in a model id or raw value.
     public static let dynamicPrefixes: [String] =
         Tab.prefixes + Sidebar.prefixes + Settings.prefixes + Row.prefixes + Feedback.prefixes + EntryForm.prefixes
-        + Activity.prefixes + Organize.prefixes
+        + Activity.prefixes + Organize.prefixes + Overview.prefixes
 }

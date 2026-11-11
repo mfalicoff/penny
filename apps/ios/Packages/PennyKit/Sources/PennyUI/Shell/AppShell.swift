@@ -122,6 +122,10 @@ struct DetailPage: View {
         case .householdExpense(let household, let expense): HouseholdDetailView(id: household, expenseID: expense)
         case .trip(let id): TripDetailView(id: id)
         case .entry(let id): EntryDetailView(id: id)
+        case .moneyFlow: MoneyFlowView()
+        case .insights: InsightsView()
+        case .calendar: CalendarView()
+        case .categorySpending(let ids, let title): CategorySpendingView(categoryIds: ids, title: title)
         }
     }
 }
