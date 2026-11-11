@@ -14,12 +14,16 @@ async function mockApi(page: Page, email = "alex@example.test") {
     route.fulfill({ json: { revision: 0, ledger: { version: 4, currency: "CAD", accounts: [], trips: [], categories: [], transactions: [], recurring: [] } } }),
   );
   await page.route("/api/v1/search/transactions", (route) => route.fulfill({ json: { version: 1, items: [], totalCount: 0, nextCursor: null } }));
+  // Household screens (MAZ-91) have their own journeys in households.spec.ts; here they find nothing.
+  await page.route("/api/households", (route) => route.fulfill({ json: { households: [] } }));
+  await page.route("/api/households/**", (route) => route.fulfill({ status: 404, json: { error: "Household not found." } }));
 }
 
 const ROUTES: [string, string][] = [
   ["/", "Home"],
   ["/transactions?q=coffee", "Activity"],
   ["/insights", "Insights"],
+  ["/households", "Shared"],
   ["/households/h-1", "Household"],
   ["/trips", "Trips"],
   ["/recurring", "Recurring"],
