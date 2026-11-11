@@ -201,9 +201,11 @@ struct Penny {
         throw UIExpectationFailed(description: "Add entry did not open \(AccessibilityID.Screen.addEntry)")
     }
 
-    /// Types an amount such as "12.34": the in-sheet keypad on iPhone, the keyboard on iPad.
+    /// Types an amount such as "12.34". The form shows the in-sheet keypad at compact width
+    /// (iPhone, and the iPad form sheet) and a text field at regular width, so this follows
+    /// whichever control the amount actually is rather than the device.
     func enterAmount(_ amount: String) throws {
-        if Device.isPad {
+        if try wait(for: AccessibilityID.EntryForm.amount).elementType == .textField {
             try type(amount, into: AccessibilityID.EntryForm.amount)
             return
         }

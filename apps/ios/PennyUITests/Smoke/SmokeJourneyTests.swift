@@ -70,9 +70,11 @@ final class SmokeJourneyTests: PennyUITestCase {
         screenshot("add-expense-filled")
         try penny.tap(AccessibilityID.EntryForm.save)
 
-        // Saved: the sheet closes and the toast confirms.
-        try penny.wait(for: AccessibilityID.Feedback.savedToast)
+        // Saved: the sheet closes back to Home. The Saved toast shows for only four seconds,
+        // during the sheet's dismissal, which XCTest's idle waits can outlast, so it is not
+        // asserted here (its state is covered by EntryFlowTests); the server check below is.
         try penny.waitForAbsence(of: AccessibilityID.Screen.addEntry)
+        try penny.wait(for: AccessibilityID.Screen.home)
         screenshot("expense-saved")
 
         // The write reaches the real API with the typed amount, title and kind.
