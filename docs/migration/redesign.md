@@ -78,6 +78,14 @@ The SwiftUI shell, settings, lock and demo are described in [native app shell](.
 - **The lock screen** shows no amount; the card's blurred hero behind the lock is not drawn, so nothing of the ledger is visible while locked.
 - Screens owned by feature issues (Add entry, households, insights, the money flow, the iPad dashboard panels) show a named "not available yet" state, and every legacy route still lands on its destination.
 
+## Web recurring notes (MAZ-90)
+
+The web builds `iphone-recurring` and `iphone-schedule-detail` from the MAZ-85 components ([web README](../../apps/web/README.md#recurring-schedules-maz-90)). Adaptations from the cards:
+
+- **No swipe actions.** A row opens the schedule detail (a dialog, not a new URL); Pause/Resume and Remove are buttons there, and removal has its own confirmation. The page footer says what editing and removing do instead of "Swipe a schedule".
+- **New schedule** is a button on the page and a dialog with the whole form; the cards have no web form, so it follows the entry form's fields with a live line for the next dates and catch-up.
+- Rows add **Waiting to sync** while the change is only on this device, and the detail adds the number of recorded entries.
+
 ## Web shared-household notes (MAZ-91)
 
 The web builds the Shared cards (`iphone-shared-list`, `iphone-shared`, `iphone-shared-balances`, `iphone-shared-people`, `iphone-shared-expense-add`, `iphone-split`, `iphone-record-payment`, `iphone-payment-stale`, `iphone-household-create`, `iphone-history`, `ipad-shared`, `web-household`) from the MAZ-85 components ([web README](../../apps/web/README.md#shared-households-maz-91)). Adaptations from the cards:

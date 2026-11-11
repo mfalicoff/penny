@@ -7,6 +7,8 @@ import { useAccountEmail } from "../../auth/account";
 import { Avatar, Button, ChoiceGroup, SwitchRow } from "../../design/controls";
 import { Dialog } from "../../design/ModalDialog";
 import { Banner, SaveErrorBanner, useToast } from "../../design/states";
+import { CategoryFormDialog } from "../organize/CategoryFormDialog";
+import { useLedgerWorkspace } from "../organize/workspace";
 import type { HouseholdView } from "./context";
 import { useLedgerChoices } from "./choices";
 import { describeSharedError } from "./errors";
@@ -121,6 +123,9 @@ export function ExpenseFormDialog({ view, target, onClose }: { view: HouseholdVi
   const queryClient = useQueryClient();
   const toast = useToast();
   const choices = useLedgerChoices();
+  // Inline category creation (MAZ-89): saved to the personal ledger, then chosen here; the draft stays.
+  const workspace = useLedgerWorkspace();
+  const [creatingCategory, setCreatingCategory] = useState(false);
   const meId = view.who.meId;
   const [draft, setDraft] = useState<Draft>(() => draftFrom(target, meId, choices.categories[0]?.name ?? "Other"));
   const [revision, setRevision] = useState(target.kind === "edit" ? target.expense.revision : target.kind === "rule" ? target.rule.revision : 0);
@@ -359,6 +364,18 @@ export function ExpenseFormDialog({ view, target, onClose }: { view: HouseholdVi
                 </option>
               ))}
             </select>
+            {workspace.ledger ? (
+              <Button
+                variant="quiet"
+                icon="add"
+                className="inline-create"
+                onClick={() => {
+                  setCreatingCategory(true);
+                }}
+              >
+                New category
+              </Button>
+            ) : null}
           </div>
           {target.kind !== "edit" ? (
             <div className="form-field">
@@ -509,6 +526,19 @@ export function ExpenseFormDialog({ view, target, onClose }: { view: HouseholdVi
           </Button>
         </div>
       </form>
+      {creatingCategory && workspace.ledger ? (
+        <CategoryFormDialog
+          workspace={{ ledger: workspace.ledger, save: workspace.save }}
+          initialKind="expense"
+          fixedKind
+          onSaved={(category) => {
+            set("category", category.name);
+          }}
+          onClose={() => {
+            setCreatingCategory(false);
+          }}
+        />
+      ) : null}
     </Dialog>
   );
 }

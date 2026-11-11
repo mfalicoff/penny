@@ -1,6 +1,6 @@
 import type { LedgerChange } from "@domain/commands.ts";
 import { dateKey, materialize, type Ledger } from "@domain/ledger.ts";
-import { mergeLedger } from "@domain/merge.ts";
+import { mergeOfflineLedger } from "./merge";
 import { ApiError } from "../api/client";
 import { withLock, openLedgerChannel, type LedgerChannel, type LockRunner } from "./coordination";
 import { MemoryLedgerDatabase, StorageError, type LedgerDatabase } from "./database";
@@ -44,6 +44,11 @@ export interface LedgerSyncState {
   issue: SyncIssue | null;
   /** The ledger to show: the server's copy plus this browser's unsynced changes. Null until the first download. */
   ledger: Ledger | null;
+  /**
+   * The last ledger the server acknowledged (the stored base), which `ledger` adds this browser's
+   * changes to. Screens compare the two to mark records "Waiting to sync". Null until the first download.
+   */
+  base: Ledger | null;
   pending: PendingSummary;
   lastSyncedAt: string | null;
   /** Whether saves are kept durably. False when the browser refuses storage: the ledger is shown but saves are refused. */
@@ -136,9 +141,9 @@ const defaultSleep = (ms: number) =>
  * following the native engine's rules (docs/ios-offline-sync.md):
  *
  * - A save is applied to `local`, materialized, written to IndexedDB, and only then acknowledged.
- * - One sync per account at a time across tabs: read, merge (`src/domain/merge.ts`), PUT on the
- *   revision just read, retry 409s with jitter, then record the answer as `base` and merge in saves
- *   that landed meanwhile. The server never merges.
+ * - One sync per account at a time across tabs: read, merge (`./merge.ts`: the shared merge plus the
+ *   native recurrence refinements), PUT on the revision just read, retry 409s with jitter, then
+ *   record the answer as `base` and merge in saves that landed meanwhile. The server never merges.
  * - Unreadable, newer-format and blocked storage are reported, never overwritten.
  * - A 401 changes nothing locally: the work waits for the same account to sign in again.
  */
@@ -213,6 +218,7 @@ export class LedgerSyncEngine {
       phase: this.phase(pending),
       issue: this.issue,
       ledger: record?.local ?? null,
+      base: record?.base ?? null,
       pending,
       lastSyncedAt: record?.lastSyncedAt ?? null,
       durable: this.durable,
@@ -388,7 +394,7 @@ export class LedgerSyncEngine {
           };
           return { next: record, result: null };
         }
-        const local = sameLedger(copy.base, copy.local) ? current.local : normalizeLedger(mergeLedger(copy.base, copy.local, current.local));
+        const local = sameLedger(copy.base, copy.local) ? current.local : normalizeLedger(mergeOfflineLedger(copy.base, copy.local, current.local));
         return { next: { ...current, local, savedAt: now, legacy }, result: null };
       });
       this.broadcast();
@@ -591,7 +597,7 @@ export class LedgerSyncEngine {
     let answer: ServerSnapshot;
     for (let attempt = 1; ; attempt += 1) {
       const today = this.today();
-      const merged = normalizeLedger(materialize(pending ? mergeLedger(start.base, start.local, remote.ledger) : remote.ledger, today));
+      const merged = normalizeLedger(materialize(pending ? mergeOfflineLedger(start.base, start.local, remote.ledger) : remote.ledger, today));
       if (sameLedger(merged, remote.ledger)) {
         answer = remote;
         break;
@@ -634,7 +640,7 @@ export class LedgerSyncEngine {
       if (current.baseRevision !== null && current.baseRevision > answer.revision) return { result: current };
       // Saves that landed while this pass ran are merged on top of the answer and stay pending.
       const sent = start ? start.local : current.base;
-      const local = sameLedger(current.local, sent) ? answer.ledger : normalizeLedger(mergeLedger(sent, current.local, answer.ledger));
+      const local = sameLedger(current.local, sent) ? answer.ledger : normalizeLedger(mergeOfflineLedger(sent, current.local, answer.ledger));
       const record: LedgerRecord = { ...current, baseRevision: answer.revision, base: answer.ledger, local, lastSyncedAt: syncedAt };
       return { next: record, result: record };
     });

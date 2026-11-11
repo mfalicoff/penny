@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { NotYetAvailable } from "../features/placeholder/NotYetAvailable";
+import { RecurringPage } from "../features/recurring/RecurringPage";
 
-/** Legacy URL kept from the Expo app. Recurring schedules arrive with MAZ-90. */
+/** Legacy URL kept from the Expo app (Manage › Recurring): personal recurring schedules (MAZ-90). */
 export const Route = createFileRoute("/recurring")({
   staticData: { title: "Recurring" },
-  component: () => <NotYetAvailable page="Recurring" icon="repeat" />,
+  component: RecurringPage,
 });

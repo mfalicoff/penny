@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { NotYetAvailable } from "../features/placeholder/NotYetAvailable";
+import { AccountsPage } from "../features/organize/AccountsPage";
 
-/** Legacy URL kept from the Expo app. Payment accounts arrive with MAZ-89. */
+/** Payment accounts (MAZ-89), at the legacy URL kept from the Expo app. */
 export const Route = createFileRoute("/accounts")({
   staticData: { title: "Accounts" },
-  component: () => <NotYetAvailable page="Accounts" icon="wallet" />,
+  component: AccountsPage,
 });

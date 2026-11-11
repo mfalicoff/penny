@@ -27,6 +27,8 @@ const ROUTES: [string, string][] = [
   ["/households/h-1", "Household"],
   ["/trips", "Trips"],
   ["/recurring", "Recurring"],
+  ["/accounts", "Accounts"],
+  ["/categories", "Categories"],
   ["/settings", "Settings"],
   ["/settings/appearance", "Settings"],
   ["/settings/currency", "Settings"],
