@@ -468,6 +468,18 @@ public final class LedgerSyncModel {
             phase: phase, pending: pending, lastSyncedAt: engineState.snapshot?.lastSyncedAt, scope: account.scope)
     }
 
+    // MARK: Drafts
+
+    /// The kept entry drafts of `scope` (`LedgerFileStore.loadDrafts`).
+    public func keptDrafts(for scope: AccountScope) -> EntryDraftShelf { store.files.loadDrafts(scope) }
+
+    /// Stores the kept entry drafts of `scope`, while it is the signed-in account: a shell
+    /// closing after sign-out must not write drafts back for an account just removed.
+    public func keepDrafts(_ shelf: EntryDraftShelf, for scope: AccountScope) {
+        guard account?.scope == scope, savesAllowed else { return }
+        try? store.files.saveDrafts(shelf, for: scope)
+    }
+
     // MARK: Search
 
     /// Whole-ledger local search over this device's ledger, pending changes included

@@ -99,6 +99,10 @@ public final class AccountWorkspace: LedgerWorkspace {
         }
     }
 
+    public func loadDrafts() -> EntryDraftShelf { model.keptDrafts(for: scope) }
+
+    public func saveDrafts(_ shelf: EntryDraftShelf) { model.keepDrafts(shelf, for: scope) }
+
     // MARK: Mapping
 
     public static func load(_ phase: LedgerSyncState.Phase, ledger: Ledger?) -> LedgerLoad {

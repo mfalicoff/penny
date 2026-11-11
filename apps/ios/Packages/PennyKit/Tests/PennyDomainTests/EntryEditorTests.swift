@@ -242,7 +242,8 @@ struct EntryEditorTests {
 
         guard case .ready(let attempt) = editor.beginSave(in: ledger, makeID: { "x" }) else { return }
         shelf.keep(editor)
-        #expect(!shelf.has(.new), "a draft being saved is not kept")
+        #expect(shelf.take(.new)?.isSaving == false, "a draft being saved is kept, as not saved, until it succeeds")
+        shelf.keep(editor)
         editor.finish(attempt.number, failure: nil)
         shelf.keep(editor)
         #expect(!shelf.has(.new), "a saved draft is not kept")

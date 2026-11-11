@@ -116,6 +116,30 @@ public struct EntryEditor: Hashable, Sendable {
         phase = failure.map { .failed($0) } ?? .saved
     }
 
+    /// A draft read back from storage (`EntryDraftShelf`): `draft` as kept, on `mode`. A new
+    /// entry's form counts as untouched with only its kind, date and category set.
+    public init(restoring draft: EntryDraft, mode: Mode) {
+        self.mode = mode
+        switch mode {
+        case .new:
+            initial = EntryDraft(
+                kind: draft.kind, title: "", amount: "", date: draft.date, categoryId: draft.categoryId)
+        case .edit(let entry):
+            initial = EntryDraft(editing: entry)
+        }
+        self.draft = draft
+        categoryByKind[draft.kind] = draft.categoryId
+    }
+
+    /// This editor as a draft to come back to: a save still running counts as not started,
+    /// so if it fails the restored form can save again. A finished save stays finished.
+    public var resumable: EntryEditor {
+        guard isSaving else { return self }
+        var copy = self
+        copy.phase = .editing
+        return copy
+    }
+
     /// Reopens the form on `latest`, the entry as the ledger holds it now, after a conflict.
     /// Returns false when the entry no longer exists (deleted on another device): the form
     /// should close. The person's edits are dropped: they asked to review the latest version.

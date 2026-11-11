@@ -239,6 +239,69 @@ struct OfflineLedgerStoreTests {
         #expect(try files.load(Offline.scope()) == snapshot())
     }
 
+    // MARK: Kept drafts
+
+    static func drafts() -> EntryDraftShelf {
+        let ledger = Offline.ledger([Offline.entry("lunch")])
+        var new = EntryEditor(new: .expense, today: .day("2026-11-05"), ledger: ledger)
+        new.draft.title = "Dinner"
+        new.draft.amount = "48,90"
+        new.draft.frequency = .monthly
+        new.draft.receipt = ReceiptReference(id: "r1", name: "receipt.jpg", uri: "file:///r1.jpg", mime: "image/jpeg")
+        var edit = EntryEditor(editing: Offline.entry("lunch", note: "x"))
+        edit.draft.note = "Half was a gift"
+        var shelf = EntryDraftShelf()
+        shelf.keep(new)
+        shelf.keep(edit)
+        return shelf
+    }
+
+    @Test("whenDraftsAreKept_LedgerFileStore_ShouldReadThemBackAfterARelaunch")
+    func draftsRoundTrip() throws {
+        let files = Offline.store(directory, calendar: calendar).files
+        let shelf = Self.drafts()
+        try files.saveDrafts(shelf, for: Offline.scope())
+        // A new process: only the file.
+        let read = Offline.store(directory, calendar: calendar).files.loadDrafts(Offline.scope())
+        #expect(read.kept.map(\.draft) == shelf.kept.map(\.draft))
+        #expect(read.kept.map(\.mode) == shelf.kept.map(\.mode))
+        #expect(read.kept.allSatisfy { $0.isDirty && !$0.isSaving })
+        #expect(files.loadDrafts(Offline.scope(Offline.sam)).kept.isEmpty, "per account")
+
+        try files.saveDrafts(EntryDraftShelf(), for: Offline.scope())
+        #expect(!FileManager.default.fileExists(atPath: files.draftsURL(for: Offline.scope()).path))
+    }
+
+    @Test("whenTheDraftsFileIsDamaged_LedgerFileStore_ShouldStartWithNoDrafts")
+    func damagedDrafts() throws {
+        let files = Offline.store(directory, calendar: calendar).files
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try Data("not json".utf8).write(to: files.draftsURL(for: Offline.scope()))
+        #expect(files.loadDrafts(Offline.scope()).kept.isEmpty)
+    }
+
+    @Test("whenTheAccountIsRemoved_OfflineLedgerStore_ShouldRemoveItsDraftsAndNeverListThemAsALedger")
+    func draftsGoWithTheAccount() async throws {
+        let store = Offline.store(directory, calendar: calendar)
+        try store.files.save(snapshot(), for: Offline.scope())
+        try store.files.saveDrafts(Self.drafts(), for: Offline.scope())
+        #expect(store.storedScopes() == [Offline.scope()])
+        try await store.removeLocalData(for: Offline.scope())
+        #expect(store.files.loadDrafts(Offline.scope()).kept.isEmpty)
+        #expect(try FileManager.default.contentsOfDirectory(atPath: directory.path).isEmpty)
+    }
+
+    @Test("whenTheEmailChanges_OfflineLedgerStore_ShouldMoveTheDraftsToo")
+    func draftsMoveWithTheEmail() async throws {
+        let store = Offline.store(directory, calendar: calendar)
+        let newScope = Offline.scope("alex.new@example.test")
+        try store.files.save(snapshot(), for: Offline.scope())
+        try store.files.saveDrafts(Self.drafts(), for: Offline.scope())
+        try await store.moveLocalData(from: Offline.scope(), to: newScope)
+        #expect(store.files.loadDrafts(newScope).kept.count == 2)
+        #expect(store.files.loadDrafts(Offline.scope()).kept.isEmpty)
+    }
+
     @Test("whenTwoCopiesAreSetAsideInTheSameSecond_LedgerFileStore_ShouldKeepBoth")
     func setAsideTwiceInOneSecond() throws {
         // The store's clock is fixed, so both moves happen "in the same second".
