@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type Plugin, type ProxyOptions } from "vite";
+import { contentSecurityPolicy } from "./scripts/security-headers.ts";
 
 const designKit = fileURLToPath(new URL("../../design-kit", import.meta.url));
 const appRoot = fileURLToPath(new URL(".", import.meta.url));
@@ -67,10 +68,22 @@ export default defineConfig({
     port: Number(process.env.PENNY_WEB_PORT ?? 4173),
     strictPort: true,
     proxy: apiProxy,
+    headers: { "Content-Security-Policy": contentSecurityPolicy },
   },
   build: {
     target: "es2022",
     assetsInlineLimit: 0,
+    rollupOptions: {
+      output: {
+        // src/app/zodConfig.ts must run before Zod loads, so it gets a chunk of its own, which
+        // the entry imports first (a module inlined into the entry would run after its imports).
+        codeSplitting: { groups: [{ name: "zod-config", test: /src[\\/]app[\\/]zodConfig\.ts$/ }] },
+        // The pdf.js worker ships as `pdf.worker.min.mjs`. Module workers need a JavaScript
+        // Content-Type and the front end sends nosniff, so it is emitted as `.js`, which every
+        // server's default MIME table already maps (not every nginx knows `.mjs`).
+        assetFileNames: (asset) => (asset.names.some((name) => name.endsWith(".mjs")) ? "assets/[name]-[hash].js" : "assets/[name]-[hash][extname]"),
+      },
+    },
   },
   test: {
     environment: "jsdom",

@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { deleteRule, householdExpensesQuery, recurringQuery, refreshHousehold, updateRule } from "../../api/households";
 import type { MonthRecap, SharedExpense, SharedRecurring } from "../../api/schemas";
 import { useAccountEmail } from "../../auth/account";
@@ -11,17 +10,19 @@ import { EmptyState, ErrorState, LoadingState, SaveErrorBanner, useToast } from 
 import type { HouseholdView } from "./context";
 import { describeLoadError, describeSharedError } from "./errors";
 import { dayLabel, monthLabel, shareOf, sharePaid, splitLabel } from "./model";
-import type { HouseholdSearch } from "./search";
+import { ExpenseLink, type GroupSearch } from "./links";
 
 interface Props {
   view: HouseholdView;
   recap: UseQueryResult<MonthRecap>;
-  search: HouseholdSearch;
+  search: GroupSearch;
   onEditRule: (rule: SharedRecurring) => void;
+  /** Shown under the list: a shared trip's private expenses from before it was shared (MAZ-93). */
+  children?: ReactNode;
 }
 
 /** Expenses (cards `iphone-shared`, `web-household`): the month's expenses, or a shared trip's whole list, then repeating expenses. */
-export function ExpensesTab({ view, recap, search, onEditRule }: Props) {
+export function ExpensesTab({ view, recap, search, onEditRule, children }: Props) {
   const email = useAccountEmail();
   const trip = Boolean(view.detail.household.trip);
   const tripExpenses = useQuery({ ...householdExpensesQuery(email, view.householdId), enabled: trip });
@@ -39,17 +40,17 @@ export function ExpensesTab({ view, recap, search, onEditRule }: Props) {
   } else if (!expenses.length) {
     list = (
       <EmptyState icon="receipt" title={trip ? "No trip expenses yet" : `No shared expenses in ${monthLabel(view.month)}`}>
-        <p>{view.canWrite ? "Add one with Shared expense. Everyone sees the full total; your reports count only your share." : "Nothing was shared with you here."}</p>
+        <p>{view.canWrite ? `Add one with ${view.route === "trips" ? "Trip" : "Shared"} expense. Everyone sees the full total; your reports count only your share.` : "Nothing was shared with you here."}</p>
       </EmptyState>
     );
   } else {
     const total = expenses.reduce((sum, expense) => sum + expense.totalCents, 0);
     list = (
-      <Card title={trip ? "Trip expenses" : monthLabel(view.month)} action={<span className="muted">{view.money(total)} total</span>}>
+      <Card title={trip ? "Shared with everyone" : monthLabel(view.month)} action={<span className="muted">{view.money(total)} total</span>}>
         <ul className="row-list" aria-label="Expenses">
           {expenses.map((expense) => (
             <li key={expense.id}>
-              <Link to="/households/$id/expenses/$expenseId" params={{ id: view.householdId, expenseId: expense.id }} search={search} className="row">
+              <ExpenseLink route={view.route} householdId={view.householdId} expenseId={expense.id} search={search} className="row">
                 <Avatar name={view.who.name(expense.payerUserId) === "You" ? email : view.who.name(expense.payerUserId)} size={32} />
                 <span>
                   <span className="row__title">{expense.title}</span>
@@ -59,7 +60,7 @@ export function ExpensesTab({ view, recap, search, onEditRule }: Props) {
                   </span>
                 </span>
                 <ExpenseAmounts expense={expense} view={view} />
-              </Link>
+              </ExpenseLink>
             </li>
           ))}
         </ul>
@@ -69,7 +70,10 @@ export function ExpensesTab({ view, recap, search, onEditRule }: Props) {
 
   return (
     <div className="household-columns">
-      <div className="page">{list}</div>
+      <div className="page">
+        {list}
+        {children}
+      </div>
       <RulesCard view={view} onEdit={onEditRule} />
     </div>
   );

@@ -1,3 +1,4 @@
+import { initialCategories } from "@domain/ledger.ts";
 import type { Transport } from "../api/client";
 import type { SearchItem, SearchRequest } from "../api/schemas";
 
@@ -19,6 +20,7 @@ interface DemoEntry {
   categoryId: string;
   date: string;
   note: string;
+  tripId?: string;
 }
 
 /** Sample month, like the legacy app's demo ledger: made-up names and amounts, no real data. */
@@ -35,7 +37,7 @@ export function sampleEntries(today = new Date()): DemoEntry[] {
     ["A new read", 2499, "shopping", 2],
     ["Weekend groceries", 7235, "groceries", 6],
     ["Design project", 65000, "freelance", 8, 65000, "income"],
-    ["Index fund", 20000, "investing", 10, 20000, "investment"],
+    ["Index fund", 20000, "investments", 10, 20000, "investment"],
     ["Music streaming", 1299, "fun", 3],
   ];
   return rows.map(([title, total, categoryId, offset, share = total, kind = "expense"], index) => ({
@@ -50,6 +52,26 @@ export function sampleEntries(today = new Date()): DemoEntry[] {
   }));
 }
 
+/** A made-up personal trip (MAZ-93) starting in 12 days. The demo has no shared trips. */
+export function sampleTrips(today = new Date()) {
+  const at = (offset: number) => dateKey(new Date(today.getFullYear(), today.getMonth(), today.getDate() + offset));
+  return [{ id: "demo-trip", name: "Weekend in Québec City", startDate: at(12), endDate: at(14) }];
+}
+
+/**
+ * Two schedules due on the month's last day (MAZ-92), so the demo's Home shows a projected
+ * remaining with expected recurring income and something coming up. Previews only: the demo never
+ * records them.
+ */
+export function sampleSchedules(today = new Date()) {
+  const last = dateKey(new Date(today.getFullYear(), today.getMonth() + 1, 0));
+  const anchorDay = Number(last.slice(8));
+  const rule = (id: string, title: string, kind: Kind, total: number, categoryId: string) => ({
+    id, title, kind, total, share: total, categoryId, date: last, note: "", frequency: "monthly", nextDate: last, anchorDay, active: true,
+  });
+  return [rule("demo-rule-1", "Design retainer", "income", 40000, "freelance"), rule("demo-rule-2", "Phone plan", "expense", 4500, "other")];
+}
+
 /**
  * An in-memory stand-in for the parts of the API the web app uses, for the temporary demo. It
  * keeps the API's rules that matter to the UI (revision conflicts, cursor paging) and answers
@@ -62,10 +84,12 @@ export function createDemoServer(today = new Date()): Transport {
       version: 4,
       currency: "CAD",
       accounts: [],
-      trips: [],
-      categories: [],
-      transactions: sampleEntries(today),
-      recurring: [] as unknown[],
+      trips: sampleTrips(today),
+      // The legacy defaults, so the demo's categories have names, colors and icons.
+      categories: initialCategories.map((category) => ({ ...category })),
+      // Dinner out goes on the sample trip, dated before it: expenses outside the dates still count.
+      transactions: sampleEntries(today).map((entry) => (entry.id === "demo-5" ? { ...entry, tripId: "demo-trip" } : entry)),
+      recurring: sampleSchedules(today),
     } as Record<string, unknown> & { transactions: DemoEntry[] },
   };
 
@@ -85,10 +109,25 @@ export function createDemoServer(today = new Date()): Transport {
     return { version: 1, items, totalCount: matches.length, nextCursor: next };
   }
 
+  // Receipts uploaded in the demo (MAZ-94): kept in this tab's memory only, like everything else.
+  const receipts = new Map<string, { name: string; mime: string; bytes: Uint8Array<ArrayBuffer> }>();
+  function receipt(path: string, method: string, body: unknown): Response | null {
+    if (method === "POST" && path === "/api/receipts") {
+      const upload = body as { name: string; mime: string; base64: string };
+      const id = `demo-receipt-${String(receipts.size + 1)}`;
+      receipts.set(id, { name: upload.name, mime: upload.mime, bytes: Uint8Array.from(atob(upload.base64), (character) => character.charCodeAt(0)) });
+      return json({ id, name: upload.name, mime: upload.mime, uri: `/api/receipts/${id}` }, 201);
+    }
+    const stored = method === "GET" && path.startsWith("/api/receipts/") ? receipts.get(path.slice("/api/receipts/".length)) : undefined;
+    return stored ? new Response(stored.bytes, { status: 200, headers: { "Content-Type": stored.mime } }) : null;
+  }
+
   return async (path, { method, body, signal }) => {
     // Answer asynchronously, like a network, so loading states and aborts behave the same.
     await new Promise((resolve) => setTimeout(resolve, 0));
     if (signal?.aborted) throw new DOMException("The request was aborted.", "AbortError");
+    const stored = receipt(path, method, body);
+    if (stored) return stored;
 
     const route = `${method} ${path}`;
     switch (route) {

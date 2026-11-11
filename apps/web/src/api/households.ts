@@ -100,6 +100,14 @@ const ruleEnvelope = z.object({ rule: sharedRecurringSchema });
 export const createHousehold = (name: string, currency: string) =>
   apiFetch("/api/households", householdEnvelope, { method: "POST", body: { name, currency, timezoneOffsetMinutes: timezoneOffsetMinutes() } });
 
+/** A shared trip (MAZ-93): a household with a travel range. The range never gates membership or expense dates. */
+export const createSharedTrip = (input: { name: string; currency: string; startDate: string; endDate: string }) =>
+  apiFetch("/api/households/trips", householdEnvelope, { method: "POST", body: { ...input, timezoneOffsetMinutes: timezoneOffsetMinutes() } });
+
+/** Creator only: a shared trip's name and travel dates. Expenses and memberships never move. */
+export const updateSharedTrip = (householdId: string, input: { name: string; startDate: string; endDate: string }) =>
+  apiFetch(`${base(householdId)}/trip`, householdEnvelope, { method: "PATCH", body: input });
+
 /** Joins with an invite code. Codes are 10 hex characters; spaces, dashes and dots people type are dropped. */
 export const joinHousehold = (code: string) =>
   apiFetch("/api/households/join", householdEnvelope, { method: "POST", body: { code: normalizeInviteCode(code), timezoneOffsetMinutes: timezoneOffsetMinutes() } });

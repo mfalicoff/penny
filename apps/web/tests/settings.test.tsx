@@ -191,14 +191,14 @@ describe("toast", () => {
     try {
       const toast = screen.getByText("Currency set to EUR").closest(".pk-toast") as HTMLElement;
       act(() => {
-        toast.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+        toast.dispatchEvent(new PointerEvent("pointerover", { bubbles: true, pointerType: "mouse" }));
       });
       act(() => {
         vi.advanceTimersByTime(TOAST_MS * 2);
       });
       expect(screen.getByText("Currency set to EUR")).toBeInTheDocument();
       act(() => {
-        toast.dispatchEvent(new MouseEvent("mouseout", { bubbles: true }));
+        toast.dispatchEvent(new PointerEvent("pointerout", { bubbles: true, pointerType: "mouse" }));
       });
       act(() => {
         vi.advanceTimersByTime(TOAST_MS + 10);

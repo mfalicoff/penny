@@ -51,7 +51,7 @@ public sealed partial class ReceiptTests(ApiFixture fixture) : ReceiptTestBase(f
             stored.AsSpan(0, 8).SequenceEqual(content.AsSpan(0, 8)).ShouldBeFalse();
             (
                 await CountAsync(
-                    $"SELECT count(*) FROM penny.receipts WHERE id = '{id}' AND size_bytes = {content.Length} AND mime = '{mime}'"
+                    $"SELECT count(*) FROM penny.receipts WHERE id = '{id}' AND size_bytes = {content.Length} AND mime = '{mime}' AND encryption_version = 1"
                 )
             ).ShouldBe(1L);
         }

@@ -9,6 +9,7 @@ import { Dialog } from "../../design/ModalDialog";
 import { SaveErrorBanner, useToast } from "../../design/states";
 import type { HouseholdView } from "./context";
 import { describeSharedError } from "./errors";
+import { groupListPath } from "./links";
 import { dayLabel, isCurrent, localDate, monthLabel } from "./model";
 
 type Pending = { kind: "remove"; member: HouseholdMember } | { kind: "leave" } | { kind: "archive" } | { kind: "rename" } | null;
@@ -18,7 +19,7 @@ type Pending = { kind: "remove"; member: HouseholdMember } | { kind: "leave" } |
  * server enforces who may do what; the page offers only what the viewer may do and explains the
  * settlement rule for leaving, removal and archiving.
  */
-export function PeopleTab({ view, recap }: { view: HouseholdView; recap: MonthRecap | undefined }) {
+export function PeopleTab({ view, recap, onEditTrip }: { view: HouseholdView; recap: MonthRecap | undefined; onEditTrip?: () => void }) {
   const [pending, setPending] = useState<Pending>(null);
   const { household, members } = view.detail;
   const current = members.filter(isCurrent);
@@ -79,7 +80,7 @@ export function PeopleTab({ view, recap }: { view: HouseholdView; recap: MonthRe
             <div className="shared-actions">
               {view.creator ? (
                 <>
-                  <Button onClick={() => { setPending({ kind: "rename" }); }}>Rename</Button>
+                  {onEditTrip ? <Button onClick={onEditTrip}>Edit trip</Button> : <Button onClick={() => { setPending({ kind: "rename" }); }}>Rename</Button>}
                   <Button variant="danger-quiet" onClick={() => { setPending({ kind: "archive" }); }}>
                     Archive {trip ? "trip" : "household"}
                   </Button>
@@ -265,7 +266,7 @@ function LeaveDialog({ view, onClose }: { view: HouseholdView; onClose: () => vo
       await forgetHousehold(queryClient, email, view.householdId);
       toast.show({ title: `You left ${view.detail.household.name}`, detail: "Your past shares stay in your history." });
       onClose();
-      void navigate({ to: "/households" });
+      void navigate({ to: groupListPath(view.route) });
     },
   });
   return (
@@ -294,7 +295,7 @@ function ArchiveDialog({ view, recap, onClose }: { view: HouseholdView; recap: M
       await forgetHousehold(queryClient, email, view.householdId);
       toast.show({ title: `${view.detail.household.name} archived`, detail: "Its history stays in members' reports." });
       onClose();
-      void navigate({ to: "/households" });
+      void navigate({ to: groupListPath(view.route) });
     },
     onError: () => void refreshHousehold(queryClient, email, view.householdId),
   });
