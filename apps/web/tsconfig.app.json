@@ -27,6 +27,9 @@
     "paths": {
       "@design-kit/*": [
         "../../design-kit/*"
+      ],
+      "@domain/*": [
+        "../../src/domain/*"
       ]
     }
   },

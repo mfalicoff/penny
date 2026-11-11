@@ -3,6 +3,10 @@
 @import "./auth.css";
 @import "./components.css";
 @import "./shell.css";
+@import "./shared.css";
+@import "./organize.css";
+@import "./recurring.css";
+@import "./activity.css";
 
 *,
 *::before,

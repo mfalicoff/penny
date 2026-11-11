@@ -6,6 +6,7 @@
 
 - [Development](development.md): local web setup, Nix/direnv, live reload, connecting iOS and Android, and the source layout.
 - [Self-hosting and configuration](deployment.md): the .NET/PostgreSQL Compose stack, reverse proxies and HTTPS, configuration, external PostgreSQL, container images, upgrades and rollback, OIDC, push notifications, and the legacy Node deployment.
+- [Self-hosting on NixOS](nixos.md): the flake packages and the `services.penny` / `programs.penny` NixOS module (PostgreSQL 18, migrations, the API and nginx), its options, secrets, external PostgreSQL and upgrades.
 - [Cutover from Node/SQLite](cutover.md): the one-time move to .NET/PostgreSQL behind the same address: settings mapping, production-copy rehearsal, the window step by step, go/no-go and rollback, observation and compatibility windows, Node retirement, the cutover drill and release notes.
 - [Operations runbook](operations.md): health and readiness, JSON logs and request ids, connections and disk, backup and restore drills, index and search maintenance, PostgreSQL roles, extensions and version policy, write reconciliation, and failure runbooks.
 - [App behavior and limits](app-guide.md): personal-share calculations, payment accounts, households, trips, reimbursements, offline sync, recurrence, and ledger upgrades.
@@ -31,6 +32,7 @@
 - [Native entries, Activity and search](ios-entries.md): adding, editing and deleting entries, splits and investments, drafts and conflicts, Activity filters, server and on-device search, accessibility identifiers and simulator scenarios.
 - [Native accounts, categories and recurring schedules](ios-organize.md): account and category forms with their removal guards, the category palette and legacy colors, schedule pages, editing, pause/resume and month ends, the reusable inline forms and the accessibility identifiers.
 - [Web app foundation](../apps/web/README.md): the React/Vite/TanStack browser client, pinned versions, route and data conventions, design-kit boundaries and web CI.
+- [Browser offline ledger and sync](web-offline-sync.md): the IndexedDB schema, durable saves, the legacy Expo web import and recovery, the shared merge and same-field policy, multi-tab coordination, sync triggers and failure states, sign-out protection, local search, the origin requirement and offline limits.
 - [Frontend architecture](frontend-architecture.md): routes, feature ownership, state and persistence boundaries, responsive navigation, and native glass surfaces.
 - [Backend architecture](backend-architecture.md): HTTP/application/storage boundaries, validation, persistence guarantees, and framework tradeoffs.
 - [Backend API endpoints](api-endpoints.md): all 40 operations, authentication, request/response shapes, and compatibility notes for a Go or .NET migration.

@@ -18,6 +18,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "test:e2e:real": "node scripts/e2e-real.ts",
     "check": "npm run design:check && npm run lint && npm run typecheck && npm run test && npm run build"
   },
   "dependencies": {
@@ -29,10 +30,10 @@
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
+    "@playwright/test": "1.64.1",
     "@tanstack/eslint-plugin-query": "5.107.1",
     "@tanstack/eslint-plugin-router": "1.162.0",
     "@tanstack/router-plugin": "1.169.0",
-    "@playwright/test": "1.64.1",
     "@testing-library/jest-dom": "7.0.1",
     "@testing-library/react": "16.3.3",
     "@testing-library/user-event": "14.6.8",
@@ -42,6 +43,7 @@
     "@vitejs/plugin-react": "6.3.0",
     "eslint": "10.14.0",
     "eslint-plugin-react-hooks": "7.1.1",
+    "fake-indexeddb": "6.2.7",
     "globals": "17.14.0",
     "jsdom": "31.0.0",
     "typescript": "6.0.3",

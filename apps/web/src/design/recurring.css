@@ -1,0 +1,124 @@
+/*
+ * Personal recurring schedules (MAZ-90): cards `iphone-recurring`, `iphone-schedule-detail`.
+ * Values come from the --pk-* tokens. Money stays on solid surfaces.
+ */
+
+.recurring__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.recurring__head > p {
+  flex: 1;
+  min-width: min(100%, 240px);
+  margin: 0;
+}
+
+/* A schedule row is a button that opens the detail: full width, the row look, a visible focus ring. */
+.schedule-row {
+  width: 100%;
+  min-height: 56px;
+  padding: 8px 6px;
+  border: 0;
+  border-radius: var(--pk-r-row);
+  background: transparent;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.schedule-row:hover {
+  background: var(--pk-surface-2);
+}
+
+.schedule-row__icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--pk-fill);
+  color: var(--pk-label);
+}
+
+.schedule-row__text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.schedule-detail {
+  display: grid;
+  gap: 16px;
+}
+
+.schedule-detail__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+
+.schedule-detail__amount {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.schedule-detail__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.schedule-detail__section {
+  display: grid;
+  gap: 6px;
+}
+
+.schedule-detail__section > h3 {
+  margin: 0;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.schedule-dates {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.schedule-dates > li {
+  min-height: 36px;
+  padding: 6px 0;
+}
+
+.schedule-dates > li + li {
+  border-top: 0.5px solid var(--pk-separator);
+}
+
+.schedule-detail__remove {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding-top: 8px;
+  border-top: 0.5px solid var(--pk-separator);
+}
+
+.schedule-preview {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--pk-r-field);
+  background: var(--pk-surface-2);
+  color: var(--pk-label-2);
+  font-size: 0.875rem;
+}

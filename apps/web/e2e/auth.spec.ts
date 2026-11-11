@@ -58,6 +58,10 @@ async function mockApi(context: BrowserContext, options: { sso?: boolean } = {})
       case "/api/auth/logout":
         api.signedIn = null;
         return reply(200, { ok: true });
+      case "/api/ledger":
+        // The durable offline store (MAZ-87) downloads the ledger once signed in.
+        if (!api.signedIn) return reply(401, { error: "Please sign in to continue." });
+        return reply(200, { revision: 0, ledger: { version: 4, currency: "CAD", accounts: [], trips: [], categories: [], transactions: [], recurring: [] } });
       case "/api/v1/search/transactions":
         if (!api.signedIn) return reply(401, { error: "Please sign in to continue." });
         return reply(200, { version: 1, items: [], totalCount: 0, nextCursor: null });
@@ -134,6 +138,8 @@ test("an expired session returns to sign-in with a notice", async ({ page, conte
   api.signedIn = "alex@example.test";
   await page.goto("/transactions");
   await expect(page.getByRole("heading", { level: 1, name: "Activity" })).toBeVisible();
+  // Let the offline store's first ledger sync finish, so the search below is what meets the 401.
+  await page.waitForLoadState("networkidle");
   api.signedIn = null;
   await page.getByRole("searchbox", { name: "Search transactions" }).fill("coffee");
   await page.keyboard.press("Enter");
