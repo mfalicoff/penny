@@ -167,7 +167,7 @@ IndexedDB and `localStorage` belong to one origin (scheme, host and port). Pendi
 - No background sync: changes sync while a Penny tab is open and online.
 - Same-field conflicts are last-sync-wins for this browser; there is no per-field prompt. An edit of an entry another device deleted brings it back.
 - Shared data and receipts aren't available offline; local search is personal entries only, with substring matching (no typo or meaning matching).
-- The browser has no entry form yet (MAZ-88). Recurring schedules (MAZ-90, `/recurring`) and Accounts and Categories (MAZ-89) save through the store, and so do the legacy import, other tabs and the tests.
+- Every personal write goes through the store: the entry forms (MAZ-88), Recurring schedules (MAZ-90, `/recurring`), Accounts and Categories (MAZ-89), the legacy import, other tabs and the tests.
 - Only the server knows which shared expenses link a payment account. Removing such an account offline is accepted here and refused at sync (`400 Remove household expense links…`), which holds back every pending change until Accounts' **Put it back** restores it ([accounts and categories](../apps/web/README.md#accounts-and-categories-maz-89)).
 
 ## Tests

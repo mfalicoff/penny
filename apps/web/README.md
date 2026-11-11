@@ -220,7 +220,7 @@ Saving and recovery:
 
 **Inline creation.** `AccountFormDialog` and `CategoryFormDialog` take `onSaved(record)` and open over another dialog: Escape and the scrim close only the top one, Tab stays inside it, its submit doesn't reach the form below, and focus returns to the control that opened it. The entry form keeps its own draft and selects the new record. Today the shared expense form uses it (**New category**, with the kind fixed to Expense); the personal entry form (MAZ-88) can use the same components.
 
-Not in this issue: reordering categories (the card's "Drag to reorder" and first-three shortcuts), and the personal entry form's pickers (MAZ-88). Visual comparison with the cards is MAZ-122.
+Not in this issue: reordering categories (the card's "Drag to reorder" and first-three shortcuts). The personal entry form (MAZ-88) has its own inline category and account pickers. Visual comparison with the cards is MAZ-122.
 
 ## Recurring schedules (MAZ-90)
 
