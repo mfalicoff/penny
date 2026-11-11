@@ -55,7 +55,7 @@ Named screenshots (`<device>-<appearance>-<step>`) are kept on success; XCTest's
 | Plan | Contents | When | Retries |
 | --- | --- | --- | --- |
 | **Smoke** | `SmokeJourneyTests`: clean install opens sign-in; sign in → create → relaunch → read; Home → Add expense → Saved → Activity (skipped until MAZ-73) | Every PR and push to `v2` (`ios.yml`, job `ui-smoke`), required | None |
-| **Full** | Everything except screenshots: smoke, lifecycle and upgrade, network failures, auth journeys | Nightly, on releases and on demand (`ios-ui-matrix.yml`) | One retry on failure, reported |
+| **Full** | Everything except screenshots: smoke, lifecycle and upgrade, network failures, auth journeys, the overview journeys (`OverviewJourneyTests`, demo data, MAZ-77) | Nightly, on releases and on demand (`ios-ui-matrix.yml`) | One retry on failure, reported |
 | **Screenshots** | `ScreenshotTests`: light and dark × default, accessibility XL text, Reduce Transparency, Reduce Motion; sign-in with keyboard and error | Nightly, on releases and on demand | None |
 
 | | Minimum OS | Current OS |

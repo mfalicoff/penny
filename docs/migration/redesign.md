@@ -76,7 +76,17 @@ The SwiftUI shell, settings, lock and demo are described in [native app shell](.
 - **iPad** uses the same navigation state in a `NavigationSplitView`; Settings and the Manage pages open in the detail column instead of a sheet. In compact widths (Slide Over, narrow Split View) the iPad uses the iPhone tab bar.
 - **Lock after** (Immediately, 1 minute, 5 minutes on `iphone-app-lock`) is MAZ-133 and not in this build; the lock applies immediately, as in the legacy app.
 - **The lock screen** shows no amount; the card's blurred hero behind the lock is not drawn, so nothing of the ledger is visible while locked.
-- Screens owned by feature issues (Add entry, households, insights, the money flow, the iPad dashboard panels) show a named "not available yet" state, and every legacy route still lands on its destination.
+- Screens owned by feature issues (households and other later work) show a named "not available yet" state, and every legacy route still lands on its destination. Home, Insights, the money flow, the calendar and the iPad dashboard panels arrived with MAZ-77 (below).
+
+## Native overview notes (MAZ-77)
+
+The SwiftUI app builds `iphone-home`, `iphone-home-dark`, `iphone-empty-home`, `iphone-money-flow`, `iphone-insights`, `iphone-calendar` and `ipad-home` ([native overview](../ios-overview.md)). Adaptations from the cards:
+
+- **Home** adds an Expected income card under Projected when a schedule expects income, and an **Explore your month** list (Calendar, Spending by category, Money flow). The Follow your money card opens the money flow; Insights is reached from Explore instead of a pill on the card.
+- **The calendar is a page**, not a sheet: it shares the month with Home and the other pages and has its own previous/next and Today.
+- **The money flow is recorded-only**, like Left to spend. A value list under the chart is its accessible alternative and replaces it at accessibility text sizes.
+- **iPad** uses the dashboard only in a regular width of at least 760 points; the card's sidebar Insights row is not added (Insights is a page of Home).
+- The legacy `home-amoled` and `home-catppuccin` specimens have no card since MAZ-132; a saved legacy preference opens as dark, so `iphone-home-dark` covers them.
 
 ## Web recurring notes (MAZ-90)
 
