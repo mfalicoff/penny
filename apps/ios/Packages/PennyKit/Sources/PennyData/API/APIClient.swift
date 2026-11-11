@@ -215,6 +215,15 @@ public struct APIClient: Sendable {
         return response
     }
 
+    // MARK: Households
+
+    /// `GET /api/households/projection?month=YYYY-MM`: the caller's share of every household
+    /// expense recorded in the month, and previews of the month's shared rules. The server
+    /// computes the shares; the app never splits a shared total itself.
+    public func householdProjection(month: MonthKey) async throws -> WireHouseholdProjection {
+        try await json(.get, "/api/households/projection", query: [URLQueryItem(name: "month", value: "\(month)")])
+    }
+
     // MARK: Plumbing
 
     enum Method: String {
@@ -232,9 +241,11 @@ public struct APIClient: Sendable {
     }
 
     private func json<Response: Decodable>(
-        _ method: Method, _ path: String, authenticated: Bool = true, timeout: TimeInterval? = nil
+        _ method: Method, _ path: String, query: [URLQueryItem] = [], authenticated: Bool = true,
+        timeout: TimeInterval? = nil
     ) async throws -> Response {
-        try decode(try await perform(method, path, authenticated: authenticated, timeout: timeout).body)
+        try decode(
+            try await perform(method, path, query: query, authenticated: authenticated, timeout: timeout).body)
     }
 
     private func json<Response: Decodable, Body: Encodable>(
@@ -254,9 +265,11 @@ public struct APIClient: Sendable {
     }
 
     private func perform(
-        _ method: Method, _ path: String, body: Data? = nil, authenticated: Bool = true, timeout: TimeInterval? = nil
+        _ method: Method, _ path: String, query: [URLQueryItem] = [], body: Data? = nil, authenticated: Bool = true,
+        timeout: TimeInterval? = nil
     ) async throws -> HTTPResult {
-        let request = try makeRequest(method, path, body: body, authenticated: authenticated, timeout: timeout)
+        let request = try makeRequest(
+            method, path, query: query, body: body, authenticated: authenticated, timeout: timeout)
         let result: HTTPResult
         do {
             try Task.checkCancellation()
@@ -280,12 +293,14 @@ public struct APIClient: Sendable {
     }
 
     func makeRequest(
-        _ method: Method, _ path: String, body: Data?, authenticated: Bool, timeout: TimeInterval?
+        _ method: Method, _ path: String, query: [URLQueryItem] = [], body: Data?, authenticated: Bool,
+        timeout: TimeInterval?
     ) throws(APIError) -> URLRequest {
         guard var components = URLComponents(url: configuration.server.url, resolvingAgainstBaseURL: false) else {
             throw .invalidRequest(.wrongServer)
         }
         components.percentEncodedPath += path
+        if !query.isEmpty { components.queryItems = query }
         guard let url = components.url, url.host?.lowercased() == configuration.server.url.host?.lowercased() else {
             throw .invalidRequest(.wrongServer)
         }
