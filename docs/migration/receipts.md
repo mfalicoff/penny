@@ -81,7 +81,7 @@ Receipt metadata lives in PostgreSQL and the bytes on the filesystem, so a backu
 
 ## Clients
 
-The Expo clients upload with `saveReceipt` (`src/data/receipts*.ts`): native reads the picked file as base64, web uses `FileReader` data URLs. To preview, they fetch `/api/receipts/<id>` with their session and display the bytes locally: a cache file on native (image view or the platform PDF viewer) and a blob URL on web (`<img>` or pdf.js). They do not depend on `Content-Disposition`, CSP or HTTP caching. HEIC/HEIF previews depend on the platform: iOS renders them, most desktop browsers do not and show the download fallback. Browser and native receipt UI are MAZ-94 and MAZ-78.
+The Expo clients upload with `saveReceipt` (`src/data/receipts*.ts`): native reads the picked file as base64, web uses `FileReader` data URLs. To preview, they fetch `/api/receipts/<id>` with their session and display the bytes locally: a cache file on native (image view or the platform PDF viewer) and a blob URL on web (`<img>` or pdf.js). They do not depend on `Content-Disposition`, CSP or HTTP caching. HEIC/HEIF previews depend on the platform: iOS renders them, most desktop browsers do not and show the download fallback. The v2 browser app (MAZ-94) does the same with its session cookie: it checks the file against the rules above before uploading, sends the JSON body over `XMLHttpRequest` for upload progress, and previews photos from a blob URL and PDFs with pdf.js; see [browser receipts](../web-receipts.md). Native receipt UI is MAZ-78.
 
 ## Deliberate differences from Node
 
@@ -93,6 +93,7 @@ The Expo clients upload with `saveReceipt` (`src/data/receipts*.ts`): native rea
 ## Tests
 
 - `ReceiptFormatTests` (unit): the base64 pattern, Node-compatible decoding, every signature and size boundary, and `encodeURIComponent` parity.
+- `ReceiptFileStoreTests` (unit, MAZ-94): AES-GCM round trip, fresh salts, nonces and paths per file, tampered ciphertext, a row claiming another owner or id (associated data), files swapped between rows, a different master key and an unknown `encryption_version` all fail to open.
 - `ReceiptTests` (real HTTP and PostgreSQL):
   - every format round-trips with SHA-256 checksums and ciphertext at rest;
   - exact download headers;
