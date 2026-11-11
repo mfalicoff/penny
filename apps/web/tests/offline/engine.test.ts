@@ -61,6 +61,24 @@ describe("first download and durable saves", () => {
     expect(server.puts).toHaveLength(1);
   });
 
+  it("says a save waits for the network from the current state, not the last sync's issue", async () => {
+    const server = new FakeServer(ledger());
+    const tab = openTab({ server });
+    await settled(tab);
+    server.reachable = false;
+    tab.network.online = false;
+    expect(await tab.engine.save(add(entry("c", "Bakery")))).toEqual({ savedOffline: true });
+    await settled(tab);
+    expect(tab.engine.getState().issue?.kind).toBe("offline");
+
+    // Back online, before any sync noticed: the save syncs right away.
+    server.reachable = true;
+    tab.network.online = true;
+    expect(await tab.engine.save(add(entry("d", "Lunch")))).toEqual({ savedOffline: false });
+    await settled(tab);
+    expect(titles(server.ledger)).toEqual(["Bakery", "Lunch"]);
+  });
+
   it("keeps the ledger unchanged when a rule refuses the change", async () => {
     const server = new FakeServer(ledger({ transactions: [entry("a", "Rent")] }));
     const db = new MemoryLedgerDatabase();
@@ -178,6 +196,37 @@ describe("conflicts with other devices", () => {
     await settled(tab);
     expect(titles(server.ledger)).toEqual(["Bakery", "Lunch"]);
     expect(tab.engine.getState().pending.count).toBe(0);
+  });
+
+  it("schedules a retry when saves keep landing during every pass", async () => {
+    const server = new FakeServer(ledger());
+    const db = new MemoryLedgerDatabase();
+    const tab = openTab({ server, db });
+    await settled(tab);
+    // Another tab saves while each PUT is in flight, so every pass ends with something pending.
+    let landed = 0;
+    server.beforePut = () => {
+      landed += 1;
+      const name = `late-${String(landed)}`;
+      void db.update(key(), (raw) => {
+        const record = raw as { local: { transactions: object[] } };
+        return { next: { ...record, local: { ...record.local, transactions: [...record.local.transactions, entry(name)] } }, result: null };
+      });
+    };
+    server.reachable = false;
+    await tab.engine.save(add(entry("c", "Bakery")));
+    await settled(tab);
+    server.reachable = true;
+    await tab.engine.syncNow();
+    expect(server.puts).toHaveLength(3);
+    expect(tab.engine.getState()).toMatchObject({ phase: "pending", issue: null, pending: { count: 1 } });
+    expect(tab.engine.retryScheduled).toBe(true);
+
+    server.beforePut = null;
+    await tab.engine.syncNow();
+    expect(titles(server.ledger)).toEqual(["Bakery", "late-1", "late-2", "late-3"]);
+    expect(tab.engine.getState().phase).toBe("upToDate");
+    expect(tab.engine.retryScheduled).toBe(false);
   });
 
   it("converges without duplicates when storing the server's answer fails", async () => {
@@ -317,6 +366,32 @@ describe("failures", () => {
     expect(db.values.get(key())).toEqual(future);
   });
 
+  it("asks for a reload, without retrying, once another tab's upgrade closed the connection", async () => {
+    const server = new FakeServer(ledger());
+    const db = new MemoryLedgerDatabase();
+    const tab = openTab({ server, db });
+    await settled(tab);
+    // What `openIndexedDb` reports after `versionchange` closed this tab's connection.
+    db.failReads = new StorageError("closed");
+    const gets = server.gets;
+    await tab.engine.syncNow();
+    expect(tab.engine.getState()).toMatchObject({ phase: "storageNewerFormat", issue: null });
+    expect(tab.engine.retryScheduled).toBe(false);
+    await expect(tab.engine.save(add(entry("x")))).rejects.toMatchObject({ kind: "storageNewerFormat" });
+    await tab.engine.syncNow();
+    expect(server.gets).toBe(gets);
+  });
+
+  it("refuses a save with the reload message when the connection closed before any sync noticed", async () => {
+    const server = new FakeServer(ledger());
+    const db = new MemoryLedgerDatabase();
+    const tab = openTab({ server, db });
+    await settled(tab);
+    db.failReads = new StorageError("closed");
+    await expect(tab.engine.save(add(entry("x")))).rejects.toMatchObject({ kind: "storageNewerFormat" });
+    expect(tab.engine.getState().phase).toBe("storageNewerFormat");
+  });
+
   it("shows the ledger but refuses saves when the browser blocks storage", async () => {
     const server = new FakeServer(ledger({ transactions: [entry("a", "Rent")] }));
     const tab = openTab({ server, db: null });
@@ -421,5 +496,35 @@ describe("sign-out", () => {
     expect(await two.engine.beginSignOut()).toBe(0);
     await two.engine.finishSignOut();
     expect(db.values.has(key())).toBe(false);
+  });
+
+  it("puts back the retry it parked when sign-out is cancelled", async () => {
+    const server = new FakeServer(ledger());
+    const tab = openTab({ server });
+    await settled(tab);
+    server.failures = [503];
+    await tab.engine.syncNow();
+    expect(tab.engine.getState().issue?.kind).toBe("serverUnavailable");
+    expect(tab.engine.retryScheduled).toBe(true);
+
+    expect(await tab.engine.beginSignOut()).toBe(0);
+    expect(tab.engine.retryScheduled).toBe(false);
+    tab.engine.cancelSignOut();
+    expect(tab.engine.retryScheduled).toBe(true);
+  });
+
+  it("removes the records set aside for the account, and only that account's", async () => {
+    const server = new FakeServer(ledger());
+    const db = new MemoryLedgerDatabase();
+    const mine = `aside\n${SERVER}\n${ALEX}\n2026-11-01T00:00:00.000Z`;
+    const theirs = `aside\n${SERVER}\n${BOB}\n2026-11-01T00:00:00.000Z`;
+    db.values.set(mine, { damaged: true });
+    db.values.set(theirs, { damaged: true });
+    const tab = openTab({ server, db });
+    await settled(tab);
+    expect(await tab.engine.beginSignOut()).toBe(0);
+    await tab.engine.finishSignOut();
+    expect(db.values.has(mine)).toBe(false);
+    expect(db.values.has(theirs)).toBe(true);
   });
 });

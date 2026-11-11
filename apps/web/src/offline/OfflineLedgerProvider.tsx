@@ -1,4 +1,4 @@
-import { useQueryClient, type QueryClient } from "@tanstack/react-query";
+import { hashKey, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { createContext, use, useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import { sessionKey } from "../api/keys";
 import { ledgerKey, readLedgerSnapshot, setLedgerSnapshot, toLedgerSnapshot, writeLedgerSnapshot, type LedgerSnapshot } from "../api/ledger";
@@ -114,9 +114,11 @@ function AccountLedger({ email, children }: { email: string; children: ReactNode
     });
     // A newer server ledger reached Query (for example, Currency settings saved one): sync, so the
     // durable copy's base catches up and pending work is merged onto it.
+    // Runs on every cache event in the app, so compare Query's own precomputed hash.
+    const ledgerHash = hashKey(ledgerKey(email));
     const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
       if (event.type !== "updated" || event.action.type !== "success") return;
-      if (JSON.stringify(event.query.queryKey) !== JSON.stringify(ledgerKey(email))) return;
+      if (event.query.queryHash !== ledgerHash) return;
       const data = event.query.state.data as LedgerSnapshot | undefined;
       if (data && data.revision > (engine.baseRevision ?? -1)) void engine.sync();
     });

@@ -16,9 +16,13 @@ export interface LedgerDatabase {
   close(): void;
 }
 
-export type StorageFailure = "unavailable" | "quota" | "failed";
+export type StorageFailure = "unavailable" | "quota" | "failed" | "closed";
 
-/** The browser refused to store or read data. `unavailable`: no IndexedDB (blocked, or an old private mode). */
+/**
+ * The browser refused to store or read data. `unavailable`: no IndexedDB (blocked, or an old private
+ * mode). `closed`: this tab's connection was closed for a newer build's upgrade (or by the browser),
+ * and only a reload opens it again.
+ */
 export class StorageError extends Error {
   readonly failure: StorageFailure;
 
@@ -28,7 +32,9 @@ export class StorageError extends Error {
         ? "This browser is out of storage space for Penny."
         : failure === "unavailable"
           ? "This browser isn't letting Penny store data."
-          : "This browser couldn't store Penny's data.",
+          : failure === "closed"
+            ? "Penny was updated in another tab. Reload the page to keep working."
+            : "This browser couldn't store Penny's data.",
       options,
     );
     this.name = "StorageError";
@@ -84,13 +90,21 @@ export async function openIndexedDb(factory?: IDBFactory, name = DATABASE_NAME):
   } catch (cause) {
     throw new StorageError(cause instanceof StorageError && cause.failure === "quota" ? "quota" : "unavailable", { cause });
   }
-  // A newer build in another tab wants to upgrade the schema: let it, and fail our next call
-  // (the app reloads into the new build) rather than block it.
+  // A newer build in another tab wants to upgrade the schema: let it rather than block it. This
+  // build can't reopen the database afterwards (the old version no longer opens), so every later
+  // call fails with `closed` and the engine asks the person to reload into the new build. The
+  // browser can also close the connection itself (site data cleared): same outcome.
+  let closed = false;
   db.onversionchange = () => {
+    closed = true;
     db.close();
+  };
+  db.onclose = () => {
+    closed = true;
   };
 
   function transaction(mode: IDBTransactionMode): IDBTransaction {
+    if (closed) throw new StorageError("closed");
     try {
       // `strict`: the write is on disk before the transaction completes, so a save is acknowledged
       // only once it would survive a crash (Chromium defaults to relaxed).
@@ -142,6 +156,7 @@ export async function openIndexedDb(factory?: IDBFactory, name = DATABASE_NAME):
       return keys.filter((key): key is string => typeof key === "string");
     },
     close() {
+      closed = true;
       db.close();
     },
   };

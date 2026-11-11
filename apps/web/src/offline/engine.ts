@@ -4,9 +4,9 @@ import { mergeLedger } from "@domain/merge.ts";
 import { ApiError } from "../api/client";
 import { withLock, openLedgerChannel, type LedgerChannel, type LockRunner } from "./coordination";
 import { MemoryLedgerDatabase, StorageError, type LedgerDatabase } from "./database";
-import { readLegacyCopy, removeLegacyCopy, setLegacyCopyAside, type LegacyStorage } from "./legacy";
+import { readLegacyCopy, removeLegacyAsideCopies, removeLegacyCopy, setLegacyCopyAside, type LegacyStorage } from "./legacy";
 import { NOTHING_PENDING, pendingChanges, type PendingSummary } from "./pending";
-import { accountScope, asideKey, parseRecord, RECORD_FORMAT, RecordError, recordKey, type AccountScope, type LedgerRecord } from "./record";
+import { accountScope, asideKey, isAsideKeyOf, parseRecord, RECORD_FORMAT, RecordError, recordKey, type AccountScope, type LedgerRecord } from "./record";
 import { IncompatibleLedgerError, normalizeLedger, sameLedger, type ServerSnapshot } from "./wire";
 
 /** Why the last sync didn't finish. Pending work is kept in every case. */
@@ -167,7 +167,12 @@ export class LedgerSyncEngine {
   private running: Promise<void> | null = null;
   private followUp: Promise<void> | null = null;
   private retryTimer: ReturnType<typeof setTimeout> | null = null;
+  private retryDelay = 0;
+  /** The delay of a retry that `beginSignOut` cancelled, so `cancelSignOut` can schedule it again. */
+  private heldRetry: number | null = null;
   private backoffStep = 0;
+  /** `pendingChanges` of the last record seen, keyed by identity: emits that don't change the record reuse it. */
+  private pendingOf: { record: LedgerRecord; summary: PendingSummary } | null = null;
   private syncWhenVisible = false;
   private channel: LedgerChannel | null = null;
   private detach: (() => void) | null = null;
@@ -199,7 +204,11 @@ export class LedgerSyncEngine {
 
   private snapshot(): LedgerSyncState {
     const record = this.record;
-    const pending = record ? pendingChanges(record.base, record.local) : NOTHING_PENDING;
+    let pending = NOTHING_PENDING;
+    if (record) {
+      if (this.pendingOf?.record !== record) this.pendingOf = { record, summary: pendingChanges(record.base, record.local) };
+      pending = this.pendingOf.summary;
+    }
     return {
       phase: this.phase(pending),
       issue: this.issue,
@@ -250,6 +259,7 @@ export class LedgerSyncEngine {
     this.started = false;
     this.generation += 1;
     this.cancelRetry();
+    this.heldRetry = null;
     this.detach?.();
     this.detach = null;
     this.followUp = null;
@@ -319,7 +329,7 @@ export class LedgerSyncEngine {
       next = parseRecord(await (await this.db()).get(this.key), this.scope);
     } catch (error) {
       if (generation !== this.generation) return;
-      if (error instanceof RecordError) this.storageProblem = error.problem === "newerFormat" ? "newerFormat" : "unreadable";
+      this.noteStorageProblem(error);
       this.emit();
       return;
     }
@@ -458,10 +468,10 @@ export class LedgerSyncEngine {
       });
     } catch (error) {
       if (error instanceof LedgerSaveError) throw error;
-      if (error instanceof RecordError) {
-        this.storageProblem = error.problem === "newerFormat" ? "newerFormat" : "unreadable";
+      const problem = this.noteStorageProblem(error);
+      if (problem) {
         this.emit();
-        throw new LedgerSaveError(error.problem === "newerFormat" ? "storageNewerFormat" : "storageUnreadable", undefined, { cause: error });
+        throw new LedgerSaveError(problem === "newerFormat" ? "storageNewerFormat" : "storageUnreadable", undefined, { cause: error });
       }
       throw new LedgerSaveError("writeFailed", error instanceof StorageError && error.failure === "quota" ? "This browser is out of storage space for Penny, so the change wasn't saved. Free up space, then try again. Your draft is still here." : undefined, { cause: error });
     }
@@ -475,7 +485,10 @@ export class LedgerSyncEngine {
       this.persist();
       void this.sync();
     }
-    return { savedOffline: !this.online() || this.issue?.kind === "offline" || this.issue?.kind === "serverUnreachable" };
+    // What is known now, without waiting for the sync this save started: the browser's network
+    // state, and whether the server was unreachable on the last attempt while online. A previous
+    // `offline` issue says nothing once the browser is back online (the sync just started covers it).
+    return { savedOffline: !this.online() || this.issue?.kind === "serverUnreachable" };
   }
 
   /** Records recurring entries that fell due (after midnight, or on start). Writes only if something changed. */
@@ -501,8 +514,9 @@ export class LedgerSyncEngine {
         this.emit();
         this.broadcast();
       }
-    } catch {
+    } catch (error) {
       // A failed catch-up is repeated by the next save or sync, which materialize too.
+      if (generation === this.generation && this.noteStorageProblem(error)) this.emit();
     }
   }
 
@@ -542,14 +556,21 @@ export class LedgerSyncEngine {
     this.syncing = true;
     this.emit();
     try {
-      for (let pass = 0; pass < MAX_PASSES; pass += 1) {
-        const more = await this.pass(generation);
+      let more = true;
+      for (let pass = 0; pass < MAX_PASSES && more; pass += 1) {
+        more = await this.pass(generation);
         if (generation !== this.generation) return;
-        if (!more) break;
       }
       this.issue = null;
-      this.backoffStep = 0;
-      await this.finishLegacy(generation);
+      if (more) {
+        // Saves (here or in another tab) kept landing during every pass. Nothing failed, so no
+        // issue is shown, but the rest must not wait for an unrelated trigger: try again after the
+        // backoff, which grows if this keeps happening.
+        this.scheduleRetry(this.nextBackoff());
+      } else {
+        this.backoffStep = 0;
+        await this.finishLegacy(generation);
+      }
     } catch (error) {
       if (generation === this.generation) this.fail(error);
     } finally {
@@ -634,10 +655,8 @@ export class LedgerSyncEngine {
   }
 
   private fail(error: unknown) {
-    if (error instanceof RecordError) {
-      this.storageProblem = error.problem === "newerFormat" ? "newerFormat" : "unreadable";
-      return;
-    }
+    // Unusable or closed storage: reported as a storage state, never retried by a timer.
+    if (this.noteStorageProblem(error)) return;
     if (error instanceof ApiError && error.status === 401) {
       this.sessionExpired = true;
       this.issue = null;
@@ -648,9 +667,19 @@ export class LedgerSyncEngine {
     this.issue = describeIssue(error, this.online());
     if (!this.issue.retries) return;
     if (this.issue.kind === "offline") return; // The `online` event resumes.
+    this.scheduleRetry(this.nextBackoff());
+  }
+
+  private nextBackoff(): number {
     const delay = Math.min(BACKOFF_MAX, BACKOFF_FIRST * 2 ** this.backoffStep);
     this.backoffStep += 1;
+    return delay;
+  }
+
+  private scheduleRetry(delay: number) {
+    this.cancelRetry();
     const generation = this.generation;
+    this.retryDelay = delay;
     this.retryTimer = setTimeout(() => {
       this.retryTimer = null;
       if (generation !== this.generation) return;
@@ -667,9 +696,26 @@ export class LedgerSyncEngine {
     this.retryTimer = null;
   }
 
+  /**
+   * Records an unusable stored record (`RecordError`) or a connection closed for another tab's
+   * upgrade as a storage state, and returns it (null when `error` was neither). A closed connection
+   * shows as `storageNewerFormat` ("Penny was updated in another tab", Reload): this build can't reopen it.
+   */
+  private noteStorageProblem(error: unknown): "unreadable" | "newerFormat" | null {
+    if (error instanceof RecordError) this.storageProblem = error.problem === "newerFormat" ? "newerFormat" : "unreadable";
+    else if (error instanceof StorageError && error.failure === "closed") this.storageProblem = "newerFormat";
+    else return null;
+    return this.storageProblem;
+  }
+
   /** Whether a retry is waiting for this tab to become visible (for tests and diagnostics). */
   get waitingForVisibility(): boolean {
     return this.syncWhenVisible;
+  }
+
+  /** Whether a retry timer is set (for tests and diagnostics). */
+  get retryScheduled(): boolean {
+    return this.retryTimer !== null;
   }
 
   // MARK: recovery
@@ -713,37 +759,51 @@ export class LedgerSyncEngine {
   /** Holds saves and syncs (in this tab) and returns the pending count. Call `cancelSignOut` or `finishSignOut` next. */
   async beginSignOut(): Promise<number> {
     this.holding = true;
-    this.cancelRetry();
+    // A sync already running finishes first; it may schedule a retry, which the hold then parks.
     await this.running;
+    if (this.retryTimer !== null) this.heldRetry ??= this.retryDelay;
+    this.cancelRetry();
     return this.pendingCount();
   }
 
+  /** Sign-out didn't go ahead: lifts the hold, syncs what is pending and restores a retry the hold parked. */
   cancelSignOut(): void {
     this.holding = false;
+    const held = this.heldRetry;
+    this.heldRetry = null;
     if (this.state.pending.count > 0) void this.sync();
+    else if (held !== null) this.scheduleRetry(held);
   }
 
   /**
-   * The server session is gone: removes this account's copies from the browser, but only if nothing
-   * became pending meanwhile (another tab may have saved). Pending work is never removed here.
+   * The server session is gone: removes this account's copies from the browser (the record, records
+   * set aside, and the legacy app's `localStorage` copies), but only if nothing became pending
+   * meanwhile (another tab may have saved). Pending work is never removed here: like `pendingCount`,
+   * a legacy copy with edits the record doesn't hold, or one that can't be read, stays.
    */
   async finishSignOut(): Promise<void> {
     const db = await this.db();
-    const removed = await db.update(this.key, (raw) => {
+    const removed = await db.update(this.key, (raw): { next?: null; result: { imported: string | undefined } | null } => {
       let current: LedgerRecord | null;
       try {
         current = parseRecord(raw, this.scope);
       } catch {
-        return { result: false };
+        return { result: null };
       }
-      if (current && !sameLedger(current.base, current.local)) return { result: false };
-      return { next: current ? null : undefined, result: true };
+      if (current && !sameLedger(current.base, current.local)) return { result: null };
+      return { ...(current ? { next: null } : {}), result: { imported: current?.legacy?.fingerprint } };
     });
     if (removed) {
-      const record = this.record;
-      if (record?.legacy) removeLegacyCopy(this.options.legacyStorage, this.scope.email, record.legacy.fingerprint);
+      const storage = this.options.legacyStorage;
+      const copy = readLegacyCopy(storage, this.scope.email);
+      // The record held this copy and was clean, so the server has its edits; or the copy (an import
+      // that storage refused) has nothing unsynced of its own.
+      if (copy.kind === "readable" && (copy.fingerprint === removed.imported || pendingChanges(copy.base, copy.local).count === 0)) {
+        removeLegacyCopy(storage, this.scope.email, copy.fingerprint);
+      }
+      removeLegacyAsideCopies(storage, this.scope.email);
       for (const key of await db.keys()) {
-        if (key.startsWith(`aside\n${this.scope.server}\n${this.scope.email}\n`)) await db.update(key, () => ({ next: null, result: null }));
+        if (isAsideKeyOf(this.scope, key)) await db.update(key, () => ({ next: null, result: null }));
       }
       this.broadcast();
     }

@@ -14,7 +14,7 @@ import { parseLedger } from "./wire";
  * IndexedDB, keeps the original until the server has acknowledged everything that was pending,
  * and only then removes it (see `LedgerSyncEngine`).
  */
-export type LegacyStorage = Pick<Storage, "getItem" | "setItem" | "removeItem">;
+export type LegacyStorage = Pick<Storage, "getItem" | "setItem" | "removeItem" | "key" | "length">;
 
 export const legacyLedgerKey = (email: string) => `penny:ledger:${email.trim().toLowerCase()}`;
 export const legacyAsideKey = (email: string, at: string) => `${legacyLedgerKey(email)}.unreadable-${at}`;
@@ -88,4 +88,23 @@ export function setLegacyCopyAside(storage: LegacyStorage | null, email: string,
   if (text === null) return;
   storage.setItem(legacyAsideKey(email, at), text);
   storage.removeItem(legacyLedgerKey(email));
+}
+
+/**
+ * Sign-out: removes copies set aside by `setLegacyCopyAside` (the person chose to stop counting
+ * them as pending). Best effort; a browser that refuses leaves them in place.
+ */
+export function removeLegacyAsideCopies(storage: LegacyStorage | null, email: string): void {
+  if (!storage) return;
+  const prefix = legacyAsideKey(email, "");
+  try {
+    const keys: string[] = [];
+    for (let index = 0; index < storage.length; index += 1) {
+      const name = storage.key(index);
+      if (name?.startsWith(prefix)) keys.push(name);
+    }
+    for (const name of keys) storage.removeItem(name);
+  } catch {
+    // localStorage refused; nothing else to do.
+  }
 }

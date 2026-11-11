@@ -31,13 +31,6 @@ export function registerPendingChanges(next: Source): () => void {
   };
 }
 
-export async function hasPendingChanges(email: string): Promise<boolean> {
-  if (typeof source === "function") return source(email);
-  const count = await source.beginSignOut(email);
-  source.cancelSignOut(email);
-  return count > 0;
-}
-
 export interface SignOutHold {
   pending: number;
   cancel(): void;

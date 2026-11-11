@@ -136,6 +136,12 @@ export class MemoryStorage implements LegacyStorage {
   removeItem(key: string) {
     this.items.delete(key);
   }
+  key(index: number) {
+    return [...this.items.keys()][index] ?? null;
+  }
+  get length() {
+    return this.items.size;
+  }
 }
 
 // Every engine a test opened is stopped afterwards, so no retry timer or channel outlives it.

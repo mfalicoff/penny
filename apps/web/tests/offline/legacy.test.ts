@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { MemoryLedgerDatabase, StorageError } from "../../src/offline/database";
-import { fingerprint, legacyLedgerKey, readLegacyCopy } from "../../src/offline/legacy";
+import { fingerprint, legacyAsideKey, legacyLedgerKey, readLegacyCopy } from "../../src/offline/legacy";
 import { accountScope, recordKey } from "../../src/offline/record";
 import { ALEX, BOB, channelHub, entry, FakeServer, ledger, MemoryStorage, openTab, SERVER, settled, titles } from "./harness";
 
@@ -136,6 +136,55 @@ describe("legacy Expo web import", () => {
     expect(legacy.getItem(legacyLedgerKey(ALEX))).toBe(original);
     expect(db.values.size).toBe(0);
     expect(await tab.engine.pendingCount()).toBe(2);
+  });
+
+  it("removes a set-aside copy at sign-out, and only this account's", async () => {
+    const server = new FakeServer(ledger());
+    const legacy = new MemoryStorage();
+    legacy.setItem(legacyLedgerKey(ALEX), "{not json");
+    legacy.setItem(legacyAsideKey(BOB, "2026-11-01T00:00:00.000Z"), "{bob's");
+    const tab = openTab({ server, legacy });
+    await settled(tab);
+    tab.engine.setLegacyCopyAside();
+    expect(await tab.engine.beginSignOut()).toBe(0);
+    await tab.engine.finishSignOut();
+    expect([...legacy.items.keys()].filter((name) => name.startsWith(legacyLedgerKey(ALEX)))).toEqual([]);
+    expect(legacy.getItem(legacyAsideKey(BOB, "2026-11-01T00:00:00.000Z"))).toBe("{bob's");
+  });
+
+  it("keeps an unreadable copy that wasn't set aside when sign-out finishes anyway", async () => {
+    const server = new FakeServer(ledger());
+    const legacy = new MemoryStorage();
+    const tab = openTab({ server, legacy });
+    await settled(tab);
+    expect(await tab.engine.beginSignOut()).toBe(0);
+    // The legacy app wrote a copy after the count (it counts as pending, so it stays).
+    legacy.setItem(legacyLedgerKey(ALEX), "{not json");
+    await tab.engine.finishSignOut();
+    expect(legacy.getItem(legacyLedgerKey(ALEX))).toBe("{not json");
+  });
+
+  it("at sign-out, removes a copy whose import storage refused once it has nothing unsynced, and keeps one with edits", async () => {
+    const server = new FakeServer(ledger({ transactions: [entry("a", "Rent")] }));
+    const clean = ledger({ transactions: [entry("a", "Rent")] });
+    const legacy = legacyStorage(ALEX, { base: clean, local: clean });
+    const db = new MemoryLedgerDatabase();
+    db.failWith = new StorageError("quota");
+    const tab = openTab({ server, db, legacy });
+    await settled(tab);
+    expect(db.values.size).toBe(0);
+    expect(await tab.engine.beginSignOut()).toBe(0);
+    await tab.engine.finishSignOut();
+    expect(legacy.getItem(legacyLedgerKey(ALEX))).toBeNull();
+
+    // A copy with edits of its own is counted, so sign-out stops; even if finished, it stays.
+    const pending = legacyStorage();
+    const original = pending.getItem(legacyLedgerKey(ALEX));
+    const again = openTab({ server, db, legacy: pending });
+    await settled(again);
+    expect(await again.engine.beginSignOut()).toBe(2);
+    await again.engine.finishSignOut();
+    expect(pending.getItem(legacyLedgerKey(ALEX))).toBe(original);
   });
 
   it("uploads the legacy edits even when the browser blocks IndexedDB, then removes the original", async () => {

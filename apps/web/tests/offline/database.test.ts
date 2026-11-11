@@ -42,6 +42,29 @@ describe("IndexedDB ledger database", () => {
     for (const db of tabs) db.close();
   });
 
+  it("lets a newer build upgrade the schema, then reports every call as closed", async () => {
+    const factory = new IDBFactory();
+    const db = await openIndexedDb(factory, "upgrade-test");
+    await db.update("k", () => ({ next: { value: 1 }, result: null }));
+    // Another tab opens a newer schema version; this connection must not block it.
+    const newer = await new Promise<IDBDatabase>((resolve, reject) => {
+      const opening = factory.open("upgrade-test", 2);
+      opening.onsuccess = () => {
+        resolve(opening.result);
+      };
+      opening.onerror = () => {
+        reject(opening.error ?? new Error("open failed"));
+      };
+      opening.onblocked = () => {
+        reject(new Error("blocked by the old connection"));
+      };
+    });
+    newer.close();
+    await expect(db.get("k")).rejects.toMatchObject({ failure: "closed" });
+    await expect(db.update("k", () => ({ next: { value: 2 }, result: null }))).rejects.toMatchObject({ failure: "closed" });
+    await expect(db.keys()).rejects.toMatchObject({ failure: "closed" });
+  });
+
   it("reports a browser without IndexedDB as unavailable", async () => {
     // The test setup installs a global factory; take it away for this check.
     const saved = globalThis.indexedDB;
