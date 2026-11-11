@@ -137,7 +137,7 @@ The same as the native app and the legacy app, field by field and by record id i
 | Unreadable legacy copy | "Changes from the previous Penny web app couldn't be read" and Set aside |
 | Session expired | Sign-in with the expiry notice |
 
-`useLedgerSync()` gives screens `ledger` (server plus pending), `pending.count`, `pending.entryIds` ("Waiting to sync" rows), `pending.deletedEntryIds`, `phase`, `issue`, `lastSyncedAt` ("as of last sync"), `durable` and `changedAt`. Entry screens (MAZ-88) save with `useLedgerEngine().save(change)`, show `LedgerSaveError.message` and keep the draft on failure, and can use `savedOffline` for "Saved on this device".
+`useLedgerSync()` gives screens `ledger` (server plus pending), `base` (the last ledger the server acknowledged, kept through reloads; Accounts and Categories compare records with it to mark them "Waiting to sync"), `pending.count`, `pending.entryIds` ("Waiting to sync" rows), `pending.deletedEntryIds`, `phase`, `issue`, `lastSyncedAt` ("as of last sync"), `durable` and `changedAt`. Entry screens (MAZ-88) save with `useLedgerEngine().save(change)`, show `LedgerSaveError.message` and keep the draft on failure, and can use `savedOffline` for "Saved on this device".
 
 ## Search
 
@@ -158,7 +158,8 @@ IndexedDB and `localStorage` belong to one origin (scheme, host and port). Pendi
 - The browser uses the shared TypeScript merge (`src/domain/merge.ts`) without the native app's recurrence refinements: if another device deletes a rule this browser only caught up offline, the rule can come back. Occurrence ids still prevent duplicate occurrences.
 - Same-field conflicts are last-sync-wins for this browser; there is no per-field prompt. An edit of an entry another device deleted brings it back.
 - Shared data and receipts aren't available offline; local search is personal entries only, with substring matching (no typo or meaning matching).
-- The browser has no entry form yet (MAZ-88); today the store is exercised by the legacy import, other tabs and the tests.
+- The browser has no entry form yet (MAZ-88); Accounts and Categories (MAZ-89) save through the store, and so do the legacy import, other tabs and the tests.
+- Only the server knows which shared expenses link a payment account. Removing such an account offline is accepted here and refused at sync (`400 Remove household expense links…`), which holds back every pending change until Accounts' **Put it back** restores it ([accounts and categories](../apps/web/README.md#accounts-and-categories-maz-89)).
 
 ## Tests
 
