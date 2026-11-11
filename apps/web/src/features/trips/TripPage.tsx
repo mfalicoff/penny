@@ -339,7 +339,7 @@ function SharedTripPage({ householdId, search }: { householdId: string; search: 
       {totals && (totals.privateShare > 0 || totals.outside > 0) ? (
         <p className="note">
           {totals.privateShare > 0 ? `Your spending includes ${view.money(totals.privateShare)} only you can see. ` : ""}
-          {totals.outside > 0 ? `${String(totals.outside)} ${totals.outside === 1 ? "expense is" : "expenses are"} dated outside the trip and still count.` : ""}
+          {totals.outside > 0 ? `${String(totals.outside)} ${totals.outside === 1 ? "expense is" : "expenses are"} dated outside the trip and still ${totals.outside === 1 ? "belongs" : "belong"} to it.` : ""}
         </p>
       ) : null}
 
