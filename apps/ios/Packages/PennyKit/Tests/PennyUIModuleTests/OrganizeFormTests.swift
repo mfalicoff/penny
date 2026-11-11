@@ -155,6 +155,19 @@ struct OrganizeFormTests {
         #expect(CategoryFormModel(category: food, name: "Ignored").name == food.name, "an edit keeps the stored name")
     }
 
+    @Test("whenCreatedForAnEntryDraft_CategoryForm_ShouldKeepTheDraftsKind")
+    func lockedKind() async throws {
+        let workspace = Self.workspace()
+        let ledger = try #require(workspace.load.ledger)
+        let model = CategoryFormModel(kind: .expense, lockKind: true, makeID: { "cat-pets" })
+        #expect(!model.canChangeKind(in: ledger), "a category made for an expense must be an expense category")
+        #expect(
+            CategoryFormModel(kind: .expense).canChangeKind(in: ledger), "from Categories a new one can be any kind")
+        model.name = "Pets"
+        let saved = try #require(await model.save(with: Self.commit(workspace)))
+        #expect(saved.kind == .expense)
+    }
+
     @Test("whenALegacyCategoryIsRenamed_CategoryForm_ShouldKeepItsStoredColor")
     func legacyColorKept() async throws {
         let workspace = Self.workspace()

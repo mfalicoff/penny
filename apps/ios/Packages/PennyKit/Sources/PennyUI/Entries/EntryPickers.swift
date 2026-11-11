@@ -48,7 +48,7 @@ struct EntryCategoryPickerSheet: View {
                 }
             }
             .sheet(isPresented: $creating) {
-                CategoryFormSheet(kind: kind, name: query) { category in
+                CategoryFormSheet(kind: kind, name: query, lockKind: true) { category in
                     selection = category.id
                     dismiss()
                 }

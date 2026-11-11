@@ -46,6 +46,34 @@ struct EntryFlowTests {
         #expect(ActivityRoute.destination(.recorded(lunch)) == .entry(id: "lunch"))
     }
 
+    @Test("whenALinkArrivesWhileEditing_ShellModel_ShouldCloseTheEditSheetBeforeNavigating")
+    func navigateWhileEditing() {
+        let lunch = entry("lunch")
+        let shell = ShellModel(
+            workspace: FixedWorkspace(load: .ready(Ledger(transactions: [lunch]))), session: .demo, today: today)
+        shell.edit(lunch)
+
+        shell.navigate { $0.open(.addEntry) }
+        #expect(shell.editingEntry == nil, "the edit sheet closes first")
+        #expect(!shell.route.isAddEntryPresented, "Add entry waits until the edit sheet has gone")
+
+        shell.editSheetDismissed()
+        #expect(shell.route.isAddEntryPresented)
+        shell.editSheetDismissed()
+        #expect(shell.route.isAddEntryPresented, "a waiting change applies once")
+    }
+
+    @Test("whenNothingIsBeingEdited_ShellModel_ShouldNavigateAtOnce")
+    func navigateDirectly() {
+        let shell = ShellModel(workspace: FixedWorkspace(load: .ready(Ledger())), session: .demo, today: today)
+        shell.navigate { $0.openSettings(.categories) }
+        #expect(shell.route.isSettingsPresented && shell.route.settingsPath == [.categories])
+
+        shell.route.isSettingsPresented = false
+        shell.editSheetDismissed()
+        #expect(!shell.route.isSettingsPresented, "a plain edit sheet dismissal changes nothing")
+    }
+
     @Test("whenDeletingAnEntryThatChangedElsewhere_ShellModel_ShouldRefuseAndKeepIt")
     func staleDelete() async {
         let lunch = entry("lunch")

@@ -90,8 +90,9 @@ final class CategoryFormModel {
 
     init(
         category: LedgerCategory? = nil, kind: EntryKind = .expense, name suggestedName: String = "",
-        makeID: () -> String = OrganizeID.make
+        lockKind: Bool = false, makeID: () -> String = OrganizeID.make
     ) {
+        kindFixed = lockKind
         original = category
         id = category?.id ?? makeID()
         name = category?.name ?? suggestedName.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -99,6 +100,9 @@ final class CategoryFormModel {
         color = category?.color ?? CategoryStyle.hex(CategoryStyle.pickerColors[0])
         icon = category?.icon ?? "pricetag-outline"
     }
+
+    /// Created inline for a draft of one kind (an entry or a schedule): the kind must match it.
+    let kindFixed: Bool
 
     var isNew: Bool { original == nil }
     var title: String { isNew ? "New category" : "Edit category" }
@@ -108,8 +112,10 @@ final class CategoryFormModel {
 
     func choose(_ color: CategoryColor) { self.color = CategoryStyle.hex(color) }
 
-    /// A new category, or one nothing uses, can change kind.
-    func canChangeKind(in ledger: Ledger) -> Bool { isNew || !ledger.usage(ofCategory: id).isInUse }
+    /// A new category, or one nothing uses, can change kind, unless it is created for a draft.
+    func canChangeKind(in ledger: Ledger) -> Bool {
+        !kindFixed && (isNew || !ledger.usage(ofCategory: id).isInUse)
+    }
 
     func save(with commit: LedgerCommit) async -> LedgerCategory? {
         guard !isSaving else { return nil }

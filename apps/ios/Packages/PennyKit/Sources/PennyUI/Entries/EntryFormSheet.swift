@@ -374,8 +374,11 @@ private struct EntryForm: View {
     /// back the next time this form opens.
     private func editCategories() {
         overlay = nil
-        shell.route.openSettings(.categories)
-        shell.editingEntry = nil
+        if case .edit = mode {
+            shell.navigate { $0.openSettings(.categories) }
+        } else {
+            shell.route.openSettings(.categories)
+        }
     }
 
     private func dismissSheet() {

@@ -23,7 +23,7 @@ struct AppShell: View {
         .sheet(isPresented: $shell.route.isAddEntryPresented) {
             EntryFormSheet(mode: .new).environment(shell)
         }
-        .sheet(item: $shell.editingEntry) { request in
+        .sheet(item: $shell.editingEntry, onDismiss: shell.editSheetDismissed) { request in
             EntryFormSheet(mode: .edit(request.entry)).environment(shell)
         }
         .accessibilityIdentifier(shell.isDemo ? "root.demo" : "root.signedIn")

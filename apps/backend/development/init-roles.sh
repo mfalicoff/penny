@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
+# The role passwords are read from the environment inside psql (\getenv), not passed as
+# arguments, so they never appear in the process list.
+: "${PENNY_MIGRATION_PASSWORD:?}" "${PENNY_RUNTIME_PASSWORD:?}"
 psql --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" --set=ON_ERROR_STOP=1 \
-  --set=migration_password="$PENNY_MIGRATION_PASSWORD" \
-  --set=runtime_password="$PENNY_RUNTIME_PASSWORD" \
   --set=database="$POSTGRES_DB" <<'SQL'
+\getenv migration_password PENNY_MIGRATION_PASSWORD
+\getenv runtime_password PENNY_RUNTIME_PASSWORD
 CREATE ROLE penny_migrator LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE PASSWORD :'migration_password';
 CREATE ROLE penny_runtime LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE PASSWORD :'runtime_password';
 REVOKE CREATE ON SCHEMA public FROM PUBLIC;

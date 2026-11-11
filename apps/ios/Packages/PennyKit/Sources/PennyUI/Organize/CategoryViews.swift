@@ -119,10 +119,10 @@ struct CategoryFormSheet: View {
     private let onSaved: ((LedgerCategory) -> Void)?
 
     init(
-        category: LedgerCategory? = nil, kind: EntryKind = .expense, name: String = "",
+        category: LedgerCategory? = nil, kind: EntryKind = .expense, name: String = "", lockKind: Bool = false,
         onSaved: ((LedgerCategory) -> Void)? = nil
     ) {
-        _model = State(initialValue: CategoryFormModel(category: category, kind: kind, name: name))
+        _model = State(initialValue: CategoryFormModel(category: category, kind: kind, name: name, lockKind: lockKind))
         self.onSaved = onSaved
     }
 
@@ -156,7 +156,9 @@ struct CategoryFormSheet: View {
                     .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
                     .accessibilityIdentifier("categoryForm.kind")
                 } footer: {
-                    if !model.canChangeKind(in: ledger) {
+                    if model.kindFixed {
+                        Text("For \(OrganizeText.kind(model.kind).lowercased()) entries, like the one you're adding.")
+                    } else if !model.canChangeKind(in: ledger) {
                         Text(LedgerRuleError.categoryKindInUse.message)
                     }
                 }

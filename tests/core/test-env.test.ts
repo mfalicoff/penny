@@ -45,6 +45,8 @@ test("native mode requires PostgreSQL 18 binaries before creating a cluster", ()
     tool("psql", "");
     tool("initdb", "initdb (PostgreSQL) 17.4");
     assert.throws(() => nativePostgresBin({ PENNY_POSTGRES_BIN: directory }), /PostgreSQL 18 is required/);
+    tool("initdb", "initdb (PostgreSQL) 17.18"); // a minor version 18 is not major 18
+    assert.throws(() => nativePostgresBin({ PENNY_POSTGRES_BIN: directory }), /PostgreSQL 18 is required/);
     tool("initdb", "initdb (PostgreSQL) 18.6");
     assert.equal(nativePostgresBin({ PENNY_POSTGRES_BIN: directory }), directory);
   } finally {

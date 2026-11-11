@@ -85,7 +85,7 @@ export function nativePostgresBin(environment = process.env) {
     if (!existsSync(join(directory, tool))) throw new Error(`${join(directory, tool)} is missing (PENNY_POSTGRES_BIN).`);
   }
   const version = spawnSync(join(directory, "initdb"), ["--version"], { encoding: "utf8" }).stdout ?? "";
-  if (!/\b18(\.\d+)*\b/.test(version)) throw new Error(`PostgreSQL 18 is required for native mode, found: ${version.trim()}`);
+  if (!/\(PostgreSQL\) 18(\.|\s|$)/.test(version)) throw new Error(`PostgreSQL 18 is required for native mode, found: ${version.trim()}`);
   return directory;
 }
 
@@ -196,7 +196,10 @@ async function startNativePostgres(state, secrets) {
   writeFileSync(join(state.dataDirectory, "postgresql.conf"), [
     "", "# penny test environment (scripts/test-env)",
     "listen_addresses = '127.0.0.1'", `port = ${state.databasePort}`, "unix_socket_directories = ''",
-    "fsync = off", "synchronous_commit = off", "full_page_writes = off", "",
+    "fsync = off", "synchronous_commit = off", "full_page_writes = off",
+    // A failed statement is not echoed into the log: the role setup sets passwords, and the
+    // log is collected as an artifact.
+    "log_min_error_statement = panic", "",
   ].join("\n"), { flag: "a" });
   writeState(state);
   run(join(bin, "pg_ctl"), ["--pgdata", state.dataDirectory, "--log", state.postgresLog, "--wait", "--timeout", "60", "start"]);
@@ -226,15 +229,41 @@ function adminSql(state, secrets, input) {
   }
 }
 
-/** Stops a native cluster left in a run directory, if one is running. */
-function stopNativePostgres(dataDirectory, bin) {
-  if (!existsSync(join(dataDirectory, "postmaster.pid"))) return;
+/**
+ * The PID in a cluster's postmaster.pid, only while that process is still this cluster's
+ * postmaster (its command line names the data directory): a stale file can name a reused PID.
+ */
+function postmasterPid(dataDirectory) {
+  const file = join(dataDirectory, "postmaster.pid");
+  if (!existsSync(file)) return undefined;
+  const pid = Number(readFileSync(file, "utf8").split("\n")[0]);
+  if (!Number.isInteger(pid) || pid <= 0 || !processAlive(pid)) return undefined;
+  const command = spawnSync("ps", ["-p", String(pid), "-o", "command="], { encoding: "utf8" }).stdout ?? "";
+  return command.includes("postgres") && command.includes(dataDirectory) ? pid : undefined;
+}
+
+/**
+ * Stops a native cluster left in a run directory, if one is running: with pg_ctl when the
+ * binaries are known, otherwise by signalling an immediate shutdown to the verified postmaster.
+ */
+async function stopNativePostgres(dataDirectory, bin) {
+  const pid = postmasterPid(dataDirectory);
+  if (!pid) return;
   try {
     bin ??= nativePostgresBin();
   } catch {
-    return;
+    bin = undefined;
   }
-  spawnSync(join(bin, "pg_ctl"), ["--pgdata", dataDirectory, "--mode", "immediate", "--wait", "stop"], { stdio: "ignore" });
+  if (bin) {
+    spawnSync(join(bin, "pg_ctl"), ["--pgdata", dataDirectory, "--mode", "immediate", "--wait", "stop"], { stdio: "ignore" });
+  } else {
+    try {
+      process.kill(pid, "SIGQUIT");
+    } catch {
+      // Already gone.
+    }
+  }
+  for (let attempt = 0; attempt < 40 && processAlive(pid); attempt++) await delay(250);
 }
 
 export function buildApi() {
@@ -427,7 +456,7 @@ export async function down(runId, { keepArtifacts } = {}) {
   }
   // A native cluster (also one left by a crashed runner) is stopped before its files go.
   const dataDirectory = state.dataDirectory ?? join(directory, "pgdata");
-  stopNativePostgres(dataDirectory, state.postgresBin);
+  await stopNativePostgres(dataDirectory, state.postgresBin);
   let cli = state.cli;
   try {
     cli ??= containerCli();

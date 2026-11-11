@@ -79,7 +79,8 @@ struct ScheduleFormSheet: View {
                 AccountFormSheet { model.accountCreated($0) }.environment(shell)
             }
             .sheet(isPresented: $addingCategory) {
-                CategoryFormSheet(kind: model.draft.kind) { model.categoryCreated($0) }.environment(shell)
+                CategoryFormSheet(kind: model.draft.kind, lockKind: true) { model.categoryCreated($0) }.environment(
+                    shell)
             }
         }
         .tint(PennyColor.tint)

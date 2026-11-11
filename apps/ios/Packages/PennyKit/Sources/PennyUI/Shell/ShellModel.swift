@@ -36,6 +36,8 @@ final class ShellModel {
     var drafts = EntryDraftShelf()
     /// The entry being edited in the entry form sheet, from Activity or the entry detail.
     var editingEntry: EntryEditRequest?
+    /// A route change waiting for the edit sheet to finish closing (`navigate`).
+    @ObservationIgnored private var pendingNavigation: ((inout ShellRoute) -> Void)?
     /// Activity's filters and query, kept while switching tabs.
     var activityFilters: ActivityFilters
     /// Activity's server search (MAZ-121) for an account; local only in the demo.
@@ -96,6 +98,25 @@ final class ShellModel {
             return failure
         }
         return nil
+    }
+
+    /// Changes the route from outside the current screen (a deep link, Edit categories).
+    /// SwiftUI cannot present Add entry or Settings while the edit sheet is up, so the edit
+    /// sheet closes first and the change applies once it has gone (`editSheetDismissed`).
+    func navigate(_ change: @escaping (inout ShellRoute) -> Void) {
+        guard editingEntry != nil else {
+            change(&route)
+            return
+        }
+        pendingNavigation = change
+        editingEntry = nil
+    }
+
+    /// Called by the edit sheet's `onDismiss`: applies a route change that was waiting for it.
+    func editSheetDismissed() {
+        guard let change = pendingNavigation else { return }
+        pendingNavigation = nil
+        change(&route)
     }
 
     func dismissToast() {
