@@ -77,6 +77,10 @@ To invite people to a personal trip, open it and tap **Invite people**. Expenses
 
 See [Phone notifications](deployment.md#phone-notifications) for device registration and push prerequisites. The [household implementation plan](households-implementation-plan.md) records the original design tasks and acceptance examples; this guide describes current behavior.
 
+## Recurring schedules in the browser app
+
+In the new browser app (`apps/web`, MAZ-90), **Recurring** (Manage › Recurring in the sidebar, More › Recurring on phones) lists your schedules as Income, Expenses and Investments, with the next date and Paused ones last. **New schedule** asks for the type, amount, name, how often it repeats, the first date, a category, an optional account and (for expenses) your share, and shows the next dates before you save. A first date in the past records the missed dates at once. Open a schedule to see its next three dates and details, **Edit** it (future dates only; recorded entries keep their details), **Pause** or **Resume** it (paused dates are skipped), or **Remove schedule** (recorded entries stay). Changes save on this device first and show **Waiting to sync** until the server has them; dates follow the browser's local calendar.
+
 ## Sync and recurrence behavior
 
 The app caches each signed-in personal ledger on the device. A personal entry, account, category, trip, or schedule change is persisted locally before it appears as saved. Pending changes survive app restarts and sync on reconnect, foregrounding, or the 15-second active interval. Sync fetches the latest server revision, merges changes to separate records and fields, and retries revision races up to four times. If both devices change the same field, this device's pending value wins. The sync banner shows when changes are waiting or a retry is needed. Signing out is blocked until pending personal changes sync. Shared household actions and receipt uploads still require a connection.

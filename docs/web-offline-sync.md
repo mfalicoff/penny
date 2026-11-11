@@ -2,7 +2,7 @@
 
 [Documentation](README.md) · [Web app](../apps/web/README.md) · [Native offline sync](ios-offline-sync.md) · [Server ledger sync](migration/ledger.md) · [Domain rules](migration/domain-rules.md)
 
-The v2 web app (`apps/web`) keeps each signed-in account's personal ledger in the browser, saves to it while offline, and syncs it with the server's whole-ledger `GET`/`PUT /api/ledger`. It follows the native engine's rules ([native offline sync](ios-offline-sync.md)) and the shared TypeScript merge and recurrence (`src/domain/merge.ts`, `src/domain/ledger.ts`, [ADR 002](migration/architecture.md#adr-002-calculation-and-conflict-ownership)). The server never merges: it refuses a stale revision with 409.
+The v2 web app (`apps/web`) keeps each signed-in account's personal ledger in the browser, saves to it while offline, and syncs it with the server's whole-ledger `GET`/`PUT /api/ledger`. It follows the native engine's rules ([native offline sync](ios-offline-sync.md)) and the shared TypeScript merge and recurrence (`src/domain/merge.ts`, `src/domain/ledger.ts`, [ADR 002](migration/architecture.md#adr-002-calculation-and-conflict-ownership)), with the native app's recurrence refinements on top (`apps/web/src/offline/merge.ts`, MAZ-90). The server never merges: it refuses a stale revision with 409.
 
 TanStack Query is **not** the offline store. Query keeps server copies that can always be fetched again; pending work lives only in IndexedDB, so clearing or refetching Query (sign-out, expiry, `clearPrivateData`, a 401) never erases it.
 
@@ -12,7 +12,8 @@ TanStack Query is **not** the offline store. Query keeps server copies that can 
 | `openIndexedDb`, `MemoryLedgerDatabase` | `src/offline/database.ts` | The `penny-offline` database (atomic read-modify-write per key, `durability: "strict"`), and the in-memory stand-in used for tests and when the browser blocks storage |
 | `LedgerRecord`, `parseRecord` | `src/offline/record.ts` | The stored record (format 1), account scope and keys; unreadable, misplaced and newer-format copies |
 | `parseLedger`, `normalizeLedger` | `src/offline/wire.ts` | Wire ledger checks (v4; v1–v3 upgraded from an old local copy only), unknown fields kept |
-| `pendingChanges` | `src/offline/pending.ts` | "N changes waiting", the entries waiting to sync and those deleted here |
+| `mergeOfflineLedger` | `src/offline/merge.ts` | The shared three-way merge plus the native recurrence refinements (below), used for every sync, the merge of saves that landed during a sync, and the legacy import |
+| `pendingChanges` | `src/offline/pending.ts` | "N changes waiting", the entries and schedules waiting to sync, and the entries deleted here |
 | `readLegacyCopy`, `removeLegacyCopy`, `setLegacyCopyAside` | `src/offline/legacy.ts` | The Expo web app's `localStorage` copy |
 | `withLock`, `openLedgerChannel` | `src/offline/coordination.ts` | Web Locks (one sync per account across tabs) and the `penny-offline-ledger` BroadcastChannel |
 | `OfflineLedgerProvider`, `useLedgerSync`, `useLedgerEngine` | `src/offline/OfflineLedgerProvider.tsx` | One engine per signed-in account below `AuthGate`; Query, session and sign-out wiring |
@@ -84,7 +85,16 @@ The `PUT` is a whole-ledger compare-and-swap, so repeating it after an ambiguous
 
 ### Conflict policy
 
-The same as the native app and the legacy app, field by field and by record id in every list: a record only the server changed takes the server's version; different fields changed on each side both survive; **the same field changed on both sides takes this browser's value**; deleted here and edited on the server is deleted; edited here and deleted on the server comes back with this browser's version; created here is appended; a currency change here wins. Occurrence ids are `{ruleId}:{date}`, so materializing after any merge adds nothing that exists. The browser uses the shared TypeScript merge, which does not have the native app's recurrence refinements (see limitations).
+The same as the native app and the legacy app, field by field and by record id in every list: a record only the server changed takes the server's version; different fields changed on each side both survive; **the same field changed on both sides takes this browser's value**; deleted here and edited on the server is deleted; edited here and deleted on the server comes back with this browser's version; created here is appended; a currency change here wins. Occurrence ids are `{ruleId}:{date}`, so materializing after any merge adds nothing that exists.
+
+Recurrence refinements (MAZ-90, the same four as the native `LedgerMerge`; the shared `src/domain/merge.ts` stays unchanged for the legacy app). An occurrence is "untouched" when it equals what its rule (here or in the base) generates for its date, ignoring key order:
+
+- When both sides advanced a rule's `nextDate`, the later one wins, so a date the server already consumed is not recorded again.
+- An occurrence both sides recorded keeps the server's copy when this browser's is untouched, so an edit made on the other device survives.
+- An untouched occurrence only this browser recorded is dropped when the server's rule is already past its date and the server doesn't have it (recorded there, then deleted).
+- **A schedule deleted on another device stays deleted** when this browser only caught it up offline (its copy differs from the base only in `nextDate`), and the untouched occurrences recorded here for it go with it. A schedule edited here in any other field (or paused, resumed) comes back with its occurrences, as in "edited here and deleted on the server"; an occurrence edited here is kept either way.
+
+`tests/offline/merge.test.ts` checks these and that the golden `contracts/fixtures/merge-conflicts.json` cases still give the same result.
 
 ### Triggers and retries
 
@@ -155,20 +165,21 @@ IndexedDB and `localStorage` belong to one origin (scheme, host and port). Pendi
 
 - The whole ledger is rewritten on every save and sync, as in the legacy and native apps.
 - No background sync: changes sync while a Penny tab is open and online.
-- The browser uses the shared TypeScript merge (`src/domain/merge.ts`) without the native app's recurrence refinements: if another device deletes a rule this browser only caught up offline, the rule can come back. Occurrence ids still prevent duplicate occurrences.
 - Same-field conflicts are last-sync-wins for this browser; there is no per-field prompt. An edit of an entry another device deleted brings it back.
 - Shared data and receipts aren't available offline; local search is personal entries only, with substring matching (no typo or meaning matching).
-- The browser has no entry form yet (MAZ-88); Accounts and Categories (MAZ-89) save through the store, and so do the legacy import, other tabs and the tests.
+- The browser has no entry form yet (MAZ-88). Recurring schedules (MAZ-90, `/recurring`) and Accounts and Categories (MAZ-89) save through the store, and so do the legacy import, other tabs and the tests.
 - Only the server knows which shared expenses link a payment account. Removing such an account offline is accepted here and refused at sync (`400 Remove household expense links…`), which holds back every pending change until Accounts' **Put it back** restores it ([accounts and categories](../apps/web/README.md#accounts-and-categories-maz-89)).
 
 ## Tests
 
 | Suite | Covers |
 | --- | --- |
-| `tests/offline/engine.test.ts` | First download; save before download; offline create/edit/delete, reload and one PUT on reconnect; rule refusals and full disk; recurrence catch-up; an iOS edit between read and write (independent fields survive), the same-field policy, five 409s then success, saves during a sync, saves during every pass (a retry is scheduled), a failed write after the server accepted; 503, 400, unknown ledger version, 401 and resume, late answers after an account switch, misplaced and newer-format copies and recovery, a connection closed by another tab's upgrade (reload, no retry), blocked storage; `savedOffline` from the current network state; two tabs (offline save seen by the other, simultaneous syncs, racing saves, recurrence across tabs and devices); sign-out counting, the save-between-count-and-removal race, a retry restored after a cancelled sign-out, and `aside` records removed |
+| `tests/offline/merge.test.ts` | The golden merge cases; a schedule deleted elsewhere after an offline catch-up (and kept when edited here, or its occurrence edited here); the other device's occurrence edit kept; an occurrence recorded and deleted elsewhere dropped; the later `nextDate` kept; occurrences of a new local rule kept; untouched detection |
+| `tests/offline/engine.test.ts` | A schedule deleted on another device after this browser caught it up offline doesn't come back (reproduces the MAZ-87 gap); first download; save before download; offline create/edit/delete, reload and one PUT on reconnect; rule refusals and full disk; recurrence catch-up; an iOS edit between read and write (independent fields survive), the same-field policy, five 409s then success, saves during a sync, saves during every pass (a retry is scheduled), a failed write after the server accepted; 503, 400, unknown ledger version, 401 and resume, late answers after an account switch, misplaced and newer-format copies and recovery, a connection closed by another tab's upgrade (reload, no retry), blocked storage; `savedOffline` from the current network state; two tabs (offline save seen by the other, simultaneous syncs, racing saves, recurrence across tabs and devices); sign-out counting, the save-between-count-and-removal race, a retry restored after a cancelled sign-out, and `aside` records removed |
 | `tests/offline/legacy.test.ts` | Legacy import and removal after sync, interrupted and repeated runs, two tabs importing at once, a copy changed after import, an unreadable copy and Set aside (also with full storage), import refused by storage, import with IndexedDB blocked, other accounts' copies, v1–v3 copies; at sign-out, set-aside copies and clean un-imported copies removed while copies with edits or unreadable ones stay |
 | `tests/offline/database.test.ts` | The IndexedDB adapter (fake-indexeddb): round trip across connections, aborted changes, no lost update across three connections, a newer schema version taking over (calls then fail as `closed`), missing and refused IndexedDB |
 | `tests/offline.test.tsx` | The real app: banner from a previous visit, offline, reconnect and Retry; sign-out refused with pending work and the copy removed after it; local search with pending and deleted rows, then server results; clearing Query keeps the work; 401 keeps it; legacy import through the app; blocked storage |
 | `e2e/offline.spec.ts` | Real Chromium (desktop and phone): the legacy copy imported, kept through a reload and a second tab while the server is down, the browser's offline switch, one PUT on reconnect, both tabs converged, the copy removed; sign-out refused then allowed |
+| `e2e/recurring.spec.ts` | Real Chromium (desktop and phone): a schedule saved while the server is down, kept through a reload and synced with one PUT and no duplicate occurrence; a schedule deleted on another device after an offline catch-up at a later date stays deleted ([recurring](../apps/web/README.md#recurring-schedules-maz-90)) |
 
 Run `npm test` and `npm run test:e2e` in `apps/web`. The offline journeys run with `/api` mocked on Chromium, Firefox and WebKit in CI; a real .NET/PostgreSQL variant of them is not written yet (the real-stack suite, `npm run test:e2e:real`, covers sign-in and households: [browser tests](../apps/web/README.md#browser-tests)).
