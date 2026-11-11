@@ -120,11 +120,6 @@ test("two people: invite, splits, private account, stale payment, monthly settle
   await hydro.getByRole("button", { name: "Mark $45.00 as paid" }).click();
   await expect(hydro.getByText("Repaid", { exact: true })).toBeVisible();
   await bea.page.keyboard.press("Escape");
-  // On a short phone (WebKit's iPhone 15) the toast covers the Internet row, and a pointer
-  // resting on it pauses the toast, so a click there would wait forever. Move the pointer off
-  // it and let it time out (6s) first.
-  await bea.page.mouse.move(0, 0);
-  await expect(bea.page.getByText("Share marked as paid")).toBeHidden({ timeout: 10_000 });
 
   // Bea opens Internet's payment; Alex changes the shares first. The server refuses (409).
   await list.getByRole("link", { name: /Internet/ }).click();

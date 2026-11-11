@@ -164,31 +164,76 @@ interface ToastApi {
 
 const ToastContext = createContext<ToastApi | null>(null);
 
-/** How long a toast stays. Paused while pointer or focus is on it, so Undo stays reachable. */
+/** How long a toast stays. Paused while keyboard focus or a mouse pointer is on it, so Undo stays reachable. */
 export const TOAST_MS = 6000;
+
+/**
+ * Safety net for a resting mouse pointer: a hovered toast still closes after this long, so a
+ * pointer left on it never keeps it over the page for good. Keyboard focus has no limit: moving
+ * focus away is the person's own choice, and closing would pull focus out from under them.
+ */
+export const TOAST_MAX_HOVER_MS = 30_000;
+
+/** What is holding a toast open. */
+export interface ToastHold {
+  hovered: boolean;
+  focused: boolean;
+}
+
+/** Milliseconds until the toast closes on its own, or null while keyboard focus holds it. */
+export function toastDelay({ hovered, focused }: ToastHold): number | null {
+  if (focused) return null;
+  return hovered ? TOAST_MAX_HOVER_MS : TOAST_MS;
+}
+
+/**
+ * Whether a pointer entering the toast should pause it: only a mouse, on a device that can hover
+ * with a fine pointer. On touch screens a tap leaves a "hover" behind that never ends, which kept
+ * the toast over the rows beneath it (MAZ-162).
+ */
+export function pointerCanPause(pointerType: string): boolean {
+  if (pointerType !== "mouse") return false;
+  if (typeof window.matchMedia !== "function") return true;
+  return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+}
+
+/** Whether focus came from the keyboard rather than a tap or click; only that pauses the toast. */
+function keyboardFocus(target: Element): boolean {
+  try {
+    return target.matches(":focus-visible");
+  } catch {
+    return true;
+  }
+}
 
 /** Hosts one toast at a time (specimen `saved-toast`), announced politely, with optional Undo. */
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toast, setToast] = useState<ToastState | null>(null);
-  const [paused, setPaused] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
   const sequence = useRef(0);
 
   const dismiss = useCallback(() => {
     setToast(null);
-    setPaused(false);
+    setHovered(false);
+    setFocused(false);
   }, []);
   const show = useCallback((input: ToastInput) => {
     sequence.current += 1;
     setToast({ ...input, id: sequence.current });
+    // A new toast is a new element: whatever held the last one doesn't hold this one.
+    setHovered(false);
+    setFocused(false);
   }, []);
 
+  const delay = toastDelay({ hovered, focused });
   useEffect(() => {
-    if (!toast || paused) return;
-    const timer = window.setTimeout(dismiss, TOAST_MS);
+    if (!toast || delay === null) return;
+    const timer = window.setTimeout(dismiss, delay);
     return () => {
       window.clearTimeout(timer);
     };
-  }, [toast, paused, dismiss]);
+  }, [toast, delay, dismiss]);
 
   const api = useMemo(() => ({ show, dismiss }), [show, dismiss]);
 
@@ -200,17 +245,18 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           <div
             key={toast.id}
             className={cx("pk-toast", "glass", toast.tone === "error" && "pk-toast--error")}
-            onMouseEnter={() => {
-              setPaused(true);
+            onPointerEnter={(event) => {
+              if (pointerCanPause(event.pointerType)) setHovered(true);
             }}
-            onMouseLeave={() => {
-              setPaused(false);
+            onPointerLeave={() => {
+              setHovered(false);
             }}
-            onFocus={() => {
-              setPaused(true);
+            onFocus={(event) => {
+              if (keyboardFocus(event.target)) setFocused(true);
             }}
-            onBlur={() => {
-              setPaused(false);
+            onBlur={(event) => {
+              const next = event.relatedTarget;
+              if (!(next instanceof Node && event.currentTarget.contains(next))) setFocused(false);
             }}
           >
             <Icon name={toast.tone === "error" ? "alert-circle" : "checkmark-circle"} size={22} />

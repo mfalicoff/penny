@@ -358,6 +358,15 @@
   bottom: calc(92px + env(safe-area-inset-bottom));
 }
 
+/*
+ * While a toast shows, reserve its height below the content too, so the last rows can scroll
+ * clear of it and stay tappable (MAZ-162). Only the toast itself takes pointer events; the
+ * region around it lets taps through.
+ */
+body:has(.pk-toast) .app__main {
+  padding-bottom: calc(172px + env(safe-area-inset-bottom));
+}
+
 /* ---------- navigation drawer (phones) ---------- */
 .dialog:has(> .drawer) {
   place-items: stretch start;
@@ -507,6 +516,10 @@
 
   .toast-region {
     bottom: calc(20px + env(safe-area-inset-bottom));
+  }
+
+  body:has(.pk-toast) .app__main {
+    padding-bottom: calc(100px + env(safe-area-inset-bottom));
   }
 
   .topbar__title {
