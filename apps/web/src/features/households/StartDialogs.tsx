@@ -20,6 +20,15 @@ export function JoinHouseholdDialog({ onClose }: { onClose: () => void }) {
   return <StartDialog initial="join" onClose={onClose} />;
 }
 
+/** Join a shared trip with a code (MAZ-93). The same join as a household; the code decides which. */
+export function JoinTripDialog({ onClose }: { onClose: () => void }) {
+  return (
+    <Dialog title="Join a trip" onClose={onClose}>
+      <JoinForm onClose={onClose} trip />
+    </Dialog>
+  );
+}
+
 /**
  * Create or join (card `iphone-household-create`). The household uses the creator's ledger
  * currency, and joining needs the same currency, as the server enforces. Failures keep what was
@@ -129,7 +138,7 @@ function CreateForm({ onClose }: { onClose: () => void }) {
   );
 }
 
-function JoinForm({ onClose }: { onClose: () => void }) {
+function JoinForm({ onClose, trip = false }: { onClose: () => void; trip?: boolean }) {
   const email = useAccountEmail();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -146,9 +155,10 @@ function JoinForm({ onClose }: { onClose: () => void }) {
     mutationFn: (value: string) => joinHousehold(value),
     onSuccess: async ({ household }) => {
       await Promise.all([queryClient.invalidateQueries({ queryKey: householdsKey(email) }), invalidateSearch(queryClient, email)]);
-      toast.show({ title: `You joined ${household.name}`, detail: "You're included in expenses from today." });
+      toast.show({ title: `You joined ${household.name}`, detail: household.trip ? "You're included in trip expenses added from now on." : "You're included in expenses from today." });
       onClose();
-      void navigate({ to: "/households/$id", params: { id: household.id } });
+      if (household.trip) void navigate({ to: "/trips/$id", params: { id: household.id } });
+      else void navigate({ to: "/households/$id", params: { id: household.id } });
     },
     onError: () => {
       codeRef.current?.focus();
@@ -192,7 +202,9 @@ function JoinForm({ onClose }: { onClose: () => void }) {
           </span>
         ) : null}
         <span id={hintId} className="form-hint">
-          Ask a member to open the household's People section and choose Invite. Codes work for 10 minutes, and your ledger currency must match the household's.
+          {trip
+            ? "Ask the trip's creator to open People and choose Invite. Codes work for 10 minutes, and your ledger currency must match the trip's. Expenses added before you join stay with the people already on the trip."
+            : "Ask a member to open the household's People section and choose Invite. Codes work for 10 minutes, and your ledger currency must match the household's."}
         </span>
       </div>
       <div className="form-actions">
@@ -200,7 +212,7 @@ function JoinForm({ onClose }: { onClose: () => void }) {
           Cancel
         </Button>
         <Button type="submit" variant="primary" busy={join.isPending}>
-          {join.isPending ? "Joining…" : "Join household"}
+          {join.isPending ? "Joining…" : trip ? "Join trip" : "Join household"}
         </Button>
       </div>
     </form>

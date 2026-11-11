@@ -1,5 +1,4 @@
 import { useQueries, type UseQueryResult } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { monthRecapQuery } from "../../api/households";
 import type { MonthRecap, Transfer } from "../../api/schemas";
@@ -10,6 +9,7 @@ import { ErrorState, LoadingState } from "../../design/states";
 import type { HouseholdView } from "./context";
 import { describeLoadError } from "./errors";
 import { dayLabel, monthEnd, monthLabel, monthlyPaymentsOpen } from "./model";
+import { GroupLink } from "./links";
 import { RecordMonthlyDialog } from "./PaymentDialogs";
 
 /**
@@ -157,9 +157,9 @@ function MonthCard({ view, recap, onRecord, full = false }: { view: HouseholdVie
         </div>
       ) : null}
       {!full ? (
-        <Link to="/households/$id" params={{ id: view.householdId }} search={{ month: recap.month, tab: "balances" }} className="wbtn wbtn--quiet" style={{ justifySelf: "start" }}>
+        <GroupLink route={view.route} householdId={view.householdId} search={{ month: recap.month, tab: "balances" }} className="wbtn wbtn--quiet" style={{ justifySelf: "start" }}>
           Open {monthLabel(recap.month)}
-        </Link>
+        </GroupLink>
       ) : null}
     </Card>
   );
