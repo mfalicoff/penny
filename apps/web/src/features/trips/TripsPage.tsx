@@ -75,7 +75,7 @@ export function TripsPage() {
         </Banner>
       ) : null}
 
-      {cards.length === 0 && !households.isPending ? (
+      {cards.length === 0 && !households.isLoading ? (
         <EmptyState icon="airplane" title="Your next trip starts here">
           <p>Create a trip, then assign expenses to see its total. Share it to split costs with the people you travel with.</p>
         </EmptyState>
