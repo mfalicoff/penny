@@ -85,10 +85,25 @@ export function createDemoServer(today = new Date()): Transport {
     return { version: 1, items, totalCount: matches.length, nextCursor: next };
   }
 
+  // Receipts uploaded in the demo (MAZ-94): kept in this tab's memory only, like everything else.
+  const receipts = new Map<string, { name: string; mime: string; bytes: Uint8Array<ArrayBuffer> }>();
+  function receipt(path: string, method: string, body: unknown): Response | null {
+    if (method === "POST" && path === "/api/receipts") {
+      const upload = body as { name: string; mime: string; base64: string };
+      const id = `demo-receipt-${String(receipts.size + 1)}`;
+      receipts.set(id, { name: upload.name, mime: upload.mime, bytes: Uint8Array.from(atob(upload.base64), (character) => character.charCodeAt(0)) });
+      return json({ id, name: upload.name, mime: upload.mime, uri: `/api/receipts/${id}` }, 201);
+    }
+    const stored = method === "GET" && path.startsWith("/api/receipts/") ? receipts.get(path.slice("/api/receipts/".length)) : undefined;
+    return stored ? new Response(stored.bytes, { status: 200, headers: { "Content-Type": stored.mime } }) : null;
+  }
+
   return async (path, { method, body, signal }) => {
     // Answer asynchronously, like a network, so loading states and aborts behave the same.
     await new Promise((resolve) => setTimeout(resolve, 0));
     if (signal?.aborted) throw new DOMException("The request was aborted.", "AbortError");
+    const stored = receipt(path, method, body);
+    if (stored) return stored;
 
     const route = `${method} ${path}`;
     switch (route) {

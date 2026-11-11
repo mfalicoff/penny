@@ -1,3 +1,4 @@
+import type { Receipt } from "@domain/ledger.ts";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useId, useMemo, useRef, useState, type SyntheticEvent } from "react";
 import { ApiError } from "../../api/client";
@@ -8,6 +9,7 @@ import { Avatar, Button, ChoiceGroup, SwitchRow } from "../../design/controls";
 import { Dialog } from "../../design/ModalDialog";
 import { Banner, SaveErrorBanner, useToast } from "../../design/states";
 import { CategoryFormDialog } from "../organize/CategoryFormDialog";
+import { ReceiptField } from "../receipts/ReceiptField";
 import { useLedgerWorkspace } from "../organize/workspace";
 import type { HouseholdView } from "./context";
 import { useLedgerChoices } from "./choices";
@@ -44,7 +46,12 @@ interface Draft {
   note: string;
   repeat: Repeat;
   active: boolean;
+  /** The linked receipt; a repeating expense knows only its id. */
+  receipt: Receipt | null;
 }
+
+/** A receipt known only by id (repeating expenses): the preview reads its name and type from the file. */
+const receiptById = (id: string | undefined): Receipt | null => (id ? { id, name: "", mime: "", uri: `/api/receipts/${id}` } : null);
 
 type Field = "title" | "amount" | "date" | "payer" | "split";
 
@@ -77,6 +84,7 @@ function draftFrom(target: FormTarget, meId: string | undefined, fallbackCategor
       note: expense.note,
       repeat: "none",
       active: true,
+      receipt: expense.receipt ?? receiptById(expense.receiptId),
     };
   }
   if (target.kind === "rule") {
@@ -93,6 +101,7 @@ function draftFrom(target: FormTarget, meId: string | undefined, fallbackCategor
       note: rule.note,
       repeat: rule.frequency,
       active: rule.active,
+      receipt: receiptById(rule.receiptId),
     };
   }
   return {
@@ -108,6 +117,7 @@ function draftFrom(target: FormTarget, meId: string | undefined, fallbackCategor
     note: "",
     repeat: "none",
     active: true,
+    receipt: null,
   };
 }
 
@@ -131,6 +141,8 @@ export function ExpenseFormDialog({ view, target, onClose }: { view: HouseholdVi
   const [revision, setRevision] = useState(target.kind === "edit" ? target.expense.revision : target.kind === "rule" ? target.rule.revision : 0);
   const [conflict, setConflict] = useState<{ title: string; totalCents: number; payerUserId: string; revision: number; source: SharedExpense | SharedRecurring } | null>(null);
   const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
+  const [receiptBusy, setReceiptBusy] = useState(false);
+  const [receiptWait, setReceiptWait] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
   const amountRef = useRef<HTMLInputElement>(null);
   const dateRef = useRef<HTMLInputElement>(null);
@@ -238,7 +250,6 @@ export function ExpenseFormDialog({ view, target, onClose }: { view: HouseholdVi
         : draft.splitMode === "percent"
           ? participantIds.map((userId) => ({ userId, percentBasisPoints: parsePercent(draft.percent[userId] ?? "0") ?? 0 }))
           : undefined;
-    const existingReceipt = target.kind === "edit" ? target.expense.receiptId : target.kind === "rule" ? target.rule.receiptId : undefined;
     // Only the payer chooses their own private account; anyone else's edit leaves it to the server.
     const account = draft.payerUserId === meId && draft.accountId ? { accountId: draft.accountId } : {};
     return {
@@ -252,7 +263,7 @@ export function ExpenseFormDialog({ view, target, onClose }: { view: HouseholdVi
         category: { name: category.name, icon: category.icon, color: category.color },
         note: draft.note.trim(),
         ...account,
-        ...(existingReceipt ? { receiptId: existingReceipt } : {}),
+        ...(draft.receipt ? { receiptId: draft.receipt.id } : {}),
         timezoneOffsetMinutes: timezoneOffsetMinutes(),
       },
     };
@@ -261,6 +272,10 @@ export function ExpenseFormDialog({ view, target, onClose }: { view: HouseholdVi
   function onSubmit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     if (save.isPending) return;
+    if (receiptBusy) {
+      setReceiptWait(true);
+      return;
+    }
     const result = validate();
     setErrors(result.errors);
     const first = (["title", "amount", "date", "payer", "split"] as const).find((field) => result.errors[field]);
@@ -516,6 +531,23 @@ export function ExpenseFormDialog({ view, target, onClose }: { view: HouseholdVi
           <label htmlFor={ids.note}>Note</label>
           <textarea id={ids.note} maxLength={1000} value={draft.note} onChange={(event) => { set("note", event.currentTarget.value); }} />
         </div>
+
+        <ReceiptField
+          value={draft.receipt}
+          onChange={(receipt) => {
+            set("receipt", receipt);
+          }}
+          onBusyChange={(busy) => {
+            setReceiptBusy(busy);
+            if (!busy) setReceiptWait(false);
+          }}
+          hint="Everyone in the household can open it."
+        />
+        {receiptWait ? (
+          <p className="form-error" role="alert">
+            The receipt is still uploading. Wait for it to finish, or cancel the upload.
+          </p>
+        ) : null}
 
         <div className="form-actions">
           <Button variant="quiet" onClick={onClose}>
