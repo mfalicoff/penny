@@ -124,7 +124,7 @@ Conventions:
 
 Shortcuts never fire while typing in a field, while a dialog is open, or with Alt/Ctrl/⌘ held (except ⌘K). Each has a visible control and `aria-keyshortcuts`.
 
-Add entry opens a dialog over the current page (the web card `web-add-entry`); `/entries/new` opens it over Home and returns to `/` when closed. The form itself is MAZ-88, so the dialog says the browser can't add entries yet.
+Add entry opens a dialog over the current page (the web card `web-add-entry`); `/entries/new` opens it over Home and returns to `/` when closed. The form is described under [Transactions and Activity](#transactions-and-activity-maz-88).
 
 ### Responsive layout
 
@@ -138,7 +138,7 @@ Add entry opens a dialog over the current page (the web card `web-add-entry`); `
 
 ## Routes and search state
 
-Every legacy URL opens (`tests/shell.test.tsx`): `/`, `/transactions`, `/entries/new`, `/insights`, `/households`, `/households/$id`, `/households/$id/expenses/$expenseId`, `/trips`, `/trips/$id`, `/recurring`, `/accounts`, `/categories`, `/settings` and `/settings/{appearance,currency,server}`. Screens that belong to MAZ-88–90, 92 and 93 show `NotYetAvailable`, which names the page and links Home, instead of "not found"; replace it in the feature issue (the household screens arrived with MAZ-91, below). Filters live in validated search parameters (`/transactions?q=…&month=…`, `/households/$id?month=…&tab=…`), so a filtered view can be bookmarked, shared and restored with Back and Forward; dialogs, drawers and toasts are not in the URL.
+Every legacy URL opens (`tests/shell.test.tsx`): `/`, `/transactions`, `/entries/new`, `/insights`, `/households`, `/households/$id`, `/households/$id/expenses/$expenseId`, `/trips`, `/trips/$id`, `/recurring`, `/accounts`, `/categories`, `/settings` and `/settings/{appearance,currency,server}`. Screens that belong to MAZ-88–90, 92 and 93 show `NotYetAvailable`, which names the page and links Home, instead of "not found"; replace it in the feature issue (the household screens arrived with MAZ-91, below). Filters live in validated search parameters (`/transactions?q=…&month=…&kind=…`, `/households/$id?month=…&tab=…`), so a filtered view can be bookmarked, shared and restored with Back and Forward; dialogs, drawers and toasts are not in the URL.
 
 ## Shared households (MAZ-91)
 
@@ -162,7 +162,37 @@ Behavior:
 - **Accounts and categories from this browser's ledger.** The form's categories and accounts (and the detail panel's account name) come from the durable offline ledger (`useLedgerChoices`, `src/features/households/choices.ts`), so ones created on this device and not yet synced are included; the server copy in Query is the fallback (the demo, or before the offline ledger loads). Categories are sent by value, so an unsynced one is used at once. An account is sent by id and the server checks it against its copy of the payer's ledger (`400 Payment account not found.`), so an account that copy doesn't have yet is listed as "(waiting to sync)", can't be chosen, and the hint says it can be once it has synced. The form doesn't sync first and submit: shared writes stay online-only and separate from personal offline work.
 - **Recurring.** Choosing Repeat on a new expense creates a shared rule (weekly, monthly or yearly from the chosen date). Repeating expenses are listed beside the month with Edit, Pause/Resume and Remove; the server records each occurrence on its date with that day's members.
 
-Not in this issue: moving an expense to another household, receipt upload and preview (MAZ-94; an existing receipt opens from the detail panel), shared trip editing and the trip screens (MAZ-93), shared rows in Activity and Home (MAZ-88/92), and push. The temporary demo has no households, so `/households` says the server doesn't offer them there.
+Not in this issue: moving an expense to another household, receipt upload and preview (MAZ-94; an existing receipt opens from the detail panel), shared trip editing and the trip screens (MAZ-93), shared rows on Home (MAZ-92; Activity lists them since MAZ-88), and push. The temporary demo has no households, so `/households` says the server doesn't offer them there.
+
+## Transactions and Activity (MAZ-88)
+
+Code: `src/features/entries/` (the form, its draft rules in `model.ts`, pickers, detail and delete, the in-memory draft store, and `useLedgerWriter`), `src/features/activity/` (the page, URL filters in `filters.ts`, rows and totals in `data.ts`, the list), `src/api/projection.ts` and `src/design/activity.css`. Specimens: `activity`, `activity-expenses`, `filters`, `add-expense`, `add-income`, `add-investment`, `entry-extras`, `split`, `entry-detail`, `edit-entry`, `category-picker`, `account-picker`, `date-picker`, `trip-picker`, `repeat-picker`, `search-empty`, `offline`, `save-error`, `delete-entry`, `saved`.
+
+**Writes go through the offline store.** Every personal change (an entry, an edit, a delete, and categories or accounts created inline) is a shared-domain `LedgerChange` (`@domain/commands.ts`: `saveEntry`, `deleteEntry`, `saveCategory`, `saveAccount`) handed to `engine.save` (MAZ-87). It is acknowledged once it is in IndexedDB and syncs with `PUT /api/ledger` from there, so saving works offline and survives a reload; the form never calls the API. "Saved on this device. It syncs when you're back online." says when the save didn't reach the server yet, and the row shows Waiting to sync. The demo has no offline store, so Add entry there says it doesn't save entries.
+
+**The form** (Add entry, or Edit from an entry's detail):
+
+- Type: Expense, Income or Investment. Changing it keeps what was typed and picks a category of the new type. Investments are money set aside: not spending, but they come out of what's left (`net` in `@domain/summary.ts`).
+- Amount in the ledger currency (integer cents, up to two decimals, dot or comma), Title, and Category: the five most used categories of the type as chips (a radio group, so arrow keys move the choice), the chosen one always visible, and **All categories** for a filterable list where a new category can be added inline.
+- Date and Account are labelled fields; **New account** adds one inline (name and type).
+- **More details** holds the rest: Your share for expenses (all mine, split equally between N people, an amount, or a percentage; the legacy `personalShare` rules, previewed as "Your share · counts in your spending"), Repeat for new entries (weekly, monthly or yearly: the entry is the first occurrence of a new rule, and occurrences up to today are recorded by the shared recurrence), Trip for expenses, Note, and the receipt entry point. Receipt upload and preview are MAZ-94; an existing receipt is kept and opens from the form and the detail.
+- Save is in the dialog footer, which stays in view at the bottom of a long form, and on ⌘↵ or Ctrl+Enter. Validation names the field and moves focus to the first problem.
+
+**Drafts and failures.** A new entry's draft is kept in memory per account while the tab is open: closing Add entry (Esc, the scrim, Keep draft, a page change) keeps it, reopening says "Your unsaved draft is back", Save or **Discard draft** clears it, and signing out clears it. It is never written to storage. Nested pickers and inline creation open over the form, so its draft stays as typed; their own failures (a duplicate name) stay in the picker. A failed save keeps the dialog open with the draft and the reason (storage full or refused, still loading, a rule the shared domain refused) and offers Retry.
+
+**Duplicates and stale versions.** A draft keeps one entry id (and one rule id) for its life, and the busy Save ignores presses, so a repeated submit writes the same entry instead of a second one. An edit and a delete carry the version they started from: if a sync or another tab changed the entry meanwhile, the shared rule refuses it and the form shows their version next to the kept draft with **Keep my changes** (save mine over theirs) or **Use their version**; if it was deleted elsewhere, **Keep as a new entry**. A stale delete shows the latest version and asks again (**Delete anyway**). Delete asks first and offers Undo in its toast.
+
+**Activity** (`/transactions`). Search, the period, totals, quick filters and the list:
+
+| Parameter | Meaning |
+| --- | --- |
+| `q` | Keyword search. |
+| `month=YYYY-MM` or `year=YYYY` | The period, with Previous and Next. Neither is All time. `month` wins over `year`. |
+| `day=YYYY-MM-DD` | Only that day (inside the period; on its own it implies its month). |
+| `kind` | `expense`, `income` or `investment`. |
+| `category` | A personal category id. Shared rows match by its name. |
+
+Each filter is a history entry, so Back and Forward step through them; bad values fall back. Totals (Spent, Earned, Invested, Left) cover the period only, never the search, type, day or category, and Spent includes your share of shared expenses from `GET /api/households/projection` (rows in another currency than the ledger's are left out). The list is MAZ-121's server search when online and up to date (personal and shared rows, typo and meaning matches, 50-row cursor pages, aborted when the filters change, the server's order), with the category filter applied to the loaded pages. While changes wait to sync, while offline, or when the server's results predate the latest change here, it lists this browser's ledger and the cached shared rows instead ("N matching transactions on this device", the shared substring rule, newest first with a stable tie-break, 50 rows at a time), so unsynced edits show and deleted rows never come back. Personal rows open the entry's detail (Edit, Delete; focus returns to the row, or to the search field when the row is gone); shared rows open the expense in its household. Shared data stays online-only: the projection is read through Query (under the household list key, so every household write refreshes it) and never stored in the offline ledger.
 
 ## Settings
 
@@ -177,7 +207,7 @@ The native-only settings (app lock, server picker, notifications) are omitted; t
 
 ## Temporary demo
 
-"Explore a demo" on the sign-in screen runs Penny on sample data without an account (`src/demo/`). It replaces `apiFetch`'s transport with an in-memory stand-in for the endpoints the web uses (session, ledger read and revision-checked write, search with cursor paging); other endpoints answer 404, so a screen that needs a real server says so. It is isolated and temporary: no request reaches the API (Playwright checks this), it runs as `demo@penny.invalid` so its cache keys can't match a real account, nothing is stored, and Leave demo or a reload ends it and drops its cache. It can't be started while signed in. Limitations: it only covers search and currency (not shared households); the sample data is made up and fixed to the current month.
+"Explore a demo" on the sign-in screen runs Penny on sample data without an account (`src/demo/`). It replaces `apiFetch`'s transport with an in-memory stand-in for the endpoints the web uses (session, ledger read and revision-checked write, search with cursor paging); other endpoints answer 404, so a screen that needs a real server says so. It is isolated and temporary: no request reaches the API (Playwright checks this), it runs as `demo@penny.invalid` so its cache keys can't match a real account, nothing is stored, and Leave demo or a reload ends it and drops its cache. It can't be started while signed in. Limitations: it only covers search, Activity and currency (not shared households), and Add entry says the demo doesn't save entries (it has no offline store to save them to); the sample data is made up and fixed to the current month.
 
 ## Route conventions
 
@@ -273,6 +303,8 @@ The Playwright run also has `e2e/auth.spec.ts`: real Chromium journeys for passw
 `e2e/shell.spec.ts` covers the shell: layouts and overflow at each breakpoint, 200% zoom and doubled text, long names, pinned and system themes, reduced transparency and motion, shortcuts with focus restoration, Back and Forward, the phone drawer, and the demo's isolation.
 
 `e2e/offline.spec.ts` covers the durable offline store in real Chromium (IndexedDB, BroadcastChannel, Web Locks, the browser's offline switch): a legacy Expo copy imported and kept through a reload and a second tab while the server is down, one PUT on reconnect with both tabs converged, and sign-out refused while a change waits.
+
+Transactions and Activity: `tests/entries.test.tsx` (the form in the real app over fake IndexedDB and a revision-checked fake ledger in `tests/fakes/ledgerServer.ts`) covers expense, income and repeating investment entries, the four share modes, field validation and focus, ⌘↵ with a repeated press, draft retention and discard, inline category (also a duplicate name) and account creation, offline saving, edit with focus return, a stale edit (keep mine), delete with Undo, and the demo. `tests/entries-model.test.ts` checks the draft rules, idempotent saves, stale-version refusal, frequent categories, the URL filters, local rows and period totals. `tests/activity.test.tsx` covers totals with shared shares independent of filters, shared rows online and from cache offline, URL filters through Back, category filtering of shared rows by name and the empty search. `e2e/transactions.spec.ts` runs on desktop and phone: a keyboard-only add found in Activity, validation and draft retention through a closed dialog and inline category creation, an offline save kept through a reload and synced on Retry, filters through Back, Forward and reload, a stale edit resolved with their version, a confirmed delete, and 320px with Save in view.
 
 Shared households: `tests/households.test.tsx` (component tests against the in-memory household fake in `tests/fakes/householdServer.ts`, which follows the documented server rules and messages) covers create and join, invite expiry, equal/exact/percent splits, the payer-only account, categories and unsynced accounts from the offline ledger, stale edits, offline drafts, recurring rules, share and monthly payments (also a month that can't be re-read after a stale payment), payment-changed states, leave/archive restrictions, read-only archived households and history. `tests/households-model.test.ts` checks the split preview against `contracts/fixtures/shared-splits.json` and amount entry against `money.json`. `e2e/households.spec.ts` runs two people in two browser contexts on desktop and phone (invite expiry, the three split modes, concurrent edits, a stale payment, a repeated monthly payment at month end, hidden payer accounts, archive rules, keyboard entry and 320px). `e2e/households.real.spec.ts` runs the two-person journey against the real .NET API and PostgreSQL with a pinned server clock; it is skipped unless `PENNY_REAL_STACK=1` (command in the file).
 

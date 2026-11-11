@@ -1,5 +1,6 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { isPrivateKey, sessionKey, sessionNoticeKey } from "../api/keys";
+import { draftStore } from "../features/entries/drafts";
 
 export type SessionNotice = "expired" | null;
 
@@ -36,6 +37,8 @@ export async function endSession(queryClient: QueryClient): Promise<void> {
   queryClient.setQueryData(sessionKey, null);
   queryClient.setQueryData(sessionNoticeKey, null);
   clearPrivateData(queryClient);
+  // An unsaved Add entry draft belongs to the person who signed out. Expiry keeps it, like offline work.
+  draftStore.clearAll();
 }
 
 /**
