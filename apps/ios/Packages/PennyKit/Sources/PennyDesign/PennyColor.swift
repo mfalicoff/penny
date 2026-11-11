@@ -12,7 +12,11 @@ extension RGBA {
 
 extension AdaptiveColor {
     /// A SwiftUI color that resolves `light` or `dark` from the current appearance.
-    public var color: Color {
+    ///
+    /// Nonisolated: UIKit calls the provider closure on SwiftUI's async render thread too, and a
+    /// main-actor closure (this module's default isolation) traps there. Found by the MAZ-81
+    /// UI tests (crash in `AdaptiveColor.color` under `com.apple.SwiftUI.AsyncRenderer`).
+    nonisolated public var color: Color {
         #if canImport(UIKit)
             Color(
                 uiColor: UIColor { traits in

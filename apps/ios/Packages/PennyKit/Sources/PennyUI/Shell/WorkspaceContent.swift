@@ -46,7 +46,8 @@ struct EntryRow: View {
         HStack(spacing: 12) {
             CategoryIcon(
                 symbol: CategoryStyle.symbol(forIonicon: category?.icon ?? "pricetag"),
-                color: PennyColor.category(CategoryStyle.color(forCategoryID: entry.categoryId)))
+                color: PennyColor.category(
+                    category?.paletteColor ?? CategoryStyle.color(forCategoryID: entry.categoryId)))
             VStack(alignment: .leading, spacing: 2) {
                 Text(entry.title).font(.body.weight(.semibold)).foregroundStyle(PennyColor.label).lineLimit(2)
                 if waiting {

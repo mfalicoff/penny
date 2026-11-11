@@ -77,7 +77,7 @@ The legacy app refused to sign out offline at all; the native app keeps that def
 
 The token is redacted from every `description`; `SessionStoreError` carries only an `OSStatus`. The server address and install marker are not secrets and live in `UserDefaults` (`penny.auth.server`, `penny.auth.launched`).
 
-**Expo upgrade.** The legacy app stored its token with `expo-secure-store` under `penny-session` (or `penny-session.<hex of the URL>` for a server other than the original one) and its server in AsyncStorage (`penny:server-connection`). Importing those in place is MAZ-72; until then an upgraded install asks the person to sign in again. The fresh-install purge only touches the native service above, never the Expo items.
+**Expo upgrade.** The legacy app stored its token with `expo-secure-store` under `penny-session` (or `penny-session.<hex of the URL>` for a server other than the original one) and its server in AsyncStorage (`penny:server-connection`). `ExpoMigration` (MAZ-72) imports them at the first native launch: the server choice when the native app has none, and each server's session when its email is known (`penny:active-account`) and the native app has none there. It runs the fresh-install purge itself first, so the imported session survives it; `restore` then verifies it like any other. Without a known email, or with an expired token, the person signs in again and their imported entries reappear ([Expo upgrade](ios-expo-migration.md)). The fresh-install purge only touches the native service above, never the Expo items.
 
 ## Single sign-on
 

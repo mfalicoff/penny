@@ -246,5 +246,8 @@ nonisolated public enum CategoryStyle {
         "wifi": "wifi", "phone-portrait": "iphone", "flash": "bolt", "water": "drop", "shirt": "tshirt",
         "book": "book", "game-controller": "gamecontroller", "pricetag": "tag", "cash": "banknote",
         "card": "creditcard", "wallet": "wallet.bifold",
+        // The category form's icon grid (MAZ-74, `category-form` card).
+        "play": "play", "leaf": "leaf", "people": "person.2", "receipt": "doc.plaintext", "image": "photo",
+        "document-text": "doc.text", "sunny": "sun.max", "moon": "moon", "time": "clock", "key": "key",
     ]
 }

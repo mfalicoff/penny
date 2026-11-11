@@ -52,7 +52,8 @@ struct AuthGate: View {
                         makeModel: {
                             ShellModel(
                                 workspace: services.accountWorkspace(account, sync), session: .account(auth, account),
-                                today: services.today(), startDemo: startDemo)
+                                today: services.today(), startDemo: startDemo,
+                                search: auth.client.map { AccountEntrySearch(model: sync, client: $0) })
                         }
                     )
                     .id(account.scope)
@@ -96,7 +97,7 @@ struct ShellHost: View {
     /// Opens a waiting link once the shell exists and the lock is open; never behind the lock.
     private func deliver() {
         guard let model, let link = inbox.take(ready: !lock.conceals) else { return }
-        model.route.open(link)
+        model.navigate { $0.open(link) }
     }
 }
 

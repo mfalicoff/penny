@@ -30,12 +30,27 @@ final class ShellModel {
     /// Ends the demo and discards everything in it (nil for an account).
     let leaveDemo: (() -> Void)?
 
+    // MARK: Entries and Activity (MAZ-73)
+
+    /// Unsaved entry drafts kept when a form closed without Save or Discard.
+    var drafts = EntryDraftShelf()
+    /// The entry being edited in the entry form sheet, from Activity or the entry detail.
+    var editingEntry: EntryEditRequest?
+    /// A route change waiting for the edit sheet to finish closing (`navigate`).
+    @ObservationIgnored private var pendingNavigation: ((inout ShellRoute) -> Void)?
+    /// Activity's filters and query, kept while switching tabs.
+    var activityFilters: ActivityFilters
+    /// Activity's server search (MAZ-121) for an account; local only in the demo.
+    let activitySearch: ActivitySearchModel
+    /// Attaches a receipt to an entry draft (MAZ-78 provides it; nil until then).
+    var attachReceipt: ((ReceiptSource) async -> Result<ReceiptReference, SaveFailure>)?
+
     @ObservationIgnored private var toastTask: Task<Void, Never>?
     static let toastDuration: Duration = .seconds(4)
 
     init(
         workspace: any LedgerWorkspace, session: ShellSession, today: CalendarDate,
-        startDemo: (() -> Void)? = nil, leaveDemo: (() -> Void)? = nil
+        startDemo: (() -> Void)? = nil, leaveDemo: (() -> Void)? = nil, search: (any EntrySearchService)? = nil
     ) {
         self.workspace = workspace
         self.session = session
@@ -43,6 +58,8 @@ final class ShellModel {
         self.startDemo = startDemo
         self.leaveDemo = leaveDemo
         month = MonthKey(today)
+        activityFilters = ActivityFilters(period: .month(MonthKey(today)))
+        activitySearch = ActivitySearchModel(service: workspace.isDemo ? nil : search)
     }
 
     var isDemo: Bool { workspace.isDemo }
@@ -81,6 +98,25 @@ final class ShellModel {
             return failure
         }
         return nil
+    }
+
+    /// Changes the route from outside the current screen (a deep link, Edit categories).
+    /// SwiftUI cannot present Add entry or Settings while the edit sheet is up, so the edit
+    /// sheet closes first and the change applies once it has gone (`editSheetDismissed`).
+    func navigate(_ change: @escaping (inout ShellRoute) -> Void) {
+        guard editingEntry != nil else {
+            change(&route)
+            return
+        }
+        pendingNavigation = change
+        editingEntry = nil
+    }
+
+    /// Called by the edit sheet's `onDismiss`: applies a route change that was waiting for it.
+    func editSheetDismissed() {
+        guard let change = pendingNavigation else { return }
+        pendingNavigation = nil
+        change(&route)
     }
 
     func dismissToast() {

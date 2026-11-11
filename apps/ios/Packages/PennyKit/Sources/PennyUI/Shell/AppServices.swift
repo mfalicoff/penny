@@ -33,8 +33,27 @@ public struct AppServices {
         self.today = today
     }
 
-    public static func live() -> AppServices {
-        AppServices(preferences: UserDefaultsDevicePreferences(), lock: AppLockController())
+    /// What the Expo data import did at this launch (MAZ-72), for diagnostics. Nil when it did
+    /// not run (previews, tests).
+    public var expoMigration: ExpoMigrationReport?
+
+    /// The real device services. First imports the Expo app's data in place (MAZ-72), before
+    /// the lock, the sign-in state or the offline store read anything; the lock stays
+    /// concealed until the Expo lock setting has been applied. `importingExpoData: false`
+    /// is only for Debug upgrade rehearsals that stage Expo data at this launch: nothing is
+    /// imported until the next launch.
+    public static func live(importingExpoData: Bool = true) -> AppServices {
+        let native = KeychainAppLockSettingStore()
+        guard importingExpoData else {
+            return AppServices(preferences: UserDefaultsDevicePreferences(), lock: AppLockController(store: native))
+        }
+        let migration = ExpoMigration.live(lockStore: native)
+        let report = migration.run()
+        var services = AppServices(
+            preferences: UserDefaultsDevicePreferences(),
+            lock: AppLockController(store: ExpoImportingLockStore(native: native, migration: migration)))
+        services.expoMigration = report
+        return services
     }
 }
 

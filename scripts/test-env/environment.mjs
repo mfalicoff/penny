@@ -2,6 +2,12 @@
 // one real .NET API process per run, isolated by run id. Nothing here accepts an
 // external connection string: every run creates, uses and destroys its own database,
 // so a test run cannot reach development or production data.
+//
+// PENNY_POSTGRES=native replaces the container with a private PostgreSQL 18 cluster that
+// the run initializes in its own state directory, listening only on 127.0.0.1 and removed
+// with the run, for hosts that cannot run Linux containers (GitHub-hosted macOS runners).
+// It needs PostgreSQL 18 with pgvector 0.8+ binaries: PENNY_POSTGRES_BIN, or `pg_config`
+// on PATH. The guarantee is the same: it never connects to a server it did not create.
 import { spawn, spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { closeSync, existsSync, mkdirSync, openSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -46,6 +52,41 @@ export function containerCli() {
     if (probe.status === 0) return cli;
   }
   throw new Error("A container runtime is required: install Docker or Podman (or set PENNY_CONTAINER_CLI).");
+}
+
+/**
+ * `container` (default) or `native` (PENNY_POSTGRES).
+ * @param {Record<string, string | undefined>} [environment]
+ */
+export function postgresMode(environment = process.env) {
+  const mode = environment.PENNY_POSTGRES || "container";
+  if (mode !== "container" && mode !== "native") {
+    throw new Error(`PENNY_POSTGRES must be "container" or "native", not "${mode}".`);
+  }
+  return mode;
+}
+
+/**
+ * The directory holding PostgreSQL 18's initdb, pg_ctl and psql for native mode:
+ * PENNY_POSTGRES_BIN, else `pg_config --bindir`. The API refuses other major versions too;
+ * checking here fails before a cluster is created.
+ * @param {Record<string, string | undefined>} [environment]
+ */
+export function nativePostgresBin(environment = process.env) {
+  let directory = environment.PENNY_POSTGRES_BIN;
+  if (!directory) {
+    const probe = spawnSync("pg_config", ["--bindir"], { encoding: "utf8" });
+    if (probe.status !== 0) {
+      throw new Error("PENNY_POSTGRES=native needs PostgreSQL 18: set PENNY_POSTGRES_BIN or put pg_config on PATH.");
+    }
+    directory = probe.stdout.trim();
+  }
+  for (const tool of ["initdb", "pg_ctl", "psql"]) {
+    if (!existsSync(join(directory, tool))) throw new Error(`${join(directory, tool)} is missing (PENNY_POSTGRES_BIN).`);
+  }
+  const version = spawnSync(join(directory, "initdb"), ["--version"], { encoding: "utf8" }).stdout ?? "";
+  if (!/\(PostgreSQL\) 18(\.|\s|$)/.test(version)) throw new Error(`PostgreSQL 18 is required for native mode, found: ${version.trim()}`);
+  return directory;
 }
 
 function run(command, args, options = {}) {
@@ -103,7 +144,8 @@ export function runnerEnvironment(state) {
     PENNY_TEST_RUN: state.runId,
     PENNY_API_URL: state.apiUrl,
     PENNY_TEST_TOKEN: state.controlToken,
-    ...(state.oidc ? { PENNY_OIDC_ISSUER: state.oidc.issuer } : {}),
+    // The provider's public, throwaway certificate: simulators trust it (scripts/ios.sh ui-test).
+    ...(state.oidc ? { PENNY_OIDC_ISSUER: state.oidc.issuer, PENNY_OIDC_CERTIFICATE: state.oidc.certificate } : {}),
   };
 }
 
@@ -132,6 +174,98 @@ function processAlive(pid) {
   }
 }
 
+/**
+ * Native mode: initializes and starts the run's own cluster, then creates the database,
+ * roles and extensions exactly as the container's init script does. Sets databasePort.
+ */
+async function startNativePostgres(state, secrets) {
+  const bin = state.postgresBin;
+  const passwordFile = join(state.directory, "initdb-password");
+  writeFileSync(passwordFile, `${secrets.admin}\n`, { mode: 0o600 });
+  try {
+    run(join(bin, "initdb"), [
+      "--pgdata", state.dataDirectory, "--username", "postgres", "--pwfile", passwordFile,
+      "--auth", "scram-sha-256", "--encoding", "UTF8", "--locale-provider", "builtin", "--builtin-locale", "C.UTF-8",
+    ]);
+  } finally {
+    rmSync(passwordFile, { force: true });
+  }
+  state.databasePort = await freePort();
+  // TCP on loopback only and no Unix socket (state paths can exceed the socket path
+  // limit); durability settings off, like the container's tmpfs: the data dies with the run.
+  writeFileSync(join(state.dataDirectory, "postgresql.conf"), [
+    "", "# penny test environment (scripts/test-env)",
+    "listen_addresses = '127.0.0.1'", `port = ${state.databasePort}`, "unix_socket_directories = ''",
+    "fsync = off", "synchronous_commit = off", "full_page_writes = off",
+    // A failed statement is not echoed into the log: the role setup sets passwords, and the
+    // log is collected as an artifact.
+    "log_min_error_statement = panic", "",
+  ].join("\n"), { flag: "a" });
+  writeState(state);
+  run(join(bin, "pg_ctl"), ["--pgdata", state.dataDirectory, "--log", state.postgresLog, "--wait", "--timeout", "60", "start"]);
+  const env = {
+    ...process.env, PATH: `${bin}:${process.env.PATH}`,
+    PGHOST: "127.0.0.1", PGPORT: String(state.databasePort), PGPASSWORD: secrets.admin,
+  };
+  run(join(bin, "psql"), ["--username", "postgres", "--dbname", "postgres", "--set=ON_ERROR_STOP=1", "-q",
+    "--command", `CREATE DATABASE "${state.database}"`], { env });
+  run("bash", [join(backend, "development/init-roles.sh")], {
+    env: {
+      ...env, POSTGRES_USER: "postgres", POSTGRES_DB: state.database,
+      PENNY_MIGRATION_PASSWORD: secrets.migration, PENNY_RUNTIME_PASSWORD: secrets.runtime,
+    },
+  });
+}
+
+/** Runs SQL as the run's PostgreSQL administrator, in either mode. */
+function adminSql(state, secrets, input) {
+  const args = ["--username", "postgres", "--dbname", state.database, "--set=ON_ERROR_STOP=1", "-q"];
+  if (state.postgres === "native") {
+    run(join(state.postgresBin, "psql"), ["--host", "127.0.0.1", "--port", String(state.databasePort), ...args], {
+      input, env: { ...process.env, PGPASSWORD: secrets.admin },
+    });
+  } else {
+    run(state.cli, ["exec", "-i", state.container, "psql", ...args], { input });
+  }
+}
+
+/**
+ * The PID in a cluster's postmaster.pid, only while that process is still this cluster's
+ * postmaster (its command line names the data directory): a stale file can name a reused PID.
+ */
+function postmasterPid(dataDirectory) {
+  const file = join(dataDirectory, "postmaster.pid");
+  if (!existsSync(file)) return undefined;
+  const pid = Number(readFileSync(file, "utf8").split("\n")[0]);
+  if (!Number.isInteger(pid) || pid <= 0 || !processAlive(pid)) return undefined;
+  const command = spawnSync("ps", ["-p", String(pid), "-o", "command="], { encoding: "utf8" }).stdout ?? "";
+  return command.includes("postgres") && command.includes(dataDirectory) ? pid : undefined;
+}
+
+/**
+ * Stops a native cluster left in a run directory, if one is running: with pg_ctl when the
+ * binaries are known, otherwise by signalling an immediate shutdown to the verified postmaster.
+ */
+async function stopNativePostgres(dataDirectory, bin) {
+  const pid = postmasterPid(dataDirectory);
+  if (!pid) return;
+  try {
+    bin ??= nativePostgresBin();
+  } catch {
+    bin = undefined;
+  }
+  if (bin) {
+    spawnSync(join(bin, "pg_ctl"), ["--pgdata", dataDirectory, "--mode", "immediate", "--wait", "stop"], { stdio: "ignore" });
+  } else {
+    try {
+      process.kill(pid, "SIGQUIT");
+    } catch {
+      // Already gone.
+    }
+  }
+  for (let attempt = 0; attempt < 40 && processAlive(pid); attempt++) await delay(250);
+}
+
 export function buildApi() {
   run("bash", [join(backend, "dotnet.sh"), "build", "src/Penny.Backend.Api", "--configuration", "Release"], {
     stdio: ["ignore", "ignore", "pipe"],
@@ -151,7 +285,9 @@ export async function up(options = {}) {
   if (existsSync(join(statePath(runId), "env.json"))) throw new Error(`Test environment ${runId} already exists.`);
   if (!existsSync(join(modelDirectory, "model.onnx")))
     throw new Error("The search model is missing. Run `node apps/backend/development/download-model.mjs` first.");
-  const cli = containerCli();
+  const mode = postgresMode();
+  const cli = mode === "container" ? containerCli() : undefined;
+  const postgresBin = mode === "native" ? nativePostgresBin() : undefined;
   const directory = statePath(runId);
   mkdirSync(join(directory, "logs"), { recursive: true, mode: 0o700 });
   const secrets = {
@@ -163,10 +299,11 @@ export async function up(options = {}) {
   const state = {
     runId,
     createdAt: new Date().toISOString(),
-    cli,
-    container: `penny-test-${runId}`,
+    postgres: mode,
+    ...(mode === "container"
+      ? { cli, container: `penny-test-${runId}`, image: postgresImage() }
+      : { postgresBin, dataDirectory: join(directory, "pgdata"), postgresLog: join(directory, "logs/postgres.log") }),
     database: databaseName(runId),
-    image: postgresImage(),
     directory,
     receiptRoot: join(directory, "receipts"),
     apiLog: join(directory, "logs/api.log"),
@@ -176,36 +313,14 @@ export async function up(options = {}) {
   try {
     if (options.build !== false) buildApi();
     if (!existsSync(apiDll)) throw new Error("The API is not built. Run without --no-build.");
-    // tmpfs storage: nothing outlives the container, and two runs never share a volume.
-    run(cli, [
-      "run", "--detach", "--name", state.container, "--label", `${label}=${runId}`,
-      "--publish", "127.0.0.1::5432", "--tmpfs", "/var/lib/postgresql",
-      "--env", `POSTGRES_DB=${state.database}`, "--env", "POSTGRES_USER=postgres",
-      "--env", "POSTGRES_PASSWORD", "--env", "PENNY_MIGRATION_PASSWORD", "--env", "PENNY_RUNTIME_PASSWORD",
-      "--volume", `${join(backend, "development/init-roles.sh")}:/docker-entrypoint-initdb.d/10-penny-roles.sh:ro,z`,
-      state.image,
-    ], {
-      env: {
-        ...process.env,
-        POSTGRES_PASSWORD: secrets.admin,
-        PENNY_MIGRATION_PASSWORD: secrets.migration,
-        PENNY_RUNTIME_PASSWORD: secrets.runtime,
-      },
-    });
-    // The entrypoint's temporary init server listens on the socket only; TCP readiness
-    // means initialization (roles, extensions) finished and the real server is up.
-    await waitFor(() => spawnSync(cli, ["exec", state.container, "pg_isready", "-h", "127.0.0.1", "-U", "postgres", "-d", state.database]).status === 0,
-      { timeoutMs: 90_000, what: "PostgreSQL" });
-    const published = run(cli, ["port", state.container, "5432/tcp"]).trim().split("\n")[0];
-    state.databasePort = Number(published.slice(published.lastIndexOf(":") + 1));
+    if (mode === "native") await startNativePostgres(state, secrets);
+    else await startPostgresContainer(state, secrets);
     const connection = (user, password) =>
       `Host=127.0.0.1;Port=${state.databasePort};Database=${state.database};Username=${user};Password=${password};SSL Mode=Disable`;
     run("bash", [join(backend, "dotnet.sh"), apiDll, "migrate"], {
       env: { ...process.env, ConnectionStrings__Migration: connection("penny_migrator", secrets.migration) },
     });
-    run(cli, ["exec", "-i", state.container, "psql", "-U", "postgres", "-d", state.database, "--set=ON_ERROR_STOP=1", "-q"], {
-      input: readFileSync(join(backend, "development/grant-runtime.sql"), "utf8"),
-    });
+    adminSql(state, secrets, readFileSync(join(backend, "development/grant-runtime.sql"), "utf8"));
     const receiptKey = randomBytes(32).toString("base64");
     // `prepare` runs against the migrated, empty database before the API starts (the
     // cutover rehearsal imports a legacy snapshot here). `command` runs an API
@@ -288,7 +403,34 @@ export async function up(options = {}) {
   }
 }
 
-/** Stops the API, removes the container and the run's state. Idempotent. */
+/** Container mode: the pinned image, whose entrypoint creates the roles. Sets databasePort. */
+async function startPostgresContainer(state, secrets) {
+  const cli = state.cli;
+  // tmpfs storage: nothing outlives the container, and two runs never share a volume.
+  run(cli, [
+    "run", "--detach", "--name", state.container, "--label", `${label}=${state.runId}`,
+    "--publish", "127.0.0.1::5432", "--tmpfs", "/var/lib/postgresql",
+    "--env", `POSTGRES_DB=${state.database}`, "--env", "POSTGRES_USER=postgres",
+    "--env", "POSTGRES_PASSWORD", "--env", "PENNY_MIGRATION_PASSWORD", "--env", "PENNY_RUNTIME_PASSWORD",
+    "--volume", `${join(backend, "development/init-roles.sh")}:/docker-entrypoint-initdb.d/10-penny-roles.sh:ro,z`,
+    state.image,
+  ], {
+    env: {
+      ...process.env,
+      POSTGRES_PASSWORD: secrets.admin,
+      PENNY_MIGRATION_PASSWORD: secrets.migration,
+      PENNY_RUNTIME_PASSWORD: secrets.runtime,
+    },
+  });
+  // The entrypoint's temporary init server listens on the socket only; TCP readiness
+  // means initialization (roles, extensions) finished and the real server is up.
+  await waitFor(() => spawnSync(cli, ["exec", state.container, "pg_isready", "-h", "127.0.0.1", "-U", "postgres", "-d", state.database]).status === 0,
+    { timeoutMs: 90_000, what: "PostgreSQL" });
+  const published = run(cli, ["port", state.container, "5432/tcp"]).trim().split("\n")[0];
+  state.databasePort = Number(published.slice(published.lastIndexOf(":") + 1));
+}
+
+/** Stops the API, removes the container or native cluster and the run's state. Idempotent. */
 export async function down(runId, { keepArtifacts } = {}) {
   const directory = statePath(runId);
   let state = {};
@@ -312,6 +454,9 @@ export async function down(runId, { keepArtifacts } = {}) {
       }
     }
   }
+  // A native cluster (also one left by a crashed runner) is stopped before its files go.
+  const dataDirectory = state.dataDirectory ?? join(directory, "pgdata");
+  await stopNativePostgres(dataDirectory, state.postgresBin);
   let cli = state.cli;
   try {
     cli ??= containerCli();
@@ -324,7 +469,10 @@ export async function down(runId, { keepArtifacts } = {}) {
     if (ids.length) spawnSync(cli, ["rm", "--force", "--volumes", ...ids], { stdio: "ignore" });
   }
   if (!keepArtifacts) rmSync(directory, { recursive: true, force: true });
-  else rmSync(join(directory, "receipts"), { recursive: true, force: true });
+  else {
+    rmSync(join(directory, "receipts"), { recursive: true, force: true });
+    rmSync(dataDirectory, { recursive: true, force: true });
+  }
   if (currentRunId() === runId) rmSync(join(stateRoot, "current"), { force: true });
 }
 
@@ -367,6 +515,8 @@ export function collectArtifacts(state, destination = join(root, "test-results/f
   if (state.cli && state.container) {
     const logs = spawnSync(state.cli, ["logs", state.container], { encoding: "utf8" });
     if (logs.status === 0) writeFileSync(join(destination, "postgres.log"), `${logs.stdout}${logs.stderr}`);
+  } else if (state.postgresLog && existsSync(state.postgresLog)) {
+    writeFileSync(join(destination, "postgres.log"), readFileSync(state.postgresLog));
   }
   return destination;
 }

@@ -32,7 +32,7 @@ private final class PreviewAuthenticator: DeviceAuthenticator {
     func cancel() {}
 }
 
-private struct SpecimenHost<Content: View>: View {
+struct SpecimenHost<Content: View>: View {
     let shell: ShellModel
     var lock = Specimen.lock(enabled: false)
     @ViewBuilder let content: () -> Content

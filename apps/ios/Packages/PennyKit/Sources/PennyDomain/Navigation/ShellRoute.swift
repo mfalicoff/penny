@@ -18,6 +18,8 @@ public enum DetailRoute: Hashable, Sendable {
     case household(id: String)
     case householdExpense(householdID: String, expenseID: String)
     case trip(id: String)
+    /// A personal entry's detail (Activity, MAZ-73).
+    case entry(id: String)
 }
 
 /// Pages inside Settings. The first three are the old More tab's "Manage" pages, which the

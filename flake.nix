@@ -17,9 +17,19 @@
         penny-search-model = final.callPackage ./nix/packages/model.nix { };
       };
 
-      packages = forSystems linuxSystems (pkgs:
-        let penny = self.overlays.default pkgs pkgs; in
-        penny // { default = penny.penny-api; });
+      packages = forSystems systems (pkgs:
+        let
+          penny = self.overlays.default pkgs pkgs;
+          selfHosting = lib.optionalAttrs (lib.elem pkgs.stdenv.hostPlatform.system linuxSystems)
+            (penny // { default = penny.penny-api; });
+        in
+        selfHosting // {
+          # PostgreSQL 18 with pgvector for disposable test environments without a container
+          # runtime (`PENNY_POSTGRES=native`, scripts/test-env). Build it on demand with
+          # `nix build .#test-postgres` and point PENNY_POSTGRES_BIN at its bin. Deliberately
+          # not in the dev shell: entering the project should not fetch or provide a database.
+          test-postgres = pkgs.postgresql_18.withPackages (ps: [ ps.pgvector ]);
+        });
 
       nixosModules = {
         penny = import ./nix/module.nix { inherit self; };
