@@ -16,7 +16,7 @@ All executable tests live under `tests/`. Choose the lowest layer that proves th
 
 Do not add tests under `src/`, root `e2e/`, or generated `ios/` and `android/` directories. Keep runner configuration at the root and executable command wrappers in `scripts/`. Core/UI files use `*.test.ts(x)`; real-DOM UI cases use `*.web.test.jsx`; browser journeys use `*.spec.ts`; native entry points use `*.ios.test.mjs` / `*.android.test.mjs`.
 
-These rules cover the legacy Expo/Node app. The v2 browser app in `apps/web/` has its own runner and layout: colocated `src/**/*.test.ts(x)`, app-level tests in `apps/web/tests/` and a Playwright smoke in `apps/web/e2e/`. Its CI is `.github/workflows/web.yml` ([web app](../apps/web/README.md#ci)).
+These rules cover the legacy Expo/Node app. The v2 browser app in `apps/web/` has its own runner and layout: colocated `src/**/*.test.ts(x)`, app-level tests in `apps/web/tests/` and a Playwright smoke in `apps/web/e2e/`. Its CI is `.github/workflows/web.yml` ([web app](../apps/web/README.md#ci)). Shared-household journeys (MAZ-91) run two browser contexts against an in-memory household fake (`apps/web/tests/fakes/householdServer.ts`) in CI, and against the real .NET API and PostgreSQL with `e2e/households.real.spec.ts` under the [full-stack test environment](migration/test-environment.md) (`PENNY_REAL_STACK=1`).
 
 ## Commands
 
