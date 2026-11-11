@@ -19,6 +19,7 @@ interface DemoEntry {
   categoryId: string;
   date: string;
   note: string;
+  tripId?: string;
 }
 
 /** Sample month, like the legacy app's demo ledger: made-up names and amounts, no real data. */
@@ -50,6 +51,12 @@ export function sampleEntries(today = new Date()): DemoEntry[] {
   }));
 }
 
+/** A made-up personal trip (MAZ-93) starting in 12 days. The demo has no shared trips. */
+export function sampleTrips(today = new Date()) {
+  const at = (offset: number) => dateKey(new Date(today.getFullYear(), today.getMonth(), today.getDate() + offset));
+  return [{ id: "demo-trip", name: "Weekend in Québec City", startDate: at(12), endDate: at(14) }];
+}
+
 /**
  * An in-memory stand-in for the parts of the API the web app uses, for the temporary demo. It
  * keeps the API's rules that matter to the UI (revision conflicts, cursor paging) and answers
@@ -62,9 +69,10 @@ export function createDemoServer(today = new Date()): Transport {
       version: 4,
       currency: "CAD",
       accounts: [],
-      trips: [],
+      trips: sampleTrips(today),
       categories: [],
-      transactions: sampleEntries(today),
+      // Dinner out goes on the sample trip, dated before it: expenses outside the dates still count.
+      transactions: sampleEntries(today).map((entry) => (entry.id === "demo-5" ? { ...entry, tripId: "demo-trip" } : entry)),
       recurring: [] as unknown[],
     } as Record<string, unknown> & { transactions: DemoEntry[] },
   };
