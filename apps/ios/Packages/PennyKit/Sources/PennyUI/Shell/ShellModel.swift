@@ -29,6 +29,8 @@ final class ShellModel {
     let startDemo: (() -> Void)?
     /// Ends the demo and discards everything in it (nil for an account).
     let leaveDemo: (() -> Void)?
+    /// What this launch's Expo import needs from the person (MAZ-72), shown in Settings.
+    let expoImport: ExpoImportNotice?
 
     // MARK: Entries and Activity (MAZ-73)
 
@@ -47,6 +49,8 @@ final class ShellModel {
     var editingEntry: EntryEditRequest?
     /// A route change waiting for the edit sheet to finish closing (`navigate`).
     @ObservationIgnored private var pendingNavigation: ((inout ShellRoute) -> Void)?
+    /// The personal entry shown beside the Activity list on iPad (regular width).
+    var activitySelection: String?
     /// Activity's filters and query, kept while switching tabs.
     var activityFilters: ActivityFilters
     /// Activity's server search (MAZ-121) for an account; local only in the demo.
@@ -59,8 +63,10 @@ final class ShellModel {
 
     init(
         workspace: any LedgerWorkspace, session: ShellSession, today: CalendarDate,
-        startDemo: (() -> Void)? = nil, leaveDemo: (() -> Void)? = nil, search: (any EntrySearchService)? = nil
+        startDemo: (() -> Void)? = nil, leaveDemo: (() -> Void)? = nil, search: (any EntrySearchService)? = nil,
+        expoImport: ExpoImportNotice? = nil
     ) {
+        self.expoImport = expoImport
         self.workspace = workspace
         self.session = session
         self.today = today
@@ -137,7 +143,6 @@ final class ShellModel {
         pendingNavigation = nil
         change(&route)
     }
-
 
     func dismissToast() {
         toastTask?.cancel()

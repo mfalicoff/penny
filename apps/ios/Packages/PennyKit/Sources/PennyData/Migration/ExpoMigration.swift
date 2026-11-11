@@ -80,6 +80,13 @@ public struct ExpoMigrationReport: Equatable, Sendable {
         public var server: String?
         public var email: String
         public var outcome: LedgerOutcome
+
+        public init(key: String, server: String?, email: String, outcome: LedgerOutcome) {
+            self.key = key
+            self.server = server
+            self.email = email
+            self.outcome = outcome
+        }
     }
 
     public enum Note: Equatable, Sendable {
@@ -110,6 +117,12 @@ public struct ExpoMigrationReport: Equatable, Sendable {
     public var status: Status
     public var accounts: [Account] = []
     public var notes: [Note] = []
+
+    public init(status: Status, accounts: [Account] = [], notes: [Note] = []) {
+        self.status = status
+        self.accounts = accounts
+        self.notes = notes
+    }
 
     /// One line per fact, for logs and support. Emails are left out.
     public var lines: [String] {

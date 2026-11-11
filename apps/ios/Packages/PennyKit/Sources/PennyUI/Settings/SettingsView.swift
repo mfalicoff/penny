@@ -19,6 +19,20 @@ struct SettingsView: View {
             Section {
                 AccountHeader()
             }
+            if let notice = shell.expoImport {
+                Section {
+                    Label {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(notice.title).font(.body.weight(.semibold))
+                            Text(notice.message).font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
+                        }
+                    } icon: {
+                        Image(systemName: "exclamationmark.triangle").foregroundStyle(PennyColor.tint)
+                    }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityIdentifier("settings.expoImport")
+                }
+            }
             Section("Manage") {
                 row(.recurring, symbol: "repeat", value: ledger.map { "\($0.recurring.count)" })
                 row(.accounts, symbol: "wallet.bifold", value: ledger.map { "\($0.accounts.count)" })

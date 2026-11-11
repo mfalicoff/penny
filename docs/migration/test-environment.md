@@ -26,7 +26,7 @@ export PENNY_POSTGRES=native PENNY_POSTGRES_BIN="$PWD/.cache/test-postgres/bin"
 node scripts/test-env/penny-env.mjs up
 ```
 
-Each run `initdb`s a cluster in `.cache/test-env/<id>/pgdata` (random admin password, scram authentication, loopback TCP only, no Unix socket, durability off like the container's tmpfs), creates the database and applies the same `init-roles.sh`, and `down` stops it with `pg_ctl` and deletes it. It still never connects to a server it did not create. Any PostgreSQL 18 with pgvector 0.8 or later works through `PENNY_POSTGRES_BIN` (or `pg_config` on `PATH`); the nixpkgs pgvector can trail the pinned image's, so the container stays the reference for backend CI.
+Each run `initdb`s a cluster in `.cache/test-env/<id>/pgdata` (random admin password, scram authentication, loopback TCP only, no Unix socket, durability off like the container's tmpfs), creates the database and applies the same `init-roles.sh`, and `down` stops it with `pg_ctl` and deletes it. It still never connects to a server it did not create. Any PostgreSQL 18 with pgvector 0.8 or later works through `PENNY_POSTGRES_BIN` (or `pg_config` on `PATH`). The flake's `test-postgres` pins pgvector to the reference image's version (0.8.7) rather than taking nixpkgs', which can trail it; change `flake.nix`, `apps/backend/compose.yaml` and `DatabaseSchema.cs` together. The container stays the reference for backend CI.
 
 ## One command
 

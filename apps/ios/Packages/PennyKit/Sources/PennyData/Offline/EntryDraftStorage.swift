@@ -15,7 +15,8 @@ extension LedgerFileStore {
     /// draft is a convenience: an unreadable one is dropped, never a reason to block).
     public func loadDrafts(_ scope: AccountScope) -> EntryDraftShelf {
         guard let data = try? fileSystem.read(draftsURL(for: scope)),
-            let stored = try? JSONDecoder().decode(StoredDrafts.self, from: data), stored.version == StoredDrafts.current
+            let stored = try? JSONDecoder().decode(StoredDrafts.self, from: data),
+            stored.version == StoredDrafts.current
         else { return EntryDraftShelf() }
         return EntryDraftShelf(kept: stored.drafts.compactMap(\.editor))
     }

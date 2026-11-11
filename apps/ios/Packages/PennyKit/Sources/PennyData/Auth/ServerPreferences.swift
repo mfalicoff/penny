@@ -90,7 +90,8 @@ public struct UserDefaultsAuthPreferences: AuthPreferences {
     public func markLaunched() { defaults.set(true, forKey: Self.launchedKey) }
 
     public func unremovedLocalData() -> AccountScope? {
-        defaults.data(forKey: Self.unremovedKey).flatMap { try? JSONDecoder().decode(StoredScope.self, from: $0) }?.scope
+        defaults.data(forKey: Self.unremovedKey).flatMap { try? JSONDecoder().decode(StoredScope.self, from: $0) }?
+            .scope
     }
 
     public func setUnremovedLocalData(_ scope: AccountScope?) {

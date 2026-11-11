@@ -28,7 +28,19 @@
           # runtime (`PENNY_POSTGRES=native`, scripts/test-env). Build it on demand with
           # `nix build .#test-postgres` and point PENNY_POSTGRES_BIN at its bin. Deliberately
           # not in the dev shell: entering the project should not fetch or provide a database.
-          test-postgres = pkgs.postgresql_18.withPackages (ps: [ ps.pgvector ]);
+          # pgvector is pinned to the backend's reference image (apps/backend/compose.yaml,
+          # DatabaseSchema.cs), since nixpkgs' can trail it; change the three together.
+          test-postgres = pkgs.postgresql_18.withPackages (ps: [
+            (ps.pgvector.overrideAttrs (_: rec {
+              version = "0.8.7";
+              src = pkgs.fetchFromGitHub {
+                owner = "pgvector";
+                repo = "pgvector";
+                tag = "v${version}";
+                hash = "sha256-YYXz8zqiuqYWpJwImAhMry/QTLHKOP5MzuY0Of+aflc=";
+              };
+            }))
+          ]);
         });
 
       nixosModules = {
