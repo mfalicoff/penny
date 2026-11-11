@@ -48,22 +48,20 @@ public final class AccountWorkspace: LedgerWorkspace {
     public func commit(_ change: LedgerChange, summary: ChangeSummary) async -> Result<SavedChange, SaveFailure> {
         lastChange = nil
         guard state != nil else { return .failure(Self.failure(.unavailable)) }
-        let before = model.ledger
+        let receipt: SaveReceipt
         do throws(LedgerSaveError) {
-            try await model.save(change)
+            receipt = try await model.save(change)
         } catch {
             return .failure(Self.failure(error))
         }
-        // Undo is offered only when the saved ledger is exactly this change applied to the
-        // ledger on screen: nothing else (a sync landing, occurrences coming due) slipped in,
-        // so the inverse puts back only what the person changed.
-        guard state != nil, let before, let after = model.ledger, after != before,
-            (try? change.apply(to: before)) == after
-        else {
-            return .success(SavedChange(summary: summary, canUndo: false))
+        // The receipt's before and after are read together by the engine, so their difference
+        // is this change plus the recurring entries it made due (a past-dated schedule), and
+        // nothing a sync brought in: the inverse puts back only what this save did.
+        guard state != nil, receipt.after != receipt.before else {
+            return .success(SavedChange(summary: summary, canUndo: false, savedOffline: receipt.savedOffline))
         }
-        let saved = SavedChange(summary: summary, canUndo: true)
-        lastChange = (saved.id, before, after)
+        let saved = SavedChange(summary: summary, canUndo: true, savedOffline: receipt.savedOffline)
+        lastChange = (saved.id, receipt.before, receipt.after)
         return .success(saved)
     }
 
@@ -81,19 +79,15 @@ public final class AccountWorkspace: LedgerWorkspace {
         } catch {
             switch error {
             case .rule, .invalid: return .failure(.unavailable(Self.undoTooLate))
-            case .notLoaded, .storageUnreadable, .writeFailed, .unavailable: return .failure(Self.failure(error))
+            case .notLoaded, .storageUnreadable, .writeFailed, .signingOut, .changingEmail, .unavailable:
+                return .failure(Self.failure(error))
             }
         }
     }
 
-    /// The banner's Retry: read a locked copy again, otherwise sync now.
-    public func syncNow() async {
-        if state?.phase == .storageUnavailable {
-            model.sceneDidBecomeActive()
-        } else {
-            model.syncNow()
-        }
-    }
+    /// The banner's Retry, which does what the load error's action does: download an
+    /// unreadable copy again, read a locked one again, otherwise sync now.
+    public func syncNow() async { await reload() }
 
     /// The load error's action: download an unreadable copy again (`recoverUnreadableStorage`),
     /// read a locked one again, otherwise sync now.
@@ -157,7 +151,7 @@ public final class AccountWorkspace: LedgerWorkspace {
     public static func failure(_ error: LedgerSaveError) -> SaveFailure {
         switch error {
         case .rule(let rule): .rule(rule)
-        case .invalid, .notLoaded, .unavailable: .unavailable(error.message)
+        case .invalid, .notLoaded, .signingOut, .changingEmail, .unavailable: .unavailable(error.message)
         case .storageUnreadable, .writeFailed: .storage(error.message)
         }
     }

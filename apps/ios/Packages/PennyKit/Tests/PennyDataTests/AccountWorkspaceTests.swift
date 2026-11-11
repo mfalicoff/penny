@@ -108,6 +108,10 @@ struct AccountWorkspaceTests {
         #expect(AccountWorkspace.failure(.storageUnreadable) == .storage(LedgerSaveError.storageUnreadable.message))
         #expect(AccountWorkspace.failure(.notLoaded) == .unavailable(LedgerSaveError.notLoaded.message))
         #expect(AccountWorkspace.failure(.unavailable) == .unavailable(LedgerSaveError.unavailable.message))
+        #expect(AccountWorkspace.failure(.signingOut) == .unavailable(LedgerSaveError.signingOut.message))
+        #expect(AccountWorkspace.failure(.changingEmail) == .unavailable(LedgerSaveError.changingEmail.message))
+        #expect(LedgerSaveError.signingOut.message != LedgerSaveError.unavailable.message)
+        #expect(LedgerSaveError.changingEmail.message != LedgerSaveError.unavailable.message)
         #expect(AccountWorkspace.failure(.invalid([])) == .unavailable(LedgerSaveError.invalid([]).message))
     }
 
@@ -126,6 +130,8 @@ struct AccountWorkspaceTests {
         await harness.goOffline()
         let saved = try await workspace.commit(.saveEntry(Self.taxi), summary: Self.summary).get()
         #expect(saved.summary == Self.summary)
+        #expect(saved.savedOffline)
+        #expect(saved.detail == "Taxi to airport · Saved on this device", "the toast says it waits for the network")
         #expect(workspace.load.ledger?.entry(id: "taxi") != nil, "shown at once")
         #expect(workspace.pendingEntryIDs == ["taxi"])
         #expect(workspace.sync == .offline(pending: 1, lastSynced: synced))
@@ -154,6 +160,7 @@ struct AccountWorkspaceTests {
         try await signedIn()
         let saved = try await workspace.commit(.saveEntry(Self.taxi), summary: Self.summary).get()
         #expect(saved.canUndo)
+        #expect(!saved.savedOffline && saved.detail == "Taxi to airport")
         await eventually("save synced") { harness.server.ledger(Offline.alex)?.entry(id: "taxi") != nil }
 
         try await workspace.undo(saved).get()
@@ -164,6 +171,24 @@ struct AccountWorkspaceTests {
         #expect(harness.server.ledger(Offline.alex)?.entry(id: "lunch") != nil)
         let again = await workspace.undo(saved)
         #expect(again.failure == .unavailable(AccountWorkspace.undoTooLate), "only once")
+    }
+
+    @Test("whenASaveMakesRecurringEntriesComeDue_AccountWorkspace_ShouldStillOfferUndo")
+    func undoWithDueOccurrences() async throws {
+        harness.server.edit(Offline.alex) { $0.recurring = [Offline.rule("rent", next: "2026-12-01")] }
+        try await signedIn()
+        let original = try #require(workspace.load.ledger?.rule(id: "rent"))
+        var pastDated = original
+        pastDated.nextDate = .day("2026-11-01")
+        let saved = try await workspace.commit(
+            .saveSchedule(pastDated, original: original), summary: ChangeSummary(title: "Schedule updated")
+        ).get()
+        #expect(workspace.load.ledger?.entry(id: "rent:2026-11-01") != nil, "the save recorded the due entry")
+        #expect(saved.canUndo)
+
+        try await workspace.undo(saved).get()
+        #expect(workspace.load.ledger?.entry(id: "rent:2026-11-01") == nil)
+        #expect(workspace.load.ledger?.rule(id: "rent") == original)
     }
 
     @Test("whenTheSavedRecordChangedOnAnotherDevice_AccountWorkspace_ShouldRefuseUndoAndKeepTheirEdit")
@@ -220,6 +245,24 @@ struct AccountWorkspaceTests {
         #expect(refused == .failure(.storage(LedgerSaveError.storageUnreadable.message)))
 
         await workspace.reload()
+        await relaunched.waitFor(.upToDate, "recovered from the server")
+        #expect(workspace.load.ledger?.entry(id: "lunch") != nil)
+    }
+
+    @Test("whenTheCopyIsUnreadable_AccountWorkspaceBannerRetry_ShouldDownloadItAgain")
+    func unreadableRecoveryFromBanner() async throws {
+        try await signedIn()
+        try Data("not json".utf8).write(to: harness.store.files.url(for: Offline.scope()))
+        let relaunched = harness.relaunched(online: true)
+        let workspace = AccountWorkspace(model: relaunched.model, scope: Offline.scope())
+        await relaunched.auth.restore()
+        await relaunched.waitFor(.storageUnreadable)
+        guard case .failing(_, let problem) = workspace.sync, problem.kind == .storageUnreadable else {
+            Issue.record("expected the banner to show the unreadable copy, got \(workspace.sync)")
+            return
+        }
+
+        await workspace.syncNow()
         await relaunched.waitFor(.upToDate, "recovered from the server")
         #expect(workspace.load.ledger?.entry(id: "lunch") != nil)
     }

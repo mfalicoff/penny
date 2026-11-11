@@ -406,6 +406,38 @@ struct AuthControllerTests {
         #expect(localData.log.all.filter { $0 == "remove \(email)" }.count == 3)
     }
 
+    @Test("whenTheAppRelaunchesAfterSignOutCouldNotRemoveLocalData_AuthController_ShouldStillOfferToRemoveIt")
+    func unremovedLocalDataSurvivesRelaunch() async throws {
+        let localData = FakeLocalData()
+        let preferences = EphemeralAuthPreferences(server: SavedServer(server: AuthFixtures.server))
+        let (controller, transport) = try await signedIn(
+            ["POST /api/auth/logout": Routes.json(#"{"ok":true}"#)], localData: localData, preferences: preferences)
+        localData.removeError.withLock { $0 = CocoaError(.fileWriteUnknown) }
+        try await controller.signOut()
+        #expect(preferences.unremovedLocalData() == scope)
+
+        // A new process: only the preferences remain.
+        let relaunched = AuthFixtures.controller(transport: transport, preferences: preferences, localData: localData)
+        await relaunched.restore()
+        #expect(relaunched.unremovedLocalData == scope)
+        localData.removeError.withLock { $0 = nil }
+        await relaunched.removeUnremovedLocalData()
+        #expect(relaunched.unremovedLocalData == nil)
+        #expect(preferences.unremovedLocalData() == nil)
+    }
+
+    @Test("whenStored_UserDefaultsAuthPreferences_ShouldKeepTheUnremovedAccount")
+    func unremovedLocalDataInUserDefaults() throws {
+        let suite = "penny.tests.\(UUID().uuidString)"
+        defer { UserDefaults().removePersistentDomain(forName: suite) }
+        let preferences = UserDefaultsAuthPreferences(suiteName: suite)
+        #expect(preferences.unremovedLocalData() == nil)
+        preferences.setUnremovedLocalData(scope)
+        #expect(UserDefaultsAuthPreferences(suiteName: suite).unremovedLocalData() == scope)
+        preferences.setUnremovedLocalData(nil)
+        #expect(preferences.unremovedLocalData() == nil)
+    }
+
     @Test("whenAnEarlierSessionOfTheSameAccountAnswers401_AuthController_ShouldKeepTheNewerSession")
     func staleExpiryOfSameAccountIgnored() async throws {
         let sessions = EphemeralSessionStore()
@@ -502,14 +534,16 @@ struct AuthControllerTests {
 
     private func signedIn(
         _ routes: [String: Routes.Answer], localData: FakeLocalData = FakeLocalData(),
-        sessions: EphemeralSessionStore = EphemeralSessionStore()
+        sessions: EphemeralSessionStore = EphemeralSessionStore(),
+        preferences: EphemeralAuthPreferences = EphemeralAuthPreferences(server: SavedServer(server: AuthFixtures.server))
     ) async throws -> (AuthController, StubTransport) {
         var all = routes
         all["POST /api/auth/login"] = Routes.json(Routes.session(email))
         // Requests, device registration and local data share one ordered log.
         let transport = Routes.transport(all, log: localData.log)
         let controller = AuthFixtures.controller(
-            transport: transport, sessions: sessions, localData: localData, log: localData.log)
+            transport: transport, sessions: sessions, preferences: preferences, localData: localData,
+            log: localData.log)
         await controller.restore()
         try await controller.signIn(email: email, password: "correct horse")
         return (controller, transport)

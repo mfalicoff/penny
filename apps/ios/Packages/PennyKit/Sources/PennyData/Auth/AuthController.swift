@@ -17,7 +17,8 @@ public final class AuthController {
     public private(set) var server: SavedServer?
     public private(set) var singleSignOn: SingleSignOnStatus = .unknown
     /// An account whose entries are still on this device because removing them failed at
-    /// sign-out. The signed-out screen says so and offers `removeUnremovedLocalData()`.
+    /// sign-out. The signed-out screen says so and offers `removeUnremovedLocalData()`. Kept across
+    /// launches (`AuthPreferences.unremovedLocalData`).
     public private(set) var unremovedLocalData: AccountScope?
 
     @ObservationIgnored private let defaultServer: ServerURL?
@@ -53,6 +54,13 @@ public final class AuthController {
         self.localData = localData
         self.devices = devices
         self.now = now
+        // A sign-out that could not remove its entries before the app quit still offers it.
+        unremovedLocalData = preferences.unremovedLocalData()
+    }
+
+    private func setUnremovedLocalData(_ scope: AccountScope?) {
+        unremovedLocalData = scope
+        preferences.setUnremovedLocalData(scope)
     }
 
     /// A client for the signed-in account, or nil while signed out. Features use only this
@@ -376,7 +384,7 @@ public final class AuthController {
             // this device: say so and offer `removeUnremovedLocalData()`. Not if the same
             // account signed in again meanwhile; it is its own data then, so it takes saves.
             await localData.cancelRemoval(for: account.scope)
-            if state.account?.scope != account.scope { unremovedLocalData = account.scope }
+            if state.account?.scope != account.scope { setUnremovedLocalData(account.scope) }
         }
     }
 
@@ -389,7 +397,7 @@ public final class AuthController {
         } catch {
             return
         }
-        if unremovedLocalData == scope { unremovedLocalData = nil }
+        if unremovedLocalData == scope { setUnremovedLocalData(nil) }
     }
 
     /// "Sync, then sign out".
@@ -536,7 +544,7 @@ public final class AuthController {
         let account = SignedInAccount(session: session, generation: bump(), isVerified: verified)
         state = .signedIn(account)
         // Entries a sign-out could not remove belong to this account again.
-        if unremovedLocalData == account.scope { unremovedLocalData = nil }
+        if unremovedLocalData == account.scope { setUnremovedLocalData(nil) }
         return account
     }
 

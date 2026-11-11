@@ -109,7 +109,11 @@ public enum LedgerSaveError: Error, Equatable, Sendable {
     case storageUnreadable
     /// Writing to this device failed, so nothing was saved.
     case writeFailed
-    /// The account is signing out, signed out or switching.
+    /// This account is signing out, so its entries are about to leave this device.
+    case signingOut
+    /// This account's entries are moving to its new email (changed on the server).
+    case changingEmail
+    /// The account signed out, its session ended or another account signed in.
     case unavailable
 
     public var message: String {
@@ -119,6 +123,9 @@ public enum LedgerSaveError: Error, Equatable, Sendable {
         case .notLoaded: "Wait for your ledger to load before saving."
         case .storageUnreadable: "Saved entries on this device can't be read. Recover them before saving."
         case .writeFailed: "This device couldn't save the change. Free some space and try again."
+        case .signingOut: "You're signing out, so this change wasn't saved."
+        case .changingEmail:
+            "Penny is moving your entries to your account's new email. Try again in a moment."
         case .unavailable: "Your session changed. Reopen this entry before saving."
         }
     }
