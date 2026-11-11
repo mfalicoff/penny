@@ -44,11 +44,11 @@ Everything lands in `test-results/ios/ui/<plan>/` (ignored by Git; CI uploads it
 
 | File | Contents |
 | --- | --- |
-| `iphone.xcresult`, `ipad.xcresult` | Result bundles: logs, failures, attachments, Xcode's automatic failure screenshots and screen recordings |
+| `iphone.xcresult`, `ipad.xcresult` | Result bundles: logs, failures, attachments, and what XCTest collects on a failure (UI snapshot, the app's accessibility hierarchy, the element debug descriptions; screen recordings when the runtime provides them) |
 | `iphone-attachments/`, `ipad-attachments/` | The same attachments exported as files (`xcresulttool export attachments`) with a `manifest.json` |
 | `server/` | `api.log`, `postgres.log` and `environment.json` of the run (no token or passwords) |
 
-Named screenshots (`<device>-<appearance>-<step>`) are kept on success; failure screenshots, recordings and the `accessibility-tree` attachment (the app's element tree at the failure) only on failure.
+Named screenshots (`<device>-<appearance>-<step>`) are kept on success; XCTest's failure diagnostics (the "App UI hierarchy" text and the UI snapshot) only on failure.
 
 ## Plans and the OS/device matrix
 
@@ -72,6 +72,7 @@ There is no older-OS fallback to test: iOS 26 is the floor (README, minimum OS),
 
 - **Accounts**: every test creates its own account (`POST /api/test/users`, `<label>-<n>-<random>@penny.test`, random password). Tests never share data and can run in any order; the database itself is per run.
 - **Clock**: the first stack access pins the server clock to `2026-10-15T12:00:00Z` (the seeds' clock), and the app's "today" to `2026-10-15` (`PENNY_TEST_TODAY`). Tests that move the clock (session expiry) do so explicitly; the next test pins it again.
+- **Single sign-on** tests unpin the server clock first (`Stack.unpinClock()`): the API's HTTP `Date` header is real time while the attempt's `expiresAt` follows the pinned clock, so at the pinned 2026-10-15 the app sees an already-expired attempt ("Sign-in expired"). The provider's ID tokens use real time anyway.
 - **Faults**: injected with `PUT /api/test/faults` (abort or status, per method and path prefix) and always cleared in `tearDown`. Faults are global to the environment, which is why plans are not parallelized.
 - **App state**: every test's first launch sets `PENNY_TEST_RESET=1`, which erases the app's defaults, App Group container, Application Support, Documents, Caches and Keychain items before anything reads them: the same state as a fresh install. `relaunch()` terminates and relaunches without it, keeping the session, the offline ledger and preferences. The runner additionally creates new simulators for every run and deletes them afterwards.
 - **Demo data**: screenshot tests use the temporary demo (`PENNY_TEST_DEMO=1`) at the pinned date, so captures are comparable across runs.
@@ -89,7 +90,7 @@ Debug-only (`#if PENNY_TEST_CONTROLS`); `ios.sh release-check` fails if any `PEN
 | `PENNY_TEST_CONTAINER_SEED=<path>` | Apply a seed property list after the reset |
 | `PENNY_TEST_REDUCE_TRANSPARENCY=1`, `PENNY_TEST_REDUCE_MOTION=1` | Force those settings for Penny's own views (system controls follow the simulator) |
 
-Large text uses the system launch argument `-UIPreferredContentSizeCategoryName`, and appearance `XCUIDevice.shared.appearance`; neither needs app code.
+Large text uses the system launch argument `-UIPreferredContentSizeCategoryName`. Appearance is set with `XCUIDevice.shared.appearance` and pinned through Penny's own setting (a `penny.appearance` seed), because the device setting alone did not restyle a freshly launched app on the iOS 27.0 simulator.
 
 ### Install, upgrade, relaunch, network and permissions
 
@@ -130,11 +131,17 @@ Tests find elements only by identifier, never by visible text (except system-pro
 - The Smoke plan has no retries: a smoke failure blocks the PR. If a smoke test fails without a product cause, fix it or move it out of Smoke the same day with a linked issue; never add sleeps.
 - The Full plan retries a failed test once. A test that passes only on retry is flaky: open an issue with the xcresult, and fix or quarantine it (`throw XCTSkip("Flaky: MAZ-…")`) within a week.
 - Wait on conditions, never on time: `Penny.wait(for:)`, `waitForSelection`, `waitForEntry` (pulls to refresh) and `Stack.waitForLedger` (polls the server).
-- Failures stop the test: helpers throw `UIExpectationFailed` rather than `XCTFail`, because XCTest cannot stop async test code after a soft failure.
+- Failures stop the test: helpers throw `UIExpectationFailed` rather than `XCTFail`, because XCTest cannot stop async test code after a soft failure. Do not snapshot the app from `record(_:)`: it deadlocks async UI tests.
+
+## Findings and known issues
+
+- **Fixed**: `AdaptiveColor.color` (PennyDesign) trapped when SwiftUI resolved a color on its async render thread (main-actor closure under the module's default isolation); it crashed sign-in, account creation and offline journeys. The getter is now `nonisolated`.
+- **Open**: on iPad, going back from Settings › Currency in the detail column crashed once in SwiftUI (`NavigationColumnState.boundPathChange`, `swift_unexpectedError`) in `test_whenChangesArePending_SignOut…`; it did not reproduce in isolation. The settings path binding of the split view (`SplitShell`, MAZ-69) needs a look.
+- **Open**: at the largest accessibility text size the demo banner on iPhone wraps its title mid-word ("Change-s"); see the `large-text` screenshots.
 
 ## Debugging
 
-1. Open `test-results/ios/ui/<plan>/<device>.xcresult` in Xcode: the failing step, its screenshot and screen recording, and the `accessibility-tree` attachment (search it for the identifier that was not found).
+1. Open `test-results/ios/ui/<plan>/<device>.xcresult` in Xcode: the failing step, its UI snapshot and the "App UI hierarchy" attachment (search it for the identifier that was not found).
 2. Check `server/api.log` for the requests around the failure (status codes, faults applied).
 3. Re-run one test: `PENNY_UI_DEVICES=iphone PENNY_UI_ONLY=PennyUITests/<Class>/<test> apps/ios/scripts/ios.sh ui-test full`.
 4. Or keep an environment up (`npm run test-env -- up --oidc`) and run the test from Xcode with breakpoints; `npm run test-env -- status` shows the clock and active faults.
