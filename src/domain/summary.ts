@@ -8,6 +8,27 @@ export type KindTotals = ReturnType<typeof totals>;
 // Recorded history excludes scheduled occurrences, including shared ones merged into the view.
 export const isRecorded = (entry: Transaction) => !(entry as OverviewEntry).scheduled;
 
+/** Options of a month breakdown. */
+export type MonthOptions = {
+  /**
+   * The person's local calendar date (`dateKey()` on the device, or `dateKeyIn` for a known time
+   * zone). With it, income dated after today is expected (MAZ-136): it counts toward Projected,
+   * not toward recorded totals or Left to spend, until its date arrives. Without it, every entry
+   * dated in the month is recorded, as on the legacy Overview, which keeps that behavior.
+   */
+  today?: string;
+};
+
+// MAZ-136: a ledger entry is expected rather than recorded when it is income dated after today.
+// The entry itself never changes; on its date it moves from Projected to Left to spend. Income
+// only: future-dated expenses and investment contributions stay recorded (MAZ-139 owns those).
+export const isExpectedIncome = (entry: Transaction, today: string | undefined) =>
+  today !== undefined && isRecorded(entry) && entry.kind === "income" && entry.date > today;
+
+/** Not counted in Left to spend yet: a scheduled preview, or income dated after today. */
+export const isExpected = (entry: Transaction, today: string | undefined) =>
+  !isRecorded(entry) || isExpectedIncome(entry, today);
+
 // Preview only the requested month; browsing never records transactions or advances schedules.
 export function scheduledEntries(ledger: Ledger, month: string): OverviewEntry[] {
   const start = `${month}-01`;
@@ -31,39 +52,49 @@ export function scheduledEntries(ledger: Ledger, month: string): OverviewEntry[]
 }
 
 // One breakdown of a month, shared by the Overview selector and `summarizeMonth`.
-export function monthBreakdown(ledger: Ledger, month: string) {
+export function monthBreakdown(ledger: Ledger, month: string, { today }: MonthOptions = {}) {
   const entries: OverviewEntry[] = ledger.transactions.filter((t) => t.date.startsWith(month));
-  const recordedEntries = entries.filter(isRecorded);
+  // Every ledger row dated in the month. Income dated after today is expected, not recorded.
+  const dated = entries.filter(isRecorded);
+  const recordedEntries = dated.filter((entry) => !isExpectedIncome(entry, today));
+  const expected = dated.filter((entry) => isExpectedIncome(entry, today));
   // A recorded occurrence replaces its preview. Personal rows match by id only (`rule:date`, as
   // Swift `Recurrence.previews`): an edited entry keeps its recurringId but not its occurrence.
   // Shared rows (recorded and preview ids differ) match by household, rule and date; this needs
   // the server's `recurringId` on recorded rows, so a row without one is never deduplicated.
+  // An expected entry is still a ledger row, so it replaces its preview too.
   const occurrence = (entry: OverviewEntry) => {
     const householdId = "householdId" in entry ? String(entry.householdId ?? "") : "";
     return householdId && entry.recurringId ? `${householdId}|${entry.recurringId}|${entry.date}` : null;
   };
-  const recordedIds = new Set(recordedEntries.map((entry) => entry.id));
-  const recordedOccurrences = new Set(recordedEntries.map(occurrence).filter((key) => key !== null));
+  const recordedIds = new Set(dated.map((entry) => entry.id));
+  const recordedOccurrences = new Set(dated.map(occurrence).filter((key) => key !== null));
   const scheduled = [...scheduledEntries(ledger, month), ...entries.filter((t) => t.scheduled)].filter((entry) => {
     const key = occurrence(entry);
     return !recordedIds.has(entry.id) && !(key !== null && recordedOccurrences.has(key));
   });
   const scheduledIncome = scheduled.filter((entry) => entry.kind === "income");
-  const expectedIncome = scheduledIncome.reduce((sum, entry) => sum + entry.share, 0);
-  // Projected adds every scheduled occurrence of the month: income, expenses and investments,
-  // personal and shared. (The legacy app added scheduled income only.)
-  const summaryEntries: OverviewEntry[] = [...recordedEntries, ...scheduled];
-  // The money-flow chart keeps its legacy input: recorded entries plus expected income.
-  const moneyFlowEntries: OverviewEntry[] = [...recordedEntries, ...scheduledIncome];
-  return { recordedEntries, scheduled, calendarEntries: summaryEntries, expectedIncome, summaryEntries, moneyFlowEntries,
+  const expectedIncome = [...expected, ...scheduledIncome].reduce((sum, entry) => sum + entry.share, 0);
+  // Projected adds every scheduled occurrence of the month (income, expenses and investments,
+  // personal and shared; the legacy app added scheduled income only) and income dated after today.
+  const summaryEntries: OverviewEntry[] = [...recordedEntries, ...expected, ...scheduled];
+  // The money-flow chart keeps its legacy input: entries dated in the month plus scheduled income.
+  const moneyFlowEntries: OverviewEntry[] = [...recordedEntries, ...expected, ...scheduledIncome];
+  return { recordedEntries, expected, scheduled, calendarEntries: summaryEntries, expectedIncome, summaryEntries, moneyFlowEntries,
     recorded: totals(recordedEntries), summary: totals(summaryEntries) };
 }
 
 export type MonthSummary = {
   recorded: KindTotals;
-  /** Scheduled income not yet recorded this month (part of `projected`). */
+  /**
+   * Income not in Left to spend yet (part of `projected`): scheduled income not recorded this
+   * month, plus income dated after `today` when one is given (MAZ-136).
+   */
   expectedIncome: number;
-  /** Recorded plus every scheduled occurrence not yet recorded this month (income, expenses, investments). */
+  /**
+   * Recorded plus every scheduled occurrence not yet recorded this month (income, expenses,
+   * investments) and income dated after `today`.
+   */
   projected: KindTotals;
   /** `net` of each; signed. */
   recordedNet: number;
@@ -75,7 +106,7 @@ export type MonthSummary = {
 export const net = ({ income, expense, investment }: KindTotals) => income - expense - investment;
 
 // Integer cents of personal shares. Never mutates the ledger or advances schedules.
-export function summarizeMonth(ledger: Ledger, month: string): MonthSummary {
-  const { recorded, summary: projected, expectedIncome } = monthBreakdown(ledger, month);
+export function summarizeMonth(ledger: Ledger, month: string, options: MonthOptions = {}): MonthSummary {
+  const { recorded, summary: projected, expectedIncome } = monthBreakdown(ledger, month, options);
   return { recorded, expectedIncome, projected, recordedNet: net(recorded), projectedNet: net(projected) };
 }

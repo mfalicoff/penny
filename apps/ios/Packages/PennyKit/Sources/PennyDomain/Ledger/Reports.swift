@@ -147,6 +147,20 @@ public struct ReportEntry: Hashable, Sendable, Identifiable {
         scheduled = item.scheduled
     }
 
+    /// Income dated after `today` (the person's local date): expected, not recorded (MAZ-136).
+    /// It counts toward Projected, not Left to spend, until its date; the entry never changes.
+    /// Income only: future-dated expenses and contributions stay recorded (MAZ-139).
+    public func isExpectedIncome(today: CalendarDate?) -> Bool {
+        guard let today, !scheduled else { return false }
+        return kind == .income && date > today
+    }
+
+    /// Not in Left to spend yet: a scheduled preview, or income dated after `today`. Lists mark
+    /// these as expected (the pending color).
+    public func isExpected(today: CalendarDate?) -> Bool {
+        scheduled || isExpectedIncome(today: today)
+    }
+
     /// Newest first, then id in ordinal order: a total order, so lists and pages never shuffle.
     static func newestFirst(_ lhs: ReportEntry, _ rhs: ReportEntry) -> Bool {
         lhs.date != rhs.date ? lhs.date > rhs.date : JavaScriptText.ordinalLess(lhs.id, rhs.id)
@@ -274,17 +288,22 @@ public struct LedgerReport: Sendable {
 /// Home for one month: what was recorded, what is scheduled, and both totals side by side.
 public struct MonthSummary: Hashable, Sendable {
     public let month: MonthKey
-    /// Entries recorded in the month, personal and shared.
+    /// Entries recorded in the month, personal and shared, without `expected`.
     public let recordedEntries: [ReportEntry]
+    /// Personal income dated in the month after today (MAZ-136): ledger entries that count
+    /// toward Projected, not Left to spend, until their date. Empty without a `today`.
+    public let expected: [ReportEntry]
     /// Occurrences of active personal and shared rules not recorded yet, oldest first.
     public let scheduled: [ReportEntry]
     /// Recorded only: the basis of **Left to spend**.
     public let recorded: KindTotals
-    /// Recorded plus every occurrence in `scheduled`: scheduled income, expenses and investment
-    /// contributions, personal and shared (v2 `summarizeMonth` `projected`, redesign-states.json
-    /// `projected`). The legacy app added scheduled income only (MAZ-139).
+    /// Recorded plus `expected` and every occurrence in `scheduled`: scheduled income, expenses
+    /// and investment contributions, personal and shared (v2 `summarizeMonth` `projected`,
+    /// redesign-states.json and month-totals.json `projected`). The legacy app added scheduled
+    /// income only (MAZ-139).
     public let projected: KindTotals
-    /// The scheduled income included in `projected`: expected, not cash available today.
+    /// The income included in `projected` but not in `recorded`: scheduled income plus income
+    /// dated after today. Expected, not cash available today.
     public let expectedIncome: Int64
     /// Recorded spending by category (largest first).
     public let spending: [CategoryAmount]
@@ -300,8 +319,14 @@ extension LedgerReport {
     /// The month's recorded and projected totals. Previews come from each active personal
     /// rule's `nextDate` (they are not recorded until materialized, wherever they fall) and from
     /// the server's shared previews; an occurrence already recorded is never counted again.
-    public func month(_ month: MonthKey) -> MonthSummary {
-        let recordedEntries = recorded.filter { month.contains($0.date) }
+    ///
+    /// - Parameter today: the person's local date (`CalendarDate(Date(), in: .current)`). Income
+    ///   dated after it is `expected` (v2 `MonthOptions.today`, MAZ-136); `nil` records every
+    ///   entry dated in the month.
+    public func month(_ month: MonthKey, today: CalendarDate? = nil) -> MonthSummary {
+        let dated = recorded.filter { month.contains($0.date) }
+        let recordedEntries = dated.filter { !$0.isExpectedIncome(today: today) }
+        let expected = dated.filter { $0.isExpectedIncome(today: today) }
         let personal = Recurrence.previews(ledger, from: month.first, through: month.last)
             .map { ReportEntry(personal: $0, scheduled: true) }
         let shared = sharedScheduled.filter { month.contains($0.date) }
@@ -310,12 +335,14 @@ extension LedgerReport {
         }
         let recordedTotals = KindTotals(recordedEntries)
         // v2 `monthBreakdown`: projection adds every scheduled occurrence (income, expenses and
-        // investments). A recorded occurrence has already replaced its preview, so none counts twice.
-        let expectedIncome = scheduled.filter { $0.kind == .income }.reduce(0) { $0 + $1.share }
-        let projected = KindTotals(recordedEntries + scheduled)
+        // investments) and income dated after today. A recorded occurrence (expected or not) has
+        // already replaced its preview, so none counts twice.
+        let expectedIncome = (expected + scheduled).filter { $0.kind == .income }.reduce(0) { $0 + $1.share }
+        let projected = KindTotals(recordedEntries + expected + scheduled)
         return MonthSummary(
-            month: month, recordedEntries: recordedEntries, scheduled: scheduled, recorded: recordedTotals,
-            projected: projected, expectedIncome: expectedIncome, spending: spending(recordedEntries))
+            month: month, recordedEntries: recordedEntries, expected: expected, scheduled: scheduled,
+            recorded: recordedTotals, projected: projected, expectedIncome: expectedIncome,
+            spending: spending(recordedEntries))
     }
 
     /// Home's entry list: recorded and scheduled rows of the month that match the filters,
@@ -326,7 +353,7 @@ extension LedgerReport {
         categoryId: String? = nil
     ) -> [ReportEntry] {
         let matches = matcher(query)
-        return (summary.recordedEntries + summary.scheduled)
+        return (summary.recordedEntries + summary.expected + summary.scheduled)
             .filter {
                 (day == nil || $0.date == day) && (kind == nil || $0.kind == kind)
                     && (categoryId == nil || $0.categoryId == categoryId) && matches($0)

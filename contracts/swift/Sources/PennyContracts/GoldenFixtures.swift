@@ -66,6 +66,56 @@ public struct MergeFixture: Codable, Equatable, Sendable {
     }
 }
 
+/// month-totals.json (MAZ-136): Left to spend versus Projected around today.
+public struct MonthTotalsFixture: Codable, Equatable, Sendable {
+    public var generator: String
+    public var description: String
+    public var todayCases: [TodayCase]
+    public var ledgers: [String: Ledger]
+    public var cases: [Case]
+
+    /// An instant in an IANA time zone and the local date it falls on.
+    public struct TodayCase: Codable, Equatable, Sendable {
+        public var instant: String
+        public var timeZone: String
+        public var today: String
+    }
+
+    public struct Clock: Codable, Equatable, Sendable {
+        public var instant: String
+        public var timeZone: String
+    }
+
+    public struct Case: Codable, Equatable, Sendable {
+        public var name: String
+        /// A key of `ledgers`.
+        public var ledger: String
+        /// The local date; `nil` is the legacy Overview, which does not split.
+        public var today: String?
+        public var clock: Clock?
+        public var month: String
+        public var expected: Expected
+    }
+
+    public struct Totals: Codable, Equatable, Sendable {
+        public var income: Int64
+        public var expense: Int64
+        public var investment: Int64
+    }
+
+    public struct Expected: Codable, Equatable, Sendable {
+        public var recorded: Totals
+        public var projected: Totals
+        public var expectedIncome: Int64
+        public var recordedNet: Int64
+        public var projectedNet: Int64
+        /// Ledger entries shown as expected, sorted.
+        public var expectedIds: [String]
+        /// Scheduled previews, sorted.
+        public var scheduledIds: [String]
+    }
+}
+
 /// ledger-upgrades.json
 public struct LedgerUpgradeCase: Codable, Equatable, Sendable {
     public var name: String

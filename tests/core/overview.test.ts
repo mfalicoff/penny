@@ -124,3 +124,19 @@ test("expected income uses scheduled shares, month boundaries and recorded occur
   assert.equal(result.summary.income, 60000);
   assert.deepEqual(result.summaryEntries, [recorded]);
 });
+
+test("with today, income dated after it is expected: projected but not recorded, still listed (MAZ-136)", () => {
+  // Payday is 2026-09-21 and lunch 2026-09-20. Without today (the legacy Overview) both count.
+  assert.deepEqual(selectOverview(ledger, filters).recorded, { expense: 1000, income: 50000, investment: 0 });
+  const before = structuredClone(ledger);
+  const ahead = selectOverview(ledger, { ...filters, today: "2026-09-20" });
+  assert.deepEqual(ahead.recorded, { expense: 1000, income: 0, investment: 0 });
+  assert.deepEqual(ahead.summary, { expense: 1000, income: 50000, investment: 0 });
+  assert.equal(ahead.expectedIncome, 50000);
+  assert.deepEqual(ahead.expected.map((entry) => entry.id), ["salary"]);
+  assert.deepEqual(ahead.visibleEntries.map((entry) => entry.id), ["salary", "meal"]);
+  // On its date it is recorded; a future-dated expense is never expected (MAZ-139).
+  assert.deepEqual(selectOverview(ledger, { ...filters, today: "2026-09-21" }).recorded, { expense: 1000, income: 50000, investment: 0 });
+  assert.deepEqual(selectOverview(ledger, { ...filters, today: "2026-09-01" }).recorded, { expense: 1000, income: 0, investment: 0 });
+  assert.deepEqual(ledger, before);
+});

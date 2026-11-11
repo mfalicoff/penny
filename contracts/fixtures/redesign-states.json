@@ -8,12 +8,16 @@
   ],
   "totals": {
     "alex-2026-10": {
-      "description": "alex, October 2026 at the scenario clock. Recorded counts entries dated in the month (personal shares plus recorded shared shares); projected adds the month's scheduled personal and shared occurrences after today. Income and spending are not an account balance.",
+      "description": "alex, October 2026 at the scenario clock (2026-10-15 in UTC). Recorded (Left to spend) counts entries dated in the month on or before today (personal shares plus recorded shared shares); none of alex's income is dated after today. Projected adds the month's scheduled personal and shared occurrences after today. Income and spending are not an account balance.",
+      "clock": "2026-10-15T12:00:00Z",
+      "timeZone": "UTC",
+      "today": "2026-10-15",
       "recorded": {
         "expenseCents": 125950,
         "incomeCents": 0,
         "investmentCents": 50000
       },
+      "expected": [],
       "scheduled": [
         {
           "source": "shared",
@@ -32,6 +36,42 @@
         "expenseCents": 130750,
         "incomeCents": 0,
         "investmentCents": 50000
+      }
+    },
+    "dana-2026-10": {
+      "description": "dana (future-income scenario), October 2026 in America/Toronto (MAZ-136). At 02:30 UTC on Oct 16 it is still Oct 15 in Toronto. Recorded (Left to spend) counts income dated on or before today and every expense dated in the month, including the future-dated concert tickets (expenses and investments are out of scope, MAZ-139). Income dated after today is expected: it counts toward Projected, with the scheduled pay, until its date.",
+      "clock": "2026-10-16T02:30:00Z",
+      "timeZone": "America/Toronto",
+      "today": "2026-10-15",
+      "recorded": {
+        "expenseCents": 129000,
+        "incomeCents": 290000,
+        "investmentCents": 0
+      },
+      "expected": [
+        {
+          "title": "Freelance invoice",
+          "date": "2026-10-16",
+          "shareCents": 60000
+        },
+        {
+          "title": "Tax refund",
+          "date": "2026-10-28",
+          "shareCents": 2500
+        }
+      ],
+      "scheduled": [
+        {
+          "source": "personal",
+          "title": "Pay",
+          "date": "2026-10-30",
+          "shareCents": 200000
+        }
+      ],
+      "projected": {
+        "expenseCents": 129000,
+        "incomeCents": 552500,
+        "investmentCents": 0
       }
     }
   },

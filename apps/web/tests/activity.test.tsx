@@ -58,6 +58,23 @@ describe("Activity", () => {
     expect(api.state.projections).toContain("/api/households/projection?month=2026-11");
   });
 
+  it("marks income dated after today as expected, but not a future-dated expense (MAZ-136)", async () => {
+    const now = new Date();
+    const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    const tomorrow = `${String(next.getFullYear())}-${String(next.getMonth() + 1).padStart(2, "0")}-${String(next.getDate()).padStart(2, "0")}`;
+    const bonus = entry("bonus", "Year-end bonus", { kind: "income", categoryId: "salary", total: 50000, share: 50000, date: tomorrow });
+    const tickets = entry("tickets", "Concert tickets", { total: 9000, share: 9000, date: tomorrow, categoryId: "food" });
+    ledgerServer({ transactions: [bonus, tickets] }, { shared: [], search: () => [personalHit(bonus), personalHit(tickets)] });
+    renderApp(`/transactions?month=${tomorrow.slice(0, 7)}`);
+    const row = await within(await screen.findByRole("region", { name: "Search results" })).findByRole("button", { name: /Year-end bonus/ });
+    expect(row).toHaveTextContent("Expected");
+    expect(row.querySelector(".category-dot--expected")).not.toBeNull();
+    expect(row).toHaveTextContent("expected");
+    const expense = within(results()).getByRole("button", { name: /Concert tickets/ });
+    expect(expense).not.toHaveTextContent("Expected");
+    expect(expense.querySelector(".category-dot--expected")).toBeNull();
+  });
+
   it("lists shared rows beside personal ones and opens them in their household", async () => {
     server();
     renderApp("/transactions?month=2026-11");

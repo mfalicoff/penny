@@ -1,3 +1,4 @@
+import Foundation
 import PennyContracts
 import PennyDomain
 import Testing
@@ -137,6 +138,85 @@ struct ReportTests {
         #expect(month.recordedRemaining == -175_950)
         #expect(month.projectedRemaining == -180_750)
         #expect(month.recorded.investment == 50_000, "the ETF purchase is a contribution, not spending")
+    }
+
+    /// The local date of an instant in an IANA time zone, as a device in that zone computes it.
+    static func localDate(_ instant: String, _ zone: String) throws -> CalendarDate {
+        let date = try #require(ISO8601DateFormatter().date(from: instant), "\(instant) is not ISO 8601")
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try #require(TimeZone(identifier: zone), "\(zone) is not a time zone")
+        return CalendarDate(date, in: calendar)
+    }
+
+    /// month-totals.json (MAZ-136), generated from v2 `summarizeMonth`: income dated after today
+    /// counts toward Projected, not Left to spend, at the boundary and across time zones.
+    @Test("whenIncomeIsDatedAfterToday_MonthSummary_ShouldCountItTowardProjectedOnly")
+    func monthTotalsFixture() throws {
+        let fixture = try Fixtures.decode(MonthTotalsFixture.self, from: "month-totals.json")
+        for item in fixture.todayCases {
+            #expect(try Self.localDate(item.instant, item.timeZone) == .day(item.today), "\(item)")
+        }
+        for item in fixture.cases {
+            let ledger = try ContractLedger.ledger(try #require(fixture.ledgers[item.ledger]))
+            let month = try #require(MonthKey(item.month))
+            let today = try item.today.map(ContractLedger.date)
+            if let clock = item.clock {
+                #expect(try Self.localDate(clock.instant, clock.timeZone) == today, "\(item.name)")
+            }
+            let summary = LedgerReport(ledger: ledger).month(month, today: today)
+            func totals(_ amounts: MonthTotalsFixture.Totals) -> KindTotals {
+                KindTotals(expense: amounts.expense, income: amounts.income, investment: amounts.investment)
+            }
+            #expect(summary.recorded == totals(item.expected.recorded), "\(item.name)")
+            #expect(summary.projected == totals(item.expected.projected), "\(item.name)")
+            #expect(summary.expectedIncome == item.expected.expectedIncome, "\(item.name)")
+            #expect(summary.recordedRemaining == item.expected.recordedNet, "\(item.name)")
+            #expect(summary.projectedRemaining == item.expected.projectedNet, "\(item.name)")
+            #expect(Set(summary.expected.map(\.id)) == Set(item.expected.expectedIds), "\(item.name)")
+            #expect(Set(summary.scheduled.map(\.id)) == Set(item.expected.scheduledIds), "\(item.name)")
+            #expect(summary.expected.allSatisfy { $0.isExpected(today: today) && $0.kind == .income })
+            #expect(summary.recordedEntries.allSatisfy { !$0.isExpected(today: today) })
+            // Home's list keeps the expected entries, unchanged.
+            let listed = LedgerReport(ledger: ledger).monthEntries(summary).map(\.id)
+            #expect(Set(item.expected.expectedIds).isSubset(of: Set(listed)), "\(item.name)")
+        }
+    }
+
+    @Test("whenFutureIncomeSeeded_MonthSummary_ShouldMatchRedesignTotalsInThePersonsTimeZone")
+    func redesignFutureIncomeTotals() throws {
+        let states = try Fixtures.decode(RedesignStates.self, from: "redesign-states.json")
+        let expected = try #require(states.totals["dana-2026-10"])
+        let seeds = try Fixtures.decode(SeedFixture.self, from: "full-stack-seeds.json")
+        let scenario = try #require(seeds.scenarios.first { $0.name == "future-income" })
+        let step = try #require(scenario.steps.first { $0["as"] == .string("dana") && $0["ledger"] != nil })
+        let wire = try JSONDecoder().decode(
+            PennyContracts.Ledger.self, from: try JSONEncoder().encode(try #require(step["ledger"])))
+        let ledger = try ContractLedger.ledger(wire)
+        let today = try Self.localDate(expected.clock, expected.timeZone)
+        #expect(today == .day(expected.today))
+        let october = try #require(Self.october)
+        let month = LedgerReport(ledger: ledger).month(october, today: today)
+        func totals(_ amounts: RedesignStates.Amounts) -> KindTotals {
+            KindTotals(expense: amounts.expenseCents, income: amounts.incomeCents, investment: amounts.investmentCents)
+        }
+        #expect(month.recorded == totals(expected.recorded))
+        #expect(month.projected == totals(expected.projected))
+        #expect(
+            month.expected.map { "\($0.title) \($0.date) \($0.share)" }
+                == expected.expected.map {
+                    "\($0.title) \($0.date) \($0.shareCents)"
+                })
+        #expect(
+            month.scheduled.map { "\($0.title) \($0.date) \($0.share)" }
+                == expected.scheduled.map {
+                    "\($0.title) \($0.date) \($0.shareCents)"
+                })
+        // The same instant in UTC is Oct 16: the invoice dated that day is recorded instead.
+        let utc = LedgerReport(ledger: ledger).month(october, today: try Self.localDate(expected.clock, "UTC"))
+        #expect(utc.recorded.income == month.recorded.income + 60_000)
+        #expect(utc.projected == month.projected)
+        // Without a today every dated entry is recorded (the parameter is opt-in).
+        #expect(LedgerReport(ledger: ledger).month(october).expected.isEmpty)
     }
 
     @Test("whenSharedRowsRepeatOrAreRecorded_LedgerReport_ShouldCountEachOccurrenceOnce")

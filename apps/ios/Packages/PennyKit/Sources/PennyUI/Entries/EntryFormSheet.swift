@@ -137,12 +137,9 @@ private struct EntryForm: View {
                     more: { overlay = .category })
                 rows(model)
                 if let date = CalendarDate.ledgerDate(draft.date), date > shell.today {
-                    StatusBanner(
-                        tone: .info, title: "\(EntryText.day(date, today: shell.today)) is still ahead",
-                        message:
-                            "Penny records this entry now. It counts in \(MonthPicker.title(MonthKey(date), long: true))'s totals."
-                    )
-                    .accessibilityIdentifier("entryForm.futureDate")
+                    let note = EntryText.futureDate(draft.kind, date: date, today: shell.today)
+                    StatusBanner(tone: .info, title: note.title, message: note.message)
+                        .accessibilityIdentifier("entryForm.futureDate")
                 }
             }
             .padding(.horizontal, Metrics.gutter)

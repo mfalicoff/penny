@@ -43,23 +43,31 @@ struct EntryRow: View {
     var body: some View {
         let category = report.categories.first { $0.id == entry.categoryId }
         let waiting = shell.workspace.pendingEntryIDs.contains(entry.id)
+        // MAZ-136: a preview, or income dated after today, is expected: an amber ring, and the
+        // word in the meta line so the meaning is never color alone.
+        let expected = entry.isExpected(today: shell.today)
         HStack(spacing: 12) {
             CategoryIcon(
                 symbol: CategoryStyle.symbol(forIonicon: category?.icon ?? "pricetag"),
                 color: PennyColor.category(
-                    category?.paletteColor ?? CategoryStyle.color(forCategoryID: entry.categoryId)))
+                    category?.paletteColor ?? CategoryStyle.color(forCategoryID: entry.categoryId))
+            )
+            .overlay {
+                if expected { Circle().strokeBorder(PennyColor.pending, lineWidth: 2).accessibilityHidden(true) }
+            }
             VStack(alignment: .leading, spacing: 2) {
                 Text(entry.title).font(.body.weight(.semibold)).foregroundStyle(PennyColor.label).lineLimit(2)
                 if waiting {
                     Label("Waiting to sync", systemImage: "clock")
                         .font(.footnote).foregroundStyle(PennyColor.pending)
                 } else {
-                    Text(meta(category: category)).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
+                    Text(meta(category: category, expected: expected)).font(.footnote)
+                        .foregroundStyle(PennyColor.secondaryLabel)
                         .lineLimit(1)
                 }
             }
             Spacer(minLength: 8)
-            MoneyText(entry.share, meaning: Self.meaning(entry), currency: currency)
+            MoneyText(entry.share, meaning: Self.meaning(entry, today: shell.today), currency: currency)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
@@ -68,8 +76,8 @@ struct EntryRow: View {
         .accessibilityIdentifier("entry.\(entry.id)")
     }
 
-    static func meaning(_ entry: ReportEntry) -> MoneyMeaning {
-        if entry.scheduled { return .pending }
+    static func meaning(_ entry: ReportEntry, today: CalendarDate? = nil) -> MoneyMeaning {
+        if entry.isExpected(today: today) { return .pending }
         switch entry.kind {
         case .expense: return .expense
         case .income: return .income
@@ -77,8 +85,9 @@ struct EntryRow: View {
         }
     }
 
-    private func meta(category: LedgerCategory?) -> String {
+    private func meta(category: LedgerCategory?, expected: Bool) -> String {
         var parts = [DayText.short(entry.date, today: shell.today)]
+        if expected { parts.append("Expected") }
         if let account = entry.accountId.flatMap(report.ledger.account(id:)) { parts.append(account.name) }
         if entry.share != entry.total { parts.append("your share") }
         if parts.count == 1, let category { parts.append(category.name) }

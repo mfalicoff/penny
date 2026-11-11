@@ -12,7 +12,8 @@ struct HomeView: View {
     var body: some View {
         WorkspaceContent { ledger in
             let report = LedgerReport(ledger: ledger)
-            let summary = report.month(shell.month)
+            // Income dated after today counts toward Projected, not Left to spend (MAZ-136).
+            let summary = report.month(shell.month, today: shell.today)
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     SyncBanner()
