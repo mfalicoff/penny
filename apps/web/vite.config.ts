@@ -51,6 +51,10 @@ export default defineConfig({
   resolve: {
     alias: { "@design-kit": designKit, "@domain": sharedDomain },
   },
+  // Transform every file, including the shared ../../src/domain, with this app's tsconfig.
+  // Otherwise files outside apps/web pick up the root tsconfig.json, which extends
+  // expo/tsconfig.base, and that only resolves where the root Expo dependencies are installed.
+  tsconfig: "./tsconfig.app.json",
   envPrefix: "PENNY_PUBLIC_",
   server: {
     // 4173 is an origin the API allows by default (Auth__AllowedOrigins, test-env).
