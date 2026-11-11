@@ -101,7 +101,7 @@ MAZ-85 ports the kit's look onto native, accessible elements. Use these instead 
 | Money | `Money`, `formatCents` | Integer cents, tabular figures. Expenses use the label color; income, investment and pending add their color **and** a visually hidden word. No currency means a plain number, never an assumed symbol. |
 | Status label | `Badge` | Always text, optionally with an icon. |
 | States | `LoadingState`, `EmptyState`, `ErrorState` (`src/design/states.tsx`) | Errors are `role="alert"`, say nothing was lost, and offer Try again. |
-| Feedback | `Banner`, `OfflineBanner`, `ServerUnreachableBanner`, `SaveErrorBanner`, `useToast()` | Specimens `offline`, `save-error`, `saved-toast`. A save error keeps the draft and names the next step. Toasts are polite live announcements, last 6 seconds, pause under the pointer or focus, and can offer Undo. |
+| Feedback | `Banner`, `OfflineBanner`, `ServerUnreachableBanner`, `SaveErrorBanner`, `useToast()` | Specimens `offline`, `save-error`, `saved-toast`. A save error keeps the draft and names the next step. Toasts are polite live announcements, last 6 seconds and can offer Undo. Keyboard focus pauses them until it leaves; a mouse pointer pauses them for up to 30 seconds, and only where the device hovers with a fine pointer, so on touch screens a tap never keeps one open. On phones the page reserves room for the toast so the last rows scroll clear of it (MAZ-162). |
 
 Conventions:
 
