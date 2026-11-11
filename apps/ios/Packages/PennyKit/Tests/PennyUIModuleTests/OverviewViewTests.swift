@@ -157,45 +157,4 @@ struct OverviewViewTests {
                 CategoryBreakdown(LedgerReport(ledger: used).month(MonthKey(today))), currency: "CAD")
                 == "No spending yet")
     }
-
-    /// Renders each screen at the smallest iPhone width, a large iPhone and an iPad, at the
-    /// default and the largest accessibility text size, in light and dark: every body builds
-    /// for every combination, with populated, empty, overspent and income-only months. Visual
-    /// review of the same combinations is the Screenshots plan's `OverviewScreenshotTests`.
-    @Test(
-        "whenRenderedAtEverySizeAndAppearance_OverviewScreens_ShouldBuildForEveryMonthShape",
-        arguments: ["populated", "empty", "overspent", "incomeOnly"])
-    func renders(_ shape: String) throws {
-        let ledger: Ledger
-        switch shape {
-        case "populated": ledger = DemoLedger.make(today: today)
-        case "empty": ledger = Ledger()
-        case "overspent": ledger = Ledger(transactions: [entry("rent", "2026-11-02", 200_000, category: "home")])
-        default: ledger = Ledger(transactions: [entry("pay", "2026-11-01", 320_000, kind: .income, category: "salary")])
-        }
-        let shell = shell(ledger)
-        let screens: [AnyView] = [
-            AnyView(NavigationStack { HomeView() }), AnyView(NavigationStack { MoneyFlowView() }),
-            AnyView(NavigationStack { InsightsView() }), AnyView(NavigationStack { CalendarView() }),
-            AnyView(NavigationStack { CategorySpendingView(categoryIds: ["home"], title: "Home") }),
-        ]
-        for width in [320.0, 440, 1024] {
-            for size in [DynamicTypeSize.large, .accessibility5] {
-                for scheme in [ColorScheme.light, .dark] {
-                    for screen in screens {
-                        let view =
-                            screen
-                            .environment(shell)
-                            .environment(\.dynamicTypeSize, size)
-                            .environment(\.colorScheme, scheme)
-                            .environment(\.horizontalSizeClass, width > 700 ? .regular : .compact)
-                            .frame(width: width, height: 900)
-                        let renderer = ImageRenderer(content: view)
-                        renderer.proposedSize = ProposedViewSize(width: width, height: 900)
-                        #expect(renderer.cgImage != nil, "\(shape) \(width) \(size) \(scheme)")
-                    }
-                }
-            }
-        }
-    }
 }
