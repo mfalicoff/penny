@@ -132,6 +132,22 @@ struct LedgerSyncModelTests {
         #expect(harness.server.ledger(Offline.alex)?.entry(id: "taxi") != nil)
     }
 
+    @Test("whenSignedInAgainAfterTheSessionEnded_LedgerSyncModel_ShouldNotShowSessionExpiredBeforeTheNextSync")
+    func noStaleSessionExpiredAfterSignIn() async throws {
+        try await signedIn()
+        harness.server.revoke(Offline.alex)
+        try await harness.model.save(.saveEntry(Offline.entry("taxi")))
+        await harness.waitFor(.sessionExpired)
+
+        // No network path: signing in works, but the next sync cannot start.
+        harness.triggers.setOnline(false)
+        await eventually("offline") { !harness.model.isOnline }
+        try await harness.signIn()
+        await eventually("ledger shown") { harness.model.ledger != nil }
+        #expect(harness.model.state.phase == .offline)
+        #expect(harness.model.state.pending.entryIDs == ["taxi"])
+    }
+
     @Test("whenChangesArePending_SignOut_ShouldRefuseInsteadOfDiscardingThem")
     func signOutProtectsPendingWork() async throws {
         try await signedIn()
@@ -238,6 +254,42 @@ struct LedgerSyncModelTests {
             harness.model.state.phase == .upToDate && harness.server.ledger(Offline.alex)?.entry(id: "taxi") != nil
         }
         #expect(harness.server.log.all.filter { $0 == "PUT /api/ledger" }.count == 2)
+    }
+
+    @Test("whenTheServerAsksToWait_LedgerSyncModel_ShouldHoldTriggeredSyncsUntilTheWaitEnds")
+    func retryAfterIsHonored() async throws {
+        try await signedIn()
+        harness.server.fail("PUT /api/ledger", with: .status(503, retryAfter: 1))
+        try await harness.model.save(.saveEntry(Offline.entry("taxi")))
+        await harness.waitFor(.failed(.serverUnavailable(retryAfter: 1)))
+        let puts = { harness.server.log.all.filter { $0 == "PUT /api/ledger" }.count }
+        #expect(puts() == 1)
+
+        // A save, a return to the foreground and the network coming back all wait.
+        try await harness.model.save(.saveEntry(Offline.entry("bus", title: "Bus")))
+        harness.model.sceneDidBecomeActive()
+        harness.triggers.setOnline(false)
+        await eventually("offline") { !harness.model.isOnline }
+        harness.triggers.setOnline(true)
+        await eventually("online") { harness.model.isOnline }
+        try await Task.sleep(for: .milliseconds(300))
+        #expect(puts() == 1, "nothing sent before Retry-After")
+
+        await eventually("synced once the wait ended") {
+            harness.model.state.phase == .upToDate && harness.server.ledger(Offline.alex)?.entry(id: "bus") != nil
+        }
+        #expect(puts() == 2)
+    }
+
+    @Test("whenTheServerAsksToWait_LedgerSyncModelRetry_ShouldSyncAtOnce")
+    func manualRetryIgnoresRetryAfter() async throws {
+        try await signedIn()
+        harness.server.fail("PUT /api/ledger", with: .status(429, retryAfter: 600))
+        try await harness.model.save(.saveEntry(Offline.entry("taxi")))
+        await harness.waitFor(.failed(.serverUnavailable(retryAfter: 600)))
+        harness.model.syncNow()
+        await harness.waitFor(.upToDate)
+        #expect(harness.server.ledger(Offline.alex)?.entry(id: "taxi") != nil)
     }
 
     @Test("whenTheServerRejectsTheWrite_LedgerSyncModel_ShouldShowTheMessageAndWaitForTheNextSave")

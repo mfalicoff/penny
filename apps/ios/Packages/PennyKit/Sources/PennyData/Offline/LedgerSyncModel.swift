@@ -114,6 +114,9 @@ public final class LedgerSyncModel {
     @ObservationIgnored private var failures = 0
     @ObservationIgnored private var engineUpdates: Task<Void, Never>?
     @ObservationIgnored private var retry: Task<Void, Never>?
+    /// Until when the server asked to wait (Retry-After on a 429 or 503). Saves, the network
+    /// returning and the app becoming active wait for it; `syncNow()` does not.
+    @ObservationIgnored private var serverWaitUntil: ContinuousClock.Instant?
     @ObservationIgnored private var monitors: [Task<Void, Never>] = []
 
     public init(
@@ -199,9 +202,11 @@ public final class LedgerSyncModel {
 
     // MARK: Sync triggers
 
-    /// "Retry": syncs now, even when the network monitor reports no path, and resets backoff.
+    /// "Retry": syncs now, even when the network monitor reports no path or the server asked
+    /// to wait, and resets backoff.
     public func syncNow() {
         failures = 0
+        serverWaitUntil = nil
         requestSync(force: true)
     }
 
@@ -257,6 +262,15 @@ public final class LedgerSyncModel {
         guard let engine, let account, savesAllowed, let client = auth.client, client.scope == account.scope
         else { return }
         guard isOnline || force else { return }
+        if !force, let until = serverWaitUntil {
+            let remaining = until - ContinuousClock.now
+            if remaining > .zero {
+                // The server asked to wait: sync when the wait ends, not now.
+                if retry == nil { scheduleRetry(after: remaining) }
+                return
+            }
+            serverWaitUntil = nil
+        }
         retry?.cancel()
         retry = nil
         let current = generation
@@ -271,6 +285,7 @@ public final class LedgerSyncModel {
         switch outcome {
         case .synced:
             failures = 0
+            serverWaitUntil = nil
             // Saves kept arriving while the sync ran (it stops after a few passes): send the
             // rest shortly rather than waiting for the next trigger.
             if engineState?.pending.isEmpty == false { scheduleRetry(after: backoff.initial) }
@@ -281,7 +296,9 @@ public final class LedgerSyncModel {
             guard issue.retriesAutomatically else { break }
             var retryAfter: TimeInterval?
             if case .serverUnavailable(let after) = issue { retryAfter = after }
-            scheduleRetry(after: backoff.delay(afterFailures: failures, retryAfter: retryAfter))
+            let delay = backoff.delay(afterFailures: failures, retryAfter: retryAfter)
+            if let retryAfter, retryAfter > 0 { serverWaitUntil = .now + delay }
+            scheduleRetry(after: delay)
         case .notReady, .cancelled:
             break
         }
@@ -378,6 +395,7 @@ public final class LedgerSyncModel {
         engineState = nil
         savesAllowed = false
         failures = 0
+        serverWaitUntil = nil
         if ledger != nil {
             ledger = nil
             searchEpoch += 1
@@ -426,8 +444,10 @@ public final class LedgerSyncModel {
                 switch engineState.lastOutcome {
                 case .failed(.offline): phase = .offline
                 case .failed(let issue): phase = isOnline ? .failed(issue) : .offline
-                case .sessionExpired: phase = .sessionExpired
-                case .synced, .cancelled, .notReady, nil:
+                // A 401 unbinds the account (`handle`), so an engine still reporting one
+                // while an account is bound is left from the session that ended: this
+                // sign-in replaced it. Show the ledger as it is now instead.
+                case .synced, .cancelled, .notReady, .sessionExpired, nil:
                     if !isOnline {
                         phase = .offline
                     } else if engineState.snapshot == nil {
