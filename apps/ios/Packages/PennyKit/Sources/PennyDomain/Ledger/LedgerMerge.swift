@@ -29,8 +29,8 @@
 ///   `nextDate`), and the occurrences this device recorded for it, untouched, go with it. A
 ///   rule edited here in any other field comes back, as any edited record does.
 ///
-/// The legacy TypeScript merge has none of these, so the golden fixture (generated from it)
-/// cannot hold them; `LedgerMergeTests` covers them.
+/// The TypeScript merge (`src/domain/merge.ts`) runs the same four, and the golden fixture
+/// generated from it holds a `recurring:` case for each, so web and iOS check the same results.
 ///
 /// The merge is pure. Callers materialize recurrence on the result (`Recurrence.materialize`).
 public enum LedgerMerge {

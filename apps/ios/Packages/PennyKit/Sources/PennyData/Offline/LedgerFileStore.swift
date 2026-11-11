@@ -292,16 +292,25 @@ public struct LedgerFileStore: Sendable {
 
     /// Moves an unreadable file aside (kept for support and manual recovery, removed with the
     /// account) so the account can start again from the server. Returns the new location.
+    /// Names carry the second and, when that name is taken (two recoveries in one second), a
+    /// counter, so an earlier copy is never overwritten and the move never fails on a name.
     @discardableResult
     public func setAside(_ scope: AccountScope) throws(LedgerStoreError) -> URL {
-        let stamp = Int(now().timeIntervalSince1970)
-        let destination = directory.appendingPathComponent("\(fileName(for: scope)).unreadable-\(stamp).json")
+        let stem = "\(fileName(for: scope)).unreadable-\(Int(now().timeIntervalSince1970))"
         do {
+            let taken = Set(try fileSystem.files(in: directory).map(\.lastPathComponent))
+            var name = "\(stem).json"
+            var counter = 1
+            while taken.contains(name) {
+                counter += 1
+                name = "\(stem)-\(counter).json"
+            }
+            let destination = directory.appendingPathComponent(name)
             try fileSystem.move(url(for: scope), to: destination)
+            return destination
         } catch {
             throw .writeFailed
         }
-        return destination
     }
 
     /// Every account with a readable header in the store, for example to offer removing

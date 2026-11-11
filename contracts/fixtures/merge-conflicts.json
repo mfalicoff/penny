@@ -1783,6 +1783,907 @@
           }
         ]
       }
+    },
+    {
+      "name": "recurring: a rule deleted remotely stays deleted after a local catch-up, with its untouched occurrence",
+      "base": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [
+          {
+            "id": "pass",
+            "title": "Transit pass",
+            "kind": "expense",
+            "total": 15600,
+            "share": 15600,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-10-01",
+            "note": "",
+            "frequency": "monthly",
+            "nextDate": "2026-11-01",
+            "anchorDay": 1,
+            "active": true
+          }
+        ],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": []
+      },
+      "local": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [
+          {
+            "id": "pass",
+            "title": "Transit pass",
+            "kind": "expense",
+            "total": 15600,
+            "share": 15600,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-10-01",
+            "note": "",
+            "frequency": "monthly",
+            "nextDate": "2026-12-01",
+            "anchorDay": 1,
+            "active": true
+          }
+        ],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "pass:2026-11-01",
+            "title": "Transit pass",
+            "kind": "expense",
+            "total": 15600,
+            "share": 15600,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-11-01",
+            "note": "",
+            "recurringId": "pass"
+          }
+        ]
+      },
+      "remote": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": []
+      },
+      "expected": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": []
+      }
+    },
+    {
+      "name": "recurring: a rule deleted remotely comes back when edited locally",
+      "base": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [
+          {
+            "id": "pass",
+            "title": "Transit pass",
+            "kind": "expense",
+            "total": 15600,
+            "share": 15600,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-10-01",
+            "note": "",
+            "frequency": "monthly",
+            "nextDate": "2026-11-01",
+            "anchorDay": 1,
+            "active": true
+          }
+        ],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": []
+      },
+      "local": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [
+          {
+            "id": "pass",
+            "title": "Transit pass",
+            "kind": "expense",
+            "total": 16000,
+            "share": 16000,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-10-01",
+            "note": "",
+            "frequency": "monthly",
+            "nextDate": "2026-12-01",
+            "anchorDay": 1,
+            "active": true
+          }
+        ],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "pass:2026-11-01",
+            "title": "Transit pass",
+            "kind": "expense",
+            "total": 15600,
+            "share": 15600,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-11-01",
+            "note": "",
+            "recurringId": "pass"
+          }
+        ]
+      },
+      "remote": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": []
+      },
+      "expected": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [
+          {
+            "id": "pass",
+            "title": "Transit pass",
+            "kind": "expense",
+            "total": 16000,
+            "share": 16000,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-10-01",
+            "note": "",
+            "frequency": "monthly",
+            "nextDate": "2026-12-01",
+            "anchorDay": 1,
+            "active": true
+          }
+        ],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "pass:2026-11-01",
+            "title": "Transit pass",
+            "kind": "expense",
+            "total": 15600,
+            "share": 15600,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-11-01",
+            "note": "",
+            "recurringId": "pass"
+          }
+        ]
+      }
+    },
+    {
+      "name": "recurring: the later nextDate wins when both sides caught up",
+      "base": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [
+          {
+            "id": "pass",
+            "title": "Transit pass",
+            "kind": "expense",
+            "total": 15600,
+            "share": 15600,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-10-01",
+            "note": "",
+            "frequency": "monthly",
+            "nextDate": "2026-11-01",
+            "anchorDay": 1,
+            "active": true
+          }
+        ],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": []
+      },
+      "local": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [
+          {
+            "id": "pass",
+            "title": "Transit pass",
+            "kind": "expense",
+            "total": 15600,
+            "share": 15600,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-10-01",
+            "note": "",
+            "frequency": "monthly",
+            "nextDate": "2026-12-01",
+            "anchorDay": 1,
+            "active": true
+          }
+        ],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "pass:2026-11-01",
+            "title": "Transit pass",
+            "kind": "expense",
+            "total": 15600,
+            "share": 15600,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-11-01",
+            "note": "",
+            "recurringId": "pass"
+          }
+        ]
+      },
+      "remote": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [
+          {
+            "id": "pass",
+            "title": "Transit pass",
+            "kind": "expense",
+            "total": 15600,
+            "share": 15600,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-10-01",
+            "note": "",
+            "frequency": "monthly",
+            "nextDate": "2027-01-01",
+            "anchorDay": 1,
+            "active": true
+          }
+        ],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "pass:2026-11-01",
+            "title": "Transit pass",
+            "kind": "expense",
+            "total": 15600,
+            "share": 15600,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-11-01",
+            "note": "",
+            "recurringId": "pass"
+          },
+          {
+            "id": "pass:2026-12-01",
+            "title": "Transit pass",
+            "kind": "expense",
+            "total": 15600,
+            "share": 15600,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-12-01",
+            "note": "",
+            "recurringId": "pass"
+          }
+        ]
+      },
+      "expected": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [
+          {
+            "id": "pass",
+            "title": "Transit pass",
+            "kind": "expense",
+            "total": 15600,
+            "share": 15600,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-10-01",
+            "note": "",
+            "frequency": "monthly",
+            "nextDate": "2027-01-01",
+            "anchorDay": 1,
+            "active": true
+          }
+        ],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "pass:2026-11-01",
+            "title": "Transit pass",
+            "kind": "expense",
+            "total": 15600,
+            "share": 15600,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-11-01",
+            "note": "",
+            "recurringId": "pass"
+          },
+          {
+            "id": "pass:2026-12-01",
+            "title": "Transit pass",
+            "kind": "expense",
+            "total": 15600,
+            "share": 15600,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-12-01",
+            "note": "",
+            "recurringId": "pass"
+          }
+        ]
+      }
+    },
+    {
+      "name": "recurring: an occurrence both sides recorded keeps the server's edit",
+      "base": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [
+          {
+            "id": "pass",
+            "title": "Transit pass",
+            "kind": "expense",
+            "total": 15600,
+            "share": 15600,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-10-01",
+            "note": "",
+            "frequency": "monthly",
+            "nextDate": "2026-11-01",
+            "anchorDay": 1,
+            "active": true
+          }
+        ],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": []
+      },
+      "local": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [
+          {
+            "id": "pass",
+            "title": "Transit pass",
+            "kind": "expense",
+            "total": 15600,
+            "share": 15600,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-10-01",
+            "note": "",
+            "frequency": "monthly",
+            "nextDate": "2026-12-01",
+            "anchorDay": 1,
+            "active": true
+          }
+        ],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "pass:2026-11-01",
+            "title": "Transit pass",
+            "kind": "expense",
+            "total": 15600,
+            "share": 15600,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-11-01",
+            "note": "",
+            "recurringId": "pass"
+          }
+        ]
+      },
+      "remote": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [
+          {
+            "id": "pass",
+            "title": "Transit pass",
+            "kind": "expense",
+            "total": 15600,
+            "share": 15600,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-10-01",
+            "note": "",
+            "frequency": "monthly",
+            "nextDate": "2026-12-01",
+            "anchorDay": 1,
+            "active": true
+          }
+        ],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "pass:2026-11-01",
+            "title": "Transit pass",
+            "kind": "expense",
+            "total": 15600,
+            "share": 15600,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-11-01",
+            "note": "Edited elsewhere",
+            "recurringId": "pass"
+          }
+        ]
+      },
+      "expected": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [
+          {
+            "id": "pass",
+            "title": "Transit pass",
+            "kind": "expense",
+            "total": 15600,
+            "share": 15600,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-10-01",
+            "note": "",
+            "frequency": "monthly",
+            "nextDate": "2026-12-01",
+            "anchorDay": 1,
+            "active": true
+          }
+        ],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "pass:2026-11-01",
+            "title": "Transit pass",
+            "kind": "expense",
+            "total": 15600,
+            "share": 15600,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-11-01",
+            "note": "Edited elsewhere",
+            "recurringId": "pass"
+          }
+        ]
+      }
+    },
+    {
+      "name": "recurring: an untouched occurrence the server recorded and deleted is dropped",
+      "base": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [
+          {
+            "id": "pass",
+            "title": "Transit pass",
+            "kind": "expense",
+            "total": 15600,
+            "share": 15600,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-10-01",
+            "note": "",
+            "frequency": "monthly",
+            "nextDate": "2026-11-01",
+            "anchorDay": 1,
+            "active": true
+          }
+        ],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": []
+      },
+      "local": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [
+          {
+            "id": "pass",
+            "title": "Transit pass",
+            "kind": "expense",
+            "total": 15600,
+            "share": 15600,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-10-01",
+            "note": "",
+            "frequency": "monthly",
+            "nextDate": "2026-12-01",
+            "anchorDay": 1,
+            "active": true
+          }
+        ],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": [
+          {
+            "id": "pass:2026-11-01",
+            "title": "Transit pass",
+            "kind": "expense",
+            "total": 15600,
+            "share": 15600,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-11-01",
+            "note": "",
+            "recurringId": "pass"
+          }
+        ]
+      },
+      "remote": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [
+          {
+            "id": "pass",
+            "title": "Transit pass",
+            "kind": "expense",
+            "total": 15600,
+            "share": 15600,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-10-01",
+            "note": "",
+            "frequency": "monthly",
+            "nextDate": "2026-12-01",
+            "anchorDay": 1,
+            "active": true
+          }
+        ],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": []
+      },
+      "expected": {
+        "version": 4,
+        "currency": "CAD",
+        "accounts": [
+          {
+            "id": "chq",
+            "name": "Chequing",
+            "type": "bank"
+          }
+        ],
+        "trips": [],
+        "recurring": [
+          {
+            "id": "pass",
+            "title": "Transit pass",
+            "kind": "expense",
+            "total": 15600,
+            "share": 15600,
+            "categoryId": "food",
+            "accountId": "chq",
+            "date": "2026-10-01",
+            "note": "",
+            "frequency": "monthly",
+            "nextDate": "2026-12-01",
+            "anchorDay": 1,
+            "active": true
+          }
+        ],
+        "categories": [
+          {
+            "id": "food",
+            "name": "Food",
+            "icon": "cafe-outline",
+            "color": "#E47850",
+            "kind": "expense"
+          }
+        ],
+        "transactions": []
+      }
     }
   ]
 }

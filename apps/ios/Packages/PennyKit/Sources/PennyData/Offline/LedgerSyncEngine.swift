@@ -142,11 +142,15 @@ public actor LedgerSyncEngine {
     }
 
     /// Records occurrences that came due (after a day change, or at launch) without a save
-    /// from the person. Does nothing when nothing is due or the copy is not ready.
+    /// from the person. Does nothing when nothing is due or the copy is not ready. As with
+    /// `commit`, only problems the catch-up introduces stop it, so a ledger that already
+    /// breaks a rule still catches up.
     public func materializeDueOccurrences() {
         guard holds == 0, load() == .ready, var next = snapshot else { return }
         let local = Recurrence.materialize(next.local, today: today())
-        guard local != next.local, local.violations.isEmpty else { return }
+        guard local != next.local else { return }
+        let existing = Set(next.local.violations)
+        guard local.violations.allSatisfy({ existing.contains($0) }) else { return }
         next.local = local
         guard (try? files.save(next, for: scope)) != nil else { return }
         snapshot = next

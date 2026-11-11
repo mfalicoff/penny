@@ -239,6 +239,20 @@ struct OfflineLedgerStoreTests {
         #expect(try files.load(Offline.scope()) == snapshot())
     }
 
+    @Test("whenTwoCopiesAreSetAsideInTheSameSecond_LedgerFileStore_ShouldKeepBoth")
+    func setAsideTwiceInOneSecond() throws {
+        // The store's clock is fixed, so both moves happen "in the same second".
+        let store = Offline.store(directory, calendar: calendar)
+        try store.files.save(snapshot(), for: Offline.scope())
+        let first = try store.files.setAside(Offline.scope())
+        try store.files.save(snapshot(), for: Offline.scope())
+        let second = try store.files.setAside(Offline.scope())
+        #expect(first != second)
+        let names = try FileManager.default.contentsOfDirectory(atPath: directory.path)
+        #expect(names.filter { $0.contains(".unreadable-") }.count == 2)
+        #expect(try store.files.load(Offline.scope()) == nil, "the account starts again from the server")
+    }
+
     @Test("whenTheAccountIsRemoved_OfflineLedgerStore_ShouldDeleteItsFilesIncludingSetAsideCopies")
     func removeLocalData() async throws {
         let store = Offline.store(directory, calendar: calendar)
