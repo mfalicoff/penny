@@ -28,7 +28,8 @@ import {
 import { CategoryPickerDialog, NewAccountDialog } from "./pickers";
 import { useLedgerWriter, type LedgerWriter } from "./writer";
 
-export type EntryTarget = { kind: "new"; entryKind?: Kind } | { kind: "edit"; entry: Transaction };
+/** `tripId` starts a new expense on that trip (MAZ-93: Trip expense), apart from any kept draft. */
+export type EntryTarget = { kind: "new"; entryKind?: Kind; tripId?: string } | { kind: "edit"; entry: Transaction };
 
 const KIND_HINT: Record<Kind, string> = {
   expense: "Money you spent. Split it to count only your share.",
@@ -85,8 +86,11 @@ function EntryForm({ writer, ledger, target, onClose, onSaved }: { writer: Ledge
   const email = useAccountEmail();
   const toast = useToast();
   const editing = target.kind === "edit" ? target.entry : undefined;
-  const [restored] = useState(() => (target.kind === "new" ? draftStore.get(email) : undefined));
-  const [draft, setDraftState] = useState<EntryDraft>(() => editing ? draftFromEntry(editing) : (restored ?? newDraft(ledger, target.kind === "new" ? target.entryKind : undefined)));
+  const tripId = target.kind === "new" ? target.tripId : undefined;
+  // A trip expense starts fresh and never replaces the draft kept for Add entry.
+  const keepsDraft = target.kind === "new" && !tripId;
+  const [restored] = useState(() => (keepsDraft ? draftStore.get(email) : undefined));
+  const [draft, setDraftState] = useState<EntryDraft>(() => editing ? draftFromEntry(editing) : tripId ? { ...newDraft(ledger, "expense"), tripId } : (restored ?? newDraft(ledger, target.kind === "new" ? target.entryKind : undefined)));
   // The version the edit is based on. A stale save is refused against it (the shared `saveEntry` rule).
   const [base, setBase] = useState<Transaction | undefined>(editing);
   const [errors, setErrors] = useState<DraftErrors>({});
@@ -94,7 +98,7 @@ function EntryForm({ writer, ledger, target, onClose, onSaved }: { writer: Ledge
   const [conflict, setConflict] = useState<Conflict | null>(null);
   const [saving, setSaving] = useState(false);
   const savingRef = useRef(false);
-  const [more, setMore] = useState(() => Boolean(editing && (editing.note || editing.tripId || editing.share !== editing.total || editing.receipt)) || Boolean(restored && (restored.note || restored.tripId || restored.split !== "full" || restored.repeat !== "none")));
+  const [more, setMore] = useState(() => Boolean(tripId) || Boolean(editing && (editing.note || editing.tripId || editing.share !== editing.total || editing.receipt)) || Boolean(restored && (restored.note || restored.tripId || restored.split !== "full" || restored.repeat !== "none")));
   const [picker, setPicker] = useState<"category" | "account" | null>(null);
   const amountRef = useRef<HTMLInputElement>(null);
   const ids = {
@@ -118,7 +122,7 @@ function EntryForm({ writer, ledger, target, onClose, onSaved }: { writer: Ledge
   function setDraft(update: (previous: EntryDraft) => EntryDraft) {
     setDraftState((previous) => {
       const next = update(previous);
-      if (target.kind === "new") {
+      if (keepsDraft) {
         if (hasContent(next)) draftStore.set(email, next);
         else draftStore.clear(email);
       }
@@ -160,7 +164,7 @@ function EntryForm({ writer, ledger, target, onClose, onSaved }: { writer: Ledge
     setConflict(null);
     try {
       const receipt = await writer.save(entryChange(built, base));
-      if (target.kind === "new") draftStore.clear(email);
+      if (keepsDraft) draftStore.clear(email);
       const offline = receipt.savedOffline ? "Saved on this device. It syncs when you're back online." : undefined;
       toast.show(
         target.kind === "new"
@@ -228,13 +232,13 @@ function EntryForm({ writer, ledger, target, onClose, onSaved }: { writer: Ledge
       }
       actions={
         <>
-          {target.kind === "new" && hasContent(draft) ? (
+          {keepsDraft && hasContent(draft) ? (
             <Button variant="danger-quiet" onClick={discard}>
               Discard draft
             </Button>
           ) : null}
           <Button variant="quiet" onClick={onClose}>
-            {target.kind === "new" && hasContent(draft) ? "Keep draft" : "Cancel"}
+            {keepsDraft && hasContent(draft) ? "Keep draft" : "Cancel"}
           </Button>
           <Button type="submit" form={ids.form} variant="primary" busy={saving} aria-keyshortcuts="Meta+Enter Control+Enter">
             {saving ? "Saving…" : "Save"}

@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { NotYetAvailable } from "../../features/placeholder/NotYetAvailable";
+import { TripsPage } from "../../features/trips/TripsPage";
 
-/** Legacy URL kept from the Expo app. Trips arrive with MAZ-93. */
+/** Legacy URL kept from the Expo app (Sidebar › Together › Trips): personal and shared trips (MAZ-93). */
 export const Route = createFileRoute("/trips/")({
   staticData: { title: "Trips" },
-  component: () => <NotYetAvailable page="Trips" icon="airplane" />,
+  component: TripsPage,
 });
