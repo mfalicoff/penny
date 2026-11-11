@@ -6,7 +6,8 @@ import { AddEntryDialog } from "../../features/entries/AddEntryDialog";
 import { Avatar, Button, Kbd } from "../../design/controls";
 import { Icon } from "../../design/Icon";
 import { ModalDialog } from "../../design/ModalDialog";
-import { Banner, OfflineBanner, ServerUnreachableBanner } from "../../design/states";
+import { Banner, ServerUnreachableBanner } from "../../design/states";
+import { SyncStatusBanner } from "../../offline/SyncStatusBanner";
 import { leaveDemo, useIsDemo } from "../../demo/demo";
 import { serverInfoQuery } from "../../api/info";
 import { ServerStatus } from "../ServerStatus";
@@ -111,7 +112,7 @@ export function AppShell() {
           </Button>
         </header>
         {demo ? <DemoBanner /> : null}
-        <OfflineBanner />
+        <SyncStatusBanner />
         <ServerUnreachableBanner unreachable={serverDown} />
         <main id="main" className="app__main" tabIndex={-1}>
           <PageTitleContext value={setTitleOverride}>

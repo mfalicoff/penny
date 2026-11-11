@@ -7,6 +7,8 @@ import { defineConfig, type Plugin, type ProxyOptions } from "vite";
 
 const designKit = fileURLToPath(new URL("../../design-kit", import.meta.url));
 const appRoot = fileURLToPath(new URL(".", import.meta.url));
+// The shared, platform-neutral ledger rules (MAZ-86): merge, recurrence, commands and local search.
+const sharedDomain = fileURLToPath(new URL("../../src/domain", import.meta.url));
 
 // The browser always calls /api/ on its own origin (production: the nginx proxy in
 // deploy/web). In development and preview, Vite forwards /api/ to the real .NET API.
@@ -47,7 +49,7 @@ export default defineConfig({
     thirdPartyLicenses(),
   ],
   resolve: {
-    alias: { "@design-kit": designKit },
+    alias: { "@design-kit": designKit, "@domain": sharedDomain },
   },
   envPrefix: "PENNY_PUBLIC_",
   server: {
@@ -55,7 +57,7 @@ export default defineConfig({
     port: 4173,
     strictPort: true,
     proxy: apiProxy,
-    fs: { allow: [appRoot, designKit] },
+    fs: { allow: [appRoot, designKit, sharedDomain] },
   },
   preview: {
     port: Number(process.env.PENNY_WEB_PORT ?? 4173),

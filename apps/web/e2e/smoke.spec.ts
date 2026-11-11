@@ -15,7 +15,9 @@ function watchForErrors(page: Page) {
 test.beforeEach(async ({ page }) => {
   await page.route("/api/info", (route) => route.fulfill({ json: { name: "penny", version: "2.0.0-e2e" } }));
   await page.route("/api/auth/me", (route) => route.fulfill({ json: { email: "alex@example.test" } }));
-  await page.route("/api/ledger", (route) => route.fulfill({ json: { revision: 0, ledger: { currency: "CAD" } } }));
+  await page.route("/api/ledger", (route) =>
+    route.fulfill({ json: { revision: 0, ledger: { version: 4, currency: "CAD", accounts: [], trips: [], categories: [], transactions: [], recurring: [] } } }),
+  );
   await page.route("/api/v1/search/transactions", (route) => route.fulfill({ json: { version: 1, items: [], totalCount: 0, nextCursor: null } }));
 });
 
