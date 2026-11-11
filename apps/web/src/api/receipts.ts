@@ -180,6 +180,9 @@ function parseReceipt(status: number, text: string): Receipt {
   return parsed.data;
 }
 
+/** How long an upload may take in all: 10 MiB as base64 over a slow (~100 kB/s) connection, with room to spare. */
+export const UPLOAD_TIMEOUT_MS = 5 * 60_000;
+
 /** `POST /api/receipts` with upload progress (fetch has none), cancelled through `signal`. */
 function post(body: string, signal: AbortSignal, onProgress: (fraction: number) => void): Promise<{ status: number; text: string }> {
   return new Promise((resolve, reject) => {
@@ -191,6 +194,8 @@ function post(body: string, signal: AbortSignal, onProgress: (fraction: number) 
       signal.removeEventListener("abort", onAbort);
     };
     request.open("POST", "/api/receipts");
+    // A stalled upload ends as a retryable failure instead of holding Save forever.
+    request.timeout = UPLOAD_TIMEOUT_MS;
     request.setRequestHeader("Content-Type", "application/json");
     request.setRequestHeader("Accept", "application/json");
     request.upload.onprogress = (event) => {

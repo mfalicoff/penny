@@ -139,8 +139,8 @@ public sealed partial class ReceiptFileStore(ReceiptStoreSettings settings)
 
     private byte[] Open(Receipt row, byte[] nonce, byte[] sealedBytes, string part)
     {
-        // A newer build may have written a scheme this one does not know: refuse it rather
-        // than guess.
+        // Defense in depth: `ck_receipts_encryption_version` only admits 1 today, and a future
+        // scheme relaxes that check in its migration. Never guess at a version this build lacks.
         if (row.EncryptionVersion != CurrentVersion)
             throw new CryptographicException("Receipt encryption version is not supported.");
         if (sealedBytes.Length < TagBytes)

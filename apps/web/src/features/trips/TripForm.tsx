@@ -285,11 +285,18 @@ export function ShareTripDialog({ trip, expenseCount, onClose }: { trip: Trip; e
         await workspace.save(saveTrip({ ...trip, sharedHouseholdId: household.id }, trip));
       } catch (error) {
         // Undo the server half: the trip is new and empty, so archiving it is always allowed.
-        await archiveHousehold(household.id).catch(() => undefined);
-        throw error;
+        const undone = await archiveHousehold(household.id).then(
+          () => true,
+          () => false,
+        );
+        if (undone) throw error;
+        // Both halves failed: say so, rather than let a retry create a second trip beside it.
+        throw new Error(`${household.name} was created as a shared trip, but Penny couldn't link it to your trip or remove it again. Open it from Trips and archive it from People before sharing again.`, { cause: error });
       }
       return household;
     },
+    // A trip left behind by a failed undo shows up in Trips straight away.
+    onError: () => queryClient.invalidateQueries({ queryKey: householdsKey(email) }),
     onSuccess: async (household) => {
       await Promise.all([queryClient.invalidateQueries({ queryKey: householdsKey(email) }), invalidateSearch(queryClient, email)]);
       toast.show({ title: `${household.name} is shared`, detail: "What you added before stays private to you." });

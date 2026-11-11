@@ -54,6 +54,9 @@ export async function openPdf(data: Uint8Array, signal: AbortSignal): Promise<Pd
     async render(number, canvas, width, renderSignal) {
       const page = await document.getPage(number);
       try {
+        // A render replaced while the page loaded must not touch the canvas: the abort listener
+        // below would never fire for a signal that is already aborted.
+        if (renderSignal.aborted) throw new DOMException("The page was replaced.", "AbortError");
         const unscaled = page.getViewport({ scale: 1 });
         const scale = width / unscaled.width;
         const ratio = Math.min(window.devicePixelRatio || 1, 3);
@@ -70,6 +73,7 @@ export async function openPdf(data: Uint8Array, signal: AbortSignal): Promise<Pd
         try {
           await job.promise;
         } catch (cause) {
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- the signal can abort while the page renders.
           if (renderSignal.aborted || cause instanceof pdfjs.RenderingCancelledException) throw new DOMException("The page was replaced.", "AbortError");
           throw new PdfUnreadableError({ cause });
         } finally {

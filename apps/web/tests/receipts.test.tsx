@@ -11,7 +11,10 @@ import {
   receiptMimeOf,
   receiptName,
   uploadReceipt,
+  UPLOAD_TIMEOUT_MS,
 } from "../src/api/receipts";
+import { hasContent } from "../src/features/entries/drafts";
+import { newDraft } from "../src/features/entries/model";
 import { ApiError } from "../src/api/client";
 import { entry, ledgerServer, personalHit, setOnline } from "./fakes/ledgerServer";
 import { createHouseholdServer } from "./fakes/householdServer";
@@ -50,6 +53,7 @@ class FakeXhr {
   onerror: (() => void) | null = null;
   onabort: (() => void) | null = null;
   ontimeout: (() => void) | null = null;
+  timeout = 0;
   status = 0;
   responseText = "";
   method = "";
@@ -191,6 +195,28 @@ describe("uploadReceipt", () => {
     });
     controller.abort();
     await expect(pending).rejects.toMatchObject({ name: "AbortError" });
+  });
+
+  it("ends a stalled upload as a retryable offline failure", async () => {
+    ledgerServer();
+    FakeXhr.gate = new Promise(() => undefined);
+    const pending = uploadReceipt(file(PDF_BYTES, "r.pdf", "application/pdf"), "application/pdf", { signal: new AbortController().signal });
+    await waitFor(() => {
+      expect(FakeXhr.sent).toHaveLength(1);
+    });
+    const request = FakeXhr.sent[0];
+    expect(request?.timeout).toBe(UPLOAD_TIMEOUT_MS);
+    request?.ontimeout?.();
+    await expect(pending).rejects.toMatchObject({ status: 0, message: RECEIPT_MESSAGES.offline });
+  });
+});
+
+describe("receipt drafts", () => {
+  it("counts a receipt as draft content only on an expense", () => {
+    const receipt = { id: "r1", name: "dinner.pdf", mime: "application/pdf", uri: "/api/receipts/r1" };
+    const draft = newDraft({ categories: [], transactions: [] });
+    expect(hasContent({ ...draft, kind: "expense", receipt })).toBe(true);
+    expect(hasContent({ ...draft, kind: "income", receipt })).toBe(false);
   });
 });
 

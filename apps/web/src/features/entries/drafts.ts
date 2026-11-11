@@ -24,5 +24,5 @@ export const draftStore = {
 
 /** Whether a draft holds anything worth keeping. */
 export function hasContent(draft: EntryDraft): boolean {
-  return Boolean(draft.amount.trim() || draft.title.trim() || draft.note.trim() || draft.shareInput.trim() || draft.receipt);
+  return Boolean(draft.amount.trim() || draft.title.trim() || draft.note.trim() || draft.shareInput.trim() || (draft.kind === "expense" && draft.receipt));
 }
