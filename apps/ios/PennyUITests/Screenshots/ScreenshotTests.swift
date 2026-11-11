@@ -21,6 +21,14 @@ final class ScreenshotTests: PennyUITestCase {
         Variant(name: "reduce-motion", reduceMotion: true),
     ]
 
+    /// The appearance is also pinned through Penny's own setting (`penny.appearance`, seeded
+    /// before launch): changing `XCUIDevice.appearance` alone did not reliably restyle a
+    /// freshly launched app on the iOS 27.0 simulator.
+    @MainActor
+    static func appearanceSeed(_ appearance: XCUIDevice.Appearance) -> ContainerSeed {
+        ContainerSeed(standardDefaults: ["penny.appearance": appearance == .dark ? "dark" : "light"])
+    }
+
     override func tearDown() async throws {
         await MainActor.run { XCUIDevice.shared.appearance = .light }
         try await super.tearDown()
@@ -37,6 +45,7 @@ final class ScreenshotTests: PennyUITestCase {
                 options.contentSize = variant.contentSize
                 options.reduceTransparency = variant.reduceTransparency
                 options.reduceMotion = variant.reduceMotion
+                options.seed = Self.appearanceSeed(appearance)
                 let penny = try await launch(options)
 
                 try penny.waitForShell()
@@ -54,7 +63,9 @@ final class ScreenshotTests: PennyUITestCase {
     func test_whenCapturingSignIn_Screenshots_ShouldIncludeTheKeyboardAndAnError() async throws {
         for appearance in [XCUIDevice.Appearance.light, .dark] {
             XCUIDevice.shared.appearance = appearance
-            let penny = try await launch()
+            var options = LaunchOptions()
+            options.seed = Self.appearanceSeed(appearance)
+            let penny = try await launch(options)
             try penny.wait(for: AccessibilityID.Auth.email)
             screenshot("sign-in")
             try penny.type("someone@penny.test", into: AccessibilityID.Auth.email)
