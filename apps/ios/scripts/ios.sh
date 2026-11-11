@@ -319,6 +319,9 @@ ui_test_run() {
     # Screenshots, failure recordings and the accessibility trees, browsable without Xcode.
     xcrun xcresulttool export attachments --path "$out/$name.xcresult" --output-path "$out/$name-attachments" \
       >/dev/null 2>&1 || mkdir -p "$out/$name-attachments"
+    # One simulator at a time: an idle booted iPhone starves the iPad run on small CI runners
+    # (XCTest's accessibility queries then time out). The device itself is deleted at exit.
+    xcrun simctl shutdown "$id" >/dev/null 2>&1 || true
   done
   echo "UI test results: $out"
   return "$failed"
