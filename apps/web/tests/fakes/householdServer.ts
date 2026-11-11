@@ -10,6 +10,17 @@
  */
 import { equalSplit, percentSplit } from "../../src/features/households/model";
 
+/** A private ledger as `GET`/`PUT /api/ledger` carry it (only the parts the fake checks are typed). */
+export interface WireLedger {
+  version: number;
+  currency: string;
+  accounts: { id: string; name: string; type: string }[];
+  trips: { id: string; name: string; startDate: string; endDate: string; sharedHouseholdId?: string }[];
+  categories: { id: string; name: string; icon: string; color: string; kind: string }[];
+  transactions: { id: string; title: string; kind: string; total: number; share: number; categoryId: string; date: string; note: string; tripId?: string; accountId?: string }[];
+  recurring: unknown[];
+}
+
 export interface FakeResponse {
   status: number;
   body: unknown;
@@ -96,7 +107,44 @@ export function createHouseholdServer(options: { now?: () => number } = {}) {
     rules: [] as FakeRule[],
     reimbursements: [] as FakeReimbursement[],
     audit: [] as { id: string; householdId: string; expenseId?: string; actorId: string; action: string; before: unknown; after: unknown; createdAt: number }[],
+    /** Each account's private ledger (MAZ-93 trips), created on first read. */
+    ledgers: new Map<string, { revision: number; ledger: WireLedger }>(),
   };
+
+  /** The account's ledger, starting from two expense categories, its currency and accounts. */
+  function ledgerOf(email: string) {
+    const key = email.toLowerCase();
+    let found = state.ledgers.get(key);
+    if (!found) {
+      const me = user(email);
+      found = {
+        revision: 1,
+        ledger: {
+          version: 4,
+          currency: me.currency,
+          accounts: me.accounts,
+          trips: [],
+          categories: [
+            { id: "c-groceries", name: "Groceries", icon: "basket", color: "#4F9D69", kind: "expense" },
+            { id: "c-home", name: "Home", icon: "home", color: "#C27C4E", kind: "expense" },
+          ],
+          transactions: [],
+          recurring: [],
+        },
+      };
+      state.ledgers.set(key, found);
+    }
+    return found;
+  }
+
+  /** A shared trip's name and dates, as the server's schema accepts them, or null (400). */
+  function readTrip(body: Body): { name: string; startDate: string; endDate: string } | null {
+    const name = typeof body.name === "string" ? body.name.trim() : "";
+    const real = (value: unknown): value is string =>
+      typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value) && value >= "2000-01-01" && value <= "2100-12-31" && new Date(`${value}T00:00:00Z`).toISOString().startsWith(value);
+    if (!name || name.length > 80 || !real(body.startDate) || !real(body.endDate) || body.endDate < body.startDate) return null;
+    return { name, startDate: body.startDate, endDate: body.endDate };
+  }
 
   function user(email: string) {
     const key = email.toLowerCase();
@@ -298,22 +346,28 @@ export function createHouseholdServer(options: { now?: () => number } = {}) {
     const { pathname, searchParams } = new URL(url, "http://penny.test");
     const parts = pathname.replace(/^\/api\//, "").split("/").map(decodeURIComponent);
 
-    if (pathname === "/api/ledger" && method === "GET") {
-      return ok({
-        revision: 1,
-        ledger: {
-          version: 4,
-          currency: me.currency,
-          accounts: me.accounts,
-          trips: [],
-          categories: [
-            { id: "c-groceries", name: "Groceries", icon: "basket", color: "#4F9D69", kind: "expense" },
-            { id: "c-home", name: "Home", icon: "home", color: "#C27C4E", kind: "expense" },
-          ],
-          transactions: [],
-          recurring: [],
-        },
-      });
+    if (pathname === "/api/ledger" && method === "GET") return ok(ledgerOf(email));
+    if (pathname === "/api/ledger" && method === "PUT") {
+      // Revision-checked like the API (409 on a stale write, never a merge). MAZ-93 trips sync here.
+      const current = ledgerOf(email);
+      if (body.revision !== current.revision) return err(409, "Ledger revision conflict.");
+      const ledger = body.ledger as WireLedger;
+      for (const trip of ledger.trips) {
+        if (trip.sharedHouseholdId && !household(trip.sharedHouseholdId)) return err(400, "Shared trip not found.");
+      }
+      const saved = { revision: current.revision + 1, ledger };
+      state.ledgers.set(email.toLowerCase(), saved);
+      return ok(saved);
+    }
+    if (parts[0] === "households" && parts[1] === "trips" && parts.length === 2 && method === "POST") {
+      const input = readTrip(body);
+      if (!input) return err(400, "Invalid household data.");
+      if (body.currency !== me.currency) return err(400, "Trip currency must match your ledger currency.");
+      const created = { id: nextId("h"), name: input.name, currency: me.currency, creatorId: me.id, createdAt: state.now(), archived: false, trip: { startDate: input.startDate, endDate: input.endDate } };
+      state.households.push(created);
+      state.periods.push({ householdId: created.id, userId: me.id, joinedAt: state.now(), joinedOn: today() });
+      audit(created.id, me.id, "trip.created", null, view(created));
+      return ok({ household: view(created) }, 201);
     }
     if (parts[0] !== "households") return err(404, "API route not found.");
 
@@ -351,6 +405,18 @@ export function createHouseholdServer(options: { now?: () => number } = {}) {
     const creator = found.creatorId === me.id;
 
     if (parts.length === 2 && method === "GET") return ok({ household: view(found), members: members(found.id) });
+    if (parts[2] === "trip" && parts.length === 3 && method === "PATCH") {
+      if (!writable) return err(404, "Household not found.");
+      if (!creator) return err(403, "Only the household creator can manage members.");
+      const input = readTrip(body);
+      if (!input) return err(400, "Invalid household data.");
+      if (!found.trip) return err(404, "Trip not found.");
+      const before = view(found);
+      found.name = input.name;
+      found.trip = { startDate: input.startDate, endDate: input.endDate };
+      audit(found.id, me.id, "trip.edited", before, view(found));
+      return ok({ household: view(found) });
+    }
     if (parts.length === 2 && method === "PATCH") {
       if (!writable) return err(404, "Household not found.");
       if (!creator) return err(403, "Only the household creator can manage members.");
@@ -565,6 +631,13 @@ export function createHouseholdServer(options: { now?: () => number } = {}) {
     /** The id the fake gave an account (accounts appear on first use). */
     userId: (email: string) => user(email).id,
     setLedger: (email: string, ledger: { currency?: string; accounts?: { id: string; name: string; type: string }[] }) => Object.assign(user(email), ledger),
+    /** The account's private ledger as the server holds it (read or seeded before the browser loads it). */
+    ledger: (email: string) => ledgerOf(email),
+    /** Another device writes to the account's ledger: the change lands with a new revision. */
+    writeLedger: (email: string, change: (ledger: WireLedger) => WireLedger) => {
+      const current = ledgerOf(email);
+      state.ledgers.set(email.toLowerCase(), { revision: current.revision + 1, ledger: change(current.ledger) });
+    },
     /** Pretends a 10-minute invite was created long ago, so it has expired. */
     expireInvites: () => {
       for (const invite of state.invites) invite.expiresAt = state.now() - 1;
