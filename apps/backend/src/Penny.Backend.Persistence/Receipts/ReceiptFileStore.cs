@@ -7,9 +7,11 @@ namespace Penny.Backend.Persistence.Receipts;
 
 // AES-256-GCM with a per-file key derived (HKDF-SHA256) from the master service key
 // and a random per-file salt. The file body and the original filename are sealed
-// with the same key, separate nonces and associated data binding them to the row.
+// with the same key, separate nonces and associated data binding them to the owner
+// and the receipt id. `receipts.encryption_version` names the scheme; only 1 exists.
 public sealed partial class ReceiptFileStore(ReceiptStoreSettings settings)
 {
+    public const short CurrentVersion = 1;
     private const int TagBytes = 16;
     private const int NonceBytes = 12;
     private const int SaltBytes = 32;
@@ -36,6 +38,7 @@ public sealed partial class ReceiptFileStore(ReceiptStoreSettings settings)
                 Id = receiptId,
                 UserId = userId,
                 StoragePath = file[..2] + "/" + file,
+                EncryptionVersion = CurrentVersion,
                 KeySalt = salt,
                 FileNonce = fileNonce,
                 NameNonce = nameNonce,
@@ -136,6 +139,10 @@ public sealed partial class ReceiptFileStore(ReceiptStoreSettings settings)
 
     private byte[] Open(Receipt row, byte[] nonce, byte[] sealedBytes, string part)
     {
+        // A newer build may have written a scheme this one does not know: refuse it rather
+        // than guess.
+        if (row.EncryptionVersion != CurrentVersion)
+            throw new CryptographicException("Receipt encryption version is not supported.");
         if (sealedBytes.Length < TagBytes)
             throw new CryptographicException("Receipt ciphertext is truncated.");
         var key = DeriveKey(row.KeySalt);

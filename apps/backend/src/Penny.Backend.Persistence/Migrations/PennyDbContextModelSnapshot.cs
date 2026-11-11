@@ -1357,6 +1357,12 @@ namespace Penny.Backend.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<short>("EncryptionVersion")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("smallint")
+                        .HasDefaultValue((short)1)
+                        .HasColumnName("encryption_version");
+
                     b.Property<byte[]>("FileNonce")
                         .IsRequired()
                         .HasColumnType("bytea")
@@ -1406,6 +1412,8 @@ namespace Penny.Backend.Persistence.Migrations
 
                     b.ToTable("receipts", "penny", t =>
                         {
+                            t.HasCheckConstraint("ck_receipts_encryption_version", "encryption_version = 1");
+
                             t.HasCheckConstraint("ck_receipts_file_nonce", "length(file_nonce) = 12");
 
                             t.HasCheckConstraint("ck_receipts_key_salt", "length(key_salt) = 32");
