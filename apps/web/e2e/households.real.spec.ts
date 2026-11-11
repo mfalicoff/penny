@@ -3,11 +3,10 @@ import { expect, test, type Browser, type Page } from "@playwright/test";
 // The MAZ-91 two-person journeys against the real .NET API and PostgreSQL from the full-stack
 // test environment (docs/migration/test-environment.md). Skipped unless PENNY_REAL_STACK=1. It
 // pins the server clock through the environment's test controls (PENNY_API_URL and
-// PENNY_TEST_TOKEN, exported by `test-env run`), so it never runs against a real server. From the
-// repository root:
+// PENNY_TEST_TOKEN, exported by `test-env run`), so it never runs against a real server. CI runs
+// it on Chromium, Firefox and WebKit (MAZ-95). In apps/web:
 //
-//   npm run test-env -- run --seed empty --origins http://127.0.0.1:4176 -- \
-//     sh -c 'cd apps/web && npm run build && PENNY_REAL_STACK=1 PENNY_E2E_PORT=4176 npx playwright test households.real --project=desktop'
+//   npm run build && npm run test:e2e:real -- households.real --project=chromium-desktop
 //
 // Accounts are new random `.test` addresses; amounts are made up.
 test.skip(process.env.PENNY_REAL_STACK !== "1", "needs the full-stack test environment (PENNY_REAL_STACK=1)");
@@ -121,6 +120,11 @@ test("two people: invite, splits, private account, stale payment, monthly settle
   await hydro.getByRole("button", { name: "Mark $45.00 as paid" }).click();
   await expect(hydro.getByText("Repaid", { exact: true })).toBeVisible();
   await bea.page.keyboard.press("Escape");
+  // On a short phone (WebKit's iPhone 15) the toast covers the Internet row, and a pointer
+  // resting on it pauses the toast, so a click there would wait forever. Move the pointer off
+  // it and let it time out (6s) first.
+  await bea.page.mouse.move(0, 0);
+  await expect(bea.page.getByText("Share marked as paid")).toBeHidden({ timeout: 10_000 });
 
   // Bea opens Internet's payment; Alex changes the shares first. The server refuses (409).
   await list.getByRole("link", { name: /Internet/ }).click();

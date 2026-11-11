@@ -15,7 +15,7 @@ All versions are exact in `package.json` and locked in `package-lock.json`.
 | Validation | Zod | 4.6.7 | Response and search-parameter schemas |
 | Types and lint | TypeScript, typescript-eslint, ESLint | 6.0.3, 8.72.2, 10.14.0 | typescript-eslint supports TypeScript below 6.1, so this app stays on 6.0 until it supports 7. |
 | Tests | Vitest, jsdom, Testing Library | 5.1.0, 31.0.0, 16.3.3 | Component tests against the real router and query client |
-| Browser smoke | Playwright | 1.64.1 | Runs the production build in Chromium (desktop and phone) |
+| Browser tests | Playwright | 1.64.1 | Runs the production build in Chromium, Firefox and WebKit, with `/api` mocked or against the real .NET API ([browser tests](#browser-tests)) |
 
 **TanStack Start isn't used.** Every business endpoint already lives in the .NET API, and nginx already serves static files with a same-origin `/api/` proxy (`deploy/web`). Server rendering would add a Node runtime to deploy and secure, and nothing needs it yet: the app sits behind sign-in, so SEO doesn't apply, and first paint is a small static shell. Reconsider only if a documented rendering or hosting need comes up.
 
@@ -48,6 +48,7 @@ The proxy keeps the browser's `Origin` (`http://localhost:4173`), and port 4173 
 | `npm test` | Vitest unit and component tests. Any console error or warning fails the test. |
 | `npm run build` | Production build into `dist/`, then `scripts/verify-dist.ts` |
 | `npm run test:e2e` | Playwright smoke against `vite preview` on port 4175, with `/api` mocked |
+| `npm run test:e2e:real` | The `*.real.spec.ts` journeys against a disposable real stack (needs Docker or Podman and .NET; [browser tests](#browser-tests)) |
 | `npm run design:sync` / `design:check` | Regenerate the design tokens, or check that they match the design kit |
 | `npm run check` | Everything above except the browser smoke |
 
@@ -266,14 +267,49 @@ The bundle contains no server URL, connection string or credential. In productio
 
 ## CI
 
-`.github/workflows/web.yml` runs on every pull request and on pushes to `v2`. It runs install, design-token check, lint, typecheck, unit and component tests, the production build with artifact verification, a stale route tree check, and the Playwright smoke. The job has no secrets. Mark **Web lint, types, tests, build and browser smoke** as a required status check in the repository's branch protection.
+`.github/workflows/web.yml` runs on every pull request, on pushes to `v2`, nightly and on demand. **Web lint, types, tests, build and browser smoke** runs install, design-token check, lint, typecheck, unit and component tests, the production build with artifact verification, a stale route tree check, and the mocked Playwright smoke in Chromium. **Browser smoke (mocked API, firefox/webkit)** runs the same smoke on the other engines, and **Real-stack browser journeys (chromium/firefox/webkit)** runs the real-server specs ([browser tests](#browser-tests)). No job has secrets. Mark all of them as required status checks in the repository's branch protection. GitHub runs scheduled workflows from the default branch only, so the nightly run starts once this workflow is on it.
 
-The Playwright run also has `e2e/auth.spec.ts`: real Chromium journeys for password and SSO sign-in (including a real popup, cancellation, a blocked popup and a failed callback), expiry and sign-out, with `/api` and the provider mocked. `e2e/auth.real.spec.ts` runs the same journeys against the full-stack test environment and is skipped unless `PENNY_REAL_STACK=1` (command in the file). Make it a CI job together with MAZ-95.
+### Browser tests
+
+Every Playwright run serves the production build (`npm run build` first) with `vite preview`. `PENNY_REAL_STACK` chooses the suite:
+
+| Suite | Specs | Server | Command |
+| --- | --- | --- | --- |
+| Mocked smoke | `e2e/*.spec.ts` except `*.real.spec.ts` | `/api` and the OIDC provider mocked per test with `page.route`; port 4175 | `npm run test:e2e` |
+| Real stack | `e2e/*.real.spec.ts` | The [full-stack test environment](../../docs/migration/test-environment.md): PostgreSQL 18 with pg_trgm and pgvector in a container, a migrated `penny_test_<run id>` database on tmpfs, the .NET API built from this checkout with test controls, and the local OIDC provider; port 4173, a redirect URI the provider registers | `npm run test:e2e:real` |
+
+`npm run test:e2e:real` (`scripts/e2e-real.ts`) runs `scripts/test-env/penny-env.mjs run --oidc -- npx playwright test` with `PENNY_REAL_STACK=1`: the environment is created, used and always torn down in one command, and Playwright gets `PENNY_API_URL` (where `vite preview` forwards `/api`) and `PENNY_TEST_TOKEN`. Arguments go to Playwright: `npm run test:e2e:real -- households.real --project=webkit-phone`. It needs what the test environment needs: Docker or Podman, the pinned .NET SDK, the search model and restored packages ([prerequisites](../../docs/migration/test-environment.md#prerequisites)). It seeds nothing and leaves the server clock unpinned, because OIDC sign-in attempts expire by real time (the `empty` seed pins the clock to 2026-10-15); specs that need a date pin it through `/api/test/clock` and unpin it afterwards.
+
+**Browser matrix.** `PENNY_E2E_BROWSERS` (`chromium`, `firefox`, `webkit`; default `chromium`) and `PENNY_E2E_DEVICES` (`desktop`, `phone`, `tablet`; default `desktop,phone`) choose the projects, named `<browser>-<device>`:
+
+| | desktop | phone | tablet |
+| --- | --- | --- | --- |
+| chromium | Desktop Chrome | Pixel 7 | Galaxy Tab S9 |
+| firefox | Desktop Firefox | none | none |
+| webkit | Desktop Safari | iPhone 15 | iPad (gen 11) |
+
+Firefox has no mobile emulation (Playwright refuses `isMobile` there) and the specs use `isMobile` to choose phone journeys, so Firefox runs desktop only and asking for its phone or tablet adds no project. This is browser emulation; native simulators and devices are MAZ-81.
+
+| CI job | Engines | Devices |
+| --- | --- | --- |
+| Web lint, types, tests, build and browser smoke | chromium | desktop, phone |
+| Browser smoke (mocked API) | firefox, webkit (one job each) | desktop, phone (Firefox: desktop) |
+| Real-stack browser journeys | chromium, firefox, webkit (one job and one environment each) | desktop, phone (Firefox: desktop); nightly and manual runs add tablet |
+
+**Isolation.** Each real-stack job has its own environment (random run id, container, database, ports, control token and receipt directory), and every spec registers new random `.test` accounts, so tests never depend on each other's data. Specs in one environment run one at a time (`workers: 1`) because they share the server clock. Amounts and names are made up; no secret or real financial data is used. The only test doubles are the local OIDC provider (`scripts/test-env/oidc-provider.mjs`: auto-approving, throwaway certificate) and Playwright's browser clock where a spec fixes it; the real-stack specs never mock a business API call. No live check against a real identity provider runs in CI.
+
+**Artifacts.** Traces, screenshots and (real stack) videos are kept for failed attempts in `test-results/e2e/`, the HTML report and `results.json` in `test-results/e2e-report/`. The real-stack run also copies the API log, PostgreSQL log and `environment.json` (no token or passwords) to `../../test-results/fullstack/<run id>/`. In GitHub Actions they are uploaded as `web-playwright-report`, `web-playwright-report-<browser>` and `web-real-stack-<browser>` on the run's summary page. Open a trace with `npx playwright show-trace <trace.zip>` (or at trace.playwright.dev) and a report with `npx playwright show-report <dir>`.
+
+**Retries and flaky tests.** CI retries a failed test once. WebKit projects get a 60s test timeout instead of 30s, because the two-person household journeys run 3-4 times slower there. A test that passes on retry is reported as flaky in the list output, the job's annotations and the HTML report, and its failed attempt keeps its trace, screenshot and video. Triage: open the failed attempt's trace (network, console and DOM at each step) next to `api.log` from the same run, decide whether the app, the test or the environment is at fault, and fix it or file an issue with the trace. Don't raise timeouts or retries to hide it. Reproduce with the same project, for example `npm run test:e2e:real -- --project=webkit-phone --repeat-each=5`. Example: on `webkit-phone` (iPhone 15), `households.real` first waited out its 3-minute timeout because the "Share marked as paid" toast covered the next expense row, and Playwright's pointer resting on the toast paused it (the toast pauses on hover), so it never left; the spec now moves the pointer away and waits for the toast to close.
+
+On NixOS, where Playwright's downloaded browsers can't run, give `test-env run` a command that runs Playwright in the official image on the host network, with the repository at the same path. From the repository root: `npm run test-env -- run --oidc -- podman run --rm --network host --userns=keep-id -e HOME=/tmp -e PENNY_REAL_STACK=1 -e PENNY_API_URL -e PENNY_TEST_TOKEN -e PENNY_E2E_BROWSERS -v "$PWD:$PWD" -w "$PWD/apps/web" mcr.microsoft.com/playwright:v1.64.1-noble npx playwright test`. Without `PENNY_REAL_STACK=1` and the `test-env` wrapper, the same `podman run` runs the mocked smoke.
+
+`e2e/auth.spec.ts` has the password and SSO sign-in journeys (including a real popup, cancellation, a blocked popup and a failed callback), expiry and sign-out, with `/api` and the provider mocked. `e2e/auth.real.spec.ts` runs the same journeys against the real stack.
 
 `e2e/shell.spec.ts` covers the shell: layouts and overflow at each breakpoint, 200% zoom and doubled text, long names, pinned and system themes, reduced transparency and motion, shortcuts with focus restoration, Back and Forward, the phone drawer, and the demo's isolation.
 
 `e2e/offline.spec.ts` covers the durable offline store in real Chromium (IndexedDB, BroadcastChannel, Web Locks, the browser's offline switch): a legacy Expo copy imported and kept through a reload and a second tab while the server is down, one PUT on reconnect with both tabs converged, and sign-out refused while a change waits.
 
-Shared households: `tests/households.test.tsx` (component tests against the in-memory household fake in `tests/fakes/householdServer.ts`, which follows the documented server rules and messages) covers create and join, invite expiry, equal/exact/percent splits, the payer-only account, categories and unsynced accounts from the offline ledger, stale edits, offline drafts, recurring rules, share and monthly payments (also a month that can't be re-read after a stale payment), payment-changed states, leave/archive restrictions, read-only archived households and history. `tests/households-model.test.ts` checks the split preview against `contracts/fixtures/shared-splits.json` and amount entry against `money.json`. `e2e/households.spec.ts` runs two people in two browser contexts on desktop and phone (invite expiry, the three split modes, concurrent edits, a stale payment, a repeated monthly payment at month end, hidden payer accounts, archive rules, keyboard entry and 320px). `e2e/households.real.spec.ts` runs the two-person journey against the real .NET API and PostgreSQL with a pinned server clock; it is skipped unless `PENNY_REAL_STACK=1` (command in the file).
+Shared households: `tests/households.test.tsx` (component tests against the in-memory household fake in `tests/fakes/householdServer.ts`, which follows the documented server rules and messages) covers create and join, invite expiry, equal/exact/percent splits, the payer-only account, categories and unsynced accounts from the offline ledger, stale edits, offline drafts, recurring rules, share and monthly payments (also a month that can't be re-read after a stale payment), payment-changed states, leave/archive restrictions, read-only archived households and history. `tests/households-model.test.ts` checks the split preview against `contracts/fixtures/shared-splits.json` and amount entry against `money.json`. `e2e/households.spec.ts` runs two people in two browser contexts on desktop and phone (invite expiry, the three split modes, concurrent edits, a stale payment, a repeated monthly payment at month end, hidden payer accounts, archive rules, keyboard entry and 320px). `e2e/households.real.spec.ts` runs the two-person journey against the real .NET API and PostgreSQL with a pinned server clock, in the real-stack suite.
 
-Not covered yet: real .NET/PostgreSQL browser journeys on Chromium, Firefox and WebKit in CI (MAZ-95), screenshot baselines (MAZ-96) and the comparison with the cards (MAZ-122). The production image in `deploy/web` still serves the Expo export. It switches to this app at cutover.
+Not covered yet: screenshot baselines (MAZ-96) and the comparison with the cards (MAZ-122). The production image in `deploy/web` still serves the Expo export. It switches to this app at cutover.

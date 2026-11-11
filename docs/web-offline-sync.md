@@ -170,4 +170,4 @@ IndexedDB and `localStorage` belong to one origin (scheme, host and port). Pendi
 | `tests/offline.test.tsx` | The real app: banner from a previous visit, offline, reconnect and Retry; sign-out refused with pending work and the copy removed after it; local search with pending and deleted rows, then server results; clearing Query keeps the work; 401 keeps it; legacy import through the app; blocked storage |
 | `e2e/offline.spec.ts` | Real Chromium (desktop and phone): the legacy copy imported, kept through a reload and a second tab while the server is down, the browser's offline switch, one PUT on reconnect, both tabs converged, the copy removed; sign-out refused then allowed |
 
-Run `npm test` and `npm run test:e2e` in `apps/web`. The same journeys against the real .NET/PostgreSQL stack on Chromium, Firefox and WebKit belong to MAZ-95.
+Run `npm test` and `npm run test:e2e` in `apps/web`. The offline journeys run with `/api` mocked on Chromium, Firefox and WebKit in CI; a real .NET/PostgreSQL variant of them is not written yet (the real-stack suite, `npm run test:e2e:real`, covers sign-in and households: [browser tests](../apps/web/README.md#browser-tests)).
