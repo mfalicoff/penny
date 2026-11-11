@@ -1,8 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { NotYetAvailable } from "../../../features/placeholder/NotYetAvailable";
+import { HouseholdPage } from "../../../features/households/HouseholdPage";
+import { householdSearchSchema } from "../../../features/households/search";
 
-/** Legacy URL kept from the Expo app. The household page arrives with MAZ-91. */
+/** Legacy URL kept from the Expo app: one household, with `?month=`, `?tab=` and the legacy `?add=1` (MAZ-91). */
 export const Route = createFileRoute("/households/$id/")({
   staticData: { title: "Household" },
-  component: () => <NotYetAvailable page="Shared households" icon="people" />,
+  validateSearch: householdSearchSchema,
+  component: Household,
 });
+
+function Household() {
+  const { id } = Route.useParams();
+  const search = Route.useSearch();
+  return <HouseholdPage householdId={id} search={search} />;
+}
