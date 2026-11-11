@@ -20,10 +20,10 @@ struct AppShell: View {
             }
         }
         .environment(shell)
-        .sheet(isPresented: $shell.route.isAddEntryPresented) {
+        .sheet(isPresented: $shell.route.isAddEntryPresented, onDismiss: shell.sheetDismissed) {
             EntryFormSheet(mode: .new).environment(shell)
         }
-        .sheet(item: $shell.editingEntry, onDismiss: shell.editSheetDismissed) { request in
+        .sheet(item: $shell.editingEntry, onDismiss: shell.sheetDismissed) { request in
             EntryFormSheet(mode: .edit(request.entry)).environment(shell)
         }
         .accessibilityIdentifier(shell.isDemo ? "root.demo" : "root.signedIn")

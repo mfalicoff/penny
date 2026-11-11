@@ -249,6 +249,20 @@ struct AccountWorkspaceTests {
         #expect(workspace.load.ledger?.entry(id: "lunch") != nil)
     }
 
+    @Test("whenDraftsAreKept_AccountWorkspace_ShouldStoreThemForTheAccountUntilItSignsOut")
+    func keptDrafts() async throws {
+        try await signedIn()
+        let shelf = OfflineLedgerStoreTests.drafts()
+        workspace.saveDrafts(shelf)
+        let reopened = AccountWorkspace(model: harness.model, scope: Offline.scope())
+        #expect(reopened.loadDrafts().kept.map(\.draft) == shelf.kept.map(\.draft))
+
+        try await harness.auth.signOut()
+        #expect(workspace.loadDrafts().kept.isEmpty, "removed with the account's data")
+        workspace.saveDrafts(shelf)
+        #expect(workspace.loadDrafts().kept.isEmpty, "a closing shell can't write them back after sign-out")
+    }
+
     @Test("whenTheCopyIsUnreadable_AccountWorkspaceBannerRetry_ShouldDownloadItAgain")
     func unreadableRecoveryFromBanner() async throws {
         try await signedIn()

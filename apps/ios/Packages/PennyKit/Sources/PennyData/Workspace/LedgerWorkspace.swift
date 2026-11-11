@@ -33,6 +33,16 @@ public protocol LedgerWorkspace: AnyObject, Observable {
     func syncNow() async
     /// Retry from a load error, or pull to refresh.
     func reload() async
+    /// Entry drafts kept for later ("Keep as draft", or a form replaced by a deep link). An
+    /// account keeps them on this device across launches; the demo only in memory.
+    func loadDrafts() -> EntryDraftShelf
+    func saveDrafts(_ shelf: EntryDraftShelf)
+}
+
+extension LedgerWorkspace {
+    /// Nothing stored: drafts live only as long as the shell.
+    public func loadDrafts() -> EntryDraftShelf { EntryDraftShelf() }
+    public func saveDrafts(_ shelf: EntryDraftShelf) {}
 }
 
 /// The ledger behind the shell.

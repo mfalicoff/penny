@@ -85,8 +85,14 @@ private struct EntryForm: View {
             editor = Self.fresh(mode, today: shell.today, ledger: ledger)
         }
         let shell = self.shell
+        let mode = self.mode
         model = EntryFormModel(editor: editor) { change, summary in
-            await shell.commit(change, summary: summary)
+            let failure = await shell.commit(change, summary: summary)
+            // The shelf holds the draft while the save runs (the sheet may be replaced by a
+            // deep link meanwhile); it goes only once the save succeeded, so a failure that
+            // lands after the sheet closed leaves the draft to come back to.
+            if failure == nil { shell.drafts.discard(mode) }
+            return failure
         }
     }
 
@@ -374,11 +380,9 @@ private struct EntryForm: View {
     /// back the next time this form opens.
     private func editCategories() {
         overlay = nil
-        if case .edit = mode {
-            shell.navigate { $0.openSettings(.categories) }
-        } else {
-            shell.route.openSettings(.categories)
-        }
+        // `navigate` closes this sheet first and opens Settings once it has gone: SwiftUI cannot
+        // present Settings in the same update that dismisses the edit or Add entry sheet.
+        shell.navigate { $0.openSettings(.categories) }
     }
 
     private func dismissSheet() {

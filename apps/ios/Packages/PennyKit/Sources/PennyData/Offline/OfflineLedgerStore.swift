@@ -96,6 +96,10 @@ public actor OfflineLedgerStore: AccountLocalData {
         }
         do {
             try await engine(for: new).adopt(snapshot)
+            // Kept drafts move too (best effort: a draft is a convenience), unless the new
+            // scope already has its own.
+            let drafts = files.loadDrafts(old)
+            if !drafts.kept.isEmpty, files.loadDrafts(new).kept.isEmpty { try? files.saveDrafts(drafts, for: new) }
             try await source.remove()
         } catch {
             await source.endHold()

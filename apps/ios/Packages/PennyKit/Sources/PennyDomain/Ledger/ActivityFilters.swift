@@ -139,11 +139,22 @@ public struct ActivityDay: Equatable, Sendable {
 
 /// Unsaved entry drafts kept when a form closes without saving or discarding (a deep link,
 /// Settings or the app replacing the sheet), so reopening it restores the work. One draft for
-/// a new entry and one per edited entry; a saved or untouched draft is never kept.
+/// a new entry and one per edited entry; a saved or untouched draft is never kept. The shell
+/// stores the shelf per account (`LedgerWorkspace.saveDrafts`), so drafts survive a relaunch.
 public struct EntryDraftShelf: Hashable, Sendable {
     private var drafts: [String: EntryEditor] = [:]
 
     public init() {}
+
+    /// A shelf holding `kept`, as read back from storage.
+    public init(kept: [EntryEditor]) {
+        for editor in kept { keep(editor) }
+    }
+
+    /// Every kept draft, in a stable order (by key), for storage.
+    public var kept: [EntryEditor] {
+        drafts.sorted { $0.key < $1.key }.map(\.value)
+    }
 
     static func key(_ mode: EntryEditor.Mode) -> String {
         switch mode {
@@ -153,11 +164,13 @@ public struct EntryDraftShelf: Hashable, Sendable {
     }
 
     /// Keeps `editor` if it holds unsaved work; otherwise forgets any earlier draft for it. A
-    /// draft whose save is still running is not kept: that save is about to record it.
+    /// draft whose save is still running is kept too, as not saved (`EntryEditor.resumable`),
+    /// until that save succeeds and the form discards it: if the sheet was replaced meanwhile
+    /// and the save then fails, the draft is still here.
     public mutating func keep(_ editor: EntryEditor) {
         let key = Self.key(editor.mode)
-        if editor.isDirty, !editor.isSaved, !editor.isSaving {
-            drafts[key] = editor
+        if editor.isDirty, !editor.isSaved {
+            drafts[key] = editor.resumable
         } else {
             drafts[key] = nil
         }

@@ -32,8 +32,17 @@ final class ShellModel {
 
     // MARK: Entries and Activity (MAZ-73)
 
-    /// Unsaved entry drafts kept when a form closed without Save or Discard.
-    var drafts = EntryDraftShelf()
+    /// Unsaved entry drafts kept when a form closed without Save or Discard. Every change is
+    /// stored through the workspace (per account, on this device), so they survive a relaunch.
+    var drafts: EntryDraftShelf {
+        get { draftShelf }
+        set {
+            guard newValue != draftShelf else { return }
+            draftShelf = newValue
+            workspace.saveDrafts(newValue)
+        }
+    }
+    private var draftShelf: EntryDraftShelf
     /// The entry being edited in the entry form sheet, from Activity or the entry detail.
     var editingEntry: EntryEditRequest?
     /// A route change waiting for the edit sheet to finish closing (`navigate`).
@@ -60,6 +69,7 @@ final class ShellModel {
         month = MonthKey(today)
         activityFilters = ActivityFilters(period: .month(MonthKey(today)))
         activitySearch = ActivitySearchModel(service: workspace.isDemo ? nil : search)
+        draftShelf = workspace.loadDrafts()
     }
 
     var isDemo: Bool { workspace.isDemo }
@@ -101,23 +111,33 @@ final class ShellModel {
     }
 
     /// Changes the route from outside the current screen (a deep link, Edit categories).
-    /// SwiftUI cannot present Add entry or Settings while the edit sheet is up, so the edit
-    /// sheet closes first and the change applies once it has gone (`editSheetDismissed`).
+    /// SwiftUI cannot present one sheet while another is up or still closing, so when the
+    /// change needs a sheet to go first (the edit sheet, or Add entry before Settings opens),
+    /// that sheet closes and the change applies once it has gone (`sheetDismissed`).
     func navigate(_ change: @escaping (inout ShellRoute) -> Void) {
-        guard editingEntry != nil else {
-            change(&route)
+        if editingEntry != nil {
+            pendingNavigation = change
+            editingEntry = nil
             return
         }
-        pendingNavigation = change
-        editingEntry = nil
+        var next = route
+        change(&next)
+        if route.isAddEntryPresented, !next.isAddEntryPresented, next.isSettingsPresented {
+            pendingNavigation = change
+            route.isAddEntryPresented = false
+            return
+        }
+        route = next
     }
 
-    /// Called by the edit sheet's `onDismiss`: applies a route change that was waiting for it.
-    func editSheetDismissed() {
+    /// Called by the edit and Add entry sheets' `onDismiss`: applies a route change that was
+    /// waiting for the sheet to go.
+    func sheetDismissed() {
         guard let change = pendingNavigation else { return }
         pendingNavigation = nil
         change(&route)
     }
+
 
     func dismissToast() {
         toastTask?.cancel()

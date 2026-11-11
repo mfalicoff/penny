@@ -57,10 +57,32 @@ struct EntryFlowTests {
         #expect(shell.editingEntry == nil, "the edit sheet closes first")
         #expect(!shell.route.isAddEntryPresented, "Add entry waits until the edit sheet has gone")
 
-        shell.editSheetDismissed()
+        shell.sheetDismissed()
         #expect(shell.route.isAddEntryPresented)
-        shell.editSheetDismissed()
+        shell.sheetDismissed()
         #expect(shell.route.isAddEntryPresented, "a waiting change applies once")
+    }
+
+    @Test("whenASettingsLinkArrivesWhileAddEntryIsOpen_ShellModel_ShouldCloseAddEntryBeforeOpeningSettings")
+    func settingsLinkOverAddEntry() {
+        let shell = ShellModel(workspace: FixedWorkspace(load: .ready(Ledger())), session: .demo, today: today)
+        shell.route.openAddEntry()
+
+        shell.navigate { $0.open(.settings(.categories)) }
+        #expect(!shell.route.isAddEntryPresented, "Add entry closes first")
+        #expect(!shell.route.isSettingsPresented, "Settings waits until the Add sheet has gone")
+
+        shell.sheetDismissed()
+        #expect(shell.route.isSettingsPresented && shell.route.settingsPath == [.categories])
+        #expect(!shell.route.isAddEntryPresented)
+    }
+
+    @Test("whenALinkArrivesWhileAddEntryIsOpen_ShellModel_ShouldNavigateAtOnceWhenNoSheetMustOpen")
+    func tabLinkOverAddEntry() {
+        let shell = ShellModel(workspace: FixedWorkspace(load: .ready(Ledger())), session: .demo, today: today)
+        shell.route.openAddEntry()
+        shell.navigate { $0.open(.activity) }
+        #expect(shell.route.tab == .activity && !shell.route.isAddEntryPresented)
     }
 
     @Test("whenNothingIsBeingEdited_ShellModel_ShouldNavigateAtOnce")
@@ -70,7 +92,7 @@ struct EntryFlowTests {
         #expect(shell.route.isSettingsPresented && shell.route.settingsPath == [.categories])
 
         shell.route.isSettingsPresented = false
-        shell.editSheetDismissed()
+        shell.sheetDismissed()
         #expect(!shell.route.isSettingsPresented, "a plain edit sheet dismissal changes nothing")
     }
 
