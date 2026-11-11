@@ -12,6 +12,7 @@ public struct StatusBanner<Action: View>: View {
     private let title: String
     private let message: String?
     private let action: Action
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     public init(tone: Tone, title: String, message: String? = nil, @ViewBuilder action: () -> Action) {
         self.tone = tone
@@ -21,20 +22,22 @@ public struct StatusBanner<Action: View>: View {
     }
 
     public var body: some View {
-        HStack(alignment: .center, spacing: 12) {
-            Image(systemName: icon)
-                .font(.body.weight(.semibold))
-                .foregroundStyle(iconColor)
-                .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.subheadline.weight(.semibold)).foregroundStyle(PennyColor.label)
-                if let message {
-                    Text(message).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
-                        .fixedSize(horizontal: false, vertical: true)
+        Group {
+            // At accessibility text sizes the action goes under the text, so the title keeps
+            // the full width and wraps between words instead of breaking one ("Change-s").
+            if dynamicTypeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: 8) {
+                    content
+                    action
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                HStack(alignment: .center, spacing: 12) {
+                    content
+                    Spacer(minLength: 0)
+                    action
                 }
             }
-            Spacer(minLength: 0)
-            action
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
@@ -42,6 +45,23 @@ public struct StatusBanner<Action: View>: View {
         .background(background, in: RoundedRectangle(cornerRadius: Metrics.rowRadius, style: .continuous))
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(tone == .error ? .isStaticText : [])
+    }
+
+    private var content: some View {
+        HStack(alignment: .center, spacing: 12) {
+            Image(systemName: icon)
+                .font(.body.weight(.semibold))
+                .foregroundStyle(iconColor)
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.subheadline.weight(.semibold)).foregroundStyle(PennyColor.label)
+                    .fixedSize(horizontal: false, vertical: true)
+                if let message {
+                    Text(message).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
     }
 
     private var icon: String {
@@ -246,5 +266,8 @@ nonisolated public enum CategoryStyle {
         "wifi": "wifi", "phone-portrait": "iphone", "flash": "bolt", "water": "drop", "shirt": "tshirt",
         "book": "book", "game-controller": "gamecontroller", "pricetag": "tag", "cash": "banknote",
         "card": "creditcard", "wallet": "wallet.bifold",
+        // The category form's icon grid (MAZ-74, `category-form` card).
+        "play": "play", "leaf": "leaf", "people": "person.2", "receipt": "doc.plaintext", "image": "photo",
+        "document-text": "doc.text", "sunny": "sun.max", "moon": "moon", "time": "clock", "key": "key",
     ]
 }

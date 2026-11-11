@@ -23,4 +23,7 @@ public struct SearchResults: Equatable, Sendable {
         hasMore = page.response.nextCursor != nil
         return true
     }
+
+    /// Marks the search complete: the coordinator had no further page for it.
+    public mutating func markComplete() { hasMore = false }
 }

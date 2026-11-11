@@ -33,7 +33,10 @@ public actor LedgerSyncEngine {
     private var observers: [UUID: AsyncStream<LedgerEngineState>.Continuation] = [:]
     /// Removals and moves in progress (`beginRemoval`, `beginMove`); saves and syncs are
     /// refused while any is.
-    private var holds = 0
+    private var heldBy: [Hold] = []
+    private var holds: Int { heldBy.count }
+
+    private enum Hold { case removal, move }
 
     /// Passes per sync: the first plus at most two for saves made while it ran.
     static let maxPasses = 3
@@ -110,7 +113,17 @@ public actor LedgerSyncEngine {
     /// snapshot. Due recurrence is materialized with the device's local date.
     @discardableResult
     public func commit(_ change: LedgerChange) throws(LedgerSaveError) -> LocalLedgerSnapshot {
-        guard holds == 0 else { throw .unavailable }
+        try commitChange(change).snapshot
+    }
+
+    /// `commit`, also returning the local ledger right before it, read in the same actor step,
+    /// so the difference is exactly this save (with the occurrences it made due) and nothing a
+    /// sync brought in. Undo reverts that difference.
+    public func commitChange(_ change: LedgerChange) throws(LedgerSaveError) -> (
+        before: Ledger, snapshot: LocalLedgerSnapshot
+    ) {
+        // Say why: the person is signing out, or the account is moving to a new email.
+        guard heldBy.isEmpty else { throw heldBy.contains(.move) ? .changingEmail : .signingOut }
         switch load() {
         case .ready: break
         case .unreadable, .newerFormat: throw .storageUnreadable
@@ -130,6 +143,7 @@ public actor LedgerSyncEngine {
         let existing = Set(next.local.violations)
         let violations = local.violations.filter { !existing.contains($0) }
         guard violations.isEmpty else { throw .invalid(violations) }
+        let before = next.local
         next.local = local
         do {
             try files.save(next, for: scope)
@@ -138,15 +152,19 @@ public actor LedgerSyncEngine {
         }
         snapshot = next
         publish()
-        return next
+        return (before, next)
     }
 
     /// Records occurrences that came due (after a day change, or at launch) without a save
-    /// from the person. Does nothing when nothing is due or the copy is not ready.
+    /// from the person. Does nothing when nothing is due or the copy is not ready. As with
+    /// `commit`, only problems the catch-up introduces stop it, so a ledger that already
+    /// breaks a rule still catches up.
     public func materializeDueOccurrences() {
         guard holds == 0, load() == .ready, var next = snapshot else { return }
         let local = Recurrence.materialize(next.local, today: today())
-        guard local != next.local, local.violations.isEmpty else { return }
+        guard local != next.local else { return }
+        let existing = Set(next.local.violations)
+        guard local.violations.allSatisfy({ existing.contains($0) }) else { return }
         next.local = local
         guard (try? files.save(next, for: scope)) != nil else { return }
         snapshot = next
@@ -316,7 +334,7 @@ public actor LedgerSyncEngine {
     /// in the same step, so the count the person agrees to lose is the count `remove()`
     /// deletes; no save can land in between. Balance with `remove()` or `endHold()`.
     public func beginRemoval() -> Int {
-        holds += 1
+        heldBy.append(.removal)
         return pendingChangeCount()
     }
 
@@ -324,7 +342,7 @@ public actor LedgerSyncEngine {
     /// a sync in flight, then returns the snapshot to `adopt`. Nothing can change it until
     /// `remove()` or `endHold()`. On a throw the hold is already lifted.
     func beginMove() async throws(LedgerStoreError) -> LocalLedgerSnapshot? {
-        holds += 1
+        heldBy.append(.move)
         if let running { _ = await running.value }
         do {
             return try storedSnapshot()
@@ -337,7 +355,7 @@ public actor LedgerSyncEngine {
     /// Lifts a hold from `beginRemoval` or `beginMove` that did not end in `remove()`
     /// (sign-out refused or failed, move failed).
     public func endHold() {
-        holds = max(0, holds - 1)
+        if !heldBy.isEmpty { heldBy.removeLast() }
     }
 
     /// Removes the account's data from this device and stops: a sync in flight is cancelled

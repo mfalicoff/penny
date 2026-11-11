@@ -107,14 +107,58 @@ struct ShellRouteTests {
 
 @Suite("Deep links after sign-in and unlock")
 struct DeepLinkInboxTests {
+    let alex = DeepLinkSession.account("https://penny.example.test alex@example.test")
+    let sam = DeepLinkSession.account("https://penny.example.test sam@example.test")
+
+    @Test("whenALinkArrivedForOneAccount_DeepLinkInbox_ShouldNotOpenItInTheNextAccount")
+    func tiedToTheAccount() {
+        var inbox = DeepLinkInbox()
+        inbox.sessionChanged(to: alex)
+        inbox.receive(.activity)
+        // Alex signs out before unlocking; Sam signs in.
+        inbox.sessionChanged(to: nil)
+        inbox.sessionChanged(to: sam)
+        #expect(inbox.take(ready: true, for: sam) == nil)
+        #expect(inbox.pending == nil, "dropped, not kept for later")
+
+        inbox.sessionChanged(to: alex)
+        inbox.receive(.activity)
+        inbox.sessionChanged(to: nil)
+        inbox.sessionChanged(to: alex)
+        #expect(inbox.take(ready: true, for: alex) == .activity, "the same account signing in again opens it")
+    }
+
+    @Test("whenTheDemoOpensWhileALinkWaits_DeepLinkInbox_ShouldKeepTheLinkForTheAccount")
+    func demoLeavesAccountLinks() {
+        var inbox = DeepLinkInbox()
+        inbox.receive(.addEntry)
+        inbox.sessionChanged(to: .demo)
+        #expect(inbox.take(ready: true, for: .demo) == nil)
+        #expect(inbox.pending == .addEntry)
+        inbox.sessionChanged(to: alex)
+        #expect(inbox.take(ready: true, for: alex) == .addEntry, "a link from before sign-in opens in the account")
+    }
+
+    @Test("whenALinkArrivesDuringTheDemo_DeepLinkInbox_ShouldOpenItInTheDemoOnly")
+    func demoLinks() {
+        var inbox = DeepLinkInbox()
+        inbox.sessionChanged(to: .demo)
+        inbox.receive(.activity)
+        #expect(inbox.take(ready: true, for: .demo) == .activity)
+        inbox.receive(.home)
+        inbox.sessionChanged(to: alex)
+        #expect(inbox.take(ready: true, for: alex) == nil, "a demo link never opens in an account")
+        #expect(inbox.pending == nil)
+    }
+
     @Test("whenLinkArrivesBeforeTheShellIsReady_DeepLinkInbox_ShouldKeepItUntilReady")
     func waitsForReady() {
         var inbox = DeepLinkInbox()
         inbox.receive(.trip(id: "t1"))
-        #expect(inbox.take(ready: false) == nil, "signed out or locked: keep it")
+        #expect(inbox.take(ready: false, for: alex) == nil, "signed out or locked: keep it")
         #expect(inbox.pending == .trip(id: "t1"))
-        #expect(inbox.take(ready: true) == .trip(id: "t1"))
-        #expect(inbox.take(ready: true) == nil, "delivered once")
+        #expect(inbox.take(ready: true, for: alex) == .trip(id: "t1"))
+        #expect(inbox.take(ready: true, for: alex) == nil, "delivered once")
     }
 
     @Test("whenSeveralLinksArriveWhileLocked_DeepLinkInbox_ShouldOpenOnlyTheNewest")
@@ -122,7 +166,7 @@ struct DeepLinkInboxTests {
         var inbox = DeepLinkInbox()
         inbox.receive(.activity)
         inbox.receive(.addEntry)
-        #expect(inbox.take(ready: true) == .addEntry)
+        #expect(inbox.take(ready: true, for: alex) == .addEntry)
     }
 
     @Test("whenAuthCallbackArrives_DeepLinkInbox_ShouldIgnoreIt")
@@ -139,8 +183,8 @@ struct DeepLinkInboxTests {
         inbox.receive(try #require(DeepLink(url: url)))
         var route = ShellRoute()
         // Restoring the session, then the lock prompt: nothing is shown yet.
-        #expect(inbox.take(ready: false) == nil)
-        if let link = inbox.take(ready: true) { route.open(link) }
+        #expect(inbox.take(ready: false, for: alex) == nil)
+        if let link = inbox.take(ready: true, for: alex) { route.open(link) }
         #expect(route.tab == .shared)
         #expect(route.path(for: .shared).last == .householdExpense(householdID: "h1", expenseID: "e2"))
     }

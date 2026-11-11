@@ -39,6 +39,9 @@ apps/ios/scripts/ios.sh test           # app + PennyKit tests on clean iPhone an
 apps/ios/scripts/ios.sh release-check  # Release build: production settings, no test controls
 apps/ios/scripts/ios.sh launch         # install, launch and screenshot on clean iPhone and iPad simulators
 apps/ios/scripts/ios.sh ci             # lint, package-test, test, release-check
+apps/ios/scripts/ios.sh ui-build       # build the app and the XCUITest bundle
+apps/ios/scripts/ios.sh ui-test smoke  # XCUITest plan (smoke|full|screenshots) on clean iPhone and iPad
+                                       # simulators against the full-stack environment (Docker/Podman)
 ```
 
 `test` and `launch` create new simulators from the newest installed iOS runtime and delete them afterwards, so no state carries over between runs. They use the newest iPhone Pro and iPad Pro 11-inch device types; set `PENNY_IPHONE` or `PENNY_IPAD` to a device type name from `xcrun simctl list devicetypes` to choose others.
@@ -56,15 +59,17 @@ CI runs the same steps on the GitHub `xcode-27` (Apple Silicon) image in [`.gith
 | `Penny/` | The app entry point, Debug-only test controls, the asset catalog (icon, accent color) and the privacy manifest. Keep it thin: features belong in PennyKit. | MAZ-66, then MAZ-69 |
 | `PennyTests/` | Unit tests hosted in the built app: bundle identity, URL scheme, platforms, configuration, App Group, test controls | MAZ-66 |
 | `Packages/PennyKit/Sources/PennyDomain` | Platform-neutral rules: deep links, server URLs, app identity, shell navigation (`Navigation/`) and the demo ledger (`Demo/`), and in `Ledger/` the ported money, date, recurrence, ledger command, report and local search rules ([ledger rules](../../docs/ios-ledger-domain.md)), and the offline three-way merge (`LedgerMerge`, MAZ-71). | MAZ-66, 69, 70, 71 |
-| `Packages/PennyKit/Sources/PennyData` | Configuration, the App Group container, the API client and wire models (`API/`, [API client](../../docs/ios-api-client.md)), the sign-in state machine and Keychain session store (`Auth/`, [native sign-in](../../docs/ios-authentication.md)), the durable offline ledger, sync engine and observable sync state (`Offline/`, [offline sync](../../docs/ios-offline-sync.md)), the app lock (`AppLock/`), device preferences, and the `LedgerWorkspace` interface with `AccountWorkspace`, which connects it to the offline sync model (`Workspace/`, MAZ-69/71), and later migration from Expo storage (MAZ-72) | MAZ-66, 67, 68, 69, 71 |
+| `Packages/PennyKit/Sources/PennyData` | Configuration, the App Group container, the API client and wire models (`API/`, [API client](../../docs/ios-api-client.md)), the sign-in state machine and Keychain session store (`Auth/`, [native sign-in](../../docs/ios-authentication.md)), the durable offline ledger, sync engine and observable sync state (`Offline/`, [offline sync](../../docs/ios-offline-sync.md)), the app lock (`AppLock/`), device preferences, and the `LedgerWorkspace` interface with `AccountWorkspace`, which connects it to the offline sync model (`Workspace/`, MAZ-69/71), and the in-place import of the Expo app's AsyncStorage and SecureStore data (`Migration/`, MAZ-72, [Expo upgrade](../../docs/ios-expo-migration.md)) | MAZ-66, 67, 68, 69, 71 |
 | `Packages/PennyKit/Sources/PennyDesign` | Design tokens, colors, type, Liquid Glass helpers and the shared components (`Components/`: money, hero, glass controls, banners, toast, named states; [native shell](../../docs/ios-shell.md#components-and-tokens)) | MAZ-66, 69 |
-| `Packages/PennyKit/Sources/PennyUI` | Screens and the app shell: the sign-in, create-account, server and sign-out screens (`Auth/`, MAZ-68); the iPhone tab bar and iPad split view, Home, Activity, Shared, Trips, Settings, the lock cover, the demo and the states (`Shell/`, `Home/`, `Activity/`, `Together/`, `Settings/`, MAZ-69; [native shell](../../docs/ios-shell.md)) | MAZ-68, 69 onward |
+| `Packages/PennyKit/Sources/PennyUI` | Screens and the app shell: the sign-in, create-account, server and sign-out screens (`Auth/`, MAZ-68); the iPhone tab bar and iPad split view, Home, Activity, Shared, Trips, Settings, the lock cover, the demo and the states (`Shell/`, `Home/`, `Activity/`, `Together/`, `Settings/`, MAZ-69; [native shell](../../docs/ios-shell.md)); the entry sheet, pickers, entry detail, and Activity filters and search (`Entries/`, `Activity/`, MAZ-73; [native entries](../../docs/ios-entries.md)); Accounts, Categories, Recurring, the schedule page and the reusable account, category and schedule forms (`Organize/`, MAZ-74; [organize](../../docs/ios-organize.md)) | MAZ-68, 69, 73, 74 onward |
 | `Packages/PennyKit/Tests` | One test target per module. PennyDomain, PennyData and PennyDesign tests also run on the Mac host. | each module's owner |
+| `PennyUITests/`, `TestPlans/` | XCUITest target and plans against the full-stack environment ([native UI tests](../../docs/ios-ui-tests.md)) | MAZ-81 |
+| `Packages/PennyKit/Sources/PennyAccessibility` | Accessibility identifiers shared by the views and the UI tests (no imports) | MAZ-81, each screen's owner |
 | `scripts/ios.sh` | The commands above | MAZ-66 |
 
 Dependencies point one way: `PennyUI → PennyDesign`, `PennyUI → PennyData → PennyDomain`. PennyDomain and PennyData never import SwiftUI, UIKit or AppKit, and PennyDesign never imports PennyData or PennyUI; `ios.sh lint` checks this, and the package manifest makes the reverse direction a compile error. PennyDesign and PennyUI default to `@MainActor` isolation; mark pure value types `nonisolated`.
 
-UI tests (XCUITest) belong to MAZ-81; the WidgetKit extension target to MAZ-80 (new sizes: MAZ-135).
+UI tests (XCUITest, MAZ-81) live in `PennyUITests/` (its own target and **PennyUITests** scheme, with the Smoke, Full and Screenshots plans in `TestPlans/`); they import only `PennyAccessibility`, the PennyKit module of shared accessibility identifiers, and drive the installed app against the real API ([native UI tests](../../docs/ios-ui-tests.md)). The WidgetKit extension target belongs to MAZ-80 (new sizes: MAZ-135).
 
 ## Environments
 
@@ -77,7 +82,7 @@ UI tests (XCUITest) belong to MAZ-81; the WidgetKit extension target to MAZ-80 (
 
 `PennyData.AppConfiguration` reads these values at launch and fails, showing an error screen, rather than guessing when one is missing or malformed. Release must not have a default server.
 
-Test controls (`Penny/TestControls.swift`) let tests start the app against a test server: set `PENNY_TEST_SERVER_URL` in the launch environment, for example to the [full-stack test environment](../../docs/migration/test-environment.md). `PENNY_TEST_DEMO=1` opens the temporary demo at launch ([native shell](../../docs/ios-shell.md#demo)). They exist only in Debug. `ios.sh release-check` builds Release and fails if any file in the bundle contains the test-control names, or if the Release Info.plist is not `production` without a default server.
+Test controls (`Penny/TestControls.swift`) let tests start the app against a test server: set `PENNY_TEST_SERVER_URL` in the launch environment, for example to the [full-stack test environment](../../docs/migration/test-environment.md). `PENNY_TEST_DEMO=1` opens the temporary demo at launch ([native shell](../../docs/ios-shell.md#demo)). `PENNY_TEST_RESET`, `PENNY_TEST_TODAY`, `PENNY_TEST_CONTAINER_SEED` and the Reduce Transparency/Motion overrides serve the UI tests ([launch controls](../../docs/ios-ui-tests.md#launch-controls)). `PENNY_TEST_EXPO_FIXTURE=upgrade` stages an Expo install in the container for an in-place upgrade rehearsal and imports it at the next launch ([Expo upgrade](../../docs/ios-expo-migration.md#tests-and-rehearsal)). They exist only in Debug. `ios.sh release-check` builds Release and fails if any file in the bundle contains the test-control names, or if the Release Info.plist is not `production` without a default server.
 
 ## Minimum OS and Liquid Glass
 
@@ -101,7 +106,7 @@ The app bundles no fonts or icon files. It uses SF Pro through the system text s
 | Identifier | Value | Continuity |
 | --- | --- | --- |
 | Bundle id | `com.mfalicoff.penny` | Same as `app.json`; a different id would be a new app |
-| App Group | `group.com.mfalicoff.penny` | Same as the Expo widgets ([App Groups setup](../../docs/ios-ipa.md#widget-app-groups-setup)); MAZ-72 migrates the data stored there |
+| App Group | `group.com.mfalicoff.penny` | Same as the Expo widgets ([App Groups setup](../../docs/ios-ipa.md#widget-app-groups-setup)); the Expo app kept only derived widget snapshots there, which MAZ-72 leaves for MAZ-80's widgets to replace ([Expo upgrade](../../docs/ios-expo-migration.md)) |
 | URL scheme | `penny` | Every legacy route keeps a destination (`PennyDomain.DeepLink`), including `penny://entries/new` from the widgets and `penny://auth/callback` for OIDC |
 | Widget extension | `com.mfalicoff.penny.ExpoWidgetsTarget` with kinds `BalanceChartWidget` and `RecentExpensesWidget` | Reserved for the WidgetKit extension (MAZ-80); keeping both keeps widgets people already placed |
 

@@ -73,13 +73,13 @@ struct ShellTests {
         #expect(CurrencyPolicy.options.map(\.rawValue) == ["CAD", "USD", "EUR", "GBP"])
     }
 
-    @Test("whenEntriesAreGrouped_ActivityView_ShouldKeepOrderAndTotalEachDaysNet")
+    @Test("whenEntriesAreGrouped_ActivityDay_ShouldKeepOrderAndTotalEachDaysNet")
     func dayGroups() throws {
         let report = LedgerReport(ledger: DemoLedger.make(today: today))
         let page = report.activity(.month(MonthKey(today)))
-        let days = ActivityView.days(page.entries)
+        let days = ActivityDay.group(page.entries)
         #expect(days.flatMap(\.entries) == page.entries)
-        #expect(Set(days.map(\.day)).count == days.count)
+        #expect(Set(days.map(\.date)).count == days.count)
         let first = try #require(days.first)
         let expected = first.entries.reduce(Int64(0)) { $0 + ($1.kind == .income ? $1.share : -$1.share) }
         #expect(first.net == expected)
@@ -96,6 +96,11 @@ struct ShellTests {
         #expect(SyncBanner.title(.offline(pending: 1, lastSynced: nil)) == "Offline · 1 change waiting")
         let problem = WorkspaceProblem(.server, "Penny will try again.")
         #expect(SyncBanner.message(.failing(pending: 1, problem: problem)) == "Penny will try again.")
+        let offline = SyncStatus.offline(pending: 1, lastSynced: nil)
+        #expect(
+            SyncBanner.message(offline, device: "iPad")
+                == "Your changes are saved on this iPad and sync when you're back online.")
+        #expect(SyncBanner.message(offline, device: "iPhone")?.contains("this iPhone") == true)
     }
 
     @Test("whenTheCopyOnThisDeviceCantBeRead_WorkspaceContent_ShouldOfferToDownloadItAgain")

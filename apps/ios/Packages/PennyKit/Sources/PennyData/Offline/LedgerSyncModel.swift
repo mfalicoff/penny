@@ -59,6 +59,10 @@ public struct SaveReceipt: Equatable, Sendable {
     public let scope: AccountScope
     public let savedOffline: Bool
     public let pendingCount: Int
+    /// This device's ledger right before and right after the save, read together: the
+    /// difference is this change and the recurring entries it made due, nothing else.
+    public let before: Ledger
+    public let after: Ledger
 }
 
 /// What to do with a server search page (docs/migration/search.md, "Offline, pending edits").
@@ -114,6 +118,9 @@ public final class LedgerSyncModel {
     @ObservationIgnored private var failures = 0
     @ObservationIgnored private var engineUpdates: Task<Void, Never>?
     @ObservationIgnored private var retry: Task<Void, Never>?
+    /// Until when the server asked to wait (Retry-After on a 429 or 503). Saves, the network
+    /// returning and the app becoming active wait for it; `syncNow()` does not.
+    @ObservationIgnored private var serverWaitUntil: ContinuousClock.Instant?
     @ObservationIgnored private var monitors: [Task<Void, Never>] = []
 
     public init(
@@ -179,11 +186,12 @@ public final class LedgerSyncModel {
         // `auth.state` is checked here too: the model hears of a change to it one main-actor
         // turn later (`observeAuth`), and a save in that turn must not land once the session
         // has ended.
+        if case .signingOut(let signingOut) = auth.state, signingOut.scope == account?.scope { throw .signingOut }
         guard let engine, let account, savesAllowed, case .signedIn(let signedIn) = auth.state,
             signedIn.scope == account.scope
         else { throw .unavailable }
         let current = generation
-        let snapshot = try await engine.commit(change)
+        let (before, snapshot) = try await engine.commitChange(change)
         // Show the saved ledger now rather than when the update stream delivers it.
         let saved = await engine.state
         if current == generation { apply(saved) }
@@ -194,14 +202,17 @@ public final class LedgerSyncModel {
         }
         requestSync()
         return SaveReceipt(
-            scope: account.scope, savedOffline: waitingForNetwork, pendingCount: snapshot.pending.count)
+            scope: account.scope, savedOffline: waitingForNetwork, pendingCount: snapshot.pending.count,
+            before: before, after: snapshot.local)
     }
 
     // MARK: Sync triggers
 
-    /// "Retry": syncs now, even when the network monitor reports no path, and resets backoff.
+    /// "Retry": syncs now, even when the network monitor reports no path or the server asked
+    /// to wait, and resets backoff.
     public func syncNow() {
         failures = 0
+        serverWaitUntil = nil
         requestSync(force: true)
     }
 
@@ -257,6 +268,15 @@ public final class LedgerSyncModel {
         guard let engine, let account, savesAllowed, let client = auth.client, client.scope == account.scope
         else { return }
         guard isOnline || force else { return }
+        if !force, let until = serverWaitUntil {
+            let remaining = until - ContinuousClock.now
+            if remaining > .zero {
+                // The server asked to wait: sync when the wait ends, not now.
+                if retry == nil { scheduleRetry(after: remaining) }
+                return
+            }
+            serverWaitUntil = nil
+        }
         retry?.cancel()
         retry = nil
         let current = generation
@@ -271,6 +291,7 @@ public final class LedgerSyncModel {
         switch outcome {
         case .synced:
             failures = 0
+            serverWaitUntil = nil
             // Saves kept arriving while the sync ran (it stops after a few passes): send the
             // rest shortly rather than waiting for the next trigger.
             if engineState?.pending.isEmpty == false { scheduleRetry(after: backoff.initial) }
@@ -281,7 +302,9 @@ public final class LedgerSyncModel {
             guard issue.retriesAutomatically else { break }
             var retryAfter: TimeInterval?
             if case .serverUnavailable(let after) = issue { retryAfter = after }
-            scheduleRetry(after: backoff.delay(afterFailures: failures, retryAfter: retryAfter))
+            let delay = backoff.delay(afterFailures: failures, retryAfter: retryAfter)
+            if let retryAfter, retryAfter > 0 { serverWaitUntil = .now + delay }
+            scheduleRetry(after: delay)
         case .notReady, .cancelled:
             break
         }
@@ -378,6 +401,7 @@ public final class LedgerSyncModel {
         engineState = nil
         savesAllowed = false
         failures = 0
+        serverWaitUntil = nil
         if ledger != nil {
             ledger = nil
             searchEpoch += 1
@@ -426,8 +450,10 @@ public final class LedgerSyncModel {
                 switch engineState.lastOutcome {
                 case .failed(.offline): phase = .offline
                 case .failed(let issue): phase = isOnline ? .failed(issue) : .offline
-                case .sessionExpired: phase = .sessionExpired
-                case .synced, .cancelled, .notReady, nil:
+                // A 401 unbinds the account (`handle`), so an engine still reporting one
+                // while an account is bound is left from the session that ended: this
+                // sign-in replaced it. Show the ledger as it is now instead.
+                case .synced, .cancelled, .notReady, .sessionExpired, nil:
                     if !isOnline {
                         phase = .offline
                     } else if engineState.snapshot == nil {
@@ -440,6 +466,18 @@ public final class LedgerSyncModel {
         }
         state = LedgerSyncState(
             phase: phase, pending: pending, lastSyncedAt: engineState.snapshot?.lastSyncedAt, scope: account.scope)
+    }
+
+    // MARK: Drafts
+
+    /// The kept entry drafts of `scope` (`LedgerFileStore.loadDrafts`).
+    public func keptDrafts(for scope: AccountScope) -> EntryDraftShelf { store.files.loadDrafts(scope) }
+
+    /// Stores the kept entry drafts of `scope`, while it is the signed-in account: a shell
+    /// closing after sign-out must not write drafts back for an account just removed.
+    public func keepDrafts(_ shelf: EntryDraftShelf, for scope: AccountScope) {
+        guard account?.scope == scope, savesAllowed else { return }
+        try? store.files.saveDrafts(shelf, for: scope)
     }
 
     // MARK: Search

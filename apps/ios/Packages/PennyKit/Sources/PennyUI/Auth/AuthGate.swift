@@ -22,6 +22,7 @@ struct AuthGate: View {
             if let demo {
                 ShellHost(
                     inbox: $inbox,
+                    session: .demo,
                     makeModel: {
                         ShellModel(
                             workspace: demo, session: .demo, today: services.today(), leaveDemo: { self.demo = nil })
@@ -49,20 +50,37 @@ struct AuthGate: View {
                 case .signedIn(let account), .signingOut(let account):
                     ShellHost(
                         inbox: $inbox,
+                        session: Self.session(account),
                         makeModel: {
                             ShellModel(
                                 workspace: services.accountWorkspace(account, sync), session: .account(auth, account),
-                                today: services.today(), startDemo: startDemo)
+                                today: services.today(), startDemo: startDemo,
+                                search: auth.client.map { AccountEntrySearch(model: sync, client: $0) },
+                                expoImport: services.expoMigration.flatMap(ExpoImportNotice.init))
                         }
                     )
                     .id(account.scope)
                 }
             }
         }
+        .onChange(of: currentSession, initial: true) { inbox.sessionChanged(to: currentSession) }
         .task { await auth.restore() }
         .onChange(of: scenePhase) {
             if scenePhase == .active, auth.state == .keychainUnavailable { Task { await auth.restore() } }
         }
+    }
+
+    /// The session on screen, so a link that arrives now is kept for it (`DeepLinkInbox`).
+    private var currentSession: DeepLinkSession? {
+        if demo != nil { return .demo }
+        switch auth.state {
+        case .signedIn(let account), .signingOut(let account): return Self.session(account)
+        case .restoring, .keychainUnavailable, .signedOut, .signingIn: return nil
+        }
+    }
+
+    static func session(_ account: SignedInAccount) -> DeepLinkSession {
+        .account("\(account.scope.server.description) \(account.scope.email.lowercased())")
     }
 
     private func startDemo() {
@@ -73,6 +91,8 @@ struct AuthGate: View {
 /// Creates the shell's model once and hands it pending deep links when the app is unlocked.
 struct ShellHost: View {
     @Binding var inbox: DeepLinkInbox
+    /// Who this shell shows: it opens only links for it (`DeepLinkInbox.take`).
+    let session: DeepLinkSession
     let makeModel: () -> ShellModel
     @State private var model: ShellModel?
     @Environment(AppLockController.self) private var lock
@@ -93,10 +113,11 @@ struct ShellHost: View {
         .onChange(of: lock.conceals) { deliver() }
     }
 
-    /// Opens a waiting link once the shell exists and the lock is open; never behind the lock.
+    /// Opens a waiting link once the shell exists and the lock is open; never behind the lock,
+    /// and never one meant for another account.
     private func deliver() {
-        guard let model, let link = inbox.take(ready: !lock.conceals) else { return }
-        model.route.open(link)
+        guard let model, let link = inbox.take(ready: !lock.conceals, for: session) else { return }
+        model.navigate { $0.open(link) }
     }
 }
 

@@ -53,7 +53,7 @@
     },
     {
       "file": "merge-conflicts.json",
-      "sha256": "0be465f96d1e88ad7c3f6878f384f3bfcd1cb9dce196c2c0550980d4bb249273",
+      "sha256": "4538510c5350d48b9931ec8b1347b094c0ad6ea65971b274d5b490f8b604e349",
       "generatedBy": "scripts/fixtures/generate-golden.ts",
       "consumers": {
         "typescript": [

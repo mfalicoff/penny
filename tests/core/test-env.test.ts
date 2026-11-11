@@ -1,12 +1,13 @@
-// MAZ-62 runner logic that needs no containers: run ids, the pinned image, seed
-// references, comparison normalization and the provider's generated certificate.
+// MAZ-62 runner logic that needs no containers: run ids, the pinned image, the native
+// PostgreSQL mode selection, seed references, comparison normalization and the
+// provider's generated certificate.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { X509Certificate } from "node:crypto";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { databaseName, postgresImage, runnerEnvironment, validRunId } from "../../scripts/test-env/environment.mjs";
+import { databaseName, nativePostgresBin, postgresImage, postgresMode, runnerEnvironment, validRunId } from "../../scripts/test-env/environment.mjs";
 import { applyPendingEdits, resolve } from "../../scripts/test-env/seed.mjs";
 import { differences, knownPath, normalize, writeParityReport } from "../../scripts/test-env/compare.mjs";
 import { selfSignedCertificate } from "../../scripts/test-env/oidc-provider.mjs";
@@ -25,9 +26,43 @@ test("environments use the PostgreSQL image pinned in compose and DatabaseSchema
   assert.ok(schema.includes(image.split("@")[1]), "the C# fixture pins the same digest");
 });
 
+test("PENNY_POSTGRES picks the container by default and native only when asked", () => {
+  assert.equal(postgresMode({}), "container");
+  assert.equal(postgresMode({ PENNY_POSTGRES: "" }), "container");
+  assert.equal(postgresMode({ PENNY_POSTGRES: "native" }), "native");
+  assert.throws(() => postgresMode({ PENNY_POSTGRES: "external" }), /container" or "native/);
+});
+
+test("native mode requires PostgreSQL 18 binaries before creating a cluster", () => {
+  const directory = mkdtempSync(join(tmpdir(), "penny-pg-bin-"));
+  try {
+    assert.throws(() => nativePostgresBin({ PENNY_POSTGRES_BIN: directory }), /initdb is missing/);
+    const tool = (name: string, output: string) => {
+      writeFileSync(join(directory, name), `#!/bin/sh\necho "${output}"\n`);
+      chmodSync(join(directory, name), 0o755);
+    };
+    tool("pg_ctl", "");
+    tool("psql", "");
+    tool("initdb", "initdb (PostgreSQL) 17.4");
+    assert.throws(() => nativePostgresBin({ PENNY_POSTGRES_BIN: directory }), /PostgreSQL 18 is required/);
+    tool("initdb", "initdb (PostgreSQL) 17.18"); // a minor version 18 is not major 18
+    assert.throws(() => nativePostgresBin({ PENNY_POSTGRES_BIN: directory }), /PostgreSQL 18 is required/);
+    tool("initdb", "initdb (PostgreSQL) 18.6");
+    assert.equal(nativePostgresBin({ PENNY_POSTGRES_BIN: directory }), directory);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
 test("runner environment exposes the API and control token, never database credentials", () => {
   const value = runnerEnvironment({ runId: "r1", apiUrl: "http://127.0.0.1:1", controlToken: "t" });
   assert.deepEqual(Object.keys(value).sort(), ["PENNY_API_URL", "PENNY_TEST_RUN", "PENNY_TEST_TOKEN"]);
+  const oidc = runnerEnvironment({
+    runId: "r1", apiUrl: "http://127.0.0.1:1", controlToken: "t",
+    oidc: { issuer: "https://127.0.0.1:2", clientId: "penny-test", certificate: "/tmp/certificate.pem" },
+  });
+  assert.equal(oidc.PENNY_OIDC_ISSUER, "https://127.0.0.1:2");
+  assert.equal(oidc.PENNY_OIDC_CERTIFICATE, "/tmp/certificate.pem");
 });
 
 test("seed references resolve whole values, embedded paths and dates", () => {

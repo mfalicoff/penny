@@ -18,6 +18,8 @@ public enum DetailRoute: Hashable, Sendable {
     case household(id: String)
     case householdExpense(householdID: String, expenseID: String)
     case trip(id: String)
+    /// A personal entry's detail (Activity, MAZ-73).
+    case entry(id: String)
 }
 
 /// Pages inside Settings. The first three are the old More tab's "Manage" pages, which the
@@ -151,24 +153,72 @@ public struct ShellRoute: Equatable, Sendable {
     }
 }
 
+/// Who a shell shows, for `DeepLinkInbox`: an account (by a stable key, its scope) or the demo.
+public enum DeepLinkSession: Hashable, Sendable {
+    case account(String)
+    case demo
+}
+
 /// Holds a deep link until the shell can show it: after sign-in finishes and the app lock is
 /// open. A link that arrives while signed out or locked is kept, not dropped and not shown
 /// behind the lock; a newer link replaces an older one.
+///
+/// A link belongs to the session showing when it arrived (`session`). One that arrived while
+/// an account was signed in opens only in that account: another account's shell drops it, so
+/// a link kept from before a sign-out never opens in the next account. The demo takes only
+/// links that arrived during the demo and leaves the others waiting. A link that arrived while
+/// no session was showing (signed out, or still restoring at launch) opens in the next account.
 public struct DeepLinkInbox: Equatable, Sendable {
     public private(set) var pending: DeepLink?
+    /// The session showing when `pending` arrived; nil when none was.
+    public private(set) var owner: DeepLinkSession?
+    /// The session showing now. The gate keeps it current (`sessionChanged(to:)`).
+    public private(set) var session: DeepLinkSession?
 
-    public init(_ pending: DeepLink? = nil) { self.pending = pending }
+    public init(_ pending: DeepLink? = nil, owner: DeepLinkSession? = nil) {
+        self.pending = pending
+        self.owner = owner
+    }
 
-    /// Keeps `link` for later. The OIDC callback is not a destination and is ignored.
+    /// Keeps `link` for later, for the session showing now. The OIDC callback is not a
+    /// destination and is ignored.
     public mutating func receive(_ link: DeepLink) {
         if case .authCallback = link { return }
         pending = link
+        owner = session
     }
 
-    /// The pending link, once, when the shell is ready for it.
-    public mutating func take(ready: Bool) -> DeepLink? {
-        guard ready, let link = pending else { return nil }
-        pending = nil
+    /// Records the session now showing (nil while signed out or restoring).
+    public mutating func sessionChanged(to session: DeepLinkSession?) {
+        self.session = session
+    }
+
+    /// The pending link, once, when the shell showing `session` is ready for it and the link
+    /// is for that session. A link for another account is dropped.
+    public mutating func take(ready: Bool, for session: DeepLinkSession) -> DeepLink? {
+        guard let link = pending else { return nil }
+        switch (owner, session) {
+        case (.account(let mine), .account(let theirs)) where mine != theirs:
+            // For another account: never open it here.
+            clear()
+            return nil
+        case (.demo, .account):
+            // Left from the demo: never open it in an account.
+            clear()
+            return nil
+        case (.account, .demo), (nil, .demo):
+            // An account's link (or one from before any sign-in) waits for an account.
+            return nil
+        default:
+            break
+        }
+        guard ready else { return nil }
+        clear()
         return link
+    }
+
+    private mutating func clear() {
+        pending = nil
+        owner = nil
     }
 }

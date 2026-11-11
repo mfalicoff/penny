@@ -249,7 +249,7 @@ Not in this issue: reordering categories (the card's "Drag to reorder" and first
 
 ## Recurring schedules (MAZ-90)
 
-Code: `src/features/recurring/` (the page, the detail and remove dialogs, the form, and `model.ts` for labels, upcoming dates and the draft), `src/design/recurring.css`, and the browser merge in `src/offline/merge.ts`. Cards: `iphone-recurring`, `iphone-schedule-detail`; specimens `recurring`, `recurring-paused`, `schedule`, `edit-schedule`, `remove-schedule`.
+Code: `src/features/recurring/` (the page, the detail and remove dialogs, the form, and `model.ts` for labels, upcoming dates and the draft), `src/design/recurring.css`, and the browser merge (`src/offline/merge.ts`, which re-exports the shared `src/domain/merge.ts`). Cards: `iphone-recurring`, `iphone-schedule-detail`; specimens `recurring`, `recurring-paused`, `schedule`, `edit-schedule`, `remove-schedule`.
 
 | Where | What |
 | --- | --- |

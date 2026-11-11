@@ -1,0 +1,39 @@
+{
+  "configurations" : [
+    {
+      "id" : "F67AFEFA-3F17-4A68-9CB5-1A2B02EADF46",
+      "name" : "Smoke",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : false,
+    "defaultTestExecutionTimeAllowance" : 300,
+    "environmentVariableEntries" : [
+      {
+        "key" : "PENNY_UITEST_PLAN",
+        "value" : "smoke"
+      }
+    ],
+    "maximumTestExecutionTimeAllowance" : 600,
+    "systemAttachmentLifetime" : "deleteOnSuccess",
+    "testTimeoutsEnabled" : true,
+    "userAttachmentLifetime" : "keepAlways"
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : false,
+      "selectedTests" : [
+        "SmokeJourneyTests"
+      ],
+      "target" : {
+        "containerPath" : "container:Penny.xcodeproj",
+        "identifier" : "A10000000000000000000070",
+        "name" : "PennyUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

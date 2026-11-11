@@ -1,0 +1,106 @@
+name: iOS UI matrix
+
+# The broader XCUITest matrix (MAZ-81, docs/ios-ui-tests.md): the Full and Screenshots plans on
+# iPhone and iPad, on the minimum supported OS (iOS 26) and the newest runtime the pinned Xcode
+# offers, against the real .NET API on PostgreSQL with the local OIDC provider. The Smoke plan
+# runs on every PR in ios.yml; this runs nightly, on releases and on demand.
+on:
+  schedule:
+    - cron: '17 7 * * *'
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      plans:
+        description: Plans to run (space-separated; full, screenshots, smoke)
+        default: full screenshots
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-ui-matrix-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  ui:
+    name: ${{ matrix.os.name }} · ${{ matrix.plan }}
+    runs-on: xcode-27
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          # `runtime` is a CoreSimulator runtime identifier prefix; empty means the newest
+          # installed runtime that supports the device types (ios.sh picks it).
+          - { name: iOS 26 (minimum), download: '26.0', runtime: com.apple.CoreSimulator.SimRuntime.iOS-26-0 }
+          - { name: newest iOS, download: '', runtime: '' }
+        plan: [full, screenshots]
+    env:
+      NUGET_PACKAGES: ${{ github.workspace }}/.cache/backend/nuget
+      # The runner cannot run Linux containers: PostgreSQL 18 + pgvector comes from the flake.
+      PENNY_POSTGRES: native
+      PENNY_POSTGRES_BIN: ${{ github.workspace }}/.cache/test-postgres/bin
+    steps:
+      - name: Selected plans
+        id: selected
+        shell: bash
+        env:
+          PLANS: ${{ github.event.inputs.plans || 'full screenshots' }}
+          PLAN: ${{ matrix.plan }}
+        run: |
+          if [[ " $PLANS " == *" $PLAN "* ]]; then echo "run=true" >> "$GITHUB_OUTPUT"; else echo "run=false" >> "$GITHUB_OUTPUT"; fi
+      - uses: actions/checkout@v7
+        if: steps.selected.outputs.run == 'true'
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v5
+        if: steps.selected.outputs.run == 'true'
+        with:
+          global-json-file: apps/backend/global.json
+          cache: true
+          cache-dependency-path: |
+            apps/backend/src/**/packages.lock.json
+            apps/backend/tests/**/packages.lock.json
+      - uses: actions/setup-node@v7
+        if: steps.selected.outputs.run == 'true'
+        with:
+          node-version: '24'
+          cache: npm
+      - if: steps.selected.outputs.run == 'true'
+        run: npm ci
+      - if: steps.selected.outputs.run == 'true'
+        uses: cachix/install-nix-action@v31
+      - name: PostgreSQL 18 with pgvector from the flake
+        if: steps.selected.outputs.run == 'true'
+        run: nix build .#test-postgres --out-link .cache/test-postgres
+      - name: Install the minimum-OS simulator runtime
+        if: steps.selected.outputs.run == 'true' && matrix.os.download != ''
+        run: xcodebuild -downloadPlatform iOS -buildVersion "${{ matrix.os.download }}"
+      - name: Cache search model
+        if: steps.selected.outputs.run == 'true'
+        uses: actions/cache@v6
+        with:
+          path: .cache/backend/models
+          key: search-model-${{ hashFiles('apps/backend/development/download-model.mjs') }}
+      - name: Download and verify search model
+        if: steps.selected.outputs.run == 'true'
+        run: node apps/backend/development/download-model.mjs
+      - name: Restore locked packages
+        if: steps.selected.outputs.run == 'true'
+        run: bash apps/backend/dotnet.sh restore Penny.Backend.slnx --locked-mode
+      - name: ${{ matrix.plan }} plan on clean iPhone and iPad simulators
+        if: steps.selected.outputs.run == 'true'
+        env:
+          PENNY_RUNTIME: ${{ matrix.os.runtime }}
+        run: apps/ios/scripts/ios.sh ui-test "${{ matrix.plan }}"
+      - name: Remove leftover environments
+        if: always() && steps.selected.outputs.run == 'true'
+        run: node scripts/test-env/penny-env.mjs down --all
+      - name: Upload xcresult bundles, screenshots, recordings and server logs
+        if: always() && steps.selected.outputs.run == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: ios-ui-${{ matrix.plan }}-${{ matrix.os.download || 'newest' }}
+          path: test-results/ios/ui/
+          if-no-files-found: warn

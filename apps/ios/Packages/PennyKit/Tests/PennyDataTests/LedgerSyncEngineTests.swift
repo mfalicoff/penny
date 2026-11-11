@@ -110,6 +110,21 @@ struct LedgerSyncEngineTests {
         #expect(await engine.state.pending.entryIDs == ["taxi"])
     }
 
+    @Test("whenTheLedgerAlreadyBreaksARule_EngineCatchUp_ShouldStillRecordDueOccurrences")
+    func catchUpWithExistingViolations() async throws {
+        server.edit(Offline.alex) { ledger in
+            var old = Offline.rule("old", next: "2101-01-01")
+            old.active = false
+            ledger.recurring = [old, Offline.rule("rent", next: "2026-11-06")]
+        }
+        let engine = try await synced()
+        #expect(await engine.state.snapshot?.local.violations.isEmpty == false)
+        calendar.set("2026-11-06")
+        await engine.materializeDueOccurrences()
+        #expect(await engine.state.pending.entryIDs == ["rent:2026-11-06"])
+        #expect(await engine.state.snapshot?.local.rule(id: "rent")?.nextDate == .day("2026-12-01"))
+    }
+
     // MARK: Disk failures
 
     @Test("whenTheDiskWriteFails_Engine_ShouldNotAcknowledgeTheSave")

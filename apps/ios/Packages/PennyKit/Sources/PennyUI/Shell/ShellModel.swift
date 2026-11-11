@@ -29,20 +29,53 @@ final class ShellModel {
     let startDemo: (() -> Void)?
     /// Ends the demo and discards everything in it (nil for an account).
     let leaveDemo: (() -> Void)?
+    /// What this launch's Expo import needs from the person (MAZ-72), shown in Settings.
+    let expoImport: ExpoImportNotice?
+
+    // MARK: Entries and Activity (MAZ-73)
+
+    /// Unsaved entry drafts kept when a form closed without Save or Discard. Every change is
+    /// stored through the workspace (per account, on this device), so they survive a relaunch.
+    var drafts: EntryDraftShelf {
+        get { draftShelf }
+        set {
+            guard newValue != draftShelf else { return }
+            draftShelf = newValue
+            workspace.saveDrafts(newValue)
+        }
+    }
+    private var draftShelf: EntryDraftShelf
+    /// The entry being edited in the entry form sheet, from Activity or the entry detail.
+    var editingEntry: EntryEditRequest?
+    /// A route change waiting for the edit sheet to finish closing (`navigate`).
+    @ObservationIgnored private var pendingNavigation: ((inout ShellRoute) -> Void)?
+    /// The personal entry shown beside the Activity list on iPad (regular width).
+    var activitySelection: String?
+    /// Activity's filters and query, kept while switching tabs.
+    var activityFilters: ActivityFilters
+    /// Activity's server search (MAZ-121) for an account; local only in the demo.
+    let activitySearch: ActivitySearchModel
+    /// Attaches a receipt to an entry draft (MAZ-78 provides it; nil until then).
+    var attachReceipt: ((ReceiptSource) async -> Result<ReceiptReference, SaveFailure>)?
 
     @ObservationIgnored private var toastTask: Task<Void, Never>?
     static let toastDuration: Duration = .seconds(4)
 
     init(
         workspace: any LedgerWorkspace, session: ShellSession, today: CalendarDate,
-        startDemo: (() -> Void)? = nil, leaveDemo: (() -> Void)? = nil
+        startDemo: (() -> Void)? = nil, leaveDemo: (() -> Void)? = nil, search: (any EntrySearchService)? = nil,
+        expoImport: ExpoImportNotice? = nil
     ) {
+        self.expoImport = expoImport
         self.workspace = workspace
         self.session = session
         self.today = today
         self.startDemo = startDemo
         self.leaveDemo = leaveDemo
         month = MonthKey(today)
+        activityFilters = ActivityFilters(period: .month(MonthKey(today)))
+        activitySearch = ActivitySearchModel(service: workspace.isDemo ? nil : search)
+        draftShelf = workspace.loadDrafts()
     }
 
     var isDemo: Bool { workspace.isDemo }
@@ -81,6 +114,34 @@ final class ShellModel {
             return failure
         }
         return nil
+    }
+
+    /// Changes the route from outside the current screen (a deep link, Edit categories).
+    /// SwiftUI cannot present one sheet while another is up or still closing, so when the
+    /// change needs a sheet to go first (the edit sheet, or Add entry before Settings opens),
+    /// that sheet closes and the change applies once it has gone (`sheetDismissed`).
+    func navigate(_ change: @escaping (inout ShellRoute) -> Void) {
+        if editingEntry != nil {
+            pendingNavigation = change
+            editingEntry = nil
+            return
+        }
+        var next = route
+        change(&next)
+        if route.isAddEntryPresented, !next.isAddEntryPresented, next.isSettingsPresented {
+            pendingNavigation = change
+            route.isAddEntryPresented = false
+            return
+        }
+        route = next
+    }
+
+    /// Called by the edit and Add entry sheets' `onDismiss`: applies a route change that was
+    /// waiting for the sheet to go.
+    func sheetDismissed() {
+        guard let change = pendingNavigation else { return }
+        pendingNavigation = nil
+        change(&route)
     }
 
     func dismissToast() {

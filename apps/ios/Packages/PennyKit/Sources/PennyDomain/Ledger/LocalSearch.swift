@@ -8,9 +8,9 @@
 /// the fields with single spaces keeps cross-field matches ("beans morning" finds title
 /// "Coffee beans" with note "Morning"), but a query cannot skip a field ("lunch  with" with
 /// two spaces does not find "Lunch" / "With Alex"). There is no accent folding ("cafe" does
-/// not find "Café"), and `%`, `_` and `\` are ordinary characters. The folded normalization
-/// and typo/meaning tiers of server search v1 (`foldCases`, MAZ-121) are not applied here;
-/// MAZ-73 owns them on iOS.
+/// not find "Café"), and `%`, `_` and `\` are ordinary characters. The folded normalization of
+/// server search v1 (`foldCases`, MAZ-121) is not applied here: the native entry screens use
+/// `SearchText` and `FoldedSearchIndex` (MAZ-73), and typo and meaning tiers need the server.
 public enum LocalSearch {
     /// The haystack's fields, in the legacy order. Missing fields are empty.
     public static func matches(

@@ -22,6 +22,8 @@ let package = Package(
         .library(name: "PennyData", targets: ["PennyData"]),
         .library(name: "PennyDesign", targets: ["PennyDesign"]),
         .library(name: "PennyUI", targets: ["PennyUI"]),
+        // Identifiers shared by the screens and the XCUITest target (MAZ-81). No dependencies.
+        .library(name: "PennyAccessibility", targets: ["PennyAccessibility"]),
     ],
     dependencies: [
         .package(name: "PennyContracts", path: "../../../../contracts/swift")
@@ -30,6 +32,7 @@ let package = Package(
         .target(name: "PennyDomain", swiftSettings: strict),
         .target(name: "PennyData", dependencies: ["PennyDomain"], swiftSettings: strict),
         .target(name: "PennyDesign", swiftSettings: mainActorByDefault),
+        .target(name: "PennyAccessibility", swiftSettings: strict),
         .target(
             name: "PennyUI",
             dependencies: ["PennyDomain", "PennyData", "PennyDesign"],
@@ -47,5 +50,6 @@ let package = Package(
         ),
         .testTarget(name: "PennyDesignTests", dependencies: ["PennyDesign"], swiftSettings: strict),
         .testTarget(name: "PennyUIModuleTests", dependencies: ["PennyUI"], swiftSettings: mainActorByDefault),
+        .testTarget(name: "PennyAccessibilityTests", dependencies: ["PennyAccessibility"], swiftSettings: strict),
     ]
 )

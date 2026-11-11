@@ -33,6 +33,16 @@ public protocol LedgerWorkspace: AnyObject, Observable {
     func syncNow() async
     /// Retry from a load error, or pull to refresh.
     func reload() async
+    /// Entry drafts kept for later ("Keep as draft", or a form replaced by a deep link). An
+    /// account keeps them on this device across launches; the demo only in memory.
+    func loadDrafts() -> EntryDraftShelf
+    func saveDrafts(_ shelf: EntryDraftShelf)
+}
+
+extension LedgerWorkspace {
+    /// Nothing stored: drafts live only as long as the shell.
+    public func loadDrafts() -> EntryDraftShelf { EntryDraftShelf() }
+    public func saveDrafts(_ shelf: EntryDraftShelf) {}
 }
 
 /// The ledger behind the shell.
@@ -121,11 +131,24 @@ public struct SavedChange: Equatable, Identifiable, Sendable {
     public let id: UUID
     public let summary: ChangeSummary
     public let canUndo: Bool
+    /// The change is kept on this device and waits for the network (`SaveReceipt.savedOffline`).
+    public let savedOffline: Bool
 
-    public init(id: UUID = UUID(), summary: ChangeSummary, canUndo: Bool) {
+    public init(id: UUID = UUID(), summary: ChangeSummary, canUndo: Bool, savedOffline: Bool = false) {
         self.id = id
         self.summary = summary
         self.canUndo = canUndo
+        self.savedOffline = savedOffline
+    }
+
+    static let savedOnDevice = "Saved on this device"
+
+    /// The toast's second line: the summary's detail, plus "Saved on this device" when the
+    /// change waits for the network.
+    public var detail: String? {
+        guard savedOffline else { return summary.detail }
+        guard let detail = summary.detail, !detail.isEmpty else { return Self.savedOnDevice }
+        return "\(detail) · \(Self.savedOnDevice)"
     }
 }
 

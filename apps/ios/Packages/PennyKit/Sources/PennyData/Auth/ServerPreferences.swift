@@ -41,12 +41,30 @@ public protocol AuthPreferences: Sendable {
     /// first launch deletes them instead of restoring a session nobody expects.
     var hasLaunchedBefore: Bool { get }
     func markLaunched()
+    /// An account whose entries a sign-out could not remove (`AuthController.unremovedLocalData`),
+    /// kept across launches so the signed-out screen can still offer to remove them.
+    func unremovedLocalData() -> AccountScope?
+    func setUnremovedLocalData(_ scope: AccountScope?)
+}
+
+/// How `unremovedLocalData` is stored.
+struct StoredScope: Codable {
+    var server: String
+    var email: String
+
+    init(_ scope: AccountScope) {
+        server = scope.server.description
+        email = scope.email
+    }
+
+    var scope: AccountScope? { (try? ServerURL(server)).map { AccountScope(server: $0, email: email) } }
 }
 
 /// `AuthPreferences` in `UserDefaults.standard` (or a named suite in tests).
 public struct UserDefaultsAuthPreferences: AuthPreferences {
     static let serverKey = "penny.auth.server"
     static let launchedKey = "penny.auth.launched"
+    static let unremovedKey = "penny.auth.unremovedLocalData"
 
     private let suiteName: String?
 
@@ -70,6 +88,19 @@ public struct UserDefaultsAuthPreferences: AuthPreferences {
     public var hasLaunchedBefore: Bool { defaults.bool(forKey: Self.launchedKey) }
 
     public func markLaunched() { defaults.set(true, forKey: Self.launchedKey) }
+
+    public func unremovedLocalData() -> AccountScope? {
+        defaults.data(forKey: Self.unremovedKey).flatMap { try? JSONDecoder().decode(StoredScope.self, from: $0) }?
+            .scope
+    }
+
+    public func setUnremovedLocalData(_ scope: AccountScope?) {
+        guard let scope, let data = try? JSONEncoder().encode(StoredScope(scope)) else {
+            defaults.removeObject(forKey: Self.unremovedKey)
+            return
+        }
+        defaults.set(data, forKey: Self.unremovedKey)
+    }
 }
 
 /// Preferences in memory, for previews and tests.
@@ -77,15 +108,18 @@ public final class EphemeralAuthPreferences: AuthPreferences {
     private struct Values {
         var server: SavedServer?
         var launched: Bool
+        var unremoved: AccountScope?
     }
     private let values: Mutex<Values>
 
     public init(server: SavedServer? = nil, launchedBefore: Bool = true) {
-        values = Mutex(Values(server: server, launched: launchedBefore))
+        values = Mutex(Values(server: server, launched: launchedBefore, unremoved: nil))
     }
 
     public func savedServer() -> SavedServer? { values.withLock { $0.server } }
     public func setSavedServer(_ server: SavedServer) throws { values.withLock { $0.server = server } }
     public var hasLaunchedBefore: Bool { values.withLock { $0.launched } }
     public func markLaunched() { values.withLock { $0.launched = true } }
+    public func unremovedLocalData() -> AccountScope? { values.withLock { $0.unremoved } }
+    public func setUnremovedLocalData(_ scope: AccountScope?) { values.withLock { $0.unremoved = scope } }
 }
