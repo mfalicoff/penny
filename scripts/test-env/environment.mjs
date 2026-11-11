@@ -103,7 +103,8 @@ export function runnerEnvironment(state) {
     PENNY_TEST_RUN: state.runId,
     PENNY_API_URL: state.apiUrl,
     PENNY_TEST_TOKEN: state.controlToken,
-    ...(state.oidc ? { PENNY_OIDC_ISSUER: state.oidc.issuer } : {}),
+    // The provider's public, throwaway certificate: simulators trust it (scripts/ios.sh ui-test).
+    ...(state.oidc ? { PENNY_OIDC_ISSUER: state.oidc.issuer, PENNY_OIDC_CERTIFICATE: state.oidc.certificate } : {}),
   };
 }
 

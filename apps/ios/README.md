@@ -39,6 +39,9 @@ apps/ios/scripts/ios.sh test           # app + PennyKit tests on clean iPhone an
 apps/ios/scripts/ios.sh release-check  # Release build: production settings, no test controls
 apps/ios/scripts/ios.sh launch         # install, launch and screenshot on clean iPhone and iPad simulators
 apps/ios/scripts/ios.sh ci             # lint, package-test, test, release-check
+apps/ios/scripts/ios.sh ui-build       # build the app and the XCUITest bundle
+apps/ios/scripts/ios.sh ui-test smoke  # XCUITest plan (smoke|full|screenshots) on clean iPhone and iPad
+                                       # simulators against the full-stack environment (Docker/Podman)
 ```
 
 `test` and `launch` create new simulators from the newest installed iOS runtime and delete them afterwards, so no state carries over between runs. They use the newest iPhone Pro and iPad Pro 11-inch device types; set `PENNY_IPHONE` or `PENNY_IPAD` to a device type name from `xcrun simctl list devicetypes` to choose others.
@@ -60,11 +63,13 @@ CI runs the same steps on the GitHub `xcode-27` (Apple Silicon) image in [`.gith
 | `Packages/PennyKit/Sources/PennyDesign` | Design tokens, colors, type, Liquid Glass helpers and the shared components (`Components/`: money, hero, glass controls, banners, toast, named states; [native shell](../../docs/ios-shell.md#components-and-tokens)) | MAZ-66, 69 |
 | `Packages/PennyKit/Sources/PennyUI` | Screens and the app shell: the sign-in, create-account, server and sign-out screens (`Auth/`, MAZ-68); the iPhone tab bar and iPad split view, Home, Activity, Shared, Trips, Settings, the lock cover, the demo and the states (`Shell/`, `Home/`, `Activity/`, `Together/`, `Settings/`, MAZ-69; [native shell](../../docs/ios-shell.md)); the entry sheet, pickers, entry detail, and Activity filters and search (`Entries/`, `Activity/`, MAZ-73; [native entries](../../docs/ios-entries.md)); Accounts, Categories, Recurring, the schedule page and the reusable account, category and schedule forms (`Organize/`, MAZ-74; [organize](../../docs/ios-organize.md)) | MAZ-68, 69, 73, 74 onward |
 | `Packages/PennyKit/Tests` | One test target per module. PennyDomain, PennyData and PennyDesign tests also run on the Mac host. | each module's owner |
+| `PennyUITests/`, `TestPlans/` | XCUITest target and plans against the full-stack environment ([native UI tests](../../docs/ios-ui-tests.md)) | MAZ-81 |
+| `Packages/PennyKit/Sources/PennyAccessibility` | Accessibility identifiers shared by the views and the UI tests (no imports) | MAZ-81, each screen's owner |
 | `scripts/ios.sh` | The commands above | MAZ-66 |
 
 Dependencies point one way: `PennyUI → PennyDesign`, `PennyUI → PennyData → PennyDomain`. PennyDomain and PennyData never import SwiftUI, UIKit or AppKit, and PennyDesign never imports PennyData or PennyUI; `ios.sh lint` checks this, and the package manifest makes the reverse direction a compile error. PennyDesign and PennyUI default to `@MainActor` isolation; mark pure value types `nonisolated`.
 
-UI tests (XCUITest) belong to MAZ-81; the WidgetKit extension target to MAZ-80 (new sizes: MAZ-135).
+UI tests (XCUITest, MAZ-81) live in `PennyUITests/` (its own target and **PennyUITests** scheme, with the Smoke, Full and Screenshots plans in `TestPlans/`); they import only `PennyAccessibility`, the PennyKit module of shared accessibility identifiers, and drive the installed app against the real API ([native UI tests](../../docs/ios-ui-tests.md)). The WidgetKit extension target belongs to MAZ-80 (new sizes: MAZ-135).
 
 ## Environments
 
@@ -77,7 +82,7 @@ UI tests (XCUITest) belong to MAZ-81; the WidgetKit extension target to MAZ-80 (
 
 `PennyData.AppConfiguration` reads these values at launch and fails, showing an error screen, rather than guessing when one is missing or malformed. Release must not have a default server.
 
-Test controls (`Penny/TestControls.swift`) let tests start the app against a test server: set `PENNY_TEST_SERVER_URL` in the launch environment, for example to the [full-stack test environment](../../docs/migration/test-environment.md). `PENNY_TEST_DEMO=1` opens the temporary demo at launch ([native shell](../../docs/ios-shell.md#demo)). `PENNY_TEST_EXPO_FIXTURE=upgrade` stages an Expo install in the container for an in-place upgrade rehearsal and imports it at the next launch ([Expo upgrade](../../docs/ios-expo-migration.md#tests-and-rehearsal)). They exist only in Debug. `ios.sh release-check` builds Release and fails if any file in the bundle contains the test-control names, or if the Release Info.plist is not `production` without a default server.
+Test controls (`Penny/TestControls.swift`) let tests start the app against a test server: set `PENNY_TEST_SERVER_URL` in the launch environment, for example to the [full-stack test environment](../../docs/migration/test-environment.md). `PENNY_TEST_DEMO=1` opens the temporary demo at launch ([native shell](../../docs/ios-shell.md#demo)). `PENNY_TEST_RESET`, `PENNY_TEST_TODAY`, `PENNY_TEST_CONTAINER_SEED` and the Reduce Transparency/Motion overrides serve the UI tests ([launch controls](../../docs/ios-ui-tests.md#launch-controls)). `PENNY_TEST_EXPO_FIXTURE=upgrade` stages an Expo install in the container for an in-place upgrade rehearsal and imports it at the next launch ([Expo upgrade](../../docs/ios-expo-migration.md#tests-and-rehearsal)). They exist only in Debug. `ios.sh release-check` builds Release and fails if any file in the bundle contains the test-control names, or if the Release Info.plist is not `production` without a default server.
 
 ## Minimum OS and Liquid Glass
 

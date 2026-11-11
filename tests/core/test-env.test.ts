@@ -28,6 +28,12 @@ test("environments use the PostgreSQL image pinned in compose and DatabaseSchema
 test("runner environment exposes the API and control token, never database credentials", () => {
   const value = runnerEnvironment({ runId: "r1", apiUrl: "http://127.0.0.1:1", controlToken: "t" });
   assert.deepEqual(Object.keys(value).sort(), ["PENNY_API_URL", "PENNY_TEST_RUN", "PENNY_TEST_TOKEN"]);
+  const oidc = runnerEnvironment({
+    runId: "r1", apiUrl: "http://127.0.0.1:1", controlToken: "t",
+    oidc: { issuer: "https://127.0.0.1:2", clientId: "penny-test", certificate: "/tmp/certificate.pem" },
+  });
+  assert.equal(oidc.PENNY_OIDC_ISSUER, "https://127.0.0.1:2");
+  assert.equal(oidc.PENNY_OIDC_CERTIFICATE, "/tmp/certificate.pem");
 });
 
 test("seed references resolve whole values, embedded paths and dates", () => {
