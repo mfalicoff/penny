@@ -84,9 +84,9 @@ describe("top bar", () => {
     await screen.findByRole("heading", { level: 1, name: "Trips" });
     const add = screen.getByRole("button", { name: "Add entry" });
     await user.click(add);
-    const dialog = screen.getByRole("dialog", { name: "Add entry" });
-    expect(dialog).toHaveAccessibleDescription(/isn't available yet/);
-    expect(within(dialog).getAllByRole("button", { name: "Close" })).toHaveLength(2);
+    expect(screen.getByRole("dialog", { name: "Add entry" })).toBeInTheDocument();
+    // The entry form (MAZ-88) once this browser's ledger has loaded; its own tests are in entries.test.tsx.
+    expect(await within(await screen.findByRole("form", { name: "Add entry" })).findByLabelText("Amount (CAD)")).toHaveFocus();
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(add).toHaveFocus();

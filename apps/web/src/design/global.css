@@ -6,6 +6,7 @@
 @import "./shared.css";
 @import "./organize.css";
 @import "./recurring.css";
+@import "./activity.css";
 
 *,
 *::before,
