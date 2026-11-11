@@ -34,14 +34,20 @@ export function scheduledEntries(ledger: Ledger, month: string): OverviewEntry[]
 export function monthBreakdown(ledger: Ledger, month: string) {
   const entries: OverviewEntry[] = ledger.transactions.filter((t) => t.date.startsWith(month));
   const recordedEntries = entries.filter(isRecorded);
-  // A recorded occurrence replaces its preview: by id, or (for shared rows, whose recorded and
-  // preview ids differ) by household, rule and date.
-  const occurrence = (entry: OverviewEntry) =>
-    `${"householdId" in entry ? String(entry.householdId) : ""}|${entry.recurringId}|${entry.date}`;
+  // A recorded occurrence replaces its preview. Personal rows match by id only (`rule:date`, as
+  // Swift `Recurrence.previews`): an edited entry keeps its recurringId but not its occurrence.
+  // Shared rows (recorded and preview ids differ) match by household, rule and date; this needs
+  // the server's `recurringId` on recorded rows, so a row without one is never deduplicated.
+  const occurrence = (entry: OverviewEntry) => {
+    const householdId = "householdId" in entry ? String(entry.householdId ?? "") : "";
+    return householdId && entry.recurringId ? `${householdId}|${entry.recurringId}|${entry.date}` : null;
+  };
   const recordedIds = new Set(recordedEntries.map((entry) => entry.id));
-  const recordedOccurrences = new Set(recordedEntries.filter((entry) => entry.recurringId).map(occurrence));
-  const scheduled = [...scheduledEntries(ledger, month), ...entries.filter((t) => t.scheduled)].filter((entry) =>
-    !recordedIds.has(entry.id) && !(entry.recurringId && recordedOccurrences.has(occurrence(entry))));
+  const recordedOccurrences = new Set(recordedEntries.map(occurrence).filter((key) => key !== null));
+  const scheduled = [...scheduledEntries(ledger, month), ...entries.filter((t) => t.scheduled)].filter((entry) => {
+    const key = occurrence(entry);
+    return !recordedIds.has(entry.id) && !(key !== null && recordedOccurrences.has(key));
+  });
   const scheduledIncome = scheduled.filter((entry) => entry.kind === "income");
   const expectedIncome = scheduledIncome.reduce((sum, entry) => sum + entry.share, 0);
   // Projected adds every scheduled occurrence of the month: income, expenses and investments,

@@ -12,6 +12,7 @@ import { createRepositories } from "../../server/infrastructure/repositories.ts"
 import { createLedgerService } from "../../server/application/ledger.ts";
 import { ledgerWithHouseholds } from "../../src/features/households/projection.ts";
 import { selectOverview } from "../../src/features/overview/selectors.ts";
+import { summarizeMonth } from "../../src/domain/summary.ts";
 import type { ProjectedExpense } from "../../src/data/households";
 
 const stamp = Date.parse("2026-09-28T12:00:00Z");
@@ -445,6 +446,29 @@ test("materialized and deleted household occurrences never appear again as previ
   assert.deepEqual(revisited.transactions.map((entry) => entry.date), ["2026-10-12"]);
   assert.deepEqual(revisited.scheduled.map((entry) => entry.date).sort(), ["2026-10-19", "2026-10-26"],
     "rewinding a rule cannot resurrect recorded or soft-deleted occurrences");
+});
+
+test("recorded household occurrences carry their rule id so a stale preview is not counted twice", (t) => {
+  const { db, service, household } = setup(); t.after(() => db.close());
+  join(service, household.id, "bea");
+  const rule = service.createRecurring(household.id, "alex", {
+    ...expense(9000), date: undefined, nextDate: "2026-10-05", frequency: "weekly",
+  }).rule;
+  const stale = service.projection("bea", "2026-10");
+  service.runRecurring("2026-10-12");
+  service.createExpense(household.id, "alex", expense(2000, "alex", "2026-10-12"));
+  const fresh = service.projection("bea", "2026-10");
+  // Recorded rows keep their random id; `recurringId` names the rule and `date` the occurrence.
+  assert.deepEqual(fresh.transactions.map((entry) => [entry.date, entry.shareCents, entry.recurringId ?? null]).sort(), [
+    ["2026-10-05", 4500, rule.id], ["2026-10-12", 1000, null], ["2026-10-12", 4500, rule.id],
+  ]);
+  assert.ok(fresh.transactions.every((entry) => !String(entry.id).startsWith(`${rule.id}:`)));
+  assert.equal(fresh.transactions.filter((entry) => !("recurringId" in entry)).length, 1, "a one-off expense has no recurringId key");
+  // The client still holds the older preview response, including the two recorded dates.
+  const view = ledgerWithHouseholds(emptyLedger(), [...fresh.transactions, ...stale.scheduled] as ProjectedExpense[], [household]);
+  const summary = summarizeMonth(view, "2026-10");
+  assert.equal(summary.recorded.expense, 10000);
+  assert.equal(summary.projected.expense, 19000, "recorded 10000 plus the 19th and 26th, not the stale 5th and 12th again");
 });
 
 test("paused and deleted household recurring rules produce no monthly previews", (t) => {

@@ -131,7 +131,7 @@ export function EntryList({
         </View>
       )}
       {visibleEntries.some((t) => t.scheduled) && (
-        <Text style={[s.muted, { marginTop: 12 }]}>Scheduled entries are previews. Upcoming income counts toward the overview projection, but scheduled expenses and investments do not count until recorded. Tap a preview to edit its schedule.</Text>
+        <Text style={[s.muted, { marginTop: 12 }]}>Scheduled entries are previews and are not counted in the totals until recorded. Tap a preview to edit its schedule.</Text>
       )}
       {visibleEntries.length ? (
         [...grouped].map(([date, entries]) => (

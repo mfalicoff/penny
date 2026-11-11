@@ -176,7 +176,12 @@ public final class LedgerSyncModel {
     /// sends it. On failure nothing changed: keep the draft and show `LedgerSaveError.message`.
     @discardableResult
     public func save(_ change: LedgerChange) async throws(LedgerSaveError) -> SaveReceipt {
-        guard let engine, let account, savesAllowed else { throw .unavailable }
+        // `auth.state` is checked here too: the model hears of a change to it one main-actor
+        // turn later (`observeAuth`), and a save in that turn must not land once the session
+        // has ended.
+        guard let engine, let account, savesAllowed, case .signedIn(let signedIn) = auth.state,
+            signedIn.scope == account.scope
+        else { throw .unavailable }
         let current = generation
         let snapshot = try await engine.commit(change)
         // Show the saved ledger now rather than when the update stream delivers it.

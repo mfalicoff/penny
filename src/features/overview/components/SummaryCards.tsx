@@ -6,10 +6,9 @@ type SummaryCardsProps = {
   compact: boolean;
   money: (value: number) => string;
   period?: "month" | "year";
-  projected?: boolean;
 };
 
-export function SummaryCards({ summary, compact, money, period = "month", projected = false }: SummaryCardsProps) {
+export function SummaryCards({ summary, compact, money, period = "month" }: SummaryCardsProps) {
   const a = makeStyles();
 
   return (
@@ -45,7 +44,7 @@ export function SummaryCards({ summary, compact, money, period = "month", projec
           hint: "Contributions, not portfolio value",
         },
         {
-          label: projected ? "Projected remaining" : "Cash remaining",
+          label: "Cash remaining",
           amount: summary.income - summary.expense - summary.investment,
           icon: "wallet-outline",
           color: C.ink,

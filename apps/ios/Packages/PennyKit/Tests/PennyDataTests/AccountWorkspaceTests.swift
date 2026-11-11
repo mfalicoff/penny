@@ -170,7 +170,12 @@ struct AccountWorkspaceTests {
     func staleUndo() async throws {
         try await signedIn()
         let saved = try await workspace.commit(.saveEntry(Self.taxi), summary: Self.summary).get()
-        await eventually("save synced") { harness.server.ledger(Offline.alex)?.entry(id: "taxi") != nil }
+        // Until this device's sync has ended: one still running read the server before the web
+        // edit, and `syncNow()` would join it instead of reading again.
+        await eventually("save synced") {
+            harness.server.ledger(Offline.alex)?.entry(id: "taxi") != nil && workspace.pendingEntryIDs.isEmpty
+                && harness.model.state.phase == .upToDate
+        }
         harness.server.edit(Offline.alex) { ledger in
             ledger.transactions = ledger.transactions.map { entry in
                 var entry = entry
@@ -192,7 +197,11 @@ struct AccountWorkspaceTests {
         try await signedIn()
         harness.server.revoke(Offline.alex)
         _ = try await workspace.commit(.saveEntry(Self.taxi), summary: Self.summary).get()
-        await eventually("session ended") { workspace.sync == .signInRequired(pending: 1) }
+        // The engine reports the 401 a moment before the model hands it to `AuthController`,
+        // which is what ends the session and stops saves: wait for both.
+        await eventually("session ended") {
+            workspace.sync == .signInRequired(pending: 1) && harness.auth.state.account == nil
+        }
         let refused = await workspace.commit(.saveEntry(Offline.entry("bus")), summary: Self.summary)
         #expect(
             refused == .failure(.unavailable(LedgerSaveError.unavailable.message)), "nothing saved while signed out")

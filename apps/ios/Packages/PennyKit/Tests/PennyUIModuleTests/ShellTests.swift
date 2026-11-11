@@ -166,12 +166,16 @@ private final class SucceedingAuthenticator: DeviceAuthenticator {
     func cancel() {}
 }
 
-/// Waits (up to two seconds) for work started in a task to reach a state.
+/// Waits for work started in a task to reach a state. The limit is wall-clock time, not a
+/// number of polls, so a loaded CI simulator (where a 5 ms sleep takes far longer) does not
+/// time out a wait that would succeed.
 @MainActor
 private func eventually(_ condition: @MainActor () -> Bool) async {
-    for _ in 0..<400 {
+    let deadline = ContinuousClock.now + .seconds(30)
+    while ContinuousClock.now < deadline {
         if condition() { return }
         try? await Task.sleep(for: .milliseconds(5))
     }
+    if condition() { return }
     Issue.record("Timed out")
 }

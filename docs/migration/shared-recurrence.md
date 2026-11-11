@@ -28,7 +28,7 @@ The body is the shared `expenseInput` without `date`, plus `nextDate` (a real da
 | Update | current member (`404`) → body (`400`) → receipt → payer current → split → rule in this household (`404 Recurring rule not found.`) → revision (`409 Recurring rule changed. Refresh and try again.`) → account |
 | Delete | current member (`404`) → `{revision}` (`400`) → rule (`404 Recurring rule not found.`) → revision (`409 Recurring rule changed. Refresh and try again.`) |
 
-Another member's edit keeps the payer's account; the payer's own edit without an account clears it (as for expenses). Deleting a rule removes it and its allocations; recorded occurrences keep their `recurringId`. Rule writes record `recurring.created` (after: rule view without `accountId`), `recurring.updated` (before `{id, title, active, revision}`, after: rule view) and `recurring.deleted` (before `{id, title, revision}`) audit rows in the same transaction. Rule events never fill the push outbox (legacy).
+Another member's edit keeps the payer's account; the payer's own edit without an account clears it (as for expenses). Deleting a rule removes it and its allocations; recorded occurrences keep their `recurringId`, which the [projection](shared-expenses.md#personal-projection) sends on recorded rows (MAZ-139). Rule writes record `recurring.created` (after: rule view without `accountId`), `recurring.updated` (before `{id, title, active, revision}`, after: rule view) and `recurring.deleted` (before `{id, title, revision}`) audit rows in the same transaction. Rule events never fill the push outbox (legacy).
 
 ## Recurrence semantics
 
