@@ -50,6 +50,25 @@ Once an expense has a recorded share payment, its payer, total, member allocatio
 
 The household's **Monthly recap** shows its recorded expenses, each member's remaining balance, and suggested reimbursements for that month. On the last calendar day of the month or later, tap **Record paid** to record a full remaining suggested transfer; the server uses UTC dates for this cutoff. Once any monthly reimbursement is recorded, individual payment recording closes for that month to prevent double payments; use the remaining monthly suggestions instead. Reimbursements have no payment-account choice and do not add a transaction or reduce anyone's reported spending. An unpaid month remains overdue independently of later months. A member can leave or be removed only after all of their monthly balances are settled; their previous expenses and audit history remain. The creator cannot leave while other active members remain. Archiving requires every monthly balance to be settled.
 
+### Shared households in the v2 web app
+
+The new browser app (`apps/web`, MAZ-91) has the same rules under **Shared** in the sidebar (Together › Shared) or the phone tab bar. A household opens with its members and your balance for the month, then three sections: **Expenses** (the month's expenses with their full totals and your share, and repeating expenses), **Balances** (each member's position, suggested payments and older unpaid months) and **People** (members, invite codes and the creator's controls). **History** lists every change by everyone. Open an expense for its shares, repayments and change history.
+
+- **Online only.** Shared households need a connection. While offline you can read what is already on screen, but nothing shared can be saved; the form you were filling in stays open with your entries, and **Retry** sends it once you are back.
+- **Who sees what.** Everyone in the household sees each expense's full total, who paid and every share. Your personal reports count only your share. When you are the payer you can pick one of your own accounts; nobody else ever sees which one.
+- **Conflicts.** If someone else changes an expense while you edit it, Penny keeps your edits and shows their version: keep your changes on top of theirs, or take theirs. If an expense changes while you are recording a payment for it, nothing is recorded; Penny shows the old and new amounts and asks you to review the expense first.
+- **Recording payments.** Mark as paid and Record paid note money that already changed hands outside Penny. Penny never moves money, and payments never count as spending.
+
+**Monthly settlement example** (made-up amounts). Alex, Bea and Cam share a household in October. Alex pays Hydro, $90.00, split equally ($30.00 each). Bea pays Internet, $60.00, split by amount: Alex $30.00, Bea $15.00, Cam $15.00.
+
+| Member | Paid | Shares | October balance |
+| --- | --- | --- | --- |
+| Alex | $90.00 | $60.00 | gets back $30.00 |
+| Bea | $60.00 | $45.00 | gets back $15.00 |
+| Cam | $0.00 | $45.00 | owes $45.00 |
+
+Suggested payments: Cam → Alex $30.00 and Cam → Bea $15.00. If Cam repays his Hydro share early with **Mark as paid** ($30.00 to Alex), October's suggestions shrink to Cam → Bea $15.00. From October 31 (UTC; still the evening of October 30 in the Americas) Cam or Bea can **Record paid** for that full $15.00, which settles October; after that, individual share payments for October are closed. If Cam doesn't pay, October shows as **Overdue** in November and stays separate: November's balances start from zero. Cam can't leave, and Alex can't archive the household, until every month is settled.
+
 ## Shared trips
 
 Sign in and open **Trips** to create a shared trip or join one with its invitation code. The creator opens the trip's **People** controls to generate a code and invite others. Any participant can add an expense, choose who paid, and split it equally, by amount, or by percentage. Trip expenses can be dated before or after the travel dates, including bookings made before the group was created. New expenses include the people currently in the trip; earlier expense splits do not change when someone joins later.

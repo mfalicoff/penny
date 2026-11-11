@@ -135,7 +135,7 @@ describe("currency", () => {
   });
 
   it("doesn't guess that a ledger is empty when the server omits the lists", async () => {
-    stubServer();
+    stubServer((url) => (url === "/api/ledger" ? json({ revision: 0, ledger: { currency: "CAD" } }) : undefined));
     renderApp("/settings/currency");
     const group = await screen.findByRole("group", { name: "Ledger currency" });
     expect(group).toHaveAccessibleDescription(/couldn't confirm that your ledger is empty/);

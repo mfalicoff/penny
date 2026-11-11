@@ -238,10 +238,11 @@ describe("session expiry and sign-out", () => {
 
   it("refuses to sign out while changes are waiting to sync", async () => {
     const { fetchMock } = fakeApi(ALEX);
-    const unregister = registerPendingChanges((email) => email === ALEX);
     const user = userEvent.setup();
     renderApp("/");
     await openSignOut(user);
+    // Registered after the app's own offline store, so this stand-in answers (offline.test.tsx uses the real store).
+    const unregister = registerPendingChanges((email) => email === ALEX);
     await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Sign out" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Your changes are still waiting to sync");
     expect(wasCalled(fetchMock, "/api/auth/logout")).toBe(false);

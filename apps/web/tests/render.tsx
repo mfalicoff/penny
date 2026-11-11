@@ -22,6 +22,17 @@ export function stubFetch(handler: FetchHandler) {
 export const ALEX = "alex@example.test";
 export const emptySearch = { version: 1, items: [], totalCount: 0, nextCursor: null };
 
+/** A complete, empty v4 ledger as the API sends it (what the durable offline store expects). */
+export const emptyWireLedger = (currency = "CAD") => ({
+  version: 4,
+  currency,
+  accounts: [],
+  trips: [],
+  categories: [{ id: "groceries", name: "Groceries", icon: "basket-outline", color: "#6C9C79", kind: "expense" }],
+  transactions: [],
+  recurring: [],
+});
+
 type Override = (url: string, init: RequestInit | undefined) => Response | Promise<Response> | undefined;
 
 /** A signed-in server: identity, info and an empty search. `override` answers first; returning undefined falls through. */
@@ -32,7 +43,7 @@ export function stubServer(override?: Override) {
     if (url === "/api/info") return json({ name: "penny", version: "2.0.0-test" });
     if (url === "/api/auth/me") return json({ email: ALEX });
     if (url === "/api/auth/oidc") return json({ enabled: false });
-    if (url === "/api/ledger") return json({ revision: 0, ledger: { currency: "CAD" } });
+    if (url === "/api/ledger") return json({ revision: 0, ledger: emptyWireLedger() });
     if (url === "/api/v1/search/transactions") return json(emptySearch);
     return json({ error: "Not found." }, 404);
   });
