@@ -166,8 +166,11 @@ struct LedgerSyncModelTests {
         await eventually("logout sent") { harness.server.log.all.contains("POST /api/auth/logout") }
         // A save that reaches the engine after the pending count (here, while logout runs).
         let engine = await harness.store.engine(for: Offline.scope())
-        await #expect(throws: LedgerSaveError.unavailable) {
+        await #expect(throws: LedgerSaveError.signingOut) {
             try await engine.commit(.saveEntry(Offline.entry("taxi")))
+        }
+        await #expect(throws: LedgerSaveError.signingOut) {
+            try await harness.model.save(.saveEntry(Offline.entry("taxi")))
         }
         logout.open()
         try await signOut.value

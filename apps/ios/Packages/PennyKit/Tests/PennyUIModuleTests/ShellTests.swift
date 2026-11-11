@@ -96,6 +96,11 @@ struct ShellTests {
         #expect(SyncBanner.title(.offline(pending: 1, lastSynced: nil)) == "Offline · 1 change waiting")
         let problem = WorkspaceProblem(.server, "Penny will try again.")
         #expect(SyncBanner.message(.failing(pending: 1, problem: problem)) == "Penny will try again.")
+        let offline = SyncStatus.offline(pending: 1, lastSynced: nil)
+        #expect(
+            SyncBanner.message(offline, device: "iPad")
+                == "Your changes are saved on this iPad and sync when you're back online.")
+        #expect(SyncBanner.message(offline, device: "iPhone")?.contains("this iPhone") == true)
     }
 
     @Test("whenTheCopyOnThisDeviceCantBeRead_WorkspaceContent_ShouldOfferToDownloadItAgain")

@@ -59,6 +59,10 @@ public struct SaveReceipt: Equatable, Sendable {
     public let scope: AccountScope
     public let savedOffline: Bool
     public let pendingCount: Int
+    /// This device's ledger right before and right after the save, read together: the
+    /// difference is this change and the recurring entries it made due, nothing else.
+    public let before: Ledger
+    public let after: Ledger
 }
 
 /// What to do with a server search page (docs/migration/search.md, "Offline, pending edits").
@@ -182,11 +186,12 @@ public final class LedgerSyncModel {
         // `auth.state` is checked here too: the model hears of a change to it one main-actor
         // turn later (`observeAuth`), and a save in that turn must not land once the session
         // has ended.
+        if case .signingOut(let signingOut) = auth.state, signingOut.scope == account?.scope { throw .signingOut }
         guard let engine, let account, savesAllowed, case .signedIn(let signedIn) = auth.state,
             signedIn.scope == account.scope
         else { throw .unavailable }
         let current = generation
-        let snapshot = try await engine.commit(change)
+        let (before, snapshot) = try await engine.commitChange(change)
         // Show the saved ledger now rather than when the update stream delivers it.
         let saved = await engine.state
         if current == generation { apply(saved) }
@@ -197,7 +202,8 @@ public final class LedgerSyncModel {
         }
         requestSync()
         return SaveReceipt(
-            scope: account.scope, savedOffline: waitingForNetwork, pendingCount: snapshot.pending.count)
+            scope: account.scope, savedOffline: waitingForNetwork, pendingCount: snapshot.pending.count,
+            before: before, after: snapshot.local)
     }
 
     // MARK: Sync triggers

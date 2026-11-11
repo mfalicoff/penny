@@ -172,7 +172,7 @@ struct OfflineLedgerStoreTests {
         if saved != nil {
             #expect(moved.local.entry(id: "bus") != nil, "a save acknowledged on the old scope must not be lost")
         } else {
-            #expect(refusal == .unavailable, "refused, so the draft is kept")
+            #expect(refusal == .changingEmail, "refused with the reason, so the draft is kept")
         }
     }
 
@@ -197,7 +197,7 @@ struct OfflineLedgerStoreTests {
         try store.files.save(snapshot(pending: [Offline.entry("taxi")]), for: Offline.scope())
         #expect(await store.beginRemoval(for: Offline.scope()) == 1)
         let engine = await store.engine(for: Offline.scope())
-        await #expect(throws: LedgerSaveError.unavailable) { try await engine.commit(.saveEntry(Offline.entry("bus"))) }
+        await #expect(throws: LedgerSaveError.signingOut) { try await engine.commit(.saveEntry(Offline.entry("bus"))) }
         #expect(await store.pendingChangeCount(for: Offline.scope()) == 1, "nothing landed after the count")
 
         await store.cancelRemoval(for: Offline.scope())

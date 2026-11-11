@@ -3,6 +3,10 @@ import PennyDesign
 import PennyDomain
 import SwiftUI
 
+#if os(iOS)
+    import UIKit
+#endif
+
 /// The offline / sync-error banner over Home and Activity. It names how many changes wait
 /// and offers Retry; nothing is lost while it shows.
 struct SyncBanner: View {
@@ -27,6 +31,15 @@ struct SyncBanner: View {
         return .error
     }
 
+    /// "iPad" on iPad, otherwise "iPhone" (the only idioms the app runs on).
+    @MainActor static var deviceName: String {
+        #if os(iOS)
+            UIDevice.current.userInterfaceIdiom == .pad ? "iPad" : "iPhone"
+        #else
+            "device"
+        #endif
+    }
+
     static func title(_ status: SyncStatus) -> String {
         switch status {
         case .offline(let pending, _):
@@ -37,9 +50,9 @@ struct SyncBanner: View {
         }
     }
 
-    static func message(_ status: SyncStatus) -> String? {
+    static func message(_ status: SyncStatus, device: String = deviceName) -> String? {
         switch status {
-        case .offline: "Your changes are saved on this iPhone and sync when you're back online."
+        case .offline: "Your changes are saved on this \(device) and sync when you're back online."
         case .failing(_, let problem): problem.message
         case .signInRequired: "Your changes stay on this device until you sign in again."
         case .upToDate, .syncing, .localOnly: nil
@@ -77,14 +90,14 @@ struct ToastOverlay: ViewModifier {
             .overlay(alignment: .bottom) {
                 if let toast = shell.toast {
                     SaveToast(
-                        title: toast.summary.title, detail: toast.summary.detail, leading: leading(toast.summary),
+                        title: toast.summary.title, detail: toast.detail, leading: leading(toast.summary),
                         undo: toast.canUndo ? { Task { undoFailure = await shell.undoToast()?.message } } : nil
                     )
                     .padding(.horizontal, Metrics.gutter)
                     .padding(.bottom, bottomPadding)
                     .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
                     .accessibilityIdentifier("toast.saved")
-                    .onAppear { announce("\(toast.summary.title). \(toast.summary.detail ?? "")") }
+                    .onAppear { announce("\(toast.summary.title). \(toast.detail ?? "")") }
                 }
             }
             .animation(reduceMotion ? nil : .snappy, value: shell.toast?.id)
