@@ -39,6 +39,9 @@ final class FixtureDecodingTests: XCTestCase {
         }
         let parity = try Fixtures.decode(ParityFixture.self, from: "parity-cases.json")
         XCTAssertFalse(parity.dates.isEmpty)
+        let totals = try Fixtures.decode(MonthTotalsFixture.self, from: "month-totals.json")
+        XCTAssertTrue(totals.cases.allSatisfy { totals.ledgers[$0.ledger] != nil })
+        XCTAssertTrue(totals.cases.contains { $0.clock != nil } && totals.cases.contains { $0.today == nil })
     }
 
     func testScenarioFixturesDecodeStrictlyAndAgree() throws {
@@ -56,6 +59,14 @@ final class FixtureDecodingTests: XCTestCase {
         }
         let total = try XCTUnwrap(states.totals["alex-2026-10"])
         XCTAssertEqual(total.projected.expenseCents, total.recorded.expenseCents + total.scheduled.reduce(0) { $0 + $1.shareCents })
+        // MAZ-136: dana's income after today is expected; projected adds it and the scheduled pay.
+        let future = try XCTUnwrap(states.totals["dana-2026-10"])
+        XCTAssertFalse(future.expected.isEmpty)
+        XCTAssertTrue(future.expected.allSatisfy { $0.date > future.today })
+        XCTAssertEqual(
+            future.projected.incomeCents,
+            future.recorded.incomeCents + (future.expected.map(\.shareCents) + future.scheduled.map(\.shareCents)).reduce(0, +))
+        XCTAssertNotNil(seeds.scenarios.first { $0.name == "future-income" })
     }
 
     func testUnknownMemberIsRejected() throws {

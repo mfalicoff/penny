@@ -330,6 +330,92 @@ public sealed partial class FullStackSeedTests(ApiFixture fixture) : SearchTestB
     }
 
     [Fact]
+    public async Task whenFutureIncomeSeeded_RedesignTotals_ShouldSplitIncomeAtTheLocalToday()
+    {
+        // MAZ-136: Left to spend (recorded) counts income dated on or before the person's local
+        // date; income after it is expected and counts toward Projected only. Expenses and
+        // investments dated after today stay recorded (MAZ-139). The server stores the entries
+        // as written; this checks the published totals against what it serves.
+        var context = await SeedAsync(Scenario("future-income"));
+        var totals = ContractFixtures.Read("redesign-states.json")["totals"]!["dana-2026-10"]!;
+        var zone = TimeZoneInfo.FindSystemTimeZoneById(totals["timeZone"]!.GetValue<string>());
+        var clock = Instant(totals["clock"]!);
+        var today = TimeZoneInfo
+            .ConvertTime(clock, zone)
+            .ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        today.ShouldBe(totals["today"]!.GetValue<string>());
+        today.ShouldNotBe(
+            clock.UtcDateTime.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+            "the time zone moves today off the UTC date"
+        );
+        var month = today[..7];
+        var ledger = (await GetLedgerAsync(context.Tokens["dana"]))["ledger"]!;
+        var entries = ledger["transactions"]!
+            .AsArray()
+            .Select(entry => entry!)
+            .Where(entry =>
+                entry["date"]!.GetValue<string>().StartsWith(month, StringComparison.Ordinal)
+            )
+            .ToList();
+        bool IsKind(JsonNode entry, string kind) => entry["kind"]!.GetValue<string>() == kind;
+        bool IsAfterToday(JsonNode entry) =>
+            string.CompareOrdinal(entry["date"]!.GetValue<string>(), today) > 0;
+        static long Sum(IEnumerable<JsonNode> items) =>
+            items.Sum(item => item["share"]!.GetValue<long>());
+        static long Cents(JsonNode node, string name) => node[name]!.GetValue<long>();
+
+        var recorded = totals["recorded"]!;
+        Sum(entries.Where(entry => IsKind(entry, "expense")))
+            .ShouldBe(Cents(recorded, "expenseCents"));
+        Sum(entries.Where(entry => IsKind(entry, "investment")))
+            .ShouldBe(Cents(recorded, "investmentCents"));
+        Sum(entries.Where(entry => IsKind(entry, "income") && !IsAfterToday(entry)))
+            .ShouldBe(Cents(recorded, "incomeCents"));
+        entries
+            .Any(entry => IsKind(entry, "expense") && IsAfterToday(entry))
+            .ShouldBeTrue("a future-dated expense stays recorded");
+        entries
+            .Where(entry => IsKind(entry, "income") && IsAfterToday(entry))
+            .Select(entry =>
+                (
+                    entry["title"]!.GetValue<string>(),
+                    entry["date"]!.GetValue<string>(),
+                    entry["share"]!.GetValue<long>()
+                )
+            )
+            .ShouldBe(
+                totals["expected"]!
+                    .AsArray()
+                    .Select(item =>
+                        (
+                            item!["title"]!.GetValue<string>(),
+                            item["date"]!.GetValue<string>(),
+                            Cents(item, "shareCents")
+                        )
+                    ),
+                // The server does not promise the ledger's entry order.
+                ignoreOrder: true
+            );
+
+        // The scheduled pay is the served rule's next occurrence; projected adds it and the
+        // expected income to the recorded totals.
+        var scheduled = totals["scheduled"]!.AsArray().Single()!;
+        var rule = ledger["recurring"]!
+            .AsArray()
+            .Single(item =>
+                item!["title"]!.GetValue<string>() == scheduled["title"]!.GetValue<string>()
+            )!;
+        rule["nextDate"]!.GetValue<string>().ShouldBe(scheduled["date"]!.GetValue<string>());
+        rule["share"]!.GetValue<long>().ShouldBe(Cents(scheduled, "shareCents"));
+        var expected = totals["expected"]!.AsArray().Sum(item => Cents(item!, "shareCents"));
+        var projected = totals["projected"]!;
+        Cents(projected, "incomeCents")
+            .ShouldBe(Cents(recorded, "incomeCents") + expected + Cents(scheduled, "shareCents"));
+        Cents(projected, "expenseCents").ShouldBe(Cents(recorded, "expenseCents"));
+        Cents(projected, "investmentCents").ShouldBe(Cents(recorded, "investmentCents"));
+    }
+
+    [Fact]
     public async Task whenScenarioSeededTwice_Seed_ShouldProduceIdenticalNormalizedState()
     {
         async Task<string> SnapshotAsync()

@@ -1,0 +1,642 @@
+{
+  "generator": "scripts/fixtures/generate-golden.ts",
+  "description": "Left to spend (recorded) versus Projected around today (MAZ-136). Income dated after the person's local date is expected: it counts toward Projected, not recorded totals or Left to spend, until its date; the entry itself never changes. Projected also adds every scheduled occurrence not yet recorded. Scope: income only; future-dated expenses and investment contributions stay recorded (MAZ-139). `todayCases` turn an instant and an IANA time zone into the local date; `today: null` is the legacy Overview, which does not split.",
+  "todayCases": [
+    {
+      "instant": "2026-10-16T02:30:00Z",
+      "timeZone": "America/Toronto",
+      "today": "2026-10-15"
+    },
+    {
+      "instant": "2026-10-16T02:30:00Z",
+      "timeZone": "UTC",
+      "today": "2026-10-16"
+    },
+    {
+      "instant": "2026-10-15T15:30:00Z",
+      "timeZone": "Asia/Tokyo",
+      "today": "2026-10-16"
+    },
+    {
+      "instant": "2026-10-15T15:30:00Z",
+      "timeZone": "America/Vancouver",
+      "today": "2026-10-15"
+    },
+    {
+      "instant": "2026-10-15T10:30:00Z",
+      "timeZone": "Pacific/Kiritimati",
+      "today": "2026-10-16"
+    },
+    {
+      "instant": "2026-10-16T09:30:00Z",
+      "timeZone": "Pacific/Pago_Pago",
+      "today": "2026-10-15"
+    },
+    {
+      "instant": "2026-11-01T05:30:00Z",
+      "timeZone": "America/Toronto",
+      "today": "2026-11-01"
+    },
+    {
+      "instant": "2026-10-31T23:59:59Z",
+      "timeZone": "Europe/London",
+      "today": "2026-10-31"
+    },
+    {
+      "instant": "2026-03-08T07:30:00Z",
+      "timeZone": "America/Toronto",
+      "today": "2026-03-08"
+    }
+  ],
+  "ledgers": {
+    "october": {
+      "version": 4,
+      "currency": "CAD",
+      "accounts": [
+        {
+          "id": "chq",
+          "name": "Chequing",
+          "type": "bank"
+        }
+      ],
+      "trips": [],
+      "recurring": [
+        {
+          "id": "pay",
+          "title": "pay",
+          "kind": "income",
+          "total": 200000,
+          "share": 200000,
+          "categoryId": "salary",
+          "date": "2026-09-01",
+          "note": "",
+          "frequency": "monthly",
+          "nextDate": "2026-10-30",
+          "anchorDay": 30,
+          "active": true
+        },
+        {
+          "id": "gym",
+          "title": "gym",
+          "kind": "expense",
+          "total": 4000,
+          "share": 4000,
+          "categoryId": "food",
+          "date": "2026-09-01",
+          "note": "",
+          "frequency": "monthly",
+          "nextDate": "2026-10-28",
+          "anchorDay": 28,
+          "active": true
+        }
+      ],
+      "categories": [
+        {
+          "id": "food",
+          "name": "Food",
+          "icon": "cafe-outline",
+          "color": "#E47850",
+          "kind": "expense"
+        },
+        {
+          "id": "salary",
+          "name": "Salary",
+          "icon": "cash-outline",
+          "color": "#3E8E5E",
+          "kind": "income"
+        },
+        {
+          "id": "investments",
+          "name": "Investments",
+          "icon": "trending-up-outline",
+          "color": "#5B7DB1",
+          "kind": "investment"
+        }
+      ],
+      "transactions": [
+        {
+          "id": "september-pay",
+          "title": "september-pay",
+          "kind": "income",
+          "total": 300000,
+          "share": 300000,
+          "categoryId": "salary",
+          "date": "2026-09-30",
+          "note": ""
+        },
+        {
+          "id": "salary",
+          "title": "salary",
+          "kind": "income",
+          "total": 250000,
+          "share": 250000,
+          "categoryId": "salary",
+          "date": "2026-10-01",
+          "note": ""
+        },
+        {
+          "id": "rent",
+          "title": "rent",
+          "kind": "expense",
+          "total": 120000,
+          "share": 120000,
+          "categoryId": "food",
+          "date": "2026-10-01",
+          "note": ""
+        },
+        {
+          "id": "bonus",
+          "title": "bonus",
+          "kind": "income",
+          "total": 40000,
+          "share": 40000,
+          "categoryId": "salary",
+          "date": "2026-10-15",
+          "note": ""
+        },
+        {
+          "id": "freelance",
+          "title": "freelance",
+          "kind": "income",
+          "total": 60000,
+          "share": 60000,
+          "categoryId": "salary",
+          "date": "2026-10-16",
+          "note": ""
+        },
+        {
+          "id": "concert",
+          "title": "concert",
+          "kind": "expense",
+          "total": 9000,
+          "share": 9000,
+          "categoryId": "food",
+          "date": "2026-10-20",
+          "note": ""
+        },
+        {
+          "id": "etf",
+          "title": "etf",
+          "kind": "investment",
+          "total": 50000,
+          "share": 50000,
+          "categoryId": "investments",
+          "date": "2026-10-25",
+          "note": ""
+        },
+        {
+          "id": "refund",
+          "title": "refund",
+          "kind": "income",
+          "total": 2500,
+          "share": 2500,
+          "categoryId": "salary",
+          "date": "2026-10-31",
+          "note": ""
+        },
+        {
+          "id": "november-pay",
+          "title": "november-pay",
+          "kind": "income",
+          "total": 100000,
+          "share": 100000,
+          "categoryId": "salary",
+          "date": "2026-11-01",
+          "note": ""
+        }
+      ]
+    },
+    "pay-recorded-early": {
+      "version": 4,
+      "currency": "CAD",
+      "accounts": [
+        {
+          "id": "chq",
+          "name": "Chequing",
+          "type": "bank"
+        }
+      ],
+      "trips": [],
+      "recurring": [
+        {
+          "id": "pay",
+          "title": "pay",
+          "kind": "income",
+          "total": 200000,
+          "share": 200000,
+          "categoryId": "salary",
+          "date": "2026-09-01",
+          "note": "",
+          "frequency": "monthly",
+          "nextDate": "2026-10-30",
+          "anchorDay": 30,
+          "active": true
+        },
+        {
+          "id": "gym",
+          "title": "gym",
+          "kind": "expense",
+          "total": 4000,
+          "share": 4000,
+          "categoryId": "food",
+          "date": "2026-09-01",
+          "note": "",
+          "frequency": "monthly",
+          "nextDate": "2026-10-28",
+          "anchorDay": 28,
+          "active": true
+        }
+      ],
+      "categories": [
+        {
+          "id": "food",
+          "name": "Food",
+          "icon": "cafe-outline",
+          "color": "#E47850",
+          "kind": "expense"
+        },
+        {
+          "id": "salary",
+          "name": "Salary",
+          "icon": "cash-outline",
+          "color": "#3E8E5E",
+          "kind": "income"
+        },
+        {
+          "id": "investments",
+          "name": "Investments",
+          "icon": "trending-up-outline",
+          "color": "#5B7DB1",
+          "kind": "investment"
+        }
+      ],
+      "transactions": [
+        {
+          "id": "september-pay",
+          "title": "september-pay",
+          "kind": "income",
+          "total": 300000,
+          "share": 300000,
+          "categoryId": "salary",
+          "date": "2026-09-30",
+          "note": ""
+        },
+        {
+          "id": "salary",
+          "title": "salary",
+          "kind": "income",
+          "total": 250000,
+          "share": 250000,
+          "categoryId": "salary",
+          "date": "2026-10-01",
+          "note": ""
+        },
+        {
+          "id": "rent",
+          "title": "rent",
+          "kind": "expense",
+          "total": 120000,
+          "share": 120000,
+          "categoryId": "food",
+          "date": "2026-10-01",
+          "note": ""
+        },
+        {
+          "id": "bonus",
+          "title": "bonus",
+          "kind": "income",
+          "total": 40000,
+          "share": 40000,
+          "categoryId": "salary",
+          "date": "2026-10-15",
+          "note": ""
+        },
+        {
+          "id": "freelance",
+          "title": "freelance",
+          "kind": "income",
+          "total": 60000,
+          "share": 60000,
+          "categoryId": "salary",
+          "date": "2026-10-16",
+          "note": ""
+        },
+        {
+          "id": "concert",
+          "title": "concert",
+          "kind": "expense",
+          "total": 9000,
+          "share": 9000,
+          "categoryId": "food",
+          "date": "2026-10-20",
+          "note": ""
+        },
+        {
+          "id": "etf",
+          "title": "etf",
+          "kind": "investment",
+          "total": 50000,
+          "share": 50000,
+          "categoryId": "investments",
+          "date": "2026-10-25",
+          "note": ""
+        },
+        {
+          "id": "refund",
+          "title": "refund",
+          "kind": "income",
+          "total": 2500,
+          "share": 2500,
+          "categoryId": "salary",
+          "date": "2026-10-31",
+          "note": ""
+        },
+        {
+          "id": "november-pay",
+          "title": "november-pay",
+          "kind": "income",
+          "total": 100000,
+          "share": 100000,
+          "categoryId": "salary",
+          "date": "2026-11-01",
+          "note": ""
+        },
+        {
+          "id": "pay:2026-10-30",
+          "title": "pay",
+          "kind": "income",
+          "total": 200000,
+          "share": 200000,
+          "categoryId": "salary",
+          "date": "2026-10-30",
+          "note": "",
+          "recurringId": "pay"
+        }
+      ]
+    }
+  },
+  "cases": [
+    {
+      "name": "income dated today is recorded; income dated tomorrow is expected",
+      "ledger": "october",
+      "today": "2026-10-15",
+      "month": "2026-10",
+      "expected": {
+        "recorded": {
+          "income": 290000,
+          "expense": 129000,
+          "investment": 50000
+        },
+        "projected": {
+          "income": 552500,
+          "expense": 133000,
+          "investment": 50000
+        },
+        "expectedIncome": 262500,
+        "recordedNet": 111000,
+        "projectedNet": 369500,
+        "expectedIds": [
+          "freelance",
+          "refund"
+        ],
+        "scheduledIds": [
+          "gym:2026-10-28",
+          "pay:2026-10-30"
+        ]
+      }
+    },
+    {
+      "name": "the day before, income dated today is still expected",
+      "ledger": "october",
+      "today": "2026-10-14",
+      "month": "2026-10",
+      "expected": {
+        "recorded": {
+          "income": 250000,
+          "expense": 129000,
+          "investment": 50000
+        },
+        "projected": {
+          "income": 552500,
+          "expense": 133000,
+          "investment": 50000
+        },
+        "expectedIncome": 302500,
+        "recordedNet": 71000,
+        "projectedNet": 369500,
+        "expectedIds": [
+          "bonus",
+          "freelance",
+          "refund"
+        ],
+        "scheduledIds": [
+          "gym:2026-10-28",
+          "pay:2026-10-30"
+        ]
+      }
+    },
+    {
+      "name": "on the last day of the month every dated entry is recorded",
+      "ledger": "october",
+      "today": "2026-10-31",
+      "month": "2026-10",
+      "expected": {
+        "recorded": {
+          "income": 352500,
+          "expense": 129000,
+          "investment": 50000
+        },
+        "projected": {
+          "income": 552500,
+          "expense": 133000,
+          "investment": 50000
+        },
+        "expectedIncome": 200000,
+        "recordedNet": 173500,
+        "projectedNet": 369500,
+        "expectedIds": [],
+        "scheduledIds": [
+          "gym:2026-10-28",
+          "pay:2026-10-30"
+        ]
+      }
+    },
+    {
+      "name": "a month still ahead: all its income is expected",
+      "ledger": "october",
+      "today": "2026-09-20",
+      "month": "2026-10",
+      "expected": {
+        "recorded": {
+          "income": 0,
+          "expense": 129000,
+          "investment": 50000
+        },
+        "projected": {
+          "income": 552500,
+          "expense": 133000,
+          "investment": 50000
+        },
+        "expectedIncome": 552500,
+        "recordedNet": -179000,
+        "projectedNet": 369500,
+        "expectedIds": [
+          "bonus",
+          "freelance",
+          "refund",
+          "salary"
+        ],
+        "scheduledIds": [
+          "gym:2026-10-28",
+          "pay:2026-10-30"
+        ]
+      }
+    },
+    {
+      "name": "a past month: everything dated is recorded",
+      "ledger": "october",
+      "today": "2026-11-11",
+      "month": "2026-10",
+      "expected": {
+        "recorded": {
+          "income": 352500,
+          "expense": 129000,
+          "investment": 50000
+        },
+        "projected": {
+          "income": 552500,
+          "expense": 133000,
+          "investment": 50000
+        },
+        "expectedIncome": 200000,
+        "recordedNet": 173500,
+        "projectedNet": 369500,
+        "expectedIds": [],
+        "scheduledIds": [
+          "gym:2026-10-28",
+          "pay:2026-10-30"
+        ]
+      }
+    },
+    {
+      "name": "time zone: 02:30 UTC on Oct 16 is still Oct 15 in Toronto, so Oct 16 income is expected",
+      "ledger": "october",
+      "today": "2026-10-15",
+      "clock": {
+        "instant": "2026-10-16T02:30:00Z",
+        "timeZone": "America/Toronto"
+      },
+      "month": "2026-10",
+      "expected": {
+        "recorded": {
+          "income": 290000,
+          "expense": 129000,
+          "investment": 50000
+        },
+        "projected": {
+          "income": 552500,
+          "expense": 133000,
+          "investment": 50000
+        },
+        "expectedIncome": 262500,
+        "recordedNet": 111000,
+        "projectedNet": 369500,
+        "expectedIds": [
+          "freelance",
+          "refund"
+        ],
+        "scheduledIds": [
+          "gym:2026-10-28",
+          "pay:2026-10-30"
+        ]
+      }
+    },
+    {
+      "name": "time zone: the same instant in UTC is Oct 16, so Oct 16 income is recorded",
+      "ledger": "october",
+      "today": "2026-10-16",
+      "clock": {
+        "instant": "2026-10-16T02:30:00Z",
+        "timeZone": "UTC"
+      },
+      "month": "2026-10",
+      "expected": {
+        "recorded": {
+          "income": 350000,
+          "expense": 129000,
+          "investment": 50000
+        },
+        "projected": {
+          "income": 552500,
+          "expense": 133000,
+          "investment": 50000
+        },
+        "expectedIncome": 202500,
+        "recordedNet": 171000,
+        "projectedNet": 369500,
+        "expectedIds": [
+          "refund"
+        ],
+        "scheduledIds": [
+          "gym:2026-10-28",
+          "pay:2026-10-30"
+        ]
+      }
+    },
+    {
+      "name": "an occurrence recorded ahead of its date replaces its preview and stays expected",
+      "ledger": "pay-recorded-early",
+      "today": "2026-10-15",
+      "month": "2026-10",
+      "expected": {
+        "recorded": {
+          "income": 290000,
+          "expense": 129000,
+          "investment": 50000
+        },
+        "projected": {
+          "income": 552500,
+          "expense": 133000,
+          "investment": 50000
+        },
+        "expectedIncome": 262500,
+        "recordedNet": 111000,
+        "projectedNet": 369500,
+        "expectedIds": [
+          "freelance",
+          "pay:2026-10-30",
+          "refund"
+        ],
+        "scheduledIds": [
+          "gym:2026-10-28"
+        ]
+      }
+    },
+    {
+      "name": "without today (legacy Overview) every dated entry is recorded",
+      "ledger": "october",
+      "today": null,
+      "month": "2026-10",
+      "expected": {
+        "recorded": {
+          "income": 352500,
+          "expense": 129000,
+          "investment": 50000
+        },
+        "projected": {
+          "income": 552500,
+          "expense": 133000,
+          "investment": 50000
+        },
+        "expectedIncome": 200000,
+        "recordedNet": 173500,
+        "projectedNet": 369500,
+        "expectedIds": [],
+        "scheduledIds": [
+          "gym:2026-10-28",
+          "pay:2026-10-30"
+        ]
+      }
+    }
+  ]
+}

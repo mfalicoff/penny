@@ -1,5 +1,6 @@
 import Foundation
 import PennyData
+import PennyDesign
 import PennyDomain
 import Testing
 
@@ -170,5 +171,30 @@ struct EntryFlowTests {
         #expect(ActivityPeriodText.title(.year(2026)) == "2026")
         #expect(ActivityPeriodText.scope(ActivityFilters(period: .allTime, kind: .expense)) == "all months expenses")
         #expect(ActivityPeriodText.scope(ActivityFilters(period: .month(month))).hasSuffix(" entries"))
+    }
+
+    @Test("whenIncomeIsDatedAfterToday_EntryRowAndForm_ShouldMarkItExpected")
+    func futureIncomeIsExpected() throws {
+        let tomorrow = today.adding(days: 1)
+        let pay = LedgerEntry(
+            id: "pay", title: "Pay", kind: .income, total: 200_000, share: 200_000, categoryId: "salary",
+            date: tomorrow)
+        let rent = LedgerEntry(
+            id: "rent", title: "Rent", kind: .expense, total: 90_000, share: 90_000, categoryId: "home",
+            date: tomorrow)
+        let ledger = Ledger(transactions: [pay, rent])
+        let rows = LedgerReport(ledger: ledger).recorded
+        let income = try #require(rows.first { $0.id == "pay" })
+        let expense = try #require(rows.first { $0.id == "rent" })
+        // MAZ-136: income dated after today is expected (amber); a future expense is not (MAZ-139).
+        #expect(EntryRow.meaning(income, today: today) == .pending)
+        #expect(EntryRow.meaning(income, today: tomorrow) == .income, "on its date it is recorded")
+        #expect(EntryRow.meaning(expense, today: today) == .expense)
+        let note = EntryText.futureDate(.income, date: tomorrow, today: today)
+        #expect(note.title == "Tomorrow is still ahead, so this pay shows as expected.")
+        #expect(note.message == "It counts toward Projected until the day it's recorded — not toward Left to spend.")
+        #expect(
+            EntryText.futureDate(.expense, date: tomorrow, today: today).message.hasPrefix(
+                "Penny records this entry now."))
     }
 }

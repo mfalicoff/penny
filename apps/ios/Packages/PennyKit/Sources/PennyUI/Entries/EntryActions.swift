@@ -181,6 +181,24 @@ enum EntryText {
         return DayText.date(day).formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day())
     }
 
+    /// The note under a date after today. Income dated ahead is expected (MAZ-136, `add-income`
+    /// card); expenses and investments are recorded in that month's totals (MAZ-139 owns them).
+    static func futureDate(
+        _ kind: EntryKind, date: CalendarDate, today: CalendarDate
+    ) -> (title: String, message: String) {
+        let day = self.day(date, today: today)
+        if kind == .income {
+            return (
+                "\(day) is still ahead, so this pay shows as expected.",
+                "It counts toward Projected until the day it's recorded — not toward Left to spend."
+            )
+        }
+        return (
+            "\(day) is still ahead",
+            "Penny records this entry now. It counts in \(MonthPicker.title(MonthKey(date), long: true))'s totals."
+        )
+    }
+
     static func split(total: Int64, share: Int64, currency: String) -> String {
         share == total ? "All mine" : "\(MoneyFormat.amount(share, currency: currency)) yours"
     }

@@ -139,6 +139,11 @@
   vertical-align: middle;
 }
 
+/* Expected (MAZ-136): income dated after today. The row also says "Expected" in text. */
+.category-dot--expected {
+  box-shadow: 0 0 0 2px var(--pk-pending);
+}
+
 /* ---------- chips (frequent categories) ---------- */
 .chip-row {
   display: flex;

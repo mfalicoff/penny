@@ -11,6 +11,7 @@ import { calculateHouseholdSplits } from "../../src/domain/households.ts";
 import { searchEntries } from "../../src/domain/search.ts";
 import { scheduledEntries, summarizeMonth } from "../../src/domain/summary.ts";
 import { calendarMonth, selectOverview, shiftMonthKey } from "../../src/domain/selectors/overview.ts";
+import { dateKeyIn } from "../../src/domain/calendar.ts";
 import { selectTransactions } from "../../src/domain/selectors/transactions.ts";
 import { buildMoneyFlow } from "../../src/domain/selectors/moneyFlow.ts";
 import { tripOverview } from "../../src/domain/selectors/trips.ts";
@@ -310,4 +311,38 @@ test("redesign fixture: recorded and projected totals match summarizeMonth", () 
   const overview = selectOverview(view, { month, day: null, filter: "all", categoryId: null, search: "" });
   assert.deepEqual(overview.scheduled.map((entry) => `${entry.title} ${entry.date} ${entry.share}`).sort(),
     expected.scheduled.map((item: { title: string; date: string; shareCents: number }) => `${item.title} ${item.date} ${item.shareCents}`).sort());
+  // At alex's today nothing changes: no October income is dated after it.
+  assert.deepEqual(summarizeMonth(view, month, { today: expected.today }), summary);
+});
+
+test("redesign fixture: future-dated income counts toward projected, not recorded (MAZ-136)", () => {
+  const states = fixture("redesign-states.json");
+  const seeds = fixture("full-stack-seeds.json");
+  const expected = states.totals["dana-2026-10"];
+  const scenario = seeds.scenarios.find((item: { name: string }) => item.name === "future-income");
+  const ledger = ([...scenario.steps].reverse().find((step: { as?: string; ledger?: Ledger }) => step.ledger && step.as === "dana") as { ledger: Ledger }).ledger;
+  const today = dateKeyIn(new Date(expected.clock), expected.timeZone);
+  assert.equal(today, expected.today);
+  const month = today.slice(0, 7);
+  const summary = summarizeMonth(ledger, month, { today });
+  const totalsOf = (amounts: { expenseCents: number; incomeCents: number; investmentCents: number }) =>
+    ({ income: amounts.incomeCents, expense: amounts.expenseCents, investment: amounts.investmentCents });
+  assert.deepEqual(summary.recorded, totalsOf(expected.recorded));
+  assert.deepEqual(summary.projected, totalsOf(expected.projected));
+  const line = (item: { title: string; date: string; shareCents?: number; share?: number }) => `${item.title} ${item.date} ${item.shareCents ?? item.share}`;
+  assert.equal(summary.expectedIncome, [...expected.expected, ...expected.scheduled].reduce((sum: number, item: { shareCents: number }) => sum + item.shareCents, 0));
+  const overview = selectOverview(ledger, { month, day: null, filter: "all", categoryId: null, search: "", today });
+  assert.deepEqual(overview.expected.map(line), expected.expected.map(line));
+  assert.deepEqual(overview.scheduled.map(line), expected.scheduled.map(line));
+  // The calendar and list still show the expected entries, unchanged.
+  for (const entry of overview.expected) assert.ok(overview.calendarEntries.includes(entry));
+  // In UTC the same instant is Oct 16: the invoice dated that day is recorded instead.
+  const utc = summarizeMonth(ledger, month, { today: dateKeyIn(new Date(expected.clock), "UTC") });
+  assert.equal(utc.recorded.income, summary.recorded.income + 60000);
+  assert.deepEqual(utc.projected, summary.projected);
+  // On its date the refund moves from Projected to Left to spend; the entry is untouched.
+  const before = structuredClone(ledger);
+  const later = summarizeMonth(ledger, month, { today: "2026-10-28" });
+  assert.equal(later.recorded.income, expected.projected.incomeCents - 200000);
+  assert.deepEqual(ledger, before);
 });

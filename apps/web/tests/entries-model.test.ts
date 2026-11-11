@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Ledger, Transaction } from "@domain/ledger.ts";
 import { localRows, periodTotals, rowFilters } from "../src/features/activity/data";
 import { activeDay, activitySearchSchema, periodOf, searchRange, shiftPeriod, without, withPeriod } from "../src/features/activity/filters";
-import { buildEntry, categoryIcon, draftFromEntry, entryChange, frequentCategories, inlineCategories, newDraft, withKind, type EntryDraft } from "../src/features/entries/model";
+import { buildEntry, categoryIcon, draftFromEntry, entryChange, frequentCategories, futureIncomeNote, inlineCategories, newDraft, withKind, type EntryDraft } from "../src/features/entries/model";
 
 /** Synthetic data only. */
 const ledger = (extra: Partial<Ledger> = {}): Ledger => ({
@@ -167,5 +167,21 @@ describe("Activity rows and totals", () => {
     expect(localRows(data, rows, rowFilters({ month: "2026-11", category: "food" }), new Set()).map((row) => row.key)).toEqual(["shared:Market", "personal:rent"]);
     expect(localRows(data, rows, rowFilters({ q: "maison" }), new Set()).map((row) => row.key)).toEqual(["shared:Market", "shared:Euro dinner", "shared:Hydro"]);
     expect(localRows(data, rows, rowFilters({ q: "BEANS" }), new Set()).map((row) => row.key)).toEqual(["personal:oct"]);
+  });
+});
+
+describe("future-dated income (MAZ-136)", () => {
+  it("notes that income dated after today is expected and counts toward Projected", () => {
+    const note = futureIncomeNote({ kind: "income", date: "2026-11-15" }, "2026-11-11");
+    expect(note).toMatch(/^Nov\.? 15 is still ahead, so this pay shows as expected\. /);
+    expect(note).toContain("It counts toward Projected until the day it's recorded — not toward Left to spend.");
+  });
+
+  it("says nothing on or before today, for other kinds, or for an unfinished date", () => {
+    expect(futureIncomeNote({ kind: "income", date: "2026-11-11" }, "2026-11-11")).toBeNull();
+    expect(futureIncomeNote({ kind: "income", date: "2026-11-10" }, "2026-11-11")).toBeNull();
+    expect(futureIncomeNote({ kind: "expense", date: "2026-11-15" }, "2026-11-11")).toBeNull();
+    expect(futureIncomeNote({ kind: "investment", date: "2026-11-15" }, "2026-11-11")).toBeNull();
+    expect(futureIncomeNote({ kind: "income", date: "" }, "2026-11-11")).toBeNull();
   });
 });

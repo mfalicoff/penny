@@ -64,6 +64,17 @@ export function today(now = new Date()): string {
 export const centsToInput = (value: number) => (value / 100).toFixed(2);
 
 /**
+ * The note under an income date after today (`add-income` card, MAZ-136): that pay is expected and
+ * counts toward Projected, not Left to spend, until its date. `null` for any other draft; future
+ * expenses and investments are recorded (MAZ-139).
+ */
+export function futureIncomeNote(draft: Pick<EntryDraft, "kind" | "date">, now = today()): string | null {
+  if (draft.kind !== "income" || !validDate(draft.date) || draft.date <= now) return null;
+  const day = parseDate(draft.date).toLocaleDateString("en-CA", { month: "short", day: "numeric" });
+  return `${day} is still ahead, so this pay shows as expected. It counts toward Projected until the day it's recorded — not toward Left to spend.`;
+}
+
+/**
  * Categories of `kind`, most used first (ties keep the ledger's order). Forms and Activity show the
  * first few inline and the rest behind "All categories".
  */
