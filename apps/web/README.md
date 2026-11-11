@@ -66,6 +66,7 @@ apps/web/
     api/                 apiFetch (and its swappable transport), ApiError, DTO schemas, query keys, one module per resource
     auth/                session lifecycle, SSO popup flow, pending-change registry, AuthGate
     demo/                the temporary demo: in-memory API stand-in and its start/leave lifecycle
+    offline/             the durable offline ledger (MAZ-87): IndexedDB store, sync engine, legacy import, sync banner
     features/            screens by feature (auth, search, settings, home, entries, placeholders), outside src/routes/
     design/              tokens.css (generated), CSS, Icon, controls, dialogs, Money, loading/empty/error/toast states
     routes/              file routes only. Every file here is a route.
@@ -82,6 +83,8 @@ apps/web/
 - **Icons.** Ionicons v7 outline glyphs (`design-kit/src/icons.ts`, MIT, notice at `dist/licenses/Ionicons-MIT.txt`), rendered by `src/design/Icon.tsx`. Icons are decorative unless given a `label`.
 
 The visual baseline is `docs/design/penny-ios` and `contracts/design-baseline.json`. The visual comparison of this implementation with the cards belongs to MAZ-122.
+
+**Shared rules.** Ledger merge, recurrence, commands and local search come from the repository's platform-neutral `src/domain/` ([domain rules](../../docs/migration/domain-rules.md)) through the `@domain/*` alias (Vite `resolve.alias` and `paths` in `tsconfig.app.json`/`tsconfig.test.json`). Import them, never copy them; the module compiles under this app's stricter flags.
 
 ## Design system and accessibility
 
@@ -185,7 +188,7 @@ Sign-in is password or optional single sign-on (OIDC), against the API in [authe
 - **Gate.** `AuthGate` (`src/auth/account.tsx`) wraps the app shell. It shows a loading state, a retry screen when the server can't be reached (the user is never signed out by a network or 5xx failure), the sign-in/create-account screen (`src/features/auth/AuthScreen.tsx`) when `/me` answers 401, and the app otherwise. A deep link like `/transactions?q=rent` is kept through sign-in. `/auth/callback` is outside the gate.
 - **Forms.** Labelled fields, native autofill hints, client validation that matches the API (valid email, 10 to 256 character password) with focus moved to the first invalid field, and `role="alert"` messages. After a rejected submit the email is kept, a wrong password is cleared and refocused, and a duplicate email (409) focuses the email field.
 - **Expiry and sign-out.** A 401 from any private request, or from a refetch of `/me`, ends the session: the app returns to sign-in with a "Your session ended" notice. Sign-out (`src/features/auth/SignOut.tsx`) asks for confirmation, calls `/api/auth/logout` and, only when that succeeds, clears the account's cached data. If the server can't be reached the user stays signed in and is told why. Sessions don't slide: they end 30 days after sign-in.
-- **Pending-change protection.** Edits made offline live outside Query in the durable store of MAZ-87. That store registers itself with `registerPendingChanges` (`src/auth/pendingChanges.ts`); sign-out is refused while the account has unsynced edits, as in the legacy app. Expiry never deletes them: they wait on this device until the same account signs in again.
+- **Pending-change protection.** Edits made offline live outside Query in the durable store (`src/offline/`, below). It registers itself with `registerPendingChanges` (`src/auth/pendingChanges.ts`). Sign-out calls `beginSignOut`, which holds the account's saves and counts unsynced edits from IndexedDB (other tabs' included; an unreadable copy or an unreadable legacy copy counts as one): with any pending it refuses, as in the legacy app; otherwise it calls `/api/auth/logout` and then removes the account's browser copy, only if nothing became pending meanwhile. Expiry never deletes them: they wait in this browser until the same account signs in again.
 
 ### Single sign-on
 
@@ -220,7 +223,13 @@ TanStack Query holds server copies only. It never holds credentials and is not t
 - **Keys.** `src/api/keys.ts`: `["server", …]` is public data (server info, SSO availability); `["session"]` is the signed-in email; `["user", email, …]` is every private query, so two accounts can never share an entry. The server is the page's own origin, so it is implicit. Resource modules build keys with `userKey(email, …)`, taking the email from `useAccountEmail()` (only available below `AuthGate`). Loaders that read private data must use the same keys and run behind the gate.
 - **Who clears it.** `src/auth/lifecycle.ts` is the only code that ends or changes a session. `beginSession` (sign-in, registration, SSO) discards anything cached for another account; `endSession` (sign-out) and `expireSession` (401) remove every `["user", …]` query and all mutation state. Removing a query aborts its request.
 - **Late responses.** A reply that arrives after sign-out or an account change has no cache entry to land in, and the cancelled `/me` check can't sign the previous user back in. Tests cover both, and also a search whose query changed while its request was in flight.
-- **Search.** `src/api/search.ts` implements MAZ-121's `POST /api/v1/search/transactions` as an infinite query keyed by account, normalized filters and query text. The server's cursor is the page parameter, so a cursor can't be reused across queries. A `404` means the server predates search and the UI says so. A failure while loading a later page keeps the loaded results and retries only that page. Personal amounts use the ledger currency from `GET /api/ledger` (shown as a plain number if it can't be read, never under an assumed currency). After ledger, shared expense or household changes call `invalidateSearch(queryClient, email)`; durable offline edits stay out of Query.
+- **Search.** `src/api/search.ts` implements MAZ-121's `POST /api/v1/search/transactions` as an infinite query keyed by account, normalized filters and query text. The server's cursor is the page parameter, so a cursor can't be reused across queries. A `404` means the server predates search and the UI says so. A failure while loading a later page keeps the loaded results and retries only that page. Personal amounts use the ledger currency from `GET /api/ledger` (shown as a plain number if it can't be read, never under an assumed currency). After ledger, shared expense or household changes call `invalidateSearch(queryClient, email)`; durable offline edits stay out of Query. While edits are pending, offline, or when the server's results predate the latest local change, Activity searches the browser's ledger instead and says "on this device" ([offline search](../../docs/web-offline-sync.md#search)).
+
+## Durable offline ledger
+
+`src/offline/` keeps each signed-in account's personal ledger in IndexedDB (`penny-offline`, one record `{base, local, baseRevision}` per origin and account), acknowledges a save only after it is committed, and syncs with `GET`/`PUT /api/ledger` using the shared merge and recurrence: one sync per account across tabs (Web Locks), 409s re-read and re-merged up to five times, saves allowed during a sync, triggers on sign-in, save, reconnect, tab focus and Retry, backoff otherwise. `OfflineLedgerProvider` (below `AuthGate`, one engine per account, none in the demo) puts each server snapshot it records into Query's ledger entry and invalidates search when the server ledger changed; a 401 calls `expireSession` and keeps the work. Tabs see each other's writes over the `penny-offline-ledger` BroadcastChannel. The legacy Expo web app's `localStorage` copy (`penny:ledger:<email>`) is imported once and removed only after the server has its edits. `SyncStatusBanner` shows "Offline · N changes waiting" with Retry, sync failures and the storage states (blocked, unreadable, newer version); screens read `useLedgerSync()` and save with `useLedgerEngine().save(change)`.
+
+Storage schema, migration and recovery, conflict rules, multi-tab behavior, the origin requirement and limitations: [browser offline ledger and sync](../../docs/web-offline-sync.md).
 
 ## Configuration and secrets
 
@@ -238,5 +247,7 @@ The bundle contains no server URL, connection string or credential. In productio
 The Playwright run also has `e2e/auth.spec.ts`: real Chromium journeys for password and SSO sign-in (including a real popup, cancellation, a blocked popup and a failed callback), expiry and sign-out, with `/api` and the provider mocked. `e2e/auth.real.spec.ts` runs the same journeys against the full-stack test environment and is skipped unless `PENNY_REAL_STACK=1` (command in the file). Make it a CI job together with MAZ-95.
 
 `e2e/shell.spec.ts` covers the shell: layouts and overflow at each breakpoint, 200% zoom and doubled text, long names, pinned and system themes, reduced transparency and motion, shortcuts with focus restoration, Back and Forward, the phone drawer, and the demo's isolation.
+
+`e2e/offline.spec.ts` covers the durable offline store in real Chromium (IndexedDB, BroadcastChannel, Web Locks, the browser's offline switch): a legacy Expo copy imported and kept through a reload and a second tab while the server is down, one PUT on reconnect with both tabs converged, and sign-out refused while a change waits.
 
 Not covered yet: real .NET/PostgreSQL browser journeys on Chromium, Firefox and WebKit in CI (MAZ-95), screenshot baselines (MAZ-96) and the comparison with the cards (MAZ-122). The production image in `deploy/web` still serves the Expo export. It switches to this app at cutover.

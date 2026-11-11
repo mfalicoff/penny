@@ -1,4 +1,7 @@
 import "@testing-library/jest-dom/vitest";
+// IndexedDB for the durable offline store (MAZ-87); a fresh, empty database for every test.
+import "fake-indexeddb/auto";
+import { IDBFactory } from "fake-indexeddb";
 import { cleanup } from "@testing-library/react";
 import { afterEach, beforeEach, vi } from "vitest";
 import { stopDemo } from "../src/demo/demo";
@@ -10,6 +13,7 @@ let messages: string[] = [];
 if (typeof window !== "undefined") window.scrollTo = () => undefined;
 
 beforeEach(() => {
+  globalThis.indexedDB = new IDBFactory();
   messages = [];
   for (const level of ["error", "warn"] as const) {
     vi.spyOn(console, level).mockImplementation((...args: unknown[]) => {

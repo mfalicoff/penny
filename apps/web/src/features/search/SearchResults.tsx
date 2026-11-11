@@ -5,6 +5,10 @@ import { monthRange, searchTransactionsQuery } from "../../api/search";
 import type { SearchItem } from "../../api/schemas";
 import { useAccountEmail } from "../../auth/account";
 import { formatCents } from "../../design/Money";
+import { useOnline } from "../../design/states";
+import { useLedgerSync } from "../../offline/OfflineLedgerProvider";
+import type { Ledger } from "@domain/ledger.ts";
+import { searchEntries } from "@domain/search.ts";
 
 function describeSearchError(error: unknown): string {
   if (error instanceof ApiError) {
@@ -31,10 +35,54 @@ function describe(item: SearchItem, ledgerCurrency: string | undefined) {
   };
 }
 
+/**
+ * Search over this browser's ledger (`src/domain/search.ts`: the trimmed, case-insensitive
+ * substring rule, newest first). Pending creates and edits are found, pending deletes are not.
+ * Personal entries only: shared expenses aren't kept offline.
+ */
+function LocalSearchResults({ ledger, waiting, query, month }: { ledger: Ledger; waiting: string[]; query: string | undefined; month: string | undefined }) {
+  const { from, to } = monthRange(month);
+  const pending = new Set(waiting);
+  const items = searchEntries(ledger, query ?? "").filter((entry) => (!from || entry.date >= from) && (!to || entry.date <= to));
+  return (
+    <section aria-label="Search results">
+      <p role="status" aria-live="polite">
+        {items.length === 0 ? "No matching transactions on this device." : `${items.length} matching transaction${items.length === 1 ? "" : "s"} on this device`}
+      </p>
+      <p className="muted">Showing what this browser has, including changes waiting to sync. Shared expenses and smarter matching need a connection.</p>
+      <ul className="results">
+        {items.map((entry) => (
+          <li key={`personal:${entry.id}`} className="results__row">
+            <span className="results__title">{entry.title}</span>
+            <span className="results__meta">
+              {pending.has(entry.id) ? "Waiting to sync" : "Personal"} · <time dateTime={entry.date}>{entry.date}</time>
+            </span>
+            <span className="results__amount pk-num">{formatCents(entry.share, ledger.currency)}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 export function SearchResults({ query, month }: { query: string | undefined; month: string | undefined }) {
   const email = useAccountEmail();
   const search = useInfiniteQuery(searchTransactionsQuery(email, { ...(query ? { query } : {}), ...monthRange(month) }));
   const currency = useQuery(ledgerCurrencyQuery(email));
+  const sync = useLedgerSync();
+  const online = useOnline();
+
+  // Durable offline work (MAZ-87): while changes are pending, offline, or the server's results
+  // predate the latest change here, search this browser's ledger instead. Server pages are never
+  // mixed with local rows, so a deleted row can't come back and an accepted entry isn't listed twice.
+  const localLedger = sync?.ledger ?? null;
+  if (sync && localLedger) {
+    const stale = search.data !== undefined && search.dataUpdatedAt < sync.changedAt;
+    const unreachable = search.data === undefined && search.error instanceof ApiError && search.error.status === 0;
+    if (sync.pending.count > 0 || !online || sync.phase === "offline" || stale || unreachable) {
+      return <LocalSearchResults ledger={localLedger} waiting={sync.pending.entryIds} query={query} month={month} />;
+    }
+  }
 
   if (search.isPending) {
     return (

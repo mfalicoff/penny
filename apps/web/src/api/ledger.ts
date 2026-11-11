@@ -65,3 +65,24 @@ export async function changeCurrency(snapshot: LedgerSnapshot, currency: Currenc
 export function setLedgerSnapshot(queryClient: QueryClient, email: string, snapshot: LedgerSnapshot) {
   queryClient.setQueryData(ledgerKey(email), snapshot);
 }
+
+/**
+ * The whole snapshot, for the durable offline store (MAZ-87, `src/offline/`), which checks the
+ * ledger itself. `PUT` is a compare-and-swap on `revision`: 409 when another write landed first.
+ */
+const rawSnapshotSchema = z.object({ revision: z.number().int().min(0), ledger: z.unknown() });
+export type RawLedgerSnapshot = z.infer<typeof rawSnapshotSchema>;
+
+export function readLedgerSnapshot(): Promise<RawLedgerSnapshot> {
+  return apiFetch("/api/ledger", rawSnapshotSchema);
+}
+
+export function writeLedgerSnapshot(snapshot: RawLedgerSnapshot): Promise<RawLedgerSnapshot> {
+  return apiFetch("/api/ledger", rawSnapshotSchema, { method: "PUT", body: snapshot });
+}
+
+/** A server snapshot the offline store recorded, as the Query copy (`ledgerQuery`) holds it. */
+export function toLedgerSnapshot(snapshot: RawLedgerSnapshot): LedgerSnapshot | null {
+  const parsed = ledgerSnapshotSchema.safeParse(snapshot);
+  return parsed.success ? parsed.data : null;
+}
