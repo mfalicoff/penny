@@ -1,5 +1,5 @@
 import { kinds, type Kind, type Ledger, type Transaction } from "@domain/ledger.ts";
-import { useId, useRef, useState, type KeyboardEvent, type ReactNode, type SyntheticEvent } from "react";
+import { useId, useRef, useState, type KeyboardEvent, type SyntheticEvent } from "react";
 import { useAccountEmail } from "../../auth/account";
 import { Button, ChoiceGroup, cx, Kbd } from "../../design/controls";
 import { Icon } from "../../design/Icon";
@@ -7,6 +7,7 @@ import { Dialog } from "../../design/ModalDialog";
 import { formatCents } from "../../design/Money";
 import { Banner, LoadingState, SaveErrorBanner, useOnline, useToast } from "../../design/states";
 import { LedgerSaveError } from "../../offline/engine";
+import { ReceiptField } from "../receipts/ReceiptField";
 import { draftStore, hasContent } from "./drafts";
 import {
   buildEntry,
@@ -98,7 +99,8 @@ function EntryForm({ writer, ledger, target, onClose, onSaved }: { writer: Ledge
   const [conflict, setConflict] = useState<Conflict | null>(null);
   const [saving, setSaving] = useState(false);
   const savingRef = useRef(false);
-  const [more, setMore] = useState(() => Boolean(tripId) || Boolean(editing && (editing.note || editing.tripId || editing.share !== editing.total || editing.receipt)) || Boolean(restored && (restored.note || restored.tripId || restored.split !== "full" || restored.repeat !== "none")));
+  const [more, setMore] = useState(() => Boolean(tripId) || Boolean(editing && (editing.note || editing.tripId || editing.share !== editing.total || editing.receipt)) || Boolean(restored && (restored.note || restored.tripId || restored.split !== "full" || restored.repeat !== "none" || restored.receipt)));
+  const [receiptBusy, setReceiptBusy] = useState(false);
   const [picker, setPicker] = useState<"category" | "account" | null>(null);
   const amountRef = useRef<HTMLInputElement>(null);
   const ids = {
@@ -150,6 +152,10 @@ function EntryForm({ writer, ledger, target, onClose, onSaved }: { writer: Ledge
 
   async function submit() {
     if (savingRef.current || !writer.save) return;
+    if (receiptBusy) {
+      setFailure("The receipt is still uploading. Wait for it to finish, or cancel the upload.");
+      return;
+    }
     const result = buildEntry(draft, ledger, base);
     setErrors(result.errors);
     const first = FIELD_ORDER.find((field) => result.errors[field]);
@@ -445,7 +451,15 @@ function EntryForm({ writer, ledger, target, onClose, onSaved }: { writer: Ledge
             <textarea id={ids.note} maxLength={1000} value={draft.note} onChange={(event) => { set("note", event.currentTarget.value); }} {...invalid("note")} />
             {errorText("note")}
           </div>
-          <ReceiptRow entry={editing} kind={draft.kind} />
+          {draft.kind === "expense" ? (
+            <ReceiptField
+              value={draft.receipt}
+              onChange={(receipt) => {
+                set("receipt", receipt);
+              }}
+              onBusyChange={setReceiptBusy}
+            />
+          ) : null}
         </div>
       </form>
       {picker === "category" ? (
@@ -484,31 +498,7 @@ function moreSummary(draft: EntryDraft, ledger: Ledger): string {
   const trip = draft.kind === "expense" && draft.tripId ? ledger.trips.find((item) => item.id === draft.tripId) : undefined;
   if (trip) parts.push(trip.name);
   if (draft.note.trim()) parts.push("Note");
+  if (draft.kind === "expense" && draft.receipt) parts.push("Receipt");
   return parts.length ? parts.join(" · ") : "Split, repeat, trip, note, receipt";
 }
 
-/** Receipt entry point (specimen `entry-extras`). Upload and preview arrive with MAZ-94; an existing receipt is kept and opens. */
-function ReceiptRow({ entry, kind }: { entry: Transaction | undefined; kind: Kind }): ReactNode {
-  if (kind !== "expense") return null;
-  const receipt = entry?.receipt;
-  return (
-    <div className="receipt-row">
-      <Icon name="receipt" size={20} />
-      {receipt ? (
-        <span>
-          Receipt:{" "}
-          {receipt.uri.startsWith("/api/receipts/") ? (
-            <a href={receipt.uri} target="_blank" rel="noreferrer">
-              {receipt.name}
-            </a>
-          ) : (
-            receipt.name
-          )}
-          <span className="note"> Kept when you save.</span>
-        </span>
-      ) : (
-        <span className="note">Attaching receipts from the browser is coming soon. Receipts added in the Penny app are kept.</span>
-      )}
-    </div>
-  );
-}

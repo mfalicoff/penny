@@ -16,6 +16,11 @@ internal sealed class ReceiptMapping : IEntityTypeConfiguration<Receipt>
                     "ck_receipts_storage_path",
                     "storage_path ~ '^[0-9a-f]{2}/[0-9a-f]{32}$'"
                 );
+                // ReceiptFileStore.Versions: the sealing schemes this build can open.
+                table.HasCheckConstraint(
+                    "ck_receipts_encryption_version",
+                    "encryption_version = 1"
+                );
                 table.HasCheckConstraint("ck_receipts_key_salt", "length(key_salt) = 32");
                 table.HasCheckConstraint("ck_receipts_file_nonce", "length(file_nonce) = 12");
                 table.HasCheckConstraint("ck_receipts_name_nonce", "length(name_nonce) = 12");
@@ -24,6 +29,8 @@ internal sealed class ReceiptMapping : IEntityTypeConfiguration<Receipt>
             }
         );
         builder.HasKey(receipt => receipt.Id);
+        // Rows written before the column existed used scheme 1, the only one so far.
+        builder.Property(receipt => receipt.EncryptionVersion).HasDefaultValue((short)1);
         // Target of owner-enforcing composite foreign keys from personal entries.
         builder.HasAlternateKey(receipt => new { receipt.UserId, receipt.Id });
         builder.HasIndex(receipt => receipt.StoragePath).IsUnique();

@@ -167,6 +167,7 @@ The password files are read through systemd credentials, so they may be owned by
 With `nginx.enable = false`, the module only runs the API. Serve `webPackage` (a static document root) from your own server, with the same rules as [`deploy/web/default.conf.template`](../deploy/web/default.conf.template):
 
 - SPA fallback: unknown paths return `index.html`, sent with `Cache-Control: no-cache`.
+- Security headers on the app's pages: `X-Content-Type-Options: nosniff` and the Content-Security-Policy from `apps/web/scripts/security-headers.ts` (the module's nginx sends both; the policy allows the same-origin pdf.js worker and `blob:` receipt photos, see [browser receipts](web-receipts.md#deployment-the-pdf-worker-and-security-headers)). Serve `/assets/*.js`, including the pdf.js worker, with a JavaScript `Content-Type`.
 - `/api/` goes to `http://127.0.0.1:5080`. Replace `X-Forwarded-For` with the peer address rather than appending to it, don't buffer request bodies, and allow bodies of at least 21 MB and reads of at least 60 seconds.
 
 For example, with Caddy:
