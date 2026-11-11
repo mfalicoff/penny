@@ -64,6 +64,8 @@ A shared trip is a household with a travel range (`households.trip_start/trip_en
 
 A **personal** ledger trip may point to a shared trip with `sharedHouseholdId` (ledger v2). That link is private ledger data, written only through `PUT /api/ledger`: joining, leaving, removal or archiving never add, change or clear it, and it does not make anyone a member. The ledger only checks that the household exists.
 
+The browser (MAZ-93, [web README](../../apps/web/README.md#trips-maz-93)) uses this link to share a personal trip: it creates the shared trip, then saves the link through the durable offline ledger, and archives the new trip again if that save fails. The personal trip's expenses are never sent to the shared trip; they stay private and show only to their owner as "Only you", counted in that person's spending and never in the trip total or anyone's balance. Shared trip expenses settle by month like any household's.
+
 ## Transactions, locking and concurrency
 
 Every mutation runs in one READ COMMITTED transaction in `PostgresHouseholdRepository.WriteAsync`; a failure, cancellation or timeout rolls back everything, including the audit row. Reads (`list`, `detail`) use one REPEATABLE READ snapshot.
