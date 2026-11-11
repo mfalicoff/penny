@@ -145,6 +145,9 @@ describe("the schedule draft", () => {
 
     const moved = { ...same, date: "2026-11-20" };
     expect(editedRule(original, moved, build(moved, start, original)).anchorDay).toBe(20);
+    // Changing the cadence re-anchors on the next date too, even when the date stays.
+    const recadenced = { ...same, frequency: "weekly" as const };
+    expect(editedRule(original, recadenced, build(recadenced, start, original)).anchorDay).toBe(30);
     expect(checkDraft({ ...same, date: "2026-11-01" }, start, TODAY, original).errors.date).toBe("Choose today or a later date. Past entries aren't recorded again.");
     // Saving over a version changed elsewhere is refused by the shared command.
     expect(() => saveSchedule(edited, original)(ledger({ recurring: [{ ...original, title: "Fibre" }] }))).toThrow("changed on another device");

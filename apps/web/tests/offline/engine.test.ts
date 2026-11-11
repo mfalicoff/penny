@@ -1,4 +1,5 @@
-import { saveEntry } from "@domain/commands.ts";
+import { deleteEntry, saveCategory, saveEntry } from "@domain/commands.ts";
+import type { Ledger, Transaction } from "@domain/ledger.ts";
 import { describe, expect, it, vi } from "vitest";
 import { MemoryLedgerDatabase, StorageError } from "../../src/offline/database";
 import { LedgerSaveError } from "../../src/offline/engine";
@@ -561,5 +562,56 @@ describe("sign-out", () => {
     await tab.engine.finishSignOut();
     expect(db.values.has(mine)).toBe(false);
     expect(db.values.has(theirs)).toBe(true);
+  });
+});
+
+describe("records saved offline stay editable before a sync", () => {
+  // The stale checks in the shared commands compare records with JSON.stringify, so the copy the
+  // screens hold must have the same key order as the stored copy read back (MAZ-88/89 review).
+  const shownLedger = (tab: ReturnType<typeof openTab>): Ledger => {
+    const value = tab.engine.getState().ledger;
+    if (!value) throw new Error("expected a ledger");
+    return value;
+  };
+  const found = <T extends { id: string }>(items: T[], id: string): T => {
+    const item = items.find((candidate) => candidate.id === id);
+    if (!item) throw new Error(`expected ${id}`);
+    return item;
+  };
+
+  it("renames and removes a category created offline without a false conflict", async () => {
+    const server = new FakeServer(ledger());
+    const tab = openTab({ server, db: new MemoryLedgerDatabase() });
+    await settled(tab);
+    server.reachable = false;
+    tab.network.online = false;
+
+    // Built in the order the category form uses, which differs from the stored order.
+    await tab.engine.save(saveCategory({ id: "pets", name: "Pets", icon: "paw-outline", color: "#8A6FB0", kind: "expense" }));
+    const shown = found(shownLedger(tab).categories, "pets");
+    await tab.engine.save(saveCategory({ ...shown, name: "Pet care" }, shown));
+    const renamed = found(shownLedger(tab).categories, "pets");
+    expect(renamed.name).toBe("Pet care");
+    await tab.engine.save(saveCategory(renamed, renamed, true));
+    expect(shownLedger(tab).categories.map((item) => item.id)).toEqual(["groceries"]);
+  });
+
+  it("edits and deletes an expense with a trip saved offline", async () => {
+    const server = new FakeServer(ledger({ trips: [{ id: "lisbon", name: "Lisbon", startDate: "2026-11-01", endDate: "2026-11-08" }] }));
+    const tab = openTab({ server, db: new MemoryLedgerDatabase() });
+    await settled(tab);
+    server.reachable = false;
+    tab.network.online = false;
+
+    // tripId before date, as the entry form builds it; the stored copy puts it after note.
+    const { date, note, ...head } = entry("t", "Tram");
+    const created: Transaction = { ...head, tripId: "lisbon", date, note };
+    await tab.engine.save(saveEntry(created));
+    const shown = found(shownLedger(tab).transactions, "t");
+    await tab.engine.save(saveEntry({ ...shown, title: "Tram pass" }, shown));
+    const edited = found(shownLedger(tab).transactions, "t");
+    expect(edited.title).toBe("Tram pass");
+    await tab.engine.save(deleteEntry(edited));
+    expect(titles(tab.engine.getState().ledger)).toEqual([]);
   });
 });

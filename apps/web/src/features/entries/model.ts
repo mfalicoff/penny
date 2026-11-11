@@ -16,6 +16,7 @@ import {
 } from "@domain/ledger.ts";
 import { ICON_SVG } from "@design-kit/src/icons";
 import type { IconName } from "../../design/Icon";
+import { MAX_SCHEDULES } from "../recurring/model";
 
 /**
  * The personal entry form's draft and its validation (MAZ-88). The rules are the legacy app's
@@ -207,7 +208,12 @@ export function buildEntry(draft: EntryDraft, ledger: Ledger, original?: Transac
  * keeps its id (so it replaces itself) and the rule is added only once.
  */
 export function entryChange({ transaction, rule }: BuiltEntry, original?: Transaction): LedgerChange {
-  return (ledger) => saveEntry(transaction, original, rule && !ledger.recurring.some((item) => item.id === rule.id) ? rule : undefined)(ledger);
+  return (ledger) => {
+    const newRule = rule && !ledger.recurring.some((item) => item.id === rule.id) ? rule : undefined;
+    // The server refuses a ledger over the limit, which would hold back every pending change.
+    if (newRule && ledger.recurring.length >= MAX_SCHEDULES) throw new Error(`You can have up to ${String(MAX_SCHEDULES)} schedules. Remove one first, or save this entry without repeating.`);
+    return saveEntry(transaction, original, newRule)(ledger);
+  };
 }
 
 /** Ledger icons are Ionicons names ("basket-outline"); the web's set has the outline glyphs without the suffix. */

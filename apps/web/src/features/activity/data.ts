@@ -5,6 +5,7 @@ import { searchLookups, searchMatcher } from "@domain/search.ts";
 import { isRecorded, net } from "@domain/summary.ts";
 import { ApiError } from "../../api/client";
 import { ledgerQuery } from "../../api/ledger";
+import { householdsQuery } from "../../api/households";
 import { sharedProjectionQuery, type SharedRow } from "../../api/projection";
 import { useAccountEmail } from "../../auth/account";
 import { useLedgerSync } from "../../offline/OfflineLedgerProvider";
@@ -44,12 +45,23 @@ export type SharedState =
 export function useSharedRows(period: Period, online: boolean): SharedState & { retry: () => void } {
   const email = useAccountEmail();
   const query = useQuery(sharedProjectionQuery(email, projectionPeriod(period)));
+  // A server that leaves out `householdCurrency` gets it from the household list, as the legacy
+  // `ledgerWithHouseholds` does. Asked for only then; the list is usually cached already.
+  const needsCurrency = query.data?.transactions.some((row) => !row.householdCurrency) ?? false;
+  const households = useQuery({ ...householdsQuery(email), enabled: needsCurrency });
   const retry = () => {
     void query.refetch();
   };
   if (query.data) {
     const cached = !online || (query.isError && query.error instanceof ApiError && query.error.status === 0);
-    return { status: "ready", rows: query.data.transactions.filter((row) => !row.scheduled && inPeriod(row.date, period)), cached, retry };
+    const currencies = new Map((households.data ?? []).map((household) => [household.id, household.currency]));
+    const rows = query.data.transactions
+      .filter((row) => !row.scheduled && inPeriod(row.date, period))
+      .map((row) => {
+        const currency = row.householdCurrency ?? currencies.get(row.householdId);
+        return currency && !row.householdCurrency ? { ...row, householdCurrency: currency } : row;
+      });
+    return { status: "ready", rows, cached, retry };
   }
   if (query.error instanceof ApiError && query.error.status === 404) return { status: "none", retry };
   if (query.isError) {
@@ -73,8 +85,9 @@ export interface PeriodTotals {
 /** Totals of the period: recorded personal shares plus your share of recorded shared expenses. Independent of every other filter. */
 export function periodTotals(ledger: Ledger, period: Period, shared: SharedRow[]): PeriodTotals {
   const personal = totals(ledger.transactions.filter((entry) => isRecorded(entry) && inPeriod(entry.date, period)));
-  // A household's currency matches its members' ledgers; a row in another currency is never added in.
-  const counted = shared.filter((row) => !row.householdCurrency || row.householdCurrency === ledger.currency);
+  // A household's currency matches its members' ledgers; a row in another currency, or one whose
+  // currency isn't known yet, is never added in (as the legacy `ledgerWithHouseholds`).
+  const counted = shared.filter((row) => row.householdCurrency === ledger.currency);
   const sharedTotal = counted.reduce((sum, row) => sum + row.shareCents, 0);
   const result = { ...personal, expense: personal.expense + sharedTotal };
   return { ...result, net: net(result), shared: sharedTotal, sharedCount: counted.length };

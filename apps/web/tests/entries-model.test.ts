@@ -69,6 +69,14 @@ describe("entry drafts", () => {
     expect(twice.recurring).toHaveLength(1);
   });
 
+  it("refuses a repeating entry at the schedule limit, which the server would refuse at sync", () => {
+    const built = buildEntry(draft({ repeat: "weekly" }), ledger()).built;
+    const rule = built?.rule;
+    if (!built || !rule) throw new Error("expected a repeating draft");
+    const full = ledger({ recurring: Array.from({ length: 1000 }, (_, index) => ({ ...rule, id: `r${String(index)}` })) });
+    expect(() => entryChange(built)(full)).toThrow("up to 1000 schedules");
+  });
+
   it("refuses a stale edit with the shared rule's message, and keeps the receipt and schedule link", () => {
     const original = entry("e1", { receipt: { id: "r1", name: "receipt.pdf", mime: "application/pdf", uri: "/api/receipts/r1" }, recurringId: "rule-1" });
     const edited = buildEntry({ ...draftFromEntry(original), title: "Edited" }, ledger({ transactions: [original] }), original).built;
@@ -142,6 +150,11 @@ describe("Activity rows and totals", () => {
     const totals = periodTotals(data, { type: "month", month: "2026-11" }, rows);
     // 1450.00 personal + 30.00 + 30.00 shared; the EUR row is never added to a CAD ledger.
     expect(totals).toEqual({ expense: 151000, income: 480000, investment: 20000, net: 309000, shared: 6000, sharedCount: 2 });
+  });
+
+  it("never counts a shared row whose currency is not known", () => {
+    const noCurrency = { ...shared("Hydro"), householdCurrency: undefined };
+    expect(periodTotals(data, { type: "month", month: "2026-11" }, [noCurrency]).sharedCount).toBe(0);
   });
 
   it("lists personal and shared rows newest first and applies type, day, category and text locally", () => {

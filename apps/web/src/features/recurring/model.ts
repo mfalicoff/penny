@@ -229,7 +229,9 @@ export function editedRule(original: Recurring, draft: ScheduleDraft, built: Bui
     note: built.note,
     frequency: draft.frequency,
     nextDate: draft.date,
-    anchorDay: draft.date === original.nextDate ? original.anchorDay : parseDate(draft.date).getDate(),
+    // Keep the anchor only when neither the date nor the cadence changed: a weekly rule moved to monthly
+    // on Nov 17 repeats on the 17th, not on the day the weekly rule started.
+    anchorDay: draft.date === original.nextDate && draft.frequency === original.frequency ? original.anchorDay : parseDate(draft.date).getDate(),
   };
 }
 

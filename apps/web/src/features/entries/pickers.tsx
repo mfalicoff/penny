@@ -5,6 +5,7 @@ import { Button, ChoiceGroup, cx } from "../../design/controls";
 import { Icon } from "../../design/Icon";
 import { Dialog } from "../../design/ModalDialog";
 import type { SaveReceipt } from "../../offline/engine";
+import { RECORD_LIMIT } from "../organize/model";
 import { categoryIcon, KIND_PLURAL } from "./model";
 
 type Save = (change: LedgerChange) => Promise<SaveReceipt>;
@@ -61,7 +62,12 @@ export function CategoryPickerDialog({
     setBusy(true);
     setError(null);
     try {
-      await save(saveCategory(category));
+      // Checked against the stored ledger: the server refuses more than RECORD_LIMIT categories,
+      // which would hold back every pending change.
+      await save((ledger) => {
+        if (ledger.categories.length >= RECORD_LIMIT) throw new Error(`You have ${String(RECORD_LIMIT)} categories, the most Penny keeps. Remove one you don't use to add another.`);
+        return saveCategory(category)(ledger);
+      });
       onSelect(category.id);
       onClose();
     } catch (failure) {

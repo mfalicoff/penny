@@ -52,10 +52,16 @@ export class IncompatibleLedgerError extends Error {
 
 /**
  * Plain JSON: no `undefined` fields, no shared references. Comparisons use `JSON.stringify`, as the
- * shared merge does, so every ledger the store keeps goes through here once.
+ * shared merge and the shared commands' stale checks do, so every ledger the store keeps goes
+ * through here once. Keys are put in the order `parseLedger` gives them (schema fields first, then
+ * unknown ones), so the copy screens hold matches what a later read of the store returns. Without
+ * that, a record built in memory (say `{id,name,icon,color,kind}`) and the same record read back
+ * (`{id,name,kind,icon,color}`) look like an edit from another device.
  */
 export function normalizeLedger(ledger: Ledger): Ledger {
-  return JSON.parse(JSON.stringify(ledger)) as Ledger;
+  const plain: unknown = JSON.parse(JSON.stringify(ledger));
+  const ordered = ledgerV4.safeParse(plain);
+  return (ordered.success ? JSON.parse(JSON.stringify(ordered.data)) : plain) as Ledger;
 }
 
 /** Reads a wire ledger, upgrading v1–v3. Throws `IncompatibleLedgerError` for anything else. */
