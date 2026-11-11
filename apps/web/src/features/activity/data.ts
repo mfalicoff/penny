@@ -35,7 +35,8 @@ export function useActivityLedger(): { ledger: Ledger | null; local: boolean } {
 }
 
 export type SharedState =
-  | { status: "ready"; rows: SharedRow[]; cached: boolean }
+  /** `rows`: recorded shares in the period. `scheduled`: the period's shared previews (Home's Projected, MAZ-92). */
+  | { status: "ready"; rows: SharedRow[]; scheduled: SharedRow[]; cached: boolean }
   | { status: "loading" }
   /** Offline or unreachable with nothing cached; or another failure. */
   | { status: "unavailable"; message: string }
@@ -47,21 +48,31 @@ export function useSharedRows(period: Period, online: boolean): SharedState & { 
   const query = useQuery(sharedProjectionQuery(email, projectionPeriod(period)));
   // A server that leaves out `householdCurrency` gets it from the household list, as the legacy
   // `ledgerWithHouseholds` does. Asked for only then; the list is usually cached already.
-  const needsCurrency = query.data?.transactions.some((row) => !row.householdCurrency) ?? false;
+  const needsCurrency = query.data ? [...query.data.transactions, ...query.data.scheduled].some((row) => !row.householdCurrency) : false;
   const households = useQuery({ ...householdsQuery(email), enabled: needsCurrency });
   const retry = () => {
     void query.refetch();
   };
-  if (query.data) {
+  // Memoized on the query data, so a re-render (typing a search) keeps the same arrays and the
+  // reports built from them aren't recomputed.
+  const periodKey = JSON.stringify(period);
+  const data = query.data;
+  const householdList = households.data;
+  const lists = useMemo(() => {
+    if (!data) return null;
+    const range = JSON.parse(periodKey) as Period;
+    const currencies = new Map((householdList ?? []).map((household) => [household.id, household.currency]));
+    const withCurrency = (row: SharedRow) => {
+      const currency = row.householdCurrency ?? currencies.get(row.householdId);
+      return currency && !row.householdCurrency ? { ...row, householdCurrency: currency } : row;
+    };
+    const rows = data.transactions.filter((row) => !row.scheduled && inPeriod(row.date, range)).map(withCurrency);
+    const scheduled = [...data.transactions.filter((row) => row.scheduled), ...data.scheduled].filter((row) => inPeriod(row.date, range)).map(withCurrency);
+    return { rows, scheduled };
+  }, [data, householdList, periodKey]);
+  if (lists) {
     const cached = !online || (query.isError && query.error instanceof ApiError && query.error.status === 0);
-    const currencies = new Map((households.data ?? []).map((household) => [household.id, household.currency]));
-    const rows = query.data.transactions
-      .filter((row) => !row.scheduled && inPeriod(row.date, period))
-      .map((row) => {
-        const currency = row.householdCurrency ?? currencies.get(row.householdId);
-        return currency && !row.householdCurrency ? { ...row, householdCurrency: currency } : row;
-      });
-    return { status: "ready", rows, cached, retry };
+    return { status: "ready", ...lists, cached, retry };
   }
   if (query.error instanceof ApiError && query.error.status === 404) return { status: "none", retry };
   if (query.isError) {
