@@ -44,6 +44,11 @@ export interface LedgerSyncState {
   issue: SyncIssue | null;
   /** The ledger to show: the server's copy plus this browser's unsynced changes. Null until the first download. */
   ledger: Ledger | null;
+  /**
+   * The last ledger the server acknowledged (the stored base), which `ledger` adds this browser's
+   * changes to. Screens compare the two to mark records "Waiting to sync". Null until the first download.
+   */
+  base: Ledger | null;
   pending: PendingSummary;
   lastSyncedAt: string | null;
   /** Whether saves are kept durably. False when the browser refuses storage: the ledger is shown but saves are refused. */
@@ -213,6 +218,7 @@ export class LedgerSyncEngine {
       phase: this.phase(pending),
       issue: this.issue,
       ledger: record?.local ?? null,
+      base: record?.base ?? null,
       pending,
       lastSyncedAt: record?.lastSyncedAt ?? null,
       durable: this.durable,

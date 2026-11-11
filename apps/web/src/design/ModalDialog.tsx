@@ -47,6 +47,9 @@ export function ModalDialog({ labelledBy, describedBy, onClose, initialFocus, pa
   }, [host]);
 
   function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    // A dialog opened from this one (inline creation) is portaled elsewhere in the page but still
+    // bubbles through React here; its own handler owns those keys.
+    if (!(event.target instanceof Node) || !event.currentTarget.contains(event.target)) return;
     if (event.key === "Escape") {
       event.stopPropagation();
       onClose();

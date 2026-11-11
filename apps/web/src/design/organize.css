@@ -1,0 +1,252 @@
+/*
+ * Accounts and categories (MAZ-89): cards `iphone-accounts`, `iphone-account-form`,
+ * `iphone-categories`, `iphone-category-form`. Values come from the --pk-* tokens; category
+ * colors are the records' own (from the category palette).
+ */
+
+.organize__lede {
+  margin: 0;
+  color: var(--pk-label-2);
+}
+
+.organize-section {
+  display: grid;
+  gap: 8px;
+}
+
+.organize-section__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+
+.organize-section__head h2 {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--pk-label-2);
+}
+
+/* A whole row opens the record's form. */
+.organize-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 4px 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 8px 16px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.organize-row:hover {
+  background: var(--pk-surface-2);
+}
+
+.organize-row:focus-visible {
+  outline-offset: -2px;
+}
+
+.organize-row > .icon:last-child {
+  color: var(--pk-label-3);
+}
+
+.organize-row__text {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.organize-row__name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.organize-row__meta {
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 479px) {
+  /* The badge moves under the name on narrow screens, so long names keep their width. */
+  .organize-row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .organize-row__badge {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: start;
+  }
+}
+
+.organize-tile {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  color: #fff;
+}
+
+.organize-tile--plain {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--pk-fill);
+  color: var(--pk-label);
+}
+
+.organize-type-icon {
+  display: grid;
+  place-items: center;
+  height: 36px;
+  color: var(--pk-label);
+}
+
+.organize-preview {
+  display: grid;
+  place-items: center;
+  justify-self: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  color: #fff;
+}
+
+/* ---------- color swatches and icon grid: native radios, drawn as tiles ---------- */
+.organize-swatches,
+.organize-icons {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.organize-swatches__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.organize-icons__options {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+  gap: 6px;
+}
+
+.organize-swatch,
+.organize-icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.organize-swatch input,
+.organize-icon input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.organize-swatch__dot {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: transparent;
+}
+
+.organize-swatch input:checked + .organize-swatch__dot {
+  box-shadow:
+    0 0 0 3px var(--pk-surface),
+    0 0 0 5.5px var(--pk-label);
+  color: #fff;
+}
+
+.organize-icon__glyph {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--pk-fill);
+  color: var(--pk-label);
+}
+
+.organize-icon--on .organize-icon__glyph {
+  color: #fff;
+}
+
+.organize-swatch input:focus-visible + .organize-swatch__dot,
+.organize-icon input:focus-visible + .organize-icon__glyph {
+  outline: 2px solid var(--pk-tint);
+  outline-offset: 3px;
+}
+
+@media (forced-colors: active) {
+  /* Swatches and tiles are the record's color itself, so they keep it; selection uses a system outline. */
+  .organize-swatch__dot,
+  .organize-tile,
+  .organize-preview {
+    forced-color-adjust: none;
+  }
+
+  .organize-swatch input:checked + .organize-swatch__dot,
+  .organize-icon--on .organize-icon__glyph {
+    outline: 3px solid Highlight;
+  }
+}
+
+/* ---------- remove section ---------- */
+.organize-remove {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 0.5px solid var(--pk-separator);
+}
+
+.organize-remove h3 {
+  margin: 0;
+  font-size: 0.9375rem;
+}
+
+.organize-remove__move {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.organize-remove__move .form-field {
+  flex: 1 1 200px;
+}
+
+.organize-remove .note .icon {
+  vertical-align: -2px;
+}
+
+.inline-create {
+  justify-self: start;
+}
