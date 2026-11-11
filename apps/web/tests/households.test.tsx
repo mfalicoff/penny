@@ -1,6 +1,9 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent, { type UserEvent } from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { Ledger } from "@domain/ledger.ts";
+import { openIndexedDb } from "../src/offline/database";
+import { accountScope, RECORD_FORMAT, recordKey, type LedgerRecord } from "../src/offline/record";
 import { createHouseholdServer, type HouseholdServer } from "./fakes/householdServer";
 import { ALEX, bodyOf, callsTo, json, renderApp, stubServer } from "./render";
 
@@ -11,10 +14,10 @@ const CAM = "cam@example.test";
 let server: HouseholdServer;
 
 /** Routes /api/ledger and /api/households… to the fake as Alex; everything else as the usual signed-in stub. */
-function serve(options: { offline?: () => boolean } = {}) {
+function serve(options: { offline?: () => boolean; unreachable?: (method: string, url: string) => boolean } = {}) {
   return stubServer((url, init) => {
     if (!url.startsWith("/api/households") && url !== "/api/ledger") return undefined;
-    if (options.offline?.()) throw new TypeError("Failed to fetch");
+    if (options.offline?.() || options.unreachable?.(init?.method ?? "GET", url)) throw new TypeError("Failed to fetch");
     const result = server.handle(ALEX, init?.method ?? "GET", url, (bodyOf(init) ?? {}) as Record<string, unknown>);
     return json(result.body, result.status);
   });
@@ -229,6 +232,44 @@ describe("shared expense form", () => {
     expect(within(form).getByText(`${BEA} chooses their own payment account; nobody else sees it.`)).toBeInTheDocument();
   });
 
+  it("offers categories and accounts made on this device, and an unsynced account only once it has synced", async () => {
+    const id = seed();
+    server.setLedger(ALEX, { accounts: [{ id: "acct-visa", name: "Everyday card", type: "credit" }] });
+    // This browser added a category and an account offline; neither reached the server yet.
+    const base = (server.handle(ALEX, "GET", "/api/ledger").body as { ledger: Ledger }).ledger;
+    const local: Ledger = {
+      ...base,
+      accounts: [...base.accounts, { id: "acct-cash", name: "Cash jar", type: "cash" }],
+      categories: [...base.categories, { id: "c-pets", name: "Pets", icon: "paw", color: "#7A6FB0", kind: "expense" }],
+    };
+    const db = await openIndexedDb();
+    const record: LedgerRecord = { format: RECORD_FORMAT, server: window.location.origin, email: ALEX, baseRevision: 1, base, local, lastSyncedAt: null, savedAt: "2026-10-19T12:00:00.000Z" };
+    await db.update(recordKey(accountScope(window.location.origin, ALEX)), () => ({ next: record, result: null }));
+    db.close();
+
+    const fetchMock = serve();
+    const user = userEvent.setup();
+    renderApp(`/households/${id}`);
+    await user.click(await screen.findByRole("button", { name: "Shared expense" }));
+    const form = await dialog("New shared expense");
+    // Categories are sent by value, so one made offline can be used right away.
+    expect(await within(form).findByRole("option", { name: "Pets" })).toBeInTheDocument();
+    // The server checks the account against its copy of the ledger, so an unsynced one waits.
+    expect(within(form).getByRole("option", { name: "Everyday card" })).toBeEnabled();
+    expect(within(form).getByRole("option", { name: "Cash jar (waiting to sync)" })).toBeDisabled();
+    expect(within(form).getByLabelText("Your account")).toHaveAccessibleDescription(/can be chosen once they've synced/);
+
+    await fillExpense(user, form, "Vet", "60");
+    await user.selectOptions(within(form).getByLabelText("Category"), "Pets");
+    await user.selectOptions(within(form).getByLabelText("Your account"), "acct-visa");
+    await user.click(within(form).getByRole("button", { name: "Add expense" }));
+    expect(await screen.findByText("Vet added")).toBeInTheDocument();
+    expect(bodyOf(callsTo(fetchMock, `/api/households/${id}/expenses`).find((init) => init?.method === "POST"))).toMatchObject({
+      category: { name: "Pets", icon: "paw", color: "#7A6FB0" },
+      accountId: "acct-visa",
+    });
+  });
+
   it("keeps a stale edit's draft and lets the person keep their changes on the latest version", async () => {
     const id = seed();
     const expense = addExpense(ALEX, id, { title: "Hydro", totalCents: 9000, payerUserId: ids().alex });
@@ -384,6 +425,33 @@ describe("payments and settlement", () => {
     const stale = await dialog("Balance changed");
     expect(stale).toHaveTextContent("Nothing was recorded.");
     expect(within(stale).getByRole("row", { name: /Amount/ })).toHaveTextContent("Nothing to pay");
+    expect(server.state.reimbursements).toHaveLength(1);
+  });
+
+  it("says the balance changed when the month can't be re-read after a stale payment, and records nothing", async () => {
+    vi.setSystemTime(new Date("2026-10-31T12:00:00Z"));
+    const id = seed();
+    addExpense(BEA, id, { title: "Hydro", totalCents: 9000, payerUserId: ids().bea });
+    let monthDown = false;
+    serve({ unreachable: (method, url) => monthDown && method === "GET" && url.includes("/months/") });
+    const user = userEvent.setup();
+    renderApp(`/households/${id}?tab=balances`);
+    const open = await screen.findByRole("region", { name: "October 2026" });
+    await user.click(within(open).getByRole("button", { name: `Record that You paid ${BEA} $30.00` }));
+    const record = await dialog("Record payment");
+    server.handle(BEA, "POST", `/api/households/${id}/months/2026-10/reimbursements`, { fromUserId: ids().alex, toUserId: ids().bea, amountCents: 3000 });
+    monthDown = true;
+    await user.click(within(record).getByRole("button", { name: "Mark $30.00 as paid" }));
+    const alert = await within(record).findByRole("alert");
+    expect(alert).toHaveTextContent("October 2026 changed after you opened this payment, so nothing was recorded.");
+    expect(alert).toHaveTextContent("Penny couldn't load the new balance either: Penny can't reach the server.");
+    expect(screen.queryByRole("dialog", { name: "Balance changed" })).not.toBeInTheDocument();
+    expect(server.state.reimbursements).toHaveLength(1);
+
+    // Once the month loads again, trying again shows the new balance.
+    monthDown = false;
+    await user.click(within(record).getByRole("button", { name: "Mark $30.00 as paid" }));
+    expect(within(await dialog("Balance changed")).getByRole("row", { name: /Amount/ })).toHaveTextContent("Nothing to pay");
     expect(server.state.reimbursements).toHaveLength(1);
   });
 

@@ -9,7 +9,7 @@ import { Dialog } from "../../design/ModalDialog";
 import { Money } from "../../design/Money";
 import { Banner, SaveErrorBanner, useToast } from "../../design/states";
 import type { HouseholdView } from "./context";
-import { describeSharedError } from "./errors";
+import { describeLoadError, describeSharedError } from "./errors";
 import { dayLabel, monthLabel, shareOf } from "./model";
 
 const NO_TRANSFER_NOTE = "Recording a payment notes money already paid. Penny doesn't transfer money.";
@@ -24,6 +24,8 @@ export function RecordMonthlyDialog({ view, month, transfer, onClose }: { view: 
   const queryClient = useQueryClient();
   const toast = useToast();
   const [stale, setStale] = useState<MonthRecap | null>(null);
+  /** Why re-reading the month after a 409 failed; the balance changed but the new amount is unknown. */
+  const [rereadFailed, setRereadFailed] = useState<string | null>(null);
   const staleRef = useRef<HTMLDivElement>(null);
   const from = view.who.name(transfer.fromUserId);
   const to = view.who.name(transfer.toUserId);
@@ -37,11 +39,18 @@ export function RecordMonthlyDialog({ view, month, transfer, onClose }: { view: 
       toast.show({ title: "Payment recorded", detail: `${from} paid ${to} ${view.money(transfer.amountCents)} for ${monthName}. No money moved in Penny.` });
       onClose();
     },
+    onMutate: () => {
+      setRereadFailed(null);
+    },
     onError: async (error) => {
       if (!(error instanceof ApiError) || error.status !== 409) return;
-      // The month changed under us: re-read it and show what is owed now.
-      const latest = await queryClient.query({ ...monthRecapQuery(email, view.householdId, month), staleTime: 0 });
-      setStale(latest);
+      // The month changed under us: re-read it and show what is owed now. If that read fails too,
+      // say so (nothing was recorded) instead of showing only the server's 409 text.
+      try {
+        setStale(await queryClient.query({ ...monthRecapQuery(email, view.householdId, month), staleTime: 0 }));
+      } catch (failure) {
+        setRereadFailed(describeLoadError(failure));
+      }
     },
   });
 
@@ -93,7 +102,11 @@ export function RecordMonthlyDialog({ view, month, transfer, onClose }: { view: 
     );
   }
 
-  const failure = record.isError ? describeSharedError(record.error) : null;
+  const failure = record.isError
+    ? rereadFailed !== null
+      ? { kind: "conflict" as const, message: `${monthName} changed after you opened this payment, so nothing was recorded. Penny couldn't load the new balance either: ${rereadFailed} Review the balances before recording a payment.` }
+      : describeSharedError(record.error)
+    : null;
   return (
     <Dialog
       title="Record payment"

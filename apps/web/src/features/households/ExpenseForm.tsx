@@ -1,15 +1,15 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useId, useMemo, useRef, useState, type SyntheticEvent } from "react";
 import { ApiError } from "../../api/client";
 import { createExpense, createRule, expenseQuery, recurringQuery, refreshHousehold, timezoneOffsetMinutes, updateExpense, updateRule } from "../../api/households";
-import { ledgerQuery } from "../../api/ledger";
 import type { Allocation, ExpenseInput, Frequency, HouseholdMember, SharedCategory, SharedExpense, SharedRecurring, SplitMode } from "../../api/schemas";
 import { useAccountEmail } from "../../auth/account";
 import { Avatar, Button, ChoiceGroup, SwitchRow } from "../../design/controls";
 import { Dialog } from "../../design/ModalDialog";
 import { Banner, SaveErrorBanner, useToast } from "../../design/states";
 import type { HouseholdView } from "./context";
-import { describeSharedError, ledgerChoices } from "./errors";
+import { useLedgerChoices } from "./choices";
+import { describeSharedError } from "./errors";
 import {
   centsToInput,
   eligibleMembers,
@@ -120,8 +120,7 @@ export function ExpenseFormDialog({ view, target, onClose }: { view: HouseholdVi
   const email = useAccountEmail();
   const queryClient = useQueryClient();
   const toast = useToast();
-  const ledger = useQuery(ledgerQuery(email));
-  const choices = useMemo(() => ledgerChoices(ledger.data), [ledger.data]);
+  const choices = useLedgerChoices();
   const meId = view.who.meId;
   const [draft, setDraft] = useState<Draft>(() => draftFrom(target, meId, choices.categories[0]?.name ?? "Other"));
   const [revision, setRevision] = useState(target.kind === "edit" ? target.expense.revision : target.kind === "rule" ? target.rule.revision : 0);
@@ -404,13 +403,16 @@ export function ExpenseFormDialog({ view, target, onClose }: { view: HouseholdVi
             <select id={ids.account} value={draft.accountId} onChange={(event) => { set("accountId", event.currentTarget.value); }} aria-describedby={`${ids.account}-hint`}>
               <option value="">No account</option>
               {choices.accounts.map((account) => (
-                <option key={account.id} value={account.id}>
-                  {account.name}
+                // The server checks the account against its copy of your ledger, so one added on
+                // this device is shown but can't be chosen until it has synced.
+                <option key={account.id} value={account.id} disabled={!account.synced}>
+                  {account.synced ? account.name : `${account.name} (waiting to sync)`}
                 </option>
               ))}
             </select>
             <span id={`${ids.account}-hint`} className="form-hint">
               Private: only you see which account you paid from.
+              {choices.accounts.some((account) => !account.synced) ? " Accounts added on this device can be chosen once they've synced." : null}
             </span>
           </div>
         ) : !payerIsMe ? (

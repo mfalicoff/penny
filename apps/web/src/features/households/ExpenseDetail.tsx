@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { ApiError } from "../../api/client";
 import { deleteExpense, expenseQuery, refreshHousehold } from "../../api/households";
-import { ledgerQuery } from "../../api/ledger";
 import type { SharedExpense } from "../../api/schemas";
 import { useAccountEmail } from "../../auth/account";
 import { Badge, Button } from "../../design/controls";
@@ -10,7 +9,8 @@ import { Dialog } from "../../design/ModalDialog";
 import { Money } from "../../design/Money";
 import { EmptyState, ErrorState, LoadingState, SaveErrorBanner, useToast } from "../../design/states";
 import type { HouseholdView } from "./context";
-import { describeLoadError, describeSharedError, ledgerChoices } from "./errors";
+import { useLedgerChoices } from "./choices";
+import { describeLoadError, describeSharedError } from "./errors";
 import { HistoryPanel } from "./HistoryPanel";
 import { canRecordShare, dayLabel, isPaid, possessive, SHARE_STATUS_LABEL, shareOf, shareStatus, splitLabel } from "./model";
 import { RecordShareView } from "./PaymentDialogs";
@@ -123,12 +123,11 @@ function DetailPane({
   onHistory: () => void;
   onEdit: () => void;
 }) {
-  const email = useAccountEmail();
-  const ledger = useQuery({ ...ledgerQuery(email), enabled: expense.accountId !== undefined });
+  const choices = useLedgerChoices(expense.accountId !== undefined);
   const me = view.who.meId;
   const mine = shareOf(expense, me);
   const payerIsMe = me !== undefined && expense.payerUserId === me;
-  const accountName = expense.accountId ? ledgerChoices(ledger.data).accounts.find((account) => account.id === expense.accountId)?.name : undefined;
+  const accountName = expense.accountId ? choices.accounts.find((account) => account.id === expense.accountId)?.name : undefined;
 
   return (
     <div className="form">
