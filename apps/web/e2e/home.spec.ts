@@ -75,10 +75,24 @@ test("the money flow is chosen with the keyboard and announced", async ({ page, 
 
   // Clicking a node (its label on the Sankey) focuses it, and clicking it again clears it.
   const home = view.getByRole("button", { name: /^Went out: Home/ });
-  const target = isMobile ? home : home.locator("text").first();
-  await target.click();
+  // On the Sankey, click where the label is drawn. Playwright works out the click point of SVG
+  // text wrongly on WebKit (it lands on the bare <svg>), while a real pointer at the label hits it.
+  const clickNode = async () => {
+    if (isMobile) {
+      await home.click();
+      return;
+    }
+    const label = home.locator("text").first();
+    await label.scrollIntoViewIfNeeded();
+    const box = await label.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    });
+    await page.mouse.click(box.x, box.y);
+  };
+  await clickNode();
   await expect(home).toHaveAttribute("aria-pressed", "true");
-  await target.click();
+  await clickNode();
   await expect(home).toHaveAttribute("aria-pressed", "false");
 
   await flow.getByText("Show as a table").click();

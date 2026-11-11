@@ -16,13 +16,15 @@ namespace Penny.Backend.Persistence.Migrations
                 table: "receipts",
                 type: "smallint",
                 nullable: false,
-                defaultValue: (short)1);
+                defaultValue: (short)1
+            );
 
             migrationBuilder.AddCheckConstraint(
                 name: "ck_receipts_encryption_version",
                 schema: "penny",
                 table: "receipts",
-                sql: "encryption_version = 1");
+                sql: "encryption_version = 1"
+            );
         }
 
         /// <inheritdoc />
@@ -31,12 +33,14 @@ namespace Penny.Backend.Persistence.Migrations
             migrationBuilder.DropCheckConstraint(
                 name: "ck_receipts_encryption_version",
                 schema: "penny",
-                table: "receipts");
+                table: "receipts"
+            );
 
             migrationBuilder.DropColumn(
                 name: "encryption_version",
                 schema: "penny",
-                table: "receipts");
+                table: "receipts"
+            );
         }
     }
 }
