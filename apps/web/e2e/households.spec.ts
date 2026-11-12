@@ -259,6 +259,44 @@ test("monthly payment at month end, a repeated payment, private accounts and arc
   await bea.context.close();
 });
 
+test("on phones a tapped toast still closes and the rows under it stay reachable (MAZ-162)", async ({ browser, baseURL, isMobile }) => {
+  test.skip(!isMobile, "touch layout only");
+  const alex = await person(browser, ALEX, baseURL);
+  const bea = await person(browser, BEA, baseURL);
+  const url = await createAndJoin(alex.page, bea.page);
+  await alex.page.goto(url);
+  await addExpense(alex.page, "Hydro", "90");
+  await addExpense(alex.page, "Internet", "40");
+
+  await bea.page.goto(url);
+  const list = bea.page.getByRole("list", { name: "Expenses" });
+  await list.getByRole("link", { name: /Hydro/ }).click();
+  const hydro = bea.page.getByRole("dialog", { name: "Hydro" });
+  await hydro.getByRole("button", { name: "Mark your share as paid" }).click();
+  await hydro.getByRole("button", { name: "Mark $45.00 as paid" }).click();
+  await bea.page.keyboard.press("Escape");
+  const toast = bea.page.locator(".pk-toast", { hasText: "Share marked as paid" });
+  await expect(toast).toBeVisible();
+
+  // While it shows, the page reserves its height: the last row scrolls clear of the toast.
+  await bea.page.evaluate(() => {
+    window.scrollTo(0, document.documentElement.scrollHeight);
+  });
+  const last = await list.getByRole("listitem").last().boundingBox();
+  const over = await toast.boundingBox();
+  expect(last && over && last.y + last.height <= over.y).toBe(true);
+
+  // A tap on the toast's text (a touch, then the mouse events browsers emulate after it)
+  // leaves the pointer resting there. It closes on its own anyway.
+  await toast.getByText("Share marked as paid").tap();
+  await toast.getByText("Share marked as paid").click();
+  await expect(toast).toBeHidden({ timeout: 10_000 });
+  await list.getByRole("link", { name: /Internet/ }).click();
+  await expect(bea.page.getByRole("dialog", { name: "Internet" })).toBeVisible();
+  await alex.context.close();
+  await bea.context.close();
+});
+
 test("keyboard-only expense entry and no horizontal scrolling at 320px", async ({ browser, baseURL, isMobile }) => {
   test.skip(isMobile, "sets its own viewport");
   const alex = await person(browser, ALEX, baseURL, { width: 320 });

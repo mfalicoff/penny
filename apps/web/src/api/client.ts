@@ -38,6 +38,11 @@ export function setTransport(next: Transport | null): void {
   transport = next;
 }
 
+/** The demo's in-memory server while it runs, for requests that can't go through `apiFetch` (receipt bytes). */
+export function currentTransport(): Transport | null {
+  return transport;
+}
+
 const errorBody = (value: unknown): string | undefined =>
   typeof value === "object" && value !== null && "error" in value && typeof value.error === "string"
     ? value.error

@@ -13,6 +13,7 @@ import { useLedgerChoices } from "./choices";
 import { describeLoadError, describeSharedError } from "./errors";
 import { HistoryPanel } from "./HistoryPanel";
 import { canRecordShare, dayLabel, isPaid, possessive, SHARE_STATUS_LABEL, shareOf, shareStatus, splitLabel } from "./model";
+import { ReceiptLink } from "../receipts/ReceiptLink";
 import { RecordShareView } from "./PaymentDialogs";
 
 type Pane = { kind: "detail" } | { kind: "record"; expense: SharedExpense; fromUserId: string } | { kind: "delete" } | { kind: "history" };
@@ -166,9 +167,7 @@ function DetailPane({
           <>
             <dt>Receipt</dt>
             <dd>
-              <a href={expense.receipt.uri} target="_blank" rel="noreferrer">
-                {expense.receipt.name || "View receipt"}
-              </a>
+              <ReceiptLink receipt={expense.receipt} />
             </dd>
           </>
         ) : null}

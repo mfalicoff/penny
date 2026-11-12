@@ -247,7 +247,8 @@ describe("shared expense form", () => {
     await db.update(recordKey(accountScope(window.location.origin, ALEX)), () => ({ next: record, result: null }));
     db.close();
 
-    const fetchMock = serve();
+    // The local changes can't reach the server (the fake ledger accepts PUTs since MAZ-93), so they stay unsynced.
+    const fetchMock = serve({ unreachable: (method, url) => method === "PUT" && url === "/api/ledger" });
     const user = userEvent.setup();
     renderApp(`/households/${id}`);
     await user.click(await screen.findByRole("button", { name: "Shared expense" }));

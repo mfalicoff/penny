@@ -181,7 +181,8 @@ export function HouseholdPage({ householdId, expenseId, search }: { householdId:
   );
 }
 
-function MonthBalance({ month, balance, loading, view }: { month: string; balance: number | undefined; loading: boolean; view: HouseholdView }) {
+/** The viewer's balance for the month, in words and color. Also used by shared trips (MAZ-93). */
+export function MonthBalance({ month, balance, loading, view }: { month: string; balance: number | undefined; loading: boolean; view: HouseholdView }) {
   const name = monthLabel(month).split(" ")[0] ?? month;
   if (loading) return <>{name} · loading your balance…</>;
   if (balance === undefined) return <>{name} · nothing shared with you</>;

@@ -11,6 +11,7 @@ import {
   type Frequency,
   type Kind,
   type Ledger,
+  type Receipt,
   type Recurring,
   type Transaction,
 } from "@domain/ledger.ts";
@@ -45,6 +46,8 @@ export interface EntryDraft {
   split: ShareMode;
   shareInput: string;
   repeat: Repeat;
+  /** The linked receipt (expenses only): uploaded in this form, or the entry's own. Null for none. */
+  receipt: Receipt | null;
 }
 
 export type DraftField = "amount" | "title" | "date" | "category" | "account" | "trip" | "share" | "note";
@@ -109,6 +112,7 @@ export function newDraft(ledger: Pick<Ledger, "categories" | "transactions">, ki
     split: "full",
     shareInput: "",
     repeat: "none",
+    receipt: null,
   };
 }
 
@@ -128,6 +132,7 @@ export function draftFromEntry(entry: Transaction): EntryDraft {
     split,
     shareInput: split === "amount" ? centsToInput(entry.share) : "",
     repeat: "none",
+    receipt: entry.receipt ?? null,
   };
 }
 
@@ -179,7 +184,7 @@ export function buildEntry(draft: EntryDraft, ledger: Ledger, original?: Transac
   }
   if (Object.keys(errors).length) return { errors };
 
-  const receipt = draft.kind === "expense" ? original?.receipt : undefined;
+  const receipt = draft.kind === "expense" ? draft.receipt : null;
   const transaction: Transaction = {
     id: draft.id,
     title,

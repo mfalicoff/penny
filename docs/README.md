@@ -34,6 +34,7 @@
 - [Native Home, money flow, Insights and calendar](ios-overview.md): report formulas, recorded versus projected, shared and private aggregation, what investments mean, the iPhone and iPad layouts, chart accessibility, tests and performance verification.
 - [Web app foundation](../apps/web/README.md): the React/Vite/TanStack browser client, pinned versions, route and data conventions, design-kit boundaries and web CI.
 - [Browser offline ledger and sync](web-offline-sync.md): the IndexedDB schema, durable saves, the legacy Expo web import and recovery, the shared merge and same-field policy, multi-tab coordination, sync triggers and failure states, sign-out protection, local search, the origin requirement and offline limits.
+- [Browser receipts](web-receipts.md): supported files and limits, upload with progress, cancel and retry, the draft, authenticated photo and PDF preview and download, the pdf.js worker and Content-Security-Policy for deployment, receipt encryption and key configuration, and troubleshooting.
 - [Frontend architecture](frontend-architecture.md): routes, feature ownership, state and persistence boundaries, responsive navigation, and native glass surfaces.
 - [Backend architecture](backend-architecture.md): HTTP/application/storage boundaries, validation, persistence guarantees, and framework tradeoffs.
 - [Backend API endpoints](api-endpoints.md): all 40 operations, authentication, request/response shapes, and compatibility notes for a Go or .NET migration.

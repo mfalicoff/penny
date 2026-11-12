@@ -46,6 +46,28 @@ export function verifyDist(root: string): string[] {
     if (!existsSync(join(root, license))) problems.push(`missing ${license}`);
   }
 
+  // Zod's compiler is off before Zod loads (src/app/zodConfig.ts), so the strict CSP never sees
+  // its `new Function` probe: the entry's first import is that chunk.
+  const entry = /<script type="module"[^>]*src="\/([^"]+)"/.exec(html)?.[1];
+  const entryPath = entry ? join(root, entry) : "";
+  const firstImport = entryPath && existsSync(entryPath) ? /import\s*(?:[^"';]*?from\s*)?["']\.\/([^"']+)["']/.exec(readFileSync(entryPath, "utf8"))?.[1] : undefined;
+  const zodConfig = firstImport ? join(root, "assets", firstImport) : "";
+  if (!zodConfig || !/zod-config-/.test(firstImport ?? "") || !existsSync(zodConfig) || !readFileSync(zodConfig, "utf8").includes("__zod_globalConfig")) {
+    problems.push("the entry script must import the zod-config chunk first (src/app/zodConfig.ts)");
+  }
+
+  // The pdf.js worker (MAZ-94): one same-origin `.js` file under /assets/ (a JavaScript type on
+  // every server, as module workers require), referenced root-absolute from the bundle.
+  const workers = all.filter((path) => /\/assets\/pdf\.worker\.min-[\w-]+\.(m?js)$/.test(path) && readFileSync(path, "utf8").includes("WorkerMessageHandler"));
+  if (workers.length !== 1) problems.push(`expected one pdf.js worker in assets/, found ${String(workers.length)}`);
+  for (const worker of workers) {
+    const name = relative(root, worker);
+    if (name.endsWith(".mjs")) problems.push(`${name} must be emitted as .js`);
+    const ref = `/${name.split("\\").join("/")}`;
+    if (!all.some((path) => path.endsWith(".js") && path !== worker && readFileSync(path, "utf8").includes(ref))) problems.push(`no bundle references the pdf.js worker at ${ref}`);
+  }
+  if (all.some((path) => path.endsWith(".mjs"))) problems.push("dist/ contains .mjs files, which some servers send without a JavaScript type");
+
   const forbidden: [RegExp, string][] = [
     [/postgres(ql)?:\/\//i, "a PostgreSQL URL"],
     [/\b(Host|Server)=[^;"']+;\s*(Port|Database|Username)=/i, "a connection string"],

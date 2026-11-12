@@ -9,6 +9,7 @@ import { Banner, SaveErrorBanner, useToast } from "../../design/states";
 import { dayLabel } from "../households/model";
 import { categoryIcon, shareSummary } from "./model";
 import { EntryFormDialog } from "./EntryForm";
+import { ReceiptLink } from "../receipts/ReceiptLink";
 import { useLedgerWriter } from "./writer";
 
 const TONE = { expense: "expense", income: "income", investment: "investment" } as const;
@@ -104,13 +105,7 @@ export function EntryDetailDialog({ entry: shown, onClose }: { entry: Transactio
             <>
               <dt>Receipt</dt>
               <dd>
-                {entry.receipt.uri.startsWith("/api/receipts/") ? (
-                  <a href={entry.receipt.uri} target="_blank" rel="noreferrer">
-                    {entry.receipt.name}
-                  </a>
-                ) : (
-                  entry.receipt.name
-                )}
+                <ReceiptLink receipt={entry.receipt} />
               </dd>
             </>
           ) : null}

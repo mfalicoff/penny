@@ -1,0 +1,260 @@
+/*
+ * Trips (MAZ-93): specimens `trips`, `personal-trip`, `shared-trip`, `trip-form`,
+ * `share-personal-trip`, `trip-people`, `trip-balances`; cards `web-trips`, `iphone-trips`,
+ * `iphone-trip-detail`, `iphone-trip-form`. Shared trips reuse the household styles
+ * (shared.css). Values come from the --pk-* tokens. Money stays on solid surfaces.
+ */
+
+.trips__intro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 18px;
+}
+
+.trip-back {
+  justify-self: start;
+}
+
+/* ---------- the featured trip ---------- */
+.trip-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 22px;
+  border-radius: var(--pk-r-card);
+  background: var(--pk-surface);
+  box-shadow: 0 0 0 0.5px var(--pk-separator);
+}
+
+/* The proposal's soft copper and blue wash, kept behind the solid text and never under money alone. */
+.trip-hero::before {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(60% 90% at 0% 0%, var(--pk-invest-soft), transparent 70%),
+    radial-gradient(50% 80% at 70% 100%, var(--pk-tint-soft), transparent 70%);
+  content: "";
+  pointer-events: none;
+}
+
+.trip-hero__main {
+  position: relative;
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+}
+
+.trip-hero__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.trip-hero__name {
+  margin: 0;
+  font-size: clamp(1.5rem, 1.2rem + 1.5vw, 2.25rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+.trip-hero .muted {
+  margin: 0;
+}
+
+/* ---------- numbers ---------- */
+.trip-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+  margin: 0;
+}
+
+.trip-stats > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.trip-stats dt {
+  color: var(--pk-label-2);
+  font-size: 0.875rem;
+}
+
+.trip-stats dd {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.trip-stats--card {
+  padding: 16px 18px;
+  border-radius: var(--pk-r-card);
+  background: var(--pk-surface);
+  box-shadow: 0 0 0 0.5px var(--pk-separator);
+}
+
+/* The month balance is a sentence, not a big number. */
+.trip-stats .trip-stats__sentence {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* ---------- trip pages ---------- */
+.trip-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 18px;
+}
+
+.trip-head__summary {
+  display: grid;
+  flex: 1 1 240px;
+  gap: 6px;
+  min-width: 0;
+}
+
+.trip-head__dates {
+  margin: 0;
+  color: var(--pk-label-2);
+  overflow-wrap: anywhere;
+}
+
+button.row {
+  width: 100%;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+button.row:hover {
+  background: var(--pk-surface-2);
+}
+
+button.row:focus-visible {
+  outline-offset: -2px;
+}
+
+.trip-category {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.trip-share-points {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding-inline-start: 20px;
+}
+
+/* ---------- the trip grid ---------- */
+.trip-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trip-grid > li {
+  display: grid;
+}
+
+.trip-tile {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  min-height: 160px;
+  padding: 16px;
+  border: 0;
+  border-radius: var(--pk-r-card);
+  background: var(--pk-surface);
+  box-shadow: 0 0 0 0.5px var(--pk-separator);
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  text-decoration: none;
+}
+
+.trip-tile:hover {
+  background: var(--pk-surface-2);
+}
+
+.trip-tile__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.trip-tile__icon {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--pk-fill);
+}
+
+.trip-tile__name {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.trip-tile__meta {
+  color: var(--pk-label-2);
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.trip-tile__amount {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin-top: auto;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.trip-tile--new {
+  place-content: center;
+  justify-items: center;
+  box-shadow: none;
+  outline: 1.5px dashed var(--pk-separator);
+  outline-offset: -1.5px;
+  color: var(--pk-label-2);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.trip-tile--new:focus-visible {
+  outline: 2px solid var(--pk-tint);
+}
+
+@media (forced-colors: active) {
+  .trip-hero::before {
+    display: none;
+  }
+
+  .trip-tile,
+  .trip-hero,
+  .trip-stats--card {
+    border: 1px solid CanvasText;
+  }
+}

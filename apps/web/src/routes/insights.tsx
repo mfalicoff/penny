@@ -1,8 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { NotYetAvailable } from "../features/placeholder/NotYetAvailable";
+import { InsightsPage } from "../features/home/InsightsPage";
+import { insightsSearchSchema } from "../features/home/model";
 
-/** Insights (web card `web-insights`): the full money flow and category comparison arrive with MAZ-92. */
+/** Insights (web card `web-insights`, MAZ-92): the month's money flow and category comparison. `?month=YYYY-MM`. */
 export const Route = createFileRoute("/insights")({
   staticData: { title: "Insights" },
-  component: () => <NotYetAvailable page="Insights" icon="pie-chart" />,
+  validateSearch: insightsSearchSchema,
+  component: Insights,
 });
+
+function Insights() {
+  const search = Route.useSearch();
+  return <InsightsPage search={search} />;
+}
