@@ -248,6 +248,34 @@ struct TripModelTests {
         #expect(fake.calls == ["createTrip"], "no expense is sent to the shared trip")
         #expect(trips.households.households.first?.id == household.id)
         #expect(box.ledger.privateExpenses(linkedTo: household.id).map(\.id) == ["train"])
+        #expect(box.summaries.last?.allowsUndo == false, "the link is saved without Undo")
+    }
+
+    @Test("whenATripIsShared_SaveToast_ShouldOfferNoUndoThatOrphansTheSharedTrip")
+    func shareHasNoUndo() async throws {
+        let fake = FakeHouseholds()
+        let trips = TripFixtures.trips(fake)
+        let demo = DemoWorkspace(today: TripFixtures.day("2026-11-09"))
+        _ = try await demo.commit(.saveTrip(TripFixtures.personal), summary: ChangeSummary(title: "Trip added")).get()
+        var saved: SavedChange?
+        let outcome = await trips.share(TripFixtures.personal, currency: .cad) { change, summary in
+            switch await demo.commit(change, summary: summary) {
+            case .success(let change):
+                saved = change
+                return nil
+            case .failure(let failure): return failure
+            }
+        }
+        guard case .shared(let household) = outcome else {
+            Issue.record("expected shared, got \(outcome)")
+            return
+        }
+        let link = try #require(saved)
+        #expect(!link.canUndo, "the toast shows no Undo")
+        if case .success = await demo.undo(link) {
+            Issue.record("the link can't be reverted behind the shared trip's back")
+        }
+        #expect(demo.load.ledger?.trip(id: "mine")?.sharedHouseholdId == household.id)
     }
 
     @Test("whenTheLinkCantBeSaved_Share_ShouldArchiveTheNewTripAgain")
@@ -410,6 +438,34 @@ struct TripModelTests {
         await expenses.refresh()
         #expect(expenses.load.failure?.kind == .offline)
         #expect(expenses.expenses.map(\.id) == ["dinner"], "a failure keeps what was read")
+        #expect(expenses.loadedExpenses?.map(\.id) == ["dinner"], "and still totals it")
+    }
+
+    @Test("whenTheFirstReadIsPendingOrFails_SharedTripExpenses_ShouldHaveNoListToTotal")
+    func noTotalsBeforeARead() async throws {
+        let fake = TripFixtures.server()
+        let trips = TripFixtures.trips(fake)
+        let expenses = try #require(trips.expenses(for: TripFixtures.tripId))
+        #expect(expenses.loadedExpenses == nil, "nothing read yet")
+        fake.delay("sharedExpenses", .milliseconds(200))
+        async let first: Void = expenses.refresh()
+        try await Task.sleep(for: .milliseconds(20))
+        #expect(expenses.load == .loading)
+        #expect(expenses.loadedExpenses == nil, "an empty list while loading isn't a $0.00 trip")
+        await first
+        fake.delay("sharedExpenses", .zero)
+
+        let offline = try #require(TripFixtures.trips(fake).expenses(for: TripFixtures.tripId))
+        fake.fail("sharedExpenses", with: .offline)
+        await offline.refresh()
+        #expect(offline.load.failure?.kind == .offline)
+        #expect(offline.loadedExpenses == nil, "a failed first read has no total")
+        await offline.refresh()
+        #expect(offline.loadedExpenses?.map(\.id) == ["dinner", "flight"])
+
+        let empty = try #require(TripFixtures.trips(FakeHouseholds()).expenses(for: "empty-trip"))
+        await empty.refresh()
+        #expect(empty.loadedExpenses == [], "a trip read with no expenses totals $0.00")
     }
 
     @Test("whenATripIsPendingAdd_TripDirectory_ShouldHandItOutOnce")

@@ -89,10 +89,11 @@ private struct EntryForm: View {
         } else {
             editor = Self.fresh(mode, today: shell.today, ledger: ledger)
         }
-        // Trip expense (MAZ-76): the new expense opens on that trip.
+        // Trip expense (MAZ-76): a fresh new expense opens on that trip. A kept draft comes back
+        // as it was typed; the request is used up either way.
         if mode == .new, let tripId = shell.addEntryTripId {
             shell.addEntryTripId = nil
-            editor.start(onTrip: tripId, ledger: ledger)
+            if !restored { editor.start(onTrip: tripId, ledger: ledger) }
         }
         let shell = self.shell
         let mode = self.mode

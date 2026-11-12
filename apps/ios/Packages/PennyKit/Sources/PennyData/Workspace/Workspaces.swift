@@ -24,8 +24,8 @@ public final class DemoWorkspace: LedgerWorkspace {
         guard let ledger = load.ledger else { return .failure(.unavailable("The demo has ended.")) }
         do throws(LedgerRuleError) {
             let next = try change.apply(to: ledger)
-            let saved = SavedChange(summary: summary, canUndo: true)
-            lastChange = (saved.id, ledger, next)
+            let saved = SavedChange(summary: summary, canUndo: summary.allowsUndo)
+            lastChange = summary.allowsUndo ? (saved.id, ledger, next) : nil
             load = .ready(next)
             return .success(saved)
         } catch {

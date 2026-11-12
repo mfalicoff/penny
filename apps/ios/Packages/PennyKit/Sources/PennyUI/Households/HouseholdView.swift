@@ -143,11 +143,14 @@ struct HouseholdPage: View {
             await refreshTrip()
         }
         .task {
+            // Trip expense from the Trips list opens the form once the page is here. Taken
+            // before the reads, so a failed or offline load (or leaving early) never leaves it
+            // to open the form later, unasked.
+            let wantsAdd = shell.trips.takePendingAdd(for: model.id)
             model.followCurrentMonth(MonthKey(shell.today))
             await model.refresh()
             await refreshTrip()
-            // Trip expense from the Trips list opens the form once the page is here.
-            if model.household?.trip != nil, !model.isReadOnly, shell.trips.takePendingAdd(for: model.id) {
+            if wantsAdd, !Task.isCancelled, model.household?.trip != nil, !model.isReadOnly {
                 form = .new
             }
         }

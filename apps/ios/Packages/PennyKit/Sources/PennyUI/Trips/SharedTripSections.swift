@@ -29,9 +29,12 @@ struct SharedTripContext {
             ledger.map { $0.currency.rawValue == household.currency ? $0.privateExpenses(linkedTo: model.id) : [] }
             ?? []
         privateEntries = personal
-        let loaded = expenses.flatMap { $0.load == .idle ? nil : $0.expenses }
+        // Totals only from a list that was read: during a first read, or after it failed, the
+        // empty list isn't the trip's, so the stats show a placeholder rather than $0.00.
         let meId = model.people.meId
-        totals = loaded.map { SharedTripTotals(expenses: $0, meId: meId, personal: personal, range: range) }
+        totals = expenses?.loadedExpenses.map {
+            SharedTripTotals(expenses: $0, meId: meId, personal: personal, range: range)
+        }
     }
 }
 
