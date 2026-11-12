@@ -142,7 +142,7 @@ private struct HouseholdPage: View {
         .sheet(item: $payment) { request in
             PaymentSheet(request: request, model: model)
         }
-        .sheet(isPresented: $inviting) {
+        .sheet(isPresented: $inviting, onDismiss: { Task { await model.refresh() } }) {
             InviteSheet(model: model).environment(shell)
         }
         .alert("Rename household", isPresented: $renaming) {

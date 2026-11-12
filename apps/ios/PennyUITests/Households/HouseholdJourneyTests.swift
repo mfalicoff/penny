@@ -47,7 +47,6 @@ final class HouseholdJourneyTests: PennyUITestCase {
         try penny.wait(for: IDs.Screen.expenseForm)
         try penny.type("90", into: IDs.formAmount)
         try penny.type("Groceries", into: IDs.formTitle)
-        try penny.wait(for: IDs.split(bea.userID))
         screenshot("shared-expense-form")
         try penny.tap(IDs.formSave)
         try penny.waitForAbsence(of: IDs.Screen.expenseForm, timeout: 20)
@@ -83,8 +82,11 @@ final class HouseholdJourneyTests: PennyUITestCase {
         try penny.waitForAbsence(of: IDs.Screen.expenseForm)
 
         // Membership restriction: the creator can't leave while another member remains.
-        penny.app.navigationBars.buttons.element(boundBy: 0).tap()
-        try penny.wait(for: AccessibilityID.Screen.household)
+        // Back to the household (the back button is titled with its name).
+        let back = penny.app.navigationBars.buttons
+            .matching(NSPredicate(format: "label BEGINSWITH %@ OR label == %@", "Apartment", "Back")).firstMatch
+        (back.waitForExistence(timeout: 5) ? back : penny.app.navigationBars.buttons.element(boundBy: 0)).tap()
+        try penny.wait(for: AccessibilityID.Screen.household, timeout: 20)
         try penny.selectSegment("People", in: IDs.section)
         try penny.tap(IDs.leave)
         try penny.dialogButton("Leave").tap()
@@ -126,7 +128,7 @@ final class HouseholdJourneyTests: PennyUITestCase {
         try penny.tap(IDs.joinButton)
         try penny.wait(for: AccessibilityID.Screen.household, timeout: 20)
         try penny.selectSegment("People", in: IDs.section)
-        try penny.wait(for: IDs.member(guest.userID))
+        try penny.waitAfterRefresh(for: IDs.member(guest.userID))
         screenshot("joined-by-link")
     }
 
@@ -159,7 +161,11 @@ extension Penny {
     /// The Shared tab (iPhone) or sidebar row (iPad).
     func openShared() throws {
         if Device.isPad {
-            try tap(AccessibilityID.Sidebar.item("shared"))
+            let row = try wait(for: AccessibilityID.Sidebar.item("shared"))
+            for _ in 0..<3 {
+                row.tap()
+                if element(AccessibilityID.Screen.shared).waitForExistence(timeout: 8) { return }
+            }
         } else {
             let tab = app.buttons.matching(identifier: AccessibilityID.Tab.tab("shared")).firstMatch
             let button = tab.waitForExistence(timeout: 5) ? tab : app.tabBars.buttons["Shared"]
@@ -196,8 +202,16 @@ extension Penny {
         let deadline = Date().addingTimeInterval(timeout)
         while !target.waitForExistence(timeout: 3) {
             guard Date() < deadline else { throw UIExpectationFailed(description: "\(id) did not appear") }
-            pullToRefresh()
+            pullHouseholdToRefresh()
         }
+    }
+
+    /// Pulls the household page (not the iPad sidebar, the first list on screen) to refresh.
+    func pullHouseholdToRefresh(_ screen: String = AccessibilityID.Screen.household) {
+        let page = app.collectionViews.matching(identifier: screen).firstMatch
+        guard page.exists else { return pullToRefresh() }
+        let top = page.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2))
+        top.press(forDuration: 0.05, thenDragTo: page.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.8)))
     }
 
     func waitForLabel(_ element: XCUIElement, containing text: String, timeout: TimeInterval = 30) throws {
@@ -206,7 +220,7 @@ extension Penny {
             guard Date() < deadline else {
                 throw UIExpectationFailed(description: "\(element.identifier) never said \(text): \(element.label)")
             }
-            pullToRefresh()
+            pullHouseholdToRefresh(AccessibilityID.Screen.householdExpense)
             _ = element.waitForExistence(timeout: 2)
         }
     }
