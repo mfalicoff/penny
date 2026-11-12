@@ -67,6 +67,10 @@ final class ShellModel {
 
     /// The Shared tab's households and their page models (none in the demo).
     let households: HouseholdDirectory
+    /// Shared trips and every trip's whole expense list (MAZ-76; none in the demo).
+    let trips: TripDirectory
+    /// The trip a Trip expense opens Add entry on, taken once by the entry form (MAZ-76).
+    var addEntryTripId: String?
 
     // MARK: Overview (MAZ-77)
 
@@ -108,6 +112,7 @@ final class ShellModel {
         if case .account(_, let account) = session { email = householdEmail ?? account.email }
         households = HouseholdDirectory(
             service: workspace.isDemo ? nil : householdService, email: email, month: { MonthKey(monthClock()) })
+        trips = TripDirectory(households: households)
         shared = SharedProjectionModel(service: workspace.isDemo ? nil : sharedProjection)
         self.expoImport = expoImport
         self.workspace = workspace
@@ -163,6 +168,12 @@ final class ShellModel {
             failedCount += 1
             return failure
         }
+    }
+
+    /// Trip expense on a personal trip (MAZ-76): Add entry, opened on that trip.
+    func openTripExpense(_ tripId: String) {
+        addEntryTripId = tripId
+        navigate { $0.openAddEntry() }
     }
 
     func undoToast() async -> SaveFailure? {

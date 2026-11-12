@@ -82,16 +82,14 @@ struct PreviewHouseholds: HouseholdService {
     ]
 
     func households() async throws -> [WireHousehold] {
-        [
-            Self.household,
-            WireHousehold(
-                id: "lisbon", name: "Lisbon", currency: "CAD", creatorId: Self.mira,
-                createdAt: 1_790_000_000_000, memberCount: 4,
-                trip: WireHouseholdTrip(startDate: "2026-11-12", endDate: "2026-11-19")),
-        ]
+        [Self.household, Self.lisbon]
     }
+    /// A shared trip (MAZ-76 specimens).
+    static let lisbon = WireHousehold(
+        id: "lisbon", name: "Lisbon", currency: "CAD", creatorId: me, createdAt: 1_790_000_000_000, memberCount: 3,
+        trip: WireHouseholdTrip(startDate: "2026-11-12", endDate: "2026-11-19"))
     func household(id: String) async throws -> WireHouseholdDetail {
-        WireHouseholdDetail(household: Self.household, members: Self.members)
+        WireHouseholdDetail(household: id == Self.lisbon.id ? Self.lisbon : Self.household, members: Self.members)
     }
     func monthRecap(householdId: String, month: MonthKey) async throws -> WireMonthRecap { Self.recap }
     func sharedExpenses(householdId: String, month: MonthKey?) async throws -> [WireSharedExpense] {
@@ -119,6 +117,16 @@ struct PreviewHouseholds: HouseholdService {
     func removeMember(householdId: String, userId: String) async throws { throw APIError.offline }
     func archiveHousehold(id: String) async throws {
         throw APIError.conflict(message: "Settle all monthly balances before archiving.")
+    }
+    func createTrip(
+        name: String, currency: Currency, startDate: CalendarDate, endDate: CalendarDate, timezoneOffsetMinutes: Int
+    ) async throws -> WireHousehold {
+        throw APIError.offline
+    }
+    func updateTrip(id: String, name: String, startDate: CalendarDate, endDate: CalendarDate) async throws
+        -> WireHousehold
+    {
+        throw APIError.offline
     }
     func createSharedExpense(householdId: String, _ input: WireExpenseInput) async throws -> WireSharedExpense {
         throw APIError.offline

@@ -47,6 +47,18 @@ public struct EntryEditor: Hashable, Sendable {
         categoryByKind[kind] = draft.categoryId
     }
 
+    /// Opens a new expense on a trip (Trip expense, MAZ-76): the trip is part of how the form
+    /// opened, so closing it untouched asks nothing. Only a new expense takes it; an edit, or a
+    /// trip that isn't in the ledger, is left alone (`saveEntry` would refuse it).
+    public mutating func start(onTrip tripId: String, ledger: Ledger) {
+        guard isNew, ledger.trip(id: tripId) != nil else { return }
+        if draft.kind != .expense { setKind(.expense, ledger: ledger) }
+        draft.tripId = tripId
+        initial.tripId = tripId
+        initial.kind = draft.kind
+        initial.categoryId = draft.categoryId
+    }
+
     /// Editing a recorded entry.
     public init(editing entry: LedgerEntry) {
         mode = .edit(entry)

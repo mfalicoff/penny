@@ -179,6 +179,36 @@ final class FakeHouseholds: HouseholdService {
         _ = state.withLock { $0.archived.insert(id) }
     }
 
+    func createTrip(
+        name: String, currency: Currency, startDate: CalendarDate, endDate: CalendarDate, timezoneOffsetMinutes: Int
+    ) async throws -> WireHousehold {
+        try await call("createTrip")
+        return state.withLock { state in
+            state.nextId += 1
+            let household = WireHousehold(
+                id: "trip-new-\(state.nextId)", name: name, currency: currency.rawValue, creatorId: Self.me,
+                createdAt: 1_793_000_000_000, memberCount: 1,
+                trip: WireHouseholdTrip(startDate: startDate.description, endDate: endDate.description))
+            state.households.insert(household, at: 0)
+            state.members[household.id] = [Self.member(Self.me)]
+            return household
+        }
+    }
+
+    func updateTrip(id: String, name: String, startDate: CalendarDate, endDate: CalendarDate) async throws
+        -> WireHousehold
+    {
+        try await call("updateTrip")
+        return try state.withLock { state in
+            guard let index = state.households.firstIndex(where: { $0.id == id }), state.households[index].trip != nil
+            else { throw APIError.notFound(message: "Trip not found.") }
+            state.households[index].name = name
+            state.households[index].trip = WireHouseholdTrip(
+                startDate: startDate.description, endDate: endDate.description)
+            return state.households[index]
+        }
+    }
+
     func sharedExpenses(householdId: String, month: MonthKey?) async throws -> [WireSharedExpense] {
         try await call("sharedExpenses")
         return state.withLock { Array($0.expenses.values) }

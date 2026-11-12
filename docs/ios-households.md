@@ -136,7 +136,7 @@ Run on clean iPhone and iPad simulators against the [full-stack environment](mig
 
 ## Limitations
 
-- Shared trips (MAZ-76) appear in the list and open the household page; their trip screens, Only you entries and expense-wide lists are MAZ-76.
+- Shared trips open their trip page (MAZ-76, [native trips](ios-trips.md)): the household page with the trip's dates and totals, Expenses for the whole trip and Only you.
 - Receipts on shared expenses: an existing receipt stays linked and shows on the detail; picking one is MAZ-78.
 - Kept shared drafts last for the session only (shared data is online-only and isn't stored on the device).
 - The iPad sidebar doesn't list households directly yet (Shared opens the list); the `ipad-shared` card's balances column is the Balances section.
