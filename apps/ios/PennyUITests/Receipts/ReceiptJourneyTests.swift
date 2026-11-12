@@ -141,17 +141,28 @@ final class ReceiptJourneyTests: PennyUITestCase {
     func test_whenPickersAreCancelledAtLargeText_Receipt_ShouldKeepTheDraftAsTyped() async throws {
         _ = try ReceiptFixtures.load()
         let account = try await makeAccount("receipt-cancel")
-        try await launch().signIn(email: account.email, password: account.password)
-        // Signed in, relaunch at the largest accessibility text size (the session is kept).
+        let title = "Receipt cancel"
+        // Type the draft at the default size (the iPad form sheet can't focus its name field at
+        // XL in XCUITest) and keep it; it is stored on the device.
+        let first = try await launch()
+        try first.signIn(email: account.email, password: account.password)
+        try first.openAddEntry()
+        try first.enterAmount("9.99")
+        try first.type(title, into: AccessibilityID.EntryForm.title)
+        try first.tap(AccessibilityID.EntryForm.close)
+        let keep = first.element("entryForm.keepDraft")
+        if keep.waitForExistence(timeout: 5) { keep.tap() } else { try first.dialogButton("Keep as draft").tap() }
+        try first.waitForAbsence(of: AccessibilityID.Screen.addEntry)
+        // Relaunch at the largest accessibility text size (the session and the draft are kept).
         app.terminate()
         var options = LaunchOptions()
         options.resetsState = false
         options.contentSize = "UICTContentSizeCategoryAccessibilityXL"
         let penny = try await launch(options)
         try penny.waitForShell()
-
-        let title = "Receipt cancel"
-        try penny.startExpense(amount: "9.99", title: title)
+        try penny.openAddEntry()
+        try penny.wait(for: "entryForm.restoredDraft")
+        try penny.openDetails()
         try penny.cancelPhotoPicker()
         try penny.wait(for: AccessibilityID.Screen.entryExtras)
         try penny.cancelFilePicker()
