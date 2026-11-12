@@ -26,6 +26,10 @@ public sealed class SearchDocument
     public required string DocumentText { get; set; }
     public required string OwnerText { get; set; }
     public required string EmbeddingSource { get; set; }
+
+    // The receipt attached to the entry or expense (MAZ-125). Its text matches only for
+    // viewers who may read the receipt, through `receipt_texts` and its chunks.
+    public string? ReceiptId { get; set; }
     public Vector? Embedding { get; set; }
     public string? EmbeddingModel { get; set; }
     public DateTimeOffset? EmbeddingDueAt { get; set; }

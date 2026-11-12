@@ -217,11 +217,13 @@ public sealed class PostgresLedgerRepository(NpgsqlDataSource source) : ILedgerR
         // Search (MAZ-121): personal documents follow the entries, categories and
         // accounts in this transaction, so search never diverges from the committed
         // revision; a category or account rename rewrites every affected document.
+        var links = new ReceiptLinks();
         await SearchIndexer.StageLedgerAsync(
             context,
             userId,
             ledger,
             newDocuments,
+            links,
             cancellationToken
         );
         // EF orders the inserts, updates and deletes so foreign keys hold. The copied
@@ -230,6 +232,9 @@ public sealed class PostgresLedgerRepository(NpgsqlDataSource source) : ILedgerR
         await context.SaveChangesAsync(cancellationToken);
         await BulkInsert.CopyAsync(context, newEntries, cancellationToken);
         await BulkInsert.CopyAsync(context, newDocuments, cancellationToken);
+        // Receipt text (MAZ-125): a replaced or removed receipt loses its text and
+        // chunks, a newly linked one without text is queued, in this transaction.
+        await ReceiptTextIndex.ApplyAsync(context, links, cancellationToken);
         // The payer sees their account name in their own shared expenses' documents.
         await SearchIndexer.SyncPaidExpensesAsync(context, userId, cancellationToken);
         await transaction.CommitAsync(cancellationToken);

@@ -29,7 +29,8 @@ One `api` container runs every worker. Each worker claims rows with PostgreSQL l
 | --- | --- | --- |
 | Shared recurrence | `Recurrence__Worker` | Records due recurring household expenses ([shared recurrence](migration/shared-recurrence.md)) |
 | Push delivery | `Push__Worker` | Drains the notification outbox to APNs/Expo ([push](migration/push.md)) |
-| Search embeddings | `Search__EmbeddingWorker` | Embeds new search documents ([search](migration/search.md)) |
+| Search embeddings | `Search__EmbeddingWorker` | Embeds new search documents and receipt text chunks ([search](migration/search.md)) |
+| Receipt text | `Ocr__Worker` | Extracts the text of uploaded receipts on this server with Tesseract, poppler and libvips ([receipt OCR](operations.md#receipt-text-ocr)) |
 
 Supported topologies:
 
@@ -132,7 +133,11 @@ Copy `deploy/api.env.example` to `deploy/api.env` (mode 0600, git-ignored). It i
 | `Auth__PasswordResetHours` | 24 | Lifetime of operator-issued reset codes ([password reset](migration/authentication.md#password-reset-maz-123)) |
 | `Oidc__Issuer`, `Oidc__ClientId`, `Oidc__ClientSecret`, `Oidc__RedirectUris`, `Oidc__Label`, `Oidc__AllowRegistration` | off | See [OIDC](#openid-connect-oidc-sign-in) |
 | `Push__Apns__TeamId`, `Push__Apns__KeyId`, `Push__Apns__Topic`, `Push__Apns__PrivateKey` | off | All four or none ([push](migration/push.md#configuration)); `Push__Expo__Enabled` (default `true`) keeps legacy Expo delivery until retired |
-| `Recurrence__Worker`, `Push__Worker`, `Search__EmbeddingWorker` | `true` | [Workers](#background-workers) |
+| `Recurrence__Worker`, `Push__Worker`, `Search__EmbeddingWorker`, `Ocr__Worker` | `true` | [Workers](#background-workers) |
+| `Ocr__Languages` | `eng+fra` | Tesseract languages for receipt text; each needs its language data, checked at startup ([receipt OCR](operations.md#receipt-text-ocr)) |
+| `Ocr__Concurrency` / `Ocr__TimeoutSeconds` / `Ocr__MaxPages` / `Ocr__MaxFileMegabytes` / `Ocr__MaxAttempts` | 1 / 120 / 10 / 10 / 4 | Receipt text bounds per process |
+| `Ocr__EngineMemoryMegabytes` | 1024 | Memory (address space) of each OCR engine process, enforced with `prlimit` ([receipt OCR](operations.md#receipt-text-ocr)) |
+| `PENNY_API_MEMORY` (Compose) | `3g` | Memory limit of the `api` container (API, search model and OCR engines); raise it by about `Ocr__EngineMemoryMegabytes` per extra `Ocr__Concurrency` |
 | `Database__MaxPoolSize` | 20 | 1–100 connections per process |
 | `Database__ConnectTimeoutSeconds` / `Database__CommandTimeoutSeconds` | 5 / 5 | 1–30 |
 | `Backend__MaxRequestBodyBytes` | 20 MiB | Keep `PENNY_MAX_BODY` slightly above it |
@@ -142,7 +147,7 @@ Copy `deploy/api.env.example` to `deploy/api.env` (mode 0600, git-ignored). It i
 | `Logging__LogLevel__Default` | `Information` | `Warning` drops the per-request access line |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` and the other standard `OTEL_*` variables | off | Traces, metrics and logs over OTLP to an OpenTelemetry Collector or Grafana Alloy ([telemetry](operations.md#telemetry-opentelemetry)) |
 
-The image already sets `ASPNETCORE_ENVIRONMENT=Production`, `ASPNETCORE_HTTP_PORTS=8080`, `Search__ModelDirectory=/opt/penny/model` (the pinned, SHA-256-verified embedding model), `Receipts__Root=/var/lib/penny/receipts`, JSON console logs and `DOTNET_EnableDiagnostics=0`. Production serves no OpenAPI or Scalar routes and never enables the test controls.
+The image already sets `ASPNETCORE_ENVIRONMENT=Production`, `ASPNETCORE_HTTP_PORTS=8080`, `Search__ModelDirectory=/opt/penny/model` (the pinned, SHA-256-verified embedding model), `Receipts__Root=/var/lib/penny/receipts`, JSON console logs and `DOTNET_EnableDiagnostics=0`, and contains Tesseract (English and French language data) and poppler-utils for receipt text extraction. Production serves no OpenAPI or Scalar routes and never enables the test controls.
 
 Keep secrets out of the image, the repository and command lines. If your platform has a secret manager, inject the same variable names into the services instead of using `.env` files.
 

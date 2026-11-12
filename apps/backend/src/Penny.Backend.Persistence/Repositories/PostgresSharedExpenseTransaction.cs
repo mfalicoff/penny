@@ -557,7 +557,29 @@ internal sealed class PostgresSharedExpenseTransaction(
         );
         AddAllocations(ruleId, record.Allocations);
         await Context.SaveChangesAsync(Cancellation);
+        await ApplyReceiptLinkAsync(null, record.ReceiptId);
     }
+
+    // Shared rules link receipts like documents do (MAZ-125): a receipt the rule no
+    // longer references loses its text when nothing else links it, and a newly linked
+    // receipt without text is queued, in this transaction.
+    private Task ApplyReceiptLinkAsync(string? before, string? after)
+    {
+        var links = new ReceiptLinks();
+        links.Change(before, after);
+        return ReceiptTextIndex.ApplyAsync(Context, links, Cancellation);
+    }
+
+    // The receipt a rule links at `revision` (none when the revision no longer matches,
+    // in which case the compare-and-increment write that follows changes nothing).
+    private Task<string?> RuleReceiptAsync(string householdId, string ruleId, long revision) =>
+        Context
+            .HouseholdRecurring.AsNoTracking()
+            .Where(rule =>
+                rule.Id == ruleId && rule.HouseholdId == householdId && rule.Revision == revision
+            )
+            .Select(rule => rule.ReceiptId)
+            .FirstOrDefaultAsync(Cancellation);
 
     public async Task<bool> UpdateRuleAsync(
         string householdId,
@@ -567,6 +589,7 @@ internal sealed class PostgresSharedExpenseTransaction(
     )
     {
         var anchorDay = (short)record.AnchorDay;
+        var before = await RuleReceiptAsync(householdId, ruleId, revision);
         var updated = await Context
             .HouseholdRecurring.Where(rule =>
                 rule.Id == ruleId && rule.HouseholdId == householdId && rule.Revision == revision
@@ -597,16 +620,24 @@ internal sealed class PostgresSharedExpenseTransaction(
             .ExecuteDeleteAsync(Cancellation);
         AddAllocations(ruleId, record.Allocations);
         await Context.SaveChangesAsync(Cancellation);
+        await ApplyReceiptLinkAsync(before, record.ReceiptId);
         return true;
     }
 
     // Allocations go with the rule (the only cascading foreign key besides devices).
-    public async Task<bool> DeleteRuleAsync(string householdId, string ruleId, long revision) =>
-        await Context
+    public async Task<bool> DeleteRuleAsync(string householdId, string ruleId, long revision)
+    {
+        var before = await RuleReceiptAsync(householdId, ruleId, revision);
+        var deleted = await Context
             .HouseholdRecurring.Where(rule =>
                 rule.Id == ruleId && rule.HouseholdId == householdId && rule.Revision == revision
             )
-            .ExecuteDeleteAsync(Cancellation) == 1;
+            .ExecuteDeleteAsync(Cancellation);
+        if (deleted != 1)
+            return false;
+        await ApplyReceiptLinkAsync(before, null);
+        return true;
+    }
 
     public async Task<bool> AdvanceRuleAsync(
         string ruleId,

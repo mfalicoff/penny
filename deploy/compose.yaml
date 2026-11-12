@@ -70,6 +70,11 @@ services:
 
   api:
     <<: *api
+    # The API with the search model needs about 1 GiB, plus up to Ocr__EngineMemoryMegabytes
+    # (default 1024) per receipt extracted at once (Ocr__Concurrency, default 1); past the
+    # limit the kernel kills the container and it restarts (docs/operations.md#receipt-text-ocr).
+    mem_limit: ${PENNY_API_MEMORY:-3g}
+    pids_limit: 1024
     env_file:
       - path: ./api.env
         required: false

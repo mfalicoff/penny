@@ -15,6 +15,7 @@ public static class BackendTelemetry
     public const string PushReceiptsJob = "push.receipts";
     public const string SearchEmbeddingJob = "search.embedding";
     public const string RecurrenceJob = "recurrence";
+    public const string ReceiptTextJob = "receipt.text";
 
     public const string JobAttribute = "penny.job";
     public const string ItemsAttribute = "penny.job.items";
@@ -22,6 +23,8 @@ public static class BackendTelemetry
     public const string MethodAttribute = "penny.auth.method";
     public const string PolicyAttribute = "penny.rate_limit.policy";
     public const string ErrorTypeAttribute = "error.type";
+    public const string ReceiptTextStatusAttribute = "penny.receipt_text.status";
+    public const string ReceiptTextMethodAttribute = "penny.receipt_text.method";
 
     public const string Success = "success";
     public const string Failure = "failure";
@@ -89,6 +92,37 @@ public static class BackendTelemetry
         "{failure}",
         "Background work items or passes that failed and will be retried."
     );
+
+    // Seconds for one receipt text extraction (MAZ-125): a text PDF takes milliseconds,
+    // a multi-page scan at most the configured time bound.
+    private static readonly double[] ExtractionBuckets = [0.1, 0.5, 1, 2, 5, 10, 30, 60, 120, 300];
+
+    private static readonly Counter<long> ReceiptTexts = Meter.CreateCounter<long>(
+        "penny.receipt_text.results",
+        "{receipt}",
+        "Receipt text extractions by status (done, failed, unsupported, retry) and method (text, ocr, mixed)."
+    );
+
+    private static readonly Histogram<double> ReceiptTextDuration = Meter.CreateHistogram(
+        "penny.receipt_text.duration",
+        "s",
+        "Wall time of one receipt text extraction attempt, by status.",
+        advice: new InstrumentAdvice<double> { HistogramBucketBoundaries = ExtractionBuckets }
+    );
+
+    // One extraction attempt. `status` is done, failed, unsupported or retry; `method`
+    // is text, ocr or mixed for done results, otherwise null.
+    public static void ReceiptTextExtracted(string status, string? method, TimeSpan duration)
+    {
+        var tags = new TagList { { ReceiptTextStatusAttribute, status } };
+        if (method is not null)
+            tags.Add(ReceiptTextMethodAttribute, method);
+        ReceiptTexts.Add(1, tags);
+        ReceiptTextDuration.Record(
+            Math.Max(0, duration.TotalSeconds),
+            new KeyValuePair<string, object?>(ReceiptTextStatusAttribute, status)
+        );
+    }
 
     // `failureKind` is null on success, otherwise the lowercase FailureKind name.
     public static void SignIn(string method, string? failureKind)

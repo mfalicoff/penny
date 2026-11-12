@@ -40,7 +40,7 @@ Use Node 24 and the committed npm lockfile (`npm ci`).
 | `npm run test:e2e:native` | Both native platforms, sequentially |
 | `npm run test:all` | Core + all Jest projects + browser + both native platforms |
 | `npm run test-env -- run --seed NAME -- <command>` | Disposable .NET API + PostgreSQL environment for a browser or simulator runner ([test environment](migration/test-environment.md)) |
-| `npm run test:fullstack` | Environment isolation, cleanup, seeds, OIDC and legacy versus .NET comparison (needs Docker/Podman, the .NET SDK and the search model) |
+| `npm run test:fullstack` | Environment isolation, cleanup, seeds, OIDC and legacy versus .NET comparison (needs Docker/Podman, the .NET SDK and the search model; receipt OCR is off there unless `PENNY_OCR_WORKER=true`) |
 | `npm run fixtures:generate` / `fixtures:check` | Regenerate or verify the golden fixtures and their manifest |
 
 `test:all` requires a macOS machine with both native toolchains and app binaries. An explicitly requested platform fails with setup guidance when prerequisites are missing; it is never silently skipped. Run native suites one at a time; parallel instrumentation can destabilize the Android automation bridge.

@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Penny.Backend.Api.Configuration;
+using Penny.Backend.Application.Receipts;
 using Penny.Backend.Application.Search;
 using Penny.Backend.Persistence.Configuration;
 using Penny.Backend.Persistence.Repositories;
@@ -68,14 +69,20 @@ internal static class SearchCommand
                 Console.Error.WriteLine(
                     report.Clean
                         ? "Search documents are current."
-                        : "Search documents are stale. Run search-rebuild (and keep the embedding worker running)."
+                        : "Search documents are stale. Run search-rebuild (and keep the embedding worker running); receipt text that is missing or pending needs receipts-ocr (or the OCR worker)."
                 );
                 return report.Clean ? 0 : 2;
             }
             var embedder = OnnxTextEmbedder.Load(SearchOptions.Read(configuration).ModelDirectory);
-            var rebuilt = await repository.RebuildAsync(userId, embedder.ModelId, stopping.Token);
+            var maxChunks = OcrOptions.Read(configuration).Limits.MaxChunks;
+            var rebuilt = await repository.RebuildAsync(
+                userId,
+                embedder.ModelId,
+                text => ReceiptTextService.Chunks(text, embedder, maxChunks),
+                stopping.Token
+            );
             Console.Error.WriteLine(
-                $"Rewrote {rebuilt.Written} and removed {rebuilt.Removed} search documents; {rebuilt.Queued} more queued for embedding."
+                $"Rewrote {rebuilt.Written} and removed {rebuilt.Removed} search documents and {rebuilt.ReceiptTexts} receipt texts; {rebuilt.Queued} more queued for embedding."
             );
             var started = DateTimeOffset.UtcNow;
             var embedded = await new SearchEmbeddingService(
@@ -93,6 +100,7 @@ internal static class SearchCommand
                         rebuilt.Written,
                         rebuilt.Removed,
                         rebuilt.Queued,
+                        rebuilt.ReceiptTexts,
                         Embedded = embedded,
                         Pending = await repository.PendingEmbeddingsAsync(stopping.Token),
                     }
