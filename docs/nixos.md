@@ -90,6 +90,8 @@ All options live under `services.penny` (or `programs.penny`).
 | `stateDir` | `/var/lib/penny` | Receipts (`receipts/`), generated key, data-protection keys |
 | `user` / `group` | `penny` / `penny` | Service account |
 | `package` / `webPackage` / `searchModel` | the flake's `penny-api` / `penny-web` / `penny-search-model` | Override to pin or patch builds |
+| `ocr.languages` | `[ "eng" "fra" ]` | Receipt OCR languages (`Ocr__Languages`); their Tesseract data is added to `ocr.tesseract` ([receipt OCR](operations.md#receipt-text-ocr)) |
+| `ocr.tesseract` / `ocr.poppler` | `pkgs.tesseract` with `ocr.languages` / `pkgs.poppler-utils` | The local OCR programs (`Ocr__Tesseract`, `Ocr__PopplerDirectory`); receipts never leave the host |
 | `database.createLocally` | `true` | Run and configure PostgreSQL 18 on this host |
 | `database.name` / `host` / `port` | `penny` / `/run/postgresql` / `5432` | Database location; `host` may be a socket directory |
 | `database.migrationUser` / `runtimeUser` | `penny_migrator` / `penny_runtime` | Role names |
