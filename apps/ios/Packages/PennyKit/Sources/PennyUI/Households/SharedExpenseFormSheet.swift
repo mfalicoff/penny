@@ -106,6 +106,7 @@ private struct SharedExpenseForm: View {
                     Button("Close", systemImage: "xmark") {
                         if form.hasChanges { confirmingClose = true } else { close() }
                     }
+                    .disabled(form.isSaving)
                     .accessibilityIdentifier("sharedForm.close")
                 }
                 ToolbarItem(placement: .confirmationAction) {
@@ -143,7 +144,7 @@ private struct SharedExpenseForm: View {
         .onChange(of: focus) { if let focus { form.draft.focus = focus } }
         .onDisappear {
             // Replaced by a link or closed some other way: keep what was typed for this session.
-            if !saved, !discarded, form.hasChanges { form.keepDraft() }
+            if !saved, form.saved == nil, !discarded, form.hasChanges { form.keepDraft() }
         }
         .accessibilityIdentifier("screen.sharedExpenseForm")
     }

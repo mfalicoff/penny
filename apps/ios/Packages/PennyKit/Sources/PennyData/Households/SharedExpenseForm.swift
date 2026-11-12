@@ -44,6 +44,9 @@ public struct SharedExpenseDraft: Equatable, Sendable {
     public var note: String
     /// The payer's own private account. Only kept while the viewer is the payer.
     public var accountId: String?
+    /// The viewer's account while someone else is chosen as payer, restored if the viewer is
+    /// chosen again. Never sent.
+    public var setAsideAccountId: String?
     /// New expenses only: repeat as a shared rule instead (its first date is `date`).
     public var repeats: RecurrenceFrequency?
     /// Rules: whether the rule is running.
@@ -285,7 +288,14 @@ public struct SharedExpenseDraft: Equatable, Sendable {
     /// unless the viewer still pays.
     public mutating func choosePayer(_ id: String, viewerId: String?) {
         payerId = id
-        if id != viewerId { accountId = nil }
+        if id != viewerId {
+            if accountId != nil { setAsideAccountId = accountId }
+            accountId = nil
+        } else if accountId == nil, let setAside = setAsideAccountId {
+            // Back to the viewer: their account comes back, so saving doesn't clear the link.
+            accountId = setAside
+            setAsideAccountId = nil
+        }
     }
 
     // MARK: Request bodies
@@ -370,6 +380,8 @@ public final class SharedExpenseFormModel {
     public private(set) var latest: SharedExpenseDraft.Original?
     public private(set) var isStale = false
     public private(set) var isSaving = false
+    /// What the server stored, once a save succeeded. A second Save returns it without sending.
+    public private(set) var saved: Outcome?
     /// Bumped when a save is refused, for the error haptic.
     public private(set) var refusedCount = 0
     /// The draft as it was opened, to know whether closing loses anything.
@@ -416,6 +428,7 @@ public final class SharedExpenseFormModel {
 
     /// Sends the draft. Nil while it was refused, failed or already saving; the draft stays.
     public func save() async -> Outcome? {
+        if let saved { return saved }
         guard !isSaving else { return nil }
         failure = nil
         problem = nil
@@ -453,8 +466,13 @@ public final class SharedExpenseFormModel {
                 let input = draft.expenseInput(valid, viewerId: viewerId, timezoneOffset: timezoneOffset())
                 outcome = .expense(try await service.createSharedExpense(householdId: householdId, input))
             }
+            // Saved: never send it again, and drop any kept copy of the draft at once (a sheet that
+            // closed meanwhile may have kept one). The page reads again in the background, so the
+            // sheet closes without waiting for it.
+            saved = outcome
             household.directory?.drafts[draft.key] = nil
-            await household.didSave()
+            let household = household
+            Task { await household.didSave() }
             return outcome
         } catch {
             let failure = HouseholdFailure(error)
@@ -483,8 +501,10 @@ public final class SharedExpenseFormModel {
         return true
     }
 
-    /// Keeps the draft for later (closing with changes, or the sheet replaced by a link).
+    /// Keeps the draft for later (closing with changes, or the sheet replaced by a link). A draft
+    /// that was already saved is never kept: keeping it would offer to create it again.
     public func keepDraft() {
+        guard saved == nil else { return }
         household.directory?.drafts[draft.key] = draft
     }
 

@@ -22,6 +22,8 @@ final class FakeHouseholds: HouseholdService {
         var bodies: [String: WireExpenseInput] = [:]
         var ruleBodies: [WireRuleInput] = []
         var nextId = 0
+        /// How long each answer takes, by method name or `monthRecap <YYYY-MM>`.
+        var delays: [String: Duration] = [:]
     }
 
     let state = Mutex(State())
@@ -81,24 +83,28 @@ final class FakeHouseholds: HouseholdService {
 
     func fail(_ method: String, with error: APIError) { state.withLock { $0.failNext[method] = error } }
 
-    private func call(_ name: String) throws {
-        try state.withLock { state in
+    private func call(_ name: String, key: String? = nil) async throws {
+        let delay = try state.withLock { state -> Duration? in
             state.calls.append(name)
             if let error = state.failNext.removeValue(forKey: name) { throw error }
+            return state.delays[key ?? name]
         }
+        if let delay { try await Task.sleep(for: delay) }
     }
+
+    func delay(_ key: String, _ duration: Duration) { state.withLock { $0.delays[key] = duration } }
 
     private func recap(_ household: String, _ month: MonthKey) -> WireMonthRecap {
         state.withLock { $0.recaps["\(household) \(month)"] } ?? WireMonthRecap(month: "\(month)")
     }
 
     func households() async throws -> [WireHousehold] {
-        try call("households")
+        try await call("households")
         return state.withLock { state in state.households.filter { !state.archived.contains($0.id) } }
     }
 
     func household(id: String) async throws -> WireHouseholdDetail {
-        try call("household")
+        try await call("household")
         return try state.withLock { state in
             guard let household = state.households.first(where: { $0.id == id }) else {
                 throw APIError.notFound(message: "Household not found.")
@@ -108,7 +114,7 @@ final class FakeHouseholds: HouseholdService {
     }
 
     func createHousehold(name: String, currency: Currency, timezoneOffsetMinutes: Int) async throws -> WireHousehold {
-        try call("createHousehold")
+        try await call("createHousehold")
         return state.withLock { state in
             state.nextId += 1
             let household = WireHousehold(
@@ -121,7 +127,7 @@ final class FakeHouseholds: HouseholdService {
     }
 
     func joinHousehold(code: InviteCode, timezoneOffsetMinutes: Int) async throws -> WireHousehold {
-        try call("joinHousehold")
+        try await call("joinHousehold")
         return try state.withLock { state in
             guard code.value == state.inviteCode, let household = state.households.first else {
                 throw APIError.badRequest(message: "Invite code is invalid or expired.")
@@ -131,7 +137,7 @@ final class FakeHouseholds: HouseholdService {
     }
 
     func renameHousehold(id: String, name: String) async throws -> WireHousehold {
-        try call("renameHousehold")
+        try await call("renameHousehold")
         return try state.withLock { state in
             guard let index = state.households.firstIndex(where: { $0.id == id }) else {
                 throw APIError.notFound(message: "Household not found.")
@@ -142,12 +148,12 @@ final class FakeHouseholds: HouseholdService {
     }
 
     func createInvite(householdId: String) async throws -> WireInvite {
-        try call("createInvite")
+        try await call("createInvite")
         return WireInvite(code: state.withLock { $0.inviteCode }, expiresAt: 1_793_000_600_000)
     }
 
     func leaveHousehold(id: String) async throws {
-        try call("leaveHousehold")
+        try await call("leaveHousehold")
         state.withLock { state in
             state.members[id] = state.members[id]?.map { member in
                 var left = member
@@ -158,7 +164,7 @@ final class FakeHouseholds: HouseholdService {
     }
 
     func removeMember(householdId: String, userId: String) async throws {
-        try call("removeMember")
+        try await call("removeMember")
         state.withLock { state in
             state.members[householdId] = state.members[householdId]?.map { member in
                 var left = member
@@ -169,17 +175,17 @@ final class FakeHouseholds: HouseholdService {
     }
 
     func archiveHousehold(id: String) async throws {
-        try call("archiveHousehold")
+        try await call("archiveHousehold")
         _ = state.withLock { $0.archived.insert(id) }
     }
 
     func sharedExpenses(householdId: String, month: MonthKey?) async throws -> [WireSharedExpense] {
-        try call("sharedExpenses")
+        try await call("sharedExpenses")
         return state.withLock { Array($0.expenses.values) }
     }
 
     func sharedExpense(householdId: String, id: String) async throws -> WireSharedExpense {
-        try call("sharedExpense")
+        try await call("sharedExpense")
         return try state.withLock { state in
             guard let expense = state.expenses[id] else { throw APIError.notFound(message: "Expense not found.") }
             return expense
@@ -187,7 +193,7 @@ final class FakeHouseholds: HouseholdService {
     }
 
     func createSharedExpense(householdId: String, _ input: WireExpenseInput) async throws -> WireSharedExpense {
-        try call("createSharedExpense")
+        try await call("createSharedExpense")
         return state.withLock { state in
             state.nextId += 1
             let id = "expense-\(state.nextId)"
@@ -205,7 +211,7 @@ final class FakeHouseholds: HouseholdService {
     func updateSharedExpense(householdId: String, id: String, _ input: WireExpenseInput) async throws
         -> WireSharedExpense
     {
-        try call("updateSharedExpense")
+        try await call("updateSharedExpense")
         return try state.withLock { state in
             guard var expense = state.expenses[id] else { throw APIError.notFound(message: "Expense not found.") }
             guard input.revision == expense.revision else {
@@ -221,7 +227,7 @@ final class FakeHouseholds: HouseholdService {
     }
 
     func deleteSharedExpense(householdId: String, id: String, revision: Int) async throws {
-        try call("deleteSharedExpense")
+        try await call("deleteSharedExpense")
         try state.withLock { state in
             guard let expense = state.expenses[id] else { throw APIError.notFound(message: "Expense not found.") }
             guard expense.revision == revision else {
@@ -235,7 +241,7 @@ final class FakeHouseholds: HouseholdService {
     func recordSharePayment(householdId: String, expenseId: String, fromUserId: String, revision: Int) async throws
         -> WireSharedExpense
     {
-        try call("recordSharePayment")
+        try await call("recordSharePayment")
         return try state.withLock { state in
             guard var expense = state.expenses[expenseId] else {
                 throw APIError.notFound(message: "Expense not found.")
@@ -257,7 +263,7 @@ final class FakeHouseholds: HouseholdService {
     }
 
     func monthRecap(householdId: String, month: MonthKey) async throws -> WireMonthRecap {
-        try call("monthRecap")
+        try await call("monthRecap", key: "monthRecap \(month)")
         var recap = recap(householdId, month)
         let stored = state.withLock { $0.expenses }
         recap.expenses = recap.expenses.map { stored[$0.id] ?? $0 }
@@ -267,7 +273,7 @@ final class FakeHouseholds: HouseholdService {
     func recordMonthlyPayment(householdId: String, month: MonthKey, transfer: WireTransfer) async throws
         -> WireReimbursement
     {
-        try call("recordMonthlyPayment")
+        try await call("recordMonthlyPayment")
         return try state.withLock { state in
             let key = "\(householdId) \(month)"
             guard var recap = state.recaps[key], let index = recap.suggestions.firstIndex(of: transfer) else {
@@ -282,17 +288,17 @@ final class FakeHouseholds: HouseholdService {
     }
 
     func householdAudit(householdId: String, expenseId: String?) async throws -> [WireAuditEvent] {
-        try call("householdAudit")
+        try await call("householdAudit")
         return state.withLock { state in state.events.filter { expenseId == nil || $0.expenseId == expenseId } }
     }
 
     func sharedRules(householdId: String) async throws -> [WireSharedRule] {
-        try call("sharedRules")
+        try await call("sharedRules")
         return state.withLock { Array($0.rules.values) }
     }
 
     func createSharedRule(householdId: String, _ input: WireRuleInput) async throws -> WireSharedRule {
-        try call("createSharedRule")
+        try await call("createSharedRule")
         return state.withLock { state in
             state.ruleBodies.append(input)
             let rule = WireSharedRule(
@@ -305,7 +311,7 @@ final class FakeHouseholds: HouseholdService {
     }
 
     func updateSharedRule(householdId: String, id: String, _ input: WireRuleInput) async throws -> WireSharedRule {
-        try call("updateSharedRule")
+        try await call("updateSharedRule")
         return try state.withLock { state in
             guard var rule = state.rules[id] else { throw APIError.notFound(message: "Recurring rule not found.") }
             guard input.revision == rule.revision else {
@@ -320,7 +326,7 @@ final class FakeHouseholds: HouseholdService {
     }
 
     func deleteSharedRule(householdId: String, id: String, revision: Int) async throws {
-        try call("deleteSharedRule")
+        try await call("deleteSharedRule")
         state.withLock { $0.rules[id] = nil }
     }
 }

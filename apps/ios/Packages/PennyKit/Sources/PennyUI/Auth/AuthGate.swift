@@ -57,9 +57,13 @@ struct AuthGate: View {
                                 workspace: services.accountWorkspace(account, sync), session: .account(auth, account),
                                 today: services.today(), clock: services.today, startDemo: startDemo,
                                 search: auth.client.map { AccountEntrySearch(model: sync, client: $0) },
-                                sharedProjection: auth.client.map { APISharedProjection(client: $0) },
+                                sharedProjection: auth.client.map {
+                                    APISharedProjection(client: $0) { auth.sessionDidExpire(for: account) }
+                                },
                                 expoImport: services.expoMigration.flatMap(ExpoImportNotice.init),
-                                households: auth.client.map { APIHouseholdService(client: $0) })
+                                households: auth.client.map {
+                                    APIHouseholdService(client: $0) { auth.sessionDidExpire(for: account) }
+                                })
                             shell.receipts = AccountReceipts(auth: auth, account: account, sync: sync)
                             return shell
                         }

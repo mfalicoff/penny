@@ -125,7 +125,10 @@ private struct HouseholdPage: View {
             }
         }
         .refreshable { await model.refresh() }
-        .task { await model.refresh() }
+        .task {
+            model.followCurrentMonth(MonthKey(shell.today))
+            await model.refresh()
+        }
         .onChange(of: model.writeCount) { Task { await shell.refreshShared() } }
         .navigationTitle(model.household?.name ?? "Household")
         .toolbar {
@@ -211,7 +214,9 @@ private struct HouseholdPage: View {
     private var monthPicker: some View {
         HStack {
             Button("Previous month", systemImage: "chevron.left") {
-                if let previous = model.month.shifted(by: -1) { Task { await model.show(month: previous) } }
+                if let previous = model.month.shifted(by: -1) {
+                    Task { await model.show(month: previous, current: MonthKey(shell.today)) }
+                }
             }
             .labelStyle(.iconOnly)
             .accessibilityIdentifier("household.previousMonth")
@@ -220,7 +225,9 @@ private struct HouseholdPage: View {
                 .accessibilityIdentifier("household.month")
             Spacer()
             Button("Next month", systemImage: "chevron.right") {
-                if let next = model.month.shifted(by: 1) { Task { await model.show(month: next) } }
+                if let next = model.month.shifted(by: 1) {
+                    Task { await model.show(month: next, current: MonthKey(shell.today)) }
+                }
             }
             .labelStyle(.iconOnly)
             .disabled(model.month >= MonthKey(shell.today))
@@ -358,7 +365,9 @@ private struct HouseholdPage: View {
             Section("Overdue") {
                 ForEach(overdue, id: \.self) { month in
                     Button {
-                        if let key = MonthKey(month) { Task { await model.show(month: key) } }
+                        if let key = MonthKey(month) {
+                            Task { await model.show(month: key, current: MonthKey(shell.today)) }
+                        }
                     } label: {
                         HStack {
                             Text(MonthKey(month).map(HouseholdText.month) ?? month)

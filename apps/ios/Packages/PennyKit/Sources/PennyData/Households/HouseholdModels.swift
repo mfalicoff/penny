@@ -213,13 +213,52 @@ public final class HouseholdModel {
         return nil
     }
 
-    /// Reads the household, its month, its rules and whether it's still listed.
+    @ObservationIgnored private var refreshing: Task<Void, Never>?
+    @ObservationIgnored private var refreshRequested = false
+    /// Bumped whenever the month on screen changes, so an answer for an earlier choice is dropped.
+    @ObservationIgnored private var monthGeneration = 0
+    /// The current month when the person last chose a month themselves (nil while following it).
+    @ObservationIgnored private var chosenDuring: MonthKey?
+
+    /// Reads the household, its month, its rules and whether it's still listed. A refresh asked
+    /// for while one runs (a save finishing during a pull to refresh) runs again after it, and
+    /// every caller waits for the read that includes its change.
     public func refresh() async {
-        if load == .loading { return }
+        if let running = refreshing {
+            refreshRequested = true
+            await running.value
+            return
+        }
+        let task = Task { [weak self] in
+            guard let self else { return }
+            repeat {
+                self.refreshRequested = false
+                await self.readOnce()
+            } while self.refreshRequested
+        }
+        refreshing = task
+        await task.value
+        refreshing = nil
+    }
+
+    /// Follows the calendar: a page opened again after the month rolled over shows the new
+    /// current month, unless the person chose a month themselves since that rollover.
+    public func followCurrentMonth(_ current: MonthKey) {
+        if let chosenDuring, chosenDuring == current { return }
+        chosenDuring = nil
+        guard month != current else { return }
+        month = current
+        monthGeneration += 1
+        recap = nil
+    }
+
+    private func readOnce() async {
         load = .loading
+        let requested = month
+        let generation = monthGeneration
         do {
             async let detail = service.household(id: id)
-            async let recap = service.monthRecap(householdId: id, month: month)
+            async let recap = service.monthRecap(householdId: id, month: requested)
             async let rules = service.sharedRules(householdId: id)
             async let listed = service.households()
             let loaded = try await detail
@@ -227,11 +266,13 @@ public final class HouseholdModel {
             people = HouseholdPeople(members: loaded.members, email: email)
             isArchived = !(try await listed).contains { $0.id == id }
             do {
-                self.recap = try await recap
+                let answer = try await recap
+                // The person moved to another month meanwhile: that month's own read shows it.
+                if generation == monthGeneration { self.recap = answer }
             } catch let error as APIError {
                 // A former member asking for a month after they left: no rows, not a failure.
                 guard case .notFound = error else { throw error }
-                self.recap = WireMonthRecap(month: "\(month)")
+                if generation == monthGeneration { self.recap = WireMonthRecap(month: "\(requested)") }
             }
             self.rules = (try? await rules) ?? []
             directory?.update(loaded.household)
@@ -243,14 +284,22 @@ public final class HouseholdModel {
         }
     }
 
-    public func show(month next: MonthKey) async {
+    /// Shows another month. Answers arrive in any order; only the one for the month still on
+    /// screen is kept, so a quick ‹ ‹ never shows October's balances under September.
+    public func show(month next: MonthKey, current: MonthKey? = nil) async {
         guard next != month else { return }
+        chosenDuring = current ?? chosenDuring ?? month
         month = next
+        monthGeneration += 1
+        let generation = monthGeneration
         recap = nil
         do {
-            recap = try await service.monthRecap(householdId: id, month: next)
+            let answer = try await service.monthRecap(householdId: id, month: next)
+            guard generation == monthGeneration else { return }
+            recap = answer
         } catch is CancellationError {
         } catch {
+            guard generation == monthGeneration else { return }
             if case .notFound = error as? APIError, detail != nil {
                 recap = WireMonthRecap(month: "\(next)")
             } else {
@@ -272,9 +321,11 @@ public final class HouseholdModel {
     /// Creates a new code (replacing the previous one) for 10 minutes.
     public func newInvite() async -> HouseholdFailure? {
         await write(refreshing: false) {
+            // Stamped before sending: the code can't outlive the server's 10 minutes on screen.
+            let sent = Date()
             let invite = try await self.service.createInvite(householdId: self.id)
             self.invite = invite
-            self.inviteExpiresAt = Date().addingTimeInterval(InviteCode.lifetime)
+            self.inviteExpiresAt = sent.addingTimeInterval(InviteCode.lifetime)
         }
     }
 
@@ -423,7 +474,10 @@ public final class HouseholdModel {
     // MARK: Plumbing
 
     private func reloadMonth() async {
-        if let recap = try? await service.monthRecap(householdId: id, month: month) { self.recap = recap }
+        let generation = monthGeneration
+        if let recap = try? await service.monthRecap(householdId: id, month: month), generation == monthGeneration {
+            self.recap = recap
+        }
         if let detail = try? await service.household(id: id) {
             self.detail = detail
             people = HouseholdPeople(members: detail.members, email: email)
