@@ -13,6 +13,7 @@ struct EntryDetailView: View {
     /// page closes (the default).
     var onDeleted: (() -> Void)?
     @State private var deleting: LedgerEntry?
+    @State private var previewing: ReceiptPreviewRequest?
 
     var body: some View {
         WorkspaceContent { ledger in
@@ -77,8 +78,27 @@ struct EntryDetailView: View {
                         detail("Total", MoneyFormat.amount(entry.total, currency: currency))
                     }
                     if let receipt = entry.receipt {
-                        Label(receipt.name, systemImage: receipt.mime == "application/pdf" ? "doc" : "photo")
-                            .accessibilityIdentifier("entryDetail.receipt")
+                        Button {
+                            previewing = ReceiptPreviewRequest(receipt: receipt)
+                        } label: {
+                            HStack(spacing: 12) {
+                                ReceiptThumbnail(mime: receipt.mime)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(receipt.name).foregroundStyle(PennyColor.label).lineLimit(2)
+                                        .truncationMode(.middle)
+                                    Text(ReceiptRules.kind(receipt.mime)).font(.subheadline)
+                                        .foregroundStyle(PennyColor.secondaryLabel)
+                                }
+                                Spacer(minLength: 0)
+                                Image(systemName: "chevron.right").font(.footnote.weight(.semibold))
+                                    .foregroundStyle(PennyColor.tertiaryLabel).accessibilityHidden(true)
+                            }
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityElement(children: .combine)
+                        .accessibilityHint("Opens the receipt")
+                        .accessibilityIdentifier("entryDetail.receipt")
                     }
                 }
             }
@@ -92,6 +112,15 @@ struct EntryDetailView: View {
                 Button("Edit", systemImage: "square.and.pencil") { shell.edit(entry) }
                     .accessibilityIdentifier("entryDetail.edit")
             }
+        }
+        .receiptViewer($previewing) { request in
+            ReceiptPreviewView(
+                receipt: request.receipt, transfers: shell.receipts,
+                context: ReceiptPreviewContext(
+                    title: entry.title,
+                    detail:
+                        "\(MoneyFormat.amount(entry.total, currency: currency)) total · \(EntryText.day(entry.date, today: shell.today))",
+                    symbol: EntryText.symbol(category), color: EntryText.color(category, id: entry.categoryId)))
         }
         .deleteEntryConfirmation($deleting) {
             if let onDeleted { onDeleted() } else { dismiss() }

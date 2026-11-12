@@ -59,8 +59,9 @@ final class ShellModel {
     var activityFilters: ActivityFilters
     /// Activity's server search (MAZ-121) for an account; local only in the demo.
     let activitySearch: ActivitySearchModel
-    /// Attaches a receipt to an entry draft (MAZ-78 provides it; nil until then).
-    var attachReceipt: ((ReceiptSource) async -> Result<ReceiptReference, SaveFailure>)?
+    /// Receipt upload and download for the signed-in account (MAZ-78); nil in the demo and
+    /// previews, where the entry form says receipts need an account.
+    var receipts: (any ReceiptTransfers)?
 
     // MARK: Overview (MAZ-77)
 
