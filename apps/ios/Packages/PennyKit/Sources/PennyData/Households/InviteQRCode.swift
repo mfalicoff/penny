@@ -25,11 +25,17 @@ public enum InviteQRCode {
             of: CIImage(cgImage: image), format: .RGBA8, colorSpace: CGColorSpaceCreateDeviceRGB())
     }
 
-    /// Every QR payload Vision finds in `image` (for a photo of a code, and the round-trip test).
+    /// Every QR payload found in `image` (for a photo of a code, and the round-trip test).
+    /// Vision first; Core Image's detector when Vision finds nothing (the iOS simulator has no
+    /// Vision barcode model).
     public static func decode(_ image: CGImage) async -> [String] {
         var request = DetectBarcodesRequest()
         request.symbologies = [.qr]
-        let observations = (try? await request.perform(on: image)) ?? []
-        return observations.compactMap(\.payloadString)
+        let found = ((try? await request.perform(on: image)) ?? []).compactMap(\.payloadString)
+        if !found.isEmpty { return found }
+        let detector = CIDetector(
+            ofType: CIDetectorTypeQRCode, context: nil, options: [CIDetectorAccuracy: CIDetectorAccuracyHigh])
+        return (detector?.features(in: CIImage(cgImage: image)) ?? [])
+            .compactMap { ($0 as? CIQRCodeFeature)?.messageString }
     }
 }
