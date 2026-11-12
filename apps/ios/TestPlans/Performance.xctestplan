@@ -1,0 +1,39 @@
+{
+  "configurations" : [
+    {
+      "id" : "5C1E2A90-8F3B-4D1E-9A7C-6B2D0E4F8A13",
+      "name" : "Performance",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : false,
+    "defaultTestExecutionTimeAllowance" : 600,
+    "environmentVariableEntries" : [
+      {
+        "key" : "PENNY_UITEST_PLAN",
+        "value" : "performance"
+      }
+    ],
+    "maximumTestExecutionTimeAllowance" : 1200,
+    "systemAttachmentLifetime" : "deleteOnSuccess",
+    "testTimeoutsEnabled" : true,
+    "userAttachmentLifetime" : "keepAlways"
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : false,
+      "selectedTests" : [
+        "PerformanceTests"
+      ],
+      "target" : {
+        "containerPath" : "container:Penny.xcodeproj",
+        "identifier" : "A10000000000000000000070",
+        "name" : "PennyUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

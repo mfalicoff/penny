@@ -272,7 +272,11 @@ private struct ActivitySearchEmpty: View {
     var body: some View {
         let trimmed = filters.query.trimmingCharacters(in: .whitespacesAndNewlines)
         ContentUnavailableView {
+            // The identifier goes on the title, inside a container element (below): without one,
+            // the screen's `screen.activity` replaced every identifier in this overlay, Search all
+            // months' included; a container's own identifier is replaced too (MAZ-82).
             Label(trimmed.isEmpty ? "Nothing matches" : "No results for “\(trimmed)”", systemImage: "magnifyingglass")
+                .accessibilityIdentifier("activity.searchEmpty")
         } description: {
             Text("Nothing matches in \(ActivityPeriodText.scope(filters)). Try another word, or search everything.")
         } actions: {
@@ -290,7 +294,7 @@ private struct ActivitySearchEmpty: View {
                     .accessibilityIdentifier("activity.clearFilters")
             }
         }
-        .accessibilityIdentifier("activity.searchEmpty")
+        .accessibilityElement(children: .contain)
     }
 }
 

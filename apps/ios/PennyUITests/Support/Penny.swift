@@ -133,11 +133,20 @@ struct Penny {
     func openSettings() throws {
         popSettingsPages()
         if element(AccessibilityID.Screen.settings).exists { return }
+        // A tap that lands while Home is still settling after sign-in or a sheet is ignored
+        // (MAZ-82 saw it right after sign-in), so it is retried like the tab bar's.
+        let button: XCUIElement
         if Device.isPad {
-            try tap(AccessibilityID.Sidebar.settings)
+            button = try wait(for: AccessibilityID.Sidebar.settings)
         } else {
             try openHome()
-            try tap(AccessibilityID.Home.settings)
+            button = try wait(for: AccessibilityID.Home.settings)
+        }
+        for attempt in 0..<3 {
+            // The iPad sidebar's button can report not hittable while it works; tap it the first
+            // time regardless, and again only when it is still there to be tapped.
+            if attempt == 0 || button.isHittable { button.tap() }
+            if element(AccessibilityID.Screen.settings).waitForExistence(timeout: 8) { return }
         }
         try wait(for: AccessibilityID.Screen.settings)
     }

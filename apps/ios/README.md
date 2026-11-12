@@ -40,7 +40,7 @@ apps/ios/scripts/ios.sh release-check  # Release build: production settings, no 
 apps/ios/scripts/ios.sh launch         # install, launch and screenshot on clean iPhone and iPad simulators
 apps/ios/scripts/ios.sh ci             # lint, package-test, test, release-check
 apps/ios/scripts/ios.sh ui-build       # build the app and the XCUITest bundle
-apps/ios/scripts/ios.sh ui-test smoke  # XCUITest plan (smoke|full|screenshots) on clean iPhone and iPad
+apps/ios/scripts/ios.sh ui-test smoke  # XCUITest plan (smoke|full|screenshots|performance) on clean iPhone and iPad
                                        # simulators against the full-stack environment (Docker/Podman)
 apps/ios/scripts/ios.sh push <file>    # send a notification payload to the booted simulator (no APNs)
 ```

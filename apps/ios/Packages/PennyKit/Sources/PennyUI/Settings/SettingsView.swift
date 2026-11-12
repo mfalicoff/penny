@@ -35,9 +35,9 @@ struct SettingsView: View {
                 }
             }
             Section("Manage") {
-                row(.recurring, symbol: "repeat", value: ledger.map { "\($0.recurring.count)" })
-                row(.accounts, symbol: "wallet.bifold", value: ledger.map { "\($0.accounts.count)" })
-                row(.categories, symbol: "tag", value: ledger.map { "\($0.categories.count)" })
+                manageRow(.recurring, symbol: "repeat", value: ledger.map { "\($0.recurring.count)" })
+                manageRow(.accounts, symbol: "wallet.bifold", value: ledger.map { "\($0.accounts.count)" })
+                manageRow(.categories, symbol: "tag", value: ledger.map { "\($0.categories.count)" })
             }
             Section {
                 row(.appearance, symbol: "sun.max", value: appearance.preference.title)
@@ -101,6 +101,33 @@ struct SettingsView: View {
 
     static func lockTitle(_ biometry: BiometryKind) -> String {
         biometry == .none ? "App lock" : "\(biometry.name) lock"
+    }
+
+    /// A Manage page. On iPad, where Settings is the detail column and these pages are sidebar
+    /// rows of their own, the row selects the sidebar item instead of pushing onto the bound
+    /// Settings path: a push there made the column swap stacks in the same update, and SwiftUI
+    /// crashed (`NavigationColumnState.boundPathChange`, found by MAZ-82's iPad journeys).
+    @ViewBuilder
+    private func manageRow(_ route: SettingsRoute, symbol: String, value: String?) -> some View {
+        if shell.route.settingsIsColumn {
+            Button {
+                shell.route.sidebarSelection = .manage(route)
+            } label: {
+                HStack {
+                    Label(route.title, systemImage: symbol)
+                    Spacer()
+                    if let value { Text(value).foregroundStyle(PennyColor.secondaryLabel) }
+                    Image(systemName: "chevron.right").font(.footnote.weight(.semibold))
+                        .foregroundStyle(PennyColor.tertiaryLabel).accessibilityHidden(true)
+                }
+                .frame(minHeight: Metrics.minTouchTarget)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("settings.\(route.rawValue)")
+        } else {
+            row(route, symbol: symbol, value: value)
+        }
     }
 
     private func row(

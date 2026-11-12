@@ -103,7 +103,8 @@ struct LaunchView: View {
         configuration: AppConfiguration, inbox: Binding<DeepLinkInbox>, services: AppServices,
         notifications: PushNotifications? = nil, auth: AuthController? = nil
     ) {
-        let store = OfflineLedgerStore.standard()
+        // The store records due recurrence with the same day the screens use (a pinned day in UI tests).
+        let store = OfflineLedgerStore.standard(today: services.today)
         let auth =
             auth
             ?? AuthController(
