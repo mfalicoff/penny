@@ -1,5 +1,5 @@
 {
-  "description": "MAZ-96 baseline of axe violations found when the scans were added (Chromium 1248, axe-core 4.14). Every entry is an open accessibility gap listed in docs/acceptance.md; remove it when fixed. The scan fails on any violation not listed here and on any listed one that no longer occurs.",
+  "description": "MAZ-96 baseline of axe violations found when the scans were added (Chromium 1248, axe-core 4.14; Firefox and WebKit are held to the same layout's entries, minus any `except`). Every entry is an open accessibility gap listed in docs/acceptance.md; remove it when fixed. The scan fails on any violation not listed here and on any listed one that no longer occurs.",
   "violations": [
     {
       "scan": "sign-in light",
@@ -264,7 +264,11 @@
         "chromium-desktop",
         "chromium-phone"
       ],
-      "reason": "Design-kit colors below 4.5:1 for normal text: white on the accent button (3.68 light, 2.76 dark), income green (3.69-4.17), pending amber (3.16-3.64), keyboard-shortcut chips and quiet links (4.41-4.43), banner text (4.13). Needs a design-kit token change (MAZ-122 visual handoff), not a hand edit of tokens.css."
+      "reason": "Design-kit colors below 4.5:1 for normal text: white on the accent button (3.68 light, 2.76 dark), income green (3.69-4.17), pending amber (3.16-3.64), keyboard-shortcut chips and quiet links (4.41-4.43), banner text (4.13). Needs a design-kit token change (MAZ-122 visual handoff), not a hand edit of tokens.css.",
+      "except": [
+        "firefox-desktop"
+      ],
+      "exceptReason": "Firefox applies forced colors to the page, so its contrast passes; Chromium emulation leaves author colors in what axe measures."
     },
     {
       "scan": "Home forced-colors",
@@ -284,7 +288,11 @@
         "chromium-desktop",
         "chromium-phone"
       ],
-      "reason": "Design-kit colors below 4.5:1 for normal text: white on the accent button (3.68 light, 2.76 dark), income green (3.69-4.17), pending amber (3.16-3.64), keyboard-shortcut chips and quiet links (4.41-4.43), banner text (4.13). Needs a design-kit token change (MAZ-122 visual handoff), not a hand edit of tokens.css."
+      "reason": "Design-kit colors below 4.5:1 for normal text: white on the accent button (3.68 light, 2.76 dark), income green (3.69-4.17), pending amber (3.16-3.64), keyboard-shortcut chips and quiet links (4.41-4.43), banner text (4.13). Needs a design-kit token change (MAZ-122 visual handoff), not a hand edit of tokens.css.",
+      "except": [
+        "firefox-desktop"
+      ],
+      "exceptReason": "Firefox applies forced colors to the page, so its contrast passes; Chromium emulation leaves author colors in what axe measures."
     }
   ]
 }

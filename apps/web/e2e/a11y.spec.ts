@@ -16,7 +16,10 @@ import known from "./a11y-known.json" with { type: "json" };
 
 const TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 const PAGES = ["Home", "Activity", "Insights", "Trips", "Recurring", "Accounts", "Categories", "Settings"] as const;
-const allowed = known.violations as { scan: string; rule: string; projects: string[]; reason: string }[];
+// Firefox runs axe several times slower; nine scans need more than the default 30 s.
+test.describe.configure({ timeout: 120_000 });
+
+const allowed = known.violations as { scan: string; rule: string; projects: string[]; except?: string[]; reason: string }[];
 
 async function scan(page: Page, label: string) {
   const result = await new AxeBuilder({ page }).withTags(TAGS).analyze();
@@ -33,7 +36,7 @@ async function scan(page: Page, label: string) {
   // The baseline was recorded on Chromium; other engines are held to the same layout's entries.
   const layout = `chromium-${test.info().project.name.split("-").pop() ?? "desktop"}`;
   const expected = allowed
-    .filter((item) => item.scan === label && item.projects.includes(layout))
+    .filter((item) => item.scan === label && item.projects.includes(layout) && !item.except?.includes(test.info().project.name))
     .map((item) => item.rule)
     .sort();
   // Soft, so one scan reports every page.
@@ -57,8 +60,10 @@ test("the Add entry dialog passes axe, and Escape returns focus to its opener", 
   await startDemo(page);
   await enterDemo(page);
   await navigate(page, "Activity");
+  // Opened from the keyboard: WebKit does not focus a button on click, so focus return is only defined this way.
   const opener = page.getByRole("button", { name: "Add entry" }).first();
-  await opener.click();
+  await opener.focus();
+  await page.keyboard.press("Enter");
   const dialog = page.getByRole("dialog", { name: "Add entry" });
   await expect(dialog).toBeVisible();
   await scan(page, "Add entry");
