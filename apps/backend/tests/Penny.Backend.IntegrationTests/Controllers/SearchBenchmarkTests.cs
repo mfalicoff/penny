@@ -131,7 +131,7 @@ public sealed class SearchBenchmarkTests(ApiFixture fixture) : SearchTestBase(fi
         var repository = new PostgresSearchRepository(maintenance, Fixture.Receipts);
         var embedder = Fixture.Factory.Services.GetRequiredService<ITextEmbedder>();
         var rebuild = Stopwatch.StartNew();
-        var rebuilt = await repository.RebuildAsync(null, embedder.ModelId, Ct);
+        var rebuilt = await repository.RebuildAsync(null, embedder.ModelId, _ => [], Ct);
         report.AppendLine(
             CultureInfo.InvariantCulture,
             $"Text rebuild: {rebuilt.Written} documents in {rebuild.Elapsed.TotalSeconds:F1} s"

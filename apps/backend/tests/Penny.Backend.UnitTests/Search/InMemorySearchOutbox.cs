@@ -84,6 +84,7 @@ internal sealed class InMemorySearchOutbox : ISearchRepository
     public Task<SearchRebuildReport> RebuildAsync(
         string? userId,
         string modelId,
+        Func<string, IReadOnlyList<string>> chunk,
         CancellationToken cancellationToken
     ) => throw new NotSupportedException();
 

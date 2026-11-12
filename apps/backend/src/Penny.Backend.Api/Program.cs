@@ -18,10 +18,13 @@ var maintenance =
         or SearchCommand.Verify
         or ReceiptCommand.Verify
         or ReceiptCommand.Sweep
+        or ReceiptTextCommand.Name
         or PushSmokeCommand.Name;
 var builder = WebApplication.CreateBuilder(maintenance ? [] : args);
 if (args.FirstOrDefault() is ReceiptCommand.Verify or ReceiptCommand.Sweep)
     return await ReceiptCommand.RunAsync(args, builder.Configuration);
+if (args.FirstOrDefault() == ReceiptTextCommand.Name)
+    return await ReceiptTextCommand.RunAsync(args, builder.Configuration);
 if (args.FirstOrDefault() == PushSmokeCommand.Name)
     return await PushSmokeCommand.RunAsync(args, builder.Configuration);
 if (args.FirstOrDefault() == PasswordResetCommand.Name)

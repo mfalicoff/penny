@@ -42,11 +42,13 @@ public interface ISearchRepository
     Task<long> PendingEmbeddingsAsync(CancellationToken cancellationToken);
 
     // Recomputes every document of one user (personal entries and the shared expenses
-    // of households they joined) or of everyone, and queues embeddings that are
+    // of households they joined) or of everyone, recomputes stored receipt texts'
+    // normalized text and chunks (`chunk` splits a text), and queues embeddings that are
     // missing or made by another model.
     Task<SearchRebuildReport> RebuildAsync(
         string? userId,
         string modelId,
+        Func<string, IReadOnlyList<string>> chunk,
         CancellationToken cancellationToken
     );
 
