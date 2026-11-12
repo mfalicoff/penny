@@ -26,7 +26,10 @@ struct InviteSheet: View {
                         HouseholdFailureBanner(failure: failure) { Task { await create() } }
                     }
                     if let invite = model.invite, let code = InviteCode(typed: invite.code) {
-                        InviteCard(invite: invite, code: code, link: InviteLink(code: code, server: serverURL)) {
+                        InviteCard(
+                            expiresAt: model.inviteExpiresAt ?? Date(milliseconds: invite.expiresAt), code: code,
+                            link: InviteLink(code: code, server: serverURL)
+                        ) {
                             Task { await create() }
                         } copy: {
                             copy(code.value)
@@ -79,7 +82,7 @@ struct InviteSheet: View {
 }
 
 private struct InviteCard: View {
-    let invite: WireInvite
+    let expiresAt: Date
     let code: InviteCode
     let link: InviteLink
     let renew: () -> Void
@@ -95,7 +98,7 @@ private struct InviteCard: View {
                 .accessibilityLabel("Invite code \(code.spoken)")
                 .accessibilityIdentifier("invite.code")
             if let image = InviteQRCode.image(for: link.url) {
-                Image(decorative: image, scale: 1)
+                Image(image, scale: 1, label: Text("Invite QR code"))
                     .interpolation(.none)
                     .resizable()
                     .scaledToFit()
@@ -107,7 +110,7 @@ private struct InviteCard: View {
                     .accessibilityIdentifier("invite.qr")
             }
             TimelineView(.periodic(from: .now, by: 1)) { context in
-                let left = Date(milliseconds: invite.expiresAt).timeIntervalSince(context.date)
+                let left = expiresAt.timeIntervalSince(context.date)
                 Text(left > 0 ? "Expires in \(Self.clock(left))" : "Expired. Make a new code.")
                     .font(.subheadline.monospacedDigit())
                     .foregroundStyle(left > 60 ? PennyColor.secondaryLabel : PennyColor.pending)

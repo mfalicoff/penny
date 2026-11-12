@@ -459,6 +459,22 @@ struct HouseholdModelTests {
         #expect(model.expenses.isEmpty)
     }
 
+    @Test("whenAnInviteIsCreated_HouseholdModel_ShouldCountDownTenMinutesOnThisDevice")
+    func inviteCountdown() async throws {
+        let fake = FakeHouseholds.standard()
+        let model = try #require(Self.directory(fake).model(for: FakeHouseholds.home))
+        await model.refresh()
+        let before = Date()
+        #expect(await model.newInvite() == nil)
+        #expect(model.invite?.code == "A1B2C3D4E5")
+        let expiry = try #require(model.inviteExpiresAt)
+        #expect(abs(expiry.timeIntervalSince(before) - InviteCode.lifetime) < 5, "independent of the server clock")
+        model.expireInvite(now: before.addingTimeInterval(9 * 60))
+        #expect(model.invite != nil)
+        model.expireInvite(now: before.addingTimeInterval(11 * 60))
+        #expect(model.invite == nil)
+    }
+
     @Test("whenARuleIsPaused_HouseholdModel_ShouldSendTheRuleWithItsRevision")
     func pauseRule() async throws {
         let fake = FakeHouseholds.standard()

@@ -19,7 +19,6 @@ struct InviteSignInCard: View {
             content(invites, invite)
                 .padding(.horizontal, Metrics.gutter)
                 .padding(.top, 8)
-                .accessibilityIdentifier("householdStart.otherServer")
         }
     }
 
@@ -38,7 +37,9 @@ struct InviteSignInCard: View {
                     StatusBanner(
                         tone: .info, title: "Connect to \(ServerText.host(server)) to join?",
                         message: "The invite is for \(server.description). Penny checks that it's a Penny server, "
-                            + "then you sign in there. Nothing from any other server is sent to it.")
+                            + "then you sign in there. Nothing from any other server is sent to it."
+                    )
+                    .accessibilityIdentifier("householdStart.otherServer")
                     if let failure {
                         Text(failure).font(.footnote).foregroundStyle(PennyColor.danger)
                     }

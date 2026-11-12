@@ -175,6 +175,7 @@ private struct SharedExpenseForm: View {
             Section {
                 HStack {
                     Text("Your unsaved expense is back").font(.subheadline.weight(.semibold))
+                        .accessibilityIdentifier("sharedForm.restoredDraft")
                     Spacer()
                     Button("Discard", role: .destructive) {
                         form.discardDraft()
@@ -184,7 +185,6 @@ private struct SharedExpenseForm: View {
                     }
                     .accessibilityIdentifier("sharedForm.discard")
                 }
-                .accessibilityIdentifier("sharedForm.restoredDraft")
             }
         }
         if let failure = form.failure {

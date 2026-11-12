@@ -133,7 +133,9 @@ struct InviteScannerView: View {
                     title: model.state == .denied ? "Camera access is off" : "No camera available",
                     message: model.state == .denied
                         ? "You can still type the code. To scan, allow Camera for Penny in Settings."
-                        : "This device can't scan. Type the 10-character code instead.")
+                        : "This device can't scan. Type the 10-character code instead."
+                )
+                .accessibilityIdentifier("scanner.denied")
                 typeCodeButton
                 #if os(iOS)
                     if model.state == .denied, let url = URL(string: UIApplication.openSettingsURLString) {
@@ -142,7 +144,6 @@ struct InviteScannerView: View {
                 #endif
             }
             .padding(Metrics.gutter)
-            .accessibilityIdentifier("scanner.denied")
         }
     }
 

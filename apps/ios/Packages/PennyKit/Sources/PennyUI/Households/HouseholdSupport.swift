@@ -101,14 +101,15 @@ struct HouseholdFailureBanner: View {
         VStack(alignment: .leading, spacing: 8) {
             StatusBanner(
                 tone: failure.kind == .offline ? .offline : .error, title: Self.title(failure.kind),
-                message: failure.message)
+                message: failure.message
+            )
+            .accessibilityIdentifier(onList ? "shared.notice" : "household.notice")
             if failure.canRetry, let retry {
                 Button("Try again", action: retry)
                     .buttonStyle(.bordered)
                     .accessibilityIdentifier("household.retry")
             }
         }
-        .accessibilityIdentifier(onList ? "shared.notice" : "household.notice")
     }
 
     static func title(_ kind: HouseholdFailure.Kind) -> String {

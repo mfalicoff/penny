@@ -30,12 +30,10 @@ struct PaymentSheet: View {
                             old: staleExpense.old, latest: staleExpense.latest, people: model.people,
                             currency: model.currency
                         ) { dismiss() }
-                        .accessibilityIdentifier("screen.paymentStale")
                     } else if let staleSuggestions {
                         StaleMonthlyView(
                             suggestions: staleSuggestions, people: model.people, currency: model.currency
                         ) { dismiss() }
-                        .accessibilityIdentifier("screen.paymentStale")
                     } else {
                         details
                     }
@@ -179,7 +177,9 @@ private struct StaleExpenseView: View {
                 message: latest.map {
                     "\(people.name($0.updatedBy)) edited this expense after you opened it. Review it before "
                         + "recording a payment."
-                } ?? "Someone deleted this expense after you opened it.")
+                } ?? "Someone deleted this expense after you opened it."
+            )
+            .accessibilityIdentifier("screen.paymentStale")
             if let latest {
                 VStack(spacing: 10) {
                     compare("Total", old.totalCents, latest.totalCents)
@@ -230,7 +230,9 @@ private struct StaleMonthlyView: View {
             StatusBanner(
                 tone: .error, title: "Balances changed",
                 message: "This is no longer the full suggested payment. Someone recorded a payment or changed an "
-                    + "expense after you opened it.")
+                    + "expense after you opened it."
+            )
+            .accessibilityIdentifier("screen.paymentStale")
             VStack(alignment: .leading, spacing: 8) {
                 Text("Suggested now").font(.headline)
                 if suggestions.isEmpty {

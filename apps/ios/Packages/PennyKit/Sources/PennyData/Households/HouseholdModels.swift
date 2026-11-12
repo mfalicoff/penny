@@ -168,6 +168,10 @@ public final class HouseholdModel {
     public private(set) var rules: [WireSharedRule] = []
     /// The newest code this device created, while it is valid.
     public private(set) var invite: WireInvite?
+    /// When the invite stops working, on this device's clock: it arrived with the server's
+    /// fixed 10-minute lifetime, so a device clock that differs from the server's can't make
+    /// the countdown wrong (never later than the server's own `expiresAt` would allow).
+    public private(set) var inviteExpiresAt: Date?
     public private(set) var load: HouseholdLoad = .idle
     /// Archived: readable, but nothing can change (inferred from its absence from the list).
     public private(set) var isArchived = false
@@ -267,12 +271,19 @@ public final class HouseholdModel {
 
     /// Creates a new code (replacing the previous one) for 10 minutes.
     public func newInvite() async -> HouseholdFailure? {
-        await write(refreshing: false) { self.invite = try await self.service.createInvite(householdId: self.id) }
+        await write(refreshing: false) {
+            let invite = try await self.service.createInvite(householdId: self.id)
+            self.invite = invite
+            self.inviteExpiresAt = Date().addingTimeInterval(InviteCode.lifetime)
+        }
     }
 
     /// Forgets the invite once it has expired.
     public func expireInvite(now: Date = Date()) {
-        if let invite, Date(milliseconds: invite.expiresAt) <= now { self.invite = nil }
+        if invite != nil, let inviteExpiresAt, inviteExpiresAt <= now {
+            invite = nil
+            self.inviteExpiresAt = nil
+        }
     }
 
     public func leave() async -> HouseholdFailure? {
@@ -291,6 +302,7 @@ public final class HouseholdModel {
             try await self.service.archiveHousehold(id: self.id)
             self.isArchived = true
             self.invite = nil
+            self.inviteExpiresAt = nil
             self.directory?.forget(self.id)
         }
     }

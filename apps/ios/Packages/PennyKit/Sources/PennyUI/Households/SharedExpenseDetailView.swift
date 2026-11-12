@@ -172,6 +172,8 @@ private struct ExpensePage: View {
                         Text(people.name(split.userId)).font(.body.weight(.semibold))
                         Text(status.label).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
                     }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityIdentifier("sharedExpense.share.\(split.userId)")
                     Spacer(minLength: 8)
                     MoneyText(split.amountCents, meaning: .neutral, currency: model.currency)
                     if expense.canRecordShare(from: split.userId, people: people, archived: model.isArchived) {
@@ -183,7 +185,6 @@ private struct ExpensePage: View {
                 }
                 .frame(minHeight: Metrics.minTouchTarget)
                 .accessibilityElement(children: .contain)
-                .accessibilityIdentifier("sharedExpense.share.\(split.userId)")
             }
         } header: {
             Text("Shares")

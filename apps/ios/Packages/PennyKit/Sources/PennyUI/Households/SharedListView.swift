@@ -8,6 +8,7 @@ import SwiftUI
 /// a failed read keeps the last list and says why, with Try again.
 struct SharedView: View {
     @Environment(ShellModel.self) private var shell
+    @Environment(InviteHandoff.self) private var invites: InviteHandoff?
 
     var body: some View {
         @Bindable var shell = shell
@@ -75,7 +76,7 @@ struct SharedView: View {
         .background(PennyColor.background)
         .navigationTitle("Shared")
         .sheet(item: $shell.route.householdStart) { start in
-            HouseholdStartSheet(start: start).environment(shell)
+            HouseholdStartSheet(start: start).environment(shell).environment(invites)
         }
         .accessibilityIdentifier("screen.shared")
     }
