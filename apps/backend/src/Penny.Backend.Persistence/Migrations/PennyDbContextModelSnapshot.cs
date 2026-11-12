@@ -1428,6 +1428,188 @@ namespace Penny.Backend.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.ReceiptText", b =>
+                {
+                    b.Property<string>("ReceiptId")
+                        .HasColumnType("text")
+                        .HasColumnName("receipt_id")
+                        .UseCollation("C");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("integer")
+                        .HasColumnName("attempts");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("content")
+                        .UseCollation("C");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<DateTimeOffset?>("DueAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("due_at");
+
+                    b.Property<string>("Engine")
+                        .HasColumnType("text")
+                        .HasColumnName("engine")
+                        .UseCollation("C");
+
+                    b.Property<DateTimeOffset?>("ExtractedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("extracted_at");
+
+                    b.Property<string>("Failure")
+                        .HasColumnType("text")
+                        .HasColumnName("failure")
+                        .UseCollation("C");
+
+                    b.Property<DateTimeOffset?>("LeaseExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lease_expires_at");
+
+                    b.Property<string>("LeaseToken")
+                        .HasColumnType("text")
+                        .HasColumnName("lease_token")
+                        .UseCollation("C");
+
+                    b.Property<string>("Method")
+                        .HasColumnType("text")
+                        .HasColumnName("method")
+                        .UseCollation("C");
+
+                    b.Property<int?>("Pages")
+                        .HasColumnType("integer")
+                        .HasColumnName("pages");
+
+                    b.Property<string>("SearchText")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("search_text")
+                        .UseCollation("C");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status")
+                        .UseCollation("C");
+
+                    b.HasKey("ReceiptId");
+
+                    b.HasIndex("DueAt")
+                        .HasDatabaseName("ix_receipt_texts_due")
+                        .HasFilter("due_at IS NOT NULL");
+
+                    b.HasIndex("SearchText")
+                        .HasDatabaseName("ix_receipt_texts_search_trgm");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("SearchText"), "gin");
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("SearchText"), new[] { "gin_trgm_ops" });
+
+                    b.ToTable("receipt_texts", "penny", t =>
+                        {
+                            t.HasCheckConstraint("ck_receipt_texts_attempts", "attempts >= 0");
+
+                            t.HasCheckConstraint("ck_receipt_texts_done", "status <> 'done' OR method IS NOT NULL");
+
+                            t.HasCheckConstraint("ck_receipt_texts_due", "(status = 'pending') = (due_at IS NOT NULL)");
+
+                            t.HasCheckConstraint("ck_receipt_texts_finished", "status = 'pending' OR (engine IS NOT NULL AND extracted_at IS NOT NULL)");
+
+                            t.HasCheckConstraint("ck_receipt_texts_lease", "(lease_token IS NULL) = (lease_expires_at IS NULL)");
+
+                            t.HasCheckConstraint("ck_receipt_texts_method", "method IS NULL OR method IN ('text','ocr','mixed')");
+
+                            t.HasCheckConstraint("ck_receipt_texts_pages", "pages IS NULL OR pages >= 0");
+
+                            t.HasCheckConstraint("ck_receipt_texts_status", "status IN ('pending','done','failed','unsupported')");
+                        });
+                });
+
+            modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.ReceiptTextChunk", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long>("Id"));
+
+                    b.Property<Vector>("Embedding")
+                        .HasColumnType("vector(384)")
+                        .HasColumnName("embedding");
+
+                    b.Property<int>("EmbeddingAttempts")
+                        .HasColumnType("integer")
+                        .HasColumnName("embedding_attempts");
+
+                    b.Property<DateTimeOffset?>("EmbeddingDueAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("embedding_due_at");
+
+                    b.Property<string>("EmbeddingModel")
+                        .HasColumnType("text")
+                        .HasColumnName("embedding_model")
+                        .UseCollation("C");
+
+                    b.Property<DateTimeOffset?>("LeaseExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lease_expires_at");
+
+                    b.Property<string>("LeaseToken")
+                        .HasColumnType("text")
+                        .HasColumnName("lease_token")
+                        .UseCollation("C");
+
+                    b.Property<int>("Ordinal")
+                        .HasColumnType("integer")
+                        .HasColumnName("ordinal");
+
+                    b.Property<string>("Passage")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("passage")
+                        .UseCollation("C");
+
+                    b.Property<string>("ReceiptId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("receipt_id")
+                        .UseCollation("C");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Embedding")
+                        .HasDatabaseName("ix_receipt_text_chunks_embedding");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Embedding"), "hnsw");
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("Embedding"), new[] { "vector_cosine_ops" });
+
+                    b.HasIndex("EmbeddingDueAt")
+                        .HasDatabaseName("ix_receipt_text_chunks_embedding_due")
+                        .HasFilter("embedding_due_at IS NOT NULL");
+
+                    b.HasIndex("ReceiptId", "Ordinal")
+                        .IsUnique()
+                        .HasDatabaseName("ux_receipt_text_chunks_receipt");
+
+                    b.ToTable("receipt_text_chunks", "penny", t =>
+                        {
+                            t.HasCheckConstraint("ck_receipt_text_chunks_attempts", "embedding_attempts >= 0");
+
+                            t.HasCheckConstraint("ck_receipt_text_chunks_embedding", "(embedding IS NULL) = (embedding_model IS NULL)");
+
+                            t.HasCheckConstraint("ck_receipt_text_chunks_lease", "(lease_token IS NULL) = (lease_expires_at IS NULL)");
+
+                            t.HasCheckConstraint("ck_receipt_text_chunks_ordinal", "ordinal >= 0");
+                        });
+                });
+
             modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.SearchDocument", b =>
                 {
                     b.Property<long>("Id")
@@ -1515,6 +1697,11 @@ namespace Penny.Backend.Persistence.Migrations
                         .HasColumnName("payer_id")
                         .UseCollation("C");
 
+                    b.Property<string>("ReceiptId")
+                        .HasColumnType("text")
+                        .HasColumnName("receipt_id")
+                        .UseCollation("C");
+
                     b.Property<string>("ResultKey")
                         .IsRequired()
                         .HasColumnType("text")
@@ -1568,6 +1755,10 @@ namespace Penny.Backend.Persistence.Migrations
 
                     NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("OwnerText"), "gin");
                     NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("OwnerText"), new[] { "gin_trgm_ops" });
+
+                    b.HasIndex("ReceiptId")
+                        .HasDatabaseName("ix_search_documents_receipt")
+                        .HasFilter("receipt_id IS NOT NULL");
 
                     b.HasIndex("UserId", "EntryId")
                         .IsUnique()
@@ -1971,6 +2162,23 @@ namespace Penny.Backend.Persistence.Migrations
                     b.HasOne("Penny.Backend.Persistence.Schema.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.ReceiptText", b =>
+                {
+                    b.HasOne("Penny.Backend.Persistence.Schema.Entities.Receipt", null)
+                        .WithMany()
+                        .HasForeignKey("ReceiptId")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.ReceiptTextChunk", b =>
+                {
+                    b.HasOne("Penny.Backend.Persistence.Schema.Entities.ReceiptText", null)
+                        .WithMany()
+                        .HasForeignKey("ReceiptId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 

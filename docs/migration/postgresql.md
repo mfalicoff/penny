@@ -18,6 +18,7 @@ The legacy SQLite schema is an import source, not a template. PostgreSQL stores 
 | Push | `push_devices`, `push_outbox`, `push_deliveries` | Lease columns (`lease_owner/token/expires_at`) for the MAZ-61 delivery worker; `household_recurring` has the same columns for the MAZ-59 runner. Migration `AddApnsPushDelivery` adds `push_devices.provider` (`expo`/`apns`) and `environment` (APNs `sandbox`/`production`, checked per provider), `push_deliveries.provider` and `last_error`, and the pending-by-token index ([push](push.md)) |
 | Import | `sqlite_import` | Singleton checkpoint; drop after the cutover observation window |
 | Search | `search_documents` | MAZ-121: normalized texts and embeddings of personal entries and live shared expenses; derived data, not imported (`search-rebuild`) |
+| Receipt text | `receipt_texts`, `receipt_text_chunks` | MAZ-125: text extracted from each receipt on the server (unencrypted, with status, engine and timestamps; also the extraction outbox) and its embedding chunks; derived data, not imported (`receipts-ocr`, `search-rebuild`) |
 
 Mapping rules:
 
@@ -30,7 +31,7 @@ Mapping rules:
 Constraint decisions:
 
 - Ledger children reference their own ledger's rows through composite keys: `(user_id, category_id)`, `(user_id, account_id)`, `(user_id, trip_id)`, and `(user_id, receipt_id)` to `receipts(user_id, id)`, so an entry can only attach a receipt its owner uploaded.
-- **No cascades** except `push_devices → sessions` and `household_recurring_allocations → household_recurring`. Deleting a category that is still referenced fails (`RESTRICT`). When an account or trip is removed, the ledger writer (MAZ-55) clears entry and rule references in the same save. EF cannot express `SET NULL` on a single column of a composite key.
+- **No cascades** except `push_devices → sessions`, `household_recurring_allocations → household_recurring` and `receipt_text_chunks → receipt_texts` (MAZ-125: chunks are derived from the text and go with it). Deleting a category that is still referenced fails (`RESTRICT`). When an account or trip is removed, the ledger writer (MAZ-55) clears entry and rule references in the same save. EF cannot express `SET NULL` on a single column of a composite key.
 - `share_cents BETWEEN 0 AND total_cents`. At most one open period per `(household_id, user_id)` (partial unique index). Unique `(recurring_id, expense_date)` per recurring occurrence and `(expense_id, from_user_id)` per expense payment.
 - **Deliberately unenforced references:** `recurring_id` on entries and expenses (occurrences outlive their rule), `household_audit.expense_id` (history), and `household_expenses/recurring.account_id`. The last one points to the payer's *personal* account, and the application validates it on write. The legacy app let personal accounts be deleted underneath shared expenses.
 - Split sums equal the expense total. The importer and the shared-expense writer (MAZ-57) enforce this; there is no database trigger.
@@ -77,6 +78,7 @@ Everything else is EF-generated or a LINQ query. Check-constraint and partial-in
 | `DatabaseMigrator`: `pg_try_advisory_lock` / `pg_advisory_unlock` | One session lock shared by `migrate` and `import-sqlite` |
 | `PostgresReadiness`: role/privilege check (`pg_roles`, `has_*_privilege`) | Proves the runtime role cannot change schema |
 | `SqliteImporter`: `has_table_privilege(...)` | Rejects runtime credentials before any import work |
+| `AddReceiptTexts` migration: `UPDATE search_documents … FROM ledger_entries / household_expenses` | Backfills `search_documents.receipt_id` for existing documents (MAZ-125), so no rebuild is needed after the upgrade |
 | `SqliteImporter`: `setval(... household_audit sort_order ...)` | Continues the identity after explicit legacy rowids |
 | `development/grant-runtime.sql`, `init-roles.sh` | Role and grant administration and `CREATE EXTENSION pg_trgm/vector` (administrator), outside the application. `RuntimeGrants` (MAZ-63) executes the same embedded `grant-runtime.sql` for `migrate --grant-runtime` |
 | `TestDataReset` (MAZ-62, test environments only): `DELETE FROM penny."<table>"` per EF table, children first | Clears a disposable `penny_test*` database between full-stack runs with the runtime role (which has DELETE, not TRUNCATE); table names come from the EF model and the database name is checked first ([test environment](test-environment.md#test-controls)) |

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Animated, Easing, Platform, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, StyleSheet, Text, View } from "react-native";
 import type { Kind } from "../domain/ledger";
 import { C, Icon } from "../shared/ui";
 
@@ -11,7 +11,7 @@ export function SaveToast({ message, kind }: { message: string; kind?: Kind | nu
       toValue: 1,
       duration: 280,
       easing: Easing.out(Easing.cubic),
-      useNativeDriver: Platform.OS !== "web",
+      useNativeDriver: true,
     });
     animation.start();
     return () => animation.stop();

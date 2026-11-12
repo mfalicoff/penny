@@ -10,7 +10,7 @@ Run commands from the repository root of a checkout of the release you deploy (t
 
 | Service | Image | Role | Network |
 | --- | --- | --- | --- |
-| `web` | `ghcr.io/<owner>/penny-web` | Unprivileged nginx: the Expo web export, SPA fallback, and a same-origin proxy for `/api/` | The only published port (default `127.0.0.1:8080`) |
+| `web` | `ghcr.io/<owner>/penny-web` | Unprivileged nginx: the v2 web app (`apps/web`), SPA fallback, and a same-origin proxy for `/api/` ([web app](#the-web-app)) | The only published port (default `127.0.0.1:8080`) |
 | `api` | `ghcr.io/<owner>/penny-api` | ASP.NET Core API plus the background workers (shared recurrence, push delivery, search embeddings) | Internal network only |
 | `migrate` | `penny-api` | One-shot `migrate --grant-runtime`: applies EF migrations under the migration lock, then the runtime grants, and exits | Internal |
 | `postgres` | `pgvector/pgvector:0.8.7-pg18-trixie` (digest pinned) | PostgreSQL 18.6 with `pg_trgm` and pgvector 0.8.7; profile `bundled-postgres` | Internal |
@@ -29,7 +29,8 @@ One `api` container runs every worker. Each worker claims rows with PostgreSQL l
 | --- | --- | --- |
 | Shared recurrence | `Recurrence__Worker` | Records due recurring household expenses ([shared recurrence](migration/shared-recurrence.md)) |
 | Push delivery | `Push__Worker` | Drains the notification outbox to APNs/Expo ([push](migration/push.md)) |
-| Search embeddings | `Search__EmbeddingWorker` | Embeds new search documents ([search](migration/search.md)) |
+| Search embeddings | `Search__EmbeddingWorker` | Embeds new search documents and receipt text chunks ([search](migration/search.md)) |
+| Receipt text | `Ocr__Worker` | Extracts the text of uploaded receipts on this server with Tesseract, poppler and libvips ([receipt OCR](operations.md#receipt-text-ocr)) |
 
 Supported topologies:
 
@@ -132,7 +133,11 @@ Copy `deploy/api.env.example` to `deploy/api.env` (mode 0600, git-ignored). It i
 | `Auth__PasswordResetHours` | 24 | Lifetime of operator-issued reset codes ([password reset](migration/authentication.md#password-reset-maz-123)) |
 | `Oidc__Issuer`, `Oidc__ClientId`, `Oidc__ClientSecret`, `Oidc__RedirectUris`, `Oidc__Label`, `Oidc__AllowRegistration` | off | See [OIDC](#openid-connect-oidc-sign-in) |
 | `Push__Apns__TeamId`, `Push__Apns__KeyId`, `Push__Apns__Topic`, `Push__Apns__PrivateKey` | off | All four or none ([push](migration/push.md#configuration)); `Push__Expo__Enabled` (default `true`) keeps legacy Expo delivery until retired |
-| `Recurrence__Worker`, `Push__Worker`, `Search__EmbeddingWorker` | `true` | [Workers](#background-workers) |
+| `Recurrence__Worker`, `Push__Worker`, `Search__EmbeddingWorker`, `Ocr__Worker` | `true` | [Workers](#background-workers) |
+| `Ocr__Languages` | `eng+fra` | Tesseract languages for receipt text; each needs its language data, checked at startup ([receipt OCR](operations.md#receipt-text-ocr)) |
+| `Ocr__Concurrency` / `Ocr__TimeoutSeconds` / `Ocr__MaxPages` / `Ocr__MaxFileMegabytes` / `Ocr__MaxAttempts` | 1 / 120 / 10 / 10 / 4 | Receipt text bounds per process |
+| `Ocr__EngineMemoryMegabytes` | 1024 | Memory (address space) of each OCR engine process, enforced with `prlimit` ([receipt OCR](operations.md#receipt-text-ocr)) |
+| `PENNY_API_MEMORY` (Compose) | `3g` | Memory limit of the `api` container (API, search model and OCR engines); raise it by about `Ocr__EngineMemoryMegabytes` per extra `Ocr__Concurrency` |
 | `Database__MaxPoolSize` | 20 | 1–100 connections per process |
 | `Database__ConnectTimeoutSeconds` / `Database__CommandTimeoutSeconds` | 5 / 5 | 1–30 |
 | `Backend__MaxRequestBodyBytes` | 20 MiB | Keep `PENNY_MAX_BODY` slightly above it |
@@ -142,7 +147,7 @@ Copy `deploy/api.env.example` to `deploy/api.env` (mode 0600, git-ignored). It i
 | `Logging__LogLevel__Default` | `Information` | `Warning` drops the per-request access line |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` and the other standard `OTEL_*` variables | off | Traces, metrics and logs over OTLP to an OpenTelemetry Collector or Grafana Alloy ([telemetry](operations.md#telemetry-opentelemetry)) |
 
-The image already sets `ASPNETCORE_ENVIRONMENT=Production`, `ASPNETCORE_HTTP_PORTS=8080`, `Search__ModelDirectory=/opt/penny/model` (the pinned, SHA-256-verified embedding model), `Receipts__Root=/var/lib/penny/receipts`, JSON console logs and `DOTNET_EnableDiagnostics=0`. Production serves no OpenAPI or Scalar routes and never enables the test controls.
+The image already sets `ASPNETCORE_ENVIRONMENT=Production`, `ASPNETCORE_HTTP_PORTS=8080`, `Search__ModelDirectory=/opt/penny/model` (the pinned, SHA-256-verified embedding model), `Receipts__Root=/var/lib/penny/receipts`, JSON console logs and `DOTNET_EnableDiagnostics=0`, and contains Tesseract (English and French language data) and poppler-utils for receipt text extraction. Production serves no OpenAPI or Scalar routes and never enables the test controls.
 
 Keep secrets out of the image, the repository and command lines. If your platform has a secret manager, inject the same variable names into the services instead of using `.env` files.
 
@@ -178,9 +183,19 @@ Every release is forward-only and migrates from any earlier v2 release. Read the
 
 A failed `migrate` leaves the previous schema in place (each migration runs in its own transaction) and the API is not started; fix the cause and run `up` again.
 
+### The web app
+
+The `web` image serves the v2 browser app (`apps/web`: React, Vite, TanStack) since MAZ-97. Earlier images served the Expo web export. Both use the same origin, URLs and `penny_session` cookie, and talk to the same API, so the web and API images can be upgraded or rolled back separately within the API's compatibility window.
+
+- **Caching.** `index.html` is `no-cache`, so a new release takes effect on the next page load. Files under `/assets/` are fingerprinted and `immutable`; a missing asset is a plain 404 and is not cached. `/version.json` (no-store) reports the image's `version` and `revision`: check it after an upgrade or rollback. Old Expo bundle paths (`/_expo/`) return 404. A tab left open from before the upgrade recovers when it is reloaded.
+- **Legacy URLs and sign-in.** Every legacy route ([route map](migration/redesign.md#legacy-deep-links)), including the OIDC callback `/auth/callback`, still opens a page, so `Oidc__RedirectUris`, bookmarks and the widget's **+** link don't change.
+- **Offline changes carry over.** On first sign-in, the new app imports the Expo app's unsynced copy from `localStorage`. It removes that copy only after the server has the changes ([legacy migration](web-offline-sync.md#migrating-the-legacy-expo-web-copy)). Keep the same origin, or the browser starts with an empty store.
+- **Rolling the web image back** to a pre-MAZ-97 tag brings back the Expo web app. It reads from the server, plus any legacy copy that wasn't imported yet. Changes still waiting in the new app's IndexedDB are left alone, and they upload when the new image is served again. A copy the Expo app writes during the rollback is merged in on the next import. Data is lost only if site data is cleared or the origin changes.
+- **Supported browsers:** current and previous major versions of Chrome, Edge, Firefox and Safari (macOS and iOS), which are tested in CI on Chromium, Firefox and WebKit. The app needs ES2022, IndexedDB, Web Locks and module workers. Older browsers aren't supported.
+
 ## Roll back
 
-- **Release without a migration:** set the previous image tags and run `up -d --wait` again.
+- **Release without a migration:** set the previous image tags and run `up -d --wait` again. The web image can be rolled back on its own ([web app](#the-web-app)).
 - **Release with a migration:** the previous build refuses the newer schema. Its readiness reports `schema` and its `migrate` refuses "Database schema is newer than this build". Prefer rolling forward with a fixed release. If you must go back, restore the pre-upgrade backup ([restore](operations.md#restore)) with the previous images, then reconcile the writes accepted since the backup ([write reconciliation](operations.md#write-reconciliation-after-a-rollback)).
 
 ## Container images and releases
@@ -229,7 +244,7 @@ The .NET API delivers native iOS notifications through APNs (`Push__Apns__*`) an
 
 ## Legacy Node/SQLite deployment
 
-Until the cutover, the legacy server keeps its own image (`ghcr.io/<owner>/<repository>`, built by `.github/workflows/docker-image.yml` from the root `Dockerfile`) and `compose.yaml`. It runs one Node process with SQLite (receipts inside the database) and serves the web app on port 3001. Keep it as the rollback target until the [cutover](migration/postgresql.md#cutover-and-forward-only-recovery) observation window ends.
+Until the cutover, the legacy server keeps its own image (`ghcr.io/<owner>/<repository>`, built by `.github/workflows/docker-image.yml` from the root `Dockerfile`) and `compose.yaml`. It runs one Node process with SQLite (receipts inside the database) and serves `/api/` on port 3001. Since MAZ-97 it no longer serves a web app: images built from this revision on are API-only (earlier tags still contain the Expo web export), and browsers use the `penny-web` image. A rollback to Node therefore leaves browsers without the app unless you run a pre-MAZ-97 legacy tag. Keep it as the rollback target until the [cutover](migration/postgresql.md#cutover-and-forward-only-recovery) observation window ends.
 
 ```sh
 docker compose up -d --build

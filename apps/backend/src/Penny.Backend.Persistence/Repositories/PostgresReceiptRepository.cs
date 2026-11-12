@@ -4,6 +4,7 @@ using Penny.Backend.Application.Abstractions.Persistence;
 using Penny.Backend.Persistence.Receipts;
 using Penny.Backend.Persistence.Schema;
 using Penny.Backend.Persistence.Schema.Entities;
+using Penny.Backend.Persistence.Search;
 
 namespace Penny.Backend.Persistence.Repositories;
 
@@ -39,32 +40,8 @@ public sealed class PostgresReceiptRepository(NpgsqlDataSource source, ReceiptFi
         await using var context = PennyDbContext.Create(source);
         var row = await context
             .Receipts.AsNoTracking()
-            .Where(receipt =>
-                receipt.Id == receiptId
-                && (
-                    receipt.UserId == userId
-                    || context.HouseholdExpenses.Any(expense =>
-                        expense.ReceiptId == receipt.Id
-                        && expense.DeletedAt == null
-                        && (
-                            context.HouseholdMemberPeriods.Any(period =>
-                                period.HouseholdId == expense.HouseholdId
-                                && period.UserId == userId
-                                && period.LeftAt == null
-                            )
-                            || (
-                                context.HouseholdSplits.Any(share =>
-                                    share.ExpenseId == expense.Id && share.UserId == userId
-                                )
-                                && context.HouseholdMemberPeriods.Any(period =>
-                                    period.HouseholdId == expense.HouseholdId
-                                    && period.UserId == userId
-                                )
-                            )
-                        )
-                    )
-                )
-            )
+            .Where(receipt => receipt.Id == receiptId)
+            .Where(ReceiptAccess.Readable(context, userId))
             .SingleOrDefaultAsync(cancellationToken);
         return await OpenAsync(row, cancellationToken);
     }
@@ -93,6 +70,9 @@ public sealed class PostgresReceiptRepository(NpgsqlDataSource source, ReceiptFi
         {
             await using var context = PennyDbContext.Create(source);
             context.Receipts.Add(encrypted.Row);
+            // MAZ-125: text extraction is queued in the same insert and runs after the
+            // commit in the background; the upload never waits for it.
+            context.ReceiptTexts.Add(ReceiptTextIndex.Pending(encrypted.Row.Id));
             // Not cancellable: once the file is in place, the outcome must be known.
             await context.SaveChangesAsync(CancellationToken.None);
         }

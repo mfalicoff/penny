@@ -1,5 +1,5 @@
 import { createContext, Fragment, useContext, useEffect, useState, type PropsWithChildren } from "react";
-import { Platform, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { readServerConfiguration, saveServerConfiguration, type PennyServer, type ServerConfiguration } from "../data/serverConnection";
 import { Button, C, s } from "../shared/ui";
 
@@ -15,7 +15,6 @@ export function ServerConnectionProvider({ children }: PropsWithChildren) {
     catch { setError("Could not load this device's server setting. Your saved data has not been changed."); }
   }
   useEffect(() => {
-    if (Platform.OS === "web") return;
     let active = true;
     void readServerConfiguration().then((value) => {
       if (active) setConfiguration(value);
@@ -24,7 +23,6 @@ export function ServerConnectionProvider({ children }: PropsWithChildren) {
     });
     return () => { active = false; };
   }, []);
-  if (Platform.OS === "web") return children;
   if (!configuration) return <View style={{ flex: 1, backgroundColor: C.bg, justifyContent: "center", padding: 24, gap: 16 }}>
     <Text style={s.muted}>{error || "Loading your server…"}</Text>
     {error ? <Button title="Retry" onPress={load} /> : null}

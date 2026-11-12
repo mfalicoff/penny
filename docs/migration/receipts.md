@@ -42,6 +42,10 @@ Every read and link is authorized in PostgreSQL in the same statement that loads
 
 Responses and logs never contain storage paths, file names on disk, keys or nonces.
 
+## Receipt text (MAZ-125)
+
+The upload also queues the receipt's text extraction (a `pending` `receipt_texts` row in the same insert). A background worker extracts it on the server only (poppler for PDF text, Tesseract for photos and scans), never delaying or failing the upload. The extracted text is stored unencrypted so search can index it, and it matches only for users who may read the receipt under the access rules above (`ReceiptAccess.Readable`, shared with downloads). When the last entry, shared expense or rule linking a receipt lets go of it, its text is deleted in the same transaction. See [operations](../operations.md#receipt-text-ocr) and [search](search.md#receipt-text-maz-125).
+
 ## Storage, failures and recovery
 
 Bytes and the original filename are sealed with AES-256-GCM under a per-file HKDF key ([receipt storage](postgresql.md#receipt-storage)). An upload writes in this order:

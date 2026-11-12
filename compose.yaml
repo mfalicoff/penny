@@ -1,9 +1,6 @@
 services:
   penny:
-    build:
-      context: .
-      args:
-        EXPO_PUBLIC_API_URL: ""
+    build: .
     ports:
       - "${PORT:-3001}:3001"
     environment:

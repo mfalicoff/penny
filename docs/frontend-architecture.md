@@ -22,7 +22,7 @@ Use this formula for new work: **a thin route, a feature screen, local UI state,
 
 `App.tsx` is a compatibility export. The actual entry point is `expo-router/entry`, with composition in `src/app/_layout.tsx`. The shell renders a visible `Slot`; Overview, Recurring and Categories each render their own content. This follows [Expo Router's layout model](https://docs.expo.dev/router/basics/navigation-layouts/).
 
-Keep platform implementations adjacent: `session.ts` / `session.web.ts`, `receipts.ts` / `receipts.web.ts`, and `PdfPreview.tsx` / `PdfPreview.web.tsx`. Import the extensionless module so Metro chooses the platform. Pure modules used by Node tests or the server use explicit `.ts` imports.
+The Expo app targets iOS and Android only; its web implementations (`*.web.ts(x)`) were removed in MAZ-97, and the browser client is `apps/web`. Keep any iOS/Android-specific implementation adjacent (`*.ios.tsx` / `*.android.tsx`) and import the extensionless module so Metro chooses the platform. Pure modules used by Node tests or the server use explicit `.ts` imports.
 
 ## State and writes
 
@@ -49,7 +49,7 @@ The household projection API returns recorded `transactions` plus month-only `sc
 
 `AppLockProvider` sits above server/session providers. It reads `penny-app-lock` from SecureStore before `AppLockGate` admits account content. Read failures fail closed with a retry action. Once admitted, the session tree stays mounted while hidden so locking does not discard drafts. Shared `Sheet` dialogs also suppress their native modals while obscured, preventing an open sheet from covering the lock screen.
 
-The provider conceals content while inactive and locks on actual background transitions. iOS biometric-prompt inactive/active events do not trigger a second prompt. Authentication is single-flight; background transitions invalidate outstanding results, and enabling/disabling is committed only after successful authentication and a durable preference write. Enabling requires strong enrolled biometrics; later unlocking/disabling permits the OS device-credential fallback. The web provider is a passthrough and never imports the native authentication module.
+The provider conceals content while inactive and locks on actual background transitions. iOS biometric-prompt inactive/active events do not trigger a second prompt. Authentication is single-flight; background transitions invalidate outstanding results, and enabling/disabling is committed only after successful authentication and a durable preference write. Enabling requires strong enrolled biometrics; later unlocking/disabling permits the OS device-credential fallback.
 
 `app.json` configures the `expo-local-authentication` plugin's Face ID usage description; the module contributes Android biometric permissions. This requires a native rebuild, not new iOS entitlements. See [Mobile app protection](app-guide.md#mobile-app-protection) for recovery behavior and the widget/notification privacy boundary.
 
@@ -73,7 +73,7 @@ After installing these native dependencies, rebuild the development apps with `n
 2. Keep transient state local. Put state in a provider only when its lifetime must span routes or sessions.
 3. Extract calculations and input conversion into pure functions. Add reusable ledger mutations to `domain/commands.ts` and run them through `commit`.
 4. Break substantial screen sections into components with named props. Extract shared components after there is real reuse, rather than creating generic frameworks in advance.
-5. Put behavior tests under `tests/ui/`, mirroring the feature's source hierarchy. Keep Node domain/API integration tests under `tests/core/` and runtime journeys under `tests/e2e/{web,native}/`. Never put tests in `src/app/` or elsewhere in the application tree. The canonical [testing strategy](testing.md) defines ownership and platform gates.
+5. Put behavior tests under `tests/ui/`, mirroring the feature's source hierarchy. Keep Node domain/API integration tests under `tests/core/` and runtime journeys under `tests/e2e/native/`. Never put tests in `src/app/` or elsewhere in the application tree. The canonical [testing strategy](testing.md) defines ownership and platform gates.
 
 ESLint rejects upward dependencies from domain, data, shared code and providers into screen/composition code. A feature may reuse an explicit component from another feature (for example, entries use receipt preview); avoid a global feature barrel or feature-to-feature state dependencies.
 
@@ -81,28 +81,25 @@ ESLint rejects upward dependencies from domain, data, shared code and providers 
 
 ```sh
 npm run test:core      # Node: money, recurrence, commands, draft conversion, selectors, real API integration
-npm run test:ui        # Jest/Expo: iOS, Android, and web projects
+npm run test:ui        # Jest/Expo: iOS and Android projects
 npm run test:ui:ios    # iOS native component interactions
 npm run test:ui:android # Android native component interactions
 npm run test:ui:watch  # Interactive frontend work
 npm test              # Both suites; also used by CI
 npm run lint
 npm run typecheck
-npm run build:web
 npx expo export --platform ios --platform android --output-dir /tmp/penny-native-export
 ```
 
-The frontend harness uses the SDK-matched [Jest Expo preset](https://docs.expo.dev/develop/unit-testing/), React Native Testing Library and [Expo Router's testing utilities](https://docs.expo.dev/router/reference/testing/). The same native interaction tests run with the iOS and Android presets so platform-specific module resolution and picker behavior are checked on both. Tests press accessible controls and assert observable outcomes, rather than snapshots of the component tree. The separate web project runs `*.web.test.jsx` with React DOM and real React Native Web components, including SVGs and modal portals; it catches rendering errors that native mocks can miss. Run it alone with `npm run test:ui:web`. Actual browser, simulator and emulator commands are defined in the [testing strategy](testing.md).
+The frontend harness uses the SDK-matched [Jest Expo preset](https://docs.expo.dev/develop/unit-testing/), React Native Testing Library and [Expo Router's testing utilities](https://docs.expo.dev/router/reference/testing/). The same native interaction tests run with the iOS and Android presets so platform-specific module resolution and picker behavior are checked on both. Tests press accessible controls and assert observable outcomes, rather than snapshots of the component tree. Actual browser, simulator and emulator commands are defined in the [testing strategy](testing.md).
 
-Web tests use `tests/ui/support/web-renderer.jsx`, which fails on any `console.error` or `console.warn`, including during unmount. Do not silence these messages in individual tests. Test both empty and populated states: the empty chart does not mount an SVG, so it cannot catch SVG prop incompatibilities. Chart cases cover split expenses without income, income only, mixed income/expenses, overspending, break-even and label selection. Workflow cases cover desktop/phone overview filters and editing, form validation and failed-save retries, category CRUD, schedule pause/resume/removal, authentication, currency changes and receipt failure handling.
+Conditional children of a `View` must use boolean conditions or return `null`. For string state, use `message !== "" && <Text>…</Text>` or a ternary; `message && …` passes an empty string to the view, which React Native rejects outside `<Text>`.
 
-Conditional children of a `View` must use boolean conditions or return `null`. For string state, use `message !== "" && <Text>…</Text>` or a ternary; `message && …` passes an empty string to the view and triggers a React Native Web text-node error.
-
-Native-only props must not leak onto DOM elements through third-party components. The decorative chart SVG uses `accessible={false}` on native and `aria-hidden`/`tabIndex` on web. Use `style.pointerEvents` rather than the deprecated web `pointerEvents` prop.
+The decorative chart SVG uses `accessible={false}`. Use `style.pointerEvents` rather than the deprecated `pointerEvents` prop.
 
 Cover success and failure where behavior can lose user work: stale edit/delete conflicts, retries, duplicate submissions, failed-save draft retention, session changes, subscription cleanup and navigation persistence. Domain tests cover money/date boundaries and immutability. Route tests use the real route exports, shell, screens and providers with a mocked API.
 
-Native font loading is mocked globally; receipt I/O and preview are mocked in native form/navigation tests. Web receipt tests render the real preview UI with mocked file I/O and PDF worker results to check loading, errors, pagination, download links and resource cleanup. These tests do not validate device pickers, actual PDF decoding, keyboard behavior, accessibility on a device or visual layout. Bundle exports check cross-platform resolution, not device interaction. Changes to those areas still need a browser or simulator/device check. The server integration test requires permission to listen on a local port.
+Native font loading is mocked globally; receipt I/O and preview are mocked in native form/navigation tests. These tests do not validate device pickers, actual PDF decoding, keyboard behavior, accessibility on a device or visual layout. Bundle exports check cross-platform resolution, not device interaction. Changes to those areas still need a browser or simulator/device check. The server integration test requires permission to listen on a local port.
 
 ### Verification on September 27, 2026
 

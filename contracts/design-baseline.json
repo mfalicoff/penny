@@ -761,7 +761,7 @@
       "nativeIssue": "MAZ-78",
       "webIssue": "MAZ-94",
       "legacyRoute": "/entries/new",
-      "legacyTest": "tests/e2e/web/entries.spec.ts",
+      "legacyTest": "tests/core/server.test.ts",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",

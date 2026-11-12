@@ -53,6 +53,14 @@ let
     Logging__Console__FormatterName = "systemd";
     Search__ModelDirectory = "${cfg.searchModel}";
     Receipts__Root = "${cfg.stateDir}/receipts";
+    # Receipt OCR (MAZ-125): local programs only; the language data comes with the
+    # tesseract package (its wrapper sets TESSDATA_PREFIX).
+    Ocr__Tesseract = lib.getExe' cfg.ocr.tesseract "tesseract";
+    Ocr__PopplerDirectory = "${lib.getBin cfg.ocr.poppler}/bin";
+    Ocr__VipsDirectory = "${lib.getBin cfg.ocr.vips}/bin";
+    Ocr__Prlimit = lib.getExe' pkgs.util-linux "prlimit";
+    Ocr__EngineMemoryMegabytes = toString cfg.ocr.engineMemoryMegabytes;
+    Ocr__Languages = lib.concatStringsSep "+" cfg.ocr.languages;
     Auth__AllowedOrigins = lib.concatStringsSep "," cfg.publicOrigins;
     Auth__SecureCookies = lib.boolToString cfg.secureCookies;
     Auth__TrustedProxies = lib.concatStringsSep "," cfg.trustedProxies;
@@ -213,6 +221,68 @@ in
       default = pennyPackages.penny-search-model;
       defaultText = lib.literalExpression "penny.packages.\${system}.penny-search-model";
       description = "Directory with the pinned search embedding model (`Search__ModelDirectory`).";
+    };
+
+    ocr = {
+      languages = mkOption {
+        type = types.nonEmptyListOf types.str;
+        default = [ "eng" "fra" ];
+        example = [ "eng" "fra" "deu" ];
+        description = ''
+          Tesseract languages for receipt text extraction (`Ocr__Languages`, MAZ-125). Their
+          language data is added to `ocr.tesseract`; the API checks it at startup.
+        '';
+      };
+
+      tesseract = mkOption {
+        type = types.package;
+        default = pkgs.tesseract.override { enableLanguages = cfg.ocr.languages; };
+        defaultText = lib.literalExpression
+          "pkgs.tesseract.override { enableLanguages = config.services.penny.ocr.languages; }";
+        description = "Tesseract (with its language data) used for receipt OCR on this host.";
+      };
+
+      poppler = mkOption {
+        type = types.package;
+        default = pkgs.poppler-utils;
+        defaultText = lib.literalExpression "pkgs.poppler-utils";
+        description = "poppler's `pdftotext`, `pdfinfo` and `pdftoppm`, which read and render receipt PDFs.";
+      };
+
+      vips = mkOption {
+        type = types.package;
+        default = pkgs.vips;
+        defaultText = lib.literalExpression "pkgs.vips";
+        description = "libvips' `vipsheader` and `vipsthumbnail`, which decode receipt photos at a bounded size.";
+      };
+
+      engineMemoryMegabytes = mkOption {
+        type = types.ints.between 256 16384;
+        default = 1024;
+        description = ''
+          Address-space limit of each OCR engine process (`Ocr__EngineMemoryMegabytes`,
+          applied with `prlimit`); an engine that needs more fails that attempt.
+        '';
+      };
+    };
+
+    memoryMax = mkOption {
+      type = types.nullOr types.str;
+      default = "3G";
+      example = "2G";
+      description = ''
+        systemd `MemoryMax=` of the API service, which also runs the OCR engines: the
+        API with the search model needs about 1 GiB, plus up to
+        `ocr.engineMemoryMegabytes` per concurrent receipt (`Ocr__Concurrency`, default
+        1). The kernel kills the service past it (systemd restarts it); null leaves it
+        unlimited.
+      '';
+    };
+
+    tasksMax = mkOption {
+      type = types.nullOr types.ints.positive;
+      default = 1024;
+      description = "systemd `TasksMax=` of the API service (threads and OCR child processes); null for systemd's default.";
     };
 
     hostName = mkOption {
@@ -541,6 +611,10 @@ in
         RestartSec = 5;
         # Above Backend__ShutdownTimeoutSeconds so requests and worker leases drain.
         TimeoutStopSec = 45;
+      } // lib.optionalAttrs (cfg.memoryMax != null) {
+        MemoryMax = cfg.memoryMax;
+      } // lib.optionalAttrs (cfg.tasksMax != null) {
+        TasksMax = cfg.tasksMax;
       };
     };
 
@@ -574,11 +648,11 @@ in
               proxy_send_timeout 330s;
             '';
           };
-          # Fingerprinted Vite bundles never change.
+          # Fingerprinted Vite bundles never change. Without `always`, a 404 is not cached.
           "/assets/" = {
             tryFiles = "$uri =404";
             extraConfig = ''
-              add_header Cache-Control "public, max-age=31536000, immutable" always;
+              add_header Cache-Control "public, max-age=31536000, immutable";
               add_header X-Content-Type-Options nosniff always;
             '';
           };

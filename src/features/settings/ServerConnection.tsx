@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Platform, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { probePennyServer, type PennyServer } from "../../data/serverConnection";
 import { useServerConnection } from "../../providers/ServerConnectionProvider";
 import { Button, Field, s } from "../../shared/ui";
@@ -15,7 +15,7 @@ export function ServerConnection({ editable = false, disabled = false, onBusy }:
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const running = useRef(false);
-  if (Platform.OS === "web" || !connection) return null;
+  if (!connection) return null;
 
   async function check() {
     if (running.current || disabled) return;

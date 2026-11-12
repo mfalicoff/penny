@@ -76,14 +76,24 @@ internal sealed class InMemorySearchOutbox : ISearchRepository
     public Task<long> PendingEmbeddingsAsync(CancellationToken cancellationToken) =>
         Task.FromResult((long)Rows.Count(row => row.Value.Due is not null));
 
+    // Searches find nothing; their criteria are recorded.
+    public List<SearchCriteria> Searches { get; } = [];
+
     public Task<StoredSearchPage> SearchAsync(
         SearchCriteria criteria,
         CancellationToken cancellationToken
-    ) => throw new NotSupportedException();
+    )
+    {
+        Searches.Add(criteria);
+        return Task.FromResult(
+            new StoredSearchPage(0, [], new Dictionary<string, StoredReceiptInfo>())
+        );
+    }
 
     public Task<SearchRebuildReport> RebuildAsync(
         string? userId,
         string modelId,
+        Func<string, IReadOnlyList<string>> chunk,
         CancellationToken cancellationToken
     ) => throw new NotSupportedException();
 

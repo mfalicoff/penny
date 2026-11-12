@@ -6,17 +6,19 @@ Run all commands from the repository root. For a deployed server, use the [self-
 
 ## Run the complete web app
 
-Use Node **24 or newer** and npm. No external database service is required.
+The browser app is `apps/web` (React, Vite, TanStack) on the .NET API. The Expo web app was retired in MAZ-97. Use Node **24 or newer**, npm, and Docker or Podman for the disposable PostgreSQL and API stack:
 
 ```sh
 npm ci
-npm run build:web
-npm run server
+npm run test-env -- up --seed searchable-household   # prints the API URL
+cd apps/web
+npm ci
+PENNY_API_URL=http://127.0.0.1:<port> npm run dev     # http://localhost:4173
 ```
 
-Open **http://localhost:3001**. Create an account, or choose the sample-data demo. The server serves both the exported web app and `/api` endpoints. No `.env` is needed for this same-origin local setup.
+Open **http://localhost:4173**. Create an account, or choose the sample-data demo, which needs no API. See the [web app's developer setup](../apps/web/README.md#developer-setup) for the commands and the [test environment](migration/test-environment.md) for the stack. To run the production containers locally, follow [self-hosting](deployment.md#quick-start).
 
-Data is saved to `data/penny.sqlite` by default. This directory is ignored by Git.
+The legacy Node/SQLite server (`npm run server`) now serves only `/api/`, for the Expo mobile apps and the legacy test suites. It saves data to `data/penny.sqlite`, which Git ignores.
 
 ## Nix / direnv development shell
 
@@ -61,20 +63,20 @@ host browser dependencies).
 
 ## Develop with live reload
 
+The web app's `npm run dev` (above) reloads on save. For the legacy Expo mobile apps, start the legacy API and Expo:
+
 ```sh
 cp .env.example .env
 npm run server
 # In a second terminal:
-npm run web
+npm start
 ```
-
-Expo web runs on port 8081. `.env.example` points it at the API on port 3001 and allows that origin. Restart Expo after changing `EXPO_PUBLIC_API_URL`; it is embedded in the client bundle at build time.
 
 ### iOS and Android
 
 On the mobile sign-in screen, choose **Change server**, enter your Penny server's base URL (without `/api`), and tap **Check server**. Penny checks the public `/api/info` endpoint, displays the server version, and enables **Use this server** only after a successful check. Use an HTTPS hostname, or a reachable LAN address for development; `localhost` on a physical phone points at the phone, not your server. Use the same account on each device.
 
-The selection is saved only on that device, survives app restarts and sign-out, and is shown in Settings. To switch servers, sync any pending entries and sign out first. Sessions and offline ledgers are isolated by server, including accounts with the same email address. Web has no server selector: the deployed web app uses the backend serving it (the build-time override above remains available for web development).
+The selection is saved only on that device, survives app restarts and sign-out, and is shown in Settings. To switch servers, sync any pending entries and sign out first. Sessions and offline ledgers are isolated by server, including accounts with the same email address. The web app (`apps/web`) has no server selector: it always uses the origin that serves it.
 
 `EXPO_PUBLIC_API_URL` now supplies the initial mobile default, falling back to `http://localhost:3001`. On the first launch after upgrading, Penny saves that address automatically and retains existing sessions and offline entries, without requiring a network check. Keep the previous build's `EXPO_PUBLIC_API_URL` for the first migration release; older builds did not store their embedded address separately. Later builds cannot override a device's saved selection. Deploy the updated backend before asking users to select a new server: older servers without `/api/info` cannot be verified, but existing migrated connections continue working.
 
@@ -107,7 +109,7 @@ Expo, React, React Native, their native libraries, and Expo-specific tooling are
 excluded from automated updates so their versions stay aligned with the Expo SDK.
 Update them deliberately using Expo's SDK upgrade guidance and
 `npx expo install --fix`, then commit both `package.json` and `package-lock.json`
-and verify web, iOS, and Android. When adding an SDK-managed dependency, keep the
+and verify iOS and Android. When adding an SDK-managed dependency, keep the
 exclusion rule in `renovate.json` aligned with it.
 
 The toolchain runs TypeScript 7, ESLint 10, and Jest 30 without independently
@@ -122,7 +124,7 @@ upgrading the Expo SDK:
 - `eslint.config.js` applies ESLint's
   [`fixupConfigRules`](https://github.com/eslint/rewrite/tree/main/packages/compat)
   adapter to Expo's plugins, preserving their rules on ESLint 10.
-- Jest 30 runs the existing `jest-expo` iOS, Android, and web projects.
+- Jest 30 runs the existing `jest-expo` iOS and Android projects.
 
 Some upstream Expo lint/test dependencies still declare older ESLint/Jest peer
 ranges, so `npm ci` emits peer warnings. The compatibility setup does not disable
@@ -150,7 +152,7 @@ npx --yes --package renovate -- renovate-config-validator --strict --no-global r
 - `server/application/`: account, ledger and receipt operations with typed storage/security interfaces.
 - `server/validation/`: input schemas, ledger invariants and receipt signature checks.
 - `server/infrastructure/`: SQLite schema/repositories, atomic writes and password/token cryptography.
-- `server/index.ts`: process lifecycle, environment configuration and web hosting.
+- `server/index.ts`: process lifecycle and environment configuration (API only since MAZ-97).
 
 See [Frontend architecture](frontend-architecture.md) for ownership rules, the pattern for adding a feature, and the testing strategy.
 See [Backend architecture](backend-architecture.md) for service boundaries, persistence guarantees, API regression coverage and the Hono assessment.
@@ -159,7 +161,10 @@ See [Backend architecture](backend-architecture.md) for service boundaries, pers
 
 ```sh
 npm run lint
-
-[Showing lines 1-300 of 344. Use :301 to continue]
+npm run typecheck
+npm test
+npx expo export --platform ios --platform android --output-dir /tmp/penny-native-export
+(cd apps/web && npm ci && npm run check)
+```
 
 See [Testing strategy](testing.md) for the canonical test commands, coverage boundaries, browser and native toolchain setup, and CI policy. Bundle exports check resolution, not device interaction.

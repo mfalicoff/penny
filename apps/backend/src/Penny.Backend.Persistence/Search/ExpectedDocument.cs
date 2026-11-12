@@ -14,5 +14,6 @@ internal sealed record ExpectedDocument(
     string Kind,
     DateOnly ItemDate,
     long? AmountCents,
-    SearchDocumentText Text
+    SearchDocumentText Text,
+    string? ReceiptId
 );

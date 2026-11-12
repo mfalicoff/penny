@@ -1,4 +1,3 @@
-import { isOidcCallback } from "../data/oidc";
 import { Text, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Auth } from "../features/auth/AuthScreen";
@@ -24,6 +23,5 @@ function SessionGate() {
 }
 
 export default function RootLayout() {
-  if (isOidcCallback()) return <View style={{ flex: 1, justifyContent: "center", padding: 24 }}><Text>Completing sign-in… You can close this window and return to Penny.</Text></View>;
   return <ThemeProvider><SafeAreaProvider><AppLockProvider><AppLockGate><ServerConnectionProvider><LedgerProvider><SessionGate /></LedgerProvider></ServerConnectionProvider></AppLockGate></AppLockProvider></SafeAreaProvider></ThemeProvider>;
 }

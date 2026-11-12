@@ -57,6 +57,15 @@
           packages = with pkgs; [
             nodejs_24
             sqlite
+            # Receipt OCR (MAZ-125): the API's text extraction and its tests need
+            # Tesseract with English and French data, poppler's pdftotext/pdfinfo/pdftoppm
+            # and libvips' command-line tools (bounded image decoding).
+            (tesseract.override { enableLanguages = [ "eng" "fra" ]; })
+            poppler-utils
+            vips
+          ] ++ lib.optionals pkgs.stdenv.hostPlatform.isLinux [
+            # prlimit applies the per-engine memory and CPU limits.
+            util-linux
           ];
         } // lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
           # The Aspire dashboard (apps/backend/src/Penny.Backend.AppHost, MAZ-138) is a

@@ -64,7 +64,7 @@ export async function unregisterPushForLogout(): Promise<void> {
   }
 }
 
-/** Mount once under LedgerProvider. Web uses PushRegistration.web.tsx instead. */
+/** Mount once under LedgerProvider. */
 export function PushRegistration({ email, demo }: { email: string | null; demo: boolean }) {
   useEffect(() => {
     if (!email || demo) return;

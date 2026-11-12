@@ -16,6 +16,12 @@ internal sealed class DeterministicEmbedder : ITextEmbedder
 
     public int Dimensions => 4;
 
+    // One token per word plus the prefix and special tokens.
+    public int MaxTokens { get; set; } = 512;
+
+    public int CountPassageTokens(string passage) =>
+        passage.Split([' ', '\n'], StringSplitOptions.RemoveEmptyEntries).Length + 4;
+
     public float[] EmbedQuery(string query) => Vector(query);
 
     public IReadOnlyList<float[]> EmbedPassages(IReadOnlyList<string> passages)

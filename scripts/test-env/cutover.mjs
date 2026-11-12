@@ -347,7 +347,7 @@ export async function rehearseCutover({ build = false, reportDirectory = join(ro
         const run = (name, args, allowed = [0]) => {
           const result = command(args);
           steps[name] = result.status;
-          if (!allowed.includes(result.status)) throw new Error(`${name} failed (${result.status}): ${result.stderr.trim().split("\n").slice(-3).join(" ")}`);
+          if (!allowed.includes(result.status)) throw new Error(`${name} failed (${result.status}): ${result.stderr.trim().split("\n").slice(-3).join(" ")} ${result.stdout.trim().split("\n").slice(-2).join(" ")}`.trim());
           return result;
         };
         const snapshot = run("snapshot-sqlite", ["snapshot-sqlite", legacy.databasePath, sealed]);
@@ -361,6 +361,11 @@ export async function rehearseCutover({ build = false, reportDirectory = join(ro
         const searchStarted = Date.now();
         run("search-rebuild", ["search-rebuild"]);
         timings.searchRebuildSeconds = (Date.now() - searchStarted) / 1000;
+        // Imported receipts have no text (MAZ-125): search-rebuild links and queues them,
+        // receipts-ocr extracts and embeds them, so search-verify can come back clean.
+        const ocrStarted = Date.now();
+        run("receipts-ocr", ["receipts-ocr"]);
+        timings.receiptsOcrSeconds = (Date.now() - ocrStarted) / 1000;
         run("search-verify", ["search-verify"]);
         run("receipts-verify", ["receipts-verify"]);
         const code = run("reset-password", ["reset-password", resetAccount.email]).stdout.trim();

@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { ServerConnection } from "./ServerConnection";
-import { Platform, Pressable, Switch, Text, View } from "react-native";
+import { Pressable, Switch, Text, View } from "react-native";
 import { changeCurrency } from "../../domain/commands";
 import { useLedger } from "../../providers/LedgerProvider";
 import { useAppLock } from "../../providers/AppLockProvider";
@@ -39,7 +39,7 @@ export function SettingsSheet({ visible, onClose }: { visible: boolean; onClose:
         })}
       </View>
     </View>
-    {Platform.OS !== "web" && appLock && <View style={{ gap: 10 }}>
+    {appLock && <View style={{ gap: 10 }}>
       <View style={s.between}>
         <Text style={s.label}>Biometric app lock</Text>
         <Switch accessibilityLabel="Biometric app lock" value={appLock.enabled} disabled={appLock.busy}

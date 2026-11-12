@@ -52,7 +52,6 @@ yarn-error.*
 !.env.example
 
 # Generated PDF.js assets
-public/pdf/
 
 # Test reports
 coverage/
