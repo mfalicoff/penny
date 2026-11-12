@@ -59,6 +59,21 @@ struct UITestLaunchControlsTests {
         #expect(TestControls.fromProcess([:]) == TestControls())
     }
 
+    @Test("whenNotificationVariablesSet_TestControls_ShouldInjectTheSamePayloadARealNotificationCarries")
+    func notification() throws {
+        let payload =
+            #"{"aps":{"alert":{"title":"New household expense"}},"householdId":"h1","month":"2026-09","expenseId":"e2"}"#
+        let controls = TestControls.fromProcess([
+            "PENNY_TEST_NOTIFICATION": payload, "PENNY_TEST_NOTIFICATION_ON_RESUME": #"{"householdId":"h1"}"#,
+        ])
+        let atLaunch = try #require(controls.notificationAtLaunch.flatMap(TestNotificationInjection.notification))
+        #expect(atLaunch == HouseholdNotification(householdID: "h1", month: "2026-09", expenseID: "e2"))
+        // A malformed payload is injected as one: nil, which opens nothing.
+        #expect(controls.notificationOnResume.flatMap(TestNotificationInjection.notification) == nil)
+        #expect(TestNotificationInjection.notification("not json") == nil)
+        #expect(TestControls.fromProcess([:]).notificationAtLaunch == nil)
+    }
+
     @Test("whenSeedApplied_ContainerSeed_ShouldWriteDefaultsAndFilesInsideTheContainer")
     func seed() throws {
         let key = "penny.uitest.seed.\(UUID().uuidString)"

@@ -22,6 +22,10 @@ struct LaunchOptions {
     var contentSize: String?
     var reduceTransparency = false
     var reduceMotion = false
+    /// A notification payload (JSON) Penny opens as if tapped: at launch, or the first time it
+    /// returns from the background (MAZ-79, `PENNY_TEST_NOTIFICATION*`).
+    var notification: String?
+    var notificationOnResume: String?
 }
 
 /// Base class for Penny's UI tests: launches against the full-stack environment, creates
@@ -107,6 +111,10 @@ class PennyUITestCase: XCTestCase {
         if let today = options.today { environment["PENNY_TEST_TODAY"] = today }
         if options.reduceTransparency { environment["PENNY_TEST_REDUCE_TRANSPARENCY"] = "1" }
         if options.reduceMotion { environment["PENNY_TEST_REDUCE_MOTION"] = "1" }
+        if let notification = options.notification { environment["PENNY_TEST_NOTIFICATION"] = notification }
+        if let notification = options.notificationOnResume {
+            environment["PENNY_TEST_NOTIFICATION_ON_RESUME"] = notification
+        }
         if let seed = options.seed { environment["PENNY_TEST_CONTAINER_SEED"] = try seed.write().path() }
         app.launchEnvironment = environment
         app.launchArguments = options.contentSize.map { ["-UIPreferredContentSizeCategoryName", $0] } ?? []

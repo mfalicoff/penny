@@ -6,6 +6,8 @@ import SwiftUI
 struct PennyApp: App {
     private let configuration: Result<AppConfiguration, AppConfiguration.Invalid>
     private let services: AppServices
+    /// APNs and notification callbacks (MAZ-79, PennyUI.PushNotifications).
+    @UIApplicationDelegateAdaptor(PennyAppDelegate.self) private var appDelegate
     #if PENNY_TEST_CONTROLS
         private let controls = TestControls.fromProcess()
     #endif
@@ -32,10 +34,11 @@ struct PennyApp: App {
     var body: some Scene {
         WindowGroup {
             #if PENNY_TEST_CONTROLS
-                RootView(configuration: configuration, services: services)
+                RootView(configuration: configuration, services: services, notifications: appDelegate.notifications)
                     .modifier(TestAccessibilityOverrides(controls: controls))
+                    .modifier(TestNotificationInjection(controls: controls, notifications: appDelegate.notifications))
             #else
-                RootView(configuration: configuration, services: services)
+                RootView(configuration: configuration, services: services, notifications: appDelegate.notifications)
             #endif
         }
     }

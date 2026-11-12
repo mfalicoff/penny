@@ -31,6 +31,22 @@ extension Stack {
         _ = try await send("POST", api("/join"), body: ["code": code], token: token)
     }
 
+    /// Adds an equal-split expense paid by `payer` (MAZ-79's notification journeys).
+    func createExpense(
+        token: String, household: String, payer: String, title: String, cents: Int, date: String
+    ) async throws -> String {
+        let body: [String: Any] = [
+            "title": title, "totalCents": cents, "date": date, "payerUserId": payer, "splitMode": "equal",
+            "category": ["name": "Food", "icon": "cafe-outline", "color": "#E47850"], "note": "",
+        ]
+        guard
+            let id =
+                (try await send("POST", api("/\(household)/expenses"), body: body, token: token)["expense"]
+                as? [String: Any])?["id"] as? String
+        else { throw StackError.malformed("POST /api/households/{id}/expenses") }
+        return id
+    }
+
     func expenses(token: String, household: String) async throws -> [[String: Any]] {
         try await send("GET", api("/\(household)/expenses"), token: token)["expenses"] as? [[String: Any]] ?? []
     }

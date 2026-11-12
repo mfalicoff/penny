@@ -284,6 +284,17 @@ public final class HouseholdModel {
         }
     }
 
+    /// Moves to `next` without reading it (MAZ-79: an opened notification, before the page shows;
+    /// the page's own read loads it). As with a month the person chose, the page keeps it until
+    /// the calendar moves past `current`.
+    public func open(month next: MonthKey, current: MonthKey) {
+        chosenDuring = current
+        guard next != month else { return }
+        month = next
+        monthGeneration += 1
+        recap = nil
+    }
+
     /// Shows another month. Answers arrive in any order; only the one for the month still on
     /// screen is kept, so a quick ‹ ‹ never shows October's balances under September.
     public func show(month next: MonthKey, current: MonthKey? = nil) async {

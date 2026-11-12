@@ -10,6 +10,7 @@ struct SettingsView: View {
     @Environment(ShellModel.self) private var shell
     @Environment(AppearanceModel.self) private var appearance
     @Environment(AppLockController.self) private var lock
+    @Environment(PushNotifications.self) private var push: PushNotifications?
     /// Shown on iPhone, where Settings is a sheet.
     var onDone: (() -> Void)?
 
@@ -52,6 +53,14 @@ struct SettingsView: View {
                 if let ledger, let reason = CurrencyPolicy.lockReason(ledger: ledger) { Text(reason) }
             }
             if let account = shell.account {
+                if let push {
+                    // MAZ-79: household notifications, for an account only.
+                    Section {
+                        NotificationSettingsRow(push: push)
+                    } footer: {
+                        Text(NotificationText.footer(permission: push.permission, status: push.registrar.status))
+                    }
+                }
                 Section {
                     NavigationLink(value: SettingsRoute.server) {
                         Label {

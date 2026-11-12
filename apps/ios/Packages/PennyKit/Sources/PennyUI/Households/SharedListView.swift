@@ -9,6 +9,7 @@ import SwiftUI
 struct SharedView: View {
     @Environment(ShellModel.self) private var shell
     @Environment(InviteHandoff.self) private var invites: InviteHandoff?
+    @Environment(PushNotifications.self) private var push: PushNotifications?
 
     var body: some View {
         @Bindable var shell = shell
@@ -34,6 +35,10 @@ struct SharedView: View {
                             .foregroundStyle(PennyColor.secondaryLabel)
                             .listRowBackground(Color.clear)
                             .accessibilityIdentifier("shared.overall")
+                    }
+                    // MAZ-79: notifications are offered here, once there is a household to hear about.
+                    if let push, push.offersPrompt {
+                        Section { NotificationPrompt(push: push) }
                     }
                 }
                 rows("Households", directory.households.filter { $0.trip == nil }, directory)

@@ -12,6 +12,10 @@ public enum DeepLink: Equatable, Sendable {
     case households
     case household(id: String)
     case householdExpense(householdID: String, expenseID: String)
+    /// A household on a given month, optionally one of that month's expenses (MAZ-79): what a
+    /// household notification opens (`HouseholdNotification`), and the legacy notification route
+    /// `penny:///households/<id>?month=YYYY-MM&expenseId=<id>`.
+    case householdMonth(householdID: String, month: MonthKey, expenseID: String?)
     case trips
     case trip(id: String)
     /// A household invite (MAZ-75): `penny://join?code=<CODE>&server=<server URL>`, from a QR
@@ -58,7 +62,7 @@ public enum DeepLink: Equatable, Sendable {
         case ("transactions", 0): return .activity
         case ("entries", 1) where rest[0] == "new": return .addEntry
         case ("households", 0): return .households
-        case ("households", 1): return .household(id: rest[0])
+        case ("households", 1): return householdLink(rest[0], query)
         case ("households", 3) where rest[1] == "expenses":
             return .householdExpense(householdID: rest[0], expenseID: rest[2])
         case ("trips", 0): return .trips
@@ -68,6 +72,16 @@ public enum DeepLink: Equatable, Sendable {
         case (_, 0): return SettingsPage(rawValue: first).map(DeepLink.settings)
         default: return nil
         }
+    }
+
+    /// `month` (and `expenseId`) from the legacy notification route. Without a valid month the link
+    /// opens the household as before.
+    private static func householdLink(_ id: String, _ query: [URLQueryItem]) -> DeepLink {
+        func value(_ name: String) -> String? { query.first { $0.name == name }?.value }
+        guard let month = value("month"),
+            let notification = HouseholdNotification(householdID: id, month: month, expenseID: value("expenseId"))
+        else { return .household(id: id) }
+        return notification.deepLink
     }
 
     private static func joinLink(_ query: [URLQueryItem]) -> DeepLink {
