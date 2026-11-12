@@ -1,6 +1,6 @@
 # MAZ-50 revision verification — 2026-11-07
 
-Scope: architecture/contracts on `codex/maz-50-postgresql-contracts`, based on `master` `0e58a8b`. Remote `v2` was absent at task start; the PR base is recreated from that audited baseline. The earlier October 19 Linear verification is preserved as historical evidence, not reused to certify this revision.
+Scope: architecture/contracts on `codex/maz-50-postgresql-contracts`, based on `master` `0e58a8b`. Remote `v2` was absent at task start; the PR base is recreated from that audited baseline. The earlier October 19 Linear verification is preserved as historical evidence, not reused to certify this revision. Recorded before the Expo app's removal (MAZ-98); `npm run test:ui` no longer exists.
 
 | Check | Result |
 | --- | --- |

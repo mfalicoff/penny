@@ -2,115 +2,13 @@
 
 [App showcase](../README.md) · [Documentation](README.md)
 
-This guide describes the running legacy Expo client. The accepted [v2 migration architecture](migration/architecture.md) defines the separate SwiftUI/TanStack clients, redesign and PostgreSQL API.
+The Expo/React Native frontend was removed from the repository in MAZ-98. Android had already been retired, and the Expo web build was replaced by `apps/web` in MAZ-97. The [v2 migration architecture](migration/architecture.md) describes the clients that replaced it.
 
-Use this formula for new work: **a thin route, a feature screen, local UI state, pure rules, and one shared persistence boundary**.
+- **iOS:** the native SwiftUI app. See the [native iOS app](../apps/ios/README.md) and the `ios-*.md` guides in the [documentation index](README.md).
+- **Browser:** the React/Vite/TanStack client. See the [web app foundation](../apps/web/README.md).
 
-## Ownership
+People who still have an Expo build installed upgrade in place. See [Upgrading Expo iOS installs](ios-expo-migration.md).
 
-| Location | Owns | Does not own |
-| --- | --- | --- |
-| `src/app/` | Expo Router route and layout exports | Components, tests, business logic |
-| `src/shell/` | Responsive navigation, account gate, common page chrome and dialog mounting | Ledger mutations or individual screen content |
-| `src/features/<feature>/` | Screens, feature components, forms, draft conversion and selectors | Global session lifecycle |
-| `src/providers/LedgerProvider.tsx` | Authentication state, ledger snapshot, serialized saves, polling, foreground sync, save feedback | Form inputs, filtering or feature-specific mutations |
-| `src/providers/WorkspaceProvider.tsx` | Overview filters and entry-dialog selection that survive navigation | Server data or requests |
-| `src/providers/AppLockProvider.tsx` | Device-local biometric preference, authentication single-flight, launch/foreground locking | Server sign-in, ledger encryption or widget privacy |
-| `src/domain/` | Ledger types, money, recurrence, immutable commands, merge, search, recorded/projected summaries and pure selectors (`selectors/`); see [domain rules](migration/domain-rules.md) | React, Expo, network calls or platform APIs |
-| `src/data/` | API requests, revision retries, session credentials and receipt I/O | Presentation or navigation |
-| `src/shared/` | UI primitives, formatting and responsive breakpoints | Feature orchestration |
+## Shared TypeScript rules
 
-`App.tsx` is a compatibility export. The actual entry point is `expo-router/entry`, with composition in `src/app/_layout.tsx`. The shell renders a visible `Slot`; Overview, Recurring and Categories each render their own content. This follows [Expo Router's layout model](https://docs.expo.dev/router/basics/navigation-layouts/).
-
-The Expo app targets iOS and Android only; its web implementations (`*.web.ts(x)`) were removed in MAZ-97, and the browser client is `apps/web`. Keep any iOS/Android-specific implementation adjacent (`*.ios.tsx` / `*.android.tsx`) and import the extensionless module so Metro chooses the platform. Pure modules used by Node tests or the server use explicit `.ts` imports.
-
-## State and writes
-
-Form fields and validation messages stay in the form. Category editing and schedule deletion confirmations stay in their feature. Entry-dialog selection and overview filters live above the route slot because they must survive navigation. The workspace is remounted for a new session so account changes cannot retain another account's drafts or filters.
-
-Save flow:
-
-```text
-Form input → pure draft validation → optional receipt upload
-           → domain command → LedgerProvider.commit
-                            → latest server ledger + command + revision check
-                            → updated snapshot or visible error
-```
-
-Commands return `(ledger: Ledger) => Ledger`; they must not mutate the input or perform side effects. Generate IDs before constructing commands and preserve unrelated changes. Personal changes are persisted as per-account, per-server `{base,local}` v4 snapshots before save feedback, survive restarts and sync on reconnect/foreground/interval. Sync fetches the latest ledger and retries revision races using three-way field merge; local edited fields win same-field races. A failed local save retains the form draft; a failed sync retains durable pending changes. Shared actions and receipt uploads require connectivity. Signing out is blocked while personal changes remain pending.
-
-The session provider rejects overlapping saves, ignores results from an obsolete session, and cleans up timers and foreground listeners. Demo changes use the same commands locally. Do not add polling or direct ledger writes to screens.
-
-Overview selectors calculate monthly totals independently of the visible list's search/day/kind filters. `monthEntries` contains recorded entries; `calendarEntries` adds all scheduled previews; `summaryEntries` adds every scheduled occurrence (income, expenses, investments; a recorded occurrence replaces its preview) and feeds the summary cards (`summary`, the Projected figure); `recorded` holds the recorded-only totals; `moneyFlowEntries` adds only scheduled income and feeds the money-flow chart. `scheduled` enables projection labeling and `expectedIncome` identifies the unrecorded income. Preview generation reuses recurrence dates and occurrence IDs to avoid counting materialized payments twice, without mutating the ledger. Transactions reports remain recorded-only. Reports use integer-cent personal shares. Presentation components receive explicit props; they do not fetch data. Screen-local styles live with their components; reusable controls and tokens live in `shared/ui`.
-
-The household projection API returns recorded `transactions` plus month-only `scheduled` previews. `HouseholdProvider` retains each period's response; only Overview combines its selected month's previews with the recorded household projection. Transactions and widgets continue receiving recorded entries only. Household preview metadata survives ledger projection so Overview can exclude previews from spending and route taps to the household's `ruleId` schedule editor. The server calculates membership-aware shares with the same recurrence logic used to materialize household expenses; reads never write occurrences or advance schedules.
-
-## Native app lock
-
-`AppLockProvider` sits above server/session providers. It reads `penny-app-lock` from SecureStore before `AppLockGate` admits account content. Read failures fail closed with a retry action. Once admitted, the session tree stays mounted while hidden so locking does not discard drafts. Shared `Sheet` dialogs also suppress their native modals while obscured, preventing an open sheet from covering the lock screen.
-
-The provider conceals content while inactive and locks on actual background transitions. iOS biometric-prompt inactive/active events do not trigger a second prompt. Authentication is single-flight; background transitions invalidate outstanding results, and enabling/disabling is committed only after successful authentication and a durable preference write. Enabling requires strong enrolled biometrics; later unlocking/disabling permits the OS device-credential fallback.
-
-`app.json` configures the `expo-local-authentication` plugin's Face ID usage description; the module contributes Android biometric permissions. This requires a native rebuild, not new iOS entitlements. See [Mobile app protection](app-guide.md#mobile-app-protection) for recovery behavior and the widget/notification privacy boundary.
-
-## Native glass surfaces
-
-Mobile headers, bottom navigation and shared `Sheet` dialogs use `shared/ui/GlassSurface`. Ledger cards and form controls remain opaque for legibility. Web keeps its existing solid chrome.
-
-- **iOS 26+:** [Expo GlassEffect](https://docs.expo.dev/versions/v57.0.0/sdk/glass-effect/) renders native Liquid Glass only when both runtime capability checks pass. Earlier iOS versions use a frosted blur.
-- **Android 12+:** [Expo BlurView](https://docs.expo.dev/versions/v57.0.0/sdk/blur-view/) samples one shared `BlurTargetView` containing the scrolling page. Glass overlays stay outside the target to avoid recursive blur. Android uses a frosted-glass approximation, not Apple's Liquid Glass renderer.
-- **Fallbacks:** Android versions below API 31 and AMOLED appearance use solid theme-colored surfaces. iOS Reduce Transparency is checked before enabling effects and observed for live changes; a failed preference query leaves surfaces opaque. A sheet outside the workspace's glass provider also remains opaque.
-
-`GlassProvider` owns the sampled-content ref and accessibility preference. `GlassSurface` follows the app's selected light/dark palette rather than assuming the system theme. Floating navigation measures its height so scroll padding keeps the first and last controls reachable. Native modals slide instead of fading: setting a glass view or ancestor to zero opacity can prevent the iOS effect from rendering.
-
-Blur fallbacks place a theme-colored tint above the sampled image, not behind it. This preserves text contrast even if Android retains a bright sampled frame while a dialog is open during a dark-theme switch.
-
-After installing these native dependencies, rebuild the development apps with `npx expo run:ios` and `npx expo run:android`; a JavaScript reload or OTA update alone cannot add `expo-blur` to an existing binary.
-
-## Adding a feature
-
-1. Add its screen under `src/features/<name>/` and a route export under `src/app/`.
-2. Keep transient state local. Put state in a provider only when its lifetime must span routes or sessions.
-3. Extract calculations and input conversion into pure functions. Add reusable ledger mutations to `domain/commands.ts` and run them through `commit`.
-4. Break substantial screen sections into components with named props. Extract shared components after there is real reuse, rather than creating generic frameworks in advance.
-5. Put behavior tests under `tests/ui/`, mirroring the feature's source hierarchy. Keep Node domain/API integration tests under `tests/core/` and runtime journeys under `tests/e2e/native/`. Never put tests in `src/app/` or elsewhere in the application tree. The canonical [testing strategy](testing.md) defines ownership and platform gates.
-
-ESLint rejects upward dependencies from domain, data, shared code and providers into screen/composition code. A feature may reuse an explicit component from another feature (for example, entries use receipt preview); avoid a global feature barrel or feature-to-feature state dependencies.
-
-## Testing
-
-```sh
-npm run test:core      # Node: money, recurrence, commands, draft conversion, selectors, real API integration
-npm run test:ui        # Jest/Expo: iOS and Android projects
-npm run test:ui:ios    # iOS native component interactions
-npm run test:ui:android # Android native component interactions
-npm run test:ui:watch  # Interactive frontend work
-npm test              # Both suites; also used by CI
-npm run lint
-npm run typecheck
-npx expo export --platform ios --platform android --output-dir /tmp/penny-native-export
-```
-
-The frontend harness uses the SDK-matched [Jest Expo preset](https://docs.expo.dev/develop/unit-testing/), React Native Testing Library and [Expo Router's testing utilities](https://docs.expo.dev/router/reference/testing/). The same native interaction tests run with the iOS and Android presets so platform-specific module resolution and picker behavior are checked on both. Tests press accessible controls and assert observable outcomes, rather than snapshots of the component tree. Actual browser, simulator and emulator commands are defined in the [testing strategy](testing.md).
-
-Conditional children of a `View` must use boolean conditions or return `null`. For string state, use `message !== "" && <Text>…</Text>` or a ternary; `message && …` passes an empty string to the view, which React Native rejects outside `<Text>`.
-
-The decorative chart SVG uses `accessible={false}`. Use `style.pointerEvents` rather than the deprecated `pointerEvents` prop.
-
-Cover success and failure where behavior can lose user work: stale edit/delete conflicts, retries, duplicate submissions, failed-save draft retention, session changes, subscription cleanup and navigation persistence. Domain tests cover money/date boundaries and immutability. Route tests use the real route exports, shell, screens and providers with a mocked API.
-
-Native font loading is mocked globally; receipt I/O and preview are mocked in native form/navigation tests. These tests do not validate device pickers, actual PDF decoding, keyboard behavior, accessibility on a device or visual layout. Bundle exports check cross-platform resolution, not device interaction. Changes to those areas still need a browser or simulator/device check. The server integration test requires permission to listen on a local port.
-
-### Verification on September 27, 2026
-
-- Passed 26 core tests, 16 native UI tests and 22 real-DOM web tests, plus lint and TypeScript checks.
-- Exported web, iOS and Android bundles successfully.
-- Used temporary demo data in a live development browser at desktop and 390-pixel phone widths. Verified chart selection, a $98 expense with a $49 personal share, monthly recurrence, pause/resume, category creation, settings, search, phone-width editing/saving and empty-month navigation.
-- No browser console warnings or errors appeared after a clean reload and those interactions. The phone document width matched its viewport (390 pixels).
-- No physical-device/simulator run or real receipt upload/PDF decoding was performed in this pass.
-
-### Biometric-lock verification on October 24, 2026
-
-- Lint and TypeScript checks passed; all 54 UI suites / 255 tests passed, including 18 native app-lock checks across iOS and Android.
-- Built and installed the iOS simulator app with no build warnings or errors. Verified the real Face ID prompt, authenticated enabling/disabling, relaunch protection, background relocking with an open settings sheet, failed recognition/cancellation remaining locked, and successful unlock/retry.
-- Android and web production bundles exported successfully. Android device prompts and physical-device biometrics/passcode fallback were not exercised.
+`src/domain/` remains in the root package. It holds the pure TypeScript ledger rules: types, money, recurrence, immutable commands, merge, search, recorded/projected summaries, selectors, entry-draft conversion (`entryDraft.ts`) and the household projection (`householdProjection.ts`). The legacy Node API in `server/`, the core tests and the golden fixtures use it. It must not import UI, network or platform code. See [domain rules](migration/domain-rules.md) and the [testing strategy](testing.md).

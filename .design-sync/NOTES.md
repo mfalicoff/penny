@@ -19,6 +19,6 @@
 
 ## Re-sync risks
 - **Token drift:** the kit's tokens and CSS are copied by hand from `docs/design/penny-ios/assets/penny.css`. When the proposal's colors or category palette change, update `design-kit/src/styles.css` too, or the two drift apart silently.
-- **Sankey logic:** `MoneyFlow` copies the rules of `src/features/overview/moneyFlow.ts` (top five plus "N more", Beyond income, Left over). Changes to the app's flow logic won't reach the kit automatically.
+- **Sankey logic:** `MoneyFlow` copies the rules of `src/domain/selectors/moneyFlow.ts` (top five plus "N more", Beyond income, Left over). Changes to the app's flow logic won't reach the kit automatically.
 - **Hand-maintained mirrors:** `conventions.md` and `docs/*.md` repeat these rules in prose. Re-validate names against the build on every sync.
 - **Toolchain pins:** esbuild 0.25 and TypeScript 5.9, recorded in `design-kit/package-lock.json`.

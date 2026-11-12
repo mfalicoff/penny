@@ -21,8 +21,12 @@ LD_RUNPATH_SEARCH_PATHS = $(inherited) @executable_path/Frameworks
 
 // Signing (README.md#signing). Simulator builds sign ad hoc and need no team. For a
 // device, put DEVELOPMENT_TEAM in the git-ignored Configuration/Signing.local.xcconfig.
-CODE_SIGN_STYLE = Automatic
+// TestFlight archives in CI sign manually: `ios.sh archive` sets the PENNY_* values below
+// (docs/ios-ipa.md#signing). They are set here, on the app target only, because a profile
+// passed straight to xcodebuild would also apply to the PennyKit package targets.
+CODE_SIGN_STYLE = $(PENNY_CODE_SIGN_STYLE:default=Automatic)
 CODE_SIGN_ENTITLEMENTS = Configuration/Penny.entitlements
-CODE_SIGN_IDENTITY = Apple Development
+CODE_SIGN_IDENTITY = $(PENNY_CODE_SIGN_IDENTITY:default=Apple Development)
+PROVISIONING_PROFILE_SPECIFIER = $(PENNY_PROFILE_SPECIFIER)
 CODE_SIGN_IDENTITY[sdk=iphonesimulator*] = -
 #include? "Signing.local.xcconfig"

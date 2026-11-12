@@ -78,7 +78,6 @@ function summary(state) {
     postgres: state.postgres,
     container: state.container,
     stateFile: `${state.directory}/env.json`,
-    android: state.apiUrl.replace("127.0.0.1", "10.0.2.2"),
     oidcIssuer: state.oidc?.issuer,
     oidcCertificate: state.oidc?.certificate,
   };
@@ -100,7 +99,7 @@ async function main() {
     case "run": {
       if (!command.length) throw new Error("Usage: penny-env run [options] -- <command...>");
       const { state, oidc } = await start(flags);
-      let code = 1;
+      let code;
       const stop = async () => {
         collectArtifacts(state);
         await oidc?.close();

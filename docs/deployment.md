@@ -219,7 +219,7 @@ It uses a throwaway Compose project and synthetic data, and removes everything a
 
 ## OpenID Connect (OIDC) sign-in
 
-Penny supports one configurable OIDC provider alongside email/password login on web, iOS, and Android. Configure a client supporting Authorization Code with S256 PKCE and the `openid email profile` scopes. The provider must return a verified email (`email_verified: true`) in the ID token or UserInfo response.
+Penny supports one configurable OIDC provider alongside email/password login on web and iOS. Configure a client supporting Authorization Code with S256 PKCE and the `openid email profile` scopes. The provider must return a verified email (`email_verified: true`) in the ID token or UserInfo response.
 
 Set these server-side values in `deploy/api.env`:
 
@@ -232,13 +232,13 @@ Oidc__Label=Single sign-on
 Oidc__AllowRegistration=true
 ```
 
-Use the exact issuer URL advertised by your provider. Register each exact redirect URI with the provider; wildcards are unsupported. Web sign-in uses a popup and requires HTTPS or localhost; keep the popup and original window on the same origin (the `web` container serves `/auth/callback`). The client secret is optional for public clients; confidential clients use `client_secret_post`. Never put it in an `EXPO_PUBLIC_` variable. Pending sign-in attempts are stored in PostgreSQL, so they survive restarts and work with several API containers.
+Use the exact issuer URL advertised by your provider. Register each exact redirect URI with the provider; wildcards are unsupported. Web sign-in uses a popup and requires HTTPS or localhost; keep the popup and original window on the same origin (the `web` container serves `/auth/callback`). The client secret is optional for public clients; confidential clients use `client_secret_post`. Never put it in client configuration. Pending sign-in attempts are stored in PostgreSQL, so they survive restarts and work with several API containers.
 
-New OIDC accounts are disabled by default. Set `Oidc__AllowRegistration=true` to provision an empty ledger on first sign-in, then set it back to `false`. This is independent of password sign-up. Existing users are identified by the stable `(issuer, subject)` pair; an existing account with the same email is **never automatically linked**. For the Expo app, a development or production build with `expo-web-browser` and the `penny` URL scheme is required (not Expo Go). The native iOS app uses the same `penny://auth/callback` redirect in an ephemeral system sign-in sheet ([native sign-in](ios-authentication.md#provider-and-callback-setup)). Details and troubleshooting: [OIDC on the .NET backend](migration/authentication.md#openid-connect-maz-54).
+New OIDC accounts are disabled by default. Set `Oidc__AllowRegistration=true` to provision an empty ledger on first sign-in, then set it back to `false`. This is independent of password sign-up. Existing users are identified by the stable `(issuer, subject)` pair; an existing account with the same email is **never automatically linked**. The native iOS app uses the same `penny://auth/callback` redirect in an ephemeral system sign-in sheet ([native sign-in](ios-authentication.md#provider-and-callback-setup)). Details and troubleshooting: [OIDC on the .NET backend](migration/authentication.md#openid-connect-maz-54).
 
 ## Phone notifications
 
-On iOS and Android, Penny requests notification permission and registers the signed-in device. Other active members receive a push for a new expense, an edited expense, or a recorded reimbursement; a recurring occurrence counts as a new expense. Web does not register for push.
+On iOS, Penny requests notification permission and registers the signed-in device. Other active members receive a push for a new expense, an edited expense, or a recorded reimbursement; a recurring occurrence counts as a new expense. Web does not register for push.
 
 The .NET API delivers native iOS notifications through APNs (`Push__Apns__*`) and keeps legacy Expo tokens working through the Expo Push Service while `Push__Expo__Enabled=true`. Provider calls go out from the `api` container; allow outbound HTTPS to `api.push.apple.com` (`api.sandbox.push.apple.com` for development builds) and `exp.host` for Expo. Credentials, the `push-smoke-apns` check and delivery diagnostics: [push](migration/push.md).
 

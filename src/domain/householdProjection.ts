@@ -1,5 +1,14 @@
-import type { ProjectedExpense, Household } from "../../data/households";
-import type { Category, Ledger, Transaction } from "../../domain/ledger";
+import type { Category, Ledger, Receipt, Transaction } from "./ledger.ts";
+
+// The household projection the legacy server returns (GET /api/households/projection), as the
+// retired Expo client read it. Kept with the merge rule as the reference for parity tests.
+export type Household = { id: string; name: string; currency: string; creatorId: string; createdAt: number; memberCount: number; trip?: { startDate: string; endDate: string } };
+export type ProjectedExpense = {
+  id: string; householdId: string; householdName: string; householdCurrency?: string; title: string; date: string;
+  totalCents: number; shareCents: number; category: { name: string; icon: string; color: string };
+  note: string; receiptId?: string; receipt?: Receipt; payerUserId: string; accountId?: string;
+  scheduled?: boolean; recurringId?: string;
+};
 
 export type HouseholdTransaction = Transaction & { householdId: string; householdExpenseId: string; scheduled?: boolean };
 

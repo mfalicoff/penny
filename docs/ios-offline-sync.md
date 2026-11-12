@@ -2,7 +2,7 @@
 
 [Documentation](README.md) · [Native iOS app](../apps/ios/README.md) · [Ledger rules](ios-ledger-domain.md) · [API client](ios-api-client.md) · [Sign-in](ios-authentication.md) · [Server ledger sync](migration/ledger.md)
 
-The native app keeps each signed-in account's personal ledger on the device, saves to it while offline, and syncs it with the server's whole-ledger `GET`/`PUT /api/ledger`. The server never merges: it refuses a stale revision with 409. The client merges, as the legacy app does (`src/data/offlineLedger.ts`, `src/domain/merge.ts`, `src/providers/LedgerProvider.tsx`; [ADR 002](migration/architecture.md#adr-002-calculation-and-conflict-ownership)).
+The native app keeps each signed-in account's personal ledger on the device, saves to it while offline, and syncs it with the server's whole-ledger `GET`/`PUT /api/ledger`. The server never merges: it refuses a stale revision with 409. The client merges, as the released Expo builds did, with the shared rules in `src/domain/merge.ts` ([ADR 002](migration/architecture.md#adr-002-calculation-and-conflict-ownership)).
 
 | Piece | Where | Role |
 | --- | --- | --- |
@@ -86,7 +86,7 @@ Personal recurrence refinements, where an occurrence is "untouched" when it equa
 - When both sides advanced a rule's `nextDate`, the later one wins, so a date already consumed is not recorded again.
 - An occurrence both devices recorded keeps the server's copy when this device's is untouched, so an edit made on the other device is kept.
 - An untouched occurrence this device recorded is dropped when the server's rule is already past its date and the server does not have it (recorded there and deleted).
-- A rule the server deleted stays deleted when this device only caught it up offline (its copy differs from the base only in `nextDate`), and the untouched occurrences this device recorded for it are dropped with it. A rule edited here in any other field comes back with its occurrences, as in the "Edited here, deleted on the server" row. The shared TypeScript merge (`src/domain/merge.ts`, used by the browser and the Expo app) runs the same four rules (MAZ-141).
+- A rule the server deleted stays deleted when this device only caught it up offline (its copy differs from the base only in `nextDate`), and the untouched occurrences this device recorded for it are dropped with it. A rule edited here in any other field comes back with its occurrences, as in the "Edited here, deleted on the server" row. The shared TypeScript merge (`src/domain/merge.ts`, used by the browser and the released Expo builds) runs the same four rules (MAZ-141).
 
 Occurrence ids are `{ruleId}:{date}`, so materializing again after any merge adds nothing that exists. Golden cases: `contracts/fixtures/merge-conflicts.json` (its `recurring:` cases cover the four refinements, so web and iOS check the same results), plus more recurrence cases in `LedgerMergeTests`.
 

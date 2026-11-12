@@ -10,7 +10,7 @@ The iOS-native redesign in [`docs/design/penny-ios/`](../design/penny-ios/README
 - the tokens (`--pk-*` in `design-kit/src/styles.css`), fonts, icons, materials, navigation and legacy route map;
 - the decisions below, the behavior issues the design implies, and known gaps.
 
-`tests/core/contracts.test.ts` checks the baseline against the files on disk: the card list, markers and hashes, the kit components and Claude Design source map, the source hashes, and that every Expo Router screen under `src/app/` keeps a destination. After a design change, update the affected entries and hashes in the same change.
+`tests/core/contracts.test.ts` checks the baseline against the files on disk: the card list, markers and hashes, the kit components and Claude Design source map, the source hashes, and that every legacy Expo Router route recorded in the baseline (`navigation.legacyRoutes`) keeps a destination on iPhone, iPad and web. The Expo app was removed in MAZ-98, so those routes are a frozen record. After a design change, update the affected entries and hashes in the same change.
 
 ## Decisions (MAZ-132)
 

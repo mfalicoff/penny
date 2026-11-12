@@ -1,0 +1,180 @@
+name: Build the iOS app for TestFlight
+
+# MAZ-98: signs a native Xcode archive of apps/ios and uploads it to TestFlight, where it
+# upgrades the retired Expo build in place (same bundle id, team, App Group and URL scheme).
+# Setup, secrets and the release runbook: docs/ios-ipa.md. Android and Expo builds are retired.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One upload at a time so build numbers reach App Store Connect in order.
+concurrency:
+  group: ios-testflight
+  cancel-in-progress: false
+
+jobs:
+  checks:
+    uses: ./.github/workflows/tests.yml
+
+  ios-checks:
+    uses: ./.github/workflows/ios.yml
+
+  testflight:
+    name: Archive, sign and upload the native app to TestFlight
+    needs: [checks, ios-checks]
+    permissions:
+      contents: write
+    runs-on: xcode-27
+    timeout-minutes: 90
+    env:
+      PENNY_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+      PENNY_ASC_KEY_ID: ${{ vars.ASC_API_KEY_ID }}
+      PENNY_ASC_ISSUER_ID: ${{ vars.ASC_API_ISSUER_ID }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Check TestFlight setup
+        env:
+          BUILD_NUMBER_BASE: ${{ vars.IOS_BUILD_NUMBER_BASE }}
+          DIST_CERT_P12: ${{ secrets.IOS_DIST_CERT_P12 }}
+          DIST_CERT_PASSWORD: ${{ secrets.IOS_DIST_CERT_PASSWORD }}
+          APPSTORE_PROFILE: ${{ secrets.IOS_APPSTORE_PROFILE }}
+          WIDGETS_APPSTORE_PROFILE: ${{ secrets.IOS_WIDGETS_APPSTORE_PROFILE }}
+          ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
+        run: |
+          missing=0
+          check() { if [ -z "$2" ]; then echo "::error::Set $1. See docs/ios-ipa.md#one-time-setup."; missing=1; fi; }
+          check "the APPLE_TEAM_ID variable" "$PENNY_TEAM_ID"
+          check "the ASC_API_KEY_ID variable" "$PENNY_ASC_KEY_ID"
+          check "the ASC_API_ISSUER_ID variable" "$PENNY_ASC_ISSUER_ID"
+          check "the IOS_BUILD_NUMBER_BASE variable" "$BUILD_NUMBER_BASE"
+          check "the IOS_DIST_CERT_P12 secret" "$DIST_CERT_P12"
+          check "the IOS_DIST_CERT_PASSWORD secret" "$DIST_CERT_PASSWORD"
+          check "the IOS_APPSTORE_PROFILE secret" "$APPSTORE_PROFILE"
+          check "the IOS_WIDGETS_APPSTORE_PROFILE secret" "$WIDGETS_APPSTORE_PROFILE"
+          check "the ASC_API_KEY_P8 secret" "$ASC_API_KEY_P8"
+          [ "$missing" -eq 0 ] || exit 1
+          if [[ ! "$BUILD_NUMBER_BASE" =~ ^[1-9][0-9]*$ ]]; then
+            echo "::error::IOS_BUILD_NUMBER_BASE must be a whole number above the last legacy EAS build number."
+            exit 1
+          fi
+
+      - name: Choose the build number
+        env:
+          BUILD_NUMBER_BASE: ${{ vars.IOS_BUILD_NUMBER_BASE }}
+        # <base>.<run>.<attempt>: App Store Connect compares the parts in order, so every run and
+        # rerun is higher than the last, and all of them are above the legacy EAS builds.
+        run: echo "PENNY_BUILD_NUMBER=$BUILD_NUMBER_BASE.$GITHUB_RUN_NUMBER.$GITHUB_RUN_ATTEMPT" >> "$GITHUB_ENV"
+
+      - name: Install the distribution certificate, profiles and API key
+        env:
+          DIST_CERT_P12: ${{ secrets.IOS_DIST_CERT_P12 }}
+          DIST_CERT_PASSWORD: ${{ secrets.IOS_DIST_CERT_PASSWORD }}
+          APPSTORE_PROFILE: ${{ secrets.IOS_APPSTORE_PROFILE }}
+          WIDGETS_APPSTORE_PROFILE: ${{ secrets.IOS_WIDGETS_APPSTORE_PROFILE }}
+          ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
+        run: |
+          set -euo pipefail
+          keychain="$RUNNER_TEMP/penny-signing.keychain-db"
+          keychain_password="$(uuidgen)"
+          security create-keychain -p "$keychain_password" "$keychain"
+          security set-keychain-settings -lut 3600 "$keychain"
+          security unlock-keychain -p "$keychain_password" "$keychain"
+          echo "$DIST_CERT_P12" | base64 --decode > "$RUNNER_TEMP/distribution.p12"
+          security import "$RUNNER_TEMP/distribution.p12" -P "$DIST_CERT_PASSWORD" -A -t cert -f pkcs12 -k "$keychain"
+          rm -f "$RUNNER_TEMP/distribution.p12"
+          security set-key-partition-list -S apple-tool:,apple: -k "$keychain_password" "$keychain" > /dev/null
+          existing=()
+          while IFS= read -r line; do existing+=("$(echo "$line" | tr -d ' "')"); done < <(security list-keychains -d user)
+          security list-keychains -d user -s "$keychain" "${existing[@]}"
+
+          # install <secret name> <base64 profile> <bundle id> -> prints the profile's name
+          install() {
+            local secret="$1" data="$2" bundle="$3" profile plist uuid app_id
+            profile="$RUNNER_TEMP/$bundle.mobileprovision"
+            plist="$RUNNER_TEMP/$bundle.profile.plist"
+            echo "$data" | base64 --decode > "$profile"
+            security cms -D -i "$profile" > "$plist"
+            uuid=$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$plist")
+            app_id=$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:application-identifier' "$plist")
+            if [ "$app_id" != "$PENNY_TEAM_ID.$bundle" ]; then
+              echo "::error::$secret is for $app_id, not $PENNY_TEAM_ID.$bundle." >&2
+              return 1
+            fi
+            if /usr/libexec/PlistBuddy -c 'Print :ProvisionedDevices' "$plist" > /dev/null 2>&1; then
+              echo "::error::$secret lists devices; use an App Store distribution profile." >&2
+              return 1
+            fi
+            if [ "$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:com.apple.security.application-groups:0' "$plist" 2>/dev/null)" != "group.com.mfalicoff.penny" ]; then
+              echo "::error::$secret lacks the App Group group.com.mfalicoff.penny. See docs/ios-ipa.md#widget-app-groups-setup." >&2
+              return 1
+            fi
+            for dir in "$HOME/Library/MobileDevice/Provisioning Profiles" \
+              "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"; do
+              mkdir -p "$dir"
+              cp "$profile" "$dir/$uuid.mobileprovision"
+            done
+            /usr/libexec/PlistBuddy -c 'Print :Name' "$plist"
+          }
+          app_profile=$(install IOS_APPSTORE_PROFILE "$APPSTORE_PROFILE" com.mfalicoff.penny)
+          widgets_profile=$(install IOS_WIDGETS_APPSTORE_PROFILE "$WIDGETS_APPSTORE_PROFILE" com.mfalicoff.penny.ExpoWidgetsTarget)
+          # Push (MAZ-79): the app's profile must carry APNs, or the signed app cannot register.
+          if [ "$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:aps-environment' "$RUNNER_TEMP/com.mfalicoff.penny.profile.plist" 2>/dev/null)" != "production" ]; then
+            echo "::error::IOS_APPSTORE_PROFILE has no production aps-environment. Enable Push Notifications on the App ID and regenerate it (docs/ios-notifications.md)."
+            exit 1
+          fi
+          mkdir -p "$RUNNER_TEMP/private_keys"
+          printf '%s\n' "$ASC_API_KEY_P8" > "$RUNNER_TEMP/private_keys/AuthKey_$PENNY_ASC_KEY_ID.p8"
+          {
+            echo "PENNY_PROFILE_SPECIFIER=$app_profile"
+            echo "PENNY_WIDGETS_PROFILE_SPECIFIER=$widgets_profile"
+            echo "PENNY_SIGNING_KEYCHAIN=$keychain"
+            echo "PENNY_ASC_KEY_PATH=$RUNNER_TEMP/private_keys/AuthKey_$PENNY_ASC_KEY_ID.p8"
+          } >> "$GITHUB_ENV"
+
+      - name: Archive the Release build
+        run: apps/ios/scripts/ios.sh archive
+
+      - name: Export and verify the App Store signed IPA
+        run: apps/ios/scripts/ios.sh export
+
+      - name: Upload IPA and dSYMs
+        uses: actions/upload-artifact@v7
+        with:
+          name: penny-ios-${{ env.PENNY_BUILD_NUMBER }}
+          path: |
+            .cache/ios/export/Penny.ipa
+            .cache/ios/export/Penny.ipa.sha256
+            .cache/ios/Penny.xcarchive/dSYMs/
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
+
+      - name: Attach IPA to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          cp .cache/ios/export/Penny.ipa "$RUNNER_TEMP/penny.ipa"
+          (cd "$RUNNER_TEMP" && shasum -a 256 penny.ipa > penny.ipa.sha256)
+          gh release upload "$RELEASE_TAG" "$RUNNER_TEMP/penny.ipa" "$RUNNER_TEMP/penny.ipa.sha256" --clobber
+
+      - name: Upload this IPA to TestFlight
+        run: apps/ios/scripts/ios.sh upload
+
+      - name: Remove signing material
+        if: always()
+        run: |
+          if [ -n "${PENNY_SIGNING_KEYCHAIN:-}" ]; then security delete-keychain "$PENNY_SIGNING_KEYCHAIN" || true; fi
+          rm -rf "$RUNNER_TEMP/private_keys" "$RUNNER_TEMP/"*.mobileprovision "$RUNNER_TEMP/"*.profile.plist
+          rm -f "$HOME/Library/MobileDevice/Provisioning Profiles/"*.mobileprovision \
+            "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles/"*.mobileprovision

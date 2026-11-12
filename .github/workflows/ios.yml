@@ -1,13 +1,13 @@
 name: iOS checks
 
 # The native SwiftUI app (apps/ios, MAZ-66). Runs when the app or anything its tests read
-# changes: the legacy identity in app.json, the design baseline, fixtures and signing docs.
+# changes: the design baseline, fixtures, the signing docs and the release workflow.
 on:
   pull_request:
     paths:
       - apps/ios/**
+      - .github/workflows/ios-testflight.yml
       - contracts/**
-      - app.json
       - package.json
       - docs/ios-ipa.md
       - apps/backend/**
@@ -20,7 +20,6 @@ on:
     paths:
       - apps/ios/**
       - contracts/**
-      - app.json
       - package.json
       - docs/ios-ipa.md
       - apps/backend/**
@@ -28,13 +27,17 @@ on:
       - flake.nix
       - flake.lock
       - .github/workflows/ios.yml
+  # The TestFlight release (ios-testflight.yml, MAZ-98) runs these same gates before archiving.
+  workflow_call:
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: ios-${{ github.ref }}
+  # github.workflow is the caller's name when called, so a TestFlight run never cancels (or is
+  # cancelled by) a pull request or push run on the same ref.
+  group: ios-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -56,6 +59,8 @@ jobs:
         run: apps/ios/scripts/ios.sh test
       - name: Release configuration excludes test controls
         run: apps/ios/scripts/ios.sh release-check
+      - name: TestFlight archive and IPA checks refuse bad builds
+        run: apps/ios/scripts/ios.sh distribution-test
       - name: Launch on clean iPhone and iPad simulators
         run: apps/ios/scripts/ios.sh launch
       - name: Upload test results and launch screenshots

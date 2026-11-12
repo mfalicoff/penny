@@ -16,10 +16,9 @@ UIKit and UserNotifications stay in PennyUI and the app target. PennyDomain and 
 
 The app's entitlements now include `aps-environment`. Simulator builds sign ad hoc and need nothing. **Before the next device build, archive or TestFlight upload**, the App ID needs the capability. Without it, signing fails or the profile lacks the entitlement:
 
-1. In [Apple Developer → Certificates, Identifiers & Profiles → Identifiers](https://developer.apple.com/account/resources/identifiers/list), open the App ID `com.mfalicoff.penny` and check that **Push Notifications** is enabled. The legacy app's `expo-notifications` plugin adds the same entitlement, so it may already be on. If not, enable it and save. Leave the certificate options alone: the server uses a token-based `.p8` key, not a push certificate.
+1. In [Apple Developer → Certificates, Identifiers & Profiles → Identifiers](https://developer.apple.com/account/resources/identifiers/list), open the App ID `com.mfalicoff.penny` and check that **Push Notifications** is enabled. The released Expo builds' `expo-notifications` plugin added the same entitlement, so it may already be on. If not, enable it and save. Leave the certificate options alone: the server uses a token-based `.p8` key, not a push certificate.
 2. Regenerate the app's provisioning profiles: development profiles for Xcode device builds and the App Store profile for archives. With automatic signing (`Configuration/Signing.local.xcconfig` with `DEVELOPMENT_TEAM`), Xcode does this on the next build if your account may manage the team's profiles. Otherwise, regenerate them in the portal and download them in Xcode (**Settings → Accounts → Download Manual Profiles**). The widget extension `com.mfalicoff.penny.ExpoWidgetsTarget` does not need the capability.
 3. For the backend, create the APNs auth key and configure `Push__Apns__*` as described in [Apple credentials](migration/push.md#apple-credentials). One key serves both gateways.
-4. The legacy EAS build is unchanged. If the capability was off and you enable it, regenerate the EAS App Store profile too (`EXPO_NO_CAPABILITY_SYNC=1 npx eas-cli@latest credentials --platform ios`, as in [Widget App Groups setup](ios-ipa.md#widget-app-groups-setup)).
 
 The bundle id, App Group and URL scheme are unchanged.
 
@@ -74,7 +73,7 @@ The server sends the legacy deep-link object as top-level custom keys next to `a
   "householdId": "<id>", "month": "2026-09", "expenseId": "<id>", "eventId": "<id>" }
 ```
 
-`HouseholdNotification(userInfo:)` applies the legacy client's allowlist (`src/data/push.ts`): `householdId` and an optional `expenseId` must match `[A-Za-z0-9_-]{1,100}`, and `month` must be `YYYY-MM` within the ledger range. Anything else (a missing or mistyped key, a URL, path segments, `null`) makes the whole payload invalid, and the notification then just opens the app where it was. `eventId` and unknown keys are ignored. The legacy in-app route `penny:///households/<id>?month=YYYY-MM&expenseId=<id>` parses to the same destination (`DeepLink.householdMonth`); without a valid month it opens the household as before.
+`HouseholdNotification(userInfo:)` applies the allowlist of the released Expo builds: `householdId` and an optional `expenseId` must match `[A-Za-z0-9_-]{1,100}`, and `month` must be `YYYY-MM` within the ledger range. Anything else (a missing or mistyped key, a URL, path segments, `null`) makes the whole payload invalid, and the notification then just opens the app where it was. `eventId` and unknown keys are ignored. The legacy in-app route `penny:///households/<id>?month=YYYY-MM&expenseId=<id>` parses to the same destination (`DeepLink.householdMonth`); without a valid month it opens the household as before.
 
 | Payload | Opens | Back |
 | --- | --- | --- |

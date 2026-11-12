@@ -15,8 +15,8 @@ import { dateKeyIn } from "../../src/domain/calendar.ts";
 import { selectTransactions } from "../../src/domain/selectors/transactions.ts";
 import { buildMoneyFlow } from "../../src/domain/selectors/moneyFlow.ts";
 import { tripOverview } from "../../src/domain/selectors/trips.ts";
-import { ledgerWithHouseholds } from "../../src/features/households/projection.ts";
-import type { ProjectedExpense } from "../../src/data/households.ts";
+import { ledgerWithHouseholds } from "../../src/domain/householdProjection.ts";
+import type { ProjectedExpense } from "../../src/domain/householdProjection.ts";
 
 const root = new URL("../../", import.meta.url);
 const fixture = (name: string) => JSON.parse(readFileSync(new URL(`contracts/fixtures/${name}`, root), "utf8"));

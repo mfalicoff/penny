@@ -4,7 +4,7 @@
 
 ## Run and operate Penny
 
-- [Development](development.md): local web setup, Nix/direnv, live reload, connecting iOS and Android, and the source layout.
+- [Development](development.md): local web setup, the legacy API, Nix/direnv, dependency updates, pointers to the iOS, web and backend app setup, and the source layout.
 - [Self-hosting and configuration](deployment.md): the .NET/PostgreSQL Compose stack, reverse proxies and HTTPS, configuration, external PostgreSQL, container images, upgrades and rollback, OIDC, push notifications, and the legacy Node deployment.
 - [Self-hosting on NixOS](nixos.md): the flake packages and the `services.penny` / `programs.penny` NixOS module (PostgreSQL 18, migrations, the API and nginx), its options, secrets, external PostgreSQL and upgrades.
 - [Cutover from Node/SQLite](cutover.md): the one-time move to .NET/PostgreSQL behind the same address: settings mapping, production-copy rehearsal, the window step by step, go/no-go and rollback, observation and compatibility windows, Node retirement, the cutover drill and release notes.
@@ -14,8 +14,7 @@
 ## Build and release
 
 - [Releases](releases.md): semantic versioning, version checks, release commands, Git tags, and native build counters.
-- [Android APK builds](android-apk.md): EAS signing credentials, CI setup, installation, and compatible updates.
-- [iOS IPA and TestFlight builds](ios-ipa.md): Apple credentials, widget App Groups, EAS builds, and TestFlight submission.
+- [iOS IPA and TestFlight builds](ios-ipa.md): native Xcode archive, signing, TestFlight upload and release runbook.
 
 ## Architecture and testing
 
@@ -41,16 +40,16 @@
 - [Browser receipts](web-receipts.md): supported files and limits, upload with progress, cancel and retry, the draft, authenticated photo and PDF preview and download, the pdf.js worker and Content-Security-Policy for deployment, receipt encryption and key configuration, and troubleshooting.
 - [Native receipts](ios-receipts.md): the iPhone and iPad photo and file pickers, supported files, upload progress, cancel and retry, the draft, the authenticated photo and PDF viewer, sharing, temporary-file cleanup, permissions and privacy, and simulator and device verification.
 - [Native household notifications](ios-notifications.md): APNs entitlement and Apple Developer setup, sandbox versus production, contextual permission, the registration lifecycle (refresh, denial, sign-out, account changes), payload validation and navigation, auth/app-lock and cross-account privacy, simulator injection versus physical-device verification.
-- [Frontend architecture](frontend-architecture.md): routes, feature ownership, state and persistence boundaries, responsive navigation, and native glass surfaces.
+- [Frontend architecture](frontend-architecture.md): the removed Expo frontend (MAZ-98), where its replacements live, and the shared TypeScript rules in `src/domain`.
 - [Backend architecture](backend-architecture.md): HTTP/application/storage boundaries, validation, persistence guarantees, and framework tradeoffs.
 - [Backend API endpoints](api-endpoints.md): all 40 operations, authentication, request/response shapes, and compatibility notes for a Go or .NET migration.
-- [Testing strategy](testing.md): test ownership, commands, coverage, browser/native setup, device isolation, and CI policy.
+- [Testing strategy](testing.md): test ownership, root and per-app commands, coverage, browser and native setup pointers, and CI policy.
 - [Browser and cross-client acceptance](acceptance.md): the acceptance matrix by feature, real .NET/PostgreSQL and cross-client journeys, simulator and browser runner commands, accessibility, responsive and performance results, known gaps and device-only exclusions (MAZ-96).
 - [Household implementation plan](households-implementation-plan.md): original design tasks and acceptance examples. For current behavior, use the [app guide](app-guide.md#shared-households).
 
 ## Showcase screenshots
 
-The [README](../README.md) uses real captures of the running web app with temporary demo data, refreshed on October 24, 2026. The phone-width capture shows responsive web, not a native iOS or Android build.
+The [README](../README.md) uses real captures of the running web app with temporary demo data, refreshed on October 24, 2026. The phone-width capture shows responsive web, not a native iOS build.
 
 - `screenshots/overview.jpg`: desktop monthly overview, calendar, and category breakdown.
 - `screenshots/sankey.jpg`: the overview's **Follow your money** card.

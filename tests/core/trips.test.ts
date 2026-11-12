@@ -2,8 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { saveEntry, saveTrip } from "../../src/domain/commands.ts";
 import { emptyLedger, upgradeLedger, type Transaction, type Trip } from "../../src/domain/ledger.ts";
-import { buildEntry, type EntryDraft } from "../../src/features/entries/entryDraft.ts";
-import { tripOverview } from "../../src/features/trips/selectors.ts";
+import { buildEntry, type EntryDraft } from "../../src/domain/entryDraft.ts";
+import { tripOverview } from "../../src/domain/selectors/trips.ts";
 import { ledgerWriteSchema } from "../../server/validation/ledger.ts";
 
 const trip: Trip = { id: "montreal", name: "Montréal", startDate: "2026-09-10", endDate: "2026-09-14" };

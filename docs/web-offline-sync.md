@@ -49,7 +49,7 @@ IndexedDB database `penny-offline`, schema version 1, one object store `ledgers`
 
 ## Migrating the legacy Expo web copy
 
-The Expo web export stores AsyncStorage in `localStorage` with the key as given and no server namespace (`src/data/offlineLedger.ts`): `penny:ledger:<lowercased email>` holds `{"base": Ledger, "local": Ledger}` and `penny:active-account` the last email. Both apps are served from the same origin, so the v2 app can read the copy.
+The Expo web export stored AsyncStorage in `localStorage` with the key as given and no server namespace: `penny:ledger:<lowercased email>` holds `{"base": Ledger, "local": Ledger}` and `penny:active-account` the last email. Both apps are served from the same origin, so the v2 app can read the copy.
 
 1. When an account's engine starts it reads `penny:ledger:<email>` (read-only). A copy for another email is never read.
 2. A readable copy is imported in one IndexedDB transaction, with a fingerprint of the stored text:
