@@ -20,10 +20,6 @@
       },
       "predictiveBackGestureEnabled": false
     },
-    "web": {
-      "favicon": "./assets/penny-favicon.png",
-      "output": "single"
-    },
     "plugins": [
       "expo-sharing",
       "expo-secure-store",

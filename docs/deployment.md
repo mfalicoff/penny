@@ -239,7 +239,7 @@ The .NET API delivers native iOS notifications through APNs (`Push__Apns__*`) an
 
 ## Legacy Node/SQLite deployment
 
-Until the cutover, the legacy server keeps its own image (`ghcr.io/<owner>/<repository>`, built by `.github/workflows/docker-image.yml` from the root `Dockerfile`) and `compose.yaml`. It runs one Node process with SQLite (receipts inside the database) and serves the web app on port 3001. Keep it as the rollback target until the [cutover](migration/postgresql.md#cutover-and-forward-only-recovery) observation window ends.
+Until the cutover, the legacy server keeps its own image (`ghcr.io/<owner>/<repository>`, built by `.github/workflows/docker-image.yml` from the root `Dockerfile`) and `compose.yaml`. It runs one Node process with SQLite (receipts inside the database) and serves `/api/` on port 3001. Since MAZ-97 it no longer serves a web app: images built from this revision on are API-only (earlier tags still contain the Expo web export), and browsers use the `penny-web` image. A rollback to Node therefore leaves browsers without the app unless you run a pre-MAZ-97 legacy tag. Keep it as the rollback target until the [cutover](migration/postgresql.md#cutover-and-forward-only-recovery) observation window ends.
 
 ```sh
 docker compose up -d --build

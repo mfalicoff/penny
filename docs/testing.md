@@ -10,13 +10,12 @@ All executable tests live under `tests/`. Choose the lowest layer that proves th
 | --- | --- | --- |
 | `tests/core/` | Node test runner | Pure rules, money/date boundaries, immutable commands, HTTP/SQLite integration and backend permissions |
 | `tests/ui/` | Jest / Expo | Component interactions, providers, client data/session behavior, routing; mirrors the corresponding `src/` hierarchy |
-| `tests/ui/support/` | Shared Jest support | Native mocks, setup and strict real-DOM web renderer |
-| `tests/e2e/web/` | Playwright / Chromium | Exported production web app + real API; desktop and phone viewport journeys |
+| `tests/ui/support/` | Shared Jest support | Native mocks and setup |
 | `tests/e2e/native/` | Node + `agent-device` | Actual iOS Simulator / Android Emulator journeys, with shared scenarios and reusable platform lifecycle |
 
-Do not add tests under `src/`, root `e2e/`, or generated `ios/` and `android/` directories. Keep runner configuration at the root and executable command wrappers in `scripts/`. Core/UI files use `*.test.ts(x)`; real-DOM UI cases use `*.web.test.jsx`; browser journeys use `*.spec.ts`; native entry points use `*.ios.test.mjs` / `*.android.test.mjs`.
+Do not add tests under `src/`, root `e2e/`, or generated `ios/` and `android/` directories. Keep runner configuration at the root and executable command wrappers in `scripts/`. Core/UI files use `*.test.ts(x)`; native entry points use `*.ios.test.mjs` / `*.android.test.mjs`.
 
-These rules cover the legacy Expo/Node app. The v2 browser app in `apps/web/` has its own runner and layout: colocated `src/**/*.test.ts(x)`, app-level tests in `apps/web/tests/` and a Playwright smoke in `apps/web/e2e/`. Its Vitest setup gives every test a fresh, empty IndexedDB (`fake-indexeddb`), so the durable offline store runs for real in component tests; the offline engine, legacy-import and multi-tab cases are in `apps/web/tests/offline/` and the real-browser journeys in `e2e/offline.spec.ts` ([browser offline sync](web-offline-sync.md#tests)). Its CI is `.github/workflows/web.yml` ([web app](../apps/web/README.md#ci)). Shared-household journeys (MAZ-91) run two browser contexts against an in-memory household fake (`apps/web/tests/fakes/householdServer.ts`) in CI, and against the real .NET API and PostgreSQL with `e2e/households.real.spec.ts` under the [full-stack test environment](migration/test-environment.md) (`PENNY_REAL_STACK=1`). Recurring schedules (MAZ-90) have model tests (`tests/recurring-model.test.ts`), app tests over the durable store (`tests/recurring.test.tsx`), the browser merge cases (`tests/offline/merge.test.ts`) and a mocked Playwright journey (`e2e/recurring.spec.ts`) that pins the browser clock with `page.clock` to cover short months, leap days, catch-up and a schedule deleted on another device ([web app](../apps/web/README.md#recurring-schedules-maz-90)).
+These rules cover the legacy Expo/Node app, which has no web target since MAZ-97 (its Expo web export, web Jest project and `tests/e2e/web/` Playwright suite were removed). The v2 browser app in `apps/web/` has its own runner and layout: colocated `src/**/*.test.ts(x)`, app-level tests in `apps/web/tests/` and a Playwright smoke in `apps/web/e2e/`. Its Vitest setup gives every test a fresh, empty IndexedDB (`fake-indexeddb`), so the durable offline store runs for real in component tests; the offline engine, legacy-import and multi-tab cases are in `apps/web/tests/offline/` and the real-browser journeys in `e2e/offline.spec.ts` ([browser offline sync](web-offline-sync.md#tests)). Its CI is `.github/workflows/web.yml` ([web app](../apps/web/README.md#ci)). Shared-household journeys (MAZ-91) run two browser contexts against an in-memory household fake (`apps/web/tests/fakes/householdServer.ts`) in CI, and against the real .NET API and PostgreSQL with `e2e/households.real.spec.ts` under the [full-stack test environment](migration/test-environment.md) (`PENNY_REAL_STACK=1`). Recurring schedules (MAZ-90) have model tests (`tests/recurring-model.test.ts`), app tests over the durable store (`tests/recurring.test.tsx`), the browser merge cases (`tests/offline/merge.test.ts`) and a mocked Playwright journey (`e2e/recurring.spec.ts`) that pins the browser clock with `page.clock` to cover short months, leap days, catch-up and a schedule deleted on another device ([web app](../apps/web/README.md#recurring-schedules-maz-90)).
 
 ## Commands
 
@@ -24,15 +23,13 @@ Use Node 24 and the committed npm lockfile (`npm ci`).
 
 | Command | Runs |
 | --- | --- |
-| `npm test` | Portable default: core + all three Jest projects |
+| `npm test` | Portable default: core + both Jest projects |
 | `npm run test:core` | Node rules/API suite |
-| `npm run test:ui` | iOS + Android component/data tests and web DOM tests |
-| `npm run test:ui:ios` / `test:ui:android` / `test:ui:web` | One Jest platform |
+| `npm run test:ui` | iOS + Android component/data tests |
+| `npm run test:ui:ios` / `test:ui:android` | One Jest platform |
 | `npm run test:ui:watch` | Interactive Jest development |
 | `npm run test:coverage` | Core/API + all Jest projects, with code coverage |
 | `npm run test:coverage:core` / `test:coverage:ui` | Coverage for one test layer |
-| `npm run test:e2e:web` | Fresh web export, isolated API/database and Playwright journeys |
-| `npm run test:e2e` | Browser E2E default; does not imply native coverage |
 | `npm run test:e2e:check -- ios` | Check iOS tooling, runtime and app binary without booting a device |
 | `npm run test:e2e:check -- android` | Check Android tooling, AVD/image and APK without booting a device |
 | `npm run test:e2e:check -- all` | Check both native platforms |
@@ -45,7 +42,7 @@ Use Node 24 and the committed npm lockfile (`npm ci`).
 
 `test:all` requires a macOS machine with both native toolchains and app binaries. An explicitly requested platform fails with setup guidance when prerequisites are missing; it is never silently skipped. Run native suites one at a time; parallel instrumentation can destabilize the Android automation bridge.
 
-For everyday changes, run the relevant layer while iterating, then `npm run lint`, `npm run typecheck`, and `npm test`. Run browser E2E for web journeys and the affected native platform for native behavior. Before a cross-platform release, run `npm run test:all` on the prepared macOS workstation and complete the device-only checks below. Bundle exports validate resolution, not interaction.
+For everyday changes, run the relevant layer while iterating, then `npm run lint`, `npm run typecheck`, and `npm test`. Run the web app's checks (`apps/web`) for browser behavior and the affected native platform for native behavior. Before a cross-platform release, run `npm run test:all` on the prepared macOS workstation and complete the device-only checks below. Bundle exports validate resolution, not interaction.
 
 ## Code coverage
 
@@ -62,7 +59,7 @@ Normal `npm test` remains uninstrumented for faster local feedback. Coverage run
 
 Tests, fixtures, dependencies and generated native projects are outside these source boundaries. Core's frontend helper/selector execution is reflected in its tests but only backend/domain code is measured in the core report; the UI report owns the complete frontend source tree.
 
-The UI report combines the iOS, Android and web Jest projects: a covered line means at least one project executed it, not that every platform did. Core and UI reports intentionally stay separate: source ownership overlaps in `src/domain`, and V8/Babel count statements/branches differently. Do not average their percentages or claim a single cross-platform score.
+The UI report combines the iOS and Android Jest projects: a covered line means at least one project executed it, not that every platform did. Core and UI reports intentionally stay separate: source ownership overlaps in `src/domain`, and V8/Babel count statements/branches differently. Do not average their percentages or claim a single cross-platform score.
 
 To inspect one Jest platform without overwriting the combined report:
 
@@ -70,7 +67,7 @@ To inspect one Jest platform without overwriting the combined report:
 npm run test:coverage:ui -- --selectProjects ios --coverageDirectory=coverage/ui-ios
 ```
 
-Replace `ios` with `android` or `web` as needed. HTML/LCOV show missed lines and branches for prioritizing meaningful tests. No arbitrary percentage threshold is enforced initially; test failures still fail the coverage command. Establish thresholds only after reviewing the baseline and deciding which behavior needs protection.
+Replace `ios` with `android` as needed. HTML/LCOV show missed lines and branches for prioritizing meaningful tests. No arbitrary percentage threshold is enforced initially; test failures still fail the coverage command. Establish thresholds only after reviewing the baseline and deciding which behavior needs protection.
 
 Browser and simulator/emulator E2E are not instrumented. Code coverage does not prove native layout, permissions, pickers, push delivery or physical-device behavior. Reports are ignored by Git; CI retains HTML/LCOV/JSON as the `code-coverage` artifact, excluding raw V8 temporary data.
 
@@ -85,16 +82,7 @@ Verified `npm run test:coverage` with all 85 core and 237 UI tests passing; the 
 
 ## Browser setup
 
-```sh
-npx playwright install chromium
-npm run test:e2e:web
-```
-
-The wrapper exports current JavaScript with a fixture API URL, starts the production web app/API on `127.0.0.1:4173`, and uses a fresh temporary SQLite database. It never reuses a running development server. Coverage includes registration/login, demo navigation, expense/income/investment entries, filters, receipts, accounts/categories/trips, recurring entries, settings and persistence. OIDC provider sign-in still needs an external identity provider; controlled OIDC behavior is covered at the service/API and UI layers.
-
-Use exact accessible-name matching for navigation buttons (`getByRole("button", { name: "Categories", exact: true })`). Substring matching also finds the overview's **Filter by category: All categories** pill.
-
-Playwright writes failure screenshots, video and traces to `test-results/web/`, and HTML to `test-results/web-report/`.
+Browser journeys belong to the v2 web app: from `apps/web`, run `npx playwright install chromium` once and then `npm run test:e2e` (mocked API) or `npm run test:e2e:real` (real .NET API and PostgreSQL). See [the web app's tests](../apps/web/README.md#ci). The production web image is covered by `scripts/deploy-smoke.mjs` ([container images](deployment.md#container-images-and-releases)).
 
 ## Native workstation setup
 

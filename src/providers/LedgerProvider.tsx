@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
-import { AppState, Platform } from "react-native";
+import { AppState } from "react-native";
 import NetInfo from "@react-native-community/netinfo";
 import { ApiError, fetchLedger, saveSnapshot, signOut, whoAmI } from "../data/api";
 import { forgetAccount, hasPendingChanges, mergeLedger, readActiveAccount, readLocalLedger, rememberAccount, removeLocalLedger, writeLocalLedger, type LocalLedger } from "../data/offlineLedger";
@@ -169,7 +169,7 @@ function useLedgerSession() {
       }).catch(() => {}).finally(() => { probing.current = false; });
     };
     const timer = setInterval(() => {
-      if (AppState.currentState === "active" || Platform.OS === "web") retry();
+      if (AppState.currentState === "active") retry();
     }, 15000);
     const listener = AppState.addEventListener("change", (state) => {
       if (state === "active") retry();
