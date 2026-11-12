@@ -1,0 +1,298 @@
+{
+  "description": "MAZ-96 baseline of axe violations found when the scans were added (Chromium 1248, axe-core 4.14; Firefox and WebKit are held to the same layout's entries, minus any `except`). Every entry is an open accessibility gap listed in docs/acceptance.md; remove it when fixed. The scan fails on any violation not listed here and on any listed one that no longer occurs.",
+  "violations": [
+    {
+      "scan": "sign-in light",
+      "rule": "color-contrast",
+      "impact": "serious",
+      "projects": [
+        "chromium-desktop",
+        "chromium-phone"
+      ],
+      "reason": "Design-kit colors below 4.5:1 for normal text: white on the accent button (3.68 light, 2.76 dark), income green (3.69-4.17), pending amber (3.16-3.64), keyboard-shortcut chips and quiet links (4.41-4.43), banner text (4.13). Needs a design-kit token change (MAZ-122 visual handoff), not a hand edit of tokens.css."
+    },
+    {
+      "scan": "Home light",
+      "rule": "color-contrast",
+      "impact": "serious",
+      "projects": [
+        "chromium-desktop",
+        "chromium-phone"
+      ],
+      "reason": "Design-kit colors below 4.5:1 for normal text: white on the accent button (3.68 light, 2.76 dark), income green (3.69-4.17), pending amber (3.16-3.64), keyboard-shortcut chips and quiet links (4.41-4.43), banner text (4.13). Needs a design-kit token change (MAZ-122 visual handoff), not a hand edit of tokens.css."
+    },
+    {
+      "scan": "Home light",
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "projects": [
+        "chromium-desktop",
+        "chromium-phone"
+      ],
+      "reason": "Buttons whose aria-label omits their visible text (Explore your month flow nodes and chart segments, Categories Edit <name> rows). Speech-input users must say the label, not what they see (WCAG 2.5.3)."
+    },
+    {
+      "scan": "Activity light",
+      "rule": "color-contrast",
+      "impact": "serious",
+      "projects": [
+        "chromium-desktop",
+        "chromium-phone"
+      ],
+      "reason": "Design-kit colors below 4.5:1 for normal text: white on the accent button (3.68 light, 2.76 dark), income green (3.69-4.17), pending amber (3.16-3.64), keyboard-shortcut chips and quiet links (4.41-4.43), banner text (4.13). Needs a design-kit token change (MAZ-122 visual handoff), not a hand edit of tokens.css."
+    },
+    {
+      "scan": "Insights light",
+      "rule": "color-contrast",
+      "impact": "serious",
+      "projects": [
+        "chromium-desktop",
+        "chromium-phone"
+      ],
+      "reason": "Design-kit colors below 4.5:1 for normal text: white on the accent button (3.68 light, 2.76 dark), income green (3.69-4.17), pending amber (3.16-3.64), keyboard-shortcut chips and quiet links (4.41-4.43), banner text (4.13). Needs a design-kit token change (MAZ-122 visual handoff), not a hand edit of tokens.css."
+    },
+    {
+      "scan": "Insights light",
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "projects": [
+        "chromium-desktop",
+        "chromium-phone"
+      ],
+      "reason": "Buttons whose aria-label omits their visible text (Explore your month flow nodes and chart segments, Categories Edit <name> rows). Speech-input users must say the label, not what they see (WCAG 2.5.3)."
+    },
+    {
+      "scan": "Insights light",
+      "rule": "scrollable-region-focusable",
+      "impact": "serious",
+      "projects": [
+        "chromium-phone"
+      ],
+      "reason": "The phone Insights category table scrolls horizontally but its scroll container cannot take keyboard focus (WCAG 2.1.1)."
+    },
+    {
+      "scan": "Trips light",
+      "rule": "color-contrast",
+      "impact": "serious",
+      "projects": [
+        "chromium-desktop",
+        "chromium-phone"
+      ],
+      "reason": "Design-kit colors below 4.5:1 for normal text: white on the accent button (3.68 light, 2.76 dark), income green (3.69-4.17), pending amber (3.16-3.64), keyboard-shortcut chips and quiet links (4.41-4.43), banner text (4.13). Needs a design-kit token change (MAZ-122 visual handoff), not a hand edit of tokens.css."
+    },
+    {
+      "scan": "Recurring light",
+      "rule": "color-contrast",
+      "impact": "serious",
+      "projects": [
+        "chromium-desktop",
+        "chromium-phone"
+      ],
+      "reason": "Design-kit colors below 4.5:1 for normal text: white on the accent button (3.68 light, 2.76 dark), income green (3.69-4.17), pending amber (3.16-3.64), keyboard-shortcut chips and quiet links (4.41-4.43), banner text (4.13). Needs a design-kit token change (MAZ-122 visual handoff), not a hand edit of tokens.css."
+    },
+    {
+      "scan": "Accounts light",
+      "rule": "color-contrast",
+      "impact": "serious",
+      "projects": [
+        "chromium-desktop",
+        "chromium-phone"
+      ],
+      "reason": "Design-kit colors below 4.5:1 for normal text: white on the accent button (3.68 light, 2.76 dark), income green (3.69-4.17), pending amber (3.16-3.64), keyboard-shortcut chips and quiet links (4.41-4.43), banner text (4.13). Needs a design-kit token change (MAZ-122 visual handoff), not a hand edit of tokens.css."
+    },
+    {
+      "scan": "Categories light",
+      "rule": "color-contrast",
+      "impact": "serious",
+      "projects": [
+        "chromium-desktop",
+        "chromium-phone"
+      ],
+      "reason": "Design-kit colors below 4.5:1 for normal text: white on the accent button (3.68 light, 2.76 dark), income green (3.69-4.17), pending amber (3.16-3.64), keyboard-shortcut chips and quiet links (4.41-4.43), banner text (4.13). Needs a design-kit token change (MAZ-122 visual handoff), not a hand edit of tokens.css."
+    },
+    {
+      "scan": "Categories light",
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "projects": [
+        "chromium-desktop",
+        "chromium-phone"
+      ],
+      "reason": "Buttons whose aria-label omits their visible text (Explore your month flow nodes and chart segments, Categories Edit <name> rows). Speech-input users must say the label, not what they see (WCAG 2.5.3)."
+    },
+    {
+      "scan": "Settings light",
+      "rule": "color-contrast",
+      "impact": "serious",
+      "projects": [
+        "chromium-desktop",
+        "chromium-phone"
+      ],
+      "reason": "Design-kit colors below 4.5:1 for normal text: white on the accent button (3.68 light, 2.76 dark), income green (3.69-4.17), pending amber (3.16-3.64), keyboard-shortcut chips and quiet links (4.41-4.43), banner text (4.13). Needs a design-kit token change (MAZ-122 visual handoff), not a hand edit of tokens.css."
+    },
+    {
+      "scan": "sign-in dark",
+      "rule": "color-contrast",
+      "impact": "serious",
+      "projects": [
+        "chromium-desktop",
+        "chromium-phone"
+      ],
+      "reason": "Design-kit colors below 4.5:1 for normal text: white on the accent button (3.68 light, 2.76 dark), income green (3.69-4.17), pending amber (3.16-3.64), keyboard-shortcut chips and quiet links (4.41-4.43), banner text (4.13). Needs a design-kit token change (MAZ-122 visual handoff), not a hand edit of tokens.css."
+    },
+    {
+      "scan": "Home dark",
+      "rule": "color-contrast",
+      "impact": "serious",
+      "projects": [
+        "chromium-desktop",
+        "chromium-phone"
+      ],
+      "reason": "Design-kit colors below 4.5:1 for normal text: white on the accent button (3.68 light, 2.76 dark), income green (3.69-4.17), pending amber (3.16-3.64), keyboard-shortcut chips and quiet links (4.41-4.43), banner text (4.13). Needs a design-kit token change (MAZ-122 visual handoff), not a hand edit of tokens.css."
+    },
+    {
+      "scan": "Home dark",
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "projects": [
+        "chromium-desktop",
+        "chromium-phone"
+      ],
+      "reason": "Buttons whose aria-label omits their visible text (Explore your month flow nodes and chart segments, Categories Edit <name> rows). Speech-input users must say the label, not what they see (WCAG 2.5.3)."
+    },
+    {
+      "scan": "Activity dark",
+      "rule": "color-contrast",
+      "impact": "serious",
+      "projects": [
+        "chromium-desktop",
+        "chromium-phone"
+      ],
+      "reason": "Design-kit colors below 4.5:1 for normal text: white on the accent button (3.68 light, 2.76 dark), income green (3.69-4.17), pending amber (3.16-3.64), keyboard-shortcut chips and quiet links (4.41-4.43), banner text (4.13). Needs a design-kit token change (MAZ-122 visual handoff), not a hand edit of tokens.css."
+    },
+    {
+      "scan": "Insights dark",
+      "rule": "color-contrast",
+      "impact": "serious",
+      "projects": [
+        "chromium-desktop"
+      ],
+      "reason": "Design-kit colors below 4.5:1 for normal text: white on the accent button (3.68 light, 2.76 dark), income green (3.69-4.17), pending amber (3.16-3.64), keyboard-shortcut chips and quiet links (4.41-4.43), banner text (4.13). Needs a design-kit token change (MAZ-122 visual handoff), not a hand edit of tokens.css."
+    },
+    {
+      "scan": "Insights dark",
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "projects": [
+        "chromium-desktop",
+        "chromium-phone"
+      ],
+      "reason": "Buttons whose aria-label omits their visible text (Explore your month flow nodes and chart segments, Categories Edit <name> rows). Speech-input users must say the label, not what they see (WCAG 2.5.3)."
+    },
+    {
+      "scan": "Trips dark",
+      "rule": "color-contrast",
+      "impact": "serious",
+      "projects": [
+        "chromium-desktop",
+        "chromium-phone"
+      ],
+      "reason": "Design-kit colors below 4.5:1 for normal text: white on the accent button (3.68 light, 2.76 dark), income green (3.69-4.17), pending amber (3.16-3.64), keyboard-shortcut chips and quiet links (4.41-4.43), banner text (4.13). Needs a design-kit token change (MAZ-122 visual handoff), not a hand edit of tokens.css."
+    },
+    {
+      "scan": "Recurring dark",
+      "rule": "color-contrast",
+      "impact": "serious",
+      "projects": [
+        "chromium-desktop"
+      ],
+      "reason": "Design-kit colors below 4.5:1 for normal text: white on the accent button (3.68 light, 2.76 dark), income green (3.69-4.17), pending amber (3.16-3.64), keyboard-shortcut chips and quiet links (4.41-4.43), banner text (4.13). Needs a design-kit token change (MAZ-122 visual handoff), not a hand edit of tokens.css."
+    },
+    {
+      "scan": "Insights dark",
+      "rule": "scrollable-region-focusable",
+      "impact": "serious",
+      "projects": [
+        "chromium-phone"
+      ],
+      "reason": "The phone Insights category table scrolls horizontally but its scroll container cannot take keyboard focus (WCAG 2.1.1)."
+    },
+    {
+      "scan": "Accounts dark",
+      "rule": "color-contrast",
+      "impact": "serious",
+      "projects": [
+        "chromium-desktop",
+        "chromium-phone"
+      ],
+      "reason": "Design-kit colors below 4.5:1 for normal text: white on the accent button (3.68 light, 2.76 dark), income green (3.69-4.17), pending amber (3.16-3.64), keyboard-shortcut chips and quiet links (4.41-4.43), banner text (4.13). Needs a design-kit token change (MAZ-122 visual handoff), not a hand edit of tokens.css."
+    },
+    {
+      "scan": "Categories dark",
+      "rule": "color-contrast",
+      "impact": "serious",
+      "projects": [
+        "chromium-desktop",
+        "chromium-phone"
+      ],
+      "reason": "Design-kit colors below 4.5:1 for normal text: white on the accent button (3.68 light, 2.76 dark), income green (3.69-4.17), pending amber (3.16-3.64), keyboard-shortcut chips and quiet links (4.41-4.43), banner text (4.13). Needs a design-kit token change (MAZ-122 visual handoff), not a hand edit of tokens.css."
+    },
+    {
+      "scan": "Categories dark",
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "projects": [
+        "chromium-desktop",
+        "chromium-phone"
+      ],
+      "reason": "Buttons whose aria-label omits their visible text (Explore your month flow nodes and chart segments, Categories Edit <name> rows). Speech-input users must say the label, not what they see (WCAG 2.5.3)."
+    },
+    {
+      "scan": "Settings dark",
+      "rule": "color-contrast",
+      "impact": "serious",
+      "projects": [
+        "chromium-desktop"
+      ],
+      "reason": "Design-kit colors below 4.5:1 for normal text: white on the accent button (3.68 light, 2.76 dark), income green (3.69-4.17), pending amber (3.16-3.64), keyboard-shortcut chips and quiet links (4.41-4.43), banner text (4.13). Needs a design-kit token change (MAZ-122 visual handoff), not a hand edit of tokens.css."
+    },
+    {
+      "scan": "Home forced-colors",
+      "rule": "color-contrast",
+      "impact": "serious",
+      "projects": [
+        "chromium-desktop",
+        "chromium-phone"
+      ],
+      "reason": "Design-kit colors below 4.5:1 for normal text: white on the accent button (3.68 light, 2.76 dark), income green (3.69-4.17), pending amber (3.16-3.64), keyboard-shortcut chips and quiet links (4.41-4.43), banner text (4.13). Needs a design-kit token change (MAZ-122 visual handoff), not a hand edit of tokens.css.",
+      "except": [
+        "firefox-desktop"
+      ],
+      "exceptReason": "Firefox applies forced colors to the page, so its contrast passes; Chromium emulation leaves author colors in what axe measures."
+    },
+    {
+      "scan": "Home forced-colors",
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "projects": [
+        "chromium-desktop",
+        "chromium-phone"
+      ],
+      "reason": "Buttons whose aria-label omits their visible text (Explore your month flow nodes and chart segments, Categories Edit <name> rows). Speech-input users must say the label, not what they see (WCAG 2.5.3)."
+    },
+    {
+      "scan": "Activity forced-colors",
+      "rule": "color-contrast",
+      "impact": "serious",
+      "projects": [
+        "chromium-desktop",
+        "chromium-phone"
+      ],
+      "reason": "Design-kit colors below 4.5:1 for normal text: white on the accent button (3.68 light, 2.76 dark), income green (3.69-4.17), pending amber (3.16-3.64), keyboard-shortcut chips and quiet links (4.41-4.43), banner text (4.13). Needs a design-kit token change (MAZ-122 visual handoff), not a hand edit of tokens.css.",
+      "except": [
+        "firefox-desktop"
+      ],
+      "exceptReason": "Firefox applies forced colors to the page, so its contrast passes; Chromium emulation leaves author colors in what axe measures."
+    }
+  ]
+}
