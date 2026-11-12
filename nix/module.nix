@@ -574,11 +574,11 @@ in
               proxy_send_timeout 330s;
             '';
           };
-          # Fingerprinted Vite bundles never change.
+          # Fingerprinted Vite bundles never change. Without `always`, a 404 is not cached.
           "/assets/" = {
             tryFiles = "$uri =404";
             extraConfig = ''
-              add_header Cache-Control "public, max-age=31536000, immutable" always;
+              add_header Cache-Control "public, max-age=31536000, immutable";
               add_header X-Content-Type-Options nosniff always;
             '';
           };

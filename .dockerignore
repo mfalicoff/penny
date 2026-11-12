@@ -15,3 +15,9 @@ apps/backend
 apps/ios
 test-results
 deploy/.env
+# The web image (deploy/web/Dockerfile) installs its own dependencies and builds dist/.
+apps/web/node_modules
+apps/web/dist
+apps/web/test-results
+apps/web/playwright-report
+design-kit/node_modules

@@ -12,12 +12,13 @@ buildNpmPackage {
   pname = "penny-web";
   version = "0.0.0-nix";
 
-  # apps/web imports ../../design-kit (fonts, icons, styles), so the source is the
-  # repository root narrowed to those two directories.
+  # apps/web imports ../../design-kit (fonts, icons, styles) and ../../src/domain (the
+  # shared ledger rules), so the source is the repository root narrowed to those three
+  # directories.
   src = lib.fileset.toSource {
     root = ../..;
     fileset = lib.fileset.difference
-      (lib.fileset.unions [ ../../apps/web ../../design-kit ])
+      (lib.fileset.unions [ ../../apps/web ../../design-kit ../../src/domain ])
       (lib.fileset.unions (map lib.fileset.maybeMissing [
         ../../apps/web/node_modules
         ../../apps/web/dist

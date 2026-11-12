@@ -10,7 +10,7 @@ Run commands from the repository root of a checkout of the release you deploy (t
 
 | Service | Image | Role | Network |
 | --- | --- | --- | --- |
-| `web` | `ghcr.io/<owner>/penny-web` | Unprivileged nginx: the Expo web export, SPA fallback, and a same-origin proxy for `/api/` | The only published port (default `127.0.0.1:8080`) |
+| `web` | `ghcr.io/<owner>/penny-web` | Unprivileged nginx: the v2 web app (`apps/web`), SPA fallback, and a same-origin proxy for `/api/` ([web app](#the-web-app)) | The only published port (default `127.0.0.1:8080`) |
 | `api` | `ghcr.io/<owner>/penny-api` | ASP.NET Core API plus the background workers (shared recurrence, push delivery, search embeddings) | Internal network only |
 | `migrate` | `penny-api` | One-shot `migrate --grant-runtime`: applies EF migrations under the migration lock, then the runtime grants, and exits | Internal |
 | `postgres` | `pgvector/pgvector:0.8.7-pg18-trixie` (digest pinned) | PostgreSQL 18.6 with `pg_trgm` and pgvector 0.8.7; profile `bundled-postgres` | Internal |
@@ -178,9 +178,19 @@ Every release is forward-only and migrates from any earlier v2 release. Read the
 
 A failed `migrate` leaves the previous schema in place (each migration runs in its own transaction) and the API is not started; fix the cause and run `up` again.
 
+### The web app
+
+The `web` image serves the v2 browser app (`apps/web`: React, Vite, TanStack) since MAZ-97. Earlier images served the Expo web export. Both use the same origin, URLs and `penny_session` cookie, and talk to the same API, so the web and API images can be upgraded or rolled back separately within the API's compatibility window.
+
+- **Caching.** `index.html` is `no-cache`, so a new release takes effect on the next page load. Files under `/assets/` are fingerprinted and `immutable`; a missing asset is a plain 404 and is not cached. `/version.json` (no-store) reports the image's `version` and `revision`: check it after an upgrade or rollback. Old Expo bundle paths (`/_expo/`) return 404. A tab left open from before the upgrade recovers when it is reloaded.
+- **Legacy URLs and sign-in.** Every legacy route ([route map](migration/redesign.md#legacy-deep-links)), including the OIDC callback `/auth/callback`, still opens a page, so `Oidc__RedirectUris`, bookmarks and the widget's **+** link don't change.
+- **Offline changes carry over.** On first sign-in, the new app imports the Expo app's unsynced copy from `localStorage`. It removes that copy only after the server has the changes ([legacy migration](web-offline-sync.md#migrating-the-legacy-expo-web-copy)). Keep the same origin, or the browser starts with an empty store.
+- **Rolling the web image back** to a pre-MAZ-97 tag brings back the Expo web app. It reads from the server, plus any legacy copy that wasn't imported yet. Changes still waiting in the new app's IndexedDB are left alone, and they upload when the new image is served again. A copy the Expo app writes during the rollback is merged in on the next import. Data is lost only if site data is cleared or the origin changes.
+- **Supported browsers:** current and previous major versions of Chrome, Edge, Firefox and Safari (macOS and iOS), which are tested in CI on Chromium, Firefox and WebKit. The app needs ES2022, IndexedDB, Web Locks and module workers. Older browsers aren't supported.
+
 ## Roll back
 
-- **Release without a migration:** set the previous image tags and run `up -d --wait` again.
+- **Release without a migration:** set the previous image tags and run `up -d --wait` again. The web image can be rolled back on its own ([web app](#the-web-app)).
 - **Release with a migration:** the previous build refuses the newer schema. Its readiness reports `schema` and its `migrate` refuses "Database schema is newer than this build". Prefer rolling forward with a fixed release. If you must go back, restore the pre-upgrade backup ([restore](operations.md#restore)) with the previous images, then reconcile the writes accepted since the backup ([write reconciliation](operations.md#write-reconciliation-after-a-rollback)).
 
 ## Container images and releases
