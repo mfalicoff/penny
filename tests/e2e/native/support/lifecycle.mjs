@@ -97,9 +97,6 @@ export async function createNativeHarness(t, platform, journey, env = process.en
   const addCleanup = (cleanup) => cleanups.push(cleanup);
 
   async function device(...args) {
-    // Android RN accessibility-idle settling can stall; the journey waits for
-    // explicit destination text instead. Keep this platform behavior reusable.
-    if (platform === "android") args = args.filter((arg) => arg !== "--settle");
     const line = `$ agent-device ${args.join(" ")}`;
     // A failed open can still create a session; attempt to close it at teardown.
     if (args[0] === "open") opened = true;
@@ -108,7 +105,6 @@ export async function createNativeHarness(t, platform, journey, env = process.en
       const result = await command("agent-device", [...args, "--platform", platform, ...target, "--session", session], 120000, env);
       transcript.push(`${line}\n${result}`);
       if (args[0] === "close") opened = false;
-      if (platform === "android" && args[0] === "fill") await device("keyboard", "dismiss");
       return result;
     } catch (error) {
       transcript.push(`${line}\n${error}`);

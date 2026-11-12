@@ -4,7 +4,7 @@ const shared = {
 };
 
 module.exports = {
-  projects: ["ios", "android"].map((platform) => ({
+  projects: ["ios"].map((platform) => ({
     ...shared,
     displayName: platform,
     preset: `jest-expo/${platform}`,

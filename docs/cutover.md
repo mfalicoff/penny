@@ -220,7 +220,8 @@ What existing clients get after the switch, and for how long:
 
 | Client or credential | After the switch | Until |
 | --- | --- | --- |
-| Current Expo apps (iOS, Android) on the same address | Supported: same routes, payloads, errors, ledger v1–v4, `penny_session` cookie and bearer tokens | Replaced by the native iOS app (MAZ-98); Android retirement is staged in MAZ-98 |
+| Current Expo iOS app on the same address | Supported: same routes, payloads, errors, ledger v1–v4, `penny_session` cookie and bearer tokens | Replaced by the native iOS app (MAZ-98) |
+| Expo Android app | Supported by the same API until it drops the legacy routes (MAZ-131), with no fixes | Retired in MAZ-98 with no migration path ([Android retirement](ios-ipa.md#android-retirement)) |
 | Expo web app (browsers) | Replaced by the TanStack web app in the `penny-web` image on the same origin (MAZ-97): legacy URLs, cookie sessions and unsynced `localStorage` edits carry over ([web app](deployment.md#the-web-app)) | Retired in MAZ-97 |
 | Signed-in sessions | Keep working, unchanged | Their legacy expiry (at most 30 days after their last sign-in) |
 | Email/password accounts | Must redeem an operator-issued reset code once | Indefinitely: the scrypt hash stays stored but never verifies |

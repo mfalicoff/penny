@@ -43,6 +43,10 @@ apps/ios/scripts/ios.sh ui-build       # build the app and the XCUITest bundle
 apps/ios/scripts/ios.sh ui-test smoke  # XCUITest plan (smoke|full|screenshots|performance) on clean iPhone and iPad
                                        # simulators against the full-stack environment (Docker/Podman)
 apps/ios/scripts/ios.sh push <file>    # send a notification payload to the booted simulator (no APNs)
+apps/ios/scripts/ios.sh archive        # signed Release archive for TestFlight (PENNY_BUILD_NUMBER)
+apps/ios/scripts/ios.sh export         # App Store signed, verified .cache/ios/export/Penny.ipa
+apps/ios/scripts/ios.sh upload         # validate and upload that IPA to TestFlight (API key)
+apps/ios/scripts/ios.sh distribution-test  # the archive/IPA checks refuse bad builds (after release-check)
 ```
 
 `test` and `launch` create new simulators from the newest installed iOS runtime and delete them afterwards, so no state carries over between runs. They use the newest iPhone Pro and iPad Pro 11-inch device types; set `PENNY_IPHONE` or `PENNY_IPAD` to a device type name from `xcrun simctl list devicetypes` to choose others.
@@ -119,11 +123,11 @@ These values live in `PennyDomain.AppIdentity`. `AppIdentityTests` compares them
 - Camera access for the household invite scanner (MAZ-75) is a usage description (`INFOPLIST_KEY_NSCameraUsageDescription` in `Configuration/Penny.xcconfig`), not an entitlement: no App ID or profile change. Penny asks only when the scanner opens.
 - Push notifications (MAZ-79) add the `aps-environment` entitlement (`development`; exporting for TestFlight or the App Store switches it to `production`). The App ID needs the **Push Notifications** capability and regenerated profiles before the next device build or archive ([Apple Developer setup](../../docs/ios-notifications.md#apple-developer-setup)). Penny asks for notification permission only in context, never at launch.
 
-TestFlight distribution of this app (archive, upload and the upgrade from the Expo build on a physical device) is MAZ-98. The legacy EAS workflow is unchanged.
+TestFlight distribution (MAZ-98): `ios.sh archive`, `export` and `upload`, run by [`ios-testflight.yml`](../../.github/workflows/ios-testflight.yml) when a release is published. CI signs manually with the App Store distribution certificate and profile; on a Mac, automatic signing with your Apple account also works. Secrets, build numbers, the device checklist and rollback are in [iOS builds, signing and TestFlight](../../docs/ios-ipa.md).
 
 ## Versions
 
-`MARKETING_VERSION` in `Configuration/Version.xcconfig` follows `package.json`. Release-please updates it with each release, and `npm run version:check` fails when they differ. `CURRENT_PROJECT_VERSION` is `1` locally; archives for TestFlight must set it above the legacy EAS build counter (`npx eas-cli@latest build:version:get --platform ios`), because App Store Connect rejects build numbers that do not increase.
+`MARKETING_VERSION` in `Configuration/Version.xcconfig` follows `package.json`. Release-please updates it with each release, and `npm run version:check` fails when they differ. `CURRENT_PROJECT_VERSION` is `1` locally. `ios.sh archive` sets it from `PENNY_BUILD_NUMBER`; CI uses `<IOS_BUILD_NUMBER_BASE>.<run>.<attempt>`, with the base above the legacy EAS build counter (`npx eas-cli@latest build:version:get --platform ios`), because App Store Connect rejects build numbers that do not increase ([build numbers](../../docs/ios-ipa.md#versions-and-build-numbers)).
 
 ## Tests
 

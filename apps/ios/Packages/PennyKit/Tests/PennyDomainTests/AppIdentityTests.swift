@@ -28,6 +28,20 @@ struct AppIdentityTests {
         #expect(AppIdentity.widgetExtensionBundleIdentifier.hasPrefix(AppIdentity.bundleIdentifier + "."))
     }
 
+    // MAZ-98: the TestFlight checks in ios.sh refuse any archive or IPA that is not this app.
+    // If they drifted from AppIdentity, they would pass a build that cannot upgrade Expo installs.
+    @Test("whenComparedWithReleaseScript_AppIdentity_ShouldMatchTheTestFlightChecks")
+    func matchesReleaseScript() throws {
+        let script = try String(
+            contentsOf: Repository.root.appendingPathComponent("apps/ios/scripts/ios.sh"), encoding: .utf8)
+        #expect(script.contains("BUNDLE_ID=\"\(AppIdentity.bundleIdentifier)\""))
+        #expect(script.contains("APP_GROUP=\"\(AppIdentity.appGroup)\""))
+
+        let workflow = try String(
+            contentsOf: Repository.root.appendingPathComponent(".github/workflows/ios-testflight.yml"), encoding: .utf8)
+        #expect(workflow.contains("$PENNY_TEAM_ID.\(AppIdentity.bundleIdentifier)"))
+    }
+
     @Test("whenNativePackageBuilds_ContractFixtures_ShouldBeReachable")
     func contractsReachable() throws {
         // MAZ-67 builds the API models on PennyContracts; this keeps the dependency honest.

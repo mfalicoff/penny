@@ -51,7 +51,6 @@ Startup: create the container with the repository's `init-roles.sh` (roles and e
 | --- | --- |
 | Browser on this machine | `PENNY_API_URL` (`http://127.0.0.1:<port>`); add its origin with `--origins` if it is not one of the defaults (`localhost`/`127.0.0.1` on 8081 and 4173) |
 | iOS Simulator | Same URL: the simulator shares the host's loopback |
-| Android Emulator | `http://10.0.2.2:<port>` (printed as `android` by `up`) |
 | Physical device or another machine | `--host 0.0.0.0`, then `http://<host LAN address>:<port>`. Only on a trusted network: the API has test controls |
 
 The environment serves plain HTTP. The native app reaches `http://127.0.0.1:<port>` without an App Transport Security exception (loopback IP addresses are exempt); `apps/ios/scripts/ios.sh ui-test` starts this environment with `--oidc` around the XCUITest plans and trusts the provider certificate (`PENNY_OIDC_CERTIFICATE` in the runner environment) on each simulator ([native UI tests](../ios-ui-tests.md)).

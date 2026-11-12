@@ -219,7 +219,7 @@ It uses a throwaway Compose project and synthetic data, and removes everything a
 
 ## OpenID Connect (OIDC) sign-in
 
-Penny supports one configurable OIDC provider alongside email/password login on web, iOS, and Android. Configure a client supporting Authorization Code with S256 PKCE and the `openid email profile` scopes. The provider must return a verified email (`email_verified: true`) in the ID token or UserInfo response.
+Penny supports one configurable OIDC provider alongside email/password login on web and iOS. Configure a client supporting Authorization Code with S256 PKCE and the `openid email profile` scopes. The provider must return a verified email (`email_verified: true`) in the ID token or UserInfo response.
 
 Set these server-side values in `deploy/api.env`:
 
@@ -238,7 +238,7 @@ New OIDC accounts are disabled by default. Set `Oidc__AllowRegistration=true` to
 
 ## Phone notifications
 
-On iOS and Android, Penny requests notification permission and registers the signed-in device. Other active members receive a push for a new expense, an edited expense, or a recorded reimbursement; a recurring occurrence counts as a new expense. Web does not register for push.
+On iOS, Penny requests notification permission and registers the signed-in device. Other active members receive a push for a new expense, an edited expense, or a recorded reimbursement; a recurring occurrence counts as a new expense. Web does not register for push.
 
 The .NET API delivers native iOS notifications through APNs (`Push__Apns__*`) and keeps legacy Expo tokens working through the Expo Push Service while `Push__Expo__Enabled=true`. Provider calls go out from the `api` container; allow outbound HTTPS to `api.push.apple.com` (`api.sandbox.push.apple.com` for development builds) and `exp.host` for Expo. Credentials, the `push-smoke-apns` check and delivery diagnostics: [push](migration/push.md).
 

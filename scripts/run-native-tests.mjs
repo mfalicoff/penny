@@ -2,18 +2,18 @@ import { spawn } from "node:child_process";
 import { readdir } from "node:fs/promises";
 import { resolve } from "node:path";
 import * as ios from "../tests/e2e/native/support/ios.mjs";
-import * as android from "../tests/e2e/native/support/android.mjs";
 import { commonPreflight, root } from "../tests/e2e/native/support/lifecycle.mjs";
 
-const usage = "Usage: node scripts/run-native-tests.mjs [--check] ios|android|all\n--check only discovers prerequisites; it never boots devices, starts Metro, builds apps or downloads tools.";
+const usage = "Usage: node scripts/run-native-tests.mjs [--check] ios\n--check only discovers prerequisites; it never boots devices, starts Metro, builds apps or downloads tools.";
 const args = process.argv.slice(2);
 const platforms = args.filter((arg) => arg !== "--check");
-if (platforms.length !== 1 || !["ios", "android", "all"].includes(platforms[0]) || args.filter((arg) => arg === "--check").length > 1) {
+if (platforms.length !== 1 || platforms[0] !== "ios" || args.filter((arg) => arg === "--check").length > 1) {
   console.error(usage);
   process.exit(2);
 }
-const selected = platforms[0] === "all" ? ["ios", "android"] : platforms;
-const adapters = { ios, android };
+// Android is retired (MAZ-98); the legacy Expo journeys run on iOS only.
+const selected = platforms;
+const adapters = { ios };
 let child;
 let interrupted;
 const forward = (signal) => {
@@ -40,9 +40,7 @@ try {
       const source = await adapters[platform].preflight();
       files[platform] = entries.filter((name) => name.endsWith(`.${platform}.test.mjs`)).sort().map((name) => resolve(directory, name));
       if (!files[platform].length) throw new Error(`No ${platform} native journeys found in ${directory}.`);
-      console.log(platform === "ios"
-        ? `iOS prerequisites ready: ${source.runtime}; ${source.deviceType}; app ${source.app}`
-        : `Android prerequisites ready: AVD ${source.name}; image ${source.imagePath}; APK ${source.apk}`);
+      console.log(`iOS prerequisites ready: ${source.runtime}; ${source.deviceType}; app ${source.app}`);
     } catch (error) { failures.push(`${platform}: ${error.message}`); }
   }
   if (failures.length) throw new Error(`Native prerequisites are missing:\n${failures.join("\n")}`);

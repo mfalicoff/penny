@@ -3,24 +3,6 @@
     "appVersionSource": "remote"
   },
   "build": {
-    "apk": {
-      "distribution": "internal",
-      "environment": "production",
-      "credentialsSource": "remote",
-      "autoIncrement": true,
-      "android": {
-        "buildType": "apk"
-      }
-    },
-    "play-internal": {
-      "distribution": "store",
-      "environment": "production",
-      "credentialsSource": "remote",
-      "autoIncrement": true,
-      "android": {
-        "buildType": "app-bundle"
-      }
-    },
     "ipa": {
       "distribution": "store",
       "environment": "production",
@@ -32,11 +14,6 @@
     }
   },
   "submit": {
-    "play-internal": {
-      "android": {
-        "track": "internal"
-      }
-    },
     "production": {
       "ios": {}
     }

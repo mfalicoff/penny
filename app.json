@@ -12,14 +12,6 @@
         "ITSAppUsesNonExemptEncryption": false
       }
     },
-    "android": {
-      "package": "com.mfalicoff.penny",
-      "adaptiveIcon": {
-        "backgroundColor": "#283B33",
-        "foregroundImage": "./assets/penny-android-foreground.png"
-      },
-      "predictiveBackGestureEnabled": false
-    },
     "plugins": [
       "expo-sharing",
       "expo-secure-store",

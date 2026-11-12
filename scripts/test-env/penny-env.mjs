@@ -78,7 +78,6 @@ function summary(state) {
     postgres: state.postgres,
     container: state.container,
     stateFile: `${state.directory}/env.json`,
-    android: state.apiUrl.replace("127.0.0.1", "10.0.2.2"),
     oidcIssuer: state.oidc?.issuer,
     oidcCertificate: state.oidc?.certificate,
   };

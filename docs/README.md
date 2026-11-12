@@ -4,7 +4,7 @@
 
 ## Run and operate Penny
 
-- [Development](development.md): local web setup, Nix/direnv, live reload, connecting iOS and Android, and the source layout.
+- [Development](development.md): local web setup, Nix/direnv, live reload, connecting the legacy Expo iOS app to a server, and the source layout.
 - [Self-hosting and configuration](deployment.md): the .NET/PostgreSQL Compose stack, reverse proxies and HTTPS, configuration, external PostgreSQL, container images, upgrades and rollback, OIDC, push notifications, and the legacy Node deployment.
 - [Self-hosting on NixOS](nixos.md): the flake packages and the `services.penny` / `programs.penny` NixOS module (PostgreSQL 18, migrations, the API and nginx), its options, secrets, external PostgreSQL and upgrades.
 - [Cutover from Node/SQLite](cutover.md): the one-time move to .NET/PostgreSQL behind the same address: settings mapping, production-copy rehearsal, the window step by step, go/no-go and rollback, observation and compatibility windows, Node retirement, the cutover drill and release notes.
@@ -14,8 +14,7 @@
 ## Build and release
 
 - [Releases](releases.md): semantic versioning, version checks, release commands, Git tags, and native build counters.
-- [Android APK builds](android-apk.md): EAS signing credentials, CI setup, installation, and compatible updates.
-- [iOS IPA and TestFlight builds](ios-ipa.md): Apple credentials, widget App Groups, EAS builds, and TestFlight submission.
+- [iOS IPA and TestFlight builds](ios-ipa.md): native Xcode archive, signing, TestFlight upload and release runbook.
 
 ## Architecture and testing
 
@@ -50,7 +49,7 @@
 
 ## Showcase screenshots
 
-The [README](../README.md) uses real captures of the running web app with temporary demo data, refreshed on October 24, 2026. The phone-width capture shows responsive web, not a native iOS or Android build.
+The [README](../README.md) uses real captures of the running web app with temporary demo data, refreshed on October 24, 2026. The phone-width capture shows responsive web, not a native iOS build.
 
 - `screenshots/overview.jpg`: desktop monthly overview, calendar, and category breakdown.
 - `screenshots/sankey.jpg`: the overview's **Follow your money** card.

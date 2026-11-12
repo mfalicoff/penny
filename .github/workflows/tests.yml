@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   tests:
-    name: Core and UI (iOS / Android)
+    name: Core and UI (iOS)
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:

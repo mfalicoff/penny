@@ -54,10 +54,9 @@ Nix ignores untracked files in Git flakes. Update the pinned toolchain deliberat
 with `nix flake update` and commit the resulting lockfile.
 
 The shell uses the existing npm lockfile; Expo and EAS CLIs remain project-local
-or invoked with `npx`. Xcode/Command Line Tools, simulators, and the Android SDK
-must be installed separately for local native builds. Watchman is optional and can
-be installed at the system level for filesystem watching. Existing `ANDROID_HOME` and
-other platform settings are left unchanged. For browser tests, install Chromium
+or invoked with `npx`. Xcode/Command Line Tools and simulators must be installed
+separately for local iOS builds. Watchman is optional and can be installed at the
+system level for filesystem watching. Existing platform settings are left unchanged. For browser tests, install Chromium
 with `npx playwright install chromium` as described below (Linux may also need
 host browser dependencies).
 
@@ -72,7 +71,9 @@ npm run server
 npm start
 ```
 
-### iOS and Android
+### iOS (legacy Expo app)
+
+This section covers the legacy Expo iOS app. The native SwiftUI app has its own setup in the [native iOS app README](../apps/ios/README.md). Android is no longer supported; see [Android retirement](ios-ipa.md#android-retirement).
 
 On the mobile sign-in screen, choose **Change server**, enter your Penny server's base URL (without `/api`), and tap **Check server**. Penny checks the public `/api/info` endpoint, displays the server version, and enables **Use this server** only after a successful check. Use an HTTPS hostname, or a reachable LAN address for development; `localhost` on a physical phone points at the phone, not your server. Use the same account on each device.
 
@@ -83,12 +84,11 @@ The selection is saved only on that device, survives app restarts and sign-out, 
 ```sh
 npm start
 # Open with an Expo Go version that supports SDK 57, or a development build.
-# With the respective platform development tools installed:
+# With Xcode installed:
 npm run ios
-npm run android
 ```
 
-Standalone mobile builds should use an HTTPS API endpoint. Development against plain HTTP depends on platform transport policies. The [mobile build workflow](../.github/workflows/mobile-builds.yml) runs checks and builds a signed [Android APK](android-apk.md) and [iOS IPA](ios-ipa.md) through EAS when a GitHub Release is published or on manual dispatch. Release builds attach both binaries and their SHA-256 checksums to the release's **Assets**. It uploads the store signed IPA to TestFlight automatically. Complete the platform signing and App Store Connect setup in those guides before running it.
+Standalone mobile builds should use an HTTPS API endpoint. Development against plain HTTP depends on platform transport policies. The [iOS TestFlight workflow](../.github/workflows/ios-testflight.yml) runs checks, archives and signs the native iOS app, and uploads it to TestFlight when a GitHub Release is published or on manual dispatch. Release builds attach `penny.ipa` and its SHA-256 checksum to the release's **Assets**. The legacy Expo iOS build is available only as a manual-dispatch option. Complete the setup in [iOS IPA and TestFlight builds](ios-ipa.md#one-time-setup) before running it.
 
 ## Dependency updates
 
@@ -97,7 +97,7 @@ Dependency Dashboard. All regular updates, including major versions, are grouped
 into one pull request, with at most one regular Renovate PR open at a time.
 It checks npm dependencies and their lockfiles, GitHub Actions, Dockerfiles, and
 Docker Compose images. Security vulnerability PRs can bypass Renovate's concurrency
-limit. All pull requests require manual merging. Generated iOS and Android
+limit. All pull requests require manual merging. Generated native
 dependency files are not managed independently.
 
 To activate the hosted bot, merge the configuration into the default branch and
@@ -109,7 +109,7 @@ Expo, React, React Native, their native libraries, and Expo-specific tooling are
 excluded from automated updates so their versions stay aligned with the Expo SDK.
 Update them deliberately using Expo's SDK upgrade guidance and
 `npx expo install --fix`, then commit both `package.json` and `package-lock.json`
-and verify iOS and Android. When adding an SDK-managed dependency, keep the
+and verify iOS. When adding an SDK-managed dependency, keep the
 exclusion rule in `renovate.json` aligned with it.
 
 The toolchain runs TypeScript 7, ESLint 10, and Jest 30 without independently
@@ -124,7 +124,7 @@ upgrading the Expo SDK:
 - `eslint.config.js` applies ESLint's
   [`fixupConfigRules`](https://github.com/eslint/rewrite/tree/main/packages/compat)
   adapter to Expo's plugins, preserving their rules on ESLint 10.
-- Jest 30 runs the existing `jest-expo` iOS and Android projects.
+- Jest 30 runs the existing `jest-expo` iOS project.
 
 Some upstream Expo lint/test dependencies still declare older ESLint/Jest peer
 ranges, so `npm ci` emits peer warnings. The compatibility setup does not disable

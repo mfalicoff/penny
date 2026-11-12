@@ -51,21 +51,22 @@ The household projection API returns recorded `transactions` plus month-only `sc
 
 The provider conceals content while inactive and locks on actual background transitions. iOS biometric-prompt inactive/active events do not trigger a second prompt. Authentication is single-flight; background transitions invalidate outstanding results, and enabling/disabling is committed only after successful authentication and a durable preference write. Enabling requires strong enrolled biometrics; later unlocking/disabling permits the OS device-credential fallback.
 
-`app.json` configures the `expo-local-authentication` plugin's Face ID usage description; the module contributes Android biometric permissions. This requires a native rebuild, not new iOS entitlements. See [Mobile app protection](app-guide.md#mobile-app-protection) for recovery behavior and the widget/notification privacy boundary.
+`app.json` configures the `expo-local-authentication` plugin's Face ID usage description. This requires a native rebuild, not new iOS entitlements. See [Mobile app protection](app-guide.md#mobile-app-protection) for recovery behavior and the widget/notification privacy boundary.
 
 ## Native glass surfaces
 
 Mobile headers, bottom navigation and shared `Sheet` dialogs use `shared/ui/GlassSurface`. Ledger cards and form controls remain opaque for legibility. Web keeps its existing solid chrome.
 
 - **iOS 26+:** [Expo GlassEffect](https://docs.expo.dev/versions/v57.0.0/sdk/glass-effect/) renders native Liquid Glass only when both runtime capability checks pass. Earlier iOS versions use a frosted blur.
-- **Android 12+:** [Expo BlurView](https://docs.expo.dev/versions/v57.0.0/sdk/blur-view/) samples one shared `BlurTargetView` containing the scrolling page. Glass overlays stay outside the target to avoid recursive blur. Android uses a frosted-glass approximation, not Apple's Liquid Glass renderer.
-- **Fallbacks:** Android versions below API 31 and AMOLED appearance use solid theme-colored surfaces. iOS Reduce Transparency is checked before enabling effects and observed for live changes; a failed preference query leaves surfaces opaque. A sheet outside the workspace's glass provider also remains opaque.
+- **Fallbacks:** AMOLED appearance uses solid theme-colored surfaces. iOS Reduce Transparency is checked before enabling effects and observed for live changes; a failed preference query leaves surfaces opaque. A sheet outside the workspace's glass provider also remains opaque.
 
 `GlassProvider` owns the sampled-content ref and accessibility preference. `GlassSurface` follows the app's selected light/dark palette rather than assuming the system theme. Floating navigation measures its height so scroll padding keeps the first and last controls reachable. Native modals slide instead of fading: setting a glass view or ancestor to zero opacity can prevent the iOS effect from rendering.
 
-Blur fallbacks place a theme-colored tint above the sampled image, not behind it. This preserves text contrast even if Android retains a bright sampled frame while a dialog is open during a dark-theme switch.
+Blur fallbacks place a theme-colored tint above the sampled image, not behind it, to preserve text contrast.
 
-After installing these native dependencies, rebuild the development apps with `npx expo run:ios` and `npx expo run:android`; a JavaScript reload or OTA update alone cannot add `expo-blur` to an existing binary.
+The legacy Expo code still contains Android branches, such as the Android BlurView path in `GlassSurface`. Android is no longer supported, and those branches go away with the Expo retirement ([Android retirement](ios-ipa.md#android-retirement)).
+
+After installing these native dependencies, rebuild the development app with `npx expo run:ios`; a JavaScript reload or OTA update alone cannot add `expo-blur` to an existing binary.
 
 ## Adding a feature
 
@@ -81,17 +82,16 @@ ESLint rejects upward dependencies from domain, data, shared code and providers 
 
 ```sh
 npm run test:core      # Node: money, recurrence, commands, draft conversion, selectors, real API integration
-npm run test:ui        # Jest/Expo: iOS and Android projects
+npm run test:ui        # Jest/Expo: iOS project
 npm run test:ui:ios    # iOS native component interactions
-npm run test:ui:android # Android native component interactions
 npm run test:ui:watch  # Interactive frontend work
 npm test              # Both suites; also used by CI
 npm run lint
 npm run typecheck
-npx expo export --platform ios --platform android --output-dir /tmp/penny-native-export
+npx expo export --platform ios --output-dir /tmp/penny-native-export
 ```
 
-The frontend harness uses the SDK-matched [Jest Expo preset](https://docs.expo.dev/develop/unit-testing/), React Native Testing Library and [Expo Router's testing utilities](https://docs.expo.dev/router/reference/testing/). The same native interaction tests run with the iOS and Android presets so platform-specific module resolution and picker behavior are checked on both. Tests press accessible controls and assert observable outcomes, rather than snapshots of the component tree. Actual browser, simulator and emulator commands are defined in the [testing strategy](testing.md).
+The frontend harness uses the SDK-matched [Jest Expo preset](https://docs.expo.dev/develop/unit-testing/), React Native Testing Library and [Expo Router's testing utilities](https://docs.expo.dev/router/reference/testing/). Native interaction tests run with the iOS preset so platform-specific module resolution and picker behavior are checked. Tests press accessible controls and assert observable outcomes, rather than snapshots of the component tree. Actual simulator commands are defined in the [testing strategy](testing.md).
 
 Conditional children of a `View` must use boolean conditions or return `null`. For string state, use `message !== "" && <Text>…</Text>` or a ternary; `message && …` passes an empty string to the view, which React Native rejects outside `<Text>`.
 
@@ -102,6 +102,8 @@ Cover success and failure where behavior can lose user work: stale edit/delete c
 Native font loading is mocked globally; receipt I/O and preview are mocked in native form/navigation tests. These tests do not validate device pickers, actual PDF decoding, keyboard behavior, accessibility on a device or visual layout. Bundle exports check cross-platform resolution, not device interaction. Changes to those areas still need a browser or simulator/device check. The server integration test requires permission to listen on a local port.
 
 ### Verification on September 27, 2026
+
+These records predate the Android retirement (MAZ-98); the Android checks they mention no longer run.
 
 - Passed 26 core tests, 16 native UI tests and 22 real-DOM web tests, plus lint and TypeScript checks.
 - Exported web, iOS and Android bundles successfully.
