@@ -9,6 +9,10 @@ internal sealed class ChangingEmbedder(InMemorySearchOutbox outbox) : ITextEmbed
 
     public int Dimensions => 1;
 
+    public int MaxTokens => 512;
+
+    public int CountPassageTokens(string passage) => passage.Length;
+
     public float[] EmbedQuery(string query) => [1];
 
     public IReadOnlyList<float[]> EmbedPassages(IReadOnlyList<string> passages)

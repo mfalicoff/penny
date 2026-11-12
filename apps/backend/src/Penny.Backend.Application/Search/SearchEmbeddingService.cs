@@ -5,10 +5,11 @@ using Penny.Backend.Application.Diagnostics;
 
 namespace Penny.Backend.Application.Search;
 
-// Drains the embedding outbox: writes queue documents in their own transaction; this
-// service leases a batch, embeds the passages on the CPU and stores the vectors only
-// if each passage is still the one it embedded. Failures release the lease with
-// exponential backoff. Any number of workers may run: leases never overlap.
+// Drains the embedding outbox: writes queue documents in their own transaction, and
+// receipt text extraction queues receipt chunks (MAZ-125); this service leases a batch
+// (documents first), embeds the passages on the CPU and stores the vectors only if each
+// passage is still the one it embedded. Failures release the lease with exponential
+// backoff. Any number of workers may run: leases never overlap.
 public sealed class SearchEmbeddingService(
     ISearchRepository search,
     ITextEmbedder embedder,
@@ -61,7 +62,12 @@ public sealed class SearchEmbeddingService(
             [
                 .. work.Select(
                     (item, index) =>
-                        new EmbeddingResult(item.DocumentId, item.Passage, vectors[index])
+                        new EmbeddingResult(
+                            item.DocumentId,
+                            item.Passage,
+                            vectors[index],
+                            item.Target
+                        )
                 ),
             ],
             cancellationToken

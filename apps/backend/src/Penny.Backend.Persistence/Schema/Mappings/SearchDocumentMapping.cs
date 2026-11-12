@@ -61,6 +61,11 @@ internal sealed class SearchDocumentMapping : IEntityTypeConfiguration<SearchDoc
         builder
             .HasIndex(document => document.HouseholdId)
             .HasDatabaseName("ix_search_documents_household");
+        // Receipt text matches join through the receipt (MAZ-125).
+        builder
+            .HasIndex(document => document.ReceiptId)
+            .HasFilter("receipt_id IS NOT NULL")
+            .HasDatabaseName("ix_search_documents_receipt");
         // Literal substring (LIKE) and word_similarity (<%) on the stored texts.
         builder
             .HasIndex(document => document.OwnerText)

@@ -42,7 +42,8 @@ internal static class SearchIndexer
                     entry.Note,
                     categories.GetValueOrDefault(entry.CategoryId, ""),
                     entry.AccountId is { } account ? accounts.GetValueOrDefault(account) : null
-                )
+                ),
+                entry.ReceiptId
             )),
         ];
 
@@ -66,6 +67,7 @@ internal static class SearchIndexer
                 expense.Note,
                 expense.CategoryName,
                 expense.ExpenseDate,
+                expense.ReceiptId,
                 Account = expense.AccountId == null
                     ? null
                     : context
@@ -89,7 +91,8 @@ internal static class SearchIndexer
                 "expense",
                 row.ExpenseDate,
                 null,
-                SearchDocumentText.Build(row.Title, row.Note, row.CategoryName, row.Account)
+                SearchDocumentText.Build(row.Title, row.Note, row.CategoryName, row.Account),
+                row.ReceiptId
             )),
         ];
     }
@@ -119,6 +122,7 @@ internal static class SearchIndexer
                     row.DocumentText,
                     row.OwnerText,
                     row.EmbeddingSource,
+                    row.ReceiptId,
                 })
                 .ToListAsync(cancellationToken)
         ).ToDictionary(
@@ -142,7 +146,8 @@ internal static class SearchIndexer
                             row.DocumentText,
                             row.OwnerText,
                             row.EmbeddingSource
-                        )
+                        ),
+                        row.ReceiptId
                     )
                 ),
             StringComparer.Ordinal
@@ -151,11 +156,13 @@ internal static class SearchIndexer
     // Stages inserts, updates and deletes that make `scope` equal `expected`; the
     // caller saves. Result keys are unique within a scope (one user's entries, or a
     // set of expenses). With `inserts`, new documents (already due for embedding) are
-    // collected there for the caller to copy in bulk instead of tracked.
+    // collected there for the caller to copy in bulk instead of tracked. Receipt link
+    // changes are collected in `links` for ReceiptTextIndex.ApplyAsync after the save.
     public static async Task<(int Written, int Removed)> StageAsync(
         PennyDbContext context,
         IQueryable<SearchDocument> scope,
         IReadOnlyList<ExpectedDocument> expected,
+        ReceiptLinks links,
         CancellationToken cancellationToken,
         List<SearchDocument>? inserts = null
     )
@@ -170,6 +177,7 @@ internal static class SearchIndexer
                     inserts.Add(New(document));
                 else
                     context.SearchDocuments.Add(New(document));
+                links.Change(null, document.ReceiptId);
                 written++;
                 continue;
             }
@@ -178,6 +186,8 @@ internal static class SearchIndexer
             var row = Stub(current.Id, current.Document);
             context.SearchDocuments.Attach(row);
             var entry = context.Entry(row);
+            entry.Property(item => item.ReceiptId).CurrentValue = document.ReceiptId;
+            links.Change(current.Document.ReceiptId, document.ReceiptId);
             entry.Property(item => item.HouseholdId).CurrentValue = document.HouseholdId;
             entry.Property(item => item.PayerId).CurrentValue = document.PayerId;
             entry.Property(item => item.Kind).CurrentValue = document.Kind;
@@ -202,7 +212,10 @@ internal static class SearchIndexer
             written++;
         }
         foreach (var (id, document) in stored.Values)
+        {
             context.SearchDocuments.Remove(Stub(id, document));
+            links.Change(document.ReceiptId, null);
+        }
         return (written, stored.Count);
     }
 
@@ -214,6 +227,7 @@ internal static class SearchIndexer
         string userId,
         StoredLedger ledger,
         List<SearchDocument> inserts,
+        ReceiptLinks links,
         CancellationToken cancellationToken
     ) =>
         StageAsync(
@@ -233,12 +247,13 @@ internal static class SearchIndexer
                     StringComparer.Ordinal
                 )
             ),
+            links,
             cancellationToken,
             inserts
         );
 
     // Shared documents in `expenses` (live or deleted), staged and saved. Deleted
-    // expenses lose their document.
+    // expenses lose their document; receipt texts follow the links (MAZ-125).
     public static async Task<(int Written, int Removed)> SyncExpensesAsync(
         PennyDbContext context,
         IQueryable<HouseholdExpense> expenses,
@@ -246,15 +261,18 @@ internal static class SearchIndexer
     )
     {
         var ids = expenses.Select(expense => expense.Id);
+        var links = new ReceiptLinks();
         var changes = await StageAsync(
             context,
             context.SearchDocuments.Where(document =>
                 document.ExpenseId != null && ids.Contains(document.ExpenseId)
             ),
             await ExpectedSharedAsync(context, expenses, cancellationToken),
+            links,
             cancellationToken
         );
         await context.SaveChangesAsync(cancellationToken);
+        await ReceiptTextIndex.ApplyAsync(context, links, cancellationToken);
         return changes;
     }
 
@@ -313,6 +331,7 @@ internal static class SearchIndexer
             DocumentText = document.Text.Document,
             OwnerText = document.Text.OwnerDocument,
             EmbeddingSource = document.Text.EmbeddingSource,
+            ReceiptId = document.ReceiptId,
             EmbeddingDueAt = DueNow,
         };
 

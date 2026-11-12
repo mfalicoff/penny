@@ -9,9 +9,18 @@ public interface ITextEmbedder
 
     int Dimensions { get; }
 
+    // The most tokens the model reads from one input, prefix and special tokens
+    // included; longer passages are truncated.
+    int MaxTokens { get; }
+
     // Search text (the normalized query).
     float[] EmbedQuery(string query);
 
-    // Indexed text (title, note and category; never account names).
+    // Indexed text (title, note and category, or a receipt text chunk; never account
+    // names).
     IReadOnlyList<float[]> EmbedPassages(IReadOnlyList<string> passages);
+
+    // How many tokens the model reads for `passage` (the passage prefix and special
+    // tokens included), so long receipt text can be split into chunks that fit.
+    int CountPassageTokens(string passage);
 }

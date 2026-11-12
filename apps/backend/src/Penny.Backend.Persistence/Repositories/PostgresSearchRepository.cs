@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Penny.Backend.Application.Abstractions.Persistence;
+using Penny.Backend.Application.Receipts;
 using Penny.Backend.Application.Search;
 using Penny.Backend.Domain.Errors;
 using Penny.Backend.Domain.Search;
@@ -102,9 +103,26 @@ public sealed class PostgresSearchRepository(NpgsqlDataSource source, ReceiptFil
         var pattern = SearchText.ContainsPattern(query);
         var typo = SearchText.CodePoints(query) >= SearchTuning.TypoMinimumLength;
         var nearest = criteria.QueryVector is { } vector
-            ? await NearestAsync(context, criteria, new Vector(vector), cancellationToken)
+            ? await MeaningAsync(context, criteria, new Vector(vector), cancellationToken)
             : [];
         var queryVector = new Vector(criteria.QueryVector ?? new float[SearchSchema.Dimensions]);
+        var receipts = new ReceiptMatch(context, viewer, criteria.ModelId, queryVector);
+        var receiptTexts = receipts.Texts;
+        // Receipt text (MAZ-125) is its own field, matched only through receipts the viewer
+        // may read; its branches come after the document's so each can use its index.
+        Expression<Func<SearchDocument, bool>> receiptText = document =>
+            document.ReceiptId != null
+            && receiptTexts.Any(text =>
+                text.ReceiptId == document.ReceiptId
+                && EF.Functions.Like(text.SearchText, pattern, "\\")
+            );
+        Expression<Func<SearchDocument, bool>> receiptSimilar = document =>
+            typo
+            && document.ReceiptId != null
+            && receiptTexts.Any(text =>
+                text.ReceiptId == document.ReceiptId
+                && EF.Functions.TrigramsAreWordSimilar(query, text.SearchText)
+            );
 
         if (sources.Personal)
         {
@@ -112,6 +130,8 @@ public sealed class PostgresSearchRepository(NpgsqlDataSource source, ReceiptFil
                 EF.Functions.Like(document.OwnerText, pattern, "\\");
             Expression<Func<SearchDocument, bool>> similar = document =>
                 typo && EF.Functions.TrigramsAreWordSimilar(query, document.OwnerText);
+            var anyText = Predicates.Or(text, receiptText);
+            var anySimilar = Predicates.Or(similar, receiptSimilar);
             branches.Add(
                 PersonalRows(
                     personal.Where(text),
@@ -119,18 +139,37 @@ public sealed class PostgresSearchRepository(NpgsqlDataSource source, ReceiptFil
                     document => EF.Functions.Like(document.TitleText, pattern, "\\") ? 1 : 2
                 )
             );
+            branches.Add(
+                PersonalRows(personal.Where(Predicates.Not(text)).Where(receiptText), 1, _ => 2)
+            );
             if (typo)
+            {
                 branches.Add(
-                    PersonalTypoRows(personal.Where(Predicates.Not(text)).Where(similar), query)
+                    PersonalTypoRows(
+                        personal.Where(Predicates.Not(anyText)).Where(similar),
+                        query,
+                        receipts
+                    )
                 );
+                branches.Add(
+                    PersonalTypoRows(
+                        personal
+                            .Where(Predicates.Not(anyText))
+                            .Where(Predicates.Not(similar))
+                            .Where(receiptSimilar),
+                        query,
+                        receipts
+                    )
+                );
+            }
             if (nearest.Count > 0)
                 branches.Add(
                     PersonalMeaningRows(
                         personal
-                            .Where(Predicates.Not(text))
-                            .Where(Predicates.Not(similar))
+                            .Where(Predicates.Not(anyText))
+                            .Where(Predicates.Not(anySimilar))
                             .Where(document => nearest.Contains(document.Id)),
-                        queryVector
+                        receipts
                     )
                 );
         }
@@ -155,6 +194,8 @@ public sealed class PostgresSearchRepository(NpgsqlDataSource source, ReceiptFil
                         && EF.Functions.TrigramsAreWordSimilar(query, document.DocumentText)
                     )
                 );
+            var anyText = Predicates.Or(text, receiptText);
+            var anySimilar = Predicates.Or(similar, receiptSimilar);
             branches.Add(
                 SharedRows(
                     context,
@@ -164,34 +205,85 @@ public sealed class PostgresSearchRepository(NpgsqlDataSource source, ReceiptFil
                     document => EF.Functions.Like(document.TitleText, pattern, "\\") ? 1 : 2
                 )
             );
+            branches.Add(
+                SharedRows(
+                    context,
+                    shared.Where(Predicates.Not(text)).Where(receiptText),
+                    viewer,
+                    1,
+                    _ => 2
+                )
+            );
             if (typo)
+            {
                 branches.Add(
                     SharedTypoRows(
                         context,
-                        shared.Where(Predicates.Not(text)).Where(similar),
+                        shared.Where(Predicates.Not(anyText)).Where(similar),
                         viewer,
-                        query
+                        query,
+                        receipts
                     )
                 );
+                branches.Add(
+                    SharedTypoRows(
+                        context,
+                        shared
+                            .Where(Predicates.Not(anyText))
+                            .Where(Predicates.Not(similar))
+                            .Where(receiptSimilar),
+                        viewer,
+                        query,
+                        receipts
+                    )
+                );
+            }
             if (nearest.Count > 0)
                 branches.Add(
                     SharedMeaningRows(
                         context,
                         shared
-                            .Where(Predicates.Not(text))
-                            .Where(Predicates.Not(similar))
+                            .Where(Predicates.Not(anyText))
+                            .Where(Predicates.Not(anySimilar))
                             .Where(document => nearest.Contains(document.Id)),
                         viewer,
-                        queryVector
+                        receipts
                     )
                 );
         }
         return Union(branches);
     }
 
+    // Meaning candidates (MAZ-125): each result's best similarity among its entry
+    // embedding and the chunks of receipts the viewer may read, limited to the
+    // `MeaningLimit` best results (the cap counts results, not chunks).
+    private static async Task<List<long>> MeaningAsync(
+        PennyDbContext context,
+        SearchCriteria criteria,
+        Vector vector,
+        CancellationToken cancellationToken
+    )
+    {
+        var best = new Dictionary<long, double>();
+        foreach (
+            var (id, similarity) in (
+                await NearestAsync(context, criteria, vector, cancellationToken)
+            ).Concat(await NearestReceiptsAsync(context, criteria, vector, cancellationToken))
+        )
+            if (!best.TryGetValue(id, out var known) || similarity > known)
+                best[id] = similarity;
+        return
+        [
+            .. best.OrderByDescending(pair => pair.Value)
+                .ThenBy(pair => pair.Key)
+                .Take(SearchTuning.MeaningLimit)
+                .Select(pair => pair.Key),
+        ];
+    }
+
     // The closest authorized, filtered documents embedded by the current model, then
     // the similarity threshold. pgvector applies the filter inside the HNSW scan.
-    private static async Task<List<long>> NearestAsync(
+    private static async Task<List<(long Id, double Similarity)>> NearestAsync(
         PennyDbContext context,
         SearchCriteria criteria,
         Vector vector,
@@ -220,8 +312,70 @@ public sealed class PostgresSearchRepository(NpgsqlDataSource source, ReceiptFil
         [
             .. closest
                 .Where(row => 1 - row.Distance >= SearchTuning.MeaningSimilarity)
-                .Select(row => row.Id),
+                .Select(row => (row.Id, 1 - row.Distance)),
         ];
+    }
+
+    // MAZ-125: the closest chunks of receipts the viewer may read that are attached to
+    // an authorized, filtered result, embedded by the current model. Both checks run
+    // inside the HNSW scan (iterative scans), never after ranking, so a hidden receipt
+    // can neither match nor push a visible one out of the closest chunks. Returns each
+    // result linked to an accepted receipt with that receipt's best chunk similarity.
+    private static async Task<List<(long Id, double Similarity)>> NearestReceiptsAsync(
+        PennyDbContext context,
+        SearchCriteria criteria,
+        Vector vector,
+        CancellationToken cancellationToken
+    )
+    {
+        var viewer = criteria.ViewerId;
+        var authorized = criteria.Request.Source switch
+        {
+            SearchReader.Personal => OwnEntries(viewer),
+            SearchReader.Shared => VisibleShared(context, viewer),
+            _ => Predicates.Or(OwnEntries(viewer), VisibleShared(context, viewer)),
+        };
+        var results = Filtered(context.SearchDocuments.Where(authorized), criteria.Request);
+        var readable = context.Receipts.Where(ReceiptAccess.Readable(context, viewer));
+        var model = criteria.ModelId;
+        var closest = await context
+            .ReceiptTextChunks.AsNoTracking()
+            .Where(chunk =>
+                chunk.Embedding != null
+                && chunk.EmbeddingModel == model
+                && readable.Any(receipt => receipt.Id == chunk.ReceiptId)
+                && results.Any(document => document.ReceiptId == chunk.ReceiptId)
+            )
+            .OrderBy(chunk => chunk.Embedding!.CosineDistance(vector))
+            .Take(SearchTuning.MeaningLimit)
+            .Select(chunk => new
+            {
+                chunk.ReceiptId,
+                Distance = chunk.Embedding!.CosineDistance(vector),
+            })
+            .ToListAsync(cancellationToken);
+        // Receipt chunk acceptance: the same similarity rule as entry embeddings
+        // (NearestAsync). This is the one place the receipt threshold is read; a change
+        // to the meaning acceptance rule (MAZ-167: criteria.MeaningSimilarity) goes here.
+        var threshold = SearchTuning.MeaningSimilarity;
+        var accepted = closest
+            .Where(row => 1 - row.Distance >= threshold)
+            .GroupBy(row => row.ReceiptId, StringComparer.Ordinal)
+            .ToDictionary(
+                group => group.Key,
+                group => 1 - group.Min(row => row.Distance),
+                StringComparer.Ordinal
+            );
+        if (accepted.Count == 0)
+            return [];
+        var receiptIds = accepted.Keys.ToList();
+        var linked = await results
+            .Where(document =>
+                document.ReceiptId != null && receiptIds.Contains(document.ReceiptId)
+            )
+            .Select(document => new { document.Id, document.ReceiptId })
+            .ToListAsync(cancellationToken);
+        return [.. linked.Select(document => (document.Id, accepted[document.ReceiptId!]))];
     }
 
     private static Expression<Func<SearchDocument, bool>> OwnEntries(string viewer) =>
@@ -270,34 +424,69 @@ public sealed class PostgresSearchRepository(NpgsqlDataSource source, ReceiptFil
         Expression<Func<SearchDocument, int>> tier
     ) => documents.Select(Row(tier, _ => score, document => document.AmountCents ?? 0));
 
+    // Tier 3 scores the best word_similarity of the document and of a readable receipt.
     private static IQueryable<SearchRow> PersonalTypoRows(
         IQueryable<SearchDocument> documents,
-        string query
-    ) =>
-        documents.Select(
+        string query,
+        ReceiptMatch receipts
+    )
+    {
+        var texts = receipts.Texts;
+        return documents.Select(
             Row(
                 _ => 3,
                 document =>
                     (long)
                         Math.Round(
-                            EF.Functions.TrigramsWordSimilarity(query, document.OwnerText) * Exact
+                            Math.Max(
+                                EF.Functions.TrigramsWordSimilarity(query, document.OwnerText),
+                                texts
+                                    .Where(text => text.ReceiptId == document.ReceiptId)
+                                    .Select(text =>
+                                        (double?)
+                                            EF.Functions.TrigramsWordSimilarity(
+                                                query,
+                                                text.SearchText
+                                            )
+                                    )
+                                    .Max()
+                                    ?? 0
+                            ) * Exact
                         ),
                 document => document.AmountCents ?? 0
             )
         );
+    }
 
+    // Tier 4 scores the best of the entry embedding and readable receipt chunks.
     private static IQueryable<SearchRow> PersonalMeaningRows(
         IQueryable<SearchDocument> documents,
-        Vector vector
-    ) =>
-        documents.Select(
+        ReceiptMatch receipts
+    )
+    {
+        var (chunks, model, vector) = (receipts.Chunks, receipts.Model, receipts.Vector);
+        return documents.Select(
             Row(
                 _ => 4,
                 document =>
-                    (long)Math.Round((1 - document.Embedding!.CosineDistance(vector)) * Exact),
+                    (long)
+                        Math.Round(
+                            Math.Max(
+                                document.EmbeddingModel == model
+                                    ? 1 - document.Embedding!.CosineDistance(vector)
+                                    : -1,
+                                chunks
+                                    .Where(chunk => chunk.ReceiptId == document.ReceiptId)
+                                    .Max(chunk =>
+                                        (double?)(1 - chunk.Embedding!.CosineDistance(vector))
+                                    )
+                                    ?? -1
+                            ) * Exact
+                        ),
                 document => document.AmountCents ?? 0
             )
         );
+    }
 
     private static IQueryable<SearchRow> SharedRows(
         PennyDbContext context,
@@ -311,41 +500,72 @@ public sealed class PostgresSearchRepository(NpgsqlDataSource source, ReceiptFil
         PennyDbContext context,
         IQueryable<SearchDocument> documents,
         string viewer,
-        string query
-    ) =>
-        documents.Select(
+        string query,
+        ReceiptMatch receipts
+    )
+    {
+        var texts = receipts.Texts;
+        return documents.Select(
             Row(
                 _ => 3,
                 document =>
                     (long)
                         Math.Round(
-                            (
+                            Math.Max(
                                 document.PayerId == viewer
                                     ? EF.Functions.TrigramsWordSimilarity(query, document.OwnerText)
                                     : EF.Functions.TrigramsWordSimilarity(
                                         query,
                                         document.DocumentText
+                                    ),
+                                texts
+                                    .Where(text => text.ReceiptId == document.ReceiptId)
+                                    .Select(text =>
+                                        (double?)
+                                            EF.Functions.TrigramsWordSimilarity(
+                                                query,
+                                                text.SearchText
+                                            )
                                     )
+                                    .Max()
+                                    ?? 0
                             ) * Exact
                         ),
                 Share(context, viewer)
             )
         );
+    }
 
     private static IQueryable<SearchRow> SharedMeaningRows(
         PennyDbContext context,
         IQueryable<SearchDocument> documents,
         string viewer,
-        Vector vector
-    ) =>
-        documents.Select(
+        ReceiptMatch receipts
+    )
+    {
+        var (chunks, model, vector) = (receipts.Chunks, receipts.Model, receipts.Vector);
+        return documents.Select(
             Row(
                 _ => 4,
                 document =>
-                    (long)Math.Round((1 - document.Embedding!.CosineDistance(vector)) * Exact),
+                    (long)
+                        Math.Round(
+                            Math.Max(
+                                document.EmbeddingModel == model
+                                    ? 1 - document.Embedding!.CosineDistance(vector)
+                                    : -1,
+                                chunks
+                                    .Where(chunk => chunk.ReceiptId == document.ReceiptId)
+                                    .Max(chunk =>
+                                        (double?)(1 - chunk.Embedding!.CosineDistance(vector))
+                                    )
+                                    ?? -1
+                            ) * Exact
+                        ),
                 Share(context, viewer)
             )
         );
+    }
 
     // The viewer's share of a shared expense; 0 for a current member without one.
     private static Expression<Func<SearchDocument, long>> Share(
@@ -577,7 +797,14 @@ public sealed class PostgresSearchRepository(NpgsqlDataSource source, ReceiptFil
             .Select(document => document.Id)
             .ToListAsync(cancellationToken);
         if (candidates.Count == 0)
-            return [];
+            return await ClaimChunksAsync(
+                context,
+                leaseToken,
+                now,
+                leaseUntil,
+                limit,
+                cancellationToken
+            );
         await context
             .SearchDocuments.Where(document => candidates.Contains(document.Id))
             .Where(due)
@@ -587,7 +814,7 @@ public sealed class PostgresSearchRepository(NpgsqlDataSource source, ReceiptFil
                         .SetProperty(document => document.LeaseExpiresAt, leaseUntil),
                 cancellationToken
             );
-        return await context
+        var work = await context
             .SearchDocuments.AsNoTracking()
             .Where(document =>
                 candidates.Contains(document.Id) && document.LeaseToken == leaseToken
@@ -597,7 +824,69 @@ public sealed class PostgresSearchRepository(NpgsqlDataSource source, ReceiptFil
                 document.Id,
                 document.EmbeddingSource,
                 document.EmbeddingAttempts,
-                document.EmbeddingDueAt!.Value
+                document.EmbeddingDueAt!.Value,
+                EmbeddingTarget.Document
+            ))
+            .ToListAsync(cancellationToken);
+        return
+        [
+            .. work,
+            .. await ClaimChunksAsync(
+                context,
+                leaseToken,
+                now,
+                leaseUntil,
+                limit - work.Count,
+                cancellationToken
+            ),
+        ];
+    }
+
+    // Receipt text chunks (MAZ-125) fill the rest of a batch, with the same lease rules.
+    private static async Task<List<EmbeddingWork>> ClaimChunksAsync(
+        PennyDbContext context,
+        string leaseToken,
+        DateTimeOffset now,
+        DateTimeOffset leaseUntil,
+        int limit,
+        CancellationToken cancellationToken
+    )
+    {
+        if (limit <= 0)
+            return [];
+        Expression<Func<ReceiptTextChunk, bool>> due = chunk =>
+            chunk.EmbeddingDueAt != null
+            && chunk.EmbeddingDueAt <= now
+            && (chunk.LeaseExpiresAt == null || chunk.LeaseExpiresAt <= now);
+        var candidates = await context
+            .ReceiptTextChunks.AsNoTracking()
+            .Where(due)
+            .OrderBy(chunk => chunk.EmbeddingDueAt)
+            .ThenBy(chunk => chunk.Id)
+            .Take(limit)
+            .Select(chunk => chunk.Id)
+            .ToListAsync(cancellationToken);
+        if (candidates.Count == 0)
+            return [];
+        await context
+            .ReceiptTextChunks.Where(chunk => candidates.Contains(chunk.Id))
+            .Where(due)
+            .ExecuteUpdateAsync(
+                set =>
+                    set.SetProperty(chunk => chunk.LeaseToken, leaseToken)
+                        .SetProperty(chunk => chunk.LeaseExpiresAt, leaseUntil),
+                cancellationToken
+            );
+        return await context
+            .ReceiptTextChunks.AsNoTracking()
+            .Where(chunk => candidates.Contains(chunk.Id) && chunk.LeaseToken == leaseToken)
+            .OrderBy(chunk => chunk.Id)
+            .Select(chunk => new EmbeddingWork(
+                chunk.Id,
+                chunk.Passage,
+                chunk.EmbeddingAttempts,
+                chunk.EmbeddingDueAt!.Value,
+                EmbeddingTarget.ReceiptChunk
             ))
             .ToListAsync(cancellationToken);
     }
@@ -614,6 +903,26 @@ public sealed class PostgresSearchRepository(NpgsqlDataSource source, ReceiptFil
         foreach (var result in results)
         {
             var vector = new Vector(result.Vector);
+            if (result.Target == EmbeddingTarget.ReceiptChunk)
+            {
+                stored += await context
+                    .ReceiptTextChunks.Where(chunk =>
+                        chunk.Id == result.DocumentId
+                        && chunk.LeaseToken == leaseToken
+                        && chunk.Passage == result.Passage
+                    )
+                    .ExecuteUpdateAsync(
+                        set =>
+                            set.SetProperty(chunk => chunk.Embedding, vector)
+                                .SetProperty(chunk => chunk.EmbeddingModel, modelId)
+                                .SetProperty(chunk => chunk.EmbeddingDueAt, (DateTimeOffset?)null)
+                                .SetProperty(chunk => chunk.EmbeddingAttempts, 0)
+                                .SetProperty(chunk => chunk.LeaseToken, (string?)null)
+                                .SetProperty(chunk => chunk.LeaseExpiresAt, (DateTimeOffset?)null),
+                        cancellationToken
+                    );
+                continue;
+            }
             stored += await context
                 .SearchDocuments.Where(document =>
                     document.Id == result.DocumentId
@@ -657,20 +966,38 @@ public sealed class PostgresSearchRepository(NpgsqlDataSource source, ReceiptFil
                         .SetProperty(document => document.LeaseExpiresAt, (DateTimeOffset?)null),
                 cancellationToken
             );
+        await context
+            .ReceiptTextChunks.Where(chunk => chunk.LeaseToken == leaseToken)
+            .ExecuteUpdateAsync(
+                set =>
+                    set.SetProperty(chunk => chunk.EmbeddingDueAt, retryAt)
+                        .SetProperty(
+                            chunk => chunk.EmbeddingAttempts,
+                            chunk => chunk.EmbeddingAttempts + 1
+                        )
+                        .SetProperty(chunk => chunk.LeaseToken, (string?)null)
+                        .SetProperty(chunk => chunk.LeaseExpiresAt, (DateTimeOffset?)null),
+                cancellationToken
+            );
     }
 
     public async Task<long> PendingEmbeddingsAsync(CancellationToken cancellationToken)
     {
         await using var context = PennyDbContext.Create(source);
         return await context.SearchDocuments.LongCountAsync(
-            document => document.EmbeddingDueAt != null,
-            cancellationToken
-        );
+                document => document.EmbeddingDueAt != null,
+                cancellationToken
+            )
+            + await context.ReceiptTextChunks.LongCountAsync(
+                chunk => chunk.EmbeddingDueAt != null,
+                cancellationToken
+            );
     }
 
     public async Task<SearchRebuildReport> RebuildAsync(
         string? userId,
         string modelId,
+        Func<string, IReadOnlyList<string>> chunk,
         CancellationToken cancellationToken
     )
     {
@@ -689,13 +1016,16 @@ public sealed class PostgresSearchRepository(NpgsqlDataSource source, ReceiptFil
                     set => set.SetProperty(ledger => ledger.Currency, ledger => ledger.Currency),
                     cancellationToken
                 );
+            var links = new ReceiptLinks();
             var (personalWritten, personalRemoved) = await SearchIndexer.StageAsync(
                 context,
                 SearchIndexer.PersonalScope(context, user),
                 await ExpectedPersonalAsync(context, user, cancellationToken),
+                links,
                 cancellationToken
             );
             await context.SaveChangesAsync(cancellationToken);
+            await ReceiptTextIndex.ApplyAsync(context, links, cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             written += personalWritten;
             removed += personalRemoved;
@@ -722,6 +1052,7 @@ public sealed class PostgresSearchRepository(NpgsqlDataSource source, ReceiptFil
             written += sharedWritten;
             removed += sharedRemoved;
         }
+        var receiptTexts = await RebuildReceiptTextsAsync(userId, chunk, cancellationToken);
         await using (var context = PennyDbContext.Create(source))
         {
             var queued = await Scope(context, userId)
@@ -735,8 +1066,114 @@ public sealed class PostgresSearchRepository(NpgsqlDataSource source, ReceiptFil
                             .SetProperty(document => document.EmbeddingAttempts, 0),
                     cancellationToken
                 );
-            return new(written, removed, queued);
+            var receiptIds = ReceiptScope(context, userId).Select(text => text.ReceiptId);
+            queued += await context
+                .ReceiptTextChunks.Where(chunk =>
+                    receiptIds.Contains(chunk.ReceiptId)
+                    && chunk.EmbeddingDueAt == null
+                    && (chunk.Embedding == null || chunk.EmbeddingModel != modelId)
+                )
+                .ExecuteUpdateAsync(
+                    set =>
+                        set.SetProperty(chunk => chunk.EmbeddingDueAt, SearchIndexer.DueNow)
+                            .SetProperty(chunk => chunk.EmbeddingAttempts, 0),
+                    cancellationToken
+                );
+            return new(written, removed, queued, receiptTexts);
         }
+    }
+
+    // MAZ-125: stored receipt text is reused (OCR is not re-run; that is
+    // `receipts-ocr`). Its normalized text and chunks are recomputed, in batches, under
+    // row locks that order the rewrite with a concurrent extraction of the same receipt.
+    private async Task<long> RebuildReceiptTextsAsync(
+        string? userId,
+        Func<string, IReadOnlyList<string>> chunk,
+        CancellationToken cancellationToken
+    )
+    {
+        List<string> ids;
+        await using (var context = PennyDbContext.Create(source))
+            ids = await ReceiptScope(context, userId)
+                .Where(text => text.Status == ReceiptTextStatus.Done)
+                .OrderBy(text => text.ReceiptId)
+                .Select(text => text.ReceiptId)
+                .ToListAsync(cancellationToken);
+        long rewritten = 0;
+        foreach (var batch in ids.Chunk(100))
+        {
+            await using var context = PennyDbContext.Create(source);
+            await using var transaction = await context.Database.BeginTransactionAsync(
+                cancellationToken
+            );
+            await context
+                .ReceiptTexts.Where(text => batch.Contains(text.ReceiptId))
+                .ExecuteUpdateAsync(
+                    set => set.SetProperty(text => text.Status, text => text.Status),
+                    cancellationToken
+                );
+            var texts = await context
+                .ReceiptTexts.Where(text =>
+                    batch.Contains(text.ReceiptId) && text.Status == ReceiptTextStatus.Done
+                )
+                .ToListAsync(cancellationToken);
+            var chunks = (
+                await context
+                    .ReceiptTextChunks.Where(row => batch.Contains(row.ReceiptId))
+                    .OrderBy(row => row.Ordinal)
+                    .Select(row => new { row.ReceiptId, row.Passage })
+                    .ToListAsync(cancellationToken)
+            )
+                .GroupBy(row => row.ReceiptId, StringComparer.Ordinal)
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.Select(row => row.Passage).ToList(),
+                    StringComparer.Ordinal
+                );
+            foreach (var text in texts)
+            {
+                var searchText = SearchText.Normalize(text.Content);
+                var passages = text.Content.Length == 0 ? [] : chunk(text.Content);
+                var stored = chunks.GetValueOrDefault(text.ReceiptId) ?? [];
+                var sameChunks = stored.SequenceEqual(passages, StringComparer.Ordinal);
+                if (
+                    sameChunks
+                    && string.Equals(text.SearchText, searchText, StringComparison.Ordinal)
+                )
+                    continue;
+                text.SearchText = searchText;
+                if (!sameChunks)
+                {
+                    await context
+                        .ReceiptTextChunks.Where(row => row.ReceiptId == text.ReceiptId)
+                        .ExecuteDeleteAsync(cancellationToken);
+                    context.ReceiptTextChunks.AddRange(
+                        ReceiptTextIndex.Chunks(text.ReceiptId, passages)
+                    );
+                }
+                rewritten++;
+            }
+            await context.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        }
+        return rewritten;
+    }
+
+    // The receipt texts a rebuild or verify of `userId` (or everyone) covers: receipts
+    // the user uploaded and receipts linked by the user's documents.
+    private static IQueryable<ReceiptText> ReceiptScope(PennyDbContext context, string? userId)
+    {
+        if (userId is null)
+            return context.ReceiptTexts;
+        var linked = Scope(context, userId)
+            .Where(document => document.ReceiptId != null)
+            .Select(document => document.ReceiptId!);
+        return context.ReceiptTexts.Where(text =>
+            linked.Contains(text.ReceiptId)
+            || context.Receipts.Any(receipt =>
+                receipt.Id == text.ReceiptId && receipt.UserId == userId
+            )
+        );
     }
 
     public async Task<SearchVerifyReport> VerifyAsync(
@@ -792,6 +1229,44 @@ public sealed class PostgresSearchRepository(NpgsqlDataSource source, ReceiptFil
             )
         );
         var scope = Scope(context, userId);
+        // MAZ-125: receipt texts. Chunks are compared by presence only (re-chunking needs
+        // the model's tokenizer; `search-rebuild` recomputes them).
+        var texts = ReceiptScope(context, userId);
+        var receiptIds = texts.Select(text => text.ReceiptId);
+        var chunks = context.ReceiptTextChunks.Where(chunk => receiptIds.Contains(chunk.ReceiptId));
+        long staleReceipts = await texts.LongCountAsync(
+            text =>
+                text.Status == ReceiptTextStatus.Done
+                && (
+                    (
+                        text.Content != ""
+                        && !context.ReceiptTextChunks.Any(chunk =>
+                            chunk.ReceiptId == text.ReceiptId
+                        )
+                    )
+                    || (
+                        text.Content == ""
+                        && context.ReceiptTextChunks.Any(chunk => chunk.ReceiptId == text.ReceiptId)
+                    )
+                ),
+            cancellationToken
+        );
+        await foreach (
+            var text in texts
+                .AsNoTracking()
+                .Where(text => text.Status == ReceiptTextStatus.Done)
+                .Select(text => new { text.Content, text.SearchText })
+                .AsAsyncEnumerable()
+                .WithCancellation(cancellationToken)
+        )
+            if (
+                !string.Equals(
+                    SearchText.Normalize(text.Content),
+                    text.SearchText,
+                    StringComparison.Ordinal
+                )
+            )
+                staleReceipts++;
         return new(
             await scope.LongCountAsync(cancellationToken),
             missing,
@@ -800,11 +1275,35 @@ public sealed class PostgresSearchRepository(NpgsqlDataSource source, ReceiptFil
             await scope.LongCountAsync(
                 document => document.EmbeddingDueAt != null,
                 cancellationToken
-            ),
+            )
+                + await chunks.LongCountAsync(
+                    chunk => chunk.EmbeddingDueAt != null,
+                    cancellationToken
+                ),
             await scope.LongCountAsync(
                 document =>
                     document.EmbeddingDueAt == null
                     && (document.Embedding == null || document.EmbeddingModel != modelId),
+                cancellationToken
+            )
+                + await chunks.LongCountAsync(
+                    chunk =>
+                        chunk.EmbeddingDueAt == null
+                        && (chunk.Embedding == null || chunk.EmbeddingModel != modelId),
+                    cancellationToken
+                ),
+            await texts.LongCountAsync(cancellationToken),
+            await scope
+                .Where(document =>
+                    document.ReceiptId != null
+                    && !context.ReceiptTexts.Any(text => text.ReceiptId == document.ReceiptId)
+                )
+                .Select(document => document.ReceiptId)
+                .Distinct()
+                .LongCountAsync(cancellationToken),
+            staleReceipts,
+            await texts.LongCountAsync(
+                text => text.Status == ReceiptTextStatus.Pending,
                 cancellationToken
             )
         );

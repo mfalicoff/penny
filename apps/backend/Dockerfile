@@ -51,6 +51,14 @@ ENV ASPNETCORE_ENVIRONMENT=Production \
     Logging__Console__FormatterOptions__TimestampFormat=yyyy-MM-ddTHH:mm:ss.fffZ \
     Search__ModelDirectory=/opt/penny/model \
     Receipts__Root=/var/lib/penny/receipts
+# Receipt text extraction (MAZ-125) runs on this server only: Tesseract with English and
+# French language data, and poppler's pdftotext/pdftoppm, from the Ubuntu 24.04 archive
+# of the pinned base image. To read other languages, derive an image that installs
+# tesseract-ocr-<lang> and set Ocr__Languages (docs/operations.md#receipt-text-ocr).
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+      tesseract-ocr tesseract-ocr-eng tesseract-ocr-fra poppler-utils \
+    && rm -rf /var/lib/apt/lists/*
 COPY --from=model --chown=root:root --chmod=0644 /model/ /opt/penny/model/
 COPY --from=build --chown=root:root /app/ /opt/penny/app/
 # The receipt volume is the only writable application path; the app user owns it.

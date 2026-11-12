@@ -134,7 +134,7 @@ penny exec -T postgres pg_dump -U postgres -d penny --schema=penny --format=cust
 penny exec -T api tar -C /var/lib/penny/receipts -cf - . > "penny-receipts-$stamp.tar"
 ```
 
-For an external PostgreSQL, run `pg_dump` with the PostgreSQL 18 client tools from a host that can reach it, using a password file (`PGPASSFILE`) and `sslmode=verify-full`. Store backups encrypted and off the host; they contain password hashes, sessions and financial data. Do not run `receipts-sweep` between the dump and the file copy.
+For an external PostgreSQL, run `pg_dump` with the PostgreSQL 18 client tools from a host that can reach it, using a password file (`PGPASSFILE`) and `sslmode=verify-full`. Store backups encrypted and off the host; they contain password hashes, sessions and financial data, including the unencrypted text extracted from receipts ([receipt OCR](#receipt-text-ocr)). Do not run `receipts-sweep` between the dump and the file copy.
 
 The dump restores to its point in time. To lose nothing after it, enable WAL archiving and point-in-time recovery on the database (built into most managed services; for the bundled container use a tool such as pgBackRest or WAL-G against the `penny-postgres` volume) and back up the receipt volume at least as often.
 
@@ -178,7 +178,7 @@ SELECT indexrelid::regclass FROM pg_index WHERE NOT indisvalid;
 
 Never create, drop or alter Penny's tables or indexes by hand; schema changes ship only as EF migrations applied by `migrate` ([changing the schema](migration/postgresql.md#changing-the-schema)).
 
-**Search reconciliation.** Search documents and embeddings are derived data. `search-verify` is read-only and prints `{Documents, Missing, Orphaned, StaleText, PendingEmbeddings, StaleModel}`, exiting 0 when all are zero and 2 otherwise (pending embeddings are normal for a few seconds after writes). `search-rebuild [--user USER_ID]` recomputes documents and embeds what is missing. Run it after a restore that `search-verify` flags, after `import-sqlite`, and after an upgrade whose release notes say the search model or normalization changed. The embedding model is pinned in the image, so it changes only with a release.
+**Search reconciliation.** Search documents and embeddings are derived data. `search-verify` is read-only and prints `{Documents, Missing, Orphaned, StaleText, PendingEmbeddings, StaleModel, ReceiptTexts, MissingReceiptText, StaleReceiptText, PendingReceiptText}`, exiting 0 when all but the two totals are zero and 2 otherwise (pending embeddings and pending receipt text are normal for a short while after writes and uploads). `search-rebuild [--user USER_ID]` recomputes documents and the normalized text and chunks of stored receipt text (it never re-runs OCR), and embeds what is missing. `MissingReceiptText` means a linked receipt has no text yet: run [`receipts-ocr`](#receipt-text-ocr). Run it after a restore that `search-verify` flags, after `import-sqlite`, and after an upgrade whose release notes say the search model or normalization changed. The embedding model is pinned in the image, so it changes only with a release.
 
 ```sh
 penny exec api dotnet Penny.Backend.Api.dll search-verify
@@ -188,6 +188,52 @@ penny exec api dotnet Penny.Backend.Api.dll search-rebuild
 **Receipts.** `receipts-verify` decrypts every receipt and reports `{Receipts, Verified, Missing, Corrupt, Unreferenced, Bytes}` (exit 2 on missing or corrupt files). `receipts-sweep [--dry-run]` removes unreferenced files older than an hour ([receipts](migration/receipts.md#commands)).
 
 **Password resets.** `penny exec api dotnet Penny.Backend.Api.dll reset-password user@example.com` issues a one-time code ([password reset](migration/authentication.md#password-reset-maz-123)).
+
+## Receipt text (OCR)
+
+MAZ-125 makes the text of receipts searchable: search finds an entry or shared expense by what is printed on its receipt (a store name, an item), by substring, typo and meaning ([search](migration/search.md#receipt-text-maz-125)).
+
+**Everything runs on this server.** Receipts are never sent to a third-party service. PDFs with an embedded text layer are read directly by poppler's `pdftotext`; photos (JPEG, PNG, GIF, WebP) and scanned PDF pages (fewer than 40 letters or digits of embedded text) are rendered by `pdftoppm` and read by Tesseract. Each program runs as a short-lived child process fed through standard input and read from standard output, so the decrypted receipt exists only in the API's memory (its buffer is zeroed after the job) and never on disk. HEIC/HEIF photos are not readable by Tesseract's image library and are marked `unsupported`.
+
+**The extracted text is stored unencrypted** in PostgreSQL (`receipt_texts.content` and its normalized `search_text`, plus embedding chunks in `receipt_text_chunks`) so it can be indexed. The receipt file itself stays AES-GCM encrypted on the receipt volume. Treat database dumps and backups as containing receipt contents: protect them like the receipt volume. The text is deleted when the last entry, shared expense or shared rule linking the receipt lets go of it (removal, replacement, deletion), in the same transaction.
+
+**How it runs.** An upload only queues the receipt (`pending`) in its own insert; it never waits for or fails because of OCR. The `Ocr__Worker` (on by default) then extracts it, stores the result with its status (`done`, `failed` or `unsupported`), the engine identity (`tesseract 5.3.4 (eng+fra); poppler 24.02.0`), the method (`text`, `ocr` or `mixed`), the page count and a timestamp, and queues its chunks for the search embedding worker. Until the text is extracted and embedded, the entry matches by its own fields only. Failed attempts (unreadable file, corrupt file, engine error, time limit) are retried after 30 s, 1, 2, 4 … minutes (at most an hour) and the receipt is `failed` after `Ocr__MaxAttempts`. Rows are leased like the other outboxes, so several API processes may run the worker.
+
+| Setting | Default | Notes |
+| --- | --- | --- |
+| `Ocr__Worker` | `true` | `false` stops this process from extracting (another may). When on, the programs and every language's data are checked at startup and the host fails before listening if one is missing |
+| `Ocr__Languages` | `eng+fra` | Tesseract language codes joined by `+` (the multilingual search model is tested with English and French) |
+| `Ocr__Tesseract` | `tesseract` | Program path or name on `PATH` |
+| `Ocr__PopplerDirectory` | `PATH` | Absolute directory holding `pdftotext` and `pdftoppm` |
+| `Ocr__TessdataDirectory` | Tesseract's default | Absolute language data directory (`TESSDATA_PREFIX`) |
+| `Ocr__Concurrency` | 1 | Receipts extracted at once per process (1–8); each uses one CPU thread |
+| `Ocr__TimeoutSeconds` | 120 | Per receipt, all pages; the engine is killed when it passes |
+| `Ocr__MaxPages` | 10 | Only the first pages of a PDF are read |
+| `Ocr__MaxFileMegabytes` | 10 | Larger receipts are `unsupported` (uploads are limited to 10 MiB anyway) |
+| `Ocr__MaxAttempts` | 4 | Failed attempts before `failed` |
+| `Ocr__PollSeconds` | 5 | Idle delay between passes |
+
+Extracted text is cut at 100,000 characters and split into at most 32 chunks of 512 model tokens.
+
+**Engine and language data.** The container image installs `tesseract-ocr`, `tesseract-ocr-eng`, `tesseract-ocr-fra` and `poppler-utils` from the base image's Ubuntu 24.04 archive. To read another language, build a derived image (`FROM ghcr.io/mfalicoff/penny-api`, `USER root`, `apt-get install tesseract-ocr-deu`, `USER $APP_UID`) and set `Ocr__Languages=eng+fra+deu`. The NixOS module wires the programs and data from `services.penny.ocr` ([NixOS](nixos.md)). For a bare-metal or development host, install Tesseract 5 with the language data and poppler-utils (the Nix dev shell provides them).
+
+**Backfill and re-runs.** Receipts uploaded before MAZ-125 and receipts imported by `import-sqlite` have no text. `receipts-ocr` queues every receipt without text, every `failed` receipt and every receipt extracted by another engine version or language set, then extracts and embeds them in the command's own process (the worker does not need to be running) and prints counts. `--user USER_ID` limits it to one user's uploads; `--all` re-runs every receipt; `--status` only reports `{Receipts, Missing, Pending, Done, Failed, Unsupported, OtherEngine}`. Run it once after upgrading to MAZ-125, after `import-sqlite` (with `search-rebuild`), and after an engine upgrade or a change of `Ocr__Languages`. It uses the same bounds and settings as the worker.
+
+```sh
+penny exec api dotnet Penny.Backend.Api.dll receipts-ocr --status
+penny exec api dotnet Penny.Backend.Api.dll receipts-ocr
+```
+
+**Resources.** Text PDFs take milliseconds. One OCR page takes about 1–3 s of one CPU core and 150–250 MB of memory on the development host (Ryzen 7 5800X, 300 dpi page, Tesseract 5.5); expect roughly twice that on the reference i7-4790K. With the default concurrency of 1, a backfill of 1,000 photo receipts takes on the order of an hour on modest hardware and leaves the other cores to the API; raise `Ocr__Concurrency` to 2 on a quad-core host if backfills should finish sooner. Stored text is small (a receipt is typically 0.5–3 kB, plus about 1.5 kB of vector per chunk).
+
+**Troubleshooting.**
+
+- *The host does not start: "OCR language data is missing for fra".* Install that language's data (`tesseract-ocr-fra`, or `enableLanguages` on Nix), point `Ocr__TessdataDirectory` at it, or remove it from `Ocr__Languages`. "The OCR program tesseract could not be started" means it is not installed or `Ocr__Tesseract` / `Ocr__PopplerDirectory` are wrong. A process that should not extract can set `Ocr__Worker=false`.
+- *Receipts stay `pending`.* No process runs the worker, or rows are waiting for their retry time. `receipts-ocr --status` shows the counts; the `penny.job.lag` and `penny.receipt_text.results` metrics (job `receipt.text`) show progress and outcomes.
+- *Receipts are `failed`.* `failure` says why: `corrupt` (the file cannot be parsed), `unreadable` (the encrypted file is missing or fails authentication: run `receipts-verify`), `timeout` (raise `Ocr__TimeoutSeconds` or lower `Ocr__MaxPages`), `engine-error`. After fixing the cause, `receipts-ocr` retries every failed receipt.
+- *A receipt is `unsupported`.* `unsupported-format` (HEIC/HEIF) or `too-large`. Re-uploading a HEIC photo as JPEG makes it readable.
+- *A receipt's text is wrong or poor.* OCR quality depends on the photo (focus, contrast, crumpling). Text and typo matches still work on the parts that were read.
+- Logs and telemetry carry only failure codes and exception type names, never receipt text, file names or ids.
 
 ## PostgreSQL
 

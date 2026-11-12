@@ -10,9 +10,11 @@ using Penny.Backend.Api.Errors;
 using Penny.Backend.Api.Households;
 using Penny.Backend.Api.Middleware;
 using Penny.Backend.Api.Push;
+using Penny.Backend.Api.Receipts;
 using Penny.Backend.Api.Search;
 using Penny.Backend.Api.Testing;
 using Penny.Backend.Application.Abstractions.Persistence;
+using Penny.Backend.Application.Abstractions.Receipts;
 using Penny.Backend.Application.Abstractions.Search;
 using Penny.Backend.Application.Abstractions.Security;
 using Penny.Backend.Application.Authentication;
@@ -88,6 +90,7 @@ public static class BackendServices
         AddRecurrenceServices(builder.Services, RecurrenceOptions.Read(configuration));
         AddOidcServices(builder.Services, OidcOptions.Read(configuration), controls);
         AddSearchServices(builder.Services, SearchOptions.Read(configuration));
+        AddReceiptTextServices(builder.Services, OcrOptions.Read(configuration));
         AddPushServices(builder.Services, PushOptions.Read(configuration), controls);
     }
 
@@ -235,6 +238,23 @@ public static class BackendServices
         services.AddSingleton<SearchEmbeddingService>();
         if (search.EmbeddingWorker)
             services.AddHostedService<SearchEmbeddingWorker>();
+    }
+
+    // Receipt text extraction (MAZ-125): uploads always queue it; the worker runs unless
+    // `Ocr__Worker=false`. With the worker on, the OCR programs and language data are
+    // checked here, so a missing engine or language stops the host before it listens.
+    private static void AddReceiptTextServices(IServiceCollection services, OcrOptions ocr)
+    {
+        services.AddSingleton(ocr);
+        services.AddSingleton(ocr.Limits);
+        var extractor = new LocalReceiptTextExtractor(ocr.Engine);
+        if (ocr.Worker)
+            _ = extractor.Engine;
+        services.AddSingleton<IReceiptTextExtractor>(extractor);
+        services.AddSingleton<IReceiptTextRepository, PostgresReceiptTextRepository>();
+        services.AddSingleton<ReceiptTextService>();
+        if (ocr.Worker)
+            services.AddHostedService<ReceiptTextWorker>();
     }
 
     private static void AddLedgerServices(IServiceCollection services, IConfiguration configuration)

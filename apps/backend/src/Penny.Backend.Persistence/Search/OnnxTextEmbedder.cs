@@ -57,6 +57,12 @@ public sealed class OnnxTextEmbedder : ITextEmbedder, IDisposable
 
     public int Dimensions => HiddenSize;
 
+    int ITextEmbedder.MaxTokens => MaxTokens;
+
+    // The ids Tokens() feeds the model for "passage: " + text, before truncation.
+    public int CountPassageTokens(string passage) =>
+        tokenizer.EncodeToIds("passage: " + passage).Count + 2;
+
     // Loads (once per process and directory) and verifies the pinned files.
     public static OnnxTextEmbedder Load(string? directory)
     {

@@ -38,6 +38,8 @@ public sealed class PennyDbContext(DbContextOptions<PennyDbContext> options) : D
     public DbSet<PushDelivery> PushDeliveries => Set<PushDelivery>();
     public DbSet<SqliteImportCheckpoint> SqliteImport => Set<SqliteImportCheckpoint>();
     public DbSet<SearchDocument> SearchDocuments => Set<SearchDocument>();
+    public DbSet<ReceiptText> ReceiptTexts => Set<ReceiptText>();
+    public DbSet<ReceiptTextChunk> ReceiptTextChunks => Set<ReceiptTextChunk>();
 
     public static PennyDbContext Create(NpgsqlDataSource source) =>
         new(Configure(new DbContextOptionsBuilder<PennyDbContext>(), source).Options);

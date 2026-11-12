@@ -809,6 +809,126 @@
       "keys": []
     }
   ],
+  "receiptCases": {
+    "description": "MAZ-125: receipt text is its own searchable field. Each receipt is a synthetic text PDF with these lines, linked to the entry; it matches only after extraction, by text and typo through the normalized text and by meaning through its own chunk embeddings (never the entry's). `before` lists keys the query must not find before extraction.",
+    "ledger": {
+      "version": 4,
+      "currency": "CAD",
+      "categories": [
+        {
+          "id": "misc",
+          "name": "Misc",
+          "icon": "ellipse-outline",
+          "color": "#7D7D7D",
+          "kind": "expense"
+        }
+      ],
+      "transactions": [
+        {
+          "id": "r01",
+          "title": "Saturday errands",
+          "date": "2026-11-07",
+          "kind": "expense",
+          "total": 3549,
+          "share": 3549,
+          "categoryId": "misc",
+          "note": ""
+        },
+        {
+          "id": "r02",
+          "title": "Weekly stop",
+          "date": "2026-11-05",
+          "kind": "expense",
+          "total": 2277,
+          "share": 2277,
+          "categoryId": "misc",
+          "note": ""
+        },
+        {
+          "id": "r03",
+          "title": "Weekly stop",
+          "date": "2026-11-04",
+          "kind": "expense",
+          "total": 1200,
+          "share": 1200,
+          "categoryId": "misc",
+          "note": ""
+        }
+      ],
+      "recurring": [],
+      "accounts": [],
+      "trips": []
+    },
+    "receipts": [
+      {
+        "entryId": "r01",
+        "lines": [
+          "CENTRE HARDWARE SUPPLY",
+          "Claw hammer 16 oz 12.99",
+          "Box of wood screws 4.50",
+          "Cordless drill bit set 18.00",
+          "TOTAL 35.49"
+        ]
+      },
+      {
+        "entryId": "r02",
+        "lines": [
+          "PHARMACIE DU QUARTIER",
+          "Sirop contre la toux 9,99",
+          "Comprimés d'ibuprofène 7,49",
+          "Pansements adhésifs 5,29",
+          "TOTAL 22,77"
+        ]
+      }
+    ],
+    "cases": [
+      {
+        "name": "receipt text substring",
+        "request": { "query": "wood screws" },
+        "keys": ["personal:r01"],
+        "matches": ["text"],
+        "before": ["personal:r01"]
+      },
+      {
+        "name": "receipt text is normalized like the title",
+        "request": { "query": "IBUPROFENE" },
+        "keys": ["personal:r02"],
+        "matches": ["text"],
+        "before": ["personal:r02"]
+      },
+      {
+        "name": "title before receipt text",
+        "request": { "query": "weekly" },
+        "keys": ["personal:r02", "personal:r03"],
+        "matches": ["title", "title"]
+      },
+      {
+        "name": "receipt text typo",
+        "request": { "query": "pharmacei" },
+        "keys": ["personal:r02"],
+        "matches": ["typo"],
+        "before": ["personal:r02"]
+      },
+      {
+        "name": "English meaning from an English receipt",
+        "request": { "query": "tools" },
+        "meaning": ["personal:r01"],
+        "before": ["personal:r01"]
+      },
+      {
+        "name": "English meaning from a French receipt",
+        "request": { "query": "medicine" },
+        "meaning": ["personal:r02"],
+        "before": ["personal:r02"]
+      },
+      {
+        "name": "French meaning from a French receipt",
+        "request": { "query": "médicaments" },
+        "meaning": ["personal:r02"],
+        "before": ["personal:r02"]
+      }
+    ]
+  },
   "paginationCase": {
     "request": {
       "query": "coffee",
