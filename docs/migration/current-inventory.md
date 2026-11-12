@@ -1,6 +1,6 @@
 # Current product inventory
 
-Audited from `src/app/`, `server/app.ts`, `server/http/`, `server/infrastructure/database.ts`, `src/data/`, `Dockerfile`, `compose.yaml`, `.github/workflows/` and the existing test suites on 2026-11-07.
+Audited from `src/app/`, `server/app.ts`, `server/http/`, `server/infrastructure/database.ts`, `src/data/`, `Dockerfile`, `compose.yaml`, `.github/workflows/` and the existing test suites on 2026-11-07. This is a historical record: MAZ-97 and MAZ-98 later removed the Expo web and mobile apps, including `src/app/`, `src/data/` and `tests/ui/`.
 
 ## User routes
 

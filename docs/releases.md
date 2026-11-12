@@ -2,7 +2,7 @@
 
 [App showcase](../README.md) · [Documentation](README.md)
 
-Run release commands from the repository root. Platform-specific credentials and distribution instructions live in [iOS IPA and TestFlight builds](ios-ipa.md). Android builds are retired; see [Android retirement](ios-ipa.md#android-retirement). Container publishing is covered in [Self-hosting](deployment.md#container-images-and-releases).
+A release publishes the container images and the native iOS TestFlight build. Run release commands from the repository root. Platform-specific credentials and distribution instructions live in [iOS IPA and TestFlight builds](ios-ipa.md). Android builds are retired; see [Android retirement](ios-ipa.md#android-retirement). Container publishing is covered in [Self-hosting](deployment.md#container-images-and-releases).
 
 ## Semantic versioning and releases
 
@@ -14,9 +14,7 @@ Penny uses [Semantic Versioning](https://semver.org/): **MAJOR.MINOR.PATCH**.
 
 `package.json` is the version source of truth, starting at the existing `1.0.0`.
 The native iOS archive checks that its `CFBundleShortVersionString` matches it,
-and `app.config.js` supplies it to the legacy Expo build; the backend's
-`/api/info` also reads it.
-Other Expo settings remain in `app.json`. Do not add a separate version there.
+and the backend's `/api/info` also reads it.
 Store releases use three numeric components without leading zeros; prerelease
 and build suffixes are not supported by this release workflow because iOS
 requires a numeric marketing version. TestFlight builds use the same release
@@ -126,10 +124,9 @@ secret is missing. See the
 [Release Please credential requirements](https://github.com/googleapis/release-please-action#github-credentials).
 
 Complete the Apple signing and App Store Connect setup in
-[iOS one-time setup](ios-ipa.md#one-time-setup). Keep `EXPO_TOKEN` and
-`ASC_APP_ID` only while the [legacy Expo build](ios-ipa.md#legacy-expo-build)
-is still needed. Protect `master` with the existing PR checks to gate
-release PR merges. Prefer squash merging so each PR's release intent is
+[iOS one-time setup](ios-ipa.md#one-time-setup). `EXPO_TOKEN` and `ASC_APP_ID`
+are no longer needed; see [Expo retirement](ios-ipa.md#expo-retirement).
+Protect `master` with the existing PR checks to gate release PR merges. Prefer squash merging so each PR's release intent is
 unambiguous.
 
 ### Builds, deployment, and recovery
@@ -163,7 +160,6 @@ publish it; do not remove its release labels manually.
 
 Native TestFlight builds use the build number
 `IOS_BUILD_NUMBER_BASE.<run>.<attempt>`, independently of semantic versions,
-so every run and rerun is higher than the last and above the legacy EAS builds.
-The legacy Expo build still uses EAS's remote iOS `buildNumber` counter; raise
-`IOS_BUILD_NUMBER_BASE` above it after using that build. See
+so every run and rerun is higher than the last and above the build numbers of
+the released Expo builds. See
 [iOS one-time setup](ios-ipa.md#one-time-setup).

@@ -2,7 +2,7 @@
 
 [Documentation](../../docs/README.md) · [V2 architecture](../../docs/migration/architecture.md) · [Redesign baseline](../../docs/migration/redesign.md)
 
-The native v2 app (MAZ-66 onward). It replaces the Expo app on iOS in place: it keeps the bundle id, App Group, URL scheme and widget identifiers, so the App Store/TestFlight build upgrades over the Expo build. It lives here, outside the Expo-generated `ios/` directory, which stays ignored and is never edited.
+The native v2 app (MAZ-66 onward). It replaces the Expo app on iOS in place: it keeps the bundle id, App Group, URL scheme and widget identifiers, so the App Store/TestFlight build upgrades over the Expo build. The Expo app itself was removed from the repository in MAZ-98 ([Expo retirement](../../docs/ios-ipa.md#expo-retirement)); this is Penny's only iOS app.
 
 ## Requirements
 
@@ -110,29 +110,29 @@ The app bundles no fonts or icon files. It uses SF Pro through the system text s
 
 | Identifier | Value | Continuity |
 | --- | --- | --- |
-| Bundle id | `com.mfalicoff.penny` | Same as `app.json`; a different id would be a new app |
+| Bundle id | `com.mfalicoff.penny` | Same as the released Expo builds; a different id would be a new app |
 | App Group | `group.com.mfalicoff.penny` | Same as the Expo widgets ([App Groups setup](../../docs/ios-ipa.md#widget-app-groups-setup)); the Expo app kept only derived widget snapshots there, which MAZ-72 leaves for MAZ-80's widgets to replace ([Expo upgrade](../../docs/ios-expo-migration.md)) |
 | URL scheme | `penny` | Every legacy route keeps a destination (`PennyDomain.DeepLink`), including `penny://entries/new` from the widgets and `penny://auth/callback` for OIDC |
 | Widget extension | `com.mfalicoff.penny.ExpoWidgetsTarget` with kinds `BalanceChartWidget` and `RecentExpensesWidget` | The `PennyWidgets` target (MAZ-80) keeps both, so widgets people already placed keep working; it has the same App Group (`PennyWidgets.entitlements`) |
 
-These values live in `PennyDomain.AppIdentity`. `AppIdentityTests` compares them with `app.json` and the signing docs, and `PennyTests` checks the built bundle.
+These values live in `PennyDomain.AppIdentity`. `AppIdentityTests` pins them to the released Expo builds' values and compares them with the signing docs and the TestFlight checks in `ios.sh` and `ios-testflight.yml`, and `PennyTests` checks the built bundle.
 
 - **Simulator** builds sign ad hoc and need no Apple team. Xcode embeds the entitlements, so the App Group works in tests.
 - **Device** builds and archives need the team that owns `com.mfalicoff.penny` in App Store Connect. Copy `Configuration/Signing.local.xcconfig.example` to `Configuration/Signing.local.xcconfig` (ignored by Git) and set `DEVELOPMENT_TEAM`. Automatic signing then uses the existing App ID with its App Groups capability.
-- Any new entitlement must first be enabled on the matching App ID, and its provisioning profiles regenerated, as for the Expo app.
+- Any new entitlement must first be enabled on the matching App ID, and its provisioning profiles regenerated (and the CI profile secrets replaced, [one-time setup](../../docs/ios-ipa.md#one-time-setup)).
 - Camera access for the household invite scanner (MAZ-75) is a usage description (`INFOPLIST_KEY_NSCameraUsageDescription` in `Configuration/Penny.xcconfig`), not an entitlement: no App ID or profile change. Penny asks only when the scanner opens.
 - Push notifications (MAZ-79) add the `aps-environment` entitlement (`development`; exporting for TestFlight or the App Store switches it to `production`). The App ID needs the **Push Notifications** capability and regenerated profiles before the next device build or archive ([Apple Developer setup](../../docs/ios-notifications.md#apple-developer-setup)). Penny asks for notification permission only in context, never at launch.
 
-TestFlight distribution (MAZ-98): `ios.sh archive`, `export` and `upload`, run by [`ios-testflight.yml`](../../.github/workflows/ios-testflight.yml) when a release is published. CI signs manually with the App Store distribution certificate and profile; on a Mac, automatic signing with your Apple account also works. Secrets, build numbers, the device checklist and rollback are in [iOS builds, signing and TestFlight](../../docs/ios-ipa.md).
+TestFlight distribution (MAZ-98): `ios.sh archive`, `export` and `upload`, run by [`ios-testflight.yml`](../../.github/workflows/ios-testflight.yml) when a release is published. CI signs manually with the App Store distribution certificate and one App Store profile each for the app and `PennyWidgets`; the export check also requires production `aps-environment`. On a Mac, automatic signing with your Apple account also works. Secrets, build numbers, the device checklist and rollback are in [iOS builds, signing and TestFlight](../../docs/ios-ipa.md).
 
 ## Versions
 
-`MARKETING_VERSION` in `Configuration/Version.xcconfig` follows `package.json`. Release-please updates it with each release, and `npm run version:check` fails when they differ. `CURRENT_PROJECT_VERSION` is `1` locally. `ios.sh archive` sets it from `PENNY_BUILD_NUMBER`; CI uses `<IOS_BUILD_NUMBER_BASE>.<run>.<attempt>`, with the base above the legacy EAS build counter (`npx eas-cli@latest build:version:get --platform ios`), because App Store Connect rejects build numbers that do not increase ([build numbers](../../docs/ios-ipa.md#versions-and-build-numbers)).
+`MARKETING_VERSION` in `Configuration/Version.xcconfig` follows `package.json`. Release-please updates it with each release, and `npm run version:check` fails when they differ. `CURRENT_PROJECT_VERSION` is `1` locally. `ios.sh archive` sets it from `PENNY_BUILD_NUMBER`; CI uses `<IOS_BUILD_NUMBER_BASE>.<run>.<attempt>`, with the base above the Expo builds' numbers in TestFlight, because App Store Connect rejects build numbers that do not increase ([build numbers](../../docs/ios-ipa.md#versions-and-build-numbers)).
 
 ## Tests
 
 Swift Testing, with names in the repository's `whenCondition_Subject_ShouldOutcome` form. Each module has a test target; app-level checks live in `PennyTests`.
 
-- Tests that guard continuity read files from the checkout (`app.json`, `contracts/design-baseline.json`, `docs/ios-ipa.md`) through `#filePath`, which works on the Mac host and in the simulator.
+- Tests that guard continuity read files from the checkout (`contracts/design-baseline.json`, `docs/ios-ipa.md`, `scripts/ios.sh`, `.github/workflows/ios-testflight.yml`) through `#filePath`, which works on the Mac host and in the simulator.
 - Contract fixtures are read through `PennyContracts` ([contracts](../../contracts/README.md)); MAZ-67 adds the API models.
 - Keep personal financial data, real server addresses and credentials out of tests. Use `.test` domains, loopback addresses and fixture data.

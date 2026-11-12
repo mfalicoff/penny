@@ -28,7 +28,7 @@ An account is a label for how money is paid or received: Bank account, Credit ca
 Categories are listed one kind at a time (Expense, Income, Investment), each with how many entries and schedules use it.
 
 - **Name:** trimmed, 1–50 characters, unique ignoring case within its kind. At most 300 categories.
-- **Color:** the form offers only the redesign's category palette (blue, teal, slate, pink, brown, olive, ocean, gray; `contracts/design-baseline.json` `categoryColors`), never a meaning color. It is stored as `#RRGGBB`, so the Expo and web apps read it.
+- **Color:** the form offers only the redesign's category palette (blue, teal, slate, pink, brown, olive, ocean, gray; `contracts/design-baseline.json` `categoryColors`), never a meaning color. It is stored as `#RRGGBB`, so the web app and the released Expo builds read it.
 - **Icon:** a grid of icons, stored as their Ionicons names (`home-outline`) for the same reason, and drawn with the matching SF Symbol.
 - **Kind** can change only while nothing uses the category (`This category has entries. Keep its type to preserve your history.`).
 - **Remove** is offered only when nothing uses it; otherwise it is disabled with "Home is used by 14 entries. Keep it to preserve your history." Categories have no reassignment: they keep history.

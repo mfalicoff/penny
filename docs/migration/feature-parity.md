@@ -1,6 +1,6 @@
 # Feature and test traceability
 
-Baseline: 2026-11-07, `master` at `0e58a8b`. Current implementation is the observable contract. The issue numbers identify delivery work; the proposed gates do not claim those stacks exist yet.
+Baseline: 2026-11-07, `master` at `0e58a8b`. Current implementation is the observable contract. The issue numbers identify delivery work; the proposed gates do not claim those stacks exist yet. Legacy client paths under `src/` (other than `src/domain/`), `tests/ui/` and `app.json` refer to the Expo app removed in MAZ-98; they are kept as the record of what was ported.
 
 | Feature | Current source and test | Migration issue and required parity gate |
 | --- | --- | --- |

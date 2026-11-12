@@ -62,7 +62,7 @@ Concurrent writers on the same revision serialize on the row lock: the first com
 
 ## Personal versus shared sync guarantees
 
-- **Personal ledger: client-owned, whole-document, optimistic.** The server stores exactly the validated document; it does not materialize personal recurrence, merge, or reorder by meaning. Clients materialize due occurrences themselves (entry id `{rule}:{date}`, `recurringId`) and advance `nextDate` in the same write, and they merge durable pending offline edits by id against the latest snapshot (`src/data/offlineLedger.ts`). Independent edits survive because the loser of a race re-reads and re-applies; the server guarantees only that no write is based on a stale revision.
+- **Personal ledger: client-owned, whole-document, optimistic.** The server stores exactly the validated document; it does not materialize personal recurrence, merge, or reorder by meaning. Clients materialize due occurrences themselves (entry id `{rule}:{date}`, `recurringId`) and advance `nextDate` in the same write, and they merge durable pending offline edits by id against the latest snapshot (`src/domain/merge.ts`). Independent edits survive because the loser of a race re-reads and re-applies; the server guarantees only that no write is based on a stale revision.
 - **Shared households** (MAZ-56–59) are server-owned per entity with their own revisions, server-side recurrence and audit. A personal save never changes shared rows; it only reads them for checks 5–8. Shared rows are never copied into the personal document.
 
 ## Storage mapping and read order

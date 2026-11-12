@@ -4,24 +4,24 @@ Accepted revision: 2026-11-07. This specifies v2; it does not deploy replacement
 
 ## ADR 001: preserve the public boundary; migrate server storage
 
-The running baseline is Expo SDK 57 (`src/`) and Node 24/Express (`server/`), with a same-origin exported web bundle and SQLite. **PostgreSQL is the committed v2 server database.** SQLite is the legacy import and rollback source. Device/browser durable stores remain local; they never connect to PostgreSQL.
+The running baseline is Expo SDK 57 (`src/`) and Node 24/Express (`server/`), with a same-origin exported web bundle and SQLite. (MAZ-97 and MAZ-98 later retired the Expo web and mobile apps; `src/` now holds only the shared rules in `src/domain/`.) **PostgreSQL is the committed v2 server database.** SQLite is the legacy import and rollback source. Device/browser durable stores remain local; they never connect to PostgreSQL.
 
 Preserve `/api` paths, camelCase JSON, ledger v4, arbitrary existing string IDs, integer revisions, session hashes/expiry, receipt IDs/bytes and shared visibility during coexistence. JSON key order is not a contract; array order and absent/null distinctions are. Search v1 is additive, defined in [search.md](search.md). Legacy scrypt password hashes are deliberately not verified by the .NET backend; those accounts must reset their password with an operator-issued code ([password reset](authentication.md#password-reset-maz-123)).
 
 | Path | Ownership |
 | --- | --- |
-| `server/`, `src/`, `tests/` | Running legacy product and Node/Expo regression suites |
+| `server/`, `src/domain/`, `tests/` | Legacy Node API (rollback image), shared TypeScript rules and their regression suites; the Expo app was removed in MAZ-98 |
 | `apps/backend/` | Independent ASP.NET Core API, application/domain ports, PostgreSQL persistence and integration tests |
 | `apps/ios/` | Swift/SwiftUI iPhone/iPad presentation, domain rules, durable local data and XCUITest |
 | `apps/web/` | React/TypeScript, TanStack Router/Query, accessible DOM and durable browser data |
 | `contracts/` | OpenAPI, sanitized fixtures and design trace snapshot for all stacks |
 | `docs/migration/` | Decisions, compatibility, import/cutover and acceptance gates |
 
-Scoped `AGENTS.md` files distinguish new stacks from root legacy Expo guidance. PostgreSQL major 18 is selected; MAZ-51/52 pin compatible .NET/Npgsql versions, PostgreSQL patch and image digest before implementation. No database/provider binaries are added by this specification.
+Scoped `AGENTS.md` files distinguish new stacks from root legacy guidance. PostgreSQL major 18 is selected; MAZ-51/52 pin compatible .NET/Npgsql versions, PostgreSQL patch and image digest before implementation. No database/provider binaries are added by this specification.
 
 ## ADR 002: calculation and conflict ownership
 
-Personal commands, recurrence materialization and three-way merge remain client-owned (`src/domain/ledger.ts`, `commands.ts`, `src/data/offlineLedger.ts`, `LedgerProvider.tsx`). Save `{base,local}` durably before acknowledging a personal save. Generate IDs once, serialize saves and refetch/merge/retry 409s. Local edited fields win same-field races; untouched remote fields survive. Local deletions remove entries; locally edited remotely deleted entries can reappear under the existing algorithm. Preserve failed pending work. The API validates whole-ledger writes and atomically compares/increments revisions; it never silently merges or generates personal recurrence. Personal recurrence uses the local calendar and preserves anchor days.
+Personal commands, recurrence materialization and three-way merge remain client-owned (`src/domain/ledger.ts`, `commands.ts`, `merge.ts`; in the Expo app also `src/data/offlineLedger.ts` and `LedgerProvider.tsx`, removed in MAZ-98). Save `{base,local}` durably before acknowledging a personal save. Generate IDs once, serialize saves and refetch/merge/retry 409s. Local edited fields win same-field races; untouched remote fields survive. Local deletions remove entries; locally edited remotely deleted entries can reappear under the existing algorithm. Preserve failed pending work. The API validates whole-ledger writes and atomically compares/increments revisions; it never silently merges or generates personal recurrence. Personal recurrence uses the local calendar and preserves anchor days.
 
 Shared allocation, historical membership, recurrence, monthly settlement, reimbursements and personal projections remain server-owned (`src/domain/households.ts`, `server/infrastructure/households.ts`). Project shared expenses exactly once; do not insert them into private ledgers. Only the payer sees their private account reference. Recorded `transactions` and month-only `scheduled` previews remain separate. Home labels expected income; Activity, spending and widgets use recorded entries. Reimbursements record existing payments, never move money or create spending. All stacks use integer cents, basis points and date-only calendar strings.
 

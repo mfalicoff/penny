@@ -32,7 +32,7 @@ When enabled, Penny requires authentication at launch and after returning from t
 
 This protects access to the app UI, not the server account or cached ledger with an additional encryption layer. Existing home-screen widgets and notification previews are outside the app lock; remove widgets or adjust system notification previews if they expose information you want hidden.
 
-Legacy Expo builds must include `expo-local-authentication`. The app config plugin adds the iOS `NSFaceIDUsageDescription`. No additional iOS entitlement, Apple Developer capability, or provisioning-profile update is needed for biometrics. Rebuild the native app after installing the module; an OTA update cannot add it, and Face ID cannot be tested in Expo Go. See [Expo's SDK 57 LocalAuthentication documentation](https://docs.expo.dev/versions/v57.0.0/sdk/local-authentication/).
+The native iOS app's lock is described in [App lock](ios-shell.md#app-lock).
 
 ## Shared households
 

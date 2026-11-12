@@ -2,13 +2,13 @@
 
 [App showcase](../README.md) · [Documentation](README.md) · [Native iOS app](../apps/ios/README.md) · [Expo upgrade](ios-expo-migration.md)
 
-Penny for iPhone and iPad ships as the native SwiftUI app in [`apps/ios`](../apps/ios/README.md), built with Xcode and uploaded to TestFlight (MAZ-98). It replaces the Expo app **in place**: same bundle id, Apple team, App Group, URL scheme and widget identifiers. A TestFlight or App Store update therefore installs over the Expo build and imports its data on first launch ([Expo upgrade](ios-expo-migration.md)).
+Penny for iPhone and iPad ships as the native SwiftUI app in [`apps/ios`](../apps/ios/README.md), built with Xcode and uploaded to TestFlight (MAZ-98). It replaces the retired Expo app **in place**: same bundle id, Apple team, App Group, URL scheme and widget identifiers. A TestFlight or App Store update therefore installs over the Expo build and imports its data on first launch ([Expo upgrade](ios-expo-migration.md)).
 
 The **Build the iOS app for TestFlight** workflow ([`.github/workflows/ios-testflight.yml`](../.github/workflows/ios-testflight.yml)) runs when a GitHub Release is published for a version tag such as `v1.2.3`, or by manual dispatch. It:
 
 1. runs the application tests ([`tests.yml`](../.github/workflows/tests.yml): release version, lint, types, unit and browser tests) and the iOS gates ([`ios.yml`](../.github/workflows/ios.yml): swift-format, PennyKit and app tests on iPhone and iPad, the Release check, launch, and the XCUITest smoke plan against the full stack);
-2. signs a Release archive with the App Store distribution certificate and profile (`apps/ios/scripts/ios.sh archive`);
-3. exports an App Store signed IPA and checks it (`ios.sh export`): bundle id, version, build number, production environment, no default server, no test controls, the App Group, `get-task-allow` off and an App Store profile (`beta-reports-active`);
+2. signs a Release archive with the App Store distribution certificate and the app's and widget extension's App Store profiles (`apps/ios/scripts/ios.sh archive`), and checks the archive embeds `PennyWidgets.appex` with the app's version and build;
+3. exports an App Store signed IPA and checks it (`ios.sh export`): bundle id, version, build number, production environment, no default server, no test controls, the App Group, `get-task-allow` off and an App Store profile (`beta-reports-active`) on both the app and the widget extension, and production APNs (`aps-environment`) on the app;
 4. attaches `penny.ipa` and `penny.ipa.sha256` to the release's **Assets** and keeps the IPA and dSYMs as an Actions artifact for 30 days;
 5. validates and uploads that IPA to App Store Connect (`ios.sh upload`), where it appears under TestFlight once Apple processes it.
 
@@ -18,10 +18,10 @@ The IPA is store signed: it installs only through TestFlight or the App Store, n
 
 Everything uses the Apple team that already owns `com.mfalicoff.penny` in App Store Connect. Never create a new App ID: a different bundle id or team is a different app, and Expo installs would not upgrade.
 
-1. **Distribution certificate.** Reuse the Apple Distribution certificate the Expo builds use, so nothing changes for existing installs. Download it with `npx eas-cli@latest credentials --platform ios` (profile `ipa` → **Distribution Certificate** → download the `.p12` and its password), or export it from Keychain Access if you created it there. A new Apple Distribution certificate also works; revoking the old one does not affect installed apps.
-2. **App Store provisioning profile.** In [Certificates, Identifiers & Profiles → Profiles](https://developer.apple.com/account/resources/profiles/list), create (or reuse) an **App Store Connect** distribution profile for `com.mfalicoff.penny` with that certificate. Its App ID must have the App Groups capability with `group.com.mfalicoff.penny` ([App Groups](#widget-app-groups-setup)); `ios.sh export` fails if the signed app lacks it. Download the `.mobileprovision`. Note its name: the workflow reads it from the file.
+1. **Distribution certificate.** Reuse the Apple Distribution certificate the Expo builds use, so nothing changes for existing installs. The Expo builds kept it in their EAS project: download the `.p12` and its password from [expo.dev](https://expo.dev) → the Penny project → **Credentials → iOS → Distribution Certificate**, or export it from Keychain Access if you created it there. A new Apple Distribution certificate also works; revoking the old one does not affect installed apps.
+2. **App Store provisioning profiles.** In [Certificates, Identifiers & Profiles → Profiles](https://developer.apple.com/account/resources/profiles/list), create (or reuse) two **App Store Connect** distribution profiles with that certificate: one for `com.mfalicoff.penny` (the app) and one for `com.mfalicoff.penny.ExpoWidgetsTarget` (the `PennyWidgets` extension). Both App IDs need the App Groups capability with `group.com.mfalicoff.penny` ([App Groups](#widget-app-groups-setup)), and the app's also needs **Push Notifications** ([APNs setup](ios-notifications.md#apple-developer-setup)). The workflow refuses a profile without the App Group, or an app profile without production `aps-environment`, before it builds. Download both `.mobileprovision` files; the workflow reads their names from the files.
 3. **App Store Connect API key.** In [App Store Connect → Users and Access → Integrations → App Store Connect API](https://appstoreconnect.apple.com/access/integrations/api), create a team key with the **App Manager** role. Download `AuthKey_<KEY ID>.p8` (Apple offers it once) and note the key ID and issuer ID. The key only uploads builds; signing uses the certificate and profile.
-4. **Build number base.** App Store Connect rejects a build number that is not higher than every earlier upload of the same version, including the Expo builds. Read the last EAS build number with `npx eas-cli@latest build:version:get --platform ios` (or from TestFlight) and use a number above it as the base. Native builds are numbered `<base>.<run>.<attempt>` ([build numbers](#versions-and-build-numbers)).
+4. **Build number base.** App Store Connect rejects a build number that is not higher than every earlier upload of the same version, including the Expo builds. Read the highest build number in App Store Connect → Penny → TestFlight (the Expo builds used whole numbers from EAS) and use a number above it as the base. Native builds are numbered `<base>.<run>.<attempt>` ([build numbers](#versions-and-build-numbers)).
 5. In GitHub, under **Settings → Secrets and variables → Actions**, add:
 
    | Kind | Name | Value |
@@ -33,22 +33,23 @@ Everything uses the Apple team that already owns `com.mfalicoff.penny` in App St
    | Secret | `ASC_API_KEY_P8` | The full text of `AuthKey_<KEY ID>.p8` |
    | Secret | `IOS_DIST_CERT_P12` | `base64 -i distribution.p12` |
    | Secret | `IOS_DIST_CERT_PASSWORD` | The `.p12` password |
-   | Secret | `IOS_APPSTORE_PROFILE` | `base64 -i Penny_App_Store.mobileprovision` |
+   | Secret | `IOS_APPSTORE_PROFILE` | `base64 -i Penny_App_Store.mobileprovision` (the app) |
+   | Secret | `IOS_WIDGETS_APPSTORE_PROFILE` | `base64 -i Penny_Widgets_App_Store.mobileprovision` (the widget extension) |
 
-   The workflow checks each value before it builds. It imports the certificate into a temporary keychain and deletes the keychain, profile and key afterwards. `EXPO_TOKEN` and `ASC_APP_ID` are needed only for the [legacy Expo build](#legacy-expo-build).
+   The workflow checks each value before it builds. It imports the certificate into a temporary keychain and deletes the keychain, profiles and key afterwards. The Expo-era `EXPO_TOKEN` secret and `ASC_APP_ID` variable are no longer used and can be deleted.
 6. Run **Actions → Build the iOS app for TestFlight → Run workflow** on `v2` once. Ordinary pushes and pull requests never sign or upload.
 
-When the profile or certificate expires (yearly), regenerate it and replace the secret. A profile change for a new entitlement follows the [App Groups](#widget-app-groups-setup) steps.
+When a profile or the certificate expires (yearly), regenerate it and replace the secret. A profile change for a new entitlement follows the [App Groups](#widget-app-groups-setup) steps.
 
 ### Widget App Groups setup
 
-The app and its widgets share data through the App Group `group.com.mfalicoff.penny`. The Expo app already uses it, so it is normally configured. To check or set it up in [Apple Developer → Certificates, Identifiers & Profiles](https://developer.apple.com/account/resources/identifiers/list):
+The app and its widgets share data through the App Group `group.com.mfalicoff.penny`. The Expo app already used it, so it is normally configured. To check or set it up in [Apple Developer → Certificates, Identifiers & Profiles](https://developer.apple.com/account/resources/identifiers/list):
 
 1. Under **Identifiers → App Groups**, register `group.com.mfalicoff.penny` if it does not exist.
 2. Under **Identifiers → App IDs**, open `com.mfalicoff.penny` and `com.mfalicoff.penny.ExpoWidgetsTarget`. Enable **App Groups** on each and assign `group.com.mfalicoff.penny`. Save both.
-3. Regenerate the App Store provisioning profiles for both ids so their entitlements include the group, and update `IOS_APPSTORE_PROFILE`.
+3. Regenerate the App Store provisioning profiles for both ids so their entitlements include the group, and update `IOS_APPSTORE_PROFILE` and `IOS_WIDGETS_APPSTORE_PROFILE`.
 
-The widget extension keeps the id `com.mfalicoff.penny.ExpoWidgetsTarget` so widgets people already placed keep working. The native WidgetKit extension arrives with MAZ-80; when it does, it needs its own App Store profile in the workflow and in `ios.sh export`'s `provisioningProfiles`. Any new entitlement (for example `aps-environment` for push, MAZ-79) must be enabled on the App ID, and the profiles regenerated, **before** the first CI build that uses it.
+The `PennyWidgets` extension (MAZ-80) keeps the Expo extension's id `com.mfalicoff.penny.ExpoWidgetsTarget`, so widgets people already placed keep working ([native widgets](ios-widgets.md#identity-and-app-group-entitlements)). Any new entitlement must be enabled on the App ID, and the profiles regenerated and their secrets replaced, **before** the first CI build that uses it.
 
 ## Signing
 
@@ -56,9 +57,9 @@ The widget extension keeps the id `com.mfalicoff.penny.ExpoWidgetsTarget` so wid
 
 | | Manual (CI) | Automatic (a Mac) |
 | --- | --- | --- |
-| When | `PENNY_PROFILE_SPECIFIER` is set to an installed App Store profile's name | otherwise |
-| Archive | Apple Distribution certificate and that profile, app target only (`Configuration/Penny.xcconfig`) | Apple Development, from the Apple account under **Xcode → Settings → Accounts** (or the API key) |
-| Export | re-signs with the same certificate and profile | Xcode picks or creates the distribution certificate and profile (`-allowProvisioningUpdates`) |
+| When | `PENNY_PROFILE_SPECIFIER` and `PENNY_WIDGETS_PROFILE_SPECIFIER` name installed App Store profiles (one alone is refused) | otherwise |
+| Archive | Apple Distribution certificate and those profiles, set per target (`Configuration/Penny.xcconfig`, `PennyWidgets.xcconfig`) | Apple Development, from the Apple account under **Xcode → Settings → Accounts** (or the API key) |
+| Export | re-signs with the same certificate and profiles | Xcode picks or creates the distribution certificate and profile (`-allowProvisioningUpdates`) |
 | Apple-side changes | none | may create profiles or a cloud-managed certificate |
 
 To build and upload from a Mac, set `DEVELOPMENT_TEAM` in `apps/ios/Configuration/Signing.local.xcconfig` ([native app signing](../apps/ios/README.md#signing-and-entitlements)) or export `PENNY_TEAM_ID`, then:
@@ -78,7 +79,7 @@ A local upload uses a build number too; choose one that CI will not reuse (a hig
 
 - **Version** (`CFBundleShortVersionString`): `MARKETING_VERSION` in `apps/ios/Configuration/Version.xcconfig`, kept equal to `package.json` by release-please and `npm run version:check`. `ios.sh archive` checks the archive carries it.
 - **Build number** (`CFBundleVersion`): `PENNY_BUILD_NUMBER`, set by CI to `<IOS_BUILD_NUMBER_BASE>.<run number>.<run attempt>`. App Store Connect compares the parts in order, so every run and rerun is higher than the last, and all are higher than the Expo builds (whole numbers below the base). Xcode is told not to change it (`manageAppVersionAndBuildNumber` off).
-- After any [legacy Expo build](#legacy-expo-build), EAS's counter moves past the base. Raise `IOS_BUILD_NUMBER_BASE` above the new EAS number before the next native build.
+- Never lower `IOS_BUILD_NUMBER_BASE`. Raise it (for example at a new major version) only above every build already uploaded.
 
 ## Release runbook
 
@@ -98,8 +99,8 @@ Run on physical devices with iOS 26 or later, upgrading from the latest Expo bui
 - [ ] **Biometrics**: Face ID / Touch ID unlocks; cancelling falls back to the passcode.
 - [ ] **OIDC**: sign out and sign in with the provider; `penny://auth/callback` returns to the app.
 - [ ] **Pickers**: attach a receipt from Photos, Files and the camera; preview and share it.
-- [ ] **Push (APNs)** once MAZ-79 ships: allow notifications; another member's shared expense notifies this device.
-- [ ] **Widgets** once MAZ-80 ships: the widgets placed under Expo still show and update; tapping one opens `penny://entries/new`.
+- [ ] **Push (APNs)**: allow notifications; another member's shared expense notifies this device through the production gateway, and tapping it opens the expense ([notifications](ios-notifications.md)).
+- [ ] **Widgets**: the widgets placed under Expo still show and update after the first native launch; Recent expenses opens `penny://entries/new` ([widgets](ios-widgets.md)).
 - [ ] **Redesign**: Liquid Glass controls on iOS 26, light/dark with Reduce Transparency on and off, the largest Dynamic Type size, VoiceOver through Home → add entry → save, forms stay above the keyboard, inline categories, recorded vs projected money, and recovery from a stale shared payment.
 - [ ] **PostgreSQL backend**: read, write and keyword search against the migrated .NET/PostgreSQL server (MAZ-65), and reconcile an offline edit.
 
@@ -108,25 +109,21 @@ Attach screenshots or a short recording to the release and to MAZ-98, with MAZ-8
 ### Rollback and recovery
 
 - **A bad native build**: in TestFlight, stop testing that build (**Expire Build**) and tell testers to install the previous native build from the TestFlight app's **Previous Builds**. The native app's data stays in place.
-- **Back to Expo**: testers can install the last Expo build from **Previous Builds** (TestFlight only; the App Store never downgrades). What an Expo build finds after the native app ran is described in the [Expo upgrade rollback limits](ios-expo-migration.md#rollback-limits). If no Expo build is still installable (TestFlight builds expire after 90 days), run the [legacy Expo build](#legacy-expo-build).
+- **Back to Expo**: testers can install the last Expo build from **Previous Builds** (TestFlight only; the App Store never downgrades). What an Expo build finds after the native app ran is described in the [Expo upgrade rollback limits](ios-expo-migration.md#rollback-limits). TestFlight builds expire after 90 days and the Expo app can no longer be built from this repository ([Expo retirement](#expo-retirement)), so this fallback ends when the last Expo build expires.
 - **Signing broke** (expired certificate or profile, a missing entitlement): the export check names the cause. Regenerate the profile or certificate, replace the secret and rerun. Nothing reaches testers in between.
 
 Rehearse a rollback to the previous native build and to the Expo build once on a test device before widening TestFlight.
 
-## Legacy Expo build
+## Expo retirement
 
-The Expo app's EAS build stays available until the native in-place upgrade is proven on devices, as a rollback target only. Run **Actions → Build the iOS app for TestFlight → Run workflow** with **app: legacy-expo**. It runs the application tests, builds the `ipa` EAS profile with the existing EAS credentials (`EXPO_TOKEN` secret, `EXPO_NO_CAPABILITY_SYNC=1` because EAS's capability sync is [rejected by Apple](https://github.com/expo/eas-cli/issues/3986) for App Groups) and submits it to TestFlight (`ASC_APP_ID` variable: the app's numeric Apple ID from App Store Connect → App Information). Releases never run it.
+The Expo/React Native app was removed from the repository in MAZ-98, after the TanStack web app replaced Expo web (MAZ-97). Its EAS build job and `ipa` profile, `app.json`, the Expo and React Native dependencies, its Jest tests and simulator journeys are gone; `EXPO_TOKEN` and `ASC_APP_ID` can be deleted from the repository settings. What remains of it:
 
-It shares the TestFlight build train: afterwards, raise `IOS_BUILD_NUMBER_BASE` above its EAS build number.
+- **Installs upgrade in place.** People on an Expo App Store or TestFlight build get the native app as an update; it imports the Expo app's data on first launch ([Expo upgrade](ios-expo-migration.md)). The identity it must keep is pinned by `AppIdentityTests`.
+- **Rollback to Expo** is only the TestFlight **Previous Builds** list, until the last Expo build expires ([rollback](#rollback-and-recovery)). To build it again, check out a commit before the removal; its EAS project and credentials are still on expo.dev.
+- **The legacy Node API** (`server/`, the rollback image) and the TypeScript rules in `src/domain` stay in the root package; the golden fixtures are generated from them.
 
-**Retire it** (remove the job, the `ipa` EAS profile, `EXPO_TOKEN` and `ASC_APP_ID`) when all of these hold:
-
-- the [device checklist](#testflight-upgrade-and-device-checklist) passed on an upgrade from the last Expo build, including pending entries, with no open import issue;
-- at least one native release has been on TestFlight for two weeks with no rollback to Expo;
-- the web app no longer uses Expo (MAZ-97), so the Expo mobile dependencies and config can go with it.
+Run the [device checklist](#testflight-upgrade-and-device-checklist) on an upgrade from the last Expo build before widening TestFlight; until it passes, keep the last Expo build installable in TestFlight.
 
 ## Android retirement
 
 Penny no longer builds or supports Android. There is no sunset period and no migration path: the APK and Play builds, their EAS profiles, the Android app config and assets, and the Android test harness are gone. People on Android can use the web app with the same account; their data is on the server. Already-installed Android builds keep working against a compatible server until it drops the legacy API (MAZ-131), but receive no fixes.
-
-The legacy Expo sources still contain Android branches (`Platform.OS === "android"`); they are removed with the Expo app.
