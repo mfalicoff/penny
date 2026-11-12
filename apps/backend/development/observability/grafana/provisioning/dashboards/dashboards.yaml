@@ -1,0 +1,10 @@
+# Dashboards provisioned from files. MAZ-128 adds the starter dashboards to ../../dashboards.
+apiVersion: 1
+
+providers:
+  - name: penny
+    folder: Penny
+    type: file
+    allowUiUpdates: false
+    options:
+      path: /var/lib/grafana/dashboards

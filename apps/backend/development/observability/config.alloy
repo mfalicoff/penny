@@ -1,0 +1,58 @@
+// Local development telemetry pipeline (MAZ-138). One OTLP endpoint for every service;
+// Alloy batches each signal and forwards it to its store. The MAZ-128 reference stack
+// builds on these files instead of keeping a second copy.
+
+otelcol.receiver.otlp "default" {
+  grpc {
+    endpoint = "0.0.0.0:4317"
+  }
+
+  http {
+    endpoint = "0.0.0.0:4318"
+
+    // Lets browser code on the local Vite origin post OTLP/HTTP directly (MAZ-126).
+    cors {
+      allowed_origins = ["http://localhost:4173", "http://127.0.0.1:4173"]
+    }
+  }
+
+  output {
+    metrics = [otelcol.processor.batch.default.input]
+    logs    = [otelcol.processor.batch.default.input]
+    traces  = [otelcol.processor.batch.default.input]
+  }
+}
+
+otelcol.processor.batch "default" {
+  timeout = "2s"
+
+  output {
+    metrics = [otelcol.exporter.otlphttp.prometheus.input]
+    logs    = [otelcol.exporter.otlphttp.loki.input]
+    traces  = [otelcol.exporter.otlp.tempo.input]
+  }
+}
+
+// Prometheus' native OTLP receiver (started with --web.enable-otlp-receiver).
+otelcol.exporter.otlphttp "prometheus" {
+  client {
+    endpoint = "http://prometheus:9090/api/v1/otlp"
+  }
+}
+
+// Loki's native OTLP endpoint.
+otelcol.exporter.otlphttp "loki" {
+  client {
+    endpoint = "http://loki:3100/otlp"
+  }
+}
+
+otelcol.exporter.otlp "tempo" {
+  client {
+    endpoint = "tempo:4317"
+
+    tls {
+      insecure = true
+    }
+  }
+}

@@ -1,0 +1,27 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.6.5">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <UserSecretsId>penny-backend-apphost</UserSecretsId>
+    <!-- Run with `dotnet run`; the orchestrator and dashboard come from NuGet, not the Aspire CLI. -->
+    <NoWarn>$(NoWarn);ASPIRE010</NoWarn>
+    <!-- The SDK adds the orchestrator and dashboard packages for the host OS
+         (Aspire.Hosting.Orchestration.linux-x64, ...osx-arm64, ...), so a lock file written on
+         one OS fails locked restore on another. Versions stay pinned in Directory.Packages.props
+         and the SDK version above. -->
+    <RestorePackagesWithLockFile>false</RestorePackagesWithLockFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Orchestrated as the `api` and `migrate` resources. -->
+    <ProjectReference Include="../Penny.Backend.Api/Penny.Backend.Api.csproj" />
+    <!-- A plain library reference: the PostgreSQL image pin lives in DatabaseSchema.Image. -->
+    <ProjectReference
+      Include="../Penny.Backend.Persistence/Penny.Backend.Persistence.csproj"
+      IsAspireProjectResource="false"
+    />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.JavaScript" />
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" />
+  </ItemGroup>
+</Project>
