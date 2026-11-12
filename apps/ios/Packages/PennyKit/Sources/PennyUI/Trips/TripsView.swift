@@ -98,7 +98,9 @@ struct TripsView: View {
                 if cards.isEmpty, directory.load != .loading {
                     PennyStateView(
                         .empty, title: "No trips yet",
-                        message: "Trips group what you spend while away, so you can see what a trip cost.")
+                        message: "Trips group what you spend while away, so you can see what a trip cost."
+                    )
+                    .allowsHitTesting(false)
                 }
             }
         }

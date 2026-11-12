@@ -87,7 +87,7 @@ As for households, `docs/design/penny-redesign/screen-inventory.json` and the Pe
 
 ## Acceptance scenarios
 
-Run on clean iPhone and iPad simulators against the [full-stack environment](migration/test-environment.md); the automated ones are `TripJourneyTests` in the Full plan (`PENNY_UI_ONLY=PennyUITests/TripJourneyTests apps/ios/scripts/ios.sh ui-test full`).
+Run on clean iPhone and iPad simulators against the [full-stack environment](migration/test-environment.md); the automated ones are `TripJourneyTests` in the Full plan (`PENNY_UI_ONLY=PennyUITests/TripJourneyTests apps/ios/scripts/ios.sh ui-test full`). Both journeys pass on the iPhone and iPad simulators; the system "Save Password?" sheet that can appear after a password sign-in is dismissed by the tests.
 
 1. **Conversion and two users (automated):** a personal trip with an expense dated before it; Share trip; the server's shared trip has no expenses and the ledger links the trip; the expense shows under Only you; a shared expense before anyone joins (only you in it); the second person joins through the API; a second shared expense splits between both while the first keeps its participants; Trip total $170.00 and Your spending $134.00 count each expense once; Balances shows the other person.
 2. **CRUD and deletion (automated):** New trip; Trip expense opens Add entry on the trip and the entry is assigned on the server; Delete trip is disabled with the reason while it has the entry; once the entry is moved to No trip from another device, the trip is deleted.

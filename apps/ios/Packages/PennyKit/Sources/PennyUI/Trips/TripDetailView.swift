@@ -38,7 +38,6 @@ struct TripDetailView: View {
 /// changes the name and dates or deletes an empty trip.
 struct PersonalTripPage: View {
     @Environment(ShellModel.self) private var shell
-    @Environment(\.dismiss) private var dismiss
     let trip: Trip
     let ledger: Ledger
 
@@ -48,7 +47,6 @@ struct PersonalTripPage: View {
     @State private var outcome: Outcome?
 
     enum Outcome: Equatable {
-        case deleted
         case shared(String)
     }
 
@@ -170,7 +168,8 @@ struct PersonalTripPage: View {
         }
         .sheet(isPresented: $editing, onDismiss: applyOutcome) {
             TripFormSheet(target: .personal(trip), expenseCount: ledger.expenseCount(onTrip: trip.id)) { saved in
-                if case .deleted = saved { outcome = .deleted }
+                // The trip is gone from the ledger: leave its page at once (the sheet goes with it).
+                if case .deleted = saved { leave() }
             }
             .environment(shell)
         }
@@ -192,14 +191,21 @@ struct PersonalTripPage: View {
         return parts.joined(separator: " · ")
     }
 
-    /// After the sheet has gone: a deleted trip leaves its page; a shared one is replaced by the
-    /// shared trip's page, so Back still leads to where the person came from.
+    /// Leaves this trip's page in the tab that shows it.
+    private func leave() {
+        let tab = shell.route.tab
+        var path = shell.route.path(for: tab)
+        guard let index = path.lastIndex(of: .trip(id: trip.id)) else { return }
+        path.removeSubrange(index...)
+        shell.route.setPath(path, for: tab)
+    }
+
+    /// After Share trip's sheet has gone: this page is replaced by the shared trip's, so Back
+    /// still leads to where the person came from.
     private func applyOutcome() {
         guard let outcome else { return }
         self.outcome = nil
         switch outcome {
-        case .deleted:
-            dismiss()
         case .shared(let id):
             let tab = shell.route.tab
             var path = shell.route.path(for: tab)
