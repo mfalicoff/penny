@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { randomBytes } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { expect, type Browser, type BrowserContext, type Page } from "@playwright/test";
 
@@ -75,24 +76,31 @@ export interface SeedContext {
   expenseIds: Record<string, string>;
 }
 
+// Runs scripts/test-env/seed.mjs (the runner's own seeder) in a child process, with a fresh run
+// tag so every call gets its own users (`<alias>.<tag>@penny.test`) and data, even when several
+// Playwright projects seed the same scenario into one environment.
+const SEED_PROGRAM = `
+import { scenario, seed } from ${JSON.stringify(`${repository}/scripts/test-env/seed.mjs`)};
+const api = process.env.PENNY_API_URL;
+const setClock = async (now) => {
+  const response = await fetch(api + "/api/test/clock", { method: "PUT", headers: { "X-Penny-Test-Token": process.env.PENNY_TEST_TOKEN, "Content-Type": "application/json" }, body: JSON.stringify({ now }) });
+  if (!response.ok) throw new Error("clock " + response.status);
+};
+const context = await seed(scenario(process.argv[1]), { apiUrl: api, runTag: process.argv[2], setClock });
+process.stdout.write(JSON.stringify(context));
+`;
+
 /**
- * Seeds a scenario from contracts/fixtures/full-stack-seeds.json into this environment once
- * (users are `<alias>.<run id>@penny.test`, so a second seed of the same scenario would collide)
- * and returns the runner's context: aliases, passwords, household and expense ids. Seeding pins
- * the server clock to the scenario's clock.
+ * Seeds a scenario from contracts/fixtures/full-stack-seeds.json into this environment with new
+ * users and returns the seeder's context: aliases, passwords, sessions, household and expense ids.
+ * Seeding pins the server clock to the scenario's clock.
  */
 export function seedScenario(name: string): SeedContext {
-  const { run } = environment();
-  if (!run) throw new Error("PENNY_TEST_RUN is needed to seed a scenario.");
-  const file = `${repository}/.cache/test-env/${run}/seed-${name}.json`;
-  if (!existsSync(file)) {
-    const result = spawnSync(process.execPath, [`${repository}/scripts/test-env/penny-env.mjs`, "seed", name, "--run-id", run], {
-      cwd: repository,
-      encoding: "utf8",
-    });
-    if (result.status !== 0) throw new Error(`seed ${name} failed: ${result.stderr}`);
-  }
-  return JSON.parse(readFileSync(file, "utf8")) as SeedContext;
+  environment();
+  const tag = randomBytes(4).toString("hex");
+  const result = spawnSync(process.execPath, ["--input-type=module", "-e", SEED_PROGRAM, name, tag], { cwd: repository, encoding: "utf8" });
+  if (result.status !== 0) throw new Error(`seed ${name} failed: ${result.stderr}`);
+  return JSON.parse(result.stdout) as SeedContext;
 }
 
 /** The scenario definition itself (steps, search expectations, pending edits). */

@@ -42,8 +42,13 @@ test("currency, organize, income, expense, investment, a schedule and Home's tot
 
   // Currency can be chosen while the ledger is empty, and the server stores it.
   await page.goto("/settings/currency");
-  await page.getByRole("radio", { name: "EUR" }).check({ force: true });
+  await expect(page.getByText(/Choose your currency before adding entries/)).toBeVisible();
+  const eur = page.getByRole("radio", { name: "EUR" });
+  await expect(async () => {
+    await eur.check({ force: true, timeout: 2_000 });
+  }).toPass();
   await expect.poll(async () => (await server.read()).ledger.currency).toBe("EUR");
+  await expect(eur).toBeChecked();
 
   // An account and a category.
   await page.goto("/accounts");
@@ -79,7 +84,12 @@ test("currency, organize, income, expense, investment, a schedule and Home's tot
   await expect(page.getByText(/changes? waiting/)).toHaveCount(0);
 
   // The server holds exactly what was entered, linked to the new account and category.
-  await expect.poll(async () => (await server.read()).ledger.transactions.length).toBe(3);
+  await expect
+    .poll(async () => {
+      const { ledger } = await server.read();
+      return [ledger.transactions.length, (ledger.recurring as unknown[]).length];
+    })
+    .toEqual([3, 1]);
   const stored = await server.read();
   const bakery = stored.ledger.categories.find((item) => item.name === "Bakery");
   const card = stored.ledger.accounts.find((item) => item.name === "Daily card");
