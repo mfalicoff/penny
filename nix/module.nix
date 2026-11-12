@@ -53,6 +53,11 @@ let
     Logging__Console__FormatterName = "systemd";
     Search__ModelDirectory = "${cfg.searchModel}";
     Receipts__Root = "${cfg.stateDir}/receipts";
+    # Receipt OCR (MAZ-125): local programs only; the language data comes with the
+    # tesseract package (its wrapper sets TESSDATA_PREFIX).
+    Ocr__Tesseract = lib.getExe' cfg.ocr.tesseract "tesseract";
+    Ocr__PopplerDirectory = "${cfg.ocr.poppler}/bin";
+    Ocr__Languages = lib.concatStringsSep "+" cfg.ocr.languages;
     Auth__AllowedOrigins = lib.concatStringsSep "," cfg.publicOrigins;
     Auth__SecureCookies = lib.boolToString cfg.secureCookies;
     Auth__TrustedProxies = lib.concatStringsSep "," cfg.trustedProxies;
@@ -213,6 +218,33 @@ in
       default = pennyPackages.penny-search-model;
       defaultText = lib.literalExpression "penny.packages.\${system}.penny-search-model";
       description = "Directory with the pinned search embedding model (`Search__ModelDirectory`).";
+    };
+
+    ocr = {
+      languages = mkOption {
+        type = types.nonEmptyListOf types.str;
+        default = [ "eng" "fra" ];
+        example = [ "eng" "fra" "deu" ];
+        description = ''
+          Tesseract languages for receipt text extraction (`Ocr__Languages`, MAZ-125). Their
+          language data is added to `ocr.tesseract`; the API checks it at startup.
+        '';
+      };
+
+      tesseract = mkOption {
+        type = types.package;
+        default = pkgs.tesseract.override { enableLanguages = cfg.ocr.languages; };
+        defaultText = lib.literalExpression
+          "pkgs.tesseract.override { enableLanguages = config.services.penny.ocr.languages; }";
+        description = "Tesseract (with its language data) used for receipt OCR on this host.";
+      };
+
+      poppler = mkOption {
+        type = types.package;
+        default = pkgs.poppler-utils;
+        defaultText = lib.literalExpression "pkgs.poppler-utils";
+        description = "poppler's `pdftotext` and `pdftoppm`, which read and render receipt PDFs.";
+      };
     };
 
     hostName = mkOption {

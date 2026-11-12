@@ -368,6 +368,9 @@ export async function up(options = {}) {
         Auth__InviteRateLimitPermits: "10000",
         Auth__AllowedOrigins: state.origins.join(","),
         Recurrence__Worker: options.worker === false ? "false" : "true",
+        // Receipt OCR (MAZ-125) needs Tesseract and poppler on the host; the full-stack
+        // journeys do not depend on it, so it is off unless PENNY_OCR_WORKER=true.
+        Ocr__Worker: process.env.PENNY_OCR_WORKER === "true" ? "true" : "false",
         Recurrence__PollSeconds: "2",
         TestControls__Enabled: "true",
         TestControls__Token: state.controlToken,
