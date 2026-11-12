@@ -57,16 +57,17 @@ struct HouseholdViewTests {
     @Test("whenAnInviteArrives_InviteHandoff_ShouldOpenOnceAndWaitForTheRightServer")
     func handoff() {
         let invites = InviteHandoff(allowsLoopbackHTTP: true)
-        #expect(invites.takeForShell() == nil)
+        #expect(invites.takeForShell(by: "shell") == nil)
         invites.receive(code: "A1B2C3D4E5", server: "https://friends.example.test")
-        let taken = invites.takeForShell()
+        let taken = invites.takeForShell(by: "shell")
         #expect(taken?.code == "A1B2C3D4E5")
-        #expect(invites.takeForShell() == nil, "an invite opens once")
+        #expect(invites.takeForShell(by: "shell") == nil, "an invite opens once")
+        invites.shown(code: "A1B2C3D4E5", server: "https://friends.example.test")
         // The person chose to sign out and join on the other server: this shell leaves it alone.
         invites.keepForSignIn(code: "A1B2C3D4E5", server: "https://friends.example.test")
-        #expect(invites.takeForShell() == nil)
+        #expect(invites.takeForShell(by: "shell") == nil)
         invites.signedIn()
-        #expect(invites.takeForShell()?.server == "https://friends.example.test")
+        #expect(invites.takeForShell(by: "shell")?.server == "https://friends.example.test")
         invites.receive(code: "FFFFFFFFFF", server: nil)
         invites.clear()
         #expect(invites.invite == nil)
@@ -77,6 +78,8 @@ struct HouseholdViewTests {
         let shell = ShellModel(workspace: FixedWorkspace(load: .ready(Ledger())), session: .demo, today: today)
         shell.navigate { $0.open(.join(code: "A1B2C3D4E5", server: nil)) }
         #expect(shell.route.tab == .shared)
+        // The Shared tab presents it once it is on screen.
+        shell.presentPendingHouseholdStart()
         #expect(shell.route.householdStart == .join(code: "A1B2C3D4E5", server: nil))
     }
 
@@ -113,5 +116,63 @@ struct HouseholdViewTests {
             #expect(message.contains("Ask for a new invite"))
         }
         #expect(HouseholdStartSheet.message(.insecureServer).contains("HTTPS"))
+    }
+}
+
+@Suite("Join links over sheets and columns (MAZ-75 review)")
+@MainActor
+struct JoinPresentationTests {
+    private let today = CalendarDate(year: 2026, month: 11, day: 9) ?? .earliest
+
+    private func shell() -> ShellModel {
+        ShellModel(workspace: FixedWorkspace(load: .ready(Ledger())), session: .demo, today: today)
+    }
+
+    @Test("whenAJoinLinkArrivesOverTheSettingsSheet_ShellModel_ShouldPresentItOnlyAfterTheSheetClosed")
+    func overSettingsSheet() {
+        let shell = shell()
+        shell.route.openSettings(.currency)
+        shell.navigate { $0.open(.join(code: "A1B2C3D4E5", server: nil)) }
+        #expect(!shell.route.isSettingsPresented)
+        // The Shared tab appears while the Settings sheet is still animating away.
+        shell.presentPendingHouseholdStart()
+        #expect(shell.route.householdStart == nil, "never in the same update as the closing sheet")
+        shell.sheetDismissed()
+        #expect(shell.route.householdStart == .join(code: "A1B2C3D4E5", server: nil))
+    }
+
+    @Test("whenAJoinLinkArrivesOverTheIPadSettingsColumn_ShellModel_ShouldPresentItOnceSharedIsShown")
+    func overSettingsColumn() {
+        let shell = shell()
+        shell.route.settingsIsColumn = true
+        shell.route.openSettings(.currency)
+        shell.navigate { $0.open(.join(code: "A1B2C3D4E5", server: nil)) }
+        #expect(shell.route.sidebarSelection == .tab(.shared))
+        #expect(shell.route.householdStart == nil, "the column swaps first; the sheet comes in a later update")
+        shell.presentPendingHouseholdStart()
+        #expect(shell.route.householdStart == .join(code: "A1B2C3D4E5", server: nil))
+    }
+
+    @Test("whenSigningOutToJoinElsewhere_ShellModel_ShouldOpenSettingsOnlyAfterTheJoinSheetClosed")
+    func signOutToJoin() {
+        let shell = shell()
+        shell.route.householdStart = .join(code: "A1B2C3D4E5", server: "https://friends.example.test")
+        shell.closeHouseholdStart { $0.openSettings() }
+        #expect(shell.route.householdStart == nil)
+        #expect(!shell.route.isSettingsPresented, "not while the join sheet is still closing")
+        shell.sheetDismissed()
+        #expect(shell.route.isSettingsPresented)
+    }
+
+    @Test("whenTheJoinSheetNeverAppears_InviteHandoff_ShouldKeepTheInviteForTheNextShell")
+    func keptUntilShown() {
+        let invites = InviteHandoff(allowsLoopbackHTTP: false)
+        invites.receive(code: "A1B2C3D4E5", server: nil)
+        #expect(invites.takeForShell(by: "account one")?.code == "A1B2C3D4E5")
+        #expect(invites.takeForShell(by: "account one") == nil, "opened once per shell")
+        #expect(invites.invite != nil, "kept until its sheet is on screen")
+        #expect(invites.takeForShell(by: "account two")?.code == "A1B2C3D4E5", "another shell can still open it")
+        invites.shown(code: "A1B2C3D4E5", server: nil)
+        #expect(invites.invite == nil)
     }
 }

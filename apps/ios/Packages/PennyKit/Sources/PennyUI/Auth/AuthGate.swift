@@ -141,7 +141,7 @@ struct ShellHost: View {
         {
             invites.signedIn()
         }
-        guard let invite = invites.takeForShell() else { return }
+        guard let invite = invites.takeForShell(by: "\(session)") else { return }
         model.navigate { $0.open(.join(code: invite.code, server: invite.server)) }
     }
 }

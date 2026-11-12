@@ -95,7 +95,11 @@ struct HouseholdStartSheet: View {
                     })
             }
         }
-        .onAppear(perform: readLink)
+        .onAppear {
+            // On screen: the invite that asked for this sheet is used up (`InviteHandoff`).
+            if case .join(let code, let server) = start { handoff?.shown(code: code, server: server) }
+            readLink()
+        }
         .interactiveDismissDisabled(working)
         .accessibilityIdentifier("screen.householdStart")
     }
@@ -168,8 +172,8 @@ struct HouseholdStartSheet: View {
                 .accessibilityIdentifier("householdStart.otherServer")
                 Button("Sign out to join on \(ServerText.host(otherServer))") {
                     handoff?.keepForSignIn(code: InviteCode(typed: codeText)?.value, server: otherServer.description)
-                    dismiss()
-                    shell.navigate { $0.openSettings() }
+                    // Settings opens once this sheet has gone, never in the same update.
+                    shell.closeHouseholdStart { $0.openSettings() }
                 }
                 .accessibilityIdentifier("householdStart.useOtherServer")
                 Button("Use a code for \(currentServer.map(ServerText.host) ?? "this server") instead") {

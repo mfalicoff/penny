@@ -75,7 +75,15 @@ struct SharedView: View {
         .task { await directory.refresh() }
         .background(PennyColor.background)
         .navigationTitle("Shared")
-        .sheet(item: $shell.route.householdStart) { start in
+        // A join link waits until this tab is on screen and nothing else is closing.
+        .onChange(of: shell.route.pendingHouseholdStart, initial: true) { shell.presentPendingHouseholdStart() }
+        .task(id: shell.route.pendingHouseholdStart) {
+            // A safety net if a closing sheet never reported its dismissal.
+            guard shell.route.pendingHouseholdStart != nil else { return }
+            try? await Task.sleep(for: .seconds(1.5))
+            shell.presentPendingHouseholdStart(force: true)
+        }
+        .sheet(item: $shell.route.householdStart, onDismiss: shell.sheetDismissed) { start in
             HouseholdStartSheet(start: start).environment(shell).environment(invites)
         }
         .accessibilityIdentifier("screen.shared")

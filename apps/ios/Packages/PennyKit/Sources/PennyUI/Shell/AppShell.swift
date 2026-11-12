@@ -70,7 +70,7 @@ private struct TabShell: View {
         }
         .tint(PennyColor.tint)
         .modifier(ToastOverlay(bottomPadding: 72))
-        .sheet(isPresented: $shell.route.isSettingsPresented) {
+        .sheet(isPresented: $shell.route.isSettingsPresented, onDismiss: shell.sheetDismissed) {
             NavigationStack(path: $shell.route.settingsPath) {
                 SettingsView(onDone: { shell.route.isSettingsPresented = false })
                     .navigationDestination(for: SettingsRoute.self) { SettingsPage(route: $0) }

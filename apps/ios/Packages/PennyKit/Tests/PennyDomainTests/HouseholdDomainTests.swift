@@ -129,6 +129,10 @@ struct InviteLinkTests {
         #expect(route.tab == .shared)
         #expect(route.path(for: .shared).isEmpty)
         #expect(!route.isSettingsPresented)
+        do {
+            let presented = route.presentPendingHouseholdStart()
+            #expect(presented)
+        }
         #expect(route.householdStart == .join(code: "A1B2C3D4E5", server: "https://penny.example.test"))
         // Another destination or sheet replaces it, so two sheets never compete.
         route.openAddEntry()
@@ -232,5 +236,59 @@ struct HouseholdSplitTests {
         #expect(SettlementCalendar.timezoneOffsetMinutes(secondsFromGMT: 3600) == -60)
         #expect(SettlementCalendar.timezoneOffsetMinutes(secondsFromGMT: 14 * 3600) == -840)
         #expect(SettlementCalendar.timezoneOffsetMinutes(secondsFromGMT: -13 * 3600) == 720)
+    }
+}
+
+@Suite("Join links over other screens (MAZ-75 review)")
+struct JoinRouteTests {
+    @Test("whenAJoinLinkOpens_ShellRoute_ShouldWaitToPresentTheSheetUntilNothingElseIsUp")
+    func pending() {
+        var route = ShellRoute(tab: .home)
+        route.openSettings(.currency)
+        route.open(.join(code: "A1B2C3D4E5", server: nil))
+        #expect(!route.isSettingsPresented)
+        #expect(route.tab == .shared)
+        #expect(route.householdStart == nil, "not in the same update that closes Settings")
+        #expect(route.pendingHouseholdStart == .join(code: "A1B2C3D4E5", server: nil))
+        do {
+            let presented = route.presentPendingHouseholdStart()
+            #expect(presented)
+        }
+        #expect(route.householdStart == .join(code: "A1B2C3D4E5", server: nil))
+        #expect(route.pendingHouseholdStart == nil)
+    }
+
+    @Test("whenAnotherSheetIsUp_ShellRoute_ShouldKeepTheJoinSheetWaiting")
+    func blocked() {
+        var route = ShellRoute(tab: .home)
+        route.open(.join(code: "A1B2C3D4E5", server: nil))
+        route.isAddEntryPresented = true
+        do {
+            let presented = route.presentPendingHouseholdStart()
+            #expect(!presented)
+        }
+        route.isAddEntryPresented = false
+        route.isSettingsPresented = true
+        do {
+            let presented = route.presentPendingHouseholdStart()
+            #expect(!presented, "the iPhone Settings sheet is up")
+        }
+        route.settingsIsColumn = true
+        do {
+            let presented = route.presentPendingHouseholdStart()
+            #expect(presented, "the iPad Settings column isn't a sheet")
+        }
+    }
+
+    @Test("whenAnotherDestinationOpens_ShellRoute_ShouldDropAWaitingJoinSheet")
+    func replaced() {
+        var route = ShellRoute(tab: .home)
+        route.open(.join(code: "A1B2C3D4E5", server: nil))
+        route.open(.trips)
+        #expect(route.pendingHouseholdStart == nil)
+        do {
+            let presented = route.presentPendingHouseholdStart()
+            #expect(!presented)
+        }
     }
 }

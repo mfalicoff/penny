@@ -86,6 +86,13 @@ public struct ShellRoute: Equatable, Sendable {
     public var isAddEntryPresented: Bool
     /// The create-or-join household sheet (MAZ-75), over the Shared tab.
     public var householdStart: HouseholdStart?
+    /// A join sheet a link asked for, waiting to be presented (MAZ-75). A link usually arrives
+    /// over something else (Settings, a sheet, another tab), so the sheet is not presented in the
+    /// same update that closes those: the Shared tab presents it once it is on screen and no
+    /// other sheet is still closing (`presentPendingHouseholdStart`). Presenting it together
+    /// with closing a sheet drops it on iPhone, and together with swapping the iPad detail
+    /// column it crashes SwiftUI (`NavigationColumnState.boundPathChange`).
+    public private(set) var pendingHouseholdStart: HouseholdStart?
     /// True while Settings is shown as the iPad split view's detail column rather than a sheet
     /// (the shell sets it from its layout). Add entry then opens over it and leaves it alone:
     /// closing it would swap the detail column's bound navigation stack for another in the
@@ -118,6 +125,7 @@ public struct ShellRoute: Equatable, Sendable {
     public mutating func openSettings(_ page: SettingsRoute? = nil) {
         isAddEntryPresented = false
         householdStart = nil
+        pendingHouseholdStart = nil
         isSettingsPresented = true
         settingsPath = page.map { [$0] } ?? []
     }
@@ -143,14 +151,26 @@ public struct ShellRoute: Equatable, Sendable {
         case .trip(let id): show(.trips, [.trip(id: id)])
         case .join(let code, let server):
             show(.shared, [])
-            householdStart = .join(code: code, server: server)
+            pendingHouseholdStart = .join(code: code, server: server)
         case .authCallback: break
         }
+    }
+
+    /// Presents the waiting join sheet, unless another sheet is still up. Returns whether it did.
+    @discardableResult
+    public mutating func presentPendingHouseholdStart() -> Bool {
+        guard let pending = pendingHouseholdStart, !isAddEntryPresented, householdStart == nil,
+            !(isSettingsPresented && !settingsIsColumn)
+        else { return false }
+        pendingHouseholdStart = nil
+        householdStart = pending
+        return true
     }
 
     private mutating func show(_ next: AppTab, _ path: [DetailRoute]) {
         isSettingsPresented = false
         householdStart = nil
+        pendingHouseholdStart = nil
         settingsPath = []
         isAddEntryPresented = false
         tab = next

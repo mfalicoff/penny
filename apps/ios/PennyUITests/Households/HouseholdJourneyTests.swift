@@ -132,6 +132,30 @@ final class HouseholdJourneyTests: PennyUITestCase {
         screenshot("joined-by-link")
     }
 
+    /// A join link that arrives over Settings › Currency (the iPad detail column, the iPhone
+    /// sheet) closes Settings first, then presents the join sheet in a later update: presenting
+    /// it while the column swaps crashed SwiftUI, and over a closing sheet it never appeared.
+    @MainActor
+    func test_whenAJoinLinkArrivesOverSettings_Join_ShouldCloseSettingsThenOpenTheJoinSheet() async throws {
+        let stack = try await stack()
+        let owner = try await makeAccount("over-settings-owner")
+        let guest = try await makeAccount("over-settings-guest")
+        let household = try await stack.createHousehold(token: owner.token, name: "Studio")
+        let code = try await stack.invite(token: owner.token, household: household)
+        let penny = try await launch()
+        try penny.signIn(email: guest.email, password: guest.password)
+        try penny.openSettingsPage("currency", screen: AccessibilityID.Screen.currency)
+        screenshot("settings-currency-before-link")
+
+        try penny.openJoinLink(code: code, server: stack.configuration.apiURL.absoluteString)
+        try penny.wait(for: IDs.Screen.start, timeout: 20)
+        try penny.waitForAbsence(of: AccessibilityID.Screen.currency)
+        XCTAssertEqual(try penny.value(of: IDs.code)?.replacingOccurrences(of: " ", with: ""), code)
+        screenshot("join-over-settings")
+        try penny.tap(IDs.joinButton)
+        try penny.wait(for: AccessibilityID.Screen.household, timeout: 20)
+    }
+
     /// The scanner asks for the camera only when it opens; without one (the simulator has no
     /// camera, or access is denied) typed entry keeps working. An expired code says so.
     @MainActor

@@ -21,6 +21,16 @@ public final class InviteHandoff {
         /// The person chose to sign out and join on the link's server: the current shell
         /// leaves it alone.
         public var waitsForSignIn: Bool
+        /// The shell that is opening it (`takeForShell(by:)`); it stays here until the join
+        /// sheet is on screen (`shown`), so an invite whose sheet never appeared isn't lost.
+        public var openingBy: String?
+
+        public init(code: String?, server: String?, waitsForSignIn: Bool, openingBy: String? = nil) {
+            self.code = code
+            self.server = server
+            self.waitsForSignIn = waitsForSignIn
+            self.openingBy = openingBy
+        }
     }
 
     public private(set) var invite: Invite?
@@ -36,12 +46,20 @@ public final class InviteHandoff {
         invite = Invite(code: code, server: server, waitsForSignIn: false)
     }
 
-    /// The invite for a signed-in shell, once. Nil when none waits or it waits for a sign-in
-    /// on another server.
-    public func takeForShell() -> Invite? {
-        guard let invite, !invite.waitsForSignIn else { return nil }
-        self.invite = nil
+    /// The invite for the signed-in shell `owner` (a stable key for it), once per shell. Nil
+    /// when none waits, it waits for a sign-in on another server, or `owner` is already opening
+    /// it. The invite is kept until its sheet is shown (`shown`), so if that shell goes away
+    /// first (a sign-out, a crash of the presentation), the next shell can still open it.
+    public func takeForShell(by owner: String) -> Invite? {
+        guard let invite, !invite.waitsForSignIn, invite.openingBy != owner else { return nil }
+        self.invite?.openingBy = owner
         return invite
+    }
+
+    /// The join sheet for this invite is on screen: it is used up.
+    public func shown(code: String?, server: String?) {
+        guard let invite, invite.openingBy != nil, invite.code == code, invite.server == server else { return }
+        self.invite = nil
     }
 
     /// The person will sign out and join on the link's server.

@@ -192,15 +192,47 @@ final class ShellModel {
             route.isAddEntryPresented = false
             return
         }
+        if Self.closesSheet(from: route, to: next) { sheetsClosing += 1 }
         route = next
     }
 
-    /// Called by the edit and Add entry sheets' `onDismiss`: applies a route change that was
-    /// waiting for the sheet to go.
+    /// Closes the join sheet and applies `change` once it has gone (its `onDismiss` calls
+    /// `sheetDismissed`), so the next sheet or column never changes in the same update.
+    func closeHouseholdStart(then change: @escaping (inout ShellRoute) -> Void) {
+        guard route.householdStart != nil else { return navigate(change) }
+        pendingNavigation = change
+        sheetsClosing += 1
+        route.householdStart = nil
+    }
+
+    /// Called by the sheets' `onDismiss`: applies a route change that was waiting for the sheet
+    /// to go, then presents a join sheet a link asked for meanwhile.
     func sheetDismissed() {
-        guard let change = pendingNavigation else { return }
-        pendingNavigation = nil
-        change(&route)
+        sheetsClosing = max(0, sheetsClosing - 1)
+        if let change = pendingNavigation {
+            pendingNavigation = nil
+            change(&route)
+        }
+        presentPendingHouseholdStart()
+    }
+
+    /// Sheets closing right now (between a route change and their `onDismiss`). A join sheet
+    /// waits for them (`ShellRoute.pendingHouseholdStart`).
+    @ObservationIgnored private(set) var sheetsClosing = 0
+
+    /// Presents the join sheet a link asked for, once the Shared tab is on screen (it calls
+    /// this when it appears and when a link arrives) and no other sheet is still closing.
+    func presentPendingHouseholdStart(force: Bool = false) {
+        guard sheetsClosing == 0 || force, route.pendingHouseholdStart != nil else { return }
+        if force { sheetsClosing = 0 }
+        route.presentPendingHouseholdStart()
+    }
+
+    /// Whether going from `old` to `new` dismisses a sheet (not the iPad Settings column).
+    static func closesSheet(from old: ShellRoute, to new: ShellRoute) -> Bool {
+        (old.isAddEntryPresented && !new.isAddEntryPresented)
+            || (old.householdStart != nil && new.householdStart == nil)
+            || (old.isSettingsPresented && !new.isSettingsPresented && !old.settingsIsColumn)
     }
 
     func dismissToast() {
