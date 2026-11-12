@@ -1,8 +1,10 @@
 import Foundation
-import PennyData
 import PennyDomain
+import Security
 import Synchronization
 import Testing
+
+@testable import PennyData
 
 /// APNs registration (MAZ-79) against a stub server: the request shapes, the lifecycle
 /// (permission, token, refresh, account change, denial, sign-out) and stale answers. Fixture
@@ -13,8 +15,14 @@ struct PushRegistrationTests {
     private static let tokenA = PushDeviceToken(hex: String(repeating: "a1", count: 32))!
     private static let tokenB = PushDeviceToken(hex: String(repeating: "b2", count: 32))!
 
-    /// A UserDefaults suite of its own per test.
-    private let store = PushRegistrationStore(suiteName: "penny.tests.push.\(UUID().uuidString)")
+    private let suite = "penny.tests.push.\(UUID().uuidString)"
+    private let keychain = FakeKeychain()
+    /// A UserDefaults suite and a Keychain of its own per test.
+    private let store: PushRegistrationStore
+
+    init() {
+        store = PushRegistrationStore(suiteName: suite, keychain: keychain)
+    }
 
     nonisolated private static func ok(_ request: URLRequest) -> HTTPResult {
         HTTPResult(status: request.httpMethod == "POST" ? 201 : 200, headers: [:], body: Data(#"{"ok":true}"#.utf8))
@@ -23,7 +31,8 @@ struct PushRegistrationTests {
     private func account(_ email: String, _ transport: StubTransport) throws -> PushAccount {
         try #require(
             PushAccount(
-                client: try APIFixtures.client(session: APIFixtures.session(email: email), transport: transport)))
+                client: try APIFixtures.client(session: APIFixtures.session(email: email), transport: transport),
+                store: store))
     }
 
     nonisolated private static func calls(_ transport: StubTransport) throws -> [String] {
@@ -221,24 +230,122 @@ struct PushRegistrationTests {
         await devices.unregister(using: alex.client)
         #expect(try Self.calls(transport) == ["DELETE /api/push/devices a1a1"])
         #expect(store.load() == nil)
+        #expect(store.lastOwner() == alex.owner, "delivered notifications stay Alex's until another account registers")
     }
 
-    @Test("whenTheServerCantBeReachedAtSignOut_APNsDeviceRegistration_ShouldNotThrowAndForgetTheToken")
+    @Test("whenTheServerCantBeReachedAtSignOut_APNsDeviceRegistration_ShouldNotThrowAndKeepTheRegistration")
     func signOutOffline() async throws {
         let transport = StubTransport { _ in throw URLError(.notConnectedToInternet) }
         let alex = try account("alex@example.test", transport)
+        let stored = StoredPushRegistration(token: Self.tokenA, environment: .sandbox, owner: alex.owner)
+        store.save(stored)
+        await APNsDeviceRegistration(store: store).unregister(using: alex.client)
+        // The server may still send Alex's notifications: the device stays Alex's until the next
+        // account registers the token, so they never show or open for that account.
+        #expect(store.load() == stored)
+        #expect(PushRegistrar(environment: .sandbox, store: store).owner == alex.owner)
+    }
+
+    @Test(
+        "whenTheDeviceOrSessionIsAlreadyGoneAtSignOut_APNsDeviceRegistration_ShouldForgetTheToken",
+        arguments: [401, 404])
+    func signOutAlreadyGone(status: Int) async throws {
+        let transport = StubTransport { _ in
+            HTTPResult(status: status, headers: [:], body: Data(#"{"error":"gone"}"#.utf8))
+        }
+        let alex = try account("alex@example.test", transport)
         store.save(StoredPushRegistration(token: Self.tokenA, environment: .sandbox, owner: alex.owner))
         await APNsDeviceRegistration(store: store).unregister(using: alex.client)
-        #expect(store.load() == nil, "server logout (or its expiry) removes the device on the server")
+        #expect(store.load() == nil)
+        #expect(store.lastOwner() == alex.owner)
+    }
+
+    @Test("whenSignOutRemovedTheDeviceButDidNotGoAhead_PushRegistrar_ShouldRegisterItAgain")
+    func signOutCancelled() async throws {
+        let transport = StubTransport { Self.ok($0) }
+        let registrar = PushRegistrar(environment: .sandbox, store: store)
+        let alex = try account("alex@example.test", transport)
+        await registrar.permissionChanged(.allowed)
+        await registrar.accountChanged(alex)
+        await registrar.tokenReceived(Self.tokenA)
+
+        // Sign-out removes the device, then server logout fails and Alex stays signed in.
+        let devices = APNsDeviceRegistration(store: store) { await registrar.resync() }
+        await devices.unregister(using: alex.client)
+        #expect(store.load() == nil)
+        await devices.signOutCancelled(using: alex.client)
+        #expect(registrar.status == .registered)
+        #expect(store.load()?.owner == alex.owner)
+        #expect(
+            try Self.calls(transport) == [
+                "POST /api/push/devices a1a1", "DELETE /api/push/devices a1a1", "POST /api/push/devices a1a1",
+            ])
+    }
+
+    @Test("whenTheStoredRegistrationWasRemovedElsewhere_PushRegistrar_ShouldNotTrustWhatItRegistered")
+    func storeCleared() async throws {
+        let transport = StubTransport { Self.ok($0) }
+        let registrar = PushRegistrar(environment: .sandbox, store: store)
+        await registrar.permissionChanged(.allowed)
+        await registrar.accountChanged(try account("alex@example.test", transport))
+        await registrar.tokenReceived(Self.tokenA)
+        store.clear()
+        // The next activation re-reads the permission: the device is registered again.
+        await registrar.permissionChanged(.allowed)
+        #expect(try Self.calls(transport) == ["POST /api/push/devices a1a1", "POST /api/push/devices a1a1"])
+        await registrar.permissionChanged(.allowed)
+        #expect(transport.sent.count == 2, "then once per process again")
     }
 
     @Test("whenOwnersAreCompared_PushOwner_ShouldIgnoreEmailCaseAndHideTheEmail")
     func owner() throws {
         let server = APIFixtures.server
-        let one = PushOwner(AccountScope(server: server, email: "Alex@Example.test"))
-        #expect(one == PushOwner(AccountScope(server: server, email: "alex@example.test")))
-        #expect(one != PushOwner(AccountScope(server: APIFixtures.otherServer, email: "alex@example.test")))
+        let one = try #require(store.owner(for: AccountScope(server: server, email: "Alex@Example.test")))
+        #expect(one == store.owner(for: AccountScope(server: server, email: "alex@example.test")))
+        #expect(one != store.owner(for: AccountScope(server: APIFixtures.otherServer, email: "alex@example.test")))
         #expect(!one.digest.contains("alex") && one.digest.count == 64)
+        #expect(one != PushOwner.legacy(AccountScope(server: server, email: "alex@example.test")), "keyed")
+    }
+
+    @Test("whenMakingOwners_PushRegistrationStore_ShouldKeyThemWithThisDevicesKeychainKey")
+    func ownerKey() throws {
+        let scope = AccountScope(server: APIFixtures.server, email: "alex@example.test")
+        let one = try #require(store.owner(for: scope))
+        #expect(store.owner(for: scope) == one, "the key is made once and kept")
+        let item = try #require(keychain.items(service: PushOwnerKeychain.service).values.first)
+        #expect(item.data.count == 32 && !item.isSynchronizable)
+        #expect(item.attributes[kSecAttrAccessible as String] == "\(kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly)")
+
+        // Another device (or a restore onto one) has another key: the digest never matches.
+        let elsewhere = PushRegistrationStore(suiteName: suite, keychain: FakeKeychain())
+        #expect(try #require(elsewhere.owner(for: scope)) != one)
+    }
+
+    @Test("whenTheKeychainIsLocked_PushAccount_ShouldNotExist")
+    func ownerKeyLocked() throws {
+        keychain.forcedStatus.withLock { $0 = errSecInteractionNotAllowed }
+        let client = try APIFixtures.client(transport: StubTransport { Self.ok($0) })
+        #expect(PushAccount(client: client, store: store) == nil, "nothing registers or opens until it unlocks")
+        keychain.forcedStatus.withLock { $0 = nil }
+        #expect(PushAccount(client: client, store: store) != nil)
+    }
+
+    @Test("whenADevelopmentBuildStoredAnUnkeyedOwner_PushRegistrationStore_ShouldAdoptItOnlyForThatAccount")
+    func legacyOwner() throws {
+        let transport = StubTransport { Self.ok($0) }
+        let alex = try account("alex@example.test", transport)
+        let bea = try account("bea@example.test", transport)
+        let legacy = PushOwner.legacy(AccountScope(server: APIFixtures.server, email: "alex@example.test"))
+        let data = try JSONEncoder().encode(
+            StoredPushRegistration(token: Self.tokenA, environment: .sandbox, owner: legacy))
+        UserDefaults(suiteName: suite)?.set(data, forKey: "penny.push.registration")
+        #expect(store.lastOwner() == legacy)
+
+        store.adoptLegacyRegistration(for: bea)
+        #expect(store.lastOwner() == legacy, "not Bea's")
+        store.adoptLegacyRegistration(for: alex)
+        #expect(store.load() == StoredPushRegistration(token: Self.tokenA, environment: .sandbox, owner: alex.owner))
+        #expect(store.lastOwner() == alex.owner)
     }
 
     @Test("whenTheStoredValueIsDamaged_PushRegistrationStore_ShouldReadNone")

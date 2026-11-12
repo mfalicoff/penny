@@ -73,8 +73,6 @@ public final class PushNotifications {
     public private(set) var promptDismissed: Bool
     /// A tapped notification waiting for an account to open in.
     private(set) var pending: HouseholdNotification?
-    /// Tapped notifications that were not opened: malformed, or for another account. For tests.
-    private(set) var rejectedCount = 0
 
     @ObservationIgnored let system: any NotificationSystem
     @ObservationIgnored private let store: PushRegistrationStore
@@ -104,7 +102,15 @@ public final class PushNotifications {
     }
 
     /// Sign-out's `DELETE /api/push/devices` (`AuthController`'s device registration).
-    public var devices: any DeviceRegistration { APNsDeviceRegistration(store: store) }
+    /// When sign-out does not go ahead, the registrar registers the device again.
+    public var devices: any DeviceRegistration {
+        APNsDeviceRegistration(store: store) { [registrar] in await registrar.resync() }
+    }
+
+    /// The account `client` registers as; nil without a session or while the Keychain is locked.
+    public func account(for client: APIClient) -> PushAccount? {
+        PushAccount(client: client, store: store)
+    }
 
     public var permission: PushPermission { registrar.permission }
     public var hasAccount: Bool { account != nil }
@@ -116,10 +122,14 @@ public final class PushNotifications {
 
     /// The signed-in account changed (nil while signed out, restoring or in the demo).
     func accountChanged(_ next: PushAccount?) async {
-        if let previous = account, previous.owner != next?.owner {
-            // The previous account's notifications must not stay on screen for the next person.
-            system.removeDeliveredNotifications()
-        }
+        if let next { store.adoptLegacyRegistration(for: next) }
+        // The previous account's notifications must not stay on screen for the next person:
+        // after an account change in this process, or at launch when the device's registration
+        // (which the registrar is about to replace) belongs to another account.
+        let changedInProcess = account != nil && account?.owner != next?.owner
+        let stored = registrar.owner
+        let storedForAnother = next != nil && stored != nil && stored != next?.owner
+        if changedInProcess || storedForAnother { system.removeDeliveredNotifications() }
         account = next
         deliverPending()
         await registrar.accountChanged(next)
@@ -162,28 +172,27 @@ public final class PushNotifications {
     /// The person opened a notification (cold start or not). `notification` is nil for a
     /// payload that isn't a valid household target: the app then just opens.
     public func didOpen(_ notification: HouseholdNotification?) {
-        guard let notification else {
-            rejectedCount += 1
-            return
-        }
+        guard let notification else { return }
         pending = notification
         deliverPending()
     }
 
     /// Whether a notification that arrives while Penny is in the foreground shows a banner:
-    /// only a valid one, while the account it was registered for is signed in.
+    /// only a valid one, while the account the device's token was last registered for is
+    /// signed in. Any other owner (another account's, one kept from a sign-out or a denial, or
+    /// one made with another device's key) shows none. Only an install that never registered
+    /// has no owner; APNs cannot have reached it.
     public func showsInForeground(_ notification: HouseholdNotification?) -> Bool {
         guard notification != nil, let account else { return false }
         return registrar.owner.map { $0 == account.owner } ?? true
     }
 
+    /// Opens the waiting notification once an account is signed in, unless the device's token
+    /// was last registered for another account: then it is dropped.
     private func deliverPending() {
         guard let notification = pending, let account, let deliver else { return }
         pending = nil
-        if let owner = registrar.owner, owner != account.owner {
-            rejectedCount += 1
-            return
-        }
+        if let owner = registrar.owner, owner != account.owner { return }
         deliver(notification.deepLink)
     }
 }

@@ -42,6 +42,13 @@ public struct NoLocalAccountData: AccountLocalData {
 /// session's devices.
 public protocol DeviceRegistration: Sendable {
     func unregister(using client: APIClient) async
+    /// Sign-out called `unregister`, then did not go ahead (the server could not be reached):
+    /// the same account stays signed in and its device must be registered again.
+    func signOutCancelled(using client: APIClient) async
+}
+
+extension DeviceRegistration {
+    public func signOutCancelled(using client: APIClient) async {}
 }
 
 /// No push registration yet (before MAZ-79).
