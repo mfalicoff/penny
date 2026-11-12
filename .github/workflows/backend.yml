@@ -31,6 +31,8 @@ jobs:
           cache-dependency-path: |
             apps/backend/src/**/packages.lock.json
             apps/backend/tests/**/packages.lock.json
+            apps/backend/Directory.Packages.props
+            apps/backend/src/Penny.Backend.AppHost/Penny.Backend.AppHost.csproj
       - uses: actions/setup-node@v7
         with:
           node-version: '24'
@@ -96,6 +98,8 @@ jobs:
           cache-dependency-path: |
             apps/backend/src/**/packages.lock.json
             apps/backend/tests/**/packages.lock.json
+            apps/backend/Directory.Packages.props
+            apps/backend/src/Penny.Backend.AppHost/Penny.Backend.AppHost.csproj
       - uses: actions/setup-node@v7
         with:
           node-version: '24'

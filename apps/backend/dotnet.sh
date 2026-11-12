@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")"
-if [[ -f .env && "${1:-}" == "run" ]]; then
+# The AppHost generates its own credentials, so it does not load the Compose-based .env.
+if [[ -f .env && "${1:-}" == "run" && "$*" != *Penny.Backend.AppHost* ]]; then
   set -a
   source .env
   set +a
 fi
-backend_cache="$PWD/../../.cache/backend"
+# Normalized: Aspire puts Unix sockets under TMPDIR, and those paths are limited to 108 bytes.
+backend_cache="$(cd ../.. && pwd)/.cache/backend"
 mkdir -p "$backend_cache/temporary"
 backend_repository="$(cd ../.. && pwd)"
 export TESTINGPLATFORM_PIPE_DIRECTORY="${TESTINGPLATFORM_PIPE_DIRECTORY:-$backend_repository/.cache/p}"

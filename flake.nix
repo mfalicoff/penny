@@ -53,12 +53,17 @@
       });
 
       devShells = forSystems systems (pkgs: {
-        default = pkgs.mkShell {
+        default = pkgs.mkShell ({
           packages = with pkgs; [
             nodejs_24
             sqlite
           ];
-        };
+        } // lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
+          # The Aspire dashboard (apps/backend/src/Penny.Backend.AppHost, MAZ-138) is a
+          # prebuilt native binary that loads libicu from the library path, which NixOS
+          # does not provide globally.
+          LD_LIBRARY_PATH = lib.makeLibraryPath [ pkgs.icu ];
+        });
       });
     };
 }
