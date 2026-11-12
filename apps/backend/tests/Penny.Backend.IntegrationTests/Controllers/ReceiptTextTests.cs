@@ -162,7 +162,7 @@ public sealed class ReceiptTextTests(ApiFixture fixture) : ReceiptTextTestBase(f
     }
 
     [Fact]
-    public async Task whenFileCorrupt_Extraction_ShouldRetryWithBackoffThenFail()
+    public async Task whenFileCorrupt_Extraction_ShouldFailWithoutRetrying()
     {
         var (_, userId) = await AccountAsync("corrupt@example.test");
         At(Noon);
@@ -178,29 +178,20 @@ public sealed class ReceiptTextTests(ApiFixture fixture) : ReceiptTextTestBase(f
             "image/png",
             [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, .. Enumerable.Repeat((byte)7, 500)]
         );
-        var texts = TextsWith(Limits with { MaxAttempts = 2, Concurrency = 2 });
+        // Same bytes, same engine, same result: a corrupt file is not retried.
+        var texts = TextsWith(Limits with { MaxAttempts = 4, Concurrency = 2 });
         (await texts.RunOnceAsync(Ct)).ShouldBe(2);
-        foreach (var id in new[] { pdf, png })
-        {
-            var retry = await TextOfAsync(id);
-            retry.Status.ShouldBe(ReceiptTextStatus.Pending);
-            retry.Attempts.ShouldBe(1);
-            retry.Failure.ShouldBe(ReceiptTextFailure.Corrupt);
-            retry.DueAt.ShouldBe(Noon + ReceiptTextService.Backoff(0));
-        }
-        // Not due before the backoff passes.
-        (await texts.RunOnceAsync(Ct)).ShouldBe(0);
-        At(Noon + TimeSpan.FromSeconds(30));
-        (await texts.CatchUpAsync(Ct)).ShouldBe(2);
         foreach (var id in new[] { pdf, png })
         {
             var failed = await TextOfAsync(id);
             failed.Status.ShouldBe(ReceiptTextStatus.Failed);
-            failed.Attempts.ShouldBe(2);
+            failed.Attempts.ShouldBe(1);
             failed.Failure.ShouldBe(ReceiptTextFailure.Corrupt);
             failed.DueAt.ShouldBeNull();
-            failed.ExtractedAt.ShouldBe(Noon + TimeSpan.FromSeconds(30));
+            failed.ExtractedAt.ShouldBe(Noon);
         }
+        (await texts.CatchUpAsync(Ct)).ShouldBe(0);
+        ReceiptTextService.Backoff(0).ShouldBe(TimeSpan.FromSeconds(30));
         ReceiptTextService.Backoff(1).ShouldBe(TimeSpan.FromMinutes(1));
         ReceiptTextService.Backoff(30).ShouldBe(ReceiptTextService.MaxBackoff);
     }

@@ -206,6 +206,23 @@ public sealed class ReceiptTextServiceTests
         var outbox = new Outbox();
         outbox.Due.Add(Work(attempts: 4));
         var engine = new FakeEngine(_ =>
+            throw new ReceiptExtractionException(ReceiptTextFailure.EngineError)
+        );
+        await Service(outbox, engine).RunOnceAsync(CancellationToken.None);
+        outbox.Retried.ShouldBeEmpty();
+        var failed = outbox.Completed.ShouldHaveSingleItem();
+        failed.Status.ShouldBe(ReceiptTextStatus.Failed);
+        failed.Failure.ShouldBe(ReceiptTextFailure.EngineError);
+        failed.Attempts.ShouldBe(4);
+        failed.Content.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task whenFileCorrupt_RunOnce_ShouldFailOnTheFirstAttempt()
+    {
+        var outbox = new Outbox();
+        outbox.Due.Add(Work(attempts: 1));
+        var engine = new FakeEngine(_ =>
             throw new ReceiptExtractionException(ReceiptTextFailure.Corrupt)
         );
         await Service(outbox, engine).RunOnceAsync(CancellationToken.None);
@@ -213,7 +230,6 @@ public sealed class ReceiptTextServiceTests
         var failed = outbox.Completed.ShouldHaveSingleItem();
         failed.Status.ShouldBe(ReceiptTextStatus.Failed);
         failed.Failure.ShouldBe(ReceiptTextFailure.Corrupt);
-        failed.Attempts.ShouldBe(4);
-        failed.Content.ShouldBeEmpty();
+        failed.Attempts.ShouldBe(1);
     }
 }

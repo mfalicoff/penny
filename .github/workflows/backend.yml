@@ -120,6 +120,9 @@ jobs:
         run: bash apps/backend/dotnet.sh restore Penny.Backend.slnx --locked-mode
       - name: Golden fixtures are current
         run: npm run fixtures:check
+      # The cutover suite runs receipts-ocr on the imported receipts (MAZ-125).
+      - name: Install OCR engine
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng tesseract-ocr-fra poppler-utils libvips-tools
       # Isolated PostgreSQL + API per test, seeds, OIDC, crash cleanup and the legacy
       # Node/SQLite differential journey (MAZ-62).
       - name: Full-stack environment suite

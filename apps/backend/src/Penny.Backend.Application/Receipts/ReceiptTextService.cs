@@ -267,9 +267,12 @@ public sealed class ReceiptTextService(
         CancellationToken cancellationToken
     )
     {
-        // The claim already counted this attempt.
+        // The claim already counted this attempt. A corrupt file gives the same result
+        // with the same bytes and engine every time, so it fails at once instead of
+        // spending CPU on retries; `receipts-ocr` retries failed receipts after an engine
+        // change. Every other failure may be transient and is retried.
         var attempts = item.Attempts;
-        if (attempts >= settings.MaxAttempts)
+        if (attempts >= settings.MaxAttempts || failure == ReceiptTextFailure.Corrupt)
         {
             await texts.CompleteAsync(
                 token,
