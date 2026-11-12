@@ -48,10 +48,12 @@ public struct EntryEditor: Hashable, Sendable {
     }
 
     /// Opens a new expense on a trip (Trip expense, MAZ-76): the trip is part of how the form
-    /// opened, so closing it untouched asks nothing. Only a new expense takes it; an edit, or a
-    /// trip that isn't in the ledger, is left alone (`saveEntry` would refuse it).
+    /// opened, so closing it untouched asks nothing. Only a fresh new entry takes it; an edit, a
+    /// kept draft the person already typed into (it could be an income or a transfer, and isn't
+    /// turned into a trip expense), or a trip that isn't in the ledger is left alone (`saveEntry`
+    /// would refuse it).
     public mutating func start(onTrip tripId: String, ledger: Ledger) {
-        guard isNew, ledger.trip(id: tripId) != nil else { return }
+        guard isNew, !isDirty, ledger.trip(id: tripId) != nil else { return }
         if draft.kind != .expense { setKind(.expense, ledger: ledger) }
         draft.tripId = tripId
         initial.tripId = tripId

@@ -177,7 +177,7 @@ final class ShellModel {
     }
 
     func undoToast() async -> SaveFailure? {
-        guard let toast else { return nil }
+        guard let toast, toast.canUndo else { return nil }
         dismissToast()
         if case .failure(let failure) = await workspace.undo(toast) {
             failedCount += 1

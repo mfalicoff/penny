@@ -173,6 +173,19 @@ struct AccountWorkspaceTests {
         #expect(again.failure == .unavailable(AccountWorkspace.undoTooLate), "only once")
     }
 
+    @Test("whenTheSummaryAllowsNoUndo_AccountWorkspace_ShouldSaveWithoutOfferingUndo")
+    func noUndo() async throws {
+        try await signedIn()
+        var summary = Self.summary
+        summary.allowsUndo = false
+        let saved = try await workspace.commit(.saveEntry(Self.taxi), summary: summary).get()
+        #expect(!saved.canUndo)
+        #expect(workspace.load.ledger?.entry(id: "taxi") != nil, "the change is kept")
+        let undo = await workspace.undo(saved)
+        #expect(undo.failure == .unavailable(AccountWorkspace.undoTooLate))
+        #expect(workspace.load.ledger?.entry(id: "taxi") != nil, "and stays")
+    }
+
     @Test("whenASaveMakesRecurringEntriesComeDue_AccountWorkspace_ShouldStillOfferUndo")
     func undoWithDueOccurrences() async throws {
         harness.server.edit(Offline.alex) { $0.recurring = [Offline.rule("rent", next: "2026-12-01")] }

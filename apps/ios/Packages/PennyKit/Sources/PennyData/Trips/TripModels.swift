@@ -111,7 +111,10 @@ public final class TripDirectory {
         }
         var linked = trip
         linked.sharedHouseholdId = household.id
-        let summary = ChangeSummary(title: "\(trip.name) is shared", detail: "What you added before stays private.")
+        // No Undo: reverting only the link would leave the shared trip on the server, listed
+        // twice and shareable again, with the earlier private expenses no longer under it.
+        let summary = ChangeSummary(
+            title: "\(trip.name) is shared", detail: "What you added before stays private.", allowsUndo: false)
         if let failure = await commit(.saveTrip(linked, original: trip), summary) {
             do {
                 // The trip is new and empty, so archiving it is always allowed.
@@ -145,6 +148,12 @@ public final class SharedTripExpenses {
     /// Newest first, then id.
     public private(set) var expenses: [WireSharedExpense] = []
     public private(set) var load: HouseholdLoad = .idle
+    /// A read has succeeded at least once, so `expenses` is the trip's list and not just empty
+    /// because nothing has been read yet.
+    public private(set) var hasLoaded = false
+    /// The list to total, once a read has succeeded (the last one read, during a later read or
+    /// after it failed); nil before that, so a total is never shown as $0.00 for a list never read.
+    public var loadedExpenses: [WireSharedExpense]? { hasLoaded ? expenses : nil }
     @ObservationIgnored private let service: any HouseholdService
     @ObservationIgnored private var generation = 0
 
@@ -162,9 +171,10 @@ public final class SharedTripExpenses {
             let list = try await service.sharedExpenses(householdId: id, month: nil)
             guard mine == generation else { return }
             expenses = list.sorted { $0.date != $1.date ? $0.date > $1.date : $0.id < $1.id }
+            hasLoaded = true
             load = .loaded
         } catch is CancellationError {
-            if mine == generation { load = expenses.isEmpty ? .idle : .loaded }
+            if mine == generation { load = hasLoaded ? .loaded : .idle }
         } catch {
             guard mine == generation else { return }
             load = .failed(HouseholdFailure(error))

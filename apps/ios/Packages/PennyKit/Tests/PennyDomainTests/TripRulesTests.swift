@@ -151,4 +151,18 @@ struct TripRulesTests {
         editing.start(onTrip: "lisbon", ledger: ledger)
         #expect(editing.draft.tripId == nil, "an edit keeps its own trip")
     }
+
+    @Test("whenAKeptDraftIsRestored_EntryEditor_ShouldNotTurnItIntoATripExpense")
+    func tripExpenseOnKeptDraft() {
+        let ledger = Self.ledger()
+        var kept = EntryEditor(new: .expense, today: Self.day("2026-11-12"), ledger: ledger)
+        kept.setKind(.income, ledger: ledger)
+        kept.draft.title = "Salary"
+        kept.draft.amount = "2400"
+        let typed = kept.draft
+        kept.start(onTrip: "lisbon", ledger: ledger)
+        #expect(kept.draft == typed, "the income stays as typed, with no trip")
+        #expect(kept.draft.kind == .income && kept.draft.tripId == nil)
+        #expect(kept.isDirty, "closing it still asks to keep or discard")
+    }
 }
