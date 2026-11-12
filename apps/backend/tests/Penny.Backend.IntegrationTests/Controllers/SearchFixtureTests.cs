@@ -77,6 +77,29 @@ public sealed class SearchFixtureTests(ApiFixture fixture) : SearchTestBase(fixt
         }
     }
 
+    // MAZ-167: short entries embed generically, so unrelated or nonsense queries scored
+    // above a fixed threshold; the per-query baseline keeps them out.
+    [Fact]
+    public async Task whenQueryUnrelatedToShortEntries_Search_ShouldReturnNoMeaningMatches()
+    {
+        var (token, _) = await AccountAsync("search-unrelated@example.test");
+        await SeedLedgerAsync(token, Cases["unrelatedLedger"]);
+        await CatchUpAsync();
+        foreach (var item in Cases["unrelatedCases"]!.AsArray())
+        {
+            var name = item!["name"]!.GetValue<string>();
+            var page = await SearchAsync(token, item["request"]!);
+            if (item["includes"] is JsonArray includes)
+                foreach (var key in includes.Select(key => key!.GetValue<string>()))
+                    MatchOf(page, key).ShouldBe("meaning", name);
+            if (item["keys"] is JsonArray exact)
+            {
+                Keys(page).ShouldBe([.. exact.Select(key => key!.GetValue<string>())], name);
+                Total(page).ShouldBe(exact.Count, name);
+            }
+        }
+    }
+
     [Fact]
     public async Task whenPagesFollowed_Search_ShouldReturnEveryResultOnceInOrder()
     {
