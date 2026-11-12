@@ -36,8 +36,10 @@ public actor OfflineLedgerStore: AccountLocalData {
     }
 
     /// The store in Application Support (`LedgerFileStore.defaultDirectory`).
-    public static func standard() -> OfflineLedgerStore {
-        OfflineLedgerStore(files: LedgerFileStore(directory: LedgerFileStore.defaultDirectory))
+    public static func standard(
+        today: @escaping @Sendable () -> PennyDomain.CalendarDate = { PennyDomain.CalendarDate(Date()) }
+    ) -> OfflineLedgerStore {
+        OfflineLedgerStore(files: LedgerFileStore(directory: LedgerFileStore.defaultDirectory), today: today)
     }
 
     /// The account's engine, created on first use.
