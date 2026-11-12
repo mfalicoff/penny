@@ -1,14 +1,13 @@
 name: iOS checks
 
 # The native SwiftUI app (apps/ios, MAZ-66). Runs when the app or anything its tests read
-# changes: the legacy identity in app.json, the design baseline, fixtures and signing docs.
+# changes: the design baseline, fixtures, the signing docs and the release workflow.
 on:
   pull_request:
     paths:
       - apps/ios/**
       - .github/workflows/ios-testflight.yml
       - contracts/**
-      - app.json
       - package.json
       - docs/ios-ipa.md
       - apps/backend/**
@@ -21,7 +20,6 @@ on:
     paths:
       - apps/ios/**
       - contracts/**
-      - app.json
       - package.json
       - docs/ios-ipa.md
       - apps/backend/**

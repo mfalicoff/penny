@@ -8,7 +8,7 @@ import { createApp } from "../../server/app.ts";
 import { cents, nextOccurrence, personalShare, upgradeLedger } from "../../src/domain/ledger.ts";
 import { calculateHouseholdSplits } from "../../src/domain/households.ts";
 import { ledgerWriteSchema } from "../../server/validation/ledger.ts";
-import { selectTransactions } from "../../src/features/transactions/selectors.ts";
+import { selectTransactions } from "../../src/domain/selectors/transactions.ts";
 import { createHash } from "node:crypto";
 import { normalizeSearchText } from "./search-normalization.ts";
 
@@ -228,10 +228,10 @@ test("design baseline traces every penny-ios card and design-kit control to feat
   assert.equal(baseline.tokens.fonts.web.family, "Inter");
   assert.equal(baseline.tokens.icons.ios.family, "SF Symbols");
 
-  // Every legacy Expo Router screen keeps a destination on each platform.
-  const routeFiles = (dir: string): string[] => readdirSync(new URL(dir, root), { withFileTypes: true }).flatMap((entry) =>
-    entry.isDirectory() ? routeFiles(`${dir}${entry.name}/`) : entry.name.startsWith("_") ? [] : [`${dir}${entry.name}`]);
-  assert.deepEqual(baseline.navigation.legacyRoutes.map((item: any) => item.file).sort(), routeFiles("src/app/").sort());
+  // Every legacy Expo Router screen keeps a destination on each platform. The Expo app is retired
+  // (MAZ-98), so this map is now the frozen record of its routes; deep links still arrive on them.
+  assert.equal(baseline.navigation.legacyRoutes.length, 12);
+  assert.equal(new Set(baseline.navigation.legacyRoutes.map((item: any) => item.route)).size, 12);
   for (const item of baseline.navigation.legacyRoutes) for (const platform of ["iPhone", "iPad", "web"]) assert.ok(item[platform], `${item.route} on ${platform}`);
   for (const item of baseline.specimens) if (item.legacyRoute) assert.ok(baseline.navigation.legacyRoutes.some((route: any) => route.route === item.legacyRoute), item.legacyRoute);
 

@@ -9,7 +9,7 @@ import { cents, nextOccurrence, personalShare, type Ledger } from "../../src/dom
 import { mergeLedger } from "../../src/domain/merge.ts";
 import { calculateHouseholdSplits } from "../../src/domain/households.ts";
 import { ledgerWriteSchema } from "../../server/validation/ledger.ts";
-import { selectTransactions } from "../../src/features/transactions/selectors.ts";
+import { selectTransactions } from "../../src/domain/selectors/transactions.ts";
 import { dateKeyIn } from "../../src/domain/calendar.ts";
 import { isExpected, summarizeMonth } from "../../src/domain/summary.ts";
 import { selectOverview } from "../../src/domain/selectors/overview.ts";

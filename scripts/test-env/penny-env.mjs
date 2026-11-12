@@ -99,7 +99,7 @@ async function main() {
     case "run": {
       if (!command.length) throw new Error("Usage: penny-env run [options] -- <command...>");
       const { state, oidc } = await start(flags);
-      let code = 1;
+      let code;
       const stop = async () => {
         collectArtifacts(state);
         await oidc?.close();

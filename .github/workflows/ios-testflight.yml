@@ -1,22 +1,12 @@
 name: Build the iOS app for TestFlight
 
 # MAZ-98: signs a native Xcode archive of apps/ios and uploads it to TestFlight, where it
-# upgrades the Expo build in place (same bundle id, team, App Group and URL scheme).
-# Setup, secrets and the release runbook: docs/ios-ipa.md. Android builds are retired.
+# upgrades the retired Expo build in place (same bundle id, team, App Group and URL scheme).
+# Setup, secrets and the release runbook: docs/ios-ipa.md. Android and Expo builds are retired.
 on:
   release:
     types: [published]
   workflow_dispatch:
-    inputs:
-      app:
-        description: Which iOS app to build
-        type: choice
-        default: native
-        options:
-          - native
-          # The Expo bridge build stays available until the pending-data migration is proven
-          # on devices (docs/ios-ipa.md#legacy-expo-build). It shares the TestFlight build train.
-          - legacy-expo
 
 permissions:
   contents: read
@@ -31,12 +21,10 @@ jobs:
     uses: ./.github/workflows/tests.yml
 
   ios-checks:
-    if: ${{ inputs.app != 'legacy-expo' }}
     uses: ./.github/workflows/ios.yml
 
   testflight:
     name: Archive, sign and upload the native app to TestFlight
-    if: ${{ inputs.app != 'legacy-expo' }}
     needs: [checks, ios-checks]
     permissions:
       contents: write
@@ -190,78 +178,3 @@ jobs:
           rm -rf "$RUNNER_TEMP/private_keys" "$RUNNER_TEMP/"*.mobileprovision "$RUNNER_TEMP/"*.profile.plist
           rm -f "$HOME/Library/MobileDevice/Provisioning Profiles/"*.mobileprovision \
             "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles/"*.mobileprovision
-
-  # The Expo bridge build (MAZ-72): manual dispatch only, until docs/ios-ipa.md#legacy-expo-build
-  # says it can go. Uses EAS's remote build counter, so raise IOS_BUILD_NUMBER_BASE above it after.
-  legacy-expo-ipa:
-    name: Build the legacy Expo IPA on EAS and submit to TestFlight
-    if: ${{ inputs.app == 'legacy-expo' }}
-    needs: checks
-    runs-on: ubuntu-latest
-    timeout-minutes: 120
-    steps:
-      - name: Check out source
-        uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-
-      - name: Check EAS and TestFlight setup
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-          ASC_APP_ID: ${{ vars.ASC_APP_ID }}
-        run: |
-          if [ -z "$EXPO_TOKEN" ]; then
-            echo "::error::Add the EXPO_TOKEN repository secret. See docs/ios-ipa.md#legacy-expo-build."
-            exit 1
-          fi
-          if ! jq -e '.expo.extra.eas.projectId | strings | select(length > 0)' app.json > /dev/null; then
-            echo "::error::Run npx eas-cli@latest init and commit the updated app.json."
-            exit 1
-          fi
-          if [[ ! "$ASC_APP_ID" =~ ^[0-9]+$ ]]; then
-            echo "::error::Set the ASC_APP_ID repository variable to Penny's App Store Connect Apple ID."
-            exit 1
-          fi
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: '24'
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build on EAS with the existing signing credentials
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-          # EAS capability sync sends a request Apple rejects for App Groups.
-          EXPO_NO_CAPABILITY_SYNC: '1'
-        run: |
-          npx --yes eas-cli@latest build \
-            --platform ios \
-            --profile ipa \
-            --non-interactive \
-            --freeze-credentials \
-            --wait \
-            --json > "$RUNNER_TEMP/eas-build.json"
-
-      - name: Submit this build to TestFlight
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-          ASC_APP_ID: ${{ vars.ASC_APP_ID }}
-        run: |
-          jq --arg app_id "$ASC_APP_ID" \
-            '.submit.production.ios.ascAppId = $app_id' eas.json > "$RUNNER_TEMP/eas-submit.json"
-          mv "$RUNNER_TEMP/eas-submit.json" eas.json
-          build_id=$(jq -er '
-            if length == 1 and .[0].status == "FINISHED" and .[0].platform == "IOS"
-            then .[0].id | strings | select(length > 0)
-            else error("EAS did not return a completed iOS build") end
-          ' "$RUNNER_TEMP/eas-build.json")
-          npx --yes eas-cli@latest submit \
-            --platform ios \
-            --profile production \
-            --id "$build_id" \
-            --non-interactive \
-            --wait

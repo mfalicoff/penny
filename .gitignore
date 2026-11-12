@@ -6,25 +6,15 @@
 # dependencies
 node_modules/
 
-# Expo
-.expo/
 dist/
-web-build/
-expo-env.d.ts
 
-# Native
-.kotlin/
+# Signing material (never commit)
 *.orig.*
-*.jks
-*.keystore
 credentials.json
 *.p8
 *.p12
 *.key
 *.mobileprovision
-
-# Metro
-.metro-health-check*
 
 # debug
 npm-debug.*
@@ -40,10 +30,6 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
-
-# generated native folders
-/ios
-/android
 
 # Server data and deployment secrets
 /data/

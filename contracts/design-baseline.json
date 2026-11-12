@@ -412,7 +412,7 @@
       "nativeIssue": "MAZ-80",
       "webIssue": null,
       "legacyRoute": "/entries/new",
-      "legacyTest": "tests/ui/widgets/widgetData.test.ts",
+      "legacyTest": null,
       "acceptance": {
         "native": "MAZ-82",
         "web": null,
@@ -610,7 +610,7 @@
       "nativeIssue": "MAZ-73",
       "webIssue": "MAZ-88",
       "legacyRoute": "/entries/new",
-      "legacyTest": "tests/ui/features/entries/EntryForm.test.tsx",
+      "legacyTest": null,
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -637,7 +637,7 @@
       "nativeIssue": "MAZ-73",
       "webIssue": "MAZ-88",
       "legacyRoute": "/entries/new",
-      "legacyTest": "tests/ui/features/entries/EntryForm.test.tsx",
+      "legacyTest": null,
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -665,7 +665,7 @@
       "nativeIssue": "MAZ-73",
       "webIssue": "MAZ-88",
       "legacyRoute": "/entries/new",
-      "legacyTest": "tests/ui/features/entries/EntryForm.test.tsx",
+      "legacyTest": null,
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -689,7 +689,7 @@
       "nativeIssue": "MAZ-73",
       "webIssue": "MAZ-88",
       "legacyRoute": "/entries/new",
-      "legacyTest": "tests/ui/features/entries/EntryForm.test.tsx",
+      "legacyTest": null,
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -713,7 +713,7 @@
       "nativeIssue": "MAZ-73",
       "webIssue": "MAZ-88",
       "legacyRoute": "/entries/new",
-      "legacyTest": "tests/ui/features/entries/EntryForm.test.tsx",
+      "legacyTest": null,
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -737,7 +737,7 @@
       "nativeIssue": "MAZ-73",
       "webIssue": "MAZ-88",
       "legacyRoute": "/entries/new",
-      "legacyTest": "tests/ui/features/entries/EntryForm.test.tsx",
+      "legacyTest": null,
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -785,7 +785,7 @@
       "nativeIssue": "MAZ-73",
       "webIssue": "MAZ-88",
       "legacyRoute": "/entries/new",
-      "legacyTest": "tests/ui/features/entries/EntryForm.test.tsx",
+      "legacyTest": null,
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1097,7 +1097,7 @@
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "legacyRoute": "/",
-      "legacyTest": "tests/ui/features/settings/SettingsSheet.test.tsx",
+      "legacyTest": null,
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1217,7 +1217,7 @@
       "nativeIssue": "MAZ-74",
       "webIssue": "MAZ-89",
       "legacyRoute": "/categories",
-      "legacyTest": "tests/ui/features/categories/CategoryForm.test.tsx",
+      "legacyTest": null,
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1241,7 +1241,7 @@
       "nativeIssue": "MAZ-74",
       "webIssue": "MAZ-89",
       "legacyRoute": "/categories",
-      "legacyTest": "tests/ui/features/categories/CategoryForm.test.tsx",
+      "legacyTest": null,
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1265,7 +1265,7 @@
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "legacyRoute": "/",
-      "legacyTest": "tests/ui/features/settings/SettingsSheet.test.tsx",
+      "legacyTest": null,
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1289,7 +1289,7 @@
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "legacyRoute": "/",
-      "legacyTest": "tests/ui/providers/AppLockProvider.test.tsx",
+      "legacyTest": null,
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1316,7 +1316,7 @@
       "nativeIssue": "MAZ-68",
       "webIssue": "MAZ-84",
       "legacyRoute": "/auth/callback",
-      "legacyTest": "tests/ui/features/auth/AuthScreen.test.tsx",
+      "legacyTest": null,
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1340,7 +1340,7 @@
       "nativeIssue": "MAZ-68",
       "webIssue": "MAZ-84",
       "legacyRoute": "/auth/callback",
-      "legacyTest": "tests/ui/features/auth/AuthScreen.test.tsx",
+      "legacyTest": null,
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1364,7 +1364,7 @@
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "legacyRoute": "/",
-      "legacyTest": "tests/ui/data/serverConnection.test.ts",
+      "legacyTest": null,
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1388,7 +1388,7 @@
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "legacyRoute": "/",
-      "legacyTest": "tests/ui/providers/AppLockProvider.test.tsx",
+      "legacyTest": null,
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1436,7 +1436,7 @@
       "nativeIssue": "MAZ-71",
       "webIssue": "MAZ-87",
       "legacyRoute": "/",
-      "legacyTest": "tests/ui/data/offlineLedger.test.ts",
+      "legacyTest": null,
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1460,7 +1460,7 @@
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "legacyRoute": "/",
-      "legacyTest": "tests/ui/features/settings/SettingsSheet.test.tsx",
+      "legacyTest": null,
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1484,7 +1484,7 @@
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "legacyRoute": "/",
-      "legacyTest": "tests/ui/features/settings/SettingsSheet.test.tsx",
+      "legacyTest": null,
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1508,7 +1508,7 @@
       "nativeIssue": "MAZ-68",
       "webIssue": "MAZ-84",
       "legacyRoute": "/auth/callback",
-      "legacyTest": "tests/ui/features/auth/AuthScreen.test.tsx",
+      "legacyTest": null,
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1580,7 +1580,7 @@
       "nativeIssue": "MAZ-73",
       "webIssue": "MAZ-88",
       "legacyRoute": "/entries/new",
-      "legacyTest": "tests/ui/features/entries/EntryForm.test.tsx",
+      "legacyTest": null,
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1655,7 +1655,7 @@
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "legacyRoute": "/",
-      "legacyTest": "tests/ui/features/settings/SettingsSheet.test.tsx",
+      "legacyTest": null,
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1799,7 +1799,7 @@
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "legacyRoute": "/",
-      "legacyTest": "tests/ui/features/settings/SettingsSheet.test.tsx",
+      "legacyTest": null,
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1823,7 +1823,7 @@
       "nativeIssue": "MAZ-73",
       "webIssue": "MAZ-88",
       "legacyRoute": "/entries/new",
-      "legacyTest": "tests/ui/features/entries/EntryForm.test.tsx",
+      "legacyTest": null,
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1850,7 +1850,7 @@
       "nativeIssue": "MAZ-68",
       "webIssue": "MAZ-84",
       "legacyRoute": "/auth/callback",
-      "legacyTest": "tests/ui/features/auth/AuthScreen.test.tsx",
+      "legacyTest": null,
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",

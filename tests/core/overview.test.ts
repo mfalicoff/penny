@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { emptyLedger, materialize, type Transaction } from "../../src/domain/ledger.ts";
-import { calendarMonth, selectOverview, shiftMonthKey } from "../../src/features/overview/selectors.ts";
+import { calendarMonth, selectOverview, shiftMonthKey } from "../../src/domain/selectors/overview.ts";
 
 const expense: Transaction = { id: "meal", title: "Lunch", kind: "expense", total: 4000, share: 1000, categoryId: "food", date: "2026-09-20", note: "With Alex" };
 const ledger = { ...emptyLedger(), transactions: [expense, { ...expense, id: "salary", title: "Payday", note: "", kind: "income" as const, categoryId: "salary", share: 50000, date: "2026-09-21" }, { ...expense, id: "last-month", date: "2026-08-31" }] };

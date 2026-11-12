@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildMoneyFlow, layoutMoneyFlow } from "../../src/features/overview/moneyFlow.ts";
+import { buildMoneyFlow, layoutMoneyFlow } from "../../src/domain/selectors/moneyFlow.ts";
 import { emptyLedger, type Transaction } from "../../src/domain/ledger.ts";
 const categories = emptyLedger().categories;
 const entry = (

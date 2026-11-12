@@ -1,4 +1,4 @@
-import { cents, nextOccurrence, parseDate, personalShare, uid, validDate, type Category, type Frequency, type Kind, type Receipt, type Recurring, type Transaction } from "../../domain/ledger.ts";
+import { cents, nextOccurrence, parseDate, personalShare, uid, validDate, type Category, type Frequency, type Kind, type Receipt, type Recurring, type Transaction } from "./ledger.ts";
 
 export type EntryDraft = {
   kind: Kind;

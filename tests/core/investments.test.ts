@@ -1,10 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { emptyLedger, materialize, totals, upgradeLedger, type Ledger } from "../../src/domain/ledger.ts";
-import { buildEntry, type EntryDraft } from "../../src/features/entries/entryDraft.ts";
+import { buildEntry, type EntryDraft } from "../../src/domain/entryDraft.ts";
 import { saveEntry } from "../../src/domain/commands.ts";
-import { selectOverview } from "../../src/features/overview/selectors.ts";
-import { buildMoneyFlow, layoutMoneyFlow } from "../../src/features/overview/moneyFlow.ts";
+import { selectOverview } from "../../src/domain/selectors/overview.ts";
+import { buildMoneyFlow, layoutMoneyFlow } from "../../src/domain/selectors/moneyFlow.ts";
 import { ledgerWriteSchema } from "../../server/validation/ledger.ts";
 import { openDatabase } from "../../server/infrastructure/database.ts";
 import { createRepositories } from "../../server/infrastructure/repositories.ts";

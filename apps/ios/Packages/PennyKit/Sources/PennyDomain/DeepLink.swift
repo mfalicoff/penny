@@ -32,8 +32,8 @@ public enum DeepLink: Equatable, Sendable {
         case recurring
     }
 
-    /// The URL scheme registered in the app's Info.plist (`CFBundleURLSchemes`) and the
-    /// legacy app.json `scheme`.
+    /// The URL scheme registered in the app's Info.plist (`CFBundleURLSchemes`), the same as
+    /// the retired Expo app's.
     public static let scheme = "penny"
 
     /// Parses a `penny://` URL. Expo Router writes links two ways, and both are accepted:

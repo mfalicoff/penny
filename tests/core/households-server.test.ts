@@ -10,10 +10,10 @@ import { security } from "../../server/infrastructure/security.ts";
 import { emptyLedger } from "../../src/domain/ledger.ts";
 import { createRepositories } from "../../server/infrastructure/repositories.ts";
 import { createLedgerService } from "../../server/application/ledger.ts";
-import { ledgerWithHouseholds } from "../../src/features/households/projection.ts";
-import { selectOverview } from "../../src/features/overview/selectors.ts";
+import { ledgerWithHouseholds } from "../../src/domain/householdProjection.ts";
+import { selectOverview } from "../../src/domain/selectors/overview.ts";
 import { summarizeMonth } from "../../src/domain/summary.ts";
-import type { ProjectedExpense } from "../../src/data/households";
+import type { ProjectedExpense } from "../../src/domain/householdProjection.ts";
 
 const stamp = Date.parse("2026-09-28T12:00:00Z");
 const category = { name: "Groceries", icon: "basket-outline", color: "#6C9C79" };
