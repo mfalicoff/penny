@@ -27,6 +27,13 @@ struct AppShell: View {
         .onChange(of: scenePhase) {
             if scenePhase == .active { shell.refreshToday() }
         }
+        // On iPad Settings is the detail column, so Add entry opens over it instead of closing
+        // it (ShellRoute.settingsIsColumn). In a compact width it is a sheet again, and only one
+        // sheet shows at a time.
+        .onChange(of: sizeClass, initial: true) {
+            shell.route.settingsIsColumn = sizeClass == .regular
+            if sizeClass != .regular, shell.route.isAddEntryPresented { shell.route.isSettingsPresented = false }
+        }
         .sheet(isPresented: $shell.route.isAddEntryPresented, onDismiss: shell.sheetDismissed) {
             EntryFormSheet(mode: .new).environment(shell)
         }

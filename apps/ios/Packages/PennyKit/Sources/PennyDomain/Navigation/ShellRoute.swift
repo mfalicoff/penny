@@ -74,13 +74,20 @@ public enum SidebarItem: Hashable, Sendable {
 /// - Choosing the tab already shown returns it to its root.
 /// - A deep link shows its destination from that tab's root (so Back always leads to the
 ///   tab's root, never to an unrelated screen) and closes a sheet that would hide it.
-/// - Add entry opens over whatever is shown, and only Settings is closed for it.
+/// - Add entry opens over whatever is shown. Only the Settings sheet (iPhone) is closed for
+///   it: on iPad Settings is the detail column, which stays where it is (`settingsIsColumn`).
 public struct ShellRoute: Equatable, Sendable {
     public private(set) var tab: AppTab
     public private(set) var paths: [AppTab: [DetailRoute]]
     public var isSettingsPresented: Bool
     public var settingsPath: [SettingsRoute]
     public var isAddEntryPresented: Bool
+    /// True while Settings is shown as the iPad split view's detail column rather than a sheet
+    /// (the shell sets it from its layout). Add entry then opens over it and leaves it alone:
+    /// closing it would swap the detail column's bound navigation stack for another in the
+    /// same update as the sheet appears, which crashes SwiftUI
+    /// (`NavigationColumnState.boundPathChange`, MAZ-78).
+    public var settingsIsColumn = false
 
     public init(tab: AppTab = .home) {
         self.tab = tab
@@ -110,7 +117,7 @@ public struct ShellRoute: Equatable, Sendable {
     }
 
     public mutating func openAddEntry() {
-        isSettingsPresented = false
+        if !settingsIsColumn { isSettingsPresented = false }
         isAddEntryPresented = true
     }
 
