@@ -189,7 +189,7 @@ struct Stack {
         try await send(method, configuration.apiURL.appending(path: "api/test/\(path)"), body: body, control: true)
     }
 
-    private func send(
+    func send(
         _ method: String, _ url: URL, body: [String: Any]? = nil, token: String? = nil, control: Bool = false
     ) async throws -> [String: Any] {
         var request = URLRequest(url: url, timeoutInterval: 30)
