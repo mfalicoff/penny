@@ -25,6 +25,12 @@ struct ReceiptFixtures {
         guard let data = try? Data(contentsOf: folder.appending(path: "manifest.json")),
             let manifest = try JSONSerialization.jsonObject(with: data) as? [String: [String: Any]]
         else {
+            // Under `ios.sh ui-test` (PENNY_UITEST_REQUIRE_STACK=1) the fixtures are seeded, so
+            // missing ones are a broken run, not a reason to skip (like a missing stack).
+            if ProcessInfo.processInfo.environment["PENNY_UITEST_REQUIRE_STACK"] == "1" {
+                throw UIExpectationFailed(
+                    description: "No receipt fixtures at \(folder.path): `ios.sh ui-test` should have seeded them.")
+            }
             throw XCTSkip("No receipt fixtures: run through `apps/ios/scripts/ios.sh ui-test`, which seeds them.")
         }
         return ReceiptFixtures(folder: folder, manifest: manifest)

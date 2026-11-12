@@ -335,6 +335,26 @@ struct ReceiptPreviewModelTests {
         _ = folder
     }
 
+    @Test("whenAPickedFileIsCopied_FileCache_ShouldKeepTheBytesWithCompleteProtection")
+    func copyProtection() throws {
+        let (plain, folder) = try cache()
+        // The simulator doesn't report protection classes, so the protection step is recorded.
+        let protected = Mutex<[String]>([])
+        let cache = ReceiptFileCache(root: plain.root) { url in protected.withLock { $0.append(url.path) } }
+        let source = folder.url.appending(path: "picked.pdf")
+        try ReceiptBytes.pdf.write(to: source)
+        let copy = try cache.copy(source)
+        #expect(try Data(contentsOf: copy) == ReceiptBytes.pdf)
+        #expect(copy.path().hasPrefix(cache.root.path()))
+        #expect(protected.withLock { $0 } == [copy.path], "the copy doesn't keep the picker's protection class")
+        // A copy that can't be protected isn't kept.
+        let failing = ReceiptFileCache(root: plain.root) { _ in throw CocoaError(.fileWriteNoPermission) }
+        #expect(throws: CocoaError.self) { _ = try failing.copy(source) }
+        #expect(failing.files().count == 1, "only the protected copy above remains")
+        // The real step really protects on a device; on the Mac host it does nothing and succeeds.
+        _ = try ReceiptFileCache(root: plain.root).copy(source)
+    }
+
     @Test("whenPurged_FileCache_ShouldRemoveEveryFileButNothingOutsideIt")
     func purge() throws {
         let (cache, folder) = try cache()

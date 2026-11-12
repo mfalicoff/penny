@@ -303,14 +303,16 @@ prepare_ui_device() {
 RECEIPT_FIXTURES="$CACHE/receipt-fixtures"
 seed_receipt_fixtures() {
   local id="$1" storage name
-  command -v node >/dev/null || { echo "warning: no Node; receipt fixtures not seeded." >&2; return 0; }
+  # ui-test requires the receipt journeys' fixtures, as it requires the stack: missing Node or
+  # Files storage stops the run instead of letting those journeys fail one by one.
+  command -v node >/dev/null || { echo "error: Node is required to seed the receipt fixtures." >&2; exit 1; }
   node "$IOS_DIR/scripts/receipt-fixtures.mjs" "$RECEIPT_FIXTURES" >/dev/null
   xcrun simctl addmedia "$id" "$RECEIPT_FIXTURES/penny-receipt-photo.png"
   storage="$(xcrun simctl get_app_container "$id" com.apple.DocumentsApp groups 2>/dev/null \
     | sed -n 's/^group\.com\.apple\.FileProvider\.LocalStorage[[:space:]]*//p')"
   if [[ -z "$storage" ]]; then
-    echo "warning: no Files local storage on $id; file picker journeys will fail." >&2
-    return 0
+    echo "error: no Files local storage on $id; the receipt file picker journeys can't run." >&2
+    exit 1
   fi
   mkdir -p "$storage/File Provider Storage"
   for name in penny-receipt.pdf penny-damaged.pdf penny-renamed.pdf penny-oversized.png; do

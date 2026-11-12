@@ -8,9 +8,24 @@ public import PennyDomain
 /// its file when it closes; `purge()` removes everything left over (launch, account change).
 public struct ReceiptFileCache: Sendable {
     public let root: URL
+    /// Gives a copied file complete protection. Replaceable for tests: the simulator doesn't
+    /// report protection classes, so the tests check that every copy is protected through it.
+    let protect: @Sendable (URL) throws -> Void
 
     public init(root: URL) {
+        self.init(root: root, protect: Self.completeProtection)
+    }
+
+    public init(root: URL, protect: @escaping @Sendable (URL) throws -> Void) {
         self.root = root
+        self.protect = protect
+    }
+
+    static let completeProtection: @Sendable (URL) throws -> Void = { url in
+        #if os(iOS)
+            try FileManager.default.setAttributes(
+                [.protectionKey: FileProtectionType.complete], ofItemAtPath: url.path)
+        #endif
     }
 
     /// `tmp/PennyReceipts` in the app's container.
@@ -42,6 +57,8 @@ public struct ReceiptFileCache: Sendable {
         let url = folder.appending(path: name, directoryHint: .notDirectory)
         do {
             try FileManager.default.copyItem(at: source, to: url)
+            // A copy keeps the source's protection class; this cache always uses complete protection.
+            try protect(url)
         } catch {
             try? FileManager.default.removeItem(at: folder)
             throw error
