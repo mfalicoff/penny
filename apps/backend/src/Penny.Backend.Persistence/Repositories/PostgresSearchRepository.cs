@@ -319,8 +319,8 @@ public sealed class PostgresSearchRepository(NpgsqlDataSource source, ReceiptFil
 
     // MAZ-125: the closest chunks of receipts the viewer may read that are attached to
     // an authorized, filtered result, embedded by the current model. Both checks run
-    // inside the HNSW scan (iterative scans), never after ranking, so a hidden receipt
-    // can neither match nor push a visible one out of the closest chunks. Returns each
+    // before ranking, so a hidden receipt can neither match nor push a visible one out
+    // of the closest receipts. Returns each
     // result linked to an accepted receipt with that receipt's best chunk similarity.
     private static async Task<List<(long Id, double Similarity)>> NearestReceiptsAsync(
         PennyDbContext context,
@@ -339,6 +339,10 @@ public sealed class PostgresSearchRepository(NpgsqlDataSource source, ReceiptFil
         var results = Filtered(context.SearchDocuments.Where(authorized), criteria.Request);
         var readable = context.Receipts.Where(ReceiptAccess.Readable(context, viewer));
         var model = criteria.ModelId;
+        // Exact, not through the HNSW index: the viewer's readable, linked chunks are a
+        // small set, and a filtered HNSW scan loses recall when other users' chunks are
+        // closer (docs/migration/search.md, receipt search benchmark). The best chunk per
+        // receipt is kept, so the cap counts receipts, not chunks.
         var closest = await context
             .ReceiptTextChunks.AsNoTracking()
             .Where(chunk =>
@@ -347,25 +351,21 @@ public sealed class PostgresSearchRepository(NpgsqlDataSource source, ReceiptFil
                 && readable.Any(receipt => receipt.Id == chunk.ReceiptId)
                 && results.Any(document => document.ReceiptId == chunk.ReceiptId)
             )
-            .OrderBy(chunk => chunk.Embedding!.CosineDistance(vector))
-            .Take(SearchTuning.MeaningLimit)
-            .Select(chunk => new
+            .GroupBy(chunk => chunk.ReceiptId)
+            .Select(group => new
             {
-                chunk.ReceiptId,
-                Distance = chunk.Embedding!.CosineDistance(vector),
+                ReceiptId = group.Key,
+                Distance = group.Min(chunk => chunk.Embedding!.CosineDistance(vector)),
             })
+            .OrderBy(row => row.Distance)
+            .Take(SearchTuning.MeaningLimit)
             .ToListAsync(cancellationToken);
         // Receipt chunk acceptance: the same per-query threshold as entry embeddings
         // (NearestAsync, `MeaningThreshold`). This is the one place it is read for receipts.
         var threshold = criteria.MeaningSimilarity;
         var accepted = closest
             .Where(row => 1 - row.Distance >= threshold)
-            .GroupBy(row => row.ReceiptId, StringComparer.Ordinal)
-            .ToDictionary(
-                group => group.Key,
-                group => 1 - group.Min(row => row.Distance),
-                StringComparer.Ordinal
-            );
+            .ToDictionary(row => row.ReceiptId, row => 1 - row.Distance, StringComparer.Ordinal);
         if (accepted.Count == 0)
             return [];
         var receiptIds = accepted.Keys.ToList();

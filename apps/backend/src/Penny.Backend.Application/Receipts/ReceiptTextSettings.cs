@@ -11,7 +11,7 @@ public sealed record ReceiptTextSettings(
     TimeSpan Timeout,
     int Concurrency,
     int MaxAttempts,
-    int MaxTextLength = 100_000,
+    int MaxTextLength = 20_000,
     int MaxChunks = 32
 )
 {
