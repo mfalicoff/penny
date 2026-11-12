@@ -11,6 +11,8 @@ public struct RootView: View {
     @State private var services: AppServices
     @State private var appearance: AppearanceModel
     @State private var inbox = DeepLinkInbox()
+    /// A `penny://join` invite waiting for the right account (MAZ-75).
+    @State private var invites: InviteHandoff
     @Environment(\.scenePhase) private var scenePhase
 
     public init(
@@ -19,6 +21,8 @@ public struct RootView: View {
         self.configuration = configuration
         _services = State(initialValue: services)
         _appearance = State(initialValue: AppearanceModel(preferences: services.preferences))
+        let development = (try? configuration.get())?.environment == .development
+        _invites = State(initialValue: InviteHandoff(allowsLoopbackHTTP: development))
     }
 
     public var body: some View {
@@ -32,6 +36,7 @@ public struct RootView: View {
         .tint(PennyColor.tint)
         .preferredColorScheme(appearance.colorScheme)
         .environment(appearance)
+        .environment(invites)
         .environment(services.lock)
         .modifier(LockCover(lock: services.lock))
         .task { await services.lock.start() }
@@ -42,7 +47,13 @@ public struct RootView: View {
             // Unknown penny:// routes open Home. Single sign-on callbacks return through the
             // system authentication session, never through openURL; one arriving here was not
             // requested by this app (or is a replay), so the inbox ignores it.
-            inbox.receive(DeepLink(url: url) ?? .home)
+            let link = DeepLink(url: url) ?? .home
+            // Invites name their server, so they wait for an account on it (`InviteHandoff`).
+            if case .join(let code, let server) = link {
+                invites.receive(code: code, server: server)
+            } else {
+                inbox.receive(link)
+            }
         }
     }
 

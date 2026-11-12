@@ -27,6 +27,13 @@ struct AppShell: View {
         .onChange(of: scenePhase) {
             if scenePhase == .active { shell.refreshToday() }
         }
+        // On iPad Settings is the detail column, so Add entry opens over it instead of closing
+        // it (ShellRoute.settingsIsColumn). In a compact width it is a sheet again, and only one
+        // sheet shows at a time.
+        .onChange(of: sizeClass, initial: true) {
+            shell.route.settingsIsColumn = sizeClass == .regular
+            if sizeClass != .regular, shell.route.isAddEntryPresented { shell.route.isSettingsPresented = false }
+        }
         .sheet(isPresented: $shell.route.isAddEntryPresented, onDismiss: shell.sheetDismissed) {
             EntryFormSheet(mode: .new).environment(shell)
         }
@@ -63,7 +70,7 @@ private struct TabShell: View {
         }
         .tint(PennyColor.tint)
         .modifier(ToastOverlay(bottomPadding: 72))
-        .sheet(isPresented: $shell.route.isSettingsPresented) {
+        .sheet(isPresented: $shell.route.isSettingsPresented, onDismiss: shell.sheetDismissed) {
             NavigationStack(path: $shell.route.settingsPath) {
                 SettingsView(onDone: { shell.route.isSettingsPresented = false })
                     .navigationDestination(for: SettingsRoute.self) { SettingsPage(route: $0) }
@@ -126,7 +133,9 @@ struct DetailPage: View {
     var body: some View {
         switch route {
         case .household(let id): HouseholdDetailView(id: id)
-        case .householdExpense(let household, let expense): HouseholdDetailView(id: household, expenseID: expense)
+        case .householdExpense(let household, let expense):
+            HouseholdExpenseView(householdID: household, expenseID: expense)
+        case .householdHistory(let household): HouseholdHistoryView(householdID: household)
         case .trip(let id): TripDetailView(id: id)
         case .entry(let id): EntryDetailView(id: id)
         case .moneyFlow: MoneyFlowView()

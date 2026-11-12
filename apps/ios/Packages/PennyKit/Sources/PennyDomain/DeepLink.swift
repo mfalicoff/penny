@@ -14,6 +14,11 @@ public enum DeepLink: Equatable, Sendable {
     case householdExpense(householdID: String, expenseID: String)
     case trips
     case trip(id: String)
+    /// A household invite (MAZ-75): `penny://join?code=<CODE>&server=<server URL>`, from a QR
+    /// code or a shared link. The values are kept as sent; `InviteLink(code:server:current:)`
+    /// validates them (a malformed link is shown as one, never dropped silently). A query key
+    /// that appears twice makes the whole link malformed (both values nil).
+    case join(code: String?, server: String?)
     /// The OIDC redirect. Its query (code, state, error) is passed on untouched.
     case authCallback(query: [URLQueryItem])
 
@@ -59,9 +64,17 @@ public enum DeepLink: Equatable, Sendable {
         case ("trips", 0): return .trips
         case ("trips", 1): return .trip(id: rest[0])
         case ("auth", 1) where rest[0] == "callback": return .authCallback(query: query)
+        case ("join", 0): return joinLink(query)
         case (_, 0): return SettingsPage(rawValue: first).map(DeepLink.settings)
         default: return nil
         }
+    }
+
+    private static func joinLink(_ query: [URLQueryItem]) -> DeepLink {
+        let names = query.map(\.name)
+        guard Set(names).count == names.count else { return .join(code: nil, server: nil) }
+        func value(_ name: String) -> String? { query.first { $0.name == name }?.value }
+        return .join(code: value("code"), server: value("server"))
     }
 
     /// Identifiers are opaque server ids; reject traversal and empty-looking segments

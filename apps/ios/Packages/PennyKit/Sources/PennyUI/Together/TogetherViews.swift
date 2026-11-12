@@ -3,47 +3,6 @@ import PennyDesign
 import PennyDomain
 import SwiftUI
 
-/// The Shared tab. Households, balances and shared expenses arrive with MAZ-75; until then
-/// the tab says so instead of showing an empty list that looks broken. Legacy links to a
-/// household or an expense still land here, on a page that names what it can't show yet.
-struct SharedView: View {
-    @Environment(ShellModel.self) private var shell
-
-    var body: some View {
-        VStack(spacing: 16) {
-            VStack(spacing: 12) {
-                SyncBanner()
-                DemoBanner()
-            }
-            .padding(.horizontal, Metrics.gutter)
-            PennyStateView(
-                .unavailable, title: "Shared expenses are coming",
-                message: shell.isDemo
-                    ? "The demo has no households. In your account, households you join show up here."
-                    : "Households you belong to will show up here, with what you owe and are owed.")
-        }
-        .background(PennyColor.background)
-        .navigationTitle("Shared")
-        .accessibilityIdentifier("screen.shared")
-    }
-}
-
-struct HouseholdDetailView: View {
-    let id: String
-    var expenseID: String?
-
-    var body: some View {
-        PennyStateView(
-            .unavailable, title: expenseID == nil ? "Household" : "Shared expense",
-            message: "This link opens here. Households and their expenses arrive in a later update."
-        )
-        .background(PennyColor.background)
-        .navigationTitle(expenseID == nil ? "Household" : "Expense")
-        .toolbarTitleDisplayModeInline()
-        .accessibilityIdentifier(expenseID == nil ? "screen.household" : "screen.householdExpense")
-    }
-}
-
 /// The Trips tab: personal trips with what was spent on each. Shared trips and editing arrive
 /// with MAZ-76.
 struct TripsView: View {

@@ -152,9 +152,12 @@ struct Penny {
         // One query for all pages: each element query costs about a second.
         let page = app.descendants(matching: .any)
             .matching(NSPredicate(format: "identifier IN %@", Self.settingsPages)).firstMatch
+        // The navigation bar's back button by its system identifier: on iPad the first button in
+        // a navigation bar can be the sidebar's Add entry, not Back.
+        let back = app.navigationBars.buttons.matching(identifier: "BackButton").firstMatch
         for _ in 0..<3 {
-            guard page.exists, !element(AccessibilityID.Screen.settings).exists else { return }
-            app.navigationBars.buttons.element(boundBy: 0).tap()
+            guard page.exists, !element(AccessibilityID.Screen.settings).exists, back.exists else { return }
+            back.tap()
         }
     }
 

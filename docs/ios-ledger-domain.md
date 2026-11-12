@@ -87,7 +87,7 @@ No fixture was added or changed. Known gaps, for the fixture owners rather than 
 
 - `manifest.json` still lists only `contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift` as the Swift consumer of these files (and MAZ-73 for `search-cases.json`); the generator's consumer table (`scripts/fixtures/generate-golden.ts`) should add `apps/ios/Packages/PennyKit/Tests/PennyDomainTests` when it is next regenerated.
 - There is no shared fixture for the entry draft rules, the command check order and messages, pause/resume, materialization or the projected formula with expected income; the Swift tests port the v2 TypeScript behavior (`tests/core/domain-rules.test.ts`) and the redesign totals. The message test pins every `LedgerRuleError` sentence word for word to the legacy source (`src/domain/ledger.ts`, `commands.ts`, `entryDraft.ts`), and the four new ones to the wording chosen here.
-- `merge-conflicts.json` is consumed by MAZ-71's `LedgerMergeTests` (listed in the manifest); `shared-splits.json` and `settlement.json` are MAZ-75's.
+- `merge-conflicts.json` is consumed by MAZ-71's `LedgerMergeTests` (listed in the manifest); `shared-splits.json` is consumed by MAZ-75's `HouseholdSplitTests` (the form's split preview); settlement stays on the server, so the app shows its balances and suggestions and never computes them ([native households](ios-households.md)).
 
 ## Compatibility decisions
 

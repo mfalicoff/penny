@@ -53,19 +53,30 @@ struct AuthGate: View {
                         inbox: $inbox,
                         session: Self.session(account),
                         makeModel: {
-                            ShellModel(
+                            let shell = ShellModel(
                                 workspace: services.accountWorkspace(account, sync), session: .account(auth, account),
                                 today: services.today(), clock: services.today, startDemo: startDemo,
                                 search: auth.client.map { AccountEntrySearch(model: sync, client: $0) },
-                                sharedProjection: auth.client.map { APISharedProjection(client: $0) },
-                                expoImport: services.expoMigration.flatMap(ExpoImportNotice.init))
+                                sharedProjection: auth.client.map {
+                                    APISharedProjection(client: $0) { auth.sessionDidExpire(for: account) }
+                                },
+                                expoImport: services.expoMigration.flatMap(ExpoImportNotice.init),
+                                households: auth.client.map {
+                                    APIHouseholdService(client: $0) { auth.sessionDidExpire(for: account) }
+                                })
+                            shell.receipts = AccountReceipts(auth: auth, account: account, sync: sync)
+                            return shell
                         }
                     )
                     .id(account.scope)
                 }
             }
         }
-        .onChange(of: currentSession, initial: true) { inbox.sessionChanged(to: currentSession) }
+        .onChange(of: currentSession, initial: true) {
+            inbox.sessionChanged(to: currentSession)
+            // Receipt previews and picked files left by a crash or the previous account (MAZ-78).
+            ReceiptFileCache.standard.purge()
+        }
         .task { await auth.restore() }
         .onChange(of: scenePhase) {
             if scenePhase == .active, auth.state == .keychainUnavailable { Task { await auth.restore() } }
@@ -98,6 +109,7 @@ struct ShellHost: View {
     let makeModel: () -> ShellModel
     @State private var model: ShellModel?
     @Environment(AppLockController.self) private var lock
+    @Environment(InviteHandoff.self) private var invites: InviteHandoff?
 
     var body: some View {
         Group {
@@ -113,13 +125,28 @@ struct ShellHost: View {
         }
         .onChange(of: inbox) { deliver() }
         .onChange(of: lock.conceals) { deliver() }
+        .onChange(of: invites?.invite) { deliver() }
     }
 
     /// Opens a waiting link once the shell exists and the lock is open; never behind the lock,
     /// and never one meant for another account.
     private func deliver() {
+        deliverInvite()
         guard let model, let link = inbox.take(ready: !lock.conceals, for: session) else { return }
         model.navigate { $0.open(link) }
+    }
+
+    /// A waiting invite opens the join sheet in an account's shell (never in the demo, never
+    /// behind the lock). One kept for a sign-in on another server waits for that server's account.
+    private func deliverInvite() {
+        guard let model, let invites, !lock.conceals, let account = model.account else { return }
+        if let waiting = invites.invite, waiting.waitsForSignIn,
+            waiting.server.flatMap({ try? ServerURL($0) }) == account.server
+        {
+            invites.signedIn()
+        }
+        guard let invite = invites.takeForShell(by: "\(session)") else { return }
+        model.navigate { $0.open(.join(code: invite.code, server: invite.server)) }
     }
 }
 
@@ -142,6 +169,9 @@ struct SignedOutFlow: View {
                         auth: auth, mode: .signIn, onChangeServer: { path.append(.server) },
                         onSwitchMode: { path.append(.createAccount) })
                 }
+            }
+            .safeAreaInset(edge: .top) {
+                InviteSignInCard(auth: auth)
             }
             .safeAreaInset(edge: .bottom) {
                 if let onTryDemo {

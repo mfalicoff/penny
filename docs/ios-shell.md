@@ -60,7 +60,7 @@ Every legacy route keeps a destination (`DeepLink`, MAZ-66; [legacy deep links](
 
 A link that arrives while signed out, while the session is being restored or while the app is locked waits in `DeepLinkInbox`. It opens once the shell is showing and the lock is open, never behind the lock. A newer link replaces an older one. A link belongs to the session showing when it arrived (`DeepLinkSession`, kept current by `AuthGate`): one that arrived while an account was signed in opens only in that account, and another account's shell drops it, so a link kept from before a sign-out never opens in the next account. A link that arrived while no session showed opens in the next account. The demo opens only links that arrived during the demo; an account's link waits through it.
 
-Household and expense pages say that households arrive in a later update (MAZ-75). A link to a trip that isn't on the device shows "Trip not found".
+Household and expense links open their pages (MAZ-75, [native households](ios-households.md)); `penny://join` invite links wait in `InviteHandoff` instead of the inbox, for an account on the server they name. A link to a trip that isn't on the device shows "Trip not found".
 
 ## Components and tokens
 
