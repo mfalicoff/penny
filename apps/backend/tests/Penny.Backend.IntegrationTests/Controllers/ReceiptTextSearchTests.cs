@@ -58,7 +58,8 @@ public sealed class ReceiptTextSearchTests(ApiFixture fixture) : ReceiptTextTest
         (await ExtractAsync()).ShouldBe(2);
         // Text and typo matches need no embedding; meaning waits for the chunk embeddings.
         Keys(await SearchAsync(token, new { query = "wood screws" })).ShouldBe(["personal:r01"]);
-        Keys(await SearchAsync(token, new { query = "tools" })).ShouldNotContain("personal:r01");
+        Keys(await SearchAsync(token, new { query = "medication" }))
+            .ShouldNotContain("personal:r02");
         (
             await CountAsync(
                 "SELECT count(*) FROM penny.receipt_text_chunks WHERE embedding_due_at IS NOT NULL"
@@ -87,6 +88,9 @@ public sealed class ReceiptTextSearchTests(ApiFixture fixture) : ReceiptTextTest
                     Keys(page).ShouldContain(key, name);
                     MatchOf(page, key).ShouldBe("meaning", name);
                 }
+            if (item["absent"] is JsonArray absent)
+                foreach (var key in absent.Select(key => key!.GetValue<string>()))
+                    Keys(page).ShouldNotContain(key, name);
         }
     }
 
@@ -222,9 +226,9 @@ public sealed class ReceiptTextSearchTests(ApiFixture fixture) : ReceiptTextTest
         var (viewer, _) = await AccountAsync("viewer@example.test");
         var receipt = await UploadReceiptAsync(
             viewer,
-            "tools.pdf",
+            "pharmacy.pdf",
             "application/pdf",
-            SyntheticReceipts.TextPdf(Lines(ReceiptCases["receipts"]![0]!))
+            SyntheticReceipts.TextPdf(Lines(ReceiptCases["receipts"]![1]!))
         );
         await SaveEntryAsync(viewer, "mine", "Saturday errands", receipt);
         // Another user's receipt, linked to their own entry, whose chunks are copied
@@ -234,7 +238,7 @@ public sealed class ReceiptTextSearchTests(ApiFixture fixture) : ReceiptTextTest
             owner,
             "hidden.pdf",
             "application/pdf",
-            SyntheticReceipts.TextPdf(Lines(ReceiptCases["receipts"]![0]!))
+            SyntheticReceipts.TextPdf(Lines(ReceiptCases["receipts"]![1]!))
         );
         await SaveEntryAsync(owner, "theirs", "Hidden", hidden);
         await ExtractAsync();
@@ -245,7 +249,7 @@ public sealed class ReceiptTextSearchTests(ApiFixture fixture) : ReceiptTextTest
             + string.Join(
                 ',',
                 embedder
-                    .EmbedQuery(SearchText.Normalize("tools"))
+                    .EmbedQuery(SearchText.Normalize("medication"))
                     .Select(value => value.ToString("R", CultureInfo.InvariantCulture))
             )
             + "]";
@@ -258,12 +262,12 @@ public sealed class ReceiptTextSearchTests(ApiFixture fixture) : ReceiptTextTest
             """,
             Ct
         );
-        var page = await SearchAsync(viewer, new { query = "tools" });
+        var page = await SearchAsync(viewer, new { query = "medication" });
         Keys(page).ShouldContain("personal:mine");
         MatchOf(page, "personal:mine").ShouldBe("meaning");
         Keys(page).ShouldNotContain("personal:theirs");
         // The owner finds their own receipt; the viewer's stays out of their results.
-        var own = await SearchAsync(owner, new { query = "tools" });
+        var own = await SearchAsync(owner, new { query = "medication" });
         Keys(own).ShouldContain("personal:theirs");
         Keys(own).ShouldNotContain("personal:mine");
         _ = ownerId;

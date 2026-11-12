@@ -807,10 +807,146 @@
         "query": "%%%"
       },
       "keys": []
+    },
+    {
+      "name": "unrelated word has no meaning match",
+      "request": {
+        "query": "something"
+      },
+      "keys": []
+    },
+    {
+      "name": "greeting has no meaning match",
+      "request": {
+        "query": "hello"
+      },
+      "keys": []
+    }
+  ],
+  "unrelatedLedger": {
+    "version": 4,
+    "currency": "CAD",
+    "categories": [
+      {
+        "id": "home",
+        "name": "Home",
+        "icon": "home-outline",
+        "color": "#5B7DB1",
+        "kind": "expense"
+      },
+      {
+        "id": "food",
+        "name": "Food",
+        "icon": "cafe-outline",
+        "color": "#E47850",
+        "kind": "expense"
+      },
+      {
+        "id": "transport",
+        "name": "Transport",
+        "icon": "bus-outline",
+        "color": "#7DB15B",
+        "kind": "expense"
+      },
+      {
+        "id": "fun",
+        "name": "Entertainment",
+        "icon": "film-outline",
+        "color": "#9C796C",
+        "kind": "expense"
+      }
+    ],
+    "transactions": [
+      {
+        "id": "u01",
+        "title": "rent",
+        "date": "2026-11-01",
+        "kind": "expense",
+        "total": 7800,
+        "share": 7800,
+        "categoryId": "home",
+        "note": ""
+      },
+      {
+        "id": "u02",
+        "title": "test",
+        "date": "2026-11-02",
+        "kind": "expense",
+        "total": 89800,
+        "share": 89800,
+        "categoryId": "home",
+        "note": ""
+      },
+      {
+        "id": "u03",
+        "title": "Gas",
+        "date": "2026-11-03",
+        "kind": "expense",
+        "total": 4500,
+        "share": 4500,
+        "categoryId": "transport",
+        "note": ""
+      },
+      {
+        "id": "u04",
+        "title": "Lunch",
+        "date": "2026-11-04",
+        "kind": "expense",
+        "total": 1500,
+        "share": 1500,
+        "categoryId": "food",
+        "note": ""
+      },
+      {
+        "id": "u05",
+        "title": "Netflix",
+        "date": "2026-11-05",
+        "kind": "expense",
+        "total": 1700,
+        "share": 1700,
+        "categoryId": "fun",
+        "note": ""
+      }
+    ],
+    "recurring": [],
+    "accounts": [],
+    "trips": []
+  },
+  "unrelatedCases": [
+    {
+      "name": "unrelated word on short entries (MAZ-167)",
+      "request": {
+        "query": "something",
+        "pageSize": 50
+      },
+      "keys": []
+    },
+    {
+      "name": "keyboard mash on short entries",
+      "request": {
+        "query": "asdf"
+      },
+      "keys": []
+    },
+    {
+      "name": "greeting on short entries",
+      "request": {
+        "query": "hello"
+      },
+      "keys": []
+    },
+    {
+      "name": "related meaning still matches short entries",
+      "request": {
+        "query": "housing"
+      },
+      "includes": [
+        "personal:u01"
+      ]
     }
   ],
   "receiptCases": {
-    "description": "MAZ-125: receipt text is its own searchable field. Each receipt is a synthetic text PDF with these lines, linked to the entry; it matches only after extraction, by text and typo through the normalized text and by meaning through its own chunk embeddings (never the entry's). `before` lists keys the query must not find before extraction.",
+    "description": "MAZ-125: receipt text is its own searchable field. Each receipt is a synthetic text PDF with these lines, linked to the entry; it matches only after extraction, by text and typo through the normalized text and by meaning through its own chunk embeddings (never the entry's). `before` lists keys the query must not find before extraction; `absent` lists keys it must not find once extracted and embedded. Meaning uses the per-query threshold (MAZ-167): \"outils\" scores 0.823 against the French pharmacy receipt, above the old fixed 0.82 but below its 0.836 threshold.",
     "ledger": {
       "version": 4,
       "currency": "CAD",
@@ -910,14 +1046,13 @@
         "before": ["personal:r02"]
       },
       {
-        "name": "English meaning from an English receipt",
-        "request": { "query": "tools" },
-        "meaning": ["personal:r01"],
-        "before": ["personal:r01"]
+        "name": "Unrelated French query does not match a receipt by meaning",
+        "request": { "query": "outils" },
+        "absent": ["personal:r01", "personal:r02"]
       },
       {
         "name": "English meaning from a French receipt",
-        "request": { "query": "medicine" },
+        "request": { "query": "medication" },
         "meaning": ["personal:r02"],
         "before": ["personal:r02"]
       },

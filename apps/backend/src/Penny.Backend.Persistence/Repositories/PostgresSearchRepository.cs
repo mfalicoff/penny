@@ -282,7 +282,8 @@ public sealed class PostgresSearchRepository(NpgsqlDataSource source, ReceiptFil
     }
 
     // The closest authorized, filtered documents embedded by the current model, then
-    // the similarity threshold. pgvector applies the filter inside the HNSW scan.
+    // the query's meaning threshold (`MeaningThreshold`). pgvector applies the filter
+    // inside the HNSW scan.
     private static async Task<List<(long Id, double Similarity)>> NearestAsync(
         PennyDbContext context,
         SearchCriteria criteria,
@@ -311,7 +312,7 @@ public sealed class PostgresSearchRepository(NpgsqlDataSource source, ReceiptFil
         return
         [
             .. closest
-                .Where(row => 1 - row.Distance >= SearchTuning.MeaningSimilarity)
+                .Where(row => 1 - row.Distance >= criteria.MeaningSimilarity)
                 .Select(row => (row.Id, 1 - row.Distance)),
         ];
     }
@@ -354,10 +355,9 @@ public sealed class PostgresSearchRepository(NpgsqlDataSource source, ReceiptFil
                 Distance = chunk.Embedding!.CosineDistance(vector),
             })
             .ToListAsync(cancellationToken);
-        // Receipt chunk acceptance: the same similarity rule as entry embeddings
-        // (NearestAsync). This is the one place the receipt threshold is read; a change
-        // to the meaning acceptance rule (MAZ-167: criteria.MeaningSimilarity) goes here.
-        var threshold = SearchTuning.MeaningSimilarity;
+        // Receipt chunk acceptance: the same per-query threshold as entry embeddings
+        // (NearestAsync, `MeaningThreshold`). This is the one place it is read for receipts.
+        var threshold = criteria.MeaningSimilarity;
         var accepted = closest
             .Where(row => 1 - row.Distance >= threshold)
             .GroupBy(row => row.ReceiptId, StringComparer.Ordinal)
