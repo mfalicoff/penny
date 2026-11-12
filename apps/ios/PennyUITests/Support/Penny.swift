@@ -142,8 +142,10 @@ struct Penny {
             try openHome()
             button = try wait(for: AccessibilityID.Home.settings)
         }
-        for _ in 0..<3 {
-            if button.isHittable { button.tap() }
+        for attempt in 0..<3 {
+            // The iPad sidebar's button can report not hittable while it works; tap it the first
+            // time regardless, and again only when it is still there to be tapped.
+            if attempt == 0 || button.isHittable { button.tap() }
             if element(AccessibilityID.Screen.settings).waitForExistence(timeout: 8) { return }
         }
         try wait(for: AccessibilityID.Screen.settings)

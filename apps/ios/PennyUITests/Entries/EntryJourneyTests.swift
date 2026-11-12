@@ -65,7 +65,7 @@ final class EntryJourneyTests: PennyUITestCase {
         try penny.openEntry(incomeID)
         try penny.tap(AccessibilityID.Journeys.detailDelete)
         try penny.cancelDialog(AccessibilityID.Journeys.deleteCancel, confirmID: AccessibilityID.Activity.deleteConfirm)
-        try penny.wait(for: AccessibilityID.Screen.entryDetail)
+        try penny.wait(for: AccessibilityID.Journeys.detailEdit)
         try penny.deleteOpenEntry()
         ledger = try await stack.waitForLedger(token: account.token, timeout: 30) { ledger in
             LedgerJSON.transaction(ledger, id: incomeID) == nil

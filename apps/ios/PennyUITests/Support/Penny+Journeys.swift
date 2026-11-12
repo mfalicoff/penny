@@ -96,7 +96,9 @@ extension Penny {
     /// list on iPad.
     func openEntry(_ id: String) throws {
         try waitForEntry(id).tap()
-        try wait(for: AccessibilityID.Screen.entryDetail)
+        // The detail's toolbar Edit, not `screen.entryDetail`: beside the iPad Activity list the
+        // detail sits inside `screen.activity`, whose identifier replaces the detail's own.
+        try wait(for: AccessibilityID.Journeys.detailEdit)
     }
 
     /// Edit from the entry detail's toolbar, waiting for the edit sheet.
