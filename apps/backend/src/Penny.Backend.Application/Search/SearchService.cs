@@ -16,8 +16,12 @@ public sealed class SearchService(ISearchRepository search, ITextEmbedder embedd
 {
     private static readonly string[] Matches = ["", "title", "text", "typo", "meaning"];
 
-    // Embeds the neutral anchors on the first meaning search, not at startup.
-    private readonly Lazy<MeaningThreshold> threshold = new(() => new(embedder));
+    // Embeds the neutral anchors on the first meaning search, not at startup. A failure
+    // (the model not loadable yet) is not cached: the next search tries again.
+    private readonly Lazy<MeaningThreshold> threshold = new(
+        () => new(embedder),
+        LazyThreadSafetyMode.PublicationOnly
+    );
 
     public async Task<SearchPageView> SearchAsync(
         string viewerId,
