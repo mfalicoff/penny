@@ -277,11 +277,12 @@ cmd_ui_test() {
 ui_devices() { echo "${PENNY_UI_DEVICES:-iphone ipad}"; }
 
 # Prepares a fresh simulator for UI tests: boots it and trusts the local OIDC provider's
-# throwaway certificate (single sign-on journeys). Nothing else is installed or granted:
-# tests set up permissions themselves.
+# throwaway certificate (single sign-on journeys). It also seeds the synthetic receipt files
+# (seed_receipt_fixtures). Nothing is granted: tests set up permissions themselves.
 prepare_ui_device() {
   local id="$1"
   xcrun simctl bootstatus "$id" -b >/dev/null
+  seed_receipt_fixtures "$id"
   if [[ -n "${PENNY_OIDC_CERTIFICATE:-}" && -f "$PENNY_OIDC_CERTIFICATE" ]]; then
     xcrun simctl keychain "$id" add-root-cert "$PENNY_OIDC_CERTIFICATE"
   fi
@@ -293,6 +294,30 @@ prepare_ui_device() {
     sleep 5
     xcrun simctl terminate "$id" com.mfalicoff.penny >/dev/null 2>&1 || true
   fi
+}
+
+# Receipt journeys (MAZ-78, docs/ios-receipts.md): synthetic files from receipt-fixtures.mjs. The
+# photo goes into the photo library for the system photo picker; the PDFs and the refused files
+# into Files › On My iPhone/iPad (the Files app's local storage), where the document picker finds
+# them. The UI tests read manifest.json from RECEIPT_FIXTURES for the checksums.
+RECEIPT_FIXTURES="$CACHE/receipt-fixtures"
+seed_receipt_fixtures() {
+  local id="$1" storage name
+  # ui-test requires the receipt journeys' fixtures, as it requires the stack: missing Node or
+  # Files storage stops the run instead of letting those journeys fail one by one.
+  command -v node >/dev/null || { echo "error: Node is required to seed the receipt fixtures." >&2; exit 1; }
+  node "$IOS_DIR/scripts/receipt-fixtures.mjs" "$RECEIPT_FIXTURES" >/dev/null
+  xcrun simctl addmedia "$id" "$RECEIPT_FIXTURES/penny-receipt-photo.png"
+  storage="$(xcrun simctl get_app_container "$id" com.apple.DocumentsApp groups 2>/dev/null \
+    | sed -n 's/^group\.com\.apple\.FileProvider\.LocalStorage[[:space:]]*//p')"
+  if [[ -z "$storage" ]]; then
+    echo "error: no Files local storage on $id; the receipt file picker journeys can't run." >&2
+    exit 1
+  fi
+  mkdir -p "$storage/File Provider Storage"
+  for name in penny-receipt.pdf penny-damaged.pdf penny-renamed.pdf penny-oversized.png; do
+    cp "$RECEIPT_FIXTURES/$name" "$storage/File Provider Storage/$name"
+  done
 }
 
 ui_test_run() {
@@ -312,6 +337,7 @@ ui_test_run() {
     if ! TEST_RUNNER_PENNY_API_URL="$PENNY_API_URL" TEST_RUNNER_PENNY_TEST_TOKEN="$PENNY_TEST_TOKEN" \
       TEST_RUNNER_PENNY_TEST_RUN="${PENNY_TEST_RUN:-local}" TEST_RUNNER_PENNY_OIDC_ISSUER="${PENNY_OIDC_ISSUER:-}" \
       TEST_RUNNER_PENNY_UITEST_REQUIRE_STACK=1 TEST_RUNNER_PENNY_UITEST_UPGRADE="${PENNY_UPGRADE_FROM_APP:+1}" \
+      TEST_RUNNER_PENNY_RECEIPT_FIXTURES="$RECEIPT_FIXTURES" \
       XCB_SCHEME=PennyUITests xcb -configuration Debug -destination "id=$id" -testPlan "$testplan" \
       ${only[@]+"${only[@]}"} test-without-building -resultBundlePath "$out/$name.xcresult"; then
       failed=1

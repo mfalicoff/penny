@@ -314,13 +314,56 @@ public enum AccessibilityID {
         static let all = [message, retry, unlock]
     }
 
+    /// Receipts (MAZ-78): More details' Receipt group, the upload row, the entry detail's receipt
+    /// row and the receipt viewer (`screen.receipt`).
+    public enum Receipt {
+        public static let screen = "screen.receipt"
+        /// The form's "Receipt, repeat, trip" row, which opens More details.
+        public static let moreDetails = "entryForm.details"
+        public static let attached = "entryExtras.receipt"
+        public static let remove = "entryExtras.removeReceipt"
+        public static let photo = "entryExtras.receiptPhoto"
+        public static let file = "entryExtras.receiptFile"
+        public static let hint = "entryExtras.receiptHint"
+        public static let detailRow = "entryDetail.receipt"
+        public static let saveWaiting = "entryForm.receiptUploading"
+        public static let reading = "receiptUpload.reading"
+        public static let progress = "receiptUpload.progress"
+        public static let cancel = "receiptUpload.cancel"
+        public static let retry = "receiptUpload.retry"
+        public static let dismiss = "receiptUpload.dismiss"
+        public static let error = "receiptUpload.error"
+        public static let viewerClose = "receipt.close"
+        public static let viewerTitle = "receipt.title"
+        public static let viewerShare = "receipt.share"
+        public static let viewerRemove = "receipt.remove"
+        public static let viewerLoading = "receipt.loading"
+        public static let viewerError = "receipt.error"
+        public static let viewerRetry = "receipt.retry"
+        public static let viewerImage = "receipt.image"
+        public static let viewerPDF = "receipt.pdf"
+        public static let viewerPageCount = "receipt.pageCount"
+        public static let viewerUndecodable = "receipt.undecodable"
+        public static let viewerEntry = "receipt.entry"
+
+        static let all = [
+            screen, moreDetails, attached, remove, photo, file, hint, detailRow, saveWaiting, reading, progress, cancel,
+            retry,
+            dismiss, error, viewerClose, viewerTitle, viewerShare, viewerRemove, viewerLoading, viewerError,
+            viewerRetry, viewerImage, viewerPDF, viewerPageCount, viewerUndecodable, viewerEntry,
+        ]
+    }
+
     /// Every fixed identifier, for the convention and drift tests.
     public static let fixed: [String] =
         Screen.all + Root.all + Auth.all + Server.all + Tab.all + Sidebar.all + Home.all + Settings.all + EntryForm.all
         + Activity.all + Organize.all + Feedback.all + Lock.all + Overview.all
+        + Households.all
+        + Receipt.all
 
     /// Prefixes of identifiers that end in a model id or raw value.
     public static let dynamicPrefixes: [String] =
         Tab.prefixes + Sidebar.prefixes + Settings.prefixes + Row.prefixes + Feedback.prefixes + EntryForm.prefixes
         + Activity.prefixes + Organize.prefixes + Overview.prefixes
+        + Households.prefixes
 }

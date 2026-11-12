@@ -9,12 +9,6 @@ struct EntryEditRequest: Identifiable, Equatable {
     var id: String { entry.id }
 }
 
-/// Where a receipt comes from, for the receipt hook (`ShellModel.attachReceipt`, MAZ-78).
-enum ReceiptSource: Equatable {
-    case photo
-    case file
-}
-
 extension ShellModel {
     /// Opens the entry form on `entry`.
     func edit(_ entry: LedgerEntry) {

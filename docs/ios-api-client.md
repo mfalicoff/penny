@@ -14,7 +14,7 @@ The Swift API client lives in `apps/ios/Packages/PennyKit/Sources/PennyData/API`
 | `Errors.swift` | `APIError` |
 | `Transport.swift` | `HTTPTransport` and the production `URLSessionTransport` |
 
-The OIDC routes (`oidcConfiguration`, `startOidc`, `completeOidc`) arrived with MAZ-68; sign-in, the Keychain and session handling built on this client are in [native sign-in](ios-authentication.md). Password reset (`POST /api/auth/password-reset`, whose native screen is still open), households, push registration and the shared-expense routes are not in this client yet; they follow the same conventions (MAZ-79, 75, 76).
+The OIDC routes (`oidcConfiguration`, `startOidc`, `completeOidc`) arrived with MAZ-68; sign-in, the Keychain and session handling built on this client are in [native sign-in](ios-authentication.md). Households, invites, shared expenses, payments, month recaps, monthly reimbursements, audit and shared rules arrived with MAZ-75 (`APIClient+Households.swift`, `HouseholdWireModels.swift`, [native households](ios-households.md)). Password reset (`POST /api/auth/password-reset`, whose native screen is still open) and push registration are not in this client yet; they follow the same conventions (MAZ-79).
 
 ## Models and contract updates
 
@@ -69,7 +69,7 @@ The client never retries by itself. `isRetryable` tells a caller whether repeati
 
 ## Ledger and receipts
 
-`ledger()` returns `LedgerSnapshot(revision, ledger)`; `putLedger` sends the snapshot with the revision it was based on and returns the stored snapshot. Receipts upload as JSON `{name, mime, base64}` (at most 10 MiB, mime from the contract list) and download as bytes with their mime type and filename; ids are percent-encoded into a single path segment.
+`ledger()` returns `LedgerSnapshot(revision, ledger)`; `putLedger` sends the snapshot with the revision it was based on and returns the stored snapshot. Receipts upload as JSON `{name, mime, base64}` (1 byte to 10 MiB, mime from the contract list) and download as bytes with their mime type and filename; ids are percent-encoded into a single path segment. `uploadReceipt` takes an optional `progress` closure that receives the fraction of the request body sent, from `HTTPTransport.send(_:progress:)` (`URLSessionTransport` reports it from its task delegate; other transports report nothing). The receipt screens are in [native receipts](ios-receipts.md).
 
 ## Search
 

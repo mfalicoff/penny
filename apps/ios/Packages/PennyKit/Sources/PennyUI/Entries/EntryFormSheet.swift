@@ -57,6 +57,11 @@ private struct EntryForm: View {
     let ledger: Ledger
 
     @State private var model: EntryFormModel?
+    /// The receipt upload (MAZ-78). Owned by the form so it survives leaving More details; it
+    /// is cancelled when the form closes.
+    @State private var upload: ReceiptUploadModel?
+    /// Save was pressed while a receipt was still uploading: nothing was saved.
+    @State private var waitingForReceipt = false
     @State private var restored = false
     /// Set when the form closes on purpose (saved or discarded), so nothing is kept.
     @State private var closing = false
@@ -93,6 +98,10 @@ private struct EntryForm: View {
             // lands after the sheet closed leaves the draft to come back to.
             if failure == nil { shell.drafts.discard(mode) }
             return failure
+        }
+        let formModel = model
+        upload = ReceiptUploadModel(transfers: shell.receipts) { receipt in
+            formModel?.editor.draft.receipt = receipt
         }
     }
 
@@ -168,7 +177,9 @@ private struct EntryForm: View {
             case .account:
                 EntryAccountPicker(selection: $model.editor.draft.accountId, ledger: ledger)
             case .details:
-                EntryExtrasView(model: model, ledger: ledger, save: { save(model) })
+                if let upload {
+                    EntryExtrasView(model: model, upload: upload, ledger: ledger, save: { save(model) })
+                }
             }
         }
         .sheet(item: $overlay) { overlay in
@@ -215,6 +226,13 @@ private struct EntryForm: View {
                 .accessibilityIdentifier("entryForm.discardDraft")
             }
             .accessibilityIdentifier("entryForm.restoredDraft")
+        }
+        if waitingForReceipt, upload?.isBusy == true {
+            StatusBanner(
+                tone: .info, title: "The receipt is still uploading",
+                message: "Save once it's attached, or cancel the upload in Receipt, repeat, trip."
+            )
+            .accessibilityIdentifier("entryForm.receiptUploading")
         }
         if entryGone {
             StatusBanner(
@@ -349,6 +367,12 @@ private struct EntryForm: View {
 
     private func save(_ model: EntryFormModel) {
         titleFocused = false
+        // Save waits for a receipt upload: saving now would drop the receipt being sent.
+        if upload?.isBusy == true {
+            waitingForReceipt = true
+            return
+        }
+        waitingForReceipt = false
         Task {
             guard let ledger = shell.workspace.load.ledger else { return }
             let saved = await model.save(in: ledger) { entry, isNew in

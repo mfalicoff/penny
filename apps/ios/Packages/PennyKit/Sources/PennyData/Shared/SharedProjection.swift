@@ -8,16 +8,19 @@ public protocol SharedProjectionService: Sendable {
     func projection(month: MonthKey) async throws -> WireHouseholdProjection
 }
 
-/// The signed-in account's projection, straight from the API.
+/// The signed-in account's projection, straight from the API. A 401 ends the session it was
+/// made with (`sessionExpired`), like every other signed-in request.
 public struct APISharedProjection: SharedProjectionService {
     private let client: APIClient
+    private let sessionExpired: (@MainActor @Sendable () -> Void)?
 
-    public init(client: APIClient) {
+    public init(client: APIClient, sessionExpired: (@MainActor @Sendable () -> Void)? = nil) {
         self.client = client
+        self.sessionExpired = sessionExpired
     }
 
     public func projection(month: MonthKey) async throws -> WireHouseholdProjection {
-        try await client.householdProjection(month: month)
+        try await SessionExpiry.run(sessionExpired) { try await client.householdProjection(month: month) }
     }
 }
 

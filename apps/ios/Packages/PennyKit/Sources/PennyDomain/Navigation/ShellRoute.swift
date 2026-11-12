@@ -17,6 +17,8 @@ public enum AppTab: String, CaseIterable, Hashable, Sendable {
 public enum DetailRoute: Hashable, Sendable {
     case household(id: String)
     case householdExpense(householdID: String, expenseID: String)
+    /// A household's change history (MAZ-75).
+    case householdHistory(householdID: String)
     case trip(id: String)
     /// A personal entry's detail (Activity, MAZ-73).
     case entry(id: String)
@@ -74,13 +76,29 @@ public enum SidebarItem: Hashable, Sendable {
 /// - Choosing the tab already shown returns it to its root.
 /// - A deep link shows its destination from that tab's root (so Back always leads to the
 ///   tab's root, never to an unrelated screen) and closes a sheet that would hide it.
-/// - Add entry opens over whatever is shown, and only Settings is closed for it.
+/// - Add entry opens over whatever is shown. Only the Settings sheet (iPhone) is closed for
+///   it: on iPad Settings is the detail column, which stays where it is (`settingsIsColumn`).
 public struct ShellRoute: Equatable, Sendable {
     public private(set) var tab: AppTab
     public private(set) var paths: [AppTab: [DetailRoute]]
     public var isSettingsPresented: Bool
     public var settingsPath: [SettingsRoute]
     public var isAddEntryPresented: Bool
+    /// The create-or-join household sheet (MAZ-75), over the Shared tab.
+    public var householdStart: HouseholdStart?
+    /// A join sheet a link asked for, waiting to be presented (MAZ-75). A link usually arrives
+    /// over something else (Settings, a sheet, another tab), so the sheet is not presented in the
+    /// same update that closes those: the Shared tab presents it once it is on screen and no
+    /// other sheet is still closing (`presentPendingHouseholdStart`). Presenting it together
+    /// with closing a sheet drops it on iPhone, and together with swapping the iPad detail
+    /// column it crashes SwiftUI (`NavigationColumnState.boundPathChange`).
+    public private(set) var pendingHouseholdStart: HouseholdStart?
+    /// True while Settings is shown as the iPad split view's detail column rather than a sheet
+    /// (the shell sets it from its layout). Add entry then opens over it and leaves it alone:
+    /// closing it would swap the detail column's bound navigation stack for another in the
+    /// same update as the sheet appears, which crashes SwiftUI
+    /// (`NavigationColumnState.boundPathChange`, MAZ-78).
+    public var settingsIsColumn = false
 
     public init(tab: AppTab = .home) {
         self.tab = tab
@@ -88,6 +106,7 @@ public struct ShellRoute: Equatable, Sendable {
         isSettingsPresented = false
         settingsPath = []
         isAddEntryPresented = false
+        householdStart = nil
     }
 
     public func path(for tab: AppTab) -> [DetailRoute] { paths[tab] ?? [] }
@@ -105,12 +124,15 @@ public struct ShellRoute: Equatable, Sendable {
 
     public mutating func openSettings(_ page: SettingsRoute? = nil) {
         isAddEntryPresented = false
+        householdStart = nil
+        pendingHouseholdStart = nil
         isSettingsPresented = true
         settingsPath = page.map { [$0] } ?? []
     }
 
     public mutating func openAddEntry() {
-        isSettingsPresented = false
+        if !settingsIsColumn { isSettingsPresented = false }
+        householdStart = nil
         isAddEntryPresented = true
     }
 
@@ -127,12 +149,28 @@ public struct ShellRoute: Equatable, Sendable {
             show(.shared, [.household(id: household), .householdExpense(householdID: household, expenseID: expense)])
         case .trips: show(.trips, [])
         case .trip(let id): show(.trips, [.trip(id: id)])
+        case .join(let code, let server):
+            show(.shared, [])
+            pendingHouseholdStart = .join(code: code, server: server)
         case .authCallback: break
         }
     }
 
+    /// Presents the waiting join sheet, unless another sheet is still up. Returns whether it did.
+    @discardableResult
+    public mutating func presentPendingHouseholdStart() -> Bool {
+        guard let pending = pendingHouseholdStart, !isAddEntryPresented, householdStart == nil,
+            !(isSettingsPresented && !settingsIsColumn)
+        else { return false }
+        pendingHouseholdStart = nil
+        householdStart = pending
+        return true
+    }
+
     private mutating func show(_ next: AppTab, _ path: [DetailRoute]) {
         isSettingsPresented = false
+        householdStart = nil
+        pendingHouseholdStart = nil
         settingsPath = []
         isAddEntryPresented = false
         tab = next
@@ -227,5 +265,19 @@ public struct DeepLinkInbox: Equatable, Sendable {
     private mutating func clear() {
         pending = nil
         owner = nil
+    }
+}
+
+/// What the create-or-join household sheet opens on (MAZ-75).
+public enum HouseholdStart: Hashable, Identifiable, Sendable {
+    case create
+    /// Join, with the values of a `penny://join` link when one opened it (nil when typed).
+    case join(code: String?, server: String?)
+
+    public var id: String {
+        switch self {
+        case .create: "create"
+        case .join(let code, let server): "join \(code ?? "") \(server ?? "")"
+        }
     }
 }
