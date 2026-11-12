@@ -190,7 +190,8 @@ public sealed class PostgresSearchRepository(NpgsqlDataSource source, ReceiptFil
     }
 
     // The closest authorized, filtered documents embedded by the current model, then
-    // the similarity threshold. pgvector applies the filter inside the HNSW scan.
+    // the query's meaning threshold (`MeaningThreshold`). pgvector applies the filter
+    // inside the HNSW scan.
     private static async Task<List<long>> NearestAsync(
         PennyDbContext context,
         SearchCriteria criteria,
@@ -219,7 +220,7 @@ public sealed class PostgresSearchRepository(NpgsqlDataSource source, ReceiptFil
         return
         [
             .. closest
-                .Where(row => 1 - row.Distance >= SearchTuning.MeaningSimilarity)
+                .Where(row => 1 - row.Distance >= criteria.MeaningSimilarity)
                 .Select(row => row.Id),
         ];
     }
