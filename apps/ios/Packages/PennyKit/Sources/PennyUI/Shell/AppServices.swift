@@ -33,6 +33,10 @@ public struct AppServices {
         self.today = today
     }
 
+    /// Keeps the Home Screen widgets' App Group snapshot (MAZ-80). Nil in previews and tests,
+    /// and in a build without the App Group entitlement.
+    public var widgets: WidgetPublisher?
+
     /// What the Expo data import did at this launch (MAZ-72), for diagnostics. Nil when it did
     /// not run (previews, tests).
     public var expoMigration: ExpoMigrationReport?
@@ -45,7 +49,10 @@ public struct AppServices {
     public static func live(importingExpoData: Bool = true) -> AppServices {
         let native = KeychainAppLockSettingStore()
         guard importingExpoData else {
-            return AppServices(preferences: UserDefaultsDevicePreferences(), lock: AppLockController(store: native))
+            var services = AppServices(
+                preferences: UserDefaultsDevicePreferences(), lock: AppLockController(store: native))
+            services.widgets = WidgetPublisher.live()
+            return services
         }
         let migration = ExpoMigration.live(lockStore: native)
         let report = migration.run()
@@ -53,6 +60,7 @@ public struct AppServices {
             preferences: UserDefaultsDevicePreferences(),
             lock: AppLockController(store: ExpoImportingLockStore(native: native, migration: migration)))
         services.expoMigration = report
+        services.widgets = WidgetPublisher.live()
         return services
     }
 }

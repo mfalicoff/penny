@@ -8,9 +8,13 @@ public enum AppIdentity {
     public static let appGroup = "group.com.mfalicoff.penny"
     public static let urlScheme = DeepLink.scheme
 
-    /// Reserved for the native WidgetKit extension (MAZ-80). Expo's expo-widgets plugin
+    /// The native WidgetKit extension (MAZ-80, `PennyWidgets/`). Expo's expo-widgets plugin
     /// generated this id, and the extension must keep it.
     public static let widgetExtensionBundleIdentifier = "com.mfalicoff.penny.ExpoWidgetsTarget"
     /// Widget `kind` strings from the legacy app.json; placed widgets are matched by kind.
-    public static let widgetKinds = ["BalanceChartWidget", "RecentExpensesWidget"]
+    public static let widgetKinds = [balanceWidgetKind, recentExpensesWidgetKind]
+    /// Monthly balance: Left to spend for the month (MAZ-80).
+    public static let balanceWidgetKind = "BalanceChartWidget"
+    /// Recent expenses, with the add-entry shortcut (MAZ-80).
+    public static let recentExpensesWidgetKind = "RecentExpensesWidget"
 }

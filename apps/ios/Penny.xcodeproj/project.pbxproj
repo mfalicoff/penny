@@ -11,6 +11,8 @@
 		A10000000000000000000034 /* PennyData in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000032 /* PennyData */; };
 		A10000000000000000000036 /* PennyDomain in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000035 /* PennyDomain */; };
 		A10000000000000000000037 /* PennyAccessibility in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000038 /* PennyAccessibility */; };
+		A1000000000000000000003A /* PennyWidgetUI in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000039 /* PennyWidgetUI */; };
+		A1000000000000000000003B /* PennyWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A10000000000000000000013 /* PennyWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -28,7 +30,28 @@
 			remoteGlobalIDString = A10000000000000000000040;
 			remoteInfo = Penny;
 		};
+		A10000000000000000000046 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A10000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A10000000000000000000080;
+			remoteInfo = PennyWidgets;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		A10000000000000000000044 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				A1000000000000000000003B /* PennyWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		A10000000000000000000010 /* Penny.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Penny.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -44,6 +67,10 @@
 		A10000000000000000000027 /* Penny.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Penny.entitlements; sourceTree = "<group>"; };
 		A10000000000000000000028 /* Signing.local.xcconfig.example */ = {isa = PBXFileReference; lastKnownFileType = text; path = Signing.local.xcconfig.example; sourceTree = "<group>"; };
 		A10000000000000000000029 /* PennyUITests.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = PennyUITests.xcconfig; sourceTree = "<group>"; };
+		A10000000000000000000013 /* PennyWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PennyWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		A1000000000000000000002A /* PennyWidgets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = PennyWidgets.xcconfig; sourceTree = "<group>"; };
+		A1000000000000000000002B /* PennyWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PennyWidgets.entitlements; sourceTree = "<group>"; };
+		A1000000000000000000002C /* PennyWidgets-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "PennyWidgets-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -60,6 +87,11 @@
 		A10000000000000000000007 /* PennyUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = PennyUITests;
+			sourceTree = "<group>";
+		};
+		A10000000000000000000008 /* PennyWidgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = PennyWidgets;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -90,6 +122,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A10000000000000000000082 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1000000000000000000003A /* PennyWidgetUI in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -99,6 +139,7 @@
 				A10000000000000000000005 /* Penny */,
 				A10000000000000000000006 /* PennyTests */,
 				A10000000000000000000007 /* PennyUITests */,
+				A10000000000000000000008 /* PennyWidgets */,
 				A10000000000000000000004 /* Configuration */,
 				A10000000000000000000003 /* Products */,
 			);
@@ -110,6 +151,7 @@
 				A10000000000000000000010 /* Penny.app */,
 				A10000000000000000000011 /* PennyTests.xctest */,
 				A10000000000000000000012 /* PennyUITests.xctest */,
+				A10000000000000000000013 /* PennyWidgets.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -124,9 +166,12 @@
 				A10000000000000000000022 /* Penny.xcconfig */,
 				A10000000000000000000023 /* PennyTests.xcconfig */,
 				A10000000000000000000029 /* PennyUITests.xcconfig */,
+				A1000000000000000000002A /* PennyWidgets.xcconfig */,
 				A10000000000000000000028 /* Signing.local.xcconfig.example */,
 				A10000000000000000000026 /* Info.plist */,
 				A10000000000000000000027 /* Penny.entitlements */,
+				A1000000000000000000002C /* PennyWidgets-Info.plist */,
+				A1000000000000000000002B /* PennyWidgets.entitlements */,
 			);
 			path = Configuration;
 			sourceTree = "<group>";
@@ -141,10 +186,12 @@
 				A10000000000000000000041 /* Sources */,
 				A10000000000000000000042 /* Frameworks */,
 				A10000000000000000000043 /* Resources */,
+				A10000000000000000000044 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				A10000000000000000000045 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				A10000000000000000000005 /* Penny */,
@@ -204,6 +251,29 @@
 			productReference = A10000000000000000000012 /* PennyUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		A10000000000000000000080 /* PennyWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A10000000000000000000084 /* Build configuration list for PBXNativeTarget "PennyWidgets" */;
+			buildPhases = (
+				A10000000000000000000081 /* Sources */,
+				A10000000000000000000082 /* Frameworks */,
+				A10000000000000000000083 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				A10000000000000000000008 /* PennyWidgets */,
+			);
+			name = PennyWidgets;
+			packageProductDependencies = (
+				A10000000000000000000039 /* PennyWidgetUI */,
+			);
+			productName = PennyWidgets;
+			productReference = A10000000000000000000013 /* PennyWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -224,6 +294,9 @@
 					A10000000000000000000070 = {
 						CreatedOnToolsVersion = 27.2;
 						TestTargetID = A10000000000000000000040;
+					};
+					A10000000000000000000080 = {
+						CreatedOnToolsVersion = 27.2;
 					};
 				};
 			};
@@ -247,6 +320,7 @@
 				A10000000000000000000040 /* Penny */,
 				A10000000000000000000050 /* PennyTests */,
 				A10000000000000000000070 /* PennyUITests */,
+				A10000000000000000000080 /* PennyWidgets */,
 			);
 		};
 /* End PBXProject section */
@@ -267,6 +341,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		A10000000000000000000073 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A10000000000000000000083 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -297,6 +378,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A10000000000000000000081 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -309,6 +397,11 @@
 			isa = PBXTargetDependency;
 			target = A10000000000000000000040 /* Penny */;
 			targetProxy = A10000000000000000000075 /* PBXContainerItemProxy */;
+		};
+		A10000000000000000000045 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A10000000000000000000080 /* PennyWidgets */;
+			targetProxy = A10000000000000000000046 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -369,6 +462,20 @@
 			};
 			name = Release;
 		};
+		A10000000000000000000085 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = A1000000000000000000002A /* PennyWidgets.xcconfig */;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		A10000000000000000000086 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = A1000000000000000000002A /* PennyWidgets.xcconfig */;
+			buildSettings = {
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -408,6 +515,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		A10000000000000000000084 /* Build configuration list for PBXNativeTarget "PennyWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A10000000000000000000085 /* Debug */,
+				A10000000000000000000086 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
@@ -433,6 +549,10 @@
 		A10000000000000000000038 /* PennyAccessibility */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = PennyAccessibility;
+		};
+		A10000000000000000000039 /* PennyWidgetUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PennyWidgetUI;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

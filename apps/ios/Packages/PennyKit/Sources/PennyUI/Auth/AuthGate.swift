@@ -65,6 +65,7 @@ struct AuthGate: View {
                                     APIHouseholdService(client: $0) { auth.sessionDidExpire(for: account) }
                                 })
                             shell.receipts = AccountReceipts(auth: auth, account: account, sync: sync)
+                            shell.widgets = services.widgets
                             return shell
                         }
                     )
@@ -76,6 +77,12 @@ struct AuthGate: View {
             inbox.sessionChanged(to: currentSession)
             // Receipt previews and picked files left by a crash or the previous account (MAZ-78).
             ReceiptFileCache.standard.purge()
+        }
+        // The widgets show only the signed-in account's money: signing out clears them, and
+        // another account's snapshot is removed before its shell publishes (MAZ-80). Kept
+        // apart from the demo, which never touches them.
+        .onChange(of: WidgetPublisher.owner(auth.state), initial: true) { _, owner in
+            services.widgets?.ownerChanged(owner)
         }
         .task { await auth.restore() }
         .onChange(of: scenePhase) {

@@ -24,7 +24,7 @@ Released builds are 1.0.0 (2026-10-25) and later; the offline ledger (2026-10-18
 | SecureStore | `penny-session` | 64-hex session token | yes | `KeychainSessionStore` for that server, when its email is known and the native app has no session there |
 | SecureStore | `penny-theme` | `light`, `dark`, `amoled`, `catppuccin` | never | `penny.appearance` via `AppearancePreference(legacy:)`: AMOLED and Catppuccin become Dark |
 | SecureStore | `penny-app-lock` | `true` / `false` | never | `KeychainAppLockSettingStore` (only ever turned **on**) |
-| App Group defaults | `__expo_widgets_<kind>_layout`, `__expo_widgets_<kind>_timeline` | expo-widgets snapshots (derived from the ledger) | — | nothing: derived data; MAZ-80's widgets write their own |
+| App Group defaults | `__expo_widgets_<kind>_layout`, `__expo_widgets_<kind>_timeline` | expo-widgets snapshots (derived from the ledger) | — | nothing: derived data, removed at the first native launch; the native widgets write their own `Widgets/snapshot.json` ([widgets](ios-widgets.md#widget-data-schema)) |
 
 Server scoping (`serverStorageKey`): keys for the build's original server (`legacyUrl`) are unscoped; keys for any other server end in `.` plus each code point of the server URL in lowercase hex joined by dots (`https://a.test` → `68.74.74.70.73.3a.2f.2f.61.2e.74.65.73.74`). Emails may contain dots, so the importer takes the leftmost suffix that decodes to an HTTP(S) URL and encodes back to exactly the same text. Every ledger under every server is imported, not only the current one.
 
@@ -83,7 +83,7 @@ The journal file shows which records were imported and retired. When the import 
 - Installing an older Expo build over the native app (TestFlight only; the App Store does not downgrade) finds its own stores as they were, minus the ledger records already retired (those accounts had synced, so the Expo app downloads them again). Until the import finishes it keeps its server choice, sessions and settings. Changes made in the native app reach the Expo app only through the server.
 - After the import finished, the Expo stores are gone: a rolled-back Expo app starts signed out on its build's default server with default settings, and downloads the ledgers again from the server.
 - Going forward again after a rollback imports only Expo records that changed since the last import (by fingerprint), merging their pending changes onto the native ledger. The lock and sessions are re-checked; a server choice is never replaced.
-- Native data never flows back into Expo formats, and the native widget snapshots (MAZ-80) do not reuse the Expo widget keys.
+- Native data never flows back into Expo formats, and the native widget snapshots (MAZ-80) do not reuse the Expo widget keys. A rolled-back Expo app finds its widget keys gone and shows its widgets empty until it writes them again.
 
 ## Tests and rehearsal
 
