@@ -236,6 +236,9 @@ final class FakeLocalData: AccountLocalData {
 struct FakeDevices: DeviceRegistration {
     let log: CallLog
     func unregister(using client: APIClient) async { log.record("unregister \(client.scope?.email ?? "-")") }
+    func signOutCancelled(using client: APIClient) async {
+        log.record("signOutCancelled \(client.scope?.email ?? "-")")
+    }
 }
 
 /// Returns the callback a test chooses, or throws (CancellationError = the person closed it).

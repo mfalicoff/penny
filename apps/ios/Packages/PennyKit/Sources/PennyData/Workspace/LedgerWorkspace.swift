@@ -118,12 +118,20 @@ public struct ChangeSummary: Equatable, Sendable {
     /// An entry kind for the toast's icon, if the change is about one entry.
     public var kind: EntryKind?
     public var categoryId: String?
+    /// False when Undo would revert only half of what happened: the change goes with something
+    /// already done elsewhere (Share trip's link to the shared trip it just created on the
+    /// server), so the toast offers no Undo and the workspace keeps no inverse.
+    public var allowsUndo: Bool
 
-    public init(title: String, detail: String? = nil, kind: EntryKind? = nil, categoryId: String? = nil) {
+    public init(
+        title: String, detail: String? = nil, kind: EntryKind? = nil, categoryId: String? = nil,
+        allowsUndo: Bool = true
+    ) {
         self.title = title
         self.detail = detail
         self.kind = kind
         self.categoryId = categoryId
+        self.allowsUndo = allowsUndo
     }
 }
 

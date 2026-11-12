@@ -369,7 +369,11 @@ public final class AuthController {
             // Already ended on the server.
         } catch {
             if !removeEvenIfUnreachable {
-                if stillSigningOut() { activate(account.session, verified: account.isVerified) }
+                if stillSigningOut() {
+                    activate(account.session, verified: account.isVerified)
+                    // `unregister` may have removed the device: register it again.
+                    await devices.signOutCancelled(using: client)
+                }
                 throw .serverUnreachable
             }
         }

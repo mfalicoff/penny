@@ -14,7 +14,7 @@ The Swift API client lives in `apps/ios/Packages/PennyKit/Sources/PennyData/API`
 | `Errors.swift` | `APIError` |
 | `Transport.swift` | `HTTPTransport` and the production `URLSessionTransport` |
 
-The OIDC routes (`oidcConfiguration`, `startOidc`, `completeOidc`) arrived with MAZ-68; sign-in, the Keychain and session handling built on this client are in [native sign-in](ios-authentication.md). Households, invites, shared expenses, payments, month recaps, monthly reimbursements, audit and shared rules arrived with MAZ-75 (`APIClient+Households.swift`, `HouseholdWireModels.swift`, [native households](ios-households.md)). Password reset (`POST /api/auth/password-reset`, whose native screen is still open) and push registration are not in this client yet; they follow the same conventions (MAZ-79).
+The OIDC routes (`oidcConfiguration`, `startOidc`, `completeOidc`) arrived with MAZ-68; sign-in, the Keychain and session handling built on this client are in [native sign-in](ios-authentication.md). Households, invites, shared expenses, payments, month recaps, monthly reimbursements, audit and shared rules arrived with MAZ-75 (`APIClient+Households.swift`, `HouseholdWireModels.swift`, [native households](ios-households.md)). Push registration (`registerPushDevice`, `unregisterPushDevice`: `POST`/`DELETE /api/push/devices` with the native APNs body) arrived with MAZ-79 (`APIClient+Push.swift`, [native notifications](ios-notifications.md)). Password reset (`POST /api/auth/password-reset`, whose native screen is still open) is not in this client yet; it follows the same conventions.
 
 ## Models and contract updates
 

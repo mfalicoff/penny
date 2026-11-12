@@ -55,7 +55,7 @@ Named screenshots (`<device>-<appearance>-<step>`) are kept on success; XCTest's
 | Plan | Contents | When | Retries |
 | --- | --- | --- | --- |
 | **Smoke** | `SmokeJourneyTests`: clean install opens sign-in; sign in → create → relaunch → read; Home → Add expense → Saved → Activity (skipped until MAZ-73) | Every PR and push to `v2` (`ios.yml`, job `ui-smoke`), required | None |
-| **Full** | Everything except screenshots: smoke, lifecycle and upgrade, network failures, auth journeys, the overview journeys (`OverviewJourneyTests`, demo data, MAZ-77) | Nightly, on releases and on demand (`ios-ui-matrix.yml`) | One retry on failure, reported |
+| **Full** | Everything except screenshots: smoke, lifecycle and upgrade, network failures, auth journeys, the overview journeys (`OverviewJourneyTests`, demo data, MAZ-77), notification navigation (`NotificationJourneyTests`, MAZ-79) | Nightly, on releases and on demand (`ios-ui-matrix.yml`) | One retry on failure, reported |
 | **Screenshots** | `ScreenshotTests`: light and dark × default, accessibility XL text, Reduce Transparency, Reduce Motion; sign-in with keyboard and error | Nightly, on releases and on demand | None |
 
 | | Minimum OS | Current OS |
@@ -89,6 +89,7 @@ Debug-only (`#if PENNY_TEST_CONTROLS`); `ios.sh release-check` fails if any `PEN
 | `PENNY_TEST_TODAY=yyyy-MM-dd` | Pin the app's today |
 | `PENNY_TEST_CONTAINER_SEED=<path>` | Apply a seed property list after the reset |
 | `PENNY_TEST_REDUCE_TRANSPARENCY=1`, `PENNY_TEST_REDUCE_MOTION=1` | Force those settings for Penny's own views (system controls follow the simulator) |
+| `PENNY_TEST_NOTIFICATION=<json>`, `PENNY_TEST_NOTIFICATION_ON_RESUME=<json>` | Open a notification payload (the APNs custom keys) as if tapped, at launch or on the first return from the background, through `PushNotifications.didOpen` ([native notifications](ios-notifications.md#tests-and-verification), MAZ-79) |
 
 Large text uses the system launch argument `-UIPreferredContentSizeCategoryName`. Appearance is set with `XCUIDevice.shared.appearance` and pinned through Penny's own setting (a `penny.appearance` seed), because the device setting alone did not restyle a freshly launched app on the iOS 27.0 simulator.
 
@@ -112,6 +113,7 @@ Large text uses the system launch argument `-UIPreferredContentSizeCategoryName`
 | `NetworkFailureTests` | Offline write is saved, marked waiting, survives a relaunch and syncs when the server returns; a dropped sign-in keeps the input and succeeds on retry | Full |
 | `AuthJourneyTests` | Wrong password keeps the email; account creation; SSO success and cancellation (local OIDC provider); session expiry by moving the server clock past 30 days, with the email kept; sign-out with a pending change asks and syncs first; account switching hides the previous account's entries | Full |
 | `HouseholdJourneyTests` | A join link over Settings › Currency (the iPad column, the iPhone sheet) closes Settings, then opens the join sheet. Two people on the real API (MAZ-75): create, invite (code, QR, countdown), join with the code, an equal split stored as $45/$45 without the payer's account, the other member's share payment shown as Repaid, a concurrent edit refused with Review latest, the creator refused when leaving; `penny://join` links for this server, another server and a malformed one; the scanner without a camera keeping typed entry, and an expired code ([native households](ios-households.md#acceptance-scenarios)) | Full |
+| `TripJourneyTests` | Two people on the real API (MAZ-76): a personal trip with an earlier expense is shared, the expense is never sent and shows under Only you, a shared expense before the other person joins keeps its participants, a later one splits between both, totals count each once, Balances; New trip, Trip expense on the trip, Delete refused while an entry is assigned and allowed once it is moved ([native trips](ios-trips.md)) | Full |
 | `AddEntryOverSettingsTests` | iPad: Add entry from Settings › Currency opens over the Settings column and leaves the page in place (MAZ-78) | Full |
 | `ReceiptJourneyTests` | Photo and PDF upload, preview and share with SHA-256 round trips and another account's 404; upload failure and Try again; oversized and renamed files refused; pickers cancelled at XL text; session ended during upload with the draft back; the viewer's 404, offline and Try again ([native receipts](ios-receipts.md#tests)) | Full |
 | `ScreenshotTests` | Home, Activity, Settings in light/dark × default/XL text/Reduce Transparency/Reduce Motion; sign-in, keyboard and error in light/dark | Screenshots |

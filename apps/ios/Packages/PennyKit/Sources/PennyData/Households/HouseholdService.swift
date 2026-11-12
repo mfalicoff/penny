@@ -14,6 +14,15 @@ public protocol HouseholdService: Sendable {
     func removeMember(householdId: String, userId: String) async throws
     func archiveHousehold(id: String) async throws
 
+    /// Shared trips (MAZ-76): a household with a travel range.
+    func createTrip(
+        name: String, currency: Currency, startDate: PennyDomain.CalendarDate, endDate: PennyDomain.CalendarDate,
+        timezoneOffsetMinutes: Int
+    ) async throws -> WireHousehold
+    func updateTrip(id: String, name: String, startDate: PennyDomain.CalendarDate, endDate: PennyDomain.CalendarDate)
+        async throws
+        -> WireHousehold
+
     func sharedExpenses(householdId: String, month: MonthKey?) async throws -> [WireSharedExpense]
     func sharedExpense(householdId: String, id: String) async throws -> WireSharedExpense
     func createSharedExpense(householdId: String, _ input: WireExpenseInput) async throws -> WireSharedExpense
@@ -77,6 +86,23 @@ public struct APIHouseholdService: HouseholdService {
     }
     public func archiveHousehold(id: String) async throws {
         try await call { try await client.archiveHousehold(id: id) }
+    }
+    public func createTrip(
+        name: String, currency: Currency, startDate: PennyDomain.CalendarDate, endDate: PennyDomain.CalendarDate,
+        timezoneOffsetMinutes: Int
+    ) async throws -> WireHousehold {
+        try await call {
+            try await client.createTrip(
+                name: name, currency: currency, startDate: startDate, endDate: endDate,
+                timezoneOffsetMinutes: timezoneOffsetMinutes)
+        }
+    }
+    public func updateTrip(
+        id: String, name: String, startDate: PennyDomain.CalendarDate, endDate: PennyDomain.CalendarDate
+    ) async throws
+        -> WireHousehold
+    {
+        try await call { try await client.updateTrip(id: id, name: name, startDate: startDate, endDate: endDate) }
     }
 
     public func sharedExpenses(householdId: String, month: MonthKey?) async throws -> [WireSharedExpense] {
