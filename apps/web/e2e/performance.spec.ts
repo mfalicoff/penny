@@ -69,7 +69,8 @@ async function mockApi(context: BrowserContext) {
 /** Records long tasks (main-thread blocks over 50 ms) from page load on. */
 async function watchLongTasks(page: Page) {
   await page.addInitScript(() => {
-    const store = ((window as unknown as { __longTasks: number[] }).__longTasks = []);
+    const store: number[] = [];
+    (window as unknown as { __longTasks: number[] }).__longTasks = store;
     new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) store.push(entry.duration);
     }).observe({ type: "longtask", buffered: true });

@@ -37,7 +37,7 @@ interface Scenario {
   searchExpectations: Expectation[];
 }
 
-const definition = scenarioDefinition<Scenario>("searchable-household");
+const definition = scenarioDefinition("searchable-household") as Scenario;
 const titles = new Map<string, string>();
 for (const step of definition.steps) {
   for (const entry of step.ledger?.transactions ?? []) titles.set(`personal:${entry.id}`, entry.title);
@@ -79,10 +79,10 @@ function client(alias: string) {
   return created;
 }
 
-async function timedSearch(alias: string, request: Record<string, unknown>): Promise<SearchPage> {
+async function timedSearch(alias: string, request: { query: string } & Record<string, unknown>): Promise<SearchPage> {
   const started = performance.now();
   const page = await client(alias).search(request);
-  latencies.push({ query: String(request.query ?? ""), ms: performance.now() - started });
+  latencies.push({ query: request.query, ms: performance.now() - started });
   return page;
 }
 

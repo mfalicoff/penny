@@ -96,8 +96,8 @@ export function seedScenario(name: string): SeedContext {
 }
 
 /** The scenario definition itself (steps, search expectations, pending edits). */
-export function scenarioDefinition<T>(name: string): T {
-  const file = JSON.parse(readFileSync(`${repository}/contracts/fixtures/full-stack-seeds.json`, "utf8")) as { scenarios: (T & { name: string })[] };
+export function scenarioDefinition(name: string): unknown {
+  const file = JSON.parse(readFileSync(`${repository}/contracts/fixtures/full-stack-seeds.json`, "utf8")) as { scenarios: { name: string }[] };
   const found = file.scenarios.find((item) => item.name === name);
   if (!found) throw new Error(`Unknown scenario ${name}`);
   return found;
@@ -136,10 +136,13 @@ export interface LedgerSnapshot {
  * server and the database are real.
  */
 export class LedgerClient {
-  constructor(
-    private readonly token: string,
-    private readonly api = environment().api,
-  ) {}
+  private readonly token: string;
+  private readonly api: string;
+
+  constructor(token: string, api = environment().api) {
+    this.token = token;
+    this.api = api;
+  }
 
   static async signIn(user: TestUser) {
     const { api } = environment();

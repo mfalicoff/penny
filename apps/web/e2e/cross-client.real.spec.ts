@@ -24,13 +24,13 @@ const asLedger = (snapshot: LedgerSnapshot) => snapshot.ledger as unknown as Led
 async function sync(client: LedgerClient, base: LedgerSnapshot, local: Ledger) {
   let attempts = 0;
   let current = base;
-  let result = await client.write(current.revision, local as unknown as LedgerSnapshot["ledger"]);
+  let result = await client.write(current.revision, local);
   while (result.status === 409 && attempts < 5) {
     attempts += 1;
     const remote = await client.read();
     const merged = mergeLedger(asLedger(base), local, asLedger(remote));
     current = remote;
-    result = await client.write(current.revision, merged as unknown as LedgerSnapshot["ledger"]);
+    result = await client.write(current.revision, merged);
   }
   expect(result.status, "native sync").toBe(200);
   return { conflicts: attempts, snapshot: await client.read() };
@@ -158,7 +158,7 @@ test("a deletion on the native client closes an open web edit of that entry and 
   const category = base.ledger.categories.find((item) => item.kind === "expense");
   if (!category) throw new Error("no expense category");
   const seeded = structuredClone(asLedger(base));
-  seeded.transactions.push({ id: "native-gift", title: "Gift", kind: "expense", total: 3000, share: 3000, categoryId: category.id, date: "2026-10-05", note: "" } as Ledger["transactions"][number]);
+  seeded.transactions.push({ id: "native-gift", title: "Gift", kind: "expense", total: 3000, share: 3000, categoryId: category.id, date: "2026-10-05", note: "" });
   const created = await sync(native, base, seeded);
 
   await page.goto("/transactions?month=2026-10");

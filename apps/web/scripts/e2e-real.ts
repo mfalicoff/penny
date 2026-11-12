@@ -7,6 +7,12 @@
 //   npm run build && npm run test:e2e:real -- --project=firefox-desktop
 //
 // PENNY_E2E_BROWSERS and PENNY_E2E_DEVICES choose the projects (playwright.config.ts).
+//
+// With PENNY_E2E_REUSE_STACK=1 and an environment already up (PENNY_API_URL, PENNY_TEST_TOKEN and
+// PENNY_TEST_RUN exported, e.g. from `npm run test-env -- env`), the specs run against that one
+// and nothing is torn down, so an iOS Simulator run (`apps/ios/scripts/ios.sh ui-test`, which
+// reuses the same variables) and the browser share one API and database (MAZ-96,
+// docs/acceptance.md).
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -19,9 +25,14 @@ if (!existsSync(`${app}/dist/index.html`)) {
   process.exit(1);
 }
 
-const result = spawnSync(
-  process.execPath,
-  [runner, "run", "--oidc", "--", "npx", "playwright", "test", ...process.argv.slice(2)],
-  { cwd: app, stdio: "inherit", env: { ...process.env, PENNY_REAL_STACK: "1" } },
-);
+const reuse = process.env.PENNY_E2E_REUSE_STACK === "1";
+if (reuse && !(process.env.PENNY_API_URL && process.env.PENNY_TEST_TOKEN && process.env.PENNY_TEST_RUN)) {
+  console.error("PENNY_E2E_REUSE_STACK=1 needs PENNY_API_URL, PENNY_TEST_TOKEN and PENNY_TEST_RUN: export them from `npm run test-env -- env`.");
+  process.exit(1);
+}
+
+const playwright = ["playwright", "test", ...process.argv.slice(2)];
+const result = reuse
+  ? spawnSync("npx", playwright, { cwd: app, stdio: "inherit", env: { ...process.env, PENNY_REAL_STACK: "1" } })
+  : spawnSync(process.execPath, [runner, "run", "--oidc", "--", "npx", ...playwright], { cwd: app, stdio: "inherit", env: { ...process.env, PENNY_REAL_STACK: "1" } });
 process.exit(result.status ?? 1);
