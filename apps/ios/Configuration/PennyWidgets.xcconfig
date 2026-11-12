@@ -9,9 +9,12 @@ SKIP_INSTALL = YES
 ENABLE_PREVIEWS = YES
 LD_RUNPATH_SEARCH_PATHS = $(inherited) @executable_path/Frameworks @executable_path/../../Frameworks
 
-// Signing (README.md#signing-and-entitlements). Same team and App Group as the app.
-CODE_SIGN_STYLE = Automatic
+// Signing (README.md#signing-and-entitlements). Same team and App Group as the app. TestFlight
+// archives in CI sign manually with the extension's own App Store profile: `ios.sh archive` sets
+// the PENNY_* values below (docs/ios-ipa.md#signing), as for the app in Penny.xcconfig.
+CODE_SIGN_STYLE = $(PENNY_CODE_SIGN_STYLE:default=Automatic)
 CODE_SIGN_ENTITLEMENTS = Configuration/PennyWidgets.entitlements
-CODE_SIGN_IDENTITY = Apple Development
+CODE_SIGN_IDENTITY = $(PENNY_CODE_SIGN_IDENTITY:default=Apple Development)
+PROVISIONING_PROFILE_SPECIFIER = $(PENNY_WIDGETS_PROFILE_SPECIFIER)
 CODE_SIGN_IDENTITY[sdk=iphonesimulator*] = -
 #include? "Signing.local.xcconfig"

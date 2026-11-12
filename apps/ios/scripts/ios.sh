@@ -237,21 +237,28 @@ ARCHIVE="$CACHE/Penny.xcarchive"
 EXPORT_DIR="$CACHE/export"
 BUNDLE_ID="com.mfalicoff.penny"
 APP_GROUP="group.com.mfalicoff.penny"
+# The WidgetKit extension (MAZ-80) keeps the Expo extension's id so placed widgets survive.
+WIDGETS_ID="com.mfalicoff.penny.ExpoWidgetsTarget"
+WIDGETS_APPEX="PlugIns/PennyWidgets.appex"
 
 plist_value() { /usr/libexec/PlistBuddy -c "Print :$1" "$2" 2>/dev/null || true; }
 
 # Two signing modes (docs/ios-ipa.md#signing):
-# - manual (CI): PENNY_PROFILE_SPECIFIER names an installed App Store provisioning profile for
-#   the bundle id, and its "Apple Distribution" certificate is in a keychain. Archive and export
-#   both use them, so Xcode never creates certificates or profiles.
+# - manual (CI): PENNY_PROFILE_SPECIFIER and PENNY_WIDGETS_PROFILE_SPECIFIER name installed App
+#   Store provisioning profiles for the app and the widget extension, and their "Apple
+#   Distribution" certificate is in a keychain. Archive and export both use them, so Xcode never
+#   creates certificates or profiles.
 # - automatic (local): Xcode signs with the Apple account under Settings › Accounts, or with the
 #   App Store Connect API key below, and may create or update profiles.
 signing_flags() {
   SIGN_FLAGS=()
-  if [[ -n "${PENNY_PROFILE_SPECIFIER:-}" ]]; then
-    # Read by Configuration/Penny.xcconfig (app target only).
+  if [[ -n "${PENNY_PROFILE_SPECIFIER:-}" || -n "${PENNY_WIDGETS_PROFILE_SPECIFIER:-}" ]]; then
+    [[ -n "${PENNY_PROFILE_SPECIFIER:-}" && -n "${PENNY_WIDGETS_PROFILE_SPECIFIER:-}" ]] \
+      || { echo "error: manual signing needs both PENNY_PROFILE_SPECIFIER and PENNY_WIDGETS_PROFILE_SPECIFIER." >&2; exit 1; }
+    # Read by Configuration/Penny.xcconfig and PennyWidgets.xcconfig (those targets only).
     SIGN_FLAGS=(PENNY_CODE_SIGN_STYLE=Manual "PENNY_CODE_SIGN_IDENTITY=Apple Distribution"
-      "PENNY_PROFILE_SPECIFIER=$PENNY_PROFILE_SPECIFIER")
+      "PENNY_PROFILE_SPECIFIER=$PENNY_PROFILE_SPECIFIER"
+      "PENNY_WIDGETS_PROFILE_SPECIFIER=$PENNY_WIDGETS_PROFILE_SPECIFIER")
     ASC_FLAGS=()
   else
     asc_auth_flags
@@ -315,17 +322,38 @@ verify_app() {
     || { echo "error: $app has a default server URL." >&2; exit 1; }
   [[ "$(plist_value PennyAppGroup "$plist")" == "$APP_GROUP" ]] \
     || { echo "error: $app does not use $APP_GROUP." >&2; exit 1; }
+  # App Store Connect rejects an extension whose version or build differs from the app's.
+  local widgets="$app/$WIDGETS_APPEX"
+  [[ -d "$widgets" ]] || { echo "error: $app does not embed $WIDGETS_APPEX." >&2; exit 1; }
+  [[ "$(plist_value CFBundleIdentifier "$widgets/Info.plist")" == "$WIDGETS_ID" ]] \
+    || { echo "error: $widgets is not $WIDGETS_ID." >&2; exit 1; }
+  [[ "$(plist_value CFBundleShortVersionString "$widgets/Info.plist")" == "$version" \
+    && "$(plist_value CFBundleVersion "$widgets/Info.plist")" == "$PENNY_BUILD_NUMBER" ]] \
+    || { echo "error: $widgets version or build number differs from the app's." >&2; exit 1; }
   assert_no_test_controls "$app"
 }
 
-# Distribution entitlements on the re-signed app. $1 is a Penny.app directory, $2 the team.
+# Distribution entitlements on the re-signed app and its widget extension. $1 is a Penny.app
+# directory, $2 the team.
 verify_distribution_signature() {
-  local app="$1" team="$2" entitlements
-  entitlements="$CACHE/distribution-entitlements.plist"
+  local app="$1" team="$2"
   /usr/bin/codesign --verify --deep --strict "$app"
+  verify_bundle_signature "$app" "$BUNDLE_ID" "$team"
+  # APNs (MAZ-79): an App Store profile turns the development entitlement into production.
+  [[ "$(plist_value aps-environment "$CACHE/distribution-entitlements.plist")" == "production" ]] \
+    || { echo "error: $app is not signed for production APNs; enable Push Notifications on the App ID and regenerate its profile (docs/ios-notifications.md)." >&2; exit 1; }
+  verify_bundle_signature "$app/$WIDGETS_APPEX" "$WIDGETS_ID" "$team"
+}
+
+# $1 a signed bundle, $2 its bundle id, $3 the team. Leaves its entitlements in
+# $CACHE/distribution-entitlements.plist.
+verify_bundle_signature() {
+  local app="$1" id="$2" team="$3" entitlements
+  entitlements="$CACHE/distribution-entitlements.plist"
+  rm -f "$entitlements"
   /usr/bin/codesign -d --entitlements "$entitlements" --xml "$app" 2>/dev/null
-  [[ "$(plist_value application-identifier "$entitlements")" == "$team.$BUNDLE_ID" ]] \
-    || { echo "error: $app is not signed for $team.$BUNDLE_ID." >&2; exit 1; }
+  [[ "$(plist_value application-identifier "$entitlements")" == "$team.$id" ]] \
+    || { echo "error: $app is not signed for $team.$id." >&2; exit 1; }
   [[ "$(plist_value get-task-allow "$entitlements")" == "false" ]] \
     || { echo "error: $app is development-signed (get-task-allow is not false)." >&2; exit 1; }
   [[ "$(plist_value beta-reports-active "$entitlements")" == "true" ]] \
@@ -364,6 +392,7 @@ cmd_export() {
   if [[ -n "${PENNY_PROFILE_SPECIFIER:-}" ]]; then
     /usr/libexec/PlistBuddy -c "Add :signingStyle string manual" -c "Add :signingCertificate string Apple Distribution" \
       -c "Add :provisioningProfiles dict" -c "Add :provisioningProfiles:$BUNDLE_ID string $PENNY_PROFILE_SPECIFIER" \
+      -c "Add :provisioningProfiles:$WIDGETS_ID string $PENNY_WIDGETS_PROFILE_SPECIFIER" \
       "$options" >/dev/null
   else
     /usr/libexec/PlistBuddy -c "Add :signingStyle string automatic" "$options" >/dev/null
@@ -425,6 +454,18 @@ cmd_distribution_test() {
     "$(tampered server 'Set :PennyDefaultServerURL http://127.0.0.1:3001')"
   expect fail "another App Group is refused" with_build "$build" verify_app \
     "$(tampered group 'Set :PennyAppGroup group.com.example.other')"
+  rm -rf "$work/nowidgets.app" && cp -R "$app" "$work/nowidgets.app" && rm -rf "$work/nowidgets.app/$WIDGETS_APPEX"
+  expect fail "an app without the widget extension is refused" with_build "$build" verify_app "$work/nowidgets.app"
+  rm -rf "$work/widgetbuild.app" && cp -R "$app" "$work/widgetbuild.app"
+  /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $build.9" "$work/widgetbuild.app/$WIDGETS_APPEX/Info.plist"
+  expect fail "a widget build number other than the app's is refused" with_build "$build" verify_app "$work/widgetbuild.app"
+  rm -rf "$work/widgetid.app" && cp -R "$app" "$work/widgetid.app"
+  /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier com.mfalicoff.penny.Widgets" "$work/widgetid.app/$WIDGETS_APPEX/Info.plist"
+  expect fail "another widget extension id is refused" with_build "$build" verify_app "$work/widgetid.app"
+  with_profiles() { PENNY_PROFILE_SPECIFIER="$1" PENNY_WIDGETS_PROFILE_SPECIFIER="$2"; signing_flags; }
+  expect pass "manual signing with both profiles is accepted" with_profiles "Penny App Store" "Penny Widgets App Store"
+  expect fail "manual signing with only the app profile is refused" with_profiles "Penny App Store" ""
+  expect fail "manual signing with only the widget profile is refused" with_profiles "" "Penny Widgets App Store"
   rm -rf "$work/controls.app" && cp -R "$app" "$work/controls.app"
   echo "PENNY_TEST_CONTROLS" > "$work/controls.app/leftover.txt"
   expect fail "test controls in the bundle are refused" with_build "$build" verify_app "$work/controls.app"
