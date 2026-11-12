@@ -360,10 +360,12 @@ public enum AccessibilityID {
         + Activity.all + Organize.all + Feedback.all + Lock.all + Overview.all
         + Households.all
         + Receipt.all
+        + Trips.all
 
     /// Prefixes of identifiers that end in a model id or raw value.
     public static let dynamicPrefixes: [String] =
         Tab.prefixes + Sidebar.prefixes + Settings.prefixes + Row.prefixes + Feedback.prefixes + EntryForm.prefixes
         + Activity.prefixes + Organize.prefixes + Overview.prefixes
         + Households.prefixes
+        + Trips.prefixes
 }

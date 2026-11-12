@@ -148,6 +148,12 @@ public final class HouseholdDirectory {
         return model
     }
 
+    /// A household or shared trip created or joined here (MAZ-76): listed first at once.
+    public func didAdd(_ household: WireHousehold) {
+        households.removeAll { $0.id == household.id }
+        households.insert(household, at: 0)
+    }
+
     /// Replaces a row after a rename or a member change.
     public func update(_ household: WireHousehold) {
         if let index = households.firstIndex(where: { $0.id == household.id }) { households[index] = household }

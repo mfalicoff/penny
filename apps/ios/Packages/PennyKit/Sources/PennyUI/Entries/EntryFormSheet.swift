@@ -82,12 +82,17 @@ private struct EntryForm: View {
     }
 
     private func start() {
-        let editor: EntryEditor
+        var editor: EntryEditor
         if let kept = shell.drafts.take(mode) {
             editor = kept
             restored = true
         } else {
             editor = Self.fresh(mode, today: shell.today, ledger: ledger)
+        }
+        // Trip expense (MAZ-76): the new expense opens on that trip.
+        if mode == .new, let tripId = shell.addEntryTripId {
+            shell.addEntryTripId = nil
+            editor.start(onTrip: tripId, ledger: ledger)
         }
         let shell = self.shell
         let mode = self.mode

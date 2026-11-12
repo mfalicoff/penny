@@ -17,6 +17,10 @@ struct HouseholdStartSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     let start: HouseholdStart
+    /// Join a trip (MAZ-76, from the Trips tab): join only, in trip words.
+    let joinsTrip: Bool
+    /// Called instead of opening the household on the Shared tab, once this sheet is closing.
+    let onOpened: ((WireHousehold) -> Void)?
 
     enum Mode: String, CaseIterable { case create, join }
 
@@ -30,8 +34,10 @@ struct HouseholdStartSheet: View {
     @State private var scanning = false
     @FocusState private var focused: Bool
 
-    init(start: HouseholdStart) {
+    init(start: HouseholdStart, joinsTrip: Bool = false, onOpened: ((WireHousehold) -> Void)? = nil) {
         self.start = start
+        self.joinsTrip = joinsTrip
+        self.onOpened = onOpened
         switch start {
         case .create:
             _mode = State(initialValue: .create)
@@ -45,16 +51,18 @@ struct HouseholdStartSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section {
-                    Picker("Create or join", selection: $mode) {
-                        Text("Create").tag(Mode.create)
-                        Text("Join").tag(Mode.join)
+                if !joinsTrip {
+                    Section {
+                        Picker("Create or join", selection: $mode) {
+                            Text("Create").tag(Mode.create)
+                            Text("Join").tag(Mode.join)
+                        }
+                        .pickerStyle(.segmented)
+                        .accessibilityIdentifier("householdStart.mode")
                     }
-                    .pickerStyle(.segmented)
-                    .accessibilityIdentifier("householdStart.mode")
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets())
                 }
-                .listRowBackground(Color.clear)
-                .listRowInsets(EdgeInsets())
 
                 if let failure {
                     Section {
@@ -74,7 +82,7 @@ struct HouseholdStartSheet: View {
             }
             .scrollContentBackground(.hidden)
             .background(PennyColor.background)
-            .navigationTitle(mode == .create ? "New household" : "Join a household")
+            .navigationTitle(joinsTrip ? "Join a trip" : mode == .create ? "New household" : "Join a household")
             .inlineNavigationTitle()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -209,14 +217,17 @@ struct HouseholdStartSheet: View {
                 Text("Invite code")
             } footer: {
                 Text(
-                    "Codes last 10 minutes and work for everyone they're shared with. Your ledger currency must "
-                        + "match the household's. You only share expenses dated from the day you join.")
+                    joinsTrip
+                        ? "Codes last 10 minutes and work for everyone they're shared with. Your ledger currency must "
+                            + "match the trip's. Expenses added before you join keep the people they were split with."
+                        : "Codes last 10 minutes and work for everyone they're shared with. Your ledger currency must "
+                            + "match the household's. You only share expenses dated from the day you join.")
             }
             Section {
                 Button {
                     Task { await join() }
                 } label: {
-                    ProgressLabel(title: "Join household", working: working)
+                    ProgressLabel(title: joinsTrip ? "Join trip" : "Join household", working: working)
                 }
                 .disabled(working || InviteCode(typed: codeText) == nil)
                 .accessibilityIdentifier("householdStart.joinButton")
@@ -259,6 +270,11 @@ struct HouseholdStartSheet: View {
     /// Created or joined: show the household, and refresh Home's shared shares.
     private func opened(_ household: WireHousehold) {
         dismiss()
+        if let onOpened {
+            onOpened(household)
+            Task { await shell.refreshShared() }
+            return
+        }
         shell.navigate { route in
             route.householdStart = nil
             route.open(.household(id: household.id))

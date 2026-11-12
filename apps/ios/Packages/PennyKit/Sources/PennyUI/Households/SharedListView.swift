@@ -94,7 +94,11 @@ struct SharedView: View {
         if !households.isEmpty {
             Section(title) {
                 ForEach(households) { household in
-                    NavigationLink(value: DetailRoute.household(id: household.id)) {
+                    // A shared trip opens its trip page (MAZ-76).
+                    NavigationLink(
+                        value: household.trip == nil
+                            ? DetailRoute.household(id: household.id) : DetailRoute.trip(id: household.id)
+                    ) {
                         HouseholdRow(
                             household: household, balance: directory.balances[household.id],
                             initials: directory.memberInitials[household.id] ?? [])
@@ -113,7 +117,7 @@ struct SharedView: View {
     }
 }
 
-private struct ActionRow: View {
+struct ActionRow: View {
     let title: String
     let detail: String
     let symbol: String
