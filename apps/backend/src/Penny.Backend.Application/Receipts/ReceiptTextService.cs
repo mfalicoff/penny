@@ -11,8 +11,11 @@ namespace Penny.Backend.Application.Receipts;
 // upload only queues a `receipt_texts` row; this service leases due rows, decrypts each
 // receipt in memory, extracts its text with the local engine under the size, page and
 // time bounds, and stores the cleaned text, its normalized search text and the chunks
-// the embedding worker embeds next. Failed attempts are retried with exponential
-// backoff until `MaxAttempts`. Nothing about the content is logged.
+// the embedding worker embeds next. Every claim counts as an attempt (so a worker that
+// crashes mid-extraction, e.g. killed for memory, still uses one up); failed attempts
+// are retried with exponential backoff until `MaxAttempts`, and a row whose last
+// attempt's lease expired unfinished is failed (`lease-expired`) by the next claim.
+// Nothing about the content is logged.
 public sealed class ReceiptTextService(
     IReceiptTextRepository texts,
     IReceiptTextExtractor extractor,
@@ -39,6 +42,8 @@ public sealed class ReceiptTextService(
             now,
             now + settings.Lease,
             settings.Concurrency,
+            settings.MaxAttempts,
+            engine,
             cancellationToken
         );
         if (work.Count == 0)
@@ -204,7 +209,7 @@ public sealed class ReceiptTextService(
                     text,
                     SearchText.Normalize(text),
                     extraction.Pages,
-                    null,
+                    extraction.Truncated ? ReceiptTextFailure.Truncated : null,
                     item.Attempts,
                     clock.GetUtcNow(),
                     chunks
@@ -236,7 +241,13 @@ public sealed class ReceiptTextService(
     {
         await texts.CompleteAsync(
             token,
-            Ended(item, ReceiptTextStatus.Unsupported, engine, failure, item.Attempts),
+            Ended(
+                item,
+                ReceiptTextStatus.Unsupported,
+                engine,
+                failure,
+                Math.Max(0, item.Attempts - 1)
+            ),
             cancellationToken
         );
         BackendTelemetry.ReceiptTextExtracted(
@@ -256,7 +267,8 @@ public sealed class ReceiptTextService(
         CancellationToken cancellationToken
     )
     {
-        var attempts = item.Attempts + 1;
+        // The claim already counted this attempt.
+        var attempts = item.Attempts;
         if (attempts >= settings.MaxAttempts)
         {
             await texts.CompleteAsync(
@@ -274,7 +286,7 @@ public sealed class ReceiptTextService(
         await texts.RetryAsync(
             token,
             item.ReceiptId,
-            clock.GetUtcNow() + Backoff(item.Attempts),
+            clock.GetUtcNow() + Backoff(attempts - 1),
             failure,
             cancellationToken
         );

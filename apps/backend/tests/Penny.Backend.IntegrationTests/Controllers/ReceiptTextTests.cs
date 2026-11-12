@@ -1,7 +1,10 @@
 using Microsoft.Extensions.DependencyInjection;
+using Penny.Backend.Api.Configuration;
+using Penny.Backend.Application.Abstractions.Persistence;
 using Penny.Backend.Application.Abstractions.Receipts;
 using Penny.Backend.Application.Receipts;
 using Penny.Backend.IntegrationTests.Infrastructure;
+using Penny.Backend.Persistence.Receipts;
 using Shouldly;
 using Xunit;
 
@@ -224,8 +227,241 @@ public sealed class ReceiptTextTests(ApiFixture fixture) : ReceiptTextTestBase(f
         await texts.RunOnceAsync(Ct);
         var done = await TextOfAsync(id);
         done.Status.ShouldBe(ReceiptTextStatus.Done);
-        done.Attempts.ShouldBe(1);
+        // Attempts made: the failed one and the one that succeeded.
+        done.Attempts.ShouldBe(2);
         flaky.Calls.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task whenWorkerDiesDuringEveryAttempt_Claim_ShouldFailTheReceiptInsteadOfRetryingForever()
+    {
+        var (_, userId) = await AccountAsync("crash@example.test");
+        At(Noon);
+        var id = await StoreReceiptAsync(
+            userId,
+            "bomb.pdf",
+            "application/pdf",
+            SyntheticReceipts.TextPdf(Lines)
+        );
+        var repository = Fixture.Factory.Services.GetRequiredService<IReceiptTextRepository>();
+        var settings = Limits with { MaxAttempts = 2 };
+        var now = Noon;
+        // Each claim's worker dies (an engine takes the process down, the host's OOM
+        // killer): nothing completes or retries, the lease just expires.
+        for (var attempt = 1; attempt <= 2; attempt++)
+        {
+            var work = await repository.ClaimAsync(
+                "worker-" + attempt,
+                now,
+                now + settings.Lease,
+                10,
+                settings.MaxAttempts,
+                "engine",
+                Ct
+            );
+            work.ShouldHaveSingleItem().Attempts.ShouldBe(attempt);
+            (await TextOfAsync(id)).Attempts.ShouldBe(attempt);
+            // Still leased: another worker cannot take it.
+            (
+                await repository.ClaimAsync(
+                    "other",
+                    now + TimeSpan.FromSeconds(1),
+                    now + settings.Lease,
+                    10,
+                    settings.MaxAttempts,
+                    "engine",
+                    Ct
+                )
+            ).ShouldBeEmpty();
+            now += settings.Lease + TimeSpan.FromSeconds(1);
+        }
+        At(now);
+        // The next pass finds the last attempt abandoned and fails the receipt.
+        (await TextsWith(settings).RunOnceAsync(Ct)).ShouldBe(0);
+        var failed = await TextOfAsync(id);
+        failed.Status.ShouldBe(ReceiptTextStatus.Failed);
+        failed.Failure.ShouldBe(ReceiptTextFailure.LeaseExpired);
+        failed.Attempts.ShouldBe(2);
+        failed.DueAt.ShouldBeNull();
+        failed.ExtractedAt.ShouldBe(now);
+        failed.Engine.ShouldNotBeNull();
+        (await TextsWith(settings).CatchUpAsync(Ct)).ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task whenReceiptReextracted_Extraction_ShouldKeepTheEmbeddingsOfUnchangedChunks()
+    {
+        var (token, userId) = await AccountAsync("rerun@example.test");
+        var id = await StoreReceiptAsync(
+            userId,
+            "long.pdf",
+            "application/pdf",
+            SyntheticReceipts.TextPdf(Lines)
+        );
+        await SaveEntryAsync(token, "long", "Groceries", id);
+        // Long enough for several chunks; the second run changes only the last line.
+        var lines = Enumerable
+            .Range(1, 400)
+            .Select(line => $"Article numero {line} pommes poires fromage pain")
+            .ToList();
+        var first = new FixedTextExtractor(string.Join('\n', lines));
+        await TextsWith(Limits, first).CatchUpAsync(Ct);
+        await CatchUpAsync();
+        var before = await ChunksAsync(id);
+        before.Count.ShouldBeGreaterThan(2);
+        before.ShouldAllBe(chunk => chunk.Embedded && !chunk.Due);
+
+        lines[^1] = "TOTAL 99.99 merci";
+        await Fixture.SqlAsync(
+            $"UPDATE penny.receipt_texts SET status = 'pending', due_at = TIMESTAMPTZ '1970-01-01 00:00:00+00', attempts = 0 WHERE receipt_id = '{id}'",
+            Ct
+        );
+        await TextsWith(Limits, new FixedTextExtractor(string.Join('\n', lines))).CatchUpAsync(Ct);
+        var after = await ChunksAsync(id);
+        after.Count.ShouldBe(before.Count);
+        // Unchanged passages keep their row and embedding; only the last is re-queued.
+        after.SkipLast(1).ShouldBe(before.SkipLast(1));
+        after[^1].Id.ShouldNotBe(before[^1].Id);
+        after[^1].Embedded.ShouldBeFalse();
+        after[^1].Due.ShouldBeTrue();
+        await CatchUpAsync();
+        (await ChunksAsync(id)).ShouldAllBe(chunk => chunk.Embedded && !chunk.Due);
+    }
+
+    private async Task<List<(long Id, int Ordinal, bool Embedded, bool Due)>> ChunksAsync(
+        string receiptId
+    )
+    {
+        await using var command = Fixture.Admin.CreateCommand(
+            "SELECT id, ordinal, embedding IS NOT NULL, embedding_due_at IS NOT NULL FROM penny.receipt_text_chunks WHERE receipt_id = $1 ORDER BY ordinal"
+        );
+        command.Parameters.AddWithValue(receiptId);
+        await using var reader = await command.ExecuteReaderAsync(Ct);
+        var chunks = new List<(long, int, bool, bool)>();
+        while (await reader.ReadAsync(Ct))
+            chunks.Add(
+                (reader.GetInt64(0), reader.GetInt32(1), reader.GetBoolean(2), reader.GetBoolean(3))
+            );
+        return chunks;
+    }
+
+    // The real engine under a tight memory and CPU limit: decoding or rendering any of
+    // the inputs below at full size would need gigabytes and be killed.
+    private LocalReceiptTextExtractor BoundedEngine(long megabytes = 512)
+    {
+        var engine = Fixture.Factory.Services.GetRequiredService<OcrOptions>().Engine;
+        return new(
+            engine with
+            {
+                Limits = OperatingSystem.IsLinux()
+                    ? new("prlimit", megabytes * 1024 * 1024, 60)
+                    : null,
+            }
+        );
+    }
+
+    [Fact]
+    public async Task whenEngineExceedsItsMemoryLimit_Extraction_ShouldCountTheAttemptAndEndFailed()
+    {
+        Assert.SkipUnless(OperatingSystem.IsLinux(), "prlimit limits are Linux only.");
+        var (_, userId) = await AccountAsync("limit@example.test");
+        At(Noon);
+        var id = await StoreReceiptAsync(
+            userId,
+            "scan.pdf",
+            "application/pdf",
+            SyntheticReceipts.ScannedPdf(Lines)
+        );
+        // Enough for poppler, too little for Tesseract to hold the page.
+        var texts = TextsWith(Limits with { MaxAttempts = 2 }, BoundedEngine(120));
+        await texts.RunOnceAsync(Ct);
+        var retry = await TextOfAsync(id);
+        retry.Status.ShouldBe(ReceiptTextStatus.Pending);
+        retry.Failure.ShouldBe(ReceiptTextFailure.ResourceLimit);
+        retry.Attempts.ShouldBe(1);
+        At(Noon + TimeSpan.FromMinutes(1));
+        await texts.CatchUpAsync(Ct);
+        var failed = await TextOfAsync(id);
+        failed.Status.ShouldBe(ReceiptTextStatus.Failed);
+        failed.Failure.ShouldBe(ReceiptTextFailure.ResourceLimit);
+        failed.Attempts.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task whenInputsDeclareHugeDimensions_Extraction_ShouldReadThemWithBoundedMemory()
+    {
+        var (_, userId) = await AccountAsync("bomb@example.test");
+        // 100 × 100 inches: 30000 × 30000 pixels at 300 dpi.
+        var hugePage = await StoreReceiptAsync(
+            userId,
+            "page.pdf",
+            "application/pdf",
+            SyntheticReceipts.ScannedPdfPage(7200, 7200, (0, 0, 7200, 7200, Lines))
+        );
+        var hugePng = SyntheticReceipts.Png(30000, 30000);
+        hugePng.Length.ShouldBeLessThan(2 * 1024 * 1024);
+        var bomb = await StoreReceiptAsync(userId, "huge.png", "image/png", hugePng);
+        var started = System.Diagnostics.Stopwatch.StartNew();
+        await TextsWith(Limits with { Timeout = TimeSpan.FromSeconds(60) }, BoundedEngine())
+            .CatchUpAsync(Ct);
+        started.Elapsed.ShouldBeLessThan(TimeSpan.FromSeconds(60));
+        var page = await TextOfAsync(hugePage);
+        page.Status.ShouldBe(ReceiptTextStatus.Done, page.Failure);
+        page.Method.ShouldBe("ocr");
+        page.SearchText.ShouldContain("fromagerie leclerc");
+        var png = await TextOfAsync(bomb);
+        png.Status.ShouldBe(ReceiptTextStatus.Done, png.Failure);
+        png.Failure.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task whenReceiptIsVeryTall_Extraction_ShouldReadItInStripsTopToBottom()
+    {
+        var (_, userId) = await AccountAsync("tall@example.test");
+        string[] top = ["EPICERIE DU MARCHE", "Pommes Cortland 4.49"];
+        string[] bottom = ["SOUS-TOTAL 31.17", "Merci et a bientot"];
+        // 1700 × 12000 pixels: four strips, the bottom text in the third.
+        var image = await StoreReceiptAsync(
+            userId,
+            "tall.png",
+            "image/png",
+            SyntheticReceipts.Png(1700, 12000, (0, top), (9000, bottom))
+        );
+        // Three letter pages tall: rendered in strips, never as one bitmap.
+        var page = await StoreReceiptAsync(
+            userId,
+            "tall.pdf",
+            "application/pdf",
+            SyntheticReceipts.ScannedPdfPage(
+                612,
+                2376,
+                (0, 1584, 612, 792, top),
+                (0, 0, 612, 792, bottom)
+            )
+        );
+        // 1700 × 30000 pixels is past the pixel ceiling: the top is read, the rest cut.
+        var cut = await StoreReceiptAsync(
+            userId,
+            "cut.png",
+            "image/png",
+            SyntheticReceipts.Png(1700, 30000, (0, top), (27000, bottom))
+        );
+        await TextsWith(Limits with { Concurrency = 3 }, BoundedEngine()).CatchUpAsync(Ct);
+        foreach (var id in new[] { image, page })
+        {
+            var text = await TextOfAsync(id);
+            text.Status.ShouldBe(ReceiptTextStatus.Done, text.Failure);
+            text.Failure.ShouldBeNull();
+            text.SearchText.ShouldContain("epicerie du marche");
+            text.SearchText.ShouldContain("merci et a bientot");
+            text.SearchText.IndexOf("epicerie", StringComparison.Ordinal)
+                .ShouldBeLessThan(text.SearchText.IndexOf("merci", StringComparison.Ordinal));
+        }
+        var truncated = await TextOfAsync(cut);
+        truncated.Status.ShouldBe(ReceiptTextStatus.Done);
+        truncated.Failure.ShouldBe(ReceiptTextFailure.Truncated);
+        truncated.SearchText.ShouldContain("epicerie du marche");
+        truncated.SearchText.ShouldNotContain("merci");
     }
 
     [Fact]

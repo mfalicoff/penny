@@ -23,6 +23,9 @@ public sealed record ReceiptTextSettings(
         4
     );
 
-    // The lease outlives the time bound, so a live worker never loses its row.
+    // The lease outlives the time bound, so a live worker never loses its row. It
+    // covers the extraction only (reading the file, the engines under `Timeout`, and
+    // storing the result); embedding the stored chunks is the search embedding worker's
+    // job, under that outbox's own lease.
     public TimeSpan Lease => Timeout + TimeSpan.FromMinutes(1);
 }

@@ -5,13 +5,18 @@ namespace Penny.Backend.Application.Abstractions.Persistence;
 // and retried with backoff, so any number of workers can run.
 public interface IReceiptTextRepository
 {
-    // Leases up to `limit` due rows to `leaseToken` until `leaseUntil`. Rows leased to
-    // another live worker are skipped.
+    // Leases up to `limit` due rows to `leaseToken` until `leaseUntil` and counts the
+    // attempt (`attempts + 1`) in the same update. Rows leased to another live worker
+    // are skipped. Due rows that already used `maxAttempts` (their last attempt's lease
+    // expired without a result: the worker died) are failed as `lease-expired` with
+    // `engine` instead of being run again.
     Task<IReadOnlyList<ReceiptTextWork>> ClaimAsync(
         string leaseToken,
         DateTimeOffset now,
         DateTimeOffset leaseUntil,
         int limit,
+        int maxAttempts,
+        string engine,
         CancellationToken cancellationToken
     );
 
@@ -28,8 +33,8 @@ public interface IReceiptTextRepository
         CancellationToken cancellationToken
     );
 
-    // Gives up the lease after a failed attempt: the row stays pending and is retried
-    // at `retryAt`.
+    // Gives up the lease after a failed attempt (already counted by the claim): the row
+    // stays pending and is retried at `retryAt`.
     Task RetryAsync(
         string leaseToken,
         string receiptId,
@@ -38,9 +43,11 @@ public interface IReceiptTextRepository
         CancellationToken cancellationToken
     );
 
-    // Backfill: creates pending rows for receipts without one and queues failed rows
-    // and rows made by another engine (every finished row with `all`), for every
-    // receipt or the receipts `userId` uploaded.
+    // Backfill: creates pending rows for linked receipts (by an entry, a live shared
+    // expense or a shared rule) without one, and queues failed rows and rows made by
+    // another engine (every finished row with `all`), for every receipt or the receipts
+    // `userId` uploaded. Unlinked receipts without a row stay without: their text was
+    // deleted when the last link let go.
     Task<ReceiptTextQueueReport> QueueAsync(
         string? userId,
         bool all,

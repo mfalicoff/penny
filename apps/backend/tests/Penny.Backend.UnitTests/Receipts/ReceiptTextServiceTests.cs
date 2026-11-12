@@ -24,6 +24,8 @@ public sealed class ReceiptTextServiceTests
             DateTimeOffset now,
             DateTimeOffset leaseUntil,
             int limit,
+            int maxAttempts,
+            string engine,
             CancellationToken cancellationToken
         )
         {
@@ -98,7 +100,7 @@ public sealed class ReceiptTextServiceTests
     private static ReceiptTextWork Work(
         string mime = "application/pdf",
         long size = 100,
-        int attempts = 0
+        int attempts = 1
     ) => new("r1", mime, size, attempts, DateTimeOffset.UnixEpoch);
 
     private static ReceiptTextService Service(
@@ -137,6 +139,23 @@ public sealed class ReceiptTextServiceTests
     }
 
     [Fact]
+    public async Task whenImageTruncated_RunOnce_ShouldStoreTheTextAndRecordTheTruncation()
+    {
+        var outbox = new Outbox();
+        outbox.Due.Add(Work("image/png", attempts: 2));
+        var engine = new FakeEngine(_ =>
+            Task.FromResult(new ReceiptExtraction("TOP OF A VERY LONG RECEIPT", "ocr", 1, true))
+        );
+        await Service(outbox, engine).RunOnceAsync(CancellationToken.None);
+        var result = outbox.Completed.ShouldHaveSingleItem();
+        result.Status.ShouldBe(ReceiptTextStatus.Done);
+        result.Failure.ShouldBe(ReceiptTextFailure.Truncated);
+        result.Content.ShouldBe("TOP OF A VERY LONG RECEIPT");
+        // Attempts made, this one included (the claim counted it).
+        result.Attempts.ShouldBe(2);
+    }
+
+    [Fact]
     public async Task whenFileUnsupportedOrTooLarge_RunOnce_ShouldNeverReadOrRetryIt()
     {
         var outbox = new Outbox();
@@ -152,13 +171,15 @@ public sealed class ReceiptTextServiceTests
             .Order()
             .ShouldBe([ReceiptTextFailure.TooLarge, ReceiptTextFailure.UnsupportedFormat]);
         outbox.Completed.ShouldAllBe(result => result.Status == ReceiptTextStatus.Unsupported);
+        // Never attempted: the claim's count is not kept.
+        outbox.Completed.ShouldAllBe(result => result.Attempts == 0);
     }
 
     [Fact]
     public async Task whenEngineIsTooSlow_RunOnce_ShouldCancelItAndRetryWithBackoff()
     {
         var outbox = new Outbox();
-        outbox.Due.Add(Work(attempts: 2));
+        outbox.Due.Add(Work(attempts: 3));
         var engine = new FakeEngine(async token =>
         {
             await Task.Delay(TimeSpan.FromMinutes(5), token);
@@ -183,7 +204,7 @@ public sealed class ReceiptTextServiceTests
     public async Task whenLastAttemptFails_RunOnce_ShouldFailTheReceipt()
     {
         var outbox = new Outbox();
-        outbox.Due.Add(Work(attempts: 3));
+        outbox.Due.Add(Work(attempts: 4));
         var engine = new FakeEngine(_ =>
             throw new ReceiptExtractionException(ReceiptTextFailure.Corrupt)
         );

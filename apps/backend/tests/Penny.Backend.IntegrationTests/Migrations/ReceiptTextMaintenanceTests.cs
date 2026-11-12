@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Penny.Backend.Application.Receipts;
 using Penny.Backend.IntegrationTests.Infrastructure;
 using Penny.Backend.Persistence.Schema;
 using Shouldly;
@@ -54,7 +55,7 @@ public sealed class ReceiptTextMaintenanceTests(ApiFixture fixture) : ReceiptTex
     }
 
     [Fact]
-    public async Task whenReceiptsPredateOcr_ReceiptsOcr_ShouldBackfillAndRerunAfterEngineChange()
+    public async Task whenReceiptsPredateOcr_ReceiptsOcr_ShouldBackfillLinkedReceiptsAndRerunAfterEngineChange()
     {
         var (token, userId) = await AccountAsync("backfill@example.test");
         var linked = await LegacyReceiptAsync(
@@ -73,28 +74,49 @@ public sealed class ReceiptTextMaintenanceTests(ApiFixture fixture) : ReceiptTex
             $"DELETE FROM penny.receipt_texts WHERE receipt_id = '{linked}'",
             Ct
         );
+        // A receipt whose text was deleted on purpose when its last link let go.
+        var released = await StoreReceiptAsync(
+            userId,
+            "released.pdf",
+            "application/pdf",
+            SyntheticReceipts.TextPdf("Patisserie Kouign-Amann", "Croissant aux amandes 4.25")
+        );
+        await SaveEntryAsync(token, "pastry", "Breakfast", released);
+        await ExtractAsync();
+        await SaveEntryAsync(token, "pastry", "Breakfast", null);
+        (await TextRowAsync(released)).ShouldBeNull();
         await CatchUpAsync();
         var (stale, staleReport) = await RunAsync("search-verify");
         stale.ShouldBe(2);
         staleReport.GetProperty("MissingReceiptText").GetInt64().ShouldBe(1);
 
         var (_, before) = await RunAsync("receipts-ocr", "--status");
-        before.GetProperty("Receipts").GetInt64().ShouldBe(2);
-        before.GetProperty("Missing").GetInt64().ShouldBe(2);
+        before.GetProperty("Receipts").GetInt64().ShouldBe(3);
+        // Only the linked receipt is missing its text.
+        before.GetProperty("Missing").GetInt64().ShouldBe(1);
 
         var (exit, report) = await RunAsync("receipts-ocr");
         exit.ShouldBe(0);
-        report.GetProperty("Created").GetInt64().ShouldBe(2);
-        report.GetProperty("Extracted").GetInt64().ShouldBe(2);
-        report.GetProperty("Embedded").GetInt64().ShouldBe(2);
-        report.GetProperty("Done").GetInt64().ShouldBe(2);
-        (await TextOfAsync(unlinked)).SearchText.ShouldContain("fraises");
+        report.GetProperty("Created").GetInt64().ShouldBe(1);
+        report.GetProperty("Extracted").GetInt64().ShouldBe(1);
+        report.GetProperty("Embedded").GetInt64().ShouldBe(1);
+        report.GetProperty("Done").GetInt64().ShouldBe(1);
+        // Unlinked receipts do not get text back: neither one never linked since its
+        // upload before MAZ-125, nor one whose text was deleted when it was unlinked.
+        (await TextRowAsync(unlinked)).ShouldBeNull();
+        (await TextRowAsync(released)).ShouldBeNull();
         var page = await SearchAsync(token, new { query = "roman graphique" });
         Keys(page).ShouldBe(["personal:book"]);
         Matches(page).ShouldBe(["text"]);
         var (clean, cleanReport) = await RunAsync("search-verify");
         clean.ShouldBe(0, cleanReport.ToString());
-        cleanReport.GetProperty("ReceiptTexts").GetInt64().ShouldBe(2);
+        cleanReport.GetProperty("ReceiptTexts").GetInt64().ShouldBe(1);
+
+        // Linking the released receipt again queues its extraction.
+        await SaveEntryAsync(token, "pastry", "Breakfast", released);
+        (await TextOfAsync(released)).Status.ShouldBe(ReceiptTextStatus.Pending);
+        await ExtractAsync();
+        await CatchUpAsync();
 
         // Nothing to do until the engine or its languages change.
         (await RunAsync("receipts-ocr"))
