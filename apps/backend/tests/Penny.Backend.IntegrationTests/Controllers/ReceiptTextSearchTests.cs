@@ -144,6 +144,99 @@ public sealed class ReceiptTextSearchTests(ApiFixture fixture) : ReceiptTextTest
         Keys(await SearchAsync(token, new { query = "bagels" })).ShouldBe(["personal:e3"]);
     }
 
+    // A shared recurring rule body linking `receiptId` (null: no receipt).
+    private static Dictionary<string, object?> RuleLinking(
+        string payerId,
+        string? receiptId,
+        long? revision = null
+    )
+    {
+        var body = Expense(4500, payerId);
+        body.Remove("date");
+        body["title"] = "Internet";
+        body["nextDate"] = "2027-01-15";
+        body["frequency"] = "monthly";
+        if (receiptId is not null)
+            body["receiptId"] = receiptId;
+        if (revision is { } edited)
+        {
+            body["revision"] = edited;
+            body["active"] = true;
+        }
+        return body;
+    }
+
+    [Fact]
+    public async Task whenSharedRuleIsTheLastLink_RuleWrites_ShouldReleaseAndQueueReceiptText()
+    {
+        var (alex, alexId) = await AccountAsync("alex@example.test");
+        var (bea, _) = await AccountAsync("bea@example.test");
+        At(Noon);
+        var home = Id(await CreateHouseholdAsync(alex));
+        await AdmitAsync(home, alex, bea);
+        var first = await UploadReceiptAsync(
+            alex,
+            "first.pdf",
+            "application/pdf",
+            SyntheticReceipts.TextPdf("Fournisseur Internet Fibre", "Forfait mensuel 45.00")
+        );
+        var second = await UploadReceiptAsync(
+            alex,
+            "second.pdf",
+            "application/pdf",
+            SyntheticReceipts.TextPdf("Fournisseur Internet Fibre", "Nouveau forfait 55.00")
+        );
+        var rules = $"/api/households/{home}/recurring";
+        var rule = (
+            await ExpectAsync(
+                HttpMethod.Post,
+                rules,
+                alex,
+                System.Net.HttpStatusCode.Created,
+                RuleLinking(alexId, first)
+            )
+        ).GetProperty("rule");
+        await ExtractAsync();
+        (await TextOfAsync(first)).Status.ShouldBe(ReceiptTextStatus.Done);
+
+        // Replacing the rule's receipt releases the old one (no other link) at once.
+        await ExpectAsync(
+            HttpMethod.Put,
+            $"{rules}/{Id(rule)}",
+            alex,
+            System.Net.HttpStatusCode.OK,
+            RuleLinking(alexId, second, revision: 0)
+        );
+        (await TextRowAsync(first)).ShouldBeNull();
+        (
+            await CountAsync(
+                $"SELECT count(*) FROM penny.receipt_text_chunks WHERE receipt_id = '{first}'"
+            )
+        ).ShouldBe(0);
+        await ExtractAsync();
+        (await TextOfAsync(second)).Status.ShouldBe(ReceiptTextStatus.Done);
+
+        // Deleting the rule releases the receipt it was the last link of.
+        await ExpectAsync(
+            HttpMethod.Delete,
+            $"{rules}/{Id(rule)}",
+            alex,
+            System.Net.HttpStatusCode.OK,
+            new { revision = 1 }
+        );
+        (await TextRowAsync(second)).ShouldBeNull();
+
+        // A rule linking a receipt whose text was released queues a new extraction.
+        await ExpectAsync(
+            HttpMethod.Post,
+            rules,
+            alex,
+            System.Net.HttpStatusCode.Created,
+            RuleLinking(alexId, first)
+        );
+        (await TextOfAsync(first)).Status.ShouldBe(ReceiptTextStatus.Pending);
+    }
+
     [Fact]
     public async Task whenSharedExpenseHasReceipt_Search_ShouldMatchItOnlyForReceiptReaders()
     {
