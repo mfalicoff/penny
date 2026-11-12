@@ -99,7 +99,7 @@ Large text uses the system launch argument `-UIPreferredContentSizeCategoryName`
 - **Upgrade (real binary)**: `PENNY_UPGRADE_FROM_APP=<previous Penny.app>` installs and runs the previous build on each simulator first; the plan's install is then an in-place upgrade and `LifecycleTests` checks the launch without a reset. Without it that test is skipped.
 - **Terminate/relaunch**: `relaunch()`.
 - **Network failure**: server faults (`FaultRule.offline(prefix)` drops connections) rather than simulator network changes, so failures are exact and repeatable.
-- **Permissions and pickers**: `Penny.acceptSystemAlert(_:)` answers system prompts from SpringBoard or the app; `XCUIApplication.resetAuthorizationStatus(for:)` resets a protected resource before a test. v2 has no permission-gated feature yet besides Face ID; the photo picker arrives with receipts (MAZ-78), which adds its media with `xcrun simctl addmedia` in `prepare_ui_device` (`ios.sh`).
+- **Permissions and pickers**: `Penny.acceptSystemAlert(_:)` answers system prompts from SpringBoard or the app; `XCUIApplication.resetAuthorizationStatus(for:)` resets a protected resource before a test. v2 has no permission-gated feature yet besides Face ID: the receipt pickers (MAZ-78) run out of process and need no permission. `prepare_ui_device` (`ios.sh`) seeds every simulator with synthetic receipt files: the photo with `xcrun simctl addmedia`, the PDFs and refused files into Files › On My iPhone/iPad ([native receipts](ios-receipts.md#fixtures)).
 
 ## Journeys
 
@@ -111,6 +111,7 @@ Large text uses the system launch argument `-UIPreferredContentSizeCategoryName`
 | `LifecycleTests` | Seeded earlier-install state is kept; upgrade over a previous build; relaunch keeps the session, a reset (reinstall) does not | Full |
 | `NetworkFailureTests` | Offline write is saved, marked waiting, survives a relaunch and syncs when the server returns; a dropped sign-in keeps the input and succeeds on retry | Full |
 | `AuthJourneyTests` | Wrong password keeps the email; account creation; SSO success and cancellation (local OIDC provider); session expiry by moving the server clock past 30 days, with the email kept; sign-out with a pending change asks and syncs first; account switching hides the previous account's entries | Full |
+| `ReceiptJourneyTests` | Photo and PDF upload, preview and share with SHA-256 round trips and another account's 404; upload failure and Try again; oversized and renamed files refused; pickers cancelled at XL text; session ended during upload with the draft back; the viewer's 404, offline and Try again ([native receipts](ios-receipts.md#tests)) | Full |
 | `ScreenshotTests` | Home, Activity, Settings in light/dark × default/XL text/Reduce Transparency/Reduce Motion; sign-in, keyboard and error in light/dark | Screenshots |
 
 Online/offline keyword search fixtures (MAZ-73 search) and the per-card baseline comparison (MAZ-122) build on this harness: seed with `npm run test-env -- seed searchable-household` or `Stack` calls, and capture with `screenshot(_:)` named after the card id in `contracts/fixtures/redesign-states.json`.

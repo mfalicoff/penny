@@ -69,7 +69,7 @@ The client never retries by itself. `isRetryable` tells a caller whether repeati
 
 ## Ledger and receipts
 
-`ledger()` returns `LedgerSnapshot(revision, ledger)`; `putLedger` sends the snapshot with the revision it was based on and returns the stored snapshot. Receipts upload as JSON `{name, mime, base64}` (at most 10 MiB, mime from the contract list) and download as bytes with their mime type and filename; ids are percent-encoded into a single path segment.
+`ledger()` returns `LedgerSnapshot(revision, ledger)`; `putLedger` sends the snapshot with the revision it was based on and returns the stored snapshot. Receipts upload as JSON `{name, mime, base64}` (1 byte to 10 MiB, mime from the contract list) and download as bytes with their mime type and filename; ids are percent-encoded into a single path segment. `uploadReceipt` takes an optional `progress` closure that receives the fraction of the request body sent, from `HTTPTransport.send(_:progress:)` (`URLSessionTransport` reports it from its task delegate; other transports report nothing). The receipt screens are in [native receipts](ios-receipts.md).
 
 ## Search
 
