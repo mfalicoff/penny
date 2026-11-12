@@ -153,6 +153,43 @@ struct ShellTests {
         #expect(AppearanceModel(preferences: preferences).preference == .dark, "kept for the next launch")
     }
 
+    @Test("whenTheDayChangesWhileOpen_ShellModel_ShouldMoveFutureIncomeFromExpectedToRecorded")
+    @MainActor
+    func todayFollowsTheClock() async throws {
+        let payday = today.adding(days: 1)
+        let pay = LedgerEntry(
+            id: "pay", title: "Pay", kind: .income, total: 200_000, share: 200_000, categoryId: "salary",
+            date: payday)
+        let ledger = Ledger(transactions: [pay])
+        let clock = ManualClock(today)
+        let shell = ShellModel(
+            workspace: FixedWorkspace(load: .ready(ledger)), session: .demo, today: today, clock: { clock.now })
+        let month = shell.month
+        // What Home reads: the shell's report for the month on screen at the shell's today.
+        func summary() -> MonthSummary { shell.report(ledger).month(shell.month, today: shell.today) }
+        #expect(summary().expected.map(\.id) == ["pay"])
+        #expect(summary().recorded.income == 0, "not in Left to spend before its date")
+
+        shell.refreshToday()
+        #expect(shell.today == today, "the same day changes nothing")
+
+        // Midnight, through the day-change signal.
+        let days = ManualDayMonitor()
+        let following = Task { await shell.followDayChanges(days) }
+        defer { following.cancel() }
+        clock.now = payday
+        days.fire()
+        await eventually { shell.today == payday }
+        #expect(summary().expected.isEmpty)
+        #expect(summary().recorded.income == 200_000, "on its date it counts toward Left to spend")
+        #expect(shell.month == month, "the month on screen stays")
+
+        // Returning to the foreground on a later day.
+        clock.now = payday.adding(days: 1)
+        shell.refreshToday()
+        #expect(shell.today == payday.adding(days: 1))
+    }
+
     @Test("whenMonthsAreListed_MonthPicker_ShouldOfferThisMonthAndTheElevenBefore")
     func months() {
         let months = MonthPicker.months(through: MonthKey(today))
@@ -160,6 +197,26 @@ struct ShellTests {
         #expect(months.first == MonthKey(today))
         #expect(months.last == MonthKey(today).shifted(by: -11))
     }
+}
+
+/// The device's date, set by hand.
+@MainActor
+private final class ManualClock {
+    var now: CalendarDate
+    init(_ now: CalendarDate) { self.now = now }
+}
+
+/// Day changes fired by hand (midnight, a clock or time zone change).
+private final class ManualDayMonitor: CalendarDayMonitoring, @unchecked Sendable {
+    private let stream: AsyncStream<Void>
+    private let continuation: AsyncStream<Void>.Continuation
+
+    init() {
+        (stream, continuation) = AsyncStream.makeStream(bufferingPolicy: .bufferingNewest(1))
+    }
+
+    func dayChanges() -> AsyncStream<Void> { stream }
+    func fire() { continuation.yield() }
 }
 
 /// A device check that always succeeds at once.

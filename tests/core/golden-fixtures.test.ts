@@ -10,6 +10,9 @@ import { mergeLedger } from "../../src/domain/merge.ts";
 import { calculateHouseholdSplits } from "../../src/domain/households.ts";
 import { ledgerWriteSchema } from "../../server/validation/ledger.ts";
 import { selectTransactions } from "../../src/features/transactions/selectors.ts";
+import { dateKeyIn } from "../../src/domain/calendar.ts";
+import { isExpected, summarizeMonth } from "../../src/domain/summary.ts";
+import { selectOverview } from "../../src/domain/selectors/overview.ts";
 import { generated, manifest, sha256 } from "../../scripts/fixtures/generate-golden.ts";
 import { applyPendingEdits } from "../../scripts/test-env/seed.mjs";
 
@@ -47,6 +50,26 @@ const Merge = z.strictObject({
   generator: z.string(),
   description: z.string(),
   cases: z.array(z.strictObject({ name: z.string(), base: LedgerShape, local: LedgerShape, remote: LedgerShape, expected: LedgerShape })).min(5),
+});
+
+const KindTotals = z.strictObject({ income: z.number().int(), expense: z.number().int(), investment: z.number().int() });
+const MonthTotals = z.strictObject({
+  generator: z.string(),
+  description: z.string(),
+  todayCases: z.array(z.strictObject({ instant: z.iso.datetime(), timeZone: z.string().min(1), today: date })).min(5),
+  ledgers: z.record(z.string(), LedgerShape),
+  cases: z.array(z.strictObject({
+    name: z.string(),
+    ledger: z.string(),
+    today: date.nullable(),
+    clock: z.strictObject({ instant: z.iso.datetime(), timeZone: z.string().min(1) }).optional(),
+    month: z.string().regex(/^\d{4}-\d{2}$/),
+    expected: z.strictObject({
+      recorded: KindTotals, projected: KindTotals, expectedIncome: z.number().int(),
+      recordedNet: z.number().int(), projectedNet: z.number().int(),
+      expectedIds: z.array(z.string()), scheduledIds: z.array(z.string()),
+    }),
+  })).min(5),
 });
 
 const Manifest = z.strictObject({
@@ -127,7 +150,13 @@ const Redesign = z.strictObject({
   palettes: z.array(z.enum(["light", "dark"])).length(2),
   totals: z.record(z.string(), z.strictObject({
     description: z.string(),
+    // The person's clock and time zone decide today (MAZ-136); `today` is their local date.
+    clock: z.iso.datetime(),
+    timeZone: z.string().min(1),
+    today: date,
     recorded: Totals,
+    // Ledger income dated after today: in Projected, not in recorded totals.
+    expected: z.array(z.strictObject({ title: z.string(), date, shareCents: z.number().int() })),
     scheduled: z.array(z.strictObject({ source: z.enum(["personal", "shared"]), title: z.string(), date, shareCents: z.number().int() })),
     projected: Totals,
   })),
@@ -182,6 +211,33 @@ test("recurrence fixtures match next occurrence and keep the anchor", () => {
 test("merge-conflict fixtures match the offline three-way merge", () => {
   for (const item of parse(Merge, "merge-conflicts.json").cases)
     assert.deepEqual(JSON.parse(JSON.stringify(mergeLedger(item.base, item.local, item.remote))), item.expected, item.name);
+});
+
+test("month-totals fixtures: income dated after today is expected, at the boundary and across time zones", () => {
+  const golden = parse(MonthTotals, "month-totals.json");
+  for (const item of golden.todayCases) assert.equal(dateKeyIn(new Date(item.instant), item.timeZone), item.today, JSON.stringify(item));
+  for (const item of golden.cases) {
+    const ledger = golden.ledgers[item.ledger]!;
+    if (item.clock) assert.equal(dateKeyIn(new Date(item.clock.instant), item.clock.timeZone), item.today, item.name);
+    const options = item.today === null ? {} : { today: item.today };
+    const summary = summarizeMonth(ledger, item.month, options);
+    const { recorded, projected, expectedIncome, recordedNet, projectedNet } = item.expected;
+    assert.deepEqual(summary, { recorded, projected, expectedIncome, recordedNet, projectedNet }, item.name);
+    const overview = selectOverview(ledger, { month: item.month, day: null, filter: "all", categoryId: null, search: "", ...options });
+    assert.deepEqual(overview.expected.map((entry) => entry.id).sort(), item.expected.expectedIds, item.name);
+    assert.deepEqual(overview.scheduled.map((entry) => entry.id).sort(), item.expected.scheduledIds, item.name);
+    assert.deepEqual(overview.summary, summary.projected, item.name);
+    // Independent of the implementation: Left to spend is income dated on or before today.
+    const income = ledger.transactions.filter((entry) => entry.kind === "income" && entry.date.startsWith(item.month) && (item.today === null || entry.date <= item.today));
+    assert.equal(summary.recorded.income, income.reduce((sum, entry) => sum + entry.share, 0), item.name);
+    // Only income moves: expenses and investments dated after today stay recorded (MAZ-139).
+    const dated = (kind: string) => ledger.transactions.filter((entry) => entry.kind === kind && entry.date.startsWith(item.month)).reduce((sum, entry) => sum + entry.share, 0);
+    assert.equal(summary.recorded.expense, dated("expense"), item.name);
+    assert.equal(summary.recorded.investment, dated("investment"), item.name);
+    for (const id of item.expected.expectedIds) assert.ok(isExpected(ledger.transactions.find((entry) => entry.id === id)!, item.today ?? undefined), id);
+    // The entry never changes: projected is the same whatever today is.
+    assert.deepEqual(summary.projected, summarizeMonth(ledger, item.month).projected, item.name);
+  }
 });
 
 test("fixture manifest hashes every shared fixture and names each consumer", () => {
@@ -303,6 +359,8 @@ test("redesign states cover all 61 cards with seeded, consistent data", () => {
   const total = states.totals["alex-2026-10"];
   const month = "2026-10";
   const ledger = ([...scenario.steps].reverse().find((step) => "ledger" in step && step.as === "alex") as { ledger: Ledger }).ledger;
+  assert.equal(total.today, dateKeyIn(new Date(total.clock), total.timeZone));
+  assert.deepEqual(total.expected, [], "none of alex's October income is dated after today");
   const sum = (kind: string) => ledger.transactions.filter((entry) => entry.kind === kind && entry.date.startsWith(month)).reduce((acc, entry) => acc + entry.share, 0);
   // Members on the expense date: everyone who joined before it and had not left.
   const members = (when: string) => when < "2026-10-02" ? ["alex", "bea", "cam"] : ["alex", "bea"];
@@ -321,4 +379,32 @@ test("redesign states cover all 61 cards with seeded, consistent data", () => {
   assert.deepEqual(total.projected, { ...total.recorded, expenseCents: total.recorded.expenseCents + scheduled });
   const gym = ledger.recurring.find((rule) => rule.id === "r-gym")!;
   assert.deepEqual(total.scheduled.find((item) => item.source === "personal"), { source: "personal", title: gym.title, date: gym.nextDate, shareCents: gym.share });
+});
+
+test("redesign totals with future-dated income: recorded stops at today in the person's time zone", () => {
+  // MAZ-136, recomputed from the seed without the domain rule: Left to spend counts income dated
+  // on or before today; income after it is expected; expenses and investments are all recorded.
+  const states = parse(Redesign, "redesign-states.json");
+  const seeds = parse(Seeds, "full-stack-seeds.json");
+  const total = states.totals["dana-2026-10"]!;
+  const scenario = seeds.scenarios.find((item) => item.name === "future-income")!;
+  assert.equal(total.clock, scenario.clock);
+  assert.equal(total.today, dateKeyIn(new Date(total.clock), total.timeZone));
+  assert.notEqual(total.today, total.clock.slice(0, 10), "the time zone moves today off the UTC date");
+  const month = total.today.slice(0, 7);
+  const ledger = ([...scenario.steps].reverse().find((step) => "ledger" in step && step.as === "dana") as { ledger: Ledger }).ledger;
+  const inMonth = ledger.transactions.filter((entry) => entry.date.startsWith(month));
+  const sum = (entries: Ledger["transactions"]) => entries.reduce((acc, entry) => acc + entry.share, 0);
+  const income = inMonth.filter((entry) => entry.kind === "income");
+  assert.deepEqual(total.recorded, {
+    expenseCents: sum(inMonth.filter((entry) => entry.kind === "expense")),
+    incomeCents: sum(income.filter((entry) => entry.date <= total.today)),
+    investmentCents: sum(inMonth.filter((entry) => entry.kind === "investment")),
+  });
+  assert.ok(inMonth.some((entry) => entry.kind === "expense" && entry.date > total.today), "a future-dated expense stays recorded");
+  assert.ok(income.some((entry) => entry.date === total.today), "income dated today is recorded");
+  assert.deepEqual(total.expected, income.filter((entry) => entry.date > total.today).map((entry) => ({ title: entry.title, date: entry.date, shareCents: entry.share })));
+  const pay = ledger.recurring.find((rule) => rule.id === "r-pay")!;
+  assert.deepEqual(total.scheduled, [{ source: "personal", title: pay.title, date: pay.nextDate, shareCents: pay.share }]);
+  assert.deepEqual(total.projected, { ...total.recorded, incomeCents: total.recorded.incomeCents + sum(income.filter((entry) => entry.date > total.today)) + pay.share });
 });

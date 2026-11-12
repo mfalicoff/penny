@@ -77,9 +77,21 @@ public struct RedesignStates: Codable, Equatable, Sendable {
 
     public struct Totals: Codable, Equatable, Sendable {
         public var description: String
+        /// The person's clock and IANA time zone; `today` is their local date (MAZ-136).
+        public var clock: String
+        public var timeZone: String
+        public var today: String
         public var recorded: Amounts
+        /// Ledger income dated after `today`: in `projected`, not in `recorded`.
+        public var expected: [Expected]
         public var scheduled: [Scheduled]
         public var projected: Amounts
+    }
+
+    public struct Expected: Codable, Equatable, Sendable {
+        public var title: String
+        public var date: String
+        public var shareCents: Int64
     }
 
     public struct Amounts: Codable, Equatable, Sendable {

@@ -24,7 +24,11 @@ final class ShellModel {
 
     let workspace: any LedgerWorkspace
     let session: ShellSession
-    let today: CalendarDate
+    /// The person's local date. Income dated after it is expected (MAZ-136), so every report
+    /// reads it; `refreshToday()` moves it on at midnight, on a clock or time zone change and
+    /// when the app returns to the foreground. The month on screen stays where it is.
+    private(set) var today: CalendarDate
+    @ObservationIgnored private let clock: () -> CalendarDate
     /// Starts the demo from the empty Home (nil while in the demo).
     let startDemo: (() -> Void)?
     /// Ends the demo and discards everything in it (nil for an account).
@@ -58,18 +62,46 @@ final class ShellModel {
     /// Attaches a receipt to an entry draft (MAZ-78 provides it; nil until then).
     var attachReceipt: ((ReceiptSource) async -> Result<ReceiptReference, SaveFailure>)?
 
+    // MARK: Overview (MAZ-77)
+
+    /// The caller's household shares for Home's reports (none in the demo).
+    let shared: SharedProjectionModel
+    /// The last report built, reused while the ledger and the shared answers are unchanged.
+    /// Comparing a ledger that did not change is cheap (arrays share storage), so a large
+    /// ledger is joined once per change instead of once per view update.
+    @ObservationIgnored private var reportCache: (ledger: Ledger, revision: Int, report: LedgerReport)?
+
+    /// The personal ledger joined with the caller's shared shares: what Home, Insights, the
+    /// calendar and the money flow read. Each shared row counts once, as the viewer's share.
+    func report(_ ledger: Ledger) -> LedgerReport {
+        if let cache = reportCache, cache.revision == shared.revision, cache.ledger == ledger { return cache.report }
+        let rows = shared.shares(currency: ledger.currency)
+        let report = LedgerReport(ledger: ledger, shared: rows.recorded, sharedScheduled: rows.scheduled)
+        reportCache = (ledger, shared.revision, report)
+        return report
+    }
+
+    /// Reads the shared projection for the month on screen and the one before it (Insights
+    /// compares the two).
+    func refreshShared() async {
+        await shared.refresh(month)
+        if let previous = month.shifted(by: -1) { await shared.refresh(previous) }
+    }
+
     @ObservationIgnored private var toastTask: Task<Void, Never>?
     static let toastDuration: Duration = .seconds(4)
 
     init(
-        workspace: any LedgerWorkspace, session: ShellSession, today: CalendarDate,
+        workspace: any LedgerWorkspace, session: ShellSession, today: CalendarDate, clock: (() -> CalendarDate)? = nil,
         startDemo: (() -> Void)? = nil, leaveDemo: (() -> Void)? = nil, search: (any EntrySearchService)? = nil,
-        expoImport: ExpoImportNotice? = nil
+        sharedProjection: (any SharedProjectionService)? = nil, expoImport: ExpoImportNotice? = nil
     ) {
+        shared = SharedProjectionModel(service: workspace.isDemo ? nil : sharedProjection)
         self.expoImport = expoImport
         self.workspace = workspace
         self.session = session
         self.today = today
+        self.clock = clock ?? { today }
         self.startDemo = startDemo
         self.leaveDemo = leaveDemo
         month = MonthKey(today)
@@ -79,6 +111,21 @@ final class ShellModel {
     }
 
     var isDemo: Bool { workspace.isDemo }
+
+    /// Reads the date again from the clock. Changes `today` only when the day changed, so a
+    /// foreground on the same day redraws nothing; income dated on the new day moves from
+    /// expected to Left to spend (MAZ-136).
+    func refreshToday() {
+        let now = clock()
+        if now != today { today = now }
+    }
+
+    /// Refreshes `today` on every calendar day change (midnight, a clock or time zone change:
+    /// the signal `LedgerSyncModel` materializes recurrence on) until the task is cancelled.
+    func followDayChanges(_ monitor: any CalendarDayMonitoring = SystemCalendarDayMonitor()) async {
+        refreshToday()
+        for await _ in monitor.dayChanges() { refreshToday() }
+    }
 
     var account: SignedInAccount? {
         if case .account(_, let account) = session { return account }

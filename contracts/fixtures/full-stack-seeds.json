@@ -773,6 +773,152 @@
       }
     },
     {
+      "name": "future-income",
+      "summary": "One person in Toronto whose October has income dated today, tomorrow and later in the month, a future-dated expense and a scheduled pay rule (MAZ-136). At the clock it is 2026-10-16 in UTC but still 2026-10-15 in Toronto, so income dated 2026-10-16 is expected, not recorded.",
+      "clock": "2026-10-16T02:30:00Z",
+      "users": [
+        "dana"
+      ],
+      "steps": [
+        {
+          "clock": "2026-10-16T02:30:00Z"
+        },
+        {
+          "as": "dana",
+          "ledger": {
+            "version": 4,
+            "currency": "CAD",
+            "categories": [
+              {
+                "id": "salary",
+                "name": "Salary",
+                "icon": "cash-outline",
+                "color": "#3E8E5E",
+                "kind": "income"
+              },
+              {
+                "id": "home",
+                "name": "Home",
+                "icon": "home-outline",
+                "color": "#5B7DB1",
+                "kind": "expense"
+              },
+              {
+                "id": "fun",
+                "name": "Fun",
+                "icon": "musical-notes-outline",
+                "color": "#B15B7D",
+                "kind": "expense"
+              }
+            ],
+            "accounts": [
+              {
+                "id": "chq",
+                "name": "Chequing",
+                "type": "bank"
+              }
+            ],
+            "trips": [],
+            "transactions": [
+              {
+                "id": "d-september",
+                "title": "September pay",
+                "kind": "income",
+                "total": 300000,
+                "share": 300000,
+                "categoryId": "salary",
+                "accountId": "chq",
+                "date": "2026-09-30",
+                "note": ""
+              },
+              {
+                "id": "d-salary",
+                "title": "Salary",
+                "kind": "income",
+                "total": 250000,
+                "share": 250000,
+                "categoryId": "salary",
+                "accountId": "chq",
+                "date": "2026-10-01",
+                "note": ""
+              },
+              {
+                "id": "d-rent",
+                "title": "Rent",
+                "kind": "expense",
+                "total": 120000,
+                "share": 120000,
+                "categoryId": "home",
+                "accountId": "chq",
+                "date": "2026-10-01",
+                "note": ""
+              },
+              {
+                "id": "d-bonus",
+                "title": "Bonus",
+                "kind": "income",
+                "total": 40000,
+                "share": 40000,
+                "categoryId": "salary",
+                "accountId": "chq",
+                "date": "2026-10-15",
+                "note": ""
+              },
+              {
+                "id": "d-invoice",
+                "title": "Freelance invoice",
+                "kind": "income",
+                "total": 60000,
+                "share": 60000,
+                "categoryId": "salary",
+                "accountId": "chq",
+                "date": "2026-10-16",
+                "note": ""
+              },
+              {
+                "id": "d-tickets",
+                "title": "Concert tickets",
+                "kind": "expense",
+                "total": 9000,
+                "share": 9000,
+                "categoryId": "fun",
+                "date": "2026-10-20",
+                "note": ""
+              },
+              {
+                "id": "d-refund",
+                "title": "Tax refund",
+                "kind": "income",
+                "total": 2500,
+                "share": 2500,
+                "categoryId": "salary",
+                "accountId": "chq",
+                "date": "2026-10-28",
+                "note": ""
+              }
+            ],
+            "recurring": [
+              {
+                "id": "r-pay",
+                "title": "Pay",
+                "kind": "income",
+                "total": 200000,
+                "share": 200000,
+                "categoryId": "salary",
+                "accountId": "chq",
+                "date": "2026-09-30",
+                "note": "",
+                "frequency": "monthly",
+                "nextDate": "2026-10-30",
+                "anchorDay": 30,
+                "active": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
       "name": "differential",
       "summary": "A clock-independent journey for legacy Node/SQLite versus .NET/PostgreSQL comparison: dates are \"$today\"/\"$month\" (the server's current day), so it runs on a legacy server at real time and on .NET with the clock pinned to the same day. Probes are compared after normalizing generated ids, tokens, codes and instants. Equal splits use totals divisible by the member count: remainder cents go to the lexically first generated user id, which differs between the two servers (the rule itself is pinned by shared-splits.json).",
       "clock": "$now",

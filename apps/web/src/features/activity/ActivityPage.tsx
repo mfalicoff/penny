@@ -1,9 +1,10 @@
 import type { Kind, Transaction } from "@domain/ledger.ts";
 import { useNavigate } from "@tanstack/react-router";
 import { useId, useRef, useState, type SyntheticEvent } from "react";
+import { useToday } from "../../app/useToday";
 import { Button, Card, ChoiceGroup, cx } from "../../design/controls";
 import { Icon } from "../../design/Icon";
-import { Money } from "../../design/Money";
+import { formatCents, Money } from "../../design/Money";
 import { useOnline } from "../../design/states";
 import { EntryDetailDialog } from "../entries/EntryDetail";
 import { categoryIcon, frequentCategories, inlineCategories } from "../entries/model";
@@ -132,7 +133,8 @@ function PeriodBar({ search, period, navigate }: { search: ActivitySearch; perio
 }
 
 function Totals({ period, ledger, shared }: { period: Period; ledger: NonNullable<ReturnType<typeof useActivityLedger>["ledger"]>; shared: SharedState & { retry: () => void } }) {
-  const result = periodTotals(ledger, period, shared.status === "ready" ? shared.rows : []);
+  const today = useToday();
+  const result = periodTotals(ledger, period, shared.status === "ready" ? shared.rows : [], today);
   const currency = ledger.currency;
   return (
     <Card title={periodLabel(period)} className="activity-totals">
@@ -167,6 +169,7 @@ function Totals({ period, ledger, shared }: { period: Period; ledger: NonNullabl
         {shared.status === "ready" && result.sharedCount > 0
           ? `Spent includes your share of ${String(result.sharedCount)} shared expense${result.sharedCount === 1 ? "" : "s"}${shared.cached ? ", as Penny last loaded them" : ""}.`
           : null}
+        {result.expectedIncome > 0 ? ` Earned leaves out ${formatCents(result.expectedIncome, currency)} of income dated after today, listed as Expected until its date.` : null}
       </p>
       {shared.status === "unavailable" ? (
         <p className="note" role="status">

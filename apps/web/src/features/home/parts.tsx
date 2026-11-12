@@ -1,7 +1,9 @@
 import type { Ledger, Transaction } from "@domain/ledger.ts";
 import type { OverviewEntry } from "@domain/selectors/overview.ts";
+import { isExpectedIncome } from "@domain/summary.ts";
 import { Link } from "@tanstack/react-router";
 import { useId, type ReactNode } from "react";
+import { useToday } from "../../app/useToday";
 import { Badge, Button, cx } from "../../design/controls";
 import { Icon } from "../../design/Icon";
 import { Money } from "../../design/Money";
@@ -76,17 +78,21 @@ const TONE = { expense: "expense", income: "income", investment: "investment" } 
 /**
  * Entries of the month: personal ones open their detail, shared ones open the expense in its
  * household, and scheduled occurrences are labelled "Scheduled" (amber) and open nothing, so a
- * preview never looks like a recorded entry.
+ * preview never looks like a recorded entry. Income dated after today is labelled "Expected"
+ * (amber, MAZ-136) and still opens: it is a ledger entry that counts toward Projected only.
  */
 export function EntryRows({ entries, ledger, currency, onOpen }: { entries: readonly OverviewEntry[]; ledger: Ledger; currency: string | undefined; onOpen: (entry: Transaction, opener: HTMLElement) => void }) {
   const categories = new Map(ledger.categories.map((category) => [category.id, category]));
   const accounts = new Map(ledger.accounts.map((account) => [account.id, account.name]));
+  const today = useToday();
   return (
     <ul className="results home-rows">
       {entries.map((entry) => {
         const category = categories.get(entry.categoryId);
         const shared = isSharedEntry(entry) ? entry : null;
         const account = !shared && entry.accountId ? accounts.get(entry.accountId) : undefined;
+        // MAZ-136: income dated after today is expected (amber, "Expected"), but still opens as an entry.
+        const expected = isExpectedIncome(entry, today);
         const meta = [
           entry.scheduled ? null : shared ? (shared.householdName ? `Shared · ${shared.householdName}` : "Shared") : null,
           category?.name,
@@ -94,21 +100,21 @@ export function EntryRows({ entries, ledger, currency, onOpen }: { entries: read
         ].filter(Boolean);
         const body = (
           <>
-            <span className="category-dot" style={{ color: category?.color }}>
+            <span className={expected ? "category-dot category-dot--expected" : "category-dot"} style={{ color: category?.color }}>
               <Icon name={categoryIcon(category?.icon)} size={18} />
             </span>
             <span className="results__title">{entry.title}</span>
             <span className="results__meta">
-              {entry.scheduled ? (
+              {entry.scheduled || expected ? (
                 <Badge tone="pending" icon="time">
-                  Scheduled
+                  {expected ? "Expected" : "Scheduled"}
                 </Badge>
               ) : null}{" "}
               {meta.length ? `${meta.join(" · ")} · ` : ""}
               <time dateTime={entry.date}>{dayLabel(entry.date)}</time>
             </span>
             <span className="results__amount">
-              <Money cents={entry.share} currency={currency} tone={entry.scheduled ? "pending" : TONE[entry.kind]} signed={entry.kind === "income" && !entry.scheduled} />
+              <Money cents={entry.share} currency={currency} tone={entry.scheduled || expected ? "pending" : TONE[entry.kind]} signed={entry.kind === "income" && !entry.scheduled && !expected} />
               {shared || entry.share !== entry.total ? <span className="results__sub">your share</span> : null}
             </span>
           </>

@@ -3,7 +3,7 @@ import { calendarMonth } from "@domain/calendar.ts";
 import { type Category, type Kind, type Ledger, type Transaction } from "@domain/ledger.ts";
 import { buildMoneyFlow, type FlowNode, type MoneyFlow } from "@domain/selectors/moneyFlow.ts";
 import { selectOverview, type OverviewEntry } from "@domain/selectors/overview.ts";
-import { net, type KindTotals } from "@domain/summary.ts";
+import { isExpected, net, type KindTotals } from "@domain/summary.ts";
 import type { SharedRow } from "../../api/projection";
 
 /**
@@ -104,11 +104,14 @@ export interface MonthReport {
   month: string;
   /** Entries recorded this month (personal and shared), newest first. */
   recordedEntries: OverviewEntry[];
-  /** Scheduled occurrences not recorded yet (personal and shared), soonest first. */
+  /**
+   * What the month still expects, soonest first: scheduled occurrences not recorded yet (personal
+   * and shared) and income dated after today (MAZ-136), which counts toward Projected only.
+   */
   comingUp: OverviewEntry[];
   recorded: KindTotals;
   projected: KindTotals;
-  /** Scheduled income not recorded yet (part of projected). */
+  /** Scheduled income not recorded yet plus income dated after today (part of projected). */
   expectedIncome: number;
   /** Income − expenses − investments of recorded entries ("Left to spend"). Negative means overspent. */
   recordedNet: number;
@@ -117,6 +120,7 @@ export interface MonthReport {
   /** Your share of recorded shared expenses, already in `recorded.expense`. */
   sharedSpent: number;
   sharedCount: number;
+  /** The recorded month's money flow: what came in and where it went. Never includes expected income. */
   flow: MoneyFlow;
   /** Recorded spending by category, largest first. */
   spending: (Category & { amount: number })[];
@@ -128,15 +132,18 @@ export interface MonthReport {
 const byDateAscThenId = (a: Transaction, b: Transaction) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id);
 const byDateDescThenId = (a: Transaction, b: Transaction) => b.date.localeCompare(a.date) || a.id.localeCompare(b.id);
 
-/** The month's report from the ledger view. Every total is independent of the list's filters. */
-export function monthReport(view: Ledger, month: string): MonthReport {
-  const overview = selectOverview(view, { month, day: null, filter: "all", categoryId: null, search: "" });
+/**
+ * The month's report from the ledger view. Every total is independent of the list's filters.
+ * `today` (the local date) makes income dated after it expected (MAZ-136); Home always passes it.
+ */
+export function monthReport(view: Ledger, month: string, today?: string): MonthReport {
+  const overview = selectOverview(view, { month, day: null, filter: "all", categoryId: null, search: "", ...(today === undefined ? {} : { today }) });
   const recordedEntries = [...overview.monthEntries].sort(byDateDescThenId);
   const shared = recordedEntries.filter(isSharedEntry);
   return {
     month,
     recordedEntries,
-    comingUp: [...overview.scheduled].sort(byDateAscThenId),
+    comingUp: [...overview.expected, ...overview.scheduled].sort(byDateAscThenId),
     recorded: overview.recorded,
     projected: overview.summary,
     expectedIncome: overview.expectedIncome,
@@ -144,7 +151,9 @@ export function monthReport(view: Ledger, month: string): MonthReport {
     projectedNet: net(overview.summary),
     sharedSpent: shared.reduce((sum, entry) => sum + entry.share, 0),
     sharedCount: shared.length,
-    flow: buildMoneyFlow(overview.moneyFlowEntries, view.categories),
+    // Recorded entries only (personal and shared, at your share), like Left to spend and the native
+    // iOS flow, so Left over always matches it. Not the legacy `moneyFlowEntries` (MAZ-136).
+    flow: buildMoneyFlow(overview.monthEntries, view.categories),
     spending: overview.spending,
     calendarEntries: overview.calendarEntries,
     empty: overview.calendarEntries.length === 0,
@@ -201,11 +210,16 @@ export interface CalendarDay {
   expense: number;
   income: number;
   investment: number;
+  /** Expected or scheduled entries on the day: scheduled previews and income dated after today (the amber ring). */
   scheduled: number;
 }
 
-/** The month's days with what happened on each, built in one pass over the entries (no per-cell scans). */
-export function calendarDays(month: string, entries: readonly OverviewEntry[]): { offset: number; days: CalendarDay[] } {
+/**
+ * The month's days with what happened on each, built in one pass over the entries (no per-cell
+ * scans). Scheduled occurrences and income dated after `today` (MAZ-136) count as `scheduled`
+ * ("expected or scheduled"): an amber ring, never a recorded dot.
+ */
+export function calendarDays(month: string, entries: readonly OverviewEntry[], today?: string): { offset: number; days: CalendarDay[] } {
   const { daysInMonth, offset } = calendarMonth(month);
   const days: CalendarDay[] = Array.from({ length: daysInMonth }, (_, index) => ({
     date: `${month}-${String(index + 1).padStart(2, "0")}`,
@@ -221,7 +235,7 @@ export function calendarDays(month: string, entries: readonly OverviewEntry[]): 
     const day = days[Number(entry.date.slice(8)) - 1];
     if (!day) continue;
     day.count += 1;
-    if (entry.scheduled) day.scheduled += 1;
+    if (isExpected(entry, today)) day.scheduled += 1;
     else day[entry.kind] += entry.share;
   }
   return { offset, days };

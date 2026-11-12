@@ -1,8 +1,8 @@
 import type { OverviewEntry } from "@domain/selectors/overview.ts";
 import { useId, useMemo, useRef, type KeyboardEvent } from "react";
+import { useToday } from "../../app/useToday";
 import { Button, cx } from "../../design/controls";
 import { formatCents } from "../../design/Money";
-import { localDate } from "../households/model";
 import { calendarDays, type CalendarDay } from "./model";
 
 const WEEKDAYS = [
@@ -26,7 +26,7 @@ export function describeDay(day: CalendarDay, currency: string | undefined): str
   if (day.expense) parts.push(`spent ${formatCents(day.expense, currency)}`);
   if (day.income) parts.push(`income ${formatCents(day.income, currency)}`);
   if (day.investment) parts.push(`invested ${formatCents(day.investment, currency)}`);
-  if (day.scheduled) parts.push(`${String(day.scheduled)} scheduled`);
+  if (day.scheduled) parts.push(`${String(day.scheduled)} expected or scheduled`);
   return `${longDay(day.date)}${parts.length ? `: ${parts.join(", ")}` : ", nothing recorded"}`;
 }
 
@@ -41,15 +41,17 @@ interface MonthCalendarProps {
 
 /**
  * The month calendar (specimen `calendar`). Dots use the meaning colors only: gray spent, green
- * income, indigo invested, and an amber ring for scheduled occurrences, which are never drawn like
- * recorded entries. Selecting a day filters the list below (`?day=`), selecting it again clears it.
+ * income, indigo invested, and an amber ring for what is expected or scheduled (scheduled
+ * occurrences and income dated after today, MAZ-136), which is never drawn like a recorded entry.
+ * The legend and each day's accessible name say "expected or scheduled" for the ring. Selecting a
+ * day filters the list below (`?day=`), selecting it again clears it.
  * Arrow keys move by day and week, Home and End to the ends of the week.
  */
 export function MonthCalendar({ month, monthLabel, entries, selected, currency, onSelect }: MonthCalendarProps) {
   const headingId = useId();
   const grid = useRef<HTMLTableElement>(null);
-  const { offset, days } = useMemo(() => calendarDays(month, entries), [month, entries]);
-  const today = localDate();
+  const today = useToday();
+  const { offset, days } = useMemo(() => calendarDays(month, entries, today), [month, entries, today]);
   const focusable = selected?.startsWith(`${month}-`) ? selected : today.startsWith(`${month}-`) ? today : days[0]?.date;
   const weeks: (CalendarDay | null)[][] = [];
   const cells: (CalendarDay | null)[] = [...Array.from({ length: offset }, () => null), ...days];
@@ -144,7 +146,7 @@ export function MonthCalendar({ month, monthLabel, entries, selected, currency, 
           <span className="calendar__dot calendar__dot--investment" aria-hidden="true" /> Invested
         </li>
         <li>
-          <span className="calendar__dot calendar__dot--scheduled" aria-hidden="true" /> Scheduled
+          <span className="calendar__dot calendar__dot--scheduled" aria-hidden="true" /> Expected or scheduled
         </li>
       </ul>
     </section>

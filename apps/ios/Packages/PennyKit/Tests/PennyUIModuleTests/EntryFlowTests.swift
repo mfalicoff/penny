@@ -1,5 +1,6 @@
 import Foundation
 import PennyData
+import PennyDesign
 import PennyDomain
 import Testing
 
@@ -170,5 +171,79 @@ struct EntryFlowTests {
         #expect(ActivityPeriodText.title(.year(2026)) == "2026")
         #expect(ActivityPeriodText.scope(ActivityFilters(period: .allTime, kind: .expense)) == "all months expenses")
         #expect(ActivityPeriodText.scope(ActivityFilters(period: .month(month))).hasSuffix(" entries"))
+    }
+
+    @Test("whenARowIsRecordedExpectedOrScheduled_EntryRow_ShouldSayItOnceAndKeepTheCategory")
+    func rowStatusText() throws {
+        let later = today.adding(days: 3)
+        func rule(_ id: String, _ kind: EntryKind, _ category: String) -> RecurringRule {
+            RecurringRule(
+                id: id, title: id, kind: kind, total: 5_000, share: 5_000, categoryId: category, date: later,
+                frequency: .monthly, nextDate: later, anchorDay: later.day)
+        }
+        let ledger = Ledger(
+            transactions: [
+                entry("lunch"),
+                LedgerEntry(
+                    id: "invoice", title: "Invoice", kind: .income, total: 60_000, share: 60_000,
+                    categoryId: "salary", date: later),
+            ], recurring: [rule("pay", .income, "salary"), rule("gym", .expense, "health")])
+        let report = LedgerReport(ledger: ledger)
+        let summary = report.month(MonthKey(today), today: today)
+        let rows = report.monthEntries(summary)
+        func row(_ id: String) throws -> ReportEntry { try #require(rows.first { $0.id == id }) }
+        func meta(_ id: String) throws -> String {
+            let entry = try row(id)
+            let category = report.categories.first { $0.id == entry.categoryId }
+            return EntryRow.meta(entry, category: category, report: report, today: today)
+        }
+        func parts(_ id: String) throws -> [String] { try meta(id).components(separatedBy: " · ") }
+        func name(_ category: String) -> String { report.categories.first { $0.id == category }?.name ?? "?" }
+
+        // Recorded: no status; a split share says "your share" instead of the category.
+        #expect(try parts("lunch").dropFirst() == ["your share"])
+        #expect(EntryRow.status(try row("lunch"), today: today) == nil)
+        // Income dated after today, scheduled income, and a scheduled expense: one status each.
+        #expect(try parts("invoice").dropFirst() == ["Expected", name("salary")])
+        let pay = Recurrence.occurrenceID(ruleID: "pay", date: later)
+        let gym = Recurrence.occurrenceID(ruleID: "gym", date: later)
+        #expect(try parts(pay).dropFirst() == ["Expected", name("salary")])
+        #expect(try parts(gym).dropFirst() == ["Scheduled", name("health")])
+        for id in ["lunch", "invoice", pay, gym] {
+            let text = try meta(id).lowercased()
+            #expect(text.components(separatedBy: "expected").count <= 2, "\(id) says expected once")
+            #expect(text.components(separatedBy: "scheduled").count <= 2, "\(id) says scheduled once")
+        }
+        // Waiting to sync replaces the meta line but keeps the status in words.
+        #expect(EntryRow.waitingText(try row("lunch"), today: today) == "Waiting to sync")
+        #expect(EntryRow.waitingText(try row("invoice"), today: today) == "Waiting to sync · Expected")
+        #expect(EntryRow.waitingText(try row(gym), today: today) == "Waiting to sync · Scheduled")
+        // On its date the income is recorded: no status.
+        #expect(EntryRow.status(try row("invoice"), today: later) == nil)
+    }
+
+    @Test("whenIncomeIsDatedAfterToday_EntryRowAndForm_ShouldMarkItExpected")
+    func futureIncomeIsExpected() throws {
+        let tomorrow = today.adding(days: 1)
+        let pay = LedgerEntry(
+            id: "pay", title: "Pay", kind: .income, total: 200_000, share: 200_000, categoryId: "salary",
+            date: tomorrow)
+        let rent = LedgerEntry(
+            id: "rent", title: "Rent", kind: .expense, total: 90_000, share: 90_000, categoryId: "home",
+            date: tomorrow)
+        let ledger = Ledger(transactions: [pay, rent])
+        let rows = LedgerReport(ledger: ledger).recorded
+        let income = try #require(rows.first { $0.id == "pay" })
+        let expense = try #require(rows.first { $0.id == "rent" })
+        // MAZ-136: income dated after today is expected (amber); a future expense is not (MAZ-139).
+        #expect(EntryRow.meaning(income, today: today) == .pending)
+        #expect(EntryRow.meaning(income, today: tomorrow) == .income, "on its date it is recorded")
+        #expect(EntryRow.meaning(expense, today: today) == .expense)
+        let note = EntryText.futureDate(.income, date: tomorrow, today: today)
+        #expect(note.title == "Tomorrow is still ahead, so this pay shows as expected.")
+        #expect(note.message == "It counts toward Projected until the day it's recorded — not toward Left to spend.")
+        #expect(
+            EntryText.futureDate(.expense, date: tomorrow, today: today).message.hasPrefix(
+                "Penny records this entry now."))
     }
 }

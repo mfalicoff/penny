@@ -76,30 +76,50 @@ extension ActivityFilters.Period {
 /// Activity's rows and the period's totals.
 public struct ActivityResult: Equatable, Sendable {
     /// The whole period's recorded totals (your shares). The day, kind, category and query
-    /// never change them, so filtering never makes money look different.
+    /// never change them, so filtering never makes money look different. Income dated after
+    /// today is expected (MAZ-136) and left out, so a month's totals equal Home's
+    /// `MonthSummary.recorded`.
     public let summary: KindTotals
-    /// Matching recorded rows (never previews), newest first then id: chronological, so the
-    /// list can group them by day whatever the query.
+    /// The period's income dated after today (your shares): listed, but not in `summary`.
+    public let expectedIncome: Int64
+    /// Matching ledger rows (never previews), newest first then id: chronological, so the
+    /// list can group them by day whatever the query. Expected income is listed (and marked).
     public let entries: [ReportEntry]
+
+    public init(summary: KindTotals, expectedIncome: Int64 = 0, entries: [ReportEntry]) {
+        self.summary = summary
+        self.expectedIncome = expectedIncome
+        self.entries = entries
+    }
 }
 
 extension LedgerReport {
     /// Activity over this device's data (personal entries with pending changes, the demo, or
     /// any shared rows the report holds), searched with the shared normalization and literal
     /// tiers (`FoldedSearchIndex`). Pass the index built for this report.
-    public func activity(_ filters: ActivityFilters, index: FoldedSearchIndex) -> ActivityResult {
+    ///
+    /// - Parameter today: the person's local date. Income dated after it is expected (MAZ-136):
+    ///   listed, but left out of `summary` as Home leaves it out of `recorded`. `nil` counts
+    ///   every entry.
+    public func activity(
+        _ filters: ActivityFilters, index: FoldedSearchIndex, today: CalendarDate? = nil
+    ) -> ActivityResult {
         let periodEntries = recorded.filter { filters.period.contains($0.date) }
         let needle = FoldedSearchIndex.needle(filters.query)
         let entries =
             periodEntries
             .filter { filters.admits($0) && index.match($0, needle: needle) != nil }
             .sorted(by: ReportEntry.newestFirst)
-        return ActivityResult(summary: KindTotals(periodEntries), entries: entries)
+        let expected = periodEntries.filter { $0.isExpectedIncome(today: today) }
+        return ActivityResult(
+            summary: KindTotals(periodEntries.filter { !$0.isExpectedIncome(today: today) }),
+            expectedIncome: expected.reduce(0) { $0 + $1.share }, entries: entries)
     }
 
-    /// The period's recorded totals alone (what Activity shows above server results).
-    public func totals(_ period: ActivityFilters.Period) -> KindTotals {
-        KindTotals(recorded.filter { period.contains($0.date) })
+    /// The period's recorded totals alone (what Activity shows above server results), without
+    /// income dated after `today` (MAZ-136).
+    public func totals(_ period: ActivityFilters.Period, today: CalendarDate? = nil) -> KindTotals {
+        KindTotals(recorded.filter { period.contains($0.date) && !$0.isExpectedIncome(today: today) })
     }
 }
 

@@ -2,7 +2,9 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import type { Ledger, Transaction } from "@domain/ledger.ts";
+import { isExpectedIncome } from "@domain/summary.ts";
 import { ApiError } from "../../api/client";
+import { useToday } from "../../app/useToday";
 import { ledgerCurrencyQuery } from "../../api/ledger";
 import { searchTransactionsQuery } from "../../api/search";
 import { useAccountEmail } from "../../auth/account";
@@ -182,6 +184,7 @@ const TONE = { expense: "expense", income: "income", investment: "investment" } 
 
 /** One keyboard-reachable row per entry: a button for personal entries, a link for shared ones. */
 function RowList({ rows, ledger, currency, onOpen }: { rows: ActivityRow[]; ledger: Ledger | null; currency: string | undefined; onOpen: ResultsProps["onOpen"] }) {
+  const today = useToday();
   if (rows.length === 0) return null;
   const categories = new Map(ledger?.categories.map((category) => [category.id, category]));
   const accounts = new Map(ledger?.accounts.map((account) => [account.id, account.name]));
@@ -192,6 +195,8 @@ function RowList({ rows, ledger, currency, onOpen }: { rows: ActivityRow[]; ledg
           const { entry } = row;
           const category = categories.get(entry.categoryId);
           const account = entry.accountId ? accounts.get(entry.accountId) : undefined;
+          // MAZ-136: income dated after today is expected; it counts toward Projected, not Left to spend.
+          const expected = isExpectedIncome(entry, today);
           return (
             <li key={row.key} className="results__row activity-row">
               <button
@@ -202,17 +207,18 @@ function RowList({ rows, ledger, currency, onOpen }: { rows: ActivityRow[]; ledg
                   onOpen(entry, event.currentTarget);
                 }}
               >
-                <span className="category-dot" style={{ color: category?.color }}>
+                <span className={expected ? "category-dot category-dot--expected" : "category-dot"} style={{ color: category?.color }}>
                   <Icon name={categoryIcon(category?.icon)} size={18} />
                 </span>
                 <span className="results__title">{entry.title}</span>
                 <span className="results__meta">
                   {row.pending ? "Waiting to sync" : "Personal"}
+                  {expected ? " · Expected" : ""}
                   {category ? ` · ${category.name}` : ""}
                   {account ? ` · ${account}` : ""} · <time dateTime={entry.date}>{dayLabel(entry.date, true)}</time>
                 </span>
                 <span className="results__amount">
-                  <Money cents={entry.share} currency={currency} tone={TONE[entry.kind]} />
+                  <Money cents={entry.share} currency={currency} tone={expected ? "pending" : TONE[entry.kind]} />
                 </span>
               </button>
             </li>

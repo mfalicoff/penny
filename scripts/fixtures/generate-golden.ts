@@ -11,6 +11,8 @@ import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
 import { cents, nextOccurrence, personalShare, type Frequency, type Ledger } from "../../src/domain/ledger.ts";
 import { mergeLedger } from "../../src/domain/merge.ts";
+import { dateKeyIn } from "../../src/domain/calendar.ts";
+import { monthBreakdown, summarizeMonth } from "../../src/domain/summary.ts";
 import { ledgerWriteSchema } from "../../server/validation/ledger.ts";
 
 const directory = new URL("../../contracts/fixtures/", import.meta.url);
@@ -126,12 +128,82 @@ function merge() {
   };
 }
 
+// MAZ-136: Left to spend (recorded) versus Projected around today. Income dated after the
+// person's local date is expected: it counts toward Projected, not Left to spend, until its
+// date. Income only; future-dated expenses and investments stay recorded (MAZ-139).
+function monthTotals() {
+  const entry = (id: string, kind: string, categoryId: string, share: number, date: string) =>
+    ({ id, title: id, kind, total: share, share, categoryId, date, note: "" });
+  const categories: Ledger["categories"] = [
+    { id: "food", name: "Food", icon: "cafe-outline", color: "#E47850", kind: "expense" },
+    { id: "salary", name: "Salary", icon: "cash-outline", color: "#3E8E5E", kind: "income" },
+    { id: "investments", name: "Investments", icon: "trending-up-outline", color: "#5B7DB1", kind: "investment" },
+  ];
+  const rule = (id: string, kind: string, categoryId: string, share: number, nextDate: string, anchorDay: number) =>
+    ({ ...entry(id, kind, categoryId, share, "2026-09-01"), frequency: "monthly", nextDate, anchorDay, active: true });
+  const recurring = [rule("pay", "income", "salary", 200000, "2026-10-30", 30), rule("gym", "expense", "food", 4000, "2026-10-28", 28)] as Ledger["recurring"];
+  const october = [
+    entry("september-pay", "income", "salary", 300000, "2026-09-30"),
+    entry("salary", "income", "salary", 250000, "2026-10-01"),
+    entry("rent", "expense", "food", 120000, "2026-10-01"),
+    entry("bonus", "income", "salary", 40000, "2026-10-15"),
+    entry("freelance", "income", "salary", 60000, "2026-10-16"),
+    entry("concert", "expense", "food", 9000, "2026-10-20"),
+    entry("etf", "investment", "investments", 50000, "2026-10-25"),
+    entry("refund", "income", "salary", 2500, "2026-10-31"),
+    entry("november-pay", "income", "salary", 100000, "2026-11-01"),
+  ];
+  const ledgers = {
+    october: ledger(october, { categories, recurring }),
+    // The 2026-10-30 pay was recorded ahead of its date (its occurrence id is in the ledger):
+    // it replaces the preview and is expected by its date like any other income.
+    "pay-recorded-early": ledger([...october, { ...entry("pay:2026-10-30", "income", "salary", 200000, "2026-10-30"), title: "pay", recurringId: "pay" }], { categories, recurring }),
+  };
+  const todayCases = ([
+    ["2026-10-16T02:30:00Z", "America/Toronto"], ["2026-10-16T02:30:00Z", "UTC"], ["2026-10-15T15:30:00Z", "Asia/Tokyo"],
+    ["2026-10-15T15:30:00Z", "America/Vancouver"], ["2026-10-15T10:30:00Z", "Pacific/Kiritimati"], ["2026-10-16T09:30:00Z", "Pacific/Pago_Pago"],
+    ["2026-11-01T05:30:00Z", "America/Toronto"], ["2026-10-31T23:59:59Z", "Europe/London"], ["2026-03-08T07:30:00Z", "America/Toronto"],
+  ] as const).map(([instant, timeZone]) => ({ instant, timeZone, today: dateKeyIn(new Date(instant), timeZone) }));
+  const clocks = (instant: string, timeZone: string) => ({ instant, timeZone });
+  const inputs: { name: string; ledger: keyof typeof ledgers; today: string | null; clock?: { instant: string; timeZone: string } }[] = [
+    { name: "income dated today is recorded; income dated tomorrow is expected", ledger: "october", today: "2026-10-15" },
+    { name: "the day before, income dated today is still expected", ledger: "october", today: "2026-10-14" },
+    { name: "on the last day of the month every dated entry is recorded", ledger: "october", today: "2026-10-31" },
+    { name: "a month still ahead: all its income is expected", ledger: "october", today: "2026-09-20" },
+    { name: "a past month: everything dated is recorded", ledger: "october", today: "2026-11-11" },
+    { name: "time zone: 02:30 UTC on Oct 16 is still Oct 15 in Toronto, so Oct 16 income is expected", ledger: "october", today: dateKeyIn(new Date("2026-10-16T02:30:00Z"), "America/Toronto"), clock: clocks("2026-10-16T02:30:00Z", "America/Toronto") },
+    { name: "time zone: the same instant in UTC is Oct 16, so Oct 16 income is recorded", ledger: "october", today: dateKeyIn(new Date("2026-10-16T02:30:00Z"), "UTC"), clock: clocks("2026-10-16T02:30:00Z", "UTC") },
+    { name: "an occurrence recorded ahead of its date replaces its preview and stays expected", ledger: "pay-recorded-early", today: "2026-10-15" },
+    { name: "without today (legacy Overview) every dated entry is recorded", ledger: "october", today: null },
+  ];
+  const cases = inputs.map((input) => {
+    const breakdown = monthBreakdown(ledgers[input.ledger], "2026-10", input.today === null ? {} : { today: input.today });
+    const summary = summarizeMonth(ledgers[input.ledger], "2026-10", input.today === null ? {} : { today: input.today });
+    return {
+      ...input, month: "2026-10",
+      expected: {
+        recorded: summary.recorded, projected: summary.projected, expectedIncome: summary.expectedIncome,
+        recordedNet: summary.recordedNet, projectedNet: summary.projectedNet,
+        // Ledger entries shown as expected (amber ring) and the scheduled previews, by id.
+        expectedIds: breakdown.expected.map((item) => item.id).sort(),
+        scheduledIds: breakdown.scheduled.map((item) => item.id).sort(),
+      },
+    };
+  });
+  return {
+    generator,
+    description: "Left to spend (recorded) versus Projected around today (MAZ-136). Income dated after the person's local date is expected: it counts toward Projected, not recorded totals or Left to spend, until its date; the entry itself never changes. Projected also adds every scheduled occurrence not yet recorded. Scope: income only; future-dated expenses and investment contributions stay recorded (MAZ-139). `todayCases` turn an instant and an IANA time zone into the local date; `today: null` is the legacy Overview, which does not split.",
+    todayCases, ledgers, cases,
+  };
+}
+
 // Which suites consume each fixture. A language with no implementation yet names the
 // issue that adds it; a fixture only meaningful to some layers says so.
 const consumers: Record<string, Record<string, string[] | string>> = {
   "money.json": { typescript: ["tests/core/golden-fixtures.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Contracts/GoldenFixtureTests.cs"], swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"] },
   "recurrence.json": { typescript: ["tests/core/golden-fixtures.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Contracts/GoldenFixtureTests.cs"], swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"] },
   "merge-conflicts.json": { typescript: ["tests/core/golden-fixtures.test.ts"], csharp: "not applicable: the server never merges; it rejects stale writes with 409 (http-journey.json)", swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift", "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/LedgerMergeTests.swift"] },
+  "month-totals.json": { typescript: ["tests/core/golden-fixtures.test.ts"], csharp: "not applicable: Left to spend and Projected are client calculations; the seeded server's ledger is checked against redesign-states.json totals (FullStackSeedTests)", swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift", "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/ReportTests.swift"] },
   "parity-cases.json": { typescript: ["tests/core/contracts.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Households/HouseholdSplitsTests.cs"], swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"] },
   "shared-splits.json": { typescript: ["tests/core/households-domain.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Households/HouseholdSplitsTests.cs"], swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"] },
   "settlement.json": { typescript: ["tests/core/households-domain.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Households/MonthlySettlementTests.cs"], swift: "MAZ-75 (shared settlement in Swift)" },
@@ -157,6 +229,7 @@ export function generated(): Record<string, string> {
     "money.json": serialize(money()),
     "recurrence.json": serialize(recurrence()),
     "merge-conflicts.json": serialize(merge()),
+    "month-totals.json": serialize(monthTotals()),
   };
 }
 

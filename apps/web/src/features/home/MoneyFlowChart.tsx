@@ -25,13 +25,12 @@ interface MoneyFlowChartProps {
   monthLabel: string;
   /** Heading level of the card title (2 on Insights, 3 inside Home's Explore your month). */
   level?: 2 | 3;
-  /** Scheduled income not received yet, which the flow includes (the legacy money-flow input). */
-  expectedIncome?: number;
 }
 
 /**
  * "Follow your money" (specimen `money-flow`, web cards `web-home` and `web-insights`): where the
- * month's money came from and where it went, from the shared `buildMoneyFlow` (your share of
+ * month's recorded money came from and where it went (never expected or scheduled entries, so it
+ * matches Left to spend, as on iOS), from the shared `buildMoneyFlow` (your share of
  * split expenses, at most five categories per side plus "Other", Invested and Left over as
  * destinations, "Beyond income" as a source in a deficit month).
  *
@@ -40,7 +39,7 @@ interface MoneyFlowChartProps {
  * a button: click, Enter or Space focuses it (and again clears), arrow keys move between nodes,
  * Escape clears. The focus card announces the selection, and "Show as a table" lists every value.
  */
-export function MoneyFlowChart({ flow, currency, monthLabel, level = 2, expectedIncome = 0 }: MoneyFlowChartProps) {
+export function MoneyFlowChart({ flow, currency, monthLabel, level = 2 }: MoneyFlowChartProps) {
   const headingId = useId();
   const hintId = useId();
   const [selected, setSelected] = useState<string | null>(null);
@@ -105,8 +104,7 @@ export function MoneyFlowChart({ flow, currency, monthLabel, level = 2, expected
           <Sankey flow={flow} nodes={nodes} selected={selected} describe={describe} toggle={toggle} onKeyDown={onKeyDown} hintId={hintId} />
           <Stacked flow={flow} nodes={nodes} selected={selected} describe={describe} toggle={toggle} onKeyDown={onKeyDown} hintId={hintId} />
           <p className="note">
-            Your share of split and shared expenses only. Investments are contributions, not spending, and come out of what's left.
-            {expectedIncome > 0 ? ` Came in includes ${money(expectedIncome)} of expected recurring income not recorded yet.` : ""}
+            Recorded entries only, so Left over matches Left to spend; expected income joins on its date or once it's recorded. Your share of split and shared expenses only. Investments are contributions, not spending, and come out of what's left.
           </p>
           <FlowTable flow={flow} nodes={nodes} currency={currency} monthLabel={monthLabel} />
         </>

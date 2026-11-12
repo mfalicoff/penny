@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { totals, type Kind, type Ledger, type Transaction } from "@domain/ledger.ts";
 import { searchLookups, searchMatcher } from "@domain/search.ts";
-import { isRecorded, net } from "@domain/summary.ts";
+import { isExpectedIncome, isRecorded, net } from "@domain/summary.ts";
 import { ApiError } from "../../api/client";
 import { ledgerQuery } from "../../api/ledger";
 import { householdsQuery } from "../../api/households";
@@ -91,17 +91,26 @@ export interface PeriodTotals {
   /** Your share of shared expenses, already in `expense`. */
   shared: number;
   sharedCount: number;
+  /** Income dated after today in the period (MAZ-136): listed, not in `income` or `net` yet. */
+  expectedIncome: number;
 }
 
-/** Totals of the period: recorded personal shares plus your share of recorded shared expenses. Independent of every other filter. */
-export function periodTotals(ledger: Ledger, period: Period, shared: SharedRow[]): PeriodTotals {
-  const personal = totals(ledger.transactions.filter((entry) => isRecorded(entry) && inPeriod(entry.date, period)));
+/**
+ * Totals of the period: recorded personal shares plus your share of recorded shared expenses.
+ * Independent of every other filter. `today` is the local date (`useToday`): income dated after it
+ * is expected (MAZ-136), listed and marked "Expected" but left out of Earned and Left until its
+ * date, so a month here matches Home's recorded totals. Future-dated expenses and investments count.
+ */
+export function periodTotals(ledger: Ledger, period: Period, shared: SharedRow[], today: string): PeriodTotals {
+  const inRange = ledger.transactions.filter((entry) => isRecorded(entry) && inPeriod(entry.date, period));
+  const personal = totals(inRange.filter((entry) => !isExpectedIncome(entry, today)));
+  const expectedIncome = inRange.filter((entry) => isExpectedIncome(entry, today)).reduce((sum, entry) => sum + entry.share, 0);
   // A household's currency matches its members' ledgers; a row in another currency, or one whose
   // currency isn't known yet, is never added in (as the legacy `ledgerWithHouseholds`).
   const counted = shared.filter((row) => row.householdCurrency === ledger.currency);
   const sharedTotal = counted.reduce((sum, row) => sum + row.shareCents, 0);
   const result = { ...personal, expense: personal.expense + sharedTotal };
-  return { ...result, net: net(result), shared: sharedTotal, sharedCount: counted.length };
+  return { ...result, net: net(result), shared: sharedTotal, sharedCount: counted.length, expectedIncome };
 }
 
 export type ActivityRow =

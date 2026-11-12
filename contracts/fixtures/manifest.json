@@ -4,7 +4,7 @@
   "fixtures": [
     {
       "file": "full-stack-seeds.json",
-      "sha256": "9cba3b7820204c6ea144e11c491edf04337fc932cf80391cf6fdee1065190bb0",
+      "sha256": "47e4b1749f8f02a7c517acc87fc3c0ff18b8dcfedc08390a01c3dc34b6a1d50f",
       "generatedBy": null,
       "consumers": {
         "typescript": [
@@ -83,6 +83,21 @@
       }
     },
     {
+      "file": "month-totals.json",
+      "sha256": "5f4c90ba0bdc484655d7789bd45e217050dc0069cdd2f98b399ffa812232b1ae",
+      "generatedBy": "scripts/fixtures/generate-golden.ts",
+      "consumers": {
+        "typescript": [
+          "tests/core/golden-fixtures.test.ts"
+        ],
+        "csharp": "not applicable: Left to spend and Projected are client calculations; the seeded server's ledger is checked against redesign-states.json totals (FullStackSeedTests)",
+        "swift": [
+          "contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift",
+          "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/ReportTests.swift"
+        ]
+      }
+    },
+    {
       "file": "parity-cases.json",
       "sha256": "12f0fb94110417c987b290bb952821cea3f64dc69323632575fbd0587079d8f0",
       "generatedBy": null,
@@ -116,7 +131,7 @@
     },
     {
       "file": "redesign-states.json",
-      "sha256": "0a3b289fca0ffcec6364ac21f315f4443eea6fd87fff6e7c281a8794160c6657",
+      "sha256": "309abd9ce3231d010d1de0ba0c46b8add5c416626e1e44bf2a7099c4713a8b23",
       "generatedBy": null,
       "consumers": {
         "typescript": [

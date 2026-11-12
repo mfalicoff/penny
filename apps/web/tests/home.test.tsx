@@ -1,7 +1,7 @@
 import { onlineManager } from "@tanstack/react-query";
 import { configure, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { entry, ledgerServer, sharedRow } from "./fakes/ledgerServer";
 import { renderApp } from "./render";
 
@@ -13,7 +13,18 @@ import { renderApp } from "./render";
 configure({ asyncUtilTimeout: 4000 });
 vi.setConfig({ testTimeout: 20_000 });
 
+// The clock is pinned to Wed Nov 11, 2026, local noon, so the month's recorded entries (Nov 1–7) are
+// before today, the Nov 20 and Nov 25 schedules are still ahead (not yet recorded by the recurrence
+// runner), and the totals hold on any day CI runs.
+const TODAY = new Date("2026-11-11T12:00:00");
+
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(TODAY);
+});
+
 afterEach(() => {
+  vi.useRealTimers();
   localStorage.clear();
   onlineManager.setOnline(true);
 });
@@ -35,7 +46,7 @@ const hero = () => screen.getByRole("region", { name: "Left to spend" });
 const explore = () => screen.getByRole("region", { name: "Explore your month" });
 
 describe("Home", () => {
-  it("leads with recorded and projected remaining, naming the expected recurring income", async () => {
+  it("leads with recorded and projected remaining, naming the expected income", async () => {
     const api = server();
     renderApp("/?month=2026-11");
     await waitFor(() => {
@@ -45,7 +56,7 @@ describe("Home", () => {
     expect(within(hero()).getByText(/^Recorded remaining:/).parentElement).toHaveTextContent("$3,113.80");
     // + 400.00 expected income − 8.00 scheduled shared share
     expect(within(hero()).getByText(/^Projected remaining:/).parentElement).toHaveTextContent("$3,505.80");
-    expect(hero()).toHaveTextContent("includes $400.00 expected recurring income and $8.00 scheduled to go out");
+    expect(hero()).toHaveTextContent("includes $400.00 expected income and $8.00 scheduled to go out");
     expect(within(hero()).getByText("Came in").parentElement).toHaveTextContent("$4,800.00");
     expect(within(hero()).getByText("Spent · your share").parentElement).toHaveTextContent("$1,486.20");
     expect(within(hero()).getByText("Invested").parentElement).toHaveTextContent("$200.00");
@@ -110,7 +121,9 @@ describe("Home", () => {
     const calendar = await within(await screen.findByRole("region", { name: "Explore your month" })).findByRole("region", { name: "Calendar" });
     const sixth = within(calendar).getByRole("button", { name: /^Friday, November 6/ });
     expect(sixth).toHaveAccessibleName("Friday, November 6: spent $6.20");
-    expect(within(calendar).getByRole("button", { name: /^Wednesday, November 25/ })).toHaveAccessibleName("Wednesday, November 25: 1 scheduled");
+    expect(within(calendar).getByRole("button", { name: /^Wednesday, November 25/ })).toHaveAccessibleName("Wednesday, November 25: 1 expected or scheduled");
+    // The amber ring covers scheduled previews and income dated after today; the legend says both.
+    expect(within(calendar).getByRole("list", { name: "Legend" })).toHaveTextContent("Expected or scheduled");
     await user.click(sixth);
     await waitFor(() => {
       expect(router.state.location.search).toEqual({ month: "2026-11", day: "2026-11-06" });
@@ -162,10 +175,10 @@ describe("Home", () => {
       expect(within(diagram).getAllByRole("button").length).toBeGreaterThan(3);
     });
     const salary = within(diagram).getByRole("button", { name: /^Came in: Salary/ });
-    expect(salary).toHaveAccessibleName("Came in: Salary, $5,200.00, 100% of what came in");
+    expect(salary).toHaveAccessibleName("Came in: Salary, $4,800.00, 100% of what came in");
     await user.click(salary);
     expect(salary).toHaveAttribute("aria-pressed", "true");
-    expect(flow.querySelector(".flow__focus")).toHaveTextContent("Salary $5,200.00 · 100% of what came in");
+    expect(flow.querySelector(".flow__focus")).toHaveTextContent("Salary $4,800.00 · 100% of what came in");
 
     await user.keyboard("{ArrowDown}");
     const food = within(diagram).getByRole("button", { name: /^Went out: Food & drinks/ });
@@ -177,9 +190,12 @@ describe("Home", () => {
     expect(food).toHaveAttribute("aria-pressed", "false");
     expect(flow.querySelector(".flow__focus")).toHaveTextContent("Nothing focused");
 
-    expect(flow).toHaveTextContent("Came in includes $400.00 of expected recurring income not recorded yet.");
+    // Recorded-only (MAZ-136): the scheduled $400.00 retainer is not in Came in, and Left over is Left to spend.
+    expect(flow).not.toHaveTextContent("expected recurring income");
+    expect(flow).toHaveTextContent("Recorded entries only, so Left over matches Left to spend");
+    expect(within(flow).getByText("Came in", { selector: "dt" }).nextElementSibling).toHaveTextContent("$4,800.00");
     const table = within(flow).getByRole("table", { name: "Money flow for November 2026" });
-    expect(within(table).getByRole("rowheader", { name: "Left over" }).parentElement).toHaveTextContent("Went out" + "Left over" + "$3,513.80" + "68%");
+    expect(within(table).getByRole("rowheader", { name: "Left over" }).parentElement).toHaveTextContent("Went out" + "Left over" + "$3,113.80" + "65%");
   });
 
   it("shows the first-entry state instead of zero-value charts", async () => {

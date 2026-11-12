@@ -59,6 +59,39 @@ final class ScreenshotTests: PennyUITestCase {
         }
     }
 
+    /// MAZ-77's redesign specimens: home, home-dark (the legacy AMOLED and Catppuccin
+    /// appearances open as dark, MAZ-132), money-flow, insights, calendar and, on iPad, the
+    /// dashboard Home (the `desktop` reference), at the default size and the largest
+    /// accessibility size, light and dark, for visual review of truncation and overlap.
+    @MainActor
+    func test_whenCapturingTheOverview_Screenshots_ShouldCoverEverySpecimenAndAppearance() async throws {
+        for appearance in [XCUIDevice.Appearance.light, .dark] {
+            XCUIDevice.shared.appearance = appearance
+            for variant in Self.variants where variant.name == "default" || variant.name == "large-text" {
+                var options = LaunchOptions()
+                options.usesStack = false
+                options.demo = true
+                options.contentSize = variant.contentSize
+                options.seed = Self.appearanceSeed(appearance)
+                let penny = try await launch(options)
+                try penny.waitForShell()
+                screenshot("overview-home-\(variant.name)")
+                try penny.tap(AccessibilityID.Home.exploreMoneyFlow)
+                try penny.wait(for: AccessibilityID.Screen.moneyFlow)
+                screenshot("overview-money-flow-\(variant.name)")
+                try penny.openHome()
+                try penny.tap(AccessibilityID.Home.exploreInsights)
+                try penny.wait(for: AccessibilityID.Screen.insights)
+                screenshot("overview-insights-\(variant.name)")
+                try penny.openHome()
+                try penny.tap(AccessibilityID.Home.exploreCalendar)
+                try penny.wait(for: AccessibilityID.Screen.calendar)
+                screenshot("overview-calendar-\(variant.name)")
+                app.terminate()
+            }
+        }
+    }
+
     @MainActor
     func test_whenCapturingSignIn_Screenshots_ShouldIncludeTheKeyboardAndAnError() async throws {
         for appearance in [XCUIDevice.Appearance.light, .dark] {

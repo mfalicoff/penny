@@ -43,23 +43,32 @@ struct EntryRow: View {
     var body: some View {
         let category = report.categories.first { $0.id == entry.categoryId }
         let waiting = shell.workspace.pendingEntryIDs.contains(entry.id)
+        // MAZ-136: a preview, or income dated after today, is expected: an amber ring, and the
+        // word in the meta line so the meaning is never color alone.
+        let expected = entry.isExpected(today: shell.today)
         HStack(spacing: 12) {
             CategoryIcon(
                 symbol: CategoryStyle.symbol(forIonicon: category?.icon ?? "pricetag"),
                 color: PennyColor.category(
-                    category?.paletteColor ?? CategoryStyle.color(forCategoryID: entry.categoryId)))
+                    category?.paletteColor ?? CategoryStyle.color(forCategoryID: entry.categoryId))
+            )
+            .overlay {
+                if expected { Circle().strokeBorder(PennyColor.pending, lineWidth: 2).accessibilityHidden(true) }
+            }
             VStack(alignment: .leading, spacing: 2) {
                 Text(entry.title).font(.body.weight(.semibold)).foregroundStyle(PennyColor.label).lineLimit(2)
                 if waiting {
-                    Label("Waiting to sync", systemImage: "clock")
+                    // The status stays in words while the sync line replaces the meta line.
+                    Label(Self.waitingText(entry, today: shell.today), systemImage: "clock")
                         .font(.footnote).foregroundStyle(PennyColor.pending)
                 } else {
-                    Text(meta(category: category)).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
+                    Text(Self.meta(entry, category: category, report: report, today: shell.today)).font(.footnote)
+                        .foregroundStyle(PennyColor.secondaryLabel)
                         .lineLimit(1)
                 }
             }
             Spacer(minLength: 8)
-            MoneyText(entry.share, meaning: Self.meaning(entry), currency: currency)
+            MoneyText(entry.share, meaning: Self.meaning(entry, today: shell.today), currency: currency)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
@@ -68,8 +77,8 @@ struct EntryRow: View {
         .accessibilityIdentifier("entry.\(entry.id)")
     }
 
-    static func meaning(_ entry: ReportEntry) -> MoneyMeaning {
-        if entry.scheduled { return .pending }
+    static func meaning(_ entry: ReportEntry, today: CalendarDate? = nil) -> MoneyMeaning {
+        if entry.isExpected(today: today) { return .pending }
         switch entry.kind {
         case .expense: return .expense
         case .income: return .income
@@ -77,12 +86,30 @@ struct EntryRow: View {
         }
     }
 
-    private func meta(category: LedgerCategory?) -> String {
-        var parts = [DayText.short(entry.date, today: shell.today)]
-        if let account = entry.accountId.flatMap(report.ledger.account(id:)) { parts.append(account.name) }
-        if entry.share != entry.total { parts.append("your share") }
-        if parts.count == 1, let category { parts.append(category.name) }
-        return parts.joined(separator: " · ")
+    /// What a row not in Left to spend is, said once: "Expected" for income dated after today
+    /// (MAZ-136) and for scheduled income, "Scheduled" for any other preview (MAZ-77), nil for
+    /// a recorded entry. A preview never reads as money that moved.
+    static func status(_ entry: ReportEntry, today: CalendarDate?) -> String? {
+        guard entry.isExpected(today: today) else { return nil }
+        return entry.kind == .income ? "Expected" : "Scheduled"
+    }
+
+    /// The line under the title: the day, the status, then the account and "your share", or
+    /// the category when there is neither.
+    static func meta(_ entry: ReportEntry, category: LedgerCategory?, report: LedgerReport, today: CalendarDate)
+        -> String
+    {
+        var details: [String] = []
+        if let account = entry.accountId.flatMap(report.ledger.account(id:)) { details.append(account.name) }
+        if entry.share != entry.total { details.append("your share") }
+        if details.isEmpty, let category { details.append(category.name) }
+        let parts = [DayText.short(entry.date, today: today)] + [status(entry, today: today)].compactMap(\.self)
+        return (parts + details).joined(separator: " · ")
+    }
+
+    /// The pending-sync line, which replaces the meta line: it keeps the status in words.
+    static func waitingText(_ entry: ReportEntry, today: CalendarDate) -> String {
+        ["Waiting to sync", status(entry, today: today)].compactMap(\.self).joined(separator: " · ")
     }
 }
 

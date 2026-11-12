@@ -25,7 +25,8 @@ struct AuthGate: View {
                     session: .demo,
                     makeModel: {
                         ShellModel(
-                            workspace: demo, session: .demo, today: services.today(), leaveDemo: { self.demo = nil })
+                            workspace: demo, session: .demo, today: services.today(), clock: services.today,
+                            leaveDemo: { self.demo = nil })
                     }
                 )
                 .id(ObjectIdentifier(demo))
@@ -54,8 +55,9 @@ struct AuthGate: View {
                         makeModel: {
                             ShellModel(
                                 workspace: services.accountWorkspace(account, sync), session: .account(auth, account),
-                                today: services.today(), startDemo: startDemo,
+                                today: services.today(), clock: services.today, startDemo: startDemo,
                                 search: auth.client.map { AccountEntrySearch(model: sync, client: $0) },
+                                sharedProjection: auth.client.map { APISharedProjection(client: $0) },
                                 expoImport: services.expoMigration.flatMap(ExpoImportNotice.init))
                         }
                     )

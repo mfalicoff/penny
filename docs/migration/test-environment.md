@@ -64,6 +64,7 @@ The environment serves plain HTTP. The native app reaches `http://127.0.0.1:<por
 | --- | --- |
 | `empty` | One new account, default ledger, no households |
 | `searchable-household` | Two personal ledgers with duplicate titles, precomposed and decomposed accents, CJK and emoji titles, Unicode notes, a category and an account renamed after their entries were written, a personal trip and a paused rule; household Maison with three members, an exact split with a zero share, cam settling September and leaving (revoked membership, retained history), an unsettled October, a scheduled shared rule; shared trip Lisbon. `searchExpectations` publish ordered keys, match tiers and must-not-see keys per viewer; `pendingEdits` publish unsynced local changes and the local search results they give |
+| `future-income` | One person (dana) in Toronto at 02:30 UTC on Oct 16, still Oct 15 locally: October income dated today, tomorrow and later, a future-dated expense and a scheduled pay rule, for the recorded versus projected split (MAZ-136, `redesign-states.json` `dana-2026-10`) |
 | `differential` | A real-time journey (`$now`) with `probes` for the legacy comparison |
 
 `POST /api/test/users` (or `user [label]`) creates a ready account (`{userId, email, password, token}`) for tests that do not need a scenario. `POST /api/test/reset` deletes every product row (children first, in foreign-key order from the EF model), keeps migration history, unpins the clock and clears faults.

@@ -15,6 +15,7 @@ import {
   entryChange,
   FIELD_ORDER,
   frequentCategories,
+  futureIncomeNote,
   inlineCategories,
   kindLabels,
   newDraft,
@@ -139,6 +140,7 @@ function EntryForm({ writer, ledger, target, onClose, onSaved }: { writer: Ledge
   const inline = inlineCategories(categories, draft.categoryId);
   const showTrips = draft.kind === "expense";
   const preview = buildEntry(draft, ledger, base).built?.transaction;
+  const futureNote = futureIncomeNote(draft);
 
   function focusField(field: DraftField) {
     if (field === "share" || field === "trip" || field === "note") setMore(true);
@@ -360,6 +362,11 @@ function EntryForm({ writer, ledger, target, onClose, onSaved }: { writer: Ledge
             <label htmlFor={ids.date}>Date</label>
             <input id={ids.date} type="date" min="2000-01-01" max="2100-12-31" value={draft.date} onChange={(event) => { set("date", event.currentTarget.value); }} {...invalid("date")} />
             {errorText("date")}
+            {futureNote ? (
+              <p className="note" role="status">
+                <Icon name="time" size={16} /> {futureNote}
+              </p>
+            ) : null}
           </div>
           <div className="form-field">
             <label htmlFor={ids.account}>Account</label>
