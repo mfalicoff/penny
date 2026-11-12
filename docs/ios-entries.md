@@ -23,7 +23,7 @@ Previews of every card this issue owns are in `PennyUI/Entries/EntrySpecimens.sw
 - **Amount:** on iPhone a keypad under the form (the system keyboard appears only for the name); on iPad the decimal keyboard. Up to nine whole digits and two decimals, as `Money.cents` accepts.
 - **Category:** the three most used categories of the type (by their use in the latest 500 entries and the schedules) as chips, the selected one always visible, and a More chip for every category with search, New (inline) and Edit categories (opens Settings › Categories; the draft is kept).
 - **Date, Account, Split:** labeled rows. Accounts are labels, never balances; None is allowed. New account creates one inline and selects it.
-- **More details:** receipt, repeat (new entries only), trip (expenses only) and note. Repeating creates a schedule whose first occurrence is this entry.
+- **More details:** receipt (expenses only: photo or file picker, upload with progress, preview; see [native receipts](ios-receipts.md)), repeat (new entries only), trip (expenses only) and note. Repeating creates a schedule whose first occurrence is this entry.
 - **Save:** the toolbar check, so the keyboard never covers it. It shows a spinner and can't be tapped twice; a save that succeeded never runs again. The sheet closes on success and the shell shows the toast with Undo and a success haptic.
 
 ### Splits and investments
@@ -67,7 +67,7 @@ Previews of every card this issue owns are in `PennyUI/Entries/EntrySpecimens.sw
 
 Screens: `screen.addEntry`, `screen.editEntry`, `screen.categoryPicker`, `screen.accountPicker`, `screen.datePicker`, `screen.split`, `screen.entryExtras`, `screen.accountForm` and `screen.categoryForm` (inline creation, see [organize](ios-organize.md)), `screen.entryDetail`, `screen.activity`, `screen.activityFilters`.
 
-Controls: `entryForm.{kind,amount,title,category.<id>,moreCategories,date,account,split,details,save,close,discard,keepDraft,discardDraft,restoredDraft,reviewLatest,conflict,deleted,retry,futureDate}`, `banner.saveError`, `keypad.{0-9,separator,delete}`, `categoryPicker.{<id>,new,edit,close}`, `accountPicker.{none,<id>,new}`, `datePicker.{calendar,today,yesterday,done}`, `split.{mode,people,input,share,error,done,cancel}`, `entryExtras.{repeat,note,trip.none,trip.<id>,removeReceipt,receiptPhoto,receiptFile}`, `entryDetail.{edit,delete,receipt}`, `deleteEntry.{confirm,cancel}`, `activity.{filters,period,filter.<all|expense|income|investment>,category.<all|id>,totals,edit,delete,loadMore,showMore,searching,searchEmpty,searchAllMonths,clearFilters,searchError,searchRetry,scope.server,scope.device}`, `filters.{period,month.previous,month.next,year.previous,year.next,oneDay,day,kind,category,clear,done}`, and the existing `entry.<id>` rows.
+Controls: `entryForm.{kind,amount,title,category.<id>,moreCategories,date,account,split,details,save,close,discard,keepDraft,discardDraft,restoredDraft,reviewLatest,conflict,deleted,retry,futureDate}`, `banner.saveError`, `keypad.{0-9,separator,delete}`, `categoryPicker.{<id>,new,edit,close}`, `accountPicker.{none,<id>,new}`, `datePicker.{calendar,today,yesterday,done}`, `split.{mode,people,input,share,error,done,cancel}`, `entryExtras.{repeat,note,trip.none,trip.<id>}`, `entryDetail.{edit,delete}`, the receipt identifiers in [native receipts](ios-receipts.md#accessibility), `deleteEntry.{confirm,cancel}`, `activity.{filters,period,filter.<all|expense|income|investment>,category.<all|id>,totals,edit,delete,loadMore,showMore,searching,searchEmpty,searchAllMonths,clearFilters,searchError,searchRetry,scope.server,scope.device}`, `filters.{period,month.previous,month.next,year.previous,year.next,oneDay,day,kind,category,clear,done}`, and the existing `entry.<id>` rows.
 
 ## Simulator scenarios (for MAZ-81/82)
 
@@ -84,6 +84,5 @@ Each runs on a clean iPhone and iPad simulator against the [full-stack test envi
 
 ## Not done yet
 
-- Receipt picking and upload: More details shows and removes an attached receipt, and calls `ShellModel.attachReceipt` when one is set; MAZ-78 provides it.
 - Category chips order by count of use; ordering by recent use is MAZ-134.
 - Offline search does not include shared expenses (they are not cached on the device yet).

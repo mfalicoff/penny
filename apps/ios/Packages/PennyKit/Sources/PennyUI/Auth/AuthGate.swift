@@ -53,20 +53,26 @@ struct AuthGate: View {
                         inbox: $inbox,
                         session: Self.session(account),
                         makeModel: {
-                            ShellModel(
+                            let shell = ShellModel(
                                 workspace: services.accountWorkspace(account, sync), session: .account(auth, account),
                                 today: services.today(), clock: services.today, startDemo: startDemo,
                                 search: auth.client.map { AccountEntrySearch(model: sync, client: $0) },
                                 sharedProjection: auth.client.map { APISharedProjection(client: $0) },
                                 expoImport: services.expoMigration.flatMap(ExpoImportNotice.init),
                                 households: auth.client.map { APIHouseholdService(client: $0) })
+                            shell.receipts = AccountReceipts(auth: auth, account: account, sync: sync)
+                            return shell
                         }
                     )
                     .id(account.scope)
                 }
             }
         }
-        .onChange(of: currentSession, initial: true) { inbox.sessionChanged(to: currentSession) }
+        .onChange(of: currentSession, initial: true) {
+            inbox.sessionChanged(to: currentSession)
+            // Receipt previews and picked files left by a crash or the previous account (MAZ-78).
+            ReceiptFileCache.standard.purge()
+        }
         .task { await auth.restore() }
         .onChange(of: scenePhase) {
             if scenePhase == .active, auth.state == .keychainUnavailable { Task { await auth.restore() } }

@@ -14,11 +14,24 @@ public struct HTTPResult: Sendable {
     }
 }
 
+/// Reports how much of a request body has been sent: bytes sent so far and the body's total.
+/// Called on any thread, in order, possibly many times a second.
+public typealias UploadProgress = @Sendable (_ sent: Int64, _ total: Int64) -> Void
+
 /// Sends one request. Tests substitute a fake; production uses `URLSessionTransport`.
 /// Implementations throw `URLError` for network failures and `CancellationError` (or
 /// `URLError.cancelled`) when the calling task is cancelled.
 public protocol HTTPTransport: Sendable {
     func send(_ request: URLRequest) async throws -> HTTPResult
+    /// Sends `request` and reports its body's progress (receipt uploads, MAZ-78). A transport
+    /// that can't observe progress sends it the plain way and reports nothing.
+    func send(_ request: URLRequest, progress: UploadProgress?) async throws -> HTTPResult
+}
+
+extension HTTPTransport {
+    public func send(_ request: URLRequest, progress: UploadProgress?) async throws -> HTTPResult {
+        try await send(request)
+    }
 }
 
 /// An ephemeral URLSession that never stores cookies or credentials, never follows
@@ -40,7 +53,11 @@ public struct URLSessionTransport: HTTPTransport {
     }
 
     public func send(_ request: URLRequest) async throws -> HTTPResult {
-        let (data, response) = try await session.data(for: request, delegate: RefuseRedirects())
+        try await send(request, progress: nil)
+    }
+
+    public func send(_ request: URLRequest, progress: UploadProgress?) async throws -> HTTPResult {
+        let (data, response) = try await session.data(for: request, delegate: TaskDelegate(progress: progress))
         guard let http = response as? HTTPURLResponse else { throw URLError(.badServerResponse) }
         var headers: [String: String] = [:]
         for (key, value) in http.allHeaderFields {
@@ -50,7 +67,21 @@ public struct URLSessionTransport: HTTPTransport {
     }
 }
 
-private final class RefuseRedirects: NSObject, URLSessionTaskDelegate, @unchecked Sendable {
+/// Refuses every redirect and forwards upload progress. One per request.
+private final class TaskDelegate: NSObject, URLSessionTaskDelegate, Sendable {
+    private let progress: UploadProgress?
+
+    init(progress: UploadProgress?) {
+        self.progress = progress
+    }
+
+    func urlSession(
+        _ session: URLSession, task: URLSessionTask, didSendBodyData bytesSent: Int64, totalBytesSent: Int64,
+        totalBytesExpectedToSend: Int64
+    ) {
+        progress?(totalBytesSent, totalBytesExpectedToSend)
+    }
+
     func urlSession(
         _ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse,
         newRequest request: URLRequest

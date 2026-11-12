@@ -88,7 +88,10 @@ private enum EntrySpecimen {
         _, _ in nil
     }
     return EntrySpecimenHost(shell: shell) {
-        NavigationStack { EntryExtrasView(model: model, ledger: Specimen.ledger(), save: {}) }
+        NavigationStack {
+            EntryExtrasView(
+                model: model, upload: ReceiptUploadModel(transfers: nil) { _ in }, ledger: Specimen.ledger(), save: {})
+        }
     }
 }
 

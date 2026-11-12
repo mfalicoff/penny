@@ -403,15 +403,18 @@ struct EntrySplitSheet: View {
 struct EntryExtrasView: View {
     @Environment(ShellModel.self) private var shell
     @Bindable var model: EntryFormModel
+    /// The form's receipt upload (MAZ-78): it outlives this page, so going back keeps it running.
+    let upload: ReceiptUploadModel
     let ledger: Ledger
     let save: () -> Void
-    @State private var receiptFailure: String?
-    @State private var attaching = false
 
     var body: some View {
         let draft = model.draft
         Form {
-            if draft.kind == .expense { receipt(draft) }
+            if draft.kind == .expense {
+                ReceiptAttachmentSection(
+                    receipt: $model.editor.draft.receipt, upload: upload, context: receiptContext(draft))
+            }
             Section {
                 if model.editor.isNew {
                     Picker("Repeat", selection: $model.editor.draft.frequency) {
@@ -457,64 +460,19 @@ struct EntryExtrasView: View {
                 EntrySaveButton(saving: model.editor.isSaving, action: save)
             }
         }
-        .alert(
-            "Couldn't attach the receipt",
-            isPresented: Binding(get: { receiptFailure != nil }, set: { if !$0 { receiptFailure = nil } })
-        ) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(receiptFailure ?? "")
-        }
         .accessibilityIdentifier("screen.entryExtras")
     }
 
-    @ViewBuilder
-    private func receipt(_ draft: EntryDraft) -> some View {
-        Section {
-            if let receipt = draft.receipt {
-                HStack {
-                    Label(receipt.name, systemImage: receipt.mime == "application/pdf" ? "doc" : "photo")
-                    Spacer()
-                    Button("Remove receipt", systemImage: "xmark.circle.fill") { model.editor.draft.receipt = nil }
-                        .labelStyle(.iconOnly)
-                        .foregroundStyle(PennyColor.secondaryLabel)
-                        .accessibilityIdentifier("entryExtras.removeReceipt")
-                }
-            }
-            if let attach = shell.attachReceipt {
-                HStack {
-                    Button("Photo", systemImage: "photo") { run(attach, .photo) }
-                        .accessibilityIdentifier("entryExtras.receiptPhoto")
-                    Spacer()
-                    Button("File or PDF", systemImage: "doc") { run(attach, .file) }
-                        .accessibilityIdentifier("entryExtras.receiptFile")
-                }
-                .buttonStyle(.borderless)
-                .disabled(attaching)
-            }
-        } header: {
-            Text("Receipt")
-        } footer: {
-            if shell.attachReceipt == nil {
-                Text(
-                    draft.receipt == nil
-                        ? "Adding receipts isn't available in this version of Penny yet."
-                        : "Removing the receipt detaches it from this entry when you save.")
-            }
-        }
-    }
-
-    private func run(
-        _ attach: @escaping (ReceiptSource) async -> Result<ReceiptReference, SaveFailure>, _ source: ReceiptSource
-    ) {
-        attaching = true
-        Task {
-            switch await attach(source) {
-            case .success(let receipt): model.editor.draft.receipt = receipt
-            case .failure(let failure): receiptFailure = failure.message
-            }
-            attaching = false
-        }
+    /// The viewer's footer card: the entry as typed so far.
+    private func receiptContext(_ draft: EntryDraft) -> ReceiptPreviewContext {
+        let category = ledger.category(id: draft.categoryId)
+        let title = draft.title.trimmingCharacters(in: .whitespacesAndNewlines)
+        let total = (try? Money.cents(draft.amount)).map { MoneyFormat.amount($0, currency: ledger.currency.rawValue) }
+        let date = CalendarDate.ledgerDate(draft.date).map { EntryText.day($0, today: shell.today) }
+        return ReceiptPreviewContext(
+            title: title.isEmpty ? "New expense" : title,
+            detail: [total.map { "\($0) total" }, date].compactMap(\.self).joined(separator: " · "),
+            symbol: EntryText.symbol(category), color: EntryText.color(category, id: draft.categoryId))
     }
 
     private func tripRow(_ id: String?, name: String) -> some View {

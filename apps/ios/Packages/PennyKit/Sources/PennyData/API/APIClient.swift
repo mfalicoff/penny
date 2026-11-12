@@ -25,6 +25,12 @@ public struct ReceiptFile: Equatable, Sendable {
     public var mime: String
     /// From `Content-Disposition`, when the server sent one.
     public var filename: String?
+
+    public init(data: Data, mime: String, filename: String?) {
+        self.data = data
+        self.mime = mime
+        self.filename = filename
+    }
 }
 
 /// The async HTTP client for the Penny API. It is a value type: create one per server, and
@@ -170,16 +176,29 @@ public struct APIClient: Sendable {
         var base64: String
     }
 
-    /// Uploads receipt bytes (at most 10 MiB; mime must be one the contract allows).
-    public func uploadReceipt(name: String, mime: String, data: Data) async throws -> WireReceipt {
-        let allowed = [
-            "application/pdf", "image/jpeg", "image/png", "image/webp", "image/gif", "image/heic", "image/heif",
-        ]
-        guard !name.isEmpty, name.utf16.count <= 255 else { throw APIError.invalidRequest(.invalidField("name")) }
-        guard allowed.contains(mime) else { throw APIError.invalidRequest(.invalidField("mime")) }
-        guard data.count <= 10 * 1024 * 1024 else { throw APIError.invalidRequest(.invalidField("base64")) }
-        let body = ReceiptUploadBody(name: name, mime: mime, base64: data.base64EncodedString())
-        return try await json(.post, "/api/receipts", body: body, timeout: configuration.transferTimeout)
+    /// Uploads receipt bytes (1 byte to 10 MiB; mime must be one the contract allows).
+    /// `progress` receives the fraction of the request body sent (0 to 1), on any thread.
+    public func uploadReceipt(
+        name: String, mime: String, data: Data, progress: (@Sendable (Double) -> Void)? = nil
+    ) async throws -> WireReceipt {
+        guard !name.isEmpty, name.utf16.count <= ReceiptRules.maxNameLength else {
+            throw APIError.invalidRequest(.invalidField("name"))
+        }
+        guard ReceiptRules.mimes.contains(mime) else { throw APIError.invalidRequest(.invalidField("mime")) }
+        guard !data.isEmpty, data.count <= ReceiptRules.maxBytes else {
+            throw APIError.invalidRequest(.invalidField("base64"))
+        }
+        let body = try JSONEncoder().encode(
+            ReceiptUploadBody(name: name, mime: mime, base64: data.base64EncodedString()))
+        var report: UploadProgress?
+        if let progress {
+            report = { sent, total in
+                if total > 0 { progress(min(1, Double(sent) / Double(total))) }
+            }
+        }
+        let result = try await perform(
+            .post, "/api/receipts", body: body, timeout: configuration.transferTimeout, progress: report)
+        return try decode(result.body)
     }
 
     public func receipt(id: String) async throws -> ReceiptFile {
@@ -268,14 +287,14 @@ public struct APIClient: Sendable {
 
     func perform(
         _ method: Method, _ path: String, query: [URLQueryItem] = [], body: Data? = nil, authenticated: Bool = true,
-        timeout: TimeInterval? = nil
+        timeout: TimeInterval? = nil, progress: UploadProgress? = nil
     ) async throws -> HTTPResult {
         let request = try makeRequest(
             method, path, query: query, body: body, authenticated: authenticated, timeout: timeout)
         let result: HTTPResult
         do {
             try Task.checkCancellation()
-            result = try await transport.send(request)
+            result = try await transport.send(request, progress: progress)
         } catch is CancellationError {
             throw CancellationError()
         } catch let error as URLError {
