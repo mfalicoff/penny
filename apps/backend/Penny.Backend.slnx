@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/Penny.Backend.Api/Penny.Backend.Api.csproj" />
+    <Project Path="src/Penny.Backend.AppHost/Penny.Backend.AppHost.csproj" />
     <Project Path="src/Penny.Backend.Application/Penny.Backend.Application.csproj" />
     <Project Path="src/Penny.Backend.Domain/Penny.Backend.Domain.csproj" />
     <Project Path="src/Penny.Backend.Persistence/Penny.Backend.Persistence.csproj" />

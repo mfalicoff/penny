@@ -4,7 +4,7 @@ MAZ-51 provides a separate controller-based .NET 10 service; MAZ-52 adds the EF 
 
 ## Toolchain and layout
 
-Install SDK **10.0.403** (pinned without roll-forward), Node 24 for the legacy checks, and Docker or compatible Podman for PostgreSQL. Packages are centralized in `Directory.Packages.props`, locked per project, and restored only from nuget.org. Current pins: Npgsql 10.0.3, Npgsql.EntityFrameworkCore.PostgreSQL 10.0.3, EF Core Relational/Design and the `dotnet-ef` tool 10.0.14, ASP.NET OpenAPI/MVC Testing 10.0.14, Scalar 2.19.0, Microsoft.IdentityModel.Protocols.OpenIdConnect and JsonWebTokens 8.23.0 (OIDC discovery and ID token validation), xUnit v3 4.0.2, Testcontainers 4.16.0, CSharpier 1.3.0, and for search (MAZ-121) Pgvector.EntityFrameworkCore 0.3.0, Microsoft.ML.OnnxRuntime 1.31.1, Microsoft.ML.Tokenizers 2.0.1 and System.Numerics.Tensors 10.0.14, and for telemetry (MAZ-127) OpenTelemetry.Extensions.Hosting, Exporter.OpenTelemetryProtocol and Exporter.InMemory (tests) 1.20.1, Instrumentation.AspNetCore and Instrumentation.Http 1.20.2, Instrumentation.Runtime 1.20.1 and Npgsql.OpenTelemetry 10.0.3. The embedding model is not committed: `node apps/backend/development/download-model.mjs` downloads the pinned files into the ignored `.cache/backend/models/multilingual-e5-small` and verifies their SHA-256 (tests and the HTTP host need it). Tests use the .NET 10 Microsoft.Testing.Platform runner; VSTest command-line flags are not supported.
+Install SDK **10.0.403** (pinned without roll-forward), Node 24 for the legacy checks, and Docker or compatible Podman for PostgreSQL. Packages are centralized in `Directory.Packages.props`, locked per project, and restored only from nuget.org. Current pins: Npgsql 10.0.3, Npgsql.EntityFrameworkCore.PostgreSQL 10.0.3, EF Core Relational/Design and the `dotnet-ef` tool 10.0.14, ASP.NET OpenAPI/MVC Testing 10.0.14, Scalar 2.19.0, Microsoft.IdentityModel.Protocols.OpenIdConnect and JsonWebTokens 8.23.0 (OIDC discovery and ID token validation), xUnit v3 4.0.2, Testcontainers 4.16.0, CSharpier 1.3.0, and for search (MAZ-121) Pgvector.EntityFrameworkCore 0.3.0, Microsoft.ML.OnnxRuntime 1.31.1, Microsoft.ML.Tokenizers 2.0.1 and System.Numerics.Tensors 10.0.14, and for telemetry (MAZ-127) OpenTelemetry.Extensions.Hosting, Exporter.OpenTelemetryProtocol and Exporter.InMemory (tests) 1.20.1, Instrumentation.AspNetCore and Instrumentation.Http 1.20.2, Instrumentation.Runtime 1.20.1 and Npgsql.OpenTelemetry 10.0.3, and for local orchestration (MAZ-138) the Aspire AppHost SDK, Aspire.Hosting.PostgreSQL and Aspire.Hosting.JavaScript 13.6.5. The embedding model is not committed: `node apps/backend/development/download-model.mjs` downloads the pinned files into the ignored `.cache/backend/models/multilingual-e5-small` and verifies their SHA-256 (tests and the HTTP host need it). Tests use the .NET 10 Microsoft.Testing.Platform runner; VSTest command-line flags are not supported.
 
 | Project | Owns |
 | --- | --- |
@@ -12,6 +12,7 @@ Install SDK **10.0.403** (pinned without roll-forward), Node 24 for the legacy c
 | `src/Penny.Backend.Application` | Use cases (password auth, ledger read/save, household membership, shared expenses and projection), persistence and security ports; no SQL/HTTP references |
 | `src/Penny.Backend.Persistence` | EF Core model (`PennyDbContext`) and migrations, repositories, read-only readiness probe, encrypted receipt store and SQLite import |
 | `src/Penny.Backend.Api` | Standard CreateBuilder/AddControllers/Build/MapControllers/Run flow, configuration, session authentication, origin/CORS/rate-limit middleware, operational, auth, ledger, household and shared-expense controllers |
+| `src/Penny.Backend.AppHost` | Local development only: the Aspire AppHost that orchestrates PostgreSQL, migration, the API, the web app and the Grafana stack (MAZ-138). Never deployed |
 | `tests/Penny.Backend.UnitTests` | Configuration bounds/redaction, password hasher, credential/token parity and inward dependency checks |
 | `tests/Penny.Backend.IntegrationTests` | One PostgreSQL container and shared WebApplicationFactory, real Kestrel/SQL, per-test compatibility metadata reset, a local HTTPS fake OIDC provider (no external network) |
 
@@ -42,6 +43,40 @@ DTOs, enums, fixtures and host helpers each have their own file. Namespace/folde
 Tests use `whenCondition_MethodOrFunctionOrFlow_ShouldExpectedOutcome`, such as `whenDatabaseUnavailable_Readiness_ShouldReturnServiceUnavailable`.
 
 `dotnet.sh` runs from this directory and puts CLI/NuGet/temporary files under the repository's ignored `.cache/backend/`. Commands below run from the repository root. Product storage uses EF Core: entities live in `Schema/Entities/`, one `IEntityTypeConfiguration` per table in `Schema/Mappings/`, and generated migrations in `Migrations/`. Raw SQL is limited to the [documented inventory](../../docs/migration/postgresql.md#raw-sql-inventory). **To change the schema, follow [Changing the schema](../../docs/migration/postgresql.md#changing-the-schema)**: edit the model, run `dotnet ef migrations add`, review the script, update the importer if needed, test, then `migrate` and re-grant. Microsoft.Data.Sqlite 10.0.14 reads import sources only. Respawn 7.0.0 resets product data while preserving EF migration history; compatibility-destruction tests rebuild the schema when needed. Maintenance dispatch lives in API `Commands/`. The shared test host pins time through `TestClock` (reset per test), uses secure cookies, and raises the sign-in and invite rate limits; rate-limit, proxy and registration-policy tests start their own hosts on the same database.
+
+## Run the whole stack with Aspire (MAZ-138)
+
+`src/Penny.Backend.AppHost` is a [.NET Aspire](https://aspire.dev) 13.6 AppHost that starts everything for local development with one command: PostgreSQL, the migration step, the search model download, this API, the web app (`apps/web`) and a Grafana stack (Alloy, Loki, Tempo, Prometheus, Grafana). You need the SDK, Node 24 and Docker or Podman; nothing else to set up.
+
+```sh
+bash apps/backend/dotnet.sh run --project src/Penny.Backend.AppHost
+```
+
+The console prints the Aspire dashboard's login link. The dashboard shows each resource's state, console output and URLs. The first start pulls the images, runs `npm ci` in `apps/web` and downloads the search model; later starts reuse them.
+
+| Resource | What it is | Address |
+| --- | --- | --- |
+| `postgres` | The pinned pgvector image (`DatabaseSchema.Image`), initialized by `development/init-roles.sh` like Compose. Data lives in the `penny-aspire-postgres` volume | loopback port chosen on the first run |
+| `search-model` | `development/download-model.mjs`; exits once the model is verified | — |
+| `migrate` | This API's `migrate --grant-runtime`, with the migration role; exits when done | — |
+| `api` | This API with the runtime role, started after `migrate` and `search-model` finish | `http://localhost:5001` (Scalar at `/scalar/v1`) |
+| `web` | `npm run dev` in `apps/web`; Vite forwards `/api/` to `api` | `http://localhost:4173` |
+| `alloy` | OTLP receiver; forwards traces to Tempo, logs to Loki and metrics to Prometheus | gRPC on a port chosen on the first run, OTLP/HTTP on `localhost:4318` |
+| `loki`, `tempo`, `prometheus` | Single-binary stores with 3-day retention, in `penny-aspire-*` volumes | loopback ports chosen on the first run |
+| `grafana` | Data sources provisioned and linked (log → trace, trace → logs and metrics). Anonymous admin, no login | `http://localhost:3000` |
+
+Wiring is done in the AppHost, not by hand: the API gets runtime and migration connection strings for the restricted roles, its receipt and model settings, `OTEL_EXPORTER_OTLP_ENDPOINT` pointing at Alloy and `Auth__AllowedOrigins` with the web origin; the web app gets `PENNY_API_URL`. The API's own [telemetry](../../docs/operations.md#telemetry-opentelemetry) settings apply unchanged; the AppHost only shortens the export intervals so a request shows up within seconds. Telemetry goes to Alloy only: the Aspire dashboard keeps resources and console logs but receives no traces, logs or metrics, so there is one copy, in Grafana. The configs for the Grafana stack are in `development/observability/` (MAZ-128 adds dashboards under `grafana/dashboards/` and builds the operator stack on the same files). Images are pinned by digest in `ObservabilityImages.cs`.
+
+To see a request end to end, use the web app (or `curl http://localhost:4173/api/ready`), then in Grafana open **Explore → Loki**, query `{service_name="penny-backend"}`, expand a line and follow **View trace** to Tempo; the trace links back to its logs and to Prometheus metrics such as `http_server_request_duration_seconds_count`.
+
+Notes:
+
+- **Secrets.** On the first run the AppHost generates the PostgreSQL admin, migration and runtime passwords and the receipt master key and stores them in this project's user secrets (`dotnet user-secrets list --project src/Penny.Backend.AppHost`). The database volume is initialized with them, so do not delete them while the volume exists. If PostgreSQL ever rejects the password (for example after the secrets were cleared, or the very first run was interrupted before they were saved), remove the `penny-aspire-postgres` volume and its container, which loses that local data. Receipts are stored under `.cache/backend/aspire/receipts`, apart from the Compose setup's, because they are encrypted with a different key.
+- **Persistent containers.** PostgreSQL, Alloy, Loki, Tempo and Prometheus keep running after the AppHost stops, so restarts are fast; stop them with `docker`/`podman` when you are done. The API, web app and Grafana stop with the AppHost.
+- **Podman.** The AppHost selects Podman when there is no Docker CLI or `docker` is Podman's shim. Set `ASPIRE_CONTAINER_RUNTIME` to override.
+- **NixOS.** The dashboard needs libicu; the repository's dev shell (`nix develop`, or direnv) provides it on `LD_LIBRARY_PATH`.
+- **Ports.** `5001`, `4173`, `3000` and `4318` are fixed, so do not run the Compose-based API below or another Vite server at the same time.
+- **Lock file.** The AppHost has no `packages.lock.json`: the Aspire SDK adds orchestrator and dashboard packages for the host OS, so a lock file would only restore on one OS. Its versions are pinned in `Directory.Packages.props` and the project's SDK reference.
 
 ## Start a local database and service
 
