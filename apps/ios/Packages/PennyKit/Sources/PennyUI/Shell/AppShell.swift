@@ -162,6 +162,19 @@ private struct SplitShell: View {
         .modifier(ToastOverlay(bottomPadding: 16))
     }
 
+    /// The Settings column's path without the Manage pages, which have their own stack. Opening
+    /// one sets `settingsPath` to it, and the Settings stack being replaced must not see its
+    /// bound path change in that same update: SwiftUI crashes with
+    /// `NavigationColumnState.boundPathChange` (MAZ-82, Settings › Categories on iPad).
+    private var settingsColumnPath: Binding<[SettingsRoute]> {
+        Binding(
+            get: {
+                let path = shell.route.settingsPath
+                return path.first.map(SettingsRoute.manage.contains) == true ? [] : path
+            },
+            set: { shell.route.settingsPath = $0 })
+    }
+
     @ViewBuilder
     private var detail: some View {
         switch shell.route.sidebarSelection {
@@ -176,7 +189,7 @@ private struct SplitShell: View {
             // Its own identity, like the tab and Manage stacks: the column then never reuses
             // another stack's state (a [DetailRoute] path) for this [SettingsRoute] one
             // (MAZ-141: a crash going back from Currency, `NavigationColumnState.boundPathChange`).
-            NavigationStack(path: $shell.route.settingsPath) {
+            NavigationStack(path: settingsColumnPath) {
                 SettingsView()
                     .navigationDestination(for: SettingsRoute.self) { SettingsPage(route: $0) }
             }

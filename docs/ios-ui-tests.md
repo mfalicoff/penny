@@ -30,7 +30,7 @@ apps/ios/scripts/ios.sh ui-build             # compile the app and the UI tests 
 | Variable | Effect |
 | --- | --- |
 | `PENNY_UI_DEVICES` | `iphone`, `ipad` or `iphone ipad` (default) |
-| `PENNY_UI_ONLY` | One class or test, e.g. `PennyUITests/AuthJourneyTests/test_whenPasswordIsWrong_SignIn_ShouldShowTheErrorAndKeepTheEmail` |
+| `PENNY_UI_ONLY` | Classes or tests, space-separated, e.g. `PennyUITests/AuthJourneyTests/test_whenPasswordIsWrong_SignIn_ShouldShowTheErrorAndKeepTheEmail` |
 | `PENNY_RUNTIME` | A simulator runtime identifier (the OS matrix) |
 | `PENNY_IPHONE`, `PENNY_IPAD` | Device types, as for `ios.sh test` |
 | `PENNY_STACK_BUILD=0` | Reuse the API's Release build instead of rebuilding it |
@@ -54,9 +54,10 @@ Named screenshots (`<device>-<appearance>-<step>`) are kept on success; XCTest's
 
 | Plan | Contents | When | Retries |
 | --- | --- | --- | --- |
-| **Smoke** | `SmokeJourneyTests`: clean install opens sign-in; sign in → create → relaunch → read; Home → Add expense → Saved → Activity (skipped until MAZ-73) | Every PR and push to `v2` (`ios.yml`, job `ui-smoke`), required | None |
-| **Full** | Everything except screenshots: smoke, lifecycle and upgrade, network failures, auth journeys, the overview journeys (`OverviewJourneyTests`, demo data, MAZ-77), notification navigation (`NotificationJourneyTests`, MAZ-79) | Nightly, on releases and on demand (`ios-ui-matrix.yml`) | One retry on failure, reported |
-| **Screenshots** | `ScreenshotTests`: light and dark × default, accessibility XL text, Reduce Transparency, Reduce Motion; sign-in with keyboard and error | Nightly, on releases and on demand | None |
+| **Smoke** | `SmokeJourneyTests`: clean install opens sign-in; sign in → create → relaunch → read; Home → Add expense → Saved → Activity | Every PR and push to `v2` (`ios.yml`, job `ui-smoke`), required | None |
+| **Full** | Everything except screenshots, accessibility audits and performance: smoke, lifecycle and upgrade, network failures, auth journeys, the overview journeys (`OverviewJourneyTests`, demo data, MAZ-77), notification navigation (`NotificationJourneyTests`, MAZ-79), and MAZ-82's full journeys (entries, search, organize and recurrence, sync conflicts, settings) | Nightly, on releases and on demand (`ios-ui-matrix.yml`) | One retry on failure, reported |
+| **Screenshots** | `ScreenshotTests`: light and dark × default, accessibility XL text, Reduce Transparency, Reduce Motion; sign-in with keyboard and error. `AccessibilityAuditTests` (MAZ-82): Xcode accessibility audits, VoiceOver labels, keyboard-safe Add entry | Nightly, on releases and on demand | None |
+| **Performance** | `PerformanceTests` (MAZ-82): cold launch, first sync, Activity, scroll and search of a 5,001-entry ledger against the budgets in [native QA](ios-qa.md#performance-budgets) | Nightly, on releases and on demand | None |
 
 | | Minimum OS | Current OS |
 | --- | --- | --- |
@@ -108,7 +109,7 @@ Large text uses the system launch argument `-UIPreferredContentSizeCategoryName`
 | --- | --- | --- |
 | `SmokeJourneyTests` | Clean install opens sign-in for the test server | Smoke |
 | | Sign in (password) → change currency (a ledger write, confirmed on the server) → second device adds an entry through the API → terminate and relaunch (session restored, no sign-in) → read the entry in Activity and the currency in Settings | Smoke |
-| | Home → Add expense → Saved → Activity: **skipped until MAZ-73** adds the entry form (steps in the test's TODO) | Smoke |
+| | Home → Add expense → Saved → Activity: the write reaches the API with its amount and kind, and Activity lists it | Smoke |
 | `LifecycleTests` | Seeded earlier-install state is kept; upgrade over a previous build; relaunch keeps the session, a reset (reinstall) does not | Full |
 | `NetworkFailureTests` | Offline write is saved, marked waiting, survives a relaunch and syncs when the server returns; a dropped sign-in keeps the input and succeeds on retry | Full |
 | `AuthJourneyTests` | Wrong password keeps the email; account creation; SSO success and cancellation (local OIDC provider); session expiry by moving the server clock past 30 days, with the email kept; sign-out with a pending change asks and syncs first; account switching hides the previous account's entries | Full |
@@ -117,8 +118,15 @@ Large text uses the system launch argument `-UIPreferredContentSizeCategoryName`
 | `AddEntryOverSettingsTests` | iPad: Add entry from Settings › Currency opens over the Settings column and leaves the page in place (MAZ-78) | Full |
 | `ReceiptJourneyTests` | Photo and PDF upload, preview and share with SHA-256 round trips and another account's 404; upload failure and Try again; oversized and renamed files refused; pickers cancelled at XL text; session ended during upload with the draft back; the viewer's 404, offline and Try again ([native receipts](ios-receipts.md#tests)) | Full |
 | `ScreenshotTests` | Home, Activity, Settings in light/dark × default/XL text/Reduce Transparency/Reduce Motion; sign-in, keyboard and error in light/dark | Screenshots |
+| `EntryJourneyTests` | Add expense and income, kind filter keeps totals, edit the amount from the detail, delete (dialog dismissed, then confirmed), relaunch; HTTP 500 during sync keeps the entry and syncs it once. Server totals checked after each write (MAZ-82) | Full |
+| `SearchJourneyTests` | Online keyword and typo search through the .NET/PostgreSQL search endpoint and the empty state; device search with a pending change, then the server again after reconnect (MAZ-82) | Full |
+| `OrganizeJourneyTests` | Create an account; create, use and rename a category; a monthly schedule records its first date and, relaunched a month later, the next one (MAZ-82) | Full |
+| `SyncConflictTests` | Two devices edit one entry while this one is offline: both fields survive, plus the other device's new entry; delete here versus edit there keeps the delete (MAZ-82) | Full |
+| `SettingsJourneyTests` | Light, Dark and System kept across relaunch; the app lock explains and stays off without Face ID or a passcode (MAZ-82) | Full |
+| `AccessibilityAuditTests` | Accessibility audits of the main screens in five variants and of sign-in; VoiceOver labels; keyboard-safe Add entry at AX-XXXL (MAZ-82) | Screenshots |
+| `PerformanceTests` | Launch, first sync, Activity, scroll and search baselines (MAZ-82) | Performance |
 
-Online/offline keyword search fixtures (MAZ-73 search) and the per-card baseline comparison (MAZ-122) build on this harness: seed with `npm run test-env -- seed searchable-household` or `Stack` calls, and capture with `screenshot(_:)` named after the card id in `contracts/fixtures/redesign-states.json`.
+The [native QA matrix](ios-qa.md) traces every parity area and redesign card to these suites and lists device-only checks, budgets and gaps. The per-card baseline comparison (MAZ-122) builds on this harness: seed with `npm run test-env -- seed searchable-household` or `Stack` calls, and capture with `screenshot(_:)` named after the card id in `contracts/fixtures/redesign-states.json`.
 
 ## Accessibility identifiers
 
@@ -144,6 +152,10 @@ Tests find elements only by identifier, never by visible text (except system-pro
 - **Mitigated, not confirmed**: on iPad, going back from Settings › Currency in the detail column crashed once in SwiftUI (`NavigationColumnState.boundPathChange`, `swift_unexpectedError`) in `test_whenChangesArePending_SignOut…`; it did not reproduce in isolation. The Settings stack in the split view's detail column (`SplitShell`) was the only one without its own identity, so the column could carry another stack's state (a `[DetailRoute]` path) into its `[SettingsRoute]` path; it now has one, like the tab and Manage stacks (MAZ-141). Watch the `full` plan on iPad for a recurrence.
 - **Fixed** (MAZ-78): on iPad, Add entry opened from a page pushed in Settings closed Settings (`ShellRoute.openAddEntry`), so the split view swapped its detail column from the bound Settings stack to Home in the same update as the sheet appeared, and SwiftUI crashed (`NavigationColumnState.boundPathChange`, `swift_unexpectedError`). Settings is the detail column on iPad, not a sheet, so Add entry now opens over it (`ShellRoute.settingsIsColumn`, set from the size class). `Penny.popSettingsPages()` taps the navigation bar's `BackButton` instead of its first button, which on iPad was the sidebar's Add entry; that is how `AuthJourneyTests`' sign-out journey hit the crash.
 - **Fixed**: at the largest accessibility text size the demo banner on iPhone wrapped its title mid-word ("Change-s"). At accessibility sizes `StatusBanner` puts its action under the text, so the title has the full width and wraps between words (MAZ-141); check the `large-text` screenshots.
+
+- **Fixed** (MAZ-82): on iPad, Settings › Recurring, Accounts or Categories crashed the app every time (`OrganizeJourneyTests`, three of three). The row pushed the page onto the bound Settings path, which also flipped `ShellRoute.sidebarSelection` from Settings to that Manage page, so the detail column swapped stacks in the same update while the outgoing Settings stack saw its bound path change: the same `NavigationColumnState.boundPathChange` class of crash as above (confirmed from the crash report). `SplitShell` now binds the Settings column to the path without Manage pages (which have their own stack), and on iPad those rows select the sidebar's Manage item instead of pushing; iPhone keeps the push. A selection-only change still crashed until the binding was filtered.
+- **Fixed** (MAZ-82): `PENNY_TEST_TODAY` pinned the screens' day but not the offline store's, which kept recording due recurrence with the real date. A test that relaunched on a later pinned day never saw the next occurrence (and a run on a real date past the pinned one could record occurrences early). `RootView` now hands `AppServices.today` to `OfflineLedgerStore.standard(today:)`; production still uses the device's day.
+- **Driver note** (MAZ-82): on iOS 27 a confirmation dialog opened from a toolbar button on iPhone is a popover with no Cancel button, so `deleteEntry.cancel` never appears; `Penny.cancelDialog` dismisses through the system's `PopoverDismissRegion` instead.
 
 ## Debugging
 

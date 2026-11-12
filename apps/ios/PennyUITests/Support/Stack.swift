@@ -97,7 +97,7 @@ struct Stack {
     /// The deterministic server instant every test starts at (the seeds' clock).
     static let defaultNow = "2026-10-15T12:00:00Z"
     /// The app's pinned "today" for `defaultNow`.
-    static let defaultToday = "2026-10-15"
+    nonisolated static let defaultToday = "2026-10-15"
 
     // MARK: Test controls
 

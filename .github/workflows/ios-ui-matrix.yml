@@ -1,6 +1,7 @@
 name: iOS UI matrix
 
-# The broader XCUITest matrix (MAZ-81, docs/ios-ui-tests.md): the Full and Screenshots plans on
+# The broader XCUITest matrix (MAZ-81/82, docs/ios-ui-tests.md): the Full, Screenshots (with the
+# accessibility audits) and Performance plans on
 # iPhone and iPad, on the minimum supported OS (iOS 26) and the newest runtime the pinned Xcode
 # offers, against the real .NET API on PostgreSQL with the local OIDC provider. The Smoke plan
 # runs on every PR in ios.yml; this runs nightly, on releases and on demand.
@@ -12,8 +13,8 @@ on:
   workflow_dispatch:
     inputs:
       plans:
-        description: Plans to run (space-separated; full, screenshots, smoke)
-        default: full screenshots
+        description: Plans to run (space-separated; full, screenshots, performance, smoke)
+        default: full screenshots performance
 
 permissions:
   contents: read
@@ -35,7 +36,7 @@ jobs:
           # installed runtime that supports the device types (ios.sh picks it).
           - { name: iOS 26 (minimum), download: '26.0', runtime: com.apple.CoreSimulator.SimRuntime.iOS-26-0 }
           - { name: newest iOS, download: '', runtime: '' }
-        plan: [full, screenshots]
+        plan: [full, screenshots, performance]
     env:
       NUGET_PACKAGES: ${{ github.workspace }}/.cache/backend/nuget
       # The runner cannot run Linux containers: PostgreSQL 18 + pgvector comes from the flake.
@@ -46,7 +47,7 @@ jobs:
         id: selected
         shell: bash
         env:
-          PLANS: ${{ github.event.inputs.plans || 'full screenshots' }}
+          PLANS: ${{ github.event.inputs.plans || 'full screenshots performance' }}
           PLAN: ${{ matrix.plan }}
         run: |
           if [[ " $PLANS " == *" $PLAN "* ]]; then echo "run=true" >> "$GITHUB_OUTPUT"; else echo "run=false" >> "$GITHUB_OUTPUT"; fi

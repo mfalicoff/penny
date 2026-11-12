@@ -175,6 +175,12 @@ struct SignedOutFlow: View {
     enum Route: Hashable { case createAccount, server }
 
     @State private var path: [Route] = []
+    @State private var keyboardShown = false
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    /// At accessibility text sizes the demo link, which rides above the keyboard, covered Sign in
+    /// while typing (MAZ-82 audit, AX-XXXL); it steps aside until the keyboard goes away.
+    private var showsTryDemo: Bool { !(keyboardShown && dynamicTypeSize.isAccessibilitySize) }
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -191,7 +197,7 @@ struct SignedOutFlow: View {
                 InviteSignInCard(auth: auth)
             }
             .safeAreaInset(edge: .bottom) {
-                if let onTryDemo {
+                if let onTryDemo, showsTryDemo {
                     Button(action: onTryDemo) {
                         Label("Take a look around with sample data", systemImage: "play.fill")
                             .font(.subheadline.weight(.semibold))
@@ -214,5 +220,13 @@ struct SignedOutFlow: View {
                 }
             }
         }
+        #if canImport(UIKit)
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
+                keyboardShown = true
+            }
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+                keyboardShown = false
+            }
+        #endif
     }
 }

@@ -12,7 +12,7 @@
 #   launch         install and launch on clean iPhone and iPad simulators, with screenshots
 #   ci             lint, package-test, test and release-check
 #   ui-build       build the app and the XCUITest bundle (no simulator, no stack)
-#   ui-test [plan] XCUITest plan smoke|full|screenshots against the full-stack environment
+#   ui-test [plan] XCUITest plan smoke|full|screenshots|performance against the full-stack environment
 #                  on clean iPhone and iPad simulators (docs/ios-ui-tests.md)
 #   push <file> [simulator]  send a notification payload (.apns) to Penny with simctl push
 #                  (default: the booted simulator; no APNs, docs/ios-notifications.md)
@@ -260,8 +260,8 @@ cmd_launch() {
 cmd_ui_test() {
   local plan="${1:-smoke}"
   case "$plan" in
-    smoke | full | screenshots) ;;
-    *) echo "error: ui-test plan must be smoke, full or screenshots." >&2; exit 2 ;;
+    smoke | full | screenshots | performance) ;;
+    *) echo "error: ui-test plan must be smoke, full, screenshots or performance." >&2; exit 2 ;;
   esac
   if [[ -n "${PENNY_API_URL:-}" && -n "${PENNY_TEST_TOKEN:-}" ]]; then
     ui_test_run "$plan"
@@ -332,8 +332,9 @@ seed_receipt_fixtures() {
 ui_test_run() {
   local plan="$1" out="$RESULTS/ui/$1" failed=0 name id testplan only=()
   testplan="$(tr '[:lower:]' '[:upper:]' <<< "${plan:0:1}")${plan:1}"
-  # PENNY_UI_ONLY: one test or class, e.g. PennyUITests/AuthJourneyTests (debugging).
-  [[ -n "${PENNY_UI_ONLY:-}" ]] && only=("-only-testing:$PENNY_UI_ONLY")
+  # PENNY_UI_ONLY: tests or classes, space-separated, e.g. PennyUITests/AuthJourneyTests (debugging).
+  local selected
+  for selected in ${PENNY_UI_ONLY:-}; do only+=("-only-testing:$selected"); done
   devices
   rm -rf "$out"/*.xcresult "$out"/*-attachments
   mkdir -p "$out"

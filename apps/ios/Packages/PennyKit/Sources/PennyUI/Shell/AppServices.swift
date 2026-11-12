@@ -15,7 +15,7 @@ public struct AppServices {
     /// created by `LaunchView`). The default presents the account through `AccountWorkspace`.
     public var accountWorkspace: (SignedInAccount, LedgerSyncModel) -> any LedgerWorkspace
     /// Today's local date (the device's calendar day).
-    public var today: () -> CalendarDate
+    public var today: @Sendable () -> CalendarDate
     /// Opens the temporary demo at launch. Only Debug test controls set it (UI tests and
     /// screenshots without a server).
     public var startsInDemo = false
@@ -25,7 +25,7 @@ public struct AppServices {
         accountWorkspace: @escaping (SignedInAccount, LedgerSyncModel) -> any LedgerWorkspace = {
             AccountWorkspace(model: $1, scope: $0.scope)
         },
-        today: @escaping () -> CalendarDate = { CalendarDate(Date()) }
+        today: @escaping @Sendable () -> CalendarDate = { CalendarDate(Date()) }
     ) {
         self.preferences = preferences
         self.lock = lock
