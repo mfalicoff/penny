@@ -44,6 +44,7 @@
 - [Backend architecture](backend-architecture.md): HTTP/application/storage boundaries, validation, persistence guarantees, and framework tradeoffs.
 - [Backend API endpoints](api-endpoints.md): all 40 operations, authentication, request/response shapes, and compatibility notes for a Go or .NET migration.
 - [Testing strategy](testing.md): test ownership, commands, coverage, browser/native setup, device isolation, and CI policy.
+- [Browser and cross-client acceptance](acceptance.md): the acceptance matrix by feature, real .NET/PostgreSQL and cross-client journeys, simulator and browser runner commands, accessibility, responsive and performance results, known gaps and device-only exclusions (MAZ-96).
 - [Household implementation plan](households-implementation-plan.md): original design tasks and acceptance examples. For current behavior, use the [app guide](app-guide.md#shared-households).
 
 ## Showcase screenshots
