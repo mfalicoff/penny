@@ -1,6 +1,6 @@
 // swift-tools-version:6.2
 // PennyKit holds every module of the native app (MAZ-66). Dependencies point one way:
-// PennyUI -> PennyDesign, PennyData -> PennyDomain. PennyDomain and PennyData never import
+// PennyUI -> PennyDesign, PennyData -> PennyDomain; PennyWidgetUI -> PennyDesign, PennyData.PennyDomain and PennyData never import
 // SwiftUI or UIKit (scripts/ios.sh boundaries checks this), so their tests also run on the
 // macOS host with `swift test`.
 import PackageDescription
@@ -22,6 +22,8 @@ let package = Package(
         .library(name: "PennyData", targets: ["PennyData"]),
         .library(name: "PennyDesign", targets: ["PennyDesign"]),
         .library(name: "PennyUI", targets: ["PennyUI"]),
+        // The WidgetKit widgets (MAZ-80), linked by the PennyWidgets extension target.
+        .library(name: "PennyWidgetUI", targets: ["PennyWidgetUI"]),
         // Identifiers shared by the screens and the XCUITest target (MAZ-81). No dependencies.
         .library(name: "PennyAccessibility", targets: ["PennyAccessibility"]),
     ],
@@ -38,6 +40,12 @@ let package = Package(
             dependencies: ["PennyDomain", "PennyData", "PennyDesign"],
             swiftSettings: mainActorByDefault
         ),
+        // Nonisolated by default: WidgetKit calls the timeline provider off the main actor.
+        .target(
+            name: "PennyWidgetUI",
+            dependencies: ["PennyDomain", "PennyData", "PennyDesign"],
+            swiftSettings: strict
+        ),
         .testTarget(
             name: "PennyDomainTests",
             dependencies: ["PennyDomain", "PennyContracts"],
@@ -50,6 +58,7 @@ let package = Package(
         ),
         .testTarget(name: "PennyDesignTests", dependencies: ["PennyDesign"], swiftSettings: strict),
         .testTarget(name: "PennyUIModuleTests", dependencies: ["PennyUI"], swiftSettings: mainActorByDefault),
+        .testTarget(name: "PennyWidgetUITests", dependencies: ["PennyWidgetUI"], swiftSettings: strict),
         .testTarget(name: "PennyAccessibilityTests", dependencies: ["PennyAccessibility"], swiftSettings: strict),
     ]
 )

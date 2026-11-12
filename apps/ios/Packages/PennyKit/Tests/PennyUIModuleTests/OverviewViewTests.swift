@@ -6,8 +6,8 @@ import Testing
 
 @testable import PennyUI
 
-/// One fixed projection for every month.
-private struct FixedProjection: SharedProjectionService {
+/// One fixed projection for every month (also used by WidgetPublisherTests).
+struct FixedProjection: SharedProjectionService {
     let answer: WireHouseholdProjection
     func projection(month: MonthKey) async throws -> WireHouseholdProjection { answer }
 }

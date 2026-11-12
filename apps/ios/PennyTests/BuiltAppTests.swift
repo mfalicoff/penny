@@ -57,4 +57,17 @@ struct BuiltAppTests {
     func privacyManifest() {
         #expect(Bundle.main.url(forResource: "PrivacyInfo", withExtension: "xcprivacy") != nil)
     }
+
+    /// MAZ-80: the WidgetKit extension keeps the Expo extension's id, so placed widgets stay.
+    @Test("whenBuilt_WidgetExtension_ShouldBeEmbeddedWithTheLegacyIdentity")
+    func widgetExtension() throws {
+        let url = try #require(Bundle.main.builtInPlugInsURL?.appending(path: "PennyWidgets.appex"))
+        let widgets = try #require(Bundle(url: url))
+        #expect(widgets.bundleIdentifier == AppIdentity.widgetExtensionBundleIdentifier)
+        let info = widgets.infoDictionary ?? [:]
+        let point = (info["NSExtension"] as? [String: Any])?["NSExtensionPointIdentifier"] as? String
+        #expect(point == "com.apple.widgetkit-extension")
+        #expect(info["MinimumOSVersion"] as? String == "26.0")
+        #expect(widgets.url(forResource: "PrivacyInfo", withExtension: "xcprivacy") != nil)
+    }
 }

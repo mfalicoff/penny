@@ -21,6 +21,8 @@ struct AppShell: View {
             }
         }
         .environment(shell)
+        // The Home Screen widgets follow the account's ledger (MAZ-80); never the demo's.
+        .modifier(WidgetPublishing(shell: shell))
         // Today moves on at midnight and when the app comes back, so income dated on the new
         // day leaves Expected for Left to spend without a relaunch (MAZ-136).
         .task { await shell.followDayChanges() }

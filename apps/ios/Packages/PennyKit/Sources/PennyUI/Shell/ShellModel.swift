@@ -62,6 +62,9 @@ final class ShellModel {
     /// Receipt upload and download for the signed-in account (MAZ-78); nil in the demo and
     /// previews, where the entry form says receipts need an account.
     var receipts: (any ReceiptTransfers)?
+    /// Writes the Home Screen widgets' snapshot for the signed-in account (MAZ-80); nil in the
+    /// demo, previews and tests.
+    var widgets: WidgetPublisher?
 
     // MARK: Households (MAZ-75)
 

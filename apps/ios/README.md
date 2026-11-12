@@ -55,7 +55,7 @@ CI runs the same steps on the GitHub `xcode-27` (Apple Silicon) image in [`.gith
 
 | Path | Contents | Owner |
 | --- | --- | --- |
-| `Penny.xcodeproj` | The app and `PennyTests` targets and the shared **Penny** scheme. Folders are synchronized: add files under `Penny/` or `PennyTests/` without touching the project file. Keep build settings in `Configuration/`, not in the project. | MAZ-66 |
+| `Penny.xcodeproj` | The app, `PennyTests` and `PennyWidgets` (WidgetKit extension, embedded in the app) targets and the shared **Penny** scheme. Folders are synchronized: add files under `Penny/`, `PennyTests/` or `PennyWidgets/` without touching the project file. Keep build settings in `Configuration/`, not in the project. | MAZ-66 |
 | `Configuration/` | xcconfig files (shared, Debug, Release, per target, version), `Info.plist` additions and entitlements | MAZ-66; signing changes need [Apple-side updates](#signing-and-entitlements) |
 | `Penny/` | The app entry point, Debug-only test controls, the asset catalog (icon, accent color) and the privacy manifest. Keep it thin: features belong in PennyKit. | MAZ-66, then MAZ-69 |
 | `PennyTests/` | Unit tests hosted in the built app: bundle identity, URL scheme, platforms, configuration, App Group, test controls | MAZ-66 |
@@ -70,7 +70,7 @@ CI runs the same steps on the GitHub `xcode-27` (Apple Silicon) image in [`.gith
 
 Dependencies point one way: `PennyUI → PennyDesign`, `PennyUI → PennyData → PennyDomain`. PennyDomain and PennyData never import SwiftUI, UIKit or AppKit, and PennyDesign never imports PennyData or PennyUI; `ios.sh lint` checks this, and the package manifest makes the reverse direction a compile error. PennyDesign and PennyUI default to `@MainActor` isolation; mark pure value types `nonisolated`.
 
-UI tests (XCUITest, MAZ-81) live in `PennyUITests/` (its own target and **PennyUITests** scheme, with the Smoke, Full and Screenshots plans in `TestPlans/`); they import only `PennyAccessibility`, the PennyKit module of shared accessibility identifiers, and drive the installed app against the real API ([native UI tests](../../docs/ios-ui-tests.md)). The WidgetKit extension target belongs to MAZ-80 (new sizes: MAZ-135).
+UI tests (XCUITest, MAZ-81) live in `PennyUITests/` (its own target and **PennyUITests** scheme, with the Smoke, Full and Screenshots plans in `TestPlans/`); they import only `PennyAccessibility`, the PennyKit module of shared accessibility identifiers, and drive the installed app against the real API ([native UI tests](../../docs/ios-ui-tests.md)). The WidgetKit extension (`PennyWidgets/`, MAZ-80) embeds the small Monthly balance and Recent expenses widgets from PennyWidgetUI; new sizes are MAZ-135 ([widgets](../../docs/ios-widgets.md)).
 
 ## Environments
 
@@ -109,7 +109,7 @@ The app bundles no fonts or icon files. It uses SF Pro through the system text s
 | Bundle id | `com.mfalicoff.penny` | Same as `app.json`; a different id would be a new app |
 | App Group | `group.com.mfalicoff.penny` | Same as the Expo widgets ([App Groups setup](../../docs/ios-ipa.md#widget-app-groups-setup)); the Expo app kept only derived widget snapshots there, which MAZ-72 leaves for MAZ-80's widgets to replace ([Expo upgrade](../../docs/ios-expo-migration.md)) |
 | URL scheme | `penny` | Every legacy route keeps a destination (`PennyDomain.DeepLink`), including `penny://entries/new` from the widgets and `penny://auth/callback` for OIDC |
-| Widget extension | `com.mfalicoff.penny.ExpoWidgetsTarget` with kinds `BalanceChartWidget` and `RecentExpensesWidget` | Reserved for the WidgetKit extension (MAZ-80); keeping both keeps widgets people already placed |
+| Widget extension | `com.mfalicoff.penny.ExpoWidgetsTarget` with kinds `BalanceChartWidget` and `RecentExpensesWidget` | The `PennyWidgets` target (MAZ-80) keeps both, so widgets people already placed keep working; it has the same App Group (`PennyWidgets.entitlements`) |
 
 These values live in `PennyDomain.AppIdentity`. `AppIdentityTests` compares them with `app.json` and the signing docs, and `PennyTests` checks the built bundle.
 

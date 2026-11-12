@@ -65,7 +65,7 @@ xcb() {
 }
 
 swift_sources() {
-  find "$IOS_DIR/Penny" "$IOS_DIR/PennyTests" "$IOS_DIR/PennyUITests" "$PACKAGE/Sources" "$PACKAGE/Tests" "$PACKAGE/Package.swift" \
+  find "$IOS_DIR/Penny" "$IOS_DIR/PennyTests" "$IOS_DIR/PennyUITests" "$IOS_DIR/PennyWidgets" "$PACKAGE/Sources" "$PACKAGE/Tests" "$PACKAGE/Package.swift" \
     -name '*.swift' -type f
 }
 
@@ -88,6 +88,12 @@ cmd_lint() {
     echo "error: PennyDesign must not depend on data or feature modules." >&2
     exit 1
   fi
+  # The widget extension links PennyWidgetUI only; the app's screens stay out of it (MAZ-80).
+  if grep -rnE '^\s*(public |internal |@testable )?import PennyUI\b' "$PACKAGE/Sources/PennyWidgetUI" \
+    "$IOS_DIR/PennyWidgets"; then
+    echo "error: the widgets must not depend on the app's screens (PennyUI)." >&2
+    exit 1
+  fi
   # Identifiers only: the UI test runner links it, so it stays free of app code.
   if grep -rnE '^\s*(public |internal |@testable )?import ' "$PACKAGE/Sources/PennyAccessibility"; then
     echo "error: PennyAccessibility must not import anything." >&2
@@ -102,7 +108,8 @@ cmd_lint() {
 
   echo "==> property lists and test plans"
   /usr/bin/plutil -lint "$IOS_DIR/Configuration/Info.plist" "$IOS_DIR/Configuration/Penny.entitlements" \
-    "$IOS_DIR/Penny/PrivacyInfo.xcprivacy"
+    "$IOS_DIR/Penny/PrivacyInfo.xcprivacy" "$IOS_DIR/Configuration/PennyWidgets-Info.plist" \
+    "$IOS_DIR/Configuration/PennyWidgets.entitlements" "$IOS_DIR/PennyWidgets/PrivacyInfo.xcprivacy"
   # Test plans are JSON: converting them parses them strictly.
   local plan
   for plan in "$IOS_DIR"/TestPlans/*.xctestplan; do

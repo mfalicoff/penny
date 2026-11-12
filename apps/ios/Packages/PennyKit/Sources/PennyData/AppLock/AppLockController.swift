@@ -19,8 +19,9 @@ public enum AppActivity: Equatable, Sendable {
 /// - The on/off setting changes only after the person authenticates and the new value is
 ///   saved; a failed save leaves the previous setting in force.
 ///
-/// Widgets and notification previews are outside the lock (MAZ-79/80 keep their contents
-/// non-sensitive); the settings screen says so.
+/// Widgets and notification previews are outside the lock; the settings screen says so. The
+/// widgets' own privacy rules (cleared on sign-out, redacted on a locked device) don't depend
+/// on it (docs/ios-widgets.md#privacy).
 @MainActor
 @Observable
 public final class AppLockController {
