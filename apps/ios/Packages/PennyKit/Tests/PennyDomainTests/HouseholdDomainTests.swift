@@ -239,6 +239,25 @@ struct HouseholdSplitTests {
     }
 }
 
+@Suite("Invite link loopback servers (MAZ-75 review)")
+struct InviteLoopbackTests {
+    @Test(
+        "whenTheHostIsLoopback_InviteLink_ShouldAcceptOnlyRealLoopbackAddresses",
+        arguments: [
+            ("http://localhost:3001", true), ("http://127.0.0.1:5080", true), ("http://127.1.2.3", true),
+            ("http://127.255.255.255", true), ("http://[::1]:3001", true), ("http://127.evil.example", false),
+            ("http://127.0.0.1.evil.example", false), ("http://127.0.0", false), ("http://127.0.0.256", false),
+            ("http://127.00000.0.1", false), ("http://1270.0.0.1", false), ("http://128.0.0.1", false),
+            ("http://localhost.evil.example", false),
+        ])
+    func loopback(server: String, allowed: Bool) throws {
+        let url = try ServerURL(server)
+        #expect(InviteLink.isLoopback(url) == allowed, "\(server)")
+        #expect(InviteLink.isAllowed(url, allowsLoopbackHTTP: true) == allowed)
+        #expect(!InviteLink.isAllowed(url, allowsLoopbackHTTP: false), "never plain HTTP in Release")
+    }
+}
+
 @Suite("Join links over other screens (MAZ-75 review)")
 struct JoinRouteTests {
     @Test("whenAJoinLinkOpens_ShellRoute_ShouldWaitToPresentTheSheetUntilNothingElseIsUp")

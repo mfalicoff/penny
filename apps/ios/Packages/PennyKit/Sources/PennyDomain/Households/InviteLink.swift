@@ -101,7 +101,17 @@ public struct InviteLink: Equatable, Sendable {
 
     public static func isLoopback(_ server: ServerURL) -> Bool {
         let host = (server.url.host ?? "").lowercased().trimmingCharacters(in: CharacterSet(charactersIn: "[]"))
-        return host == "localhost" || host == "::1" || host.hasPrefix("127.")
+        return host == "localhost" || host == "::1" || isLoopbackIPv4(host)
+    }
+
+    /// A dotted-quad IPv4 literal in 127.0.0.0/8 ("127.0.0.1", "127.1.2.3"), not a host name
+    /// that merely starts with "127." ("127.evil.example").
+    static func isLoopbackIPv4(_ host: String) -> Bool {
+        let parts = host.split(separator: ".", omittingEmptySubsequences: false)
+        guard parts.count == 4, parts[0] == "127" else { return false }
+        return parts.allSatisfy { part in
+            (1...3).contains(part.count) && part.allSatisfy { $0.isASCII && $0.isNumber } && (Int(part) ?? 256) <= 255
+        }
     }
 
     /// The link the QR code encodes. Values are percent-encoded so the server URL (with its
