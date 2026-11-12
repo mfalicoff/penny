@@ -85,6 +85,8 @@ class PennyUITestCase: XCTestCase {
         }
         let stack = Stack(configuration: configuration)
         try await stack.setClock(Stack.defaultNow)
+        // A test that hit its time allowance never ran tearDown; start without its faults.
+        try await stack.clearFaults()
         state.stack = stack
         return stack
     }
