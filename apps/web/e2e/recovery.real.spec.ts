@@ -114,10 +114,19 @@ test("a session that expires by server time keeps the waiting change and syncs i
   const { page, context } = await signIn(browser, baseURL, user, AT);
   await open(page);
 
-  // Sessions last 30 days of server time.
-  await pinClock("2026-11-15T12:00:00Z");
+  // A change waits in this browser while the ledger write can't get through.
+  await setFaults([{ method: "PUT", pathPrefix: "/api/ledger", abort: true }]);
   await addExpense(page, "Written at expiry", "9.99");
+  await expect(page.getByText(/1 change waiting/)).toBeVisible({ timeout: 20_000 });
+
+  // Sessions last 30 days of server time. Whichever request reaches the server next (a refetch or
+  // the retried write) gets 401, and the browser returns to sign-in with the change kept.
+  await pinClock("2026-11-15T12:00:00Z");
+  await clearFaults();
+  const retry = page.getByRole("button", { name: "Retry" }).first();
+  if (await retry.isVisible()) await retry.click().catch(() => undefined);
   await expect(page.getByText("Your session ended. Sign in again to continue. Changes waiting to sync are kept on this device.")).toBeVisible({ timeout: 20_000 });
+  expect(await serverTitles(user)).toEqual([]);
   await expect(page.getByRole("heading", { level: 1, name: "Welcome back" })).toBeVisible();
   // Signing in again returns to the page and sends the change once. (Unlike iOS, the web does not
   // prefill the expired account's email: docs/acceptance.md, known gaps.)
