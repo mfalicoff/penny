@@ -13,12 +13,16 @@ public struct RootView: View {
     @State private var inbox = DeepLinkInbox()
     /// A `penny://join` invite waiting for the right account (MAZ-75).
     @State private var invites: InviteHandoff
+    /// Household notifications (MAZ-79): permission, APNs registration and opened notifications.
+    private let notifications: PushNotifications?
     @Environment(\.scenePhase) private var scenePhase
 
     public init(
-        configuration: Result<AppConfiguration, AppConfiguration.Invalid>, services: AppServices = .live()
+        configuration: Result<AppConfiguration, AppConfiguration.Invalid>, services: AppServices = .live(),
+        notifications: PushNotifications? = nil
     ) {
         self.configuration = configuration
+        self.notifications = notifications
         _services = State(initialValue: services)
         _appearance = State(initialValue: AppearanceModel(preferences: services.preferences))
         let development = (try? configuration.get())?.environment == .development
@@ -29,7 +33,8 @@ public struct RootView: View {
         Group {
             switch configuration {
             case .success(let configuration):
-                LaunchView(configuration: configuration, inbox: $inbox, services: services)
+                LaunchView(
+                    configuration: configuration, inbox: $inbox, services: services, notifications: notifications)
             case .failure(let error): ConfigurationErrorView(error: error)
             }
         }
@@ -38,10 +43,17 @@ public struct RootView: View {
         .environment(appearance)
         .environment(invites)
         .environment(services.lock)
+        .environment(notifications)
         .modifier(LockCover(lock: services.lock))
         .task { await services.lock.start() }
+        .onAppear {
+            // Opened notifications go through the same inbox as links: kept until sign-in and unlock.
+            let inbox = $inbox
+            notifications?.deliver = { inbox.wrappedValue.receive($0) }
+        }
         .onChange(of: scenePhase, initial: true) { _, phase in
             Self.forward(phase, to: services.lock)
+            if phase == .active, let notifications { Task { await notifications.becameActive() } }
         }
         .onOpenURL { url in
             // Unknown penny:// routes open Home. Single sign-on callbacks return through the
@@ -85,18 +97,24 @@ struct LaunchView: View {
     @State private var demo: DemoWorkspace?
     @Binding var inbox: DeepLinkInbox
     let services: AppServices
+    let notifications: PushNotifications?
 
     init(
         configuration: AppConfiguration, inbox: Binding<DeepLinkInbox>, services: AppServices,
-        auth: AuthController? = nil
+        notifications: PushNotifications? = nil, auth: AuthController? = nil
     ) {
         let store = OfflineLedgerStore.standard()
-        let auth = auth ?? AuthController(defaultServer: configuration.defaultServerURL, localData: store)
+        let auth =
+            auth
+            ?? AuthController(
+                defaultServer: configuration.defaultServerURL, localData: store,
+                devices: notifications?.devices ?? NoDeviceRegistration())
         _auth = State(initialValue: auth)
         _sync = State(initialValue: LedgerSyncModel(auth: auth, store: store))
         _demo = State(initialValue: services.startsInDemo ? DemoWorkspace(today: services.today()) : nil)
         _inbox = inbox
         self.services = services
+        self.notifications = notifications
     }
 
     var body: some View {

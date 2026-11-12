@@ -16,6 +16,7 @@ struct AuthGate: View {
     @Binding var demo: DemoWorkspace?
 
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(PushNotifications.self) private var push: PushNotifications?
 
     var body: some View {
         Group {
@@ -77,6 +78,9 @@ struct AuthGate: View {
             inbox.sessionChanged(to: currentSession)
             // Receipt previews and picked files left by a crash or the previous account (MAZ-78).
             ReceiptFileCache.standard.purge()
+            // Push registration follows the signed-in account; the demo never registers (MAZ-79).
+            let account = pushAccount
+            if let push { Task { await push.accountChanged(account) } }
         }
         // The widgets show only the signed-in account's money: signing out clears them, and
         // another account's snapshot is removed before its shell publishes (MAZ-80). Kept
@@ -97,6 +101,12 @@ struct AuthGate: View {
         case .signedIn(let account), .signingOut(let account): return Self.session(account)
         case .restoring, .keychainUnavailable, .signedOut, .signingIn: return nil
         }
+    }
+
+    /// The account push notifications register for: only a signed-in account, never the demo.
+    private var pushAccount: PushAccount? {
+        guard let push, demo == nil, case .signedIn = auth.state else { return nil }
+        return auth.client.flatMap(push.account(for:))
     }
 
     static func session(_ account: SignedInAccount) -> DeepLinkSession {
@@ -140,7 +150,7 @@ struct ShellHost: View {
     private func deliver() {
         deliverInvite()
         guard let model, let link = inbox.take(ready: !lock.conceals, for: session) else { return }
-        model.navigate { $0.open(link) }
+        model.open(link)
     }
 
     /// A waiting invite opens the join sheet in an account's shell (never in the demo, never

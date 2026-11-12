@@ -60,7 +60,7 @@ Every legacy route keeps a destination (`DeepLink`, MAZ-66; [legacy deep links](
 
 A link that arrives while signed out, while the session is being restored or while the app is locked waits in `DeepLinkInbox`. It opens once the shell is showing and the lock is open, never behind the lock. A newer link replaces an older one. A link belongs to the session showing when it arrived (`DeepLinkSession`, kept current by `AuthGate`): one that arrived while an account was signed in opens only in that account, and another account's shell drops it, so a link kept from before a sign-out never opens in the next account. A link that arrived while no session showed opens in the next account. The demo opens only links that arrived during the demo; an account's link waits through it.
 
-Household and expense links open their pages (MAZ-75, [native households](ios-households.md)); `penny://join` invite links wait in `InviteHandoff` instead of the inbox, for an account on the server they name. A link to a trip that isn't on the device shows "Trip not found".
+Household and expense links open their pages (MAZ-75, [native households](ios-households.md)); `penny://join` invite links wait in `InviteHandoff` instead of the inbox, for an account on the server they name. A trip link takes a personal trip id or a shared trip's household id (MAZ-76, [native trips](ios-trips.md)); a personal trip that isn't on the device and isn't a shared trip shows "Trip not found" (in the demo) or the shared trip's "Trip not available".
 
 ## Components and tokens
 
@@ -93,7 +93,7 @@ PennyDesign keeps the tokens of the baseline (`Tokens.swift`, checked by `TokenB
 | Face ID lock | Keychain, this device only, not synced | See [App lock](#app-lock). |
 | Server | The saved server (MAZ-68) | Read-only while signed in: "Sign out to change servers." |
 
-When this launch's import of the Expo app's data needs the person (a damaged record set aside, an unknown server, a locked device or a full disk), Settings starts with a row that says what happened and what to do (`ExpoImportNotice`, `settings.expoImport`). Settings also shows the account with its sync status and Sign out (the MAZ-68 flow, which warns about unsynced changes), or Leave demo. Notifications (MAZ-79) and the **Lock after** delay (MAZ-133) are not in this build.
+When this launch's import of the Expo app's data needs the person (a damaged record set aside, an unknown server, a locked device or a full disk), Settings starts with a row that says what happened and what to do (`ExpoImportNotice`, `settings.expoImport`). Settings also shows the account with its sync status and Sign out (the MAZ-68 flow, which warns about unsynced changes), or Leave demo. An account's Settings has a **Notifications** row (MAZ-79, [native notifications](ios-notifications.md#permission)). The **Lock after** delay (MAZ-133) is not in this build.
 
 ## App lock
 
@@ -104,7 +104,7 @@ The legacy `AppLockProvider`, ported to `AppLockController` with the same rules:
 - **One prompt at a time.** Unlock is single-flight. Going to the background cancels the prompt, invalidates its answer and ends the single-flight hold at once, so a success from before backgrounding can't open a later session, and a quick return that beats the cancelled prompt's answer still asks again. Returning from the background asks again.
 - **Turning it on or off** asks for biometrics first (turning on accepts biometrics only, so the person proves the sensor works for them; turning off and unlocking accept the passcode too). The new value is saved before it takes effect; if saving fails, the previous setting stays and the screen says so.
 - **Recovery.** Unlocking accepts the device passcode, so a biometric lockout or a removed face or finger doesn't lock the person out. A device with no passcode can't verify anyone: the lock screen says to set a passcode in Settings, then unlock.
-- **Privacy outside the app.** Widgets and notification previews aren't covered by the lock; the setting says so. The widgets have their own rules, independent of the lock: they are cleared on sign-out and account switches and redacted on a locked device ([widgets](ios-widgets.md#privacy)).
+- **Privacy outside the app.** Widgets and notification previews aren't covered by the lock; the setting says so. MAZ-79/80 keep their contents non-sensitive; an opened notification waits for unlock like any deep link ([native notifications](ios-notifications.md#privacy-and-gates)).
 - The setting is in the Keychain (`com.mfalicoff.penny.app-lock`, `AfterFirstUnlockThisDeviceOnly`, not synchronizable). The Expo app's `penny-app-lock` value is imported before the lock first reads its setting: on (or damaged) turns the native lock on, and until the Expo value can be read and saved, the lock's read fails so the app stays concealed (`ExpoImportingLockStore`, [Expo upgrade](ios-expo-migration.md)).
 
 ## Demo

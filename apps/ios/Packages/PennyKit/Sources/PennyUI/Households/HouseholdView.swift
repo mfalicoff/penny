@@ -73,10 +73,16 @@ enum PaymentRequest: Identifiable, Equatable {
     }
 }
 
-private struct HouseholdPage: View {
+/// Also a shared trip's page (MAZ-76, `TripDetailView`): a shared trip is a household with a
+/// travel range, so it adds the trip's dates and totals, lists Expenses for the whole trip with
+/// your private expenses under Only you, and says "trip" (`SharedTripSections.swift`).
+struct HouseholdPage: View {
     @Environment(ShellModel.self) private var shell
     @Bindable var model: HouseholdModel
+    /// Opened as a trip (`penny://trips/<id>`): says "trip" before the household has loaded.
+    var opensAsTrip = false
     @State private var section: HouseholdSection = .expenses
+    @State private var editingTrip = false
     @State private var form: SharedFormRequest?
     @State private var payment: PaymentRequest?
     @State private var inviting = false
@@ -100,11 +106,17 @@ private struct HouseholdPage: View {
         }
     }
 
+    /// The trip's part of the page, for a shared trip (nil for a household).
+    private var trip: SharedTripContext? { SharedTripContext(model: model, shell: shell) }
+    private var isTrip: Bool { model.household.map { $0.trip != nil } ?? opensAsTrip }
+    private var noun: String { isTrip ? "trip" : "household" }
+
     var body: some View {
+        let trip = self.trip
         List {
             if let household = model.household {
-                header(household)
-                content(household)
+                header(household, trip: trip)
+                content(household, trip: trip)
             }
         }
         .insetGroupedList()
@@ -114,23 +126,46 @@ private struct HouseholdPage: View {
                 case .failed(let failure):
                     PennyStateView(
                         failure.kind == .offline ? .offline : .error,
-                        title: failure.kind == .membership ? "Household not available" : "Couldn't open the household",
+                        title: failure.kind == .membership
+                            ? (isTrip ? "Trip not available" : "Household not available")
+                            : "Couldn't open the \(noun)",
                         message: failure.kind == .membership
                             ? "You may have left it, been removed, or it doesn't exist on this server."
                             : failure.message, actionTitle: failure.canRetry ? "Try again" : nil,
                         action: { Task { await model.refresh() } })
                 default:
-                    PennyStateView(.loading, title: "Opening the household…")
+                    PennyStateView(.loading, title: "Opening the \(noun)…")
                 }
             }
         }
-        .refreshable { await model.refresh() }
+        .refreshable {
+            await model.refresh()
+            await refreshTrip()
+        }
         .task {
+            // Trip expense from the Trips list opens the form once the page is here. Taken
+            // before the reads, so a failed or offline load (or leaving early) never leaves it
+            // to open the form later, unasked.
+            let wantsAdd = shell.trips.takePendingAdd(for: model.id)
             model.followCurrentMonth(MonthKey(shell.today))
             await model.refresh()
+            await refreshTrip()
+            if wantsAdd, !Task.isCancelled, model.household?.trip != nil, !model.isReadOnly {
+                form = .new
+            }
         }
-        .onChange(of: model.writeCount) { Task { await shell.refreshShared() } }
-        .navigationTitle(model.household?.name ?? "Household")
+        .onChange(of: model.writeCount) {
+            Task {
+                await shell.refreshShared()
+                await refreshTrip()
+            }
+        }
+        .navigationTitle(model.household?.name ?? (isTrip ? "Trip" : "Household"))
+        .sheet(isPresented: $editingTrip) {
+            if let household = model.household {
+                TripFormSheet(target: .shared(household), expenseCount: 0) { _ in }.environment(shell)
+            }
+        }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 NavigationLink(value: DetailRoute.householdHistory(householdID: model.id)) {
@@ -166,11 +201,17 @@ private struct HouseholdPage: View {
 
     // MARK: Header
 
+    private func refreshTrip() async {
+        guard model.household?.trip != nil else { return }
+        await shell.trips.expenses(for: model.id)?.refresh()
+    }
+
     @ViewBuilder
-    private func header(_ household: WireHousehold) -> some View {
+    private func header(_ household: WireHousehold, trip: SharedTripContext?) -> some View {
         Section {
             VStack(alignment: .leading, spacing: 12) {
                 MonogramStack(initials: model.people.current.map { model.people.initials($0.userId) })
+                if let trip { SharedTripSummary(context: trip, model: model) }
                 HeroAmount(
                     "\(HouseholdText.shortMonth(model.month)) · \(Self.balanceLabel(model.viewerBalance))",
                     cents: abs(model.viewerBalance), currency: model.currency,
@@ -185,7 +226,7 @@ private struct HouseholdPage: View {
                         }
                         .accessibilityHint("Shows balances and suggested payments to record")
                         .accessibilityIdentifier("household.recordPayment")
-                        PennyButton("Expense", systemImage: "plus") { form = .new }
+                        PennyButton(isTrip ? "Trip expense" : "Expense", systemImage: "plus") { form = .new }
                             .accessibilityIdentifier("household.addExpense")
                     }
                 }
@@ -242,9 +283,16 @@ private struct HouseholdPage: View {
     }
 
     @ViewBuilder
-    private func content(_ household: WireHousehold) -> some View {
+    private func content(_ household: WireHousehold, trip: SharedTripContext?) -> some View {
         switch section {
-        case .expenses: expensesSection
+        case .expenses:
+            if let trip {
+                SharedTripExpenseSections(context: trip, model: model)
+                rulesSection
+            } else {
+                expensesSection
+                rulesSection
+            }
         case .balances: balancesSection
         case .people: peopleSection(household)
         }
@@ -278,6 +326,9 @@ private struct HouseholdPage: View {
                 Text("\(MoneyFormat.amount(total, currency: model.currency)) total")
             }
         }
+    }
+
+    @ViewBuilder private var rulesSection: some View {
         if !model.rules.isEmpty {
             Section {
                 ForEach(model.rules) { rule in
@@ -424,8 +475,11 @@ private struct HouseholdPage: View {
             Text(people.current.count == 1 ? "1 member" : "\(people.current.count) members")
         } footer: {
             Text(
-                "Everyone uses \(household.currency). New members are included in equal splits from the day they "
-                    + "join; earlier expenses don't change.")
+                isTrip
+                    ? "Everyone uses \(household.currency). People who join are in the trip's expenses added from "
+                        + "then on; earlier expenses keep the people they were split with."
+                    : "Everyone uses \(household.currency). New members are included in equal splits from the day "
+                        + "they join; earlier expenses don't change.")
         }
         if !people.former.isEmpty {
             Section("Former members") {
@@ -440,19 +494,30 @@ private struct HouseholdPage: View {
                 if model.isCreator {
                     Button("Invite someone", systemImage: "person.badge.plus") { inviting = true }
                         .accessibilityIdentifier("household.invite")
-                    Button("Rename", systemImage: "pencil") {
-                        newName = household.name
-                        renaming = true
+                    if isTrip {
+                        Button("Edit trip", systemImage: "pencil") { editingTrip = true }
+                            .accessibilityIdentifier("tripPage.edit")
+                    } else {
+                        Button("Rename", systemImage: "pencil") {
+                            newName = household.name
+                            renaming = true
+                        }
+                        .accessibilityIdentifier("household.rename")
                     }
-                    .accessibilityIdentifier("household.rename")
                 }
-                Button("Leave household", systemImage: "rectangle.portrait.and.arrow.right", role: .destructive) {
+                Button(
+                    isTrip ? "Leave trip" : "Leave household", systemImage: "rectangle.portrait.and.arrow.right",
+                    role: .destructive
+                ) {
                     confirm = .leave
                 }
                 .accessibilityIdentifier("household.leave")
                 if model.isCreator {
-                    Button("Archive household", systemImage: "archivebox", role: .destructive) { confirm = .archive }
-                        .accessibilityIdentifier("household.archive")
+                    Button(isTrip ? "Archive trip" : "Archive household", systemImage: "archivebox", role: .destructive)
+                    {
+                        confirm = .archive
+                    }
+                    .accessibilityIdentifier("household.archive")
                 }
             } footer: {
                 Text(
@@ -503,7 +568,7 @@ private struct HouseholdPage: View {
         switch confirmation {
         case .leave:
             if await model.leave() == nil {
-                shell.navigate { $0.open(.households) }
+                shell.navigate { $0.open(isTrip ? .trips : .households) }
                 await shell.refreshShared()
             }
         case .archive:

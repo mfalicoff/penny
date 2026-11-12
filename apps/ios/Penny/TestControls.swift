@@ -30,6 +30,12 @@
         /// Penny's own views, for screenshot variants (system controls follow the simulator).
         static let reduceTransparencyVariable = "PENNY_TEST_REDUCE_TRANSPARENCY"
         static let reduceMotionVariable = "PENNY_TEST_REDUCE_MOTION"
+        /// Environment variables with a notification payload (JSON, the APNs custom keys) that Penny
+        /// handles as if the person had opened that notification (MAZ-79): at launch (a cold start),
+        /// or the first time Penny returns from the background (a warm start). It goes through the
+        /// same path as a real notification (`PushNotifications.didOpen`); only APNs is skipped.
+        static let notificationVariable = "PENNY_TEST_NOTIFICATION"
+        static let notificationOnResumeVariable = "PENNY_TEST_NOTIFICATION_ON_RESUME"
 
         var serverURL: ServerURL?
         var startsInDemo = false
@@ -41,6 +47,8 @@
         /// `PENNY_TEST_EXPO_FIXTURE=upgrade`: stage Expo data for an in-place upgrade rehearsal
         /// and import nothing at this launch (`ExpoUpgradeFixture`, docs/ios-expo-migration.md).
         var stagesExpoFixture = false
+        var notificationAtLaunch: String?
+        var notificationOnResume: String?
 
         static func fromProcess(_ environment: [String: String] = ProcessInfo.processInfo.environment) -> TestControls {
             TestControls(
@@ -51,7 +59,9 @@
                 containerSeed: environment[containerSeedVariable].flatMap { $0.isEmpty ? nil : URL(filePath: $0) },
                 reduceTransparency: environment[reduceTransparencyVariable] == "1",
                 reduceMotion: environment[reduceMotionVariable] == "1",
-                stagesExpoFixture: environment[ExpoUpgradeFixture.variable] == "upgrade")
+                stagesExpoFixture: environment[ExpoUpgradeFixture.variable] == "upgrade",
+                notificationAtLaunch: environment[notificationVariable],
+                notificationOnResume: environment[notificationOnResumeVariable])
         }
 
         /// Runs before the app reads any stored state: the reset, then the seed.
@@ -83,6 +93,38 @@
             services.startsInDemo = startsInDemo
             if let today { services.today = { today } }
             return services
+        }
+    }
+
+    /// Opens the notification TestControls carries, at launch or on the first return from the
+    /// background, through `PushNotifications.didOpen` (as the app delegate would).
+    struct TestNotificationInjection: ViewModifier {
+        let controls: TestControls
+        let notifications: PushNotifications
+        @Environment(\.scenePhase) private var scenePhase
+        @State private var wasInBackground = false
+        @State private var resumed = false
+
+        func body(content: Content) -> some View {
+            content
+                .task {
+                    if let json = controls.notificationAtLaunch { notifications.didOpen(Self.notification(json)) }
+                }
+                .onChange(of: scenePhase) { _, phase in
+                    if phase == .background { wasInBackground = true }
+                    guard phase == .active, wasInBackground, !resumed, let json = controls.notificationOnResume
+                    else { return }
+                    resumed = true
+                    notifications.didOpen(Self.notification(json))
+                }
+        }
+
+        /// The payload as `userInfo`; nil (a malformed notification) for anything else.
+        static func notification(_ json: String) -> HouseholdNotification? {
+            guard let object = try? JSONSerialization.jsonObject(with: Data(json.utf8)) as? [String: Any] else {
+                return nil
+            }
+            return HouseholdNotification(userInfo: object as [AnyHashable: Any])
         }
     }
 

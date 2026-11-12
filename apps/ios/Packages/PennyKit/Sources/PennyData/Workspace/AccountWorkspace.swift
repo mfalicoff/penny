@@ -57,7 +57,7 @@ public final class AccountWorkspace: LedgerWorkspace {
         // The receipt's before and after are read together by the engine, so their difference
         // is this change plus the recurring entries it made due (a past-dated schedule), and
         // nothing a sync brought in: the inverse puts back only what this save did.
-        guard state != nil, receipt.after != receipt.before else {
+        guard state != nil, summary.allowsUndo, receipt.after != receipt.before else {
             return .success(SavedChange(summary: summary, canUndo: false, savedOffline: receipt.savedOffline))
         }
         let saved = SavedChange(summary: summary, canUndo: true, savedOffline: receipt.savedOffline)

@@ -148,6 +148,12 @@ public final class HouseholdDirectory {
         return model
     }
 
+    /// A household or shared trip created or joined here (MAZ-76): listed first at once.
+    public func didAdd(_ household: WireHousehold) {
+        households.removeAll { $0.id == household.id }
+        households.insert(household, at: 0)
+    }
+
     /// Replaces a row after a rename or a member change.
     public func update(_ household: WireHousehold) {
         if let index = households.firstIndex(where: { $0.id == household.id }) { households[index] = household }
@@ -282,6 +288,17 @@ public final class HouseholdModel {
         } catch {
             load = .failed(HouseholdFailure(error))
         }
+    }
+
+    /// Moves to `next` without reading it (MAZ-79: an opened notification, before the page shows;
+    /// the page's own read loads it). As with a month the person chose, the page keeps it until
+    /// the calendar moves past `current`.
+    public func open(month next: MonthKey, current: MonthKey) {
+        chosenDuring = current
+        guard next != month else { return }
+        month = next
+        monthGeneration += 1
+        recap = nil
     }
 
     /// Shows another month. Answers arrive in any order; only the one for the month still on

@@ -147,6 +147,11 @@ public struct ShellRoute: Equatable, Sendable {
         case .household(let id): show(.shared, [.household(id: id)])
         case .householdExpense(let household, let expense):
             show(.shared, [.household(id: household), .householdExpense(householdID: household, expenseID: expense)])
+        case .householdMonth(let household, _, let expense):
+            // A notification (MAZ-79). The month is the household page's, set by the shell.
+            var path: [DetailRoute] = [.household(id: household)]
+            if let expense { path.append(.householdExpense(householdID: household, expenseID: expense)) }
+            show(.shared, path)
         case .trips: show(.trips, [])
         case .trip(let id): show(.trips, [.trip(id: id)])
         case .join(let code, let server):

@@ -9,6 +9,7 @@ import SwiftUI
 struct SharedView: View {
     @Environment(ShellModel.self) private var shell
     @Environment(InviteHandoff.self) private var invites: InviteHandoff?
+    @Environment(PushNotifications.self) private var push: PushNotifications?
 
     var body: some View {
         @Bindable var shell = shell
@@ -34,6 +35,10 @@ struct SharedView: View {
                             .foregroundStyle(PennyColor.secondaryLabel)
                             .listRowBackground(Color.clear)
                             .accessibilityIdentifier("shared.overall")
+                    }
+                    // MAZ-79: notifications are offered here, once there is a household to hear about.
+                    if let push, push.offersPrompt {
+                        Section { NotificationPrompt(push: push) }
                     }
                 }
                 rows("Households", directory.households.filter { $0.trip == nil }, directory)
@@ -94,7 +99,11 @@ struct SharedView: View {
         if !households.isEmpty {
             Section(title) {
                 ForEach(households) { household in
-                    NavigationLink(value: DetailRoute.household(id: household.id)) {
+                    // A shared trip opens its trip page (MAZ-76).
+                    NavigationLink(
+                        value: household.trip == nil
+                            ? DetailRoute.household(id: household.id) : DetailRoute.trip(id: household.id)
+                    ) {
                         HouseholdRow(
                             household: household, balance: directory.balances[household.id],
                             initials: directory.memberInitials[household.id] ?? [])
@@ -113,7 +122,7 @@ struct SharedView: View {
     }
 }
 
-private struct ActionRow: View {
+struct ActionRow: View {
     let title: String
     let detail: String
     let symbol: String

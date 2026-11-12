@@ -42,6 +42,17 @@ struct BuiltAppTests {
         #expect(FileManager.default.fileExists(atPath: container.directory.path))
     }
 
+    @Test("whenSigned_Entitlements_ShouldRequestAPNsAndKeepTheAppGroup")
+    func entitlements() throws {
+        // MAZ-79: the checkout's entitlements file, as signed into the build (docs/ios-notifications.md).
+        let file = URL(filePath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .appending(path: "Configuration/Penny.entitlements")
+        let plist = try #require(
+            try PropertyListSerialization.propertyList(from: Data(contentsOf: file), format: nil) as? [String: Any])
+        #expect(plist["aps-environment"] as? String == "development")
+        #expect(plist["com.apple.security.application-groups"] as? [String] == [AppIdentity.appGroup])
+    }
+
     @Test("whenBuilt_AppBundle_ShouldShipItsPrivacyManifest")
     func privacyManifest() {
         #expect(Bundle.main.url(forResource: "PrivacyInfo", withExtension: "xcprivacy") != nil)

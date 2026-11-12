@@ -14,6 +14,8 @@
 #   ui-build       build the app and the XCUITest bundle (no simulator, no stack)
 #   ui-test [plan] XCUITest plan smoke|full|screenshots against the full-stack environment
 #                  on clean iPhone and iPad simulators (docs/ios-ui-tests.md)
+#   push <file> [simulator]  send a notification payload (.apns) to Penny with simctl push
+#                  (default: the booted simulator; no APNs, docs/ios-notifications.md)
 #
 # Xcode is pinned by apps/ios/.xcode-version. Outputs go to .cache/ios (git-ignored).
 # PENNY_IPHONE / PENNY_IPAD choose simulator device types (default: the newest iPhone
@@ -360,6 +362,14 @@ ui_test_run() {
   return "$failed"
 }
 
+# A notification payload through simctl (MAZ-79): exercises presentation and the tap on a
+# simulator, never APNs transport (docs/ios-notifications.md#tests-and-verification).
+cmd_push() {
+  local file="$1" device="$2"
+  [[ -f "$file" ]] || { echo "usage: ios.sh push <payload.apns> [simulator id]" >&2; exit 2; }
+  xcrun simctl push "$device" com.mfalicoff.penny "$file"
+}
+
 main() {
   sanitize_environment
   select_xcode
@@ -375,7 +385,8 @@ main() {
     ui-test) cmd_ui_test "${2:-smoke}" ;;
     ui-build) XCB_SCHEME=PennyUITests xcb -configuration Debug -destination 'generic/platform=iOS Simulator' build-for-testing ;;
     ci) cmd_lint; cmd_package_test; cmd_test; cmd_release_check ;;
-    *) sed -n '2,22p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2 ;;
+    push) cmd_push "${2:-}" "${3:-booted}" ;;
+    *) sed -n '2,24p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2 ;;
   esac
 }
 
