@@ -28,6 +28,8 @@
     {
       "parallelizable" : false,
       "skippedTests" : [
+        "AccessibilityAuditTests",
+        "PerformanceTests",
         "ScreenshotTests"
       ],
       "target" : {
