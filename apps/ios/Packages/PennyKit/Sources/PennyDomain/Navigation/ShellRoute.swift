@@ -17,6 +17,8 @@ public enum AppTab: String, CaseIterable, Hashable, Sendable {
 public enum DetailRoute: Hashable, Sendable {
     case household(id: String)
     case householdExpense(householdID: String, expenseID: String)
+    /// A household's change history (MAZ-75).
+    case householdHistory(householdID: String)
     case trip(id: String)
     /// A personal entry's detail (Activity, MAZ-73).
     case entry(id: String)
@@ -81,6 +83,8 @@ public struct ShellRoute: Equatable, Sendable {
     public var isSettingsPresented: Bool
     public var settingsPath: [SettingsRoute]
     public var isAddEntryPresented: Bool
+    /// The create-or-join household sheet (MAZ-75), over the Shared tab.
+    public var householdStart: HouseholdStart?
 
     public init(tab: AppTab = .home) {
         self.tab = tab
@@ -88,6 +92,7 @@ public struct ShellRoute: Equatable, Sendable {
         isSettingsPresented = false
         settingsPath = []
         isAddEntryPresented = false
+        householdStart = nil
     }
 
     public func path(for tab: AppTab) -> [DetailRoute] { paths[tab] ?? [] }
@@ -105,12 +110,14 @@ public struct ShellRoute: Equatable, Sendable {
 
     public mutating func openSettings(_ page: SettingsRoute? = nil) {
         isAddEntryPresented = false
+        householdStart = nil
         isSettingsPresented = true
         settingsPath = page.map { [$0] } ?? []
     }
 
     public mutating func openAddEntry() {
         isSettingsPresented = false
+        householdStart = nil
         isAddEntryPresented = true
     }
 
@@ -127,12 +134,16 @@ public struct ShellRoute: Equatable, Sendable {
             show(.shared, [.household(id: household), .householdExpense(householdID: household, expenseID: expense)])
         case .trips: show(.trips, [])
         case .trip(let id): show(.trips, [.trip(id: id)])
+        case .join(let code, let server):
+            show(.shared, [])
+            householdStart = .join(code: code, server: server)
         case .authCallback: break
         }
     }
 
     private mutating func show(_ next: AppTab, _ path: [DetailRoute]) {
         isSettingsPresented = false
+        householdStart = nil
         settingsPath = []
         isAddEntryPresented = false
         tab = next
@@ -227,5 +238,19 @@ public struct DeepLinkInbox: Equatable, Sendable {
     private mutating func clear() {
         pending = nil
         owner = nil
+    }
+}
+
+/// What the create-or-join household sheet opens on (MAZ-75).
+public enum HouseholdStart: Hashable, Identifiable, Sendable {
+    case create
+    /// Join, with the values of a `penny://join` link when one opened it (nil when typed).
+    case join(code: String?, server: String?)
+
+    public var id: String {
+        switch self {
+        case .create: "create"
+        case .join(let code, let server): "join \(code ?? "") \(server ?? "")"
+        }
     }
 }

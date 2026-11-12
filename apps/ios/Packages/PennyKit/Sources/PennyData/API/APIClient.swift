@@ -230,6 +230,8 @@ public struct APIClient: Sendable {
         case get = "GET"
         case post = "POST"
         case put = "PUT"
+        case patch = "PATCH"
+        case delete = "DELETE"
     }
 
     private func makeSession(_ wire: WireSession) throws -> ServerSession {
@@ -240,7 +242,7 @@ public struct APIClient: Sendable {
         }
     }
 
-    private func json<Response: Decodable>(
+    func json<Response: Decodable>(
         _ method: Method, _ path: String, query: [URLQueryItem] = [], authenticated: Bool = true,
         timeout: TimeInterval? = nil
     ) async throws -> Response {
@@ -248,7 +250,7 @@ public struct APIClient: Sendable {
             try await perform(method, path, query: query, authenticated: authenticated, timeout: timeout).body)
     }
 
-    private func json<Response: Decodable, Body: Encodable>(
+    func json<Response: Decodable, Body: Encodable>(
         _ method: Method, _ path: String, body: Body, authenticated: Bool = true, timeout: TimeInterval? = nil
     ) async throws -> Response {
         let data = try JSONEncoder().encode(body)
@@ -256,7 +258,7 @@ public struct APIClient: Sendable {
             try await perform(method, path, body: data, authenticated: authenticated, timeout: timeout).body)
     }
 
-    private func decode<Response: Decodable>(_ data: Data) throws -> Response {
+    func decode<Response: Decodable>(_ data: Data) throws -> Response {
         do {
             return try JSONDecoder().decode(Response.self, from: data)
         } catch {
@@ -264,7 +266,7 @@ public struct APIClient: Sendable {
         }
     }
 
-    private func perform(
+    func perform(
         _ method: Method, _ path: String, query: [URLQueryItem] = [], body: Data? = nil, authenticated: Bool = true,
         timeout: TimeInterval? = nil
     ) async throws -> HTTPResult {

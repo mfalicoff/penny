@@ -126,7 +126,9 @@ struct DetailPage: View {
     var body: some View {
         switch route {
         case .household(let id): HouseholdDetailView(id: id)
-        case .householdExpense(let household, let expense): HouseholdDetailView(id: household, expenseID: expense)
+        case .householdExpense(let household, let expense):
+            HouseholdExpenseView(householdID: household, expenseID: expense)
+        case .householdHistory(let household): HouseholdHistoryView(householdID: household)
         case .trip(let id): TripDetailView(id: id)
         case .entry(let id): EntryDetailView(id: id)
         case .moneyFlow: MoneyFlowView()

@@ -318,9 +318,11 @@ public enum AccessibilityID {
     public static let fixed: [String] =
         Screen.all + Root.all + Auth.all + Server.all + Tab.all + Sidebar.all + Home.all + Settings.all + EntryForm.all
         + Activity.all + Organize.all + Feedback.all + Lock.all + Overview.all
+        + Households.all
 
     /// Prefixes of identifiers that end in a model id or raw value.
     public static let dynamicPrefixes: [String] =
         Tab.prefixes + Sidebar.prefixes + Settings.prefixes + Row.prefixes + Feedback.prefixes + EntryForm.prefixes
         + Activity.prefixes + Organize.prefixes + Overview.prefixes
+        + Households.prefixes
 }

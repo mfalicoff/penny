@@ -62,6 +62,11 @@ final class ShellModel {
     /// Attaches a receipt to an entry draft (MAZ-78 provides it; nil until then).
     var attachReceipt: ((ReceiptSource) async -> Result<ReceiptReference, SaveFailure>)?
 
+    // MARK: Households (MAZ-75)
+
+    /// The Shared tab's households and their page models (none in the demo).
+    let households: HouseholdDirectory
+
     // MARK: Overview (MAZ-77)
 
     /// The caller's household shares for Home's reports (none in the demo).
@@ -94,8 +99,14 @@ final class ShellModel {
     init(
         workspace: any LedgerWorkspace, session: ShellSession, today: CalendarDate, clock: (() -> CalendarDate)? = nil,
         startDemo: (() -> Void)? = nil, leaveDemo: (() -> Void)? = nil, search: (any EntrySearchService)? = nil,
-        sharedProjection: (any SharedProjectionService)? = nil, expoImport: ExpoImportNotice? = nil
+        sharedProjection: (any SharedProjectionService)? = nil, expoImport: ExpoImportNotice? = nil,
+        households householdService: (any HouseholdService)? = nil, householdEmail: String? = nil
     ) {
+        let monthClock = clock ?? { today }
+        var email = householdEmail ?? ""
+        if case .account(_, let account) = session { email = householdEmail ?? account.email }
+        households = HouseholdDirectory(
+            service: workspace.isDemo ? nil : householdService, email: email, month: { MonthKey(monthClock()) })
         shared = SharedProjectionModel(service: workspace.isDemo ? nil : sharedProjection)
         self.expoImport = expoImport
         self.workspace = workspace
