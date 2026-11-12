@@ -1,10 +1,36 @@
 import Foundation
-import PennyData
 import PennyDomain
+import Security
 import Synchronization
 import Testing
 
+@testable import PennyData
 @testable import PennyUI
+
+/// One device's Keychain for the owner key (a host test process has no usable Keychain).
+private final class MemoryKeychain: KeychainBackend {
+    private let items = Mutex<[String: Data]>([:])
+
+    private static func id(_ query: [String: Any]) -> String {
+        "\(query[kSecAttrService as String] ?? "") \(query[kSecAttrAccount as String] ?? "")"
+    }
+
+    func copyData(_ query: [String: Any]) -> (OSStatus, Data?) {
+        items.withLock { $0[Self.id(query)] }.map { (errSecSuccess, $0) } ?? (errSecItemNotFound, nil)
+    }
+
+    func add(_ attributes: [String: Any]) -> OSStatus {
+        items.withLock { items in
+            let id = Self.id(attributes)
+            guard items[id] == nil else { return errSecDuplicateItem }
+            items[id] = attributes[kSecValueData as String] as? Data
+            return errSecSuccess
+        }
+    }
+
+    func update(_ query: [String: Any], _ attributes: [String: Any]) -> OSStatus { errSecUnimplemented }
+    func delete(_ query: [String: Any]) -> OSStatus { errSecUnimplemented }
+}
 
 /// Notification Center, the permission prompt and APNs, as the system would answer.
 @MainActor
@@ -47,21 +73,24 @@ private final class PushServer: HTTPTransport {
 struct NotificationTests {
     private let today = CalendarDate(year: 2026, month: 11, day: 9) ?? .earliest
     private let server = PushServer()
+    private let keychain = MemoryKeychain()
     private static let server = (try? ServerURL("https://penny.example.test"))!
     private static let token = Data((0..<32).map { UInt8($0) })
 
-    private func notifications(_ system: FakeNotificationSystem) -> PushNotifications {
-        let suite = "penny.tests.notifications.\(UUID().uuidString)"
-        return PushNotifications(
-            system: system, environment: .sandbox, store: PushRegistrationStore(suiteName: suite),
+    /// A fresh process on this test's device; `suite` keeps the stored registration across them.
+    private func notifications(
+        _ system: FakeNotificationSystem, suite: String = "penny.tests.notifications.\(UUID().uuidString)"
+    ) -> PushNotifications {
+        PushNotifications(
+            system: system, environment: .sandbox, store: PushRegistrationStore(suiteName: suite, keychain: keychain),
             defaults: UserDefaults(suiteName: suite) ?? .standard)
     }
 
-    private func account(_ email: String) throws -> PushAccount {
+    private func account(_ email: String, transport: (any HTTPTransport)? = nil) throws -> PushAccount {
         let session = try ServerSession(server: Self.server, email: email, token: String(repeating: "ab", count: 32))
         let client = try APIClient(
-            configuration: APIConfiguration(server: Self.server), session: session, transport: server)
-        return try #require(PushAccount(client: client))
+            configuration: APIConfiguration(server: Self.server), session: session, transport: transport ?? server)
+        return try #require(PushAccount(client: client, store: PushRegistrationStore(keychain: keychain)))
     }
 
     private static let expense: [AnyHashable: Any] = ["householdId": "h1", "month": "2026-09", "expenseId": "e2"]
@@ -103,7 +132,7 @@ struct NotificationTests {
         push.didOpen(HouseholdNotification(userInfo: ["householdId": "../h1", "month": "2026-10"]))
         push.didOpen(HouseholdNotification(userInfo: ["url": "https://evil.example.test"]))
         #expect(opened.isEmpty)
-        #expect(push.rejectedCount == 2)
+        #expect(push.pending == nil, "nothing is kept for later either")
     }
 
     @Test("whenANotificationIsForAnotherAccount_PushNotifications_ShouldNeverOpenOrShowIt")
@@ -128,7 +157,7 @@ struct NotificationTests {
         #expect(opened.isEmpty)
         let bea = try account("bea@example.test")
         await push.accountChanged(bea)
-        #expect(opened.isEmpty && push.rejectedCount == 1)
+        #expect(opened.isEmpty && push.pending == nil, "dropped, not kept")
         #expect(push.registrar.owner == bea.owner, "the token moved to Bea")
 
         // Bea's own notifications open and show.
@@ -161,10 +190,102 @@ struct NotificationTests {
         let failing = try APIClient(
             configuration: APIConfiguration(server: unreachable), session: session, transport: OfflineTransport())
         push.didOpen(HouseholdNotification(userInfo: Self.expense))
-        await push.accountChanged(PushAccount(client: failing))
+        await push.accountChanged(push.account(for: failing))
         #expect(opened.isEmpty)
-        #expect(push.rejectedCount == 1)
+        #expect(push.pending == nil)
         #expect(!push.showsInForeground(HouseholdNotification(userInfo: Self.expense)))
+    }
+
+    @Test("whenSignOutCouldNotReachTheServer_PushNotifications_ShouldKeepThePreviousAccountsNotificationsFromTheNext")
+    func offlineSignOut() async throws {
+        let system = FakeNotificationSystem()
+        system.current = .allowed
+        let push = notifications(system)
+        var opened: [DeepLink] = []
+        push.deliver = { opened.append($0) }
+        await push.becameActive()
+        await push.accountChanged(try account("alex@example.test"))
+        await push.didRegister(deviceToken: Self.token)
+
+        // "Sign out anyway" offline: the DELETE fails, so the server may still send Alex's
+        // notifications to this device.
+        await push.devices.unregister(using: try account("alex@example.test", transport: OfflineTransport()).client)
+        await push.accountChanged(nil)
+        #expect(push.registrar.owner != nil, "the device stays Alex's")
+
+        // Bea signs in, and her registration fails too: Alex's notifications neither show nor open.
+        let bea = try account("bea@example.test", transport: OfflineTransport())
+        await push.accountChanged(bea)
+        #expect(!push.showsInForeground(HouseholdNotification(userInfo: Self.expense)))
+        push.didOpen(HouseholdNotification(userInfo: Self.expense))
+        #expect(opened.isEmpty && push.pending == nil)
+    }
+
+    @Test("whenNotificationsWereTurnedOffBeforeTheAccountChanged_PushNotifications_ShouldStillDropThePreviousAccounts")
+    func deniedThenAccountChange() async throws {
+        let system = FakeNotificationSystem()
+        system.current = .allowed
+        let push = notifications(system)
+        var opened: [DeepLink] = []
+        push.deliver = { opened.append($0) }
+        await push.becameActive()
+        let alex = try account("alex@example.test")
+        await push.accountChanged(alex)
+        await push.didRegister(deviceToken: Self.token)
+        system.current = .denied
+        await push.becameActive()
+        #expect(server.calls == ["POST /api/push/devices", "DELETE /api/push/devices"])
+        #expect(push.registrar.owner == alex.owner, "removed on the server, still Alex's on this device")
+
+        await push.accountChanged(nil)
+        await push.accountChanged(try account("bea@example.test"))
+        #expect(!push.showsInForeground(HouseholdNotification(userInfo: Self.expense)))
+        push.didOpen(HouseholdNotification(userInfo: Self.expense))
+        #expect(opened.isEmpty)
+    }
+
+    @Test("whenTheAppLaunchesIntoAnotherAccountThanTheRegistrations_PushNotifications_ShouldClearDeliveredOnes")
+    func coldLaunchClears() async throws {
+        let suite = "penny.tests.notifications.\(UUID().uuidString)"
+        let first = FakeNotificationSystem()
+        first.current = .allowed
+        let earlier = notifications(first, suite: suite)
+        await earlier.becameActive()
+        await earlier.accountChanged(try account("alex@example.test"))
+        await earlier.didRegister(deviceToken: Self.token)
+
+        // Next launch, still Alex: the notifications stay.
+        let same = FakeNotificationSystem()
+        await notifications(same, suite: suite).accountChanged(try account("alex@example.test"))
+        #expect(same.clears == 0)
+
+        // Next launch, Bea is signed in (Alex's session ended without this process seeing it).
+        let next = FakeNotificationSystem()
+        let push = notifications(next, suite: suite)
+        await push.accountChanged(nil)  // restoring
+        #expect(next.clears == 0)
+        await push.accountChanged(try account("bea@example.test"))
+        #expect(next.clears == 1)
+    }
+
+    @Test("whenADevelopmentBuildStoredAnUnkeyedOwner_PushNotifications_ShouldStillOpenThatAccountsTap")
+    func legacyOwner() async throws {
+        let suite = "penny.tests.notifications.\(UUID().uuidString)"
+        let legacy = PushOwner.legacy(AccountScope(server: Self.server, email: "alex@example.test"))
+        let token = try #require(PushDeviceToken(Self.token))
+        // As a development build stored it: the registration only, with the unkeyed digest.
+        let data = try JSONEncoder().encode(StoredPushRegistration(token: token, environment: .sandbox, owner: legacy))
+        UserDefaults(suiteName: suite)?.set(data, forKey: "penny.push.registration")
+
+        let system = FakeNotificationSystem()
+        let push = notifications(system, suite: suite)
+        var opened: [DeepLink] = []
+        push.deliver = { opened.append($0) }
+        push.didOpen(HouseholdNotification(userInfo: Self.expense))
+        let alex = try account("alex@example.test")
+        await push.accountChanged(alex)
+        #expect(opened.count == 1 && system.clears == 0)
+        #expect(push.registrar.owner == alex.owner)
     }
 
     @Test("whenThePersonTurnsNotificationsOn_PushNotifications_ShouldAskOnceAndRegister")

@@ -98,8 +98,8 @@ struct AuthGate: View {
 
     /// The account push notifications register for: only a signed-in account, never the demo.
     private var pushAccount: PushAccount? {
-        guard demo == nil, case .signedIn = auth.state else { return nil }
-        return auth.client.flatMap(PushAccount.init)
+        guard let push, demo == nil, case .signedIn = auth.state else { return nil }
+        return auth.client.flatMap(push.account(for:))
     }
 
     static func session(_ account: SignedInAccount) -> DeepLinkSession {

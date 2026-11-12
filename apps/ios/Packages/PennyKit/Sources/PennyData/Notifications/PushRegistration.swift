@@ -2,16 +2,81 @@ import CryptoKit
 public import Foundation
 public import Observation
 public import PennyDomain
+import Security
 
-/// Which account a push registration belongs to, without storing who it is: a SHA-256 of the
-/// normalized server and lower-cased email. Kept with the stored registration so a notification
-/// left from one account is never opened in another (docs/ios-notifications.md).
+/// Which account a push registration belongs to, without storing who it is: an HMAC-SHA256 of
+/// the normalized server and lower-cased email, keyed with a random key kept in this device's
+/// Keychain (`PushOwnerKeychain`). Kept with the stored registration so a notification left from
+/// one account is never opened in another (docs/ios-notifications.md). Without the key, the
+/// digest in `UserDefaults` (and in backups) cannot be matched to an email.
 public struct PushOwner: Hashable, Sendable, Codable {
     public let digest: String
 
-    public init(_ scope: AccountScope) {
-        let key = "\(scope.server.description) \(scope.email.lowercased())"
-        digest = SHA256.hash(data: Data(key.utf8)).map { String(format: "%02x", $0) }.joined()
+    init(_ scope: AccountScope, key: SymmetricKey) {
+        digest = Self.hex(HMAC<SHA256>.authenticationCode(for: Data(Self.text(scope).utf8), using: key))
+    }
+
+    /// The unkeyed SHA-256 that development builds stored before the key existed. Only compared,
+    /// to adopt such a registration for its account (`adoptLegacyRegistration`).
+    static func legacy(_ scope: AccountScope) -> PushOwner {
+        PushOwner(digest: hex(SHA256.hash(data: Data(text(scope).utf8))))
+    }
+
+    private init(digest: String) {
+        self.digest = digest
+    }
+
+    private static func text(_ scope: AccountScope) -> String {
+        "\(scope.server.description) \(scope.email.lowercased())"
+    }
+
+    private static func hex(_ bytes: some Sequence<UInt8>) -> String {
+        bytes.map { String(format: "%02x", $0) }.joined()
+    }
+}
+
+/// The key `PushOwner` digests are made with: 32 random bytes, created on first use and kept as
+/// one generic-password item (service `com.mfalicoff.penny.push-owner`) in the data protection
+/// keychain, readable after the first unlock, on this device only (never synced, never restored
+/// onto another device). A restored or new device makes a new key, so a registration stored
+/// elsewhere matches no account until the next registration replaces it.
+struct PushOwnerKeychain: Sendable {
+    static let service = "\(AppIdentity.bundleIdentifier).push-owner"
+    let backend: any KeychainBackend
+
+    private var query: [String: Any] {
+        [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: Self.service,
+            kSecAttrAccount as String: "owner-key",
+            kSecUseDataProtectionKeychain as String: true,
+        ]
+    }
+
+    /// The key, created when there is none. Nil while the Keychain cannot be used (before the
+    /// first unlock): nothing registers or opens until it can.
+    func key() -> SymmetricKey? {
+        if let existing = read() { return existing }
+        let key = SymmetricKey(size: .bits256)
+        var item = query
+        item[kSecValueData as String] = key.withUnsafeBytes { Data($0) }
+        item[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        item[kSecAttrSynchronizable as String] = false
+        item[kSecAttrLabel as String] = "Penny notifications"
+        switch backend.add(item) {
+        case errSecSuccess: return key
+        case errSecDuplicateItem: return read()  // made meanwhile
+        default: return nil
+        }
+    }
+
+    private func read() -> SymmetricKey? {
+        var read = query
+        read[kSecReturnData as String] = true
+        read[kSecMatchLimit as String] = kSecMatchLimitOne
+        let (status, data) = backend.copyData(read)
+        guard status == errSecSuccess, let data, data.count == 32 else { return nil }
+        return SymmetricKey(data: data)
     }
 }
 
@@ -57,13 +122,15 @@ public struct StoredPushRegistration: Equatable, Sendable, Codable {
 }
 
 /// Where the registration is kept: `UserDefaults.standard` (`penny.push.registration`), or a
-/// named suite in tests. A damaged value reads as none.
+/// named suite in tests, with the owner key in the Keychain. A damaged value reads as none.
 public struct PushRegistrationStore: Sendable {
     static let key = "penny.push.registration"
     private let suiteName: String?
+    private let keychain: PushOwnerKeychain
 
-    public init(suiteName: String? = nil) {
+    public init(suiteName: String? = nil, keychain: any KeychainBackend = SystemKeychain()) {
         self.suiteName = suiteName
+        self.keychain = PushOwnerKeychain(backend: keychain)
     }
 
     private var defaults: UserDefaults { suiteName.flatMap(UserDefaults.init(suiteName:)) ?? .standard }
@@ -72,28 +139,89 @@ public struct PushRegistrationStore: Sendable {
         defaults.data(forKey: Self.key).flatMap { try? JSONDecoder().decode(StoredPushRegistration.self, from: $0) }
     }
 
+    /// Saves the registration and makes its owner the device's `lastOwner`.
     public func save(_ registration: StoredPushRegistration) {
-        if let data = try? JSONEncoder().encode(registration) { defaults.set(data, forKey: Self.key) }
+        guard let data = try? JSONEncoder().encode(registration),
+            let owner = try? JSONEncoder().encode(registration.owner)
+        else { return }
+        defaults.set(data, forKey: Self.key)
+        defaults.set(owner, forKey: Self.ownerKey)
     }
 
+    /// Forgets the registration (the server removed the device). `lastOwner` stays.
     public func clear() { defaults.removeObject(forKey: Self.key) }
+
+    static let ownerKey = "penny.push.lastOwner"
+
+    /// The account this device's token was last registered for (`penny.push.lastOwner`), kept
+    /// after the registration is removed until another account registers: notifications
+    /// delivered before the removal may still be on screen. Nil only when this install never
+    /// registered, so no APNs notification can have reached it.
+    public func lastOwner() -> PushOwner? {
+        defaults.data(forKey: Self.ownerKey).flatMap { try? JSONDecoder().decode(PushOwner.self, from: $0) }
+            ?? load()?.owner
+    }
+
+    /// The owner digest for `scope` on this device. Nil while the Keychain cannot be read.
+    public func owner(for scope: AccountScope) -> PushOwner? {
+        keychain.key().map { PushOwner(scope, key: $0) }
+    }
+
+    /// A registration stored by a development build before owner digests were keyed belongs to
+    /// `account` when its unkeyed digest is the account's: it is rewritten with the keyed one,
+    /// so the upgrade neither clears that account's notifications nor drops a tap on one.
+    public func adoptLegacyRegistration(for account: PushAccount) {
+        guard defaults.data(forKey: Self.ownerKey) == nil, var stored = load(), let scope = account.client.scope,
+            stored.owner == PushOwner.legacy(scope)
+        else { return }
+        stored.owner = account.owner
+        save(stored)
+    }
 }
 
 /// Sign-out's half of the registration (`DeviceRegistration`): while the session still works,
-/// `DELETE /api/push/devices` for the token this account registered, then forget it. Never
+/// `DELETE /api/push/devices` for the token this account registered. The stored registration
+/// is forgotten only once the server says the device is gone (or the session already ended
+/// there). After a failed request it stays: its owner keeps this account's notifications from
+/// showing or opening in the next account until that account registers the token. Never
 /// throws: server logout drops the session's devices anyway.
 public struct APNsDeviceRegistration: DeviceRegistration {
     let store: PushRegistrationStore
+    /// Sign-out did not go ahead (`signOutCancelled`): registers the device again if needed.
+    let resume: @Sendable () async -> Void
 
-    public init(store: PushRegistrationStore = PushRegistrationStore()) {
+    public init(
+        store: PushRegistrationStore = PushRegistrationStore(), resume: @escaping @Sendable () async -> Void = {}
+    ) {
         self.store = store
+        self.resume = resume
     }
 
     public func unregister(using client: APIClient) async {
         guard let stored = store.load() else { return }
-        guard let scope = client.scope, stored.owner == PushOwner(scope) else { return }
-        try? await client.unregisterPushDevice(stored.token)
-        store.clear()
+        guard let scope = client.scope, stored.owner == store.owner(for: scope) else { return }
+        do {
+            try await client.unregisterPushDevice(stored.token)
+        } catch let error as APIError where error.meansDeviceIsGone {
+            // The session or the device is already gone on the server.
+        } catch {
+            return
+        }
+        if store.load() == stored { store.clear() }
+    }
+
+    public func signOutCancelled(using client: APIClient) async {
+        await resume()
+    }
+}
+
+extension APIError {
+    /// The server no longer sends to this device for the session: it ended, or the device is
+    /// not registered.
+    fileprivate var meansDeviceIsGone: Bool {
+        if requiresSignIn { return true }
+        if case .notFound = self { return true }
+        return false
     }
 }
 
@@ -102,11 +230,11 @@ public struct PushAccount: Sendable {
     public let client: APIClient
     public let owner: PushOwner
 
-    /// Nil when the client has no session.
-    public init?(client: APIClient) {
-        guard let scope = client.scope else { return nil }
+    /// Nil when the client has no session, or the owner key cannot be read now.
+    public init?(client: APIClient, store: PushRegistrationStore) {
+        guard let scope = client.scope, let owner = store.owner(for: scope) else { return nil }
         self.client = client
-        owner = PushOwner(scope)
+        self.owner = owner
     }
 }
 
@@ -151,9 +279,10 @@ public final class PushRegistrar {
         self.store = store
     }
 
-    /// The account the stored registration belongs to; nil before the first registration and
-    /// after sign-out.
-    public var owner: PushOwner? { store.load()?.owner }
+    /// The account this device's token was last registered for (`PushRegistrationStore.lastOwner`),
+    /// also after sign-out or a denial removed the registration; nil only before this install's
+    /// first registration.
+    public var owner: PushOwner? { store.lastOwner() }
 
     public func permissionChanged(_ next: PushPermission) async {
         permission = next
@@ -178,6 +307,12 @@ public final class PushRegistrar {
         if failed, token == nil, permission == .allowed, account != nil { status = .unavailable }
     }
 
+    /// Checks the registration again after something else may have removed it: a sign-out that
+    /// removed the device and then did not go ahead.
+    public func resync() async {
+        await sync()
+    }
+
     /// Tries a failed registration again (Penny became active).
     public func retry() async {
         if case .failed = status { await sync() }
@@ -197,7 +332,11 @@ public final class PushRegistrar {
             status = tokenFailed ? .unavailable : .waitingForToken
             return
         }
-        if let registered, registered.token == token, registered.owner == account.owner {
+        // Trusted only while the stored registration still says so: sign-out may have removed
+        // the device and then not gone ahead, leaving the same account signed in.
+        if let registered, registered.token == token, registered.owner == account.owner,
+            let stored = store.load(), stored.token == token, stored.owner == account.owner
+        {
             status = .registered
             return
         }

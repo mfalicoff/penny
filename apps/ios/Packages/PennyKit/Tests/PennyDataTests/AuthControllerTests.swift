@@ -656,10 +656,16 @@ struct AuthControllerTests {
         await #expect(throws: SignOutFailure.serverUnreachable) { try await controller.signOut() }
         #expect(controller.state.account != nil)
         #expect(try sessions.load(server: AuthFixtures.server) != nil)
+        // The device was unregistered first: the registration is told to register it again.
+        #expect(
+            localData.log.all.suffix(3) == [
+                "unregister \(email)", "POST /api/auth/logout", "signOutCancelled \(email)",
+            ])
 
         try await controller.signOut(removeEvenIfUnreachable: true)
         #expect(controller.state == .signedOut(.signedOut))
         #expect(try sessions.load(server: AuthFixtures.server) == nil)
+        #expect(localData.log.all.filter { $0.hasPrefix("signOutCancelled") }.count == 1, "not when it goes ahead")
     }
 
     @Test("whenSessionAlreadyEndedOnServer_AuthController_ShouldStillSignOut")
