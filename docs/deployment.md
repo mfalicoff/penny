@@ -30,7 +30,7 @@ One `api` container runs every worker. Each worker claims rows with PostgreSQL l
 | Shared recurrence | `Recurrence__Worker` | Records due recurring household expenses ([shared recurrence](migration/shared-recurrence.md)) |
 | Push delivery | `Push__Worker` | Drains the notification outbox to APNs/Expo ([push](migration/push.md)) |
 | Search embeddings | `Search__EmbeddingWorker` | Embeds new search documents and receipt text chunks ([search](migration/search.md)) |
-| Receipt text | `Ocr__Worker` | Extracts the text of uploaded receipts on this server with Tesseract and poppler ([receipt OCR](operations.md#receipt-text-ocr)) |
+| Receipt text | `Ocr__Worker` | Extracts the text of uploaded receipts on this server with Tesseract, poppler and libvips ([receipt OCR](operations.md#receipt-text-ocr)) |
 
 Supported topologies:
 
@@ -136,6 +136,8 @@ Copy `deploy/api.env.example` to `deploy/api.env` (mode 0600, git-ignored). It i
 | `Recurrence__Worker`, `Push__Worker`, `Search__EmbeddingWorker`, `Ocr__Worker` | `true` | [Workers](#background-workers) |
 | `Ocr__Languages` | `eng+fra` | Tesseract languages for receipt text; each needs its language data, checked at startup ([receipt OCR](operations.md#receipt-text-ocr)) |
 | `Ocr__Concurrency` / `Ocr__TimeoutSeconds` / `Ocr__MaxPages` / `Ocr__MaxFileMegabytes` / `Ocr__MaxAttempts` | 1 / 120 / 10 / 10 / 4 | Receipt text bounds per process |
+| `Ocr__EngineMemoryMegabytes` | 1024 | Memory (address space) of each OCR engine process, enforced with `prlimit` ([receipt OCR](operations.md#receipt-text-ocr)) |
+| `PENNY_API_MEMORY` (Compose) | `3g` | Memory limit of the `api` container (API, search model and OCR engines); raise it by about `Ocr__EngineMemoryMegabytes` per extra `Ocr__Concurrency` |
 | `Database__MaxPoolSize` | 20 | 1–100 connections per process |
 | `Database__ConnectTimeoutSeconds` / `Database__CommandTimeoutSeconds` | 5 / 5 | 1–30 |
 | `Backend__MaxRequestBodyBytes` | 20 MiB | Keep `PENNY_MAX_BODY` slightly above it |

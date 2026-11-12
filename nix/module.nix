@@ -56,7 +56,10 @@ let
     # Receipt OCR (MAZ-125): local programs only; the language data comes with the
     # tesseract package (its wrapper sets TESSDATA_PREFIX).
     Ocr__Tesseract = lib.getExe' cfg.ocr.tesseract "tesseract";
-    Ocr__PopplerDirectory = "${cfg.ocr.poppler}/bin";
+    Ocr__PopplerDirectory = "${lib.getBin cfg.ocr.poppler}/bin";
+    Ocr__VipsDirectory = "${lib.getBin cfg.ocr.vips}/bin";
+    Ocr__Prlimit = lib.getExe' pkgs.util-linux "prlimit";
+    Ocr__EngineMemoryMegabytes = toString cfg.ocr.engineMemoryMegabytes;
     Ocr__Languages = lib.concatStringsSep "+" cfg.ocr.languages;
     Auth__AllowedOrigins = lib.concatStringsSep "," cfg.publicOrigins;
     Auth__SecureCookies = lib.boolToString cfg.secureCookies;
@@ -243,8 +246,43 @@ in
         type = types.package;
         default = pkgs.poppler-utils;
         defaultText = lib.literalExpression "pkgs.poppler-utils";
-        description = "poppler's `pdftotext` and `pdftoppm`, which read and render receipt PDFs.";
+        description = "poppler's `pdftotext`, `pdfinfo` and `pdftoppm`, which read and render receipt PDFs.";
       };
+
+      vips = mkOption {
+        type = types.package;
+        default = pkgs.vips;
+        defaultText = lib.literalExpression "pkgs.vips";
+        description = "libvips' `vipsheader` and `vipsthumbnail`, which decode receipt photos at a bounded size.";
+      };
+
+      engineMemoryMegabytes = mkOption {
+        type = types.ints.between 256 16384;
+        default = 1024;
+        description = ''
+          Address-space limit of each OCR engine process (`Ocr__EngineMemoryMegabytes`,
+          applied with `prlimit`); an engine that needs more fails that attempt.
+        '';
+      };
+    };
+
+    memoryMax = mkOption {
+      type = types.nullOr types.str;
+      default = "3G";
+      example = "2G";
+      description = ''
+        systemd `MemoryMax=` of the API service, which also runs the OCR engines: the
+        API with the search model needs about 1 GiB, plus up to
+        `ocr.engineMemoryMegabytes` per concurrent receipt (`Ocr__Concurrency`, default
+        1). The kernel kills the service past it (systemd restarts it); null leaves it
+        unlimited.
+      '';
+    };
+
+    tasksMax = mkOption {
+      type = types.nullOr types.ints.positive;
+      default = 1024;
+      description = "systemd `TasksMax=` of the API service (threads and OCR child processes); null for systemd's default.";
     };
 
     hostName = mkOption {
@@ -573,6 +611,10 @@ in
         RestartSec = 5;
         # Above Backend__ShutdownTimeoutSeconds so requests and worker leases drain.
         TimeoutStopSec = 45;
+      } // lib.optionalAttrs (cfg.memoryMax != null) {
+        MemoryMax = cfg.memoryMax;
+      } // lib.optionalAttrs (cfg.tasksMax != null) {
+        TasksMax = cfg.tasksMax;
       };
     };
 

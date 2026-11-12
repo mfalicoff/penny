@@ -32,6 +32,9 @@ public sealed class OcrOptionsTests
         options.Limits.Concurrency.ShouldBe(1);
         options.Limits.MaxAttempts.ShouldBe(4);
         options.Limits.Lease.ShouldBeGreaterThan(options.Limits.Timeout);
+        options.Engine.VipsThumbnail.ShouldBe("vipsthumbnail");
+        if (OperatingSystem.IsLinux())
+            options.Engine.Limits.ShouldBe(new("prlimit", 1024L * 1024 * 1024, 120));
     }
 
     [Fact]
@@ -45,7 +48,11 @@ public sealed class OcrOptionsTests
             ("Ocr:TessdataDirectory", "/opt/tessdata"),
             ("Ocr:MaxPages", "3"),
             ("Ocr:Concurrency", "2"),
-            ("Ocr:TimeoutSeconds", "30")
+            ("Ocr:TimeoutSeconds", "30"),
+            ("Ocr:VipsDirectory", "/opt/vips/bin"),
+            ("Ocr:Prlimit", "/usr/bin/prlimit"),
+            ("Ocr:EngineLimits", "true"),
+            ("Ocr:EngineMemoryMegabytes", "2048")
         );
         options.Worker.ShouldBeFalse();
         options.Engine.Languages.ShouldBe(["eng", "fra", "deu"]);
@@ -55,6 +62,9 @@ public sealed class OcrOptionsTests
         options.Limits.MaxPages.ShouldBe(3);
         options.Limits.Concurrency.ShouldBe(2);
         options.Limits.Timeout.ShouldBe(TimeSpan.FromSeconds(30));
+        options.Engine.VipsHeader.ShouldBe("/opt/vips/bin/vipsheader");
+        options.Engine.PdfInfo.ShouldBe("/opt/poppler/bin/pdfinfo");
+        options.Engine.Limits.ShouldBe(new("/usr/bin/prlimit", 2048L * 1024 * 1024, 30));
     }
 
     [Theory]
@@ -65,6 +75,9 @@ public sealed class OcrOptionsTests
     [InlineData("Ocr:PopplerDirectory", "bin")]
     [InlineData("Ocr:Concurrency", "9")]
     [InlineData("Ocr:MaxFileMegabytes", "11")]
+    [InlineData("Ocr:VipsDirectory", "vips")]
+    [InlineData("Ocr:EngineLimits", "on")]
+    [InlineData("Ocr:EngineMemoryMegabytes", "128")]
     public void whenValueInvalid_Read_ShouldFailWithTheSettingName(string key, string value)
     {
         Should

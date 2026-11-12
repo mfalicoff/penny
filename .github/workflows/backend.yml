@@ -45,9 +45,10 @@ jobs:
           key: search-model-${{ hashFiles('apps/backend/development/download-model.mjs') }}
       - name: Download and verify search model
         run: node apps/backend/development/download-model.mjs
-      # Receipt text extraction (MAZ-125) is tested with the real local engines.
+      # Receipt text extraction (MAZ-125) is tested with the real local engines, run
+      # under prlimit (util-linux, preinstalled) like in production.
       - name: Install OCR engine
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng tesseract-ocr-fra poppler-utils
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng tesseract-ocr-fra poppler-utils libvips-tools
       - name: Restore pinned tools
         run: bash apps/backend/dotnet.sh tool restore
       - name: Restore locked packages

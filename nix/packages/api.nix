@@ -5,8 +5,23 @@
 , buildDotnetModule
 , dotnetCorePackages
 , stdenv
+, tesseract
+, poppler-utils
+, vips
+, util-linux
 , version ? "0.0.0-nix"
 }:
+
+let
+  # Receipt OCR (MAZ-125): the local engines, on the wrapper's PATH so the package works
+  # on its own; the NixOS module also passes their exact paths (`Ocr__*`).
+  ocrPrograms = [
+    (tesseract.override { enableLanguages = [ "eng" "fra" ]; })
+    poppler-utils
+    vips
+    util-linux
+  ];
+in
 
 buildDotnetModule {
   pname = "penny-api";
@@ -43,6 +58,8 @@ buildDotnetModule {
 
   # Microsoft.ML.OnnxRuntime ships a prebuilt libonnxruntime.so that links libstdc++.
   runtimeDeps = [ stdenv.cc.cc.lib ];
+
+  makeWrapperArgs = [ "--suffix" "PATH" ":" (lib.makeBinPath ocrPrograms) ];
 
   postFixup = ''
     mv $out/bin/Penny.Backend.Api $out/bin/penny-api

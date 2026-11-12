@@ -11,6 +11,17 @@ public static class ReceiptTextFailure
     public const string Timeout = "timeout";
     public const string EngineError = "engine-error";
 
+    // An engine program was killed by its memory or CPU limit.
+    public const string ResourceLimit = "resource-limit";
+
+    // A worker claimed the receipt for its last attempt and never finished it (it
+    // crashed or was killed, e.g. by the host's out-of-memory killer).
+    public const string LeaseExpired = "lease-expired";
+
+    // Not a failure: on a `done` row, an image or page was taller than the engine's
+    // pixel ceiling and only its top part was read.
+    public const string Truncated = "truncated";
+
     public static readonly IReadOnlyList<string> All =
     [
         TooLarge,
@@ -19,5 +30,8 @@ public static class ReceiptTextFailure
         Corrupt,
         Timeout,
         EngineError,
+        ResourceLimit,
+        LeaseExpired,
+        Truncated,
     ];
 }
