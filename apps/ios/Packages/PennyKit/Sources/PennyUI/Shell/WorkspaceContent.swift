@@ -58,10 +58,11 @@ struct EntryRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(entry.title).font(.body.weight(.semibold)).foregroundStyle(PennyColor.label).lineLimit(2)
                 if waiting {
-                    Label("Waiting to sync", systemImage: "clock")
+                    // The status stays in words while the sync line replaces the meta line.
+                    Label(Self.waitingText(entry, today: shell.today), systemImage: "clock")
                         .font(.footnote).foregroundStyle(PennyColor.pending)
                 } else {
-                    Text(meta(category: category, expected: expected)).font(.footnote)
+                    Text(Self.meta(entry, category: category, report: report, today: shell.today)).font(.footnote)
                         .foregroundStyle(PennyColor.secondaryLabel)
                         .lineLimit(1)
                 }
@@ -85,15 +86,30 @@ struct EntryRow: View {
         }
     }
 
-    private func meta(category: LedgerCategory?, expected: Bool) -> String {
-        var parts = [DayText.short(entry.date, today: shell.today)]
-        if expected { parts.append("Expected") }
-        if let account = entry.accountId.flatMap(report.ledger.account(id:)) { parts.append(account.name) }
-        if entry.share != entry.total { parts.append("your share") }
-        if parts.count == 1, let category { parts.append(category.name) }
-        // A preview is not recorded: it never reads as money that moved (MAZ-77).
-        if entry.scheduled { parts.append(entry.kind == .income ? "expected" : "scheduled") }
-        return parts.joined(separator: " · ")
+    /// What a row not in Left to spend is, said once: "Expected" for income dated after today
+    /// (MAZ-136) and for scheduled income, "Scheduled" for any other preview (MAZ-77), nil for
+    /// a recorded entry. A preview never reads as money that moved.
+    static func status(_ entry: ReportEntry, today: CalendarDate?) -> String? {
+        guard entry.isExpected(today: today) else { return nil }
+        return entry.kind == .income ? "Expected" : "Scheduled"
+    }
+
+    /// The line under the title: the day, the status, then the account and "your share", or
+    /// the category when there is neither.
+    static func meta(_ entry: ReportEntry, category: LedgerCategory?, report: LedgerReport, today: CalendarDate)
+        -> String
+    {
+        var details: [String] = []
+        if let account = entry.accountId.flatMap(report.ledger.account(id:)) { details.append(account.name) }
+        if entry.share != entry.total { details.append("your share") }
+        if details.isEmpty, let category { details.append(category.name) }
+        let parts = [DayText.short(entry.date, today: today)] + [status(entry, today: today)].compactMap(\.self)
+        return (parts + details).joined(separator: " · ")
+    }
+
+    /// The pending-sync line, which replaces the meta line: it keeps the status in words.
+    static func waitingText(_ entry: ReportEntry, today: CalendarDate) -> String {
+        ["Waiting to sync", status(entry, today: today)].compactMap(\.self).joined(separator: " · ")
     }
 }
 

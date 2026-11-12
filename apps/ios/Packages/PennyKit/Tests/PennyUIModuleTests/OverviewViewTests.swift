@@ -142,7 +142,49 @@ struct OverviewViewTests {
         let spoken = HomeView.projectedSpoken(summary, currency: "CAD")
         #expect(spoken.contains("expected income not received yet"))
         #expect(RecentSection.recent(summary).map(\.id) == ["rent"], "Recent shows recorded entries only")
-        #expect(ExploreSection.calendarLine(CalendarMonth(summary)) == "1 day with entries · 1 scheduled")
+        #expect(ExploreSection.calendarLine(CalendarMonth(summary)) == "1 day with entries · 1 expected or scheduled")
+    }
+
+    @Test("whenIncomeIsDatedAfterTodayOrAPreviewIsOverdue_ComingUpPanel_ShouldListEverythingProjectedAdds")
+    func comingUpListsExpected() throws {
+        // A rule whose next date is before today has not been materialized (offline, say): its
+        // preview still counts in Projected, so the iPad panel lists it.
+        let rent = RecurringRule(
+            id: "rent", title: "Rent", kind: .expense, total: 145_000, share: 145_000, categoryId: "home",
+            date: CalendarDate("2026-11-01") ?? .earliest, frequency: .monthly,
+            nextDate: CalendarDate("2026-11-01") ?? .earliest, anchorDay: 1)
+        let ledger = Ledger(
+            transactions: [
+                entry("invoice", "2026-11-20", 60_000, kind: .income, category: "salary"),
+                entry("lunch", "2026-11-03", 1_500),
+                entry("bonus", "2026-11-12", 10_000, kind: .income, category: "salary"),
+            ], recurring: [rent])
+        let summary = LedgerReport(ledger: ledger).month(MonthKey(today), today: today)
+        let rows = ComingUpPanel.rows(summary)
+        #expect(rows.map(\.id) == ["rent:2026-11-01", "bonus", "invoice"], "soonest first, overdue included")
+        let added = rows.reduce(Int64(0)) { $0 + ($1.kind == .income ? $1.share : -$1.share) }
+        #expect(summary.recordedRemaining + added == summary.projectedRemaining, "nothing Projected adds is missing")
+        #expect(ComingUpPanel.detail(rows[1], today: today).hasSuffix(" · Expected"))
+        #expect(ComingUpPanel.detail(rows[0], today: today).hasSuffix(" · Scheduled"))
+        #expect(ComingUpPanel.more(rows, currency: "CAD") == nil)
+        let many = Ledger(
+            transactions: (10...17).map { entry("pay\($0)", "2026-11-\($0)", 100, kind: .income, category: "salary") })
+        let crowded = ComingUpPanel.rows(LedgerReport(ledger: many).month(MonthKey(today), today: today))
+        #expect(crowded.count == 8)
+        #expect(ComingUpPanel.more(crowded, currency: "CAD")?.hasPrefix("2 more · ") == true)
+    }
+
+    @Test("whenADayHasExpectedIncome_Calendar_ShouldSayExpectedOrScheduledNotScheduledAlone")
+    func calendarWording() throws {
+        let ledger = Ledger(transactions: [entry("invoice", "2026-11-20", 60_000, kind: .income, category: "salary")])
+        let summary = LedgerReport(ledger: ledger).month(MonthKey(today), today: today)
+        let day = try #require(CalendarMonth(summary).day(CalendarDate("2026-11-20") ?? .earliest))
+        #expect(day.scheduledCount == 1)
+        #expect(day.markers == [.scheduled], "the amber ring, not an income dot")
+        let spoken = OverviewText.calendarDay(day, currency: "CAD", today: today)
+        #expect(spoken.hasSuffix("1 expected or scheduled, not in Left to spend yet"))
+        #expect(!spoken.contains("received"))
+        #expect(spoken.hasSuffix(OverviewText.calendarPending(1)), "the day detail shows the same words")
     }
 
     @Test("whenNothingIsRecorded_Home_ShouldShowTheEmptyHome")

@@ -87,19 +87,22 @@ final class ActivityLocalCache {
     private(set) var report = LedgerReport(ledger: Ledger())
     private var index: FoldedSearchIndex?
     private var filters: ActivityFilters?
+    private var today: CalendarDate?
     private var result: ActivityResult?
 
-    func result(_ ledger: Ledger, _ filters: ActivityFilters) -> ActivityResult {
+    /// `today` decides which income is expected (MAZ-136), so a new day recomputes the totals.
+    func result(_ ledger: Ledger, _ filters: ActivityFilters, today: CalendarDate? = nil) -> ActivityResult {
         if ledger != self.ledger {
             self.ledger = ledger
             report = LedgerReport(ledger: ledger)
             index = nil
             result = nil
         }
-        if let result, filters == self.filters { return result }
+        if let result, filters == self.filters, today == self.today { return result }
         if filters.hasQuery, index == nil { index = FoldedSearchIndex(report) }
-        let next = report.activity(filters, index: index ?? FoldedSearchIndex())
+        let next = report.activity(filters, index: index ?? FoldedSearchIndex(), today: today)
         self.filters = filters
+        self.today = today
         result = next
         return next
     }
@@ -122,7 +125,7 @@ private struct ActivityList: View {
         @Bindable var shell = shell
         let filters = shell.activityFilters
         let search = shell.activitySearch
-        let local = cache.result(ledger, filters)
+        let local = cache.result(ledger, filters, today: shell.today)
         let server = Self.showsServer(search, filters: filters) ? search.rows(in: ledger) : nil
         let report = server?.report ?? cache.report
         let rows = server?.rows ?? local.entries
@@ -135,7 +138,7 @@ private struct ActivityList: View {
                 DemoBanner().listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
                 ActivityChips(filters: $shell.activityFilters, ledger: ledger, showFilters: showFilters)
                     .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
-                ActivityTotals(summary: local.summary, currency: currency)
+                ActivityTotals(summary: local.summary, expectedIncome: local.expectedIncome, currency: currency)
                     .listRowInsets(EdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 4))
                     .listRowBackground(Color.clear)
                 if filters.hasQuery {
@@ -428,22 +431,43 @@ struct ActivityChip: View {
     }
 }
 
-/// The period's totals (your shares). Filters and search never change them.
-private struct ActivityTotals: View {
+/// The period's recorded totals (your shares), the same numbers as Home's for a month. Filters
+/// and search never change them. Income dated after today is listed but not counted until its
+/// date (MAZ-136), so it is named on its own.
+struct ActivityTotals: View {
     let summary: KindTotals
+    var expectedIncome: Int64 = 0
     let currency: String
 
     var body: some View {
-        let parts = [
+        Text(Self.line(summary, expectedIncome: expectedIncome, currency: currency))
+            .font(.footnote)
+            .monospacedDigit()
+            .foregroundStyle(PennyColor.secondaryLabel)
+            .accessibilityLabel(Self.spoken(summary, expectedIncome: expectedIncome, currency: currency))
+            .accessibilityIdentifier("activity.totals")
+    }
+
+    static func line(_ summary: KindTotals, expectedIncome: Int64, currency: String) -> String {
+        var parts = [
             "Spent \(MoneyFormat.amount(summary.expense, currency: currency))",
             "Came in \(MoneyFormat.amount(summary.income, currency: currency))",
             "Invested \(MoneyFormat.amount(summary.investment, currency: currency))",
         ]
-        Text(parts.joined(separator: " · "))
-            .font(.footnote)
-            .monospacedDigit()
-            .foregroundStyle(PennyColor.secondaryLabel)
-            .accessibilityIdentifier("activity.totals")
+        if expectedIncome > 0 { parts.append("\(MoneyFormat.amount(expectedIncome, currency: currency)) expected") }
+        return parts.joined(separator: " · ")
+    }
+
+    static func spoken(_ summary: KindTotals, expectedIncome: Int64, currency: String) -> String {
+        var text =
+            "Recorded: spent \(MoneyFormat.amount(summary.expense, currency: currency)), came in "
+            + "\(MoneyFormat.amount(summary.income, currency: currency)), invested "
+            + "\(MoneyFormat.amount(summary.investment, currency: currency))"
+        if expectedIncome > 0 {
+            text +=
+                ". \(MoneyFormat.amount(expectedIncome, currency: currency)) expected income dated after today, not counted yet"
+        }
+        return text
     }
 }
 

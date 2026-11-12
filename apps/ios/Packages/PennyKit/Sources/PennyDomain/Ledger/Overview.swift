@@ -252,8 +252,9 @@ public struct MoneyFlowLayout: Hashable, Sendable {
 // MARK: - Calendar
 
 /// One month as a Monday-first grid: each day's recorded spending, income and contributions,
-/// and the scheduled occurrences on it. Recorded and scheduled stay separate: a scheduled
-/// preview is shown as an amber ring, never as money spent or received.
+/// and what is expected or scheduled on it. Recorded and expected stay separate: a scheduled
+/// preview or income dated after today (MAZ-136) is shown as an amber ring, never as money
+/// spent or received.
 public struct CalendarMonth: Hashable, Sendable {
     public enum Marker: String, CaseIterable, Hashable, Sendable {
         case spent, income, invested, scheduled
@@ -267,9 +268,10 @@ public struct CalendarMonth: Hashable, Sendable {
         public var invested: Int64 = 0
         /// Recorded entries on this day.
         public var recordedCount = 0
-        /// Scheduled occurrences not recorded yet.
+        /// Not in Left to spend yet: scheduled occurrences plus income dated after today (the
+        /// amber ring; "expected or scheduled").
         public var scheduledCount = 0
-        /// The scheduled occurrences' net (income minus expenses and contributions).
+        /// Their net (income minus expenses and contributions).
         public var scheduledNet: Int64 = 0
 
         public var id: CalendarDate { date }

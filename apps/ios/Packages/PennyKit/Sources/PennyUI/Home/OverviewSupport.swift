@@ -73,16 +73,22 @@ enum OverviewText {
     }
 
     /// One calendar day for VoiceOver: "Friday, November 6, spent $62.00, invested $200.00,
-    /// 1 scheduled".
+    /// 1 expected or scheduled, not in Left to spend yet". The amber ring covers scheduled
+    /// previews and income dated after today (MAZ-136), so the words name both.
     static func calendarDay(_ day: CalendarMonth.Day, currency: String, today: CalendarDate) -> String {
         var parts = [DayText.date(day.date).formatted(.dateTime.weekday(.wide).month(.wide).day())]
         if day.date == today { parts.append("today") }
         if day.spent > 0 { parts.append("spent \(money(day.spent, currency))") }
         if day.income > 0 { parts.append("received \(money(day.income, currency))") }
         if day.invested > 0 { parts.append("invested \(money(day.invested, currency))") }
-        if day.scheduledCount > 0 { parts.append("\(day.scheduledCount) scheduled, not recorded yet") }
+        if day.scheduledCount > 0 { parts.append(Self.calendarPending(day.scheduledCount)) }
         if day.isEmpty { parts.append("nothing recorded") }
         return parts.joined(separator: ", ")
+    }
+
+    /// A day's amber-ring entries in words, the same on screen and for VoiceOver.
+    static func calendarPending(_ count: Int) -> String {
+        "\(count) expected or scheduled, not in Left to spend yet"
     }
 
     /// Accessibility identifiers end in a model id; ids with characters outside the identifier

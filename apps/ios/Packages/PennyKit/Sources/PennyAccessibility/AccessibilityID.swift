@@ -181,6 +181,7 @@ public enum AccessibilityID {
         public static let calendarGrid = "calendar.grid"
         public static let calendarDayTotal = "calendar.dayTotal"
         public static let calendarDayEntries = "calendar.dayEntries"
+        public static let calendarLegend = "calendar.legend"
 
         /// A chart label of the money flow (`MoneyFlow.Node.id`).
         public static func flowNode(_ id: String) -> String { "moneyFlow.node.\(segment(id))" }
@@ -204,7 +205,7 @@ public enum AccessibilityID {
         static let all = [
             flowTotals, flowChart, flowFocus, flowFocusClear, flowDetails, insightsComparison, insightsDonut,
             categoryTotal, calendarPrevious, calendarNext, calendarToday, calendarTotals, calendarGrid,
-            calendarDayTotal, calendarDayEntries,
+            calendarDayTotal, calendarDayEntries, calendarLegend,
         ]
         static let prefixes = ["moneyFlow.node.", "moneyFlow.row.", "insights.category.", "calendar.day."]
     }

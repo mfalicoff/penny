@@ -376,7 +376,8 @@ public enum ActivityPeriod: Hashable, Sendable {
 }
 
 public struct ActivityPage: Equatable, Sendable {
-    /// The whole period's recorded totals; the query, kind and day never change them.
+    /// The whole period's recorded totals, without income dated after today (MAZ-136); the
+    /// query, kind and day never change them.
     public let summary: KindTotals
     public let entries: [ReportEntry]
     /// Matching entries across all pages.
@@ -404,8 +405,10 @@ extension LedgerReport {
 
     /// Activity: recorded entries only (personal and shared, never previews), newest first and
     /// then by id, 50 per page. A recorded recurring occurrence is an ordinary recorded entry.
+    /// Income dated after `today` is listed but left out of `summary` (MAZ-136).
     public func activity(
-        _ period: ActivityPeriod, query: String = "", kind: EntryKind? = nil, day: CalendarDate? = nil, page: Int = 0
+        _ period: ActivityPeriod, query: String = "", kind: EntryKind? = nil, day: CalendarDate? = nil, page: Int = 0,
+        today: CalendarDate? = nil
     ) -> ActivityPage {
         let periodEntries = recorded.filter { period.contains($0.date) }
         let matchesQuery = matcher(query)
@@ -417,7 +420,8 @@ extension LedgerReport {
         let pageCount = max(1, (matches.count + size - 1) / size)
         let page = min(max(page, 0), pageCount - 1)
         return ActivityPage(
-            summary: KindTotals(periodEntries), entries: Array(matches.dropFirst(page * size).prefix(size)),
+            summary: KindTotals(periodEntries.filter { !$0.isExpectedIncome(today: today) }),
+            entries: Array(matches.dropFirst(page * size).prefix(size)),
             totalCount: matches.count, page: page, pageCount: pageCount)
     }
 }

@@ -63,6 +63,9 @@ final class OverviewJourneyTests: PennyUITestCase {
         let penny = try await launchDemo()
         try penny.tap(AccessibilityID.Home.exploreCalendar)
         let totals = try penny.wait(for: AccessibilityID.Overview.calendarTotals).label
+        // The amber ring covers scheduled previews and income dated after today (MAZ-136).
+        let legend = try penny.wait(for: AccessibilityID.Overview.calendarLegend)
+        XCTAssertTrue(legend.label.hasSuffix("amber ring expected or scheduled"), legend.label)
         let first = try penny.wait(for: AccessibilityID.Overview.day(Self.firstOfMonth))
         XCTAssertFalse(first.label.isEmpty)
         first.tap()

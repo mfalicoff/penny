@@ -9,6 +9,7 @@ import SwiftUI
 /// Both read and write the same `ShellRoute`, so resizing keeps the place.
 struct AppShell: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.scenePhase) private var scenePhase
     @Bindable var shell: ShellModel
 
     var body: some View {
@@ -20,6 +21,12 @@ struct AppShell: View {
             }
         }
         .environment(shell)
+        // Today moves on at midnight and when the app comes back, so income dated on the new
+        // day leaves Expected for Left to spend without a relaunch (MAZ-136).
+        .task { await shell.followDayChanges() }
+        .onChange(of: scenePhase) {
+            if scenePhase == .active { shell.refreshToday() }
+        }
         .sheet(isPresented: $shell.route.isAddEntryPresented, onDismiss: shell.sheetDismissed) {
             EntryFormSheet(mode: .new).environment(shell)
         }

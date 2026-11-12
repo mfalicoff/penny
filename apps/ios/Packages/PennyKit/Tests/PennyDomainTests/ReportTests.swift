@@ -219,6 +219,38 @@ struct ReportTests {
         #expect(LedgerReport(ledger: ledger).month(october).expected.isEmpty)
     }
 
+    @Test("whenFutureIncomeSeeded_ActivityTotals_ShouldMatchHomesRecordedTotalsAndStillListIt")
+    func redesignFutureIncomeActivity() throws {
+        let states = try Fixtures.decode(RedesignStates.self, from: "redesign-states.json")
+        let expected = try #require(states.totals["dana-2026-10"])
+        let seeds = try Fixtures.decode(SeedFixture.self, from: "full-stack-seeds.json")
+        let scenario = try #require(seeds.scenarios.first { $0.name == "future-income" })
+        let step = try #require(scenario.steps.first { $0["as"] == .string("dana") && $0["ledger"] != nil })
+        let wire = try JSONDecoder().decode(
+            PennyContracts.Ledger.self, from: try JSONEncoder().encode(try #require(step["ledger"])))
+        let report = LedgerReport(ledger: try ContractLedger.ledger(wire))
+        let today = try Self.localDate(expected.clock, expected.timeZone)
+        let october = try #require(Self.october)
+        let home = report.month(october, today: today)
+        #expect(!home.expected.isEmpty, "the seed has income dated after today")
+
+        let filters = ActivityFilters(period: .month(october))
+        let activity = report.activity(filters, index: FoldedSearchIndex(), today: today)
+        #expect(activity.summary == home.recorded, "Activity's Came in is Home's recorded income")
+        #expect(activity.expectedIncome == home.expected.reduce(0) { $0 + $1.share })
+        #expect(report.totals(.month(october), today: today) == home.recorded)
+        #expect(report.activity(.month(october), today: today).summary == home.recorded)
+        // Expected income is still listed (and marked by the row), only not counted.
+        let listed = Set(activity.entries.map(\.id))
+        #expect(home.expected.allSatisfy { listed.contains($0.id) })
+        // Narrowing never changes the totals.
+        var income = filters
+        income.kind = .income
+        #expect(report.activity(income, index: FoldedSearchIndex(), today: today).summary == home.recorded)
+        // Without a today every dated entry counts, as before.
+        #expect(report.totals(.month(october)).income == home.recorded.income + activity.expectedIncome)
+    }
+
     @Test("whenSharedRowsRepeatOrAreRecorded_LedgerReport_ShouldCountEachOccurrenceOnce")
     func sharedProjectionDeduplication() throws {
         let month = try #require(Self.october)

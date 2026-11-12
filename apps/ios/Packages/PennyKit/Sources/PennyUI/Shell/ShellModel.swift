@@ -24,7 +24,11 @@ final class ShellModel {
 
     let workspace: any LedgerWorkspace
     let session: ShellSession
-    let today: CalendarDate
+    /// The person's local date. Income dated after it is expected (MAZ-136), so every report
+    /// reads it; `refreshToday()` moves it on at midnight, on a clock or time zone change and
+    /// when the app returns to the foreground. The month on screen stays where it is.
+    private(set) var today: CalendarDate
+    @ObservationIgnored private let clock: () -> CalendarDate
     /// Starts the demo from the empty Home (nil while in the demo).
     let startDemo: (() -> Void)?
     /// Ends the demo and discards everything in it (nil for an account).
@@ -88,7 +92,7 @@ final class ShellModel {
     static let toastDuration: Duration = .seconds(4)
 
     init(
-        workspace: any LedgerWorkspace, session: ShellSession, today: CalendarDate,
+        workspace: any LedgerWorkspace, session: ShellSession, today: CalendarDate, clock: (() -> CalendarDate)? = nil,
         startDemo: (() -> Void)? = nil, leaveDemo: (() -> Void)? = nil, search: (any EntrySearchService)? = nil,
         sharedProjection: (any SharedProjectionService)? = nil, expoImport: ExpoImportNotice? = nil
     ) {
@@ -97,6 +101,7 @@ final class ShellModel {
         self.workspace = workspace
         self.session = session
         self.today = today
+        self.clock = clock ?? { today }
         self.startDemo = startDemo
         self.leaveDemo = leaveDemo
         month = MonthKey(today)
@@ -106,6 +111,21 @@ final class ShellModel {
     }
 
     var isDemo: Bool { workspace.isDemo }
+
+    /// Reads the date again from the clock. Changes `today` only when the day changed, so a
+    /// foreground on the same day redraws nothing; income dated on the new day moves from
+    /// expected to Left to spend (MAZ-136).
+    func refreshToday() {
+        let now = clock()
+        if now != today { today = now }
+    }
+
+    /// Refreshes `today` on every calendar day change (midnight, a clock or time zone change:
+    /// the signal `LedgerSyncModel` materializes recurrence on) until the task is cancelled.
+    func followDayChanges(_ monitor: any CalendarDayMonitoring = SystemCalendarDayMonitor()) async {
+        refreshToday()
+        for await _ in monitor.dayChanges() { refreshToday() }
+    }
 
     var account: SignedInAccount? {
         if case .account(_, let account) = session { return account }

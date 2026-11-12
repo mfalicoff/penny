@@ -173,6 +173,55 @@ struct EntryFlowTests {
         #expect(ActivityPeriodText.scope(ActivityFilters(period: .month(month))).hasSuffix(" entries"))
     }
 
+    @Test("whenARowIsRecordedExpectedOrScheduled_EntryRow_ShouldSayItOnceAndKeepTheCategory")
+    func rowStatusText() throws {
+        let later = today.adding(days: 3)
+        func rule(_ id: String, _ kind: EntryKind, _ category: String) -> RecurringRule {
+            RecurringRule(
+                id: id, title: id, kind: kind, total: 5_000, share: 5_000, categoryId: category, date: later,
+                frequency: .monthly, nextDate: later, anchorDay: later.day)
+        }
+        let ledger = Ledger(
+            transactions: [
+                entry("lunch"),
+                LedgerEntry(
+                    id: "invoice", title: "Invoice", kind: .income, total: 60_000, share: 60_000,
+                    categoryId: "salary", date: later),
+            ], recurring: [rule("pay", .income, "salary"), rule("gym", .expense, "health")])
+        let report = LedgerReport(ledger: ledger)
+        let summary = report.month(MonthKey(today), today: today)
+        let rows = report.monthEntries(summary)
+        func row(_ id: String) throws -> ReportEntry { try #require(rows.first { $0.id == id }) }
+        func meta(_ id: String) throws -> String {
+            let entry = try row(id)
+            let category = report.categories.first { $0.id == entry.categoryId }
+            return EntryRow.meta(entry, category: category, report: report, today: today)
+        }
+        func parts(_ id: String) throws -> [String] { try meta(id).components(separatedBy: " · ") }
+        func name(_ category: String) -> String { report.categories.first { $0.id == category }?.name ?? "?" }
+
+        // Recorded: no status; a split share says "your share" instead of the category.
+        #expect(try parts("lunch").dropFirst() == ["your share"])
+        #expect(EntryRow.status(try row("lunch"), today: today) == nil)
+        // Income dated after today, scheduled income, and a scheduled expense: one status each.
+        #expect(try parts("invoice").dropFirst() == ["Expected", name("salary")])
+        let pay = Recurrence.occurrenceID(ruleID: "pay", date: later)
+        let gym = Recurrence.occurrenceID(ruleID: "gym", date: later)
+        #expect(try parts(pay).dropFirst() == ["Expected", name("salary")])
+        #expect(try parts(gym).dropFirst() == ["Scheduled", name("health")])
+        for id in ["lunch", "invoice", pay, gym] {
+            let text = try meta(id).lowercased()
+            #expect(text.components(separatedBy: "expected").count <= 2, "\(id) says expected once")
+            #expect(text.components(separatedBy: "scheduled").count <= 2, "\(id) says scheduled once")
+        }
+        // Waiting to sync replaces the meta line but keeps the status in words.
+        #expect(EntryRow.waitingText(try row("lunch"), today: today) == "Waiting to sync")
+        #expect(EntryRow.waitingText(try row("invoice"), today: today) == "Waiting to sync · Expected")
+        #expect(EntryRow.waitingText(try row(gym), today: today) == "Waiting to sync · Scheduled")
+        // On its date the income is recorded: no status.
+        #expect(EntryRow.status(try row("invoice"), today: later) == nil)
+    }
+
     @Test("whenIncomeIsDatedAfterToday_EntryRowAndForm_ShouldMarkItExpected")
     func futureIncomeIsExpected() throws {
         let tomorrow = today.adding(days: 1)

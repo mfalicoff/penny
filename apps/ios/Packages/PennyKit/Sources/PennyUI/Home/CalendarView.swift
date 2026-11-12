@@ -4,10 +4,11 @@ import PennyDomain
 import SwiftUI
 
 /// The month calendar (`calendar` card): a Monday-first grid with dots in the meaning colors
-/// (gray spent, green income, indigo invested) and an amber ring for scheduled occurrences,
-/// then the chosen day's entries. Choosing a day filters the list only; the month's totals
-/// above the grid never change with it. At accessibility text sizes the grid becomes a list of
-/// the days that have entries, so nothing is squeezed into seven columns.
+/// (gray spent, green income, indigo invested) and an amber ring for scheduled occurrences and
+/// income dated after today (MAZ-136), then the chosen day's entries. Choosing a day filters
+/// the list only; the month's totals above the grid never change with it. At accessibility text
+/// sizes the grid becomes a list of the days that have entries, so nothing is squeezed into
+/// seven columns.
 struct CalendarView: View {
     @Environment(ShellModel.self) private var shell
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -192,8 +193,8 @@ struct CalendarGrid: View {
     }
 }
 
-/// Dots in the meaning colors and an amber ring for scheduled. The legend and each day's
-/// spoken label say the same in words, so color is never the only cue.
+/// Dots in the meaning colors and an amber ring for expected or scheduled. The legend and each
+/// day's spoken label say the same in words, so color is never the only cue.
 struct CalendarMarkers: View {
     let markers: [CalendarMonth.Marker]
 
@@ -230,7 +231,10 @@ struct CalendarLegend: View {
         .font(.footnote)
         .foregroundStyle(PennyColor.secondaryLabel)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Legend: gray dot spent, green dot income, indigo dot invested, amber ring scheduled")
+        .accessibilityLabel(
+            "Legend: gray dot spent, green dot income, indigo dot invested, amber ring expected or scheduled"
+        )
+        .accessibilityIdentifier("calendar.legend")
     }
 
     @ViewBuilder
@@ -238,7 +242,7 @@ struct CalendarLegend: View {
         item(.spent, "Spent")
         item(.income, "Income")
         item(.invested, "Invested")
-        item(.scheduled, "Scheduled")
+        item(.scheduled, "Expected or scheduled")
     }
 
     private func item(_ marker: CalendarMonth.Marker, _ title: String) -> some View {
@@ -292,7 +296,7 @@ struct CalendarDayList: View {
     }
 }
 
-/// The chosen day: its recorded net, what is scheduled on it, and its entries.
+/// The chosen day: its recorded net, what is expected or scheduled on it, and its entries.
 struct DayDetail: View {
     let day: CalendarMonth.Day?
     let entries: [ReportEntry]
@@ -321,7 +325,7 @@ struct DayDetail: View {
             .accessibilityIdentifier("calendar.dayTotal")
             if let day, day.scheduledCount > 0 {
                 Label(
-                    "\(day.scheduledCount) scheduled · not recorded yet, so not in Left to spend",
+                    OverviewText.calendarPending(day.scheduledCount),
                     systemImage: "clock"
                 )
                 .font(.footnote)

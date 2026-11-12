@@ -32,7 +32,7 @@ Previews of every card this issue owns are in `PennyUI/Entries/EntrySpecimens.sw
 - **Equally** is a head count including you (2–100), rounded half up to the cent. **Amount** is your share as money; **Percent** is 0–100 with two decimals. A share above the total is refused.
 - Editing a split entry opens it as **Amount** with your share, as the legacy form did: the ledger does not keep how the share was computed.
 - Income and investments are always the full amount. An investment is a contribution (money put in), not a portfolio value; it counts against Left to spend like spending and shows in indigo, unsigned.
-- A date after today is recorded now and counts in that month's totals; the form says so. (Treating future income as expected rather than recorded is MAZ-136.)
+- A date after today is recorded now; the form says so. Income dated after today is expected (MAZ-136): it counts toward Projected, not Left to spend or Activity's Came in, until its date. Expenses and contributions dated after today count at once.
 
 ### Failures and drafts
 
@@ -45,7 +45,7 @@ Previews of every card this issue owns are in `PennyUI/Entries/EntrySpecimens.sw
 
 ## Activity
 
-- Recorded entries (never scheduled previews) grouped by day, newest first, each day with its net (income minus spending and contributions, your shares). The period's Spent / Came in / Invested totals sit above the list; filters and search never change them.
+- Recorded entries (never scheduled previews) grouped by day, newest first, each day with its net (income minus spending and contributions, your shares). The period's Spent / Came in / Invested totals sit above the list; filters and search never change them. They are recorded totals, the same as Home's for a month: income dated after today is listed (marked "Expected") but not in Came in, and the line names it apart ("$600.00 expected"; VoiceOver: "… expected income dated after today, not counted yet").
 - **Filters:** kind chips (All, Expenses, Income, Investments), the period chip and the Filters sheet (month, year or all time; one day; type; category). With a type chosen, its four most used categories appear as chips with All categories. The month follows Home's month picker.
 - **Rows:** tap for the detail (a shared expense opens its household); swipe for Edit and Delete. Delete always asks first and offers Undo in the toast. On iPad (regular width) the list is a 400 pt column and a personal entry opens beside it, highlighted, as on the `ipad/activity` card; deleting it clears the detail. In a narrow width the detail is pushed.
 - **Long ledgers:** local results render 200 rows at a time and add more as the list nears the end; the search index normalizes each row once per ledger change, and only when there is a query.

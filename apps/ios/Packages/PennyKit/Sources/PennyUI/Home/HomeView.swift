@@ -340,7 +340,7 @@ struct ExploreSection: View {
         let recorded = calendar.days.filter { $0.recordedCount > 0 }.count
         let scheduled = calendar.days.reduce(0) { $0 + $1.scheduledCount }
         var parts = [recorded == 1 ? "1 day with entries" : "\(recorded) days with entries"]
-        if scheduled > 0 { parts.append("\(scheduled) scheduled") }
+        if scheduled > 0 { parts.append("\(scheduled) expected or scheduled") }
         return parts.joined(separator: " · ")
     }
 
@@ -553,41 +553,68 @@ struct KindTotalsRow: View {
     }
 }
 
-/// Scheduled occurrences from today to the end of the month (recurring rules, personal and
-/// shared). Income is marked expected; nothing here is recorded yet.
+/// Everything in Projected that is not in Left to spend yet, soonest first: income dated after
+/// today (MAZ-136) and the month's scheduled occurrences (recurring rules, personal and shared),
+/// the iPad's counterpart of the iPhone's Expected income card. A preview dated before today
+/// (not materialized yet: offline, or a shared rule the server hasn't recorded) still counts
+/// in Projected, so it is listed too; the panel never hides money Projected counts.
 struct ComingUpPanel: View {
     let summary: MonthSummary
     let currency: String
     let today: CalendarDate
 
+    static let limit = 6
+
+    /// `summary.expected` and `summary.scheduled`, oldest date first, then id.
+    static func rows(_ summary: MonthSummary) -> [ReportEntry] {
+        (summary.expected + summary.scheduled).sorted {
+            $0.date != $1.date ? $0.date < $1.date : $0.id.utf16.lexicographicallyPrecedes($1.id.utf16)
+        }
+    }
+
+    /// "Nov 15 · Expected", "Nov 3 · Scheduled".
+    static func detail(_ entry: ReportEntry, today: CalendarDate) -> String {
+        [DayText.short(entry.date, today: today), EntryRow.status(entry, today: today)].compactMap(\.self)
+            .joined(separator: " · ")
+    }
+
+    /// The rows past `limit`, in words with their net, so nothing counted is out of sight.
+    static func more(_ rows: [ReportEntry], currency: String) -> String? {
+        let hidden = rows.dropFirst(limit)
+        guard !hidden.isEmpty else { return nil }
+        let net = hidden.reduce(Int64(0)) { $0 + ($1.kind == .income ? $1.share : -$1.share) }
+        return "\(hidden.count) more · \(MoneyFormat.signed(net, meaning: .neutral, currency: currency))"
+    }
+
     var body: some View {
-        let upcoming = Array(summary.scheduled.filter { $0.date >= today }.prefix(5))
+        let rows = Self.rows(summary)
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
                 Text("Coming up").font(.headline).accessibilityAddTraits(.isHeader)
                 Spacer()
-                Text("Recurring").font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
+                Text("Not in Left to spend").font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
             }
-            if upcoming.isEmpty {
-                Text("Nothing else scheduled this month.")
+            if rows.isEmpty {
+                Text("Nothing expected or scheduled this month.")
                     .font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
             }
-            ForEach(upcoming) { entry in
+            ForEach(rows.prefix(Self.limit)) { entry in
                 HStack(alignment: .firstTextBaseline) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(entry.title).font(.subheadline.weight(.semibold))
                             .fixedSize(horizontal: false, vertical: true)
-                        Text(
-                            "\(DayText.short(entry.date, today: today))\(entry.kind == .income ? " · expected" : "")"
-                        )
-                        .font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
+                        Text(Self.detail(entry, today: today))
+                            .font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
                     }
                     Spacer(minLength: 8)
                     MoneyText(
-                        entry.share, meaning: entry.kind == .income ? .pending : EntryRow.meaning(entry),
+                        entry.share, meaning: EntryRow.meaning(entry, today: today),
                         currency: currency, style: .subheadline.weight(.semibold))
                 }
                 .accessibilityElement(children: .combine)
+            }
+            if let more = Self.more(rows, currency: currency) {
+                Text(more).font(.footnote).monospacedDigit().foregroundStyle(PennyColor.secondaryLabel)
             }
         }
         .pennyCard()
