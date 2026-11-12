@@ -21,4 +21,9 @@ describe("Content-Security-Policy", () => {
     const module = readFileSync(new URL("../../../nix/module.nix", import.meta.url), "utf8");
     expect(module).toContain(`add_header Content-Security-Policy "${contentSecurityPolicy}" always;`);
   });
+
+  it("is the policy the container image's nginx sends for the app", () => {
+    const template = readFileSync(new URL("../../../deploy/web/default.conf.template", import.meta.url), "utf8");
+    expect(template).toContain(`add_header Content-Security-Policy "${contentSecurityPolicy}" always;`);
+  });
 });

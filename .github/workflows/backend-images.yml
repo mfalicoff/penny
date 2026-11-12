@@ -1,13 +1,16 @@
 name: Backend images
 
 # MAZ-63: build the .NET API and web images natively on amd64 and arm64, run the
-# production-container smoke test on each, then publish multi-platform images.
+# production-container smoke test on each, then publish multi-platform images. The web
+# image is the v2 browser app (apps/web) since MAZ-97.
 # The legacy Node image keeps its own workflow (docker-image.yml) until cutover.
 
 on:
   pull_request:
     paths:
       - 'apps/backend/**'
+      - 'apps/web/**'
+      - 'design-kit/**'
       - 'deploy/**'
       - 'scripts/deploy-smoke.mjs'
       - 'scripts/cutover-drill.mjs'
@@ -75,6 +78,9 @@ jobs:
           platforms: linux/${{ matrix.arch }}
           load: true
           tags: penny-web:ci
+          build-args: |
+            PENNY_VERSION=0.0.0-ci.${{ github.run_number }}
+            PENNY_REVISION=${{ github.sha }}
           cache-from: type=gha,scope=web-${{ matrix.arch }}
           cache-to: type=gha,mode=max,scope=web-${{ matrix.arch }}
       - name: Check image architecture and user

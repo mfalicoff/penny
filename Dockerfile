@@ -1,19 +1,11 @@
-# Web assets are architecture-independent; build them natively, even for ARM images.
-FROM --platform=$BUILDPLATFORM node:24-bookworm-slim AS build
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY . .
-ARG EXPO_PUBLIC_API_URL=""
-ENV EXPO_PUBLIC_API_URL=$EXPO_PUBLIC_API_URL
-RUN npm run build:web
-
+# Legacy Node/SQLite API (pre-cutover reference and rollback image). Since MAZ-97 it serves
+# only /api/: the browser app is the penny-web image (deploy/web), and the Expo web export
+# is retired.
 FROM node:24-bookworm-slim
 WORKDIR /app
 ENV NODE_ENV=production PORT=3001 DATABASE_PATH=/data/penny.sqlite
 COPY package*.json ./
 RUN npm ci --omit=dev && npm cache clean --force
-COPY --from=build /app/dist ./dist
 COPY server ./server
 COPY src/domain/ledger.ts ./src/domain/ledger.ts
 COPY src/domain/households.ts ./src/domain/households.ts

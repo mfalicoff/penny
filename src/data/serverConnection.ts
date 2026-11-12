@@ -1,5 +1,4 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Platform } from "react-native";
 
 const configurationKey = "penny:server-connection";
 export const defaultServerUrl = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3001";
@@ -19,9 +18,6 @@ export function normalizeServerUrl(input: string): string {
 // Persist the former build-time address once. Do not validate during migration:
 // existing sessions and offline entries must survive even when the server is down.
 export async function readServerConfiguration(): Promise<ServerConfiguration> {
-  // Web has no device setting. Deployed web uses its own origin; retain the
-  // existing build-time override for Expo's separate development server.
-  if (Platform.OS === "web") return { url: process.env.EXPO_PUBLIC_API_URL || "", legacyUrl: "" };
   const stored = await AsyncStorage.getItem(configurationKey);
   if (stored) {
     const value = JSON.parse(stored) as ServerConfiguration;
@@ -41,7 +37,6 @@ export async function getServerUrl(): Promise<string> {
 
 /** The original server keeps the existing keys; all others get an isolated namespace. */
 export async function serverStorageKey(key: string, configuration?: ServerConfiguration): Promise<string> {
-  if (Platform.OS === "web") return key;
   const { url, legacyUrl } = configuration ?? await readServerConfiguration();
   if (url === legacyUrl) return key;
   // Hex is also safe in SecureStore keys (unlike URL punctuation).
@@ -71,7 +66,6 @@ export async function probePennyServer(input: string): Promise<PennyServer> {
 }
 
 export async function saveServerConfiguration(server: PennyServer): Promise<ServerConfiguration> {
-  if (Platform.OS === "web") throw new Error("Web uses the server hosting this app.");
   const current = await readServerConfiguration();
   const next = { ...current, url: normalizeServerUrl(server.url), version: server.version };
   await AsyncStorage.setItem(configurationKey, JSON.stringify(next));

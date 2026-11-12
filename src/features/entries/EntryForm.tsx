@@ -1,7 +1,7 @@
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import { useRef, useState } from "react";
-import { Image, Platform, Pressable, Text, View } from "react-native";
+import { Image, Pressable, Text, View } from "react-native";
 import { receiptUrl, saveReceipt } from "../../data/receipts";
 import { calculateHouseholdSplits } from "../../domain/households";
 import {
@@ -494,7 +494,6 @@ export function EntryForm({
             fontWeight: "500",
             letterSpacing: -1,
           }}
-          autoFocus={!editing && Platform.OS === "web"}
         />
         <Field
           label={

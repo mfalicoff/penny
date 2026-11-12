@@ -1,5 +1,5 @@
 import { createContext, createElement, useContext, useEffect, useState, type ReactNode } from "react";
-import { Appearance, Platform } from "react-native";
+import { Appearance } from "react-native";
 import { getSavedTheme, saveTheme } from "./themeStorage";
 
 export type ThemeName = "light" | "dark" | "amoled" | "catppuccin";
@@ -68,8 +68,7 @@ export const getTheme = () => activeTheme;
 
 function syncPlatformAppearance(theme: ThemeName) {
   const mode = theme === "light" ? "light" : "dark";
-  if (Platform.OS !== "web") Appearance.setColorScheme(mode);
-  else if (typeof document !== "undefined") document.documentElement.style.colorScheme = mode;
+  Appearance.setColorScheme(mode);
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {

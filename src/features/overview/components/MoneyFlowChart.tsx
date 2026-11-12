@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Platform, Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import Svg, { Path, Rect } from "react-native-svg";
 import type { Category, Transaction } from "../../../domain/ledger";
 import { C, Icon, s } from "../../../shared/ui";
@@ -185,9 +185,7 @@ export function MoneyFlowChart({
                   <Svg
                     width={width}
                     height={layout.height}
-                    {...(Platform.OS === "web"
-                      ? { "aria-hidden": true, tabIndex: -1 as const }
-                      : { accessible: false })}
+                    accessible={false}
                     style={{ pointerEvents: "none" }}
                   >
                     {layout.sources.map((node) => (

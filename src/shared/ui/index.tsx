@@ -152,7 +152,7 @@ export function Sheet({
     <Modal
       visible={visible && !appLock?.obscured}
       transparent
-      animationType={Platform.OS === "web" ? "fade" : "slide"}
+      animationType="slide"
       onRequestClose={onClose}
     >
       <KeyboardAvoidingView
@@ -253,7 +253,6 @@ const makeStyles = (C: ThemeColors) => StyleSheet.create({
     padding: 13,
     color: C.ink,
     fontSize: 15,
-    ...(Platform.OS === "web" ? ({ outlineColor: C.accent } as any) : {}),
   },
   label: { color: C.ink, fontSize: 12, fontWeight: "600" },
   backdrop: {

@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { AppState, Platform } from "react-native";
+import { AppState } from "react-native";
 import { useLedger } from "./LedgerProvider";
 import * as householdsApi from "../data/households";
 import type { Household, ProjectedExpense } from "../data/households";
@@ -53,7 +53,7 @@ function useHouseholdState() {
     if (!email || demo) return () => { if (session.current === generation) session.current++; };
     void Promise.resolve().then(refresh);
     const timer = setInterval(() => {
-      if (Platform.OS === "web" || AppState.currentState === "active") void refresh();
+      if (AppState.currentState === "active") void refresh();
     }, 30000);
     const listener = AppState.addEventListener("change", (state) => { if (state === "active") void refresh(); });
     // Invalidate requests started by this subscription after it is removed.

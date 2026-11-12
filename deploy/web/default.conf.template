@@ -1,5 +1,6 @@
-# Penny same-origin front end (MAZ-63). Rendered with envsubst; only PENNY_* names and
-# NGINX_LOCAL_RESOLVERS are substituted, so nginx variables such as $host stay intact.
+# Penny same-origin front end (MAZ-63, MAZ-97): the apps/web build and the /api/ proxy.
+# Rendered with envsubst; only PENNY_* names and NGINX_LOCAL_RESOLVERS are substituted, so
+# nginx variables such as $host stay intact.
 #   PENNY_API_UPSTREAM  host:port of the API container (default api:8080)
 #   PENNY_MAX_BODY      request body limit, a little above Backend__MaxRequestBodyBytes
 #   PENNY_REAL_IP_FROM  CIDR of an outer TLS proxy whose X-Forwarded-For is trusted
@@ -47,19 +48,39 @@ server {
         proxy_intercept_errors off;
     }
 
-    # Fingerprinted bundles never change.
-    location /_expo/static/ {
-        add_header Cache-Control "public, max-age=31536000, immutable" always;
+    # Fingerprinted Vite bundles (scripts, styles, fonts, the pdf.js worker) never change.
+    # Without `always`, only successful responses are cached: a 404 for an asset that is not
+    # deployed yet must not be kept for a year.
+    location /assets/ {
+        add_header Cache-Control "public, max-age=31536000, immutable";
         add_header X-Content-Type-Options nosniff always;
         try_files $uri =404;
     }
 
-    # Single-page app: unknown paths render index.html, which is never cached.
+    # The retired Expo web export's bundles (MAZ-97). A tab opened before the upgrade gets a
+    # clean 404 for a lazy chunk instead of index.html served as a script, and recovers on
+    # reload. Its offline copy in localStorage is imported by the new app on the same origin.
+    location /_expo/ {
+        add_header Cache-Control "no-store" always;
+        return 404;
+    }
+
+    # The build that is serving (deploy/web/Dockerfile), for upgrade and rollback checks.
+    location = /version.json {
+        add_header Cache-Control "no-store" always;
+        add_header X-Content-Type-Options nosniff always;
+        try_files $uri =404;
+    }
+
+    # Single-page app: unknown paths render index.html, which is never cached, so a new
+    # release is picked up on the next navigation. Keep the policy in step with
+    # apps/web/scripts/security-headers.ts and nix/module.nix (apps/web/tests/security-headers.test.ts).
     location / {
         add_header Cache-Control "no-cache" always;
         add_header X-Content-Type-Options nosniff always;
         add_header X-Frame-Options DENY always;
         add_header Referrer-Policy same-origin always;
+        add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'" always;
         try_files $uri /index.html;
     }
 }

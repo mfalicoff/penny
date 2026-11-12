@@ -120,6 +120,78 @@ function findUserId(value) {
   return undefined;
 }
 
+// The v2 browser app as the web image serves it (MAZ-97): every legacy URL keeps a page, the
+// page policy and cache rules match apps/web and nix/module.nix, and the fingerprinted assets
+// (scripts, the Inter font, the pdf.js worker) are served with JavaScript/font types.
+async function checkWebArtifact(page) {
+  const legacyRoutes = [
+    "/transactions",
+    "/entries/new",
+    "/accounts",
+    "/categories",
+    "/recurring",
+    "/households",
+    "/households/h1",
+    "/households/h1/expenses/e1",
+    "/trips",
+    "/trips/t1",
+    "/insights",
+    "/settings",
+    "/auth/callback?code=c&state=s",
+  ];
+  for (const route of legacyRoutes) {
+    const response = await http(route);
+    check(response.status === 200 && response.text === page.text, `legacy URL ${route} opens the app`);
+  }
+  check(page.text.includes('<div id="root">') && !page.text.includes("_expo"), "index.html is the v2 app, not the Expo export");
+  const csp = page.headers.get("content-security-policy") ?? "";
+  check(csp.includes("script-src 'self'") && csp.includes("worker-src 'self'") && csp.includes("frame-ancestors 'none'"), "page sends the app's Content-Security-Policy", csp);
+  check(page.headers.get("x-content-type-options") === "nosniff" && page.headers.get("x-frame-options") === "DENY", "page sends nosniff and frame denial");
+
+  const version = await http("/version.json");
+  check(version.status === 200 && typeof version.json?.version === "string" && version.headers.get("cache-control") === "no-store", "version.json names the serving build, uncached", version.text);
+  const expo = await http("/_expo/static/js/web/entry-0000.js");
+  check(expo.status === 404, "retired Expo bundle paths are 404, not index.html");
+  const missingAsset = await http("/assets/missing-0000.js");
+  check(missingAsset.status === 404 && !(missingAsset.headers.get("cache-control") ?? "").includes("immutable"), "a missing fingerprinted asset is an uncached 404, not index.html");
+
+  const entry = /<script type="module"[^>]*src="(\/assets\/[^"]+\.js)"/.exec(page.text)?.[1];
+  check(Boolean(entry), "index.html loads a fingerprinted entry script", page.text.slice(0, 500));
+  const immutable = (response) => response.headers.get("cache-control") === "public, max-age=31536000, immutable";
+  const isJavaScript = (response) => /javascript/.test(response.headers.get("content-type") ?? "");
+  const entryScript = await http(entry);
+  check(entryScript.status === 200 && isJavaScript(entryScript) && immutable(entryScript), "entry script is JavaScript and cached as immutable");
+
+  const stylesheet = /<link rel="stylesheet"[^>]*href="(\/assets\/[^"]+\.css)"/.exec(page.text)?.[1];
+  const css = stylesheet ? await http(stylesheet) : undefined;
+  const font = css && /url\(["']?(\/assets\/Inter-[^"')]+)["']?\)/.exec(css.text)?.[1];
+  const fontResponse = font ? await http(font) : undefined;
+  check(Boolean(fontResponse && fontResponse.status === 200 && /font|octet-stream/.test(fontResponse.headers.get("content-type") ?? "") && immutable(fontResponse)), "the Inter font is served and cached as immutable", font ?? "no font in the stylesheet");
+
+  // The pdf.js worker is reached from lazily loaded chunks (which import each other as
+  // `./name.js`, and name the worker's URL as `/assets/name.js`): follow script references
+  // from the entry until a served file is the worker itself.
+  const seen = new Set([entry]);
+  const queue = [entryScript.text];
+  let worker;
+  while (queue.length > 0 && !worker && seen.size < 300) {
+    for (const match of queue.shift().matchAll(/(?:\/assets\/|["'`]\.\/)([\w.-]+\.js)/g)) {
+      const asset = `/assets/${match[1]}`;
+      if (seen.has(asset)) continue;
+      seen.add(asset);
+      const response = await http(asset);
+      if (response.status !== 200) continue;
+      // The name alone also matches the small module that only exports the worker's URL.
+      if (/^pdf\.worker\.min-/.test(match[1]) && response.text.includes("WorkerMessageHandler")) {
+        worker = { asset, response };
+        break;
+      }
+      queue.push(response.text);
+    }
+  }
+  check(Boolean(worker && isJavaScript(worker.response) && immutable(worker.response)), "the pdf.js worker is served as same-origin JavaScript", worker?.asset ?? "not referenced");
+}
+
 async function main() {
   mkdirSync(directory, { recursive: true, mode: 0o700 });
   const port = await freePort();
@@ -153,6 +225,7 @@ async function main() {
   check(page.headers.get("cache-control") === "no-cache", "index.html is not cached");
   const deep = await http("/households/does-not-exist");
   check(deep.status === 200 && deep.text === page.text, "deep links fall back to index.html");
+  await checkWebArtifact(page);
   const readyResponse = await http("/api/ready", { headers: { "x-request-id": "client supplied" } });
   check(readyResponse.status === 200, "API ready through the proxy");
   check(/^[0-9a-f]{32}$/.test(readyResponse.headers.get("x-request-id") ?? ""), "proxy request id echoed by the API");
