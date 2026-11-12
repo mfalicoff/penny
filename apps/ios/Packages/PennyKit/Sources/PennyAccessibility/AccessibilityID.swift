@@ -318,6 +318,8 @@ public enum AccessibilityID {
     /// row and the receipt viewer (`screen.receipt`).
     public enum Receipt {
         public static let screen = "screen.receipt"
+        /// The form's "Receipt, repeat, trip" row, which opens More details.
+        public static let moreDetails = "entryForm.details"
         public static let attached = "entryExtras.receipt"
         public static let remove = "entryExtras.removeReceipt"
         public static let photo = "entryExtras.receiptPhoto"
@@ -345,7 +347,8 @@ public enum AccessibilityID {
         public static let viewerEntry = "receipt.entry"
 
         static let all = [
-            screen, attached, remove, photo, file, hint, detailRow, saveWaiting, reading, progress, cancel, retry,
+            screen, moreDetails, attached, remove, photo, file, hint, detailRow, saveWaiting, reading, progress, cancel,
+            retry,
             dismiss, error, viewerClose, viewerTitle, viewerShare, viewerRemove, viewerLoading, viewerError,
             viewerRetry, viewerImage, viewerPDF, viewerPageCount, viewerUndecodable, viewerEntry,
         ]
