@@ -7,5 +7,10 @@
 	<array>
 		<string>group.com.mfalicoff.penny</string>
 	</array>
+	<!-- APNs (MAZ-79). Xcode signs development builds for the sandbox; exporting for TestFlight or
+	     the App Store rewrites it to production. The App ID needs the Push Notifications capability
+	     (docs/ios-notifications.md#apple-developer-setup). -->
+	<key>aps-environment</key>
+	<string>development</string>
 </dict>
 </plist>

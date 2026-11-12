@@ -55,7 +55,7 @@ Named screenshots (`<device>-<appearance>-<step>`) are kept on success; XCTest's
 | Plan | Contents | When | Retries |
 | --- | --- | --- | --- |
 | **Smoke** | `SmokeJourneyTests`: clean install opens sign-in; sign in → create → relaunch → read; Home → Add expense → Saved → Activity (skipped until MAZ-73) | Every PR and push to `v2` (`ios.yml`, job `ui-smoke`), required | None |
-| **Full** | Everything except screenshots: smoke, lifecycle and upgrade, network failures, auth journeys, the overview journeys (`OverviewJourneyTests`, demo data, MAZ-77) | Nightly, on releases and on demand (`ios-ui-matrix.yml`) | One retry on failure, reported |
+| **Full** | Everything except screenshots: smoke, lifecycle and upgrade, network failures, auth journeys, the overview journeys (`OverviewJourneyTests`, demo data, MAZ-77), notification navigation (`NotificationJourneyTests`, MAZ-79) | Nightly, on releases and on demand (`ios-ui-matrix.yml`) | One retry on failure, reported |
 | **Screenshots** | `ScreenshotTests`: light and dark × default, accessibility XL text, Reduce Transparency, Reduce Motion; sign-in with keyboard and error | Nightly, on releases and on demand | None |
 
 | | Minimum OS | Current OS |
@@ -89,6 +89,7 @@ Debug-only (`#if PENNY_TEST_CONTROLS`); `ios.sh release-check` fails if any `PEN
 | `PENNY_TEST_TODAY=yyyy-MM-dd` | Pin the app's today |
 | `PENNY_TEST_CONTAINER_SEED=<path>` | Apply a seed property list after the reset |
 | `PENNY_TEST_REDUCE_TRANSPARENCY=1`, `PENNY_TEST_REDUCE_MOTION=1` | Force those settings for Penny's own views (system controls follow the simulator) |
+| `PENNY_TEST_NOTIFICATION=<json>`, `PENNY_TEST_NOTIFICATION_ON_RESUME=<json>` | Open a notification payload (the APNs custom keys) as if tapped, at launch or on the first return from the background, through `PushNotifications.didOpen` ([native notifications](ios-notifications.md#tests-and-verification), MAZ-79) |
 
 Large text uses the system launch argument `-UIPreferredContentSizeCategoryName`. Appearance is set with `XCUIDevice.shared.appearance` and pinned through Penny's own setting (a `penny.appearance` seed), because the device setting alone did not restyle a freshly launched app on the iOS 27.0 simulator.
 
