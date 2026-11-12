@@ -78,7 +78,9 @@ export function monthBreakdown(ledger: Ledger, month: string, { today }: MonthOp
   // Projected adds every scheduled occurrence of the month (income, expenses and investments,
   // personal and shared; the legacy app added scheduled income only) and income dated after today.
   const summaryEntries: OverviewEntry[] = [...recordedEntries, ...expected, ...scheduled];
-  // The money-flow chart keeps its legacy input: entries dated in the month plus scheduled income.
+  // The legacy Expo money-flow chart keeps its input: entries dated in the month plus scheduled
+  // income (without a `today`, `expected` is empty). The web Home and the native iOS flow don't use
+  // it: they chart recorded entries only, so the flow matches Left to spend.
   const moneyFlowEntries: OverviewEntry[] = [...recordedEntries, ...expected, ...scheduledIncome];
   return { recordedEntries, expected, scheduled, calendarEntries: summaryEntries, expectedIncome, summaryEntries, moneyFlowEntries,
     recorded: totals(recordedEntries), summary: totals(summaryEntries) };

@@ -1,9 +1,7 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
-import { dateKeyIn } from "@domain/calendar.ts";
 import { emptyLedger, type Ledger, type Recurring, type Transaction } from "@domain/ledger.ts";
 import { describe, expect, it } from "vitest";
 import type { SharedRow } from "../src/api/projection";
+import { danaOctober, totalsOf } from "./fakes/futureIncome";
 import { calendarDays, categoryComparison, flowNodeSummary, groupSmall, homeSearchSchema, ledgerWithShared, monthEntries, monthReport, shortLabel } from "../src/features/home/model";
 
 /**
@@ -115,16 +113,18 @@ describe("month totals", () => {
     expect(result.recorded.expense).toBe(7440);
   });
 
-  it("separates recorded from projected remaining and names expected recurring income", () => {
+  it("separates recorded from projected remaining and names the expected income", () => {
     const result = report(ledger([entry("rent", { total: 100000, share: 100000, categoryId: "home" })], [rule("pay"), rule("phone", { kind: "expense", total: 4500, share: 4500, categoryId: "other", nextDate: "2026-11-28", anchorDay: 28 })]));
     expect(result.recordedNet).toBe(-100000);
     expect(result.expectedIncome).toBe(50000);
     expect(result.projected).toEqual({ income: 50000, expense: 104500, investment: 0 });
     expect(result.projectedNet).toBe(-54500);
     expect(result.comingUp.map((item) => item.title)).toEqual(["pay", "phone"]);
-    // The flow keeps its legacy input: recorded entries plus expected income.
-    expect(result.flow.income).toBe(50000);
+    // The flow is recorded-only (MAZ-136): the expected pay isn't money that came in, so Beyond
+    // income matches the overspent Left to spend.
+    expect(result.flow.income).toBe(0);
     expect(result.flow.expense).toBe(100000);
+    expect(result.flow.gap).toBe(100000);
   });
 
   it("drops a personal preview once its occurrence is recorded", () => {
@@ -300,22 +300,27 @@ describe("income dated after today (MAZ-136)", () => {
   });
 
   it("matches redesign-states.json dana-2026-10 in the person's time zone", () => {
-    type Amounts = { expenseCents: number; incomeCents: number; investmentCents: number };
-    type Line = { title: string; date: string; shareCents: number };
-    type Totals = { clock: string; timeZone: string; recorded: Amounts; projected: Amounts; expected: Line[]; scheduled: Line[] };
-    type Seeds = { scenarios: { name: string; steps: { as?: string; ledger?: Ledger }[] }[] };
-    const fixture = (name: string): unknown => JSON.parse(readFileSync(resolve(process.cwd(), "../../contracts/fixtures", name), "utf8"));
-    const expected = (fixture("redesign-states.json") as { totals: Record<string, Totals> }).totals["dana-2026-10"];
-    const scenario = (fixture("full-stack-seeds.json") as Seeds).scenarios.find((item) => item.name === "future-income");
-    const seed = [...(scenario?.steps ?? [])].reverse().find((step) => step.ledger && step.as === "dana")?.ledger;
-    if (!expected || !seed) throw new Error("dana-2026-10 or the future-income seed is missing");
-    const today = dateKeyIn(new Date(expected.clock), expected.timeZone);
-    const result = monthReport(ledgerWithShared(seed, [], []), today.slice(0, 7), today);
-    const totalsOf = (amounts: Amounts) => ({ income: amounts.incomeCents, expense: amounts.expenseCents, investment: amounts.investmentCents });
+    const { expected, seed, today, month } = danaOctober();
+    const result = monthReport(ledgerWithShared(seed, [], []), month, today);
     expect(result.recorded).toEqual(totalsOf(expected.recorded));
     expect(result.projected).toEqual(totalsOf(expected.projected));
     expect(result.comingUp.map((item) => `${item.title} ${item.date} ${String(item.share)}`).sort()).toEqual(
       [...expected.expected, ...expected.scheduled].map((item) => `${item.title} ${item.date} ${String(item.shareCents)}`).sort(),
     );
+    // The flow is recorded-only: it leaves out the expected invoice, refund and scheduled pay.
+    expect(result.flow.income).toBe(expected.recorded.incomeCents);
+    expect(result.flow.expense).toBe(expected.recorded.expenseCents);
+    expect(result.flow.remaining).toBe(result.recordedNet);
+  });
+
+  it("keeps expected and scheduled income out of the money flow, so Left over matches Left to spend", () => {
+    const view = ledgerWithShared(ledger([pay("2026-11-10"), pay("2026-11-11"), entry("rent", { share: 30000, total: 30000 })], [rule("retainer", { total: 40000, share: 40000 })]), [], []);
+    const result = monthReport(view, MONTH, "2026-11-10");
+    expect(result.expectedIncome).toBe(90000);
+    expect(result.flow.income).toBe(result.recorded.income);
+    expect(result.flow.income).toBe(50000);
+    expect(result.flow.remaining).toBe(result.recordedNet);
+    // On its date the income joins the flow; the scheduled retainer stays out until it's recorded.
+    expect(monthReport(view, MONTH, "2026-11-11").flow.income).toBe(100000);
   });
 });

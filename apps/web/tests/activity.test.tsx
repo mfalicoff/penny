@@ -1,7 +1,7 @@
 import { onlineManager } from "@tanstack/react-query";
 import { configure, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { entry, ledgerServer, personalHit, setOnline, sharedHit, sharedRow } from "./fakes/ledgerServer";
 import { renderApp } from "./render";
 
@@ -12,7 +12,17 @@ import { renderApp } from "./render";
 configure({ asyncUtilTimeout: 4000 });
 vi.setConfig({ testTimeout: 20_000 });
 
+// The clock is pinned to Wed Nov 11, 2026, local noon: the November entries are before it, and income
+// dated after it is expected (MAZ-136), so the totals hold on any day CI runs.
+const TODAY = new Date("2026-11-11T12:00:00");
+
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(TODAY);
+});
+
 afterEach(() => {
+  vi.useRealTimers();
   localStorage.clear();
   onlineManager.setOnline(true);
 });
@@ -59,13 +69,12 @@ describe("Activity", () => {
   });
 
   it("marks income dated after today as expected, but not a future-dated expense (MAZ-136)", async () => {
-    const now = new Date();
-    const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-    const tomorrow = `${String(next.getFullYear())}-${String(next.getMonth() + 1).padStart(2, "0")}-${String(next.getDate()).padStart(2, "0")}`;
+    // Tomorrow, the day after the pinned clock.
+    const tomorrow = "2026-11-12";
     const bonus = entry("bonus", "Year-end bonus", { kind: "income", categoryId: "salary", total: 50000, share: 50000, date: tomorrow });
     const tickets = entry("tickets", "Concert tickets", { total: 9000, share: 9000, date: tomorrow, categoryId: "food" });
     ledgerServer({ transactions: [bonus, tickets] }, { shared: [], search: () => [personalHit(bonus), personalHit(tickets)] });
-    renderApp(`/transactions?month=${tomorrow.slice(0, 7)}`);
+    renderApp("/transactions?month=2026-11");
     const row = await within(await screen.findByRole("region", { name: "Search results" })).findByRole("button", { name: /Year-end bonus/ });
     expect(row).toHaveTextContent("Expected");
     expect(row.querySelector(".category-dot--expected")).not.toBeNull();
@@ -73,6 +82,14 @@ describe("Activity", () => {
     const expense = within(results()).getByRole("button", { name: /Concert tickets/ });
     expect(expense).not.toHaveTextContent("Expected");
     expect(expense.querySelector(".category-dot--expected")).toBeNull();
+    // The totals leave the expected bonus out (as Home's recorded totals) and say so; the tickets count.
+    const card = (await screen.findByText("Earned")).closest(".activity-totals") as HTMLElement;
+    await waitFor(() => {
+      expect(within(card).getByText("Spent").nextElementSibling).toHaveTextContent("$90.00");
+    });
+    expect(within(card).getByText("Earned").nextElementSibling).toHaveTextContent("$0.00");
+    expect(within(card).getByText("Left").nextElementSibling).toHaveTextContent("-$90.00");
+    expect(card).toHaveTextContent("Earned leaves out $500.00 of income dated after today, listed as Expected until its date.");
   });
 
   it("lists shared rows beside personal ones and opens them in their household", async () => {

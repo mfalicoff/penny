@@ -24,8 +24,8 @@ const PAGE = 50;
 /**
  * Home (MAZ-92; specimens `home`, `home-dark`, `home-amoled`, `home-catppuccin`, `desktop`,
  * `empty-home`, `calendar`; web card `web-home`). It leads with what is left: the recorded
- * remaining ("Left to spend") and, separately, the projected remaining with the expected
- * recurring income named, then Came in / Spent / Invested, what's coming up, the compact flow
+ * remaining ("Left to spend") and, separately, the projected remaining with the expected income
+ * named (scheduled income and income dated after today, MAZ-136), then Came in / Spent / Invested, what's coming up, the compact flow
  * summary and recent Activity. "Explore your month" holds the calendar, categories, the full
  * money flow and the month's entries, whose filters (`day`, `q`, `kind`, `category`) live in the
  * URL and never change a total.
@@ -152,10 +152,10 @@ function Hero({ report, currency, shared }: { report: MonthReport; currency: str
           projected remaining ·{" "}
           {report.expectedIncome > 0 ? (
             <>
-              includes <span className="pk-num pk-money--pending">{formatCents(report.expectedIncome, currency)}</span> expected recurring income
+              includes <span className="pk-num pk-money--pending">{formatCents(report.expectedIncome, currency)}</span> expected income
             </>
           ) : (
-            "no recurring income expected"
+            "no income expected"
           )}
           {scheduledOut > 0 ? (
             <>
@@ -245,9 +245,9 @@ function ComingUp({ report, ledger, currency }: { report: MonthReport; ledger: L
           })}
         </ul>
       ) : (
-        <p className="muted">Nothing else is scheduled this month.</p>
+        <p className="muted">Nothing else is expected or scheduled this month.</p>
       )}
-      {report.comingUp.length > shown.length ? <p className="note">{`and ${String(report.comingUp.length - shown.length)} more scheduled`}</p> : null}
+      {report.comingUp.length > shown.length ? <p className="note">{`and ${String(report.comingUp.length - shown.length)} more coming up`}</p> : null}
     </Panel>
   );
 }
@@ -344,7 +344,7 @@ function Explore({
           }}
         />
         <div className="explore__wide">
-          <MoneyFlowChart flow={report.flow} currency={currency} monthLabel={label} level={3} expectedIncome={report.expectedIncome} />
+          <MoneyFlowChart flow={report.flow} currency={currency} monthLabel={label} level={3} />
         </div>
         <div className="explore__wide">
           <MonthList key={`${month}|${search.day ?? ""}|${search.q ?? ""}|${search.kind ?? ""}|${search.category ?? ""}`} month={month} search={search} navigate={navigate} view={view} currency={currency} onOpen={onOpen} />

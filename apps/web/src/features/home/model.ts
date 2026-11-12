@@ -120,6 +120,7 @@ export interface MonthReport {
   /** Your share of recorded shared expenses, already in `recorded.expense`. */
   sharedSpent: number;
   sharedCount: number;
+  /** The recorded month's money flow: what came in and where it went. Never includes expected income. */
   flow: MoneyFlow;
   /** Recorded spending by category, largest first. */
   spending: (Category & { amount: number })[];
@@ -150,7 +151,9 @@ export function monthReport(view: Ledger, month: string, today?: string): MonthR
     projectedNet: net(overview.summary),
     sharedSpent: shared.reduce((sum, entry) => sum + entry.share, 0),
     sharedCount: shared.length,
-    flow: buildMoneyFlow(overview.moneyFlowEntries, view.categories),
+    // Recorded entries only (personal and shared, at your share), like Left to spend and the native
+    // iOS flow, so Left over always matches it. Not the legacy `moneyFlowEntries` (MAZ-136).
+    flow: buildMoneyFlow(overview.monthEntries, view.categories),
     spending: overview.spending,
     calendarEntries: overview.calendarEntries,
     empty: overview.calendarEntries.length === 0,
@@ -207,13 +210,14 @@ export interface CalendarDay {
   expense: number;
   income: number;
   investment: number;
+  /** Expected or scheduled entries on the day: scheduled previews and income dated after today (the amber ring). */
   scheduled: number;
 }
 
 /**
  * The month's days with what happened on each, built in one pass over the entries (no per-cell
- * scans). Scheduled occurrences and income dated after `today` (MAZ-136) count as `scheduled`: an
- * amber ring, never a recorded dot.
+ * scans). Scheduled occurrences and income dated after `today` (MAZ-136) count as `scheduled`
+ * ("expected or scheduled"): an amber ring, never a recorded dot.
  */
 export function calendarDays(month: string, entries: readonly OverviewEntry[], today?: string): { offset: number; days: CalendarDay[] } {
   const { daysInMonth, offset } = calendarMonth(month);

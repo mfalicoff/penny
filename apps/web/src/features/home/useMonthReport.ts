@@ -1,5 +1,6 @@
-import { dateKey, type Ledger } from "@domain/ledger.ts";
+import type { Ledger } from "@domain/ledger.ts";
 import { useMemo } from "react";
+import { useToday } from "../../app/useToday";
 import { useOnline } from "../../design/states";
 import { useActivityLedger, useSharedRows, type SharedState } from "../activity/data";
 import { ledgerWithShared, monthReport, type MonthReport } from "./model";
@@ -27,7 +28,8 @@ export function useMonthReport(month: string): MonthData {
   const scheduled = shared.status === "ready" ? shared.scheduled : null;
   const view = useMemo(() => (ledger ? ledgerWithShared(ledger, rows ?? [], scheduled ?? []) : null), [ledger, rows, scheduled]);
   // MAZ-136: income dated after the local today counts toward Projected, not Left to spend.
-  const today = dateKey();
+  // `useToday` re-renders at local midnight, so the income moves over on its date.
+  const today = useToday();
   const report = useMemo(() => (view ? monthReport(view, month, today) : null), [view, month, today]);
   return { ledger, view, report, shared };
 }

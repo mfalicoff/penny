@@ -39,7 +39,7 @@ test("Home leads with recorded and projected remaining, then recent activity, wi
   // 5,450.00 came in − 1,883.35 spent − 200.00 invested.
   await expect(hero(page).locator(".hero__amount")).toHaveText("Recorded remaining: $3,366.65");
   // + 400.00 expected retainer − 45.00 phone plan.
-  await expect(hero(page)).toContainText("$3,721.65 projected remaining · includes $400.00 expected recurring income and $45.00 scheduled to go out");
+  await expect(hero(page)).toContainText("$3,721.65 projected remaining · includes $400.00 expected income and $45.00 scheduled to go out");
   await expect(page.getByRole("region", { name: "Coming up" })).toContainText("Design retainer");
   await expect(page.getByRole("region", { name: "Recent" }).getByRole("listitem")).toHaveCount(5);
   await expect(explore(page).getByRole("heading", { name: "Explore your month" })).toBeVisible();
@@ -61,7 +61,7 @@ test("the money flow is chosen with the keyboard and announced", async ({ page, 
   await salary.focus();
   await page.keyboard.press("Enter");
   await expect(salary).toHaveAttribute("aria-pressed", "true");
-  await expect(flow.locator(".flow__focus")).toContainText("Salary $4,800.00 · 82% of what came in");
+  await expect(flow.locator(".flow__focus")).toContainText("Salary $4,800.00 · 88% of what came in");
 
   await page.keyboard.press("ArrowDown");
   const freelance = view.getByRole("button", { name: /^Came in: Freelance/ });
@@ -97,7 +97,8 @@ test("the money flow is chosen with the keyboard and announced", async ({ page, 
 
   await flow.getByText("Show as a table").click();
   const table = flow.getByRole("table", { name: "Money flow for November 2026" });
-  await expect(table.getByRole("row", { name: /Left over/ })).toContainText("$3,766.65");
+  // Recorded-only (MAZ-136): Left over is Left to spend; the expected $400.00 retainer is not in it.
+  await expect(table.getByRole("row", { name: /Left over/ })).toContainText("$3,366.65");
   expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
   expect(errors).toEqual([]);
 });
@@ -114,6 +115,8 @@ test("totals stay put while the month's list is searched, and a day filters it",
 
   await list.getByRole("button", { name: "Clear filters" }).click();
   const calendar = explore(page).getByRole("region", { name: "Calendar" });
+  await expect(calendar.getByRole("button", { name: /^Monday, November 30/ })).toHaveAccessibleName("Monday, November 30: 2 expected or scheduled");
+  await expect(calendar.getByRole("list", { name: "Legend" })).toContainText("Expected or scheduled");
   await calendar.getByRole("button", { name: /^Monday, November 30/ }).click();
   await expect(page).toHaveURL(/day=2026-11-30/);
   await expect(list).toContainText("Phone plan");

@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { Ledger, Transaction } from "@domain/ledger.ts";
 import { localRows, periodTotals, rowFilters } from "../src/features/activity/data";
+import { ledgerWithShared, monthReport } from "../src/features/home/model";
+import { danaOctober, totalsOf } from "./fakes/futureIncome";
 import { activeDay, activitySearchSchema, periodOf, searchRange, shiftPeriod, without, withPeriod } from "../src/features/activity/filters";
 import { buildEntry, categoryIcon, draftFromEntry, entryChange, frequentCategories, futureIncomeNote, inlineCategories, newDraft, withKind, type EntryDraft } from "../src/features/entries/model";
 
@@ -147,14 +149,14 @@ describe("Activity rows and totals", () => {
   const rows = [shared("Hydro"), shared("Euro dinner", { householdCurrency: "EUR", shareCents: 999 }), shared("Market", { date: "2026-11-05", category: { name: "Food & drinks", icon: "cafe-outline", color: "#E47850" } })];
 
   it("totals the period from personal entries and shared shares, whatever the other filters", () => {
-    const totals = periodTotals(data, { type: "month", month: "2026-11" }, rows);
+    const totals = periodTotals(data, { type: "month", month: "2026-11" }, rows, "2026-11-30");
     // 1450.00 personal + 30.00 + 30.00 shared; the EUR row is never added to a CAD ledger.
-    expect(totals).toEqual({ expense: 151000, income: 480000, investment: 20000, net: 309000, shared: 6000, sharedCount: 2 });
+    expect(totals).toEqual({ expense: 151000, income: 480000, investment: 20000, net: 309000, shared: 6000, sharedCount: 2, expectedIncome: 0 });
   });
 
   it("never counts a shared row whose currency is not known", () => {
     const noCurrency = { ...shared("Hydro"), householdCurrency: undefined };
-    expect(periodTotals(data, { type: "month", month: "2026-11" }, [noCurrency]).sharedCount).toBe(0);
+    expect(periodTotals(data, { type: "month", month: "2026-11" }, [noCurrency], "2026-11-30").sharedCount).toBe(0);
   });
 
   it("lists personal and shared rows newest first and applies type, day, category and text locally", () => {
@@ -183,5 +185,29 @@ describe("future-dated income (MAZ-136)", () => {
     expect(futureIncomeNote({ kind: "expense", date: "2026-11-15" }, "2026-11-11")).toBeNull();
     expect(futureIncomeNote({ kind: "investment", date: "2026-11-15" }, "2026-11-11")).toBeNull();
     expect(futureIncomeNote({ kind: "income", date: "" }, "2026-11-11")).toBeNull();
+  });
+
+  it("leaves income dated after today out of Activity's totals, so a month matches Home's recorded totals", () => {
+    const { expected, seed, today, month } = danaOctober();
+    const period = { type: "month", month } as const;
+    const totals = periodTotals(seed, period, [], today);
+    const home = monthReport(ledgerWithShared(seed, [], []), month, today);
+    expect({ income: totals.income, expense: totals.expense, investment: totals.investment }).toEqual(home.recorded);
+    expect({ income: totals.income, expense: totals.expense, investment: totals.investment }).toEqual(totalsOf(expected.recorded));
+    expect(totals.net).toBe(home.recordedNet);
+    // The freelance invoice (Oct 16) and the tax refund (Oct 28) are expected, still listed.
+    expect(totals.expectedIncome).toBe(expected.expected.reduce((sum, line) => sum + line.shareCents, 0));
+    const listed = localRows(seed, [], rowFilters({ month }), new Set()).map((row) => row.entry.title);
+    expect(listed).toEqual(expect.arrayContaining(["Freelance invoice", "Tax refund", "Concert tickets"]));
+    // A year or all time leaves them out the same way.
+    expect(periodTotals(seed, { type: "year", year: month.slice(0, 4) }, [], today).income).toBe(300000 + expected.recorded.incomeCents);
+  });
+
+  it("counts income dated today and leaves out income dated tomorrow, until tomorrow", () => {
+    const pay = (date: string) => entry(`pay-${date}`, { kind: "income", categoryId: "salary", total: 50000, share: 50000, date });
+    const data = ledger({ transactions: [pay("2026-11-10"), pay("2026-11-11"), entry("tickets", { total: 9000, share: 9000, date: "2026-11-20" })] });
+    const period = { type: "month", month: "2026-11" } as const;
+    expect(periodTotals(data, period, [], "2026-11-10")).toMatchObject({ income: 50000, expense: 9000, net: 41000, expectedIncome: 50000 });
+    expect(periodTotals(data, period, [], "2026-11-11")).toMatchObject({ income: 100000, expense: 9000, net: 91000, expectedIncome: 0 });
   });
 });

@@ -1,9 +1,10 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { dateKey, type Ledger, type Transaction } from "@domain/ledger.ts";
+import type { Ledger, Transaction } from "@domain/ledger.ts";
 import { isExpectedIncome } from "@domain/summary.ts";
 import { ApiError } from "../../api/client";
+import { useToday } from "../../app/useToday";
 import { ledgerCurrencyQuery } from "../../api/ledger";
 import { searchTransactionsQuery } from "../../api/search";
 import { useAccountEmail } from "../../auth/account";
@@ -183,8 +184,8 @@ const TONE = { expense: "expense", income: "income", investment: "investment" } 
 
 /** One keyboard-reachable row per entry: a button for personal entries, a link for shared ones. */
 function RowList({ rows, ledger, currency, onOpen }: { rows: ActivityRow[]; ledger: Ledger | null; currency: string | undefined; onOpen: ResultsProps["onOpen"] }) {
+  const today = useToday();
   if (rows.length === 0) return null;
-  const today = dateKey();
   const categories = new Map(ledger?.categories.map((category) => [category.id, category]));
   const accounts = new Map(ledger?.accounts.map((account) => [account.id, account.name]));
   return (

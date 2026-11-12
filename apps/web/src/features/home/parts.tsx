@@ -1,8 +1,9 @@
-import { dateKey, type Ledger, type Transaction } from "@domain/ledger.ts";
+import type { Ledger, Transaction } from "@domain/ledger.ts";
 import type { OverviewEntry } from "@domain/selectors/overview.ts";
 import { isExpectedIncome } from "@domain/summary.ts";
 import { Link } from "@tanstack/react-router";
 import { useId, type ReactNode } from "react";
+import { useToday } from "../../app/useToday";
 import { Badge, Button, cx } from "../../design/controls";
 import { Icon } from "../../design/Icon";
 import { Money } from "../../design/Money";
@@ -83,7 +84,7 @@ const TONE = { expense: "expense", income: "income", investment: "investment" } 
 export function EntryRows({ entries, ledger, currency, onOpen }: { entries: readonly OverviewEntry[]; ledger: Ledger; currency: string | undefined; onOpen: (entry: Transaction, opener: HTMLElement) => void }) {
   const categories = new Map(ledger.categories.map((category) => [category.id, category]));
   const accounts = new Map(ledger.accounts.map((account) => [account.id, account.name]));
-  const today = dateKey();
+  const today = useToday();
   return (
     <ul className="results home-rows">
       {entries.map((entry) => {

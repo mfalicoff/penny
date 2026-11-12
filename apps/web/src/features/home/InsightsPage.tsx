@@ -63,7 +63,7 @@ export function InsightsPage({ search }: { search: InsightsSearch }) {
               <dd>{previous ? spendingChange(report.recorded.expense - previous.recorded.expense, currency) : "…"}</dd>
             </div>
           </dl>
-          <MoneyFlowChart flow={report.flow} currency={currency} monthLabel={label} expectedIncome={report.expectedIncome} />
+          <MoneyFlowChart flow={report.flow} currency={currency} monthLabel={label} />
           <Panel title="Spending by category" className="insights__categories">
             {comparison.length ? (
               <div className="table-scroll">
