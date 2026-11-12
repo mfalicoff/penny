@@ -126,7 +126,7 @@ extension Penny {
 
     /// Back from More details to the form.
     func closeDetails() {
-        app.navigationBars.buttons.element(boundBy: 0).tap()
+        app.navigationBars.buttons.matching(identifier: "BackButton").firstMatch.tap()
     }
 
     /// Chooses the seeded photo in the system photo picker.
