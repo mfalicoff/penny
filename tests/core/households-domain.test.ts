@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import {
   activeMemberIds,
   calculateHouseholdSplits,
@@ -9,7 +10,9 @@ import {
   suggestReimbursements,
   type HouseholdMember,
   type HouseholdRecurring,
+  type HouseholdReimbursement,
   type SharedExpense,
+  type SplitInput,
 } from "../../src/domain/households.ts";
 
 function expense(
@@ -24,6 +27,28 @@ function expense(
     splits: calculateHouseholdSplits(totalCents, { mode: "equal", memberIds }),
   };
 }
+
+test("golden split fixtures shared with the .NET backend", () => {
+  const golden = JSON.parse(readFileSync(new URL("../../contracts/fixtures/shared-splits.json", import.meta.url), "utf8")) as {
+    cases: { name: string; totalCents: number; input: SplitInput; expected?: unknown; error?: true }[];
+  };
+  for (const item of golden.cases) {
+    if (item.error) assert.throws(() => calculateHouseholdSplits(item.totalCents, item.input), Error, item.name);
+    else assert.deepEqual(calculateHouseholdSplits(item.totalCents, item.input), item.expected, item.name);
+  }
+});
+
+test("golden monthly settlement fixtures shared with the .NET backend", () => {
+  const golden = JSON.parse(readFileSync(new URL("../../contracts/fixtures/settlement.json", import.meta.url), "utf8")) as {
+    cases: { name: string; month: string; expenses: SharedExpense[]; reimbursements: HouseholdReimbursement[]; expected: unknown }[];
+    suggestionErrors: { name: string; balances: { userId: string; balanceCents: number }[] }[];
+  };
+  for (const item of golden.cases) {
+    const balances = calculateMonthlyBalances(item.month, item.expenses, item.reimbursements);
+    assert.deepEqual({ balances, suggestions: suggestReimbursements(balances) }, item.expected, item.name);
+  }
+  for (const item of golden.suggestionErrors) assert.throws(() => suggestReimbursements(item.balances), Error, item.name);
+});
 
 test("equal splits give the remainder cent to stable member IDs", () => {
   assert.deepEqual(calculateHouseholdSplits(9000, { mode: "equal", memberIds: ["c", "a", "b"] }), [

@@ -1,0 +1,86 @@
+# Penny same-origin front end (MAZ-63, MAZ-97): the apps/web build and the /api/ proxy.
+# Rendered with envsubst; only PENNY_* names and NGINX_LOCAL_RESOLVERS are substituted, so
+# nginx variables such as $host stay intact.
+#   PENNY_API_UPSTREAM  host:port of the API container (default api:8080)
+#   PENNY_MAX_BODY      request body limit, a little above Backend__MaxRequestBodyBytes
+#   PENNY_REAL_IP_FROM  CIDR of an outer TLS proxy whose X-Forwarded-For is trusted
+#                       (default loopback only: the client address is the peer)
+
+server {
+    listen 8080;
+    listen [::]:8080;
+    server_name _;
+    server_tokens off;
+    root /usr/share/nginx/html;
+    client_max_body_size ${PENNY_MAX_BODY};
+
+    set_real_ip_from ${PENNY_REAL_IP_FROM};
+    real_ip_header X-Forwarded-For;
+    real_ip_recursive on;
+
+    # Liveness of nginx itself; the API's readiness stays at /api/ready.
+    location = /nginx-health {
+        access_log off;
+        default_type text/plain;
+        return 200 "ok\n";
+    }
+
+    # The API container's address changes when it is recreated or restarted, so the
+    # name is re-resolved through the container network's DNS (read from
+    # /etc/resolv.conf at start) instead of once at startup.
+    resolver ${NGINX_LOCAL_RESOLVERS} valid=10s ipv6=off;
+
+    location /api/ {
+        set $penny_api http://${PENNY_API_UPSTREAM};
+        proxy_pass $penny_api;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        # Replaced, not appended: the API trusts exactly one hop (this proxy), so a
+        # client cannot spoof its address for rate limiting.
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Request-Id $request_id;
+        # Uploads stream to the API, which enforces its own limit and timeout.
+        proxy_request_buffering off;
+        proxy_connect_timeout 5s;
+        proxy_read_timeout 330s;
+        proxy_send_timeout 330s;
+        proxy_intercept_errors off;
+    }
+
+    # Fingerprinted Vite bundles (scripts, styles, fonts, the pdf.js worker) never change.
+    # Without `always`, only successful responses are cached: a 404 for an asset that is not
+    # deployed yet must not be kept for a year.
+    location /assets/ {
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        add_header X-Content-Type-Options nosniff always;
+        try_files $uri =404;
+    }
+
+    # The retired Expo web export's bundles (MAZ-97). A tab opened before the upgrade gets a
+    # clean 404 for a lazy chunk instead of index.html served as a script, and recovers on
+    # reload. Its offline copy in localStorage is imported by the new app on the same origin.
+    location /_expo/ {
+        add_header Cache-Control "no-store" always;
+        return 404;
+    }
+
+    # The build that is serving (deploy/web/Dockerfile), for upgrade and rollback checks.
+    location = /version.json {
+        add_header Cache-Control "no-store" always;
+        add_header X-Content-Type-Options nosniff always;
+        try_files $uri =404;
+    }
+
+    # Single-page app: unknown paths render index.html, which is never cached, so a new
+    # release is picked up on the next navigation. Keep the policy in step with
+    # apps/web/scripts/security-headers.ts and nix/module.nix (apps/web/tests/security-headers.test.ts).
+    location / {
+        add_header Cache-Control "no-cache" always;
+        add_header X-Content-Type-Options nosniff always;
+        add_header X-Frame-Options DENY always;
+        add_header Referrer-Policy same-origin always;
+        add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'" always;
+        try_files $uri /index.html;
+    }
+}

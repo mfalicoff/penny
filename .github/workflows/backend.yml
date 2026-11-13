@@ -1,0 +1,152 @@
+name: Backend checks
+
+on:
+  pull_request:
+  push:
+    branches: [v2]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: .NET build, analyzers and PostgreSQL integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      NUGET_PACKAGES: ${{ github.workspace }}/.cache/backend/nuget
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: apps/backend/global.json
+          cache: true
+          cache-dependency-path: |
+            apps/backend/src/**/packages.lock.json
+            apps/backend/tests/**/packages.lock.json
+            apps/backend/Directory.Packages.props
+            apps/backend/src/Penny.Backend.AppHost/Penny.Backend.AppHost.csproj
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      # The search embedding model (MAZ-121) is pinned by SHA-256 in the script and
+      # never committed; the cache key follows the script, which holds the hashes.
+      - name: Cache search model
+        uses: actions/cache@v6
+        with:
+          path: .cache/backend/models
+          key: search-model-${{ hashFiles('apps/backend/development/download-model.mjs') }}
+      - name: Download and verify search model
+        run: node apps/backend/development/download-model.mjs
+      # Receipt text extraction (MAZ-125) is tested with the real local engines, run
+      # under prlimit (util-linux, preinstalled) like in production.
+      - name: Install OCR engine
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng tesseract-ocr-fra poppler-utils libvips-tools
+      - name: Restore pinned tools
+        run: bash apps/backend/dotnet.sh tool restore
+      - name: Restore locked packages
+        run: bash apps/backend/dotnet.sh restore Penny.Backend.slnx --locked-mode
+      - name: Check formatting
+        run: bash apps/backend/dotnet.sh csharpier check .
+      - name: Check analyzers
+        run: bash apps/backend/dotnet.sh format analyzers Penny.Backend.slnx --verify-no-changes --no-restore
+      - name: Build
+        run: bash apps/backend/dotnet.sh build Penny.Backend.slnx --configuration Release --no-restore
+      - name: Unit and real PostgreSQL integration tests
+        run: bash apps/backend/dotnet.sh test --solution Penny.Backend.slnx --configuration Release --no-build --no-restore --report-trx --results-directory ../../test-results/backend
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: backend-test-results
+          path: test-results/backend/
+          if-no-files-found: warn
+
+  legacy:
+    name: Legacy lint and typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+
+  fullstack:
+    name: Full-stack environment, fixtures and legacy comparison
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NUGET_PACKAGES: ${{ github.workspace }}/.cache/backend/nuget
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: apps/backend/global.json
+          cache: true
+          cache-dependency-path: |
+            apps/backend/src/**/packages.lock.json
+            apps/backend/tests/**/packages.lock.json
+            apps/backend/Directory.Packages.props
+            apps/backend/src/Penny.Backend.AppHost/Penny.Backend.AppHost.csproj
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Cache search model
+        uses: actions/cache@v6
+        with:
+          path: .cache/backend/models
+          key: search-model-${{ hashFiles('apps/backend/development/download-model.mjs') }}
+      - name: Download and verify search model
+        run: node apps/backend/development/download-model.mjs
+      - name: Restore locked packages
+        run: bash apps/backend/dotnet.sh restore Penny.Backend.slnx --locked-mode
+      - name: Golden fixtures are current
+        run: npm run fixtures:check
+      # The cutover suite runs receipts-ocr on the imported receipts (MAZ-125).
+      - name: Install OCR engine
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng tesseract-ocr-fra poppler-utils libvips-tools
+      # Isolated PostgreSQL + API per test, seeds, OIDC, crash cleanup and the legacy
+      # Node/SQLite differential journey (MAZ-62).
+      - name: Full-stack environment suite
+        run: npm run test:fullstack
+      - name: Remove leftover environments
+        if: always()
+        run: node scripts/test-env/penny-env.mjs down --all
+      - name: Upload environment artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: fullstack-artifacts
+          path: test-results/fullstack/
+          if-no-files-found: ignore
+
+  swift-contracts:
+    name: Swift contract fixtures
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Swift 6.2 (Ubuntu 24.04), pinned by digest.
+    container: docker.io/library/swift:6.2-noble@sha256:22edf4bb29f6d43ad77bfdb1757666992d63a50ab124c41176f8c8c44ab69855
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Decode fixtures strictly and verify manifest hashes
+        run: swift test --package-path contracts/swift

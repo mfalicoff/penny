@@ -1,0 +1,677 @@
+/*
+ * The signed-in shell (MAZ-85). One DOM, three layouts:
+ *
+ *   < 768px      compact top bar + bottom tab bar; navigation in a "More" drawer
+ *   768–1099px   icon rail + top bar
+ *   ≥ 1100px     full sidebar (labels, sections, shortcuts) + top bar
+ *
+ * 768 and 1100 are the design proposal's breakpoints. They were checked against real content
+ * (long names, 200% zoom, the settings two-pane layout) rather than taken as fixed; see the
+ * README's "Responsive layout" section before moving them.
+ */
+
+.skip-link {
+  position: absolute;
+  inset-inline-start: var(--pk-gutter);
+  top: -100px;
+  z-index: 40;
+  padding: 8px 12px;
+  border-radius: var(--pk-r-field);
+  background: var(--pk-surface);
+  color: var(--pk-label);
+}
+
+.skip-link:focus {
+  top: 8px;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 100dvh;
+}
+
+.app__column {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.app__column > .pk-banner {
+  margin: 0 var(--pk-gutter);
+}
+
+.app__main {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  /* The hero glow bleeds past the content box by design; never into a horizontal scrollbar. */
+  overflow-x: clip;
+  padding: 4px var(--pk-gutter) calc(96px + env(safe-area-inset-bottom));
+  outline: none;
+}
+
+.page {
+  position: relative;
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* ---------- logo + brand ---------- */
+.logo {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: var(--pk-tint);
+  color: #fff;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 10px 14px;
+  color: var(--pk-label);
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  text-decoration: none;
+}
+
+/* ---------- top bar ---------- */
+.topbar {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 60px;
+  padding: 10px var(--pk-gutter) 0;
+}
+
+.topbar__brand {
+  display: inline-flex;
+  border-radius: 9px;
+}
+
+.topbar__title {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topbar__spacer {
+  flex: 1;
+}
+
+.topsearch {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  width: min(280px, 32vw);
+  height: 36px;
+  padding: 0 8px 0 12px;
+  border-radius: 10px;
+  background: var(--pk-fill);
+  color: var(--pk-label-2);
+}
+
+.topsearch:focus-within {
+  outline: 2px solid var(--pk-tint);
+  outline-offset: 2px;
+}
+
+.topsearch input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--pk-label);
+  font: inherit;
+  font-size: 0.875rem;
+  outline: none;
+}
+
+.topsearch input::placeholder {
+  color: var(--pk-label-2);
+}
+
+.topsearch .pk-kbd {
+  background: var(--pk-surface);
+}
+
+/* Narrow: the + keeps its accessible name but shows only the icon. */
+.topbar__add .topbar__add-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.topbar__add {
+  width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border-radius: 22px;
+}
+
+.topbar__add .pk-kbd {
+  display: none;
+}
+
+/* ---------- sidebar ---------- */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 18px 12px;
+}
+
+.sidebar--rail {
+  display: none;
+}
+
+.sidebar__nav {
+  display: grid;
+  gap: 4px;
+}
+
+.sidebar__heading {
+  margin: 0;
+  padding: 14px 10px 6px;
+  color: var(--pk-label-2);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.sidebar__list {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.navlink {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 40px;
+  padding: 0 10px;
+  border-radius: 10px;
+  color: var(--pk-label);
+  font-size: 0.906rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.navlink .icon {
+  color: var(--pk-label-2);
+}
+
+.navlink:hover {
+  background: var(--pk-fill);
+}
+
+.navlink[aria-current="page"],
+.navlink[aria-current="page"]:hover {
+  background: var(--pk-surface);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.08);
+  font-weight: 600;
+}
+
+.navlink[aria-current="page"] .icon {
+  color: var(--pk-tint);
+}
+
+.navlink .pk-kbd {
+  margin-inline-start: auto;
+}
+
+.navlink__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar__foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto;
+  padding: 16px 6px 0;
+}
+
+.sidebar__account {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebar__email {
+  overflow: hidden;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.server-status {
+  margin: 0;
+  overflow: hidden;
+  color: var(--pk-label-2);
+  font-size: 0.75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.server-status--error {
+  color: var(--pk-danger);
+}
+
+.iconlink {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  color: var(--pk-label-2);
+}
+
+.iconlink:hover,
+.iconlink[aria-current="page"] {
+  background: var(--pk-fill);
+  color: var(--pk-tint);
+}
+
+/* ---------- phone tab bar ---------- */
+.tabbar {
+  position: fixed;
+  z-index: 10;
+  inset-inline: 12px;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  border-radius: 31px;
+}
+
+.tabbar ul {
+  display: flex;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+}
+
+.tabbar li {
+  flex: 1;
+  min-width: 0;
+}
+
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 100%;
+  min-height: 52px;
+  padding: 0 2px;
+  border: 0;
+  border-radius: 26px;
+  background: none;
+  color: var(--pk-label);
+  font: 600 0.66rem var(--pk-font);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.tab span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tab[aria-current="page"] {
+  background: var(--pk-fill);
+  color: var(--pk-tint-text);
+}
+
+/* Toasts sit above the tab bar on phones. */
+.toast-region {
+  bottom: calc(92px + env(safe-area-inset-bottom));
+}
+
+/*
+ * While a toast shows, reserve its height below the content too, so the last rows can scroll
+ * clear of it and stay tappable (MAZ-162). Only the toast itself takes pointer events; the
+ * region around it lets taps through.
+ */
+body:has(.pk-toast) .app__main {
+  padding-bottom: calc(172px + env(safe-area-inset-bottom));
+}
+
+/* ---------- navigation drawer (phones) ---------- */
+.dialog:has(> .drawer) {
+  place-items: stretch start;
+  padding: 0;
+}
+
+.dialog__panel.drawer {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: min(320px, 88vw);
+  height: 100%;
+  padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+  overflow-y: auto;
+  border-radius: 0 22px 22px 0;
+  animation: drawer-in 0.2s ease-out;
+}
+
+.drawer__head {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 8px 0;
+}
+
+.drawer__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.drawer .sidebar {
+  flex: 1;
+  padding-top: 0;
+}
+
+@keyframes drawer-in {
+  from {
+    transform: translateX(-24px);
+    opacity: 0;
+  }
+}
+
+/* ---------- hero glow (Home) ---------- */
+.glow {
+  position: absolute;
+  inset: -160px -40px auto;
+  z-index: -1;
+  height: 420px;
+  background: var(--pk-glow-copper);
+  filter: blur(50px);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* ---------- settings ---------- */
+.settings {
+  display: grid;
+  gap: 16px;
+  align-items: start;
+}
+
+.settings__nav ul {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 6px;
+  border-radius: var(--pk-r-card);
+  background: var(--pk-surface);
+  list-style: none;
+}
+
+.settings__link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 0 12px;
+  border-radius: 12px;
+  color: var(--pk-label);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.settings__link .icon:first-child {
+  color: var(--pk-label-2);
+}
+
+.settings__link .icon:last-child {
+  margin-inline-start: auto;
+  color: var(--pk-label-3);
+}
+
+.settings__link:hover {
+  background: var(--pk-fill);
+}
+
+.settings__link[aria-current="page"] {
+  background: var(--pk-tint-soft);
+  color: var(--pk-tint-text);
+  font-weight: 600;
+}
+
+.settings__link[aria-current="page"] .icon:first-child {
+  color: var(--pk-tint);
+}
+
+.settings__pane {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.settings__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  justify-self: start;
+  min-height: 44px;
+  color: var(--pk-tint-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* Phones: the list is its own page; a section replaces it, with a back link. */
+.settings--section .settings__nav {
+  display: none;
+}
+
+/* ---------- medium: icon rail ---------- */
+@media (min-width: 768px) {
+  .app {
+    grid-template-columns: 76px minmax(0, 1fr);
+  }
+
+  .app__main {
+    padding: 8px 28px 48px;
+  }
+
+  .topbar {
+    padding: 18px 28px 0;
+  }
+
+  .topbar__brand,
+  .tabbar {
+    display: none;
+  }
+
+  .toast-region {
+    bottom: calc(20px + env(safe-area-inset-bottom));
+  }
+
+  body:has(.pk-toast) .app__main {
+    padding-bottom: calc(100px + env(safe-area-inset-bottom));
+  }
+
+  .topbar__title {
+    font-size: 1.75rem;
+  }
+
+  .topsearch {
+    display: flex;
+  }
+
+  .topbar__add {
+    width: auto;
+    min-height: 36px;
+    padding: 0 14px;
+    border-radius: 10px;
+  }
+
+  .topbar__add .topbar__add-label {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+  }
+
+  .topbar__add .pk-kbd {
+    display: inline;
+  }
+
+  .app__column > .pk-banner {
+    margin: 0 28px;
+  }
+
+  .sidebar--rail {
+    position: sticky;
+    top: 0;
+    display: flex;
+    height: 100dvh;
+    overflow-y: auto;
+    padding: 18px 10px;
+    border-inline-end: 0.5px solid var(--pk-separator);
+    background: color-mix(in srgb, var(--pk-surface) 55%, var(--pk-bg));
+  }
+
+  /* Rail: icons only. Labels stay in the accessibility tree. */
+  .sidebar--rail .brand__name,
+  .sidebar--rail .navlink__label,
+  .sidebar--rail .sidebar__heading,
+  .sidebar--rail .navlink .pk-kbd,
+  .sidebar--rail .sidebar__account {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .sidebar--rail .brand {
+    justify-content: center;
+    padding: 4px 0 14px;
+  }
+
+  .sidebar--rail .navlink {
+    justify-content: center;
+    min-height: 44px;
+    padding: 0;
+  }
+
+  .sidebar--rail .sidebar__section + .sidebar__section {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 0.5px solid var(--pk-separator);
+  }
+
+  .sidebar--rail .sidebar__foot {
+    flex-direction: column;
+    padding: 12px 0 0;
+  }
+
+  .settings {
+    grid-template-columns: minmax(200px, 260px) minmax(0, 1fr);
+  }
+
+  .settings--section .settings__nav {
+    display: block;
+  }
+
+  .settings__back {
+    display: none;
+  }
+}
+
+/* ---------- wide: full sidebar ---------- */
+@media (min-width: 1100px) {
+  .app {
+    grid-template-columns: 248px minmax(0, 1fr);
+  }
+
+  .app__main {
+    padding: 8px 32px 48px;
+  }
+
+  .topbar {
+    padding: 18px 32px 0;
+  }
+
+  .app__column > .pk-banner {
+    margin: 0 32px;
+  }
+
+  .sidebar--rail {
+    padding: 18px 12px;
+  }
+
+  .sidebar--rail .brand__name,
+  .sidebar--rail .navlink__label,
+  .sidebar--rail .sidebar__heading,
+  .sidebar--rail .navlink .pk-kbd,
+  .sidebar--rail .sidebar__account {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: hidden;
+    clip-path: none;
+  }
+
+  .sidebar--rail .brand {
+    justify-content: flex-start;
+    padding: 4px 10px 14px;
+  }
+
+  .sidebar--rail .navlink {
+    justify-content: flex-start;
+    min-height: 36px;
+    padding: 0 10px;
+  }
+
+  .sidebar--rail .sidebar__section + .sidebar__section {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .sidebar--rail .sidebar__foot {
+    flex-direction: row;
+    padding: 16px 6px 0;
+  }
+}
+
+@media (pointer: coarse) {
+  .navlink {
+    min-height: 44px;
+  }
+}

@@ -1,0 +1,810 @@
+{
+  "version": 2,
+  "description": "Deterministic data states for the 61 redesign cards in contracts/design-baseline.json (docs/design/penny-ios, MAZ-132). Each names a full-stack-seeds.json scenario and alias (or a client-only state), the view to open at the scenario clock, the appearances to capture (light and dark unless the card pins one) and any injected fault or stale write. Clients capture these against a test environment; MAZ-122 owns the visual comparison.",
+  "clock": "2026-10-15T12:00:00Z",
+  "palettes": [
+    "light",
+    "dark"
+  ],
+  "totals": {
+    "alex-2026-10": {
+      "description": "alex, October 2026 at the scenario clock (2026-10-15 in UTC). Recorded (Left to spend) counts entries dated in the month on or before today (personal shares plus recorded shared shares); none of alex's income is dated after today. Projected adds the month's scheduled personal and shared occurrences after today. Income and spending are not an account balance.",
+      "clock": "2026-10-15T12:00:00Z",
+      "timeZone": "UTC",
+      "today": "2026-10-15",
+      "recorded": {
+        "expenseCents": 125950,
+        "incomeCents": 0,
+        "investmentCents": 50000
+      },
+      "expected": [],
+      "scheduled": [
+        {
+          "source": "shared",
+          "title": "Streaming",
+          "date": "2026-10-20",
+          "shareCents": 800
+        },
+        {
+          "source": "personal",
+          "title": "Gym",
+          "date": "2026-10-31",
+          "shareCents": 4000
+        }
+      ],
+      "projected": {
+        "expenseCents": 130750,
+        "incomeCents": 0,
+        "investmentCents": 50000
+      }
+    },
+    "dana-2026-10": {
+      "description": "dana (future-income scenario), October 2026 in America/Toronto (MAZ-136). At 02:30 UTC on Oct 16 it is still Oct 15 in Toronto. Recorded (Left to spend) counts income dated on or before today and every expense dated in the month, including the future-dated concert tickets (expenses and investments are out of scope, MAZ-139). Income dated after today is expected: it counts toward Projected, with the scheduled pay, until its date.",
+      "clock": "2026-10-16T02:30:00Z",
+      "timeZone": "America/Toronto",
+      "today": "2026-10-15",
+      "recorded": {
+        "expenseCents": 129000,
+        "incomeCents": 290000,
+        "investmentCents": 0
+      },
+      "expected": [
+        {
+          "title": "Freelance invoice",
+          "date": "2026-10-16",
+          "shareCents": 60000
+        },
+        {
+          "title": "Tax refund",
+          "date": "2026-10-28",
+          "shareCents": 2500
+        }
+      ],
+      "scheduled": [
+        {
+          "source": "personal",
+          "title": "Pay",
+          "date": "2026-10-30",
+          "shareCents": 200000
+        }
+      ],
+      "projected": {
+        "expenseCents": 129000,
+        "incomeCents": 552500,
+        "investmentCents": 0
+      }
+    }
+  },
+  "states": [
+    {
+      "specimen": "system-foundations",
+      "platform": "System",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": null,
+      "client": "static",
+      "view": "token and component reference (no data)"
+    },
+    {
+      "specimen": "system-widgets",
+      "platform": "System",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "Home and Lock Screen widgets, October 2026",
+      "totals": "alex-2026-10"
+    },
+    {
+      "specimen": "iphone-home",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "home, October 2026",
+      "totals": "alex-2026-10"
+    },
+    {
+      "specimen": "iphone-home-dark",
+      "platform": "iPhone",
+      "appearances": [
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "home, October 2026",
+      "totals": "alex-2026-10"
+    },
+    {
+      "specimen": "iphone-money-flow",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "money flow, September 2026 (salary income and spending)"
+    },
+    {
+      "specimen": "iphone-insights",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "insights, October 2026",
+      "totals": "alex-2026-10"
+    },
+    {
+      "specimen": "iphone-calendar",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "month calendar, October 2026"
+    },
+    {
+      "specimen": "iphone-activity",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "activity list, October 2026"
+    },
+    {
+      "specimen": "iphone-search-empty",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "empty",
+      "as": "solo",
+      "view": "search with no results",
+      "search": {
+        "query": "zzzz"
+      }
+    },
+    {
+      "specimen": "iphone-add-expense",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "new expense draft"
+    },
+    {
+      "specimen": "iphone-add-income",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "new income draft"
+    },
+    {
+      "specimen": "iphone-entry-extras",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "entry draft with receipt, repeat and trip rows open"
+    },
+    {
+      "specimen": "iphone-split",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "entry draft with a 50% personal share"
+    },
+    {
+      "specimen": "iphone-category-picker",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "category picker with renamed Groceries & dining"
+    },
+    {
+      "specimen": "iphone-entry-detail",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "entry p-party (trip and shared personal share)"
+    },
+    {
+      "specimen": "iphone-receipt",
+      "platform": "iPhone",
+      "appearances": [
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "receipt viewer",
+      "blockedBy": "full-stack-seeds.json has no receipt yet; MAZ-78/94 add one (MAZ-60 ported the API)"
+    },
+    {
+      "specimen": "iphone-delete-confirm",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "delete p-coffee-2 confirmation"
+    },
+    {
+      "specimen": "iphone-shared-list",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "shared households and trips list"
+    },
+    {
+      "specimen": "iphone-shared",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "household Maison"
+    },
+    {
+      "specimen": "iphone-shared-balances",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "Maison balances, October 2026 (alex owes bea)",
+      "month": "2026-10"
+    },
+    {
+      "specimen": "iphone-shared-people",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "Maison people: alex, bea, former member cam"
+    },
+    {
+      "specimen": "iphone-shared-expense-add",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "new shared expense draft in Maison"
+    },
+    {
+      "specimen": "iphone-record-payment",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "bea",
+      "view": "record alex's share of Internet"
+    },
+    {
+      "specimen": "iphone-payment-stale",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "bea",
+      "view": "a second device records alex's Internet share with the revision it read before the first payment",
+      "staleWrite": {
+        "method": "POST",
+        "path": "/api/households/$household:maison/expenses/$expense:internet/payments",
+        "requests": [
+          {
+            "body": {
+              "fromUserId": "$user:alex",
+              "revision": 0
+            },
+            "expectStatus": 201
+          },
+          {
+            "body": {
+              "fromUserId": "$user:alex",
+              "revision": 0
+            },
+            "expectStatus": 409,
+            "expectError": "Expense changed. Refresh and try again."
+          }
+        ]
+      }
+    },
+    {
+      "specimen": "iphone-household-create",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "empty",
+      "as": "solo",
+      "view": "create household form"
+    },
+    {
+      "specimen": "iphone-history",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "Maison audit history"
+    },
+    {
+      "specimen": "iphone-trips",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "trips: Qu\u00e9bec weekend (personal) and Lisbon trip (shared)"
+    },
+    {
+      "specimen": "iphone-trip-detail",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "shared trip Lisbon"
+    },
+    {
+      "specimen": "iphone-trip-form",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "new trip form"
+    },
+    {
+      "specimen": "iphone-settings",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "settings sheet"
+    },
+    {
+      "specimen": "iphone-recurring",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "recurring: Gym and paused Magazine, shared Streaming"
+    },
+    {
+      "specimen": "iphone-schedule-detail",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "schedule Gym (anchor 31)"
+    },
+    {
+      "specimen": "iphone-accounts",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "accounts: Everyday chequing and Visa"
+    },
+    {
+      "specimen": "iphone-account-form",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "new account form"
+    },
+    {
+      "specimen": "iphone-categories",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "categories by kind"
+    },
+    {
+      "specimen": "iphone-category-form",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "new category form"
+    },
+    {
+      "specimen": "iphone-appearance",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "appearance: light, dark and system"
+    },
+    {
+      "specimen": "iphone-app-lock",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "app lock settings"
+    },
+    {
+      "specimen": "iphone-sign-in",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "empty",
+      "as": "solo",
+      "client": "signed-out",
+      "view": "password sign-in"
+    },
+    {
+      "specimen": "iphone-create-account",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": null,
+      "client": "signed-out",
+      "view": "registration (unique test user)"
+    },
+    {
+      "specimen": "iphone-server-connect",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": null,
+      "client": "signed-out",
+      "view": "server URL entry (environment API URL)"
+    },
+    {
+      "specimen": "iphone-lock",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "app lock over home"
+    },
+    {
+      "specimen": "iphone-empty-home",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "empty",
+      "as": "solo",
+      "view": "home, October 2026, no entries"
+    },
+    {
+      "specimen": "iphone-offline",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "home while the network fails",
+      "fault": {
+        "target": "http",
+        "abort": true
+      }
+    },
+    {
+      "specimen": "iphone-save-error",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "failed save of an entry edit",
+      "fault": {
+        "target": "http",
+        "method": "PUT",
+        "pathPrefix": "/api/ledger",
+        "status": 503,
+        "times": 1
+      },
+      "expect": {
+        "status": 503,
+        "retryStatus": 200
+      }
+    },
+    {
+      "specimen": "iphone-saved-toast",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "save succeeded after retry",
+      "fault": {
+        "target": "http",
+        "method": "PUT",
+        "pathPrefix": "/api/ledger",
+        "status": 503,
+        "times": 1
+      },
+      "expect": {
+        "status": 503,
+        "retryStatus": 200
+      }
+    },
+    {
+      "specimen": "iphone-sign-out",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "sign out confirmation with no pending changes"
+    },
+    {
+      "specimen": "ipad-home",
+      "platform": "iPad",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "iPad home dashboard, October 2026",
+      "totals": "alex-2026-10"
+    },
+    {
+      "specimen": "ipad-activity",
+      "platform": "iPad",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "iPad activity list with entry p-party in the detail pane"
+    },
+    {
+      "specimen": "ipad-add-entry",
+      "platform": "iPad",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "iPad new expense form sheet"
+    },
+    {
+      "specimen": "ipad-shared",
+      "platform": "iPad",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "iPad household Maison"
+    },
+    {
+      "specimen": "ipad-trip",
+      "platform": "iPad",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "iPad shared trip Lisbon"
+    },
+    {
+      "specimen": "ipad-settings",
+      "platform": "iPad",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "iPad settings"
+    },
+    {
+      "specimen": "web-home",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web home dashboard, October 2026",
+      "totals": "alex-2026-10"
+    },
+    {
+      "specimen": "web-activity",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web activity table with entry p-party in the detail panel"
+    },
+    {
+      "specimen": "web-insights",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web insights and money flow, September 2026 (salary income and spending)"
+    },
+    {
+      "specimen": "web-household",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web household Maison, October 2026",
+      "month": "2026-10"
+    },
+    {
+      "specimen": "web-trips",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web trips: Lisbon trip (shared) and Qu\u00e9bec weekend (personal)"
+    },
+    {
+      "specimen": "web-settings",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web settings"
+    },
+    {
+      "specimen": "web-add-entry",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web new expense dialog"
+    },
+    {
+      "specimen": "web-sign-in",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "empty",
+      "as": "solo",
+      "client": "signed-out",
+      "view": "web password sign-in"
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+<!-- @dsCard group="Web" name="Add entry dialog" viewport="1520x980" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · Web · Add entry</title>
+<link rel="stylesheet" href="../assets/penny.css"><link rel="stylesheet" href="../assets/web.css">
+<script src="../assets/icons.js"></script><script src="../assets/sankey.js"></script><script src="../assets/web.js"></script>
+<style>
+  .modal { left: 50%; top: 120px; transform: translateX(-50%); width: 760px; }
+  .mb { display: grid; grid-template-columns: 1fr 1fr; }
+  .mb > div { padding: 18px; }
+  .mb > div + div { border-left: .5px solid var(--separator); background: var(--surface-2); }
+  .seg { display: flex; background: var(--fill); border-radius: 10px; padding: 3px; height: 34px; }
+  .seg div { flex: 1; display: grid; place-items: center; font-size: 13.5px; font-weight: 600; border-radius: 8px; }
+  .seg .on { background: var(--surface); box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+  .amtin { margin-top: 18px; font-size: 52px; font-weight: 700; letter-spacing: -0.04em; }
+  .amtin .c { opacity: .35; } .amtin .caret { display: inline-block; width: 3px; height: 44px; background: var(--tint); vertical-align: -5px; margin-left: 3px; border-radius: 2px; }
+  .field { margin-top: 12px; height: 40px; border-radius: 10px; background: var(--surface-2); box-shadow: inset 0 0 0 .5px var(--separator); display: flex; align-items: center; padding: 0 12px; font-size: 15px; }
+  .lab { font-size: 12px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .04em; margin: 16px 0 8px; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chips .wchip [data-i] { width: 14px; height: 14px; }
+  .drow { display: flex; align-items: center; gap: 10px; height: 42px; border-top: .5px solid var(--separator); font-size: 14.5px; }
+  .drow:first-child { border-top: 0; }
+  .drow [data-i] { width: 17px; height: 17px; color: var(--label-2); }
+  .drow .v { margin-left: auto; color: var(--label-2); display: flex; align-items: center; gap: 4px; }
+  .drow .v b { color: var(--tint-text); }
+  .drop { margin-top: 12px; height: 74px; border-radius: 12px; border: 1.5px dashed var(--label-3); display: grid; place-items: center; font-size: 13px; color: var(--label-2); }
+</style></head>
+<body class="canvas">
+<div class="browser" data-active="activity" data-url="penny.example.com/activity?new=expense">
+  <main class="wmain">
+    <div class="wtop"><h1>Activity</h1><div class="sp"></div>
+      <div class="wsearch"><i data-i="search"></i>Search entries<kbd>⌘K</kbd></div>
+      <div class="btn primary"><i data-i="add"></i>Add entry <kbd>N</kbd></div></div>
+  </main>
+  <div class="scrimw"></div>
+  <div class="modal">
+    <div class="mh"><h3>New entry</h3><div class="seg" style="width:260px"><div class="on">Expense</div><div>Income</div><div>Invest</div></div><div class="btn icon" style="margin-left:8px"><i data-i="close"></i></div></div>
+    <div class="mb">
+      <div>
+        <div class="amtin num"><span class="c">$</span>74.40<span class="caret"></span></div>
+        <div class="field">Dinner with friends</div>
+        <div class="lab">Category</div>
+        <div class="chips">
+          <span class="wchip" style="background:var(--c-food);color:#fff"><i data-i="cafe"></i>Food &amp; drinks</span>
+          <span class="wchip"><i data-i="basket"></i>Groceries</span><span class="wchip"><i data-i="bus"></i>Transport</span><span class="wchip"><i data-i="home"></i>Home</span><span class="wchip">All…</span>
+        </div>
+      </div>
+      <div>
+        <div class="drow"><i data-i="calendar"></i>Date<span class="v">Today, Nov 9 <i data-i="chevron-down" style="width:13px;height:13px"></i></span></div>
+        <div class="drow"><i data-i="card"></i>Account<span class="v">Visa <i data-i="chevron-down" style="width:13px;height:13px"></i></span></div>
+        <div class="drow"><i data-i="people"></i>Split<span class="v">3 people · <b class="num">$24.80</b> yours</span></div>
+        <div class="drow"><i data-i="repeat"></i>Repeat<span class="v">Never</span></div>
+        <div class="drow"><i data-i="airplane"></i>Trip<span class="v">None</span></div>
+        <div class="drop"><span style="display:flex;gap:6px;align-items:center"><i data-i="receipt" style="width:16px;height:16px"></i>Drop a receipt or <b style="color:var(--tint-text)">browse</b></span></div>
+      </div>
+    </div>
+    <div class="mf"><span class="hint"><kbd>Tab</kbd> next field · <kbd>⌘↵</kbd> save · <kbd>Esc</kbd> cancel</span><span style="flex:1"></span><span class="btn">Cancel</span><span class="btn primary">Add expense <kbd>⌘↵</kbd></span></div>
+  </div>
+</div>
+</body></html>

@@ -1,0 +1,11 @@
+# Prometheus for local development (MAZ-138). Metrics arrive from Alloy through the native
+# OTLP receiver; nothing is scraped. The resource attributes Grafana filters on become labels.
+global:
+  evaluation_interval: 30s
+
+otlp:
+  promote_resource_attributes:
+    - service.name
+    - service.instance.id
+    - service.namespace
+    - deployment.environment.name

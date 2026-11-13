@@ -29,7 +29,8 @@ export type Transaction = {
   total: number;
   share: number;
   categoryId: string;
-  accountId?: string;
+  // `| undefined`: materialized occurrences copy an absent rule account as undefined (apps/web compiles this module with exactOptionalPropertyTypes).
+  accountId?: string | undefined;
   tripId?: string;
   date: string;
   note: string;

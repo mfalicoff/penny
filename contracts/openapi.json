@@ -1,0 +1,6599 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Penny legacy compatibility API",
+    "version": "1.5.0",
+    "description": "MAZ-50 compatibility baseline audited against master 0e58a8b on 2026-11-07. Existing routes are implemented in Node/SQLite; operations marked `backend` exist only in the .NET backend: password reset (MAZ-123) and search v1 (MAZ-121). See docs/migration/.",
+    "license": {
+      "name": "MIT",
+      "identifier": "MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    },
+    {
+      "sessionCookie": []
+    }
+  ],
+  "paths": {
+    "/api/health": {
+      "get": {
+        "summary": "Health check",
+        "operationId": "getApiHealth",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "x-implementation": "legacy"
+      }
+    },
+    "/api/auth/oidc": {
+      "get": {
+        "summary": "OIDC availability",
+        "operationId": "getApiAuthOidc",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OidcConfig"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "x-implementation": "legacy"
+      }
+    },
+    "/api/auth/oidc/start": {
+      "post": {
+        "summary": "Begin OIDC sign-in",
+        "operationId": "postApiAuthOidcStart",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OidcChallenge"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or unsupported legacy write.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found or not visible to this account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON request body too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OidcStart"
+              }
+            }
+          }
+        },
+        "x-implementation": "legacy"
+      }
+    },
+    "/api/auth/oidc/complete": {
+      "post": {
+        "summary": "Complete OIDC sign-in",
+        "operationId": "postApiAuthOidcComplete",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Session"
+                }
+              }
+            },
+            "headers": {
+              "Set-Cookie": {
+                "description": "penny_session; HttpOnly; SameSite=Lax; Path=/api; Max-Age=2592000. Secure is set when configured.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or unsupported legacy write.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found or not visible to this account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON request body too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OidcComplete"
+              }
+            }
+          }
+        },
+        "x-implementation": "legacy"
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "summary": "Register an account",
+        "operationId": "postApiAuthRegister",
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Session"
+                }
+              }
+            },
+            "headers": {
+              "Set-Cookie": {
+                "description": "penny_session; HttpOnly; SameSite=Lax; Path=/api; Max-Age=2592000. Secure is set when configured.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or unsupported legacy write.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision or domain conflict.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON request body too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Credentials"
+              }
+            }
+          }
+        },
+        "x-implementation": "legacy"
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "summary": "Create a session",
+        "operationId": "postApiAuthLogin",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Session"
+                }
+              }
+            },
+            "headers": {
+              "Set-Cookie": {
+                "description": "penny_session; HttpOnly; SameSite=Lax; Path=/api; Max-Age=2592000. Secure is set when configured.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or unsupported legacy write.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON request body too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Credentials"
+              }
+            }
+          }
+        },
+        "x-implementation": "legacy"
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "summary": "Current account",
+        "operationId": "getApiAuthMe",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-implementation": "legacy"
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "summary": "Revoke current session",
+        "operationId": "postApiAuthLogout",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-implementation": "legacy"
+      }
+    },
+    "/api/auth/password-reset": {
+      "post": {
+        "summary": "Redeem an operator-issued password reset code",
+        "operationId": "postApiAuthPasswordReset",
+        "description": "MAZ-123, .NET backend only (Node does not implement it). A server operator issues a single-use code with the `reset-password EMAIL` maintenance command and delivers it out of band; there is no email delivery. Redeeming it stores the new password as an ASP.NET Core Identity hash and revokes every session of the account; no session is issued, so the user then signs in normally. The request names no email, so responses never reveal whether an account exists. Unknown, malformed, used, superseded and expired codes share one 400 message. Shares the sign-in rate limit; the origin policy applies. See docs/migration/authentication.md#password-reset.",
+        "x-implementation": "backend",
+        "x-owner": "MAZ-123",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordReset"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password replaced and all sessions revoked.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`This reset code is invalid or has expired.` for any unusable code, `Enter a password of 10–256 characters.` for an invalid password (the code stays usable), or `Invalid JSON.`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON request body too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded (shared with sign-in).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ledger": {
+      "get": {
+        "summary": "Read personal ledger",
+        "operationId": "getApiLedger",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Snapshot"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-implementation": "legacy"
+      },
+      "put": {
+        "summary": "Atomic personal ledger write",
+        "operationId": "putApiLedger",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Snapshot"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or unsupported legacy write.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision or domain conflict.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON request body too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Snapshot"
+              }
+            }
+          }
+        },
+        "x-implementation": "legacy"
+      }
+    },
+    "/api/receipts": {
+      "post": {
+        "summary": "Upload receipt",
+        "operationId": "postApiReceipts",
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Receipt"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or unsupported legacy write.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON request body too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReceiptUpload"
+              }
+            }
+          }
+        },
+        "x-implementation": "legacy"
+      }
+    },
+    "/api/receipts/{id}": {
+      "get": {
+        "summary": "Read receipt bytes",
+        "operationId": "getApiReceiptsId",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/pdf": {},
+              "image/jpeg": {},
+              "image/png": {},
+              "image/webp": {},
+              "image/gif": {},
+              "image/heic": {},
+              "image/heif": {}
+            },
+            "headers": {
+              "Content-Disposition": {
+                "description": "Inline UTF-8 filename.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Content-Security-Policy": {
+                "description": "default-src none; sandbox.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or unsupported legacy write.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found or not visible to this account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          }
+        ],
+        "x-implementation": "legacy"
+      }
+    },
+    "/api/push/devices": {
+      "post": {
+        "summary": "Register Expo or APNs push device",
+        "operationId": "postApiPushDevices",
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or unsupported legacy write.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON request body too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushDevice"
+              }
+            }
+          }
+        },
+        "x-implementation": "legacy"
+      },
+      "delete": {
+        "summary": "Remove push device",
+        "operationId": "deleteApiPushDevices",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or unsupported legacy write.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision or domain conflict.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON request body too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushRemove"
+              }
+            }
+          }
+        },
+        "x-implementation": "legacy"
+      }
+    },
+    "/api/households/projection": {
+      "get": {
+        "summary": "Read personal shared-expense projection",
+        "operationId": "getApiHouseholdsProjection",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "transactions": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ProjectedExpense"
+                      }
+                    },
+                    "scheduled": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ProjectedExpense"
+                      }
+                    }
+                  },
+                  "required": [
+                    "transactions",
+                    "scheduled"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or unsupported legacy write.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "month",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-(0[1-9]|1[0-2])$"
+            }
+          },
+          {
+            "name": "year",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}$"
+            }
+          }
+        ],
+        "x-implementation": "legacy"
+      }
+    },
+    "/api/households/join": {
+      "post": {
+        "summary": "Join with invite",
+        "operationId": "postApiHouseholdsJoin",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "household": {
+                      "$ref": "#/components/schemas/Household"
+                    }
+                  },
+                  "required": [
+                    "household"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or unsupported legacy write.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision or domain conflict.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON request body too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Join"
+              }
+            }
+          }
+        },
+        "x-implementation": "legacy"
+      }
+    },
+    "/api/households/trips": {
+      "post": {
+        "summary": "Create shared trip",
+        "operationId": "postApiHouseholdsTrips",
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "household": {
+                      "$ref": "#/components/schemas/Household"
+                    }
+                  },
+                  "required": [
+                    "household"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or unsupported legacy write.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON request body too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TripInput"
+              }
+            }
+          }
+        },
+        "x-implementation": "legacy"
+      }
+    },
+    "/api/households": {
+      "get": {
+        "summary": "List households",
+        "operationId": "getApiHouseholds",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "households": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Household"
+                      }
+                    }
+                  },
+                  "required": [
+                    "households"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-implementation": "legacy"
+      },
+      "post": {
+        "summary": "Create household",
+        "operationId": "postApiHouseholds",
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "household": {
+                      "$ref": "#/components/schemas/Household"
+                    }
+                  },
+                  "required": [
+                    "household"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or unsupported legacy write.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON request body too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HouseholdInput"
+              }
+            }
+          }
+        },
+        "x-implementation": "legacy"
+      }
+    },
+    "/api/households/{id}": {
+      "get": {
+        "summary": "Read household and members",
+        "operationId": "getApiHouseholdsId",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HouseholdDetail"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or unsupported legacy write.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found or not visible to this account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          }
+        ],
+        "x-implementation": "legacy"
+      },
+      "patch": {
+        "summary": "Rename household",
+        "operationId": "patchApiHouseholdsId",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "household": {
+                      "$ref": "#/components/schemas/Household"
+                    }
+                  },
+                  "required": [
+                    "household"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or unsupported legacy write.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found or not visible to this account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision or domain conflict.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON request body too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          }
+        },
+        "x-implementation": "legacy"
+      }
+    },
+    "/api/households/{id}/trip": {
+      "patch": {
+        "summary": "Update shared trip",
+        "operationId": "patchApiHouseholdsIdTrip",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "household": {
+                      "$ref": "#/components/schemas/Household"
+                    }
+                  },
+                  "required": [
+                    "household"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or unsupported legacy write.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found or not visible to this account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision or domain conflict.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON request body too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TripUpdate"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          }
+        ],
+        "x-implementation": "legacy"
+      }
+    },
+    "/api/households/{id}/archive": {
+      "post": {
+        "summary": "Archive settled household",
+        "operationId": "postApiHouseholdsIdArchive",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or unsupported legacy write.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found or not visible to this account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          }
+        ],
+        "x-implementation": "legacy"
+      }
+    },
+    "/api/households/{id}/invites": {
+      "post": {
+        "summary": "Create invite",
+        "operationId": "postApiHouseholdsIdInvites",
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Invite"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or unsupported legacy write.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found or not visible to this account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          }
+        ],
+        "x-implementation": "legacy"
+      }
+    },
+    "/api/households/{id}/leave": {
+      "post": {
+        "summary": "Leave settled household",
+        "operationId": "postApiHouseholdsIdLeave",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or unsupported legacy write.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found or not visible to this account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          }
+        ],
+        "x-implementation": "legacy"
+      }
+    },
+    "/api/households/{id}/members/{userId}": {
+      "delete": {
+        "summary": "Remove settled member",
+        "operationId": "deleteApiHouseholdsIdMembersUserid",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or unsupported legacy write.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found or not visible to this account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision or domain conflict.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          }
+        ],
+        "x-implementation": "legacy"
+      }
+    },
+    "/api/households/{id}/expenses": {
+      "get": {
+        "summary": "List visible shared expenses",
+        "operationId": "getApiHouseholdsIdExpenses",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "expenses": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Expense"
+                      }
+                    }
+                  },
+                  "required": [
+                    "expenses"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or unsupported legacy write.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found or not visible to this account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "month",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-(0[1-9]|1[0-2])$"
+            }
+          }
+        ],
+        "x-implementation": "legacy"
+      },
+      "post": {
+        "summary": "Create shared expense",
+        "operationId": "postApiHouseholdsIdExpenses",
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "expense": {
+                      "$ref": "#/components/schemas/Expense"
+                    }
+                  },
+                  "required": [
+                    "expense"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or unsupported legacy write.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found or not visible to this account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON request body too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExpenseInput"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          }
+        ],
+        "x-implementation": "legacy"
+      }
+    },
+    "/api/households/{id}/expenses/{expenseId}": {
+      "get": {
+        "summary": "Read shared expense",
+        "operationId": "getApiHouseholdsIdExpensesExpenseid",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "expense": {
+                      "$ref": "#/components/schemas/Expense"
+                    }
+                  },
+                  "required": [
+                    "expense"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or unsupported legacy write.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found or not visible to this account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "expenseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          }
+        ],
+        "x-implementation": "legacy"
+      },
+      "put": {
+        "summary": "Update shared expense",
+        "operationId": "putApiHouseholdsIdExpensesExpenseid",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "expense": {
+                      "$ref": "#/components/schemas/Expense"
+                    }
+                  },
+                  "required": [
+                    "expense"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or unsupported legacy write.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found or not visible to this account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision or domain conflict.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON request body too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExpenseUpdate"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "expenseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          }
+        ],
+        "x-implementation": "legacy"
+      },
+      "delete": {
+        "summary": "Delete shared expense",
+        "operationId": "deleteApiHouseholdsIdExpensesExpenseid",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or unsupported legacy write.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found or not visible to this account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision or domain conflict.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON request body too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Revision"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "expenseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          }
+        ],
+        "x-implementation": "legacy"
+      }
+    },
+    "/api/households/{id}/months/{month}": {
+      "get": {
+        "summary": "Read monthly recap",
+        "operationId": "getApiHouseholdsIdMonthsMonth",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MonthRecap"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or unsupported legacy write.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found or not visible to this account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "month",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-(0[1-9]|1[0-2])$"
+            }
+          }
+        ],
+        "x-implementation": "legacy"
+      }
+    },
+    "/api/households/{id}/months/{month}/reimbursements": {
+      "post": {
+        "summary": "Record full suggested reimbursement",
+        "operationId": "postApiHouseholdsIdMonthsMonthReimbursements",
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "reimbursement": {
+                      "$ref": "#/components/schemas/Reimbursement"
+                    }
+                  },
+                  "required": [
+                    "reimbursement"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or unsupported legacy write.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found or not visible to this account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision or domain conflict.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON request body too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReimbursementInput"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "month",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-(0[1-9]|1[0-2])$"
+            }
+          }
+        ],
+        "x-implementation": "legacy"
+      }
+    },
+    "/api/households/{id}/audit": {
+      "get": {
+        "summary": "Read visible audit events",
+        "operationId": "getApiHouseholdsIdAudit",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "events": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AuditEvent"
+                      }
+                    }
+                  },
+                  "required": [
+                    "events"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or unsupported legacy write.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found or not visible to this account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "expenseId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          }
+        ],
+        "x-implementation": "legacy"
+      }
+    },
+    "/api/households/{id}/recurring": {
+      "get": {
+        "summary": "List shared recurrence",
+        "operationId": "getApiHouseholdsIdRecurring",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "rules": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/SharedRecurring"
+                      }
+                    }
+                  },
+                  "required": [
+                    "rules"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or unsupported legacy write.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found or not visible to this account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          }
+        ],
+        "x-implementation": "legacy"
+      },
+      "post": {
+        "summary": "Create shared recurrence",
+        "operationId": "postApiHouseholdsIdRecurring",
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "rule": {
+                      "$ref": "#/components/schemas/SharedRecurring"
+                    }
+                  },
+                  "required": [
+                    "rule"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or unsupported legacy write.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found or not visible to this account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON request body too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SharedRecurringInput"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          }
+        ],
+        "x-implementation": "legacy"
+      }
+    },
+    "/api/households/{id}/recurring/{ruleId}": {
+      "put": {
+        "summary": "Update shared recurrence",
+        "operationId": "putApiHouseholdsIdRecurringRuleid",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "rule": {
+                      "$ref": "#/components/schemas/SharedRecurring"
+                    }
+                  },
+                  "required": [
+                    "rule"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or unsupported legacy write.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found or not visible to this account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision or domain conflict.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON request body too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SharedRecurringUpdate"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          }
+        ],
+        "x-implementation": "legacy"
+      },
+      "delete": {
+        "summary": "Delete shared recurrence",
+        "operationId": "deleteApiHouseholdsIdRecurringRuleid",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or unsupported legacy write.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found or not visible to this account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision or domain conflict.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON request body too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Revision"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          }
+        ],
+        "x-implementation": "legacy"
+      }
+    },
+    "/api/info": {
+      "get": {
+        "summary": "Identify a Penny server without credentials",
+        "operationId": "getApiInfo",
+        "security": [],
+        "x-implementation": "legacy",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerInfo"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/households/{id}/expenses/{expenseId}/payments": {
+      "post": {
+        "summary": "Record a paid expense share",
+        "operationId": "postApiHouseholdExpensePayment",
+        "x-implementation": "legacy",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "expenseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fromUserId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "revision": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "fromUserId",
+                  "revision"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "expense": {
+                      "$ref": "#/components/schemas/Expense"
+                    }
+                  },
+                  "required": [
+                    "expense"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/search/transactions": {
+      "post": {
+        "summary": "Search authorized personal entries and shared expenses (v1)",
+        "operationId": "searchTransactionsV1",
+        "x-implementation": "backend",
+        "x-owner": "MAZ-121",
+        "description": "MAZ-121, .NET backend only (Node does not implement it; a 404 means the client falls back to local search). Matches by title or document substring (literal, after the shared normalization), by typo (pg_trgm word_similarity) and by meaning (multilingual embeddings, at most 200 closest authorized results). Authorization runs before matching, ranking, counting and paging: the viewer's own entries and the shared expenses visible under the household-view rules; a payer's account name matches only for the payer. Receipt text (MAZ-125), extracted on the server after upload, is a separate field matched by substring, typo and meaning (its own chunk embeddings, never the entry's), only for viewers who may read the receipt; that check runs in the same statement and inside the vector index scan. A receipt matches only after its text is extracted (and, for meaning, embedded). Keyset cursors are bound to a hash of the normalized query, filters and sort. 30 requests per minute per session; 503 with Retry-After when the 2-second statement timeout fires. See docs/migration/search.md.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ready": {
+      "get": {
+        "summary": "Check .NET PostgreSQL readiness",
+        "operationId": "getApiReady",
+        "security": [],
+        "x-implementation": "backend-foundation",
+        "responses": {
+          "200": {
+            "description": "Ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Database unavailable or incompatible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Database unavailable or incompatible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "64 lowercase hex session token."
+      },
+      "sessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "penny_session"
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "Ok": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok"
+        ]
+      },
+      "Credentials": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254
+          },
+          "password": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 256
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "PasswordReset": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "description": "The 64-character lowercase hex reset code issued by the operator."
+          },
+          "password": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 256
+          }
+        },
+        "required": [
+          "token",
+          "password"
+        ]
+      },
+      "Session": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          }
+        },
+        "required": [
+          "token",
+          "email"
+        ]
+      },
+      "Me": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "OidcConfig": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "label": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "enabled"
+        ]
+      },
+      "OidcStart": {
+        "type": "object",
+        "properties": {
+          "redirectUri": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": [
+          "redirectUri"
+        ]
+      },
+      "OidcChallenge": {
+        "type": "object",
+        "properties": {
+          "transaction": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "authorizationUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "expiresAt": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "transaction",
+          "authorizationUrl",
+          "expiresAt"
+        ]
+      },
+      "OidcComplete": {
+        "type": "object",
+        "properties": {
+          "transaction": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "callbackUrl": {
+            "type": "string",
+            "maxLength": 8192
+          }
+        },
+        "required": [
+          "transaction",
+          "callbackUrl"
+        ]
+      },
+      "Account": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 50
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "bank",
+              "credit",
+              "cash",
+              "other"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "type"
+        ]
+      },
+      "Trip": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Local calendar date; valid dates are 2000-01-01 through 2100-12-31."
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Local calendar date; valid dates are 2000-01-01 through 2100-12-31."
+          },
+          "sharedHouseholdId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "startDate",
+          "endDate"
+        ]
+      },
+      "Category": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "icon": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "color": {
+            "type": "string",
+            "pattern": "^#[0-9A-Fa-f]{6}$"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "income",
+              "expense",
+              "investment"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "icon",
+          "color",
+          "kind"
+        ]
+      },
+      "Receipt": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "mime": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "uri": {
+            "type": "string",
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "mime",
+          "uri"
+        ]
+      },
+      "Entry": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "income",
+              "expense",
+              "investment"
+            ]
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 99999999999
+          },
+          "share": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 99999999999,
+            "description": "Integer minor currency units (cents)."
+          },
+          "categoryId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "accountId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "tripId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Local calendar date; valid dates are 2000-01-01 through 2100-12-31."
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "receipt": {
+            "$ref": "#/components/schemas/Receipt"
+          },
+          "recurringId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "kind",
+          "total",
+          "share",
+          "categoryId",
+          "date",
+          "note"
+        ]
+      },
+      "Recurring": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "income",
+              "expense",
+              "investment"
+            ]
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 99999999999
+          },
+          "share": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 99999999999,
+            "description": "Integer minor currency units (cents)."
+          },
+          "categoryId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "accountId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Local calendar date; valid dates are 2000-01-01 through 2100-12-31."
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "frequency": {
+            "type": "string",
+            "enum": [
+              "weekly",
+              "monthly",
+              "yearly"
+            ]
+          },
+          "nextDate": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Local calendar date; valid dates are 2000-01-01 through 2100-12-31."
+          },
+          "anchorDay": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 31
+          },
+          "active": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "kind",
+          "total",
+          "share",
+          "categoryId",
+          "date",
+          "note",
+          "frequency",
+          "nextDate",
+          "anchorDay",
+          "active"
+        ]
+      },
+      "Ledger": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "integer",
+            "enum": [
+              1,
+              2,
+              3,
+              4
+            ]
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "CAD",
+              "USD",
+              "EUR",
+              "GBP"
+            ]
+          },
+          "accounts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Account"
+            },
+            "maxItems": 300
+          },
+          "trips": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Trip"
+            },
+            "maxItems": 300
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Category"
+            },
+            "maxItems": 300
+          },
+          "transactions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Entry"
+            },
+            "maxItems": 100000
+          },
+          "recurring": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Recurring"
+            },
+            "maxItems": 1000
+          }
+        },
+        "required": [
+          "version",
+          "currency",
+          "categories",
+          "transactions",
+          "recurring"
+        ],
+        "description": "v3+ requires accounts; v4 requires trips. Successful reads and writes return v4.",
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "version": {
+                  "enum": [
+                    3,
+                    4
+                  ]
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "accounts"
+              ],
+              "properties": {
+                "accounts": {}
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "version": {
+                  "const": 4
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "trips"
+              ],
+              "properties": {
+                "trips": {}
+              }
+            }
+          }
+        ]
+      },
+      "Snapshot": {
+        "type": "object",
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "ledger": {
+            "$ref": "#/components/schemas/Ledger"
+          }
+        },
+        "required": [
+          "revision",
+          "ledger"
+        ]
+      },
+      "ReceiptUpload": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "mime": {
+            "type": "string",
+            "enum": [
+              "application/pdf",
+              "image/jpeg",
+              "image/png",
+              "image/webp",
+              "image/gif",
+              "image/heic",
+              "image/heif"
+            ]
+          },
+          "base64": {
+            "type": "string",
+            "maxLength": 14680064,
+            "contentEncoding": "base64"
+          }
+        },
+        "required": [
+          "name",
+          "mime",
+          "base64"
+        ]
+      },
+      "HouseholdInput": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "CAD",
+              "USD",
+              "EUR",
+              "GBP"
+            ]
+          },
+          "timezoneOffsetMinutes": {
+            "type": "integer",
+            "minimum": -840,
+            "maximum": 720
+          }
+        },
+        "required": [
+          "name",
+          "currency"
+        ]
+      },
+      "TripInput": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "CAD",
+              "USD",
+              "EUR",
+              "GBP"
+            ]
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Local calendar date; valid dates are 2000-01-01 through 2100-12-31."
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Local calendar date; valid dates are 2000-01-01 through 2100-12-31."
+          },
+          "timezoneOffsetMinutes": {
+            "type": "integer",
+            "minimum": -840,
+            "maximum": 720
+          }
+        },
+        "required": [
+          "name",
+          "currency",
+          "startDate",
+          "endDate"
+        ]
+      },
+      "TripUpdate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Local calendar date; valid dates are 2000-01-01 through 2100-12-31."
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Local calendar date; valid dates are 2000-01-01 through 2100-12-31."
+          }
+        },
+        "required": [
+          "name",
+          "startDate",
+          "endDate"
+        ]
+      },
+      "Household": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "name": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "CAD",
+              "USD",
+              "EUR",
+              "GBP"
+            ]
+          },
+          "creatorId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "createdAt": {
+            "type": "integer"
+          },
+          "memberCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "trip": {
+            "type": "object",
+            "properties": {
+              "startDate": {
+                "type": "string",
+                "format": "date",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                "description": "Local calendar date; valid dates are 2000-01-01 through 2100-12-31."
+              },
+              "endDate": {
+                "type": "string",
+                "format": "date",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                "description": "Local calendar date; valid dates are 2000-01-01 through 2100-12-31."
+              }
+            },
+            "required": [
+              "startDate",
+              "endDate"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "currency",
+          "creatorId",
+          "createdAt",
+          "memberCount"
+        ]
+      },
+      "HouseholdMember": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "joinedAt": {
+            "type": "integer"
+          },
+          "joinedOn": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^(20[0-9]{2}|2100)-[0-9]{2}-[0-9]{2}$"
+          },
+          "leftAt": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "userId",
+          "email",
+          "joinedAt"
+        ]
+      },
+      "HouseholdDetail": {
+        "type": "object",
+        "properties": {
+          "household": {
+            "$ref": "#/components/schemas/Household"
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HouseholdMember"
+            }
+          }
+        },
+        "required": [
+          "household",
+          "members"
+        ]
+      },
+      "Invite": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "pattern": "^[A-F0-9]{10}$"
+          },
+          "expiresAt": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "code",
+          "expiresAt"
+        ]
+      },
+      "Join": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "pattern": "^[A-Fa-f0-9]{10}$"
+          },
+          "timezoneOffsetMinutes": {
+            "type": "integer",
+            "minimum": -840,
+            "maximum": 720
+          }
+        },
+        "required": [
+          "code"
+        ]
+      },
+      "ExpenseInput": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "totalCents": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 99999999999
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Local calendar date; valid dates are 2000-01-01 through 2100-12-31."
+          },
+          "payerUserId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "splitMode": {
+            "type": "string",
+            "enum": [
+              "equal",
+              "exact",
+              "percent"
+            ]
+          },
+          "allocations": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "userId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "amountCents": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 99999999999,
+                      "description": "Integer minor currency units (cents)."
+                    }
+                  },
+                  "required": [
+                    "userId",
+                    "amountCents"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "userId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "percentBasisPoints": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 10000
+                    }
+                  },
+                  "required": [
+                    "userId",
+                    "percentBasisPoints"
+                  ]
+                }
+              ]
+            },
+            "maxItems": 100
+          },
+          "category": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 50
+              },
+              "icon": {
+                "type": "string",
+                "maxLength": 80
+              },
+              "color": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$"
+              }
+            },
+            "required": [
+              "name",
+              "icon",
+              "color"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 1000,
+            "default": ""
+          },
+          "accountId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "receiptId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "timezoneOffsetMinutes": {
+            "type": "integer",
+            "minimum": -840,
+            "maximum": 720
+          }
+        },
+        "required": [
+          "title",
+          "totalCents",
+          "date",
+          "payerUserId",
+          "splitMode",
+          "category"
+        ]
+      },
+      "ExpenseUpdate": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "totalCents": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 99999999999
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Local calendar date; valid dates are 2000-01-01 through 2100-12-31."
+          },
+          "payerUserId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "splitMode": {
+            "type": "string",
+            "enum": [
+              "equal",
+              "exact",
+              "percent"
+            ]
+          },
+          "allocations": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "userId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "amountCents": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 99999999999,
+                      "description": "Integer minor currency units (cents)."
+                    }
+                  },
+                  "required": [
+                    "userId",
+                    "amountCents"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "userId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "percentBasisPoints": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 10000
+                    }
+                  },
+                  "required": [
+                    "userId",
+                    "percentBasisPoints"
+                  ]
+                }
+              ]
+            },
+            "maxItems": 100
+          },
+          "category": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 50
+              },
+              "icon": {
+                "type": "string",
+                "maxLength": 80
+              },
+              "color": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$"
+              }
+            },
+            "required": [
+              "name",
+              "icon",
+              "color"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 1000,
+            "default": ""
+          },
+          "accountId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "receiptId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "timezoneOffsetMinutes": {
+            "type": "integer",
+            "minimum": -840,
+            "maximum": 720
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "targetHouseholdId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "title",
+          "totalCents",
+          "date",
+          "payerUserId",
+          "splitMode",
+          "category",
+          "revision"
+        ]
+      },
+      "Expense": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "totalCents": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 99999999999
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Local calendar date; valid dates are 2000-01-01 through 2100-12-31."
+          },
+          "payerUserId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "splitMode": {
+            "type": "string",
+            "enum": [
+              "equal",
+              "exact",
+              "percent"
+            ]
+          },
+          "allocations": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "userId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "amountCents": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 99999999999,
+                      "description": "Integer minor currency units (cents)."
+                    }
+                  },
+                  "required": [
+                    "userId",
+                    "amountCents"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "userId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "percentBasisPoints": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 10000
+                    }
+                  },
+                  "required": [
+                    "userId",
+                    "percentBasisPoints"
+                  ]
+                }
+              ]
+            },
+            "maxItems": 100
+          },
+          "category": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 50
+              },
+              "icon": {
+                "type": "string",
+                "maxLength": 80
+              },
+              "color": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$"
+              }
+            },
+            "required": [
+              "name",
+              "icon",
+              "color"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 1000,
+            "default": ""
+          },
+          "accountId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "receiptId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "timezoneOffsetMinutes": {
+            "type": "integer",
+            "minimum": -840,
+            "maximum": 720
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "householdId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "splits": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "userId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 100
+                },
+                "amountCents": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 99999999999,
+                  "description": "Integer minor currency units (cents)."
+                }
+              },
+              "required": [
+                "userId",
+                "amountCents"
+              ]
+            }
+          },
+          "receipt": {
+            "$ref": "#/components/schemas/Receipt"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "createdBy": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "createdAt": {
+            "type": "integer"
+          },
+          "updatedBy": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "updatedAt": {
+            "type": "integer"
+          },
+          "recurringId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "payments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExpensePayment"
+            }
+          },
+          "paymentsClosed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "title",
+          "totalCents",
+          "date",
+          "payerUserId",
+          "splitMode",
+          "category",
+          "id",
+          "householdId",
+          "splits",
+          "revision",
+          "createdBy",
+          "createdAt",
+          "updatedBy",
+          "updatedAt",
+          "payments",
+          "paymentsClosed"
+        ]
+      },
+      "Revision": {
+        "type": "object",
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "revision"
+        ]
+      },
+      "ReimbursementInput": {
+        "type": "object",
+        "properties": {
+          "fromUserId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "toUserId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "amountCents": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 99999999999
+          }
+        },
+        "required": [
+          "fromUserId",
+          "toUserId",
+          "amountCents"
+        ]
+      },
+      "Reimbursement": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "householdId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "month": {
+            "type": "string",
+            "pattern": "^\\d{4}-(0[1-9]|1[0-2])$"
+          },
+          "fromUserId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "toUserId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "amountCents": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 99999999999
+          },
+          "createdBy": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "createdAt": {
+            "type": "integer"
+          },
+          "expenseId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "id",
+          "householdId",
+          "month",
+          "fromUserId",
+          "toUserId",
+          "amountCents",
+          "createdBy",
+          "createdAt"
+        ]
+      },
+      "Balance": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "balanceCents": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "userId",
+          "balanceCents"
+        ]
+      },
+      "Suggestion": {
+        "type": "object",
+        "properties": {
+          "fromUserId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "toUserId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "amountCents": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 99999999999
+          }
+        },
+        "required": [
+          "fromUserId",
+          "toUserId",
+          "amountCents"
+        ]
+      },
+      "MonthRecap": {
+        "type": "object",
+        "properties": {
+          "month": {
+            "type": "string",
+            "pattern": "^\\d{4}-(0[1-9]|1[0-2])$"
+          },
+          "expenses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Expense"
+            }
+          },
+          "reimbursements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Reimbursement"
+            }
+          },
+          "balances": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Balance"
+            }
+          },
+          "suggestions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Suggestion"
+            }
+          },
+          "overdue": {
+            "type": "boolean"
+          },
+          "overdueMonths": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^\\d{4}-(0[1-9]|1[0-2])$"
+            }
+          }
+        },
+        "required": [
+          "month",
+          "expenses",
+          "reimbursements",
+          "balances",
+          "suggestions",
+          "overdue",
+          "overdueMonths"
+        ]
+      },
+      "AuditEvent": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "householdId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "expenseId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "actorId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "action": {
+            "type": "string"
+          },
+          "before": {},
+          "after": {},
+          "createdAt": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "householdId",
+          "actorId",
+          "action",
+          "before",
+          "after",
+          "createdAt"
+        ]
+      },
+      "ProjectedExpense": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "householdId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "householdName": {
+            "type": "string"
+          },
+          "householdCurrency": {
+            "type": "string",
+            "enum": [
+              "CAD",
+              "USD",
+              "EUR",
+              "GBP"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Local calendar date; valid dates are 2000-01-01 through 2100-12-31."
+          },
+          "totalCents": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 99999999999
+          },
+          "shareCents": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 99999999999,
+            "description": "Integer minor currency units (cents)."
+          },
+          "payerUserId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "category": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 50
+              },
+              "icon": {
+                "type": "string",
+                "maxLength": 80
+              },
+              "color": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$"
+              }
+            },
+            "required": [
+              "name",
+              "icon",
+              "color"
+            ]
+          },
+          "note": {
+            "type": "string"
+          },
+          "receipt": {
+            "$ref": "#/components/schemas/Receipt"
+          },
+          "accountId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "scheduled": {
+            "type": "boolean"
+          },
+          "recurringId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "The shared rule: on previews (`scheduled: true`) and, since MAZ-139, on recorded occurrences the rule recorded. Omitted for one-off expenses. Clients match a recorded row to a cached preview by householdId, recurringId and date."
+          },
+          "receiptId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "id",
+          "householdId",
+          "title",
+          "date",
+          "totalCents",
+          "shareCents",
+          "payerUserId",
+          "category",
+          "note"
+        ]
+      },
+      "SharedRecurringInput": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "totalCents": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 99999999999
+          },
+          "payerUserId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "splitMode": {
+            "type": "string",
+            "enum": [
+              "equal",
+              "exact",
+              "percent"
+            ]
+          },
+          "allocations": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "userId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "amountCents": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 99999999999,
+                      "description": "Integer minor currency units (cents)."
+                    }
+                  },
+                  "required": [
+                    "userId",
+                    "amountCents"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "userId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "percentBasisPoints": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 10000
+                    }
+                  },
+                  "required": [
+                    "userId",
+                    "percentBasisPoints"
+                  ]
+                }
+              ]
+            },
+            "maxItems": 100
+          },
+          "category": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 50
+              },
+              "icon": {
+                "type": "string",
+                "maxLength": 80
+              },
+              "color": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$"
+              }
+            },
+            "required": [
+              "name",
+              "icon",
+              "color"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 1000,
+            "default": ""
+          },
+          "accountId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "receiptId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "timezoneOffsetMinutes": {
+            "type": "integer",
+            "minimum": -840,
+            "maximum": 720
+          },
+          "nextDate": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Local calendar date; valid dates are 2000-01-01 through 2100-12-31."
+          },
+          "frequency": {
+            "type": "string",
+            "enum": [
+              "weekly",
+              "monthly",
+              "yearly"
+            ]
+          }
+        },
+        "required": [
+          "title",
+          "totalCents",
+          "payerUserId",
+          "splitMode",
+          "category",
+          "nextDate",
+          "frequency"
+        ]
+      },
+      "SharedRecurringUpdate": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "totalCents": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 99999999999
+          },
+          "payerUserId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "splitMode": {
+            "type": "string",
+            "enum": [
+              "equal",
+              "exact",
+              "percent"
+            ]
+          },
+          "allocations": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "userId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "amountCents": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 99999999999,
+                      "description": "Integer minor currency units (cents)."
+                    }
+                  },
+                  "required": [
+                    "userId",
+                    "amountCents"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "userId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "percentBasisPoints": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 10000
+                    }
+                  },
+                  "required": [
+                    "userId",
+                    "percentBasisPoints"
+                  ]
+                }
+              ]
+            },
+            "maxItems": 100
+          },
+          "category": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 50
+              },
+              "icon": {
+                "type": "string",
+                "maxLength": 80
+              },
+              "color": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$"
+              }
+            },
+            "required": [
+              "name",
+              "icon",
+              "color"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 1000,
+            "default": ""
+          },
+          "accountId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "receiptId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "timezoneOffsetMinutes": {
+            "type": "integer",
+            "minimum": -840,
+            "maximum": 720
+          },
+          "nextDate": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Local calendar date; valid dates are 2000-01-01 through 2100-12-31."
+          },
+          "frequency": {
+            "type": "string",
+            "enum": [
+              "weekly",
+              "monthly",
+              "yearly"
+            ]
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "title",
+          "totalCents",
+          "payerUserId",
+          "splitMode",
+          "category",
+          "nextDate",
+          "frequency",
+          "active",
+          "revision"
+        ]
+      },
+      "SharedRecurring": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "totalCents": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 99999999999
+          },
+          "payerUserId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "splitMode": {
+            "type": "string",
+            "enum": [
+              "equal",
+              "exact",
+              "percent"
+            ]
+          },
+          "allocations": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "userId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "amountCents": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 99999999999,
+                      "description": "Integer minor currency units (cents)."
+                    }
+                  },
+                  "required": [
+                    "userId",
+                    "amountCents"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "userId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "percentBasisPoints": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 10000
+                    }
+                  },
+                  "required": [
+                    "userId",
+                    "percentBasisPoints"
+                  ]
+                }
+              ]
+            },
+            "maxItems": 100
+          },
+          "category": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 50
+              },
+              "icon": {
+                "type": "string",
+                "maxLength": 80
+              },
+              "color": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$"
+              }
+            },
+            "required": [
+              "name",
+              "icon",
+              "color"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 1000,
+            "default": ""
+          },
+          "accountId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "receiptId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "timezoneOffsetMinutes": {
+            "type": "integer",
+            "minimum": -840,
+            "maximum": 720
+          },
+          "nextDate": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Local calendar date; valid dates are 2000-01-01 through 2100-12-31."
+          },
+          "frequency": {
+            "type": "string",
+            "enum": [
+              "weekly",
+              "monthly",
+              "yearly"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "householdId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "anchorDay": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 31,
+            "description": "Present on list/read responses; create/update currently echo the request without this field."
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "title",
+          "totalCents",
+          "payerUserId",
+          "splitMode",
+          "category",
+          "nextDate",
+          "frequency",
+          "id",
+          "householdId",
+          "active",
+          "revision"
+        ]
+      },
+      "PushDevice": {
+        "type": "object",
+        "description": "Legacy Expo registration {token, platform}, or (MAZ-61, .NET only) a native APNs device token with provider \"apns\", platform \"ios\" and the APNs environment that issued it. Unknown keys are ignored.",
+        "properties": {
+          "token": {
+            "type": "string",
+            "pattern": "^((Expo|Exponent)PushToken\\[[A-Za-z0-9_-]{1,180}\\]|([0-9A-Fa-f]{2}){32,100})$"
+          },
+          "platform": {
+            "type": "string",
+            "enum": [
+              "ios",
+              "android"
+            ]
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "expo",
+              "apns"
+            ],
+            "default": "expo"
+          },
+          "environment": {
+            "type": "string",
+            "enum": [
+              "sandbox",
+              "production"
+            ],
+            "description": "Required for apns; absent for expo."
+          }
+        },
+        "required": [
+          "token",
+          "platform"
+        ]
+      },
+      "PushRemove": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "ServerInfo": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "const": "penny"
+          },
+          "version": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "name",
+          "version"
+        ]
+      },
+      "ExpensePayment": {
+        "type": "object",
+        "properties": {
+          "fromUserId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "amountCents": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 99999999999
+          },
+          "createdAt": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "createdBy": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "fromUserId",
+          "amountCents",
+          "createdAt",
+          "createdBy"
+        ]
+      },
+      "SearchRequest": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "default": "",
+            "description": "Trimmed (ECMAScript trim), then at most 200 UTF-16 code units. Empty matches everything that passes the filters."
+          },
+          "from": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^(20[0-9]{2}|2100)-[0-9]{2}-[0-9]{2}$",
+            "description": "Inclusive first calendar date. Omitting from and to searches all time."
+          },
+          "to": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^(20[0-9]{2}|2100)-[0-9]{2}-[0-9]{2}$",
+            "description": "Inclusive last calendar date; not before from."
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "expense",
+              "income",
+              "investment"
+            ],
+            "description": "Default: every kind. Shared expenses are expenses."
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "personal",
+              "shared",
+              "all"
+            ],
+            "default": "all"
+          },
+          "sort": {
+            "type": "string",
+            "enum": [
+              "relevance",
+              "date-desc",
+              "date-asc",
+              "amount-desc",
+              "amount-asc"
+            ],
+            "description": "Default relevance for a non-empty query, otherwise date-desc (relevance with an empty query is date-desc). Amount sorts use the viewer's share. Every sort ends with date descending, then key ascending."
+          },
+          "pageSize": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50
+          },
+          "cursor": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048,
+            "description": "Opaque nextCursor of the previous page; 400 when it belongs to another query, filter or sort."
+          }
+        },
+        "additionalProperties": false,
+        "description": "Search v1. Real calendar dates from 2000-01-01 to 2100-12-31 and from <= to are enforced by the service; unknown fields are rejected. The viewer is always the session's user."
+      },
+      "SearchItem": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string",
+                "pattern": "^personal:.+"
+              },
+              "source": {
+                "type": "string",
+                "const": "personal"
+              },
+              "match": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "enum": [
+                  "title",
+                  "text",
+                  "typo",
+                  "meaning",
+                  null
+                ],
+                "description": "Best matching tier; null for an empty query."
+              },
+              "entry": {
+                "$ref": "#/components/schemas/Entry"
+              }
+            },
+            "required": [
+              "key",
+              "source",
+              "match",
+              "entry"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string",
+                "pattern": "^shared:.+"
+              },
+              "source": {
+                "type": "string",
+                "const": "shared"
+              },
+              "match": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "enum": [
+                  "title",
+                  "text",
+                  "typo",
+                  "meaning",
+                  null
+                ],
+                "description": "Best matching tier; null for an empty query."
+              },
+              "entry": {
+                "$ref": "#/components/schemas/ProjectedExpense"
+              }
+            },
+            "required": [
+              "key",
+              "source",
+              "match",
+              "entry"
+            ]
+          }
+        ]
+      },
+      "SearchResponse": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "integer",
+            "const": 1
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SearchItem"
+            },
+            "maxItems": 100
+          },
+          "totalCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Authorized matching results, each counted once (meaning matches only within the 200-result cap). Not a money total."
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 2048
+          }
+        },
+        "required": [
+          "version",
+          "items",
+          "totalCount",
+          "nextCursor"
+        ]
+      }
+    }
+  }
+}

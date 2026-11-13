@@ -1,0 +1,20 @@
+// The WidgetKit extension (MAZ-80), embedded in Penny.app. The bundle id is the one Expo's
+// expo-widgets plugin generated (PennyDomain.AppIdentity): changing it removes placed widgets.
+PRODUCT_NAME = PennyWidgets
+PRODUCT_BUNDLE_IDENTIFIER = com.mfalicoff.penny.ExpoWidgetsTarget
+INFOPLIST_FILE = Configuration/PennyWidgets-Info.plist
+GENERATE_INFOPLIST_FILE = YES
+INFOPLIST_KEY_CFBundleDisplayName = Penny
+SKIP_INSTALL = YES
+ENABLE_PREVIEWS = YES
+LD_RUNPATH_SEARCH_PATHS = $(inherited) @executable_path/Frameworks @executable_path/../../Frameworks
+
+// Signing (README.md#signing-and-entitlements). Same team and App Group as the app. TestFlight
+// archives in CI sign manually with the extension's own App Store profile: `ios.sh archive` sets
+// the PENNY_* values below (docs/ios-ipa.md#signing), as for the app in Penny.xcconfig.
+CODE_SIGN_STYLE = $(PENNY_CODE_SIGN_STYLE:default=Automatic)
+CODE_SIGN_ENTITLEMENTS = Configuration/PennyWidgets.entitlements
+CODE_SIGN_IDENTITY = $(PENNY_CODE_SIGN_IDENTITY:default=Apple Development)
+PROVISIONING_PROFILE_SPECIFIER = $(PENNY_WIDGETS_PROFILE_SPECIFIER)
+CODE_SIGN_IDENTITY[sdk=iphonesimulator*] = -
+#include? "Signing.local.xcconfig"

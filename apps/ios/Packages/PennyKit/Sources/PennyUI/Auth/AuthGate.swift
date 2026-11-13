@@ -1,0 +1,232 @@
+import PennyData
+import PennyDesign
+import PennyDomain
+import SwiftUI
+
+/// Shows the signed-out flow, the launch states, the signed-in shell or the demo for the auth
+/// state. The demo replaces whatever is shown until it ends, and never touches the account or
+/// the offline ledger: only a signed-in account's shell is given the sync model.
+struct AuthGate: View {
+    let auth: AuthController
+    /// The app's one offline ledger and sync model (MAZ-71), read by each account's shell
+    /// through `AccountWorkspace`.
+    let sync: LedgerSyncModel
+    @Binding var inbox: DeepLinkInbox
+    let services: AppServices
+    @Binding var demo: DemoWorkspace?
+
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(PushNotifications.self) private var push: PushNotifications?
+
+    var body: some View {
+        Group {
+            if let demo {
+                ShellHost(
+                    inbox: $inbox,
+                    session: .demo,
+                    makeModel: {
+                        ShellModel(
+                            workspace: demo, session: .demo, today: services.today(), clock: services.today,
+                            leaveDemo: { self.demo = nil })
+                    }
+                )
+                .id(ObjectIdentifier(demo))
+            } else {
+                switch auth.state {
+                case .restoring:
+                    ProgressView("Opening Penny…")
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(PennyColor.background)
+                        .accessibilityIdentifier("auth.restoring")
+                case .keychainUnavailable:
+                    ContentUnavailableView {
+                        Label("Unlock to continue", systemImage: "lock")
+                    } description: {
+                        Text("Penny keeps your sign-in in the Keychain, which opens after you unlock this device.")
+                    } actions: {
+                        Button("Try again") { Task { await auth.restore() } }
+                    }
+                    .accessibilityIdentifier("auth.keychainUnavailable")
+                case .signedOut, .signingIn:
+                    SignedOutFlow(auth: auth, onTryDemo: startDemo)
+                case .signedIn(let account), .signingOut(let account):
+                    ShellHost(
+                        inbox: $inbox,
+                        session: Self.session(account),
+                        makeModel: {
+                            let shell = ShellModel(
+                                workspace: services.accountWorkspace(account, sync), session: .account(auth, account),
+                                today: services.today(), clock: services.today, startDemo: startDemo,
+                                search: auth.client.map { AccountEntrySearch(model: sync, client: $0) },
+                                sharedProjection: auth.client.map {
+                                    APISharedProjection(client: $0) { auth.sessionDidExpire(for: account) }
+                                },
+                                expoImport: services.expoMigration.flatMap(ExpoImportNotice.init),
+                                households: auth.client.map {
+                                    APIHouseholdService(client: $0) { auth.sessionDidExpire(for: account) }
+                                })
+                            shell.receipts = AccountReceipts(auth: auth, account: account, sync: sync)
+                            shell.widgets = services.widgets
+                            return shell
+                        }
+                    )
+                    .id(account.scope)
+                }
+            }
+        }
+        .onChange(of: currentSession, initial: true) {
+            inbox.sessionChanged(to: currentSession)
+            // Receipt previews and picked files left by a crash or the previous account (MAZ-78).
+            ReceiptFileCache.standard.purge()
+            // Push registration follows the signed-in account; the demo never registers (MAZ-79).
+            let account = pushAccount
+            if let push { Task { await push.accountChanged(account) } }
+        }
+        // The widgets show only the signed-in account's money: signing out clears them, and
+        // another account's snapshot is removed before its shell publishes (MAZ-80). Kept
+        // apart from the demo, which never touches them.
+        .onChange(of: WidgetPublisher.owner(auth.state), initial: true) { _, owner in
+            services.widgets?.ownerChanged(owner)
+        }
+        .task { await auth.restore() }
+        .onChange(of: scenePhase) {
+            if scenePhase == .active, auth.state == .keychainUnavailable { Task { await auth.restore() } }
+        }
+    }
+
+    /// The session on screen, so a link that arrives now is kept for it (`DeepLinkInbox`).
+    private var currentSession: DeepLinkSession? {
+        if demo != nil { return .demo }
+        switch auth.state {
+        case .signedIn(let account), .signingOut(let account): return Self.session(account)
+        case .restoring, .keychainUnavailable, .signedOut, .signingIn: return nil
+        }
+    }
+
+    /// The account push notifications register for: only a signed-in account, never the demo.
+    private var pushAccount: PushAccount? {
+        guard let push, demo == nil, case .signedIn = auth.state else { return nil }
+        return auth.client.flatMap(push.account(for:))
+    }
+
+    static func session(_ account: SignedInAccount) -> DeepLinkSession {
+        .account("\(account.scope.server.description) \(account.scope.email.lowercased())")
+    }
+
+    private func startDemo() {
+        demo = DemoWorkspace(today: services.today())
+    }
+}
+
+/// Creates the shell's model once and hands it pending deep links when the app is unlocked.
+struct ShellHost: View {
+    @Binding var inbox: DeepLinkInbox
+    /// Who this shell shows: it opens only links for it (`DeepLinkInbox.take`).
+    let session: DeepLinkSession
+    let makeModel: () -> ShellModel
+    @State private var model: ShellModel?
+    @Environment(AppLockController.self) private var lock
+    @Environment(InviteHandoff.self) private var invites: InviteHandoff?
+
+    var body: some View {
+        Group {
+            if let model {
+                AppShell(shell: model)
+            } else {
+                Color.clear
+            }
+        }
+        .onAppear {
+            if model == nil { model = makeModel() }
+            deliver()
+        }
+        .onChange(of: inbox) { deliver() }
+        .onChange(of: lock.conceals) { deliver() }
+        .onChange(of: invites?.invite) { deliver() }
+    }
+
+    /// Opens a waiting link once the shell exists and the lock is open; never behind the lock,
+    /// and never one meant for another account.
+    private func deliver() {
+        deliverInvite()
+        guard let model, let link = inbox.take(ready: !lock.conceals, for: session) else { return }
+        model.open(link)
+    }
+
+    /// A waiting invite opens the join sheet in an account's shell (never in the demo, never
+    /// behind the lock). One kept for a sign-in on another server waits for that server's account.
+    private func deliverInvite() {
+        guard let model, let invites, !lock.conceals, let account = model.account else { return }
+        if let waiting = invites.invite, waiting.waitsForSignIn,
+            waiting.server.flatMap({ try? ServerURL($0) }) == account.server
+        {
+            invites.signedIn()
+        }
+        guard let invite = invites.takeForShell(by: "\(session)") else { return }
+        model.navigate { $0.open(.join(code: invite.code, server: invite.server)) }
+    }
+}
+
+/// Sign in, create an account and choose a server, with the temporary demo at the bottom.
+struct SignedOutFlow: View {
+    let auth: AuthController
+    var onTryDemo: (() -> Void)?
+
+    enum Route: Hashable { case createAccount, server }
+
+    @State private var path: [Route] = []
+    @State private var keyboardShown = false
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    /// At accessibility text sizes the demo link, which rides above the keyboard, covered Sign in
+    /// while typing (MAZ-82 audit, AX-XXXL); it steps aside until the keyboard goes away.
+    private var showsTryDemo: Bool { !(keyboardShown && dynamicTypeSize.isAccessibilitySize) }
+
+    var body: some View {
+        NavigationStack(path: $path) {
+            Group {
+                if auth.server == nil {
+                    ServerConnectView(auth: auth) {}
+                } else {
+                    SignInView(
+                        auth: auth, mode: .signIn, onChangeServer: { path.append(.server) },
+                        onSwitchMode: { path.append(.createAccount) })
+                }
+            }
+            .safeAreaInset(edge: .top) {
+                InviteSignInCard(auth: auth)
+            }
+            .safeAreaInset(edge: .bottom) {
+                if let onTryDemo, showsTryDemo {
+                    Button(action: onTryDemo) {
+                        Label("Take a look around with sample data", systemImage: "play.fill")
+                            .font(.subheadline.weight(.semibold))
+                            .frame(minHeight: Metrics.minTouchTarget)
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(PennyColor.tintText)
+                    .padding(.bottom, 8)
+                    .accessibilityHint("Opens a temporary demo. Nothing is saved.")
+                    .accessibilityIdentifier("auth.tryDemo")
+                }
+            }
+            .navigationDestination(for: Route.self) { route in
+                switch route {
+                case .createAccount:
+                    SignInView(
+                        auth: auth, mode: .createAccount, onChangeServer: {}, onSwitchMode: { path.removeAll() })
+                case .server:
+                    ServerConnectView(auth: auth) { path.removeAll() }
+                }
+            }
+        }
+        #if canImport(UIKit)
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
+                keyboardShown = true
+            }
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+                keyboardShown = false
+            }
+        #endif
+    }
+}

@@ -3,26 +3,5 @@
   "extends": ["config:recommended", "group:all"],
   "enabledManagers": ["npm", "github-actions", "dockerfile", "docker-compose"],
   "automerge": false,
-  "prConcurrentLimit": 1,
-  "packageRules": [
-    {
-      "description": "Update Expo SDK dependencies together using expo install, not independent Renovate upgrades.",
-      "matchManagers": ["npm"],
-      "matchPackageNames": [
-        "expo",
-        "expo-*",
-        "@expo/*",
-        "react",
-        "react-dom",
-        "react-native",
-        "react-native-*",
-        "@react-native/*",
-        "@react-native-*/*",
-        "@types/react",
-        "eslint-config-expo",
-        "jest-expo"
-      ],
-      "enabled": false
-    }
-  ]
+  "prConcurrentLimit": 1
 }

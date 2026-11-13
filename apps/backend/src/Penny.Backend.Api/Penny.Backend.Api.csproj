@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <ItemGroup>
+    <ProjectReference Include="../Penny.Backend.Application/Penny.Backend.Application.csproj" />
+    <ProjectReference Include="../Penny.Backend.Persistence/Penny.Backend.Persistence.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Scalar.AspNetCore" />
+    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" />
+    <PackageReference Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" />
+    <PackageReference Include="Npgsql.OpenTelemetry" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Http" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: docker.io/pgvector/pgvector:0.8.7-pg18-trixie@sha256:5895949dfcdf308eb0cd31c950c93c14895c77f33fbedfecf1fa511ab1d4bcd2
+    environment:
+      POSTGRES_DB: penny
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${PENNY_ADMIN_PASSWORD:?}
+      PENNY_MIGRATION_PASSWORD: ${PENNY_MIGRATION_PASSWORD:?}
+      PENNY_RUNTIME_PASSWORD: ${PENNY_RUNTIME_PASSWORD:?}
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - penny-postgres:/var/lib/postgresql
+      - ./development/init-roles.sh:/docker-entrypoint-initdb.d/10-penny-roles.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d penny"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  penny-postgres:

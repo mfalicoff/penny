@@ -1,0 +1,173 @@
+name: Web checks
+
+on:
+  pull_request:
+  push:
+    branches: [v2]
+  # The broader suite: real-stack journeys on tablets too (MAZ-95). 05:17 UTC, off the hour.
+  schedule:
+    - cron: '17 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: web-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    name: Web lint, types, tests, build and browser smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Check design tokens against design-kit
+        run: npm run design:check
+      - name: Lint
+        run: npm run lint
+      - name: Check types
+        run: npm run typecheck
+      - name: Unit and component tests
+        run: npm test
+      # No secrets or API URL are available to this job: the bundle must build
+      # and verify without them (scripts/verify-dist.ts).
+      - name: Production build and artifact verification
+        run: npm run build
+      - name: Check the generated route tree is committed
+        run: git diff --exit-code -- src/routeTree.gen.ts
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Browser smoke test of the production build (mocked API, Chromium)
+        run: npm run test:e2e
+      - name: Upload browser evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: web-playwright-report
+          path: |
+            apps/web/test-results/
+          if-no-files-found: ignore
+
+  smoke-engines:
+    # The same mocked smoke on the other engines, in parallel with the job above.
+    name: Browser smoke (mocked API, ${{ matrix.browser }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [firefox, webkit]
+    defaults:
+      run:
+        working-directory: apps/web
+    env:
+      PENNY_E2E_BROWSERS: ${{ matrix.browser }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Production build
+        run: npm run build
+      - name: Install Playwright ${{ matrix.browser }}
+        run: npx playwright install --with-deps ${{ matrix.browser }}
+      - name: Browser smoke test of the production build
+        run: npm run test:e2e
+      - name: Upload browser evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: web-playwright-report-${{ matrix.browser }}
+          path: |
+            apps/web/test-results/
+          if-no-files-found: ignore
+
+  real-stack:
+    # The *.real.spec.ts journeys against the production build, the real .NET API, a
+    # disposable PostgreSQL 18 (pg_trgm, pgvector) and the local OIDC provider from the
+    # full-stack test environment (docs/migration/test-environment.md). One environment per
+    # engine; the specs inside it run one at a time because they share the server clock.
+    name: Real-stack browser journeys (${{ matrix.browser }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    env:
+      NUGET_PACKAGES: ${{ github.workspace }}/.cache/backend/nuget
+      PENNY_E2E_BROWSERS: ${{ matrix.browser }}
+      # Pull requests and pushes: desktop and phone. Nightly and manual runs add tablets.
+      PENNY_E2E_DEVICES: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && 'desktop,phone,tablet' || 'desktop,phone' }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: apps/backend/global.json
+          cache: true
+          cache-dependency-path: |
+            apps/backend/src/**/packages.lock.json
+            apps/backend/tests/**/packages.lock.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - name: Cache search model
+        uses: actions/cache@v6
+        with:
+          path: .cache/backend/models
+          key: search-model-${{ hashFiles('apps/backend/development/download-model.mjs') }}
+      - name: Download and verify search model
+        run: node apps/backend/development/download-model.mjs
+      - name: Restore locked backend packages
+        run: bash apps/backend/dotnet.sh restore Penny.Backend.slnx --locked-mode
+      - name: Install web dependencies
+        working-directory: apps/web
+        run: npm ci --no-audit --no-fund
+      - name: Production build
+        working-directory: apps/web
+        run: npm run build
+      - name: Install Playwright ${{ matrix.browser }}
+        working-directory: apps/web
+        run: npx playwright install --with-deps ${{ matrix.browser }}
+      # Builds the API, starts PostgreSQL in Docker, migrates, starts the API and the OIDC
+      # provider, runs Playwright, copies the server logs to test-results/fullstack/<run id>/
+      # and always tears the environment down.
+      - name: Real-stack journeys
+        working-directory: apps/web
+        run: npm run test:e2e:real
+      - name: Remove leftover environments
+        if: always()
+        run: node scripts/test-env/penny-env.mjs down --all
+      - name: Upload browser evidence and server logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: web-real-stack-${{ matrix.browser }}
+          path: |
+            apps/web/test-results/
+            test-results/fullstack/
+          if-no-files-found: ignore

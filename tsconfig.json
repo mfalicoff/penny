@@ -1,8 +1,22 @@
 {
-  "extends": "expo/tsconfig.base",
+  // The legacy Node API, the shared TypeScript rules, tests and scripts (Node 24, run with
+  // --experimental-strip-types). The Expo base config is gone with the Expo app (MAZ-98).
   "compilerOptions": {
+    "target": "ES2024",
+    // ES modules resolved like the former Expo base, with the DOM lib for fetch/Response types.
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "lib": ["ES2024", "DOM", "DOM.Iterable"],
     "strict": true,
-    "types": ["jest", "node", "react"],
-    "allowImportingTsExtensions": true
-  }
+    "noEmit": true,
+    "skipLibCheck": true,
+    "allowJs": true,
+    "checkJs": false,
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "types": ["node"]
+  },
+  "include": ["server/**/*.ts", "src/**/*.ts", "tests/**/*.ts", "scripts/**/*.ts"],
+  "exclude": ["node_modules", "apps", "design-kit"]
 }

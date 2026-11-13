@@ -1,0 +1,245 @@
+{
+  "generator": "scripts/fixtures/generate-golden.ts",
+  "description": "Integer-cent money: client amount parsing (cents), personal share entry, and the stored entry total/share bounds every server enforces.",
+  "parse": [
+    {
+      "input": "0",
+      "cents": 0
+    },
+    {
+      "input": "0.01",
+      "cents": 1
+    },
+    {
+      "input": "0.1",
+      "cents": 10
+    },
+    {
+      "input": "1",
+      "cents": 100
+    },
+    {
+      "input": "1.5",
+      "cents": 150
+    },
+    {
+      "input": "1,50",
+      "cents": 150
+    },
+    {
+      "input": " 12.30 ",
+      "cents": 1230
+    },
+    {
+      "input": "12.",
+      "cents": 1200
+    },
+    {
+      "input": "007.25",
+      "cents": 725
+    },
+    {
+      "input": "999999999.99",
+      "cents": 99999999999
+    },
+    {
+      "input": "999999999",
+      "cents": 99999999900
+    },
+    {
+      "input": "1000000000",
+      "error": "Enter an amount with up to two decimal places."
+    },
+    {
+      "input": "1.234",
+      "error": "Enter an amount with up to two decimal places."
+    },
+    {
+      "input": "-1",
+      "error": "Enter an amount with up to two decimal places."
+    },
+    {
+      "input": "",
+      "error": "Enter an amount with up to two decimal places."
+    },
+    {
+      "input": "  ",
+      "error": "Enter an amount with up to two decimal places."
+    },
+    {
+      "input": "abc",
+      "error": "Enter an amount with up to two decimal places."
+    },
+    {
+      "input": ".5",
+      "error": "Enter an amount with up to two decimal places."
+    },
+    {
+      "input": "1e3",
+      "error": "Enter an amount with up to two decimal places."
+    },
+    {
+      "input": "1 000",
+      "error": "Enter an amount with up to two decimal places."
+    },
+    {
+      "input": "+3",
+      "error": "Enter an amount with up to two decimal places."
+    },
+    {
+      "input": "\u0661\u0662",
+      "error": "Enter an amount with up to two decimal places."
+    }
+  ],
+  "personalShares": [
+    {
+      "total": 1001,
+      "mode": "full",
+      "input": "",
+      "share": 1001
+    },
+    {
+      "total": 1001,
+      "mode": "equal",
+      "input": "2",
+      "share": 501
+    },
+    {
+      "total": 1001,
+      "mode": "equal",
+      "input": "3",
+      "share": 334
+    },
+    {
+      "total": 1,
+      "mode": "equal",
+      "input": "2",
+      "share": 1
+    },
+    {
+      "total": 1001,
+      "mode": "equal",
+      "input": "1",
+      "error": "Split between 2 and 100 people."
+    },
+    {
+      "total": 1001,
+      "mode": "equal",
+      "input": "101",
+      "error": "Split between 2 and 100 people."
+    },
+    {
+      "total": 1001,
+      "mode": "equal",
+      "input": "2.5",
+      "error": "Split between 2 and 100 people."
+    },
+    {
+      "total": 1001,
+      "mode": "percent",
+      "input": "33.33",
+      "share": 334
+    },
+    {
+      "total": 1001,
+      "mode": "percent",
+      "input": "50",
+      "share": 501
+    },
+    {
+      "total": 1001,
+      "mode": "percent",
+      "input": "100",
+      "share": 1001
+    },
+    {
+      "total": 1001,
+      "mode": "percent",
+      "input": "100.01",
+      "error": "Your percentage must be between 0 and 100."
+    },
+    {
+      "total": 1001,
+      "mode": "percent",
+      "input": "0",
+      "share": 0
+    },
+    {
+      "total": 1001,
+      "mode": "amount",
+      "input": "10.01",
+      "share": 1001
+    },
+    {
+      "total": 1001,
+      "mode": "amount",
+      "input": "10.02",
+      "error": "Your share cannot exceed the receipt total."
+    },
+    {
+      "total": 1001,
+      "mode": "amount",
+      "input": "0",
+      "share": 0
+    },
+    {
+      "total": 99999999999,
+      "mode": "equal",
+      "input": "3",
+      "share": 33333333333
+    },
+    {
+      "total": 99999999999,
+      "mode": "percent",
+      "input": "33.33",
+      "share": 33330000000
+    }
+  ],
+  "ledgerAmounts": [
+    {
+      "total": 1,
+      "share": 0,
+      "valid": true
+    },
+    {
+      "total": 1,
+      "share": 1,
+      "valid": true
+    },
+    {
+      "total": 0,
+      "share": 0,
+      "valid": false
+    },
+    {
+      "total": 99999999999,
+      "share": 99999999999,
+      "valid": true
+    },
+    {
+      "total": 100000000000,
+      "share": 0,
+      "valid": false
+    },
+    {
+      "total": 500,
+      "share": 501,
+      "valid": false
+    },
+    {
+      "total": 1.5,
+      "share": 1,
+      "valid": false
+    },
+    {
+      "total": -1,
+      "share": 0,
+      "valid": false
+    },
+    {
+      "total": 500,
+      "share": -1,
+      "valid": false
+    }
+  ]
+}

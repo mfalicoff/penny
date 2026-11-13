@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { emptyLedger, materialize, type Transaction } from "../../src/domain/ledger.ts";
-import { calendarMonth, selectOverview, shiftMonthKey } from "../../src/features/overview/selectors.ts";
+import { calendarMonth, selectOverview, shiftMonthKey } from "../../src/domain/selectors/overview.ts";
 
 const expense: Transaction = { id: "meal", title: "Lunch", kind: "expense", total: 4000, share: 1000, categoryId: "food", date: "2026-09-20", note: "With Alex" };
 const ledger = { ...emptyLedger(), transactions: [expense, { ...expense, id: "salary", title: "Payday", note: "", kind: "income" as const, categoryId: "salary", share: 50000, date: "2026-09-21" }, { ...expense, id: "last-month", date: "2026-08-31" }] };
@@ -27,7 +27,7 @@ test("day and kind filters combine and groups remain in descending date order", 
   assert.deepEqual(selectOverview(ledger, { ...filters, filter: "expense" }).visibleEntries.map((t) => t.id), ["meal"]);
   assert.deepEqual([...selectOverview(ledger, filters).grouped.keys()], ["2026-09-21", "2026-09-20"]);
   const sameDay = { ...ledger, transactions: [...ledger.transactions, { ...expense, id: "dinner" }] };
-  assert.deepEqual(selectOverview(sameDay, filters).grouped.get(expense.date)?.map((t) => t.id), ["meal", "dinner"]);
+  assert.deepEqual(selectOverview(sameDay, filters).grouped.get(expense.date)?.map((t) => t.id), ["dinner", "meal"]);
 });
 
 test("empty months have no spending and zero totals", () => {
@@ -45,7 +45,7 @@ test("calendar handles leap years, Monday starts, six-week months and year bound
   assert.equal(shiftMonthKey("2026-01", -1), "2025-12");
 });
 
-test("future schedules appear in calendar and filtered lists without changing recorded totals or the ledger", () => {
+test("future schedules appear in calendar, filtered lists and projected totals without changing recorded totals or the ledger", () => {
   const rule = { ...expense, id: "rent", frequency: "monthly" as const, active: true, anchorDay: 31, nextDate: "2026-09-30" };
   const data = { ...ledger, recurring: [rule] };
   const before = structuredClone(data);
@@ -54,7 +54,9 @@ test("future schedules appear in calendar and filtered lists without changing re
   assert.equal(result.visibleEntries[0].scheduled, true);
   assert.equal(result.visibleEntries[0].recurringId, rule.id);
   assert.equal(result.visibleEntries[0].date, "2026-10-31");
-  assert.deepEqual(result.summary, { expense: 0, income: 0, investment: 0 });
+  assert.deepEqual(result.recorded, { expense: 0, income: 0, investment: 0 });
+  assert.deepEqual(result.summary, { expense: 1000, income: 0, investment: 0 }, "projected counts the scheduled expense");
+  assert.deepEqual(result.spending, [], "spending stays recorded-only");
   assert.equal(result.monthEntries.length, 0);
   assert.deepEqual(data, before);
 });
@@ -97,8 +99,12 @@ test("twice-monthly income funds the overview before payday and is replaced by r
     assert.equal(result.summaryEntries.filter((entry) => entry.kind === "income").reduce((sum, entry) => sum + entry.share, 0), 400000);
     assert.equal(result.monthEntries.filter((entry) => entry.kind === "income").reduce((sum, entry) => sum + entry.share, 0), receivedIncome);
     if (date === "2026-09-01") {
-      assert.deepEqual(result.summary, { income: 400000, expense: 250000, investment: 20000 });
-      assert.equal(result.summary.income - result.summary.expense - result.summary.investment, 130000);
+      // Projected adds scheduled rent (1,000) and the scheduled contribution (200,000) too.
+      assert.deepEqual(result.recorded, { income: 0, expense: 250000, investment: 20000 });
+      assert.deepEqual(result.summary, { income: 400000, expense: 251000, investment: 220000 });
+      assert.equal(result.summary.income - result.summary.expense - result.summary.investment, -71000);
+      // The money-flow chart keeps recorded entries plus expected income.
+      assert.deepEqual(result.moneyFlowEntries.map((entry) => entry.id).sort(), ["invest", "meal", "midmonth:2026-09-15", "monthend:2026-09-30"]);
     }
   }
   assert.deepEqual(data, before);
@@ -117,4 +123,20 @@ test("expected income uses scheduled shares, month boundaries and recorded occur
   assert.equal(result.expectedIncome, 0);
   assert.equal(result.summary.income, 60000);
   assert.deepEqual(result.summaryEntries, [recorded]);
+});
+
+test("with today, income dated after it is expected: projected but not recorded, still listed (MAZ-136)", () => {
+  // Payday is 2026-09-21 and lunch 2026-09-20. Without today (the legacy Overview) both count.
+  assert.deepEqual(selectOverview(ledger, filters).recorded, { expense: 1000, income: 50000, investment: 0 });
+  const before = structuredClone(ledger);
+  const ahead = selectOverview(ledger, { ...filters, today: "2026-09-20" });
+  assert.deepEqual(ahead.recorded, { expense: 1000, income: 0, investment: 0 });
+  assert.deepEqual(ahead.summary, { expense: 1000, income: 50000, investment: 0 });
+  assert.equal(ahead.expectedIncome, 50000);
+  assert.deepEqual(ahead.expected.map((entry) => entry.id), ["salary"]);
+  assert.deepEqual(ahead.visibleEntries.map((entry) => entry.id), ["salary", "meal"]);
+  // On its date it is recorded; a future-dated expense is never expected (MAZ-139).
+  assert.deepEqual(selectOverview(ledger, { ...filters, today: "2026-09-21" }).recorded, { expense: 1000, income: 50000, investment: 0 });
+  assert.deepEqual(selectOverview(ledger, { ...filters, today: "2026-09-01" }).recorded, { expense: 1000, income: 0, investment: 0 });
+  assert.deepEqual(ledger, before);
 });

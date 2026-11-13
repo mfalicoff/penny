@@ -1,4 +1,4 @@
-import type { Frequency } from "./ledger";
+import type { Frequency } from "./ledger.ts";
 
 // Shared records live outside the private Ledger snapshot. All amounts are integer cents.
 export type Household = {

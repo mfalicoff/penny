@@ -2,45 +2,50 @@
 
 [App showcase](../README.md) · [Documentation](README.md)
 
-All executable tests live under `tests/`. Choose the lowest layer that proves the behavior; add an end-to-end journey only when an actual browser or native runtime matters. Jest's iOS/Android presets are not device tests, and a phone-sized browser is not a native app.
+Choose the lowest layer that proves the behavior; add an end-to-end journey only when an actual browser or native runtime matters. A phone-sized browser is not a native app.
 
 ## Layout and ownership
 
+The root package holds the legacy Node API (`server/`), the shared TypeScript rules (`src/domain/`) and their tests. Each app owns its own tests.
+
 | Location | Runner | Responsibility |
 | --- | --- | --- |
-| `tests/core/` | Node test runner | Pure rules, money/date boundaries, immutable commands, HTTP/SQLite integration and backend permissions |
-| `tests/ui/` | Jest / Expo | Component interactions, providers, client data/session behavior, routing; mirrors the corresponding `src/` hierarchy |
-| `tests/ui/support/` | Shared Jest support | Native mocks, setup and strict real-DOM web renderer |
-| `tests/e2e/web/` | Playwright / Chromium | Exported production web app + real API; desktop and phone viewport journeys |
-| `tests/e2e/native/` | Node + `agent-device` | Actual iOS Simulator / Android Emulator journeys, with shared scenarios and reusable platform lifecycle |
+| `tests/core/` | Node test runner | Pure rules, money/date boundaries, immutable commands, entry drafts, HTTP/SQLite integration of the legacy API, backend permissions and contract checks |
+| `tests/fullstack/` | Node test runner | The disposable .NET API + PostgreSQL environment: isolation, cleanup, seeds, OIDC and legacy versus .NET comparison |
+| `contracts/fixtures/` + `scripts/fixtures/` | `npm run fixtures:check` | The golden fixtures and their manifest, shared with the .NET, Swift and web tests |
+| `apps/ios/` | `apps/ios/scripts/ios.sh` | SwiftUI app and PennyKit tests, XCUITest journeys ([native iOS app](../apps/ios/README.md#tests), [native UI tests](ios-ui-tests.md)) |
+| `apps/web/` | Vitest + Playwright | Browser app tests ([web app](../apps/web/README.md#ci)) |
+| `apps/backend/` | .NET test runner | .NET API tests against a real PostgreSQL ([backend](../apps/backend/README.md#verification-and-ci)) |
 
-Do not add tests under `src/`, root `e2e/`, or generated `ios/` and `android/` directories. Keep runner configuration at the root and executable command wrappers in `scripts/`. Core/UI files use `*.test.ts(x)`; real-DOM UI cases use `*.web.test.jsx`; browser journeys use `*.spec.ts`; native entry points use `*.ios.test.mjs` / `*.android.test.mjs`.
+Do not add tests under `src/` or root `e2e/`. Core files use `*.test.ts`; full-stack files use `*.test.mjs`. Keep executable command wrappers in `scripts/`.
+
+The Expo/React Native app was removed in MAZ-98, with its Jest suites (`tests/ui/`) and simulator journeys (`tests/e2e/native/`). Android is retired ([Android retirement](ios-ipa.md#android-retirement)).
+
+The v2 browser app in `apps/web/` has colocated `src/**/*.test.ts(x)`, app-level tests in `apps/web/tests/` and a Playwright smoke in `apps/web/e2e/`. Its Vitest setup gives every test a fresh, empty IndexedDB (`fake-indexeddb`), so the durable offline store runs for real in component tests; the offline engine, legacy-import and multi-tab cases are in `apps/web/tests/offline/` and the real-browser journeys in `e2e/offline.spec.ts` ([browser offline sync](web-offline-sync.md#tests)). Its CI is `.github/workflows/web.yml`. Browser and cross-client acceptance evidence by feature, with runner commands and known gaps, is in [acceptance](acceptance.md) (MAZ-96). Shared-household journeys (MAZ-91) run two browser contexts against an in-memory household fake (`apps/web/tests/fakes/householdServer.ts`) in CI, and against the real .NET API and PostgreSQL with `e2e/households.real.spec.ts` under the [full-stack test environment](migration/test-environment.md) (`PENNY_REAL_STACK=1`). Recurring schedules (MAZ-90) have model tests (`tests/recurring-model.test.ts`), app tests over the durable store (`tests/recurring.test.tsx`), the browser merge cases (`tests/offline/merge.test.ts`) and a mocked Playwright journey (`e2e/recurring.spec.ts`) that pins the browser clock with `page.clock` to cover short months, leap days, catch-up and a schedule deleted on another device ([web app](../apps/web/README.md#recurring-schedules-maz-90)).
 
 ## Commands
 
-Use Node 24 and the committed npm lockfile (`npm ci`).
+Use Node 24 and the committed npm lockfile (`npm ci`). From the repository root:
 
 | Command | Runs |
 | --- | --- |
-| `npm test` | Portable default: core + all three Jest projects |
-| `npm run test:core` | Node rules/API suite |
-| `npm run test:ui` | iOS + Android component/data tests and web DOM tests |
-| `npm run test:ui:ios` / `test:ui:android` / `test:ui:web` | One Jest platform |
-| `npm run test:ui:watch` | Interactive Jest development |
-| `npm run test:coverage` | Core/API + all Jest projects, with code coverage |
-| `npm run test:coverage:core` / `test:coverage:ui` | Coverage for one test layer |
-| `npm run test:e2e:web` | Fresh web export, isolated API/database and Playwright journeys |
-| `npm run test:e2e` | Browser E2E default; does not imply native coverage |
-| `npm run test:e2e:check -- ios` | Check iOS tooling, runtime and app binary without booting a device |
-| `npm run test:e2e:check -- android` | Check Android tooling, AVD/image and APK without booting a device |
-| `npm run test:e2e:check -- all` | Check both native platforms |
-| `npm run test:e2e:ios` / `test:e2e:android` | One real native platform |
-| `npm run test:e2e:native` | Both native platforms, sequentially |
-| `npm run test:all` | Core + all Jest projects + browser + both native platforms |
+| `npm test` / `npm run test:core` | Node rules/API suite (`tests/core`) |
+| `npm run test:coverage` | The core suite with code coverage |
+| `npm run test-env -- run --seed NAME -- <command>` | Disposable .NET API + PostgreSQL environment for a browser or simulator runner ([test environment](migration/test-environment.md)) |
+| `npm run test:fullstack` | Environment isolation, cleanup, seeds, OIDC and legacy versus .NET comparison (needs Docker/Podman, the .NET SDK and the search model; receipt OCR is off there unless `PENNY_OCR_WORKER=true`) |
+| `npm run fixtures:generate` / `fixtures:check` | Regenerate or verify the golden fixtures and their manifest |
+| `npm run lint` / `npm run typecheck` | ESLint and TypeScript over `src`, `server`, `tests` and `scripts` |
 
-`test:all` requires a macOS machine with both native toolchains and app binaries. An explicitly requested platform fails with setup guidance when prerequisites are missing; it is never silently skipped. Run native suites one at a time; parallel instrumentation can destabilize the Android automation bridge.
+For the apps:
 
-For everyday changes, run the relevant layer while iterating, then `npm run lint`, `npm run typecheck`, and `npm test`. Run browser E2E for web journeys and the affected native platform for native behavior. Before a cross-platform release, run `npm run test:all` on the prepared macOS workstation and complete the device-only checks below. Bundle exports validate resolution, not interaction.
+| Command | Runs |
+| --- | --- |
+| `apps/ios/scripts/ios.sh ci` | Native lint, PennyKit tests, app tests on iPhone and iPad simulators and the Release check |
+| `apps/ios/scripts/ios.sh ui-test smoke` | XCUITest plan (smoke, full, screenshots or performance) against the full-stack environment |
+| `(cd apps/web && npm run check)` | The web app's checks; see its [CI section](../apps/web/README.md#ci) for the Playwright commands |
+| `apps/backend` | See [verification and CI](../apps/backend/README.md#verification-and-ci) |
+
+For everyday changes, run the relevant layer while iterating, then `npm run lint`, `npm run typecheck` and `npm test`. Run the web app's checks for browser behavior and `ios.sh` for native behavior. Before a release, complete the [TestFlight upgrade and device checklist](ios-ipa.md#testflight-upgrade-and-device-checklist) and the [native QA release gates](ios-qa.md).
 
 ## Code coverage
 
@@ -48,130 +53,63 @@ For everyday changes, run the relevant layer while iterating, then `npm run lint
 npm run test:coverage
 ```
 
-Normal `npm test` remains uninstrumented for faster local feedback. Coverage runs the same core/UI suites, not a reduced test selection, and produces terminal summaries plus browsable HTML, LCOV (`lcov.info`) and machine-readable JSON (`coverage-summary.json`).
+Normal `npm test` remains uninstrumented for faster local feedback. Coverage runs the same core suite with `c8` (V8) and produces a terminal summary plus browsable HTML, LCOV (`lcov.info`) and machine-readable JSON (`coverage-summary.json`).
 
 | Report | Source boundary | HTML entry point |
 | --- | --- | --- |
 | Core/API (`c8` / V8) | All `server/**/*.ts` and `src/domain/**/*.ts`, including files never imported by tests | `coverage/core/index.html` |
-| UI (Jest / Babel) | All `src/**/*.{ts,tsx}`, including untested files; excludes declaration files | `coverage/ui/index.html` |
 
-Tests, fixtures, dependencies and generated native projects are outside these source boundaries. Core's frontend helper/selector execution is reflected in its tests but only backend/domain code is measured in the core report; the UI report owns the complete frontend source tree.
+Tests, fixtures and dependencies are outside this boundary. The apps measure their own coverage.
 
-The UI report combines the iOS, Android and web Jest projects: a covered line means at least one project executed it, not that every platform did. Core and UI reports intentionally stay separate: source ownership overlaps in `src/domain`, and V8/Babel count statements/branches differently. Do not average their percentages or claim a single cross-platform score.
-
-To inspect one Jest platform without overwriting the combined report:
-
-```sh
-npm run test:coverage:ui -- --selectProjects ios --coverageDirectory=coverage/ui-ios
-```
-
-Replace `ios` with `android` or `web` as needed. HTML/LCOV show missed lines and branches for prioritizing meaningful tests. No arbitrary percentage threshold is enforced initially; test failures still fail the coverage command. Establish thresholds only after reviewing the baseline and deciding which behavior needs protection.
-
-Browser and simulator/emulator E2E are not instrumented. Code coverage does not prove native layout, permissions, pickers, push delivery or physical-device behavior. Reports are ignored by Git; CI retains HTML/LCOV/JSON as the `code-coverage` artifact, excluding raw V8 temporary data.
+HTML/LCOV show missed lines and branches for prioritizing meaningful tests. No percentage threshold is enforced; test failures still fail the coverage command. Reports are ignored by Git; CI retains HTML/LCOV/JSON as the `code-coverage` artifact, excluding raw V8 temporary data.
 
 ### Measured baseline — October 24, 2026
+
+Recorded before the Expo app's removal (MAZ-98). The UI row measured the removed Jest suites.
 
 | Layer | Statements | Branches | Functions | Lines |
 | --- | --- | --- | --- | --- |
 | Core/API | 86.64% | 87.75% | 91.37% | 86.64% |
-| UI (iOS + Android + web combined) | 67.30% | 64.62% | 61.12% | 72.41% |
+| UI (legacy iOS + Android + web combined) | 67.30% | 64.62% | 61.12% | 72.41% |
 
-Verified `npm run test:coverage` with all 85 core and 237 UI tests passing; the documented iOS-only command also passed its 101 tests. Inspected HTML source drilldowns in Chromium, including real hit/miss annotations and the untested backend entry point at 0%. Confirmed untested widget source is present, LCOV/JSON reports are generated, and a failing child command keeps its nonzero exit status. Lint and typecheck passed. Shared CI coverage/upload contracts were checked locally; hosted Actions execution was not performed.
+At the time, `npm run test:coverage` passed with all 85 core and 237 UI tests. HTML drilldowns, LCOV/JSON reports and a failing child command's nonzero exit status were checked. Hosted Actions execution was not performed.
 
 ## Browser setup
 
-```sh
-npx playwright install chromium
-npm run test:e2e:web
-```
+Browser journeys belong to the v2 web app: from `apps/web`, run `npx playwright install chromium` once and then `npm run test:e2e` (mocked API) or `npm run test:e2e:real` (real .NET API and PostgreSQL). See [the web app's tests](../apps/web/README.md#ci). The production web image is covered by `scripts/deploy-smoke.mjs` ([container images](deployment.md#container-images-and-releases)).
 
-The wrapper exports current JavaScript with a fixture API URL, starts the production web app/API on `127.0.0.1:4173`, and uses a fresh temporary SQLite database. It never reuses a running development server. Coverage includes registration/login, demo navigation, expense/income/investment entries, filters, receipts, accounts/categories/trips, recurring entries, settings and persistence. OIDC provider sign-in still needs an external identity provider; controlled OIDC behavior is covered at the service/API and UI layers.
+## Native setup
 
-Use exact accessible-name matching for navigation buttons (`getByRole("button", { name: "Categories", exact: true })`). Substring matching also finds the overview's **Filter by category: All categories** pill.
-
-Playwright writes failure screenshots, video and traces to `test-results/web/`, and HTML to `test-results/web-report/`.
-
-## Native workstation setup
-
-Install the platform toolchains once; do not bake personal device IDs or absolute app paths into tests.
-
-1. **iOS:** macOS, Xcode and an available iPhone simulator runtime. Build/install a compatible simulator app with `npx expo run:ios`, or provide a simulator `.app` via `PENNY_IOS_APP_PATH` (a device IPA is not compatible).
-2. **Android:** Android SDK, emulator, `adb` and a configured AVD with its system image installed. Build a compatible debug APK with `npx expo run:android`, or provide `PENNY_ANDROID_APK`.
-3. **Automation:** install `agent-device` separately and expose it on `PATH`. Tests never download or upgrade this tool automatically.
-4. Run the native preflight commands above, then the relevant native suite.
-
-[Expo's local build guide](https://docs.expo.dev/guides/local-app-development/) explains toolchain setup and when to rebuild. Rebuild after native library/config-plugin/SDK changes. JavaScript-only changes are served fresh by the harness's own Metro process. Keep generated native projects ignored; configure them through app config/plugins, not hand edits.
-
-### Platform selection
-
-| Setting | Purpose |
-| --- | --- |
-| `PENNY_IOS_APP_PATH` | Explicit simulator `.app`; otherwise discover an installed Penny binary |
-| `PENNY_XCODE_DEVELOPER_DIR` | Xcode developer directory; default `/Applications/Xcode.app/Contents/Developer` |
-| `PENNY_IOS_RUNTIME` / `PENNY_IOS_DEVICE_TYPE` | Explicit iOS runtime/device-type identifiers or exact names |
-| `ANDROID_HOME` / `ANDROID_SDK_ROOT` | Android SDK; otherwise the usual macOS/Linux SDK location |
-| `ANDROID_AVD_HOME` / `ANDROID_USER_HOME` | Source AVD configuration location |
-| `PENNY_ANDROID_AVD` | Explicit source AVD profile |
-| `PENNY_ANDROID_APK` | Debug APK; default `android/app/build/outputs/apk/debug/app-debug.apk` |
-| `PENNY_ADB_PATH` | Explicit `adb` executable instead of `PATH` discovery |
-
-Choose explicit profiles/binaries for repeatable release checks; automatic discovery is a convenience for local development. iOS prefers a booted matching source simulator, then stable runtime/device ordering; an explicit `.app` can use an available compatible runtime without an existing installation. Android defaults to the alphabetically first AVD. The harness deliberately ignores inherited `DEVELOPER_DIR` (Nix may point it at an SDK without simulator tools); use `PENNY_XCODE_DEVELOPER_DIR` to override full Xcode. iOS puts Xcode and Apple system tools ahead of inherited tool wrappers on `PATH`.
-
-### Isolation and lifecycle
-
-Both platforms use the same server-selection scenarios. Shared support owns fixture servers, Metro startup, command evidence and process teardown; platform adapters own device creation, installation, launch and disposal. New native journeys reuse that lifecycle rather than copying an entire emulator setup into a new test.
-
-- iOS creates a temporary simulator and reuses only the source app binary, never the source simulator's data.
-- Android copies only AVD configuration into a temporary directory, boots headlessly with snapshots disabled and installs the APK. It does not copy/wipe the source AVD's app data, userdata, SD card or snapshots.
-- Each run starts in-memory Penny backends and a non-Penny fixture on free loopback ports. Metro uses IPv4 localhost; Android maps Metro/API ports with `adb reverse`.
-- No real accounts, configured Penny backend or local `.env` API URL are used.
-- Each run owns a separate `agent-device` state directory/daemon, retained with its evidence. It stops only that daemon during teardown; existing user automation sessions are untouched.
-- Cleanup closes the automation session, stops services, deletes the temporary simulator/AVD and retains evidence, including on assertion failures.
-
-Native evidence lives under `test-results/native/ios/server-connection/` and `test-results/native/android/server-connection/`: screenshots, command transcripts, backend requests, Metro output, and Android emulator output.
-
-### Native coverage and limits
-
-The shared journey checks five behaviors on each platform:
-
-- First launch retains the build's URL without an identity probe.
-- Invalid/non-Penny URLs cannot be saved, and identity requests contain no session credentials.
-- A valid Penny version appears before saving; input changes invalidate verification.
-- The selected URL/version survive app termination/relaunch and startup reaches that backend.
-- Settings shows the selected server and prevents switching inside an active workspace.
-
-This is not a full native equivalent of the browser suite. Jest covers forms, validation, retries, navigation, offline/session behavior and platform-specific date controls. Native server-selection tests do not cover OS permission prompts, real receipt pickers/PDF decoding, push delivery, widgets, physical-device layout, or upgrading an old native binary. Test these explicitly on devices when affected; migration logic also has data-layer coverage.
-
-For a manual native smoke pass: launch a fresh development build, enter the demo, navigate, create an expense, select a date, inspect settings, background/resume and verify the saved entry/totals. Use fixture/demo data rather than personal accounts. TestFlight/signing and physical-device checks remain separate from simulator automation.
+Native tests belong to `apps/ios`. Its [README](../apps/ios/README.md) covers the pinned Xcode, first-time simulator setup and the `ios.sh` commands. [Native UI tests](ios-ui-tests.md) cover simulator provisioning, the OS/device matrix, launch controls, upgrade seeds and artifacts. Physical-device and TestFlight checks are in the [native QA matrix](ios-qa.md) and the [TestFlight checklist](ios-ipa.md#testflight-upgrade-and-device-checklist).
 
 ## CI policy
 
-`.github/workflows/tests.yml` is the reusable application check used by both container and mobile release workflows. It runs lint, typecheck, core tests and all three Jest projects via `npm run test:coverage`, then browser E2E on Node 24/Linux. It uploads code coverage as `code-coverage` and browser evidence as `playwright-report`, including available reports on failure. Each core/UI test runs once, with coverage enabled.
+The reusable workflow also validates `contracts/openapi.json` with pinned Redocly CLI 2.76.0. `tests/core/contracts.test.ts` checks exact legacy route coverage (planned routes are marked separately), sanitized fixtures, local substring behavior and redesign trace completeness. [Migration verification](migration/verification.md) distinguishes these legacy/specification checks from the PostgreSQL/.NET/Swift/TanStack gates.
+
+`.github/workflows/tests.yml` is the reusable application check used by both the container and [iOS TestFlight](../.github/workflows/ios-testflight.yml) workflows. It runs the release version check, lint, typecheck, the API contract lint and the core tests with coverage (`npm run test:coverage`) on Node 24/Linux, and uploads code coverage as `code-coverage`.
 
 The container workflow invokes these checks on every pull request, regardless of
 target branch, including Renovate and fork PRs. After checks pass, it builds
 `linux/amd64` and `linux/arm64` images without registry login or publication.
 New commits cancel superseded PR runs. Pushes to the default branch (`master`),
 release tags, and manual runs validate before publishing; only `master` updates
-the `latest` tag. Signed mobile builds and TestFlight submission remain limited
-to release tags and manual runs, never pull requests.
+the `latest` tag. Signed iOS builds and TestFlight uploads remain limited
+to published releases and manual runs, never pull requests.
 
-Native device E2E is an explicit workstation/release gate, not an implied result of Linux CI or an EAS build. The repository does not provision Xcode runtimes, AVD images, `agent-device`, or native development binaries on hosted CI. Do not add a green job that skips missing devices; provision those prerequisites before moving native execution to a dedicated runner.
+The native SwiftUI app has its own workflow, `.github/workflows/ios.yml` (MAZ-66), on the GitHub `xcode-27` image. It runs on pull requests that touch `apps/ios/`, `contracts/`, `package.json`, `docs/ios-ipa.md`, `apps/backend/`, `scripts/test-env/` or the Nix flake, and the TestFlight workflow calls it before archiving. It runs swift-format and module-boundary lint, PennyKit tests on the macOS host, app and PennyKit tests on newly created iPhone and iPad simulators, a Release build that must exclude test controls, and a launch with screenshots on both simulators. It uploads `ios-test-results`. Run the same steps locally with `apps/ios/scripts/ios.sh ci` ([native app](../apps/ios/README.md#commands)). Sign-in and session tests are listed in [native sign-in](ios-authentication.md#tests-and-configuration); XCUITest journeys are in [native UI tests](ios-ui-tests.md).
 
 ## Adding or changing tests
 
 - Assert consumer-visible behavior, boundaries, transitions, permissions and failure recovery; avoid snapshots of implementation structure or tests that merely echo mocks.
-- Keep pure rules/API invariants in core. Use UI tests for interactions without OS dependencies. Use browser/native E2E only for the corresponding runtime boundary.
-- Mirror source ownership under `tests/ui/`; never put test code in Expo Router's route tree.
-- Native UI cases run under both Expo presets. Web cases use the strict shared DOM renderer; do not silence React warnings/errors.
-- Keep fixtures isolated and deterministic. New native journeys must use the common lifecycle and platform adapters, preserve fresh device data and retain failure evidence.
-- Update this strategy when adding a platform, runner, command or prerequisite rather than adding another standalone setup guide.
+- Keep pure rules/API invariants in core. Put client behavior in the app that owns it.
+- Keep fixtures isolated and deterministic. Regenerate golden fixtures with `npm run fixtures:generate` and commit the manifest.
+- Update this strategy when adding a runner, command or prerequisite rather than adding another standalone setup guide.
 
 ## Consolidation verification — October 24, 2026
 
-- `npm test`: 85 core tests and 237 UI tests across 52 Jest project suites passed.
-- `npm run test:e2e:web`: fresh production export and all 17 Chromium journeys passed.
-- `npm run test:e2e:check -- all`: both native platform prerequisites resolved. Explicit iOS app/runtime/device selection and invalid-platform/missing-APK failure paths were also exercised.
-- `npm run test:e2e:native`: iOS then Android passed all five scenarios each (six Node results per platform including the parent), with isolated automation daemons. Used iPhone 17 / iOS 27.0 and Pixel 10 Pro / Android 17 (`android-37.1` image), existing development binaries and current JavaScript.
-- Inspected both platforms' Settings screenshots. Confirmed temporary iOS simulators from both the successful run and an earlier failed run were deleted, and the temporary Android emulator was disconnected.
-- `npm run lint` and `npm run typecheck` passed. Reusable workflow YAML parsed and caller/dependency contracts resolved locally; hosted GitHub Actions execution was not performed.
+Recorded before the Expo app's removal and the Android retirement (MAZ-98). The UI, Expo web and native-journey commands it lists no longer exist.
+
+- 85 core tests and 237 UI tests across 52 Jest project suites passed.
+- A fresh Expo web production export and all 17 Chromium journeys passed.
+- The legacy native journeys passed all five scenarios on iOS and Android, with isolated automation daemons, on iPhone 17 / iOS 27.0 and Pixel 10 Pro / Android 17.
+- Lint and typecheck passed. Reusable workflow YAML parsed and caller/dependency contracts resolved locally; hosted GitHub Actions execution was not performed.

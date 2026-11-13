@@ -1,6 +1,6 @@
 # Penny
 
-A little more clarity about your money. Track expenses, income, and investment contributions on **iOS, Android, and web**, with a self-hosted server that keeps your devices in sync.
+A little more clarity about your money. Track expenses, income, and investment contributions on **iOS and web**, with a self-hosted server that keeps your devices in sync. Android is no longer supported.
 
 [Try it locally](docs/development.md#run-the-complete-web-app) · [Self-host Penny](docs/deployment.md) · [Documentation](docs/README.md)
 

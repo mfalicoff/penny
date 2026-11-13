@@ -1,0 +1,207 @@
+{
+  "version": 1,
+  "description": "Every shared fixture, its SHA-256 (LF line endings) and the suites consuming it. Regenerate with `node --experimental-strip-types scripts/fixtures/generate-golden.ts`; tests in each language verify the hashes, so an unreviewed edit fails everywhere.",
+  "fixtures": [
+    {
+      "file": "full-stack-seeds.json",
+      "sha256": "47e4b1749f8f02a7c517acc87fc3c0ff18b8dcfedc08390a01c3dc34b6a1d50f",
+      "generatedBy": null,
+      "consumers": {
+        "typescript": [
+          "tests/core/golden-fixtures.test.ts",
+          "tests/core/parity-coverage.test.ts",
+          "tests/fullstack/environment.test.mjs"
+        ],
+        "csharp": [
+          "apps/backend/tests/Penny.Backend.IntegrationTests/Contracts/FullStackSeedTests.cs"
+        ],
+        "swift": [
+          "contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"
+        ]
+      }
+    },
+    {
+      "file": "http-journey.json",
+      "sha256": "14f27b09cd6cf42f3ac68d8f9d2881862c5868e856b829c2da4b02949c12d292",
+      "generatedBy": null,
+      "consumers": {
+        "typescript": [
+          "tests/core/contracts.test.ts"
+        ],
+        "csharp": [
+          "apps/backend/tests/Penny.Backend.IntegrationTests/Controllers/LedgerTests.cs"
+        ],
+        "swift": "MAZ-71 (Swift API client)"
+      }
+    },
+    {
+      "file": "ledger-upgrades.json",
+      "sha256": "52e2ade8c05421841daba887aec58b604a346766c3a771345022a672d268e850",
+      "generatedBy": null,
+      "consumers": {
+        "typescript": [
+          "tests/core/contracts.test.ts"
+        ],
+        "csharp": [
+          "apps/backend/tests/Penny.Backend.UnitTests/Ledgers/LedgerReaderTests.cs",
+          "apps/backend/tests/Penny.Backend.IntegrationTests/Contracts/LedgerUpgradeFixtureTests.cs"
+        ],
+        "swift": [
+          "contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"
+        ]
+      }
+    },
+    {
+      "file": "merge-conflicts.json",
+      "sha256": "4538510c5350d48b9931ec8b1347b094c0ad6ea65971b274d5b490f8b604e349",
+      "generatedBy": "scripts/fixtures/generate-golden.ts",
+      "consumers": {
+        "typescript": [
+          "tests/core/golden-fixtures.test.ts"
+        ],
+        "csharp": "not applicable: the server never merges; it rejects stale writes with 409 (http-journey.json)",
+        "swift": [
+          "contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift",
+          "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/LedgerMergeTests.swift"
+        ]
+      }
+    },
+    {
+      "file": "money.json",
+      "sha256": "17ca9f55f480cd0766a20f1e11863b02d83d2e5d7e2fff0e5bcb43bdd126a96a",
+      "generatedBy": "scripts/fixtures/generate-golden.ts",
+      "consumers": {
+        "typescript": [
+          "tests/core/golden-fixtures.test.ts"
+        ],
+        "csharp": [
+          "apps/backend/tests/Penny.Backend.UnitTests/Contracts/GoldenFixtureTests.cs"
+        ],
+        "swift": [
+          "contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"
+        ]
+      }
+    },
+    {
+      "file": "month-totals.json",
+      "sha256": "5f4c90ba0bdc484655d7789bd45e217050dc0069cdd2f98b399ffa812232b1ae",
+      "generatedBy": "scripts/fixtures/generate-golden.ts",
+      "consumers": {
+        "typescript": [
+          "tests/core/golden-fixtures.test.ts"
+        ],
+        "csharp": "not applicable: Left to spend and Projected are client calculations; the seeded server's ledger is checked against redesign-states.json totals (FullStackSeedTests)",
+        "swift": [
+          "contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift",
+          "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/ReportTests.swift"
+        ]
+      }
+    },
+    {
+      "file": "parity-cases.json",
+      "sha256": "12f0fb94110417c987b290bb952821cea3f64dc69323632575fbd0587079d8f0",
+      "generatedBy": null,
+      "consumers": {
+        "typescript": [
+          "tests/core/contracts.test.ts"
+        ],
+        "csharp": [
+          "apps/backend/tests/Penny.Backend.UnitTests/Households/HouseholdSplitsTests.cs"
+        ],
+        "swift": [
+          "contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"
+        ]
+      }
+    },
+    {
+      "file": "recurrence.json",
+      "sha256": "5354085bf14750e36ddc884ba1e2be40f4b9138a6450e141466f0e32139a46cc",
+      "generatedBy": "scripts/fixtures/generate-golden.ts",
+      "consumers": {
+        "typescript": [
+          "tests/core/golden-fixtures.test.ts"
+        ],
+        "csharp": [
+          "apps/backend/tests/Penny.Backend.UnitTests/Contracts/GoldenFixtureTests.cs"
+        ],
+        "swift": [
+          "contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"
+        ]
+      }
+    },
+    {
+      "file": "redesign-states.json",
+      "sha256": "309abd9ce3231d010d1de0ba0c46b8add5c416626e1e44bf2a7099c4713a8b23",
+      "generatedBy": null,
+      "consumers": {
+        "typescript": [
+          "tests/core/golden-fixtures.test.ts"
+        ],
+        "csharp": "not applicable: client presentation states",
+        "swift": [
+          "contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"
+        ]
+      }
+    },
+    {
+      "file": "search-cases.json",
+      "sha256": "44621743e79451daa62d2f079b44b5362d24ae2e4f387898cf0225ec6c959801",
+      "generatedBy": null,
+      "consumers": {
+        "typescript": [
+          "tests/core/contracts.test.ts",
+          "tests/core/transactions.test.ts"
+        ],
+        "csharp": [
+          "apps/backend/tests/Penny.Backend.UnitTests/Search/SearchTextTests.cs",
+          "apps/backend/tests/Penny.Backend.IntegrationTests/Controllers/SearchFixtureTests.cs"
+        ],
+        "swift": "MAZ-73 (search screens and offline normalization in Swift)"
+      }
+    },
+    {
+      "file": "settlement.json",
+      "sha256": "dbc0cab9efc9142eeca8b88372b3190f66a29a2b2c6d414c157d6e968f7e17f7",
+      "generatedBy": null,
+      "consumers": {
+        "typescript": [
+          "tests/core/households-domain.test.ts"
+        ],
+        "csharp": [
+          "apps/backend/tests/Penny.Backend.UnitTests/Households/MonthlySettlementTests.cs"
+        ],
+        "swift": "MAZ-75 (shared settlement in Swift)"
+      }
+    },
+    {
+      "file": "shared-splits.json",
+      "sha256": "88708b581c371f2966edcd04aafd04e29dcab9766ed63ebe0eaef572af6daafb",
+      "generatedBy": null,
+      "consumers": {
+        "typescript": [
+          "tests/core/households-domain.test.ts"
+        ],
+        "csharp": [
+          "apps/backend/tests/Penny.Backend.UnitTests/Households/HouseholdSplitsTests.cs"
+        ],
+        "swift": [
+          "contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"
+        ]
+      }
+    },
+    {
+      "file": "storage-mapping.json",
+      "sha256": "7c955a387991b26613655139fdbbbb7795775612899e63b05fddec40bd69b811",
+      "generatedBy": null,
+      "consumers": {
+        "typescript": [
+          "tests/core/contracts.test.ts"
+        ],
+        "csharp": [
+          "apps/backend/tests/Penny.Backend.IntegrationTests/Migrations/SqliteImportTests.cs"
+        ],
+        "swift": "not applicable: server storage"
+      }
+    }
+  ]
+}

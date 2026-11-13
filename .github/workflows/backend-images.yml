@@ -1,0 +1,202 @@
+name: Backend images
+
+# MAZ-63: build the .NET API and web images natively on amd64 and arm64, run the
+# production-container smoke test on each, then publish multi-platform images. The web
+# image is the v2 browser app (apps/web) since MAZ-97.
+# The legacy Node image keeps its own workflow (docker-image.yml) until cutover.
+
+on:
+  pull_request:
+    paths:
+      - 'apps/backend/**'
+      - 'apps/web/**'
+      - 'design-kit/**'
+      - 'deploy/**'
+      - 'scripts/deploy-smoke.mjs'
+      - 'scripts/cutover-drill.mjs'
+      - 'scripts/test-env/**'
+      - 'server/**'
+      - 'Dockerfile'
+      - 'src/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.dockerignore'
+      - '.github/workflows/backend-images.yml'
+  push:
+    branches: [v2]
+    tags: ['v*.*.*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-images-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  smoke:
+    name: Build and smoke test (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - uses: docker/setup-buildx-action@v4
+      - name: Build API image
+        uses: docker/build-push-action@v7
+        with:
+          context: apps/backend
+          platforms: linux/${{ matrix.arch }}
+          load: true
+          tags: penny-api:ci
+          build-args: |
+            PENNY_VERSION=0.0.0-ci.${{ github.run_number }}
+            PENNY_REVISION=${{ github.sha }}
+          cache-from: type=gha,scope=api-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=api-${{ matrix.arch }}
+      - name: Build web image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: deploy/web/Dockerfile
+          platforms: linux/${{ matrix.arch }}
+          load: true
+          tags: penny-web:ci
+          build-args: |
+            PENNY_VERSION=0.0.0-ci.${{ github.run_number }}
+            PENNY_REVISION=${{ github.sha }}
+          cache-from: type=gha,scope=web-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=web-${{ matrix.arch }}
+      - name: Check image architecture and user
+        run: |
+          for image in penny-api:ci penny-web:ci; do
+            arch=$(docker image inspect --format '{{.Architecture}}' "$image")
+            user=$(docker image inspect --format '{{.Config.User}}' "$image")
+            echo "$image $arch user=$user"
+            test "$arch" = "${{ matrix.arch }}"
+            test -n "$user" && test "$user" != "root" && test "$user" != "0"
+          done
+      - name: Production container smoke test
+        env:
+          PENNY_SMOKE_API_IMAGE: penny-api:ci
+          PENNY_SMOKE_WEB_IMAGE: penny-web:ci
+        run: node scripts/deploy-smoke.mjs | tee smoke-${{ matrix.arch }}.log
+      - name: Upload smoke log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: deploy-smoke-${{ matrix.arch }}
+          path: smoke-${{ matrix.arch }}.log
+          if-no-files-found: warn
+      # MAZ-65: docs/cutover.md end to end, from the legacy image to these images.
+      - name: Build legacy image
+        if: matrix.arch == 'amd64'
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/${{ matrix.arch }}
+          load: true
+          tags: penny-legacy:ci
+          cache-from: type=gha,scope=legacy-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=legacy-${{ matrix.arch }}
+      - name: Cutover drill
+        if: matrix.arch == 'amd64'
+        env:
+          PENNY_DRILL_LEGACY_IMAGE: penny-legacy:ci
+          PENNY_DRILL_API_IMAGE: penny-api:ci
+          PENNY_DRILL_WEB_IMAGE: penny-web:ci
+        run: node scripts/cutover-drill.mjs | tee cutover-drill.log
+      - name: Upload cutover drill report
+        if: always() && matrix.arch == 'amd64'
+        uses: actions/upload-artifact@v7
+        with:
+          name: cutover-drill
+          path: |
+            cutover-drill.log
+            test-results/cutover-drill/
+          if-no-files-found: warn
+
+  publish:
+    name: Publish multi-platform images
+    needs: smoke
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        include:
+          - image: penny-api
+            context: apps/backend
+            file: apps/backend/Dockerfile
+          - image: penny-web
+            context: .
+            file: deploy/web/Dockerfile
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Image name and version
+        id: image
+        shell: bash
+        run: |
+          echo "name=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/${{ matrix.image }}" >> "$GITHUB_OUTPUT"
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=0.0.0-v2.${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+          fi
+      # Only the final runtime layer is per-architecture (the SDK, Node and model
+      # stages run on the build platform), so emulation stays cheap.
+      - uses: docker/setup-qemu-action@v4
+        with:
+          platforms: arm64
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: metadata
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ steps.image.outputs.name }}
+          flavor: latest=false
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=ref,event=branch
+            type=sha,format=long
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
+      - uses: docker/build-push-action@v7
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.file }}
+          platforms: linux/amd64,linux/arm64
+          push: true
+          provenance: mode=max
+          sbom: true
+          tags: ${{ steps.metadata.outputs.tags }}
+          labels: ${{ steps.metadata.outputs.labels }}
+          build-args: |
+            PENNY_VERSION=${{ steps.image.outputs.version }}
+            PENNY_REVISION=${{ github.sha }}
+          cache-from: |
+            type=gha,scope=${{ matrix.image == 'penny-api' && 'api' || 'web' }}-amd64
+            type=gha,scope=${{ matrix.image == 'penny-api' && 'api' || 'web' }}-arm64

@@ -1,0 +1,268 @@
+/* Buttons and fields shared by the sign-in, sign-out and search screens (MAZ-84). */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.button[aria-disabled="true"] {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.button--block {
+  width: 100%;
+}
+
+.button.button--secondary {
+  background: var(--pk-fill);
+  color: var(--pk-label);
+}
+
+.button.button--danger {
+  background: var(--pk-danger);
+}
+
+.link-button {
+  min-height: 44px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--pk-tint-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.field__error,
+.form-error {
+  color: var(--pk-danger);
+  font-size: 0.875rem;
+}
+
+.form-error {
+  margin: 0;
+  padding: 10px 12px;
+  border: 0.5px solid var(--pk-danger);
+  border-radius: var(--pk-r-field);
+}
+
+.field__hint {
+  font-size: 0.8125rem;
+}
+
+.field input[aria-invalid="true"] {
+  border-color: var(--pk-danger);
+}
+
+.notice {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--pk-r-field);
+  background: var(--pk-tint-soft);
+  color: var(--pk-label);
+  font-size: 0.875rem;
+}
+
+.gate-status {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+  padding: 32px var(--pk-gutter);
+}
+
+/* Sign-in and create-account: brand panel above the form on phones, beside it on wide windows. */
+.auth {
+  display: grid;
+  grid-template-columns: 1fr;
+  min-height: 100dvh;
+}
+
+.auth__brand {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  padding: 24px var(--pk-gutter);
+  background: var(--pk-surface-2);
+}
+
+.auth__logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.auth__logo .icon {
+  color: var(--pk-tint);
+}
+
+.auth__tagline {
+  margin: 12px 0 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.auth__sub {
+  margin: 0;
+  max-width: 420px;
+  color: var(--pk-label-2);
+}
+
+.auth__form {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  width: 100%;
+  max-width: 420px;
+  margin-inline: auto;
+  padding: 24px var(--pk-gutter) 40px;
+  outline: none;
+}
+
+.auth__form h1 {
+  margin: 0;
+  font-size: 1.75rem;
+  letter-spacing: -0.02em;
+}
+
+.auth__lede {
+  margin: 0;
+  color: var(--pk-label-2);
+}
+
+.auth__fields {
+  display: grid;
+  gap: 14px;
+}
+
+.auth__fields .field input {
+  width: 100%;
+}
+
+.auth__sso {
+  display: grid;
+  gap: 10px;
+  justify-items: stretch;
+}
+
+.auth__or {
+  margin: 4px 0;
+  text-align: center;
+  color: var(--pk-label-3);
+  font-size: 0.75rem;
+}
+
+.auth__switch {
+  margin: 8px 0 0;
+  text-align: center;
+  color: var(--pk-label-2);
+}
+
+.callback {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 48px var(--pk-gutter);
+  outline: none;
+}
+
+.callback .button {
+  text-decoration: none;
+}
+
+/* Dialogs (sign-out confirmation, Add entry, the phone navigation drawer). */
+.dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgb(0 0 0 / 0.45);
+}
+
+.dialog__panel {
+  display: grid;
+  gap: 12px;
+  width: min(100%, 400px);
+  padding: 20px;
+  border-radius: 16px;
+  background: var(--pk-surface);
+  color: var(--pk-label);
+}
+
+.dialog__panel h2,
+.dialog__panel p {
+  margin: 0;
+}
+
+.dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* Search results. */
+.results {
+  display: grid;
+  gap: 0;
+  margin: 12px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.results__row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 12px;
+  padding: 12px 0;
+  border-bottom: 0.5px solid var(--pk-separator);
+}
+
+.results__meta {
+  grid-column: 1;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+}
+
+.results__amount {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  font-weight: 600;
+}
+
+@media (min-width: 900px) {
+  .auth {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .auth__brand {
+    padding: 56px;
+    align-content: end;
+  }
+
+  .auth__tagline {
+    font-size: 3rem;
+  }
+
+  .auth__form {
+    align-content: center;
+    padding: 56px 24px;
+  }
+}
+
+.auth__demo {
+  display: grid;
+  gap: 4px;
+}

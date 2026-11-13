@@ -1,0 +1,338 @@
+/*
+ * Activity, entry forms, pickers and entry detail (MAZ-88): specimens `activity`,
+ * `activity-expenses`, `filters`, `add-expense`, `add-income`, `add-investment`, `entry-extras`,
+ * `split`, `entry-detail`, `edit-entry`, `category-picker`, `account-picker`, `date-picker`,
+ * `trip-picker`, `repeat-picker`, `search-empty`, `delete-entry`, `saved`. Values come from the
+ * --pk-* tokens. Money stays on solid surfaces.
+ */
+
+.activity {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.activity-bar,
+.activity-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+}
+
+.activity-bar .choices--segmented {
+  min-width: min(100%, 300px);
+}
+
+.activity-filters .choices--segmented {
+  flex: 1 1 340px;
+  min-width: 0;
+}
+
+.activity-filters .category-chips {
+  flex: 1 1 100%;
+}
+
+.activity-day {
+  min-width: min(100%, 220px);
+}
+
+/* ---------- totals ---------- */
+.totals {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 130px), 1fr));
+  gap: 12px;
+  margin: 0;
+}
+
+.totals > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.totals dt {
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+}
+
+.totals dd {
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- rows ---------- */
+.activity-results {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.activity-results > p {
+  margin: 0;
+}
+
+.results__row.activity-row {
+  display: block;
+  padding: 0;
+}
+
+.activity-row__main {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 2px 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 8px 4px;
+  border: 0;
+  border-radius: var(--pk-r-row);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.activity-row__main:hover {
+  background: var(--pk-surface-2);
+}
+
+.activity-row__main .category-dot {
+  grid-row: 1 / span 2;
+}
+
+.activity-row__main .results__title {
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+
+.activity-row__main .results__meta {
+  grid-column: 2;
+  overflow-wrap: anywhere;
+}
+
+.activity-row__main .results__amount {
+  display: grid;
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  justify-items: end;
+}
+
+.results__sub {
+  color: var(--pk-label-2);
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
+.category-dot {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--pk-fill);
+  vertical-align: middle;
+}
+
+/* Expected (MAZ-136): income dated after today. The row also says "Expected" in text. */
+.category-dot--expected {
+  box-shadow: 0 0 0 2px var(--pk-pending);
+}
+
+/* ---------- chips (frequent categories) ---------- */
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 2px 12px 2px 4px;
+  border-radius: 18px;
+  background: var(--pk-surface);
+  box-shadow: 0 0 0 0.5px var(--pk-separator);
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.chip:not(:has(.category-dot)) {
+  padding-inline-start: 12px;
+}
+
+.chip .category-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 14px;
+}
+
+.chip input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+.chip--on {
+  background: var(--pk-tint-soft);
+  box-shadow: 0 0 0 2px var(--pk-tint);
+}
+
+.chip:has(input:focus-visible) {
+  outline: 2px solid var(--pk-tint);
+  outline-offset: 2px;
+}
+
+@media (pointer: coarse) {
+  .chip {
+    min-height: 44px;
+  }
+}
+
+/* ---------- entry form ---------- */
+.field-with-action {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.field-with-action > select,
+.field-with-action > input {
+  flex: 1 1 160px;
+  min-width: 0;
+}
+
+.disclosure {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  min-height: 44px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--pk-label);
+  font: 600 0.9375rem var(--pk-font);
+  text-align: start;
+  cursor: pointer;
+}
+
+.disclosure .note {
+  font-weight: 400;
+}
+
+.more-details {
+  display: grid;
+  gap: 14px;
+}
+
+.more-details[hidden] {
+  display: none;
+}
+
+.receipt-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--pk-surface-2);
+  overflow-wrap: anywhere;
+}
+
+/* Save stays reachable at the bottom of a long form, above the on-screen keyboard. */
+.dialog__panel:has(.entry-form) .pk-dialog__foot {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+}
+
+/* ---------- pickers ---------- */
+.picker-list {
+  display: grid;
+  max-height: min(50dvh, 360px);
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  list-style: none;
+}
+
+.picker-list li + li {
+  border-top: 0.5px solid var(--pk-separator);
+}
+
+.picker-option {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 48px;
+  padding: 6px 4px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.picker-option:hover {
+  background: var(--pk-surface-2);
+}
+
+.picker-option--on {
+  font-weight: 600;
+}
+
+.picker-option--on .icon:last-child {
+  color: var(--pk-tint);
+}
+
+.inline-create {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 0.5px solid var(--pk-separator);
+}
+
+.inline-create .form-field {
+  flex: 1 1 200px;
+}
+
+/* ---------- entry detail ---------- */
+.entry-detail {
+  display: grid;
+  gap: 6px;
+}
+
+.entry-detail__amount .money {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.entry-detail__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.entry-detail__note {
+  white-space: pre-wrap;
+}

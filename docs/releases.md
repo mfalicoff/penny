@@ -2,7 +2,7 @@
 
 [App showcase](../README.md) · [Documentation](README.md)
 
-Run release commands from the repository root. Platform-specific credentials and distribution instructions live in [Android APK builds](android-apk.md) and [iOS IPA and TestFlight builds](ios-ipa.md). Container publishing is covered in [Self-hosting](deployment.md#automated-container-builds).
+A release publishes the container images and the native iOS TestFlight build. Run release commands from the repository root. Platform-specific credentials and distribution instructions live in [iOS IPA and TestFlight builds](ios-ipa.md). Android builds are retired; see [Android retirement](ios-ipa.md#android-retirement). Container publishing is covered in [Self-hosting](deployment.md#container-images-and-releases).
 
 ## Semantic versioning and releases
 
@@ -13,9 +13,8 @@ Penny uses [Semantic Versioning](https://semver.org/): **MAJOR.MINOR.PATCH**.
 - **Major**: breaking changes to supported behavior, API contracts, or stored-data compatibility.
 
 `package.json` is the version source of truth, starting at the existing `1.0.0`.
-`app.config.js` supplies that version to Expo for Android's `versionName` and
-iOS's `CFBundleShortVersionString`; the backend's `/api/info` also reads it.
-Other Expo settings remain in `app.json`. Do not add a separate version there.
+The native iOS archive checks that its `CFBundleShortVersionString` matches it,
+and the backend's `/api/info` also reads it.
 Store releases use three numeric components without leading zeros; prerelease
 and build suffixes are not supported by this release workflow because iOS
 requires a numeric marketing version. TestFlight builds use the same release
@@ -36,9 +35,10 @@ commit:
    needed.
 4. Release Please creates a matching `vMAJOR.MINOR.PATCH` tag and publishes a
    GitHub Release with the changelog entry as its release notes. The tag starts
-   the container workflow; publishing the release starts the Android/iOS workflow.
-5. As each mobile build finishes, its job attaches `penny.apk` or `penny.ipa`
-   and the corresponding `.sha256` checksum to that release's **Assets**.
+   the container workflow; publishing the release starts the
+   [iOS TestFlight workflow](../.github/workflows/ios-testflight.yml).
+5. When the iOS build finishes, it attaches `penny.ipa` and `penny.ipa.sha256`
+   to that release's **Assets**, then uploads the IPA to TestFlight.
 
 The changelog groups features and fixes and links to their commits. After the
 first release, each version heading links to GitHub's comparison between the
@@ -123,9 +123,10 @@ release builds untriggered. The workflow fails explicitly when the dedicated
 secret is missing. See the
 [Release Please credential requirements](https://github.com/googleapis/release-please-action#github-credentials).
 
-Keep the existing `EXPO_TOKEN`, EAS signing credentials, and `ASC_APP_ID` setup
-from the platform guides. Protect `master` with the existing PR checks to gate
-release PR merges. Prefer squash merging so each PR's release intent is
+Complete the Apple signing and App Store Connect setup in
+[iOS one-time setup](ios-ipa.md#one-time-setup). `EXPO_TOKEN` and `ASC_APP_ID`
+are no longer needed; see [Expo retirement](ios-ipa.md#expo-retirement).
+Protect `master` with the existing PR checks to gate release PR merges. Prefer squash merging so each PR's release intent is
 unambiguous.
 
 ### Builds, deployment, and recovery
@@ -134,30 +135,31 @@ Shared CI for release tags runs `npm run version:check`, rejecting invalid
 versions, lockfile drift, or tags that do not exactly match `v` plus the package
 version. Branch builds also check consistency without requiring a tag.
 The GitHub Release is published before the downstream builds finish;
-assets appear as each mobile build completes, not immediately on publication.
-Monitor the container and mobile runs. If a build or upload fails, rerun that
+assets appear when the iOS build completes, not immediately on publication.
+Monitor the container and iOS runs. If a build or upload fails, rerun that
 failed job for the same release. Uploads replace assets with matching names,
 so reruns do not fail because an earlier build already uploaded them.
 
 The container workflow publishes to GHCR; it does not update a running
-self-hosted server. Android/iOS binaries and checksums are attached directly
-to the GitHub Release and also retained as Actions artifacts for 30 days.
-Manual mobile runs on branches only upload Actions artifacts; manual runs on
+self-hosted server. The IPA and its checksum are attached directly to the
+GitHub Release and also retained, with dSYMs, as Actions artifacts for 30 days.
+Manual iOS runs on branches only upload Actions artifacts; manual runs on
 tags attach assets to the existing release for that tag and fail the upload
-if no release exists. Pushing a tag alone no longer starts mobile builds:
+if no release exists. Pushing a tag alone does not start an iOS build:
 publish its GitHub Release instead.
 
-iOS is still submitted to TestFlight after its release assets are uploaded,
-not to the App Store. The store signed IPA is downloadable but cannot be
-installed directly; testers use TestFlight. See the platform and deployment
-guides for installation and rollout.
+iOS is submitted to TestFlight after its release assets are uploaded, not to
+the App Store. The store signed IPA is downloadable but cannot be installed
+directly; testers use TestFlight. See the
+[release runbook](ios-ipa.md#release-runbook) for rollout.
 
 For an expired or missing release token, replace the secret, then rerun the
 failed **Release Please** run. Merging a release PR with the generated
 `autorelease: pending` label intact lets Release Please recognize it and
 publish it; do not remove its release labels manually.
 
-EAS continues to increment Android `versionCode` and iOS `buildNumber` remotely
-for every build, independently of semantic versions. For local native builds,
-run `npx expo prebuild` after a version bump to refresh the ignored generated
-native projects; do not edit their version fields by hand.
+Native TestFlight builds use the build number
+`IOS_BUILD_NUMBER_BASE.<run>.<attempt>`, independently of semantic versions,
+so every run and rerun is higher than the last and above the build numbers of
+the released Expo builds. See
+[iOS one-time setup](ios-ipa.md#one-time-setup).

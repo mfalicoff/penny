@@ -1,0 +1,13 @@
+// XCUITest bundle (MAZ-81, docs/ios-ui-tests.md). It runs in its own runner process and drives
+// the installed Penny.app; it never links the app's code. Only the PennyUITests scheme builds it.
+PRODUCT_NAME = PennyUITests
+PRODUCT_BUNDLE_IDENTIFIER = com.mfalicoff.penny.uitests
+GENERATE_INFOPLIST_FILE = YES
+TEST_TARGET_NAME = Penny
+// XCTestCase's initializers are nonisolated; under the project's main-actor default Swift
+// synthesizes main-actor overrides of them and rejects those. UI test code marks @MainActor.
+SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated
+CODE_SIGN_STYLE = Automatic
+CODE_SIGN_IDENTITY[sdk=iphonesimulator*] = -
+LD_RUNPATH_SEARCH_PATHS = $(inherited) @executable_path/Frameworks @loader_path/Frameworks
+#include? "Signing.local.xcconfig"

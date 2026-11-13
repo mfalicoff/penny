@@ -1,0 +1,243 @@
+import Foundation
+import PennyData
+import PennyDomain
+import SwiftUI
+import Testing
+
+@testable import PennyUI
+
+@Suite("App shell state")
+struct ShellTests {
+    private let today = CalendarDate(year: 2026, month: 11, day: 9) ?? .earliest
+
+    private func demoShell() -> (ShellModel, DemoWorkspace) {
+        let demo = DemoWorkspace(today: today)
+        return (ShellModel(workspace: demo, session: .demo, today: today, leaveDemo: {}), demo)
+    }
+
+    @Test("whenASaveSucceeds_ShellModel_ShouldShowTheToastAndTriggerTheSuccessHaptic")
+    func saveToast() async throws {
+        let workspace = FixedWorkspace(load: .ready(Ledger()))
+        let shell = ShellModel(workspace: workspace, session: .demo, today: today)
+        let failure = await shell.commit(
+            .changeCurrency(.usd), summary: ChangeSummary(title: "Currency updated", detail: "USD"))
+        #expect(failure == nil)
+        #expect(shell.toast?.summary.title == "Currency updated")
+        #expect(shell.savedCount == 1 && shell.failedCount == 0)
+        #expect(shell.currency == "USD")
+        shell.dismissToast()
+        #expect(shell.toast == nil)
+    }
+
+    @Test("whenASaveFails_ShellModel_ShouldReturnTheFailureWithoutAToast")
+    func saveError() async {
+        let problem = WorkspaceProblem(.server, "The server didn't respond. Your draft is kept.")
+        let workspace = FixedWorkspace(load: .ready(Ledger()), saveFailure: .server(problem))
+        let shell = ShellModel(workspace: workspace, session: .demo, today: today)
+        let failure = await shell.commit(.changeCurrency(.usd), summary: ChangeSummary(title: "Currency updated"))
+        #expect(failure == .server(problem))
+        #expect(shell.toast == nil)
+        #expect(shell.failedCount == 1, "the error haptic fires")
+        #expect(workspace.load.ledger?.currency == .cad, "nothing was kept; the caller keeps the draft")
+    }
+
+    @Test("whenUndoIsTapped_ShellModel_ShouldRevertTheDemoChange")
+    func undo() async throws {
+        let (shell, demo) = demoShell()
+        let entry = try #require(demo.load.ledger?.transactions.first)
+        _ = await shell.commit(.deleteEntry(entry), summary: ChangeSummary(title: "Entry deleted"))
+        #expect(shell.toast?.canUndo == true)
+        #expect(await shell.undoToast() == nil)
+        #expect(demo.load.ledger?.entry(id: entry.id) == entry)
+        #expect(shell.toast == nil)
+    }
+
+    @Test("whenTheDemoIsShown_ShellModel_ShouldHaveNoAccountOrServer")
+    func demoIsolation() {
+        let (shell, _) = demoShell()
+        #expect(shell.isDemo)
+        #expect(shell.account == nil && shell.auth == nil)
+        #expect(shell.leaveDemo != nil && shell.startDemo == nil)
+        #expect(SyncText.line(shell.workspace.sync) == "Demo · changes are temporary")
+    }
+
+    @Test("whenTheLedgerHasEntriesOrAHousehold_CurrencyPolicy_ShouldLockWithTheAPIsReason")
+    func currencyLock() {
+        let empty = Ledger()
+        #expect(CurrencyPolicy.lockReason(ledger: empty) == nil)
+        #expect(
+            CurrencyPolicy.lockReason(ledger: empty, activeHouseholds: 1)
+                == "Currency is locked while you're in a household.")
+        let used = DemoLedger.make(today: today)
+        #expect(CurrencyPolicy.lockReason(ledger: used) == "Currency can only be changed before adding entries.")
+        #expect(CurrencyPolicy.options.map(\.rawValue) == ["CAD", "USD", "EUR", "GBP"])
+    }
+
+    @Test("whenEntriesAreGrouped_ActivityDay_ShouldKeepOrderAndTotalEachDaysNet")
+    func dayGroups() throws {
+        let report = LedgerReport(ledger: DemoLedger.make(today: today))
+        let page = report.activity(.month(MonthKey(today)))
+        let days = ActivityDay.group(page.entries)
+        #expect(days.flatMap(\.entries) == page.entries)
+        #expect(Set(days.map(\.date)).count == days.count)
+        let first = try #require(days.first)
+        let expected = first.entries.reduce(Int64(0)) { $0 + ($1.kind == .income ? $1.share : -$1.share) }
+        #expect(first.net == expected)
+    }
+
+    @Test("whenSyncStatusChanges_SyncText_ShouldNameWhatWaits")
+    func syncText() {
+        let now = Date(timeIntervalSince1970: 1_000_000)
+        #expect(SyncText.line(.upToDate(lastSynced: now.addingTimeInterval(-5)), now: now) == "Synced just now")
+        #expect(SyncText.line(.offline(pending: 2, lastSynced: nil)) == "Offline · 2 changes waiting")
+        #expect(SyncText.line(.syncing(pending: 1)) == "Syncing 1 change…")
+        #expect(SyncText.line(.syncing(pending: 0)) == "Syncing…", "the first download has nothing waiting")
+        #expect(SyncText.line(.signInRequired(pending: 2)) == "Sign in again to sync 2 changes")
+        #expect(SyncBanner.title(.offline(pending: 1, lastSynced: nil)) == "Offline · 1 change waiting")
+        let problem = WorkspaceProblem(.server, "Penny will try again.")
+        #expect(SyncBanner.message(.failing(pending: 1, problem: problem)) == "Penny will try again.")
+        let offline = SyncStatus.offline(pending: 1, lastSynced: nil)
+        #expect(
+            SyncBanner.message(offline, device: "iPad")
+                == "Your changes are saved on this iPad and sync when you're back online.")
+        #expect(SyncBanner.message(offline, device: "iPhone")?.contains("this iPhone") == true)
+    }
+
+    @Test("whenTheCopyOnThisDeviceCantBeRead_WorkspaceContent_ShouldOfferToDownloadItAgain")
+    func loadErrorAction() {
+        let unreadable = WorkspaceProblem(.storageUnreadable, "Your entries on this device can't be read.")
+        #expect(WorkspaceContent<EmptyView>.actionTitle(unreadable) == "Download again")
+        #expect(WorkspaceContent<EmptyView>.actionTitle(WorkspaceProblem(.offline, "Offline.")) == "Try again")
+        #expect(WorkspaceContent<EmptyView>.actionTitle(WorkspaceProblem(.storage, "Locked.")) == "Try again")
+    }
+
+    @Test("whenChangesWaitOrPayIsExpected_HomeView_ShouldSayWhatProjectedIncludes")
+    func projectedLine() {
+        let summary = LedgerReport(ledger: DemoLedger.make(today: today)).month(MonthKey(today))
+        let line = HomeView.projectedLine(summary, currency: "CAD", pending: 0)
+        #expect(line.hasSuffix("projected"))
+        #expect(HomeView.projectedLine(summary, currency: "CAD", pending: 2).hasSuffix("as of last sync"))
+    }
+
+    @Test("whenTheSceneLeavesTheForeground_RootView_ShouldCoverTheAppInTheSameUpdate")
+    @MainActor
+    func scenePhaseLocksSynchronously() async {
+        let lock = AppLockController(
+            store: EphemeralAppLockSettingStore(enabled: true), authenticator: SucceedingAuthenticator())
+        await lock.start()
+        #expect(lock.status == .unlocked)
+        #expect(!lock.conceals)
+
+        // No await between the phase change and the checks: the app-switcher snapshot does
+        // not wait for a task.
+        RootView.forward(.inactive, to: lock)
+        #expect(lock.activity == .inactive)
+        #expect(lock.conceals)
+        RootView.forward(.background, to: lock)
+        #expect(lock.activity == .background)
+        #expect(lock.status == .locked)
+        #expect(lock.conceals)
+
+        RootView.forward(.active, to: lock)
+        await eventually { lock.status == .unlocked }
+        #expect(!lock.conceals)
+    }
+
+    @Test("whenAppearanceIsChosen_AppearanceModel_ShouldPersistAndApplyIt")
+    func appearance() {
+        let preferences = EphemeralDevicePreferences()
+        let model = AppearanceModel(preferences: preferences)
+        #expect(model.colorScheme == nil)
+        model.set(.dark)
+        #expect(model.colorScheme == .dark)
+        #expect(AppearanceModel(preferences: preferences).preference == .dark, "kept for the next launch")
+    }
+
+    @Test("whenTheDayChangesWhileOpen_ShellModel_ShouldMoveFutureIncomeFromExpectedToRecorded")
+    @MainActor
+    func todayFollowsTheClock() async throws {
+        let payday = today.adding(days: 1)
+        let pay = LedgerEntry(
+            id: "pay", title: "Pay", kind: .income, total: 200_000, share: 200_000, categoryId: "salary",
+            date: payday)
+        let ledger = Ledger(transactions: [pay])
+        let clock = ManualClock(today)
+        let shell = ShellModel(
+            workspace: FixedWorkspace(load: .ready(ledger)), session: .demo, today: today, clock: { clock.now })
+        let month = shell.month
+        // What Home reads: the shell's report for the month on screen at the shell's today.
+        func summary() -> MonthSummary { shell.report(ledger).month(shell.month, today: shell.today) }
+        #expect(summary().expected.map(\.id) == ["pay"])
+        #expect(summary().recorded.income == 0, "not in Left to spend before its date")
+
+        shell.refreshToday()
+        #expect(shell.today == today, "the same day changes nothing")
+
+        // Midnight, through the day-change signal.
+        let days = ManualDayMonitor()
+        let following = Task { await shell.followDayChanges(days) }
+        defer { following.cancel() }
+        clock.now = payday
+        days.fire()
+        await eventually { shell.today == payday }
+        #expect(summary().expected.isEmpty)
+        #expect(summary().recorded.income == 200_000, "on its date it counts toward Left to spend")
+        #expect(shell.month == month, "the month on screen stays")
+
+        // Returning to the foreground on a later day.
+        clock.now = payday.adding(days: 1)
+        shell.refreshToday()
+        #expect(shell.today == payday.adding(days: 1))
+    }
+
+    @Test("whenMonthsAreListed_MonthPicker_ShouldOfferThisMonthAndTheElevenBefore")
+    func months() {
+        let months = MonthPicker.months(through: MonthKey(today))
+        #expect(months.count == 12)
+        #expect(months.first == MonthKey(today))
+        #expect(months.last == MonthKey(today).shifted(by: -11))
+    }
+}
+
+/// The device's date, set by hand.
+@MainActor
+private final class ManualClock {
+    var now: CalendarDate
+    init(_ now: CalendarDate) { self.now = now }
+}
+
+/// Day changes fired by hand (midnight, a clock or time zone change).
+private final class ManualDayMonitor: CalendarDayMonitoring, @unchecked Sendable {
+    private let stream: AsyncStream<Void>
+    private let continuation: AsyncStream<Void>.Continuation
+
+    init() {
+        (stream, continuation) = AsyncStream.makeStream(bufferingPolicy: .bufferingNewest(1))
+    }
+
+    func dayChanges() -> AsyncStream<Void> { stream }
+    func fire() { continuation.yield() }
+}
+
+/// A device check that always succeeds at once.
+@MainActor
+private final class SucceedingAuthenticator: DeviceAuthenticator {
+    var biometry: BiometryKind { .faceID }
+    func canEnable() -> AuthenticationResult { .success }
+    func authenticate(_ purpose: AuthenticationPurpose, reason: String) async -> AuthenticationResult { .success }
+    func cancel() {}
+}
+
+/// Waits for work started in a task to reach a state. The limit is wall-clock time, not a
+/// number of polls, so a loaded CI simulator (where a 5 ms sleep takes far longer) does not
+/// time out a wait that would succeed.
+@MainActor
+private func eventually(_ condition: @MainActor () -> Bool) async {
+    let deadline = ContinuousClock.now + .seconds(30)
+    while ContinuousClock.now < deadline {
+        if condition() { return }
+        try? await Task.sleep(for: .milliseconds(5))
+    }
+    if condition() { return }
+    Issue.record("Timed out")
+}

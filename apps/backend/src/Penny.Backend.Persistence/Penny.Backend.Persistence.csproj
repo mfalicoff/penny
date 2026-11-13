@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../Penny.Backend.Application/Penny.Backend.Application.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Npgsql" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Data.Sqlite" />
+    <PackageReference Include="Pgvector.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" />
+    <PackageReference Include="Microsoft.ML.Tokenizers" />
+    <PackageReference Include="System.Numerics.Tensors" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- MAZ-63: the migrate command's grant-runtime option runs the same script operators run by hand. -->
+    <EmbeddedResource
+      Include="../../development/grant-runtime.sql"
+      LogicalName="Penny.Backend.Persistence.grant-runtime.sql"
+    />
+  </ItemGroup>
+</Project>

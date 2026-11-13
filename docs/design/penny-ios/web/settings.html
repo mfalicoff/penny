@@ -1,0 +1,67 @@
+<!-- @dsCard group="Web" name="Settings" viewport="1520x980" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · Web · Settings</title>
+<link rel="stylesheet" href="../assets/penny.css"><link rel="stylesheet" href="../assets/web.css">
+<script src="../assets/icons.js"></script><script src="../assets/sankey.js"></script><script src="../assets/web.js"></script>
+<style>
+  .sx { display: grid; grid-template-columns: 240px minmax(0,1fr); gap: 28px; }
+  .snav { display: flex; flex-direction: column; gap: 2px; }
+  .snav .wnav [data-i] { color: var(--label-2); }
+  .sec { margin-bottom: 18px; }
+  .sec h3 { font-size: 13px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 8px; }
+  .themes { display: flex; gap: 14px; }
+  .theme { width: 176px; text-align: center; font-size: 14px; font-weight: 600; }
+  .theme .pv { height: 110px; border-radius: 14px; margin-bottom: 8px; box-shadow: 0 0 0 .5px var(--separator); position: relative; overflow: hidden; }
+  .theme.on .pv { box-shadow: 0 0 0 2.5px var(--tint); }
+  .pv i { position: absolute; left: 12px; right: 12px; height: 14px; border-radius: 4px; }
+  .srow { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: .5px solid var(--separator); font-size: 14.5px; }
+  .srow:first-of-type { border-top: 0; }
+  .srow .t { flex: 1; } .srow .t span { display: block; font-size: 12.5px; color: var(--label-2); margin-top: 1px; }
+  .srow .v { color: var(--label-2); display: flex; gap: 6px; align-items: center; }
+  .switch { width: 42px; height: 25px; border-radius: 13px; background: var(--tint); position: relative; }
+  .switch::after { content: ""; position: absolute; top: 2px; right: 2px; width: 21px; height: 21px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+  .switch.off { background: var(--fill); } .switch.off::after { right: auto; left: 2px; }
+</style></head>
+<body class="canvas">
+<div class="browser" data-active="" data-url="penny.example.com/settings/appearance">
+  <main class="wmain">
+    <div class="wtop"><h1>Settings</h1><div class="sp"></div>
+      <div class="wsearch"><i data-i="search"></i>Search entries<kbd>⌘K</kbd></div>
+      <div class="btn primary"><i data-i="add"></i>Add entry <kbd>N</kbd></div></div>
+    <div class="wbody">
+      <div class="sx">
+        <div class="snav">
+          <div class="wnav"><i data-i="people"></i>Profile</div>
+          <div class="wnav on"><i data-i="sunny"></i>Appearance</div>
+          <div class="wnav"><i data-i="cash"></i>Currency</div>
+          <div class="wnav"><i data-i="time"></i>Notifications</div>
+          <div class="wnav"><i data-i="server"></i>Server &amp; sync</div>
+          <div class="wnav"><i data-i="document-text"></i>Export data</div>
+          <div class="wnav" style="color:var(--danger)"><i data-i="log-out" style="color:var(--danger)"></i>Sign out</div>
+        </div>
+        <div>
+          <div class="panel sec">
+            <h3>Theme</h3>
+            <div class="themes">
+              <div class="theme"><div class="pv" style="background:#F2F1EE"><i style="top:14px;width:50%;background:#16120F;opacity:.85"></i><i style="top:38px;height:56px;background:#fff"></i></div>Light</div>
+              <div class="theme"><div class="pv" style="background:#000"><i style="top:14px;width:50%;background:#F6F4F1;opacity:.85"></i><i style="top:38px;height:56px;background:#1A1918"></i></div>Dark</div>
+              <div class="theme on"><div class="pv" style="background:linear-gradient(90deg,#F2F1EE 50%,#000 50%)"><i style="top:14px;width:50%;background:#16120F;opacity:.6"></i><i style="top:38px;height:56px;background:linear-gradient(90deg,#fff 50%,#1A1918 50%)"></i></div>System</div>
+            </div>
+          </div>
+          <div class="panel sec">
+            <h3>Display</h3>
+            <div class="srow"><div class="t">Show cents on Home<span>The hero shows $1,116.65 instead of $1,117.</span></div><div class="switch"></div></div>
+            <div class="srow"><div class="t">Reduce transparency<span>Use solid surfaces instead of glass for the sidebar and toolbars.</span></div><div class="switch off"></div></div>
+            <div class="srow"><div class="t">Week starts on</div><div class="v">Monday <i data-i="chevron-down" style="width:14px;height:14px"></i></div></div>
+          </div>
+          <div class="panel sec">
+            <h3>Server &amp; sync</h3>
+            <div class="srow"><div class="t">penny.example.com<span>Version 1.0.0 · Email and SSO sign-in</span></div><div class="v"><i data-i="lock-closed" style="width:14px;height:14px"></i>Sign out to change servers</div></div>
+            <div class="srow"><div class="t">Last synced<span>All changes are saved to your server.</span></div><div class="v"><i data-i="cloud-done" style="width:16px;height:16px;color:var(--income)"></i>Just now</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</body></html>

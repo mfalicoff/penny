@@ -1,0 +1,15 @@
+{
+  "Simulator Target Bundle": "com.mfalicoff.penny",
+  "aps": {
+    "alert": {
+      "title": "New household expense",
+      "body": "A member added an expense. Open Penny to see your share."
+    },
+    "sound": "default",
+    "thread-id": "household-HOUSEHOLD_ID"
+  },
+  "householdId": "HOUSEHOLD_ID",
+  "month": "2026-10",
+  "expenseId": "EXPENSE_ID",
+  "eventId": "simulator-push"
+}

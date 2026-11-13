@@ -1,0 +1,40 @@
+{
+  "configurations" : [
+    {
+      "id" : "77977B75-3BEA-4A1B-B99C-2DB4873C8596",
+      "name" : "Screenshots",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : false,
+    "defaultTestExecutionTimeAllowance" : 600,
+    "environmentVariableEntries" : [
+      {
+        "key" : "PENNY_UITEST_PLAN",
+        "value" : "screenshots"
+      }
+    ],
+    "maximumTestExecutionTimeAllowance" : 1200,
+    "systemAttachmentLifetime" : "deleteOnSuccess",
+    "testTimeoutsEnabled" : true,
+    "userAttachmentLifetime" : "keepAlways"
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : false,
+      "selectedTests" : [
+        "AccessibilityAuditTests",
+        "ScreenshotTests"
+      ],
+      "target" : {
+        "containerPath" : "container:Penny.xcodeproj",
+        "identifier" : "A10000000000000000000070",
+        "name" : "PennyUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

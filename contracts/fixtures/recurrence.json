@@ -1,0 +1,184 @@
+{
+  "generator": "scripts/fixtures/generate-golden.ts",
+  "description": "Recurrence: next occurrence by frequency and anchor day (short months, leap years, year ends, DST weeks) and 12-step sequences that keep the anchor.",
+  "next": [
+    {
+      "date": "2025-01-31",
+      "frequency": "monthly",
+      "anchorDay": 31,
+      "next": "2025-02-28"
+    },
+    {
+      "date": "2025-02-28",
+      "frequency": "monthly",
+      "anchorDay": 31,
+      "next": "2025-03-31"
+    },
+    {
+      "date": "2024-01-31",
+      "frequency": "monthly",
+      "anchorDay": 31,
+      "next": "2024-02-29"
+    },
+    {
+      "date": "2024-02-29",
+      "frequency": "monthly",
+      "anchorDay": 29,
+      "next": "2024-03-29"
+    },
+    {
+      "date": "2026-01-30",
+      "frequency": "monthly",
+      "anchorDay": 30,
+      "next": "2026-02-28"
+    },
+    {
+      "date": "2026-03-31",
+      "frequency": "monthly",
+      "anchorDay": 31,
+      "next": "2026-04-30"
+    },
+    {
+      "date": "2026-04-30",
+      "frequency": "monthly",
+      "anchorDay": 31,
+      "next": "2026-05-31"
+    },
+    {
+      "date": "2026-12-31",
+      "frequency": "monthly",
+      "anchorDay": 31,
+      "next": "2027-01-31"
+    },
+    {
+      "date": "2026-01-15",
+      "frequency": "monthly",
+      "anchorDay": 15,
+      "next": "2026-02-15"
+    },
+    {
+      "date": "2024-02-29",
+      "frequency": "yearly",
+      "anchorDay": 29,
+      "next": "2025-02-28"
+    },
+    {
+      "date": "2025-02-28",
+      "frequency": "yearly",
+      "anchorDay": 29,
+      "next": "2026-02-28"
+    },
+    {
+      "date": "2026-10-31",
+      "frequency": "yearly",
+      "anchorDay": 31,
+      "next": "2027-10-31"
+    },
+    {
+      "date": "2026-12-29",
+      "frequency": "weekly",
+      "anchorDay": 29,
+      "next": "2027-01-05"
+    },
+    {
+      "date": "2024-02-26",
+      "frequency": "weekly",
+      "anchorDay": 26,
+      "next": "2024-03-04"
+    },
+    {
+      "date": "2026-03-06",
+      "frequency": "weekly",
+      "anchorDay": 6,
+      "next": "2026-03-13"
+    },
+    {
+      "date": "2026-10-30",
+      "frequency": "weekly",
+      "anchorDay": 30,
+      "next": "2026-11-06"
+    }
+  ],
+  "sequences": [
+    {
+      "start": "2026-01-31",
+      "frequency": "monthly",
+      "anchorDay": 31,
+      "dates": [
+        "2026-01-31",
+        "2026-02-28",
+        "2026-03-31",
+        "2026-04-30",
+        "2026-05-31",
+        "2026-06-30",
+        "2026-07-31",
+        "2026-08-31",
+        "2026-09-30",
+        "2026-10-31",
+        "2026-11-30",
+        "2026-12-31",
+        "2027-01-31"
+      ]
+    },
+    {
+      "start": "2024-02-29",
+      "frequency": "yearly",
+      "anchorDay": 29,
+      "dates": [
+        "2024-02-29",
+        "2025-02-28",
+        "2026-02-28",
+        "2027-02-28",
+        "2028-02-29",
+        "2029-02-28",
+        "2030-02-28",
+        "2031-02-28",
+        "2032-02-29",
+        "2033-02-28",
+        "2034-02-28",
+        "2035-02-28",
+        "2036-02-29"
+      ]
+    },
+    {
+      "start": "2026-08-30",
+      "frequency": "monthly",
+      "anchorDay": 30,
+      "dates": [
+        "2026-08-30",
+        "2026-09-30",
+        "2026-10-30",
+        "2026-11-30",
+        "2026-12-30",
+        "2027-01-30",
+        "2027-02-28",
+        "2027-03-30",
+        "2027-04-30",
+        "2027-05-30",
+        "2027-06-30",
+        "2027-07-30",
+        "2027-08-30"
+      ]
+    },
+    {
+      "start": "2026-12-28",
+      "frequency": "weekly",
+      "anchorDay": 28,
+      "dates": [
+        "2026-12-28",
+        "2027-01-04",
+        "2027-01-11",
+        "2027-01-18",
+        "2027-01-25",
+        "2027-02-01",
+        "2027-02-08",
+        "2027-02-15",
+        "2027-02-22",
+        "2027-03-01",
+        "2027-03-08",
+        "2027-03-15",
+        "2027-03-22"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1166 @@
+{
+  "ledger": {
+    "version": 4,
+    "currency": "CAD",
+    "categories": [
+      {
+        "id": "food",
+        "name": "Food",
+        "icon": "cafe-outline",
+        "color": "#E47850",
+        "kind": "expense"
+      },
+      {
+        "id": "salary",
+        "name": "Salary",
+        "icon": "briefcase-outline",
+        "color": "#6C9C79",
+        "kind": "income"
+      }
+    ],
+    "transactions": [
+      {
+        "id": "a",
+        "title": "Coffee beans",
+        "date": "2026-11-02",
+        "kind": "expense",
+        "total": 1000,
+        "share": 500,
+        "categoryId": "food",
+        "note": "Morning",
+        "accountId": "card"
+      },
+      {
+        "id": "b",
+        "title": "Coffee beans",
+        "date": "2026-11-02",
+        "kind": "expense",
+        "total": 1000,
+        "share": 500,
+        "categoryId": "food",
+        "note": ""
+      },
+      {
+        "id": "c",
+        "title": "Café tickets",
+        "date": "2026-11-01",
+        "kind": "expense",
+        "total": 1000,
+        "share": 500,
+        "categoryId": "food",
+        "note": ""
+      },
+      {
+        "id": "d",
+        "title": "100%_saved\\path",
+        "date": "2026-11-02",
+        "kind": "expense",
+        "total": 1000,
+        "share": 500,
+        "categoryId": "food",
+        "note": ""
+      },
+      {
+        "id": "e",
+        "title": "Rent",
+        "date": "2026-11-02",
+        "kind": "expense",
+        "total": 1000,
+        "share": 500,
+        "categoryId": "food",
+        "note": "Old coffee note"
+      },
+      {
+        "id": "f",
+        "title": "Pay",
+        "date": "2026-11-03",
+        "kind": "income",
+        "total": 5000,
+        "share": 5000,
+        "categoryId": "salary",
+        "note": ""
+      }
+    ],
+    "recurring": [],
+    "accounts": [
+      {
+        "id": "card",
+        "name": "Travel Card",
+        "type": "credit"
+      }
+    ],
+    "trips": []
+  },
+  "substringCases": [
+    {
+      "query": " COFFEE ",
+      "ids": [
+        "a",
+        "b",
+        "e"
+      ]
+    },
+    {
+      "query": "travel card",
+      "ids": [
+        "a"
+      ]
+    },
+    {
+      "query": "cafe",
+      "ids": []
+    },
+    {
+      "query": "CAFÉ",
+      "ids": [
+        "c"
+      ]
+    },
+    {
+      "query": "100%_",
+      "ids": [
+        "d"
+      ]
+    },
+    {
+      "query": "beans morning",
+      "ids": [
+        "a"
+      ]
+    },
+    {
+      "query": "",
+      "kind": "income",
+      "ids": [
+        "f"
+      ]
+    },
+    {
+      "query": "coffee",
+      "day": "2026-11-02",
+      "ids": [
+        "a",
+        "b",
+        "e"
+      ]
+    },
+    {
+      "query": "coffee",
+      "page": 1,
+      "ids": [
+        "a",
+        "b",
+        "e"
+      ],
+      "totalCount": 3
+    }
+  ],
+  "foldCases": [
+    {
+      "name": "dotted capital I",
+      "input": "\u0130",
+      "expected": "i"
+    },
+    {
+      "name": "Greek final sigma",
+      "input": "\u039f\u03a3",
+      "expected": "\u03bf\u03c3"
+    },
+    {
+      "name": "Greek final sigma in words",
+      "input": "\u039f\u0394\u039f\u03a3 \u039f\u0394\u039f\u03a3",
+      "expected": "\u03bf\u03b4\u03bf\u03c3 \u03bf\u03b4\u03bf\u03c3"
+    },
+    {
+      "name": "Greek tonos",
+      "input": "\u0386",
+      "expected": "\u03b1"
+    },
+    {
+      "name": "sharp s",
+      "input": "Straße",
+      "expected": "strasse"
+    },
+    {
+      "name": "capital sharp s",
+      "input": "\u1e9e",
+      "expected": "ss"
+    },
+    {
+      "name": "composed accent",
+      "input": "CAFÉ",
+      "expected": "cafe"
+    },
+    {
+      "name": "decomposed accent",
+      "input": "CAFE\u0301",
+      "expected": "cafe"
+    },
+    {
+      "name": "French accents",
+      "input": "Crème Brûlée",
+      "expected": "creme brulee"
+    },
+    {
+      "name": "ligature",
+      "input": "\ufb01le",
+      "expected": "file"
+    },
+    {
+      "name": "full-width letters",
+      "input": "\uff23\uff2f\uff26\uff26\uff25\uff25",
+      "expected": "coffee"
+    },
+    {
+      "name": "emoji (variation selector is Mn)",
+      "input": "Coffee \u2615\ufe0f \ud83c\udf89",
+      "expected": "coffee \u2615 \ud83c\udf89"
+    },
+    {
+      "name": "Unicode whitespace",
+      "input": "  Coffee\t\u00a0beans\u2003 \n\u3000\u2028x\u0085y ",
+      "expected": "coffee beans x y"
+    },
+    {
+      "name": "byte order mark is not whitespace",
+      "input": "\ufeffcoffee",
+      "expected": "\ufeffcoffee"
+    },
+    {
+      "name": "compatibility digraph",
+      "input": "\u01c4",
+      "expected": "dz"
+    },
+    {
+      "name": "roman numeral",
+      "input": "\u216b",
+      "expected": "xii"
+    },
+    {
+      "name": "circled letter",
+      "input": "\u24b8",
+      "expected": "c"
+    },
+    {
+      "name": "supplementary-plane lowercase",
+      "input": "\ud801\udc00",
+      "expected": "\ud801\udc28"
+    },
+    {
+      "name": "Arabic vowel marks",
+      "input": "\u0645\u064f\u062d\u064e\u0645\u0651\u064e\u062f",
+      "expected": "\u0645\u062d\u0645\u062f"
+    },
+    {
+      "name": "Hangul syllable to jamo",
+      "input": "\ud55c",
+      "expected": "\u1112\u1161\u11ab"
+    },
+    {
+      "name": "empty after trim",
+      "input": " \u3000 ",
+      "expected": ""
+    }
+  ],
+  "pendingCases": [
+    {
+      "name": "pending create",
+      "baseIds": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f"
+      ],
+      "localCreate": {
+        "id": "g",
+        "title": "Coffee on train",
+        "date": "2026-11-02",
+        "kind": "expense",
+        "total": 1000,
+        "share": 500,
+        "categoryId": "food",
+        "note": ""
+      },
+      "query": "coffee",
+      "expectedIds": [
+        "a",
+        "b",
+        "e",
+        "g"
+      ]
+    },
+    {
+      "name": "pending edit stops matching",
+      "editId": "e",
+      "patch": {
+        "note": "Changed"
+      },
+      "query": "coffee",
+      "expectedIds": [
+        "a",
+        "b"
+      ]
+    },
+    {
+      "name": "pending delete suppresses hit",
+      "deleteId": "a",
+      "query": "coffee",
+      "expectedIds": [
+        "b",
+        "e"
+      ]
+    }
+  ],
+  "serverLedger": {
+    "version": 4,
+    "currency": "CAD",
+    "categories": [
+      {
+        "id": "food",
+        "name": "Food",
+        "icon": "cafe-outline",
+        "color": "#E47850",
+        "kind": "expense"
+      },
+      {
+        "id": "home",
+        "name": "Housing",
+        "icon": "home-outline",
+        "color": "#5B7DB1",
+        "kind": "expense"
+      },
+      {
+        "id": "health",
+        "name": "Santé",
+        "icon": "medkit-outline",
+        "color": "#B15B7D",
+        "kind": "expense"
+      },
+      {
+        "id": "transport",
+        "name": "Transport",
+        "icon": "bus-outline",
+        "color": "#7DB15B",
+        "kind": "expense"
+      },
+      {
+        "id": "salary",
+        "name": "Salary",
+        "icon": "briefcase-outline",
+        "color": "#6C9C79",
+        "kind": "income"
+      },
+      {
+        "id": "invest",
+        "name": "Investments",
+        "icon": "trending-up-outline",
+        "color": "#9C796C",
+        "kind": "investment"
+      }
+    ],
+    "transactions": [
+      {
+        "id": "s01",
+        "title": "Coffee beans",
+        "date": "2026-11-02",
+        "kind": "expense",
+        "total": 1000,
+        "share": 500,
+        "categoryId": "food",
+        "note": "Morning",
+        "accountId": "card"
+      },
+      {
+        "id": "s02",
+        "title": "Coffee beans",
+        "date": "2026-11-02",
+        "kind": "expense",
+        "total": 2400,
+        "share": 2400,
+        "categoryId": "food",
+        "note": ""
+      },
+      {
+        "id": "s03",
+        "title": "Café au lait",
+        "date": "2026-11-01",
+        "kind": "expense",
+        "total": 450,
+        "share": 450,
+        "categoryId": "food",
+        "note": ""
+      },
+      {
+        "id": "s04",
+        "title": "Rent",
+        "date": "2026-11-01",
+        "kind": "expense",
+        "total": 150000,
+        "share": 75000,
+        "categoryId": "home",
+        "note": "Old coffee note"
+      },
+      {
+        "id": "s05",
+        "title": "Loyer novembre",
+        "date": "2026-11-01",
+        "kind": "expense",
+        "total": 120000,
+        "share": 120000,
+        "categoryId": "home",
+        "note": "Appartement"
+      },
+      {
+        "id": "s06",
+        "title": "Pay",
+        "date": "2026-11-03",
+        "kind": "income",
+        "total": 500000,
+        "share": 500000,
+        "categoryId": "salary",
+        "note": ""
+      },
+      {
+        "id": "s07",
+        "title": "Bus pass",
+        "date": "2026-10-15",
+        "kind": "expense",
+        "total": 9700,
+        "share": 9700,
+        "categoryId": "transport",
+        "note": ""
+      },
+      {
+        "id": "s08",
+        "title": "Pharmacie",
+        "date": "2026-10-20",
+        "kind": "expense",
+        "total": 2300,
+        "share": 2300,
+        "categoryId": "health",
+        "note": "Médicaments"
+      },
+      {
+        "id": "s09",
+        "title": "100%_saved\\path",
+        "date": "2026-11-02",
+        "kind": "expense",
+        "total": 1000,
+        "share": 1000,
+        "categoryId": "food",
+        "note": ""
+      },
+      {
+        "id": "s10",
+        "title": "Groceries",
+        "date": "2025-12-20",
+        "kind": "expense",
+        "total": 8800,
+        "share": 8800,
+        "categoryId": "food",
+        "note": ""
+      },
+      {
+        "id": "s11",
+        "title": "Index fund",
+        "date": "2026-09-01",
+        "kind": "investment",
+        "total": 100000,
+        "share": 100000,
+        "categoryId": "invest",
+        "note": ""
+      }
+    ],
+    "recurring": [],
+    "accounts": [
+      {
+        "id": "card",
+        "name": "Travel Card",
+        "type": "credit"
+      }
+    ],
+    "trips": []
+  },
+  "lexicalCases": [
+    {
+      "name": "title before text, duplicates by key",
+      "request": {
+        "query": " COFFEE "
+      },
+      "keys": [
+        "personal:s01",
+        "personal:s02",
+        "personal:s04"
+      ],
+      "matches": [
+        "title",
+        "title",
+        "text"
+      ],
+      "meaningAllowedAfter": true
+    },
+    {
+      "name": "accents are ignored",
+      "request": {
+        "query": "CAFE"
+      },
+      "keys": [
+        "personal:s03"
+      ],
+      "matches": [
+        "title"
+      ],
+      "meaningAllowedAfter": true
+    },
+    {
+      "name": "account name for its owner",
+      "request": {
+        "query": "travel card"
+      },
+      "keys": [
+        "personal:s01"
+      ],
+      "matches": [
+        "text"
+      ],
+      "meaningAllowedAfter": true
+    },
+    {
+      "name": "cross-field document",
+      "request": {
+        "query": "beans morning"
+      },
+      "keys": [
+        "personal:s01"
+      ],
+      "matches": [
+        "text"
+      ],
+      "meaningAllowedAfter": true
+    },
+    {
+      "name": "literal percent and underscore",
+      "request": {
+        "query": "100%_"
+      },
+      "keys": [
+        "personal:s09"
+      ],
+      "matches": [
+        "title"
+      ],
+      "meaningAllowedAfter": true
+    },
+    {
+      "name": "literal backslash",
+      "request": {
+        "query": "d\\pa"
+      },
+      "keys": [
+        "personal:s09"
+      ],
+      "matches": [
+        "title"
+      ],
+      "meaningAllowedAfter": true
+    },
+    {
+      "name": "typo",
+      "request": {
+        "query": "cofee"
+      },
+      "keys": [
+        "personal:s01",
+        "personal:s02",
+        "personal:s04"
+      ],
+      "matches": [
+        "typo",
+        "typo",
+        "typo"
+      ],
+      "meaningAllowedAfter": true
+    },
+    {
+      "name": "typo in a French title",
+      "request": {
+        "query": "farmacie"
+      },
+      "keys": [
+        "personal:s08"
+      ],
+      "matches": [
+        "typo"
+      ],
+      "meaningAllowedAfter": true
+    },
+    {
+      "name": "short query has no typo tier",
+      "request": {
+        "query": "zq",
+        "source": "personal"
+      },
+      "keys": [],
+      "matches": [],
+      "meaningAllowedAfter": true
+    },
+    {
+      "name": "empty query, kind filter",
+      "request": {
+        "kind": "income"
+      },
+      "keys": [
+        "personal:s06"
+      ],
+      "matches": [
+        null
+      ],
+      "totalCount": 1
+    },
+    {
+      "name": "empty query, all time, date-desc",
+      "request": {},
+      "keys": [
+        "personal:s06",
+        "personal:s01",
+        "personal:s02",
+        "personal:s09",
+        "personal:s03",
+        "personal:s04",
+        "personal:s05",
+        "personal:s08",
+        "personal:s07",
+        "personal:s11",
+        "personal:s10"
+      ],
+      "totalCount": 11
+    },
+    {
+      "name": "date range",
+      "request": {
+        "from": "2026-10-01",
+        "to": "2026-10-31"
+      },
+      "keys": [
+        "personal:s08",
+        "personal:s07"
+      ],
+      "totalCount": 2
+    },
+    {
+      "name": "from only",
+      "request": {
+        "from": "2026-11-02",
+        "kind": "expense"
+      },
+      "keys": [
+        "personal:s01",
+        "personal:s02",
+        "personal:s09"
+      ],
+      "totalCount": 3
+    },
+    {
+      "name": "date-asc",
+      "request": {
+        "to": "2026-10-31",
+        "sort": "date-asc"
+      },
+      "keys": [
+        "personal:s10",
+        "personal:s11",
+        "personal:s07",
+        "personal:s08"
+      ],
+      "totalCount": 4
+    },
+    {
+      "name": "amount-desc uses the viewer share",
+      "request": {
+        "query": "coffee",
+        "sort": "amount-desc",
+        "source": "personal"
+      },
+      "keysPrefix": [
+        "personal:s04",
+        "personal:s02",
+        "personal:s01"
+      ]
+    },
+    {
+      "name": "amount-asc",
+      "request": {
+        "kind": "expense",
+        "from": "2026-11-01",
+        "sort": "amount-asc"
+      },
+      "keys": [
+        "personal:s03",
+        "personal:s01",
+        "personal:s09",
+        "personal:s02",
+        "personal:s04",
+        "personal:s05"
+      ],
+      "totalCount": 6
+    },
+    {
+      "name": "investment kind",
+      "request": {
+        "kind": "investment"
+      },
+      "keys": [
+        "personal:s11"
+      ],
+      "totalCount": 1
+    },
+    {
+      "name": "source shared only",
+      "request": {
+        "source": "shared"
+      },
+      "keys": [],
+      "totalCount": 0
+    }
+  ],
+  "meaningCases": [
+    {
+      "name": "English meaning",
+      "request": {
+        "query": "beverage"
+      },
+      "includes": [
+        "personal:s01",
+        "personal:s02"
+      ]
+    },
+    {
+      "name": "French query finds English housing",
+      "request": {
+        "query": "logement"
+      },
+      "includes": [
+        "personal:s04"
+      ]
+    },
+    {
+      "name": "French query finds English salary",
+      "request": {
+        "query": "salaire"
+      },
+      "includes": [
+        "personal:s06"
+      ]
+    },
+    {
+      "name": "French query finds English transport",
+      "request": {
+        "query": "autobus"
+      },
+      "includes": [
+        "personal:s07"
+      ]
+    },
+    {
+      "name": "English query finds French pharmacy",
+      "request": {
+        "query": "medicine"
+      },
+      "includes": [
+        "personal:s08"
+      ]
+    },
+    {
+      "name": "English query finds French rent",
+      "request": {
+        "query": "apartment"
+      },
+      "includes": [
+        "personal:s05"
+      ]
+    },
+    {
+      "name": "mixed-language query",
+      "request": {
+        "query": "rent appartement"
+      },
+      "includes": [
+        "personal:s04"
+      ],
+      "alsoIncludes": [
+        "personal:s05"
+      ]
+    },
+    {
+      "name": "meaning respects filters",
+      "request": {
+        "query": "beverage",
+        "kind": "income"
+      },
+      "keys": []
+    },
+    {
+      "name": "no meaning without letters or digits",
+      "request": {
+        "query": "%%%"
+      },
+      "keys": []
+    },
+    {
+      "name": "unrelated word has no meaning match",
+      "request": {
+        "query": "something"
+      },
+      "keys": []
+    },
+    {
+      "name": "greeting has no meaning match",
+      "request": {
+        "query": "hello"
+      },
+      "keys": []
+    }
+  ],
+  "unrelatedLedger": {
+    "version": 4,
+    "currency": "CAD",
+    "categories": [
+      {
+        "id": "home",
+        "name": "Home",
+        "icon": "home-outline",
+        "color": "#5B7DB1",
+        "kind": "expense"
+      },
+      {
+        "id": "food",
+        "name": "Food",
+        "icon": "cafe-outline",
+        "color": "#E47850",
+        "kind": "expense"
+      },
+      {
+        "id": "transport",
+        "name": "Transport",
+        "icon": "bus-outline",
+        "color": "#7DB15B",
+        "kind": "expense"
+      },
+      {
+        "id": "fun",
+        "name": "Entertainment",
+        "icon": "film-outline",
+        "color": "#9C796C",
+        "kind": "expense"
+      }
+    ],
+    "transactions": [
+      {
+        "id": "u01",
+        "title": "rent",
+        "date": "2026-11-01",
+        "kind": "expense",
+        "total": 7800,
+        "share": 7800,
+        "categoryId": "home",
+        "note": ""
+      },
+      {
+        "id": "u02",
+        "title": "test",
+        "date": "2026-11-02",
+        "kind": "expense",
+        "total": 89800,
+        "share": 89800,
+        "categoryId": "home",
+        "note": ""
+      },
+      {
+        "id": "u03",
+        "title": "Gas",
+        "date": "2026-11-03",
+        "kind": "expense",
+        "total": 4500,
+        "share": 4500,
+        "categoryId": "transport",
+        "note": ""
+      },
+      {
+        "id": "u04",
+        "title": "Lunch",
+        "date": "2026-11-04",
+        "kind": "expense",
+        "total": 1500,
+        "share": 1500,
+        "categoryId": "food",
+        "note": ""
+      },
+      {
+        "id": "u05",
+        "title": "Netflix",
+        "date": "2026-11-05",
+        "kind": "expense",
+        "total": 1700,
+        "share": 1700,
+        "categoryId": "fun",
+        "note": ""
+      }
+    ],
+    "recurring": [],
+    "accounts": [],
+    "trips": []
+  },
+  "unrelatedCases": [
+    {
+      "name": "unrelated word on short entries (MAZ-167)",
+      "request": {
+        "query": "something",
+        "pageSize": 50
+      },
+      "keys": []
+    },
+    {
+      "name": "keyboard mash on short entries",
+      "request": {
+        "query": "asdf"
+      },
+      "keys": []
+    },
+    {
+      "name": "greeting on short entries",
+      "request": {
+        "query": "hello"
+      },
+      "keys": []
+    },
+    {
+      "name": "related meaning still matches short entries",
+      "request": {
+        "query": "housing"
+      },
+      "includes": [
+        "personal:u01"
+      ]
+    }
+  ],
+  "receiptCases": {
+    "description": "MAZ-125: receipt text is its own searchable field. Each receipt is a synthetic text PDF with these lines, linked to the entry; it matches only after extraction, by text and typo through the normalized text and by meaning through its own chunk embeddings (never the entry's). `before` lists keys the query must not find before extraction; `absent` lists keys it must not find once extracted and embedded. Meaning uses the per-query threshold (MAZ-167): \"outils\" scores 0.823 against the French pharmacy receipt, above the old fixed 0.82 but below its 0.836 threshold.",
+    "ledger": {
+      "version": 4,
+      "currency": "CAD",
+      "categories": [
+        {
+          "id": "misc",
+          "name": "Misc",
+          "icon": "ellipse-outline",
+          "color": "#7D7D7D",
+          "kind": "expense"
+        }
+      ],
+      "transactions": [
+        {
+          "id": "r01",
+          "title": "Saturday errands",
+          "date": "2026-11-07",
+          "kind": "expense",
+          "total": 3549,
+          "share": 3549,
+          "categoryId": "misc",
+          "note": ""
+        },
+        {
+          "id": "r02",
+          "title": "Weekly stop",
+          "date": "2026-11-05",
+          "kind": "expense",
+          "total": 2277,
+          "share": 2277,
+          "categoryId": "misc",
+          "note": ""
+        },
+        {
+          "id": "r03",
+          "title": "Weekly stop",
+          "date": "2026-11-04",
+          "kind": "expense",
+          "total": 1200,
+          "share": 1200,
+          "categoryId": "misc",
+          "note": ""
+        }
+      ],
+      "recurring": [],
+      "accounts": [],
+      "trips": []
+    },
+    "receipts": [
+      {
+        "entryId": "r01",
+        "lines": [
+          "CENTRE HARDWARE SUPPLY",
+          "Claw hammer 16 oz 12.99",
+          "Box of wood screws 4.50",
+          "Cordless drill bit set 18.00",
+          "TOTAL 35.49"
+        ]
+      },
+      {
+        "entryId": "r02",
+        "lines": [
+          "PHARMACIE DU QUARTIER",
+          "Sirop contre la toux 9,99",
+          "Comprimés d'ibuprofène 7,49",
+          "Pansements adhésifs 5,29",
+          "TOTAL 22,77"
+        ]
+      }
+    ],
+    "cases": [
+      {
+        "name": "receipt text substring",
+        "request": { "query": "wood screws" },
+        "keys": ["personal:r01"],
+        "matches": ["text"],
+        "before": ["personal:r01"]
+      },
+      {
+        "name": "receipt text is normalized like the title",
+        "request": { "query": "IBUPROFENE" },
+        "keys": ["personal:r02"],
+        "matches": ["text"],
+        "before": ["personal:r02"]
+      },
+      {
+        "name": "title before receipt text",
+        "request": { "query": "weekly" },
+        "keys": ["personal:r02", "personal:r03"],
+        "matches": ["title", "title"]
+      },
+      {
+        "name": "receipt text typo",
+        "request": { "query": "pharmacei" },
+        "keys": ["personal:r02"],
+        "matches": ["typo"],
+        "before": ["personal:r02"]
+      },
+      {
+        "name": "Unrelated French query does not match a receipt by meaning",
+        "request": { "query": "outils" },
+        "absent": ["personal:r01", "personal:r02"]
+      },
+      {
+        "name": "English meaning from a French receipt",
+        "request": { "query": "medication" },
+        "meaning": ["personal:r02"],
+        "before": ["personal:r02"]
+      },
+      {
+        "name": "French meaning from a French receipt",
+        "request": { "query": "médicaments" },
+        "meaning": ["personal:r02"],
+        "before": ["personal:r02"]
+      }
+    ]
+  },
+  "paginationCase": {
+    "request": {
+      "query": "coffee",
+      "source": "personal",
+      "pageSize": 1
+    },
+    "lexicalKeys": [
+      "personal:s01",
+      "personal:s02",
+      "personal:s04"
+    ]
+  },
+  "requests": [
+    {},
+    {
+      "query": "beverage",
+      "from": "2026-01-01",
+      "to": "2026-11-30",
+      "kind": "expense",
+      "source": "all",
+      "sort": "relevance",
+      "pageSize": 50
+    },
+    {
+      "query": "coffee",
+      "sort": "amount-asc",
+      "source": "shared",
+      "pageSize": 100,
+      "cursor": "eyJ2IjoxfQ"
+    }
+  ],
+  "invalidRequests": [
+    {
+      "from": "2026-11-30",
+      "to": "2026-11-01"
+    },
+    {
+      "from": "1999-12-31"
+    },
+    {
+      "to": "2101-01-01"
+    },
+    {
+      "from": "2026-02-30"
+    },
+    {
+      "pageSize": 0
+    },
+    {
+      "pageSize": 101
+    },
+    {
+      "pageSize": 1.5
+    },
+    {
+      "kind": "all"
+    },
+    {
+      "source": "everything"
+    },
+    {
+      "sort": "title"
+    },
+    {
+      "userId": "other"
+    },
+    {
+      "query": null
+    },
+    {
+      "cursor": ""
+    },
+    {
+      "query": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    }
+  ],
+  "response": {
+    "version": 1,
+    "items": [
+      {
+        "key": "personal:a",
+        "source": "personal",
+        "match": "meaning",
+        "entry": {
+          "id": "a",
+          "title": "Coffee beans",
+          "date": "2026-11-02",
+          "kind": "expense",
+          "total": 1000,
+          "share": 500,
+          "categoryId": "food",
+          "note": "Morning",
+          "accountId": "card"
+        }
+      }
+    ],
+    "totalCount": 1,
+    "nextCursor": null
+  }
+}

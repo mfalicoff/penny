@@ -1,0 +1,113 @@
+import PennyAccessibility
+import XCTest
+
+/// Representative screenshots for visual review (TestPlans/Screenshots.xctestplan, MAZ-122):
+/// light and dark, the largest accessibility text size, Reduce Transparency and Reduce
+/// Motion, the keyboard, and the iOS 26+ Liquid Glass control layer (tab bar, toolbars, the
+/// sidebar on iPad). Uses the demo's fixed sample data at a pinned date, so captures are
+/// comparable across runs; signed-out screens run against the stack.
+final class ScreenshotTests: PennyUITestCase {
+    struct Variant {
+        let name: String
+        var contentSize: String?
+        var reduceTransparency = false
+        var reduceMotion = false
+    }
+
+    static let variants = [
+        Variant(name: "default"),
+        Variant(name: "large-text", contentSize: "UICTContentSizeCategoryAccessibilityXL"),
+        Variant(name: "reduce-transparency", reduceTransparency: true),
+        Variant(name: "reduce-motion", reduceMotion: true),
+    ]
+
+    /// The appearance is also pinned through Penny's own setting (`penny.appearance`, seeded
+    /// before launch): changing `XCUIDevice.appearance` alone did not reliably restyle a
+    /// freshly launched app on the iOS 27.0 simulator.
+    @MainActor
+    static func appearanceSeed(_ appearance: XCUIDevice.Appearance) -> ContainerSeed {
+        ContainerSeed(standardDefaults: ["penny.appearance": appearance == .dark ? "dark" : "light"])
+    }
+
+    override func tearDown() async throws {
+        await MainActor.run { XCUIDevice.shared.appearance = .light }
+        try await super.tearDown()
+    }
+
+    @MainActor
+    func test_whenCapturingTheShell_Screenshots_ShouldCoverEveryAppearanceAndVariant() async throws {
+        for appearance in [XCUIDevice.Appearance.light, .dark] {
+            XCUIDevice.shared.appearance = appearance
+            for variant in Self.variants {
+                var options = LaunchOptions()
+                options.usesStack = false
+                options.demo = true
+                options.contentSize = variant.contentSize
+                options.reduceTransparency = variant.reduceTransparency
+                options.reduceMotion = variant.reduceMotion
+                options.seed = Self.appearanceSeed(appearance)
+                let penny = try await launch(options)
+
+                try penny.waitForShell()
+                screenshot("home-\(variant.name)")
+                try penny.openActivity()
+                screenshot("activity-\(variant.name)")
+                try penny.openSettings()
+                screenshot("settings-\(variant.name)")
+                app.terminate()
+            }
+        }
+    }
+
+    /// MAZ-77's redesign specimens: home, home-dark (the legacy AMOLED and Catppuccin
+    /// appearances open as dark, MAZ-132), money-flow, insights, calendar and, on iPad, the
+    /// dashboard Home (the `desktop` reference), at the default size and the largest
+    /// accessibility size, light and dark, for visual review of truncation and overlap.
+    @MainActor
+    func test_whenCapturingTheOverview_Screenshots_ShouldCoverEverySpecimenAndAppearance() async throws {
+        for appearance in [XCUIDevice.Appearance.light, .dark] {
+            XCUIDevice.shared.appearance = appearance
+            for variant in Self.variants where variant.name == "default" || variant.name == "large-text" {
+                var options = LaunchOptions()
+                options.usesStack = false
+                options.demo = true
+                options.contentSize = variant.contentSize
+                options.seed = Self.appearanceSeed(appearance)
+                let penny = try await launch(options)
+                try penny.waitForShell()
+                screenshot("overview-home-\(variant.name)")
+                try penny.tap(AccessibilityID.Home.exploreMoneyFlow)
+                try penny.wait(for: AccessibilityID.Screen.moneyFlow)
+                screenshot("overview-money-flow-\(variant.name)")
+                try penny.openHome()
+                try penny.tap(AccessibilityID.Home.exploreInsights)
+                try penny.wait(for: AccessibilityID.Screen.insights)
+                screenshot("overview-insights-\(variant.name)")
+                try penny.openHome()
+                try penny.tap(AccessibilityID.Home.exploreCalendar)
+                try penny.wait(for: AccessibilityID.Screen.calendar)
+                screenshot("overview-calendar-\(variant.name)")
+                app.terminate()
+            }
+        }
+    }
+
+    @MainActor
+    func test_whenCapturingSignIn_Screenshots_ShouldIncludeTheKeyboardAndAnError() async throws {
+        for appearance in [XCUIDevice.Appearance.light, .dark] {
+            XCUIDevice.shared.appearance = appearance
+            var options = LaunchOptions()
+            options.seed = Self.appearanceSeed(appearance)
+            let penny = try await launch(options)
+            try penny.wait(for: AccessibilityID.Auth.email)
+            screenshot("sign-in")
+            try penny.type("someone@penny.test", into: AccessibilityID.Auth.email)
+            screenshot("sign-in-keyboard")
+            try penny.type("wrong-password", into: AccessibilityID.Auth.password)
+            try penny.tap(AccessibilityID.Auth.signIn)
+            try penny.wait(for: AccessibilityID.Auth.error)
+            screenshot("sign-in-error")
+            app.terminate()
+        }
+    }
+}
