@@ -13,7 +13,10 @@ ARG NODE_IMAGE=docker.io/library/node:24.21.0-bookworm-slim@sha256:d6aa754f16b31
 # SHA-256 is verified by the same script development and CI use.
 FROM --platform=$BUILDPLATFORM ${NODE_IMAGE} AS model
 COPY development/download-model.mjs /src/download-model.mjs
-RUN node /src/download-model.mjs /model
+# Directories 0755, files 0644: the runtime COPY keeps these modes. (COPY --chmod would
+# also apply its mode to the directories it creates, /opt/penny included, which locks
+# the unprivileged app user out of /opt/penny/app.)
+RUN node /src/download-model.mjs /model && chmod -R u=rwX,go=rX /model
 
 FROM --platform=$BUILDPLATFORM ${SDK_IMAGE} AS build
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_NOLOGO=1
@@ -72,7 +75,7 @@ RUN apt-get update \
       "libvips-tools=${VIPS_VERSION}" \
     && command -v prlimit \
     && rm -rf /var/lib/apt/lists/*
-COPY --from=model --chown=root:root --chmod=0644 /model/ /opt/penny/model/
+COPY --from=model --chown=root:root /model/ /opt/penny/model/
 COPY --from=build --chown=root:root /app/ /opt/penny/app/
 # The receipt volume is the only writable application path; the app user owns it.
 # /var/lib/penny/cutover is the mount point of the one-time cutover volume (MAZ-65,
