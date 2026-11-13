@@ -5,8 +5,8 @@
 # Build context: the repository root (apps/web imports ../../design-kit and ../../src/domain).
 #   docker buildx build --platform linux/amd64,linux/arm64 -f deploy/web/Dockerfile -t penny-web .
 
-ARG NODE_IMAGE=docker.io/library/node:24.21.0-bookworm-slim@sha256:d6aa754f16b3197301076f047b5def2f02ea1dbbc2ca920407d46d7ec7f87b20
-ARG NGINX_IMAGE=docker.io/nginxinc/nginx-unprivileged:1.30.4-alpine@sha256:adf5042a17f4ecdd200c595fa9ffd1be37efb18f89a830bd1a00e4ab4d59d42c
+ARG NODE_IMAGE=docker.io/library/node:26.13.1-bookworm-slim@sha256:5df79989ed685e09f0a98019db4cebfb22fb9df1a53c0161664a011f7ff6b0f1
+ARG NGINX_IMAGE=docker.io/nginxinc/nginx-unprivileged:1.31.7-alpine@sha256:b5047b9b76845eac124358373c6852377c52e4b05834a47647e955dd91cb8f1e
 
 # Static assets are architecture independent: build them once, natively.
 FROM --platform=$BUILDPLATFORM ${NODE_IMAGE} AS build
