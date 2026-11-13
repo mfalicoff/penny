@@ -19,6 +19,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:real": "node scripts/e2e-real.ts",
+    "test:e2e:cards": "PENNY_CARDS=1 PENNY_E2E_BROWSERS=chromium PENNY_E2E_DEVICES=desktop node scripts/e2e-real.ts cards.real",
     "check": "npm run design:check && npm run lint && npm run typecheck && npm run test && npm run build"
   },
   "dependencies": {
