@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "description": "",
-  "reviewedAt": null,
+  "description": "Visual comparison of the iOS and web apps with each redesign card (MAZ-122). Method, statuses and re-sync steps: docs/design/visual-acceptance.md. Approved deviations are in docs/migration/redesign.md; follow-ups name their issue.",
+  "reviewedAt": "2026-11-12",
   "cards": [
     {
       "id": "system-foundations",
@@ -21,9 +21,10 @@
       "id": "system-widgets",
       "view": "Home and Lock Screen widgets, October 2026",
       "native": {
-        "status": "pending",
+        "status": "not-built",
         "owner": "MAZ-80",
-        "deviations": []
+        "note": "The widgets exist (MAZ-80), but XCUITest can't add them to the Home or Lock Screen; they're checked on a device, and the medium and Lock Screen families are MAZ-135.",
+        "followUp": "MAZ-135"
       },
       "web": {
         "status": "not-applicable",
@@ -35,714 +36,1875 @@
       "id": "iphone-home",
       "view": "home, October 2026",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-77",
-        "deviations": []
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "No tinted hero glow behind the header (Home, empty Home, offline, create account), and Home has no calendar button in the toolbar",
+            "kind": "follow-up",
+            "ref": "FU-IOS-HOME"
+          },
+          {
+            "summary": "Add entry is a tab with the search role inside the system tab bar, not a separate copper button",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#native-implementation-notes-maz-69"
+          },
+          {
+            "summary": "Insights and the calendar are reached from Explore your month; the calendar is a page, not a sheet",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#native-overview-notes-maz-77"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-92",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Home leads with the hero plus Came in, Spent and Invested tiles, Coming up comes before Follow your money, and the month switcher sits under the title",
+            "kind": "follow-up",
+            "ref": "FU-WEB-HOME"
+          },
+          {
+            "summary": "At phone width the tab bar adds More (Settings, Recurring, Accounts, Categories) instead of the Settings sheet from Home",
+            "kind": "follow-up",
+            "ref": "FU-WEB-SHELL"
+          }
+        ]
       }
     },
     {
       "id": "iphone-home-dark",
       "view": "home, October 2026",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-77",
-        "deviations": []
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "No tinted hero glow behind the header (Home, empty Home, offline, create account), and Home has no calendar button in the toolbar",
+            "kind": "follow-up",
+            "ref": "FU-IOS-HOME"
+          },
+          {
+            "summary": "Add entry is a tab with the search role inside the system tab bar, not a separate copper button",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#native-implementation-notes-maz-69"
+          },
+          {
+            "summary": "Insights and the calendar are reached from Explore your month; the calendar is a page, not a sheet",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#native-overview-notes-maz-77"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-92",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Home leads with the hero plus Came in, Spent and Invested tiles, Coming up comes before Follow your money, and the month switcher sits under the title",
+            "kind": "follow-up",
+            "ref": "FU-WEB-HOME"
+          },
+          {
+            "summary": "At phone width the tab bar adds More (Settings, Recurring, Accounts, Categories) instead of the Settings sheet from Home",
+            "kind": "follow-up",
+            "ref": "FU-WEB-SHELL"
+          }
+        ]
       }
     },
     {
       "id": "iphone-money-flow",
       "view": "money flow, September 2026 (salary income and spending)",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-77",
-        "deviations": []
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The money flow is recorded-only, with a value list under the chart",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#native-overview-notes-maz-77"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-92",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "On phones the flow is two stacked bars with a value list, not the Sankey; Follow your money is a section of Insights",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#web-adaptations-maz-122"
+          }
+        ]
       }
     },
     {
       "id": "iphone-insights",
       "view": "insights, October 2026",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-77",
-        "deviations": []
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Insights and the calendar are reached from Explore your month; the calendar is a page, not a sheet",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#native-overview-notes-maz-77"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-92",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "No category donut or month-over-month sentence; Insights opens with four totals",
+            "kind": "follow-up",
+            "ref": "FU-WEB-HOME"
+          }
+        ]
       }
     },
     {
       "id": "iphone-calendar",
       "view": "month calendar, October 2026",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-77",
-        "deviations": []
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Insights and the calendar are reached from Explore your month; the calendar is a page, not a sheet",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#native-overview-notes-maz-77"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-92",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The calendar is a section of Home, not a sheet",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#web-adaptations-maz-122"
+          }
+        ]
       }
     },
     {
       "id": "iphone-activity",
       "view": "activity list, October 2026",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-73",
-        "deviations": []
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Search is the system searchable field in the navigation bar, and the month is a toolbar menu",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#native-adaptations-maz-122"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-88",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Search, period and totals come before the day-grouped list, and search is at the top, not the bottom",
+            "kind": "follow-up",
+            "ref": "FU-WEB-ACTIVITY"
+          },
+          {
+            "summary": "Row actions open the entry dialog instead of swipe actions",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#interaction-baseline"
+          }
+        ]
       }
     },
     {
       "id": "iphone-search-empty",
       "view": "search with no results",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-73",
-        "deviations": []
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "With the keyboard up, the centered No results view overlaps the totals line and the server-results row",
+            "kind": "follow-up",
+            "ref": "FU-IOS-LAYOUT"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-88",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The empty state sits below the filters instead of centered",
+            "kind": "follow-up",
+            "ref": "FU-WEB-ACTIVITY"
+          }
+        ]
       }
     },
     {
       "id": "iphone-add-expense",
       "view": "new expense draft",
       "native": {
-        "status": "pending",
+        "status": "matches",
         "owner": "MAZ-73",
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
         "deviations": []
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-88",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Add entry and other forms are keyboard dialogs over the page, with no hero amount or keypad",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#interaction-baseline"
+          }
+        ]
       }
     },
     {
       "id": "iphone-add-income",
       "view": "new income draft",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-73",
-        "deviations": []
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The draft amount has no thousands separator (+$3200.00)",
+            "kind": "follow-up",
+            "ref": "FU-IOS-HOME"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-88",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Add entry and other forms are keyboard dialogs over the page, with no hero amount or keypad",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#interaction-baseline"
+          },
+          {
+            "summary": "The Income form doesn't explain that income dated after today counts toward Projected",
+            "kind": "follow-up",
+            "ref": "FU-WEB-ACTIVITY"
+          }
+        ]
       }
     },
     {
       "id": "iphone-entry-extras",
       "view": "entry draft with receipt, repeat and trip rows open",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-73",
-        "deviations": []
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The trip picker lists only personal trips; shared trips are missing",
+            "kind": "follow-up",
+            "ref": "FU-IOS-HOME"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-88",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "More details expands inside the form instead of a stacked sheet",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#interaction-baseline"
+          }
+        ]
       }
     },
     {
       "id": "iphone-split",
       "view": "entry draft with a 50% personal share",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-73",
-        "deviations": []
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Split is a full sheet with the keypad over the form, not a stacked half sheet",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#native-adaptations-maz-122"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-88",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Your share is a section of the form (All mine, Split equally, Amount, Percent) instead of a stacked sheet",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#interaction-baseline"
+          }
+        ]
       }
     },
     {
       "id": "iphone-category-picker",
       "view": "category picker with renamed Groceries & dining",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-73",
-        "deviations": []
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "A medium-detent list with search at the bottom and no Most used section, instead of the icon grid",
+            "kind": "follow-up",
+            "ref": "FU-IOS-HOME"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-88",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "A searchable list with New category, not the icon grid with Most used",
+            "kind": "follow-up",
+            "ref": "FU-WEB-ACTIVITY"
+          }
+        ]
       }
     },
     {
       "id": "iphone-entry-detail",
       "view": "entry p-party (trip and shared personal share)",
       "native": {
-        "status": "pending",
+        "status": "matches",
         "owner": "MAZ-73",
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
         "deviations": []
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-88",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The entry detail is a dialog over Activity",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#interaction-baseline"
+          }
+        ]
       }
     },
     {
       "id": "iphone-receipt",
       "view": "receipt viewer",
       "native": {
-        "status": "pending",
+        "status": "blocked",
         "owner": "MAZ-78",
-        "deviations": []
+        "note": "No seeded receipt yet (full-stack-seeds.json has no receipt yet; MAZ-78/94 add one (MAZ-60 ported the API))"
       },
       "web": {
-        "status": "pending",
+        "status": "blocked",
         "owner": "MAZ-94",
-        "deviations": []
+        "note": "No seeded receipt yet (full-stack-seeds.json has no receipt yet; MAZ-78/94 add one (MAZ-60 ported the API))"
       }
     },
     {
       "id": "iphone-delete-confirm",
       "view": "delete p-coffee-2 confirmation",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-73",
-        "deviations": []
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Confirmations are iOS 27 popovers anchored to their button, not bottom action sheets",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#native-adaptations-maz-122"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-88",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Delete confirms in a dialog; the card's shared-expense wording applies only to shared expenses",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#interaction-baseline"
+          }
+        ]
       }
     },
     {
       "id": "iphone-shared-list",
       "view": "shared households and trips list",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-75",
-        "deviations": []
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "A notification prompt (Hear about household changes) sits above the list until answered",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#native-adaptations-maz-122"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-91",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "At phone width the tab bar adds More (Settings, Recurring, Accounts, Categories) instead of the Settings sheet from Home",
+            "kind": "follow-up",
+            "ref": "FU-WEB-SHELL"
+          }
+        ]
       }
     },
     {
       "id": "iphone-shared",
       "view": "household Maison",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-75",
-        "deviations": []
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The household hero shows \"You owe\" in the label color with a month navigator above the actions; the card leads with members and a meaning-colored balance",
+            "kind": "follow-up",
+            "ref": "FU-IOS-SHARED"
+          },
+          {
+            "summary": "Members are shown by email and initials from the email",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#native-adaptations-maz-122"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-91",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The household header has no Record payment action, and a balance you owe is drawn in the label color",
+            "kind": "follow-up",
+            "ref": "FU-WEB-SHARED"
+          },
+          {
+            "summary": "Members are shown by email and initials from the email",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#web-shared-household-notes-maz-91"
+          },
+          {
+            "summary": "Expenses, Balances, People and History are links (?tab=) styled as the segmented control",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#web-shared-household-notes-maz-91"
+          }
+        ]
       }
     },
     {
       "id": "iphone-shared-balances",
       "view": "Maison balances, October 2026 (alex owes bea)",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-75",
-        "deviations": []
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Members are shown by email and initials from the email",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#native-adaptations-maz-122"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-91",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The household header has no Record payment action, and a balance you owe is drawn in the label color",
+            "kind": "follow-up",
+            "ref": "FU-WEB-SHARED"
+          },
+          {
+            "summary": "Members are shown by email and initials from the email",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#web-shared-household-notes-maz-91"
+          },
+          {
+            "summary": "Expenses, Balances, People and History are links (?tab=) styled as the segmented control",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#web-shared-household-notes-maz-91"
+          }
+        ]
       }
     },
     {
       "id": "iphone-shared-people",
       "view": "Maison people: alex, bea, former member cam",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-75",
-        "deviations": []
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Members are shown by email and initials from the email",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#native-adaptations-maz-122"
+          },
+          {
+            "summary": "No inline invite card under People; inviting is in the menu",
+            "kind": "follow-up",
+            "ref": "FU-IOS-SHARED"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-91",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Members are shown by email and initials from the email",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#web-shared-household-notes-maz-91"
+          },
+          {
+            "summary": "The invite code is shown with a live countdown and Copy; the web has no share sheet",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#web-shared-household-notes-maz-91"
+          }
+        ]
       }
     },
     {
       "id": "iphone-shared-expense-add",
       "view": "new shared expense draft in Maison",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-75",
-        "deviations": []
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The total is a text field with the system number pad instead of the in-sheet amount and keypad, and the split section isn't visible without scrolling",
+            "kind": "follow-up",
+            "ref": "FU-IOS-SHARED"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-91",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Add entry and other forms are keyboard dialogs over the page, with no hero amount or keypad",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#interaction-baseline"
+          },
+          {
+            "summary": "Members are shown by email and initials from the email",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#web-shared-household-notes-maz-91"
+          }
+        ]
       }
     },
     {
       "id": "iphone-record-payment",
       "view": "record alex's share of Internet",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-75",
-        "deviations": []
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Members are shown by email and initials from the email",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#native-adaptations-maz-122"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-91",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Record payment is a dialog over the household",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#web-shared-household-notes-maz-91"
+          },
+          {
+            "summary": "Members are shown by email and initials from the email",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#web-shared-household-notes-maz-91"
+          }
+        ]
       }
     },
     {
       "id": "iphone-payment-stale",
       "view": "a second device records alex's Internet share with the revision it read before the first payment",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-75",
-        "deviations": []
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The old total and share are struck through even when they didn't change",
+            "kind": "follow-up",
+            "ref": "FU-IOS-SHARED"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-91",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "When another device recorded the payment, the dialog says \"You edited this expense\" and shows identical Before and Now values",
+            "kind": "follow-up",
+            "ref": "FU-WEB-SHARED"
+          }
+        ]
       }
     },
     {
       "id": "iphone-household-create",
       "view": "create household form",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-75",
-        "deviations": []
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "No icon and explanation header, and Create household is inline instead of pinned to the bottom",
+            "kind": "follow-up",
+            "ref": "FU-IOS-SHARED"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-91",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Add entry and other forms are keyboard dialogs over the page, with no hero amount or keypad",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#interaction-baseline"
+          }
+        ]
       }
     },
     {
       "id": "iphone-history",
       "view": "Maison audit history",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-75",
-        "deviations": []
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Members are shown by email and initials from the email",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#native-adaptations-maz-122"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-91",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Expenses, Balances, People and History are links (?tab=) styled as the segmented control",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#web-shared-household-notes-maz-91"
+          }
+        ]
       }
     },
     {
       "id": "iphone-trips",
       "view": "trips: Québec weekend (personal) and Lisbon trip (shared)",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-76",
-        "deviations": []
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The featured trip has no Your share so far amount",
+            "kind": "follow-up",
+            "ref": "FU-IOS-SHARED"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-93",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "At phone width the tab bar adds More (Settings, Recurring, Accounts, Categories) instead of the Settings sheet from Home",
+            "kind": "follow-up",
+            "ref": "FU-WEB-SHELL"
+          }
+        ]
       }
     },
     {
       "id": "iphone-trip-detail",
       "view": "shared trip Lisbon",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-76",
-        "deviations": []
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "A shared trip uses the household month layout (October hero, Record payment) instead of the trip total and your share",
+            "kind": "follow-up",
+            "ref": "FU-IOS-SHARED"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-93",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Expenses, Balances, People and History are links (?tab=) styled as the segmented control",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#web-shared-household-notes-maz-91"
+          }
+        ]
       }
     },
     {
       "id": "iphone-trip-form",
       "view": "new trip form",
       "native": {
-        "status": "pending",
+        "status": "matches",
         "owner": "MAZ-76",
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
         "deviations": []
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-93",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Add entry and other forms are keyboard dialogs over the page, with no hero amount or keypad",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#interaction-baseline"
+          }
+        ]
       }
     },
     {
       "id": "iphone-settings",
       "view": "settings sheet",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-69",
-        "deviations": []
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Settings opens as a sheet from Home; Notifications has no row because it follows the system permission",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#native-adaptations-maz-122"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-85",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Settings at phone width lists only Account, Appearance, Currency and Server; Recurring, Accounts, Categories, Face ID and Notifications aren't in it",
+            "kind": "follow-up",
+            "ref": "FU-WEB-SHELL"
+          }
+        ]
       }
     },
     {
       "id": "iphone-recurring",
       "view": "recurring: Gym and paused Magazine, shared Streaming",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-74",
-        "deviations": []
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Shared schedules aren't listed, and a paused expense shows no minus sign",
+            "kind": "follow-up",
+            "ref": "FU-IOS-SHARED"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-90",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "At 402px recurring rows break (the title right-aligned, the amount on its own line), and shared schedules aren't listed",
+            "kind": "follow-up",
+            "ref": "FU-WEB-ORGANIZE"
+          },
+          {
+            "summary": "No swipe actions: a row opens the schedule detail",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#web-recurring-notes-maz-90"
+          }
+        ]
       }
     },
     {
       "id": "iphone-schedule-detail",
       "view": "schedule Gym (anchor 31)",
       "native": {
-        "status": "pending",
+        "status": "matches",
         "owner": "MAZ-74",
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
         "deviations": []
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-90",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The schedule detail is a dialog with Pause/Resume and Remove buttons",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#web-recurring-notes-maz-90"
+          }
+        ]
       }
     },
     {
       "id": "iphone-accounts",
       "view": "accounts: Everyday chequing and Visa",
       "native": {
-        "status": "pending",
+        "status": "matches",
         "owner": "MAZ-74",
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
         "deviations": []
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-89",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Add entry and other forms are keyboard dialogs over the page, with no hero amount or keypad",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#interaction-baseline"
+          }
+        ]
       }
     },
     {
       "id": "iphone-account-form",
       "view": "new account form",
       "native": {
-        "status": "pending",
+        "status": "matches",
         "owner": "MAZ-74",
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
         "deviations": []
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-89",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Add entry and other forms are keyboard dialogs over the page, with no hero amount or keypad",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#interaction-baseline"
+          }
+        ]
       }
     },
     {
       "id": "iphone-categories",
       "view": "categories by kind",
       "native": {
-        "status": "pending",
+        "status": "matches",
         "owner": "MAZ-74",
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
         "deviations": []
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-89",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Add entry and other forms are keyboard dialogs over the page, with no hero amount or keypad",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#interaction-baseline"
+          }
+        ]
       }
     },
     {
       "id": "iphone-category-form",
       "view": "new category form",
       "native": {
-        "status": "pending",
+        "status": "matches",
         "owner": "MAZ-74",
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
         "deviations": []
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-89",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Add entry and other forms are keyboard dialogs over the page, with no hero amount or keypad",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#interaction-baseline"
+          }
+        ]
       }
     },
     {
       "id": "iphone-appearance",
       "view": "appearance: light, dark and system",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-69",
-        "deviations": []
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Theme is a plain list (System, Light, Dark) instead of the three previews",
+            "kind": "follow-up",
+            "ref": "FU-IOS-HOME"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-85",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Appearance is a Settings pane with Reduce transparency; text size follows the browser",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#web-adaptations-maz-122"
+          }
+        ]
       }
     },
     {
       "id": "iphone-app-lock",
       "view": "app lock settings",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-69",
-        "deviations": []
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Lock after (Immediately, 1 minute, 5 minutes) is MAZ-133; without enrolled Face ID the page shows the lock unavailable",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#native-implementation-notes-maz-69"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "not-applicable",
         "owner": "MAZ-85",
-        "deviations": []
+        "note": "The web has no app lock (redesign.md, Access)."
       }
     },
     {
       "id": "iphone-sign-in",
       "view": "password sign-in",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-68",
-        "deviations": []
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "With the keyboard up, \"Take a look around with sample data\" overlaps the Sign in button",
+            "kind": "follow-up",
+            "ref": "FU-IOS-LAYOUT"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-84",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "A brand block sits above the form, \"Explore a demo\" is added, and SSO reads \"Single sign-on\"",
+            "kind": "follow-up",
+            "ref": "FU-WEB-ACCESS"
+          }
+        ]
       }
     },
     {
       "id": "iphone-create-account",
       "view": "registration (unique test user)",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-68",
-        "deviations": []
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "No tinted hero glow behind the header (Home, empty Home, offline, create account), and Home has no calendar button in the toolbar",
+            "kind": "follow-up",
+            "ref": "FU-IOS-HOME"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-84",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "A brand block sits above the form, and SSO reads \"Single sign-on\"",
+            "kind": "follow-up",
+            "ref": "FU-WEB-ACCESS"
+          }
+        ]
       }
     },
     {
       "id": "iphone-server-connect",
       "view": "server URL entry (environment API URL)",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-69",
-        "deviations": []
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Captured while the address is typed, before verification; the Cards plan should capture the Server verified state the card shows",
+            "kind": "follow-up",
+            "ref": "FU-IOS-LAYOUT"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "not-applicable",
         "owner": "MAZ-85",
-        "deviations": []
+        "note": "The web uses the origin it was opened from; Settings › Server is read-only."
       }
     },
     {
       "id": "iphone-lock",
       "view": "app lock over home",
       "native": {
-        "status": "pending",
+        "status": "blocked",
         "owner": "MAZ-69",
-        "deviations": []
+        "note": "The lock cover needs an enrolled, matching Face ID, which XCUITest can't enroll; checked on a device (docs/ios-qa.md)."
       },
       "web": {
-        "status": "pending",
+        "status": "not-applicable",
         "owner": "MAZ-85",
-        "deviations": []
+        "note": "The web has no app lock (redesign.md, Access)."
       }
     },
     {
       "id": "iphone-empty-home",
       "view": "home, October 2026, no entries",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-77",
-        "deviations": []
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "No tinted hero glow behind the header (Home, empty Home, offline, create account), and Home has no calendar button in the toolbar",
+            "kind": "follow-up",
+            "ref": "FU-IOS-HOME"
+          },
+          {
+            "summary": "Add entry is a tab with the search role inside the system tab bar, not a separate copper button",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#native-implementation-notes-maz-69"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-92",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The empty month shows one Add your first entry action instead of Income, Expense and Invest shortcuts and sample data",
+            "kind": "follow-up",
+            "ref": "FU-WEB-HOME"
+          }
+        ]
       }
     },
     {
       "id": "iphone-offline",
       "view": "home while the network fails",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-71",
-        "deviations": []
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Offline adds a \"Shared expenses may be missing\" banner when shared data couldn't load",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#native-adaptations-maz-122"
+          },
+          {
+            "summary": "No tinted hero glow behind the header (Home, empty Home, offline, create account), and Home has no calendar button in the toolbar",
+            "kind": "follow-up",
+            "ref": "FU-IOS-HOME"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-87",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The banner reads \"Not synced · The server is busy or restarting\" instead of Offline when requests fail while the browser is online",
+            "kind": "follow-up",
+            "ref": "FU-WEB-ACCESS"
+          },
+          {
+            "summary": "Home leads with the hero plus Came in, Spent and Invested tiles, Coming up comes before Follow your money, and the month switcher sits under the title",
+            "kind": "follow-up",
+            "ref": "FU-WEB-HOME"
+          }
+        ]
       }
     },
     {
       "id": "iphone-save-error",
       "view": "failed save of an entry edit",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-69",
-        "deviations": []
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "A save is local first, so a failed upload shows Couldn't sync with Retry over the screen, not Couldn't save in the form",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#native-adaptations-maz-122"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-85",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "A failed save is a failed sync on the web: the entry is saved in the browser, and Home shows the not-synced banner with Retry",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#web-adaptations-maz-122"
+          }
+        ]
       }
     },
     {
       "id": "iphone-saved-toast",
       "view": "save succeeded after retry",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-69",
-        "deviations": []
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The toast appears on the local save, before the upload",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#native-adaptations-maz-122"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-85",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The toast says \"Changes saved\" with no Undo",
+            "kind": "follow-up",
+            "ref": "FU-WEB-ACCESS"
+          }
+        ]
       }
     },
     {
       "id": "iphone-sign-out",
       "view": "sign out confirmation with no pending changes",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-68",
-        "deviations": []
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Confirmations are iOS 27 popovers anchored to their button, not bottom action sheets",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#native-adaptations-maz-122"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-84",
-        "deviations": []
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Sign out shows a generic confirmation, with no warning about unsynced changes and no Sync, then sign out",
+            "kind": "follow-up",
+            "ref": "FU-WEB-ACCESS"
+          }
+        ]
       }
     },
     {
       "id": "ipad-home",
       "view": "iPad home dashboard, October 2026",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-77",
-        "deviations": []
+        "capture": "iPad Pro 11-inch (M5) simulator, iOS 27, landscape",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The iPad sidebar has generic Shared and Trips rows instead of each household and trip, and no Insights row",
+            "kind": "follow-up",
+            "ref": "FU-IOS-IPAD"
+          },
+          {
+            "summary": "Insights and the calendar are reached from Explore your month; the calendar is a page, not a sheet",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#native-overview-notes-maz-77"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-92",
-        "deviations": []
+        "capture": "1194x834",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Home leads with the hero plus Came in, Spent and Invested tiles, Coming up comes before Follow your money, and the month switcher sits under the title",
+            "kind": "follow-up",
+            "ref": "FU-WEB-HOME"
+          },
+          {
+            "summary": "The sidebar doesn't list households and trips",
+            "kind": "follow-up",
+            "ref": "FU-WEB-SHELL"
+          }
+        ]
       }
     },
     {
       "id": "ipad-activity",
       "view": "iPad activity list with entry p-party in the detail pane",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-73",
-        "deviations": []
+        "capture": "iPad Pro 11-inch (M5) simulator, iOS 27, landscape",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The iPad sidebar has generic Shared and Trips rows instead of each household and trip, and no Insights row",
+            "kind": "follow-up",
+            "ref": "FU-IOS-IPAD"
+          },
+          {
+            "summary": "In portrait the detail pane collapses to a few points and wraps the title letter by letter",
+            "kind": "follow-up",
+            "ref": "FU-IOS-IPAD"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-88",
-        "deviations": []
+        "capture": "1194x834",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The entry detail is a dialog, not a side pane",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#interaction-baseline"
+          }
+        ]
       }
     },
     {
       "id": "ipad-add-entry",
       "view": "iPad new expense form sheet",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-73",
-        "deviations": []
+        "capture": "iPad Pro 11-inch (M5) simulator, iOS 27, landscape",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Add entry is the compact one-column sheet with the keypad, not the two-column form sheet with the keyboard",
+            "kind": "follow-up",
+            "ref": "FU-IOS-IPAD"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-88",
-        "deviations": []
+        "capture": "1194x834",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Add entry and other forms are keyboard dialogs over the page, with no hero amount or keypad",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#interaction-baseline"
+          }
+        ]
       }
     },
     {
       "id": "ipad-shared",
       "view": "iPad household Maison",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-75",
-        "deviations": []
+        "capture": "iPad Pro 11-inch (M5) simulator, iOS 27, landscape",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The iPad sidebar has generic Shared and Trips rows instead of each household and trip, and no Insights row",
+            "kind": "follow-up",
+            "ref": "FU-IOS-IPAD"
+          },
+          {
+            "summary": "The household hero shows \"You owe\" in the label color with a month navigator above the actions; the card leads with members and a meaning-colored balance",
+            "kind": "follow-up",
+            "ref": "FU-IOS-SHARED"
+          },
+          {
+            "summary": "Single column, with no balances panel beside the expenses",
+            "kind": "follow-up",
+            "ref": "FU-IOS-IPAD"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-91",
-        "deviations": []
+        "capture": "1194x834",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The household header has no Record payment action, and a balance you owe is drawn in the label color",
+            "kind": "follow-up",
+            "ref": "FU-WEB-SHARED"
+          },
+          {
+            "summary": "Members are shown by email and initials from the email",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#web-shared-household-notes-maz-91"
+          },
+          {
+            "summary": "Balances are their own section, not a column beside the expenses",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#web-shared-household-notes-maz-91"
+          }
+        ]
       }
     },
     {
       "id": "ipad-trip",
       "view": "iPad shared trip Lisbon",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-76",
-        "deviations": []
+        "capture": "iPad Pro 11-inch (M5) simulator, iOS 27, landscape",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The iPad sidebar has generic Shared and Trips rows instead of each household and trip, and no Insights row",
+            "kind": "follow-up",
+            "ref": "FU-IOS-IPAD"
+          },
+          {
+            "summary": "A shared trip uses the household month layout instead of the trip total, People and share-by-category panels",
+            "kind": "follow-up",
+            "ref": "FU-IOS-SHARED"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-93",
-        "deviations": []
+        "capture": "1194x834",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Expenses, Balances, People and History are links (?tab=) styled as the segmented control",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#web-shared-household-notes-maz-91"
+          }
+        ]
       }
     },
     {
       "id": "ipad-settings",
       "view": "iPad settings",
       "native": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-69",
-        "deviations": []
+        "capture": "iPad Pro 11-inch (M5) simulator, iOS 27, landscape",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The iPad sidebar has generic Shared and Trips rows instead of each household and trip, and no Insights row",
+            "kind": "follow-up",
+            "ref": "FU-IOS-IPAD"
+          },
+          {
+            "summary": "Settings and the Manage pages open in the detail column instead of a sheet",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#native-implementation-notes-maz-69"
+          },
+          {
+            "summary": "Settings is a single column; the selected page doesn't open beside the list",
+            "kind": "follow-up",
+            "ref": "FU-IOS-IPAD"
+          }
+        ]
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-85",
-        "deviations": []
+        "capture": "1194x834",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Settings lists only Account, Appearance, Currency and Server",
+            "kind": "follow-up",
+            "ref": "FU-WEB-SHELL"
+          }
+        ]
       }
     },
     {
@@ -754,9 +1916,25 @@
         "note": "Desktop browser card; the native counterpart is the matching ipad-* card."
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-92",
-        "deviations": []
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Home leads with the hero plus Came in, Spent and Invested tiles, Coming up comes before Follow your money, and the month switcher sits under the title",
+            "kind": "follow-up",
+            "ref": "FU-WEB-HOME"
+          },
+          {
+            "summary": "The Sankey and By category are below the fold, and the sidebar doesn't list households and trips",
+            "kind": "follow-up",
+            "ref": "FU-WEB-HOME"
+          }
+        ]
       }
     },
     {
@@ -768,9 +1946,20 @@
         "note": "Desktop browser card; the native counterpart is the matching ipad-* card."
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-88",
-        "deviations": []
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The entry detail is a dialog, not a side panel",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#interaction-baseline"
+          }
+        ]
       }
     },
     {
@@ -782,9 +1971,20 @@
         "note": "Desktop browser card; the native counterpart is the matching ipad-* card."
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-92",
-        "deviations": []
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "No category comparison table or six-month chart",
+            "kind": "follow-up",
+            "ref": "FU-WEB-HOME"
+          }
+        ]
       }
     },
     {
@@ -796,9 +1996,30 @@
         "note": "Desktop browser card; the native counterpart is the matching ipad-* card."
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-91",
-        "deviations": []
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The household header has no Record payment action, and a balance you owe is drawn in the label color",
+            "kind": "follow-up",
+            "ref": "FU-WEB-SHARED"
+          },
+          {
+            "summary": "Members are shown by email and initials from the email",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#web-shared-household-notes-maz-91"
+          },
+          {
+            "summary": "Balances are their own section; from 1100px the side column holds repeating expenses",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#web-shared-household-notes-maz-91"
+          }
+        ]
       }
     },
     {
@@ -810,9 +2031,20 @@
         "note": "Desktop browser card; the native counterpart is the matching ipad-* card."
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-93",
-        "deviations": []
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The next trip is a feature card without its expense list; other trips are a grid",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#web-adaptations-maz-122"
+          }
+        ]
       }
     },
     {
@@ -824,9 +2056,20 @@
         "note": "Desktop browser card; the native counterpart is the matching ipad-* card."
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-85",
-        "deviations": []
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Settings lists only Account, Appearance, Currency and Server",
+            "kind": "follow-up",
+            "ref": "FU-WEB-SHELL"
+          }
+        ]
       }
     },
     {
@@ -838,9 +2081,20 @@
         "note": "Desktop browser card; the native counterpart is the matching ipad-* card."
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-88",
-        "deviations": []
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Add entry and other forms are keyboard dialogs over the page, with no hero amount or keypad",
+            "kind": "approved",
+            "ref": "docs/migration/redesign.md#interaction-baseline"
+          }
+        ]
       }
     },
     {
@@ -852,9 +2106,20 @@
         "note": "Desktop browser card; the native counterpart is the matching ipad-* card."
       },
       "web": {
-        "status": "pending",
+        "status": "deviates",
         "owner": "MAZ-84",
-        "deviations": []
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The left panel has no hero glow or Left to spend preview, and \"Explore a demo\" is added",
+            "kind": "follow-up",
+            "ref": "FU-WEB-ACCESS"
+          }
+        ]
       }
     }
   ]

@@ -10,8 +10,8 @@ import { enterDemo, horizontalOverflow, navigate, startDemo } from "./demo";
 //   PENNY_VISUAL=1 npx playwright test visual --project=chromium-desktop
 //   PENNY_VISUAL=1 npx playwright test visual --project=chromium-desktop --update-snapshots   # after an intended change
 //
-// These are regression baselines for the web app itself. Comparing them with the design cards
-// (docs/design/penny-ios, contracts/design-baseline.json) is MAZ-122's comparison method.
+// These are regression baselines for the web app itself. The comparison with the design cards is
+// cards.real.spec.ts (MAZ-122, docs/design/visual-acceptance.md).
 test.skip(process.env.PENNY_VISUAL !== "1", "visual baselines are compared with PENNY_VISUAL=1");
 test.skip(({ browserName, isMobile }) => browserName !== "chromium" || isMobile, "baselines are recorded on chromium-desktop");
 
