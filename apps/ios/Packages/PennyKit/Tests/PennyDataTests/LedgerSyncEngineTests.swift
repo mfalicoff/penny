@@ -322,13 +322,13 @@ struct LedgerSyncEngineTests {
         #expect(await engine.state.pending.entryIDs == ["taxi"])
     }
 
-    @Test("whenTheServerSendsALedgerVersionThisBuildDoesNotKnow_Engine_ShouldWriteNothing")
-    func incompatibleServerData() async throws {
+    @Test("whenTheServerSendsALedgerVersionOtherThanFour_Engine_ShouldWriteNothing", arguments: [1, 3, 5])
+    func incompatibleServerData(version: Int) async throws {
         let engine = try await synced()
         try await engine.commit(.saveEntry(Offline.entry("taxi")))
-        let future =
-            #"{"revision":9,"ledger":{"version":5,"currency":"CAD","categories":[],"transactions":[],"recurring":[]}}"#
-        let transport = StubTransport(json: future)
+        let unsupported =
+            #"{"revision":9,"ledger":{"version":\#(version),"currency":"CAD","categories":[],"transactions":[],"recurring":[]}}"#
+        let transport = StubTransport(json: unsupported)
         let client = try APIFixtures.client(
             session: try ServerSession(
                 server: APIFixtures.server, email: Offline.alex, token: server.token(for: Offline.alex)),

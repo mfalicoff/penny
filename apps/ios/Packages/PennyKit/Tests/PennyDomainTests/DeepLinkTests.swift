@@ -5,7 +5,7 @@ import Testing
 @Suite("Deep links")
 struct DeepLinkTests {
     @Test(
-        "whenLegacyRoute_DeepLink_ShouldKeepItsDestination",
+        "whenKnownRoute_DeepLink_ShouldOpenItsDestination",
         arguments: [
             ("penny:///", DeepLink.home),
             ("penny://", .home),
@@ -20,13 +20,13 @@ struct DeepLinkTests {
             ("penny:///trips", .trips),
             ("penny:///trips/t3", .trip(id: "t3")),
         ])
-    func legacyRoutes(url: String, expected: DeepLink) throws {
+    func knownRoutes(url: String, expected: DeepLink) throws {
         #expect(DeepLink(url: try #require(URL(string: url))) == expected)
     }
 
     @Test("whenFirstSegmentIsTheHost_DeepLink_ShouldParseLikeAnEmptyHost")
     func hostForm() throws {
-        // The legacy widget links to penny://entries/new (src/widgets/PennyWidgets.ios.tsx).
+        // The Recent expenses widget links to penny://entries/new (`DeepLink.addEntry`).
         #expect(DeepLink(url: try #require(URL(string: "penny://entries/new"))) == .addEntry)
         #expect(DeepLink(url: try #require(URL(string: "PENNY://trips/t3/"))) == .trip(id: "t3"))
     }
@@ -35,7 +35,7 @@ struct DeepLinkTests {
     func everyBaselineRoute() throws {
         let navigation = try #require(
             try Repository.json("contracts/design-baseline.json")["navigation"] as? [String: Any])
-        let routes = try #require(navigation["legacyRoutes"] as? [[String: Any]]).compactMap { $0["route"] as? String }
+        let routes = try #require(navigation["routes"] as? [[String: Any]]).compactMap { $0["route"] as? String }
         #expect(routes.count >= 12)
         for route in routes {
             let path = route.replacingOccurrences(of: "[id]", with: "x").replacingOccurrences(

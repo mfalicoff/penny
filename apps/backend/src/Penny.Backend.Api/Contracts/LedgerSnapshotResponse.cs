@@ -2,7 +2,7 @@ using Penny.Backend.Application.Ledgers;
 
 namespace Penny.Backend.Api.Contracts;
 
-// The legacy `Snapshot` envelope: `{revision, ledger}`.
+// The `Snapshot` envelope: `{revision, ledger}`.
 public sealed record LedgerSnapshotResponse(long Revision, LedgerResponse Ledger)
 {
     public static LedgerSnapshotResponse From(LedgerSnapshot snapshot) =>

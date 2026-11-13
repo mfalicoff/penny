@@ -1,7 +1,7 @@
 namespace Penny.Backend.Application.Receipts;
 
-// Legacy server/validation/receipts.ts: the accepted MIME types, the base64 text and
-// decoded size limits, Node's lenient base64 decoding and the file-signature check.
+// Receipt upload format rules: the accepted MIME types, the base64 text and decoded
+// size limits, lenient base64 decoding and the file-signature check.
 public static class ReceiptFormat
 {
     public const int MaxNameLength = 255;
@@ -19,7 +19,7 @@ public static class ReceiptFormat
         "image/heif",
     ];
 
-    // zod `regex(/^[A-Za-z0-9+/]+={0,2}$/)`: at least one alphabet character, then at
+    // `^[A-Za-z0-9+/]+={0,2}$`: at least one alphabet character, then at
     // most two trailing `=`. No whitespace, no URL-safe alphabet.
     public static bool IsBase64Text(string value)
     {
@@ -48,7 +48,7 @@ public static class ReceiptFormat
         return true;
     }
 
-    // Node `Buffer.from(text, "base64")` for text that passed IsBase64Text: padding is
+    // Lenient decoding of text that passed IsBase64Text: padding is
     // optional, a dangling sixth-bit character is ignored and unused low bits are
     // dropped. Convert.FromBase64String would reject the unpadded forms.
     public static byte[] Decode(string base64)

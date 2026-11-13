@@ -1,4 +1,4 @@
-/// Personal recurrence: the legacy `nextOccurrence`, `materialize` and schedule previews.
+/// Personal recurrence: next occurrences, materializing and schedule previews.
 ///
 /// Occurrence identity is `"{ruleId}:{YYYY-MM-DD}"` (the date the rule produced, not the
 /// entry's current date), so an occurrence is recorded at most once per rule and date on any
@@ -28,10 +28,9 @@ public enum Recurrence {
     /// advances `nextDate`, so running this again (or on another device, after a merge) adds
     /// nothing. Paused rules are left untouched. `today` is the device's local calendar day.
     ///
-    /// Known limitation, kept from legacy: during 2100 an active rule's `nextDate` can advance
-    /// past 2100-12-31, which `Ledger.violations` (and the server) then refuse. Materializing
-    /// has no error path in the legacy flow, so it is not refused here; only a new repeating
-    /// draft is (`EntryDraft.build`).
+    /// Known limitation: during 2100 an active rule's `nextDate` can advance past 2100-12-31,
+    /// which `Ledger.violations` (and the server) then refuse. Materializing has no error path,
+    /// so it is not refused here; only a new repeating draft is (`EntryDraft.build`).
     public static func materialize(_ ledger: Ledger, today: CalendarDate) -> Ledger {
         var result = ledger
         var existing = Set(ledger.transactions.map(\.id))

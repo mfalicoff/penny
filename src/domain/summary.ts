@@ -12,21 +12,20 @@ export const isRecorded = (entry: Transaction) => !(entry as OverviewEntry).sche
 export type MonthOptions = {
   /**
    * The person's local calendar date (`dateKey()` on the device, or `dateKeyIn` for a known time
-   * zone). With it, income dated after today is expected (MAZ-136): it counts toward Projected,
-   * not toward recorded totals or Left to spend, until its date arrives. Without it, every entry
-   * dated in the month is recorded, as on the legacy Overview, which keeps that behavior.
+   * zone). Income dated after today is expected (MAZ-136): it counts toward Projected, not
+   * toward recorded totals or Left to spend, until its date arrives.
    */
-  today?: string;
+  today: string;
 };
 
 // MAZ-136: a ledger entry is expected rather than recorded when it is income dated after today.
 // The entry itself never changes; on its date it moves from Projected to Left to spend. Income
 // only: future-dated expenses and investment contributions stay recorded (MAZ-139 owns those).
-export const isExpectedIncome = (entry: Transaction, today: string | undefined) =>
-  today !== undefined && isRecorded(entry) && entry.kind === "income" && entry.date > today;
+export const isExpectedIncome = (entry: Transaction, today: string) =>
+  isRecorded(entry) && entry.kind === "income" && entry.date > today;
 
 /** Not counted in Left to spend yet: a scheduled preview, or income dated after today. */
-export const isExpected = (entry: Transaction, today: string | undefined) =>
+export const isExpected = (entry: Transaction, today: string) =>
   !isRecorded(entry) || isExpectedIncome(entry, today);
 
 // Preview only the requested month; browsing never records transactions or advances schedules.
@@ -52,7 +51,7 @@ export function scheduledEntries(ledger: Ledger, month: string): OverviewEntry[]
 }
 
 // One breakdown of a month, shared by the Overview selector and `summarizeMonth`.
-export function monthBreakdown(ledger: Ledger, month: string, { today }: MonthOptions = {}) {
+export function monthBreakdown(ledger: Ledger, month: string, { today }: MonthOptions) {
   const entries: OverviewEntry[] = ledger.transactions.filter((t) => t.date.startsWith(month));
   // Every ledger row dated in the month. Income dated after today is expected, not recorded.
   const dated = entries.filter(isRecorded);
@@ -76,13 +75,9 @@ export function monthBreakdown(ledger: Ledger, month: string, { today }: MonthOp
   const scheduledIncome = scheduled.filter((entry) => entry.kind === "income");
   const expectedIncome = [...expected, ...scheduledIncome].reduce((sum, entry) => sum + entry.share, 0);
   // Projected adds every scheduled occurrence of the month (income, expenses and investments,
-  // personal and shared; the legacy app added scheduled income only) and income dated after today.
+  // personal and shared) and income dated after today.
   const summaryEntries: OverviewEntry[] = [...recordedEntries, ...expected, ...scheduled];
-  // The legacy Expo money-flow chart keeps its input: entries dated in the month plus scheduled
-  // income (without a `today`, `expected` is empty). The web Home and the native iOS flow don't use
-  // it: they chart recorded entries only, so the flow matches Left to spend.
-  const moneyFlowEntries: OverviewEntry[] = [...recordedEntries, ...expected, ...scheduledIncome];
-  return { recordedEntries, expected, scheduled, calendarEntries: summaryEntries, expectedIncome, summaryEntries, moneyFlowEntries,
+  return { recordedEntries, expected, scheduled, calendarEntries: summaryEntries, expectedIncome, summaryEntries,
     recorded: totals(recordedEntries), summary: totals(summaryEntries) };
 }
 
@@ -90,7 +85,7 @@ export type MonthSummary = {
   recorded: KindTotals;
   /**
    * Income not in Left to spend yet (part of `projected`): scheduled income not recorded this
-   * month, plus income dated after `today` when one is given (MAZ-136).
+   * month, plus income dated after `today` (MAZ-136).
    */
   expectedIncome: number;
   /**
@@ -108,7 +103,7 @@ export type MonthSummary = {
 export const net = ({ income, expense, investment }: KindTotals) => income - expense - investment;
 
 // Integer cents of personal shares. Never mutates the ledger or advances schedules.
-export function summarizeMonth(ledger: Ledger, month: string, options: MonthOptions = {}): MonthSummary {
+export function summarizeMonth(ledger: Ledger, month: string, options: MonthOptions): MonthSummary {
   const { recorded, summary: projected, expectedIncome } = monthBreakdown(ledger, month, options);
   return { recorded, expectedIncome, projected, recordedNet: net(recorded), projectedNet: net(projected) };
 }

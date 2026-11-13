@@ -12,7 +12,7 @@ namespace Penny.Backend.IntegrationTests.Http;
 public sealed class HouseholdPolicyTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
-    public async Task whenJoinAttemptsExceedWindow_InviteRateLimit_ShouldReturnLegacyTooManyRequests()
+    public async Task whenJoinAttemptsExceedWindow_InviteRateLimit_ShouldReturnTooManyRequests()
     {
         await using var factory = new TestApiFactory(
             Fixture.RuntimeConnection,

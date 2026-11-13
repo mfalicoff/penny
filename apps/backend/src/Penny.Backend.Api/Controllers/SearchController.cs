@@ -8,7 +8,7 @@ using Penny.Backend.Application.Search;
 
 namespace Penny.Backend.Api.Controllers;
 
-// Search v1 (MAZ-121, docs/migration/search.md). Session-protected by the fallback
+// Search v1 (MAZ-121, docs/reference/search.md). Session-protected by the fallback
 // policy; the viewer is the session's user. The body travels in a POST so search text
 // stays out of URLs and access logs; neither it nor SQL parameters are logged.
 [ApiController]

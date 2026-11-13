@@ -212,7 +212,7 @@ cmd_test() {
 assert_no_test_controls() {
   local file found=0
   while IFS= read -r -d "" file; do
-    if /usr/bin/strings -a "$file" | grep -qE "PENNY_TEST_[A-Z_]+|TestControls|TestStateReset|ContainerSeed|ExpoUpgradeFixture"; then
+    if /usr/bin/strings -a "$file" | grep -qE "PENNY_TEST_[A-Z_]+|TestControls|TestStateReset|ContainerSeed"; then
       echo "error: $file contains test controls." >&2
       found=1
     fi
@@ -238,7 +238,8 @@ ARCHIVE="$CACHE/Penny.xcarchive"
 EXPORT_DIR="$CACHE/export"
 BUNDLE_ID="com.mfalicoff.penny"
 APP_GROUP="group.com.mfalicoff.penny"
-# The WidgetKit extension (MAZ-80) keeps the Expo extension's id so placed widgets survive.
+# The WidgetKit extension's id (MAZ-80) is frozen for TestFlight/App Store continuity, so placed
+# widgets survive upgrades. Never rename it.
 WIDGETS_ID="com.mfalicoff.penny.ExpoWidgetsTarget"
 WIDGETS_APPEX="PlugIns/PennyWidgets.appex"
 
@@ -299,8 +300,8 @@ team_id() {
 package_version() { sed -n 's/^  "version": "\([^"]*\)".*/\1/p' "$ROOT/package.json" | head -1; }
 
 # App Store Connect compares CFBundleVersion component by component and rejects any build
-# number that is not higher than every earlier upload for this version, including the legacy
-# EAS builds. One to three dot-separated integers, no leading zeros.
+# number that is not higher than every earlier upload for this version. One to three
+# dot-separated integers, no leading zeros.
 require_build_number() {
   [[ "${PENNY_BUILD_NUMBER:-}" =~ ^(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*)){0,2}$ ]] \
     || { echo "error: set PENNY_BUILD_NUMBER to 1-3 dot-separated integers above the last TestFlight build (README.md#versions)." >&2; exit 1; }

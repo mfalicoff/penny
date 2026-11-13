@@ -13,7 +13,7 @@ public struct KindTotals: Hashable, Sendable {
         self.investment = investment
     }
 
-    /// Sums `share`, never `total` (legacy `totals`). Every row a report holds has a share of
+    /// Sums `share`, never `total`. Every row a report holds has a share of
     /// at most `Money.maxCents` (99,999,999,999): personal rows because a ledger with any other
     /// amount fails `Ledger.violations` and is never stored, shared rows because `LedgerReport`
     /// leaves out-of-range wire rows out. So a sum cannot overflow Int64 below about 92 million
@@ -36,7 +36,7 @@ public struct KindTotals: Hashable, Sendable {
 }
 
 /// The caller's share of one shared household expense, from the server's personal
-/// projection (`GET /api/households/projection`; docs/migration/shared-expenses.md). Shared
+/// projection (`GET /api/households/projection`; docs/reference/shared-expenses.md). Shared
 /// rows are server-owned: they are shown beside the personal ledger, never copied into it.
 public struct SharedExpenseShare: Hashable, Sendable {
     public struct Category: Hashable, Sendable {
@@ -97,7 +97,7 @@ public struct ReportEntry: Hashable, Sendable, Identifiable {
     }
 
     /// Personal: the entry id (`ruleId:date` for a preview). Shared: `household:{householdId}:{id}`,
-    /// the legacy view id, so a shared row can never collide with a personal one.
+    /// the same view id the web app uses, so a shared row can never collide with a personal one.
     public var id: String
     public var source: Source
     public var kind: EntryKind
@@ -168,7 +168,7 @@ public struct ReportEntry: Hashable, Sendable, Identifiable {
 }
 
 extension SharedExpenseShare {
-    /// Shared categories are matched by look, not id (legacy `household-category:name:icon:color`).
+    /// Shared categories are matched by look, not id (`household-category:name:icon:color`).
     static func categoryID(_ category: Category) -> String {
         "household-category:\(category.name):\(category.icon):\(category.color)"
     }
@@ -211,7 +211,7 @@ public struct LedgerReport: Sendable {
 
     /// Shared projection deduplication: a row repeated across period responses (same household
     /// and id) appears once, at the position its id was first seen, with the values of its *last*
-    /// copy, as the legacy `Map` with `unique.set` did; so the caller passes older responses
+    /// copy (as a `Map` keyed by id would keep it); so the caller passes older responses
     /// first. The last copy decides everything, its currency and amounts too. A recorded
     /// occurrence replaces its preview, and a preview never repeats a recorded row's id.
     ///
@@ -299,8 +299,7 @@ public struct MonthSummary: Hashable, Sendable {
     public let recorded: KindTotals
     /// Recorded plus `expected` and every occurrence in `scheduled`: scheduled income, expenses
     /// and investment contributions, personal and shared (v2 `summarizeMonth` `projected`,
-    /// redesign-states.json and month-totals.json `projected`). The legacy app added scheduled
-    /// income only (MAZ-139).
+    /// redesign-states.json and month-totals.json `projected`; MAZ-139).
     public let projected: KindTotals
     /// The income included in `projected` but not in `recorded`: scheduled income plus income
     /// dated after today. Expected, not cash available today.
@@ -447,7 +446,7 @@ extension LedgerReport {
             total: expenses.reduce(0) { $0 + $1.share }, receiptTotal: expenses.reduce(0) { $0 + $1.total })
     }
 
-    /// Spent share and expense count per trip id (legacy `tripSummaries`).
+    /// Spent share and expense count per trip id.
     public var tripTotals: [String: (total: Int64, count: Int)] {
         var result: [String: (total: Int64, count: Int)] = [:]
         for entry in ledger.transactions where entry.kind == .expense {

@@ -4,7 +4,7 @@ import { receiptSchema } from "./schemas";
 
 /**
  * Receipt files (MAZ-94) over `POST /api/receipts` and `GET /api/receipts/{id}`. The server's
- * rules (docs/migration/receipts.md) are checked here first so a bad file fails before any
+ * rules (docs/reference/receipts.md) are checked here first so a bad file fails before any
  * upload: the same seven types, 1 byte to 10 MiB, and the file signature for the type. The
  * server stays the authority and checks them all again.
  */
@@ -246,7 +246,7 @@ export async function uploadReceipt(file: File, mime: ReceiptMime, { signal, onP
   return parseReceipt(status, text);
 }
 
-/** Receipt links that this server serves; anything else (a legacy native path) can't be opened here. */
+/** Receipt links that this server serves; anything else (a path on another device) can't be opened here. */
 export const isServedReceipt = (receipt: Pick<Receipt, "uri">) => /^\/api\/receipts\/[^/?#]+$/.test(receipt.uri);
 
 export const RECEIPT_READ_MESSAGES = {

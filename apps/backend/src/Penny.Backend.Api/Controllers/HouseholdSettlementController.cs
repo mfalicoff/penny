@@ -6,9 +6,9 @@ using Penny.Backend.Application.Households;
 
 namespace Penny.Backend.Api.Controllers;
 
-// Month recaps, monthly reimbursements and audit history (legacy
-// server/http/households.ts, MAZ-58). Session-protected by the fallback policy. See
-// docs/migration/settlement.md.
+// Month recaps, monthly reimbursements and audit history
+// (MAZ-58). Session-protected by the fallback policy. See
+// docs/reference/settlement.md.
 [ApiController]
 [Route("api/households")]
 [ProducesResponseType<ApiError>(401)]
@@ -80,8 +80,8 @@ public sealed class HouseholdSettlementController(SettlementService settlement) 
             ])
         );
 
-    // Express `typeof req.query.x === "string"` followed by a truthiness check: one
-    // non-empty value, else absent.
+    // One non-empty value, else absent (a repeated parameter or an empty value is
+    // absent).
     private string? Query(string name) =>
         Request.Query.TryGetValue(name, out var values)
         && values.Count == 1

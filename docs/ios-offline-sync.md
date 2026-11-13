@@ -1,13 +1,13 @@
 # Native offline ledger and sync (MAZ-71)
 
-[Documentation](README.md) · [Native iOS app](../apps/ios/README.md) · [Ledger rules](ios-ledger-domain.md) · [API client](ios-api-client.md) · [Sign-in](ios-authentication.md) · [Server ledger sync](migration/ledger.md)
+[Documentation](README.md) · [Native iOS app](../apps/ios/README.md) · [Ledger rules](ios-ledger-domain.md) · [API client](ios-api-client.md) · [Sign-in](ios-authentication.md) · [Server ledger sync](reference/ledger.md)
 
-The native app keeps each signed-in account's personal ledger on the device, saves to it while offline, and syncs it with the server's whole-ledger `GET`/`PUT /api/ledger`. The server never merges: it refuses a stale revision with 409. The client merges, as the released Expo builds did, with the shared rules in `src/domain/merge.ts` ([ADR 002](migration/architecture.md#adr-002-calculation-and-conflict-ownership)).
+The native app keeps each signed-in account's personal ledger on the device, saves to it while offline, and syncs it with the server's whole-ledger `GET`/`PUT /api/ledger`. The server never merges: it refuses a stale revision with 409. The client merges, with the shared rules in `src/domain/merge.ts` ([ADR 002](reference/architecture.md#adr-002-calculation-and-conflict-ownership)).
 
 | Piece | Where | Role |
 | --- | --- | --- |
 | `LedgerMerge`, `PendingChanges` | `PennyDomain/Ledger/LedgerMerge.swift` | Pure three-way merge and the "what is waiting" summary |
-| `Ledger(wire:)`, `WireLedger(_:)` | `PennyData/Offline/LedgerWireMapping.swift` | Wire ↔ domain ledger, with the v1–v3 upgrade |
+| `Ledger(wire:)`, `WireLedger(_:)` | `PennyData/Offline/LedgerWireMapping.swift` | Wire ↔ domain ledger; only version 4 is accepted |
 | `LedgerFileStore`, `DurableFileSystem` | `PennyData/Offline/LedgerFileStore.swift` | One file per account, durable atomic writes |
 | `LedgerSyncEngine` | `PennyData/Offline/LedgerSyncEngine.swift` | Per-account actor: save, serialized sync, retries, recovery, removal |
 | `OfflineLedgerStore` | `PennyData/Offline/OfflineLedgerStore.swift` | One engine per account; the `AccountLocalData` that `AuthController` uses for sign-out |
@@ -39,7 +39,7 @@ Each account (`AccountScope`: server URL and lowercased email) has one JSON file
 - The record repeats the server and email. A file whose record names another account is refused (`wrongAccount`), so a misplaced file is never shown to the wrong person.
 - **Writes** go to a temporary file in the same directory (`.ledger-<hash>.json.<uuid>.tmp`), are flushed with `F_FULLFSYNC` (falling back to `fsync`), renamed over the old file, and the directory is flushed. A crash or power loss leaves the old file or the new one, never a mix; a stray temporary file is ignored, swept when the store next opens, and removed with the account. A save is acknowledged only after this write returns.
 - **Protection.** Files are `completeUntilFirstUserAuthentication`, so a sync after a restart can run once the device has been unlocked once. The directory is excluded from backups: the server holds the backed-up copy, and restoring stale pending work onto a new device could undo newer edits.
-- **Migrations.** `format` is the schema version. A build reads its own format and refuses a higher one (`newerFormat`, shown as "update the app") without touching the file. A future format change must read every earlier format and rewrite it only after a successful read; it must never drop `local`. Ledger versions inside the file follow the wire rules: v1–v3 are upgraded on read, unknown versions are refused (`LedgerMappingError`). The Expo app's AsyncStorage ledgers (`penny:ledger:<email>` under every server namespace) are imported at the first native launch with revision 0 and no sync time, merged onto an existing native file rather than replacing it, and kept until the account syncs ([Expo upgrade](ios-expo-migration.md)).
+- **Migrations.** `format` is the schema version. A build reads its own format and refuses a higher one (`newerFormat`, shown as "update the app") without touching the file. A future format change must read every earlier format and rewrite it only after a successful read; it must never drop `local`. Ledger versions inside the file follow the wire rules: only version 4 is read, any other version is refused (`LedgerMappingError`).
 
 ## Saving
 
@@ -52,7 +52,7 @@ Each account (`AccountScope`: server URL and lowercased email) has one JSON file
 5. Write the file. A failed write throws `writeFailed`; the ledger on screen and on disk are unchanged, so the person keeps the draft.
 6. Return a `SaveReceipt` (`savedOffline` when it is waiting for the network, and `before`/`after`: the local ledger right before and after, read in one actor step, which Undo reverts) and start a sync.
 
-Saves are allowed while a sync is running; the sync merges them (below). The legacy app refused them ("Sync is finishing").
+Saves are allowed while a sync is running; the sync merges them (below).
 
 ## Sync
 
@@ -74,9 +74,9 @@ Field by field, by record id, in every list (accounts, trips, categories, entrie
 | --- | --- |
 | A record only the server changed | The server's version |
 | Different fields changed on each side | Both changes survive |
-| **The same field changed on both sides** | **This device's value wins** (the device that syncs last decides), as in the legacy app |
+| **The same field changed on both sides** | **This device's value wins** (the device that syncs last decides) |
 | Deleted here, edited on the server | Deleted |
-| Edited here, deleted on the server | Comes back with this device's version (legacy behavior) |
+| Edited here, deleted on the server | Comes back with this device's version (the edit is newer than the delete it never saw) |
 | Unchanged here, deleted on the server | Deleted |
 | Created here | Appended after the server's records |
 | Currency | This device's change wins, otherwise the server's |
@@ -86,7 +86,7 @@ Personal recurrence refinements, where an occurrence is "untouched" when it equa
 - When both sides advanced a rule's `nextDate`, the later one wins, so a date already consumed is not recorded again.
 - An occurrence both devices recorded keeps the server's copy when this device's is untouched, so an edit made on the other device is kept.
 - An untouched occurrence this device recorded is dropped when the server's rule is already past its date and the server does not have it (recorded there and deleted).
-- A rule the server deleted stays deleted when this device only caught it up offline (its copy differs from the base only in `nextDate`), and the untouched occurrences this device recorded for it are dropped with it. A rule edited here in any other field comes back with its occurrences, as in the "Edited here, deleted on the server" row. The shared TypeScript merge (`src/domain/merge.ts`, used by the browser and the released Expo builds) runs the same four rules (MAZ-141).
+- A rule the server deleted stays deleted when this device only caught it up offline (its copy differs from the base only in `nextDate`), and the untouched occurrences this device recorded for it are dropped with it. A rule edited here in any other field comes back with its occurrences, as in the "Edited here, deleted on the server" row. The shared TypeScript merge (`src/domain/merge.ts`, used by the browser) runs the same four rules (MAZ-141).
 
 Occurrence ids are `{ruleId}:{date}`, so materializing again after any merge adds nothing that exists. Golden cases: `contracts/fixtures/merge-conflicts.json` (its `recurring:` cases cover the four refinements, so web and iOS check the same results), plus more recurrence cases in `LedgerMergeTests`.
 
@@ -133,8 +133,8 @@ Shared household actions and receipt uploads are not queued: they call `AuthCont
 
 ## Local search and server results
 
-- `localSearch(_:kind:day:)` searches this device's `local` ledger, so pending creates and edits are found and pending deletes are not (`LedgerReport.search`, the legacy substring rule). Shared projections are not cached on the device yet, so offline results are personal entries only.
-- `searchesLocally(serverHasSearch:)` is true with pending changes, offline, or against a server without search v1; the screen then shows local results ("On this device") and never mixes them with server pages ([search](migration/search.md#offline-pending-edits-and-demo)).
+- `localSearch(_:kind:day:)` searches this device's `local` ledger, so pending creates and edits are found and pending deletes are not (`LedgerReport.search`, the plain substring rule). Shared projections are not cached on the device yet, so offline results are personal entries only.
+- `searchesLocally` is true with pending changes or offline; the screen then shows local results ("On this device") and never mixes them with server pages ([search](reference/search.md#offline-pending-edits-and-demo)).
 - Tag each server search with `searchEpoch` and pass the page to `reconcile(_:startedAt:)`: `.searchAgain` when the ledger or the account changed since the search started (a save or sync landed, so the page may show a deleted or stale row), `.useLocalResults` when changes are pending or the device is offline, otherwise `.show(page)`.
 - `SearchResults` accumulates pages of one search and keeps each result key once, so a shared expense that moves between pages is not listed twice.
 
@@ -159,11 +159,11 @@ Drafts are view state: a failed save, an expiry or a reconnect never touches the
 
 ## Offline limitations
 
-- The whole ledger is rewritten on every save and sync (as the legacy app did with AsyncStorage). That is fine for typical ledgers; at the 100,000-entry limit each save writes several megabytes.
+- The whole ledger is rewritten on every save and sync. That is fine for typical ledgers; at the 100,000-entry limit each save writes several megabytes.
 - No background sync: changes sync when the app is next active and online.
 - Shared household data, settlement, receipts and server search need the network; nothing shared is cached offline yet.
 - The same-field policy is last-sync-wins for this device; there is no per-field conflict prompt.
-- An edit of an entry another device deleted brings it back (legacy behavior, kept deliberately).
+- An edit of an entry another device deleted brings it back (deliberately).
 
 ## Tests
 

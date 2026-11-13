@@ -1,6 +1,6 @@
 // Wire models for households, shared expenses, settlement, audit and shared rules
-// (contracts/openapi.json, the legacy envelopes in src/data/households.ts; server: MAZ-56–59,
-// docs/migration/households.md, shared-expenses.md, settlement.md, shared-recurrence.md).
+// (contracts/openapi.json; server: MAZ-56–59,
+// docs/reference/households.md, shared-expenses.md, settlement.md, shared-recurrence.md).
 //
 // Same rules as WireModels.swift: integer cents (`Int64`), `YYYY-MM-DD` strings, opaque ids,
 // instants as Unix milliseconds (`Int64`), absent optionals nil and omitted when encoding.
@@ -44,13 +44,13 @@ public struct WireHousehold: Codable, Equatable, Sendable, Identifiable {
     }
 }
 
-/// One account's latest membership period. `leftAt` is absent (or `null` from the legacy
-/// server) for a current member.
+/// One account's latest membership period. `leftAt` is absent (or `null`) for a current member.
 public struct WireHouseholdMember: Codable, Equatable, Sendable, Identifiable {
     public var userId: String
     public var email: String
     public var joinedAt: Int64
-    /// The member's local calendar day when they joined; absent for older clients.
+    /// The member's local calendar day when they joined; absent when the join request carried
+    /// no time zone offset.
     public var joinedOn: String?
     public var leftAt: Int64?
 

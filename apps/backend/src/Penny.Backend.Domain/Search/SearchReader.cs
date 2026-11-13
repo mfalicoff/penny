@@ -4,10 +4,10 @@ using Penny.Backend.Domain.Ledgers;
 
 namespace Penny.Backend.Domain.Search;
 
-// Reads the search request (docs/migration/search.md, "Request") with the JSON rules
+// Reads the search request (docs/reference/search.md, "Request") with the JSON rules
 // of LedgerReader: numbers are safe integers, optional fields may be absent but never
 // null, the last duplicate key wins and lengths are UTF-16 code units. Unlike the
-// legacy readers, unknown fields are rejected. Every problem is one 400.
+// other request readers, unknown fields are rejected. Every problem is one 400.
 public static class SearchReader
 {
     public const string Invalid = "Invalid search request.";

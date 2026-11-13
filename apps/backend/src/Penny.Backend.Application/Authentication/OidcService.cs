@@ -4,7 +4,7 @@ using Penny.Backend.Domain.Errors;
 
 namespace Penny.Backend.Application.Authentication;
 
-// Port of the legacy OIDC service (server/application/oidc.ts). Short-lived secrets
+// OIDC sign-in attempts. Short-lived secrets
 // (state, nonce, PKCE verifier) stay on the server, keyed by SHA-256 of a transaction
 // that only the initiating app holds; they never appear in redirect URLs.
 public sealed class OidcService(
@@ -112,7 +112,7 @@ public sealed class OidcService(
         return await auth.LoginOidcAsync(identity, settings.AllowRegistration, cancellationToken);
     }
 
-    // Legacy expiry is integer milliseconds; truncating keeps the boundary exact.
+    // Expiries are integer milliseconds; truncating keeps the boundary exact.
     private DateTimeOffset Now() =>
         DateTimeOffset.FromUnixTimeMilliseconds(clock.GetUtcNow().ToUnixTimeMilliseconds());
 }

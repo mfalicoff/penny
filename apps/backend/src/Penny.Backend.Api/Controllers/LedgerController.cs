@@ -7,7 +7,7 @@ using Penny.Backend.Application.Ledgers;
 
 namespace Penny.Backend.Api.Controllers;
 
-// Personal ledger sync (legacy server/http/ledger.ts). Session-protected by the
+// Personal ledger sync. Session-protected by the
 // fallback policy; every query is scoped to the session's user.
 [ApiController]
 [Route("api/ledger")]
@@ -26,7 +26,7 @@ public sealed class LedgerController(LedgerService ledgers) : ControllerBase
             )
         );
 
-    // The body is the whole `{revision, ledger}` snapshot; see docs/migration/ledger.md.
+    // The body is the whole `{revision, ledger}` snapshot; see docs/reference/ledger.md.
     [HttpPut(Name = "putApiLedger")]
     [ProducesResponseType<LedgerSnapshotResponse>(200)]
     [ProducesResponseType<ApiError>(400)]

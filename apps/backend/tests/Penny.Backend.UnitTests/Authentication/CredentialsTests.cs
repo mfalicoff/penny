@@ -8,7 +8,8 @@ public sealed class CredentialsTests
 {
     private const string Password = "a secure test password";
 
-    // Expected values come from the legacy zod 4 schema in server/validation/auth.ts.
+    // The email rule every client applies: trimmed with JavaScript whitespace rules,
+    // lowercased, then checked against the shared pattern.
     [Theory]
     [InlineData(" PERSON@EXAMPLE.TEST ", "person@example.test")]
     [InlineData("\uFEFF\u3000a@b.co\u2028", "a@b.co")]
@@ -16,10 +17,8 @@ public sealed class CredentialsTests
     [InlineData("first.last+tag@sub.example.com", "first.last+tag@sub.example.com")]
     [InlineData("o'neil@example.test", "o'neil@example.test")]
     [InlineData("a@b.co\n", "a@b.co")]
-    public void whenEmailAcceptedByLegacySchema_Normalize_ShouldTrimAndLowercase(
-        string email,
-        string expected
-    ) => Credentials.Normalize(email, Password)!.Email.ShouldBe(expected);
+    public void whenEmailValid_Normalize_ShouldTrimAndLowercase(string email, string expected) =>
+        Credentials.Normalize(email, Password)!.Email.ShouldBe(expected);
 
     [Theory]
     [InlineData("\u0085a@b.co")]
@@ -31,7 +30,7 @@ public sealed class CredentialsTests
     [InlineData("\u00E9@b.co")]
     [InlineData("a@-b.co")]
     [InlineData("")]
-    public void whenEmailRejectedByLegacySchema_Normalize_ShouldReturnNull(string email) =>
+    public void whenEmailInvalid_Normalize_ShouldReturnNull(string email) =>
         Credentials.Normalize(email, Password).ShouldBeNull();
 
     [Fact]

@@ -13,23 +13,6 @@ public struct SeedFixture: Codable, Equatable, Sendable {
         public var steps: [[String: JSONValue]]
         public var searchExpectations: [SearchExpectation]?
         public var pendingEdits: PendingEdits?
-        /// Legacy-versus-.NET comparison requests (differential scenario).
-        public var probes: [Probe]?
-        public var knownDifferences: [KnownDifference]?
-    }
-
-    public struct Probe: Codable, Equatable, Sendable {
-        public var name: String
-        public var `as`: String?
-        public var method: String
-        public var path: String
-        public var body: JSONValue?
-    }
-
-    public struct KnownDifference: Codable, Equatable, Sendable {
-        public var probe: String
-        public var path: String
-        public var reason: String
     }
 
     public struct SearchExpectation: Codable, Equatable, Sendable {

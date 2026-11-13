@@ -6,8 +6,8 @@ using Penny.Backend.Domain.Ledgers;
 
 namespace Penny.Backend.Application.Receipts;
 
-// Receipt upload and download (legacy server/application/receipts.ts, MAZ-60).
-// Messages and check order match the legacy service; see docs/migration/receipts.md.
+// Receipt upload and download (MAZ-60). Messages and check order are part of the
+// client contract; see docs/reference/receipts.md.
 public sealed class ReceiptService(IReceiptRepository receipts, TimeProvider clock)
 {
     public const string InvalidUpload = "Choose a photo or PDF smaller than 10 MB.";
@@ -15,7 +15,7 @@ public sealed class ReceiptService(IReceiptRepository receipts, TimeProvider clo
         "This file is not a supported photo or PDF, or exceeds 10 MB.";
     public const string NotFound = "Receipt not found.";
 
-    // `body` is null when the request had no JSON body (zod then fails the schema).
+    // `body` is null when the request had no JSON body (an invalid upload).
     public async Task<StoredReceiptInfo> UploadAsync(
         string userId,
         JsonElement? body,
@@ -49,8 +49,8 @@ public sealed class ReceiptService(IReceiptRepository receipts, TimeProvider clo
                 : null
         ) ?? throw new BackendFailure(FailureKind.NotFound, NotFound);
 
-    // zod `receiptUploadSchema`: unknown keys ignored, duplicate keys resolve to the
-    // last one (JSON.parse). Names must also be storable text.
+    // The upload body: unknown keys ignored, duplicate keys resolve to the last one.
+    // Names must also be storable text.
     private static (string Name, string Mime, string Base64)? Parse(JsonElement? body)
     {
         if (body is not { ValueKind: JsonValueKind.Object } root)

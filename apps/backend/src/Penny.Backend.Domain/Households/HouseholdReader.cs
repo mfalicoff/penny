@@ -4,11 +4,11 @@ using Penny.Backend.Domain.Ledgers;
 
 namespace Penny.Backend.Domain.Households;
 
-// Ports of the legacy household zod schemas (server/infrastructure/households.ts),
-// with the same JSON rules as LedgerReader: safe-integer numbers, optional fields may
-// be absent but never null, unknown keys ignored, last duplicate key wins, names
-// trimmed with JavaScript whitespace rules and measured in UTF-16 code units. Every
-// reader returns null for an invalid body; the API reports one message for all.
+// Household request readers, with the same JSON rules as LedgerReader: safe-integer
+// numbers, optional fields may be absent but never null, unknown keys ignored, last
+// duplicate key wins, names trimmed with JavaScript whitespace rules and measured in
+// UTF-16 code units. Every reader returns null for an invalid body; the API reports
+// one message for all.
 public static partial class HouseholdReader
 {
     public const int NameLength = 80;
@@ -62,7 +62,7 @@ public static partial class HouseholdReader
         }
     }
 
-    // zod `.trim().min(1).max(80)`: trimmed first, then measured.
+    // Trimmed first, then measured: 1 to 80 UTF-16 code units.
     private static string Name(Dictionary<string, JsonElement> fields)
     {
         var name = LedgerText.TrimLikeJavaScript(

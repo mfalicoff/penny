@@ -1,6 +1,6 @@
 # Native UI tests (XCUITest, MAZ-81)
 
-[Native app](../apps/ios/README.md) · [Full-stack test environment](migration/test-environment.md) · [Redesign baseline](migration/redesign.md)
+[Native app](../apps/ios/README.md) · [Full-stack test environment](reference/test-environment.md) · [Redesign baseline](reference/redesign.md)
 
 Penny's XCUITest suites drive the installed Debug app on clean iPhone and iPad simulators against the real .NET API on PostgreSQL (MAZ-62's disposable environment), with the local OIDC provider for single sign-on. Nothing mocks the business API: tests arrange data through the same HTTP API the app uses, from a "second device", and use only the environment's test controls (`/api/test/*`) to create isolated accounts, pin the server clock and inject faults.
 
@@ -25,7 +25,7 @@ apps/ios/scripts/ios.sh ui-test screenshots  # appearance and accessibility capt
 apps/ios/scripts/ios.sh ui-build             # compile the app and the UI tests only
 ```
 
-`ui-test` needs what the full-stack environment needs (Docker or Podman, or the [native PostgreSQL mode](migration/test-environment.md#without-a-container-runtime); the .NET SDK, Node 24 and the search model; see [prerequisites](migration/test-environment.md#prerequisites)) plus Xcode 27.2. Without `PENNY_API_URL` it runs `penny-env run --oidc` around itself: the environment is created, the plan runs, server logs are collected and everything is torn down, also on failure. With an environment already up (`PENNY_API_URL`, `PENNY_TEST_TOKEN` and `PENNY_TEST_RUN` exported, for example from `npm run test-env -- env`), it uses that one.
+`ui-test` needs what the full-stack environment needs (Docker or Podman, or the [native PostgreSQL mode](reference/test-environment.md#without-a-container-runtime); the .NET SDK, Node 24 and the search model; see [prerequisites](reference/test-environment.md#prerequisites)) plus Xcode 27.2. Without `PENNY_API_URL` it runs `penny-env run --oidc` around itself: the environment is created, the plan runs, server logs are collected and everything is torn down, also on failure. With an environment already up (`PENNY_API_URL`, `PENNY_TEST_TOKEN` and `PENNY_TEST_RUN` exported, for example from `npm run test-env -- env`), it uses that one.
 
 | Variable | Effect |
 | --- | --- |
@@ -97,7 +97,7 @@ Large text uses the system launch argument `-UIPreferredContentSizeCategoryName`
 ### Install, upgrade, relaunch, network and permissions
 
 - **Clean install**: a fresh simulator per run, and `PENNY_TEST_RESET` per test.
-- **Upgrade (seeded state)**: `ContainerSeed` writes standard and App Group defaults and files into the containers before launch (`LifecycleTests`). MAZ-72 plugs the legacy Expo layout in here: add a `ContainerSeed` builder with the synthetic legacy files and defaults, launch with it, and assert the migrated ledger and session.
+- **Upgrade (seeded state)**: `ContainerSeed` writes standard and App Group defaults and files into the containers before launch (`LifecycleTests`), standing in for what an older build stored.
 - **Upgrade (real binary)**: `PENNY_UPGRADE_FROM_APP=<previous Penny.app>` installs and runs the previous build on each simulator first; the plan's install is then an in-place upgrade and `LifecycleTests` checks the launch without a reset. Without it that test is skipped.
 - **Terminate/relaunch**: `relaunch()`.
 - **Network failure**: server faults (`FaultRule.offline(prefix)` drops connections) rather than simulator network changes, so failures are exact and repeatable.
@@ -166,7 +166,7 @@ Tests find elements only by identifier, never by visible text (except system-pro
 
 ## CI
 
-`ios.yml` job `ui-smoke` (every PR touching the app, the contracts, the backend or the test environment) and `ios-ui-matrix.yml` (nightly at 07:17 UTC, on published releases, and on demand with a choice of plans) run on the `xcode-27` runner and upload `test-results/ios/ui/`. GitHub-hosted Apple Silicon macOS runners cannot run Linux containers, so both jobs install Nix, build `.#test-postgres` (PostgreSQL 18 with pgvector, locked by `flake.lock`) and run the stack with `PENNY_POSTGRES=native` ([without a container runtime](migration/test-environment.md#without-a-container-runtime)). Locally, `ios.sh ui-test` uses Docker or Podman as before, or the same native mode when those two variables are set.
+`ios.yml` job `ui-smoke` (every PR touching the app, the contracts, the backend or the test environment) and `ios-ui-matrix.yml` (nightly at 07:17 UTC, on published releases, and on demand with a choice of plans) run on the `xcode-27` runner and upload `test-results/ios/ui/`. GitHub-hosted Apple Silicon macOS runners cannot run Linux containers, so both jobs install Nix, build `.#test-postgres` (PostgreSQL 18 with pgvector, locked by `flake.lock`) and run the stack with `PENNY_POSTGRES=native` ([without a container runtime](reference/test-environment.md#without-a-container-runtime)). Locally, `ios.sh ui-test` uses Docker or Podman as before, or the same native mode when those two variables are set.
 
 ## Privacy
 

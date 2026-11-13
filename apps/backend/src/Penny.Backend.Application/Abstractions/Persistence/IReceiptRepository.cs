@@ -11,7 +11,7 @@ public interface IReceiptRepository
 
     // The receipt when the user owns it or may read it through a household: a live
     // expense links it and the user is a current member of that household, or a
-    // former member with a share in that expense (legacy `canReadReceipt`).
+    // former member with a share in that expense.
     Task<StoredReceipt?> ReadVisibleAsync(
         string userId,
         string receiptId,

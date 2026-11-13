@@ -1138,35 +1138,9 @@ namespace Penny.Backend.Persistence.Migrations
                         .HasColumnName("last_error")
                         .UseCollation("C");
 
-                    b.Property<DateTimeOffset?>("LeaseExpiresAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("lease_expires_at");
-
-                    b.Property<string>("LeaseOwner")
-                        .HasColumnType("text")
-                        .HasColumnName("lease_owner")
-                        .UseCollation("C");
-
-                    b.Property<string>("LeaseToken")
-                        .HasColumnType("text")
-                        .HasColumnName("lease_token")
-                        .UseCollation("C");
-
                     b.Property<DateTimeOffset>("NextAttemptAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("next_attempt_at");
-
-                    b.Property<string>("Provider")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("text")
-                        .HasDefaultValue("expo")
-                        .HasColumnName("provider")
-                        .UseCollation("C");
-
-                    b.Property<DateTimeOffset?>("ReceiptCheckedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("receipt_checked_at");
 
                     b.Property<DateTimeOffset?>("SentAt")
                         .HasColumnType("timestamp with time zone")
@@ -1183,10 +1157,6 @@ namespace Penny.Backend.Persistence.Migrations
                         .HasDatabaseName("ix_push_deliveries_due")
                         .HasFilter("sent_at IS NULL");
 
-                    b.HasIndex("SentAt")
-                        .HasDatabaseName("ix_push_deliveries_receipts")
-                        .HasFilter("ticket_id IS NOT NULL AND receipt_checked_at IS NULL");
-
                     b.HasIndex("Token")
                         .HasDatabaseName("ix_push_deliveries_pending_token")
                         .HasFilter("sent_at IS NULL");
@@ -1194,10 +1164,6 @@ namespace Penny.Backend.Persistence.Migrations
                     b.ToTable("push_deliveries", "penny", t =>
                         {
                             t.HasCheckConstraint("ck_push_deliveries_attempts", "attempts >= 0");
-
-                            t.HasCheckConstraint("ck_push_deliveries_lease", "(lease_owner IS NULL) = (lease_token IS NULL) AND (lease_token IS NULL) = (lease_expires_at IS NULL)");
-
-                            t.HasCheckConstraint("ck_push_deliveries_provider", "provider IN ('expo','apns')");
                         });
                 });
 
@@ -1209,6 +1175,7 @@ namespace Penny.Backend.Persistence.Migrations
                         .UseCollation("C");
 
                     b.Property<string>("Environment")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("environment")
                         .UseCollation("C");
@@ -1221,9 +1188,7 @@ namespace Penny.Backend.Persistence.Migrations
 
                     b.Property<string>("Provider")
                         .IsRequired()
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("text")
-                        .HasDefaultValue("expo")
                         .HasColumnName("provider")
                         .UseCollation("C");
 
@@ -1251,9 +1216,9 @@ namespace Penny.Backend.Persistence.Migrations
 
                     b.ToTable("push_devices", "penny", t =>
                         {
-                            t.HasCheckConstraint("ck_push_devices_platform", "platform IN ('ios','android')");
+                            t.HasCheckConstraint("ck_push_devices_platform", "platform = 'ios'");
 
-                            t.HasCheckConstraint("ck_push_devices_provider", "(provider = 'expo' AND environment IS NULL) OR (provider = 'apns' AND platform = 'ios' AND environment IS NOT NULL AND environment IN ('sandbox','production'))");
+                            t.HasCheckConstraint("ck_push_devices_provider", "provider = 'apns' AND environment IN ('sandbox','production')");
                         });
                 });
 
@@ -1807,48 +1772,6 @@ namespace Penny.Backend.Persistence.Migrations
                     b.ToTable("sessions", "penny");
                 });
 
-            modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.SqliteImportCheckpoint", b =>
-                {
-                    b.Property<bool>("Singleton")
-                        .HasColumnType("boolean")
-                        .HasColumnName("singleton");
-
-                    b.Property<string>("Manifest")
-                        .HasColumnType("jsonb")
-                        .HasColumnName("manifest");
-
-                    b.Property<string>("SourceSha256")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("source_sha256")
-                        .UseCollation("C");
-
-                    b.Property<int>("SourceVersion")
-                        .HasColumnType("integer")
-                        .HasColumnName("source_version");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("status")
-                        .UseCollation("C");
-
-                    b.HasKey("Singleton");
-
-                    b.ToTable("sqlite_import", "penny", t =>
-                        {
-                            t.HasCheckConstraint("ck_sqlite_import_manifest", "(status = 'complete') = (manifest IS NOT NULL)");
-
-                            t.HasCheckConstraint("ck_sqlite_import_sha256", "source_sha256 ~ '^[0-9A-F]{64}$'");
-
-                            t.HasCheckConstraint("ck_sqlite_import_singleton", "singleton");
-
-                            t.HasCheckConstraint("ck_sqlite_import_status", "status IN ('pending','complete')");
-
-                            t.HasCheckConstraint("ck_sqlite_import_version", "source_version = 2");
-                        });
-                });
-
             modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.User", b =>
                 {
                     b.Property<string>("Id")
@@ -1866,12 +1789,6 @@ namespace Penny.Backend.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("password")
-                        .UseCollation("C");
-
-                    b.Property<string>("Salt")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("salt")
                         .UseCollation("C");
 
                     b.HasKey("Id");

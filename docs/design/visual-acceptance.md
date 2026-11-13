@@ -1,10 +1,10 @@
 # Visual acceptance against the redesign cards (MAZ-122)
 
-[Redesign cards](penny-ios/README.md) · [Redesign baseline and deviations](../migration/redesign.md) · [Native UI tests](../ios-ui-tests.md) · [Web app](../../apps/web/README.md) · [Test environment](../migration/test-environment.md#redesign-specimens)
+[Redesign cards](penny-ios/README.md) · [Redesign baseline and deviations](../reference/redesign.md) · [Native UI tests](../ios-ui-tests.md) · [Web app](../../apps/web/README.md) · [Test environment](../reference/test-environment.md#redesign-specimens)
 
 The 61 cards in `docs/design/penny-ios` are v2's visual baseline. This page explains how the iOS and web apps are compared with them: the reference images, the captures, what must match and what may differ, where verdicts are recorded, and how to re-sync after a design change.
 
-A visual comparison checks that a screen looks and reads as designed. It does not prove the screen works. Functional parity ([feature parity](../migration/feature-parity.md)), the MAZ-82/96 journeys and real-device checks are still required separately, and a matching capture never replaces them.
+A visual comparison checks that a screen looks and reads as designed. It does not prove the screen works. Functional checks (the MAZ-82/96 journeys and real-device checks) are still required separately, and a matching capture never replaces them.
 
 ## Files
 
@@ -44,7 +44,7 @@ A pixel check can't catch a one-word copy change. `tests/core/contracts.test.ts`
 
 ## Captures
 
-Each card has a state in `redesign-states.json`: a `full-stack-seeds.json` scenario and alias (or a client-only state), the view to open at the scenario clock (2026-10-15), the appearances, and any injected fault or stale write. The capture runs seed that state in a fresh [test environment](../migration/test-environment.md) and open the view through the app's real UI.
+Each card has a state in `redesign-states.json`: a `full-stack-seeds.json` scenario and alias (or a client-only state), the view to open at the scenario clock (2026-10-15), the appearances, and any injected fault or stale write. The capture runs seed that state in a fresh [test environment](../reference/test-environment.md) and open the view through the app's real UI.
 
 | Platform | Command | Devices and viewports | Output |
 | --- | --- | --- | --- |
@@ -74,7 +74,7 @@ Compare each capture with its baseline in the same appearance. Judge by what the
 | **Copy:** labels, empty and error text, and confirmation wording, with the same meaning and tone. Wording may change only through an approved deviation. | **Platform chrome:** the status bar, home indicator, keyboard, system sheets and pickers, the browser window, and the device frame. |
 | **States:** the card's state is visible, for example the offline banner with pending rows, a kept draft, or the stale-payment comparison. | **Geometry:** spacing and sizes that follow safe areas, Dynamic Type or a resizable window, as long as layout and hierarchy hold. |
 
-A difference in a "must match" column is either an **approved deviation**, recorded in [redesign.md](../migration/redesign.md#approved-deviations-maz-122) with its reason, or a **defect**, filed against the card's feature issue.
+A difference in a "must match" column is either an **approved deviation**, recorded in [redesign.md](../reference/redesign.md#approved-deviations-maz-122) with its reason, or a **defect**, filed against the card's feature issue.
 
 ## Recording verdicts
 
@@ -88,7 +88,7 @@ A difference in a "must match" column is either an **approved deviation**, recor
 | `blocked` | The state can't be seeded yet (`blockedBy` in the states file) | `note` |
 | `not-applicable` | The platform has no such screen | `note` |
 
-Each deviation has a `summary`, a `kind` and a `ref`. An `approved` deviation's `ref` is its anchor in `docs/migration/redesign.md`. A `follow-up` deviation (a defect, or a design change still to make) names its `MAZ-` issue. `tests/core/contracts.test.ts` enforces these rules, the owners, the views and the full set of cards. No card may be left unreviewed.
+Each deviation has a `summary`, a `kind` and a `ref`. An `approved` deviation's `ref` is its anchor in `docs/reference/redesign.md`. A `follow-up` deviation (a defect, or a design change still to make) names its `MAZ-` issue. `tests/core/contracts.test.ts` enforces these rules, the owners, the views and the full set of cards. No card may be left unreviewed.
 
 To review: run both capture suites, build the sheets, walk through every card, update its entry, and set `reviewedAt`. Commit the record with the change it reviews. Captures aren't committed, because they depend on the simulator, browser and OS. Attach representative sheets to the pull request or the issue.
 

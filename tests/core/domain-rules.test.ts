@@ -1,4 +1,4 @@
-// MAZ-86: the reusable domain module (src/domain) has no React Native/Expo/server imports, and
+// MAZ-86: the reusable domain module (src/domain) imports no packages or platform APIs, and
 // its money, calendar, merge, projection and search rules agree with the shared fixtures.
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -119,6 +119,8 @@ test("merge: same-field local edit wins, local deletes win, local creates surviv
   assert.deepEqual(mergeLedger(original, deleted, remote).transactions, []);
 });
 
+// The last day of October: every entry dated in the month is recorded.
+const october = { today: "2026-10-31" };
 const rent: Recurring = { id: "rent", title: "Rent", kind: "expense", total: 100000, share: 100000, categoryId: "home", date: "2026-09-01", note: "", frequency: "monthly", active: true, anchorDay: 31, nextDate: "2026-09-30" };
 const pay: Recurring = { ...rent, id: "pay", title: "Pay", kind: "income", total: 300000, share: 300000, categoryId: "salary", nextDate: "2026-10-15", anchorDay: 15 };
 const invest: Recurring = { ...rent, id: "etf", title: "ETF", kind: "investment", total: 50000, share: 50000, categoryId: "investments", nextDate: "2026-10-10", anchorDay: 10 };
@@ -126,7 +128,7 @@ const invest: Recurring = { ...rent, id: "etf", title: "ETF", kind: "investment"
 test("projection adds every scheduled occurrence; recorded totals and expected income stay apart", () => {
   const ledger: Ledger = { ...base(), recurring: [rent, pay, invest], transactions: [{ ...base().transactions[0]!, date: "2026-10-02", share: 1000 }] };
   const before = structuredClone(ledger);
-  const summary = summarizeMonth(ledger, "2026-10");
+  const summary = summarizeMonth(ledger, "2026-10", october);
   assert.deepEqual(summary.recorded, { income: 0, expense: 1000, investment: 0 });
   assert.equal(summary.expectedIncome, 300000);
   // Rent (2026-10-31), pay and the ETF contribution are all scheduled this month.
@@ -135,19 +137,19 @@ test("projection adds every scheduled occurrence; recorded totals and expected i
   assert.equal(summary.projectedNet, 300000 - 101000 - 50000);
   assert.deepEqual(ledger, before);
   // Agrees with the overview selector the screens use.
-  const overview = selectOverview(ledger, { month: "2026-10", day: null, filter: "all", categoryId: null, search: "" });
+  const overview = selectOverview(ledger, { month: "2026-10", day: null, filter: "all", categoryId: null, search: "", ...october });
   assert.deepEqual(overview.summary, summary.projected);
   assert.deepEqual(overview.recorded, summary.recorded);
   assert.equal(overview.expectedIncome, summary.expectedIncome);
   // Recording the occurrences moves them from scheduled to recorded exactly once.
-  const recorded = summarizeMonth(materialize(ledger, "2026-10-31"), "2026-10");
+  const recorded = summarizeMonth(materialize(ledger, "2026-10-31"), "2026-10", october);
   assert.equal(recorded.expectedIncome, 0);
   assert.deepEqual(recorded.recorded, { income: 300000, expense: 101000, investment: 50000 });
   assert.deepEqual(recorded.projected, recorded.recorded);
   assert.equal(recorded.recordedNet, 300000 - 1000 - 50000 - 100000);
   assert.equal(recorded.projectedNet, summary.projectedNet);
   // Part way through the month only what is still ahead is scheduled.
-  const mid = summarizeMonth(materialize(ledger, "2026-10-12"), "2026-10");
+  const mid = summarizeMonth(materialize(ledger, "2026-10-12"), "2026-10", october);
   assert.deepEqual(mid.recorded, { income: 0, expense: 1000, investment: 50000 });
   assert.deepEqual(mid.projected, summary.projected);
 });
@@ -158,12 +160,12 @@ test("a personal preview is replaced only by the entry with its occurrence id", 
   // is not in the ledger, so it stays scheduled (Swift `Recurrence.previews` agrees).
   const weekly: Recurring = { ...rent, id: "weekly", total: 1000, share: 1000, frequency: "weekly", anchorDay: 1, date: "2026-10-01", nextDate: "2026-10-08" };
   const first: Transaction = { id: "random-id", title: "Rent", kind: "expense", total: 1000, share: 1000, categoryId: "home", date: "2026-10-08", note: "", recurringId: "weekly" };
-  const summary = summarizeMonth({ ...base(), recurring: [weekly], transactions: [first] }, "2026-10");
+  const summary = summarizeMonth({ ...base(), recurring: [weekly], transactions: [first] }, "2026-10", october);
   assert.deepEqual(summary.recorded, { income: 0, expense: 1000, investment: 0 });
   assert.equal(summary.projected.expense, 5000);
   // Once recorded under its occurrence id, the preview is replaced.
   const recorded: Transaction = { ...first, id: "weekly:2026-10-15", date: "2026-10-15" };
-  assert.equal(summarizeMonth({ ...base(), recurring: [weekly], transactions: [first, recorded] }, "2026-10").projected.expense, 5000);
+  assert.equal(summarizeMonth({ ...base(), recurring: [weekly], transactions: [first, recorded] }, "2026-10", october).projected.expense, 5000);
 });
 
 test("a recorded shared occurrence replaces its preview in projected totals", () => {
@@ -175,24 +177,23 @@ test("a recorded shared occurrence replaces its preview in projected totals", ()
     category: { name: "Fun", icon: "tv-outline", color: "#B15B7D" }, note: "", ...fields });
   const preview = row({ id: "streaming:2026-10-20", scheduled: true, recurringId: "streaming" });
   const recorded = row({ id: "9d2f4c1a7b3e6f805a2c9d4e1b7f3a60", recurringId: "streaming" });
-  const view = (rows: ProjectedExpense[]) => ledgerWithHouseholds(base(), rows, []);
-  assert.deepEqual(summarizeMonth(view([preview]), "2026-10").recorded, { income: 0, expense: 0, investment: 0 });
-  assert.equal(summarizeMonth(view([preview]), "2026-10").projected.expense, 800);
+  const view = (rows: ProjectedExpense[]) => ledgerWithHouseholds(base(), rows);
+  assert.deepEqual(summarizeMonth(view([preview]), "2026-10", october).recorded, { income: 0, expense: 0, investment: 0 });
+  assert.equal(summarizeMonth(view([preview]), "2026-10", october).projected.expense, 800);
   // The runner recorded it; a cached preview of the same household rule and date is not counted again.
   const done = view([recorded, preview]);
-  const summary = summarizeMonth(done, "2026-10");
+  const summary = summarizeMonth(done, "2026-10", october);
   assert.deepEqual(summary.recorded, { income: 0, expense: 800, investment: 0 });
   assert.deepEqual(summary.projected, summary.recorded);
-  const overview = selectOverview(done, { month: "2026-10", day: null, filter: "all", categoryId: null, search: "" });
+  const overview = selectOverview(done, { month: "2026-10", day: null, filter: "all", categoryId: null, search: "", ...october });
   assert.deepEqual(overview.calendarEntries.map((entry) => entry.id).filter((id) => id.startsWith("household:")),
     [`household:h:${recorded.id}`]);
   // Another household's rule with the same id and date is a different occurrence.
   const other = row({ ...preview, householdId: "k" });
-  assert.equal(summarizeMonth(view([recorded, preview, other]), "2026-10").projected.expense, 1600);
-  // An older server sent recorded rows without `recurringId`: nothing links them to the preview,
-  // so both count until the preview response is refreshed (the server then omits the preview).
-  const { recurringId: _omitted, ...legacy } = recorded;
-  assert.equal(summarizeMonth(view([legacy, preview]), "2026-10").projected.expense, 1600);
+  assert.equal(summarizeMonth(view([recorded, preview, other]), "2026-10", october).projected.expense, 1600);
+  // A recorded row without `recurringId` is not linked to the preview, so both count.
+  const { recurringId: _omitted, ...unlinked } = recorded;
+  assert.equal(summarizeMonth(view([unlinked, preview]), "2026-10", october).projected.expense, 1600);
 });
 
 test("investment contributions are not spending and personal shares drive totals and flow", () => {
@@ -227,13 +228,13 @@ test("one ordering everywhere: date descending, then id ascending", () => {
   const ledger: Ledger = { ...emptyLedger(), transactions: [entry("b", "2026-09-02"), entry("a", "2026-09-01"), entry("c", "2026-09-02"), entry("a2", "2026-09-02")] };
   const expected = ["a2", "b", "c", "a"];
   assert.deepEqual(searchEntries(ledger, "same").map((item) => item.id), expected);
-  assert.deepEqual(selectOverview(ledger, { month: "2026-09", day: null, filter: "all", categoryId: null, search: "same" }).visibleEntries.map((item) => item.id), expected);
+  assert.deepEqual(selectOverview(ledger, { month: "2026-09", day: null, filter: "all", categoryId: null, search: "same", today: "2026-09-30" }).visibleEntries.map((item) => item.id), expected);
   assert.deepEqual(tripOverview(ledger, { id: "trip", name: "T", startDate: "2026-09-01", endDate: "2026-09-30" }).expenses.map((item) => item.id), expected);
 });
 
 test("every screen trims and lowercases the query identically", () => {
   const ledger = base();
-  const overview = (search: string) => selectOverview(ledger, { month: "2026-09", day: null, filter: "all", categoryId: null, search }).visibleEntries.map((item) => item.id);
+  const overview = (search: string) => selectOverview(ledger, { month: "2026-09", day: null, filter: "all", categoryId: null, search, today: "2026-09-30" }).visibleEntries.map((item) => item.id);
   const activity = (search: string) => selectTransactions(ledger, { month: "2026-09", period: "month", filter: "all", search, page: 0 }).visibleEntries.map((item) => item.id);
   for (const query of ["lunch ", "  LUNCH", "lunch with", "with alex", "Lunch With"]) {
     assert.deepEqual(overview(query), ["t"], query);
@@ -300,7 +301,7 @@ test("redesign fixture: recorded and projected totals match summarizeMonth", () 
       }
     }
   }
-  const summary = summarizeMonth(view, month);
+  const summary = summarizeMonth(view, month, { today: `${month}-31` });
   const totalsOf = (amounts: { expenseCents: number; incomeCents: number; investmentCents: number }) =>
     ({ income: amounts.incomeCents, expense: amounts.expenseCents, investment: amounts.investmentCents });
   assert.deepEqual(summary.recorded, totalsOf(expected.recorded));
@@ -308,7 +309,7 @@ test("redesign fixture: recorded and projected totals match summarizeMonth", () 
   assert.equal(summary.expectedIncome, 0);
   assert.equal(summary.recordedNet, -175950);
   assert.equal(summary.projectedNet, -180750);
-  const overview = selectOverview(view, { month, day: null, filter: "all", categoryId: null, search: "" });
+  const overview = selectOverview(view, { month, day: null, filter: "all", categoryId: null, search: "", today: `${month}-31` });
   assert.deepEqual(overview.scheduled.map((entry) => `${entry.title} ${entry.date} ${entry.share}`).sort(),
     expected.scheduled.map((item: { title: string; date: string; shareCents: number }) => `${item.title} ${item.date} ${item.shareCents}`).sort());
   // At alex's today nothing changes: no October income is dated after it.

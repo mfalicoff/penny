@@ -22,9 +22,8 @@ const RECENT = 5;
 const PAGE = 50;
 
 /**
- * Home (MAZ-92; specimens `home`, `home-dark`, `home-amoled`, `home-catppuccin`, `desktop`,
- * `empty-home`, `calendar`; web card `web-home`). It leads with what is left: the recorded
- * remaining ("Left to spend") and, separately, the projected remaining with the expected income
+ * Home (MAZ-92; specimens `home`, `home-dark`, `desktop`, `empty-home`, `calendar`; web card
+ * `web-home`). It leads with what is left: the recorded remaining ("Left to spend") and, separately, the projected remaining with the expected income
  * named (scheduled income and income dated after today, MAZ-136), then Came in / Spent / Invested, what's coming up, the compact flow
  * summary and recent Activity. "Explore your month" holds the calendar, categories, the full
  * money flow and the month's entries, whose filters (`day`, `q`, `kind`, `category`) live in the

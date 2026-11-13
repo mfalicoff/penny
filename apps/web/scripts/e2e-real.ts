@@ -1,6 +1,6 @@
 // Runs the real-server Playwright specs (e2e/*.real.spec.ts) against a disposable full-stack
 // environment (MAZ-95): PostgreSQL 18 in a container, the migrated database, the .NET API built
-// from this checkout and the local OIDC provider (docs/migration/test-environment.md). The
+// from this checkout and the local OIDC provider (docs/reference/test-environment.md). The
 // environment is always torn down; its API and PostgreSQL logs are copied to
 // ../../test-results/fullstack/<run id>/. Arguments are passed to `playwright test`:
 //

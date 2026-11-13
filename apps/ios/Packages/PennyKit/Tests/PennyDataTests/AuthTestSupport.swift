@@ -10,7 +10,8 @@ import Testing
 ///
 /// - `kSecClass` must be `kSecClassGenericPassword` (anything else is `errSecParam`);
 /// - `kSecUseDataProtectionKeychain`: an item lives in the data protection keychain or the
-///   legacy file keychain, and a query only sees the one it names (absent = legacy, as on macOS);
+///   macOS file-based keychain, and a query only sees the one it names (absent = file-based, as
+///   on macOS);
 /// - `kSecAttrSynchronizable`: absent or false in a query matches only non-synced items,
 ///   `kSecAttrSynchronizableAny` matches both;
 /// - `kSecMatchLimit`: `copyData` returns one item's data, so it needs `kSecReturnData`

@@ -1,5 +1,5 @@
-/// The three-way merge of unsynced local work onto a newer server ledger (legacy
-/// `src/domain/merge.ts`; golden cases in `contracts/fixtures/merge-conflicts.json`).
+/// The three-way merge of unsynced local work onto a newer server ledger (`src/domain/merge.ts`;
+/// golden cases in `contracts/fixtures/merge-conflicts.json`).
 ///
 /// `base` is the last ledger this device received from the server, `local` is `base` plus the
 /// device's unsynced changes, and `remote` is the server's ledger now. Per list, by id:
@@ -7,10 +7,10 @@
 /// - A record this device did not change follows the server: remote edits and deletes win.
 /// - A record changed on both sides keeps every remote field this device did not edit, and
 ///   takes this device's value for every field it did edit. **Same-field races: the local
-///   edit wins** (the device that syncs last decides), as in the legacy app.
+///   edit wins** (the device that syncs last decides).
 /// - A record this device deleted is removed, even if the server edited it.
 /// - A record this device edited that the server deleted comes back with the local version
-///   (legacy behavior: the edit is newer than the delete it never saw).
+///   (the edit is newer than the delete it never saw).
 /// - Records this device created are appended after the server's, in local order.
 /// - Currency: a local change wins, otherwise the server's.
 ///
@@ -69,7 +69,7 @@ public enum LedgerMerge {
         return generators.contains { Recurrence.occurrence(of: $0, on: date) == entry } ? date : nil
     }
 
-    /// The legacy `mergeItems`: remote order, minus local deletes, with local edits merged
+    /// `mergeItems` (src/domain/merge.ts): remote order, minus local deletes, with local edits merged
     /// field by field, then local creations (and edits of remotely deleted records).
     static func items<Record: MergeableRecord>(_ base: [Record], _ local: [Record], _ remote: [Record]) -> [Record] {
         // Later duplicates win, as with a JavaScript `Map` built from the list.
@@ -252,7 +252,7 @@ extension LedgerEntry: MergeableRecord {
         merger.take(\.tripId)
         merger.take(\.date)
         merger.take(\.note)
-        // The receipt is one value (id, name, MIME, URI), as the legacy JSON field was.
+        // The receipt is one value (id, name, MIME, URI), as its JSON field is.
         merger.take(\.receipt)
         merger.take(\.recurringId)
     }

@@ -1,9 +1,7 @@
 namespace Penny.Backend.Api.Configuration;
 
-// Legacy equivalents: OIDC_ISSUER, OIDC_CLIENT_ID, OIDC_CLIENT_SECRET, OIDC_REDIRECT_URIS,
-// OIDC_LABEL and OIDC_ALLOW_REGISTRATION (server/infrastructure/oidc.ts `oidcFromEnv`
-// and the URL checks of `createOidcProvider`). OIDC is off unless an issuer or client
-// ID is set; empty values count as unset, as in the legacy server.
+// OpenID Connect settings (`Oidc__*`). OIDC is off unless an issuer or client ID is
+// set; empty values count as unset.
 public sealed record OidcOptions(
     string Issuer,
     string ClientId,
@@ -58,8 +56,7 @@ public sealed record OidcOptions(
     private static string? Value(IConfiguration configuration, string key) =>
         configuration[key] is { Length: > 0 } value ? value : null;
 
-    // Unlike the legacy `=== "true"` check, a misspelled value fails startup instead of
-    // silently disabling registration.
+    // A misspelled value fails startup instead of silently disabling registration.
     private static bool ReadAllowRegistration(IConfiguration configuration)
     {
         var value = Value(configuration, "Oidc:AllowRegistration");

@@ -99,7 +99,7 @@ public struct LedgerEngineState: Equatable, Sendable {
 /// A save could not be recorded. The ledger on screen and on disk are unchanged; keep the
 /// person's draft and show `message`.
 public enum LedgerSaveError: Error, Equatable, Sendable {
-    /// A ledger rule refused the change (legacy wording in `LedgerRuleError.message`).
+    /// A ledger rule refused the change (the shared wording in `LedgerRuleError.message`).
     case rule(LedgerRuleError)
     /// The change would make a ledger the server refuses.
     case invalid([LedgerViolation])
@@ -132,7 +132,7 @@ public enum LedgerSaveError: Error, Equatable, Sendable {
 }
 
 /// Conflict retries: how many times to re-read and re-apply after a 409, and how long to
-/// wait between attempts. The server never merges; the client does (docs/migration/ledger.md).
+/// wait between attempts. The server never merges; the client does (docs/reference/ledger.md).
 public struct ConflictRetryPolicy: Sendable {
     public var maxAttempts: Int
     public var delay: @Sendable (_ attempt: Int) async -> Void

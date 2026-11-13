@@ -61,7 +61,7 @@ public sealed class SearchMaintenanceTests(ApiFixture fixture) : SearchTestBase(
         clean.ShouldBe(0);
         cleanReport.GetProperty("Documents").GetInt64().ShouldBe(12);
 
-        // An import (or lost rows) leaves no documents; a stale normalization or model
+        // Lost rows (after a restore) leave no documents; a stale normalization or model
         // is reported too. Rebuild for one user fixes that user's documents.
         await Fixture.SqlAsync("DELETE FROM penny.search_documents WHERE source = 'shared'", Ct);
         await Fixture.SqlAsync(

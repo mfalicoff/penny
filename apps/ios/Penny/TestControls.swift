@@ -11,7 +11,7 @@
     /// this type's name appears in a Release binary.
     struct TestControls: Equatable {
         /// Environment variable that points the app at a test server, such as the
-        /// full-stack test environment (docs/migration/test-environment.md).
+        /// full-stack test environment (docs/reference/test-environment.md).
         static let serverURLVariable = "PENNY_TEST_SERVER_URL"
         /// Environment variable (`1`) that opens the temporary demo at launch, so UI tests and
         /// screenshots reach the shell without a server (docs/ios-shell.md).
@@ -24,7 +24,7 @@
         static let todayVariable = "PENNY_TEST_TODAY"
         /// Environment variable with the path of a container seed (a property list written by
         /// the UI test, see ContainerSeed), applied after the reset and before launch: the
-        /// state an earlier install left, for upgrade rehearsals (MAZ-72).
+        /// state an earlier install left, for upgrade rehearsals.
         static let containerSeedVariable = "PENNY_TEST_CONTAINER_SEED"
         /// Environment variables (`1`) that force Reduce Transparency and Reduce Motion for
         /// Penny's own views, for screenshot variants (system controls follow the simulator).
@@ -44,9 +44,6 @@
         var containerSeed: URL?
         var reduceTransparency = false
         var reduceMotion = false
-        /// `PENNY_TEST_EXPO_FIXTURE=upgrade`: stage Expo data for an in-place upgrade rehearsal
-        /// and import nothing at this launch (`ExpoUpgradeFixture`, docs/ios-expo-migration.md).
-        var stagesExpoFixture = false
         var notificationAtLaunch: String?
         var notificationOnResume: String?
 
@@ -59,7 +56,6 @@
                 containerSeed: environment[containerSeedVariable].flatMap { $0.isEmpty ? nil : URL(filePath: $0) },
                 reduceTransparency: environment[reduceTransparencyVariable] == "1",
                 reduceMotion: environment[reduceMotionVariable] == "1",
-                stagesExpoFixture: environment[ExpoUpgradeFixture.variable] == "upgrade",
                 notificationAtLaunch: environment[notificationVariable],
                 notificationOnResume: environment[notificationOnResumeVariable])
         }
@@ -68,17 +64,6 @@
         func prepareStorage(appGroup: String) throws {
             if resetsState { TestStateReset.eraseEverything(appGroup: appGroup) }
             if let containerSeed { try ContainerSeed.apply(contentsOf: containerSeed, appGroup: appGroup) }
-        }
-
-        /// Stages the Expo fixture when asked; returns whether it did, so this launch skips the import.
-        func stageExpoFixture() -> Bool {
-            guard stagesExpoFixture else { return false }
-            do {
-                try ExpoUpgradeFixture.stage(server: serverURL?.description ?? ExpoUpgradeFixture.defaultServer)
-            } catch {
-                preconditionFailure("Could not stage the Expo upgrade fixture: \(error)")
-            }
-            return true
         }
 
         func apply(_ configuration: AppConfiguration) -> AppConfiguration {

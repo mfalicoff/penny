@@ -9,7 +9,7 @@ internal sealed class HouseholdAuditEntryMapping : IEntityTypeConfiguration<Hous
     public void Configure(EntityTypeBuilder<HouseholdAuditEntry> builder)
     {
         builder.ToTable("household_audit");
-        // sort_order is an identity; it breaks created_at ties like the legacy rowid.
+        // sort_order is an identity; it breaks created_at ties in insertion order.
         builder.HasKey(entry => entry.SortOrder);
         builder.Property(entry => entry.SortOrder).UseIdentityByDefaultColumn();
         builder.Property(entry => entry.Id).IsRequired();

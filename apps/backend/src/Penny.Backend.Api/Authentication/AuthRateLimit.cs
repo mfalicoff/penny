@@ -9,7 +9,7 @@ using Penny.Backend.Application.Diagnostics;
 
 namespace Penny.Backend.Api.Authentication;
 
-// Legacy express-rate-limit: one fixed 15-minute window per client shared by every
+// One fixed 15-minute window per client shared by every
 // sign-in route, IPv6 clients grouped by /56.
 public static class AuthRateLimit
 {
@@ -38,7 +38,7 @@ public static class AuthRateLimit
                 rejected.HttpContext.Response.Headers.RetryAfter = (
                     (int)Math.Ceiling(retryAfter.TotalSeconds)
                 ).ToString(System.Globalization.CultureInfo.InvariantCulture);
-            // One handler serves every policy; the invite limit keeps its legacy text.
+            // One handler serves every policy; the invite limit has its own message.
             var policy = rejected
                 .HttpContext.GetEndpoint()
                 ?.Metadata.GetMetadata<EnableRateLimitingAttribute>()

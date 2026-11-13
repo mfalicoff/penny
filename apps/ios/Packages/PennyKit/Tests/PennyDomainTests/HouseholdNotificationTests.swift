@@ -9,7 +9,7 @@ struct HouseholdNotificationTests {
 
     @Test("whenThePayloadIsTheServers_HouseholdNotification_ShouldOpenTheMonthOrTheExpense")
     func valid() throws {
-        // The shape PushPayload sends (docs/migration/push.md), with the aps dictionary beside it.
+        // The shape PushPayload sends (docs/reference/push.md), with the aps dictionary beside it.
         let expense: [AnyHashable: Any] = [
             "aps": ["alert": ["title": "New household expense"], "thread-id": "household-h_1"],
             "householdId": "h_1", "month": "2026-09", "expenseId": "e-2", "eventId": "evt 1",
@@ -51,8 +51,8 @@ struct HouseholdNotificationTests {
         }
     }
 
-    @Test("whenTheLegacyNotificationRouteIsOpened_DeepLink_ShouldKeepTheMonthAndExpense")
-    func legacyRoute() throws {
+    @Test("whenTheNotificationRouteIsOpened_DeepLink_ShouldKeepTheMonthAndExpense")
+    func notificationRoute() throws {
         let month = try #require(Self.month)
         #expect(
             DeepLink(url: try #require(URL(string: "penny:///households/h1?month=2026-09&expenseId=e2")))
@@ -109,6 +109,6 @@ struct HouseholdNotificationTests {
         #expect(PushDeviceToken(Data(count: 101)) == nil)
         #expect(PushDeviceToken(hex: String(repeating: "a", count: 63)) == nil)
         #expect(PushDeviceToken(hex: String(repeating: "g", count: 64)) == nil)
-        #expect(PushDeviceToken(hex: "ExponentPushToken[abc]") == nil)
+        #expect(PushDeviceToken(hex: "PushToken[abc]") == nil)
     }
 }

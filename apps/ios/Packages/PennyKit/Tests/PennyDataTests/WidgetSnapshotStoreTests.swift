@@ -98,24 +98,16 @@ struct WidgetSnapshotStoreTests {
         #expect(!store.clear(unlessOwnedBy: "sam"), "nothing left to clear")
     }
 
-    @Test("whenCleared_WidgetSnapshotStore_ShouldRemoveTheSnapshotAndLegacyExpoKeys")
-    func clearLegacy() throws {
-        let suite = "penny.tests.widgets.\(UUID().uuidString)"
-        let defaults = try #require(UserDefaults(suiteName: suite))
-        defer { defaults.removePersistentDomain(forName: suite) }
-        defaults.set(Data("layout".utf8), forKey: "__expo_widgets_BalanceChartWidget_layout")
-        defaults.set(Data("timeline".utf8), forKey: "__expo_widgets_RecentExpensesWidget_timeline")
-        defaults.set("kept", forKey: "unrelated")
+    @Test("whenCleared_WidgetSnapshotStore_ShouldRemoveTheSnapshot")
+    func clear() throws {
         let root = FileManager.default.temporaryDirectory.appending(path: "widget-store-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: root) }
-        let store = WidgetSnapshotStore(root: root, legacyDefaultsSuite: suite)
+        let store = WidgetSnapshotStore(root: root)
         try store.write(Self.snapshot, owner: "alex")
 
         #expect(store.clear())
         #expect(store.read() == .signedOut)
-        #expect(defaults.object(forKey: "__expo_widgets_BalanceChartWidget_layout") == nil)
-        #expect(defaults.object(forKey: "__expo_widgets_RecentExpensesWidget_timeline") == nil)
-        #expect(defaults.string(forKey: "unrelated") == "kept")
+        #expect(!store.clear(), "nothing left to clear")
     }
 
     @Test("whenDirectoryCannotBeCreated_WidgetSnapshotStore_ShouldThrowCouldNotWrite")

@@ -61,13 +61,13 @@ public sealed class PasswordResetPolicyTests(ApiFixture fixture) : IntegrationTe
         {
             Content = JsonContent.Create(new { token = reset.Token, password = NewPassword }),
         };
-        allowed.Headers.Add("Origin", "http://localhost:8081");
+        allowed.Headers.Add("Origin", "http://localhost:4173");
         using var completed = await Client.SendAsync(allowed, Ct);
         completed.StatusCode.ShouldBe(HttpStatusCode.OK);
         completed
             .Headers.GetValues("Access-Control-Allow-Origin")
             .Single()
-            .ShouldBe("http://localhost:8081");
+            .ShouldBe("http://localhost:4173");
     }
 
     [Fact]

@@ -1,5 +1,5 @@
 /// What the entry form holds: raw text as typed plus the choices made. Building it validates
-/// everything before any upload or save (legacy `buildEntry` / `buildSchedule`), so a refused
+/// everything before any upload or save (`buildEntry` / `buildSchedule`), so a refused
 /// draft keeps the person's input and the form shows `LedgerRuleError.message`.
 public struct EntryDraft: Hashable, Sendable {
     public var kind: EntryKind
@@ -40,9 +40,10 @@ public struct EntryDraft: Hashable, Sendable {
 
     /// Builds the entry to save, and the rule it starts when the draft repeats.
     ///
-    /// Checks run in the legacy order: amount, non-zero amount, date, title, category, then
+    /// Checks run in this order: amount, non-zero amount, date, title, category, then
     /// the split. A new repeating draft whose next date would fall after 2100-12-31 is then
-    /// refused with `.scheduleAfterLedgerRange` (the legacy form saved it and the sync failed). Title and note are trimmed. Only expenses keep a split, a trip and a receipt;
+    /// refused with `.scheduleAfterLedgerRange` (the server would refuse it at sync). Title and
+    /// note are trimmed. Only expenses keep a split, a trip and a receipt;
     /// income and investments are always the full amount. A new repeating draft also returns
     /// its rule: the entry is the first occurrence (it carries the rule's id as `recurringId`)
     /// and the rule's `nextDate` is the occurrence after it, anchored on the draft's day, so

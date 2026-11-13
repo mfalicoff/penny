@@ -20,7 +20,7 @@ public sealed class PostgresSessionRepository(NpgsqlDataSource source) : ISessio
         await using var transaction = await context.Database.BeginTransactionAsync(
             cancellationToken
         );
-        // Push devices registered to purged sessions cascade in the database, as in SQLite.
+        // Push devices registered to purged sessions cascade in the database.
         await context
             .Sessions.Where(session => session.ExpiresAt < now)
             .ExecuteDeleteAsync(cancellationToken);

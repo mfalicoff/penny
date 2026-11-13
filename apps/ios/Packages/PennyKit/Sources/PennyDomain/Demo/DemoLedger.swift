@@ -1,4 +1,4 @@
-/// The sample ledger behind "Try with sample data" (the legacy `demoLedger`). It is made up,
+/// The sample ledger behind "Try with sample data". It is made up,
 /// built fresh for each demo and dated around `today`, so the demo always shows a current
 /// month. Ids start with `demo-`, so a demo record is recognizable if one ever leaked.
 ///

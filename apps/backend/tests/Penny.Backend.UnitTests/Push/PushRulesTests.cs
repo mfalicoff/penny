@@ -7,11 +7,10 @@ namespace Penny.Backend.UnitTests.Push;
 public sealed class PushRulesTests
 {
     [Fact]
-    public void whenAttemptsGrow_RetryAt_ShouldDoubleFromFiveSecondsToOneHourLikeLegacy()
+    public void whenAttemptsGrow_RetryAt_ShouldDoubleFromFiveSecondsToOneHour()
     {
         var now = PushSamples.Now;
         PushDeliveryRunner.RetryAt(now, 1, null).ShouldBe(now.AddSeconds(5));
-        // legacy retryAt(1000, 4) === 41000
         PushDeliveryRunner.RetryAt(now, 4, null).ShouldBe(now.AddSeconds(40));
         PushDeliveryRunner.RetryAt(now, 50, null).ShouldBe(now.AddHours(1));
         PushDeliveryRunner.RetryAt(now, 1, TimeSpan.FromMinutes(2)).ShouldBe(now.AddMinutes(2));
@@ -36,7 +35,7 @@ public sealed class PushRulesTests
     ) => (PushPayload.Parse(json) is not null).ShouldBe(valid);
 
     [Fact]
-    public void whenEventTypeKnown_For_ShouldReturnLegacyTextWithoutFinancialDetails()
+    public void whenEventTypeKnown_For_ShouldReturnTextWithoutFinancialDetails()
     {
         PushContent
             .For("expense.created")

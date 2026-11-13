@@ -3,7 +3,7 @@ using System.Globalization;
 namespace Penny.Backend.Domain.Ledgers;
 
 // String rules shared with the JavaScript clients. Lengths are UTF-16 code units,
-// exactly like JavaScript `string.length` and zod's min/max.
+// exactly like JavaScript `string.length`.
 public static class LedgerText
 {
     // JavaScript String.prototype.trim, which differs from string.Trim(): it trims
@@ -19,8 +19,8 @@ public static class LedgerText
         return value[start..end];
     }
 
-    // PostgreSQL text cannot hold NUL or unpaired UTF-16 surrogates (the legacy
-    // SQLite JSON could). Such strings are rejected instead of failing the save.
+    // PostgreSQL text cannot hold NUL or unpaired UTF-16 surrogates, though JSON can.
+    // Such strings are rejected instead of failing the save.
     public static bool IsStorable(string value)
     {
         for (var index = 0; index < value.Length; index++)

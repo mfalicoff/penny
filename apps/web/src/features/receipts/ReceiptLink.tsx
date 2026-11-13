@@ -6,7 +6,7 @@ import { ReceiptPreviewDialog } from "./ReceiptPreviewDialog";
 
 /**
  * A receipt in an entry or expense detail (MAZ-94): its name, opening the in-app preview with the
- * session. A receipt this server doesn't serve (a legacy native path) is shown as text only.
+ * session. A receipt this server doesn't serve (a path on another device) is shown as text only.
  */
 export function ReceiptLink({ receipt }: { receipt: Receipt }) {
   const [open, setOpen] = useState(false);

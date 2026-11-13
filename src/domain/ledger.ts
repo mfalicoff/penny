@@ -60,10 +60,6 @@ export const palette = [
   "#9D83BA",
   "#C8798D",
 ];
-const investmentCategory: Category = {
-  id: "investments", name: "Investments", icon: "trending-up-outline",
-  color: "#678DB1", kind: "investment",
-};
 export const initialCategories: Category[] = [
   {
     id: "groceries",
@@ -142,7 +138,13 @@ export const initialCategories: Category[] = [
     color: "#C6953A",
     kind: "income",
   },
-  investmentCategory,
+  {
+    id: "investments",
+    name: "Investments",
+    icon: "trending-up-outline",
+    color: "#678DB1",
+    kind: "investment",
+  },
 ];
 export const emptyLedger = (): Ledger => ({
   version: 4,
@@ -153,18 +155,6 @@ export const emptyLedger = (): Ledger => ({
   transactions: [],
   recurring: [],
 });
-// Upgrade once, without reclassifying historical expenses or restoring deleted categories.
-export function upgradeLedger(ledger: Ledger | (Omit<Ledger, "version" | "accounts" | "trips"> & { version: 1 | 2 | 3; accounts?: PaymentAccount[]; trips?: Trip[] })): Ledger {
-  if (ledger.version === 4) return ledger;
-  const categories = [...ledger.categories];
-  if (ledger.version === 1 && !categories.some((c) => c.kind === "investment") && categories.length < 300) {
-    let id = investmentCategory.id;
-    let suffix = 1;
-    while (categories.some((c) => c.id === id)) id = `${investmentCategory.id}-${suffix++}`;
-    categories.push({ ...investmentCategory, id });
-  }
-  return { ...ledger, version: 4, accounts: ledger.accounts ?? [], trips: ledger.trips ?? [], categories };
-}
 export const uid = () =>
   `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 export function dateKey(date = new Date()): string {

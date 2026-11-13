@@ -1,6 +1,6 @@
 import Foundation
 
-// Search v1 wire types (MAZ-121, docs/migration/search.md): `POST /api/v1/search/transactions`.
+// Search v1 wire types (MAZ-121, docs/reference/search.md): `POST /api/v1/search/transactions`.
 
 public enum SearchSource: String, Codable, Equatable, Sendable {
     case personal

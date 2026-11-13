@@ -79,8 +79,8 @@ export const entrySchema = z.object({
 export const projectedExpenseSchema = z.object({
   id,
   householdId: id,
-  householdName: z.string().optional(),
-  householdCurrency: z.enum(["CAD", "USD", "EUR", "GBP"]).optional(),
+  householdName: z.string(),
+  householdCurrency: z.enum(["CAD", "USD", "EUR", "GBP"]),
   title: z.string(),
   date: isoDate,
   totalCents: z.number().int().min(1).max(99_999_999_999),
@@ -155,8 +155,8 @@ export const householdMemberSchema = z.object({
   email: z.email(),
   joinedAt: instant,
   joinedOn: isoDate.optional(),
-  // The legacy server sends `null` for current members; .NET omits it.
-  leftAt: instant.nullish(),
+  // Absent for current members.
+  leftAt: instant.optional(),
 });
 export type HouseholdMember = z.infer<typeof householdMemberSchema>;
 
@@ -181,7 +181,7 @@ const percentAllocation = z.object({ userId: id, percentBasisPoints: z.number().
 export const allocationSchema = z.union([amountAllocation, percentAllocation]);
 export type Allocation = z.infer<typeof allocationSchema>;
 
-/** The body shared by expense and rule writes (legacy `expenseInput`). */
+/** The body shared by expense and rule writes. */
 const expenseFields = {
   title: z.string().min(1).max(100),
   totalCents: total,

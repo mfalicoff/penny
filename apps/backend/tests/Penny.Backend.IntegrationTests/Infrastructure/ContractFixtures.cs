@@ -2,8 +2,8 @@ using System.Text.Json.Nodes;
 
 namespace Penny.Backend.IntegrationTests.Infrastructure;
 
-// Reads the shared contract and the language-neutral fixtures used by the legacy
-// Node tests, from the repository's `contracts/` directory.
+// Reads the shared contract and the language-neutral fixtures from the repository's
+// `contracts/` directory.
 public static class ContractFixtures
 {
     public static JsonNode Read(string name) => Load(Path.Combine("contracts", "fixtures", name));

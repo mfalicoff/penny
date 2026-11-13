@@ -18,8 +18,7 @@ public protocol AppLockSettingStore: Sendable {
     func write(_ enabled: Bool) throws(AppLockStoreError)
 }
 
-/// The setting in the Keychain, on this device only and never synced, as the legacy app kept
-/// it in SecureStore. MAZ-72 imports the Expo app's `penny-app-lock` value.
+/// The setting in the Keychain, on this device only and never synced.
 public struct KeychainAppLockSettingStore: AppLockSettingStore {
     public static let service = "\(AppIdentity.bundleIdentifier).app-lock"
     static let account = "enabled"

@@ -4,7 +4,7 @@ using Penny.Backend.Domain.Ledgers;
 
 namespace Penny.Backend.Application.Households;
 
-// The legacy `householdView`: `createdAt` is Unix milliseconds and `trip` is present
+// The household view: `createdAt` is Unix milliseconds and `trip` is present
 // only for shared trips. Also the audit payload of household and trip events.
 public sealed record HouseholdView(
     string Id,

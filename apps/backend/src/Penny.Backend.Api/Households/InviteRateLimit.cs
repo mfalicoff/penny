@@ -4,7 +4,7 @@ using Penny.Backend.Api.Authentication;
 
 namespace Penny.Backend.Api.Households;
 
-// Legacy `inviteLimit` on POST /api/households/join: a fixed 10-minute window of 20
+// The invite limit on POST /api/households/join: a fixed 10-minute window of 20
 // attempts per client (same client key as the sign-in limit), so invite codes cannot
 // be guessed at speed. The rejection is written by AuthRateLimit's shared handler.
 public static class InviteRateLimit

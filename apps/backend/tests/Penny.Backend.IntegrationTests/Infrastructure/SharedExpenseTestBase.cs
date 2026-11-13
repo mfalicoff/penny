@@ -19,7 +19,7 @@ public abstract class SharedExpenseTestBase(ApiFixture fixture) : HouseholdTestB
         color = "#6C9C79",
     };
 
-    // A legacy expense body; `extra` adds or replaces fields (null removes one).
+    // A valid expense body; `extra` adds or replaces fields (null removes one).
     protected static Dictionary<string, object?> Expense(
         long totalCents,
         string payerUserId,

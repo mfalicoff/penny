@@ -1,8 +1,7 @@
 public import Foundation
 
-/// A Penny server origin, normalized the way the legacy app's `normalizeServerUrl`
-/// (src/data/serverConnection.ts) does, so a saved legacy address compares equal and keeps
-/// its storage namespace. MAZ-68 owns choosing and verifying a server; this type only
+/// A Penny server origin, normalized so that the same server typed in different ways compares
+/// equal and keeps one storage namespace. MAZ-68 owns choosing and verifying a server; this type only
 /// validates and normalizes one.
 public struct ServerURL: Equatable, Hashable, Sendable, CustomStringConvertible {
     public let url: URL

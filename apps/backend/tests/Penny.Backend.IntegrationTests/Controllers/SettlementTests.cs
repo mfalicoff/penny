@@ -182,7 +182,7 @@ public sealed class SettlementTests(ApiFixture fixture) : SettlementTestBase(fix
             .ShouldBe(projection);
         (await CountAsync("SELECT count(*) FROM penny.search_documents")).ShouldBe(searchDocuments);
         // One audit row per transfer, without an expense, and push rows for the other
-        // current members keyed by the event (legacy payload without `expenseId`).
+        // current members keyed by the event (payload without `expenseId`).
         (
             await CountAsync(
                 $"SELECT count(*) FROM penny.household_audit WHERE household_id = '{home}' AND action = 'reimbursement.created' AND expense_id IS NULL AND after_json->>'month' = '2026-09' AND NOT after_json ? 'expenseId'"
@@ -265,7 +265,7 @@ public sealed class SettlementTests(ApiFixture fixture) : SettlementTestBase(fix
     }
 
     [Fact]
-    public async Task whenReimbursementIsNotAllowed_Reimburse_ShouldRejectInLegacyOrder()
+    public async Task whenReimbursementIsNotAllowed_Reimburse_ShouldRejectInContractOrder()
     {
         var (alex, alexId, bea, beaId, cam, camId, home) = await HomeAsync();
         var (outsider, outsiderId) = await AccountAsync("outsider@example.test");

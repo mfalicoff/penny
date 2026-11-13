@@ -16,7 +16,7 @@ struct LaunchOptions {
     var demo = false
     /// The app's "today" (`yyyy-MM-dd`), matching the server clock.
     var today: String? = Stack.defaultToday
-    /// State an earlier install left (upgrade rehearsals, MAZ-72).
+    /// State an earlier install left (upgrade rehearsals).
     var seed: ContainerSeed?
     /// A `UIContentSizeCategory` raw value, such as `UICTContentSizeCategoryAccessibilityXL`.
     var contentSize: String?

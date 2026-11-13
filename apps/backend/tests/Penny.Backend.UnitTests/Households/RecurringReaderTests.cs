@@ -62,7 +62,7 @@ public sealed class RecurringReaderTests
     [Fact]
     public void whenStoredRuleCannotApply_Occurrence_ShouldSplitEquallyAmongActiveMembers()
     {
-        // Imported exact allocations that no longer add up to the total.
+        // Stored exact allocations that no longer add up to the total.
         var (shares, mode) = ExpenseSplit.Occurrence(
             9000,
             ExpenseSplit.Exact,

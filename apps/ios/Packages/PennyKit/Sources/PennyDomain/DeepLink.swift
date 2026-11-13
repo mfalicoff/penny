@@ -1,8 +1,8 @@
 public import Foundation
 
-/// A destination reached from a `penny://` URL. Every legacy Expo Router route keeps one
-/// (contracts/design-baseline.json `navigation.legacyRoutes`), so links from the legacy
-/// widgets, notifications and the OIDC callback keep working after the native app ships.
+/// A destination reached from a `penny://` URL. Every route in contracts/design-baseline.json
+/// `navigation.routes` has one, as do the links widgets, notifications and the OIDC callback
+/// open.
 /// MAZ-69 maps these onto the shell; this type only decides where a URL points.
 public enum DeepLink: Equatable, Sendable {
     case home
@@ -13,8 +13,8 @@ public enum DeepLink: Equatable, Sendable {
     case household(id: String)
     case householdExpense(householdID: String, expenseID: String)
     /// A household on a given month, optionally one of that month's expenses (MAZ-79): what a
-    /// household notification opens (`HouseholdNotification`), and the legacy notification route
-    /// `penny:///households/<id>?month=YYYY-MM&expenseId=<id>`.
+    /// household notification opens (`HouseholdNotification`), also reached by the notification
+    /// route `penny:///households/<id>?month=YYYY-MM&expenseId=<id>`.
     case householdMonth(householdID: String, month: MonthKey, expenseID: String?)
     case trips
     case trip(id: String)
@@ -32,13 +32,13 @@ public enum DeepLink: Equatable, Sendable {
         case recurring
     }
 
-    /// The URL scheme registered in the app's Info.plist (`CFBundleURLSchemes`), the same as
-    /// the retired Expo app's.
+    /// The URL scheme registered in the app's Info.plist (`CFBundleURLSchemes`), frozen for
+    /// TestFlight/App Store continuity.
     public static let scheme = "penny"
 
-    /// Parses a `penny://` URL. Expo Router writes links two ways, and both are accepted:
+    /// Parses a `penny://` URL. Links come in two forms, and both are accepted:
     /// with an empty host (`penny:///entries/new`) and with the first path segment as
-    /// the host (`penny://entries/new`, used by the legacy widget). Returns nil for other
+    /// the host (`penny://entries/new`, used by the widget). Returns nil for other
     /// schemes and unknown routes, so a caller can fall back to Home without guessing.
     public init?(url: URL) {
         guard url.scheme?.lowercased() == Self.scheme,
@@ -74,8 +74,8 @@ public enum DeepLink: Equatable, Sendable {
         }
     }
 
-    /// `month` (and `expenseId`) from the legacy notification route. Without a valid month the link
-    /// opens the household as before.
+    /// `month` (and `expenseId`) from the notification route. Without a valid month the link
+    /// opens the household.
     private static func householdLink(_ id: String, _ query: [URLQueryItem]) -> DeepLink {
         func value(_ name: String) -> String? { query.first { $0.name == name }?.value }
         guard let month = value("month"),

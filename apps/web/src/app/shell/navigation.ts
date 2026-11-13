@@ -1,6 +1,6 @@
 import type { IconName } from "../../design/Icon";
 
-/** Paths the shell links to. Each is a legacy URL kept from the Expo app or a new web-only page. */
+/** Paths the shell links to. */
 export type NavPath = "/" | "/transactions" | "/insights" | "/households" | "/trips" | "/recurring" | "/accounts" | "/categories" | "/settings";
 
 export interface NavItem {

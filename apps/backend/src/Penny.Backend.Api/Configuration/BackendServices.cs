@@ -141,8 +141,8 @@ public static class BackendServices
     }
 
     // Push devices and delivery (MAZ-61): registration always; the outbox worker unless
-    // `Push__Worker=false`. Expo stays until retired; APNs only when configured. In
-    // full-stack test runs every provider call first consults the `push` faults.
+    // `Push__Worker=false`; APNs only when configured. In full-stack test runs every
+    // provider call first consults the `push` faults.
     private static void AddPushServices(
         IServiceCollection services,
         PushOptions push,
@@ -150,35 +150,12 @@ public static class BackendServices
     )
     {
         services.AddSingleton(push);
-        services.AddSingleton(new PushSettings(push.ExpoEnabled));
         services.AddSingleton<IPushRepository, PostgresPushRepository>();
         services.AddSingleton<PushDeviceService>();
-        // Provider calls are bounded, follow no redirects and are not logged (they
-        // carry device tokens and the APNs provider token).
-        services
-            .AddHttpClient(
-                ExpoTransport.HttpClientName,
-                client =>
-                {
-                    client.Timeout = TimeSpan.FromSeconds(10);
-                    client.MaxResponseContentBufferSize = 1024 * 1024;
-                }
-            )
-            .ConfigurePrimaryHttpMessageHandler(() =>
-                new SocketsHttpHandler { AllowAutoRedirect = false }
-            )
-            .RemoveAllLoggers();
-        services.AddSingleton(provider => new ExpoTransport(
-            provider
-                .GetRequiredService<IHttpClientFactory>()
-                .CreateClient(ExpoTransport.HttpClientName)
-        ));
-        services.AddSingleton<IPushReceiptChecker>(provider =>
-            provider.GetRequiredService<ExpoTransport>()
-        );
-        AddTransport<ExpoTransport>(services, controls);
         if (push.Apns is { } apns)
         {
+            // Provider calls are bounded, follow no redirects and are not logged (they
+            // carry device tokens and the APNs provider token).
             services.AddSingleton(apns);
             services.AddSingleton<ApnsProviderToken>();
             services
@@ -295,7 +272,7 @@ public static class BackendServices
         services.AddSingleton(
             new OidcSettings(oidc.Issuer, oidc.Label, oidc.RedirectUris, oidc.AllowRegistration)
         );
-        // Provider calls follow no redirects, are bounded like the legacy 10-second
+        // Provider calls follow no redirects, are bounded by a 10-second
         // timeout and are not logged (they carry codes, tokens and the client secret).
         services
             .AddHttpClient(
@@ -363,7 +340,7 @@ public static class BackendServices
                 null
             );
         // Secure by default: every endpoint, and every unknown route, needs a session
-        // unless it opts out with [AllowAnonymous], matching the legacy middleware order.
+        // unless it opts out with [AllowAnonymous].
         var session = new AuthorizationPolicyBuilder(SessionAuthentication.Scheme)
             .RequireAuthenticatedUser()
             .Build();
@@ -385,7 +362,7 @@ public static class BackendServices
         });
         services.Configure<ForwardedHeadersOptions>(forwarded =>
         {
-            // Trust no proxy (not even loopback) unless configured, as the legacy server did.
+            // Trust no proxy (not even loopback) unless configured.
             forwarded.KnownIPNetworks.Clear();
             forwarded.KnownProxies.Clear();
             if (auth.TrustedProxies.Count == 0)

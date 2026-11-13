@@ -2,7 +2,7 @@ using System.Text.RegularExpressions;
 
 namespace Penny.Backend.Api.Authentication;
 
-// Legacy token extraction: a well-formed bearer token wins over the cookie, even when
+// Token extraction: a well-formed bearer token wins over the cookie, even when
 // it is unknown or expired; a malformed Authorization header falls back to the cookie.
 public static partial class SessionCredentials
 {

@@ -2,8 +2,8 @@ public import Foundation
 
 /// A household invite code (MAZ-56): 10 hexadecimal characters, valid for 10 minutes and for
 /// any number of people until it expires or is replaced. People read codes aloud and type them
-/// with spaces or dashes, so `init?(typed:)` drops the separators the legacy and web forms
-/// drop (`normalizeInviteCode`) and upper-cases the rest; the server accepts either case.
+/// with spaces or dashes, so `init?(typed:)` drops the separators the web form drops
+/// (`normalizeInviteCode`) and upper-cases the rest; the server accepts either case.
 public struct InviteCode: Hashable, Sendable, CustomStringConvertible {
     public static let length = 10
     /// The lifetime the server gives every new code.

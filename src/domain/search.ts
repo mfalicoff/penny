@@ -6,7 +6,7 @@ export type EntryFilter = "all" | Kind;
 // Local, durable offline/demo search: case-insensitive substring over title, note, category
 // name and account name, trimmed. It deliberately does no accent folding (search v1 on the
 // server folds text; see contracts/fixtures/search-cases.json `substringCases` vs `foldCases`).
-// Like the server contract (docs/migration/search.md, "searchable document"), the fields are
+// Like the server contract (docs/reference/search.md, "searchable document"), the fields are
 // joined with single spaces and the query is matched against that whole document, so
 // "beans morning" matches title "Coffee beans" with note "Morning".
 export type SearchLookups = { categories: ReadonlyMap<string, string>; accounts: ReadonlyMap<string, string> };

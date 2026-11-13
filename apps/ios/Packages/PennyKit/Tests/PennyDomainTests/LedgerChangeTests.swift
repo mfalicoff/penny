@@ -147,7 +147,7 @@ struct LedgerChangeTests {
         #expect(saved.violations.isEmpty, "a dangling recurringId is valid history")
     }
 
-    @Test("whenTripIsAddedEditedOrRemoved_SaveTrip_ShouldApplyTheLegacyRules")
+    @Test("whenTripIsAddedEditedOrRemoved_SaveTrip_ShouldApplyTheTripRules")
     func trips() throws {
         let ledger = Sample.ledger()
         let porto = Trip(
@@ -218,7 +218,7 @@ struct LedgerChangeTests {
         #expect(throws: LedgerRuleError.tooManyTrips) { try LedgerChange.saveTrip(porto).apply(to: full) }
     }
 
-    @Test("whenAccountIsAddedEditedOrRemoved_SaveAccount_ShouldApplyTheLegacyRules")
+    @Test("whenAccountIsAddedEditedOrRemoved_SaveAccount_ShouldApplyTheAccountRules")
     func accounts() throws {
         let ledger = Sample.ledger()
         let cash = PaymentAccount(id: "cash", name: " Wallet ", type: .cash)
@@ -300,11 +300,11 @@ struct LedgerChangeTests {
         }
     }
 
-    /// The exact legacy sentence for every case, copied from `src/domain/ledger.ts`
+    /// The exact shared sentence for every case, as in `src/domain/ledger.ts`
     /// (`cents`, `personalShare`), `src/domain/commands.ts` and
-    /// `src/features/entries/entryDraft.ts`. The switch is exhaustive, so a new case cannot be
+    /// `src/domain/entryDraft.ts`. The switch is exhaustive, so a new case cannot be
     /// added without its sentence here.
-    static func legacyMessage(_ error: LedgerRuleError) -> String {
+    static func sharedMessage(_ error: LedgerRuleError) -> String {
         switch error {
         case .invalidAmount: "Enter an amount with up to two decimal places."
         case .invalidSplitPeople: "Split between 2 and 100 people."
@@ -338,7 +338,7 @@ struct LedgerChangeTests {
         case .tooManyAccounts: "You can add up to 300 accounts."
         case .duplicateCategoryName: "You already have a category with this name."
         case .currencyLocked: "Currency can only be changed before adding entries."
-        // No legacy sentence exists for these four (LedgerRuleError's doc comment); they are
+        // src/domain has no sentence for these four (LedgerRuleError's doc comment); they are
         // pinned to the wording chosen in docs/ios-ledger-domain.md.
         case .invalidCategoryName: "Give your category a name of up to 50 characters."
         case .tooManyCategories: "You can add up to 300 categories."
@@ -348,7 +348,7 @@ struct LedgerChangeTests {
         }
     }
 
-    @Test("whenEveryErrorCase_Message_ShouldBeTheLegacySentenceWordForWord")
+    @Test("whenEveryErrorCase_Message_ShouldBeTheSharedSentenceWordForWord")
     func messages() {
         let all: [LedgerRuleError] = [
             .invalidAmount, .invalidSplitPeople, .invalidPercentage, .shareExceedsTotal, .zeroAmount, .invalidDate,
@@ -361,7 +361,7 @@ struct LedgerChangeTests {
             .currencyLocked,
         ]
         for error in all {
-            #expect(error.message == Self.legacyMessage(error), "\(error)")
+            #expect(error.message == Self.sharedMessage(error), "\(error)")
             #expect(error.description == error.message)
         }
         #expect(Set(all.map(\.message)).count == all.count)

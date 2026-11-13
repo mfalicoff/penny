@@ -112,7 +112,7 @@ jobs:
   real-stack:
     # The *.real.spec.ts journeys against the production build, the real .NET API, a
     # disposable PostgreSQL 18 (pg_trgm, pgvector) and the local OIDC provider from the
-    # full-stack test environment (docs/migration/test-environment.md). One environment per
+    # full-stack test environment (docs/reference/test-environment.md). One environment per
     # engine; the specs inside it run one at a time because they share the server clock.
     name: Real-stack browser journeys (${{ matrix.browser }})
     runs-on: ubuntu-latest

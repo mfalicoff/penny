@@ -1,4 +1,4 @@
-/// One user change to the personal ledger: the legacy `LedgerChange`, `(ledger) => ledger`.
+/// One user change to the personal ledger: `LedgerChange`, `(ledger) => ledger`.
 ///
 /// A change is a pure function applied to the *latest* ledger, never a stored result: the
 /// caller applies it to its current local snapshot, then materializes due occurrences
@@ -215,7 +215,7 @@ extension LedgerChange {
         if let accountId, ledger.account(id: accountId) == nil { throw .accountRemoved }
     }
 
-    /// The legacy duplicate-name test: `a.toLowerCase() === b.toLowerCase()`, compared by
+    /// The duplicate-name test: `a.toLowerCase() === b.toLowerCase()`, compared by
     /// UTF-16 code units like `===` (Swift's `==` would also equate canonically equivalent text).
     private static func sameName(_ lhs: String, _ rhs: String) -> Bool {
         JavaScriptText.lowercase(lhs).utf16.elementsEqual(JavaScriptText.lowercase(rhs).utf16)

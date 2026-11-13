@@ -53,17 +53,17 @@ struct KeychainSessionStoreTests {
     }
 
     @Test("whenItemIsOutsideTheDataProtectionKeychain_KeychainSessionStore_ShouldNotReadOrDeleteIt")
-    func legacyKeychainItemIgnored() throws {
+    func fileKeychainItemIgnored() throws {
         let record = #"{"version":1,"server":"\#(account)","email":"a@example.test","token":"\#(APIFixtures.token)"}"#
         keychain.put(account: account, data: Data(record.utf8), dataProtection: false)
         #expect(try store.load(server: APIFixtures.server) == nil)
         try store.deleteAll()
         // The fake keeps the keychains apart as SecItem does: the store's queries never reach it.
-        let legacy: [String: Any] = [
+        let fileKeychainQuery: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: KeychainSessionStore.service,
             kSecAttrAccount as String: account, kSecReturnData as String: true,
         ]
-        #expect(keychain.copyData(legacy).0 == errSecSuccess)
+        #expect(keychain.copyData(fileKeychainQuery).0 == errSecSuccess)
         // A query without a class is refused, as SecItemCopyMatching does.
         #expect(
             keychain.copyData([kSecAttrAccount as String: account, kSecReturnData as String: true]).0 == errSecParam)

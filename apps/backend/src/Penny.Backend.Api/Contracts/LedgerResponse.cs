@@ -2,7 +2,7 @@ using Penny.Backend.Domain.Ledgers;
 
 namespace Penny.Backend.Api.Contracts;
 
-// A v4 ledger in the legacy key order. Reads and writes always return version 4.
+// A v4 ledger in the contract key order. Reads and writes always return version 4.
 public sealed record LedgerResponse(
     int Version,
     string Currency,

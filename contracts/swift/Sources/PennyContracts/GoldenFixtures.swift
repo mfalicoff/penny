@@ -90,7 +90,7 @@ public struct MonthTotalsFixture: Codable, Equatable, Sendable {
         public var name: String
         /// A key of `ledgers`.
         public var ledger: String
-        /// The local date; `nil` is the legacy Overview, which does not split.
+        /// The local date that splits expected income from recorded income.
         public var today: String?
         public var clock: Clock?
         public var month: String
@@ -114,13 +114,6 @@ public struct MonthTotalsFixture: Codable, Equatable, Sendable {
         /// Scheduled previews, sorted.
         public var scheduledIds: [String]
     }
-}
-
-/// ledger-upgrades.json
-public struct LedgerUpgradeCase: Codable, Equatable, Sendable {
-    public var name: String
-    public var input: Ledger
-    public var expected: Ledger
 }
 
 /// shared-splits.json

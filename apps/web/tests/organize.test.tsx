@@ -272,10 +272,10 @@ describe("payment accounts", { timeout: 20_000 }, () => {
 
 describe("categories", { timeout: 20_000 }, () => {
   const coffee: Category = { id: "c-coffee", name: "Coffee", icon: "cafe-outline", color: "#E0529C", kind: "expense" };
-  const legacy: Category = { id: "groceries", name: "Groceries", icon: "basket-outline", color: "#6C9C79", kind: "expense" };
+  const groceries: Category = { id: "groceries", name: "Groceries", icon: "basket-outline", color: "#6C9C79", kind: "expense" };
 
   it("lists each kind from the URL and adds a category of every kind with a palette color and icon", async () => {
-    const server = ledgerServer({ categories: [legacy, coffee], transactions: [entry("e1"), entry("e2")], recurring: [rule("r1")] });
+    const server = ledgerServer({ categories: [groceries, coffee], transactions: [entry("e1"), entry("e2")], recurring: [rule("r1")] });
     const user = userEvent.setup();
     const { router } = renderApp("/categories");
     expect(await screen.findByRole("button", { name: "Edit Groceries" })).toHaveAccessibleDescription("2 entries, 1 schedule");
@@ -311,21 +311,21 @@ describe("categories", { timeout: 20_000 }, () => {
     expect(await within(form).findByText("You already have an expense category with this name.")).toBeInTheDocument();
   });
 
-  it("keeps an in-use category's kind and legacy color, renames it, and moves its entries before removing it", async () => {
-    const server = ledgerServer({ categories: [legacy, coffee], transactions: [entry("e1"), entry("e2", { categoryId: coffee.id })], recurring: [rule("r1")] });
+  it("keeps an in-use category's kind and off-palette color, renames it, and moves its entries before removing it", async () => {
+    const server = ledgerServer({ categories: [groceries, coffee], transactions: [entry("e1"), entry("e2", { categoryId: coffee.id })], recurring: [rule("r1")] });
     const user = userEvent.setup();
     renderApp("/categories");
     await user.click(await screen.findByRole("button", { name: "Edit Groceries" }));
     const form = await dialog("Edit category");
     expect(within(form).getByRole("radio", { name: "Income" })).toBeDisabled();
     expect(within(form).getByText("Entries use this category, so it stays an expense category.")).toBeInTheDocument();
-    // A color from an older app stays selected; the palette is offered next to it.
+    // A color outside the palette stays selected; the palette is offered next to it.
     expect(within(form).getByRole("radio", { name: "Current color" })).toBeChecked();
     await user.clear(within(form).getByLabelText("Name"));
     await user.type(within(form).getByLabelText("Name"), "Groceries & dining");
     await user.click(within(form).getByRole("button", { name: "Save" }));
     await synced(server, 1);
-    expect(server.state.ledger.categories[0]).toEqual({ ...legacy, name: "Groceries & dining" });
+    expect(server.state.ledger.categories[0]).toEqual({ ...groceries, name: "Groceries & dining" });
 
     await user.click(await screen.findByRole("button", { name: "Edit Groceries & dining" }));
     const again = await dialog("Edit category");
@@ -339,7 +339,7 @@ describe("categories", { timeout: 20_000 }, () => {
   });
 
   it("falls back to expenses for an unknown kind in the URL", async () => {
-    ledgerServer({ categories: [legacy] });
+    ledgerServer({ categories: [groceries] });
     renderApp("/categories?kind=savings");
     expect(await screen.findByRole("button", { name: "Edit Groceries" })).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: "Expense" })).toBeChecked();

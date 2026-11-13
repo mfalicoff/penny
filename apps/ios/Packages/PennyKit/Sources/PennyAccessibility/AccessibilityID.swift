@@ -217,8 +217,6 @@ public enum AccessibilityID {
         public static let server = "settings.server"
         public static let syncStatus = "settings.syncStatus"
         public static let leaveDemo = "settings.leaveDemo"
-        /// What the Expo data import needs from the person (MAZ-72).
-        public static let expoImport = "settings.expoImport"
         /// `Currency` raw values (`CAD`, `EUR`, ...).
         public static func currency(_ code: String) -> String { "currency.\(code)" }
         /// `AppearancePreference` raw values.
@@ -226,7 +224,7 @@ public enum AccessibilityID {
         public static let appLockToggle = "appLock.toggle"
         public static let appLockMessage = "appLock.message"
 
-        static let all = [done, server, syncStatus, leaveDemo, expoImport, appLockToggle, appLockMessage]
+        static let all = [done, server, syncStatus, leaveDemo, appLockToggle, appLockMessage]
         static let prefixes = ["settings.", "currency.", "appearance."]
     }
 

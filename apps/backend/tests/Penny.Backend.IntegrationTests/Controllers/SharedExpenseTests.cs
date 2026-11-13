@@ -80,7 +80,7 @@ public sealed class SharedExpenseTests(ApiFixture fixture) : SharedExpenseTestBa
     }
 
     [Fact]
-    public async Task whenRequestIsInvalid_CreateExpense_ShouldReturnLegacyMessagesInOrder()
+    public async Task whenRequestIsInvalid_CreateExpense_ShouldReturnContractMessagesInOrder()
     {
         var (alex, alexId, bea, beaId, _, camId, home) = await HomeAsync();
         var (outsider, _) = await AccountAsync("outsider@example.test");
@@ -237,7 +237,7 @@ public sealed class SharedExpenseTests(ApiFixture fixture) : SharedExpenseTestBa
         await AdmitAsync(home, alex, bea, offset: 240);
         Amounts(await CreateExpenseAsync(home, alex, Expense(2000, alexId, "2026-10-04")))
             .ShouldBe([1000L, 1000L]);
-        // An older client joined without an offset: its day comes from the caller's.
+        // A join without an offset: the member's day comes from the caller's.
         await AdmitAsync(home, alex, cam);
         Amounts(
                 await CreateExpenseAsync(
@@ -440,7 +440,7 @@ public sealed class SharedExpenseTests(ApiFixture fixture) : SharedExpenseTestBa
             HouseholdService.NotFound
         );
 
-        // Month filter and its legacy validation; newest first.
+        // Month filter and its validation; newest first.
         (await ListExpensesAsync(home, cam, "?month=2026-10"))
             .Select(Id)
             .ShouldBe([Id(newer)]);
@@ -584,7 +584,7 @@ public sealed class SharedExpenseTests(ApiFixture fixture) : SharedExpenseTestBa
             SharedExpenseService.ExpenseNotFound
         );
         (await ListExpensesAsync(home, bea)).ShouldBeEmpty();
-        // The row, its splits and its history stay; updated_at is left as legacy did.
+        // The row, its splits and its history stay; updated_at is left as it was.
         (
             await CountAsync(
                 $"SELECT count(*) FROM penny.household_expenses WHERE id = '{expenseId}' AND deleted_at IS NOT NULL AND revision = 2 AND updated_by = '{alexId}' AND (extract(epoch FROM updated_at) * 1000)::bigint = {Millis(Noon.AddMinutes(5))}"

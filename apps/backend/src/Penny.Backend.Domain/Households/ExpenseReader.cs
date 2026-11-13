@@ -4,11 +4,11 @@ using Penny.Backend.Domain.Ledgers;
 
 namespace Penny.Backend.Domain.Households;
 
-// Ports of the legacy shared-expense zod schemas (server/infrastructure/households.ts)
-// with the JSON rules of LedgerReader and HouseholdReader: safe-integer numbers,
-// optional fields may be absent but never null, unknown keys ignored, last duplicate
-// key wins, trimmed strings measured in UTF-16 code units, storable text only. Every
-// reader returns null for an invalid body; the API reports one message for all.
+// Shared-expense request readers, with the JSON rules of LedgerReader and
+// HouseholdReader: safe-integer numbers, optional fields may be absent but never null,
+// unknown keys ignored, last duplicate key wins, trimmed strings measured in UTF-16
+// code units, storable text only. Every reader returns null for an invalid body; the
+// API reports one message for all.
 public static partial class ExpenseReader
 {
     public const int TitleLength = 100;
@@ -161,7 +161,7 @@ public static partial class ExpenseReader
                 : null
         );
 
-    // A zod union: `{userId, amountCents}` is tried first, then
+    // Either shape: `{userId, amountCents}` is tried first, then
     // `{userId, percentBasisPoints}`; the matching branch drops the other key.
     private static List<SplitAllocation> Allocations(JsonElement value)
     {
@@ -212,7 +212,7 @@ public static partial class ExpenseReader
     private static string Id(JsonElement value) =>
         LedgerReader.Text(value, 1, LedgerLimits.IdLength);
 
-    // zod `.trim().min(1).max(n)`: trimmed first, then measured.
+    // Trimmed first, then measured: 1 to `max` UTF-16 code units.
     private static string Trimmed(JsonElement value, int max)
     {
         var text = LedgerText.TrimLikeJavaScript(LedgerReader.Text(value, 0, int.MaxValue));

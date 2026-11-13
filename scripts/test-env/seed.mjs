@@ -1,7 +1,6 @@
-// Runs a declarative scenario from contracts/fixtures/full-stack-seeds.json against a
-// server over its public HTTP API (MAZ-62). The same steps run on the legacy
-// Node/SQLite server and the .NET/PostgreSQL API, so seeds double as differential
-// journeys. Users get unique `.test` emails and random passwords per run.
+// Runs a declarative scenario from contracts/fixtures/full-stack-seeds.json against the
+// .NET API over its public HTTP API (MAZ-62), pinning the server clock through the test
+// controls. Users get unique `.test` emails and random passwords per run.
 import { randomBytes } from "node:crypto";
 import { readFileSync } from "node:fs";
 
@@ -25,8 +24,8 @@ export class HttpError extends Error {
   }
 }
 
-/** Minimal JSON client with bearer sessions; records every exchange for comparison. */
-export function client(apiUrl, { record } = {}) {
+/** Minimal JSON client with bearer sessions. */
+export function client(apiUrl) {
   return async function request(method, path, { token, body, expect } = {}) {
     const response = await fetch(`${apiUrl}${path}`, {
       method,
@@ -43,23 +42,20 @@ export function client(apiUrl, { record } = {}) {
     } catch {
       value = text;
     }
-    record?.push({ method, path, status: response.status, body: value });
     const allowed = expect ?? [200, 201];
     if (!allowed.includes(response.status)) throw new HttpError(method, path, response.status, value);
     return { status: response.status, body: value };
   };
 }
 
-const reference = /\$(user|household|expense|rule|email):([a-z0-9-]+)|\$(today|month)\b/g;
+const reference = /\$(user|household|expense):([a-z0-9-]+)/g;
 
-// Replaces "$user:alex", "$household:x", "$expense:x", "$rule:x", "$email:alex",
-// "$today" and "$month" in strings (whole values or inside paths) anywhere in a JSON value.
+// Replaces "$user:alex", "$household:x" and "$expense:x" in strings (whole values or
+// inside paths) anywhere in a JSON value.
 export function resolve(value, context) {
   if (typeof value === "string") {
-    return value.replace(reference, (token, kind, ref, day) => {
-      if (day) return day === "today" ? context.today : context.today.slice(0, 7);
-      const emails = Object.fromEntries(Object.entries(context.users ?? {}).map(([alias, user]) => [alias, user.email]));
-      const table = { user: context.userIds, household: context.households, expense: context.expenseIds, rule: context.rules ?? {}, email: emails }[kind];
+    return value.replace(reference, (token, kind, ref) => {
+      const table = { user: context.userIds, household: context.households, expense: context.expenseIds }[kind];
       if (!(ref in table)) throw new Error(`Seed reference ${token} is not defined yet.`);
       return table[ref];
     });
@@ -71,18 +67,15 @@ export function resolve(value, context) {
 }
 
 /**
- * Seeds a scenario. `setClock` pins server time (the .NET test control); servers
- * without one (legacy) run at real time, so clock-dependent fields differ there.
+ * Seeds a scenario. `setClock` pins server time (the .NET test control); without it the
+ * server runs at real time, so clock-dependent fields differ from the scenario.
  * @param {object} definition one entry of full-stack-seeds.json `scenarios`
- * @param {{ apiUrl: string, runTag?: string, setClock?: (iso: string) => Promise<void>,
- *   record?: object[] }} options
+ * @param {{ apiUrl: string, runTag?: string, setClock?: (iso: string) => Promise<void> }} options
  */
 export async function seed(definition, options) {
-  const request = client(options.apiUrl, { record: options.record });
+  const request = client(options.apiUrl);
   const runTag = options.runTag ?? randomBytes(4).toString("hex");
-  // "$now" scenarios follow the server's real day (legacy servers have no clock).
-  const realTime = definition.clock === "$now";
-  const finalClock = realTime ? options.now ?? new Date().toISOString() : definition.clock;
+  const finalClock = definition.clock;
   const context = {
     scenario: definition.name, runTag, today: finalClock.slice(0, 10),
     users: {}, userIds: {}, households: {}, invites: {}, expenseIds: {}, expenses: {}, rules: {},

@@ -11,7 +11,7 @@ namespace Penny.Backend.Api.Commands;
 // prints the redacted outcome (`accepted` or a reason code such as
 // `apns:400:BadDeviceToken`). Exit 0 when APNs accepted it, 2 when it refused, 1 on
 // usage or configuration errors. The token is never printed. See
-// docs/migration/push.md#physical-device-smoke-test.
+// docs/reference/push.md#physical-device-smoke-test.
 internal static partial class PushSmokeCommand
 {
     public const string Name = "push-smoke-apns";
@@ -25,7 +25,7 @@ internal static partial class PushSmokeCommand
         )
         {
             Console.Error.WriteLine(
-                "Usage: push-smoke-apns DEVICE_TOKEN_HEX sandbox|production. See docs/migration/push.md."
+                "Usage: push-smoke-apns DEVICE_TOKEN_HEX sandbox|production. See docs/reference/push.md."
             );
             return 1;
         }

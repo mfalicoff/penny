@@ -351,7 +351,7 @@ struct LedgerSyncModelTests {
         #expect(harness.model.reconcile(page, startedAt: started) == .searchAgain, "a delete since the search began")
         #expect(harness.model.reconcile(page, startedAt: harness.model.searchEpoch) == .useLocalResults)
         #expect(harness.model.localSearch("lunch").isEmpty, "the pending delete hides the row")
-        #expect(harness.model.searchesLocally(serverHasSearch: true))
+        #expect(harness.model.searchesLocally)
 
         harness.goOnline()
         await harness.waitFor(.upToDate)

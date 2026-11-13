@@ -124,8 +124,7 @@ secret is missing. See the
 [Release Please credential requirements](https://github.com/googleapis/release-please-action#github-credentials).
 
 Complete the Apple signing and App Store Connect setup in
-[iOS one-time setup](ios-ipa.md#one-time-setup). `EXPO_TOKEN` and `ASC_APP_ID`
-are no longer needed; see [Expo retirement](ios-ipa.md#expo-retirement).
+[iOS one-time setup](ios-ipa.md#one-time-setup).
 Protect `master` with the existing PR checks to gate release PR merges. Prefer squash merging so each PR's release intent is
 unambiguous.
 
@@ -160,6 +159,6 @@ publish it; do not remove its release labels manually.
 
 Native TestFlight builds use the build number
 `IOS_BUILD_NUMBER_BASE.<run>.<attempt>`, independently of semantic versions,
-so every run and rerun is higher than the last and above the build numbers of
-the released Expo builds. See
+so every run and rerun is higher than the last and above every earlier
+TestFlight build. See
 [iOS one-time setup](ios-ipa.md#one-time-setup).

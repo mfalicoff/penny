@@ -65,21 +65,4 @@ public interface IPushRepository
         DateTimeOffset claimedAt,
         CancellationToken cancellationToken
     );
-
-    // Leases up to `limit` accepted Expo tickets whose receipt is due.
-    Task<IReadOnlyList<PushReceiptClaim>> ClaimReceiptsAsync(
-        string leaseOwner,
-        string leaseToken,
-        DateTimeOffset now,
-        DateTimeOffset leaseUntil,
-        int limit,
-        CancellationToken cancellationToken
-    );
-
-    Task RecordReceiptsAsync(
-        string leaseToken,
-        IReadOnlyList<PushReceiptResult> results,
-        DateTimeOffset now,
-        CancellationToken cancellationToken
-    );
 }

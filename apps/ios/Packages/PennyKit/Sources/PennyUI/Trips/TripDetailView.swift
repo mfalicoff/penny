@@ -4,7 +4,7 @@ import PennyDomain
 import SwiftUI
 
 /// `penny://trips/<id>` and a trip row (MAZ-76): a personal trip by its ledger id, else a shared
-/// trip by its household id, as in the Expo app and the browser. A shared trip is the household
+/// trip by its household id, as in the browser. A shared trip is the household
 /// page in trip words (`HouseholdPage`): Expenses for the whole trip, Balances by month, People.
 struct TripDetailView: View {
     @Environment(ShellModel.self) private var shell

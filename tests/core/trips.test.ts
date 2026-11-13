@@ -1,22 +1,17 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { saveEntry, saveTrip } from "../../src/domain/commands.ts";
-import { emptyLedger, upgradeLedger, type Transaction, type Trip } from "../../src/domain/ledger.ts";
+import { emptyLedger, type Transaction, type Trip } from "../../src/domain/ledger.ts";
 import { buildEntry, type EntryDraft } from "../../src/domain/entryDraft.ts";
 import { tripOverview } from "../../src/domain/selectors/trips.ts";
-import { ledgerWriteSchema } from "../../server/validation/ledger.ts";
+import { ledgerWriteSchema } from "../../src/validation/ledger.ts";
 
 const trip: Trip = { id: "montreal", name: "Montréal", startDate: "2026-09-10", endDate: "2026-09-14" };
 const draft: EntryDraft = { title: "Train", kind: "expense", amount: "120.00", date: "2026-08-01", categoryId: "transport", tripId: trip.id, note: "", split: "equal", shareInput: "2", frequency: "monthly" };
 
-test("legacy ledgers gain an empty trip list and keep existing expenses", () => {
-  const current = emptyLedger();
-  const legacy = { ...current, version: 3 as const, trips: undefined };
-  const upgraded = upgradeLedger(legacy);
-  assert.equal(upgraded.version, 4);
-  assert.deepEqual(upgraded.trips, []);
-  assert.deepEqual(upgradeLedger(upgraded), upgraded);
-  assert.deepEqual(ledgerWriteSchema.parse({ revision: 0, ledger: legacy }).ledger, upgraded);
+test("a ledger write needs a trips list", () => {
+  const { trips: _, ...withoutTrips } = emptyLedger();
+  assert.equal(ledgerWriteSchema.safeParse({ revision: 0, ledger: withoutTrips }).success, false);
 });
 
 test("trip assignments count the personal share and do not repeat with a schedule", () => {
@@ -56,7 +51,7 @@ test("a personal trip can link to a shared group without losing private expenses
   assert.equal(ledgerWriteSchema.safeParse({ revision: 0, ledger: linked }).success, true);
 });
 
-test("server rejects missing trips, invalid trip references, and non-expense assignments", () => {
+test("ledger validation rejects missing trips, invalid trip references, and non-expense assignments", () => {
   const ledger = saveTrip(trip)(emptyLedger());
   const expense = buildEntry({ ...draft, frequency: "none" }, ledger.categories).transaction;
   const validate = (candidate: unknown) => ledgerWriteSchema.safeParse({ revision: 0, ledger: candidate }).success;

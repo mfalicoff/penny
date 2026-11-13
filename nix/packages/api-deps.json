@@ -60,16 +60,6 @@
     "hash": "sha256-+58+iqTayTiE0pDaog1U8mjaDA8bNNDLA8gjCQZZudo="
   },
   {
-    "pname": "Microsoft.Data.Sqlite",
-    "version": "10.0.14",
-    "hash": "sha256-NO54SJI4cty/NB6JtsGSFw8iKBXLnLJgSscHslt/sLQ="
-  },
-  {
-    "pname": "Microsoft.Data.Sqlite.Core",
-    "version": "10.0.14",
-    "hash": "sha256-3wgo44YaHgJAyaPsGJHNwZQs3Ee2HI0vs2ziVC8CsJI="
-  },
-  {
     "pname": "Microsoft.EntityFrameworkCore",
     "version": "10.0.14",
     "hash": "sha256-ISn7Cc7bF8HUlSniBR5cWsJe3nhS4WvSJlvk0WoVZuU="
@@ -363,26 +353,6 @@
     "pname": "Scalar.AspNetCore",
     "version": "2.19.0",
     "hash": "sha256-mkXYrj4KHziu3PXZnvfG/12LuNktiVX2hsXaQCfU8UA="
-  },
-  {
-    "pname": "SQLitePCLRaw.bundle_e_sqlite3",
-    "version": "2.1.13",
-    "hash": "sha256-iaIW+AWdCcq8tFq3WsLxgLczMjwn1Bz5qYHcX1tcbA8="
-  },
-  {
-    "pname": "SQLitePCLRaw.core",
-    "version": "2.1.13",
-    "hash": "sha256-2T1ferP4ZMR3IqLZAEjDGhqsdD4VPYe59KB1ie4vna8="
-  },
-  {
-    "pname": "SQLitePCLRaw.lib.e_sqlite3",
-    "version": "2.1.13",
-    "hash": "sha256-0H0TtHeRI8+lazNItQTVeiq2/BDHZPtuLJ14eYfjkgE="
-  },
-  {
-    "pname": "SQLitePCLRaw.provider.e_sqlite3",
-    "version": "2.1.13",
-    "hash": "sha256-UT7yul0BwU0egDLZ0sosiYXffsfTUfDkCRdHYRSsH5w="
   },
   {
     "pname": "System.CodeDom",

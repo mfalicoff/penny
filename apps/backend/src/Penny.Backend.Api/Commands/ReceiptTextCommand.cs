@@ -10,7 +10,7 @@ using Penny.Backend.Persistence.Search;
 namespace Penny.Backend.Api.Commands;
 
 // `receipts-ocr [--user USER_ID] [--all]` (MAZ-125) backfills receipt text: it queues
-// receipts without a text row (uploaded before MAZ-125, imported legacy receipts),
+// receipts without a text row (uploaded before MAZ-125),
 // failed receipts and receipts extracted by another engine version or language set
 // (every receipt with `--all`), then extracts and embeds them in this process with the
 // same bounds as the worker. `receipts-ocr --status [--user USER_ID]` only reports.

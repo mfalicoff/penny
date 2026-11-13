@@ -1,5 +1,5 @@
-// The app target. The bundle id, App Group and URL scheme continue the legacy Expo app's
-// (PennyDomain.AppIdentity); changing them breaks in-place upgrades.
+// The app target. The bundle id, App Group and URL scheme are frozen for TestFlight/App Store
+// continuity (PennyDomain.AppIdentity); changing them breaks in-place upgrades.
 PRODUCT_NAME = Penny
 PRODUCT_BUNDLE_IDENTIFIER = com.mfalicoff.penny
 INFOPLIST_FILE = Configuration/Info.plist

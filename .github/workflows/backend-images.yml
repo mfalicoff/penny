@@ -4,7 +4,6 @@ name: Backend images
 # production-container smoke test (and the MAZ-128 observability smoke test) on each, then
 # publish multi-platform images. The web
 # image is the v2 browser app (apps/web) since MAZ-97.
-# The legacy Node image keeps its own workflow (docker-image.yml) until cutover.
 
 on:
   pull_request:
@@ -16,13 +15,7 @@ on:
       - 'scripts/deploy-smoke.mjs'
       - 'scripts/observability-smoke.mjs'
       - 'scripts/grafana-dashboards.mjs'
-      - 'scripts/cutover-drill.mjs'
-      - 'scripts/test-env/**'
-      - 'server/**'
-      - 'Dockerfile'
-      - 'src/**'
-      - 'package.json'
-      - 'package-lock.json'
+      - 'src/domain/**'
       - '.dockerignore'
       - '.github/workflows/backend-images.yml'
   push:
@@ -116,33 +109,6 @@ jobs:
         with:
           name: observability-smoke-${{ matrix.arch }}
           path: observability-smoke-${{ matrix.arch }}.log
-          if-no-files-found: warn
-      # MAZ-65: docs/cutover.md end to end, from the legacy image to these images.
-      - name: Build legacy image
-        if: matrix.arch == 'amd64'
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          platforms: linux/${{ matrix.arch }}
-          load: true
-          tags: penny-legacy:ci
-          cache-from: type=gha,scope=legacy-${{ matrix.arch }}
-          cache-to: type=gha,mode=max,scope=legacy-${{ matrix.arch }}
-      - name: Cutover drill
-        if: matrix.arch == 'amd64'
-        env:
-          PENNY_DRILL_LEGACY_IMAGE: penny-legacy:ci
-          PENNY_DRILL_API_IMAGE: penny-api:ci
-          PENNY_DRILL_WEB_IMAGE: penny-web:ci
-        run: node scripts/cutover-drill.mjs | tee cutover-drill.log
-      - name: Upload cutover drill report
-        if: always() && matrix.arch == 'amd64'
-        uses: actions/upload-artifact@v7
-        with:
-          name: cutover-drill
-          path: |
-            cutover-drill.log
-            test-results/cutover-drill/
           if-no-files-found: warn
 
   publish:

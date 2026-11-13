@@ -1,5 +1,5 @@
-// The WidgetKit extension (MAZ-80), embedded in Penny.app. The bundle id is the one Expo's
-// expo-widgets plugin generated (PennyDomain.AppIdentity): changing it removes placed widgets.
+// The WidgetKit extension (MAZ-80), embedded in Penny.app. The bundle id is frozen for
+// TestFlight/App Store continuity (PennyDomain.AppIdentity): changing it removes placed widgets.
 PRODUCT_NAME = PennyWidgets
 PRODUCT_BUNDLE_IDENTIFIER = com.mfalicoff.penny.ExpoWidgetsTarget
 INFOPLIST_FILE = Configuration/PennyWidgets-Info.plist

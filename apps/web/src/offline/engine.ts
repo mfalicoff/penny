@@ -4,7 +4,6 @@ import { mergeOfflineLedger } from "./merge";
 import { ApiError } from "../api/client";
 import { withLock, openLedgerChannel, type LedgerChannel, type LockRunner } from "./coordination";
 import { MemoryLedgerDatabase, StorageError, type LedgerDatabase } from "./database";
-import { readLegacyCopy, removeLegacyAsideCopies, removeLegacyCopy, setLegacyCopyAside, type LegacyStorage } from "./legacy";
 import { NOTHING_PENDING, pendingChanges, type PendingSummary } from "./pending";
 import { accountScope, asideKey, isAsideKeyOf, parseRecord, RECORD_FORMAT, RecordError, recordKey, type AccountScope, type LedgerRecord } from "./record";
 import { IncompatibleLedgerError, normalizeLedger, sameLedger, type ServerSnapshot } from "./wire";
@@ -53,8 +52,6 @@ export interface LedgerSyncState {
   lastSyncedAt: string | null;
   /** Whether saves are kept durably. False when the browser refuses storage: the ledger is shown but saves are refused. */
   durable: boolean;
-  /** A copy left by the legacy web app that couldn't be read. It is kept, and counts as pending for sign-out, until set aside. */
-  legacyUnreadable: boolean;
   /**
    * `Date.now()` of the last change to what the ledger shows after it first loaded: a save here or
    * in another tab, or a sync that brought something new. Server search results older than this
@@ -103,8 +100,6 @@ export interface EngineOptions {
   api: LedgerApi;
   /** Opens the durable database. When it fails, the engine keeps working in memory without accepting saves. */
   openDatabase: () => Promise<LedgerDatabase>;
-  /** `localStorage`, where the legacy web app kept its copy. Null when unavailable. */
-  legacyStorage: LegacyStorage | null;
   /** Called once when the server answers 401 for this account. The engine changes nothing. */
   onSessionExpired?: () => void;
   /** Called whenever a sync recorded a server snapshot; `changed` when it differs from the previous base. */
@@ -159,7 +154,6 @@ export class LedgerSyncEngine {
   private loaded = false;
   private durable = true;
   private storageProblem: "unreadable" | "newerFormat" | null = null;
-  private legacyUnreadable = false;
   private issue: SyncIssue | null = null;
   private sessionExpired = false;
   private syncing = false;
@@ -195,7 +189,7 @@ export class LedgerSyncEngine {
 
   getState = (): LedgerSyncState => this.state;
 
-  /** The server revision the stored base was read or written at (null before the first sync of an imported copy). */
+  /** The server revision the stored base was read or written at (null before the first download). */
   get baseRevision(): number | null {
     return this.record?.baseRevision ?? null;
   }
@@ -222,7 +216,6 @@ export class LedgerSyncEngine {
       pending,
       lastSyncedAt: record?.lastSyncedAt ?? null,
       durable: this.durable,
-      legacyUnreadable: this.legacyUnreadable,
       changedAt: this.changedAt,
     };
   }
@@ -247,7 +240,7 @@ export class LedgerSyncEngine {
 
   // MARK: lifecycle
 
-  /** Opens storage, imports the legacy copy, shows what is stored and starts a sync. Safe to call again after `stop`. */
+  /** Opens storage, shows what is stored and starts a sync. Safe to call again after `stop`. */
   start(): void {
     if (this.started) return;
     this.started = true;
@@ -307,10 +300,6 @@ export class LedgerSyncEngine {
   }
 
   private async boot(generation: number) {
-    const db = await this.db();
-    if (generation !== this.generation) return;
-    await this.importLegacy(db, generation);
-    if (generation !== this.generation) return;
     await this.reload(generation);
     if (generation !== this.generation) return;
     this.loaded = true;
@@ -352,95 +341,6 @@ export class LedgerSyncEngine {
     if (generation !== this.generation) return;
     this.syncWhenVisible = false;
     void this.sync();
-  }
-
-  // MARK: legacy import
-
-  /**
-   * Imports the legacy web app's copy into IndexedDB. Idempotent and safe to interrupt: the copy is
-   * read-only here, the import is one transaction, and the record remembers the copy's fingerprint
-   * so a second run (another tab, a reload) imports nothing twice. If the record already exists,
-   * the copy's own unsynced edits are merged onto it. The copy is removed only after a sync that
-   * leaves nothing pending (`finishLegacy`).
-   */
-  private async importLegacy(db: LedgerDatabase, generation: number) {
-    const copy = readLegacyCopy(this.options.legacyStorage, this.scope.email);
-    if (generation !== this.generation) return;
-    this.legacyUnreadable = copy.kind === "unreadable";
-    if (copy.kind !== "readable") return;
-    const now = this.now().toISOString();
-    try {
-      await db.update(this.key, (raw) => {
-        let current: LedgerRecord | null;
-        try {
-          current = parseRecord(raw, this.scope);
-        } catch {
-          // Never import onto a copy that can't be read: the copy stays where it is.
-          return { result: null };
-        }
-        if (current?.legacy?.fingerprint === copy.fingerprint) return { result: null };
-        const legacy = { fingerprint: copy.fingerprint, importedAt: now };
-        if (!current) {
-          const record: LedgerRecord = {
-            format: RECORD_FORMAT,
-            server: this.scope.server,
-            email: this.scope.email,
-            baseRevision: null,
-            base: copy.base,
-            local: copy.local,
-            lastSyncedAt: null,
-            savedAt: now,
-            legacy,
-          };
-          return { next: record, result: null };
-        }
-        const local = sameLedger(copy.base, copy.local) ? current.local : normalizeLedger(mergeOfflineLedger(copy.base, copy.local, current.local));
-        return { next: { ...current, local, savedAt: now, legacy }, result: null };
-      });
-      this.broadcast();
-    } catch {
-      // Storage refused the import (for example, no space). The legacy copy is untouched and the
-      // next start tries again; sign-out counts its pending edits meanwhile.
-    }
-  }
-
-  /** After a clean sync: the server holds everything the legacy copy had, so the copy can go. */
-  private async finishLegacy(generation: number) {
-    const record = this.record;
-    if (!record?.legacy || record.legacy.removedAt || pendingChanges(record.base, record.local).count > 0) return;
-    const fingerprint = record.legacy.fingerprint;
-    if (!removeLegacyCopy(this.options.legacyStorage, this.scope.email, fingerprint)) {
-      // The copy changed since it was imported (the legacy app ran again here): import that too.
-      const copy = readLegacyCopy(this.options.legacyStorage, this.scope.email);
-      if (copy.kind === "readable" && copy.fingerprint !== fingerprint) {
-        await this.importLegacy(await this.db(), generation);
-        await this.reload(generation);
-        // Runs after this sync ends and sends what the copy added.
-        void this.sync();
-      }
-      return;
-    }
-    const removedAt = this.now().toISOString();
-    try {
-      const updated = await (
-        await this.db()
-      ).update(this.key, (raw) => {
-        const current = parseRecord(raw, this.scope);
-        if (!current?.legacy || current.legacy.fingerprint !== fingerprint) return { result: current };
-        const next = { ...current, legacy: { ...current.legacy, removedAt } };
-        return { next, result: next };
-      });
-      if (generation === this.generation) this.record = updated;
-    } catch {
-      // Only the bookkeeping failed; the copy is gone and the record is unchanged.
-    }
-  }
-
-  /** Moves an unreadable legacy copy aside so it no longer blocks sign-out. */
-  setLegacyCopyAside(): void {
-    setLegacyCopyAside(this.options.legacyStorage, this.scope.email, this.now().toISOString());
-    this.legacyUnreadable = false;
-    this.emit();
   }
 
   // MARK: saving
@@ -575,7 +475,6 @@ export class LedgerSyncEngine {
         this.scheduleRetry(this.nextBackoff());
       } else {
         this.backoffStep = 0;
-        await this.finishLegacy(generation);
       }
     } catch (error) {
       if (generation === this.generation) this.fail(error);
@@ -637,7 +536,7 @@ export class LedgerSyncEngine {
         return { next: record, result: record };
       }
       // Another tab already recorded a newer server ledger; this answer is older. Keep theirs.
-      if (current.baseRevision !== null && current.baseRevision > answer.revision) return { result: current };
+      if (current.baseRevision > answer.revision) return { result: current };
       // Saves that landed while this pass ran are merged on top of the answer and stay pending.
       const sent = start ? start.local : current.base;
       const local = sameLedger(current.local, sent) ? answer.ledger : normalizeLedger(mergeOfflineLedger(sent, current.local, answer.ledger));
@@ -656,7 +555,7 @@ export class LedgerSyncEngine {
     this.loaded = true;
     this.emit();
     this.broadcast();
-    this.options.onServerSnapshot?.({ revision: outcome.baseRevision ?? answer.revision, ledger: outcome.base }, changed);
+    this.options.onServerSnapshot?.({ revision: outcome.baseRevision, ledger: outcome.base }, changed);
     return !sameLedger(outcome.base, outcome.local);
   }
 
@@ -747,19 +646,12 @@ export class LedgerSyncEngine {
 
   /** Unsynced changes for this account, read from storage (another tab may have saved). An unreadable copy counts as one. */
   async pendingCount(): Promise<number> {
-    let count = 0;
-    let importedFingerprint: string | undefined;
     try {
       const record = parseRecord(await (await this.db()).get(this.key), this.scope);
-      if (record) count += pendingChanges(record.base, record.local).count;
-      importedFingerprint = record?.legacy?.fingerprint;
+      return record ? pendingChanges(record.base, record.local).count : 0;
     } catch (error) {
-      if (error instanceof RecordError) count += 1;
+      return error instanceof RecordError ? 1 : 0;
     }
-    const copy = readLegacyCopy(this.options.legacyStorage, this.scope.email);
-    if (copy.kind === "unreadable") count += 1;
-    else if (copy.kind === "readable" && copy.fingerprint !== importedFingerprint) count += pendingChanges(copy.base, copy.local).count;
-    return count;
   }
 
   /** Holds saves and syncs (in this tab) and returns the pending count. Call `cancelSignOut` or `finishSignOut` next. */
@@ -782,32 +674,23 @@ export class LedgerSyncEngine {
   }
 
   /**
-   * The server session is gone: removes this account's copies from the browser (the record, records
-   * set aside, and the legacy app's `localStorage` copies), but only if nothing became pending
-   * meanwhile (another tab may have saved). Pending work is never removed here: like `pendingCount`,
-   * a legacy copy with edits the record doesn't hold, or one that can't be read, stays.
+   * The server session is gone: removes this account's copies from the browser (the record and
+   * records set aside), but only if nothing became pending meanwhile (another tab may have saved).
+   * Pending work is never removed here: like `pendingCount`, a record that can't be read stays.
    */
   async finishSignOut(): Promise<void> {
     const db = await this.db();
-    const removed = await db.update(this.key, (raw): { next?: null; result: { imported: string | undefined } | null } => {
+    const removed = await db.update(this.key, (raw): { next?: null; result: boolean } => {
       let current: LedgerRecord | null;
       try {
         current = parseRecord(raw, this.scope);
       } catch {
-        return { result: null };
+        return { result: false };
       }
-      if (current && !sameLedger(current.base, current.local)) return { result: null };
-      return { ...(current ? { next: null } : {}), result: { imported: current?.legacy?.fingerprint } };
+      if (current && !sameLedger(current.base, current.local)) return { result: false };
+      return { ...(current ? { next: null } : {}), result: true };
     });
     if (removed) {
-      const storage = this.options.legacyStorage;
-      const copy = readLegacyCopy(storage, this.scope.email);
-      // The record held this copy and was clean, so the server has its edits; or the copy (an import
-      // that storage refused) has nothing unsynced of its own.
-      if (copy.kind === "readable" && (copy.fingerprint === removed.imported || pendingChanges(copy.base, copy.local).count === 0)) {
-        removeLegacyCopy(storage, this.scope.email, copy.fingerprint);
-      }
-      removeLegacyAsideCopies(storage, this.scope.email);
       for (const key of await db.keys()) {
         if (isAsideKeyOf(this.scope, key)) await db.update(key, () => ({ next: null, result: null }));
       }

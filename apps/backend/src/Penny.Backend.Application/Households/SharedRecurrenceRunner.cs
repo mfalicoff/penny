@@ -4,7 +4,7 @@ using Penny.Backend.Domain.Households;
 
 namespace Penny.Backend.Application.Households;
 
-// Records due shared recurring occurrences (legacy `runRecurring`), safely with any
+// Records due shared recurring occurrences, safely with any
 // number of runners and restarts:
 //
 // 1. Claim: one short transaction leases up to BatchSize due rules (active, next date
@@ -176,8 +176,8 @@ public sealed class SharedRecurrenceRunner(ISharedExpenseRepository expenses, Ti
             values.Allocations,
             active
         );
-        // Ledger check 6 keeps a linked account from being deleted; an account that
-        // is gone anyway (imported data) is dropped rather than blocking the rule.
+        // Ledger check 4 keeps a linked account from being deleted; an account that
+        // that is gone anyway is dropped rather than blocking the rule.
         var accountId =
             values.AccountId is { } account
             && await store.LockLedgerAccountAsync(values.PayerId, account)
@@ -199,7 +199,7 @@ public sealed class SharedRecurrenceRunner(ISharedExpenseRepository expenses, Ti
         );
     }
 
-    // Legacy `createExpense(householdId, payerId, ...)`: the payer is the actor, so
+    // An occurrence is created as the payer: the payer is the actor, so
     // every other current member gets a push outbox row.
     private static async Task RecordAsync(
         ISharedExpenseTransaction store,

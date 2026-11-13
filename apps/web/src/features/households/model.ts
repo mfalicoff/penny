@@ -109,7 +109,7 @@ const utcDay = (instant: number) => new Date(instant).toISOString().slice(0, 10)
 
 /* ---------- members ---------- */
 
-export const isCurrent = (member: HouseholdMember) => member.leftAt === undefined || member.leftAt === null;
+export const isCurrent = (member: HouseholdMember) => member.leftAt === undefined;
 
 /** The caller's own membership: `/me` only knows the email, members carry ids. */
 export function findMe(members: readonly HouseholdMember[], email: string): HouseholdMember | undefined {

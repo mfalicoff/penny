@@ -5,21 +5,15 @@ import { z } from "zod";
  * Appearance preferences for this browser (MAZ-85). They are device settings, not account
  * data: nothing here is private or synced, and signing out keeps them.
  *
- * - `theme`: Light, Dark or System (default). Light and dark only, per MAZ-132. A saved legacy
- *   `amoled` or `catppuccin` theme migrates to dark.
+ * - `theme`: Light, Dark or System (default). Light and dark only, per MAZ-132.
  * - `reduceTransparency`: solid surfaces instead of glass. The system setting
  *   (`prefers-reduced-transparency`) applies too, in CSS, whatever this says.
  */
 export const THEMES = ["light", "dark", "system"] as const;
 export type Theme = (typeof THEMES)[number];
 
-const themeSchema = z.preprocess(
-  (value) => (value === "amoled" || value === "catppuccin" ? "dark" : value),
-  z.enum(THEMES).catch("system"),
-);
-
 const preferencesSchema = z.object({
-  theme: themeSchema,
+  theme: z.enum(THEMES).catch("system"),
   reduceTransparency: z.boolean().catch(false),
 });
 

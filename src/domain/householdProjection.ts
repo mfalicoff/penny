@@ -1,10 +1,10 @@
 import type { Category, Ledger, Receipt, Transaction } from "./ledger.ts";
 
-// The household projection the legacy server returns (GET /api/households/projection), as the
-// retired Expo client read it. Kept with the merge rule as the reference for parity tests.
+// The household projection the API returns (GET /api/households/projection), joined into a
+// read-only personal ledger view. Kept with the merge rule as the reference for the fixture tests.
 export type Household = { id: string; name: string; currency: string; creatorId: string; createdAt: number; memberCount: number; trip?: { startDate: string; endDate: string } };
 export type ProjectedExpense = {
-  id: string; householdId: string; householdName: string; householdCurrency?: string; title: string; date: string;
+  id: string; householdId: string; householdName: string; householdCurrency: string; title: string; date: string;
   totalCents: number; shareCents: number; category: { name: string; icon: string; color: string };
   note: string; receiptId?: string; receipt?: Receipt; payerUserId: string; accountId?: string;
   scheduled?: boolean; recurringId?: string;
@@ -13,12 +13,12 @@ export type ProjectedExpense = {
 export type HouseholdTransaction = Transaction & { householdId: string; householdExpenseId: string; scheduled?: boolean };
 
 // A view of the private ledger. This must never be sent to the ledger snapshot API.
-export function ledgerWithHouseholds(ledger: Ledger, projection: ProjectedExpense[], households: Household[]): Ledger {
-  const currencies = new Map(households.map((household) => [household.id, household.currency]));
+export function ledgerWithHouseholds(ledger: Ledger, projection: ProjectedExpense[]): Ledger {
   const categories: Category[] = [...ledger.categories];
   const transactions: Transaction[] = [...ledger.transactions];
   for (const item of projection) {
-    if ((item.householdCurrency ?? currencies.get(item.householdId)) !== ledger.currency) continue;
+    // A household's currency matches its members' ledgers; a row in another currency is left out.
+    if (item.householdCurrency !== ledger.currency) continue;
     const categoryId = `household-category:${item.category.name}:${item.category.icon}:${item.category.color}`;
     if (!categories.some((category) => category.id === categoryId)) {
       categories.push({ id: categoryId, kind: "expense", ...item.category });

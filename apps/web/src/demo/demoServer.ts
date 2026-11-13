@@ -23,7 +23,7 @@ interface DemoEntry {
   tripId?: string;
 }
 
-/** Sample month, like the legacy app's demo ledger: made-up names and amounts, no real data. */
+/** Sample month: made-up names and amounts, no real data. */
 export function sampleEntries(today = new Date()): DemoEntry[] {
   const day = today.getDate();
   const on = (offset: number) => dateKey(new Date(today.getFullYear(), today.getMonth(), Math.max(1, day - offset)));
@@ -85,7 +85,7 @@ export function createDemoServer(today = new Date()): Transport {
       currency: "CAD",
       accounts: [],
       trips: sampleTrips(today),
-      // The legacy defaults, so the demo's categories have names, colors and icons.
+      // The default categories, so the demo's categories have names, colors and icons.
       categories: initialCategories.map((category) => ({ ...category })),
       // Dinner out goes on the sample trip, dated before it: expenses outside the dates still count.
       transactions: sampleEntries(today).map((entry) => (entry.id === "demo-5" ? { ...entry, tripId: "demo-trip" } : entry)),

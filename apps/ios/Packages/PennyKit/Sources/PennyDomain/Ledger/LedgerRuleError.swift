@@ -1,13 +1,13 @@
-/// A rule refused a change. `message` is the legacy user-facing sentence, word for word, so
-/// the Expo app, the web client and this one explain the same failure the same way. A caller
+/// A rule refused a change. `message` is the user-facing sentence, word for word, so
+/// the server, the web client and this one explain the same failure the same way. A caller
 /// shows `message`, keeps the user's draft and offers the next step.
 ///
-/// Four cases have no legacy command check and so no legacy sentence: `invalidCategoryName`
-/// (the legacy form refused an empty name and capped input at 50), `tooManyCategories` and
-/// `categoryKindInUse` (the legacy server refused both as "Invalid ledger data." only after
+/// Four cases have no sentence of their own in src/domain: `invalidCategoryName`
+/// (an empty name, or one over 50 UTF-16 units), `tooManyCategories` and
+/// `categoryKindInUse` (which the server refuses as "Invalid ledger data." only after
 /// sync) follow the wording of their account and trip counterparts; `scheduleAfterLedgerRange`
 /// (a new schedule whose next date is after 2100, which the server also refused only after
-/// sync) follows the date message (docs/ios-ledger-domain.md, "Compatibility decisions").
+/// sync) follows the date message (docs/ios-ledger-domain.md, "Rule decisions").
 public enum LedgerRuleError: Error, Hashable, Sendable, CustomStringConvertible {
     case invalidAmount
     case invalidSplitPeople

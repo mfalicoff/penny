@@ -79,7 +79,7 @@ public enum SingleSignOnStatus: Equatable, Sendable {
 public struct ServerCheck: Equatable, Sendable {
     public let server: ServerURL
     public let version: String
-    /// Nil when the server did not say (an older server, or the check failed).
+    /// Nil when reading `GET /api/auth/oidc` failed.
     public let singleSignOn: Bool?
     public let singleSignOnLabel: String?
 

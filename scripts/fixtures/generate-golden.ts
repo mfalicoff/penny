@@ -1,4 +1,4 @@
-// Generates the language-neutral golden fixtures from the legacy TypeScript rules (the
+// Generates the language-neutral golden fixtures from the reference TypeScript rules (the
 // observable contract) and the fixture manifest (MAZ-62). Inputs are curated here;
 // expectations are computed, so the files never drift from the reference behavior.
 //
@@ -13,7 +13,7 @@ import { cents, nextOccurrence, personalShare, type Frequency, type Ledger } fro
 import { mergeLedger } from "../../src/domain/merge.ts";
 import { dateKeyIn } from "../../src/domain/calendar.ts";
 import { monthBreakdown, summarizeMonth } from "../../src/domain/summary.ts";
-import { ledgerWriteSchema } from "../../server/validation/ledger.ts";
+import { ledgerWriteSchema } from "../../src/validation/ledger.ts";
 
 const directory = new URL("../../contracts/fixtures/", import.meta.url);
 const generator = "scripts/fixtures/generate-golden.ts";
@@ -165,7 +165,7 @@ function monthTotals() {
     ["2026-11-01T05:30:00Z", "America/Toronto"], ["2026-10-31T23:59:59Z", "Europe/London"], ["2026-03-08T07:30:00Z", "America/Toronto"],
   ] as const).map(([instant, timeZone]) => ({ instant, timeZone, today: dateKeyIn(new Date(instant), timeZone) }));
   const clocks = (instant: string, timeZone: string) => ({ instant, timeZone });
-  const inputs: { name: string; ledger: keyof typeof ledgers; today: string | null; clock?: { instant: string; timeZone: string } }[] = [
+  const inputs: { name: string; ledger: keyof typeof ledgers; today: string; clock?: { instant: string; timeZone: string } }[] = [
     { name: "income dated today is recorded; income dated tomorrow is expected", ledger: "october", today: "2026-10-15" },
     { name: "the day before, income dated today is still expected", ledger: "october", today: "2026-10-14" },
     { name: "on the last day of the month every dated entry is recorded", ledger: "october", today: "2026-10-31" },
@@ -174,11 +174,10 @@ function monthTotals() {
     { name: "time zone: 02:30 UTC on Oct 16 is still Oct 15 in Toronto, so Oct 16 income is expected", ledger: "october", today: dateKeyIn(new Date("2026-10-16T02:30:00Z"), "America/Toronto"), clock: clocks("2026-10-16T02:30:00Z", "America/Toronto") },
     { name: "time zone: the same instant in UTC is Oct 16, so Oct 16 income is recorded", ledger: "october", today: dateKeyIn(new Date("2026-10-16T02:30:00Z"), "UTC"), clock: clocks("2026-10-16T02:30:00Z", "UTC") },
     { name: "an occurrence recorded ahead of its date replaces its preview and stays expected", ledger: "pay-recorded-early", today: "2026-10-15" },
-    { name: "without today (legacy Overview) every dated entry is recorded", ledger: "october", today: null },
   ];
   const cases = inputs.map((input) => {
-    const breakdown = monthBreakdown(ledgers[input.ledger], "2026-10", input.today === null ? {} : { today: input.today });
-    const summary = summarizeMonth(ledgers[input.ledger], "2026-10", input.today === null ? {} : { today: input.today });
+    const breakdown = monthBreakdown(ledgers[input.ledger], "2026-10", { today: input.today });
+    const summary = summarizeMonth(ledgers[input.ledger], "2026-10", { today: input.today });
     return {
       ...input, month: "2026-10",
       expected: {
@@ -192,7 +191,7 @@ function monthTotals() {
   });
   return {
     generator,
-    description: "Left to spend (recorded) versus Projected around today (MAZ-136). Income dated after the person's local date is expected: it counts toward Projected, not recorded totals or Left to spend, until its date; the entry itself never changes. Projected also adds every scheduled occurrence not yet recorded. Scope: income only; future-dated expenses and investment contributions stay recorded (MAZ-139). `todayCases` turn an instant and an IANA time zone into the local date; `today: null` is the legacy Overview, which does not split.",
+    description: "Left to spend (recorded) versus Projected around today (MAZ-136). Income dated after the person's local date is expected: it counts toward Projected, not recorded totals or Left to spend, until its date; the entry itself never changes. Projected also adds every scheduled occurrence not yet recorded. Scope: income only; future-dated expenses and investment contributions stay recorded (MAZ-139). `todayCases` turn an instant and an IANA time zone into the local date.",
     todayCases, ledgers, cases,
   };
 }
@@ -207,11 +206,9 @@ const consumers: Record<string, Record<string, string[] | string>> = {
   "parity-cases.json": { typescript: ["tests/core/contracts.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Households/HouseholdSplitsTests.cs"], swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"] },
   "shared-splits.json": { typescript: ["tests/core/households-domain.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Households/HouseholdSplitsTests.cs"], swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"] },
   "settlement.json": { typescript: ["tests/core/households-domain.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Households/MonthlySettlementTests.cs"], swift: "MAZ-75 (shared settlement in Swift)" },
-  "ledger-upgrades.json": { typescript: ["tests/core/contracts.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Ledgers/LedgerReaderTests.cs", "apps/backend/tests/Penny.Backend.IntegrationTests/Contracts/LedgerUpgradeFixtureTests.cs"], swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"] },
   "search-cases.json": { typescript: ["tests/core/contracts.test.ts", "tests/core/transactions.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Search/SearchTextTests.cs", "apps/backend/tests/Penny.Backend.IntegrationTests/Controllers/SearchFixtureTests.cs"], swift: "MAZ-73 (search screens and offline normalization in Swift)" },
   "http-journey.json": { typescript: ["tests/core/contracts.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.IntegrationTests/Controllers/LedgerTests.cs"], swift: "MAZ-71 (Swift API client)" },
-  "storage-mapping.json": { typescript: ["tests/core/contracts.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.IntegrationTests/Migrations/SqliteImportTests.cs"], swift: "not applicable: server storage" },
-  "full-stack-seeds.json": { typescript: ["tests/core/golden-fixtures.test.ts", "tests/core/parity-coverage.test.ts", "tests/fullstack/environment.test.mjs"], csharp: ["apps/backend/tests/Penny.Backend.IntegrationTests/Contracts/FullStackSeedTests.cs"], swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"] },
+  "full-stack-seeds.json": { typescript: ["tests/core/golden-fixtures.test.ts", "tests/fullstack/environment.test.mjs"], csharp: ["apps/backend/tests/Penny.Backend.IntegrationTests/Contracts/FullStackSeedTests.cs"], swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"] },
   "redesign-states.json": { typescript: ["tests/core/golden-fixtures.test.ts"], csharp: "not applicable: client presentation states", swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"] },
 };
 

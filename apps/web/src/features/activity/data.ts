@@ -5,7 +5,6 @@ import { searchLookups, searchMatcher } from "@domain/search.ts";
 import { isExpectedIncome, isRecorded, net } from "@domain/summary.ts";
 import { ApiError } from "../../api/client";
 import { ledgerQuery } from "../../api/ledger";
-import { householdsQuery } from "../../api/households";
 import { sharedProjectionQuery, type SharedRow } from "../../api/projection";
 import { useAccountEmail } from "../../auth/account";
 import { useLedgerSync } from "../../offline/OfflineLedgerProvider";
@@ -40,16 +39,12 @@ export type SharedState =
   | { status: "loading" }
   /** Offline or unreachable with nothing cached; or another failure. */
   | { status: "unavailable"; message: string }
-  /** The server doesn't offer households (the demo, an older server). */
+  /** No households to show: the projection answered 404 (the demo has none). */
   | { status: "none" };
 
 export function useSharedRows(period: Period, online: boolean): SharedState & { retry: () => void } {
   const email = useAccountEmail();
   const query = useQuery(sharedProjectionQuery(email, projectionPeriod(period)));
-  // A server that leaves out `householdCurrency` gets it from the household list, as the legacy
-  // `ledgerWithHouseholds` does. Asked for only then; the list is usually cached already.
-  const needsCurrency = query.data ? [...query.data.transactions, ...query.data.scheduled].some((row) => !row.householdCurrency) : false;
-  const households = useQuery({ ...householdsQuery(email), enabled: needsCurrency });
   const retry = () => {
     void query.refetch();
   };
@@ -57,19 +52,13 @@ export function useSharedRows(period: Period, online: boolean): SharedState & { 
   // reports built from them aren't recomputed.
   const periodKey = JSON.stringify(period);
   const data = query.data;
-  const householdList = households.data;
   const lists = useMemo(() => {
     if (!data) return null;
     const range = JSON.parse(periodKey) as Period;
-    const currencies = new Map((householdList ?? []).map((household) => [household.id, household.currency]));
-    const withCurrency = (row: SharedRow) => {
-      const currency = row.householdCurrency ?? currencies.get(row.householdId);
-      return currency && !row.householdCurrency ? { ...row, householdCurrency: currency } : row;
-    };
-    const rows = data.transactions.filter((row) => !row.scheduled && inPeriod(row.date, range)).map(withCurrency);
-    const scheduled = [...data.transactions.filter((row) => row.scheduled), ...data.scheduled].filter((row) => inPeriod(row.date, range)).map(withCurrency);
+    const rows = data.transactions.filter((row) => !row.scheduled && inPeriod(row.date, range));
+    const scheduled = [...data.transactions.filter((row) => row.scheduled), ...data.scheduled].filter((row) => inPeriod(row.date, range));
     return { rows, scheduled };
-  }, [data, householdList, periodKey]);
+  }, [data, periodKey]);
   if (lists) {
     const cached = !online || (query.isError && query.error instanceof ApiError && query.error.status === 0);
     return { status: "ready", ...lists, cached, retry };
@@ -106,7 +95,7 @@ export function periodTotals(ledger: Ledger, period: Period, shared: SharedRow[]
   const personal = totals(inRange.filter((entry) => !isExpectedIncome(entry, today)));
   const expectedIncome = inRange.filter((entry) => isExpectedIncome(entry, today)).reduce((sum, entry) => sum + entry.share, 0);
   // A household's currency matches its members' ledgers; a row in another currency, or one whose
-  // currency isn't known yet, is never added in (as the legacy `ledgerWithHouseholds`).
+  // is never added in (as the domain's `ledgerWithHouseholds`).
   const counted = shared.filter((row) => row.householdCurrency === ledger.currency);
   const sharedTotal = counted.reduce((sum, row) => sum + row.shareCents, 0);
   const result = { ...personal, expense: personal.expense + sharedTotal };
@@ -165,7 +154,7 @@ export function localRows(ledger: Ledger, shared: SharedRow[], filters: RowFilte
             (row) =>
               (!filters.day || row.date === filters.day) &&
               (!filters.category || row.category.name === sharedCategory) &&
-              `${row.title} ${row.note} ${row.category.name} ${row.householdName ?? ""}`.toLowerCase().includes(needle),
+              `${row.title} ${row.note} ${row.category.name} ${row.householdName}`.toLowerCase().includes(needle),
           )
           .map((row) => ({ key: `shared:${row.id}`, source: "shared", date: row.date, entry: row }));
   return [...personal, ...sharedRows].sort(byDateThenKey);

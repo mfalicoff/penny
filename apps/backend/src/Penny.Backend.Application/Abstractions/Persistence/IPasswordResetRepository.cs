@@ -16,7 +16,7 @@ public interface IPasswordResetRepository
     );
 
     // Atomically consumes the code. If it was unexpired (expires_at > now), the same
-    // transaction stores `passwordHash` (clearing the legacy salt) and deletes every
+    // transaction stores `passwordHash` and deletes every
     // session of the user, so their push devices cascade. False for unknown, used,
     // superseded and expired codes; an expired code is deleted. Concurrent callers for
     // the same hash get true at most once.

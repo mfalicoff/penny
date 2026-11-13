@@ -1,7 +1,7 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 
 // The MAZ-93 two-person trip journey against the real .NET API and PostgreSQL from the
-// full-stack test environment (docs/migration/test-environment.md). Skipped unless
+// full-stack test environment (docs/reference/test-environment.md). Skipped unless
 // PENNY_REAL_STACK=1. It pins the server clock through the environment's test controls, so it
 // never runs against a real server. In apps/web:
 //

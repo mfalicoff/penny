@@ -44,8 +44,6 @@ public sealed class OperationsController(IEnumerable<IStorageReadiness> probes) 
                     "postgres-version" => "The backend requires PostgreSQL 18.",
                     "schema" =>
                         "Database schema is missing or incompatible. Run the explicit migration command.",
-                    "import" =>
-                        "SQLite import is incomplete. Resume and verify the sealed snapshot before serving traffic.",
                     "runtime-role" =>
                         "Use a restricted runtime database role without schema creation privileges.",
                     "permissions" =>

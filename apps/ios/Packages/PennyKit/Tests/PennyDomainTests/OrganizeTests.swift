@@ -128,7 +128,7 @@ struct OrganizeTests {
         #expect(moved.date == original.date, "the first date never changes")
     }
 
-    @Test("whenAScheduleDraftIsInvalid_BuildSchedule_ShouldThrowTheLegacyMessage")
+    @Test("whenAScheduleDraftIsInvalid_BuildSchedule_ShouldThrowTheSharedMessage")
     func invalidDraft() {
         let original = Self.rule()
         var draft = EntryDraft(schedule: original)

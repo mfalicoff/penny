@@ -154,11 +154,6 @@ describe("Activity rows and totals", () => {
     expect(totals).toEqual({ expense: 151000, income: 480000, investment: 20000, net: 309000, shared: 6000, sharedCount: 2, expectedIncome: 0 });
   });
 
-  it("never counts a shared row whose currency is not known", () => {
-    const noCurrency = { ...shared("Hydro"), householdCurrency: undefined };
-    expect(periodTotals(data, { type: "month", month: "2026-11" }, [noCurrency], "2026-11-30").sharedCount).toBe(0);
-  });
-
   it("lists personal and shared rows newest first and applies type, day, category and text locally", () => {
     const all = localRows(data, rows, rowFilters({ month: "2026-11" }), new Set(["pay"]));
     expect(all.map((row) => row.key)).toEqual(["personal:fund", "personal:pay", "shared:Market", "shared:Euro dinner", "shared:Hydro", "personal:rent"]);

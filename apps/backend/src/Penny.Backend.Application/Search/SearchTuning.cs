@@ -1,6 +1,6 @@
 namespace Penny.Backend.Application.Search;
 
-// Fixed matching parameters (docs/migration/search.md, "Matching"), tuned with the
+// Fixed matching parameters (docs/reference/search.md, "Matching"), tuned with the
 // shared fixtures. Changing the meaning rule or limit changes results, not stored
 // data; changing the model requires `search-rebuild`.
 public static class SearchTuning

@@ -24,7 +24,7 @@ public sealed class PasswordResetService(
         "No account uses this email. Emails match exactly after trimming and lowercasing.";
 
     // Operator use only: these failures say whether an account exists, so they must
-    // never reach HTTP. Works for password accounts (current or legacy hash) and for
+    // never reach HTTP. Works for password accounts and for
     // OIDC-only accounts, where the reset adds a password.
     public async Task<IssuedPasswordReset> IssueAsync(
         string? email,

@@ -1,12 +1,12 @@
 node_modules
 .git
 dist
-data
 .env
 .env.*
 *.log
 tests
-# Not part of the legacy or web images (the API image builds from apps/backend).
+# Not part of the web image (deploy/web/Dockerfile, built from the repository root); the API
+# image builds from apps/backend.
 .cache
 .claude
 .direnv

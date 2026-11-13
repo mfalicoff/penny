@@ -268,26 +268,6 @@ struct NotificationTests {
         #expect(next.clears == 1)
     }
 
-    @Test("whenADevelopmentBuildStoredAnUnkeyedOwner_PushNotifications_ShouldStillOpenThatAccountsTap")
-    func legacyOwner() async throws {
-        let suite = "penny.tests.notifications.\(UUID().uuidString)"
-        let legacy = PushOwner.legacy(AccountScope(server: Self.server, email: "alex@example.test"))
-        let token = try #require(PushDeviceToken(Self.token))
-        // As a development build stored it: the registration only, with the unkeyed digest.
-        let data = try JSONEncoder().encode(StoredPushRegistration(token: token, environment: .sandbox, owner: legacy))
-        UserDefaults(suiteName: suite)?.set(data, forKey: "penny.push.registration")
-
-        let system = FakeNotificationSystem()
-        let push = notifications(system, suite: suite)
-        var opened: [DeepLink] = []
-        push.deliver = { opened.append($0) }
-        push.didOpen(HouseholdNotification(userInfo: Self.expense))
-        let alex = try account("alex@example.test")
-        await push.accountChanged(alex)
-        #expect(opened.count == 1 && system.clears == 0)
-        #expect(push.registrar.owner == alex.owner)
-    }
-
     @Test("whenThePersonTurnsNotificationsOn_PushNotifications_ShouldAskOnceAndRegister")
     func contextualPermission() async throws {
         let system = FakeNotificationSystem()

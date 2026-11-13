@@ -56,7 +56,6 @@
         default = pkgs.mkShell ({
           packages = with pkgs; [
             nodejs_24
-            sqlite
             # Receipt OCR (MAZ-125): the API's text extraction and its tests need
             # Tesseract with English and French data, poppler's pdftotext/pdfinfo/pdftoppm
             # and libvips' command-line tools (bounded image decoding).
