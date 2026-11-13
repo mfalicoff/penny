@@ -16,7 +16,7 @@ The iOS-native redesign in [`docs/design/penny-ios/`](../design/penny-ios/README
 
 | Topic | Decision |
 | --- | --- |
-| Baseline | `docs/design/penny-ios` and `design-kit` replace Penpot. MAZ-122 is rewritten around the new cards and owns the visual comparison of implementations. |
+| Baseline | `docs/design/penny-ios` and `design-kit` replace Penpot. MAZ-122 renders the cards as light and dark baselines and records each card's comparison with both apps ([visual acceptance](../design/visual-acceptance.md)). |
 | Appearances | Light and dark only, following the system setting. Dark is true black, so AMOLED is dropped. Catppuccin is dropped, not kept as an accent. A saved legacy `amoled` or `catppuccin` preference migrates to dark (MAZ-72/87). |
 | Navigation | iPhone: a floating glass tab bar with Home, Activity, Shared and Trips, plus a separate tinted **+** button. More goes away: Recurring, Accounts, Categories and Settings open from the settings button on Home, as a sheet. iPad: `NavigationSplitView` with a glass sidebar listing households and trips. Web: a persistent sidebar and a top bar with ⌘K search and Add entry. |
 | Fonts and icons | iOS: SF Pro with Dynamic Type styles, and SF Symbols. Web: Inter, bundled with its OFL license (`design-kit/fonts/`), and Ionicons v7 outline (MIT, `design-kit/src/icons.ts`). |
@@ -66,7 +66,7 @@ Every card has its feature owners and a planned MAZ-82/96 acceptance scenario. W
 
 Adapt the fixed card viewports to safe areas, iPhone landscape, iPad split and multicolumn, and resizable browser windows; validate 320px through desktop rather than copying fixed geometry. Test Dynamic Type and VoiceOver, keyboard and focus, scrolling above Save, contrast on the hero glow, reduced motion and transparency, and native pickers. These are acceptance requirements, not evidence of device execution.
 
-The cards are static HTML rendered with Inter and Ionicons as stand-ins for SF Pro and SF Symbols. No implementation has been visually compared with them yet; MAZ-122 owns that comparison. Larger text, a real keyboard and focus, native pickers, app lock and server-search loading states still need implementation validation, and MAZ-82/96 can't substitute card checks for those gates.
+The cards are static HTML rendered with Inter and Ionicons as stand-ins for SF Pro and SF Symbols. MAZ-122 compared both apps with every card: the light and dark baselines, captures and verdicts are described in [visual acceptance](../design/visual-acceptance.md), and the verdicts are in [visual-comparisons.json](../../contracts/visual-comparisons.json). The approved deviations are [below](#approved-deviations-maz-122). Larger text, a real keyboard and focus, native pickers, app lock and server-search loading states still need implementation validation, and MAZ-82/96 can't substitute card checks for those gates.
 
 ## Native implementation notes (MAZ-69)
 
@@ -106,3 +106,26 @@ The web builds the Shared cards (`iphone-shared-list`, `iphone-shared`, `iphone-
 - **Payment changed** keeps the card's content (old and new total and share, who edited and when, Review expense, "Nothing was recorded") inside the expense dialog. A stale monthly payment shows the same comparison for the suggestion.
 - **Invite** shows the 10-character code in two groups of five with a live countdown and Copy; the native share sheet is omitted on the web.
 - The household list's per-row balance reads each household's current month (one detail and one month request per household); the page header and Balances use the same cache.
+
+## Approved deviations (MAZ-122)
+
+MAZ-122 compared the iOS and web apps with every card ([visual acceptance](../design/visual-acceptance.md), [verdicts](../../contracts/visual-comparisons.json)). A deviation is approved when it follows the platform or a decision recorded here. Each card's verdict links the section that approves it: [Interaction baseline](#interaction-baseline), the MAZ-69, MAZ-77, MAZ-90 and MAZ-91 notes above, or the two lists below. Every other difference is a follow-up, filed against its feature area and linked from the verdict.
+
+Expected differences that need no entry: SF Pro and SF Symbols on iOS, Inter and Ionicons on the web; real Liquid Glass on iOS and a CSS blur on the web; seeded names, amounts and dates instead of the cards' sample data; and platform chrome (status bar, keyboard, system sheets and pickers, the browser window).
+
+### Native adaptations (MAZ-122)
+
+- **System sheets and controls.** Forms open as system sheets with Save in the toolbar, as on the cards. Split is a full sheet with the keypad over the form, not a stacked half sheet. The date, split mode and repeat rows open the system `DatePicker` and `Picker`.
+- **Confirmations are popovers.** On iOS 27, a confirmation dialog (delete, sign out) is a popover anchored to its button, not a bottom action sheet.
+- **Search in the navigation bar.** Activity uses the system `searchable` field, and the month is a toolbar menu.
+- **Local-first saving.** A save is kept on the device first. A failed upload shows **Couldn't sync** with Retry, not **Couldn't save** in the form (`iphone-save-error`). The saved toast appears on the local save, before the upload (`iphone-saved-toast`). Offline adds a **Shared expenses may be missing** banner when shared data couldn't load.
+- **Names are emails.** Members carry only an email, so households show emails and initials from the email, as on the web.
+- **Settings** has no Notifications row: notifications follow the system permission, and the shared list asks for it once (**Hear about household changes**).
+
+### Web adaptations (MAZ-122)
+
+- **Money flow on phones.** Below the Sankey's width, Follow your money is two stacked bars with a value list. It is a section of Insights, not a separate page.
+- **Calendar.** The calendar is a section of Home, not a sheet.
+- **Local-first saving.** As on iOS, the entry is saved in the browser first, so the `iphone-save-error` state is a failed sync: Home shows the not-synced banner with Retry.
+- **Appearance.** Appearance is a Settings pane that adds Reduce transparency. Text size follows the browser, so there is no Text size row.
+- **Trips.** The next trip is a feature card without its expense list, and the other trips are a grid with a New trip card.
