@@ -47,7 +47,7 @@
           {
             "summary": "No tinted hero glow behind the header (Home, empty Home, offline, create account), and Home has no calendar button in the toolbar",
             "kind": "follow-up",
-            "ref": "FU-IOS-HOME"
+            "ref": "MAZ-180"
           },
           {
             "summary": "Add entry is a tab with the search role inside the system tab bar, not a separate copper button",
@@ -73,12 +73,12 @@
           {
             "summary": "Home leads with the hero plus Came in, Spent and Invested tiles, Coming up comes before Follow your money, and the month switcher sits under the title",
             "kind": "follow-up",
-            "ref": "FU-WEB-HOME"
+            "ref": "MAZ-174"
           },
           {
             "summary": "At phone width the tab bar adds More (Settings, Recurring, Accounts, Categories) instead of the Settings sheet from Home",
             "kind": "follow-up",
-            "ref": "FU-WEB-SHELL"
+            "ref": "MAZ-173"
           }
         ]
       }
@@ -97,7 +97,7 @@
           {
             "summary": "No tinted hero glow behind the header (Home, empty Home, offline, create account), and Home has no calendar button in the toolbar",
             "kind": "follow-up",
-            "ref": "FU-IOS-HOME"
+            "ref": "MAZ-180"
           },
           {
             "summary": "Add entry is a tab with the search role inside the system tab bar, not a separate copper button",
@@ -122,12 +122,12 @@
           {
             "summary": "Home leads with the hero plus Came in, Spent and Invested tiles, Coming up comes before Follow your money, and the month switcher sits under the title",
             "kind": "follow-up",
-            "ref": "FU-WEB-HOME"
+            "ref": "MAZ-174"
           },
           {
             "summary": "At phone width the tab bar adds More (Settings, Recurring, Accounts, Categories) instead of the Settings sheet from Home",
             "kind": "follow-up",
-            "ref": "FU-WEB-SHELL"
+            "ref": "MAZ-173"
           }
         ]
       }
@@ -199,7 +199,7 @@
           {
             "summary": "No category donut or month-over-month sentence; Insights opens with four totals",
             "kind": "follow-up",
-            "ref": "FU-WEB-HOME"
+            "ref": "MAZ-174"
           }
         ]
       }
@@ -271,7 +271,7 @@
           {
             "summary": "Search, period and totals come before the day-grouped list, and search is at the top, not the bottom",
             "kind": "follow-up",
-            "ref": "FU-WEB-ACTIVITY"
+            "ref": "MAZ-175"
           },
           {
             "summary": "Row actions open the entry dialog instead of swipe actions",
@@ -296,7 +296,7 @@
           {
             "summary": "With the keyboard up, the centered No results view overlaps the totals line and the server-results row",
             "kind": "follow-up",
-            "ref": "FU-IOS-LAYOUT"
+            "ref": "MAZ-179"
           }
         ]
       },
@@ -312,7 +312,7 @@
           {
             "summary": "The empty state sits below the filters instead of centered",
             "kind": "follow-up",
-            "ref": "FU-WEB-ACTIVITY"
+            "ref": "MAZ-175"
           }
         ]
       }
@@ -362,7 +362,7 @@
           {
             "summary": "The draft amount has no thousands separator (+$3200.00)",
             "kind": "follow-up",
-            "ref": "FU-IOS-HOME"
+            "ref": "MAZ-180"
           }
         ]
       },
@@ -383,7 +383,7 @@
           {
             "summary": "The Income form doesn't explain that income dated after today counts toward Projected",
             "kind": "follow-up",
-            "ref": "FU-WEB-ACTIVITY"
+            "ref": "MAZ-175"
           }
         ]
       }
@@ -403,7 +403,7 @@
           {
             "summary": "The trip picker lists only personal trips; shared trips are missing",
             "kind": "follow-up",
-            "ref": "FU-IOS-HOME"
+            "ref": "MAZ-180"
           }
         ]
       },
@@ -475,7 +475,7 @@
           {
             "summary": "A medium-detent list with search at the bottom and no Most used section, instead of the icon grid",
             "kind": "follow-up",
-            "ref": "FU-IOS-HOME"
+            "ref": "MAZ-180"
           }
         ]
       },
@@ -491,7 +491,7 @@
           {
             "summary": "A searchable list with New category, not the icon grid with Most used",
             "kind": "follow-up",
-            "ref": "FU-WEB-ACTIVITY"
+            "ref": "MAZ-175"
           }
         ]
       }
@@ -607,7 +607,7 @@
           {
             "summary": "At phone width the tab bar adds More (Settings, Recurring, Accounts, Categories) instead of the Settings sheet from Home",
             "kind": "follow-up",
-            "ref": "FU-WEB-SHELL"
+            "ref": "MAZ-173"
           }
         ]
       }
@@ -627,7 +627,7 @@
           {
             "summary": "The household hero shows \"You owe\" in the label color with a month navigator above the actions; the card leads with members and a meaning-colored balance",
             "kind": "follow-up",
-            "ref": "FU-IOS-SHARED"
+            "ref": "MAZ-181"
           },
           {
             "summary": "Members are shown by email and initials from the email",
@@ -648,7 +648,7 @@
           {
             "summary": "The household header has no Record payment action, and a balance you owe is drawn in the label color",
             "kind": "follow-up",
-            "ref": "FU-WEB-SHARED"
+            "ref": "MAZ-176"
           },
           {
             "summary": "Members are shown by email and initials from the email",
@@ -694,7 +694,7 @@
           {
             "summary": "The household header has no Record payment action, and a balance you owe is drawn in the label color",
             "kind": "follow-up",
-            "ref": "FU-WEB-SHARED"
+            "ref": "MAZ-176"
           },
           {
             "summary": "Members are shown by email and initials from the email",
@@ -729,7 +729,7 @@
           {
             "summary": "No inline invite card under People; inviting is in the menu",
             "kind": "follow-up",
-            "ref": "FU-IOS-SHARED"
+            "ref": "MAZ-181"
           }
         ]
       },
@@ -770,7 +770,7 @@
           {
             "summary": "The total is a text field with the system number pad instead of the in-sheet amount and keypad, and the split section isn't visible without scrolling",
             "kind": "follow-up",
-            "ref": "FU-IOS-SHARED"
+            "ref": "MAZ-181"
           }
         ]
       },
@@ -852,7 +852,7 @@
           {
             "summary": "The old total and share are struck through even when they didn't change",
             "kind": "follow-up",
-            "ref": "FU-IOS-SHARED"
+            "ref": "MAZ-181"
           }
         ]
       },
@@ -868,7 +868,7 @@
           {
             "summary": "When another device recorded the payment, the dialog says \"You edited this expense\" and shows identical Before and Now values",
             "kind": "follow-up",
-            "ref": "FU-WEB-SHARED"
+            "ref": "MAZ-176"
           }
         ]
       }
@@ -888,7 +888,7 @@
           {
             "summary": "No icon and explanation header, and Create household is inline instead of pinned to the bottom",
             "kind": "follow-up",
-            "ref": "FU-IOS-SHARED"
+            "ref": "MAZ-181"
           }
         ]
       },
@@ -960,7 +960,7 @@
           {
             "summary": "The featured trip has no Your share so far amount",
             "kind": "follow-up",
-            "ref": "FU-IOS-SHARED"
+            "ref": "MAZ-181"
           }
         ]
       },
@@ -976,7 +976,7 @@
           {
             "summary": "At phone width the tab bar adds More (Settings, Recurring, Accounts, Categories) instead of the Settings sheet from Home",
             "kind": "follow-up",
-            "ref": "FU-WEB-SHELL"
+            "ref": "MAZ-173"
           }
         ]
       }
@@ -996,7 +996,7 @@
           {
             "summary": "A shared trip uses the household month layout (October hero, Record payment) instead of the trip total and your share",
             "kind": "follow-up",
-            "ref": "FU-IOS-SHARED"
+            "ref": "MAZ-181"
           }
         ]
       },
@@ -1078,7 +1078,7 @@
           {
             "summary": "Settings at phone width lists only Account, Appearance, Currency and Server; Recurring, Accounts, Categories, Face ID and Notifications aren't in it",
             "kind": "follow-up",
-            "ref": "FU-WEB-SHELL"
+            "ref": "MAZ-173"
           }
         ]
       }
@@ -1098,7 +1098,7 @@
           {
             "summary": "Shared schedules aren't listed, and a paused expense shows no minus sign",
             "kind": "follow-up",
-            "ref": "FU-IOS-SHARED"
+            "ref": "MAZ-181"
           }
         ]
       },
@@ -1114,7 +1114,7 @@
           {
             "summary": "At 402px recurring rows break (the title right-aligned, the amount on its own line), and shared schedules aren't listed",
             "kind": "follow-up",
-            "ref": "FU-WEB-ORGANIZE"
+            "ref": "MAZ-177"
           },
           {
             "summary": "No swipe actions: a row opens the schedule detail",
@@ -1289,7 +1289,7 @@
           {
             "summary": "Theme is a plain list (System, Light, Dark) instead of the three previews",
             "kind": "follow-up",
-            "ref": "FU-IOS-HOME"
+            "ref": "MAZ-180"
           }
         ]
       },
@@ -1350,7 +1350,7 @@
           {
             "summary": "With the keyboard up, \"Take a look around with sample data\" overlaps the Sign in button",
             "kind": "follow-up",
-            "ref": "FU-IOS-LAYOUT"
+            "ref": "MAZ-179"
           }
         ]
       },
@@ -1366,7 +1366,7 @@
           {
             "summary": "A brand block sits above the form, \"Explore a demo\" is added, and SSO reads \"Single sign-on\"",
             "kind": "follow-up",
-            "ref": "FU-WEB-ACCESS"
+            "ref": "MAZ-178"
           }
         ]
       }
@@ -1386,7 +1386,7 @@
           {
             "summary": "No tinted hero glow behind the header (Home, empty Home, offline, create account), and Home has no calendar button in the toolbar",
             "kind": "follow-up",
-            "ref": "FU-IOS-HOME"
+            "ref": "MAZ-180"
           }
         ]
       },
@@ -1402,7 +1402,7 @@
           {
             "summary": "A brand block sits above the form, and SSO reads \"Single sign-on\"",
             "kind": "follow-up",
-            "ref": "FU-WEB-ACCESS"
+            "ref": "MAZ-178"
           }
         ]
       }
@@ -1422,7 +1422,7 @@
           {
             "summary": "Captured while the address is typed, before verification; the Cards plan should capture the Server verified state the card shows",
             "kind": "follow-up",
-            "ref": "FU-IOS-LAYOUT"
+            "ref": "MAZ-179"
           }
         ]
       },
@@ -1461,7 +1461,7 @@
           {
             "summary": "No tinted hero glow behind the header (Home, empty Home, offline, create account), and Home has no calendar button in the toolbar",
             "kind": "follow-up",
-            "ref": "FU-IOS-HOME"
+            "ref": "MAZ-180"
           },
           {
             "summary": "Add entry is a tab with the search role inside the system tab bar, not a separate copper button",
@@ -1482,7 +1482,7 @@
           {
             "summary": "The empty month shows one Add your first entry action instead of Income, Expense and Invest shortcuts and sample data",
             "kind": "follow-up",
-            "ref": "FU-WEB-HOME"
+            "ref": "MAZ-174"
           }
         ]
       }
@@ -1507,7 +1507,7 @@
           {
             "summary": "No tinted hero glow behind the header (Home, empty Home, offline, create account), and Home has no calendar button in the toolbar",
             "kind": "follow-up",
-            "ref": "FU-IOS-HOME"
+            "ref": "MAZ-180"
           }
         ]
       },
@@ -1523,12 +1523,12 @@
           {
             "summary": "The banner reads \"Not synced · The server is busy or restarting\" instead of Offline when requests fail while the browser is online",
             "kind": "follow-up",
-            "ref": "FU-WEB-ACCESS"
+            "ref": "MAZ-178"
           },
           {
             "summary": "Home leads with the hero plus Came in, Spent and Invested tiles, Coming up comes before Follow your money, and the month switcher sits under the title",
             "kind": "follow-up",
-            "ref": "FU-WEB-HOME"
+            "ref": "MAZ-174"
           }
         ]
       }
@@ -1600,7 +1600,7 @@
           {
             "summary": "The toast says \"Changes saved\" with no Undo",
             "kind": "follow-up",
-            "ref": "FU-WEB-ACCESS"
+            "ref": "MAZ-178"
           }
         ]
       }
@@ -1636,7 +1636,7 @@
           {
             "summary": "Sign out shows a generic confirmation, with no warning about unsynced changes and no Sync, then sign out",
             "kind": "follow-up",
-            "ref": "FU-WEB-ACCESS"
+            "ref": "MAZ-178"
           }
         ]
       }
@@ -1656,7 +1656,7 @@
           {
             "summary": "The iPad sidebar has generic Shared and Trips rows instead of each household and trip, and no Insights row",
             "kind": "follow-up",
-            "ref": "FU-IOS-IPAD"
+            "ref": "MAZ-182"
           },
           {
             "summary": "Insights and the calendar are reached from Explore your month; the calendar is a page, not a sheet",
@@ -1677,12 +1677,12 @@
           {
             "summary": "Home leads with the hero plus Came in, Spent and Invested tiles, Coming up comes before Follow your money, and the month switcher sits under the title",
             "kind": "follow-up",
-            "ref": "FU-WEB-HOME"
+            "ref": "MAZ-174"
           },
           {
             "summary": "The sidebar doesn't list households and trips",
             "kind": "follow-up",
-            "ref": "FU-WEB-SHELL"
+            "ref": "MAZ-173"
           }
         ]
       }
@@ -1702,12 +1702,12 @@
           {
             "summary": "The iPad sidebar has generic Shared and Trips rows instead of each household and trip, and no Insights row",
             "kind": "follow-up",
-            "ref": "FU-IOS-IPAD"
+            "ref": "MAZ-182"
           },
           {
             "summary": "In portrait the detail pane collapses to a few points and wraps the title letter by letter",
             "kind": "follow-up",
-            "ref": "FU-IOS-IPAD"
+            "ref": "MAZ-182"
           }
         ]
       },
@@ -1743,7 +1743,7 @@
           {
             "summary": "Add entry is the compact one-column sheet with the keypad, not the two-column form sheet with the keyboard",
             "kind": "follow-up",
-            "ref": "FU-IOS-IPAD"
+            "ref": "MAZ-182"
           }
         ]
       },
@@ -1779,17 +1779,17 @@
           {
             "summary": "The iPad sidebar has generic Shared and Trips rows instead of each household and trip, and no Insights row",
             "kind": "follow-up",
-            "ref": "FU-IOS-IPAD"
+            "ref": "MAZ-182"
           },
           {
             "summary": "The household hero shows \"You owe\" in the label color with a month navigator above the actions; the card leads with members and a meaning-colored balance",
             "kind": "follow-up",
-            "ref": "FU-IOS-SHARED"
+            "ref": "MAZ-181"
           },
           {
             "summary": "Single column, with no balances panel beside the expenses",
             "kind": "follow-up",
-            "ref": "FU-IOS-IPAD"
+            "ref": "MAZ-182"
           }
         ]
       },
@@ -1805,7 +1805,7 @@
           {
             "summary": "The household header has no Record payment action, and a balance you owe is drawn in the label color",
             "kind": "follow-up",
-            "ref": "FU-WEB-SHARED"
+            "ref": "MAZ-176"
           },
           {
             "summary": "Members are shown by email and initials from the email",
@@ -1835,12 +1835,12 @@
           {
             "summary": "The iPad sidebar has generic Shared and Trips rows instead of each household and trip, and no Insights row",
             "kind": "follow-up",
-            "ref": "FU-IOS-IPAD"
+            "ref": "MAZ-182"
           },
           {
             "summary": "A shared trip uses the household month layout instead of the trip total, People and share-by-category panels",
             "kind": "follow-up",
-            "ref": "FU-IOS-SHARED"
+            "ref": "MAZ-181"
           }
         ]
       },
@@ -1876,7 +1876,7 @@
           {
             "summary": "The iPad sidebar has generic Shared and Trips rows instead of each household and trip, and no Insights row",
             "kind": "follow-up",
-            "ref": "FU-IOS-IPAD"
+            "ref": "MAZ-182"
           },
           {
             "summary": "Settings and the Manage pages open in the detail column instead of a sheet",
@@ -1886,7 +1886,7 @@
           {
             "summary": "Settings is a single column; the selected page doesn't open beside the list",
             "kind": "follow-up",
-            "ref": "FU-IOS-IPAD"
+            "ref": "MAZ-182"
           }
         ]
       },
@@ -1902,7 +1902,7 @@
           {
             "summary": "Settings lists only Account, Appearance, Currency and Server",
             "kind": "follow-up",
-            "ref": "FU-WEB-SHELL"
+            "ref": "MAZ-173"
           }
         ]
       }
@@ -1927,12 +1927,12 @@
           {
             "summary": "Home leads with the hero plus Came in, Spent and Invested tiles, Coming up comes before Follow your money, and the month switcher sits under the title",
             "kind": "follow-up",
-            "ref": "FU-WEB-HOME"
+            "ref": "MAZ-174"
           },
           {
             "summary": "The Sankey and By category are below the fold, and the sidebar doesn't list households and trips",
             "kind": "follow-up",
-            "ref": "FU-WEB-HOME"
+            "ref": "MAZ-174"
           }
         ]
       }
@@ -1982,7 +1982,7 @@
           {
             "summary": "No category comparison table or six-month chart",
             "kind": "follow-up",
-            "ref": "FU-WEB-HOME"
+            "ref": "MAZ-174"
           }
         ]
       }
@@ -2007,7 +2007,7 @@
           {
             "summary": "The household header has no Record payment action, and a balance you owe is drawn in the label color",
             "kind": "follow-up",
-            "ref": "FU-WEB-SHARED"
+            "ref": "MAZ-176"
           },
           {
             "summary": "Members are shown by email and initials from the email",
@@ -2067,7 +2067,7 @@
           {
             "summary": "Settings lists only Account, Appearance, Currency and Server",
             "kind": "follow-up",
-            "ref": "FU-WEB-SHELL"
+            "ref": "MAZ-173"
           }
         ]
       }
@@ -2117,7 +2117,7 @@
           {
             "summary": "The left panel has no hero glow or Left to spend preview, and \"Explore a demo\" is added",
             "kind": "follow-up",
-            "ref": "FU-WEB-ACCESS"
+            "ref": "MAZ-178"
           }
         ]
       }

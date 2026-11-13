@@ -101,8 +101,8 @@ Both capture suites passed against a fresh environment: iOS on the iPhone 18 Pro
 | iOS | 8 | 41 | 1 (`system-widgets`: device check) | 2 (`iphone-receipt`, `iphone-lock`) | 9 (web cards, foundations) |
 | Web | 0 | 55 | 0 | 1 (`iphone-receipt`) | 5 (widgets, foundations, lock, app lock, server) |
 
-- **iOS** follows the cards closely on iPhone. The differences are mostly approved platform adaptations: the Add entry tab, popovers, local-first saving, and emails as names. The follow-ups cover the missing hero glow, two keyboard overlaps (sign-in, empty search), entry gaps (category grid, shared trips in the picker, the amount separator), shared and trip detail layouts, and iPad (sidebar households and trips, the two-column Add entry, a collapsing portrait detail pane).
-- **The web** shows every card's content, with web forms and dialogs in place of iOS sheets (approved). At phone width it departs further from the iPhone cards. The follow-ups cover the shell (More instead of the Settings sheet, sidebar households and trips), Home and Insights hierarchy, Activity's layout, shared actions, a stale-payment message that blames the wrong edit, recurring rows that break at 402px, and sign-in, sign-out and feedback copy.
+- **iOS** follows the cards closely on iPhone. The differences are mostly approved platform adaptations: the Add entry tab, popovers, local-first saving, and emails as names. The follow-ups (MAZ-179 to MAZ-182) cover the missing hero glow, two keyboard overlaps (sign-in, empty search), entry gaps (category grid, shared trips in the picker, the amount separator), shared and trip detail layouts, and iPad (sidebar households and trips, the two-column Add entry, a collapsing portrait detail pane).
+- **The web** shows every card's content, with web forms and dialogs in place of iOS sheets (approved). At phone width it departs further from the iPhone cards. The follow-ups (MAZ-173 to MAZ-178) cover the shell (More instead of the Settings sheet, sidebar households and trips), Home and Insights hierarchy, Activity's layout, shared actions, a stale-payment message that blames the wrong edit, recurring rows that break at 402px, and sign-in, sign-out and feedback copy.
 
 ## Review scenarios
 
@@ -124,7 +124,7 @@ A capture shows one state at one size. The scenarios below are covered by these 
 node docs/design/penny-ios/glow-contrast.mjs   # every card with a glow, light and dark
 ```
 
-For each text run over a `.glow`, the script renders the card with text hidden, reads the pixels behind the text, and takes the lowest WCAG contrast. Text needs 4.5:1, or 3:1 when large. Dark passes everywhere. In light, 26 runs on 15 cards fall short: secondary text (`--label-2`) over the copper glow measures 3.4–4.4:1, the iPad trip's amber "In 3 days" measures 2.9:1, and the empty Home's muted "$0" measures 1.9:1. They are listed in `glow-contrast-known.json`. The script fails on any new shortfall, and on a listed one that now passes, so the list stays current. The web workflow runs it on every pull request. Fixing them means choosing a token change across the cards, `design-kit` and both apps (see [design gaps](#design-gaps)).
+For each text run over a `.glow`, the script renders the card with text hidden, reads the pixels behind the text, and takes the lowest WCAG contrast. Text needs 4.5:1, or 3:1 when large. Dark passes everywhere. In light, 26 runs on 15 cards fall short: secondary text (`--label-2`) over the copper glow measures 3.4–4.4:1, the iPad trip's amber "In 3 days" measures 2.9:1, and the empty Home's muted "$0" measures 1.9:1. They are listed in `glow-contrast-known.json`. The script fails on any new shortfall, and on a listed one that now passes, so the list stays current. The web workflow runs it on every pull request. Fixing them means choosing a token change across the cards, `design-kit` and both apps (MAZ-183).
 
 ## Design gaps
 
@@ -137,7 +137,7 @@ The cards are static and show one state each. These gaps were open at the MAZ-13
 | Native pickers | **Filled by the platform rule.** The date, split and repeat rows open the system controls: SwiftUI `DatePicker` and `Picker` in a sheet on iOS, and a date input and native `select`s on the web. The cards show only the labeled row that opens them. The category and account pickers are custom lists, and the category picker has its card (`iphone-category-picker`). |
 | App lock | **Filled.** `iphone-lock` and `iphone-app-lock` show the lock and its settings. The lock draws no amount behind it (an approved deviation). The **Lock after** delay is MAZ-133. The web has no lock. |
 | Server-search loading and empty states | **Filled by the implementations.** While the server searches, Activity shows a progress state ("Searching your server…" on iOS, "Searching…" on the web) in place of the results. The empty state is `iphone-search-empty`. Both are recorded as approved deviations of `iphone-search-empty` and `web-activity`. |
-| Light-mode contrast on the hero glow | **Deferred** to a follow-up issue (measured above). |
+| Light-mode contrast on the hero glow | **Deferred** to MAZ-183 (measured above). |
 
 ## Re-sync after a design change
 
