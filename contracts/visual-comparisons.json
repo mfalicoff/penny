@@ -1,0 +1,861 @@
+{
+  "version": 1,
+  "description": "",
+  "reviewedAt": null,
+  "cards": [
+    {
+      "id": "system-foundations",
+      "view": "token and component reference (no data)",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-69",
+        "note": "Token sheet: compared by PennyDesignTests (TokenBaselineTests, CategoryPaletteTests), not by a capture."
+      },
+      "web": {
+        "status": "not-applicable",
+        "owner": "MAZ-85",
+        "note": "Token sheet: compared by `npm run design:check` against design-kit, not by a capture."
+      }
+    },
+    {
+      "id": "system-widgets",
+      "view": "Home and Lock Screen widgets, October 2026",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-80",
+        "deviations": []
+      },
+      "web": {
+        "status": "not-applicable",
+        "owner": null,
+        "note": "No owner on this platform."
+      }
+    },
+    {
+      "id": "iphone-home",
+      "view": "home, October 2026",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-77",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-92",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-home-dark",
+      "view": "home, October 2026",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-77",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-92",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-money-flow",
+      "view": "money flow, September 2026 (salary income and spending)",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-77",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-92",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-insights",
+      "view": "insights, October 2026",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-77",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-92",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-calendar",
+      "view": "month calendar, October 2026",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-77",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-92",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-activity",
+      "view": "activity list, October 2026",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-73",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-88",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-search-empty",
+      "view": "search with no results",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-73",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-88",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-add-expense",
+      "view": "new expense draft",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-73",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-88",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-add-income",
+      "view": "new income draft",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-73",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-88",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-entry-extras",
+      "view": "entry draft with receipt, repeat and trip rows open",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-73",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-88",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-split",
+      "view": "entry draft with a 50% personal share",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-73",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-88",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-category-picker",
+      "view": "category picker with renamed Groceries & dining",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-73",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-88",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-entry-detail",
+      "view": "entry p-party (trip and shared personal share)",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-73",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-88",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-receipt",
+      "view": "receipt viewer",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-78",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-94",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-delete-confirm",
+      "view": "delete p-coffee-2 confirmation",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-73",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-88",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-shared-list",
+      "view": "shared households and trips list",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-75",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-91",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-shared",
+      "view": "household Maison",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-75",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-91",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-shared-balances",
+      "view": "Maison balances, October 2026 (alex owes bea)",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-75",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-91",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-shared-people",
+      "view": "Maison people: alex, bea, former member cam",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-75",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-91",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-shared-expense-add",
+      "view": "new shared expense draft in Maison",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-75",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-91",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-record-payment",
+      "view": "record alex's share of Internet",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-75",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-91",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-payment-stale",
+      "view": "a second device records alex's Internet share with the revision it read before the first payment",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-75",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-91",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-household-create",
+      "view": "create household form",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-75",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-91",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-history",
+      "view": "Maison audit history",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-75",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-91",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-trips",
+      "view": "trips: Québec weekend (personal) and Lisbon trip (shared)",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-76",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-93",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-trip-detail",
+      "view": "shared trip Lisbon",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-76",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-93",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-trip-form",
+      "view": "new trip form",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-76",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-93",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-settings",
+      "view": "settings sheet",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-69",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-85",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-recurring",
+      "view": "recurring: Gym and paused Magazine, shared Streaming",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-74",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-90",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-schedule-detail",
+      "view": "schedule Gym (anchor 31)",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-74",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-90",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-accounts",
+      "view": "accounts: Everyday chequing and Visa",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-74",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-89",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-account-form",
+      "view": "new account form",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-74",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-89",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-categories",
+      "view": "categories by kind",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-74",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-89",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-category-form",
+      "view": "new category form",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-74",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-89",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-appearance",
+      "view": "appearance: light, dark and system",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-69",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-85",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-app-lock",
+      "view": "app lock settings",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-69",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-85",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-sign-in",
+      "view": "password sign-in",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-68",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-84",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-create-account",
+      "view": "registration (unique test user)",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-68",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-84",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-server-connect",
+      "view": "server URL entry (environment API URL)",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-69",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-85",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-lock",
+      "view": "app lock over home",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-69",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-85",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-empty-home",
+      "view": "home, October 2026, no entries",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-77",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-92",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-offline",
+      "view": "home while the network fails",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-71",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-87",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-save-error",
+      "view": "failed save of an entry edit",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-69",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-85",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-saved-toast",
+      "view": "save succeeded after retry",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-69",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-85",
+        "deviations": []
+      }
+    },
+    {
+      "id": "iphone-sign-out",
+      "view": "sign out confirmation with no pending changes",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-68",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-84",
+        "deviations": []
+      }
+    },
+    {
+      "id": "ipad-home",
+      "view": "iPad home dashboard, October 2026",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-77",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-92",
+        "deviations": []
+      }
+    },
+    {
+      "id": "ipad-activity",
+      "view": "iPad activity list with entry p-party in the detail pane",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-73",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-88",
+        "deviations": []
+      }
+    },
+    {
+      "id": "ipad-add-entry",
+      "view": "iPad new expense form sheet",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-73",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-88",
+        "deviations": []
+      }
+    },
+    {
+      "id": "ipad-shared",
+      "view": "iPad household Maison",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-75",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-91",
+        "deviations": []
+      }
+    },
+    {
+      "id": "ipad-trip",
+      "view": "iPad shared trip Lisbon",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-76",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-93",
+        "deviations": []
+      }
+    },
+    {
+      "id": "ipad-settings",
+      "view": "iPad settings",
+      "native": {
+        "status": "pending",
+        "owner": "MAZ-69",
+        "deviations": []
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-85",
+        "deviations": []
+      }
+    },
+    {
+      "id": "web-home",
+      "view": "web home dashboard, October 2026",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-77",
+        "note": "Desktop browser card; the native counterpart is the matching ipad-* card."
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-92",
+        "deviations": []
+      }
+    },
+    {
+      "id": "web-activity",
+      "view": "web activity table with entry p-party in the detail panel",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-73",
+        "note": "Desktop browser card; the native counterpart is the matching ipad-* card."
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-88",
+        "deviations": []
+      }
+    },
+    {
+      "id": "web-insights",
+      "view": "web insights and money flow, September 2026 (salary income and spending)",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-77",
+        "note": "Desktop browser card; the native counterpart is the matching ipad-* card."
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-92",
+        "deviations": []
+      }
+    },
+    {
+      "id": "web-household",
+      "view": "web household Maison, October 2026",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-75",
+        "note": "Desktop browser card; the native counterpart is the matching ipad-* card."
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-91",
+        "deviations": []
+      }
+    },
+    {
+      "id": "web-trips",
+      "view": "web trips: Lisbon trip (shared) and Québec weekend (personal)",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-76",
+        "note": "Desktop browser card; the native counterpart is the matching ipad-* card."
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-93",
+        "deviations": []
+      }
+    },
+    {
+      "id": "web-settings",
+      "view": "web settings",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-69",
+        "note": "Desktop browser card; the native counterpart is the matching ipad-* card."
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-85",
+        "deviations": []
+      }
+    },
+    {
+      "id": "web-add-entry",
+      "view": "web new expense dialog",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-73",
+        "note": "Desktop browser card; the native counterpart is the matching ipad-* card."
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-88",
+        "deviations": []
+      }
+    },
+    {
+      "id": "web-sign-in",
+      "view": "web password sign-in",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-68",
+        "note": "Desktop browser card; the native counterpart is the matching ipad-* card."
+      },
+      "web": {
+        "status": "pending",
+        "owner": "MAZ-84",
+        "deviations": []
+      }
+    }
+  ]
+}

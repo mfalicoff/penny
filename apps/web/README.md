@@ -84,7 +84,7 @@ apps/web/
 - **Font.** Inter (`design-kit/fonts/Inter.ttf`), fingerprinted into `dist/assets/`. Its OFL license is emitted to `dist/licenses/Inter-OFL.txt`.
 - **Icons.** Ionicons v7 outline glyphs (`design-kit/src/icons.ts`, MIT, notice at `dist/licenses/Ionicons-MIT.txt`), rendered by `src/design/Icon.tsx`. Icons are decorative unless given a `label`.
 
-The visual baseline is `docs/design/penny-ios` and `contracts/design-baseline.json`. The visual comparison of this implementation with the cards belongs to MAZ-122.
+The visual baseline is `docs/design/penny-ios` and `contracts/design-baseline.json`. Each card's comparison with this app is recorded in `contracts/visual-comparisons.json` ([visual acceptance](../../docs/design/visual-acceptance.md), MAZ-122).
 
 **Shared rules.** Ledger merge, recurrence, commands and local search come from the repository's platform-neutral `src/domain/` ([domain rules](../../docs/migration/domain-rules.md)) through the `@domain/*` alias (Vite `resolve.alias` and `paths` in `tsconfig.app.json`/`tsconfig.test.json`). Import them, never copy them; the module compiles under this app's stricter flags.
 
@@ -465,4 +465,4 @@ Shared households: `tests/households.test.tsx` (component tests against the in-m
 
 Accounts and categories: `tests/organize.test.tsx` (the real app over IndexedDB and a revision-checked ledger that applies the household-link rule) covers every account type and category kind, usage counts, renames that keep links, duplicate and empty names, in-use protection, Move and remove with Undo, unused removal, offline saves marked "Waiting to sync" and synced on reconnect, a full-storage failure with Retry, the refused removal of an account a shared expense links (Put it back), the kind in the URL, legacy colors, keyboard inline creation from the shared expense form (Escape, Tab and focus return) and the demo. `tests/organize-model.test.ts` covers usage text, names against the shared commands, icons, the palette against the tokens, link moves and Undo, the field-level merge of a rename and refused removals. `e2e/organize.spec.ts` runs the CRUD journeys by keyboard on desktop and phone, an offline save through a reload, the refused removal, 320px with long names and doubled text, and the form in light, dark, forced colors and reduced transparency.
 
-Not covered yet: screenshot baselines (MAZ-96) and the comparison with the cards (MAZ-122). The production image in `deploy/web` serves this app; `scripts/deploy-smoke.mjs` checks its legacy URLs, headers, caching and assets ([deployment](../../docs/deployment.md#the-web-app)).
+Screenshot baselines are `e2e/visual.spec.ts` (MAZ-96); the comparison with the cards is `e2e/cards.real.spec.ts` and `contracts/visual-comparisons.json` (MAZ-122). The production image in `deploy/web` serves this app; `scripts/deploy-smoke.mjs` checks its legacy URLs, headers, caching and assets ([deployment](../../docs/deployment.md#the-web-app)).

@@ -223,6 +223,6 @@ Explicit gaps, not covered by any automated native test in this repository:
 - **Face ID lock success path, push, widgets, camera**: need hardware; see the device release checklist. On the simulator only the app lock's refusal path runs.
 - **Hardware keyboard and focus on iPad.** Penny defines no keyboard shortcuts, and XCUITest does not model a hardware keyboard's focus ring; this is a device checklist item. The software keyboard is covered (keyboard-safe Add entry).
 - **VoiceOver navigation order and rotor.** Labels are checked automatically; the order and grouping need the device VoiceOver pass.
-- **Visual comparison with the redesign cards** is MAZ-122. Screenshots are captured, but not diffed against card baselines.
+- **Visual comparison with the redesign cards** (MAZ-122): the Cards plan captures each card's state, and each verdict is in [visual-comparisons.json](../contracts/visual-comparisons.json) ([visual acceptance](design/visual-acceptance.md)). Captures are reviewed side by side with the baselines, not diffed pixel by pixel, because SF Pro and Liquid Glass differ from the cards by design.
 - **Performance on devices.** Budgets above are simulator Debug-build numbers; device numbers are a release checklist item.
 - **Multiple Penny devices of one person at once** are exercised as "this app plus the API as another device", not as two simulators running the app.

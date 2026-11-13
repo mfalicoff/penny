@@ -2,7 +2,7 @@
 
 This proposal targets iPhone and iPad (the SwiftUI app in `apps/ios`) and the desktop web app (`apps/web`). It replaces the warm card-heavy look of both the current Expo app and the earlier Penpot proposal (which this change removes) with a design that feels native to iOS 26.
 
-Each screen is a standalone HTML file with a `@dsCard` marker, so the folder can be imported straight into a Claude Design design-system project. Rendered PNGs are in [previews/](previews/).
+Each screen is a standalone HTML file with a `@dsCard` marker, so the folder can be imported straight into a Claude Design design-system project. Rendered PNGs of every card in light and dark are in [previews/](previews/); they are the visual acceptance baselines ([visual acceptance](../visual-acceptance.md)).
 
 | Area | Cards |
 | --- | --- |
@@ -75,7 +75,10 @@ The web app uses the same tokens, color rules and money semantics as the iOS app
 The previews use Inter as a stand-in for SF Pro (SF Pro cannot be redistributed) and Ionicons as stand-ins for SF Symbols.
 
 ```sh
-node docs/design/penny-ios/render.mjs 2   # writes previews/*.png at 2x
+node docs/design/penny-ios/render.mjs 2           # writes previews/<id>.<appearance>.png and previews/manifest.json at 2x
+node docs/design/penny-ios/render.mjs 2 --check   # re-renders and compares with the committed baselines (CI)
+node docs/design/penny-ios/glow-contrast.mjs      # text contrast over the hero glow (CI)
+node docs/design/penny-ios/compare.mjs            # side-by-side sheets of a capture run
 ```
 
-Set `PENNY_DESIGN_CHROME` if Playwright's Chromium is not installed.
+`<id>` is the card's contract id (`iphone-home`), and each card is rendered in the appearances `contracts/fixtures/redesign-states.json` lists for it. Dark adds the `dark` class to the card and the screens it embeds. [Visual acceptance](../visual-acceptance.md) explains the baselines, the comparison method and the re-sync steps. Set `PENNY_DESIGN_CHROME` if Playwright's Chromium is not installed.
