@@ -18,6 +18,7 @@
 - None open. All 34 components render cleanly with authored previews graded good.
 
 ## Re-sync risks
+- **Do the whole re-sync in one change:** after a card or kit change, re-render the baselines (`node docs/design/penny-ios/render.mjs 2`), update the hashes in `contracts/design-baseline.json`, re-sync this project, and update the affected verdicts in `contracts/visual-comparisons.json`. The steps are in [visual acceptance](../docs/design/visual-acceptance.md#re-sync-after-a-design-change); `npm run test:core` and the web workflow fail on a stale baseline or hash.
 - **Token drift:** the kit's tokens and CSS are copied by hand from `docs/design/penny-ios/assets/penny.css`. When the proposal's colors or category palette change, update `design-kit/src/styles.css` too, or the two drift apart silently.
 - **Sankey logic:** `MoneyFlow` copies the rules of `src/domain/selectors/moneyFlow.ts` (top five plus "N more", Beyond income, Left over). Changes to the app's flow logic won't reach the kit automatically.
 - **Hand-maintained mirrors:** `conventions.md` and `docs/*.md` repeat these rules in prose. Re-validate names against the build on every sync.

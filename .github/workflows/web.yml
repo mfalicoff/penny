@@ -51,6 +51,12 @@ jobs:
         run: git diff --exit-code -- src/routeTree.gen.ts
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
+      # Re-renders every design card and compares it with its committed baseline (MAZ-122,
+      # docs/design/visual-acceptance.md). Failing renders are uploaded with the evidence below.
+      - name: Check the design card baselines
+        run: node ../../docs/design/penny-ios/render.mjs 2 --check
+      - name: Check text contrast over the hero glow in the design cards
+        run: node ../../docs/design/penny-ios/glow-contrast.mjs
       - name: Browser smoke test of the production build (mocked API, Chromium)
         run: npm run test:e2e
       - name: Upload browser evidence
@@ -60,6 +66,7 @@ jobs:
           name: web-playwright-report
           path: |
             apps/web/test-results/
+            test-results/design-baselines/
           if-no-files-found: ignore
 
   smoke-engines:

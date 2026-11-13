@@ -81,7 +81,7 @@ What this gives: both suites run against one server, database, clock and fault r
 
 ### Web redesign cards
 
-The redesign's web cards (`contracts/design-baseline.json`, `acceptance.web: "MAZ-96"`) and the journeys that hold their scenario. The visual comparison against each card is MAZ-122's.
+The redesign's web cards (`contracts/design-baseline.json`, `acceptance.web: "MAZ-96"`) and the journeys that hold their scenario. Each card's visual comparison with the web app is recorded in [visual-comparisons.json](../contracts/visual-comparisons.json) ([visual acceptance](design/visual-acceptance.md), MAZ-122).
 
 | Card | Scenario | Journeys |
 | --- | --- | --- |
@@ -172,7 +172,7 @@ Search latency over HTTP in `search.real.spec.ts` (small seed, every request the
 - **Migrated SQLite server data.** Browser journeys run on data created through the API, not on a database imported from the legacy SQLite file (`npm run test-env -- cutover` covers the import itself).
 - **Upgrade from a real previous build.** The legacy cache journey seeds the Expo web app's `localStorage` format; no test installs a previous production bundle and upgrades it with a service worker or cache in place.
 - **Accessibility.** The violations listed above are open. Manual screen-reader, zoom and high-contrast checks have not been run.
-- **Visual comparison.** Baselines are web-only regressions on macOS; card-by-card comparison with the design and Linux baselines are MAZ-122.
+- **Visual comparison.** `visual.spec.ts` baselines are web-only regressions on macOS. The card-by-card comparison with the design uses the card baselines, which CI checks on Linux, and the `cards.real.spec.ts` captures ([visual acceptance](design/visual-acceptance.md), MAZ-122).
 - **Session expiry prefill.** After a session expires the browser asks for the email again; the iOS app keeps it. Product decision pending.
 - **Shared money semantics from both clients.** Per-share and monthly payments, stale-payment recovery and settlement run in the browser (`households.real.spec.ts`) and natively (`HouseholdJourneyTests`) separately, not interleaved between a simulator and a browser.
 - **App lock.** Biometric app lock is native only; the browser has none.
