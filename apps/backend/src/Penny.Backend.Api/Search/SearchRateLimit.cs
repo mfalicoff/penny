@@ -5,7 +5,7 @@ using Penny.Backend.Application.Authentication;
 
 namespace Penny.Backend.Api.Search;
 
-// 30 searches per minute per session (docs/migration/search.md, "Limits"). The limiter
+// 30 searches per minute per session (docs/reference/search.md, "Limits"). The limiter
 // runs before authentication, so the partition is the hash of the presented session
 // token; requests without one are not limited here and fail authentication (401).
 public static class SearchRateLimit

@@ -20,14 +20,14 @@ The OIDC routes (`oidcConfiguration`, `startOidc`, `completeOidc`) arrived with 
 
 Wire models are written by hand and checked against the contract; they are not generated. The OpenAPI document uses `oneOf`, `if/then` and unions that generators handle poorly, and a hand-written model keeps `PennyData` free of a generator dependency. Drift is caught by tests, not by a build step:
 
-- `WireModelTests` decodes the shared fixtures through `PennyContracts` (`search-cases.json` ledger, requests and response, and every `ledger-upgrades.json` input and expected output).
+- `WireModelTests` decodes the shared fixtures through `PennyContracts` (`search-cases.json` ledger, requests and response), maps the fixture ledger to the domain, and checks that any ledger version other than 4, or a rule without `anchorDay`, is refused (`LedgerMappingError`).
 - `contracts/swift` `FixtureDecodingTests` keeps the strict round-trip check of the fixtures themselves.
 
-When the contract changes (OpenAPI, fixtures, `docs/migration/api-reference.md` change together):
+When the contract changes (OpenAPI, fixtures, `docs/reference/api-reference.md` change together):
 
 1. Update the model in `WireModels.swift` or `Search.swift` and the fixture decoding test that covers it.
 2. Run `apps/ios/scripts/ios.sh package-test`. A fixture the model cannot decode, or cannot re-encode equal, fails.
-3. Record the change in `docs/migration/feature-parity.md`.
+3. Record the change in the [API reference](reference/api-reference.md) when the wire shape changes.
 
 Wire rules the models preserve: money is integer cents (`Int64`, never `Double`); calendar dates stay `YYYY-MM-DD` strings (never `Date`); ids are opaque strings; absent optionals stay `nil` and are omitted when encoding; the ledger `version` and snapshot `revision` are kept as sent. Unknown response members are ignored (forward compatibility); a wrong type, a missing required member or an unknown enum value is `APIError.malformedResponse`. View and domain models are built from wire models elsewhere (MAZ-70, 71, 73) and never the other way round.
 
@@ -73,7 +73,7 @@ The client never retries by itself. `isRetryable` tells a caller whether repeati
 
 ## Search
 
-`search(_:)` is `POST /api/v1/search/transactions` ([search](migration/search.md)). The client validates the contract's limits before sending (query at most 200 UTF-16 units after trimming, real dates within 2000-2100 with `from` not after `to`, page size 1-100, cursor 1-2048 characters) and trims the query as the server does. Results are `SearchItem` values keyed by `key`, never by title. Cursors are opaque: pass `nextCursor` back unchanged with the same query, filters and sort; the server answers 400 for a cursor from another request.
+`search(_:)` is `POST /api/v1/search/transactions` ([search](reference/search.md)). The client validates the contract's limits before sending (query at most 200 UTF-16 units after trimming, real dates within 2000-2100 with `from` not after `to`, page size 1-100, cursor 1-2048 characters) and trims the query as the server does. Results are `SearchItem` values keyed by `key`, never by title. Cursors are opaque: pass `nextCursor` back unchanged with the same query, filters and sort; the server answers 400 for a cursor from another request.
 
 `SearchCoordinator` owns one account's search: each `start` cancels the search in flight, `nextPage` continues only the latest query, and every answer is checked against its generation and `AccountScope` (server and account) before it is returned. A slow answer to an old query, or to a previous account or server, throws `CancellationError` instead of reaching the UI. `reset(client:)` on sign-out or account change drops the query, cursor and in-flight work. Pages carry their scope and request so callers can partition caches.
 

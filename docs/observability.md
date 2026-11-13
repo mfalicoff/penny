@@ -220,7 +220,7 @@ All are in the **Penny** folder and linked from each other's **Penny dashboards*
 | **Penny API** | Is it up and healthy? Request rate, 5xx ratio, latency (p50/p95/p99) overall and by route, readiness failures, unhandled exceptions, a per-route table, warning and error logs, log search, failed and slow traces, and the trace for a request id |
 | **Penny database** | Npgsql pool use against its limit, connection time, query latency and throughput, bytes, and slow PostgreSQL spans with their parameterized SQL |
 | **Penny auth and rate limits** | Sign-ins by method and outcome, failure kinds, rejections per rate-limit policy, session and authorization results, 401/403/429 by route, ledger save conflicts, household joins |
-| **Penny background jobs** | Items and failures per job, lag from due to claimed (p50/p95), receipt text results and time, provider calls (OIDC, APNs, Expo), and worker-pass traces |
+| **Penny background jobs** | Items and failures per job, lag from due to claimed (p50/p95), receipt text results and time, provider calls (OIDC, APNs), and worker-pass traces |
 | **Penny .NET runtime** | CPU, memory (working set and GC heap), garbage collection, allocation, thread pool, lock contention, exceptions by type, Kestrel connections |
 | **Penny clients** | Errors and crashes from the web and iOS apps, top exceptions, errors and crashes by app version, recent error lines, failed client operations and slow API calls seen from the client |
 
@@ -251,7 +251,7 @@ The thresholds are starting points. Provisioned rules are read-only in the UI: e
 
 1. **Get an id.** Every API response carries `X-Request-Id`, and 500 errors log `request <RequestId>, trace <TraceId>`. A client error or crash line carries a trace id.
 2. **Find the trace.** In **Penny API**, paste the request id into **Request id**; the **Trace by request id** panel lists it. From a client error, expand the line in **Penny clients → Recent errors and crashes** and follow its trace id, or pick it from **Failed client operations**.
-3. **Read the trace.** It shows the client span (when the app sent one), the API request named by its route, each PostgreSQL command with its parameterized statement, and calls to the OIDC provider, APNs or Expo. A failed span carries `error.type`, the status code or exception type.
+3. **Read the trace.** It shows the client span (when the app sent one), the API request named by its route, each PostgreSQL command with its parameterized statement, and calls to the OIDC provider or APNs. A failed span carries `error.type`, the status code or exception type.
 4. **Read the logs.** From any span, **Logs for this span** opens the API's log lines for that request in Loki, including the exception type of a 500.
 5. **Check the scope.** **Penny API → 4xx and 5xx by route** and **Penny clients → Errors by app version** show whether it was one request or a pattern.
 

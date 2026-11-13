@@ -25,17 +25,12 @@ public enum WidgetSnapshotRead: Equatable, Sendable {
 ///
 /// The file is written atomically with `completeUntilFirstUserAuthentication` protection: the
 /// widgets can render after the first unlock following a restart, as the system requires, and
-/// nothing is readable before it. Expo's `__expo_widgets_*` defaults are never read; `clear`
-/// removes them so the legacy layouts can't be shown again (docs/ios-expo-migration.md).
+/// nothing is readable before it.
 public struct WidgetSnapshotStore: Sendable {
     /// The envelope version this build writes and the newest it reads.
     public static let version = 1
     static let directoryName = "Widgets"
     static let fileName = "snapshot.json"
-    /// The expo-widgets keys of the legacy app (`__expo_widgets_<kind>_layout|_timeline`).
-    static let legacyKeys = AppIdentity.widgetKinds.flatMap {
-        ["__expo_widgets_\($0)_layout", "__expo_widgets_\($0)_timeline"]
-    }
 
     struct Envelope: Codable {
         var version: Int
@@ -53,20 +48,17 @@ public struct WidgetSnapshotStore: Sendable {
     }
 
     public let directory: URL
-    /// The App Group's defaults suite name, whose legacy Expo keys `clear` removes. Nil in tests.
-    private let legacyDefaultsSuite: String?
 
     public var fileURL: URL { directory.appending(path: Self.fileName) }
 
     /// A store under `root` (the App Group container, or a temporary directory in tests).
-    public init(root: URL, legacyDefaultsSuite: String? = nil) {
+    public init(root: URL) {
         directory = root.appending(path: Self.directoryName, directoryHint: .isDirectory)
-        self.legacyDefaultsSuite = legacyDefaultsSuite
     }
 
     /// The store in the App Group the app and the extension share.
     public init(container: SharedContainer) {
-        self.init(root: container.directory, legacyDefaultsSuite: container.appGroup)
+        self.init(root: container.directory)
     }
 
     /// The account fingerprint stored as `owner`.
@@ -113,27 +105,12 @@ public struct WidgetSnapshotStore: Sendable {
         }
     }
 
-    /// Removes the snapshot (sign-out, an expired session, another account) and the legacy
-    /// Expo widget data. Returns whether anything was removed.
+    /// Removes the snapshot (sign-out, an expired session, another account). Returns whether
+    /// anything was removed.
     @discardableResult
     public func clear() -> Bool {
-        var removed = removeLegacyData()
-        if FileManager.default.fileExists(atPath: fileURL.path) {
-            removed = (try? FileManager.default.removeItem(at: fileURL)) != nil || removed
-        }
-        return removed
-    }
-
-    /// Removes the Expo widgets' layouts from the App Group defaults. Returns whether any existed.
-    @discardableResult
-    public func removeLegacyData() -> Bool {
-        guard let legacyDefaultsSuite, let defaults = UserDefaults(suiteName: legacyDefaultsSuite) else { return false }
-        var removed = false
-        for key in Self.legacyKeys where defaults.object(forKey: key) != nil {
-            defaults.removeObject(forKey: key)
-            removed = true
-        }
-        return removed
+        guard FileManager.default.fileExists(atPath: fileURL.path) else { return false }
+        return (try? FileManager.default.removeItem(at: fileURL)) != nil
     }
 
     /// Clears the file when it belongs to another account than `owner`. Returns whether it did.

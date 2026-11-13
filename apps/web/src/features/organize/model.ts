@@ -11,12 +11,12 @@ import type { IconName } from "../../design/Icon";
  */
 
 export const NAME_MAX = 50;
-/** The server's limit for accounts and for categories (`docs/migration/ledger.md`). */
+/** The server's limit for accounts and for categories (`docs/reference/ledger.md`). */
 export const RECORD_LIMIT = 300;
 
 export { accountTypeLabels, kindLabels };
 
-/** Account types drawn with the design kit's glyphs (the legacy `business-outline` isn't in the kit). */
+/** Account types drawn with the design kit's glyphs (the domain's `business-outline` isn't in the kit). */
 export const ACCOUNT_TYPE_ICONS: Record<AccountType, IconName> = {
   bank: "wallet",
   credit: "card",
@@ -74,7 +74,7 @@ const known = new Set<string>(ICON_NAMES);
 
 /**
  * The glyph for a stored category icon. Ledgers store Ionicons names (`basket-outline`, as the
- * legacy and native apps do); the web draws the kit's outline set, so the suffix is dropped. An
+ * domain's default categories and the native app do); the web draws the kit's outline set, so the suffix is dropped. An
  * icon the kit doesn't have shows the price tag rather than nothing.
  */
 export function categoryIcon(stored: string): IconName {

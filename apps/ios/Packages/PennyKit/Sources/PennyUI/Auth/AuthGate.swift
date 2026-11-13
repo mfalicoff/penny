@@ -61,7 +61,6 @@ struct AuthGate: View {
                                 sharedProjection: auth.client.map {
                                     APISharedProjection(client: $0) { auth.sessionDidExpire(for: account) }
                                 },
-                                expoImport: services.expoMigration.flatMap(ExpoImportNotice.init),
                                 households: auth.client.map {
                                     APIHouseholdService(client: $0) { auth.sessionDidExpire(for: account) }
                                 })

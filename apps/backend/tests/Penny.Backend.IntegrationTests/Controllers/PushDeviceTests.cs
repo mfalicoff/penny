@@ -7,8 +7,8 @@ using Xunit;
 
 namespace Penny.Backend.IntegrationTests.Controllers;
 
-// `POST/DELETE /api/push/devices` over real HTTP and PostgreSQL (MAZ-61): legacy Expo
-// tokens and native APNs tokens with their environment, per-session ownership, and
+// `POST/DELETE /api/push/devices` over real HTTP and PostgreSQL (MAZ-61): native APNs
+// tokens with their environment (anything else is refused), per-session ownership, and
 // cleanup on logout, transfer and removal. All tokens are synthetic.
 public sealed class PushDeviceTests(ApiFixture fixture) : PushTestBase(fixture)
 {
@@ -21,7 +21,13 @@ public sealed class PushDeviceTests(ApiFixture fixture) : PushTestBase(fixture)
             null,
             HttpStatusCode.Unauthorized,
             AuthService.SignInRequired,
-            new { token = ExpoToken, platform = "ios" }
+            new
+            {
+                token = ApnsToken(1),
+                platform = "ios",
+                provider = "apns",
+                environment = "production",
+            }
         );
         await ExpectErrorAsync(
             HttpMethod.Delete,
@@ -29,12 +35,12 @@ public sealed class PushDeviceTests(ApiFixture fixture) : PushTestBase(fixture)
             null,
             HttpStatusCode.Unauthorized,
             AuthService.SignInRequired,
-            new { token = ExpoToken }
+            new { token = ApnsToken(1) }
         );
     }
 
     [Fact]
-    public async Task whenLegacyAndNativeTokensRegistered_RegisterDevice_ShouldStoreProviderAndEnvironment()
+    public async Task whenNativeTokensRegistered_RegisterDevice_ShouldStoreProviderAndEnvironment()
     {
         var token = await RegisterAsync("device@example.test");
 
@@ -44,20 +50,23 @@ public sealed class PushDeviceTests(ApiFixture fixture) : PushTestBase(fixture)
                 DevicesPath,
                 token,
                 HttpStatusCode.Created,
-                new { token = ExpoToken, platform = "android" }
+                new
+                {
+                    token = ApnsToken(1).ToUpperInvariant(),
+                    platform = "ios",
+                    provider = "apns",
+                    environment = "sandbox",
+                    extra = "ignored",
+                }
             )
-        )
-            .GetProperty("ok")
-            .GetBoolean()
-            .ShouldBeTrue();
-        await RegisterApnsAsync(token, ApnsToken(1).ToUpperInvariant(), "sandbox");
+        ).GetProperty("ok").GetBoolean().ShouldBeTrue();
         await RegisterApnsAsync(token, ApnsToken(2), "production");
 
         (
             await ScalarAsync(
-                "SELECT string_agg(platform || '/' || provider || '/' || coalesce(environment, '-'), ',' ORDER BY platform, environment NULLS FIRST) FROM penny.push_devices"
+                "SELECT string_agg(platform || '/' || provider || '/' || environment, ',' ORDER BY environment) FROM penny.push_devices"
             )
-        ).ShouldBe("android/expo/-,ios/apns/production,ios/apns/sandbox");
+        ).ShouldBe("ios/apns/production,ios/apns/sandbox");
         (
             await CountAsync(
                 $"SELECT count(*) FROM penny.push_devices WHERE token = '{ApnsToken(1)}'"
@@ -66,14 +75,21 @@ public sealed class PushDeviceTests(ApiFixture fixture) : PushTestBase(fixture)
     }
 
     [Theory]
-    [InlineData("""{"token":"not-a-token","platform":"ios"}""")]
-    [InlineData("""{"token":"ExponentPushToken[device_one]","platform":"web"}""")]
+    // Registrations without an APNs provider and environment, or from another platform.
+    [InlineData("""{"token":"not-an-apns-device-token","platform":"ios"}""")]
+    [InlineData("""{"token":"not-an-apns-device-token","platform":"android"}""")]
+    [InlineData("""{"token":"not-an-apns-device-token","platform":"ios","provider":"other"}""")]
     [InlineData(
-        """{"token":"ExponentPushToken[device_one]","platform":"ios","environment":"sandbox"}"""
+        """{"token":"a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90","platform":"ios","environment":"production"}"""
     )]
-    [InlineData("""{"token":"ExponentPushToken[device_one]","platform":"ios","provider":"fcm"}""")]
     [InlineData(
-        """{"token":"ExponentPushToken[device_one]","platform":"ios","provider":"apns","environment":"sandbox"}"""
+        """{"token":"a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90","platform":"ios","provider":"fcm","environment":"production"}"""
+    )]
+    [InlineData(
+        """{"token":"a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90","platform":"web","provider":"apns","environment":"production"}"""
+    )]
+    [InlineData(
+        """{"token":"not-an-apns-device-token","platform":"ios","provider":"apns","environment":"sandbox"}"""
     )]
     [InlineData(
         """{"token":"a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90","platform":"ios","provider":"apns"}"""
@@ -92,7 +108,7 @@ public sealed class PushDeviceTests(ApiFixture fixture) : PushTestBase(fixture)
     )]
     [InlineData("""{"platform":"ios"}""")]
     [InlineData("""[]""")]
-    public async Task whenDeviceInvalid_RegisterDevice_ShouldReturnLegacyMessage(string body)
+    public async Task whenDeviceInvalid_RegisterDevice_ShouldReturnInvalidDeviceMessage(string body)
     {
         var token = await RegisterAsync("invalid-device@example.test");
         using var request = Authorized(HttpMethod.Post, DevicesPath, bearer: token);
@@ -174,13 +190,13 @@ public sealed class PushDeviceTests(ApiFixture fixture) : PushTestBase(fixture)
         )
             .GetProperty("token")
             .GetString()!;
-        await RegisterExpoAsync(first);
+        await RegisterApnsAsync(first, ApnsToken(1), "production");
         await RegisterApnsAsync(second, ApnsToken(2), "sandbox");
 
         await ExpectAsync(HttpMethod.Post, "/api/auth/logout", first, HttpStatusCode.OK);
 
-        (await ScalarAsync("SELECT string_agg(provider, ',') FROM penny.push_devices")).ShouldBe(
-            "apns"
+        (await ScalarAsync("SELECT string_agg(token, ',') FROM penny.push_devices")).ShouldBe(
+            ApnsToken(2)
         );
     }
 
@@ -207,54 +223,22 @@ public sealed class PushDeviceTests(ApiFixture fixture) : PushTestBase(fixture)
     }
 
     [Fact]
-    public async Task whenExpoRetired_RegisterDevice_ShouldRefuseExpoButAcceptApns()
-    {
-        await using var retired = new TestApiFactory(
-            Fixture.RuntimeConnection,
-            new Dictionary<string, string> { ["Push:Expo:Enabled"] = "false" }
-        );
-        using var client = CreateClient(retired);
-        var token = await RegisterAsync("retired@example.test", client);
-
-        using (var expo = Authorized(HttpMethod.Post, DevicesPath, bearer: token))
-        {
-            expo.Content = System.Net.Http.Json.JsonContent.Create(
-                new { token = ExpoToken, platform = "ios" }
-            );
-            using var response = await client.SendAsync(expo, Ct);
-            response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
-        }
-        using var apns = Authorized(HttpMethod.Post, DevicesPath, bearer: token);
-        apns.Content = System.Net.Http.Json.JsonContent.Create(
-            new
-            {
-                token = ApnsToken(4),
-                platform = "ios",
-                provider = "apns",
-                environment = "production",
-            }
-        );
-        using var accepted = await client.SendAsync(apns, Ct);
-        accepted.StatusCode.ShouldBe(HttpStatusCode.Created);
-    }
-
-    [Fact]
     public async Task whenDatabaseWritesInvalidCombination_PushDevices_ShouldRejectByConstraint()
     {
         var (_, alex, _) = await HouseholdAsync();
-        await RegisterExpoAsync(alex.Token);
+        await RegisterApnsAsync(alex.Token, ApnsToken(1), "production");
 
-        await Should.ThrowAsync<Npgsql.PostgresException>(() =>
-            Fixture.SqlAsync(
-                "UPDATE penny.push_devices SET provider = 'apns', environment = NULL",
-                Ct
-            )
-        );
-        await Should.ThrowAsync<Npgsql.PostgresException>(() =>
-            Fixture.SqlAsync(
-                "UPDATE penny.push_devices SET provider = 'apns', environment = 'production', platform = 'android'",
-                Ct
-            )
-        );
+        foreach (
+            var change in new[]
+            {
+                "environment = NULL",
+                "environment = 'development'",
+                "platform = 'android'",
+                "provider = 'fcm'",
+            }
+        )
+            await Should.ThrowAsync<Npgsql.PostgresException>(() =>
+                Fixture.SqlAsync($"UPDATE penny.push_devices SET {change}", Ct)
+            );
     }
 }

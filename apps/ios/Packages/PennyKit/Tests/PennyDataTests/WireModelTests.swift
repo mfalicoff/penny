@@ -1,6 +1,7 @@
 import Foundation
 import PennyContracts
 import PennyData
+import PennyDomain
 import Testing
 
 @Suite("Wire models")
@@ -23,14 +24,31 @@ struct WireModelTests {
         #expect(ledger.transactions.first?.share == 500)
     }
 
-    @Test("whenUpgradeFixtures_WireLedger_ShouldDecodeInputAndExpectedOutput")
-    func upgradeFixturesDecode() throws {
-        let cases = try JSONSerialization.jsonObject(with: Fixtures.data("ledger-upgrades.json")) as? [[String: Any]]
-        for item in try #require(cases) {
-            for key in ["input", "expected"] {
-                let data = try JSONSerialization.data(withJSONObject: try #require(item[key]))
-                _ = try JSONDecoder().decode(WireLedger.self, from: data)
-            }
+    @Test("whenFixtureLedger_DomainLedger_ShouldMapVersionFour")
+    func fixtureLedgerMaps() throws {
+        let wire = try JSONDecoder().decode(WireLedger.self, from: APIFixtures.member("search-cases.json", "ledger"))
+        let ledger = try PennyDomain.Ledger(wire: wire)
+        #expect(ledger.transactions.count == wire.transactions.count)
+    }
+
+    @Test("whenLedgerVersionIsNotFour_DomainLedger_ShouldRefuseIt", arguments: [0, 1, 2, 3, 5])
+    func otherVersionsRefused(version: Int) throws {
+        var wire = try JSONDecoder().decode(WireLedger.self, from: APIFixtures.member("search-cases.json", "ledger"))
+        wire.version = version
+        #expect(throws: LedgerMappingError.unsupportedVersion(version)) { try PennyDomain.Ledger(wire: wire) }
+    }
+
+    @Test("whenARuleHasNoAnchorDay_DomainLedger_ShouldRefuseIt")
+    func missingAnchorDayRefused() throws {
+        let wire = WireLedger(
+            version: 4, currency: "CAD", categories: [], transactions: [],
+            recurring: [
+                WireRecurring(
+                    id: "r", title: "Rent", kind: .expense, total: 1000, share: 1000, categoryId: "home",
+                    date: "2026-01-01", note: "", frequency: "monthly", nextDate: "2026-02-01", active: true)
+            ])
+        #expect(throws: LedgerMappingError.invalidValue(field: "recurring.anchorDay", value: "missing")) {
+            try PennyDomain.Ledger(wire: wire)
         }
     }
 

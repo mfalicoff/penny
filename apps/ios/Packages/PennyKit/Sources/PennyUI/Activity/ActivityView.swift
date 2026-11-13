@@ -8,8 +8,8 @@ import SwiftUI
 /// sheet (month, year or all time, one day, type, category), and the system search field.
 ///
 /// Browsing lists this device's ledger. A query searches the server (MAZ-121: typo and meaning
-/// matches, shared expenses) in date order, with paging; with pending changes, offline, against
-/// a server without search or in the demo it searches this device's data with the shared
+/// matches, shared expenses) in date order, with paging; with pending changes, offline or in
+/// the demo it searches this device's data with the shared
 /// normalization and says so. Rows open the entry; swipe for Edit and Delete (confirmed).
 struct ActivityView: View {
     @Environment(ShellModel.self) private var shell
@@ -340,7 +340,6 @@ private struct ActivitySearchScope: View {
         case .demo?: return "Searching the demo's sample data on this device."
         case .pendingChanges?: return "On this device: your latest changes haven't synced yet. \(words)"
         case .offline?: return "On this device: you're offline. \(words)"
-        case .serverWithoutSearch?: return "On this device: your server doesn't offer search yet. \(words)"
         case .serverFailed?, nil: return "On this device. \(words)"
         }
     }

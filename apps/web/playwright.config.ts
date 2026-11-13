@@ -12,7 +12,7 @@ import { defineConfig, devices, type Project } from "@playwright/test";
 // Projects are named <browser>-<device>, e.g. `--project=webkit-phone`. This is browser
 // emulation only; native simulators and devices are MAZ-81.
 const realStack = process.env.PENNY_REAL_STACK === "1";
-// Mocked: 4175 keeps clear of the legacy Expo Playwright server and `npm run dev` (4173).
+// Mocked: 4175 keeps clear of `npm run dev` (4173).
 // Real: 4173 is an origin the test environment allows by default and an OIDC redirect URI
 // its local provider registers.
 const port = Number(process.env.PENNY_E2E_PORT ?? (realStack ? 4173 : 4175));

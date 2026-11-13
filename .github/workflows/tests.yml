@@ -1,14 +1,18 @@
-name: Application tests
+name: Shared rules and contracts
 
 on:
+  pull_request:
+  push:
+    branches: [master]
   workflow_call:
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
   tests:
-    name: Legacy API, shared rules and contracts
+    name: Shared rules, fixtures and contracts
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -37,6 +41,12 @@ jobs:
 
       - name: Validate API contract
         run: npm exec --yes --package @redocly/cli@2.76.0 -- redocly lint contracts/openapi.json
+
+      - name: Golden fixtures are current
+        run: npm run fixtures:check
+
+      - name: Grafana dashboards are current
+        run: npm run dashboards:check
 
       - name: Run core tests with coverage
         run: npm run test:coverage

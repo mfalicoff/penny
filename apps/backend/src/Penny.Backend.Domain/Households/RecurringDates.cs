@@ -1,6 +1,6 @@
 namespace Penny.Backend.Domain.Households;
 
-// Port of the legacy `nextOccurrence` (src/domain/ledger.ts): weekly adds seven days;
+// The next occurrence of a recurring rule: weekly adds seven days;
 // monthly and yearly move to the first of the target month, then to the anchor day
 // clamped to that month's length (Jan 31 -> Feb 28 -> Mar 31; Feb 29 -> Feb 28 ->
 // Feb 29 in the next leap year). The anchor is the rule's original day of month, so a
@@ -21,8 +21,7 @@ public static class RecurringDates
 
     // The anchor a rule write keeps: the stored anchor while the next date and the
     // frequency are unchanged (a rule advanced from Jan 31 to Feb 28 still anchors on
-    // the 31st), otherwise the day of the new next date (legacy
-    // `Number(nextDate.slice(8))`).
+    // the 31st), otherwise the day of the new next date.
     public static int Anchor(
         DateOnly nextDate,
         string frequency,

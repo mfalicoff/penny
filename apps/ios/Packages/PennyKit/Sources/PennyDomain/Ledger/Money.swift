@@ -1,7 +1,7 @@
 /// Integer-cent money. Every amount in the ledger is a whole number of minor currency units
 /// (`Int64`); no rule here ever uses `Double` or `Decimal`, so no amount can drift by a cent.
-/// Rounding is explicit: half up on non-negative values, exactly what the legacy
-/// `Math.round` produced, computed in integers.
+/// Rounding is explicit: half up on non-negative values (JavaScript's `Math.round`, as the web
+/// app rounds), computed in integers.
 public enum Money {
     /// The largest stored entry amount: 999,999,999.99.
     public static let maxCents: Int64 = 99_999_999_999
@@ -59,8 +59,7 @@ public enum Money {
     /// cent, so $10.01 split three ways is $3.34 for you, never $3.33.
     ///
     /// A head count is a plain decimal integer; a fraction ("2.5"), exponent or sign is refused.
-    /// (The legacy `Number(input)` also accepted forms like "1e1" and "0x2"; an iOS form field
-    /// never produces them and refusing them is deliberately stricter.)
+    /// Forms like "1e1" and "0x2" are refused too.
     ///
     /// `total` comes from `cents(_:)`, so it is within 0...maxCents; anything else is refused as
     /// an invalid amount rather than trapping on overflow.

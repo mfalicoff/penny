@@ -6,6 +6,6 @@ public sealed record PushDispatch(
     string OutboxId,
     string Token,
     string Provider,
-    string? Environment,
+    string Environment,
     int Attempts
 );

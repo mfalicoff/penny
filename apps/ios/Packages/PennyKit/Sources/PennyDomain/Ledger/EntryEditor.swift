@@ -202,7 +202,7 @@ public struct EntrySaveAttempt: Sendable {
 
 extension EntryDraft {
     /// The form for a recorded entry. A split entry opens as "your share is this amount",
-    /// as in the legacy form: a personal entry stores only the two amounts, not how they
+    /// because a personal entry stores only the two amounts, not how they
     /// were split. The repeat choice is not offered when editing an entry.
     public init(editing entry: LedgerEntry) {
         let split = entry.share != entry.total

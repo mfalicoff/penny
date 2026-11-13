@@ -33,8 +33,6 @@ final class ShellModel {
     let startDemo: (() -> Void)?
     /// Ends the demo and discards everything in it (nil for an account).
     let leaveDemo: (() -> Void)?
-    /// What this launch's Expo import needs from the person (MAZ-72), shown in Settings.
-    let expoImport: ExpoImportNotice?
 
     // MARK: Entries and Activity (MAZ-73)
 
@@ -107,7 +105,7 @@ final class ShellModel {
     init(
         workspace: any LedgerWorkspace, session: ShellSession, today: CalendarDate, clock: (() -> CalendarDate)? = nil,
         startDemo: (() -> Void)? = nil, leaveDemo: (() -> Void)? = nil, search: (any EntrySearchService)? = nil,
-        sharedProjection: (any SharedProjectionService)? = nil, expoImport: ExpoImportNotice? = nil,
+        sharedProjection: (any SharedProjectionService)? = nil,
         households householdService: (any HouseholdService)? = nil, householdEmail: String? = nil
     ) {
         let monthClock = clock ?? { today }
@@ -117,7 +115,6 @@ final class ShellModel {
             service: workspace.isDemo ? nil : householdService, email: email, month: { MonthKey(monthClock()) })
         trips = TripDirectory(households: households)
         shared = SharedProjectionModel(service: workspace.isDemo ? nil : sharedProjection)
-        self.expoImport = expoImport
         self.workspace = workspace
         self.session = session
         self.today = today

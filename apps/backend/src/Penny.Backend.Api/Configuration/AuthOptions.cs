@@ -2,8 +2,8 @@ using System.Net;
 
 namespace Penny.Backend.Api.Configuration;
 
-// Legacy equivalents: ALLOW_REGISTRATION, COOKIE_SECURE and CORS_ORIGINS. The legacy
-// server trusted no proxy headers; TrustedProxies keeps that default.
+// Password sign-in, cookie and origin settings. No proxy headers are trusted unless
+// TrustedProxies lists the proxy.
 public sealed record AuthOptions(
     bool AllowRegistration,
     bool SecureCookies,
@@ -14,7 +14,7 @@ public sealed record AuthOptions(
     int InviteRateLimitPermits
 )
 {
-    public const string DefaultOrigins = "http://localhost:8081,http://localhost:3001";
+    public const string DefaultOrigins = "http://localhost:4173,http://127.0.0.1:4173";
 
     public static AuthOptions Read(IConfiguration configuration) =>
         new(
@@ -25,7 +25,7 @@ public sealed record AuthOptions(
             BackendOptions.ReadBounded(configuration, "Auth:RateLimitPermits", 40, 1, 10_000),
             // Operator-issued reset codes (MAZ-123): 24 hours by default, at most 7 days.
             BackendOptions.ReadBounded(configuration, "Auth:PasswordResetHours", 24, 1, 168),
-            // Legacy invite limit (MAZ-56): 20 join attempts per 10 minutes per client.
+            // Invite limit (MAZ-56): 20 join attempts per 10 minutes per client.
             BackendOptions.ReadBounded(configuration, "Auth:InviteRateLimitPermits", 20, 1, 10_000)
         );
 

@@ -16,8 +16,8 @@ public struct SharedShare: Hashable, Sendable {
     }
 }
 
-/// The server's shared-expense split (`HouseholdSplits`, a port of the legacy
-/// `calculateHouseholdSplits`), so the form previews exactly what the server will store. The
+/// The server's shared-expense split (`HouseholdSplits`, src/domain `calculateHouseholdSplits`),
+/// so the form previews exactly what the server will store. The
 /// server still decides: it recomputes the split and rejects one that doesn't add up. Golden
 /// cases: `contracts/fixtures/shared-splits.json`.
 ///
@@ -132,7 +132,7 @@ public enum SettlementCalendar {
     }
 }
 
-/// Text rules the shared-expense server applies (the legacy zod schemas): JavaScript's `trim`
+/// Text rules the shared-expense server applies: JavaScript's `trim`
 /// whitespace set, and lengths in UTF-16 units.
 public enum SharedText {
     public static func trimmed(_ text: String) -> String { JavaScriptText.trim(text) }

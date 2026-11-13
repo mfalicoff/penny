@@ -5,7 +5,7 @@ public enum AppActivity: Equatable, Sendable {
     case active, inactive, background
 }
 
-/// The biometric app lock (the legacy `AppLockProvider`, ported to the native app).
+/// The biometric app lock.
 ///
 /// - It fails closed: until the setting has been read, or when reading it fails, the app is
 ///   concealed. A failed read offers Try again; it never opens the app.

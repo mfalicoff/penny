@@ -1,10 +1,10 @@
 # Native QA matrix and release gates (MAZ-82)
 
-[Documentation](README.md) · [Native UI tests](ios-ui-tests.md) · [Native app](../apps/ios/README.md) · [Redesign baseline](migration/redesign.md) · [Feature parity](migration/feature-parity.md)
+[Documentation](README.md) · [Native UI tests](ios-ui-tests.md) · [Native app](../apps/ios/README.md) · [Redesign baseline](reference/redesign.md)
 
 This page is the native iOS release gate: which journeys are covered on the simulator and how, which redesign cards they trace to, the accessibility and performance checks with their budgets, what was actually run (execution evidence), what only a physical device can check, how to triage a failure, and the known coverage gaps. The harness itself (plans, launch controls, the stack, artifacts, flaky-test policy) is described in [native UI tests](ios-ui-tests.md); this page does not repeat it.
 
-Everything here runs against the real .NET API on PostgreSQL from the [full-stack test environment](migration/test-environment.md), with synthetic `.test` accounts and fixed synthetic amounts. No test mocks the business API, and no fixture contains personal financial data or credentials.
+Everything here runs against the real .NET API on PostgreSQL from the [full-stack test environment](reference/test-environment.md), with synthetic `.test` accounts and fixed synthetic amounts. No test mocks the business API, and no fixture contains personal financial data or credentials.
 
 ## Plans
 
@@ -19,7 +19,7 @@ All four run on clean iPhone and iPad simulators (`PENNY_UI_DEVICES`), on the mi
 
 ## Journey matrix
 
-Each row is a parity area from [feature parity](migration/feature-parity.md). "Server-checked" means the test reads the account's ledger back through `GET /api/ledger` after the write and compares amounts in cents, including the recorded totals per kind (`LedgerJSON.shareTotal`).
+Each row is a feature area. "Server-checked" means the test reads the account's ledger back through `GET /api/ledger` after the write and compares amounts in cents, including the recorded totals per kind (`LedgerJSON.shareTotal`).
 
 | Area | Suites | What is exercised | Durable after | Server-checked totals |
 | --- | --- | --- | --- | --- |
@@ -104,7 +104,7 @@ Every card in [design-baseline.json](../contracts/design-baseline.json) whose na
 | `web-add-entry` | — | Web-only reference: native behavior is traced through `iphone-add-expense`; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-sign-in` | — | Web-only reference: native behavior is traced through `iphone-sign-in`; the browser journeys are MAZ-96 | Not applicable to native |
 
-Justified native adaptations are recorded in [redesign](migration/redesign.md#native-implementation-notes-maz-69). Android has no card (the Android app is retired, MAZ-98), and the desktop-only `web-*` cards have no native screen.
+Justified native adaptations are recorded in [redesign](reference/redesign.md#native-implementation-notes-maz-69). Android has no card (the Android app is retired, MAZ-98), and the desktop-only `web-*` cards have no native screen.
 
 ## Accessibility
 
@@ -185,7 +185,7 @@ Defects found and fixed by these runs:
 
 Simulators cannot check these; run them on a physical iPhone and iPad with the release candidate from TestFlight before submitting, and record the device, OS and build in the release issue.
 
-- [ ] **Upgrade from the App Store/Expo build**: install the current store build, sign in, add an entry offline, then install the candidate over it (TestFlight). The session, the pending entry and the appearance survive (MAZ-72/98).
+- [ ] **Upgrade from the App Store build**: install the current store build, sign in, add an entry offline, then install the candidate over it (TestFlight). The session, the pending entry and the appearance survive (MAZ-98).
 - [ ] **Face ID lock**: turn on the lock, background and return; content and open sheets are concealed and drafts kept; cancel and passcode fallback work (MAZ-69, `iphone-lock`, `iphone-app-lock`).
 - [ ] **Push notifications**: register on the production APNs environment, receive a household expense notification from a second account, tap it locked and unlocked (MAZ-79, [notifications](ios-notifications.md)).
 - [ ] **Widgets**: add small widgets to the Home Screen, check light and dark, refresh after a new entry, tap through to Add entry and Home, sign out clears them (MAZ-80, `system-widgets`).

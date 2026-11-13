@@ -2,7 +2,7 @@ using Penny.Backend.Application.Abstractions.Persistence;
 
 namespace Penny.Backend.Application.Abstractions.Security;
 
-// The configured OpenID Connect provider (legacy server/infrastructure/oidc.ts).
+// The configured OpenID Connect provider.
 public interface IOidcProvider
 {
     // Builds the Authorization Code + S256 PKCE request for the attempt.

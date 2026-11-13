@@ -46,7 +46,7 @@ public sealed class TestApiFactory(
         // Tests run the shared recurrence runner explicitly with the pinned clock.
         builder.UseSetting("Recurrence:Worker", "false");
         // Tests run push delivery explicitly with deterministic fake providers; the real
-        // Expo and APNs transports are never called.
+        // APNs transport is never called.
         builder.UseSetting("Push:Worker", "false");
         // Tests run receipt text extraction explicitly (MAZ-125); it still uses the real
         // local OCR engine, which must be installed (docs/testing.md).

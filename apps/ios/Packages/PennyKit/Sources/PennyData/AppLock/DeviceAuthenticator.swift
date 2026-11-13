@@ -22,7 +22,7 @@ public enum AuthenticationPurpose: Equatable, Sendable {
     /// Opening a locked app: biometrics, with the device passcode as the backup.
     case unlock
     /// Turning the lock on: biometrics only, so the person proves the sensor works for them
-    /// before relying on it (the legacy app did the same).
+    /// before relying on it.
     case enable
     /// Turning the lock off: biometrics or the passcode.
     case disable

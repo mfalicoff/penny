@@ -28,7 +28,7 @@ public enum Percent {
 /// right (expense categories, Invested, Left over). Recorded entries only, as **Left to
 /// spend**: a scheduled preview or expected income is never drawn as money that moved.
 ///
-/// Rules (design-kit `MoneyFlow`, legacy `buildMoneyFlow`):
+/// Rules (design-kit `MoneyFlow`, src/domain `buildMoneyFlow`):
 /// - Personal shares only: a split or shared expense counts the viewer's share.
 /// - At most `maxRows` rows per column: with more categories, the largest `maxRows - 1` are
 ///   kept and the rest become one "N more" row, so every cent stays in the flow.

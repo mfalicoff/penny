@@ -2,8 +2,7 @@ using Penny.Backend.Domain.Errors;
 
 namespace Penny.Backend.Domain.Households;
 
-// Port of the legacy server `split` (server/infrastructure/households.ts): checks a
-// requested split against the eligible members, then allocates integer cents with
+// Checks a requested split against the eligible members, then allocates integer cents with
 // HouseholdSplits. Messages and their order are part of the client contract.
 public static class ExpenseSplit
 {
@@ -70,7 +69,7 @@ public static class ExpenseSplit
         );
     }
 
-    // Legacy `calculateRecurringSplits` for one occurrence: a rule's stored split
+    // The split of one recurring occurrence: a rule's stored split
     // applies while exactly the same members are active; otherwise the occurrence is
     // split equally among the active members. `SplitMode` is the mode the occurrence
     // records.
@@ -117,8 +116,8 @@ public static class ExpenseSplit
 
     // The split one occurrence records (runner) or previews (projection): `Recurring`,
     // or an equal split among the active members when the stored rule cannot be
-    // applied (allocations of the wrong kind or that no longer add up, as an imported
-    // rule may have). `activeIds` must not be empty.
+    // applied (stored allocations of the wrong kind or that no longer add up).
+    // `activeIds` must not be empty.
     public static (IReadOnlyList<SplitShare> Shares, string SplitMode) Occurrence(
         long totalCents,
         string mode,

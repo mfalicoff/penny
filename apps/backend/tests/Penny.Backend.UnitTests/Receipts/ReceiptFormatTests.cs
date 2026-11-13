@@ -6,7 +6,7 @@ using Xunit;
 
 namespace Penny.Backend.UnitTests.Receipts;
 
-// Legacy server/validation/receipts.ts and the download header (MAZ-60).
+// Receipt upload format rules and the download header (MAZ-60).
 public sealed class ReceiptFormatTests
 {
     [Theory]
@@ -23,10 +23,11 @@ public sealed class ReceiptFormatTests
     [InlineData("QQ\n", false)]
     [InlineData("a-b_", false)]
     [InlineData("QUJDé", false)]
-    public void whenTextChecked_IsBase64Text_ShouldMatchTheLegacyPattern(string text, bool valid) =>
+    public void whenTextChecked_IsBase64Text_ShouldMatchTheUploadPattern(string text, bool valid) =>
         ReceiptFormat.IsBase64Text(text).ShouldBe(valid);
 
-    // Expected values are Node's Buffer.from(text, "base64").
+    // Expected values follow the lenient decoding: optional padding, a dangling
+    // character ignored.
     [Theory]
     [InlineData("QUJD", "414243")]
     [InlineData("QUI=", "4142")]

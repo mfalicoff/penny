@@ -661,7 +661,7 @@ function auth() {
 function jobs() {
   const b = new Board();
   b.text(
-    "Workers claim **due** work: push deliveries and receipts, search embeddings, shared recurrences and receipt text. **Lag** is the time from when work became due to when a worker claimed it; recurrence lag counts from the start of the occurrence's UTC day, so hours there are normal. Failed items are retried.",
+    "Workers claim **due** work: push deliveries, search embeddings, shared recurrences and receipt text. **Lag** is the time from when work became due to when a worker claimed it; recurrence lag counts from the start of the occurrence's UTC day, so hours there are normal. Failed items are retried.",
   );
   b.row("Throughput and failures");
   b.stat("Items claimed", 8, `sum(increase(penny_job_items_total{${F}}[$__range]))`, { decimals: 0, graph: "none" });
@@ -703,7 +703,7 @@ function jobs() {
     12,
     8,
     [[`sum by (server_address, http_response_status_code) (rate(http_client_request_duration_seconds_count{${F}}[$__rate_interval]))`, "{{server_address}} {{http_response_status_code}}"]],
-    { unit: "reqps", overrides: [red(".* 5..$")], description: "Calls to the OIDC provider, APNs and Expo." },
+    { unit: "reqps", overrides: [red(".* 5..$")], description: "Calls to the OIDC provider and APNs." },
   );
   b.series("Outgoing HTTP p95", 12, 8, [[histogram(0.95, "http_client_request_duration_seconds", "le, server_address", F), "{{server_address}}"]], { unit: "s" });
 

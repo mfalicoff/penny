@@ -2,7 +2,7 @@ using Penny.Backend.Application.Abstractions.Persistence;
 
 namespace Penny.Backend.Application.Ledgers;
 
-// The legacy `emptyLedger()` created with every new account: revision 0, CAD and
+// The ledger created with every new account: revision 0, CAD and
 // the default categories.
 public static class InitialLedger
 {

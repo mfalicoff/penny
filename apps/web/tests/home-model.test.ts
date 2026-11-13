@@ -9,6 +9,8 @@ import { calendarDays, categoryComparison, flowNodeSummary, groupSmall, homeSear
  * the ledger joined with shared shares. Synthetic data only, integer cents.
  */
 const MONTH = "2026-11";
+// The month's last day: every entry dated in the month is recorded.
+const END = "2026-11-30";
 
 const entry = (id: string, extra: Partial<Transaction> = {}): Transaction => ({
   id,
@@ -55,7 +57,7 @@ const shared = (id: string, extra: Partial<SharedRow> = {}): SharedRow => ({
   ...extra,
 });
 
-const report = (value: Ledger, rows: SharedRow[] = [], scheduled: SharedRow[] = []) => monthReport(ledgerWithShared(value, rows, scheduled), MONTH);
+const report = (value: Ledger, rows: SharedRow[] = [], scheduled: SharedRow[] = []) => monthReport(ledgerWithShared(value, rows, scheduled), MONTH, END);
 
 describe("month totals", () => {
   it("an empty month has zero totals, an empty flow and nothing to chart", () => {
@@ -137,7 +139,7 @@ describe("month totals", () => {
 
 describe("shared shares", () => {
   it("adds your recorded shares to spending and leaves other currencies out", () => {
-    const result = report(ledger(), [shared("a"), shared("b", { householdCurrency: "EUR", shareCents: 9900 }), shared("c", { householdCurrency: undefined })]);
+    const result = report(ledger(), [shared("a"), shared("b", { householdCurrency: "EUR", shareCents: 9900 }), shared("c", { householdCurrency: "USD" })]);
     expect(result.recorded.expense).toBe(3000);
     expect(result.sharedSpent).toBe(3000);
     expect(result.sharedCount).toBe(1);
@@ -175,7 +177,7 @@ describe("shared shares", () => {
 describe("filters never change totals", () => {
   it("filters the month's list by keyword, kind, day and category while the report stays the same", () => {
     const view = ledgerWithShared(ledger([entry("coffee", { title: "Morning coffee", categoryId: "food", date: "2026-11-03" }), entry("rent", { categoryId: "home", total: 90000, share: 90000 }), entry("pay", { kind: "income", categoryId: "salary" })], [rule("salary")]), [shared("h")], []);
-    const before = monthReport(view, MONTH);
+    const before = monthReport(view, MONTH, END);
     expect(monthEntries(view, MONTH, { day: undefined, q: "coffee", kind: undefined, category: undefined }).map((item) => item.id)).toEqual(["coffee"]);
     expect(monthEntries(view, MONTH, { day: "2026-11-03", q: undefined, kind: undefined, category: undefined }).map((item) => item.id)).toEqual(["coffee"]);
     expect(monthEntries(view, MONTH, { day: undefined, q: undefined, kind: "income", category: undefined }).map((item) => item.id)).toEqual(["salary:2026-11-25", "pay"]);
@@ -183,7 +185,7 @@ describe("filters never change totals", () => {
     expect(monthEntries(view, MONTH, { day: undefined, q: "shared", kind: undefined, category: undefined }).map((item) => item.id)).toEqual(["household:h1:h"]);
     // A day outside the month is ignored.
     expect(monthEntries(view, MONTH, { day: "2026-10-03", q: undefined, kind: undefined, category: undefined })).toHaveLength(5);
-    expect(monthReport(view, MONTH)).toEqual(before);
+    expect(monthReport(view, MONTH, END)).toEqual(before);
   });
 });
 
@@ -237,7 +239,7 @@ describe("grouping and labels", () => {
 describe("calendar", () => {
   it("builds the month's days in one pass, scheduled kept apart from recorded", () => {
     const view = ledgerWithShared(ledger([entry("a", { date: "2026-11-06" }), entry("b", { kind: "investment", categoryId: "investments", date: "2026-11-06", share: 200, total: 200 })], [rule("pay")]), [], []);
-    const { offset, days } = calendarDays(MONTH, monthReport(view, MONTH).calendarEntries);
+    const { offset, days } = calendarDays(MONTH, monthReport(view, MONTH, END).calendarEntries, END);
     expect(offset).toBe(6); // 2026-11-01 is a Sunday
     expect(days).toHaveLength(30);
     expect(days[5]).toMatchObject({ date: "2026-11-06", count: 2, expense: 1000, investment: 200, scheduled: 0 });
@@ -263,8 +265,8 @@ describe("performance baseline", () => {
     const big = ledger(entries, [rule("pay")]);
     const started = performance.now();
     const view = ledgerWithShared(big, rows, []);
-    const result = monthReport(view, MONTH);
-    calendarDays(MONTH, result.calendarEntries);
+    const result = monthReport(view, MONTH, END);
+    calendarDays(MONTH, result.calendarEntries, END);
     monthEntries(view, MONTH, { day: undefined, q: "e1", kind: undefined, category: undefined });
     const elapsed = performance.now() - started;
     expect(result.recordedEntries.length).toBeGreaterThan(1600);
@@ -286,9 +288,8 @@ describe("income dated after today (MAZ-136)", () => {
     expect(result.expectedIncome).toBe(50000);
     expect(result.comingUp.map((item) => item.date)).toEqual(["2026-11-11"]);
     expect(result.recordedEntries.map((item) => item.id)).not.toContain("pay-2026-11-11");
-    // On its date it moves to Left to spend; without a today nothing is split (legacy).
+    // On its date it moves to Left to spend.
     expect(monthReport(view, MONTH, "2026-11-11").recorded.income).toBe(100000);
-    expect(monthReport(view, MONTH).recorded.income).toBe(100000);
   });
 
   it("rings the expected day on the calendar instead of drawing it as recorded income", () => {

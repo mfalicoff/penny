@@ -3,7 +3,7 @@ using Microsoft.Net.Http.Headers;
 
 namespace Penny.Backend.Api.Authentication;
 
-// Reads top-level string fields the way express.json() fed the legacy validators:
+// Reads top-level string fields of a JSON body:
 // non-JSON or empty bodies become `{}`, malformed JSON is a 400 "Invalid JSON.", and
 // non-string fields are treated as missing so validation, not binding, decides.
 public static class JsonStringFields

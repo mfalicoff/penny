@@ -1,6 +1,6 @@
 # Browser and cross-client acceptance (MAZ-96)
 
-[Documentation](README.md) · [Web app](../apps/web/README.md#browser-tests) · [Full-stack test environment](migration/test-environment.md) · [Native UI tests](ios-ui-tests.md) · [Redesign baseline](migration/redesign.md)
+[Documentation](README.md) · [Web app](../apps/web/README.md#browser-tests) · [Full-stack test environment](reference/test-environment.md) · [Native UI tests](ios-ui-tests.md) · [Redesign baseline](reference/redesign.md)
 
 This is the release acceptance evidence for the v2 browser app and for the browser and the native app working against one .NET API and PostgreSQL database. It lists every journey by feature, how to run it, what the last recorded run found, and what is still not proven. Native-only acceptance (XCUITest on simulators, VoiceOver, Liquid Glass, devices) is MAZ-82's; comparing implementations with the design cards is MAZ-122's.
 
@@ -14,7 +14,7 @@ All browser commands run from `apps/web` against the production build (`npm ci &
 | --- | --- | --- |
 | Mocked browser suite (smoke, journeys, accessibility, performance) | `npm run test:e2e -- --trace off` | Playwright Chromium (`npx playwright install chromium`) |
 | Same on Firefox and WebKit | `PENNY_E2E_BROWSERS=firefox,webkit npm run test:e2e -- --trace off` | `npx playwright install firefox webkit` |
-| Real .NET/PostgreSQL journeys, disposable environment | `npm run test:e2e:real -- --trace off` | Docker or Podman (`PENNY_CONTAINER_CLI=podman`), the .NET SDK, the search model and restored packages ([prerequisites](migration/test-environment.md#prerequisites)) |
+| Real .NET/PostgreSQL journeys, disposable environment | `npm run test:e2e:real -- --trace off` | Docker or Podman (`PENNY_CONTAINER_CLI=podman`), the .NET SDK, the search model and restored packages ([prerequisites](reference/test-environment.md#prerequisites)) |
 | One real journey, one project | `npm run test:e2e:real -- search.real --project=chromium-phone --trace off` | as above |
 | Visual baselines (compare) | `PENNY_VISUAL=1 npx playwright test visual --project=chromium-desktop` | Chromium; baselines are per platform |
 | Visual baselines (record after an intended change) | `PENNY_VISUAL=1 npx playwright test visual --project=chromium-desktop --update-snapshots` | Review every changed PNG before committing |
@@ -46,7 +46,7 @@ What this gives: both suites run against one server, database, clock and fault r
 
 ## Acceptance matrix
 
-`mocked` specs run with `/api` mocked per test (CI: Chromium desktop and phone; Firefox and WebKit smoke jobs). `real` specs run against the [full-stack test environment](migration/test-environment.md) (CI: Chromium, Firefox and WebKit, one environment each). Spec files are in `apps/web/e2e/`.
+`mocked` specs run with `/api` mocked per test (CI: Chromium desktop and phone; Firefox and WebKit smoke jobs). `real` specs run against the [full-stack test environment](reference/test-environment.md) (CI: Chromium, Firefox and WebKit, one environment each). Spec files are in `apps/web/e2e/`.
 
 | Feature | Browser, mocked | Browser, real .NET/PostgreSQL | Cross-client | Native (MAZ-82) |
 | --- | --- | --- | --- | --- |
@@ -71,7 +71,6 @@ What this gives: both suites run against one server, database, clock and fault r
 | Server 503 and dropped connections | `transactions.spec.ts` | `recovery.real.spec.ts` (fault controls) | | `NetworkFailureTests` |
 | Unreachable server through a reload | `smoke.spec.ts` | `recovery.real.spec.ts` | | `NetworkFailureTests` |
 | Database outage and recovery | | `recovery.real.spec.ts` (PostgreSQL container paused) | | |
-| Legacy browser cache upgrade | `offline.spec.ts` | `recovery.real.spec.ts` (onto a server copy that moved on) | | `LifecycleTests`, `ios-expo-migration.md` |
 | Settings: appearance, pinned theme | `shell.spec.ts` | `financial.real.spec.ts` | | `ScreenshotTests` |
 | Accessibility scans | `a11y.spec.ts` | | | MAZ-82 |
 | Keyboard use and focus | `shell.spec.ts`, `transactions.spec.ts`, `organize.spec.ts`, `a11y.spec.ts` | | | MAZ-82 |
@@ -139,7 +138,7 @@ Observed while recording: at 320px, Activity's Search button and the totals card
 | Server search over HTTP, p95 / max (small seed, 33 requests) | 300 ms / 1,000 ms | 55–68 ms / 135–159 ms (Firefox, WebKit) | 46 ms / 67 ms (WebKit) |
 | Browser search: navigate, query, render | 3,000 ms per query | under budget | under budget |
 
-The server-side budgets at 100,000 entries per viewer are measured by MAZ-121 ([search](migration/search.md)); this suite checks that the end-to-end path through the browser stays inside them on a small seed.
+The server-side budgets at 100,000 entries per viewer are measured by MAZ-121 ([search](reference/search.md)); this suite checks that the end-to-end path through the browser stays inside them on a small seed.
 
 ## Results
 
@@ -160,7 +159,6 @@ Flakiness seen while writing the suite (the first full Chromium run shared the m
 
 - The money journey read the server before the schedule had synced, and clicked a currency before the page settled (chromium-desktop and chromium-phone once each). Fixed in the spec: it waits for both.
 - Session expiry on phone layouts (chromium-phone once, webkit-phone once) timed out on Add entry. The page snapshot shows the app had already, correctly, returned to sign-in with the expiry notice: a background refetch reached the server after the clock moved and got the 401 before the test's write. Fixed in the spec: the change is made to wait first (the write is faulted), then the clock moves, so either request may notice the expiry. Product behavior was right in both runs.
-- The legacy upgrade journey on chromium-desktop once got a 401 for the protocol client's own session while polling. Not explained and not reproduced since; it ran after the session-expiry journey, which moves the server clock. Repeat it before marking the real-stack job required.
 
 Search latency over HTTP in `search.real.spec.ts` (small seed, every request the spec makes): p95 55.0 ms and max 134.5 ms on firefox-desktop, p95 67.9 ms and max 158.7 ms on webkit-desktop, p95 46.1 ms and max 67.2 ms on webkit-phone (the Chromium runs asserted the same budgets; their numbers were not exported).
 
@@ -168,9 +166,8 @@ Search latency over HTTP in `search.real.spec.ts` (small seed, every request the
 
 - **Simulator to browser hand-off.** No journey yet creates data in the iOS Simulator and reads it in the browser (or back). The runners share an environment (above), and `cross-client.real.spec.ts` proves convergence with a protocol client, but the Swift app's own sync is only exercised by its XCUITest and unit suites. Closing it needs an XCUITest that publishes what it created (for example through `Stack` writing a file the browser spec reads) and a wrapper that runs the two in order. Xcode was not available where this suite was written.
 - **API server restart.** The test environment cannot restart the .NET process in place, so a server restart is approximated by dropped connections (faults) and a paused database. A real restart with in-flight writes is not covered.
-- **Search index rebuild.** `search-rebuild` and `search-verify` against migrated SQLite data are covered by backend tests and the cutover drill ([cutover](cutover.md)), not by a browser journey after a rebuild.
-- **Migrated SQLite server data.** Browser journeys run on data created through the API, not on a database imported from the legacy SQLite file (`npm run test-env -- cutover` covers the import itself).
-- **Upgrade from a real previous build.** The legacy cache journey seeds the Expo web app's `localStorage` format; no test installs a previous production bundle and upgrades it with a service worker or cache in place.
+- **Search index rebuild.** `search-rebuild` and `search-verify` are covered by backend tests, not by a browser journey after a rebuild.
+- **Upgrade from a real previous build.** No test installs a previous production bundle and upgrades it with a service worker or cache in place.
 - **Accessibility.** The violations listed above are open. Manual screen-reader, zoom and high-contrast checks have not been run.
 - **Visual comparison.** `visual.spec.ts` baselines are web-only regressions on macOS. The card-by-card comparison with the design uses the card baselines, which CI checks on Linux, and the `cards.real.spec.ts` captures ([visual acceptance](design/visual-acceptance.md), MAZ-122).
 - **Session expiry prefill.** After a session expires the browser asks for the email again; the iOS app keeps it. Product decision pending.
@@ -181,4 +178,4 @@ Search latency over HTTP in `search.real.spec.ts` (small seed, every request the
 
 ### Device-only exclusions
 
-Not provable in a browser or a simulator, and owned by MAZ-82 and the release checklist: Liquid Glass rendering and Reduce Transparency on device, Face ID and the app lock, the camera invite scanner, APNs delivery, WidgetKit on a Home Screen, Dynamic Type at device scale with VoiceOver, and the TestFlight upgrade from the Expo build (MAZ-98).
+Not provable in a browser or a simulator, and owned by MAZ-82 and the release checklist: Liquid Glass rendering and Reduce Transparency on device, Face ID and the app lock, the camera invite scanner, APNs delivery, WidgetKit on a Home Screen, Dynamic Type at device scale with VoiceOver.

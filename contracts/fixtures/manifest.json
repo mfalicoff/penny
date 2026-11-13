@@ -4,12 +4,11 @@
   "fixtures": [
     {
       "file": "full-stack-seeds.json",
-      "sha256": "47e4b1749f8f02a7c517acc87fc3c0ff18b8dcfedc08390a01c3dc34b6a1d50f",
+      "sha256": "820c144b6fe8b3af2e258437ea1e3fa2456b24e55bce716207ae5c714edf4d8d",
       "generatedBy": null,
       "consumers": {
         "typescript": [
           "tests/core/golden-fixtures.test.ts",
-          "tests/core/parity-coverage.test.ts",
           "tests/fullstack/environment.test.mjs"
         ],
         "csharp": [
@@ -32,23 +31,6 @@
           "apps/backend/tests/Penny.Backend.IntegrationTests/Controllers/LedgerTests.cs"
         ],
         "swift": "MAZ-71 (Swift API client)"
-      }
-    },
-    {
-      "file": "ledger-upgrades.json",
-      "sha256": "52e2ade8c05421841daba887aec58b604a346766c3a771345022a672d268e850",
-      "generatedBy": null,
-      "consumers": {
-        "typescript": [
-          "tests/core/contracts.test.ts"
-        ],
-        "csharp": [
-          "apps/backend/tests/Penny.Backend.UnitTests/Ledgers/LedgerReaderTests.cs",
-          "apps/backend/tests/Penny.Backend.IntegrationTests/Contracts/LedgerUpgradeFixtureTests.cs"
-        ],
-        "swift": [
-          "contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"
-        ]
       }
     },
     {
@@ -84,7 +66,7 @@
     },
     {
       "file": "month-totals.json",
-      "sha256": "5f4c90ba0bdc484655d7789bd45e217050dc0069cdd2f98b399ffa812232b1ae",
+      "sha256": "3701a5b197689b8a337e51600eaa6740dc67d3df0aade8b9634a2caa46a3b462",
       "generatedBy": "scripts/fixtures/generate-golden.ts",
       "consumers": {
         "typescript": [
@@ -187,20 +169,6 @@
         "swift": [
           "contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"
         ]
-      }
-    },
-    {
-      "file": "storage-mapping.json",
-      "sha256": "7c955a387991b26613655139fdbbbb7795775612899e63b05fddec40bd69b811",
-      "generatedBy": null,
-      "consumers": {
-        "typescript": [
-          "tests/core/contracts.test.ts"
-        ],
-        "csharp": [
-          "apps/backend/tests/Penny.Backend.IntegrationTests/Migrations/SqliteImportTests.cs"
-        ],
-        "swift": "not applicable: server storage"
       }
     }
   ]

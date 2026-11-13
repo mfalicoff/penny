@@ -14,8 +14,8 @@ using Xunit;
 namespace Penny.Backend.IntegrationTests.Controllers;
 
 // Receipt upload and download over real HTTP and PostgreSQL with the encrypted file
-// store (legacy server/http/receipts.ts, MAZ-60): byte checksums for every format,
-// legacy messages, headers, owner and household access, and partial-write failures.
+// store (MAZ-60): byte checksums for every format,
+// contract messages, headers, owner and household access, and partial-write failures.
 // All data is synthetic.
 public sealed partial class ReceiptTests(ApiFixture fixture) : ReceiptTestBase(fixture)
 {
@@ -59,7 +59,7 @@ public sealed partial class ReceiptTests(ApiFixture fixture) : ReceiptTestBase(f
     }
 
     [Fact]
-    public async Task whenReceiptDownloaded_Download_ShouldSendLegacyHeaders()
+    public async Task whenReceiptDownloaded_Download_ShouldSendContractHeaders()
     {
         var token = await RegisterAsync("owner@example.test");
         var id = (await UploadedAsync(token, "Café 東京 (1)!*'~.pdf", "application/pdf", Pdf()))
@@ -128,7 +128,7 @@ public sealed partial class ReceiptTests(ApiFixture fixture) : ReceiptTestBase(f
     }
 
     [Fact]
-    public async Task whenUploadIsInvalid_Upload_ShouldRejectWithLegacyMessagesAndStoreNothing()
+    public async Task whenUploadIsInvalid_Upload_ShouldRejectWithContractMessagesAndStoreNothing()
     {
         var token = await RegisterAsync("owner@example.test");
         var pdf = Convert.ToBase64String(Pdf());
@@ -144,7 +144,7 @@ public sealed partial class ReceiptTests(ApiFixture fixture) : ReceiptTestBase(f
                 base64 = base64 ?? pdf,
             };
 
-        // Schema failures (zod): missing, mistyped or out-of-range fields.
+        // Schema failures: missing, mistyped or out-of-range fields.
         foreach (
             var body in new object[]
             {

@@ -3,9 +3,8 @@ import Foundation
 /// State an earlier install left in Penny's containers, applied by the app's Debug test
 /// controls before launch (`PENNY_TEST_CONTAINER_SEED`, apps/ios/Penny/TestStorage.swift).
 ///
-/// This is the upgrade-rehearsal hook: MAZ-72 adds a builder for the legacy Expo layout (its
-/// App Group files and defaults) and asserts the in-place migration. Seeds hold synthetic
-/// `.test` data only.
+/// This is the upgrade-rehearsal hook: a seed stands in for what an older build stored (its
+/// defaults and container files). Seeds hold synthetic `.test` data only.
 @MainActor
 struct ContainerSeed {
     var standardDefaults: [String: Any] = [:]

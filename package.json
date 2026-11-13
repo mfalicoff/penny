@@ -1,33 +1,24 @@
 {
   "name": "expense_tracker",
   "version": "2.0.0",
-  "dependencies": {
-    "cors": "^2.8.6",
-    "express": "^5.2.1",
-    "express-rate-limit": "^8.7.0",
-    "openid-client": "^6.8.8",
-    "zod": "^4.6.5"
-  },
   "devDependencies": {
     "@eslint/js": "^10.0.0",
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.6",
     "@types/node": "^26.6.3",
     "@typescript/native": "npm:typescript@~7.0.0",
     "c8": "^12.0.0",
     "eslint": "^10.0.0",
     "globals": "^17.0.0",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
-    "typescript-eslint": "8.72.2"
+    "typescript-eslint": "8.72.2",
+    "zod": "^4.6.5"
   },
   "scripts": {
-    "server": "node --env-file-if-exists=.env --experimental-strip-types server/index.ts",
     "test": "npm run test:core",
     "test:coverage": "c8 npm run test:core",
     "typecheck": "tsc --noEmit",
     "version": "npm run version:check",
     "version:check": "node scripts/check-version.mjs",
-    "lint": "eslint --max-warnings=0 src server tests scripts",
+    "lint": "eslint --max-warnings=0 src tests scripts",
     "test:core": "node --test tests/core/*.test.ts",
     "test:fullstack": "node --test --test-concurrency=1 tests/fullstack/*.test.mjs",
     "test-env": "node scripts/test-env/penny-env.mjs",
@@ -39,12 +30,10 @@
   "c8": {
     "all": true,
     "src": [
-      "server",
-      "src/domain"
+      "src"
     ],
     "include": [
-      "server/**/*.ts",
-      "src/domain/**/*.ts"
+      "src/**/*.ts"
     ],
     "exclude": [
       "**/*.d.ts"

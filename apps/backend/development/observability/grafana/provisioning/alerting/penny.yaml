@@ -187,7 +187,7 @@ groups:
         labels: { severity: warning }
         annotations:
           summary: Shared recurring expenses are being recorded a day or more late.
-          description: The recurrence runner was stopped or keeps failing. See docs/migration/shared-recurrence.md.
+          description: The recurrence runner was stopped or keeps failing. See docs/reference/shared-recurrence.md.
 
       - uid: penny-job-failures
         title: Penny background job failures

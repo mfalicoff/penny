@@ -34,8 +34,8 @@ import type { TripSearch } from "./search";
 import { ShareTripDialog, TripFormDialog } from "./TripForm";
 
 /**
- * `/trips/$id` (legacy URL): a personal trip by its ledger id, or a shared trip by its household
- * id, as in the Expo app. Personal trips are looked up first, in this browser's ledger.
+ * `/trips/$id`: a personal trip by its ledger id, or a shared trip by its household id. Personal
+ * trips are looked up first, in this browser's ledger.
  */
 export function TripPage({ id, search }: { id: string; search: TripSearch }) {
   const workspace = useLedgerWorkspace();
@@ -276,7 +276,7 @@ function SharedTripPage({ householdId, search }: { householdId: string; search: 
   const sameCurrency = workspace.ledger?.currency === household.currency;
   const mine = sameCurrency ? privateExpenses(workspace.ledger, householdId) : [];
   const totals = expenses.data ? sharedTripTotals(expenses.data, who.meId, mine, household.trip) : null;
-  const linkSearch = (next: Partial<GroupSearch>): GroupSearch => ({ ...search, add: undefined, expense: undefined, ...next });
+  const linkSearch = (next: Partial<GroupSearch>): GroupSearch => ({ month: search.month, tab: search.tab, ...next });
 
   return (
     <div className="page trips">

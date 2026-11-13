@@ -5,9 +5,8 @@ using Penny.Backend.Domain.Errors;
 
 namespace Penny.Backend.Application.Authentication;
 
-// Port of the legacy password auth service (server/application/auth.ts). Messages,
-// failure kinds and ordering are part of the client contract. Password hashes use
-// the new format only: accounts with legacy scrypt hashes must reset their password.
+// Password registration, sign-in and sign-out, and OIDC account sign-in. Messages,
+// failure kinds and ordering are part of the client contract.
 public sealed class AuthService(
     IAccountRepository accounts,
     ISessionRepository sessions,
@@ -44,12 +43,11 @@ public sealed class AuthService(
         if (await accounts.FindByEmailAsync(credentials.Email, cancellationToken) is not null)
             throw new BackendFailure(FailureKind.Conflict, DuplicateEmail);
         var userId = SessionTokens.NewId();
-        // The hash embeds its own salt; the legacy salt column stays empty.
         var hash = passwords.Hash(credentials.Password);
         // Another registration may commit while the password is hashed.
         if (
             !await accounts.TryCreateAsync(
-                new StoredUser(userId, credentials.Email, hash, ""),
+                new StoredUser(userId, credentials.Email, hash),
                 InitialLedger.Create(),
                 cancellationToken
             )
@@ -82,7 +80,7 @@ public sealed class AuthService(
         return new(await IssueAsync(user.Id, cancellationToken), user.Email);
     }
 
-    // Legacy `loginOidc`: accounts are found by the stable (issuer, subject) pair, so
+    // OIDC accounts are found by the stable (issuer, subject) pair, so
     // a changed provider email still signs in to the same account. An existing account
     // with the same email is never linked automatically.
     public async Task<IssuedSession> LoginOidcAsync(
@@ -104,7 +102,7 @@ public sealed class AuthService(
             throw new BackendFailure(FailureKind.Conflict, OidcEmailInUse);
         var userId = SessionTokens.NewId();
         // OIDC-only accounts have an empty password, which never verifies.
-        var user = new StoredUser(userId, identity.Email, "", SessionTokens.NewId());
+        var user = new StoredUser(userId, identity.Email, "");
         if (
             !await accounts.TryCreateOidcAsync(
                 user,
@@ -152,7 +150,7 @@ public sealed class AuthService(
         return token;
     }
 
-    // Legacy expiry is integer milliseconds; truncating keeps the boundary exact.
+    // Expiries are integer milliseconds; truncating keeps the boundary exact.
     private DateTimeOffset Now() =>
         DateTimeOffset.FromUnixTimeMilliseconds(clock.GetUtcNow().ToUnixTimeMilliseconds());
 }

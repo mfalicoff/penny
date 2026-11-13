@@ -272,8 +272,8 @@ struct ReceiptPreviewModelTests {
         _ = folder
     }
 
-    @Test("whenReceiptWasAttachedByTheLegacyApp_PreviewModel_ShouldNotDownload")
-    func legacy() throws {
+    @Test("whenReceiptLinkIsNotServed_PreviewModel_ShouldNotDownload")
+    func notServed() throws {
         let (cache, folder) = try cache()
         let fake = FakeReceipts()
         let receipt = ReceiptReference(id: "r", name: "r.jpg", uri: "file:///var/mobile/r.jpg", mime: "image/jpeg")

@@ -6,7 +6,7 @@ import Testing
 struct LocalSearchTests {
     static let november = MonthKey(year: 2026, month: 11)
 
-    @Test("whenLegacySubstringCase_Activity_ShouldMatchSearchFixture")
+    @Test("whenSubstringCase_Activity_ShouldMatchSearchFixture")
     func substringCases() throws {
         let cases = try LocalSearchCases.load()
         let report = LedgerReport(ledger: try ContractLedger.ledger(cases.ledger))
@@ -70,10 +70,9 @@ struct LocalSearchTests {
         // The base snapshot (what the server has) still finds the deleted and pre-edit rows:
         // only the local snapshot may answer while changes are pending.
         #expect(LedgerReport(ledger: base).activity(.year(2026), query: "crème").entries.map(\.id) == ["p-cafe"])
-        #expect(LocalSearch.searchesLocally(hasPendingChanges: true, isOnline: true, serverHasSearch: true))
-        #expect(LocalSearch.searchesLocally(hasPendingChanges: false, isOnline: false, serverHasSearch: true))
-        #expect(LocalSearch.searchesLocally(hasPendingChanges: false, isOnline: true, serverHasSearch: false))
-        #expect(!LocalSearch.searchesLocally(hasPendingChanges: false, isOnline: true, serverHasSearch: true))
+        #expect(LocalSearch.searchesLocally(hasPendingChanges: true, isOnline: true))
+        #expect(LocalSearch.searchesLocally(hasPendingChanges: false, isOnline: false))
+        #expect(!LocalSearch.searchesLocally(hasPendingChanges: false, isOnline: true))
     }
 
     @Test("whenTextNeedsExactMatching_LocalSearch_ShouldCompareCodeUnitsAfterLowercasing")
@@ -119,7 +118,7 @@ struct LocalSearchTests {
 
     /// v2 `searchEntries`: recorded entries of the whole ledger (any month), filtered by kind
     /// and day, newest first then id. It has no pages, so the paged case lists every match.
-    @Test("whenLegacySubstringCase_Search_ShouldMatchSearchFixtureAcrossTheLedger")
+    @Test("whenSubstringCase_Search_ShouldMatchSearchFixtureAcrossTheLedger")
     func searchEntries() throws {
         let cases = try LocalSearchCases.load()
         let report = LedgerReport(ledger: try ContractLedger.ledger(cases.ledger))

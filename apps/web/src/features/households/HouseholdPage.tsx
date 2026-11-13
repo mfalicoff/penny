@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { householdDetailQuery, householdsQuery, monthRecapQuery } from "../../api/households";
 import { useAccountEmail } from "../../auth/account";
 import { usePageTitle } from "../../app/shell/pageTitle";
@@ -25,7 +25,7 @@ const TAB_LABEL: Record<Exclude<HouseholdTab, "history">, string> = { expenses: 
 /**
  * A household (cards `web-household`, `iphone-shared`, `ipad-shared`): members and your balance
  * for the month, then Expenses, Balances and People. `expenseId` opens that expense in the detail
- * panel (legacy `/households/$id/expenses/$expenseId`).
+ * panel (`/households/$id/expenses/$expenseId`).
  */
 export function HouseholdPage({ householdId, expenseId, search }: { householdId: string; expenseId?: string; search: HouseholdSearch }) {
   const email = useAccountEmail();
@@ -35,16 +35,8 @@ export function HouseholdPage({ householdId, expenseId, search }: { householdId:
   const detail = useQuery(householdDetailQuery(email, householdId));
   const list = useQuery(householdsQuery(email));
   const recap = useQuery({ ...monthRecapQuery(email, householdId, month), enabled: detail.isSuccess });
-  const [form, setForm] = useState<FormTarget | null>(search.add ? { kind: "new" } : null);
+  const [form, setForm] = useState<FormTarget | null>(null);
   usePageTitle(detail.data?.household.name);
-
-  // A legacy `?add=1` link opens the form once; drop it from the URL so Back and reload don't reopen it.
-  const consumedAdd = useRef(false);
-  useEffect(() => {
-    if (!search.add || consumedAdd.current) return;
-    consumedAdd.current = true;
-    void navigate({ to: ".", search: { ...search, add: undefined }, replace: true });
-  }, [search, navigate]);
 
   if (detail.isPending) return <LoadingState label="Loading the household…" />;
   if (detail.isError) {

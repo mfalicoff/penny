@@ -1,14 +1,13 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Penny.Backend.Api.Contracts;
 using Penny.Backend.Domain.Ledgers;
 using Shouldly;
 using Xunit;
 
 namespace Penny.Backend.UnitTests.Ledgers;
 
-// Ports of the legacy ledgerWriteSchema/upgradeLedger fixtures (tests/core/
-// contracts, accounts, trips, investments and model tests).
+// The v4 ledger write rules: accepted shapes, every rejected mutation and the
+// JavaScript number, whitespace and date semantics shared with the clients.
 public sealed class LedgerReaderTests
 {
     private const string Valid = """
@@ -38,33 +37,11 @@ public sealed class LedgerReaderTests
         }
         """;
 
-    private static readonly JsonSerializerOptions Web = new(JsonSerializerDefaults.Web);
-
-    [Fact]
-    public void whenSanitizedUpgradeFixturesRead_Read_ShouldMatchLegacyUpgradeOutput()
-    {
-        var cases = ContractFixtures.Read("ledger-upgrades.json").AsArray();
-        cases.Select(item => (int)item!["input"]!["version"]!).ShouldBe([1, 2, 3, 4]);
-        foreach (var item in cases)
-        {
-            var write = Read(
-                new JsonObject { ["revision"] = 0, ["ledger"] = item!["input"]!.DeepClone() }
-            );
-            write.ShouldNotBeNull(item["name"]!.GetValue<string>());
-            var actual = JsonSerializer.SerializeToNode(LedgerResponse.From(write.Ledger), Web);
-            JsonNode
-                .DeepEquals(actual, item["expected"])
-                .ShouldBeTrue(item["name"]!.GetValue<string>());
-        }
-    }
-
     [Fact]
     public void whenValidLedgerRead_Read_ShouldKeepEveryFieldAndOptionalAbsence()
     {
         var write = Read(JsonNode.Parse(Valid)!)!;
         write.Revision.ShouldBe(0);
-        write.SourceVersion.ShouldBe(4);
-        write.OmittedTrips.ShouldBeFalse();
         var entry = write.Ledger.Transactions.Single();
         entry.Total.ShouldBe(12000);
         entry.Share.ShouldBe(6000);
@@ -76,62 +53,13 @@ public sealed class LedgerReaderTests
     }
 
     [Theory]
-    [InlineData(1, "investments", "investments-1")]
-    [InlineData(1, "food", "investments")]
-    [InlineData(2, "investments", null)]
-    public void whenLegacyVersionRead_Read_ShouldAddInvestmentCategoryOnlyForVersionOne(
-        int version,
-        string existingExpenseId,
-        string? addedId
-    )
-    {
-        var body = JsonNode.Parse(Valid)!;
-        var ledger = body["ledger"]!;
-        ledger["version"] = version;
-        ledger.AsObject().Remove("trips");
-        ledger["transactions"]![0]!.AsObject().Remove("tripId");
-        ledger["categories"] = new JsonArray(
-            Category(existingExpenseId, "expense"),
-            Category("food-2", "expense")
-        );
-        ledger["transactions"]![0]!["categoryId"] = "food-2";
-        ledger["recurring"]![0]!["categoryId"] = "food-2";
-        var write = Read(body)!;
-        write.SourceVersion.ShouldBe(version);
-        write.OmittedTrips.ShouldBeTrue();
-        write.Ledger.Trips.ShouldBeEmpty();
-        var added = write
-            .Ledger.Categories.Where(category => category.Kind == "investment")
-            .ToList();
-        if (addedId is null)
-            added.ShouldBeEmpty();
-        else
-            added.Single().ShouldBe(LedgerUpgrade.Investments with { Id = addedId });
-    }
-
-    [Fact]
-    public void whenVersionOneHasInvestmentOrFullCategories_Read_ShouldNotRestoreCategory()
-    {
-        var body = JsonNode.Parse(Valid)!;
-        body["ledger"]!["version"] = 1;
-        body["ledger"]!["transactions"]![0]!.AsObject().Remove("tripId");
-        body["ledger"]!.AsObject().Remove("trips");
-        Read(body)!.Ledger.Categories.Count.ShouldBe(3);
-        var categories = new JsonArray(Category("food", "expense"));
-        for (var index = 1; index < 300; index++)
-            categories.Add(Category("expense-" + index, "expense"));
-        body["ledger"]!["categories"] = categories;
-        Read(body)!.Ledger.Categories.Count.ShouldBe(300);
-    }
-
-    [Theory]
     [InlineData("transaction-account-missing")]
     [InlineData("recurring-account-missing")]
     [InlineData("duplicate-accounts")]
     [InlineData("unknown-account-type")]
-    [InlineData("v3-without-accounts")]
+    [InlineData("without-accounts")]
     [InlineData("null-accounts")]
-    [InlineData("v4-without-trips")]
+    [InlineData("without-trips")]
     [InlineData("trip-ends-before-start")]
     [InlineData("trip-missing")]
     [InlineData("income-on-trip")]
@@ -153,6 +81,8 @@ public sealed class LedgerReaderTests
     [InlineData("fullwidth-date")]
     [InlineData("null-account-id")]
     [InlineData("null-note")]
+    [InlineData("version-1")]
+    [InlineData("version-3")]
     [InlineData("version-5")]
     [InlineData("string-version")]
     [InlineData("unknown-currency")]
@@ -181,7 +111,7 @@ public sealed class LedgerReaderTests
     [InlineData("long-receipt-name")]
     [InlineData("long-id")]
     [InlineData("missing-recurring")]
-    public void whenLedgerBreaksLegacyRule_Read_ShouldReject(string mutation)
+    public void whenLedgerBreaksRule_Read_ShouldReject(string mutation)
     {
         Read(Mutate(mutation)).ShouldBeNull(mutation);
     }
@@ -219,7 +149,7 @@ public sealed class LedgerReaderTests
     }
 
     [Fact]
-    public void whenImportedRevisionIsHuge_Read_ShouldAcceptItExactly()
+    public void whenRevisionIsHuge_Read_ShouldAcceptItExactly()
     {
         var body = JsonNode.Parse(Valid)!;
         body["revision"] = 9_007_199_254_740_990;
@@ -245,7 +175,7 @@ public sealed class LedgerReaderTests
     [InlineData("2100-12-31", true)]
     [InlineData("1999-12-31", false)]
     [InlineData("2026-01-01 ", false)]
-    public void whenCalendarDateChecked_TryParse_ShouldMatchLegacyValidDate(
+    public void whenCalendarDateChecked_TryParse_ShouldAcceptOnlyRealDaysFrom2000To2100(
         string value,
         bool valid
     )
@@ -260,16 +190,6 @@ public sealed class LedgerReaderTests
         using var document = JsonDocument.Parse(json);
         return LedgerReader.Read(document.RootElement);
     }
-
-    private static JsonObject Category(string id, string kind) =>
-        new()
-        {
-            ["id"] = id,
-            ["name"] = "Category",
-            ["icon"] = "pricetag-outline",
-            ["color"] = "#678DB1",
-            ["kind"] = kind,
-        };
 
     private static string Mutate(string mutation)
     {
@@ -291,14 +211,13 @@ public sealed class LedgerReaderTests
             case "unknown-account-type":
                 ledger["accounts"]![0]!["type"] = "unknown";
                 break;
-            case "v3-without-accounts":
-                ledger["version"] = 3;
+            case "without-accounts":
                 ledger.Remove("accounts");
                 break;
             case "null-accounts":
                 ledger["accounts"] = null;
                 break;
-            case "v4-without-trips":
+            case "without-trips":
                 ledger.Remove("trips");
                 entry.Remove("tripId");
                 break;
@@ -369,6 +288,12 @@ public sealed class LedgerReaderTests
                 break;
             case "null-note":
                 entry["note"] = null;
+                break;
+            case "version-1":
+                ledger["version"] = 1;
+                break;
+            case "version-3":
+                ledger["version"] = 3;
                 break;
             case "version-5":
                 ledger["version"] = 5;

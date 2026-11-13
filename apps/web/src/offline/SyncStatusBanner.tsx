@@ -116,27 +116,6 @@ export function SyncStatusBanner() {
   return (
     <>
       {main}
-      {state.legacyUnreadable ? (
-        <Banner
-          tone="error"
-          title="Changes from the previous Penny web app couldn't be read"
-          action={
-            <Button
-              variant="secondary"
-              busy={busy}
-              onClick={() => {
-                run(() => {
-                  engine.setLegacyCopyAside();
-                });
-              }}
-            >
-              Set aside
-            </Button>
-          }
-        >
-          They're kept in this browser, and you can't sign out until you set them aside.
-        </Banner>
-      ) : null}
       {actionError ? (
         <p className="form-error" role="alert">
           {actionError}

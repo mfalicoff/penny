@@ -1,10 +1,10 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ApiError } from "../../api/client";
 import { householdDetailQuery, householdsQuery, monthRecapQuery } from "../../api/households";
 import type { Household } from "../../api/schemas";
 import { useAccountEmail } from "../../auth/account";
+import { useIsDemo } from "../../demo/demo";
 import { Avatar, Badge } from "../../design/controls";
 import { Icon } from "../../design/Icon";
 import { Money } from "../../design/Money";
@@ -20,7 +20,8 @@ import { OnlineNotice } from "./OnlineNotice";
  */
 export function SharedListPage() {
   const email = useAccountEmail();
-  const households = useQuery(householdsQuery(email));
+  const demo = useIsDemo();
+  const households = useQuery({ ...householdsQuery(email), enabled: !demo });
   const [dialog, setDialog] = useState<"create" | "join" | null>(null);
 
   const start = (
@@ -39,18 +40,19 @@ export function SharedListPage() {
   );
 
   let body;
-  if (households.isPending) body = <LoadingState label="Loading your households…" />;
+  if (demo) {
+    body = (
+      <EmptyState icon="people" title="The demo has no shared households">
+        <p>Sign in to your own Penny server to share one. Nothing was changed.</p>
+      </EmptyState>
+    );
+  } else if (households.isPending) body = <LoadingState label="Loading your households…" />;
   else if (households.isError && !households.data) {
-    body =
-      households.error instanceof ApiError && households.error.status === 404 ? (
-        <EmptyState icon="people" title="This server doesn't offer shared households">
-          <p>Shared households need a Penny server with households. Nothing was changed.</p>
-        </EmptyState>
-      ) : (
-        <ErrorState title="Penny couldn't load your households" onRetry={() => void households.refetch()} retrying={households.isFetching}>
-          {describeLoadError(households.error)}
-        </ErrorState>
-      );
+    body = (
+      <ErrorState title="Penny couldn't load your households" onRetry={() => void households.refetch()} retrying={households.isFetching}>
+        {describeLoadError(households.error)}
+      </ErrorState>
+    );
   } else {
     const all = households.data;
     const homes = all.filter((household) => !household.trip);

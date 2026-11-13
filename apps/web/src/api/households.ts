@@ -29,7 +29,7 @@ import { invalidateSearch } from "./search";
 const segment = (value: string) => encodeURIComponent(value);
 const base = (householdId: string) => `/api/households/${segment(householdId)}` as const;
 
-/** The caller's local UTC offset, so the server records their local join day (legacy `getTimezoneOffset`). */
+/** The caller's local UTC offset (`getTimezoneOffset`, in minutes), so the server records their local join day. */
 export const timezoneOffsetMinutes = () => Math.max(-840, Math.min(720, new Date().getTimezoneOffset()));
 
 /* ---------- keys ---------- */

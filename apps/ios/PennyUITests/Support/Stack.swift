@@ -2,7 +2,7 @@ import Foundation
 import XCTest
 
 /// The full-stack test environment the UI tests run against (MAZ-62,
-/// docs/migration/test-environment.md): the real .NET API on PostgreSQL, with its test
+/// docs/reference/test-environment.md): the real .NET API on PostgreSQL, with its test
 /// controls. Nothing here mocks the business API: tests arrange data through the same HTTP
 /// API the app uses, and move the server clock or inject faults through `/api/test/*`.
 struct StackConfiguration: Sendable {

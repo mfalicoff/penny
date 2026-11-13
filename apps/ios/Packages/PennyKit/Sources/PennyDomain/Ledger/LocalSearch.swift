@@ -1,6 +1,6 @@
 /// The local search the current app uses for offline, pending and demo data
 /// (search-cases.json `substringCases` and `pendingCases`); v2 `searchMatcher` in
-/// src/domain/search.ts (docs/migration/domain-rules.md).
+/// src/domain/search.ts (docs/reference/domain-rules.md).
 ///
 /// A row matches when the query, trimmed with JavaScript's `trim` and lowercased, is an exact
 /// substring of its one search document, `"{title} {note} {category name} {account name}"`
@@ -12,7 +12,7 @@
 /// server search v1 (`foldCases`, MAZ-121) is not applied here: the native entry screens use
 /// `SearchText` and `FoldedSearchIndex` (MAZ-73), and typo and meaning tiers need the server.
 public enum LocalSearch {
-    /// The haystack's fields, in the legacy order. Missing fields are empty.
+    /// The haystack's fields, in document order. Missing fields are empty.
     public static func matches(
         query: String, title: String, note: String, categoryName: String, accountName: String
     ) -> Bool {
@@ -29,11 +29,11 @@ public enum LocalSearch {
     }
 
     /// Whether to show local results instead of server pages. With pending local changes, or
-    /// offline, or against a server without search v1 (404), the client searches its complete
+    /// offline, the client searches its complete
     /// local result set, so an unsynced create, edit or delete can never be hidden or revived by
-    /// a server page. It never mixes local rows into server pages (docs/migration/search.md).
-    public static func searchesLocally(hasPendingChanges: Bool, isOnline: Bool, serverHasSearch: Bool) -> Bool {
-        hasPendingChanges || !isOnline || !serverHasSearch
+    /// a server page. It never mixes local rows into server pages (docs/reference/search.md).
+    public static func searchesLocally(hasPendingChanges: Bool, isOnline: Bool) -> Bool {
+        hasPendingChanges || !isOnline
     }
 }
 

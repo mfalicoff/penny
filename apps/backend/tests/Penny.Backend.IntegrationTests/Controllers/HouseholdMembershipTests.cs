@@ -95,7 +95,7 @@ public sealed class HouseholdMembershipTests(ApiFixture fixture) : HouseholdTest
             new { code }
         );
 
-        // Codes are case-insensitive and admit several accounts, as in legacy.
+        // Codes are case-insensitive and admit several accounts.
         var joined = (
             await ExpectAsync(
                 HttpMethod.Post,

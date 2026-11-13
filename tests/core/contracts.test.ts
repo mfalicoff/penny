@@ -1,13 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync, mkdtempSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { once } from "node:events";
-import { createApp } from "../../server/app.ts";
-import { cents, nextOccurrence, personalShare, upgradeLedger } from "../../src/domain/ledger.ts";
+import { readFileSync, readdirSync } from "node:fs";
+import { cents, emptyLedger, nextOccurrence, personalShare } from "../../src/domain/ledger.ts";
 import { calculateHouseholdSplits } from "../../src/domain/households.ts";
-import { ledgerWriteSchema } from "../../server/validation/ledger.ts";
+import { ledgerWriteSchema } from "../../src/validation/ledger.ts";
 import { selectTransactions } from "../../src/domain/selectors/transactions.ts";
 import { createHash } from "node:crypto";
 import { normalizeSearchText } from "./search-normalization.ts";
@@ -46,30 +42,8 @@ function matchesSchema(schema: any, value: unknown): boolean {
   return true;
 }
 
-test("OpenAPI covers every current HTTP route and resolves every schema", () => {
+test("OpenAPI operations are unique, documented and resolve every schema", () => {
   assert.equal(spec.openapi, "3.1.0");
-  const prefixes: Record<string, string> = {
-    auth: "/api/auth",
-    ledger: "/api/ledger",
-    households: "/api/households",
-    receipts: "/api/receipts",
-    push: "/api/push",
-  };
-  const appSource = readFileSync(new URL("server/app.ts", root), "utf8");
-  const actual = [...appSource.matchAll(/\bapp\.(get|post|put|patch|delete)\("([^"]+)"/g)]
-    .map(([, method, path]) => `${method} ${path}`);
-  for (const [file, prefix] of Object.entries(prefixes)) {
-    const source = readFileSync(new URL(`server/http/${file}.ts`, root), "utf8");
-    const matches = source.matchAll(/\b(?:router|routes|publicRoutes|protectedRoutes)\.(get|post|put|patch|delete)\((?:"([^"]+)"|'([^']+)')/g);
-    for (const [, method, doubleQuoted, singleQuoted] of matches) {
-      const route = doubleQuoted ?? singleQuoted;
-      const path = `${prefix}${route === "/" ? "" : route}`.replace(/:([A-Za-z]+)\b/g, "{$1}");
-      actual.push(`${method} ${path}`);
-    }
-  }
-  const documented = Object.entries(spec.paths).flatMap(([path, operations]) =>
-    Object.entries(operations as Record<string, any>).filter(([, operation]) => operation["x-implementation"] === "legacy").map(([method]) => `${method} ${path}`));
-  assert.deepEqual(documented.sort(), actual.sort());
   const operationIds = Object.values(spec.paths).flatMap((operations: any) =>
     Object.values(operations).map((operation: any) => operation.operationId));
   assert.equal(new Set(operationIds).size, operationIds.length, "operation IDs are unique");
@@ -94,7 +68,7 @@ test("OpenAPI covers every current HTTP route and resolves every schema", () => 
   checkRefs(spec.components.schemas);
 });
 
-test("search fixtures preserve legacy substring, chronology and pending local scope", () => {
+test("search fixtures cover substring matching, chronology and pending local scope", () => {
   const cases = fixture("search-cases.json");
   assert.equal(ledgerWriteSchema.safeParse({ revision: 0, ledger: cases.ledger }).success, true);
   const select = (ledger: any, item: any) => selectTransactions(ledger, {
@@ -165,7 +139,6 @@ test("search v1 schemas accept examples and reject invalid and cross-user reques
   assert.equal(matchesSchema(spec.components.schemas.SearchResponse, { ...cases.response, nextCursor: 12 }), false);
   assert.equal(matchesSchema(spec.components.schemas.SearchResponse, { ...cases.response, items: [{ ...cases.response.items[0], source: "shared" }] }), false);
   assert.equal(matchesSchema(spec.components.schemas.SearchResponse, { ...cases.response, items: [{ ...cases.response.items[0], match: "fuzzy" }] }), false);
-  assert.equal(spec.paths["/api/v1/search/transactions"].post["x-implementation"], "backend");
   assert.equal(spec.components.schemas.SearchPeriod, undefined);
 });
 
@@ -218,7 +191,6 @@ test("design baseline traces every penny-ios card and design-kit control to feat
       }
     }
     assert.ok(item.acceptance.scenario.length > 20);
-    if (item.legacyTest) assert.ok(file(item.legacyTest).length);
   }
 
   for (const source of baseline.sources) assert.equal(source.sha256, hash(source.path), `${source.path} changed: re-sync the baseline`);
@@ -228,12 +200,11 @@ test("design baseline traces every penny-ios card and design-kit control to feat
   assert.equal(baseline.tokens.fonts.web.family, "Inter");
   assert.equal(baseline.tokens.icons.ios.family, "SF Symbols");
 
-  // Every legacy Expo Router screen keeps a destination on each platform. The Expo app is retired
-  // (MAZ-98), so this map is now the frozen record of its routes; deep links still arrive on them.
-  assert.equal(baseline.navigation.legacyRoutes.length, 12);
-  assert.equal(new Set(baseline.navigation.legacyRoutes.map((item: any) => item.route)).size, 12);
-  for (const item of baseline.navigation.legacyRoutes) for (const platform of ["iPhone", "iPad", "web"]) assert.ok(item[platform], `${item.route} on ${platform}`);
-  for (const item of baseline.specimens) if (item.legacyRoute) assert.ok(baseline.navigation.legacyRoutes.some((route: any) => route.route === item.legacyRoute), item.legacyRoute);
+  // Every route (web URL and iOS deep link) has a destination on each platform.
+  assert.equal(baseline.navigation.routes.length, 12);
+  assert.equal(new Set(baseline.navigation.routes.map((item: any) => item.route)).size, 12);
+  for (const item of baseline.navigation.routes) for (const platform of ["iPhone", "iPad", "web"]) assert.ok(item[platform], `${item.route} on ${platform}`);
+  for (const item of baseline.specimens) if (item.route) assert.ok(baseline.navigation.routes.some((route: any) => route.route === item.route), item.route);
 
   // New behavior the design implies is filed, and the cards point back at it.
   const ids = new Set(baseline.specimens.map((item: any) => item.id));
@@ -284,7 +255,7 @@ test("visual baselines match their cards, and the comparison record covers every
   assert.match(record.reviewedAt, /^\d{4}-\d{2}-\d{2}$/);
   assert.deepEqual(record.cards.map((card: any) => card.id), ids, "one entry per card, in contract order");
   const slug = (heading: string) => heading.toLowerCase().replace(/[^\w\s-]/g, "").trim().replace(/\s/g, "-");
-  const anchors = new Set(file("docs/migration/redesign.md").toString("utf8").split("\n")
+  const anchors = new Set(file("docs/reference/redesign.md").toString("utf8").split("\n")
     .filter((line) => line.startsWith("#")).map((line) => slug(line.replace(/^#+\s*/, ""))));
   const statuses = ["matches", "deviates", "not-built", "blocked", "not-applicable"];
   for (const card of record.cards) {
@@ -313,35 +284,11 @@ test("visual baselines match their cards, and the comparison record covers every
         assert.ok(["approved", "follow-up"].includes(deviation.kind), where);
         if (deviation.kind === "approved") {
           const [path, anchor] = deviation.ref.split("#");
-          assert.equal(path, "docs/migration/redesign.md", `${where}: approved deviations are recorded in redesign.md`);
+          assert.equal(path, "docs/reference/redesign.md", `${where}: approved deviations are recorded in redesign.md`);
           assert.ok(anchors.has(anchor), `${where}: redesign.md has no #${anchor as string}`);
         } else assert.match(deviation.ref, /^MAZ-\d+$/, `${where}: a follow-up names its issue`);
       }
     }
-  }
-});
-
-test("storage fixtures preserve exact cents, millisecond dates, binary receipts and explicit import blockers", () => {
-  const cases = fixture("storage-mapping.json");
-  assert.equal(cases.sourceSchemaVersion, 2);
-  assert.equal(cases.targetPostgresqlMajor, 18);
-  for (const item of cases.cases) {
-    if (item.sqliteBase64) assert.equal(createHash("sha256").update(Buffer.from(item.sqliteBase64, "base64")).digest("hex"), item.sha256);
-    else if (item.column === "household_audit.after_json") assert.deepEqual(JSON.parse(item.sqlite), item.postgres);
-    else if (!item.error && item.column !== "household_recurring.active") assert.deepEqual(item.sqlite, item.postgres);
-  }
-  assert.equal(cases.cases.find((item: any) => item.name === "JSONB unsupported NUL blocks import").error, "unsupported-jsonb-text");
-  // PostgreSQL execution/import correctness remains MAZ-52/62; these check portable fixtures only.
-});
-
-test("sanitized v1–v4 ledger fixtures match current validation and upgrade behavior", () => {
-  const cases = fixture("ledger-upgrades.json") as { name: string; input: any; expected: any }[];
-  assert.deepEqual(cases.map((item) => item.input.version), [1, 2, 3, 4]);
-  for (const item of cases) {
-    const parsed = ledgerWriteSchema.safeParse({ revision: 0, ledger: item.input });
-    assert.equal(parsed.success, true, item.name);
-    if (parsed.success) assert.deepEqual(parsed.data.ledger, item.expected, item.name);
-    assert.deepEqual(upgradeLedger(item.input), item.expected, item.name);
   }
 });
 
@@ -362,108 +309,23 @@ test("language-neutral money, calendar and split fixtures match current rules", 
 
 });
 
-test("sanitized HTTP journey matches the real legacy API and temporary SQLite", async () => {
+test("the sanitized HTTP journey fixture matches OpenAPI and the ledger rules (the .NET LedgerTests replay it)", () => {
   const expected = fixture("http-journey.json");
-  const directory = mkdtempSync(join(tmpdir(), "penny-contract-"));
-  const { app, db } = createApp({ databasePath: join(directory, "contract.sqlite") });
-  const server = app.listen(0, "127.0.0.1");
-  try {
-    await once(server, "listening");
-    const address = server.address();
-    assert.ok(address && typeof address !== "string");
-    const base = `http://127.0.0.1:${address.port}/api`;
-    const call = (path: string, method = "GET", body?: unknown, token?: string) =>
-      fetch(base + path, {
-        method,
-        headers: {
-          ...(body ? { "Content-Type": "application/json" } : {}),
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        ...(body ? { body: JSON.stringify(body) } : {}),
-      });
-    const register = await call("/auth/register", "POST", expected.register.request);
-    assert.equal(register.status, expected.register.status);
-    const info = await (await call("/info")).json();
-    assert.ok(matchesSchema(spec.components.schemas.ServerInfo, info));
-    const session = await register.json();
-    assert.equal(session.email, expected.register.response.email);
-    assert.match(session.token, /^[a-f0-9]{64}$/);
-    const cookie = register.headers.get("set-cookie") ?? "";
-    assert.match(cookie, /penny_session=/);
-    assert.match(cookie, /HttpOnly/i);
-    assert.match(cookie, /SameSite=Lax/i);
-    assert.match(cookie, /Path=\/api/i);
-
-    const initial = await call("/ledger", "GET", undefined, session.token);
-    assert.equal(initial.status, expected.initialLedger.status);
-    const snapshot = await initial.json();
-    assert.ok(matchesSchema(spec.components.schemas.Snapshot, snapshot), "initial ledger matches OpenAPI");
-    assert.deepEqual({
-      revision: snapshot.revision,
-      ledgerVersion: snapshot.ledger.version,
-      currency: snapshot.ledger.currency,
-    }, expected.initialLedger.response);
-    const updated = structuredClone(snapshot);
-    updated.ledger.transactions.push(expected.write.request.entry);
-    const write = await call("/ledger", "PUT", updated, session.token);
-    assert.equal(write.status, expected.write.status);
-    const saved = await write.json();
-    assert.ok(matchesSchema(spec.components.schemas.Snapshot, saved), "saved ledger matches OpenAPI");
-    assert.equal(saved.revision, expected.write.response.revision);
-    assert.deepEqual(saved.ledger.transactions[0], expected.write.response.entry);
-
-    const stale = await call("/ledger", "PUT", updated, session.token);
-    assert.equal(stale.status, expected.staleWrite.status);
-    const staleBody = await stale.json();
-    assert.ok(matchesSchema(spec.components.schemas.Error, staleBody));
-    assert.deepEqual(staleBody, expected.staleWrite.response);
-    const projection = await call("/households/projection?month=2026-10", "GET", undefined, session.token);
-    assert.equal(projection.status, expected.projection.status);
-    const emptyProjection = await projection.json();
-    assert.deepEqual(emptyProjection, expected.projection.response);
-    assert.ok(matchesSchema(spec.paths["/api/households/projection"].get.responses[200].content["application/json"].schema, emptyProjection));
-
-    const peer = await call("/auth/register", "POST", expected.shared.secondAccount);
-    assert.equal(peer.status, 201);
-    const peerSession = await peer.json();
-    const householdResponse = await call("/households", "POST", expected.shared.household, session.token);
-    assert.equal(householdResponse.status, 201);
-    const householdId = (await householdResponse.json()).household.id;
-    const inviteResponse = await call(`/households/${householdId}/invites`, "POST", undefined, session.token);
-    assert.equal(inviteResponse.status, 201);
-    const { code } = await inviteResponse.json();
-    const joined = await call("/households/join", "POST", { code, timezoneOffsetMinutes: 0 }, peerSession.token);
-    assert.equal(joined.status, 200);
-    const sharedInput = { ...expected.shared.expense, payerUserId: (await (await call(`/households/${householdId}`, "GET", undefined, session.token)).json()).household.creatorId };
-    const created = await call(`/households/${householdId}/expenses`, "POST", sharedInput, session.token);
-    assert.equal(created.status, 201);
-    const createdBody = await created.json();
-    assert.ok(matchesSchema(spec.paths["/api/households/{id}/expenses"].post.responses[201].content["application/json"].schema, createdBody));
-    assert.ok(matchesSchema(spec.paths["/api/households"].post.responses[201].content["application/json"].schema, { household: (await (await call(`/households/${householdId}`, "GET", undefined, session.token)).json()).household }));
-    const shared = createdBody.expense;
-    assert.ok(matchesSchema(spec.components.schemas.Expense, shared), "shared expense matches OpenAPI");
-    assert.equal(shared.revision, 0);
-    const sharedProjection = await call("/households/projection?month=2099-01", "GET", undefined, peerSession.token);
-    assert.equal(sharedProjection.status, 200);
-    const projected = (await sharedProjection.json()).transactions[0];
-    assert.ok(matchesSchema(spec.components.schemas.ProjectedExpense, projected), "projection matches OpenAPI");
-    for (const [key, value] of Object.entries(expected.shared.projection))
-      assert.equal(projected[key], value, `shared projection ${key}`);
-    assert.equal(projected.accountId, undefined, "another member cannot see the payer's private account");
-    const edited = await call(`/households/${householdId}/expenses/${shared.id}`, "PUT", { ...sharedInput, revision: 0 }, session.token);
-    assert.equal(edited.status, 200);
-    assert.equal((await edited.json()).expense.revision, 1);
-    const staleShared = await call(`/households/${householdId}/expenses/${shared.id}`, "PUT", { ...sharedInput, revision: 0 }, session.token);
-    assert.equal(staleShared.status, 409);
-    assert.deepEqual(Object.keys(await staleShared.json()), ["error"]);
-    const detail = await (await call(`/households/${householdId}`, "GET", undefined, peerSession.token)).json();
-    const peerId = detail.members.find((member: { email: string }) => member.email === expected.shared.secondAccount.email).userId;
-    const paid = await call(`/households/${householdId}/expenses/${shared.id}/payments`, "POST", { fromUserId: peerId, revision: 1 }, peerSession.token);
-    assert.equal(paid.status, 201);
-    assert.ok(matchesSchema(spec.paths["/api/households/{id}/expenses/{expenseId}/payments"].post.responses[201].content["application/json"].schema, await paid.json()));
-  } finally {
-    await new Promise<void>((resolve) => server.close(() => resolve()));
-    db.close();
-    rmSync(directory, { recursive: true, force: true });
-  }
+  const schema = (path: string, method: string, status: number) => spec.paths[path][method].responses[status].content["application/json"].schema;
+  assert.ok(matchesSchema(spec.components.schemas.Credentials, expected.register.request));
+  assert.ok(matchesSchema(spec.components.schemas.Credentials, expected.shared.secondAccount));
+  const initial = { revision: expected.initialLedger.response.revision, ledger: emptyLedger() };
+  assert.equal(initial.ledger.version, expected.initialLedger.response.ledgerVersion);
+  assert.equal(initial.ledger.currency, expected.initialLedger.response.currency);
+  assert.ok(matchesSchema(spec.components.schemas.Snapshot, initial), "initial ledger matches OpenAPI");
+  const written = { revision: expected.write.response.revision, ledger: { ...initial.ledger, transactions: [expected.write.request.entry] } };
+  assert.ok(matchesSchema(spec.components.schemas.Snapshot, written), "saved ledger matches OpenAPI");
+  assert.equal(ledgerWriteSchema.safeParse(written).success, true);
+  assert.deepEqual(expected.write.response.entry, expected.write.request.entry);
+  assert.equal(expected.staleWrite.status, 409);
+  assert.ok(matchesSchema(spec.components.schemas.Error, expected.staleWrite.response));
+  assert.ok(matchesSchema(schema("/api/households/projection", "get", 200), expected.projection.response));
+  assert.ok(matchesSchema(spec.components.schemas.HouseholdInput, expected.shared.household));
+  assert.ok(matchesSchema(spec.components.schemas.ExpenseInput, { ...expected.shared.expense, payerUserId: "0".repeat(32) }));
+  assert.equal(expected.shared.projection.shareCents * 2, expected.shared.projection.totalCents, "an equal split between two members");
 });

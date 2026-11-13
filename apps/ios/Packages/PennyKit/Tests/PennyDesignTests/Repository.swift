@@ -2,7 +2,7 @@ import Foundation
 import Testing
 
 /// Files from the repository checkout, for tests that guard against drift from the
-/// legacy app and the shared contracts.
+/// shared contracts.
 enum Repository {
     // apps/ios/Packages/PennyKit/Tests/PennyDesignTests/Repository.swift -> repository root
     static let root = URL(fileURLWithPath: #filePath)

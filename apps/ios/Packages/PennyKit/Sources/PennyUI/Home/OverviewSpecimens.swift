@@ -4,17 +4,14 @@ import PennyDomain
 import SwiftUI
 
 // Xcode previews of the redesign cards MAZ-77 owns, named after their ids in
-// contracts/design-baseline.json. The legacy specimen names map as follows: home → iphone-home,
-// home-dark → iphone-home-dark, home-amoled and home-catppuccin → iphone-home-dark (MAZ-132
-// dropped both appearances; a saved legacy preference opens as dark), desktop → ipad-home,
-// money-flow, insights, calendar and empty-home → their iphone-* cards. Made-up data only.
+// contracts/design-baseline.json. Made-up data only.
 
 #Preview("iphone-home") {
     let shell = Specimen.shell(FixedWorkspace(load: .ready(Specimen.ledger())))
     SpecimenHost(shell: shell) { NavigationStack { HomeView() } }
 }
 
-#Preview("iphone-home-dark (home-amoled, home-catppuccin)") {
+#Preview("iphone-home-dark") {
     let shell = Specimen.shell(FixedWorkspace(load: .ready(Specimen.ledger())))
     SpecimenHost(shell: shell) { NavigationStack { HomeView() } }
         .preferredColorScheme(.dark)
@@ -35,7 +32,7 @@ import SwiftUI
     SpecimenHost(shell: shell) { NavigationStack { CalendarView() } }
 }
 
-#Preview("ipad-home (desktop)") {
+#Preview("ipad-home") {
     let shell = Specimen.shell(FixedWorkspace(load: .ready(Specimen.ledger())))
     SpecimenHost(shell: shell) { AppShell(shell: shell) }
 }

@@ -3,8 +3,7 @@ import XCTest
 
 /// Install, upgrade and relaunch behavior (Full plan).
 final class LifecycleTests: PennyUITestCase {
-    /// State an earlier install left is picked up by this build: the container-seed hook that
-    /// MAZ-72's Expo-to-native migration rehearsal plugs its legacy layout into.
+    /// State an earlier install left is picked up by this build (the container-seed hook).
     @MainActor
     func test_whenAnEarlierInstallLeftState_Launch_ShouldKeepIt() async throws {
         var options = LaunchOptions()

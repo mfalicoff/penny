@@ -67,7 +67,7 @@ extension RecurringRule {
 }
 
 extension EntryDraft {
-    /// The schedule form's draft for editing `rule` (legacy `EntryForm` opened with a rule):
+    /// The schedule form's draft for editing `rule`:
     /// the amount as typed money, the next date as the date, and a share that differs from the
     /// total as an amount split. Build it back with `buildSchedule(categories:original:)`;
     /// an untouched draft rebuilds the same rule.

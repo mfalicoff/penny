@@ -39,7 +39,7 @@ public sealed class OidcOptionsTests
     }
 
     [Fact]
-    public void whenMinimalSettingsConfigured_Read_ShouldUseLegacyDefaults()
+    public void whenMinimalSettingsConfigured_Read_ShouldUseDefaults()
     {
         var options = Read(Valid())!;
         options.Issuer.ShouldBe("https://identity.example.test/realms/penny");
@@ -58,7 +58,7 @@ public sealed class OidcOptionsTests
                 ("Oidc:ClientSecret", Secret),
                 (
                     "Oidc:RedirectUris",
-                    " https://penny.example.test/auth/callback , http://localhost:8081/auth/callback,penny://auth/callback,"
+                    " https://penny.example.test/auth/callback , http://localhost:4173/auth/callback,penny://auth/callback,"
                 ),
                 ("Oidc:Label", "Company login"),
                 ("Oidc:AllowRegistration", "True")
@@ -67,7 +67,7 @@ public sealed class OidcOptionsTests
         options.ClientSecret.ShouldBe(Secret);
         options.RedirectUris.ShouldBe([
             "https://penny.example.test/auth/callback",
-            "http://localhost:8081/auth/callback",
+            "http://localhost:4173/auth/callback",
             "penny://auth/callback",
         ]);
         options.Label.ShouldBe("Company login");

@@ -35,9 +35,9 @@ public struct PushDeviceToken: Hashable, Sendable, CustomStringConvertible {
 }
 
 /// What a household notification opens (MAZ-79): the server's allowlisted deep-link payload
-/// (docs/migration/push.md), read from the notification's top-level custom keys.
+/// (docs/reference/push.md), read from the notification's top-level custom keys.
 ///
-/// The rules are the legacy app's (`src/data/push.ts`): `householdId` and an optional
+/// The rules: `householdId` and an optional
 /// `expenseId` are `[A-Za-z0-9_-]{1,100}`, `month` is `YYYY-MM`. Anything else (a missing or
 /// mistyped key, a URL, extra path segments) makes the whole payload invalid, so a notification
 /// can never navigate anywhere but a household month or one of its expenses. `eventId` and

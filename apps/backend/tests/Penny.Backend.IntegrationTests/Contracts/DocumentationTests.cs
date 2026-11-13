@@ -11,7 +11,7 @@ namespace Penny.Backend.IntegrationTests.Contracts;
 public sealed class DocumentationTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
-    public async Task whenDocumentationRequested_GenerateOpenApi_ShouldDescribeOnlyImplementedOperationsAndLegacyShapes()
+    public async Task whenDocumentationRequested_GenerateOpenApi_ShouldDescribeOperationsWithContractIds()
     {
         var document = await Client.GetFromJsonAsync<JsonElement>("/openapi/v1.json", Ct);
         document.GetProperty("openapi").GetString().ShouldStartWith("3.");
@@ -66,8 +66,8 @@ public sealed class DocumentationTests(ApiFixture fixture) : IntegrationTestBase
                 .GetProperty("operationId")
                 .GetString()
                 .ShouldBe(contract[method]!["operationId"]!.GetValue<string>());
-        // Household membership operations (MAZ-56) keep the shared contract's operation
-        // IDs; Node still serves production, so the contract keeps them `legacy`.
+        // Household, shared expense, settlement and receipt operations keep the shared
+        // contract's operation IDs.
         var openApi = ContractFixtures.OpenApi()["paths"]!;
         foreach (
             var (path, method) in new[]
@@ -113,12 +113,11 @@ public sealed class DocumentationTests(ApiFixture fixture) : IntegrationTestBase
                 .GetProperty("operationId")
                 .GetString()
                 .ShouldBe(operation["operationId"]!.GetValue<string>());
-            operation["x-implementation"]!.GetValue<string>().ShouldBe("legacy");
         }
-        // The .NET-only password reset (MAZ-123) is in the shared contract too.
-        var reset = ContractFixtures.OpenApi()["paths"]!["/api/auth/password-reset"]!["post"]!;
-        reset["operationId"]!.GetValue<string>().ShouldBe("postApiAuthPasswordReset");
-        reset["x-implementation"]!.GetValue<string>().ShouldBe("backend");
+        // The password reset (MAZ-123) is in the shared contract too.
+        ContractFixtures.OpenApi()["paths"]!["/api/auth/password-reset"]!["post"]!["operationId"]!
+            .GetValue<string>()
+            .ShouldBe("postApiAuthPasswordReset");
         using var scalar = await Client.GetAsync("/scalar/v1", Ct);
         scalar.StatusCode.ShouldBe(HttpStatusCode.OK);
         (await scalar.Content.ReadAsStringAsync(Ct)).ShouldContain("scalar");
@@ -135,7 +134,7 @@ public sealed class DocumentationTests(ApiFixture fixture) : IntegrationTestBase
             builder.UseEnvironment("Production")
         );
         using var client = CreateClient(production);
-        // Unmapped routes require a session first (as in the legacy server), then 404.
+        // Unmapped routes require a session first, then 404.
         using var anonymous = await client.GetAsync(path, Ct);
         anonymous.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
         var token = await RegisterAsync("docs@example.test", client);

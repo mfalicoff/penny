@@ -30,7 +30,7 @@ internal static class ReceiptCommand
                 break;
             default:
                 Console.Error.WriteLine(
-                    "Usage: receipts-verify | receipts-sweep [--dry-run]. See docs/migration/receipts.md."
+                    "Usage: receipts-verify | receipts-sweep [--dry-run]. See docs/reference/receipts.md."
                 );
                 return 1;
         }

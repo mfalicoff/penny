@@ -12,7 +12,7 @@ namespace Penny.Backend.Persistence.Repositories;
 // compare-and-increment `ExecuteUpdate` statements on the expense row (the matching
 // row stays locked until commit); household and ledger locks come from the base
 // class. Text is ordered in memory with ordinal comparison, never by the database
-// collation, so ordering matches the legacy SQLite byte order for generated ids.
+// collation, so generated ids sort in byte order.
 internal sealed class PostgresSharedExpenseTransaction(
     PennyDbContext context,
     ReceiptFileStore files,
@@ -173,7 +173,7 @@ internal sealed class PostgresSharedExpenseTransaction(
         return true;
     }
 
-    // Legacy soft delete: `updated_at` is left as it was.
+    // Soft delete: `updated_at` is left as it was.
     public async Task<bool> DeleteExpenseAsync(
         string householdId,
         string expenseId,
@@ -309,7 +309,7 @@ internal sealed class PostgresSharedExpenseTransaction(
     {
         var viewerId = viewer?.UserId;
         var leftAt = viewer?.LeftAt;
-        // Legacy `canSeeExpense` for a former member: a share in the expense while it
+        // What a former member sees: a share in the expense while it
         // belongs to this household (deleted expenses included); other events up to
         // the moment they left.
         var events = Context
@@ -744,7 +744,7 @@ internal sealed class PostgresSharedExpenseTransaction(
             })
         );
 
-    // Newest date first, then newest creation, then id (legacy order plus a tie-break).
+    // Newest date first, then newest creation, then id.
     private static List<StoredExpense> Newest(IEnumerable<StoredExpense> expenses) =>
         [
             .. expenses

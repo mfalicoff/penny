@@ -1,7 +1,7 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 
 // The MAZ-91 two-person journeys against the real .NET API and PostgreSQL from the full-stack
-// test environment (docs/migration/test-environment.md). Skipped unless PENNY_REAL_STACK=1. It
+// test environment (docs/reference/test-environment.md). Skipped unless PENNY_REAL_STACK=1. It
 // pins the server clock through the environment's test controls (PENNY_API_URL and
 // PENNY_TEST_TOKEN, exported by `test-env run`), so it never runs against a real server. CI runs
 // it on Chromium, Firefox and WebKit (MAZ-95). In apps/web:

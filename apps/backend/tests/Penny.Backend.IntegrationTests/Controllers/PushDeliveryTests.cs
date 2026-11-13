@@ -7,52 +7,48 @@ namespace Penny.Backend.IntegrationTests.Controllers;
 
 // Delivery of the household notification outbox over real PostgreSQL with
 // deterministic fake providers (MAZ-61): recipients and actor exclusion, deep-link
-// payloads, Expo/APNs coexistence and environment routing, retries, permanent
-// failures, invalid-token cleanup, logout/expiry, expiry of old messages and Expo
-// receipts. All tokens and data are synthetic.
+// payloads, APNs environment routing, retries, permanent failures, invalid-token
+// cleanup, logout/expiry and expiry of old messages. All tokens and data are synthetic.
 public sealed class PushDeliveryTests(ApiFixture fixture) : PushTestBase(fixture)
 {
     [Fact]
     public async Task whenMemberAddsExpense_RunOnce_ShouldNotifyOtherMembersDevicesOnceWithDeepLink()
     {
         var (householdId, alex, sam) = await HouseholdAsync();
-        await RegisterExpoAsync(alex.Token);
-        await RegisterExpoAsync(sam.Token, "ExponentPushToken[sam_phone]");
+        await RegisterApnsAsync(alex.Token, ApnsToken(3), "production");
         await RegisterApnsAsync(sam.Token, ApnsToken(1), "sandbox");
         await RegisterApnsAsync(sam.Token, ApnsToken(2), "production");
 
         var expense = await CreateExpenseAsync(householdId, alex.Token, Expense(1000, alex.UserId));
         var run = await Runner().RunOnceAsync(Ct);
 
-        run.Accepted.ShouldBe(3);
-        (await Expo.SentToAsync(ExpoToken)).ShouldBeEmpty("the actor is never notified");
-        var expo = (await Expo.SentToAsync("ExponentPushToken[sam_phone]")).Single();
-        expo.Environment.ShouldBeNull();
-        expo.Title.ShouldBe("New household expense");
-        expo.Payload.ShouldBe(
-            new PushPayload(householdId, "2026-09", Id(expense), expo.Payload.EventId)
-        );
+        run.Accepted.ShouldBe(2);
+        (await Apns.SentToAsync(ApnsToken(3))).ShouldBeEmpty("the actor is never notified");
         var sandbox = (await Apns.SentToAsync(ApnsToken(1))).Single();
         var production = (await Apns.SentToAsync(ApnsToken(2))).Single();
         sandbox.Environment.ShouldBe(PushProviders.Sandbox);
         production.Environment.ShouldBe(PushProviders.Production);
-        sandbox.Payload.ShouldBe(expo.Payload);
+        sandbox.Title.ShouldBe("New household expense");
+        sandbox.Payload.ShouldBe(
+            new PushPayload(householdId, "2026-09", Id(expense), sandbox.Payload.EventId)
+        );
+        production.Payload.ShouldBe(sandbox.Payload);
         sandbox.CollapseId.ShouldBe(production.CollapseId);
         sandbox.ExpiresAt.ShouldBe(Noon + PushDeliveryRunner.MaxAge);
         (await UnsentMessagesAsync()).ShouldBe(0);
         (
             await CountAsync(
-                "SELECT count(*) FROM penny.push_deliveries WHERE provider = 'apns' AND receipt_checked_at IS NOT NULL AND ticket_id IS NOT NULL"
+                "SELECT count(*) FROM penny.push_deliveries WHERE sent_at IS NOT NULL AND ticket_id IS NOT NULL"
             )
         ).ShouldBe(2);
 
         At(Noon.AddHours(2));
         (await Runner().RunOnceAsync(Ct)).Claimed.ShouldBe(0);
-        (Expo.Sent.Count + Apns.Sent.Count).ShouldBe(3, "accepted deliveries are never resent");
+        Apns.Sent.Count.ShouldBe(2, "accepted deliveries are never resent");
     }
 
     [Fact]
-    public async Task whenReimbursementAndEditRecorded_RunOnce_ShouldUseLegacyEventText()
+    public async Task whenReimbursementAndEditRecorded_RunOnce_ShouldUseEventText()
     {
         var (householdId, alex, sam) = await HouseholdAsync();
         await RegisterApnsAsync(alex.Token, ApnsToken(1), "production");
@@ -265,44 +261,21 @@ public sealed class PushDeliveryTests(ApiFixture fixture) : PushTestBase(fixture
     }
 
     [Fact]
-    public async Task whenApnsNotConfigured_RunOnce_ShouldKeepApnsDeliveriesWaitingAndSendExpo()
+    public async Task whenApnsNotConfigured_RunOnce_ShouldKeepDeliveriesWaiting()
     {
         var (householdId, alex, sam) = await HouseholdAsync();
-        await RegisterExpoAsync(sam.Token);
         await RegisterApnsAsync(sam.Token, ApnsToken(1), "production");
         await CreateExpenseAsync(householdId, alex.Token, Expense(1000, alex.UserId));
 
-        var run = await Runner(transports: [Expo]).RunOnceAsync(Ct);
+        var run = await Runner(transports: []).RunOnceAsync(Ct);
 
-        run.Accepted.ShouldBe(1);
+        run.Accepted.ShouldBe(0);
         run.Retried.ShouldBe(1);
-        (
-            await ScalarAsync(
-                "SELECT last_error FROM penny.push_deliveries WHERE provider = 'apns'"
-            )
-        ).ShouldBe("apns:not-configured");
+        (await ScalarAsync("SELECT last_error FROM penny.push_deliveries")).ShouldBe(
+            "apns:not-configured"
+        );
         At(Noon.AddSeconds(5));
         (await Runner().RunOnceAsync(Ct)).Accepted.ShouldBe(1, "configuring APNs delivers it");
-    }
-
-    [Fact]
-    public async Task whenExpoRetired_RunOnce_ShouldFinishExpoDeliveriesAndStillSendApns()
-    {
-        var (householdId, alex, sam) = await HouseholdAsync();
-        await RegisterExpoAsync(sam.Token);
-        await RegisterApnsAsync(sam.Token, ApnsToken(1), "production");
-        await CreateExpenseAsync(householdId, alex.Token, Expense(1000, alex.UserId));
-
-        var run = await Runner(expoEnabled: false).RunOnceAsync(Ct);
-
-        run.Accepted.ShouldBe(1);
-        run.Failed.ShouldBe(1);
-        Expo.Sent.ShouldBeEmpty();
-        (
-            await ScalarAsync(
-                "SELECT last_error FROM penny.push_deliveries WHERE provider = 'expo'"
-            )
-        ).ShouldBe("expo-retired");
     }
 
     [Fact]
@@ -322,60 +295,6 @@ public sealed class PushDeliveryTests(ApiFixture fixture) : PushTestBase(fixture
         (await ScalarAsync("SELECT last_error FROM penny.push_deliveries")).ShouldBe(
             "invalid-payload"
         );
-    }
-
-    [Fact]
-    public async Task whenExpoReceiptsDue_CheckReceipts_ShouldRemoveUnregisteredDevicesAndCloseTickets()
-    {
-        var (householdId, alex, sam) = await HouseholdAsync();
-        await RegisterExpoAsync(sam.Token, "ExponentPushToken[sam_phone]");
-        await RegisterExpoAsync(alex.Token, "ExponentPushToken[alex_phone]");
-        await CreateExpenseAsync(householdId, alex.Token, Expense(1000, alex.UserId));
-        await CreateExpenseAsync(householdId, sam.Token, Expense(1000, sam.UserId));
-        await Runner().RunOnceAsync(Ct);
-        var runner = Runner();
-        (await runner.CheckReceiptsAsync(Ct)).ShouldBe(0, "receipts wait 15 minutes");
-        Receipts.Requests.ShouldBeEmpty();
-        var samTicket = (string)
-            (
-                await ScalarAsync(
-                    "SELECT ticket_id FROM penny.push_deliveries WHERE token = 'ExponentPushToken[sam_phone]'"
-                )
-            )!;
-        Receipts.Respond = ids =>
-            ids.ToDictionary(
-                id => id,
-                id =>
-                    id == samTicket
-                        ? PushReceiptStatus.DeviceNotRegistered
-                        : PushReceiptStatus.RateExceeded
-            );
-
-        At(Noon + PushDeliveryRunner.ReceiptDelay);
-        (await runner.CheckReceiptsAsync(Ct)).ShouldBe(1);
-
-        (await ScalarAsync("SELECT string_agg(token, ',') FROM penny.push_devices")).ShouldBe(
-            "ExponentPushToken[alex_phone]"
-        );
-        (
-            await CountAsync(
-                "SELECT count(*) FROM penny.push_deliveries WHERE receipt_checked_at IS NULL"
-            )
-        ).ShouldBe(1, "a rate-limited receipt is checked again");
-        Receipts.Respond = ids => ids.ToDictionary(id => id, _ => PushReceiptStatus.Ok);
-        // The receipt claim counts as the second attempt: a 10-second backoff, as in legacy.
-        At(Noon + PushDeliveryRunner.ReceiptDelay + TimeSpan.FromSeconds(10));
-        (await runner.CheckReceiptsAsync(Ct)).ShouldBe(1);
-        (
-            await CountAsync(
-                "SELECT count(*) FROM penny.push_deliveries WHERE receipt_checked_at IS NULL"
-            )
-        ).ShouldBe(0);
-        (
-            await CountAsync(
-                "SELECT count(*) FROM penny.push_deliveries WHERE lease_token IS NOT NULL"
-            )
-        ).ShouldBe(0);
     }
 
     [Fact]

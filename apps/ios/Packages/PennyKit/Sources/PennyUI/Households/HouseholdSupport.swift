@@ -130,7 +130,7 @@ struct HouseholdFailureBanner: View {
 }
 
 extension WireSharedCategory {
-    /// The category's SF Symbol and palette color (legacy Ionicons names map onto symbols).
+    /// The category's SF Symbol and palette color (stored Ionicons names map onto symbols).
     var symbol: String { CategoryStyle.symbol(forIonicon: icon) }
     var tint: Color { PennyColor.category(CategoryStyle.color(forCategoryID: name.lowercased(), hex: color)) }
 

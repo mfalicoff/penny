@@ -97,7 +97,7 @@ public struct APIClient: Sendable {
         try makeSession(try await json(.post, "/api/auth/login", body: credentials, authenticated: false))
     }
 
-    /// `GET /api/auth/oidc`. Needs no session; a 404 or `enabled: false` means no single sign-on.
+    /// `GET /api/auth/oidc`. Needs no session; `enabled: false` means no single sign-on.
     public func oidcConfiguration() async throws -> WireOidcConfig {
         try await json(.get, "/api/auth/oidc", authenticated: false)
     }
@@ -221,9 +221,8 @@ public struct APIClient: Sendable {
 
     // MARK: Search
 
-    /// One page of `POST /api/v1/search/transactions`. A 404 (`APIError.notFound`) means
-    /// this server has no search v1: use local search. Search availability never gates
-    /// ledger access; the two share nothing but the session.
+    /// One page of `POST /api/v1/search/transactions`. Search failures never gate ledger
+    /// access; the two share nothing but the session.
     public func search(_ request: SearchRequest) async throws -> SearchResponse {
         try request.validate()
         let response: SearchResponse = try await json(

@@ -60,14 +60,6 @@ server {
         try_files $uri =404;
     }
 
-    # The retired Expo web export's bundles (MAZ-97). A tab opened before the upgrade gets a
-    # clean 404 for a lazy chunk instead of index.html served as a script, and recovers on
-    # reload. Its offline copy in localStorage is imported by the new app on the same origin.
-    location /_expo/ {
-        add_header Cache-Control "no-store" always;
-        return 404;
-    }
-
     # The build that is serving (deploy/web/Dockerfile), for upgrade and rollback checks.
     location = /version.json {
         add_header Cache-Control "no-store" always;

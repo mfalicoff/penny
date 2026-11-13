@@ -4,8 +4,8 @@ using Penny.Backend.Application.Diagnostics;
 
 namespace Penny.Backend.Application.Push;
 
-// Delivers the household notification outbox (legacy `flushDue`/`checkReceipts`,
-// MAZ-61) safely with any number of runners and restarts:
+// Delivers the household notification outbox (MAZ-61) safely with
+// any number of runners and restarts:
 //
 // 1. Claim: one short transaction leases up to BatchSize due outbox messages to a
 //    fresh token. A lease expires after Lease, so a crashed runner's messages are
@@ -15,8 +15,8 @@ namespace Penny.Backend.Application.Push;
 //    deliveries on first use (the recipient's devices with live sessions), finish
 //    deliveries whose device was removed, transferred or logged out, and take the due
 //    ones, counting the attempt before anything is sent.
-// 3. Send: messages are grouped by provider (Expo, APNs) and sent; each outcome is a
-//    redacted reason code.
+// 3. Send: messages are grouped by provider (APNs) and sent; each outcome is a redacted
+//    reason code.
 // 4. Record (per message, one transaction): accepted, retry with exponential backoff
 //    (5 s doubling to 1 h, or the provider's longer Retry-After), permanent, or
 //    invalid token (the device is deleted unless it re-registered after the claim,
@@ -28,9 +28,7 @@ namespace Penny.Backend.Application.Push;
 public sealed class PushDeliveryRunner(
     IPushRepository outbox,
     IEnumerable<IPushTransport> transports,
-    PushSettings settings,
-    TimeProvider clock,
-    IPushReceiptChecker? receipts = null
+    TimeProvider clock
 )
 {
     public const int BatchSize = 25;
@@ -43,8 +41,6 @@ public sealed class PushDeliveryRunner(
     public static readonly TimeSpan MaxAge = TimeSpan.FromHours(24);
     public static readonly TimeSpan RetryBase = TimeSpan.FromSeconds(5);
     public static readonly TimeSpan RetryMax = TimeSpan.FromHours(1);
-    public static readonly TimeSpan ReceiptDelay = TimeSpan.FromMinutes(15);
-    public static readonly TimeSpan ReceiptExpiry = TimeSpan.FromHours(24);
 
     // Identifies this process in `lease_owner` for diagnostics; never authorization.
     public static readonly string Owner = $"{Environment.MachineName}/{Environment.ProcessId}";
@@ -127,10 +123,7 @@ public sealed class PushDeliveryRunner(
                         outcome.TicketId,
                         outcome.Kind == PushOutcomeKind.Retry
                             ? RetryAt(now, dispatch.Attempts, outcome.RetryAfter)
-                            : null,
-                        outcome.Kind == PushOutcomeKind.Accepted
-                            && dispatch.Provider == PushProviders.Expo
-                            && outcome.TicketId is not null
+                            : null
                     );
                 })
                 .ToList();
@@ -188,76 +181,6 @@ public sealed class PushDeliveryRunner(
         return total;
     }
 
-    // Expo receipts (legacy `checkReceipts`): an accepted ticket is checked 15 minutes
-    // later; DeviceNotRegistered removes the device; rate errors retry for 24 hours;
-    // other errors and tickets older than 24 hours are closed. Returns tickets closed.
-    public async Task<int> CheckReceiptsAsync(CancellationToken cancellationToken)
-    {
-        if (receipts is null)
-            return 0;
-        var token = RandomNumberGenerator.GetHexString(32, lowercase: true);
-        var now = clock.GetUtcNow();
-        var claims = await outbox.ClaimReceiptsAsync(
-            Owner,
-            token,
-            now,
-            now + Lease,
-            100,
-            cancellationToken
-        );
-        if (claims.Count == 0)
-            return 0;
-        using var activity = BackendTelemetry.StartJob(
-            BackendTelemetry.PushReceiptsJob,
-            claims.Count
-        );
-        IReadOnlyDictionary<string, PushReceiptStatus>? found;
-        try
-        {
-            found = await receipts.CheckAsync(
-                [.. claims.Select(claim => claim.TicketId)],
-                cancellationToken
-            );
-        }
-        catch (Exception error) when (error is not OperationCanceledException)
-        {
-            // The receipts are retried; the failure is counted, not thrown.
-            BackendTelemetry.Failed(activity, error.GetType().Name);
-            BackendTelemetry.JobFailed(BackendTelemetry.PushReceiptsJob, error.GetType().Name);
-            found = null;
-        }
-        now = clock.GetUtcNow();
-        var results = claims
-            .Select(claim =>
-            {
-                var expired = now - claim.SentAt >= ReceiptExpiry;
-                PushReceiptStatus? status =
-                    found is null ? null
-                    : found.TryGetValue(claim.TicketId, out var value) ? value
-                    : null;
-                var decision = status switch
-                {
-                    PushReceiptStatus.Ok => PushReceiptDecision.Checked,
-                    PushReceiptStatus.DeviceNotRegistered => PushReceiptDecision.InvalidToken,
-                    PushReceiptStatus.RateExceeded when !expired => PushReceiptDecision.Retry,
-                    PushReceiptStatus.RateExceeded or PushReceiptStatus.Error =>
-                        PushReceiptDecision.Checked,
-                    _ when expired => PushReceiptDecision.Checked,
-                    _ => PushReceiptDecision.Retry,
-                };
-                return new PushReceiptResult(
-                    claim,
-                    decision,
-                    decision == PushReceiptDecision.Retry
-                        ? RetryAt(now, claim.Attempts, null)
-                        : null
-                );
-            })
-            .ToList();
-        await outbox.RecordReceiptsAsync(token, results, now, cancellationToken);
-        return results.Count(result => result.Decision != PushReceiptDecision.Retry);
-    }
-
     private async Task<Dictionary<(string, string), PushOutcome>> SendAsync(
         List<(PushClaim Claim, IReadOnlyList<PushDispatch> Dispatches)> planned,
         CancellationToken cancellationToken
@@ -277,11 +200,6 @@ public sealed class PushDeliveryRunner(
                 if (payload is null || content is not { } text)
                 {
                     outcomes[key] = PushOutcome.Permanent("invalid-payload");
-                    continue;
-                }
-                if (dispatch.Provider == PushProviders.Expo && !settings.ExpoEnabled)
-                {
-                    outcomes[key] = PushOutcome.Permanent("expo-retired");
                     continue;
                 }
                 if (!byProvider.ContainsKey(dispatch.Provider))

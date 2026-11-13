@@ -10,7 +10,7 @@ namespace Penny.Backend.IntegrationTests.Http;
 
 public sealed class SecurityPolicyTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
-    private const string Allowed = "http://localhost:8081";
+    private const string Allowed = "http://localhost:4173";
     private const string Rejected = "https://attacker.example.test";
     private const string Limited = "Too many attempts. Please try again in 15 minutes.";
 

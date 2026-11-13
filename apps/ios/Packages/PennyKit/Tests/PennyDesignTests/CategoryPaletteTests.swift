@@ -32,8 +32,8 @@ struct CategoryPaletteTests {
         #expect(CategoryStyle.color(forCategoryID: "home", hex: "#0FA3A3") == .groceries, "a restyled default")
     }
 
-    @Test("whenALegacyColorIsStored_ColorForStoredHex_ShouldUseTheDefaultOrTheMappedColor")
-    func legacyColor() {
+    @Test("whenALedgerPaletteColorIsStored_ColorForStoredHex_ShouldUseTheDefaultOrTheMappedColor")
+    func ledgerPaletteColor() {
         #expect(CategoryStyle.color(forCategoryID: "home", hex: "#C6953A") == .home, "default ids keep theirs")
         #expect(CategoryStyle.color(forCategoryID: "fun", hex: "#9D83BA") == .entertainment)
         #expect(CategoryStyle.color(forCategoryID: "c-2", hex: "#E47850") == .food)

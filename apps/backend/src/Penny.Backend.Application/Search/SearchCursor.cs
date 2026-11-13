@@ -8,7 +8,7 @@ using Penny.Backend.Domain.Search;
 
 namespace Penny.Backend.Application.Search;
 
-// Simple keyset cursors (docs/migration/search.md, "Pagination"): base64url JSON with
+// Simple keyset cursors (docs/reference/search.md, "Pagination"): base64url JSON with
 // a format version, a hash of the normalized query, filters and sort, and the last
 // result's sort tuple. No signature and no expiry; a cursor only positions a request
 // that the server authorizes again.

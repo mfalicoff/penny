@@ -122,7 +122,6 @@ public final class PushNotifications {
 
     /// The signed-in account changed (nil while signed out, restoring or in the demo).
     func accountChanged(_ next: PushAccount?) async {
-        if let next { store.adoptLegacyRegistration(for: next) }
         // The previous account's notifications must not stay on screen for the next person:
         // after an account change in this process, or at launch when the device's registration
         // (which the registrar is about to replace) belongs to another account.

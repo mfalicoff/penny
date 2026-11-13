@@ -5,7 +5,8 @@ import { calendarMonth, selectOverview, shiftMonthKey } from "../../src/domain/s
 
 const expense: Transaction = { id: "meal", title: "Lunch", kind: "expense", total: 4000, share: 1000, categoryId: "food", date: "2026-09-20", note: "With Alex" };
 const ledger = { ...emptyLedger(), transactions: [expense, { ...expense, id: "salary", title: "Payday", note: "", kind: "income" as const, categoryId: "salary", share: 50000, date: "2026-09-21" }, { ...expense, id: "last-month", date: "2026-08-31" }] };
-const filters = { month: "2026-09", day: null, filter: "all" as const, categoryId: null, search: "" };
+// A `today` after every month these tests read, so every dated entry is recorded unless a test moves it.
+const filters = { month: "2026-09", day: null, filter: "all" as const, categoryId: null, search: "", today: "2027-12-31" };
 
 test("overview totals use monthly personal shares independently of list filters", () => {
   const before = structuredClone(ledger);
@@ -103,8 +104,6 @@ test("twice-monthly income funds the overview before payday and is replaced by r
       assert.deepEqual(result.recorded, { income: 0, expense: 250000, investment: 20000 });
       assert.deepEqual(result.summary, { income: 400000, expense: 251000, investment: 220000 });
       assert.equal(result.summary.income - result.summary.expense - result.summary.investment, -71000);
-      // The money-flow chart keeps recorded entries plus expected income.
-      assert.deepEqual(result.moneyFlowEntries.map((entry) => entry.id).sort(), ["invest", "meal", "midmonth:2026-09-15", "monthend:2026-09-30"]);
     }
   }
   assert.deepEqual(data, before);
@@ -126,7 +125,7 @@ test("expected income uses scheduled shares, month boundaries and recorded occur
 });
 
 test("with today, income dated after it is expected: projected but not recorded, still listed (MAZ-136)", () => {
-  // Payday is 2026-09-21 and lunch 2026-09-20. Without today (the legacy Overview) both count.
+  // Payday is 2026-09-21 and lunch 2026-09-20. In a later month both count.
   assert.deepEqual(selectOverview(ledger, filters).recorded, { expense: 1000, income: 50000, investment: 0 });
   const before = structuredClone(ledger);
   const ahead = selectOverview(ledger, { ...filters, today: "2026-09-20" });

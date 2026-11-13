@@ -3,12 +3,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { z } from "zod";
 import { cents, nextOccurrence, personalShare, type Ledger } from "../../src/domain/ledger.ts";
 import { mergeLedger } from "../../src/domain/merge.ts";
 import { calculateHouseholdSplits } from "../../src/domain/households.ts";
-import { ledgerWriteSchema } from "../../server/validation/ledger.ts";
+import { ledgerWriteSchema } from "../../src/validation/ledger.ts";
 import { selectTransactions } from "../../src/domain/selectors/transactions.ts";
 import { dateKeyIn } from "../../src/domain/calendar.ts";
 import { isExpected, summarizeMonth } from "../../src/domain/summary.ts";
@@ -61,7 +61,7 @@ const MonthTotals = z.strictObject({
   cases: z.array(z.strictObject({
     name: z.string(),
     ledger: z.string(),
-    today: date.nullable(),
+    today: date,
     clock: z.strictObject({ instant: z.iso.datetime(), timeZone: z.string().min(1) }).optional(),
     month: z.string().regex(/^\d{4}-\d{2}$/),
     expected: z.strictObject({
@@ -89,8 +89,7 @@ const Manifest = z.strictObject({
 
 const reference = z.string().regex(/^\$(user|household|expense):[a-z0-9-]+$/);
 // "$today" dates (real-time scenarios) are checked as a concrete day.
-const SeedLedger = z.custom<Ledger>((value) => value !== undefined &&
-  ledgerWriteSchema.safeParse({ revision: 0, ledger: JSON.parse(JSON.stringify(value).replaceAll("$today", "2026-01-15")) }).success, "a valid v4 ledger");
+const SeedLedger = z.custom<Ledger>((value) => value !== undefined && ledgerWriteSchema.safeParse({ revision: 0, ledger: value }).success, "a valid v4 ledger");
 const Step = z.union([
   z.strictObject({ clock: z.iso.datetime() }),
   z.strictObject({ as: z.string(), ledger: SeedLedger }),
@@ -119,18 +118,10 @@ const Seeds = z.strictObject({
   scenarios: z.array(z.strictObject({
     name: z.string().regex(/^[a-z-]+$/),
     summary: z.string(),
-    clock: z.union([z.iso.datetime(), z.literal("$now")]),
+    clock: z.iso.datetime(),
     users: z.array(z.string().regex(/^[a-z]+$/)).min(1),
     steps: z.array(Step),
     searchExpectations: z.array(SearchExpectation).optional(),
-    probes: z.array(z.strictObject({
-      name: z.string().min(1),
-      as: z.string().optional(),
-      method: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]),
-      path: z.string().startsWith("/api/"),
-      body: z.unknown().optional(),
-    })).optional(),
-    knownDifferences: z.array(z.strictObject({ probe: z.string(), path: z.string(), reason: z.string().min(1) })).optional(),
     pendingEdits: z.strictObject({
       as: z.string(),
       description: z.string(),
@@ -183,7 +174,7 @@ const Redesign = z.strictObject({
   })),
 });
 
-test("money fixtures match the legacy parser, personal shares and ledger bounds", () => {
+test("money fixtures match the amount parser, personal shares and ledger bounds", () => {
   const golden = parse(Money, "money.json");
   for (const item of golden.parse)
     if ("error" in item) assert.throws(() => cents(item.input), { message: item.error }, item.input);
@@ -219,24 +210,23 @@ test("month-totals fixtures: income dated after today is expected, at the bounda
   for (const item of golden.cases) {
     const ledger = golden.ledgers[item.ledger]!;
     if (item.clock) assert.equal(dateKeyIn(new Date(item.clock.instant), item.clock.timeZone), item.today, item.name);
-    const options = item.today === null ? {} : { today: item.today };
-    const summary = summarizeMonth(ledger, item.month, options);
+    const summary = summarizeMonth(ledger, item.month, { today: item.today });
     const { recorded, projected, expectedIncome, recordedNet, projectedNet } = item.expected;
     assert.deepEqual(summary, { recorded, projected, expectedIncome, recordedNet, projectedNet }, item.name);
-    const overview = selectOverview(ledger, { month: item.month, day: null, filter: "all", categoryId: null, search: "", ...options });
+    const overview = selectOverview(ledger, { month: item.month, day: null, filter: "all", categoryId: null, search: "", today: item.today });
     assert.deepEqual(overview.expected.map((entry) => entry.id).sort(), item.expected.expectedIds, item.name);
     assert.deepEqual(overview.scheduled.map((entry) => entry.id).sort(), item.expected.scheduledIds, item.name);
     assert.deepEqual(overview.summary, summary.projected, item.name);
     // Independent of the implementation: Left to spend is income dated on or before today.
-    const income = ledger.transactions.filter((entry) => entry.kind === "income" && entry.date.startsWith(item.month) && (item.today === null || entry.date <= item.today));
+    const income = ledger.transactions.filter((entry) => entry.kind === "income" && entry.date.startsWith(item.month) && entry.date <= item.today);
     assert.equal(summary.recorded.income, income.reduce((sum, entry) => sum + entry.share, 0), item.name);
     // Only income moves: expenses and investments dated after today stay recorded (MAZ-139).
     const dated = (kind: string) => ledger.transactions.filter((entry) => entry.kind === kind && entry.date.startsWith(item.month)).reduce((sum, entry) => sum + entry.share, 0);
     assert.equal(summary.recorded.expense, dated("expense"), item.name);
     assert.equal(summary.recorded.investment, dated("investment"), item.name);
-    for (const id of item.expected.expectedIds) assert.ok(isExpected(ledger.transactions.find((entry) => entry.id === id)!, item.today ?? undefined), id);
+    for (const id of item.expected.expectedIds) assert.ok(isExpected(ledger.transactions.find((entry) => entry.id === id)!, item.today), id);
     // The entry never changes: projected is the same whatever today is.
-    assert.deepEqual(summary.projected, summarizeMonth(ledger, item.month).projected, item.name);
+    assert.deepEqual(summary.projected, summarizeMonth(ledger, item.month, { today: "2000-01-01" }).projected, item.name);
   }
 });
 
@@ -252,9 +242,7 @@ test("fixture manifest hashes every shared fixture and names each consumer", () 
 });
 
 function readdirFixtures(): string[] {
-  const listed = spawnSync("git", ["ls-files", "--others", "--cached", "--exclude-standard", "contracts/fixtures"], { cwd: root, encoding: "utf8" });
-  return listed.stdout.split("\n").filter((line) => /^contracts\/fixtures\/[a-z-]+\.json$/.test(line) && !line.endsWith("/manifest.json"))
-    .map((line) => line.slice("contracts/fixtures/".length)).sort();
+  return readdirSync(new URL("contracts/fixtures/", root)).filter((name) => /^[a-z-]+\.json$/.test(name) && name !== "manifest.json").sort();
 }
 
 test("golden fixtures regenerate byte-for-byte in any time zone", () => {
@@ -276,12 +264,12 @@ test("full-stack seeds are well formed, sanitized and internally consistent", ()
   assert.doesNotMatch(raw, /@(?!penny\.test)[a-z0-9.-]+\.[a-z]{2,}/i);
   assert.doesNotMatch(raw, /"(password|token|code)"\s*:/);
   for (const scenario of seeds.scenarios) {
-    const defined = { user: new Set(scenario.users), email: new Set(scenario.users), household: new Set<string>(), expense: new Set<string>(), rule: new Set<string>(), invite: new Set<string>() };
+    const defined = { user: new Set(scenario.users), household: new Set<string>(), expense: new Set<string>(), invite: new Set<string>() };
     for (const step of scenario.steps) {
       if ("as" in step) assert.ok(defined.user.has(step.as), `${scenario.name}: unknown alias ${step.as}`);
-      const refs = JSON.stringify(step).match(/\$(user|email|household|expense|rule):[a-z0-9-]+/g) ?? [];
+      const refs = JSON.stringify(step).match(/\$(user|household|expense):[a-z0-9-]+/g) ?? [];
       for (const ref of refs) {
-        const [kind, name] = ref.slice(1).split(":") as ["user" | "email" | "household" | "expense" | "rule", string];
+        const [kind, name] = ref.slice(1).split(":") as ["user" | "household" | "expense", string];
         assert.ok(defined[kind].has(name), `${scenario.name}: ${ref} used before it is defined`);
       }
       if ("createHousehold" in step) defined.household.add(step.createHousehold.ref);
@@ -292,14 +280,6 @@ test("full-stack seeds are well formed, sanitized and internally consistent", ()
       }
       if ("join" in step) assert.ok(defined.invite.has(step.join.invite));
       if ("expense" in step) defined.expense.add(step.expense.ref);
-      if ("sharedRecurring" in step) defined.rule.add(step.sharedRecurring.ref);
-    }
-    for (const probe of scenario.probes ?? []) {
-      if (probe.as) assert.ok(defined.user.has(probe.as), `${probe.name}: alias`);
-      for (const ref of JSON.stringify(probe).match(/\$(user|email|household|expense|rule):[a-z0-9-]+/g) ?? []) {
-        const [kind, name] = ref.slice(1).split(":") as ["user" | "email" | "household" | "expense" | "rule", string];
-        assert.ok(defined[kind].has(name), `${probe.name}: ${ref}`);
-      }
     }
     for (const item of scenario.searchExpectations ?? []) {
       assert.ok(defined.user.has(item.as));

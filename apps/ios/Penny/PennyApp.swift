@@ -23,8 +23,7 @@ struct PennyApp: App {
                 }
             }
             self.configuration = configuration.map(controls.apply)
-            let staged = controls.stageExpoFixture()
-            services = controls.apply(AppServices.live(importingExpoData: !staged))
+            services = controls.apply(AppServices.live())
         #else
             self.configuration = configuration
             services = AppServices.live()

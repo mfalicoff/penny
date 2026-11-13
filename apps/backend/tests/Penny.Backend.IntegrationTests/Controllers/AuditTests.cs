@@ -108,14 +108,14 @@ public sealed class AuditTests(ApiFixture fixture) : SettlementTestBase(fixture)
     }
 
     [Fact]
-    public async Task whenSnapshotWasImportedWithPrivateData_Audit_ShouldRedactIt()
+    public async Task whenStoredSnapshotHasPrivateData_Audit_ShouldRedactIt()
     {
         var (alex, alexId, bea, _, _, _, home) = await HomeAsync();
-        // A legacy row written before payer privacy and receipt encryption.
+        // A stored row that still carries the payer's account and the receipt name.
         await Fixture.SqlAsync(
             $$$"""
             INSERT INTO penny.household_audit (id, household_id, expense_id, actor_id, action, before_json, after_json, created_at)
-            VALUES ('legacy-event', '{{{home}}}', 'legacy-expense', '{{{alexId}}}', 'expense.updated',
+            VALUES ('unredacted-event', '{{{home}}}', 'unredacted-expense', '{{{alexId}}}', 'expense.updated',
               '{"title":"Old","accountId":"acct-secret","receipt":{"id":"r9","name":"Secret.pdf","mime":"application/pdf"}}',
               '{"title":"New","accountId":"acct-secret"}', TIMESTAMPTZ '2026-09-28 12:30:00+00');
             """,
@@ -123,21 +123,23 @@ public sealed class AuditTests(ApiFixture fixture) : SettlementTestBase(fixture)
         );
         foreach (var token in new[] { alex, bea })
         {
-            var legacy = (await AuditAsync(home, token, "?expenseId=legacy-expense")).Single();
-            legacy.GetProperty("before").TryGetProperty("accountId", out _).ShouldBeFalse();
-            legacy
+            var unredacted = (
+                await AuditAsync(home, token, "?expenseId=unredacted-expense")
+            ).Single();
+            unredacted.GetProperty("before").TryGetProperty("accountId", out _).ShouldBeFalse();
+            unredacted
                 .GetProperty("before")
                 .GetProperty("receipt")
                 .TryGetProperty("name", out _)
                 .ShouldBeFalse();
-            legacy
+            unredacted
                 .GetProperty("before")
                 .GetProperty("receipt")
                 .GetProperty("id")
                 .GetString()
                 .ShouldBe("r9");
-            legacy.GetProperty("after").TryGetProperty("accountId", out _).ShouldBeFalse();
-            legacy.GetProperty("after").GetProperty("title").GetString().ShouldBe("New");
+            unredacted.GetProperty("after").TryGetProperty("accountId", out _).ShouldBeFalse();
+            unredacted.GetProperty("after").GetProperty("title").GetString().ShouldBe("New");
         }
     }
 

@@ -23,11 +23,11 @@
     },
     {
       "topic": "appearances",
-      "decision": "Light and dark only, following the system setting. Dark is true black, so AMOLED is dropped; Catppuccin is dropped and not kept as an accent. A saved legacy amoled or catppuccin preference migrates to dark (MAZ-72/87)."
+      "decision": "Light and dark only, following the system setting. Dark is true black; there is no AMOLED or Catppuccin theme, and Catppuccin is not kept as an accent."
     },
     {
       "topic": "navigation",
-      "decision": "iPhone tabs Home, Activity, Shared and Trips with a separate add button; More is replaced by a Settings sheet. Every legacy route keeps a destination (navigation.legacyRoutes)."
+      "decision": "iPhone tabs Home, Activity, Shared and Trips with a separate add button; More is replaced by a Settings sheet. Every route keeps a destination on iPhone, iPad and web (navigation.routes)."
     },
     {
       "topic": "fonts and icons",
@@ -35,7 +35,7 @@
     },
     {
       "topic": "Android",
-      "decision": "No Android card; the legacy Android app is retired under MAZ-98 and has no redesign baseline."
+      "decision": "No Android card; there is no Android app (retired under MAZ-98)."
     }
   ],
   "behaviorIssues": [
@@ -75,7 +75,7 @@
   "sources": [
     {
       "path": "docs/design/penny-ios/README.md",
-      "sha256": "9eb3e5431310e060baddca4a776d1c8b4bf2931cdd1ae82c8d618a99d45e438c"
+      "sha256": "d6a5a7de2f0cbcc020ce4caa4272813c0abf9fff46d3bf2dcf34484fd73b11a9"
     },
     {
       "path": "docs/design/penny-ios/render.mjs",
@@ -143,7 +143,7 @@
     },
     {
       "path": "docs/design/visual-acceptance.md",
-      "sha256": "e4e41545319fdc15c92d0bc975a4482f158b4343c8909781b4de458e54b8aa38"
+      "sha256": "b719be0765ffe97d9c94e23258eb32201d57ca192667612ce873b6b2ec4c78e3"
     }
   ],
   "tokens": {
@@ -299,87 +299,75 @@
     "web": {
       "layout": "persistent left sidebar (Home, Activity, Insights; Together; Manage) with a top bar, ⌘K search and Add entry (N)"
     },
-    "legacyRoutes": [
+    "routes": [
       {
         "route": "/",
-        "file": "src/app/index.tsx",
         "iPhone": "Home tab",
         "iPad": "Home",
         "web": "Home"
       },
       {
         "route": "/transactions",
-        "file": "src/app/transactions.tsx",
         "iPhone": "Activity tab",
         "iPad": "Activity",
         "web": "Activity"
       },
       {
         "route": "/entries/new",
-        "file": "src/app/entries/new.tsx",
         "iPhone": "Add entry sheet over the current tab",
         "iPad": "Add entry form sheet",
         "web": "Add entry dialog over the current page"
       },
       {
         "route": "/accounts",
-        "file": "src/app/accounts.tsx",
         "iPhone": "Settings sheet › Accounts",
         "iPad": "Settings › Accounts",
         "web": "Settings › Accounts"
       },
       {
         "route": "/categories",
-        "file": "src/app/categories.tsx",
         "iPhone": "Settings sheet › Categories",
         "iPad": "Settings › Categories",
         "web": "Settings › Categories"
       },
       {
         "route": "/recurring",
-        "file": "src/app/recurring.tsx",
         "iPhone": "Settings sheet › Recurring",
         "iPad": "Settings › Recurring",
         "web": "Settings › Recurring"
       },
       {
         "route": "/households",
-        "file": "src/app/households/index.tsx",
         "iPhone": "Shared tab",
         "iPad": "Sidebar › Together",
         "web": "Sidebar › Together"
       },
       {
         "route": "/households/[id]",
-        "file": "src/app/households/[id]/index.tsx",
         "iPhone": "Shared tab › household",
         "iPad": "Sidebar household",
         "web": "Household page"
       },
       {
         "route": "/households/[id]/expenses/[expenseId]",
-        "file": "src/app/households/[id]/expenses/[expenseId].tsx",
         "iPhone": "household › expense detail",
         "iPad": "household with the expense in the detail pane",
         "web": "Household page with the expense in the detail panel"
       },
       {
         "route": "/trips",
-        "file": "src/app/trips/index.tsx",
         "iPhone": "Trips tab",
         "iPad": "Sidebar › Together",
         "web": "Trips"
       },
       {
         "route": "/trips/[id]",
-        "file": "src/app/trips/[id].tsx",
         "iPhone": "Trips tab › trip",
         "iPad": "Sidebar trip",
         "web": "Trips › trip"
       },
       {
         "route": "/auth/callback",
-        "file": "src/app/auth/callback.tsx",
         "iPhone": "OIDC callback, then Home",
         "iPad": "OIDC callback, then Home",
         "web": "OIDC callback, then Home"
@@ -402,8 +390,7 @@
       "sha256": "43a653af79f3f9fbb6b9687713775565630aca9a9678746729fdf9a25f7de900",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
-      "legacyRoute": null,
-      "legacyTest": null,
+      "route": null,
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -426,8 +413,7 @@
       "sha256": "5474147b47bef15ad8b307a96f89b3e25805b6a1e15d04db197cb3d472f29a99",
       "nativeIssue": "MAZ-80",
       "webIssue": null,
-      "legacyRoute": "/entries/new",
-      "legacyTest": null,
+      "route": "/entries/new",
       "acceptance": {
         "native": "MAZ-82",
         "web": null,
@@ -453,8 +439,7 @@
       "sha256": "a3b8a1d02909b44cfcc51f0edece652b62c37e1e0e8078f2d9134e8c7566d33a",
       "nativeIssue": "MAZ-77",
       "webIssue": "MAZ-92",
-      "legacyRoute": "/",
-      "legacyTest": "tests/core/overview.test.ts",
+      "route": "/",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -480,8 +465,7 @@
       "sha256": "d7bd83222e5abb383a86eda8e34a57787a1b3c026286a895c5048e85e26b9e62",
       "nativeIssue": "MAZ-77",
       "webIssue": "MAZ-92",
-      "legacyRoute": "/",
-      "legacyTest": "tests/core/overview.test.ts",
+      "route": "/",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -504,8 +488,7 @@
       "sha256": "295bfbec37b62fb2a83030bfb3c75745973c978dfa226c024a07c57c0f3b9d3f",
       "nativeIssue": "MAZ-77",
       "webIssue": "MAZ-92",
-      "legacyRoute": "/",
-      "legacyTest": "tests/core/overview.test.ts",
+      "route": "/",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -528,8 +511,7 @@
       "sha256": "3bdcff942eaec95b9a01cb733c022f4240d5dda0ab5476110af84df61b0673c7",
       "nativeIssue": "MAZ-77",
       "webIssue": "MAZ-92",
-      "legacyRoute": "/",
-      "legacyTest": "tests/core/overview.test.ts",
+      "route": "/",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -552,8 +534,7 @@
       "sha256": "eedc5c0de50b33499aa8f002223815ad2da0c05f96122fb911aef6847c85098c",
       "nativeIssue": "MAZ-77",
       "webIssue": "MAZ-92",
-      "legacyRoute": "/",
-      "legacyTest": "tests/core/overview.test.ts",
+      "route": "/",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -576,8 +557,7 @@
       "sha256": "c8d20915a16d3bb9f5943d69d975d2bdfc27b8fd3c616b4c542eb5224e4589fa",
       "nativeIssue": "MAZ-73",
       "webIssue": "MAZ-88",
-      "legacyRoute": "/transactions",
-      "legacyTest": "tests/core/transactions.test.ts",
+      "route": "/transactions",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -600,8 +580,7 @@
       "sha256": "d6472be0eabdc118fc4cf78d4b7d463f3f0bae9418101d288c766400adc19c80",
       "nativeIssue": "MAZ-73",
       "webIssue": "MAZ-88",
-      "legacyRoute": "/transactions",
-      "legacyTest": "tests/core/transactions.test.ts",
+      "route": "/transactions",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -624,8 +603,7 @@
       "sha256": "98d49806d95f9b06211842781de743dfb38646597a6e5e4440282a1ebb91d2df",
       "nativeIssue": "MAZ-73",
       "webIssue": "MAZ-88",
-      "legacyRoute": "/entries/new",
-      "legacyTest": null,
+      "route": "/entries/new",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -651,8 +629,7 @@
       "sha256": "91d2d069a0e99185550036223805c76bc51626b68dcafb36b0474e2333e5bcd5",
       "nativeIssue": "MAZ-73",
       "webIssue": "MAZ-88",
-      "legacyRoute": "/entries/new",
-      "legacyTest": null,
+      "route": "/entries/new",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -679,8 +656,7 @@
       "sha256": "53802bf53ab3203dc705e7b8d2c3edb5207ed73788317d64b395cbd08444ac70",
       "nativeIssue": "MAZ-73",
       "webIssue": "MAZ-88",
-      "legacyRoute": "/entries/new",
-      "legacyTest": null,
+      "route": "/entries/new",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -703,8 +679,7 @@
       "sha256": "041240854898aa74b11330d441b9a03713e73ed7a972ff94f3febbfdce14aad5",
       "nativeIssue": "MAZ-73",
       "webIssue": "MAZ-88",
-      "legacyRoute": "/entries/new",
-      "legacyTest": null,
+      "route": "/entries/new",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -727,8 +702,7 @@
       "sha256": "b22929de6429bd59441f325f417b421383c3897aca39d036204376ca5e6546ce",
       "nativeIssue": "MAZ-73",
       "webIssue": "MAZ-88",
-      "legacyRoute": "/entries/new",
-      "legacyTest": null,
+      "route": "/entries/new",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -751,8 +725,7 @@
       "sha256": "9d9e04e4db899d4d038364b41f19cbe875614c3a4ea13108d9b017ab5356f5af",
       "nativeIssue": "MAZ-73",
       "webIssue": "MAZ-88",
-      "legacyRoute": "/entries/new",
-      "legacyTest": null,
+      "route": "/entries/new",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -775,8 +748,7 @@
       "sha256": "08b74fe26bd5ea6015932cd48eddab90615559ded294ff21461ed9b8184a6b5d",
       "nativeIssue": "MAZ-78",
       "webIssue": "MAZ-94",
-      "legacyRoute": "/entries/new",
-      "legacyTest": "tests/core/server.test.ts",
+      "route": "/entries/new",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -799,8 +771,7 @@
       "sha256": "d2ae193a55d84eea7ea0dc827d2ca1483c1e863e28ec15dd42d4f5b9e5773d59",
       "nativeIssue": "MAZ-73",
       "webIssue": "MAZ-88",
-      "legacyRoute": "/entries/new",
-      "legacyTest": null,
+      "route": "/entries/new",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -823,8 +794,7 @@
       "sha256": "3cea95d3654f37ac887b63b23397a85d2ea513556285696f38046bc045f8441d",
       "nativeIssue": "MAZ-75",
       "webIssue": "MAZ-91",
-      "legacyRoute": "/households",
-      "legacyTest": "tests/core/households-server.test.ts",
+      "route": "/households",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -847,8 +817,7 @@
       "sha256": "68c09ccc28c112d615dfdd725d8f2c9ed33ce06f6b78a68c47724d40c932c7d8",
       "nativeIssue": "MAZ-75",
       "webIssue": "MAZ-91",
-      "legacyRoute": "/households",
-      "legacyTest": "tests/core/households-server.test.ts",
+      "route": "/households",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -871,8 +840,7 @@
       "sha256": "17450bc668774199d854d328b17aee98a1bc58c768d205231756a05a990a4204",
       "nativeIssue": "MAZ-75",
       "webIssue": "MAZ-91",
-      "legacyRoute": "/households",
-      "legacyTest": "tests/core/households-server.test.ts",
+      "route": "/households",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -895,8 +863,7 @@
       "sha256": "8b92a9cebad20985de38293b7721a0015509e42d85a8af63f84a827e8531ff39",
       "nativeIssue": "MAZ-75",
       "webIssue": "MAZ-91",
-      "legacyRoute": "/households",
-      "legacyTest": "tests/core/households-server.test.ts",
+      "route": "/households",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -919,8 +886,7 @@
       "sha256": "fb5c5f71a646fd264d6cca99954df0c2b73fd99a5552f9595c4a3d574a76dfdf",
       "nativeIssue": "MAZ-75",
       "webIssue": "MAZ-91",
-      "legacyRoute": "/households",
-      "legacyTest": "tests/core/households-server.test.ts",
+      "route": "/households",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -943,8 +909,7 @@
       "sha256": "a610a79a0b139ceafb9a06f297957383e6a016521f202d04dd634634b5ee760a",
       "nativeIssue": "MAZ-75",
       "webIssue": "MAZ-91",
-      "legacyRoute": "/households",
-      "legacyTest": "tests/core/households-server.test.ts",
+      "route": "/households",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -967,8 +932,7 @@
       "sha256": "33e2d7c59d9c7e1a9f5841602d0cd359de8058088f3d29e3545312ed42bb819b",
       "nativeIssue": "MAZ-75",
       "webIssue": "MAZ-91",
-      "legacyRoute": "/households",
-      "legacyTest": "tests/core/households-server.test.ts",
+      "route": "/households",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -991,8 +955,7 @@
       "sha256": "48f82df3da954abc0cc99cab718b0bb54ad0778cd1d64245ea99a19604c0ea7d",
       "nativeIssue": "MAZ-75",
       "webIssue": "MAZ-91",
-      "legacyRoute": "/households",
-      "legacyTest": "tests/core/households-server.test.ts",
+      "route": "/households",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1015,8 +978,7 @@
       "sha256": "a20c89bdb421f2a3349192c2c7cb1fad3f73fecd70ae62296b6e559f373d98b9",
       "nativeIssue": "MAZ-75",
       "webIssue": "MAZ-91",
-      "legacyRoute": "/households",
-      "legacyTest": "tests/core/households-server.test.ts",
+      "route": "/households",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1039,8 +1001,7 @@
       "sha256": "d19a1b5bfa450fa16d72860ef3247315728cd3207e4aecb2ef181e335fefd5d3",
       "nativeIssue": "MAZ-76",
       "webIssue": "MAZ-93",
-      "legacyRoute": "/trips",
-      "legacyTest": "tests/core/trips.test.ts",
+      "route": "/trips",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1063,8 +1024,7 @@
       "sha256": "cb48f21004224045d973583c6d9b2456ae185c19585d5c85beaccbb850702002",
       "nativeIssue": "MAZ-76",
       "webIssue": "MAZ-93",
-      "legacyRoute": "/trips",
-      "legacyTest": "tests/core/trips.test.ts",
+      "route": "/trips",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1087,8 +1047,7 @@
       "sha256": "d1c48c5e52af25908876280f5b328926fab0e9e7eb9c71d7e4b2a52b8505cdb4",
       "nativeIssue": "MAZ-76",
       "webIssue": "MAZ-93",
-      "legacyRoute": "/trips",
-      "legacyTest": "tests/core/trips.test.ts",
+      "route": "/trips",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1111,8 +1070,7 @@
       "sha256": "dad7b83d8d3165b24049ea91d5ecd7a0450c15e5625e9b2ea21980f7e8e3e87b",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
-      "legacyRoute": "/",
-      "legacyTest": null,
+      "route": "/",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1135,8 +1093,7 @@
       "sha256": "794190bb4152c1aab16abff386aba46e7cb335bb58e2ad0c29cea6d282e90291",
       "nativeIssue": "MAZ-74",
       "webIssue": "MAZ-90",
-      "legacyRoute": "/recurring",
-      "legacyTest": "tests/core/model.test.ts",
+      "route": "/recurring",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1159,8 +1116,7 @@
       "sha256": "8152d7b9fb43883f6e12d811ec9ff6c3b298e5e12cf4e495e7eee5e2b11daf1d",
       "nativeIssue": "MAZ-74",
       "webIssue": "MAZ-90",
-      "legacyRoute": "/recurring",
-      "legacyTest": "tests/core/model.test.ts",
+      "route": "/recurring",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1183,8 +1139,7 @@
       "sha256": "986088f4c4cacf48bfd94dd7d6b3c313b31ccdb7d4c87d3b9216762e0f1138d9",
       "nativeIssue": "MAZ-74",
       "webIssue": "MAZ-89",
-      "legacyRoute": "/accounts",
-      "legacyTest": "tests/core/accounts.test.ts",
+      "route": "/accounts",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1207,8 +1162,7 @@
       "sha256": "94f766b78e365477ef16f174b6adcc3bd689f49a6608d74358f246f24fd5b092",
       "nativeIssue": "MAZ-74",
       "webIssue": "MAZ-89",
-      "legacyRoute": "/accounts",
-      "legacyTest": "tests/core/accounts.test.ts",
+      "route": "/accounts",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1231,8 +1185,7 @@
       "sha256": "4421bbd8f4cce37facc4fe1de6c50b84c26ba59ed75db2e926a20eaa1e5a2a2a",
       "nativeIssue": "MAZ-74",
       "webIssue": "MAZ-89",
-      "legacyRoute": "/categories",
-      "legacyTest": null,
+      "route": "/categories",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1255,8 +1208,7 @@
       "sha256": "03a90a5723b6db50e1aacf72b7d2c19d68aba33e6286b752dc806a4fe7a28488",
       "nativeIssue": "MAZ-74",
       "webIssue": "MAZ-89",
-      "legacyRoute": "/categories",
-      "legacyTest": null,
+      "route": "/categories",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1279,8 +1231,7 @@
       "sha256": "5e8877ca50b7570badecfa7f219dce1242f033417f072fe16672e769fca11394",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
-      "legacyRoute": "/",
-      "legacyTest": null,
+      "route": "/",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1303,8 +1254,7 @@
       "sha256": "677a70a66605dbb72cc559fdf67655b50afb84245a8c423f84a4877ab85a8eba",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
-      "legacyRoute": "/",
-      "legacyTest": null,
+      "route": "/",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1330,8 +1280,7 @@
       "sha256": "d7f3436ba111ae374ac76df62fee511bbcf74141b2272ef969bdfeb243dcb4f0",
       "nativeIssue": "MAZ-68",
       "webIssue": "MAZ-84",
-      "legacyRoute": "/auth/callback",
-      "legacyTest": null,
+      "route": "/auth/callback",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1354,8 +1303,7 @@
       "sha256": "ac3c6672e6f8797381bb81c385d90e76a3bbf845409a0af00438a0398a038003",
       "nativeIssue": "MAZ-68",
       "webIssue": "MAZ-84",
-      "legacyRoute": "/auth/callback",
-      "legacyTest": null,
+      "route": "/auth/callback",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1378,8 +1326,7 @@
       "sha256": "81ab82240611c9ed6b87610818fc620ad3ef6d050cbb90589bd9ae1d5a932176",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
-      "legacyRoute": "/",
-      "legacyTest": null,
+      "route": "/",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1402,8 +1349,7 @@
       "sha256": "8fc053a7adb30732f54d494b63b7e2c3ca6ea06bb2d5e3f5d2dee00c93c860c3",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
-      "legacyRoute": "/",
-      "legacyTest": null,
+      "route": "/",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1426,8 +1372,7 @@
       "sha256": "879c4441648a86660b7dd959bb751898d06e2f3bc3e55cfca1cd8276b02a9e93",
       "nativeIssue": "MAZ-77",
       "webIssue": "MAZ-92",
-      "legacyRoute": "/",
-      "legacyTest": "tests/core/overview.test.ts",
+      "route": "/",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1450,8 +1395,7 @@
       "sha256": "0f6342bdefeb7670531e0bc4507246826b9dee0cea110081c610495c50b2dc4d",
       "nativeIssue": "MAZ-71",
       "webIssue": "MAZ-87",
-      "legacyRoute": "/",
-      "legacyTest": null,
+      "route": "/",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1474,8 +1418,7 @@
       "sha256": "7b966c7c142054f2c51e6c8bf641d130fd2d2abe08c6fba59fa885d71f719a7f",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
-      "legacyRoute": "/",
-      "legacyTest": null,
+      "route": "/",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1498,8 +1441,7 @@
       "sha256": "ea36dff93db7f5870b4daf156e959a13dd4c61c7fa6b0ae3d0cfd329c552b081",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
-      "legacyRoute": "/",
-      "legacyTest": null,
+      "route": "/",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1522,8 +1464,7 @@
       "sha256": "a7b9d0662d99280d516d45cd02db1498d1608176678c49914af204f3eb6b3c2c",
       "nativeIssue": "MAZ-68",
       "webIssue": "MAZ-84",
-      "legacyRoute": "/auth/callback",
-      "legacyTest": null,
+      "route": "/auth/callback",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1546,8 +1487,7 @@
       "sha256": "66502f73418007473c6932c677b29ab03501366a303a7b3ef985d69ab2b0afde",
       "nativeIssue": "MAZ-77",
       "webIssue": "MAZ-92",
-      "legacyRoute": "/",
-      "legacyTest": "tests/core/overview.test.ts",
+      "route": "/",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1570,8 +1510,7 @@
       "sha256": "6f56b81f193f97c377f6305743e51e499369f533d000959c5eecfb77876ee993",
       "nativeIssue": "MAZ-73",
       "webIssue": "MAZ-88",
-      "legacyRoute": "/transactions",
-      "legacyTest": "tests/core/transactions.test.ts",
+      "route": "/transactions",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1594,8 +1533,7 @@
       "sha256": "63f739da730f8282570b13a64e9433a73ec6c2a872e212828f17ce5e0e597971",
       "nativeIssue": "MAZ-73",
       "webIssue": "MAZ-88",
-      "legacyRoute": "/entries/new",
-      "legacyTest": null,
+      "route": "/entries/new",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1621,8 +1559,7 @@
       "sha256": "54e4c8d6742721fa12faffe9a82f6b1c5fd0eec4c898c3066c592b538b341284",
       "nativeIssue": "MAZ-75",
       "webIssue": "MAZ-91",
-      "legacyRoute": "/households",
-      "legacyTest": "tests/core/households-server.test.ts",
+      "route": "/households",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1645,8 +1582,7 @@
       "sha256": "5a0f9cfeb5f9a5b2a1ac297c15283f556beea58e1bf4b0a870b9e020f2c86372",
       "nativeIssue": "MAZ-76",
       "webIssue": "MAZ-93",
-      "legacyRoute": "/trips",
-      "legacyTest": "tests/core/trips.test.ts",
+      "route": "/trips",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1669,8 +1605,7 @@
       "sha256": "8edf0f1e534cd7637c0e5a2e7bc808bb13e9c73d8c02139433e8db560bef2283",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
-      "legacyRoute": "/",
-      "legacyTest": null,
+      "route": "/",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1693,8 +1628,7 @@
       "sha256": "cf067ffbd70d4a2edfae86340d346e09ff7d964d1b158533b044a0204ced3f48",
       "nativeIssue": "MAZ-77",
       "webIssue": "MAZ-92",
-      "legacyRoute": "/",
-      "legacyTest": "tests/core/overview.test.ts",
+      "route": "/",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1717,8 +1651,7 @@
       "sha256": "0f81e00619ae7aee0fe1582311f055acaaf172964ad9fdc25f0de3e98fe83213",
       "nativeIssue": "MAZ-73",
       "webIssue": "MAZ-88",
-      "legacyRoute": "/transactions",
-      "legacyTest": "tests/core/transactions.test.ts",
+      "route": "/transactions",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1741,8 +1674,7 @@
       "sha256": "c39a37d5ed78a9e901b26901ed7de075008f1e62b20369dac2bd2c074c95d94c",
       "nativeIssue": "MAZ-77",
       "webIssue": "MAZ-92",
-      "legacyRoute": "/",
-      "legacyTest": "tests/core/overview.test.ts",
+      "route": "/",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1765,8 +1697,7 @@
       "sha256": "3f74ae3bc52e7a6e6eb477c6922f7b754b92529f80dd7a6d9457f6c45d1a4842",
       "nativeIssue": "MAZ-75",
       "webIssue": "MAZ-91",
-      "legacyRoute": "/households",
-      "legacyTest": "tests/core/households-server.test.ts",
+      "route": "/households",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1789,8 +1720,7 @@
       "sha256": "f063311a3f09134529adcbd47cdefab207d21921acef583b8caabbf28621d65c",
       "nativeIssue": "MAZ-76",
       "webIssue": "MAZ-93",
-      "legacyRoute": "/trips",
-      "legacyTest": "tests/core/trips.test.ts",
+      "route": "/trips",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1813,8 +1743,7 @@
       "sha256": "72ca73fd5bc80c3e8e2e853932cc6d953e40d442531b1b1439d8aae15eb8eb62",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
-      "legacyRoute": "/",
-      "legacyTest": null,
+      "route": "/",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1837,8 +1766,7 @@
       "sha256": "11eb4f70c432ea5fa0dcf1e2683ece9328164f135af29fc6422d6283f7d2fe49",
       "nativeIssue": "MAZ-73",
       "webIssue": "MAZ-88",
-      "legacyRoute": "/entries/new",
-      "legacyTest": null,
+      "route": "/entries/new",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",
@@ -1864,8 +1792,7 @@
       "sha256": "31152c36d2b961a68bf0694be509ccddcc4751db79296c60d518023365118ad0",
       "nativeIssue": "MAZ-68",
       "webIssue": "MAZ-84",
-      "legacyRoute": "/auth/callback",
-      "legacyTest": null,
+      "route": "/auth/callback",
       "acceptance": {
         "native": "MAZ-82",
         "web": "MAZ-96",

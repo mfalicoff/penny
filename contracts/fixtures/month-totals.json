@@ -1,6 +1,6 @@
 {
   "generator": "scripts/fixtures/generate-golden.ts",
-  "description": "Left to spend (recorded) versus Projected around today (MAZ-136). Income dated after the person's local date is expected: it counts toward Projected, not recorded totals or Left to spend, until its date; the entry itself never changes. Projected also adds every scheduled occurrence not yet recorded. Scope: income only; future-dated expenses and investment contributions stay recorded (MAZ-139). `todayCases` turn an instant and an IANA time zone into the local date; `today: null` is the legacy Overview, which does not split.",
+  "description": "Left to spend (recorded) versus Projected around today (MAZ-136). Income dated after the person's local date is expected: it counts toward Projected, not recorded totals or Left to spend, until its date; the entry itself never changes. Projected also adds every scheduled occurrence not yet recorded. Scope: income only; future-dated expenses and investment contributions stay recorded (MAZ-139). `todayCases` turn an instant and an IANA time zone into the local date.",
   "todayCases": [
     {
       "instant": "2026-10-16T02:30:00Z",
@@ -609,32 +609,6 @@
         ],
         "scheduledIds": [
           "gym:2026-10-28"
-        ]
-      }
-    },
-    {
-      "name": "without today (legacy Overview) every dated entry is recorded",
-      "ledger": "october",
-      "today": null,
-      "month": "2026-10",
-      "expected": {
-        "recorded": {
-          "income": 352500,
-          "expense": 129000,
-          "investment": 50000
-        },
-        "projected": {
-          "income": 552500,
-          "expense": 133000,
-          "investment": 50000
-        },
-        "expectedIncome": 200000,
-        "recordedNet": 173500,
-        "projectedNet": 369500,
-        "expectedIds": [],
-        "scheduledIds": [
-          "gym:2026-10-28",
-          "pay:2026-10-30"
         ]
       }
     }

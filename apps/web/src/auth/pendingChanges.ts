@@ -2,7 +2,7 @@
  * Pending-change protection. Edits made offline are stored durably outside TanStack Query
  * (the browser offline store, MAZ-87, `src/offline/`) and may not have reached the server yet.
  * Signing out would strand them, so the sign-out flow asks this registry first and refuses when the
- * active account still has unsynced edits (the legacy Expo app behaves the same way).
+ * active account still has unsynced edits (the iOS app behaves the same way).
  *
  * Nothing in the Query cache counts as pending: Query only holds server copies that can
  * always be fetched again, which is why clearing it on sign-out is safe.

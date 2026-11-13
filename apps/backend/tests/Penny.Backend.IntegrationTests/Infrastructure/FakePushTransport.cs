@@ -13,7 +13,7 @@ public sealed class FakePushTransport(string provider) : IPushTransport
     public ConcurrentQueue<PushMessage> Sent { get; } = new();
     public Func<PushMessage, PushOutcome> Respond { get; set; } = _ => PushOutcome.Accepted(null);
 
-    // Accepted with a unique ticket (Expo) or apns-id.
+    // Accepted with a unique apns-id.
     public PushOutcome Accept() =>
         PushOutcome.Accepted($"{provider}-ticket-{Interlocked.Increment(ref tickets)}");
 

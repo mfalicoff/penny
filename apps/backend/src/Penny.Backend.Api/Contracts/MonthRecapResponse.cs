@@ -2,7 +2,7 @@ using Penny.Backend.Application.Households;
 
 namespace Penny.Backend.Api.Contracts;
 
-// Contract schema `MonthRecap` (legacy `month()`, returned without an envelope).
+// Contract schema `MonthRecap`, returned without an envelope.
 public sealed record MonthRecapResponse(
     string Month,
     IReadOnlyList<ExpenseResponse> Expenses,

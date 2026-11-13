@@ -113,7 +113,6 @@ describe("search results", () => {
   });
 
   it.each([
-    [404, /doesn't offer full search/],
     [429, /Too many searches/],
     [503, /Search is busy/],
   ])("explains a %i response and can retry", async (status, message) => {

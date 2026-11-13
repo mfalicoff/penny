@@ -5,10 +5,9 @@ using Penny.Backend.Domain.Households;
 
 namespace Penny.Backend.Application.Households;
 
-// Port of the legacy shared recurring rule operations (server/infrastructure/
-// households.ts: recurring, createRecurring, updateRecurring, deleteRecurring).
-// Messages, failure kinds and the order of checks are part of the client contract;
-// deviations are listed in docs/migration/shared-recurrence.md. Every write runs in
+// Shared recurring rule list, create, update and delete. Messages, failure kinds and
+// the order of checks are part of the client contract; see
+// docs/reference/shared-recurrence.md. Every write runs in
 // one transaction that locks the household row, then the payer's ledger row when it
 // validates an account, then compare-and-increments the rule, and writes its audit
 // row before commit. Occurrences are recorded by SharedRecurrenceRunner.
@@ -57,7 +56,7 @@ public sealed class SharedRecurrenceService(ISharedExpenseRepository expenses, T
         return await expenses.WriteAsync(
             async store =>
             {
-                // Access is checked before the body, as in the legacy route.
+                // Access is checked before the body.
                 await SharedExpenseService.RequireMemberAsync(store, householdId, actorId);
                 if (input is null)
                     throw new BackendFailure(FailureKind.Invalid, HouseholdService.InvalidData);
@@ -254,7 +253,7 @@ public sealed class SharedRecurrenceService(ISharedExpenseRepository expenses, T
         );
     }
 
-    // Legacy order: the payer is a current member, then the split is valid for the
+    // Order: the payer is a current member, then the split is valid for the
     // current members (a rule is validated against today's household).
     private static async Task ValidateSplitAsync(
         ISharedExpenseTransaction store,
@@ -273,7 +272,7 @@ public sealed class SharedRecurrenceService(ISharedExpenseRepository expenses, T
         );
     }
 
-    // Equal rules store no allocations (the legacy server stored and ignored them).
+    // Equal rules store no allocations (any sent are ignored).
     private static RuleRecord Record(
         RecurringInput input,
         string? accountId,
@@ -311,7 +310,7 @@ public sealed class SharedRecurrenceService(ISharedExpenseRepository expenses, T
             ? store.FindRuleAsync(householdId, ruleId)
             : Task.FromResult<StoredRule?>(null);
 
-    // Rule events notify nobody (legacy); only expense events fill the push outbox.
+    // Rule events notify nobody; only expense events fill the push outbox.
     private static Task AuditAsync(
         ISharedExpenseTransaction store,
         string householdId,
@@ -337,7 +336,7 @@ public sealed class SharedRecurrenceService(ISharedExpenseRepository expenses, T
             )
         );
 
-    // Server calendar day (UTC), as the legacy runner used.
+    // Server calendar day (UTC), as the runner uses.
     internal static DateOnly Today(DateTimeOffset now) => DateOnly.FromDateTime(now.UtcDateTime);
 
     private DateTimeOffset Now() => MembershipDates.Truncate(clock.GetUtcNow());

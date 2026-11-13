@@ -1,5 +1,5 @@
-/// Text rules that must equal what the legacy JavaScript app and the .NET server do, because
-/// both sides validate and search the same strings (docs/migration/ledger.md).
+/// Text rules that must equal what the web app (JavaScript) and the .NET server do, because
+/// every side validates and searches the same strings (docs/reference/ledger.md).
 enum JavaScriptText {
     /// ECMAScript `WhiteSpace` and `LineTerminator`: tab, VT, FF, space, no-break space, BOM,
     /// every Unicode "Zs" space, LF, CR, LS and PS. Unlike Swift's `whitespacesAndNewlines`,
@@ -37,7 +37,7 @@ enum JavaScriptText {
 
     /// `haystack.includes(needle)`: an exact UTF-16 code-unit substring match. Swift's
     /// `String.contains` compares by canonical equivalence (a composed "é" would match a
-    /// decomposed one), which the legacy search never did.
+    /// decomposed one), which JavaScript's `includes` never does.
     static func includes(_ haystack: String, _ needle: String) -> Bool {
         let needle = Array(needle.utf16)
         guard !needle.isEmpty else { return true }
@@ -50,9 +50,9 @@ enum JavaScriptText {
         return false
     }
 
-    /// Ordinal UTF-16 code-unit order, the deterministic tie-break for ids. (The legacy app used
-    /// `localeCompare`, whose order depends on the device's ICU data; for the ASCII ids the
-    /// clients generate the two agree on letters and digits.)
+    /// Ordinal UTF-16 code-unit order, the deterministic tie-break for ids. (`localeCompare`
+    /// would depend on the device's ICU data; for the ASCII ids the clients generate the two
+    /// agree on letters and digits.)
     static func ordinalLess(_ lhs: String, _ rhs: String) -> Bool {
         lhs.utf16.lexicographicallyPrecedes(rhs.utf16)
     }

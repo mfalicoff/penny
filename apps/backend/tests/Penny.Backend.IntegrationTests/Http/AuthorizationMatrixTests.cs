@@ -13,8 +13,8 @@ namespace Penny.Backend.IntegrationTests.Http;
 // callers with 401. Every operation on someone else's household, expense, rule, member
 // or receipt is refused for a signed-in outsider, and every household write is refused
 // for a former member, without leaking the victim's data and without changing any stored
-// row. The legacy comparison (`outsider *` and `former member *` probes in
-// full-stack-seeds.json) pins the exact legacy status and message for the same calls.
+// row. The full-stack seed probes (`outsider *` and `former member *` in
+// full-stack-seeds.json) pin the exact status and message for the same calls.
 public sealed class AuthorizationMatrixTests(ApiFixture fixture) : SharedRecurrenceTestBase(fixture)
 {
     private const string HouseholdName = "Matrix private household";
@@ -147,7 +147,7 @@ public sealed class AuthorizationMatrixTests(ApiFixture fixture) : SharedRecurre
         (await StateAsync()).ShouldBe(before, "a former member changed nothing");
     }
 
-    // A refusal is 400, 403 or 404 with the legacy error envelope: never success, and
+    // A refusal is 400, 403 or 404 with the error envelope: never success, and
     // never 409, which would mean the request reached the stored state.
     private async Task ExpectRefusedAsync(
         Operation operation,

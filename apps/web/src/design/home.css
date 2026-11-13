@@ -1,7 +1,7 @@
 /*
- * Home and Insights (MAZ-92): specimens `home`, `home-dark`, `home-amoled`, `home-catppuccin`,
- * `desktop`, `empty-home`, `calendar`, `insights`, `money-flow`; web cards `web-home` and
- * `web-insights`. Every value comes from the --pk-* tokens, so each appearance follows them.
+ * Home and Insights (MAZ-92): specimens `home`, `home-dark`, `desktop`, `empty-home`, `calendar`,
+ * `insights`, `money-flow`; web cards `web-home` and `web-insights`. Every
+ * value comes from the --pk-* tokens, so each appearance follows them.
  * Phones get one column; 768px and up two; 1100px and up the 12-column desktop overview.
  */
 

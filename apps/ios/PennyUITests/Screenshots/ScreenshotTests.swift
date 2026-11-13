@@ -59,8 +59,7 @@ final class ScreenshotTests: PennyUITestCase {
         }
     }
 
-    /// MAZ-77's redesign specimens: home, home-dark (the legacy AMOLED and Catppuccin
-    /// appearances open as dark, MAZ-132), money-flow, insights, calendar and, on iPad, the
+    /// MAZ-77's redesign specimens: home, home-dark, money-flow, insights, calendar and, on iPad, the
     /// dashboard Home (the `desktop` reference), at the default size and the largest
     /// accessibility size, light and dark, for visual review of truncation and overlap.
     @MainActor

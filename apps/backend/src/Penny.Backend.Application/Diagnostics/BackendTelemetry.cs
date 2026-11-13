@@ -12,7 +12,6 @@ public static class BackendTelemetry
     public const string Name = "Penny.Backend";
 
     public const string PushDeliveryJob = "push.delivery";
-    public const string PushReceiptsJob = "push.receipts";
     public const string SearchEmbeddingJob = "search.embedding";
     public const string RecurrenceJob = "recurrence";
     public const string ReceiptTextJob = "receipt.text";

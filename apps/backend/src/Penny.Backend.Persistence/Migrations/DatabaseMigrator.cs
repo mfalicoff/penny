@@ -7,7 +7,7 @@ namespace Penny.Backend.Persistence.Migrations;
 public static class DatabaseMigrator
 {
     // Applies pending EF Core migrations. EF takes its own lock on the history table;
-    // the advisory lock additionally excludes the SQLite importer for the whole run.
+    // the advisory lock additionally excludes a concurrent `migrate` for the whole run.
     public static async Task ApplyAsync(
         NpgsqlDataSource source,
         CancellationToken cancellationToken
@@ -39,7 +39,7 @@ public static class DatabaseMigrator
         }
     }
 
-    // Session-level lock shared by `migrate` and `import-sqlite`.
+    // Session-level lock held by `migrate` for the whole run.
     internal static async Task AcquireLockAsync(NpgsqlConnection connection, CancellationToken ct)
     {
         await using var command = new NpgsqlCommand("SELECT pg_try_advisory_lock($1)", connection);
@@ -48,7 +48,7 @@ public static class DatabaseMigrator
         );
         if (await command.ExecuteScalarAsync(ct) is not true)
             throw new InvalidOperationException(
-                "Another database migration or import holds the lock. Retry after it completes."
+                "Another database migration holds the lock. Retry after it completes."
             );
     }
 

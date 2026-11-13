@@ -12,7 +12,7 @@ namespace Penny.Backend.Persistence.Search;
 //   references any more loses its extracted text and chunks (unlink, replacement,
 //   deletion), so search stops matching it at the same commit.
 // - A newly linked receipt without a text row gets a pending one (receipts uploaded
-//   before MAZ-125, imports, or a link restored after its text was deleted).
+//   before MAZ-125, or a link restored after its text was deleted).
 //
 // Both run under row locks on the receipts involved, so writers that link and unlink
 // the same receipt (a personal ledger and a household) serialize instead of racing.

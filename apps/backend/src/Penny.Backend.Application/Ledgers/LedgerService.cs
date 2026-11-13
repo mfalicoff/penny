@@ -5,16 +5,13 @@ using Penny.Backend.Domain.Ledgers;
 
 namespace Penny.Backend.Application.Ledgers;
 
-// Port of the legacy ledger service (server/application/ledger.ts). Messages, failure
-// kinds and the order of checks are part of the client contract. All checks after
-// document validation run inside the saving transaction, so they see the same state
-// the compare-and-increment commits against.
+// Personal ledger read and save. Messages, failure kinds and the order of checks are
+// part of the client contract. All checks after document validation run inside the
+// saving transaction, so they see the same state the compare-and-increment commits
+// against.
 public sealed class LedgerService(ILedgerRepository ledgers, IReceiptRepository receipts)
 {
     public const string InvalidLedger = "Invalid ledger data.";
-    public const string ReloadForAccounts =
-        "Update or reload the app before saving payment accounts.";
-    public const string ReloadForTrips = "Update or reload the app before saving trips.";
     public const string CurrencyMismatch =
         "Your ledger currency must match your active households.";
     public const string LinkedAccount =
@@ -37,7 +34,7 @@ public sealed class LedgerService(ILedgerRepository ledgers, IReceiptRepository 
         return new(stored.Revision, LedgerMapper.ToDocument(stored, receiptInfo));
     }
 
-    // `body` is null when the request had no JSON body (legacy `{}`).
+    // `body` is null when the request had no JSON body; it is invalid like `{}`.
     public async Task<LedgerSnapshot> SaveAsync(
         string userId,
         JsonElement? body,
@@ -69,14 +66,6 @@ public sealed class LedgerService(ILedgerRepository ledgers, IReceiptRepository 
     private static void Verify(LedgerWrite write, LedgerWriteState state)
     {
         var ledger = write.Ledger;
-        // Older clients drop account fields when rebuilding entries. Do not let their
-        // legacy snapshots silently erase payment accounts or their links.
-        if (write.SourceVersion < 3 && state.HasAccounts)
-            throw new BackendFailure(FailureKind.Invalid, ReloadForAccounts);
-        // The same protection for trips (v2 addition): a client that omits trips
-        // would otherwise delete them and their entry links.
-        if (write.OmittedTrips && state.HasTrips)
-            throw new BackendFailure(FailureKind.Invalid, ReloadForTrips);
         if (state.HouseholdCurrencies.Any(currency => currency != ledger.Currency))
             throw new BackendFailure(FailureKind.Invalid, CurrencyMismatch);
         var accountIds = ledger
@@ -87,7 +76,7 @@ public sealed class LedgerService(ILedgerRepository ledgers, IReceiptRepository 
         foreach (var entry in ledger.Transactions)
             if (entry.Receipt is not null && !state.OwnedReceiptIds.Contains(entry.Receipt.Id))
                 throw new BackendFailure(FailureKind.Invalid, ForeignReceipt);
-        // Shared trip links must name a real household (a v2 foreign key).
+        // Shared trip links must name a real household (a foreign key).
         foreach (var trip in ledger.Trips)
             if (
                 trip.SharedHouseholdId is not null

@@ -1,5 +1,5 @@
 // The user-visible version follows package.json (release-please updates this line and
 // scripts/check-version.mjs checks it). CI sets CURRENT_PROJECT_VERSION when archiving
-// so the build number keeps increasing from the legacy EAS counter (README.md#versions).
+// so the build number stays above every earlier upload (README.md#versions).
 MARKETING_VERSION = 2.0.0 // x-release-please-version
 CURRENT_PROJECT_VERSION = 2

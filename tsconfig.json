@@ -1,9 +1,9 @@
 {
-  // The legacy Node API, the shared TypeScript rules, tests and scripts (Node 24, run with
-  // --experimental-strip-types). The Expo base config is gone with the Expo app (MAZ-98).
+  // The shared TypeScript rules, the ledger write schema, tests and scripts (Node 24, run with
+  // --experimental-strip-types).
   "compilerOptions": {
     "target": "ES2024",
-    // ES modules resolved like the former Expo base, with the DOM lib for fetch/Response types.
+    // ES modules resolved by the bundler rules, with the DOM lib for fetch/Response types.
     "module": "preserve",
     "moduleResolution": "bundler",
     "lib": ["ES2024", "DOM", "DOM.Iterable"],
@@ -17,6 +17,6 @@
     "isolatedModules": true,
     "types": ["node"]
   },
-  "include": ["server/**/*.ts", "src/**/*.ts", "tests/**/*.ts", "scripts/**/*.ts"],
+  "include": ["src/**/*.ts", "tests/**/*.ts", "scripts/**/*.ts"],
   "exclude": ["node_modules", "apps", "design-kit"]
 }

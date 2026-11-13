@@ -2,7 +2,7 @@
 
 [App showcase](../README.md) · [Documentation](README.md) · [Operations runbook](operations.md)
 
-Penny v2 runs as a .NET API with PostgreSQL 18, behind an nginx front end that serves the web app and forwards `/api/` on the same origin. This page covers installing, configuring, upgrading and rolling back that stack. Day-to-day monitoring, backups, PostgreSQL maintenance and incident runbooks are in [Operations](operations.md). The legacy Node/SQLite server remains available until the cutover; see [Legacy Node/SQLite deployment](#legacy-nodesqlite-deployment). For local development, see [Development](development.md). On NixOS, use the flake's module instead: [Self-hosting on NixOS](nixos.md).
+Penny v2 runs as a .NET API with PostgreSQL 18, behind an nginx front end that serves the web app and forwards `/api/` on the same origin. This page covers installing, configuring, upgrading and rolling back that stack. Day-to-day monitoring, backups, PostgreSQL maintenance and incident runbooks are in [Operations](operations.md). For local development, see [Development](development.md). On NixOS, use the flake's module instead: [Self-hosting on NixOS](nixos.md).
 
 `deploy/compose.yaml` is self-contained: a server needs only that file, `deploy/.env` (from `deploy/.env.example`) and the optional `deploy/api.env`, in one directory. No checkout or script is required. The commands below run from a checkout's root, where `-f deploy/compose.yaml` points at it. From a directory holding just those files, plain `docker compose` works.
 
@@ -17,7 +17,7 @@ Penny v2 runs as a .NET API with PostgreSQL 18, behind an nginx front end that s
 
 Persistent data lives in two named volumes: `penny-postgres` (the database) and `penny-receipts` (encrypted receipt files at `/var/lib/penny/receipts`). The receipt master key lives in `deploy/.env` and **must be backed up separately**; without it, receipts can't be decrypted.
 
-Startup order is enforced by Compose: PostgreSQL healthy → `migrate` completed successfully → `api` healthy (`/api/ready`) → `web`. The API never migrates on its own. Its readiness check fails (503) until the schema, grants, extensions, receipt storage and import state are all correct.
+Startup order is enforced by Compose: PostgreSQL healthy → `migrate` completed successfully → `api` healthy (`/api/ready`) → `web`. The API never migrates on its own. Its readiness check fails (503) until the schema, grants, extensions, and receipt storage are all correct.
 
 Containers run as non-root users (API uid 1654, nginx uid 101), with read-only root filesystems, all capabilities dropped and `no-new-privileges`. Images are built for **linux/amd64** and **linux/arm64**; every base image is pinned to a multi-platform digest.
 
@@ -27,9 +27,9 @@ One `api` container runs every worker. Each worker claims rows with PostgreSQL l
 
 | Worker | Setting (default `true`) | Work |
 | --- | --- | --- |
-| Shared recurrence | `Recurrence__Worker` | Records due recurring household expenses ([shared recurrence](migration/shared-recurrence.md)) |
-| Push delivery | `Push__Worker` | Drains the notification outbox to APNs/Expo ([push](migration/push.md)) |
-| Search embeddings | `Search__EmbeddingWorker` | Embeds new search documents and receipt text chunks ([search](migration/search.md)) |
+| Shared recurrence | `Recurrence__Worker` | Records due recurring household expenses ([shared recurrence](reference/shared-recurrence.md)) |
+| Push delivery | `Push__Worker` | Drains the notification outbox to APNs ([push](reference/push.md)) |
+| Search embeddings | `Search__EmbeddingWorker` | Embeds new search documents and receipt text chunks ([search](reference/search.md)) |
 | Receipt text | `Ocr__Worker` | Extracts the text of uploaded receipts on this server with Tesseract, poppler and libvips ([receipt OCR](operations.md#receipt-text-ocr)) |
 
 Supported topologies:
@@ -37,7 +37,7 @@ Supported topologies:
 - **One API container** (the default): the API serves HTTP and runs all workers.
 - **Several API containers** behind `web`, all with workers on, or a dedicated worker container (same image and settings, workers on, no traffic) with the HTTP containers set to `false`. Rate limits (sign-in, invites, search) are kept in memory per process, so each process allows the configured number. Keep the total pool size within PostgreSQL's `max_connections` ([pool sizing](operations.md#connections-and-pool-sizing)).
 
-Run exactly one `migrate` at a time. A second one waits for the advisory lock or fails with "Another database migration or import holds the lock."
+Run exactly one `migrate` at a time. A second one waits for the advisory lock or fails with "Another database migration holds the lock."
 
 ## Quick start
 
@@ -67,7 +67,7 @@ Check `https://penny.example.com/api/ready` returns `{"ok":true}`. Mobile users 
 Terminate TLS in your existing proxy and forward the whole hostname to the `web` port (`PENNY_BIND:PENNY_PORT`, default `127.0.0.1:8080`). The API is never published.
 
 - **Origin and cookies.** `PENNY_PUBLIC_ORIGIN` must be exactly the origin in the browser's address bar (scheme, host and non-default port, no path); the API rejects mutating requests from other origins with 403 and answers CORS preflights only for it. To serve more than one origin, set `PENNY_PUBLIC_ORIGIN` to a comma-separated list (the Compose `environment` value wins over `api.env`). With `PENNY_SECURE_COOKIES=true` (the default, required for an `https://` origin) session cookies are `Secure; HttpOnly; SameSite=Lax`. Use `http://` only for `localhost` testing.
-- **Keep the browser origin stable.** Browsers keep Penny's offline changes (and the legacy web app's offline copy) per origin. Serving Penny from a new host, port or scheme starts every browser with an empty offline store, so ask users to let their tabs finish syncing ("changes waiting" gone) before such a move. The cutover keeps the address ([browser offline sync](web-offline-sync.md#deployment-origin-continuity)).
+- **Keep the browser origin stable.** Browsers keep Penny's offline changes per origin. Serving Penny from a new host, port or scheme starts every browser with an empty offline store, so ask users to let their tabs finish syncing ("changes waiting" gone) before such a move. See [browser offline sync](web-offline-sync.md#deployment-origin-continuity).
 - **Client addresses.** nginx replaces `X-Forwarded-For` with the address of its peer, and the API trusts exactly that one hop (`Auth__TrustedProxies` = the Compose subnet, default `172.31.63.0/24`; change `PENNY_SUBNET` if it collides with a local network). When your TLS proxy runs elsewhere, set `PENNY_REAL_IP_FROM` to its address or CIDR so nginx takes the real client from that proxy's `X-Forwarded-For`; otherwise every client shares the proxy's rate-limit bucket.
 - **Body size and timeouts.** nginx allows 21 MB (`PENNY_MAX_BODY`), just above the API's 20 MiB limit for encoded receipts. Allow at least that in your proxy, and a read timeout of at least the API's 30-second request timeout.
 - **Request ids.** nginx sends `X-Request-Id` (its `$request_id`) to the API, which echoes it and logs it with every line ([logging](operations.md#logs)). If your proxy sets its own `X-Request-Id`, nginx replaces it; use nginx's access log or the response header to correlate.
@@ -134,9 +134,9 @@ Copy `deploy/api.env.example` to `deploy/api.env` (mode 0600, git-ignored). It i
 | --- | --- | --- |
 | `Auth__AllowRegistration` | `true` | Password sign-up |
 | `Auth__RateLimitPermits` / `Auth__InviteRateLimitPermits` | 40 / 20 | Sign-in attempts per client per 15 minutes / invite joins per client per 10 minutes, per process |
-| `Auth__PasswordResetHours` | 24 | Lifetime of operator-issued reset codes ([password reset](migration/authentication.md#password-reset-maz-123)) |
+| `Auth__PasswordResetHours` | 24 | Lifetime of operator-issued reset codes ([password reset](reference/authentication.md#password-reset-maz-123)) |
 | `Oidc__Issuer`, `Oidc__ClientId`, `Oidc__ClientSecret`, `Oidc__RedirectUris`, `Oidc__Label`, `Oidc__AllowRegistration` | off | See [OIDC](#openid-connect-oidc-sign-in) |
-| `Push__Apns__TeamId`, `Push__Apns__KeyId`, `Push__Apns__Topic`, `Push__Apns__PrivateKey` | off | All four or none ([push](migration/push.md#configuration)); `Push__Expo__Enabled` (default `true`) keeps legacy Expo delivery until retired |
+| `Push__Apns__TeamId`, `Push__Apns__KeyId`, `Push__Apns__Topic`, `Push__Apns__PrivateKey` | off | All four or none ([push](reference/push.md)) |
 | `Recurrence__Worker`, `Push__Worker`, `Search__EmbeddingWorker`, `Ocr__Worker` | `true` | [Workers](#background-workers) |
 | `Ocr__Languages` | `eng+fra` | Tesseract languages for receipt text; each needs its language data, checked at startup ([receipt OCR](operations.md#receipt-text-ocr)) |
 | `Ocr__Concurrency` / `Ocr__TimeoutSeconds` / `Ocr__MaxPages` / `Ocr__MaxFileMegabytes` / `Ocr__MaxAttempts` | 1 / 120 / 10 / 10 / 4 | Receipt text bounds per process |
@@ -163,7 +163,7 @@ Then in `deploy/.env`: `COMPOSE_PROFILES=` (empty), `PENNY_DB_HOST`, `PENNY_DB_P
 
 ## Upgrade
 
-Every release is forward-only and migrates from any earlier v2 release. Read the release notes first: they state whether the release contains a database migration.
+Every release is forward-only. Read the release notes first: they state whether the release contains a database migration. A database created before the EF migrations were squashed into `InitialSchema` needs the one-time step in the [backend README](../apps/backend/README.md) before its first upgrade to such a release.
 
 1. Take a backup ([backup](operations.md#back-up)) and note the current image tags.
 2. Set `PENNY_API_IMAGE` and `PENNY_WEB_IMAGE` to the new **exact** version tags in `deploy/.env`, and use `deploy/compose.yaml` from the same release.
@@ -174,12 +174,11 @@ A failed `migrate` leaves the previous schema in place (each migration runs in i
 
 ### The web app
 
-The `web` image serves the v2 browser app (`apps/web`: React, Vite, TanStack) since MAZ-97. Earlier images served the Expo web export. Both use the same origin, URLs and `penny_session` cookie, and talk to the same API, so the web and API images can be upgraded or rolled back separately within the API's compatibility window.
+The `web` image serves the browser app (`apps/web`: React, Vite, TanStack). It talks to the API on the same origin with the `penny_session` cookie, so the web and API images can be upgraded or rolled back separately within the API's compatibility window.
 
-- **Caching.** `index.html` is `no-cache`, so a new release takes effect on the next page load. Files under `/assets/` are fingerprinted and `immutable`; a missing asset is a plain 404 and is not cached. `/version.json` (no-store) reports the image's `version` and `revision`: check it after an upgrade or rollback. Old Expo bundle paths (`/_expo/`) return 404. A tab left open from before the upgrade recovers when it is reloaded.
-- **Legacy URLs and sign-in.** Every legacy route ([route map](migration/redesign.md#legacy-deep-links)), including the OIDC callback `/auth/callback`, still opens a page, so `Oidc__RedirectUris`, bookmarks and the widget's **+** link don't change.
-- **Offline changes carry over.** On first sign-in, the new app imports the Expo app's unsynced copy from `localStorage`. It removes that copy only after the server has the changes ([legacy migration](web-offline-sync.md#migrating-the-legacy-expo-web-copy)). Keep the same origin, or the browser starts with an empty store.
-- **Rolling the web image back** to a pre-MAZ-97 tag brings back the Expo web app. It reads from the server, plus any legacy copy that wasn't imported yet. Changes still waiting in the new app's IndexedDB are left alone, and they upload when the new image is served again. A copy the Expo app writes during the rollback is merged in on the next import. Data is lost only if site data is cleared or the origin changes.
+- **Caching.** `index.html` is `no-cache`, so a new release takes effect on the next page load. Files under `/assets/` are fingerprinted and `immutable`; a missing asset is a plain 404 and is not cached. `/version.json` (no-store) reports the image's `version` and `revision`: check it after an upgrade or rollback. A tab left open from before the upgrade recovers when it is reloaded.
+- **URLs and sign-in.** Every app route (`contracts/design-baseline.json` `navigation.routes`), including the OIDC callback `/auth/callback`, opens the app's page, so `Oidc__RedirectUris` and bookmarks keep working across releases.
+- **Offline changes carry over.** Unsynced changes stay in the browser's offline store across releases ([browser offline sync](web-offline-sync.md)). Keep the same origin, or the browser starts with an empty store.
 - **Supported browsers:** current and previous major versions of Chrome, Edge, Firefox and Safari (macOS and iOS), which are tested in CI on Chromium, Firefox and WebKit. The app needs ES2022, IndexedDB, Web Locks and module workers. Older browsers aren't supported.
 
 ## Roll back
@@ -223,22 +222,12 @@ Oidc__AllowRegistration=true
 
 Use the exact issuer URL advertised by your provider. Register each exact redirect URI with the provider; wildcards are unsupported. Web sign-in uses a popup and requires HTTPS or localhost; keep the popup and original window on the same origin (the `web` container serves `/auth/callback`). The client secret is optional for public clients; confidential clients use `client_secret_post`. Never put it in client configuration. Pending sign-in attempts are stored in PostgreSQL, so they survive restarts and work with several API containers.
 
-New OIDC accounts are disabled by default. Set `Oidc__AllowRegistration=true` to provision an empty ledger on first sign-in, then set it back to `false`. This is independent of password sign-up. Existing users are identified by the stable `(issuer, subject)` pair; an existing account with the same email is **never automatically linked**. The native iOS app uses the same `penny://auth/callback` redirect in an ephemeral system sign-in sheet ([native sign-in](ios-authentication.md#provider-and-callback-setup)). Details and troubleshooting: [OIDC on the .NET backend](migration/authentication.md#openid-connect-maz-54).
+New OIDC accounts are disabled by default. Set `Oidc__AllowRegistration=true` to provision an empty ledger on first sign-in, then set it back to `false`. This is independent of password sign-up. Existing users are identified by the stable `(issuer, subject)` pair; an existing account with the same email is **never automatically linked**. The native iOS app uses the same `penny://auth/callback` redirect in an ephemeral system sign-in sheet ([native sign-in](ios-authentication.md#provider-and-callback-setup)). Details and troubleshooting: [OIDC on the .NET backend](reference/authentication.md#openid-connect-maz-54).
 
 ## Phone notifications
 
 On iOS, Penny requests notification permission and registers the signed-in device. Other active members receive a push for a new expense, an edited expense, or a recorded reimbursement; a recurring occurrence counts as a new expense. Web does not register for push.
 
-The .NET API delivers native iOS notifications through APNs (`Push__Apns__*`) and keeps legacy Expo tokens working through the Expo Push Service while `Push__Expo__Enabled=true`. Provider calls go out from the `api` container; allow outbound HTTPS to `api.push.apple.com` (`api.sandbox.push.apple.com` for development builds) and `exp.host` for Expo. Credentials, the `push-smoke-apns` check and delivery diagnostics: [push](migration/push.md).
+The .NET API delivers notifications through APNs (`Push__Apns__*`). Provider calls go out from the `api` container; allow outbound HTTPS to `api.push.apple.com` (`api.sandbox.push.apple.com` for development builds). Credentials, the `push-smoke-apns` check and delivery diagnostics: [push](reference/push.md).
 
-## Legacy Node/SQLite deployment
-
-Until the cutover, the legacy server keeps its own image (`ghcr.io/<owner>/<repository>`, built by `.github/workflows/docker-image.yml` from the root `Dockerfile`) and `compose.yaml`. It runs one Node process with SQLite (receipts inside the database) and serves `/api/` on port 3001. Since MAZ-97 it no longer serves a web app: images built from this revision on are API-only (earlier tags still contain the Expo web export), and browsers use the `penny-web` image. A rollback to Node therefore leaves browsers without the app unless you run a pre-MAZ-97 legacy tag. Keep it as the rollback target until the [cutover](migration/postgresql.md#cutover-and-forward-only-recovery) observation window ends.
-
-```sh
-docker compose up -d --build
-```
-
-Configure it in the root `.env` (`PORT`, `CORS_ORIGINS`, `COOKIE_SECURE`, `ALLOW_REGISTRATION`, `OIDC_*`). Proxy the whole hostname to port 3001, and allow request bodies of at least 20 MB. Back up the `penny-data` volume with the container stopped (SQLite database and WAL files together), or use SQLite's online backup API. To move its data to v2, follow the [cutover checklist](cutover.md): `snapshot-sqlite` seals the final SQLite file, and `import-sqlite` loads it into PostgreSQL, both through the `cutover` service of `deploy/compose.cutover.yaml`. **Retain the sealed SQLite snapshot, its SHA-256 and the original volume through the observation window.** Before writes reopen on v2, rolling back means discarding the PostgreSQL target and receipt volume and restarting Node on the untouched source. After that, recovery is forward-only.
-
-For client-side data upgrades, see [Ledger upgrades](app-guide.md#ledger-upgrades). For signed mobile distribution and release tags, see [Releases](releases.md).
+For signed mobile distribution and release tags, see [Releases](releases.md).

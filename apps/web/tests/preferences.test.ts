@@ -12,11 +12,6 @@ const stored = (value: unknown) => {
 };
 
 describe("appearance preferences", () => {
-  it.each(["amoled", "catppuccin"])("migrates the legacy %s theme to dark (MAZ-132)", (legacy) => {
-    stored({ theme: legacy });
-    expect(document.documentElement).toHaveAttribute("data-theme", "dark");
-  });
-
   it("falls back to the defaults for unknown or corrupt values", () => {
     stored({ theme: "sepia", reduceTransparency: "yes" });
     expect(document.documentElement).not.toHaveAttribute("data-theme");

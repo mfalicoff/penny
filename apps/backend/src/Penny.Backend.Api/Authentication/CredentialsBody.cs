@@ -1,6 +1,6 @@
 namespace Penny.Backend.Api.Authentication;
 
-// Reads `{email, password}` with the legacy express.json() semantics.
+// Reads `{email, password}` with the JsonStringFields rules.
 public static class CredentialsBody
 {
     private static readonly string[] Names = ["email", "password"];

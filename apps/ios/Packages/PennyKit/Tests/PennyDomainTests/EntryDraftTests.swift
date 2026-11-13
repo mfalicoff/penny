@@ -37,7 +37,7 @@ struct EntryDraftTests {
     }
 
     @Test(
-        "whenDraftIsInvalid_Build_ShouldRefuseInTheLegacyOrder",
+        "whenDraftIsInvalid_Build_ShouldRefuseInTheDocumentedOrder",
         arguments: [
             (
                 EntryDraft(kind: .expense, title: "", amount: "x", date: "bad", categoryId: "gone"),

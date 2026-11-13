@@ -219,7 +219,7 @@ public struct PennyStateView: View {
     }
 }
 
-/// A category's icon on a tinted circle. Legacy categories name Ionicons; they map to SF
+/// A category's icon on a tinted circle. Categories store Ionicons names; they map to SF
 /// Symbols here, and colors come from the category palette, never a meaning color.
 public struct CategoryIcon: View {
     @ScaledMetric private var size: Double
@@ -242,7 +242,7 @@ public struct CategoryIcon: View {
     }
 }
 
-/// Maps legacy Ionicons names and category ids onto SF Symbols and the category palette.
+/// Maps stored Ionicons names and category ids onto SF Symbols and the category palette.
 nonisolated public enum CategoryStyle {
     public static func symbol(forIonicon name: String) -> String {
         let base = name.replacingOccurrences(of: "-outline", with: "").replacingOccurrences(of: "-sharp", with: "")

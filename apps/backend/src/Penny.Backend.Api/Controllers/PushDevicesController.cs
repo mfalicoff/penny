@@ -6,9 +6,9 @@ using Penny.Backend.Application.Push;
 
 namespace Penny.Backend.Api.Controllers;
 
-// Push device registration (legacy server/http/push.ts, MAZ-61). Session-protected by
+// Push device registration (MAZ-61). Session-protected by
 // the fallback policy; a registration belongs to the presenting session, and logout
-// or session expiry removes it. See docs/migration/push.md.
+// or session expiry removes it. See docs/reference/push.md.
 [ApiController]
 [Route("api/push/devices")]
 [ProducesResponseType<ApiError>(400)]

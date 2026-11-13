@@ -5,10 +5,10 @@ import Testing
 
 @Suite("App identity continuity")
 struct AppIdentityTests {
-    // The Expo app and its app.json are gone (MAZ-98). These are the values its released builds
-    // (1.0.0 and later) shipped with; installs only upgrade in place while the native app keeps them.
-    @Test("whenComparedWithReleasedExpoApp_AppIdentity_ShouldKeepBundleSchemeAndWidgets")
-    func matchesReleasedExpoApp() {
+    // The values every released build (1.0.0 and later) shipped with, frozen for TestFlight/App
+    // Store continuity: installs only upgrade in place while the app keeps them.
+    @Test("whenComparedWithReleasedBuilds_AppIdentity_ShouldKeepBundleSchemeAndWidgets")
+    func matchesReleasedBuilds() {
         #expect(AppIdentity.bundleIdentifier == "com.mfalicoff.penny")
         #expect(AppIdentity.urlScheme == "penny")
         #expect(AppIdentity.appGroup == "group.com.mfalicoff.penny")
@@ -25,7 +25,7 @@ struct AppIdentityTests {
     }
 
     // MAZ-98: the TestFlight checks in ios.sh refuse any archive or IPA that is not this app.
-    // If they drifted from AppIdentity, they would pass a build that cannot upgrade Expo installs.
+    // If they drifted from AppIdentity, they would pass a build that cannot upgrade existing installs.
     @Test("whenComparedWithReleaseScript_AppIdentity_ShouldMatchTheTestFlightChecks")
     func matchesReleaseScript() throws {
         let script = try String(

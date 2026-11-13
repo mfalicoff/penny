@@ -76,13 +76,13 @@ public sealed class OidcPolicyTests(ApiFixture fixture, FakeOidcProvider provide
         {
             Content = JsonContent.Create(new { transaction, callbackUrl }),
         };
-        allowed.Headers.Add("Origin", "http://localhost:8081");
+        allowed.Headers.Add("Origin", "http://localhost:4173");
         using var completed = await client.SendAsync(allowed, Ct);
         completed.StatusCode.ShouldBe(HttpStatusCode.OK);
         completed
             .Headers.GetValues("Access-Control-Allow-Origin")
             .Single()
-            .ShouldBe("http://localhost:8081");
+            .ShouldBe("http://localhost:4173");
         Provider.TokenRequests.ShouldBe(1);
     }
 }

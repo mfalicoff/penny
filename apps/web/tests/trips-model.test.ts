@@ -1,5 +1,5 @@
 import { saveEntry, saveTrip } from "@domain/commands.ts";
-import { upgradeLedger, type Ledger, type Transaction, type Trip } from "@domain/ledger.ts";
+import { type Ledger, type Transaction, type Trip } from "@domain/ledger.ts";
 import { describe, expect, it } from "vitest";
 import type { Household, SharedExpense } from "../src/api/schemas";
 import {
@@ -31,7 +31,7 @@ const expense = (id: string, date: string, share: number, extra: Partial<Transac
 });
 
 function ledger(trips: Trip[], transactions: Transaction[]): Ledger {
-  return upgradeLedger({
+  return {
     version: 4,
     currency: "CAD",
     accounts: [],
@@ -39,7 +39,7 @@ function ledger(trips: Trip[], transactions: Transaction[]): Ledger {
     categories: [{ id: "food", name: "Food", icon: "cafe-outline", color: "#E47850", kind: "expense" }],
     transactions,
     recurring: [],
-  } as unknown as Ledger);
+  };
 }
 
 const household = (id: string, name: string, trip?: { startDate: string; endDate: string }): Household => ({

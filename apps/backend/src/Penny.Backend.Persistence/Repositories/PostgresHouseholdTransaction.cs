@@ -98,7 +98,7 @@ internal class PostgresHouseholdTransaction(
 
     // Signed per-month amounts. With a former member, only what they can see: expenses
     // in which they have a share, and reimbursements recorded by the time they left or
-    // involving them (legacy recap for a departed member).
+    // involving them (the recap of a departed member).
     protected async Task<IReadOnlyList<BalanceContribution>> ContributionsAsync(
         string householdId,
         FormerMember? viewer
@@ -375,8 +375,7 @@ internal class PostgresHouseholdTransaction(
                     )
             );
 
-    // The legacy `household_members` row: the open period, otherwise the one that
-    // ended last.
+    // A member's latest period: the open one, otherwise the one that ended last.
     private static StoredMember Latest(IEnumerable<StoredMember> periods) =>
         periods
             .OrderBy(period => period.IsCurrent ? 0 : 1)

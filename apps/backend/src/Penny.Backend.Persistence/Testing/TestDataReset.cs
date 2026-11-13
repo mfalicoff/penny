@@ -6,7 +6,7 @@ using Penny.Backend.Persistence.Schema;
 namespace Penny.Backend.Persistence.Testing;
 
 // Full-stack test environments only (MAZ-62): deletes every product row, keeping the
-// migration history and the import checkpoint, so a seeded run starts from an empty,
+// migration history, so a seeded run starts from an empty,
 // migrated database. It refuses any database whose name does not start with the
 // configured test prefix, so a misrouted connection string cannot erase real data.
 // Rows are deleted children-first in foreign-key order from the EF model; the runtime
@@ -42,15 +42,12 @@ public sealed class TestDataReset(NpgsqlDataSource source)
         return tables.Count;
     }
 
-    // Dependents before principals; the import checkpoint and history are kept.
+    // Dependents before principals; the migration history is kept.
     public static IReadOnlyList<string> DeleteOrder(IModel model)
     {
         var tables = model
             .GetEntityTypes()
-            .Where(type =>
-                type.GetTableName() is not null
-                && type.ClrType != typeof(Schema.Entities.SqliteImportCheckpoint)
-            )
+            .Where(type => type.GetTableName() is not null)
             .ToDictionary(type => type.GetTableName()!, StringComparer.Ordinal);
         var ordered = new List<string>();
         var visited = new HashSet<string>(StringComparer.Ordinal);
