@@ -140,7 +140,7 @@ let
       ${lib.getExe cfg.package} "$@"
   '';
 
-  # Idempotent equivalent of apps/backend/development/init-roles.sh for a local server:
+  # Idempotent equivalent of apps/backend/development/bootstrap.sql for a local server:
   # roles without passwords (peer authentication over the Unix socket), the schema owned
   # by the migration role, and the extensions created by the administrator.
   databaseSetup = pkgs.writeText "penny-db-setup.sql" ''

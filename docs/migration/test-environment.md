@@ -26,7 +26,7 @@ export PENNY_POSTGRES=native PENNY_POSTGRES_BIN="$PWD/.cache/test-postgres/bin"
 node scripts/test-env/penny-env.mjs up
 ```
 
-Each run `initdb`s a cluster in `.cache/test-env/<id>/pgdata` (random admin password, scram authentication, loopback TCP only, no Unix socket, durability off like the container's tmpfs), creates the database and applies the same `init-roles.sh`, and `down` stops it with `pg_ctl` and deletes it. It still never connects to a server it did not create. Any PostgreSQL 18 with pgvector 0.8 or later works through `PENNY_POSTGRES_BIN` (or `pg_config` on `PATH`). The flake's `test-postgres` pins pgvector to the reference image's version (0.8.7) rather than taking nixpkgs', which can trail it; change `flake.nix`, `apps/backend/compose.yaml` and `DatabaseSchema.cs` together. The container stays the reference for backend CI.
+Each run `initdb`s a cluster in `.cache/test-env/<id>/pgdata` (random admin password, scram authentication, loopback TCP only, no Unix socket, durability off like the container's tmpfs), creates the database (roles and extensions come from `migrate --bootstrap`, as in Compose), and `down` stops it with `pg_ctl` and deletes it. It still never connects to a server it did not create. Any PostgreSQL 18 with pgvector 0.8 or later works through `PENNY_POSTGRES_BIN` (or `pg_config` on `PATH`). The flake's `test-postgres` pins pgvector to the reference image's version (0.8.7) rather than taking nixpkgs', which can trail it; change `flake.nix`, `apps/backend/compose.yaml` and `DatabaseSchema.cs` together. The container stays the reference for backend CI.
 
 ## One command
 
@@ -43,7 +43,7 @@ npm run test-env -- down
 
 Each run gets a random id (`r` + 10 hex), container `penny-test-<id>` labeled `penny.test-run=<id>`, database `penny_test_<id>` on tmpfs (no volume), a random loopback port for PostgreSQL and the API, and `.cache/test-env/<id>/` (mode 0700; `env.json` 0600) for state and logs. Concurrent runs, including parallel CI jobs on one machine, never share a database, port, token or receipt directory.
 
-Startup: create the container with the repository's `init-roles.sh` (roles and extensions, as in development), wait for TCP readiness, run `migrate` with the migration role, apply `grant-runtime.sql`, start the API (`ASPNETCORE_ENVIRONMENT=Testing`, runtime role, generous rate limits, recurrence and embedding workers on) and wait for `/api/ready`. If any step fails, everything created so far is removed before the error is reported (with the last API log lines), and an API that exits during startup is detected immediately.
+Startup: create the container, wait for TCP readiness, run `migrate --bootstrap --grant-runtime` (roles, schema and extensions as administrator, then migrations and grants as the migration role), start the API (`ASPNETCORE_ENVIRONMENT=Testing`, runtime role, generous rate limits, recurrence and embedding workers on) and wait for `/api/ready`. If any step fails, everything created so far is removed before the error is reported (with the last API log lines), and an API that exits during startup is detected immediately.
 
 ## Simulators and devices
 

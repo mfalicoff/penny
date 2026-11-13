@@ -209,24 +209,6 @@ async function startNativePostgres(state, secrets) {
   };
   run(join(bin, "psql"), ["--username", "postgres", "--dbname", "postgres", "--set=ON_ERROR_STOP=1", "-q",
     "--command", `CREATE DATABASE "${state.database}"`], { env });
-  run("bash", [join(backend, "development/init-roles.sh")], {
-    env: {
-      ...env, POSTGRES_USER: "postgres", POSTGRES_DB: state.database,
-      PENNY_MIGRATION_PASSWORD: secrets.migration, PENNY_RUNTIME_PASSWORD: secrets.runtime,
-    },
-  });
-}
-
-/** Runs SQL as the run's PostgreSQL administrator, in either mode. */
-function adminSql(state, secrets, input) {
-  const args = ["--username", "postgres", "--dbname", state.database, "--set=ON_ERROR_STOP=1", "-q"];
-  if (state.postgres === "native") {
-    run(join(state.postgresBin, "psql"), ["--host", "127.0.0.1", "--port", String(state.databasePort), ...args], {
-      input, env: { ...process.env, PGPASSWORD: secrets.admin },
-    });
-  } else {
-    run(state.cli, ["exec", "-i", state.container, "psql", ...args], { input });
-  }
 }
 
 /**
@@ -317,10 +299,15 @@ export async function up(options = {}) {
     else await startPostgresContainer(state, secrets);
     const connection = (user, password) =>
       `Host=127.0.0.1;Port=${state.databasePort};Database=${state.database};Username=${user};Password=${password};SSL Mode=Disable`;
-    run("bash", [join(backend, "dotnet.sh"), apiDll, "migrate"], {
-      env: { ...process.env, ConnectionStrings__Migration: connection("penny_migrator", secrets.migration) },
+    // Roles, schema and extensions (as administrator), migrations and runtime grants.
+    run("bash", [join(backend, "dotnet.sh"), apiDll, "migrate", "--bootstrap", "--grant-runtime"], {
+      env: {
+        ...process.env,
+        ConnectionStrings__Admin: connection("postgres", secrets.admin),
+        ConnectionStrings__Migration: connection("penny_migrator", secrets.migration),
+        ConnectionStrings__Postgres: connection("penny_runtime", secrets.runtime),
+      },
     });
-    adminSql(state, secrets, readFileSync(join(backend, "development/grant-runtime.sql"), "utf8"));
     const receiptKey = randomBytes(32).toString("base64");
     // `prepare` runs against the migrated, empty database before the API starts (the
     // cutover rehearsal imports a legacy snapshot here). `command` runs an API
@@ -406,7 +393,7 @@ export async function up(options = {}) {
   }
 }
 
-/** Container mode: the pinned image, whose entrypoint creates the roles. Sets databasePort. */
+/** Container mode: the pinned image (`migrate --bootstrap` creates the roles). Sets databasePort. */
 async function startPostgresContainer(state, secrets) {
   const cli = state.cli;
   // tmpfs storage: nothing outlives the container, and two runs never share a volume.
@@ -414,19 +401,13 @@ async function startPostgresContainer(state, secrets) {
     "run", "--detach", "--name", state.container, "--label", `${label}=${state.runId}`,
     "--publish", "127.0.0.1::5432", "--tmpfs", "/var/lib/postgresql",
     "--env", `POSTGRES_DB=${state.database}`, "--env", "POSTGRES_USER=postgres",
-    "--env", "POSTGRES_PASSWORD", "--env", "PENNY_MIGRATION_PASSWORD", "--env", "PENNY_RUNTIME_PASSWORD",
-    "--volume", `${join(backend, "development/init-roles.sh")}:/docker-entrypoint-initdb.d/10-penny-roles.sh:ro,z`,
+    "--env", "POSTGRES_PASSWORD",
     state.image,
   ], {
-    env: {
-      ...process.env,
-      POSTGRES_PASSWORD: secrets.admin,
-      PENNY_MIGRATION_PASSWORD: secrets.migration,
-      PENNY_RUNTIME_PASSWORD: secrets.runtime,
-    },
+    env: { ...process.env, POSTGRES_PASSWORD: secrets.admin },
   });
   // The entrypoint's temporary init server listens on the socket only; TCP readiness
-  // means initialization (roles, extensions) finished and the real server is up.
+  // means initialization finished and the real server is up.
   await waitFor(() => spawnSync(cli, ["exec", state.container, "pg_isready", "-h", "127.0.0.1", "-U", "postgres", "-d", state.database]).status === 0,
     { timeoutMs: 90_000, what: "PostgreSQL" });
   const published = run(cli, ["port", state.container, "5432/tcp"]).trim().split("\n")[0];

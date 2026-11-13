@@ -16,6 +16,7 @@ writeFileSync(new URL("../.env", import.meta.url), [
   `PENNY_RUNTIME_PASSWORD=${runtime}`,
   `ConnectionStrings__Postgres='Host=127.0.0.1;Port=5433;Database=penny;Username=penny_runtime;Password=${runtime};SSL Mode=Disable'`,
   `ConnectionStrings__Migration='Host=127.0.0.1;Port=5433;Database=penny;Username=penny_migrator;Password=${migration};SSL Mode=Disable'`,
+  `ConnectionStrings__Admin='Host=127.0.0.1;Port=5433;Database=penny;Username=postgres;Password=${admin};SSL Mode=Disable'`,
   `Receipts__Root='${receiptRoot}'`,
   `Receipts__MasterKey='${receiptKey}'`,
   `Search__ModelDirectory='${modelDirectory}'`,

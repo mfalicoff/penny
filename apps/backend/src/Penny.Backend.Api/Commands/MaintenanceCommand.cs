@@ -20,6 +20,14 @@ internal static class MaintenanceCommand
         Console.CancelKeyPress += cancel;
         try
         {
+            // Roles, schema and extensions only, without migrating: an empty server that a
+            // backup is restored into needs the roles that own its objects.
+            if (args is ["bootstrap"])
+            {
+                await BootstrapAsync(configuration, stopping.Token);
+                Console.WriteLine("Database bootstrap complete.");
+                return 0;
+            }
             if (args is ["snapshot-sqlite", var sourcePath, var snapshotPath])
             {
                 Console.WriteLine(
@@ -43,7 +51,11 @@ internal static class MaintenanceCommand
                             _ => throw new ImportFailure("command-usage"),
                         };
             }
-            else if (args is not (["migrate"] or ["migrate", "--grant-runtime"]))
+            else if (
+                args[0] != "migrate"
+                || args.Skip(1).Any(option => option is not ("--bootstrap" or "--grant-runtime"))
+                || args.Skip(1).Distinct().Count() != args.Length - 1
+            )
                 throw new ImportFailure("command-usage");
             var settings = DatabaseSettings.Create(
                 configuration.GetConnectionString("Migration"),
@@ -52,9 +64,14 @@ internal static class MaintenanceCommand
             await using var database = settings.CreateDataSource();
             if (args[0] == "migrate")
             {
+                if (args.Contains("--bootstrap"))
+                {
+                    await BootstrapAsync(configuration, stopping.Token);
+                    Console.WriteLine("Database bootstrap complete.");
+                }
                 await DatabaseMigrator.ApplyAsync(database, stopping.Token);
                 Console.WriteLine("Database migration complete.");
-                if (args is [_, "--grant-runtime"])
+                if (args.Contains("--grant-runtime"))
                 {
                     await RuntimeGrants.ApplyAsync(database, stopping.Token);
                     Console.WriteLine("Runtime grants applied.");
@@ -85,7 +102,7 @@ internal static class MaintenanceCommand
         {
             Console.Error.WriteLine(error.Message);
             Console.Error.WriteLine(
-                "Usage: migrate [--grant-runtime] | snapshot-sqlite SOURCE NEW_SNAPSHOT | import-sqlite SNAPSHOT --sha256 HASH [--dry-run|--resume|--verify] | reset-password EMAIL. See docs/migration/postgresql.md."
+                "Usage: migrate [--bootstrap] [--grant-runtime] | bootstrap | snapshot-sqlite SOURCE NEW_SNAPSHOT | import-sqlite SNAPSHOT --sha256 HASH [--dry-run|--resume|--verify] | reset-password EMAIL. See docs/migration/postgresql.md."
             );
             return 1;
         }
@@ -112,5 +129,38 @@ internal static class MaintenanceCommand
         {
             Console.CancelKeyPress -= cancel;
         }
+    }
+
+    // The administrator connection is used only here. The role passwords come from the
+    // connection strings the migration and the API use, so they cannot drift apart.
+    private static async Task BootstrapAsync(
+        IConfiguration configuration,
+        CancellationToken cancellationToken
+    )
+    {
+        var migration = new Npgsql.NpgsqlConnectionStringBuilder(
+            configuration.GetConnectionString("Migration") ?? ""
+        );
+        var runtime = new Npgsql.NpgsqlConnectionStringBuilder(
+            configuration.GetConnectionString("Postgres") ?? ""
+        );
+        if (
+            migration.Username != DatabaseBootstrap.MigrationRole
+            || runtime.Username != DatabaseBootstrap.RuntimeRole
+            || string.IsNullOrEmpty(migration.Password)
+            || string.IsNullOrEmpty(runtime.Password)
+        )
+            throw new ImportFailure("bootstrap-configuration");
+        var settings = DatabaseSettings.Create(
+            configuration.GetConnectionString("Admin"),
+            maxPoolSize: 1
+        );
+        await using var administrator = settings.CreateDataSource();
+        await DatabaseBootstrap.ApplyAsync(
+            administrator,
+            migration.Password,
+            runtime.Password,
+            cancellationToken
+        );
     }
 }

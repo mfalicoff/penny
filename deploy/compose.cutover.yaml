@@ -29,8 +29,8 @@ services:
     networks: [penny]
     environment:
       ConnectionStrings__Migration: >-
-        Host=${PENNY_DB_HOST:-postgres};Port=${PENNY_DB_PORT:-5432};Database=${PENNY_DB_NAME:-penny};SSL Mode=${PENNY_DB_SSL_MODE:-Disable}${PENNY_DB_OPTIONS:-};Username=${PENNY_MIGRATION_USER:-penny_migrator};Password=${PENNY_MIGRATION_PASSWORD:?run deploy/init-env.sh first}
-      Receipts__MasterKey: ${PENNY_RECEIPT_KEY:?run deploy/init-env.sh first}
+        Host=${PENNY_DB_HOST:-postgres};Port=${PENNY_DB_PORT:-5432};Database=${PENNY_DB_NAME:-penny};SSL Mode=${PENNY_DB_SSL_MODE:-Disable}${PENNY_DB_OPTIONS:-};Username=penny_migrator;Password=${PENNY_MIGRATION_PASSWORD:?set it in deploy/.env (see deploy/.env.example)}
+      Receipts__MasterKey: ${PENNY_RECEIPT_KEY:?set it in deploy/.env (see deploy/.env.example)}
     volumes:
       - penny-receipts:/var/lib/penny/receipts
       - penny-cutover:/var/lib/penny/cutover

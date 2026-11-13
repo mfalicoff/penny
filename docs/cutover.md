@@ -21,12 +21,12 @@ Record in the issue or your own runbook, per run: date, release tags (`PENNY_API
 
 ## Settings: legacy to v2
 
-Move these from the legacy root `.env` into `deploy/.env` (created by `deploy/init-env.sh`) and `deploy/api.env` before the window. The public origin and the OIDC redirect URIs must stay **exactly** as they are, or browser cookies and single sign-on break at the switch.
+Move these from the legacy root `.env` into `deploy/.env` (copied from `deploy/.env.example`) and `deploy/api.env` before the window. The public origin and the OIDC redirect URIs must stay **exactly** as they are, or browser cookies and single sign-on break at the switch.
 
 | Legacy (`.env`) | v2 | Notes |
 | --- | --- | --- |
 | `PORT` (3001) | `PENNY_BIND` / `PENNY_PORT` (8080) | Your TLS proxy points at this port after the switch |
-| `CORS_ORIGINS` | `PENNY_PUBLIC_ORIGIN` | Same origin(s), comma-separated; give it to `init-env.sh` |
+| `CORS_ORIGINS` | `PENNY_PUBLIC_ORIGIN` | Same origin(s), comma-separated |
 | `COOKIE_SECURE` | `PENNY_SECURE_COOKIES` | `true` for any `https://` origin |
 | `ALLOW_REGISTRATION` | `Auth__AllowRegistration` (`api.env`) | |
 | `OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, `OIDC_REDIRECT_URIS`, `OIDC_LABEL`, `OIDC_ALLOW_REGISTRATION` | `Oidc__Issuer`, `Oidc__ClientId`, `Oidc__ClientSecret`, `Oidc__RedirectUris`, `Oidc__Label`, `Oidc__AllowRegistration` (`api.env`) | Imported identities keep signing in by `(issuer, subject)`, so the issuer must be byte-identical |
@@ -72,8 +72,8 @@ docker run --rm -v "$PENNY_LEGACY_VOLUME":/from:ro -v penny-rehearsal-legacy:/to
 $legacy start
 
 # 2. A throwaway v2 project on the copy (its own .env with a new receipt key).
-PENNY_ENV_FILE=$PWD/rehearsal.env sh deploy/init-env.sh http://localhost:18080
-printf 'PENNY_PORT=18080\nPENNY_SUBNET=172.31.200.0/24\nPENNY_API_IMAGE=…\nPENNY_WEB_IMAGE=…\nPENNY_LEGACY_VOLUME=penny-rehearsal-legacy\n' >> rehearsal.env
+cp deploy/.env.example rehearsal.env && chmod 600 rehearsal.env   # fill in fresh secrets
+printf 'PENNY_PUBLIC_ORIGIN=http://localhost:18080\nPENNY_SECURE_COOKIES=false\nPENNY_PORT=18080\nPENNY_SUBNET=172.31.200.0/24\nPENNY_API_IMAGE=…\nPENNY_WEB_IMAGE=…\nPENNY_LEGACY_VOLUME=penny-rehearsal-legacy\n' >> rehearsal.env
 rehearsal="docker compose -p penny-rehearsal -f deploy/compose.yaml -f deploy/compose.cutover.yaml --env-file rehearsal.env"
 ```
 

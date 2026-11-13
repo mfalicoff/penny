@@ -1,23 +1,25 @@
 # Penny self-hosting stack (MAZ-63): pinned PostgreSQL 18, a one-shot migration,
 # the .NET API and the nginx web front end on one origin.
 #
-#   sh deploy/init-env.sh https://penny.example.com   # once: writes deploy/.env (0600)
-#   docker compose -f deploy/compose.yaml up -d --wait
+#   cp .env.example .env   # once: set the origin and secrets (chmod 600)
+#   docker compose up -d --wait
+#
+# Self-contained: this file, .env and the optional api.env are all a server needs (no
+# checkout, no scripts). `migrate` bootstraps the database itself. To build the images
+# from a checkout instead, add `-f deploy/compose.build.yaml`.
 #
 # Only `web` publishes a port. The API, migration and PostgreSQL are reachable only on
-# the internal network. Secrets come from deploy/.env (and the optional deploy/api.env)
-# and are passed to the one service that needs each of them. See docs/deployment.md.
+# the internal network. Secrets come from .env (and api.env) and are passed only to the
+# services that need them. See docs/deployment.md.
 #
-# External PostgreSQL: set COMPOSE_PROFILES= (empty) and PENNY_DB_HOST/PORT/NAME,
-# PENNY_DB_SSL_MODE=VerifyFull and PENNY_DB_OPTIONS in deploy/.env; the bundled
-# `postgres` service is then not started.
+# External PostgreSQL: set COMPOSE_PROFILES= (empty), PENNY_DB_HOST/PORT/NAME,
+# PENNY_DB_SSL_MODE=VerifyFull, PENNY_DB_OPTIONS and an administrator login
+# (PENNY_ADMIN_USER/PENNY_ADMIN_PASSWORD) in .env; the bundled `postgres` is not started.
 
 name: penny
 
 x-api: &api
   image: ${PENNY_API_IMAGE:-ghcr.io/mfalicoff/penny-api:latest}
-  build:
-    context: ../apps/backend
   read_only: true
   tmpfs:
     - /tmp:size=64m
@@ -34,17 +36,14 @@ services:
     environment:
       POSTGRES_DB: ${PENNY_DB_NAME:-penny}
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${PENNY_ADMIN_PASSWORD:?run deploy/init-env.sh first}
-      PENNY_MIGRATION_PASSWORD: ${PENNY_MIGRATION_PASSWORD:?run deploy/init-env.sh first}
-      PENNY_RUNTIME_PASSWORD: ${PENNY_RUNTIME_PASSWORD:?run deploy/init-env.sh first}
+      POSTGRES_PASSWORD: ${PENNY_ADMIN_PASSWORD:?set it in deploy/.env (see deploy/.env.example)}
     volumes:
       - penny-postgres:/var/lib/postgresql
-      - ../apps/backend/development/init-roles.sh:/docker-entrypoint-initdb.d/10-penny-roles.sh:ro
     shm_size: 256m
     healthcheck:
-      # Over TCP: on first start the image runs its init scripts on a socket-only
-      # server and then restarts, so a socket check would pass before the real server
-      # is up and `migrate` could connect into the restart.
+      # Over TCP: on first start the image initializes on a socket-only server and then
+      # restarts, so a socket check would pass before the real server is up and
+      # `migrate` could connect into the restart.
       test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U postgres -d \"$${POSTGRES_DB}\""]
       interval: 5s
       timeout: 3s
@@ -54,14 +53,21 @@ services:
     restart: unless-stopped
     networks: [penny]
 
-  # Applies EF migrations under the migration advisory lock, then grant-runtime.sql,
-  # and exits. The API starts only after it succeeded.
+  # One-shot, on every `up`: as administrator, creates the penny_migrator and
+  # penny_runtime roles, the penny schema and the extensions when missing and sets both
+  # role passwords from .env (bootstrap.sql); then, as penny_migrator, applies EF
+  # migrations under the advisory lock and grant-runtime.sql, and exits. The API starts
+  # only after it succeeded. It is the only service with the administrator password.
   migrate:
     <<: *api
-    command: ["migrate", "--grant-runtime"]
+    command: ["migrate", "--bootstrap", "--grant-runtime"]
     environment:
+      ConnectionStrings__Admin: >-
+        Host=${PENNY_DB_HOST:-postgres};Port=${PENNY_DB_PORT:-5432};Database=${PENNY_DB_NAME:-penny};SSL Mode=${PENNY_DB_SSL_MODE:-Disable}${PENNY_DB_OPTIONS:-};Username=${PENNY_ADMIN_USER:-postgres};Password=${PENNY_ADMIN_PASSWORD:?set it in deploy/.env (see deploy/.env.example)}
       ConnectionStrings__Migration: >-
-        Host=${PENNY_DB_HOST:-postgres};Port=${PENNY_DB_PORT:-5432};Database=${PENNY_DB_NAME:-penny};SSL Mode=${PENNY_DB_SSL_MODE:-Disable}${PENNY_DB_OPTIONS:-};Username=${PENNY_MIGRATION_USER:-penny_migrator};Password=${PENNY_MIGRATION_PASSWORD:?run deploy/init-env.sh first}
+        Host=${PENNY_DB_HOST:-postgres};Port=${PENNY_DB_PORT:-5432};Database=${PENNY_DB_NAME:-penny};SSL Mode=${PENNY_DB_SSL_MODE:-Disable}${PENNY_DB_OPTIONS:-};Username=penny_migrator;Password=${PENNY_MIGRATION_PASSWORD:?set it in deploy/.env (see deploy/.env.example)}
+      ConnectionStrings__Postgres: >-
+        Host=${PENNY_DB_HOST:-postgres};Port=${PENNY_DB_PORT:-5432};Database=${PENNY_DB_NAME:-penny};SSL Mode=${PENNY_DB_SSL_MODE:-Disable}${PENNY_DB_OPTIONS:-};Username=penny_runtime;Password=${PENNY_RUNTIME_PASSWORD:?set it in deploy/.env (see deploy/.env.example)}
     depends_on:
       postgres:
         condition: service_healthy
@@ -80,8 +86,8 @@ services:
         required: false
     environment:
       ConnectionStrings__Postgres: >-
-        Host=${PENNY_DB_HOST:-postgres};Port=${PENNY_DB_PORT:-5432};Database=${PENNY_DB_NAME:-penny};SSL Mode=${PENNY_DB_SSL_MODE:-Disable}${PENNY_DB_OPTIONS:-};Username=${PENNY_RUNTIME_USER:-penny_runtime};Password=${PENNY_RUNTIME_PASSWORD:?run deploy/init-env.sh first}
-      Receipts__MasterKey: ${PENNY_RECEIPT_KEY:?run deploy/init-env.sh first}
+        Host=${PENNY_DB_HOST:-postgres};Port=${PENNY_DB_PORT:-5432};Database=${PENNY_DB_NAME:-penny};SSL Mode=${PENNY_DB_SSL_MODE:-Disable}${PENNY_DB_OPTIONS:-};Username=penny_runtime;Password=${PENNY_RUNTIME_PASSWORD:?set it in deploy/.env (see deploy/.env.example)}
+      Receipts__MasterKey: ${PENNY_RECEIPT_KEY:?set it in deploy/.env (see deploy/.env.example)}
       Auth__AllowedOrigins: ${PENNY_PUBLIC_ORIGIN:?set PENNY_PUBLIC_ORIGIN in deploy/.env}
       Auth__SecureCookies: ${PENNY_SECURE_COOKIES:-true}
       # Only the web container talks to the API; trusting its X-Forwarded-For gives
@@ -106,9 +112,6 @@ services:
 
   web:
     image: ${PENNY_WEB_IMAGE:-ghcr.io/mfalicoff/penny-web:latest}
-    build:
-      context: ..
-      dockerfile: deploy/web/Dockerfile
     environment:
       PENNY_API_UPSTREAM: api:8080
       PENNY_REAL_IP_FROM: ${PENNY_REAL_IP_FROM:-127.0.0.1/32}

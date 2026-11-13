@@ -7,7 +7,7 @@ The repository's flake ships Penny as Nix packages and a NixOS module. One optio
 | Unit | Role |
 | --- | --- |
 | `postgresql.service` | PostgreSQL 18 with `pg_trgm` and pgvector (skipped with an [external database](#external-postgresql)) |
-| `penny-db-setup.service` | One-shot, as `postgres`: creates the database, the `penny_migrator` and `penny_runtime` roles, the `penny` schema and the extensions. Idempotent; the Nix equivalent of `apps/backend/development/init-roles.sh` |
+| `penny-db-setup.service` | One-shot, as `postgres`: creates the database, the `penny_migrator` and `penny_runtime` roles, the `penny` schema and the extensions. Idempotent; the Nix equivalent of `apps/backend/development/bootstrap.sql` (`migrate --bootstrap`) |
 | `penny-migrate.service` | One-shot, as `penny`: `migrate --grant-runtime`. Generates the receipt master key on first start if you don't supply one |
 | `penny.service` | The .NET API and its background workers, on `127.0.0.1:5080` |
 | `nginx.service` | A virtual host that serves the web app, falls back to `index.html`, and proxies `/api/` to the API on the same origin |

@@ -145,7 +145,8 @@ Restore into a **clean** environment, with the same release that took the backup
 ```sh
 penny down                                   # keep volumes until the restore is verified elsewhere
 # New project or new volumes: e.g. a fresh checkout, or `penny down -v` once copies are safe
-penny up -d --wait postgres                  # first start creates roles, schema and extensions
+penny up -d --wait postgres                  # an empty server
+penny run --rm --no-deps migrate bootstrap   # roles, schema and extensions, without migrating
 penny exec -T postgres pg_restore -U postgres -d penny --clean --if-exists --exit-on-error < penny-$stamp.dump
 penny run --rm --no-deps -T --entrypoint tar api -C /var/lib/penny/receipts -xf - < penny-receipts-$stamp.tar
 penny up -d --wait                           # migrate (no-op or forward) + grants, then api and web
@@ -154,7 +155,7 @@ penny exec api dotnet Penny.Backend.Api.dll receipts-sweep    # drop files newer
 penny exec api dotnet Penny.Backend.Api.dll search-verify     # exit 2 means rebuild (below)
 ```
 
-The dump keeps object owners and grants, which the target's `init-roles.sh` roles satisfy. `migrate --grant-runtime` re-applies grants anyway. For a target without those roles, restore with `--no-owner --no-privileges`, then `ALTER SCHEMA penny OWNER TO penny_migrator`, reassign the tables (`REASSIGN OWNED`), and run `migrate`. Sessions survive a restore, so signed-in devices keep working; edits made after the backup are gone ([reconciliation](#write-reconciliation-after-a-rollback)).
+The dump keeps object owners and grants, which the target's bootstrapped roles satisfy. `migrate --grant-runtime` re-applies grants anyway. For a target without those roles, restore with `--no-owner --no-privileges`, then `ALTER SCHEMA penny OWNER TO penny_migrator`, reassign the tables (`REASSIGN OWNED`), and run `migrate`. Sessions survive a restore, so signed-in devices keep working; edits made after the backup are gone ([reconciliation](#write-reconciliation-after-a-rollback)).
 
 **Restore drill.** At least monthly and before each upgrade that contains a migration, restore the latest backup into a separate Compose project (`docker compose -p penny-drill -f deploy/compose.yaml --env-file drill.env …` on a different `PENNY_PORT` and `PENNY_SUBNET`, with the production receipt key). Sign in, download a receipt, run the three verify commands, then `down -v` the drill.
 
@@ -274,7 +275,7 @@ The lock belongs to that session and is released when it ends. Terminate it (`SE
 
 ### Extensions
 
-`pg_trgm` (keyword and typo matching) and `vector` (pgvector 0.8 or later, meaning search) must exist in `public` before `migrate`. The bundled image ships both (pgvector 0.8.7), and `init-roles.sh` creates them on first start. For an existing database: `CREATE EXTENSION IF NOT EXISTS pg_trgm; CREATE EXTENSION IF NOT EXISTS vector;` as administrator. Check:
+`pg_trgm` (keyword and typo matching) and `vector` (pgvector 0.8 or later, meaning search) must exist in `public` before `migrate`. The bundled image ships both (pgvector 0.8.7), and `migrate --bootstrap` creates them. For an existing database: `CREATE EXTENSION IF NOT EXISTS pg_trgm; CREATE EXTENSION IF NOT EXISTS vector;` as administrator. Check:
 
 ```sql
 SELECT extname, extversion FROM pg_extension WHERE extname IN ('pg_trgm', 'vector');
@@ -296,7 +297,7 @@ Penny needs PostgreSQL 18, `pg_trgm`, pgvector 0.8+, the ability to create two l
 
 ### Secret rotation
 
-- **Runtime or migration password:** `ALTER ROLE penny_runtime PASSWORD '…';` as administrator, update `deploy/.env`, then `penny up -d --wait` (recreates the services that use it). Existing pooled connections keep working until they close.
+- **Runtime or migration password:** change it in `deploy/.env`, then `penny up -d --wait`: `migrate` sets the new password, and the services that use it are recreated. Existing pooled connections keep working until they close.
 - **Administrator password:** `ALTER ROLE postgres PASSWORD '…';` and update `.env` (the image reads it only on first initialization).
 - **Receipt master key:** not rotatable by design. Every receipt's key is derived from it. Protect and back it up.
 - **APNs key or OIDC client secret:** replace the value in `api.env` and recreate `api`.
@@ -317,7 +318,7 @@ For the one-time SQLite cutover, the rules are different: before writes reopen o
 
 ### PostgreSQL is down or unreachable
 
-`/api/ready` returns 503 "Database is unavailable", `/api/health` stays 200, requests that need the database fail with 503, and the workers retry on their next poll. Check `penny ps`, `penny logs postgres`, disk space on the PostgreSQL volume, credentials (a changed password in `.env` without `ALTER ROLE`), and TLS settings for an external server. When the database returns, readiness recovers on its own without a restart (tested by the smoke suite).
+`/api/ready` returns 503 "Database is unavailable", `/api/health` stays 200, requests that need the database fail with 503, and the workers retry on their next poll. Check `penny ps`, `penny logs postgres`, disk space on the PostgreSQL volume, credentials (an administrator password in `.env` that no longer matches), and TLS settings for an external server. When the database returns, readiness recovers on its own without a restart (tested by the smoke suite).
 
 ### Receipt volume not writable or full
 

@@ -11,6 +11,7 @@ if (args.FirstOrDefault() == HealthProbeCommand.Name)
 var maintenance =
     args.FirstOrDefault()
     is "migrate"
+        or "bootstrap"
         or "snapshot-sqlite"
         or "import-sqlite"
         or PasswordResetCommand.Name

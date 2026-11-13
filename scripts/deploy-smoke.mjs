@@ -14,10 +14,11 @@
 import { spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { Buffer } from "node:buffer";
-import { appendFileSync, mkdirSync, rmSync } from "node:fs";
+import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { createServer } from "node:net";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { deployEnv } from "./test-env/deploy-env.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const apiImage = process.env.PENNY_SMOKE_API_IMAGE ?? "localhost/penny-api:dev";
@@ -196,20 +197,15 @@ async function main() {
   mkdirSync(directory, { recursive: true, mode: 0o700 });
   const port = await freePort();
   origin = `http://localhost:${port}`;
-  const init = spawnSync("sh", [path.join(root, "deploy", "init-env.sh"), origin], {
-    env: { ...process.env, PENNY_ENV_FILE: envFile },
-    encoding: "utf8",
-  });
-  if (init.status !== 0) throw new Error(`init-env.sh failed: ${init.stderr}`);
-  appendFileSync(
+  writeFileSync(
     envFile,
-    [
-      `PENNY_API_IMAGE=${apiImage}`,
-      `PENNY_WEB_IMAGE=${webImage}`,
-      `PENNY_PORT=${port}`,
-      `PENNY_SUBNET=172.31.${64 + (randomBytes(1)[0] % 180)}.0/24`,
-      "",
-    ].join("\n"),
+    deployEnv(origin, {
+      PENNY_API_IMAGE: apiImage,
+      PENNY_WEB_IMAGE: webImage,
+      PENNY_PORT: port,
+      PENNY_SUBNET: `172.31.${64 + (randomBytes(1)[0] % 180)}.0/24`,
+    }),
+    { mode: 0o600 },
   );
   const up = () => compose(["up", "-d", "--wait", "--no-build", "--pull", "never"]);
 
@@ -356,9 +352,11 @@ async function main() {
   ).stdout;
   check(receipts.length > 2048, `receipt archive taken (${receipts.length} bytes)`);
 
-  // Restore into a clean environment: new volumes, roles and extensions from init.
+  // Restore into a clean environment: new volumes, then roles and extensions from
+  // `bootstrap` (no migration), which the dump's owners and grants need.
   compose(["down", "-v"]);
   compose(["up", "-d", "--wait", "--no-build", "--pull", "never", "postgres"]);
+  check(compose(["run", "--rm", "--no-deps", "migrate", "bootstrap"]).stdout.includes("Database bootstrap complete."), "bootstrap prepared the empty server");
   compose(["exec", "-T", "postgres", "pg_restore", "-U", "postgres", "-d", "penny", "--clean", "--if-exists", "--exit-on-error"], { input: dump });
   compose(["run", "--rm", "--no-deps", "-T", "--entrypoint", "tar", "api", "-C", "/var/lib/penny/receipts", "-xf", "-"], { input: receipts });
   up();
@@ -381,7 +379,7 @@ async function main() {
   // Missing extension: readiness explains it and migrate refuses to run.
   psql("DROP EXTENSION pg_trgm CASCADE");
   await waitFor("readiness reports missing extension", notReady("pg_trgm"), 15_000);
-  const refused = compose(["run", "--rm", "migrate"], { allowFailure: true });
+  const refused = compose(["run", "--rm", "migrate", "migrate", "--grant-runtime"], { allowFailure: true });
   check(refused.status !== 0, "migrate refuses a database without pg_trgm");
 }
 

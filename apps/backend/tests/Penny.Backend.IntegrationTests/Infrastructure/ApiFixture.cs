@@ -63,7 +63,7 @@ public sealed class ApiFixture : IAsyncLifetime
         var ct = TestContext.Current.CancellationToken;
         await postgres.StartAsync(ct);
         Admin = DatabaseSettings.Create(postgres.GetConnectionString()).CreateDataSource();
-        // The administrator creates the search extensions once (development/init-roles.sh).
+        // The administrator creates the search extensions once (development/bootstrap.sql, run by migrate --bootstrap).
         await SqlAsync(CreateExtensions, ct);
         await DatabaseMigrator.ApplyAsync(Admin, ct);
         var password = Guid.NewGuid().ToString("N");

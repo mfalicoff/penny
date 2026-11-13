@@ -56,9 +56,9 @@ The console prints the Aspire dashboard's login link. The dashboard shows each r
 
 | Resource | What it is | Address |
 | --- | --- | --- |
-| `postgres` | The pinned pgvector image (`DatabaseSchema.Image`), initialized by `development/init-roles.sh` like Compose. Data lives in the `penny-aspire-postgres` volume | loopback port chosen on the first run |
+| `postgres` | The pinned pgvector image (`DatabaseSchema.Image`), bootstrapped by `migrate --bootstrap` like Compose. Data lives in the `penny-aspire-postgres` volume | loopback port chosen on the first run |
 | `search-model` | `development/download-model.mjs`; exits once the model is verified | — |
-| `migrate` | This API's `migrate --grant-runtime`, with the migration role; exits when done | — |
+| `migrate` | This API's `migrate --bootstrap --grant-runtime` (administrator for the bootstrap, then the migration role); exits when done | — |
 | `api` | This API with the runtime role, started after `migrate` and `search-model` finish | `http://localhost:5001` (Scalar at `/scalar/v1`) |
 | `web` | `npm run dev` in `apps/web`; Vite forwards `/api/` to `api` | `http://localhost:4173` |
 | `alloy` | OTLP receiver; forwards traces to Tempo, logs to Loki and metrics to Prometheus | gRPC on a port chosen on the first run, OTLP/HTTP on `localhost:4318` |
@@ -86,14 +86,14 @@ node apps/backend/development/download-model.mjs
 docker compose --env-file apps/backend/.env -f apps/backend/compose.yaml up -d --wait
 bash apps/backend/dotnet.sh tool restore
 bash apps/backend/dotnet.sh restore Penny.Backend.slnx --locked-mode
-bash apps/backend/dotnet.sh run --project src/Penny.Backend.Api -- migrate --grant-runtime
+bash apps/backend/dotnet.sh run --project src/Penny.Backend.Api -- migrate --bootstrap --grant-runtime
 # --grant-runtime applies development/grant-runtime.sql as the schema owner after migrating.
 bash apps/backend/dotnet.sh run --project src/Penny.Backend.Api
 ```
 
 Setup creates `.env` with random, separate admin/migration/runtime passwords, a random receipt master key and a receipt root under `.cache/backend/receipts`, mode 0600, and refuses to overwrite an existing file. An `.env` created before MAZ-52 lacks `Receipts__Root` and `Receipts__MasterKey`; add them by hand (base64 of 32 random bytes for the key). A development volume migrated by an unreleased MAZ-52 SQL draft must be recreated before the EF migration can apply. `dotnet.sh run` loads that local file. Compose binds PostgreSQL to loopback port 5433; the API uses loopback port 5001, leaving the legacy server's 3001 untouched. Podman users can use a configured Compose provider. PostgreSQL **18.6** comes from the official pgvector image `pgvector/pgvector:0.8.7-pg18-trixie` (pgvector 0.8.7), whose multi-platform digest is pinned identically in Compose and `DatabaseSchema.Image`. PostgreSQL 18 stores the named volume at `/var/lib/postgresql`; do not reuse a legacy SQLite volume.
 
-The database's first initialization creates non-superuser migration and runtime roles. After migration, apply `development/grant-runtime.sql` as schema owner/admin (`migrate --grant-runtime` runs the same embedded script as the migration role right after migrating): runtime gets DML on every `penny` table and sequence access, read-only migration history and import checkpoint, and no schema creation or role/database administration. Re-run it after every migration; it needs no edits for new tables. The migration role owns the `penny` schema and applies EF migrations. The first initialization also creates the `pg_trgm` and `vector` extensions as administrator; for an existing volume, switch the image and run `CREATE EXTENSION IF NOT EXISTS pg_trgm; CREATE EXTENSION IF NOT EXISTS vector;` as admin before `migrate`, which refuses to run without them. Initialization scripts run only for a new database volume; apply grants to existing volumes too. Updating `.env` does not rotate an existing database's passwords. Do not remove a volume containing data to change credentials; alter roles through an authorized administration session.
+`migrate --bootstrap` (as `ConnectionStrings__Admin`, before migrating; `bootstrap` alone does only this step) runs the embedded `development/bootstrap.sql`: it creates the non-superuser `penny_migrator` and `penny_runtime` roles, the `penny` schema and the extensions when missing, and sets both role passwords from `ConnectionStrings__Migration` and `ConnectionStrings__Postgres` as SCRAM verifiers. Each run sets them again, so `.env` stays authoritative. After migration, apply `development/grant-runtime.sql` as schema owner/admin (`migrate --grant-runtime` runs the same embedded script as the migration role right after migrating): runtime gets DML on every `penny` table and sequence access, read-only migration history and import checkpoint, and no schema creation or role/database administration. Re-run it after every migration; it needs no edits for new tables. The migration role owns the `penny` schema and applies EF migrations. Without `--bootstrap`, `migrate` refuses to run while `pg_trgm` or `vector` is missing. Do not remove a volume containing data to change credentials.
 
 Check `http://127.0.0.1:5001/api/health`, `/api/info` and `/api/ready`. In Development only, `/openapi/v1.json` describes implemented controllers and `/scalar/v1` serves the reference UI. The shared `contracts/openapi.json` describes both the legacy compatibility target and marked future/foundation operations. Scalar defaults do not configure a request proxy. Production does not map either documentation route.
 
@@ -105,6 +105,7 @@ ASP.NET configuration/environment variables use double underscores; secrets are 
 | --- | --- |
 | `ConnectionStrings__Postgres` | Required for serving HTTP, restricted runtime credentials |
 | `ConnectionStrings__Migration` | Required only for the explicit `migrate` command; runtime startup does not resolve/use it |
+| `ConnectionStrings__Admin` | Required only for `migrate --bootstrap` and `bootstrap`: an administrator that can create roles and extensions. `migrate --bootstrap` also reads `ConnectionStrings__Postgres` for the runtime role's password |
 | `Receipts__Root` | Absolute directory for encrypted receipt files; required by `import-sqlite`, the receipt commands and, since MAZ-55, by the HTTP host (ledger reads open receipt names; MAZ-60 uploads and downloads). Back it up after the database dump |
 | `Receipts__MasterKey` | Base64 32-byte master key; per-file keys are derived from it with HKDF. Never rotated, never logged; back it up in the secret manager |
 | `Receipts__MinFreeMegabytes` | 100; bounded 0–1,000,000. `/api/ready` writes and removes one empty probe file in `Receipts__Root` and fails (`receipt-storage`, `disk-space`) when the root is not writable or has less free space (MAZ-63) |

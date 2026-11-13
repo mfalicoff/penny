@@ -1,0 +1,14 @@
+# Builds the API and web images from this checkout instead of pulling them:
+#   docker compose -f deploy/compose.yaml -f deploy/compose.build.yaml build
+# Set PENNY_API_IMAGE/PENNY_WEB_IMAGE in deploy/.env to name the local tags.
+services:
+  migrate:
+    build:
+      context: ../apps/backend
+  api:
+    build:
+      context: ../apps/backend
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/web/Dockerfile

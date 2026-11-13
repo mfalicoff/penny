@@ -33,12 +33,13 @@
 import { spawnSync } from "node:child_process";
 import { createHash, randomBytes } from "node:crypto";
 import { Buffer } from "node:buffer";
-import { appendFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { createServer, request as httpRequest } from "node:http";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { differences } from "./test-env/compare.mjs";
 import { knownDifferences, read, reads } from "./test-env/cutover.mjs";
+import { deployEnv } from "./test-env/deploy-env.mjs";
 import { freePort } from "./test-env/environment.mjs";
 import { mergeLedger } from "../src/domain/merge.ts";
 
@@ -376,10 +377,8 @@ async function main() {
   const v2 = `http://127.0.0.1:${webPort}`;
   const atV2 = client(v2);
   try {
-    const init = spawnSync("sh", [path.join(root, "deploy", "init-env.sh"), origin], { env: { ...process.env, PENNY_ENV_FILE: envFile }, encoding: "utf8" });
-    if (init.status !== 0) throw new Error(`init-env.sh failed: ${init.stderr}`);
-    appendFileSync(envFile, [`PENNY_API_IMAGE=${apiImage}`, `PENNY_WEB_IMAGE=${webImage}`, `PENNY_PORT=${webPort}`,
-      `PENNY_SUBNET=172.31.${64 + (randomBytes(1)[0] % 180)}.0/24`, `PENNY_LEGACY_VOLUME=${legacyVolume}`, ""].join("\n"));
+    writeFileSync(envFile, deployEnv(origin, { PENNY_API_IMAGE: apiImage, PENNY_WEB_IMAGE: webImage, PENNY_PORT: webPort,
+      PENNY_SUBNET: `172.31.${64 + (randomBytes(1)[0] % 180)}.0/24`, PENNY_LEGACY_VOLUME: legacyVolume }), { mode: 0o600 });
     console.log(`# ${project}: address ${origin}, legacy :${legacyPort}, v2 web :${webPort}`);
 
     // 1. Legacy serves the address.

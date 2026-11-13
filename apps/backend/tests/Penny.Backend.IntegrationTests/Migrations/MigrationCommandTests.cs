@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using Penny.Backend.IntegrationTests.Infrastructure;
 using Penny.Backend.Persistence.Schema;
 using Shouldly;
@@ -72,8 +73,88 @@ public sealed class MigrationCommandTests(ApiFixture fixture) : IntegrationTestB
         result.Error.ShouldNotContain("Password=");
     }
 
+    [Fact]
+    public void whenBootstrapScriptEmbedded_DatabaseBootstrap_ShouldMatchRepositoryFile()
+    {
+        var file = Path.Combine(
+            AppContext.BaseDirectory,
+            "..",
+            "..",
+            "..",
+            "..",
+            "..",
+            "development",
+            "bootstrap.sql"
+        );
+        Penny
+            .Backend.Persistence.Migrations.DatabaseBootstrap.Sql()
+            .ShouldBe(File.ReadAllText(file));
+    }
+
+    [Fact]
+    public async Task whenBootstrapRequested_MigrationCommand_ShouldBeRepeatableAndRotateRolePasswords()
+    {
+        // Like a new database: no penny schema. The roles already exist (the fixture made
+        // them), so bootstrap leaves them in place and makes the configured passwords
+        // authoritative. The migration password is rotated and then restored, so the shared
+        // fixture keeps its credentials.
+        await Fixture.SqlAsync("DROP SCHEMA penny CASCADE", Ct);
+        var rotated = new NpgsqlConnectionStringBuilder(Fixture.MigrationConnection)
+        {
+            Password = Guid.NewGuid().ToString("N"),
+        }.ConnectionString;
+        var first = await RunAsync(rotated, Bootstrap(), "--bootstrap", "--grant-runtime");
+        var second = await RunAsync(rotated, Bootstrap(), "--grant-runtime", "--bootstrap");
+        var oldPassword = await RunAsync(Fixture.MigrationConnection);
+        var restored = await RunAsync(Fixture.MigrationConnection, Bootstrap(), "--bootstrap");
+        restored.ExitCode.ShouldBe(0, restored.Error);
+
+        first.ExitCode.ShouldBe(0, first.Error);
+        first.Output.ShouldContain("Database bootstrap complete.");
+        first.Output.ShouldContain("Runtime grants applied.");
+        second.ExitCode.ShouldBe(0, second.Error);
+        oldPassword.ExitCode.ShouldBe(1);
+        await using (
+            var owner = Fixture.Admin.CreateCommand(
+                "SELECT nspowner::regrole::text FROM pg_namespace WHERE nspname = 'penny'"
+            )
+        )
+            (await owner.ExecuteScalarAsync(Ct)).ShouldBe("penny_migrator");
+        using var ready = await Client.GetAsync("/api/ready", Ct);
+        ready.StatusCode.ShouldBe(System.Net.HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task whenBootstrapRoleNamesDiffer_MigrationCommand_ShouldFailWithoutExposingSecrets()
+    {
+        var environment = Bootstrap();
+        environment["ConnectionStrings__Postgres"] = new NpgsqlConnectionStringBuilder(
+            Fixture.RuntimeConnection
+        )
+        {
+            Username = "someone_else",
+        }.ConnectionString;
+        var result = await RunAsync(Fixture.MigrationConnection, environment, "--bootstrap");
+        result.ExitCode.ShouldBe(1);
+        result.Error.ShouldContain("bootstrap-configuration");
+        result.Error.ShouldNotContain("Password=");
+    }
+
+    private Dictionary<string, string> Bootstrap() =>
+        new()
+        {
+            ["ConnectionStrings__Admin"] = Fixture.AdminConnection,
+            ["ConnectionStrings__Postgres"] = Fixture.RuntimeConnection,
+        };
+
+    private static Task<(int ExitCode, string Output, string Error)> RunAsync(
+        string connection,
+        params string[] options
+    ) => RunAsync(connection, [], options);
+
     private static async Task<(int ExitCode, string Output, string Error)> RunAsync(
         string connection,
+        Dictionary<string, string> environment,
         params string[] options
     )
     {
@@ -91,6 +172,8 @@ public sealed class MigrationCommandTests(ApiFixture fixture) : IntegrationTestB
         foreach (var option in options)
             start.ArgumentList.Add(option);
         start.Environment["ConnectionStrings__Migration"] = connection;
+        foreach (var (key, value) in environment)
+            start.Environment[key] = value;
         using var process = Process.Start(start)!;
         var output = process.StandardOutput.ReadToEndAsync(Ct);
         var error = process.StandardError.ReadToEndAsync(Ct);

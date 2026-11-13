@@ -122,20 +122,13 @@ ObservabilityImages
     .WaitFor(prometheus);
 
 // --- PostgreSQL -----------------------------------------------------------------------------
-// Same image and role layout as compose.yaml: init-roles.sh creates the restricted migration
-// and runtime roles, the penny schema and the extensions on the volume's first start.
+// Same image and role layout as deploy/compose.yaml: `migrate --bootstrap` creates the
+// restricted migration and runtime roles, the penny schema and the extensions as administrator.
 
 var postgresImage = PinnedImage.Parse(DatabaseSchema.Image);
 var postgres = postgresImage
     .ApplyTo(builder.AddPostgres("postgres"))
     .WithEnvironment("POSTGRES_DB", "penny")
-    .WithEnvironment("PENNY_MIGRATION_PASSWORD", migrationPassword)
-    .WithEnvironment("PENNY_RUNTIME_PASSWORD", runtimePassword)
-    .WithBindMount(
-        Path.Combine(backend, "development/init-roles.sh"),
-        "/docker-entrypoint-initdb.d/10-penny-roles.sh",
-        true
-    )
     // PostgreSQL 18 images keep their data under /var/lib/postgresql.
     .WithVolume("penny-aspire-postgres", "/var/lib/postgresql")
     .WithLifetime(ContainerLifetime.Persistent);
@@ -148,6 +141,9 @@ var runtimeConnection = ReferenceExpression.Create(
 );
 var migrationConnection = ReferenceExpression.Create(
     $"Host={host};Port={port};Database=penny;Username=penny_migrator;Password={migrationPassword};SSL Mode=Disable"
+);
+var adminConnection = ReferenceExpression.Create(
+    $"Host={host};Port={port};Database=penny;Username=postgres;Password={postgres.Resource.PasswordParameter};SSL Mode=Disable"
 );
 
 // --- API ------------------------------------------------------------------------------------
@@ -164,8 +160,10 @@ var searchModel = builder
 
 var migrate = builder
     .AddProject<Projects.Penny_Backend_Api>("migrate")
-    .WithArgs("migrate", "--grant-runtime")
+    .WithArgs("migrate", "--bootstrap", "--grant-runtime")
+    .WithEnvironment("ConnectionStrings__Admin", adminConnection)
     .WithEnvironment("ConnectionStrings__Migration", migrationConnection)
+    .WithEnvironment("ConnectionStrings__Postgres", runtimeConnection)
     .WithEnvironment("DOTNET_ENVIRONMENT", "Development")
     .WithoutAspireTelemetry()
     .WaitFor(postgres)
