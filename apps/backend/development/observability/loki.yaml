@@ -1,4 +1,5 @@
-# Single-binary Loki for local development (MAZ-138): filesystem storage, 3-day retention.
+# Single-binary Loki for local development (MAZ-138) and the operator stack (MAZ-128):
+# filesystem storage, 3-day retention (the operator stack overrides it with -store.retention).
 auth_enabled: false
 
 server:

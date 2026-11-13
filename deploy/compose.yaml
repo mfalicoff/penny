@@ -115,6 +115,8 @@ services:
     environment:
       PENNY_API_UPSTREAM: api:8080
       PENNY_REAL_IP_FROM: ${PENNY_REAL_IP_FROM:-127.0.0.1/32}
+      # Opt-in browser telemetry (MAZ-129): a Faro collector URL, such as Grafana Cloud's.
+      PENNY_WEB_TELEMETRY_URL: ${PENNY_WEB_TELEMETRY_URL:-}
     ports:
       - "${PENNY_BIND:-127.0.0.1}:${PENNY_PORT:-8080}:8080"
     read_only: true

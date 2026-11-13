@@ -88,8 +88,12 @@ var alloy = ObservabilityImages
     )
     .WithHttpEndpoint(targetPort: 12345, name: "http")
     .WithEndpoint(targetPort: 4317, scheme: "http", name: "otlp-grpc")
-    // Fixed so browser code (MAZ-126) has a stable OTLP/HTTP address.
-    .WithHttpEndpoint(port: 4318, targetPort: 4318, name: "otlp-http")
+    .WithHttpEndpoint(targetPort: 4318, name: "otlp-http")
+    // Client ingest (MAZ-128), fixed so the web app (MAZ-129) has stable addresses:
+    // OTLP/HTTP for client services and the Grafana Faro receiver, both allowing the
+    // local Vite origin by default (config.alloy).
+    .WithHttpEndpoint(port: 4319, targetPort: 4319, name: "otlp-clients")
+    .WithHttpEndpoint(port: 12347, targetPort: 12347, name: "faro")
     .WithHttpHealthCheck("/-/ready", endpointName: "http")
     .WaitFor(loki)
     .WaitFor(tempo)

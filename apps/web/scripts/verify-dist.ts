@@ -47,10 +47,13 @@ export function verifyDist(root: string): string[] {
   }
 
   // Zod's compiler is off before Zod loads (src/app/zodConfig.ts), so the strict CSP never sees
-  // its `new Function` probe: the entry's first import is that chunk.
+  // its `new Function` probe: the entry's first import is that chunk. The bundler's own runtime
+  // chunk (CommonJS interop helpers) may come first, as long as it imports nothing itself.
   const entry = /<script type="module"[^>]*src="\/([^"]+)"/.exec(html)?.[1];
   const entryPath = entry ? join(root, entry) : "";
-  const firstImport = entryPath && existsSync(entryPath) ? /import\s*(?:[^"';]*?from\s*)?["']\.\/([^"']+)["']/.exec(readFileSync(entryPath, "utf8"))?.[1] : undefined;
+  const entryImports = entryPath && existsSync(entryPath) ? [...readFileSync(entryPath, "utf8").matchAll(/import\s*(?:[^"';]*?from\s*)?["']\.\/([^"']+)["']/g)].map((m) => m[1] ?? "") : [];
+  const isPureRuntime = (name: string) => /^rolldown-runtime-[\w-]+\.js$/.test(name) && !/\bimport\s*[{"'*\w]/.test(readFileSync(join(root, "assets", name), "utf8"));
+  const firstImport = entryImports.find((name) => !isPureRuntime(name));
   const zodConfig = firstImport ? join(root, "assets", firstImport) : "";
   if (!zodConfig || !/zod-config-/.test(firstImport ?? "") || !existsSync(zodConfig) || !readFileSync(zodConfig, "utf8").includes("__zod_globalConfig")) {
     problems.push("the entry script must import the zod-config chunk first (src/app/zodConfig.ts)");

@@ -9,6 +9,7 @@
 - [Self-hosting on NixOS](nixos.md): the flake packages and the `services.penny` / `programs.penny` NixOS module (PostgreSQL 18, migrations, the API and nginx), its options, secrets, external PostgreSQL and upgrades.
 - [Cutover from Node/SQLite](cutover.md): the one-time move to .NET/PostgreSQL behind the same address: settings mapping, production-copy rehearsal, the window step by step, go/no-go and rollback, observation and compatibility windows, Node retirement, the cutover drill and release notes.
 - [Operations runbook](operations.md): health and readiness, JSON logs and request ids, connections and disk, backup and restore drills, index and search maintenance, PostgreSQL roles, extensions and version policy, write reconciliation, and failure runbooks.
+- [Observability with Grafana](observability.md): the reference Alloy, Loki, Tempo, Prometheus and Grafana stack, connecting the API and the apps, client ingest, retention, security, dashboards, alerts and following a user-reported error end to end.
 - [App behavior and limits](app-guide.md): personal-share calculations, payment accounts, households, trips, reimbursements, offline sync, recurrence, and ledger upgrades.
 
 ## Build and release

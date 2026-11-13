@@ -26,7 +26,7 @@ The `api` container's health check runs `dotnet Penny.Backend.Api.dll health-pro
 | `receipt-storage` | "Receipt storage is not writable…" | [Receipt volume](#receipt-volume-not-writable-or-full) |
 | `disk-space` | "Receipt storage is low on free disk space…" | [Receipt volume](#receipt-volume-not-writable-or-full) |
 
-Suggested alerts: `/api/ready` non-200 for 2 minutes; any `"LogLevel":"Error"` or `"Critical"` line; PostgreSQL volume above 80% full; backups older than a day; `search-verify` or `receipts-verify` exiting non-zero in a scheduled run. With [telemetry](#telemetry-opentelemetry) on, also alert on `penny.job.failures`, `penny.job.lag` and 5xx `http.server.request.duration`; dashboards and client error monitoring are planned separately (MAZ-126, MAZ-128).
+Suggested alerts: `/api/ready` non-200 for 2 minutes; any `"LogLevel":"Error"` or `"Critical"` line; PostgreSQL volume above 80% full; backups older than a day; `search-verify` or `receipts-verify` exiting non-zero in a scheduled run. With [telemetry](#telemetry-opentelemetry) on, the [reference Grafana stack](observability.md) provisions alerts for these and for 5xx ratio, latency, job lag and failures, and app crashes, with dashboards for each area.
 
 ## Logs
 

@@ -1,0 +1,249 @@
+# Example alert rules for Penny (MAZ-128), evaluated by Grafana. They read the provisioned
+# `prometheus` and `loki` data sources; thresholds are starting points for a small household
+# server, documented in docs/observability.md#alerts. No contact point is provisioned: add one
+# (email, ntfy, Slack, ...) under Alerting > Contact points, or alerts only show in Grafana.
+#
+# Provisioned rules are read-only in the UI. To change one, edit this file and restart Grafana,
+# or copy the rule in the UI and pause this one.
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: Penny API
+    folder: Penny
+    interval: 1m
+    rules:
+      - uid: penny-api-not-reporting
+        title: Penny API not reporting
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange: { from: 600, to: 0 }
+            datasourceUid: prometheus
+            model:
+              refId: A
+              instant: true
+              expr: count(max_over_time(target_info{job="penny-backend"}[5m])) or vector(0)
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: { type: lt, params: [1] }
+        noDataState: Alerting
+        execErrState: Error
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          summary: The Penny API has sent no telemetry for 5 minutes.
+          description: The API is down, restarting in a loop, or cannot reach Alloy. Check `docker compose ps` and the api container logs.
+
+      - uid: penny-api-readiness
+        title: Penny API readiness failing
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange: { from: 600, to: 0 }
+            datasourceUid: prometheus
+            model:
+              refId: A
+              instant: true
+              expr: sum(increase(http_server_request_duration_seconds_count{job="penny-backend", http_route="api/ready", http_response_status_code!="200"}[5m])) or vector(0)
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: { type: gt, params: [0] }
+        noDataState: OK
+        execErrState: Error
+        for: 2m
+        labels: { severity: critical }
+        annotations:
+          summary: /api/ready answered non-200 for 2 minutes.
+          description: PostgreSQL, the search model or receipt storage is unavailable to the API. See docs/operations.md.
+
+      - uid: penny-api-5xx-ratio
+        title: Penny API 5xx error ratio high
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange: { from: 900, to: 0 }
+            datasourceUid: prometheus
+            model:
+              refId: A
+              instant: true
+              # At least 20 requests in 10 minutes, so one failure on an idle server does not page.
+              expr: >-
+                (
+                  sum(rate(http_server_request_duration_seconds_count{job="penny-backend", http_route!~"api/(health|ready)", http_response_status_code=~"5.."}[10m]))
+                  / sum(rate(http_server_request_duration_seconds_count{job="penny-backend", http_route!~"api/(health|ready)"}[10m]))
+                )
+                and on () sum(increase(http_server_request_duration_seconds_count{job="penny-backend", http_route!~"api/(health|ready)"}[10m])) >= 20
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: { type: gt, params: [0.05] }
+        noDataState: OK
+        execErrState: Error
+        for: 10m
+        labels: { severity: critical }
+        annotations:
+          summary: 'More than 5% of API requests failed with 5xx over 10 minutes (now {{ humanizePercentage $values.A.Value }}).'
+          description: Open the Penny API dashboard, Traces row, Failed requests, and follow a trace to its exception type and SQL.
+
+      - uid: penny-api-latency
+        title: Penny API p95 latency high
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange: { from: 1200, to: 0 }
+            datasourceUid: prometheus
+            model:
+              refId: A
+              instant: true
+              expr: >-
+                histogram_quantile(0.95, sum by (le) (rate(http_server_request_duration_seconds_bucket{job="penny-backend", http_route!~"api/(health|ready)"}[15m])))
+                and on () sum(increase(http_server_request_duration_seconds_count{job="penny-backend", http_route!~"api/(health|ready)"}[15m])) >= 20
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: { type: gt, params: [2] }
+        noDataState: OK
+        execErrState: Error
+        for: 15m
+        labels: { severity: warning }
+        annotations:
+          summary: 'API p95 latency above 2 s for 15 minutes (now {{ humanizeDuration $values.A.Value }}).'
+          description: Check the p95 latency by route panel, then the Penny database dashboard for pool saturation or slow queries.
+
+  - orgId: 1
+    name: Penny background jobs
+    folder: Penny
+    interval: 1m
+    rules:
+      - uid: penny-job-lag
+        title: Penny background job lagging
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange: { from: 1800, to: 0 }
+            datasourceUid: prometheus
+            model:
+              refId: A
+              instant: true
+              # Recurrence lag counts from the start of the occurrence's UTC day; it has its own rule.
+              expr: histogram_quantile(0.95, sum by (le, penny_job) (rate(penny_job_lag_seconds_bucket{job="penny-backend", penny_job!="recurrence"}[15m])))
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: { type: gt, params: [900] }
+        noDataState: OK
+        execErrState: Error
+        for: 15m
+        labels: { severity: warning }
+        annotations:
+          summary: '{{ $labels.penny_job }} work waits more than 15 minutes before a worker claims it.'
+          description: Workers are behind or failing. Check the Penny background jobs dashboard for failures and the worker logs.
+
+      - uid: penny-recurrence-lag
+        title: Penny recurrences a day late
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange: { from: 7200, to: 0 }
+            datasourceUid: prometheus
+            model:
+              refId: A
+              instant: true
+              expr: histogram_quantile(0.95, sum by (le) (rate(penny_job_lag_seconds_bucket{job="penny-backend", penny_job="recurrence"}[1h])))
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: { type: gt, params: [86399] }
+        noDataState: OK
+        execErrState: Error
+        for: 1h
+        labels: { severity: warning }
+        annotations:
+          summary: Shared recurring expenses are being recorded a day or more late.
+          description: The recurrence runner was stopped or keeps failing. See docs/migration/shared-recurrence.md.
+
+      - uid: penny-job-failures
+        title: Penny background job failures
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange: { from: 1800, to: 0 }
+            datasourceUid: prometheus
+            model:
+              refId: A
+              instant: true
+              expr: sum by (penny_job) (increase(penny_job_failures_total{job="penny-backend"}[15m]))
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: { type: gt, params: [5] }
+        noDataState: OK
+        execErrState: Error
+        for: 15m
+        labels: { severity: warning }
+        annotations:
+          summary: '{{ $labels.penny_job }} failed more than 5 times in 15 minutes.'
+          description: Failed items are retried; persistent failures need attention. The exception type is on the failures panel and the failed worker-pass traces.
+
+  - orgId: 1
+    name: Penny clients
+    folder: Penny
+    interval: 5m
+    rules:
+      - uid: penny-client-crashes
+        title: Penny app crashes
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange: { from: 3600, to: 0 }
+            datasourceUid: loki
+            model:
+              refId: A
+              queryType: instant
+              expr: sum by (service_name) (count_over_time({service_name=~"penny-web|penny-ios"} | severity_number >= 21 [1h]))
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: { type: gt, params: [0] }
+        noDataState: OK
+        execErrState: Error
+        for: 0s
+        labels: { severity: warning }
+        annotations:
+          summary: '{{ $labels.service_name }} reported {{ $values.A.Value }} crash(es) in the last hour.'
+          description: Open the Penny clients dashboard, Crashes by app version.

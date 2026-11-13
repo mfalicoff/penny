@@ -7,6 +7,7 @@ import { applyPreferences } from "./app/preferences";
 import { createQueryClient } from "./app/queryClient";
 import { createAppRouter } from "./app/router";
 import "./design/global.css";
+import { startTelemetry } from "./telemetry/telemetry";
 
 const container = document.getElementById("root");
 if (!container) throw new Error("index.html is missing #root");
@@ -22,3 +23,6 @@ createRoot(container).render(
     <App queryClient={queryClient} router={router} />
   </StrictMode>,
 );
+
+// Opt-in per server (MAZ-129): off unless /telemetry.json names a collector.
+void startTelemetry();

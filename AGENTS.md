@@ -16,6 +16,7 @@ npm run lint            # ESLint for server/, src/, tests/, scripts/
 npm run typecheck       # tsc --noEmit
 npm test                # node --test tests/core (legacy API, domain rules, contracts)
 npm run fixtures:check  # golden fixtures match src/domain
+npm run dashboards:check # Grafana dashboard JSON matches scripts/grafana-dashboards.mjs
 npm run version:check   # package.json, package-lock.json and apps/ios Version.xcconfig agree
 ```
 

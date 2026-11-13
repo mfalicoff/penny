@@ -90,6 +90,15 @@ describe("verifyDist", () => {
     expect(verifyDist(site({ ...good, "assets/index-a1.js": 'import{a}from"./other.js";import"./zod-config-f6.js";' }))).toEqual(["the entry script must import the zod-config chunk first (src/app/zodConfig.ts)"]);
   });
 
+  it("lets the bundler's import-free runtime chunk load before the Zod config, and nothing else", () => {
+    const runtime = "var e=Object.create;export{e as a};";
+    const entry = 'import{a as e}from"./rolldown-runtime-r1.js";import"./zod-config-f6.js";import{a}from"./other.js";';
+    expect(verifyDist(site({ ...good, "assets/index-a1.js": entry, "assets/rolldown-runtime-r1.js": runtime }))).toEqual([]);
+    expect(verifyDist(site({ ...good, "assets/index-a1.js": entry, "assets/rolldown-runtime-r1.js": 'import"./schemas-z1.js";' + runtime }))).toEqual([
+      "the entry script must import the zod-config chunk first (src/app/zodConfig.ts)",
+    ]);
+  });
+
   it("fails clearly when the build has not run", () => {
     expect(verifyDist(site({}))[0]).toMatch(/missing .*index\.html/);
   });

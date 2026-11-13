@@ -1,4 +1,5 @@
-# Single-binary Tempo for local development (MAZ-138): local storage, 3-day retention.
+# Single-binary Tempo for local development (MAZ-138) and the operator stack (MAZ-128):
+# local storage, 3-day retention (the operator stack overrides it on the command line).
 stream_over_http_enabled: true
 
 server:

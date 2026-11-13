@@ -89,6 +89,7 @@ All options live under `services.penny` (or `programs.penny`).
 | `trustedProxies` | `[ "127.0.0.1/32" "::1/128" ]` | `Auth__TrustedProxies`: the local nginx |
 | `stateDir` | `/var/lib/penny` | Receipts (`receipts/`), generated key, data-protection keys |
 | `user` / `group` | `penny` / `penny` | Service account |
+| `webTelemetryUrl` | `null` (off) | Opt-in browser telemetry: a Faro collector URL such as Grafana Cloud Frontend Observability's, published as `/telemetry.json` and allowed in `connect-src` ([web app telemetry](observability.md#web-app-telemetry)) |
 | `package` / `webPackage` / `searchModel` | the flake's `penny-api` / `penny-web` / `penny-search-model` | Override to pin or patch builds |
 | `ocr.languages` | `[ "eng" "fra" ]` | Receipt OCR languages (`Ocr__Languages`); their Tesseract data is added to `ocr.tesseract` ([receipt OCR](operations.md#receipt-text-ocr)) |
 | `ocr.tesseract` / `ocr.poppler` / `ocr.vips` | `pkgs.tesseract` with `ocr.languages` / `pkgs.poppler-utils` / `pkgs.vips` | The local OCR programs (`Ocr__Tesseract`, `Ocr__PopplerDirectory`, `Ocr__VipsDirectory`); receipts never leave the host. Engines run under util-linux `prlimit` (`Ocr__Prlimit`) |

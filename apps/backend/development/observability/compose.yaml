@@ -1,0 +1,138 @@
+# Penny reference Grafana stack for operators (MAZ-128): Alloy, Loki, Tempo, Prometheus and
+# Grafana, with Penny's data sources, dashboards and alert rules provisioned. It uses the same
+# config files as local development (MAZ-138), so there is one copy of each.
+#
+#   cp .env.example .env && chmod 600 .env    # once: set GRAFANA_ADMIN_PASSWORD
+#   docker compose up -d --wait               # after deploy/compose.yaml is up
+#
+# Then in deploy/api.env: OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy:4317 and restart the API.
+# Guide: docs/observability.md.
+#
+# Alloy joins Penny's network (`penny_penny`, created by deploy/compose.yaml) under the name
+# `alloy`, so the API reaches it without a published port. Everything else stays on this
+# stack's own network. Only loopback ports are published: Grafana, and the two client ingest
+# endpoints for a reverse proxy to expose (docs/observability.md#client-ingest).
+#
+# Sized for a modest server (example: i7-4790K, 32 GB): single-binary Loki and Tempo,
+# local disk, short retention, and memory limits that add up to under 4 GiB.
+
+name: penny-observability
+
+x-hardening: &hardening
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  restart: unless-stopped
+  networks: [observability]
+
+services:
+  loki:
+    <<: *hardening
+    image: docker.io/grafana/loki:3.6.19@sha256:0f9cbc340cbe33ee498e654075034336962057db072f57b37f253e14d476443a
+    command: ["-config.file=/etc/loki/config.yaml", "-store.retention=${PENNY_LOGS_RETENTION:-168h}"]
+    volumes:
+      - ./loki.yaml:/etc/loki/config.yaml:ro
+      - loki:/loki
+    mem_limit: ${PENNY_LOKI_MEMORY:-1g}
+
+  tempo:
+    <<: *hardening
+    image: docker.io/grafana/tempo:2.10.10@sha256:12b0820f13ffa10ce956b6e9acc3b03f3cffded99109be6cc09d106fe56e5d38
+    command:
+      - -config.file=/etc/tempo.yaml
+      - -compactor.compaction.compaction.block-retention=${PENNY_TRACES_RETENTION:-72h}
+    volumes:
+      - ./tempo.yaml:/etc/tempo.yaml:ro
+      - tempo:/var/tempo
+    mem_limit: ${PENNY_TEMPO_MEMORY:-1g}
+
+  prometheus:
+    <<: *hardening
+    image: docker.io/prom/prometheus:v3.15.1@sha256:fa3302279710be2f21a8301ec17a8b4f2301fd829bd113839b3b6b02b6f191a2
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=${PENNY_METRICS_RETENTION:-15d}
+      - --storage.tsdb.retention.size=${PENNY_METRICS_MAX_SIZE:-5GB}
+      - --web.enable-otlp-receiver
+    volumes:
+      - ./prometheus.yaml:/etc/prometheus/prometheus.yml:ro
+      - prometheus:/prometheus
+    mem_limit: ${PENNY_PROMETHEUS_MEMORY:-768m}
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:9090/-/ready"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  alloy:
+    <<: *hardening
+    image: docker.io/grafana/alloy:v1.21.1@sha256:4039c971193053a84e53dd9ed3e7d4561c069256b024631cd3498a353ed7ece8
+    # The image defaults to root, but its data directory belongs to the alloy user.
+    user: alloy
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - --disable-reporting
+      - /etc/alloy/config.alloy
+    environment:
+      PENNY_TELEMETRY_ORIGINS: ${PENNY_TELEMETRY_ORIGINS:-}
+      PENNY_CLIENT_SERVICES: ${PENNY_CLIENT_SERVICES:-}
+    volumes:
+      - ./config.alloy:/etc/alloy/config.alloy:ro
+      - alloy:/var/lib/alloy/data
+    ports:
+      # Client ingest only (OTLP/HTTP and Faro). The API's OTLP ports 4317/4318 stay internal.
+      - "${PENNY_INGEST_BIND:-127.0.0.1}:${PENNY_OTLP_CLIENT_PORT:-4319}:4319"
+      - "${PENNY_INGEST_BIND:-127.0.0.1}:${PENNY_FARO_PORT:-12347}:12347"
+    networks:
+      observability: {}
+      penny:
+        aliases: [alloy]
+    mem_limit: ${PENNY_ALLOY_MEMORY:-512m}
+    depends_on: [loki, tempo, prometheus]
+
+  grafana:
+    <<: *hardening
+    image: docker.io/grafana/grafana:13.2.5@sha256:9f7aa1e1e3246aade5792d35a738049f7f32f89cd51d1956cf426a4e86268a84
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?set GRAFANA_ADMIN_PASSWORD in .env (see .env.example)}
+      GF_SERVER_ROOT_URL: ${GRAFANA_ROOT_URL:-http://localhost:3000/}
+      GF_SECURITY_COOKIE_SECURE: ${GRAFANA_SECURE_COOKIES:-false}
+      GF_SECURITY_DISABLE_GRAVATAR: "true"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_NEWS_NEWS_FEED_ENABLED: "false"
+      GF_PLUGINS_PREINSTALL_DISABLED: "true"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana:/var/lib/grafana
+    ports:
+      - "${GRAFANA_BIND:-127.0.0.1}:${GRAFANA_PORT:-3000}:3000"
+    mem_limit: ${PENNY_GRAFANA_MEMORY:-512m}
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3000/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    depends_on: [loki, tempo, prometheus]
+
+networks:
+  observability: {}
+  # Penny's own network from deploy/compose.yaml (project `penny`, network `penny`).
+  penny:
+    external: true
+    name: ${PENNY_NETWORK:-penny_penny}
+
+volumes:
+  loki:
+  tempo:
+  prometheus:
+  alloy:
+  grafana:

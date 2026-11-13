@@ -1,7 +1,8 @@
 name: Backend images
 
 # MAZ-63: build the .NET API and web images natively on amd64 and arm64, run the
-# production-container smoke test on each, then publish multi-platform images. The web
+# production-container smoke test (and the MAZ-128 observability smoke test) on each, then
+# publish multi-platform images. The web
 # image is the v2 browser app (apps/web) since MAZ-97.
 # The legacy Node image keeps its own workflow (docker-image.yml) until cutover.
 
@@ -13,6 +14,8 @@ on:
       - 'design-kit/**'
       - 'deploy/**'
       - 'scripts/deploy-smoke.mjs'
+      - 'scripts/observability-smoke.mjs'
+      - 'scripts/grafana-dashboards.mjs'
       - 'scripts/cutover-drill.mjs'
       - 'scripts/test-env/**'
       - 'server/**'
@@ -100,6 +103,19 @@ jobs:
         with:
           name: deploy-smoke-${{ matrix.arch }}
           path: smoke-${{ matrix.arch }}.log
+          if-no-files-found: warn
+      # MAZ-128: the reference Grafana stack beside these images, with telemetry on.
+      - name: Observability stack smoke test
+        env:
+          PENNY_SMOKE_API_IMAGE: penny-api:ci
+          PENNY_SMOKE_WEB_IMAGE: penny-web:ci
+        run: node scripts/observability-smoke.mjs | tee observability-smoke-${{ matrix.arch }}.log
+      - name: Upload observability smoke log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: observability-smoke-${{ matrix.arch }}
+          path: observability-smoke-${{ matrix.arch }}.log
           if-no-files-found: warn
       # MAZ-65: docs/cutover.md end to end, from the legacy image to these images.
       - name: Build legacy image

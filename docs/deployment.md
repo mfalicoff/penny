@@ -122,6 +122,7 @@ With a same-host proxy, nginx in `web` sees the Compose gateway as the client. S
 | `PENNY_BIND` / `PENNY_PORT` | `127.0.0.1` / `8080` | Published address of `web` |
 | `PENNY_SUBNET` | `172.31.63.0/24` | Compose network; also the API's trusted proxy range |
 | `PENNY_REAL_IP_FROM` | `127.0.0.1/32` | Outer proxy trusted by nginx for `X-Forwarded-For` |
+| `PENNY_WEB_TELEMETRY_URL` | empty (off) | Opt-in browser telemetry: a Faro collector URL (`https://`, no query), such as Grafana Cloud Frontend Observability's. Published as `/telemetry.json` and allowed in the page's `connect-src`; `web` refuses to start with anything else ([web app telemetry](observability.md#web-app-telemetry)) |
 
 Passwords must not contain `;` (they are embedded in connection strings); use hex, as `openssl rand -hex 24` produces. The role names are fixed: `penny_migrator` and `penny_runtime`. `.env` is authoritative for both role passwords: every `migrate` run sets them again (as SCRAM verifiers), so rotating one means changing `.env` and running `up -d --wait`. The administrator password is the exception: the image reads it only on first initialization, so change it with `ALTER ROLE` first.
 
@@ -148,7 +149,7 @@ Copy `deploy/api.env.example` to `deploy/api.env` (mode 0600, git-ignored). It i
 | `Receipts__MinFreeMegabytes` | 100 | Readiness fails (`disk-space`) below this much free space on the receipt volume |
 | `Search__RateLimitPermits` | 30 | Searches per session per minute |
 | `Logging__LogLevel__Default` | `Information` | `Warning` drops the per-request access line |
-| `OTEL_EXPORTER_OTLP_ENDPOINT` and the other standard `OTEL_*` variables | off | Traces, metrics and logs over OTLP to an OpenTelemetry Collector or Grafana Alloy ([telemetry](operations.md#telemetry-opentelemetry)) |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` and the other standard `OTEL_*` variables | off | Traces, metrics and logs over OTLP to an OpenTelemetry Collector or Grafana Alloy ([telemetry](operations.md#telemetry-opentelemetry)); a ready-made Grafana stack: [observability](observability.md) |
 
 The image already sets `ASPNETCORE_ENVIRONMENT=Production`, `ASPNETCORE_HTTP_PORTS=8080`, `Search__ModelDirectory=/opt/penny/model` (the pinned, SHA-256-verified embedding model), `Receipts__Root=/var/lib/penny/receipts`, JSON console logs and `DOTNET_EnableDiagnostics=0`, and contains Tesseract (English and French language data) and poppler-utils for receipt text extraction. Production serves no OpenAPI or Scalar routes and never enables the test controls.
 

@@ -32,7 +32,9 @@
     "test:fullstack": "node --test --test-concurrency=1 tests/fullstack/*.test.mjs",
     "test-env": "node scripts/test-env/penny-env.mjs",
     "fixtures:generate": "node --experimental-strip-types --no-warnings scripts/fixtures/generate-golden.ts",
-    "fixtures:check": "node --experimental-strip-types --no-warnings scripts/fixtures/generate-golden.ts --check"
+    "fixtures:check": "node --experimental-strip-types --no-warnings scripts/fixtures/generate-golden.ts --check",
+    "dashboards:generate": "node scripts/grafana-dashboards.mjs",
+    "dashboards:check": "node scripts/grafana-dashboards.mjs --check"
   },
   "c8": {
     "all": true,

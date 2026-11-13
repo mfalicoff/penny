@@ -5,6 +5,9 @@
 #   PENNY_MAX_BODY      request body limit, a little above Backend__MaxRequestBodyBytes
 #   PENNY_REAL_IP_FROM  CIDR of an outer TLS proxy whose X-Forwarded-For is trusted
 #                       (default loopback only: the client address is the peer)
+#   PENNY_WEB_TELEMETRY_URL  opt-in browser telemetry collector (MAZ-129), such as Grafana
+#                       Cloud's Faro URL; empty (the default) keeps telemetry off. Checked at
+#                       start by /docker-entrypoint.d/15-penny-telemetry-url.sh
 
 server {
     listen 8080;
@@ -72,6 +75,15 @@ server {
         try_files $uri =404;
     }
 
+    # Browser telemetry settings (MAZ-129), read by the app at start. An empty collectorUrl
+    # keeps telemetry off and the SDK is never downloaded.
+    location = /telemetry.json {
+        add_header Cache-Control "no-store" always;
+        add_header X-Content-Type-Options nosniff always;
+        default_type application/json;
+        return 200 '{"collectorUrl":"${PENNY_WEB_TELEMETRY_URL}"}\n';
+    }
+
     # Single-page app: unknown paths render index.html, which is never cached, so a new
     # release is picked up on the next navigation. Keep the policy in step with
     # apps/web/scripts/security-headers.ts and nix/module.nix (apps/web/tests/security-headers.test.ts).
@@ -80,7 +92,7 @@ server {
         add_header X-Content-Type-Options nosniff always;
         add_header X-Frame-Options DENY always;
         add_header Referrer-Policy same-origin always;
-        add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'" always;
+        add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob:; font-src 'self'; connect-src 'self' ${PENNY_WEB_TELEMETRY_URL}; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'" always;
         try_files $uri /index.html;
     }
 }
