@@ -1,0 +1,1313 @@
+{
+  "version": 1,
+  "description": "Visual acceptance baselines for the redesign cards (MAZ-122). Regenerate with `node docs/design/penny-ios/render.mjs 2`; see docs/design/visual-acceptance.md.",
+  "scale": 2,
+  "font": "Inter (assets/Inter.ttf) in place of SF Pro and of monospace (tabular figures); Ionicons in place of SF Symbols",
+  "assets": [
+    {
+      "path": "assets/Inter-OFL.txt",
+      "sha256": "5b9321a4298cfeb6b34354164a1c3afc3db114569984c502b9b35d988fd58c57"
+    },
+    {
+      "path": "assets/Inter.ttf",
+      "sha256": "29160a80ff49ddcab2c97711247e08b1fab27a484a329ce8b813d820dc559031"
+    },
+    {
+      "path": "assets/icons.js",
+      "sha256": "d8ba85fa7030535dcabe133e5efc52580c50c235f908d922d702b203e4a5e7a0"
+    },
+    {
+      "path": "assets/ipad.css",
+      "sha256": "99e60a4bcc4889448736d7a592392d1b48cb903cdb01ee222e74716421318f87"
+    },
+    {
+      "path": "assets/penny.css",
+      "sha256": "a70d13ea4dfbd42e2ba57ef4d4003c8c6fce960c245504ab1d582e0a0800f7da"
+    },
+    {
+      "path": "assets/sankey.js",
+      "sha256": "ba9d666946f60ae1594dc1cc8e103d076a15696a00f0bf31d56bc235ab6d8588"
+    },
+    {
+      "path": "assets/web.css",
+      "sha256": "45bdce8f54c776fa7c5d19f22403bfd5806884a93b814a45441da8aff04eed42"
+    },
+    {
+      "path": "assets/web.js",
+      "sha256": "83e12f1802157809e4d68648737f4fad80bb445fc45e4626b99e8885292a4d23"
+    }
+  ],
+  "cards": [
+    {
+      "id": "system-foundations",
+      "source": "docs/design/penny-ios/system/foundations.html",
+      "sourceSha256": "43a653af79f3f9fbb6b9687713775565630aca9a9678746729fdf9a25f7de900",
+      "viewport": {
+        "w": 1240,
+        "h": 780
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/system-foundations.light.png",
+          "sha256": "776cd9ac23e57f4870b9b9823a9ea991e4da2307243131605e6bc72acffd9981"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/system-foundations.dark.png",
+          "sha256": "ce3de2f5ecf6b1d936bc43e2ff037c04a228dda0798f52f823b418a4279078fb"
+        }
+      ]
+    },
+    {
+      "id": "system-widgets",
+      "source": "docs/design/penny-ios/system/widgets.html",
+      "sourceSha256": "5474147b47bef15ad8b307a96f89b3e25805b6a1e15d04db197cb3d472f29a99",
+      "viewport": {
+        "w": 900,
+        "h": 670
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/system-widgets.light.png",
+          "sha256": "cf12c7d3f3aed548dca3077dfa1bb4836b1b329ed3fd32db458baf821a74ed57"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/system-widgets.dark.png",
+          "sha256": "9caab762da7fd49b577a17c1b2bde8684a3cef1bb223e52e5a80fcb74d8c62c8"
+        }
+      ]
+    },
+    {
+      "id": "iphone-account-form",
+      "source": "docs/design/penny-ios/iphone/account-form.html",
+      "sourceSha256": "94f766b78e365477ef16f174b6adcc3bd689f49a6608d74358f246f24fd5b092",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-account-form.light.png",
+          "sha256": "f8d73b831592c6b53b967daf5e93c1ffa2b2635ecc1de55634a1cbb887da1358"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-account-form.dark.png",
+          "sha256": "58aef6f712e0783111be3ae5cbe9da1e09f53e8bf7717fe00754ea25df3ae4e9"
+        }
+      ]
+    },
+    {
+      "id": "iphone-accounts",
+      "source": "docs/design/penny-ios/iphone/accounts.html",
+      "sourceSha256": "986088f4c4cacf48bfd94dd7d6b3c313b31ccdb7d4c87d3b9216762e0f1138d9",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-accounts.light.png",
+          "sha256": "c04bed23d8a9116d4c9dca32e06dfcba5708f288bc70f9638b1fba4b8c5b7a47"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-accounts.dark.png",
+          "sha256": "6aa0fdb35c9f08f142b770f9c74cce9576d229d1e8d2225b97deeb54805f688b"
+        }
+      ]
+    },
+    {
+      "id": "iphone-activity",
+      "source": "docs/design/penny-ios/iphone/activity.html",
+      "sourceSha256": "c8d20915a16d3bb9f5943d69d975d2bdfc27b8fd3c616b4c542eb5224e4589fa",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-activity.light.png",
+          "sha256": "dc76584f72f66f7384a1a5dbc2adeb3bef9fbf62ee1bd3e4fd64f10892308857"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-activity.dark.png",
+          "sha256": "7d9efc69073ce48f30a40a3a58aa5e38cdb2ede62077356fb1a64ba200726baf"
+        }
+      ]
+    },
+    {
+      "id": "iphone-add-expense",
+      "source": "docs/design/penny-ios/iphone/add-expense.html",
+      "sourceSha256": "98d49806d95f9b06211842781de743dfb38646597a6e5e4440282a1ebb91d2df",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-add-expense.light.png",
+          "sha256": "b4cd4492a7ab251c392e41b05ba5e1869908bc1942b4409ef111f3e7e5d961a2"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-add-expense.dark.png",
+          "sha256": "ff8b260d6f5b317b39277cb59974df1c3cb892fc7dc3e80b256244343bbe81f3"
+        }
+      ]
+    },
+    {
+      "id": "iphone-add-income",
+      "source": "docs/design/penny-ios/iphone/add-income.html",
+      "sourceSha256": "91d2d069a0e99185550036223805c76bc51626b68dcafb36b0474e2333e5bcd5",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-add-income.light.png",
+          "sha256": "76a61c3fecac2a860e4bfdd4f074fac31dbbbb901a1cae4a3bc123d8691678f2"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-add-income.dark.png",
+          "sha256": "db0109749e015f65ee4068cc142d57b33de523a2523ad2538f7f700af8b9dbdc"
+        }
+      ]
+    },
+    {
+      "id": "iphone-app-lock",
+      "source": "docs/design/penny-ios/iphone/app-lock.html",
+      "sourceSha256": "677a70a66605dbb72cc559fdf67655b50afb84245a8c423f84a4877ab85a8eba",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-app-lock.light.png",
+          "sha256": "7f2f46ac1a9c9c887a530ab87c4fe5fdb2cb63823fdbab55d5a2f7db7850e6aa"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-app-lock.dark.png",
+          "sha256": "7b7b3909fc2f828179c8021a0854e4a8f23c6fc689a07be6fb3e1ef2dc9edd48"
+        }
+      ]
+    },
+    {
+      "id": "iphone-appearance",
+      "source": "docs/design/penny-ios/iphone/appearance.html",
+      "sourceSha256": "5e8877ca50b7570badecfa7f219dce1242f033417f072fe16672e769fca11394",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-appearance.light.png",
+          "sha256": "83495f88fb72f5cf4abb29db6c6dfaca22704d329e8278d98ec8b8d771b14e20"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-appearance.dark.png",
+          "sha256": "42acd76e48ac5f8f57049d4f46666e8adce9023be238bc8c4d0b7bcb0344efe1"
+        }
+      ]
+    },
+    {
+      "id": "iphone-calendar",
+      "source": "docs/design/penny-ios/iphone/calendar.html",
+      "sourceSha256": "eedc5c0de50b33499aa8f002223815ad2da0c05f96122fb911aef6847c85098c",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-calendar.light.png",
+          "sha256": "015e72808c95f46b81034f8185e08f5f1a142141c2d2ae5d5bdb195df78c4750"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-calendar.dark.png",
+          "sha256": "bf6bdcfddc939016180b186768034f3cdcd789f30e6ca718af762a9d643bb643"
+        }
+      ]
+    },
+    {
+      "id": "iphone-categories",
+      "source": "docs/design/penny-ios/iphone/categories.html",
+      "sourceSha256": "4421bbd8f4cce37facc4fe1de6c50b84c26ba59ed75db2e926a20eaa1e5a2a2a",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-categories.light.png",
+          "sha256": "3e44df3d177a32493a6e2522c85c4a62a85b4d1f82ba783c16d1a313731b9838"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-categories.dark.png",
+          "sha256": "d2b16fec474eb4b78510dec19e43ba0a3c892dbf2f2ec47e48b55cdefeea3262"
+        }
+      ]
+    },
+    {
+      "id": "iphone-category-form",
+      "source": "docs/design/penny-ios/iphone/category-form.html",
+      "sourceSha256": "03a90a5723b6db50e1aacf72b7d2c19d68aba33e6286b752dc806a4fe7a28488",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-category-form.light.png",
+          "sha256": "27182847e3f0f97840c871e1ffb144ffd147999ccb68889ff822f4dc2b36ef13"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-category-form.dark.png",
+          "sha256": "7abfaa18decea1f232ec9ef97909c82576d0326352e9cbfd32889ad7ea800da9"
+        }
+      ]
+    },
+    {
+      "id": "iphone-category-picker",
+      "source": "docs/design/penny-ios/iphone/category-picker.html",
+      "sourceSha256": "b22929de6429bd59441f325f417b421383c3897aca39d036204376ca5e6546ce",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-category-picker.light.png",
+          "sha256": "73e431f0418d5b6d562852150d7f715005230b65c0f336cec50dbcd9d6f1824f"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-category-picker.dark.png",
+          "sha256": "5d5704827e5d71dd65d8a67edba801f89220857399ce6dbe19a293ffc2ee3a75"
+        }
+      ]
+    },
+    {
+      "id": "iphone-create-account",
+      "source": "docs/design/penny-ios/iphone/create-account.html",
+      "sourceSha256": "ac3c6672e6f8797381bb81c385d90e76a3bbf845409a0af00438a0398a038003",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-create-account.light.png",
+          "sha256": "459402f2c1ee647604cf11cd1413295570fc39887f03ea4c9d80d2a4e51f0ffd"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-create-account.dark.png",
+          "sha256": "46d996bf68dc1730083d7e93a2377601c17a8aefb3e62d6838479f477d8a4512"
+        }
+      ]
+    },
+    {
+      "id": "iphone-delete-confirm",
+      "source": "docs/design/penny-ios/iphone/delete-confirm.html",
+      "sourceSha256": "d2ae193a55d84eea7ea0dc827d2ca1483c1e863e28ec15dd42d4f5b9e5773d59",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-delete-confirm.light.png",
+          "sha256": "71e70c5b6bedc08690ce9993e0b6f93eda4ca6897fe251f9a2ccd9144932dc13"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-delete-confirm.dark.png",
+          "sha256": "7b296ada4f22fc37f56d47f05e7ea5c9ac96232593ef9a970e7dae2d6f4c9fa6"
+        }
+      ]
+    },
+    {
+      "id": "iphone-empty-home",
+      "source": "docs/design/penny-ios/iphone/empty-home.html",
+      "sourceSha256": "879c4441648a86660b7dd959bb751898d06e2f3bc3e55cfca1cd8276b02a9e93",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-empty-home.light.png",
+          "sha256": "8dae6cb6c889a06bd0af28144c702f0a6a77a438027b60da72103218cf588e34"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-empty-home.dark.png",
+          "sha256": "c5e918fa1135c910e1cdfddac9a5ab9dfc56ed5df87f94e6ba3497ba876e2463"
+        }
+      ]
+    },
+    {
+      "id": "iphone-entry-detail",
+      "source": "docs/design/penny-ios/iphone/entry-detail.html",
+      "sourceSha256": "9d9e04e4db899d4d038364b41f19cbe875614c3a4ea13108d9b017ab5356f5af",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-entry-detail.light.png",
+          "sha256": "06a06e17e764296c931af5af91216a2e92c1e3c123370fad53c01f4e68d57626"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-entry-detail.dark.png",
+          "sha256": "db96fd0635697238d17ac88271b3a3ed53885cbac1df4fecbf64c6e1c3cf38d8"
+        }
+      ]
+    },
+    {
+      "id": "iphone-entry-extras",
+      "source": "docs/design/penny-ios/iphone/entry-extras.html",
+      "sourceSha256": "53802bf53ab3203dc705e7b8d2c3edb5207ed73788317d64b395cbd08444ac70",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-entry-extras.light.png",
+          "sha256": "c3e8e25ecaae57fef926081f5fd70c64c8adf2d044a304d56dc05cdd2d2b0034"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-entry-extras.dark.png",
+          "sha256": "e8c7676e1f805631e84e831b86e1ac6b626f9a4621de2560b1a464390bf07c23"
+        }
+      ]
+    },
+    {
+      "id": "iphone-history",
+      "source": "docs/design/penny-ios/iphone/history.html",
+      "sourceSha256": "a20c89bdb421f2a3349192c2c7cb1fad3f73fecd70ae62296b6e559f373d98b9",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-history.light.png",
+          "sha256": "0559e0eec7db9bc7cdb32d28dd79e5fe86578452235be1b13a1af2712774a312"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-history.dark.png",
+          "sha256": "d7817e7010a0a1e041b92d3a16db27d1c10777637b86010865351a21d25550ec"
+        }
+      ]
+    },
+    {
+      "id": "iphone-home-dark",
+      "source": "docs/design/penny-ios/iphone/home-dark.html",
+      "sourceSha256": "d7bd83222e5abb383a86eda8e34a57787a1b3c026286a895c5048e85e26b9e62",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-home-dark.dark.png",
+          "sha256": "784ab34c4c0fb1f1c93db720accdb947872f9f70e65a18a355d35caccebc45de"
+        }
+      ]
+    },
+    {
+      "id": "iphone-home",
+      "source": "docs/design/penny-ios/iphone/home.html",
+      "sourceSha256": "a3b8a1d02909b44cfcc51f0edece652b62c37e1e0e8078f2d9134e8c7566d33a",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-home.light.png",
+          "sha256": "82e7510cf666b8d7ac84e332f6be05afec20071a73e2a1b53e6958533e7eddd8"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-home.dark.png",
+          "sha256": "784ab34c4c0fb1f1c93db720accdb947872f9f70e65a18a355d35caccebc45de"
+        }
+      ]
+    },
+    {
+      "id": "iphone-household-create",
+      "source": "docs/design/penny-ios/iphone/household-create.html",
+      "sourceSha256": "48f82df3da954abc0cc99cab718b0bb54ad0778cd1d64245ea99a19604c0ea7d",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-household-create.light.png",
+          "sha256": "13e920b185f34de73f1fbe7b1e398003e4da1f0f9f29378b03db20bdaeabbed0"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-household-create.dark.png",
+          "sha256": "b43a7312c866728117d485bedafbf576b9a4cf09add8131abc71ed6e3ea47eae"
+        }
+      ]
+    },
+    {
+      "id": "iphone-insights",
+      "source": "docs/design/penny-ios/iphone/insights.html",
+      "sourceSha256": "3bdcff942eaec95b9a01cb733c022f4240d5dda0ab5476110af84df61b0673c7",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-insights.light.png",
+          "sha256": "c603172e476114a962f47d78bb57a0784b70db4ea4f9eca90c2d9ac6d72d5f60"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-insights.dark.png",
+          "sha256": "1d0b0c599a64530aa44933be71694be86ae884af4749c0bfaf6d1fb56affdd41"
+        }
+      ]
+    },
+    {
+      "id": "iphone-lock",
+      "source": "docs/design/penny-ios/iphone/lock.html",
+      "sourceSha256": "8fc053a7adb30732f54d494b63b7e2c3ca6ea06bb2d5e3f5d2dee00c93c860c3",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-lock.light.png",
+          "sha256": "647cc814830307ca1907e4cd049ef7c0a4ae6ca3e769484591f7236e89e15b72"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-lock.dark.png",
+          "sha256": "7a22c59605338d151ac8b415fe6fa6665ec72410e18a89dc00ac2d10e83397ac"
+        }
+      ]
+    },
+    {
+      "id": "iphone-money-flow",
+      "source": "docs/design/penny-ios/iphone/money-flow.html",
+      "sourceSha256": "295bfbec37b62fb2a83030bfb3c75745973c978dfa226c024a07c57c0f3b9d3f",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-money-flow.light.png",
+          "sha256": "c2042c1f6f727cc3cd9a1f841a0ce8ed32f050dcaed40aa8668ec54099209d31"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-money-flow.dark.png",
+          "sha256": "070e182b1904202a3e914cf340dfafef454528941f680c109b1cb900ab7426df"
+        }
+      ]
+    },
+    {
+      "id": "iphone-offline",
+      "source": "docs/design/penny-ios/iphone/offline.html",
+      "sourceSha256": "0f6342bdefeb7670531e0bc4507246826b9dee0cea110081c610495c50b2dc4d",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-offline.light.png",
+          "sha256": "7774b40d28bf8353cc5bef59e78134e151acd2bcf7b53154c316092e2bd66711"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-offline.dark.png",
+          "sha256": "e70dc819240ba234571289f557aab5ffddc3c10c51308ea80aeaf59046e65c70"
+        }
+      ]
+    },
+    {
+      "id": "iphone-payment-stale",
+      "source": "docs/design/penny-ios/iphone/payment-stale.html",
+      "sourceSha256": "33e2d7c59d9c7e1a9f5841602d0cd359de8058088f3d29e3545312ed42bb819b",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-payment-stale.light.png",
+          "sha256": "d4d38f99e617e7a0ec9afc2c4955fc1e142e3f278c606e96068c7df1176115e9"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-payment-stale.dark.png",
+          "sha256": "3390d74906015a5a9522f28c00df7ca2e5cc7c1645740ef553e829d45d22a3b7"
+        }
+      ]
+    },
+    {
+      "id": "iphone-receipt",
+      "source": "docs/design/penny-ios/iphone/receipt.html",
+      "sourceSha256": "08b74fe26bd5ea6015932cd48eddab90615559ded294ff21461ed9b8184a6b5d",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-receipt.dark.png",
+          "sha256": "13119c0524f8e89554b7fe00d13e3a20ca8b00219c940bd2996c0f2567999f08"
+        }
+      ]
+    },
+    {
+      "id": "iphone-record-payment",
+      "source": "docs/design/penny-ios/iphone/record-payment.html",
+      "sourceSha256": "a610a79a0b139ceafb9a06f297957383e6a016521f202d04dd634634b5ee760a",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-record-payment.light.png",
+          "sha256": "a6e97de138edbe48e484e9188a831ee4fe139b6ca8a26be921d06e64747564bb"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-record-payment.dark.png",
+          "sha256": "c416560a95fd1ead69a16b3a646651272a278d01cf6b22d05195a0c17eeace17"
+        }
+      ]
+    },
+    {
+      "id": "iphone-recurring",
+      "source": "docs/design/penny-ios/iphone/recurring.html",
+      "sourceSha256": "794190bb4152c1aab16abff386aba46e7cb335bb58e2ad0c29cea6d282e90291",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-recurring.light.png",
+          "sha256": "9a41f9da439d735b956ca4d183fa21f82395d3bd27fab838b9180cab43efdd13"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-recurring.dark.png",
+          "sha256": "d2cfe6b6f2c51dd467eaf7eb8db99c6d0afff0f77cb20bd85c7d49db431d14e3"
+        }
+      ]
+    },
+    {
+      "id": "iphone-save-error",
+      "source": "docs/design/penny-ios/iphone/save-error.html",
+      "sourceSha256": "7b966c7c142054f2c51e6c8bf641d130fd2d2abe08c6fba59fa885d71f719a7f",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-save-error.light.png",
+          "sha256": "36e50a700d4ffb99f0d286b35463b4b922f4d2463fbbacd12b8c1cdf74c27599"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-save-error.dark.png",
+          "sha256": "d4ffa96d42aea33e6b8237f53215f95fd6efa008607e0bccf06861706bd07dde"
+        }
+      ]
+    },
+    {
+      "id": "iphone-saved-toast",
+      "source": "docs/design/penny-ios/iphone/saved-toast.html",
+      "sourceSha256": "ea36dff93db7f5870b4daf156e959a13dd4c61c7fa6b0ae3d0cfd329c552b081",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-saved-toast.light.png",
+          "sha256": "c544438e6c59f31efadbb3b64a293a2b11b47d9a5711f7d5580bd9ca74f325f4"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-saved-toast.dark.png",
+          "sha256": "5032c9703bb8f5a2d73fd09df5a4069ce6c0be019463252f8bda9120f442cb89"
+        }
+      ]
+    },
+    {
+      "id": "iphone-schedule-detail",
+      "source": "docs/design/penny-ios/iphone/schedule-detail.html",
+      "sourceSha256": "8152d7b9fb43883f6e12d811ec9ff6c3b298e5e12cf4e495e7eee5e2b11daf1d",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-schedule-detail.light.png",
+          "sha256": "882084e00a8917398b430d0fd3cbe040a7a772dbf54099a02b70fc6a1891aa9c"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-schedule-detail.dark.png",
+          "sha256": "e53e766a249b8ec0b789a2006f1b2918284d05d3b6faf456606507bff3e4b2a0"
+        }
+      ]
+    },
+    {
+      "id": "iphone-search-empty",
+      "source": "docs/design/penny-ios/iphone/search-empty.html",
+      "sourceSha256": "d6472be0eabdc118fc4cf78d4b7d463f3f0bae9418101d288c766400adc19c80",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-search-empty.light.png",
+          "sha256": "5ddf6fca539c28333f10539d79911cddde2c95353b9e0f74f0a98caecaa9f456"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-search-empty.dark.png",
+          "sha256": "ac6d221f16d98f2bceeb321a5130d6f668d2398dca73fa29efc98f9fb5e5192a"
+        }
+      ]
+    },
+    {
+      "id": "iphone-server-connect",
+      "source": "docs/design/penny-ios/iphone/server-connect.html",
+      "sourceSha256": "81ab82240611c9ed6b87610818fc620ad3ef6d050cbb90589bd9ae1d5a932176",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-server-connect.light.png",
+          "sha256": "7e06bab6ff9edfaa3a26b9fa47ee8bd99953b4d9eb61e86a226a853b1b4a5982"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-server-connect.dark.png",
+          "sha256": "86e1ab9dd3e75d1846a5c0b06b550533d27e7b2015932370bf5d8e98ce7f7b11"
+        }
+      ]
+    },
+    {
+      "id": "iphone-settings",
+      "source": "docs/design/penny-ios/iphone/settings.html",
+      "sourceSha256": "dad7b83d8d3165b24049ea91d5ecd7a0450c15e5625e9b2ea21980f7e8e3e87b",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-settings.light.png",
+          "sha256": "9d21ed2b33d2141f546edc083ea3520a2e5f145b7e32f8727451f4bef3e2978d"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-settings.dark.png",
+          "sha256": "764f3751c2388749d9647f95a43354ef3ef821d82e2502c7fd726c9ca0e46ce2"
+        }
+      ]
+    },
+    {
+      "id": "iphone-shared-balances",
+      "source": "docs/design/penny-ios/iphone/shared-balances.html",
+      "sourceSha256": "17450bc668774199d854d328b17aee98a1bc58c768d205231756a05a990a4204",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-shared-balances.light.png",
+          "sha256": "340024e3f4bc73a356876f97d86e59ee9d9e8615fbc29efd92f44b161b9fcaaa"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-shared-balances.dark.png",
+          "sha256": "0838fe6c4af43600b2a3a53d10970ddac8b5769ccc4b9b8db8c75e05c9037d63"
+        }
+      ]
+    },
+    {
+      "id": "iphone-shared-expense-add",
+      "source": "docs/design/penny-ios/iphone/shared-expense-add.html",
+      "sourceSha256": "fb5c5f71a646fd264d6cca99954df0c2b73fd99a5552f9595c4a3d574a76dfdf",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-shared-expense-add.light.png",
+          "sha256": "5a92503039c5bf2740f2e8df35e69391dd9da5554db047268e0bf8b89c0eeede"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-shared-expense-add.dark.png",
+          "sha256": "6a7242311f446e5a4771eb778c638bad5dee107f790c764bc95ea5387441e4ca"
+        }
+      ]
+    },
+    {
+      "id": "iphone-shared-list",
+      "source": "docs/design/penny-ios/iphone/shared-list.html",
+      "sourceSha256": "3cea95d3654f37ac887b63b23397a85d2ea513556285696f38046bc045f8441d",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-shared-list.light.png",
+          "sha256": "88f88f0226c6983fda93500b953ab267a9cee9bec43b16d712812c0dfbaaa186"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-shared-list.dark.png",
+          "sha256": "fc59ee293e15617aa1a57257108b482f4f76c759967b3fa24b74e9b32f325042"
+        }
+      ]
+    },
+    {
+      "id": "iphone-shared-people",
+      "source": "docs/design/penny-ios/iphone/shared-people.html",
+      "sourceSha256": "8b92a9cebad20985de38293b7721a0015509e42d85a8af63f84a827e8531ff39",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-shared-people.light.png",
+          "sha256": "40d43250919a4f7e0d7bed1f1951d00316c2d7e46552783af1f48b0b694c7fa7"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-shared-people.dark.png",
+          "sha256": "fef1ad837170d9920415dc28f356d73dc410e534a5cbbcc65ea8a9a85a1552d4"
+        }
+      ]
+    },
+    {
+      "id": "iphone-shared",
+      "source": "docs/design/penny-ios/iphone/shared.html",
+      "sourceSha256": "68c09ccc28c112d615dfdd725d8f2c9ed33ce06f6b78a68c47724d40c932c7d8",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-shared.light.png",
+          "sha256": "6b801a74ee4e274b183d3bacb2307d194d352f6b2e2a5470dc38ac9cfdeda114"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-shared.dark.png",
+          "sha256": "9633c1d31e2155620f3fdafeee639bc66dfe7e3d793cdc10cfe5fd1629103e84"
+        }
+      ]
+    },
+    {
+      "id": "iphone-sign-in",
+      "source": "docs/design/penny-ios/iphone/sign-in.html",
+      "sourceSha256": "d7f3436ba111ae374ac76df62fee511bbcf74141b2272ef969bdfeb243dcb4f0",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-sign-in.light.png",
+          "sha256": "203f1ebec6db895cf4a766758cb080fef0f996de5c98054f0d57abffcae28788"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-sign-in.dark.png",
+          "sha256": "ed9947631da2eaadfbe6277b7b81b268a6d80e1c17d5fba63fe823c7f39db6fb"
+        }
+      ]
+    },
+    {
+      "id": "iphone-sign-out",
+      "source": "docs/design/penny-ios/iphone/sign-out.html",
+      "sourceSha256": "a7b9d0662d99280d516d45cd02db1498d1608176678c49914af204f3eb6b3c2c",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-sign-out.light.png",
+          "sha256": "40ea85dd28acefa8400237926f1dba08668f4d3588aff01bd2a5a88b36ab5dfe"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-sign-out.dark.png",
+          "sha256": "32e26f1990d5d95f511752868e68c2283c46fb4a133769d24077a9b770f313ca"
+        }
+      ]
+    },
+    {
+      "id": "iphone-split",
+      "source": "docs/design/penny-ios/iphone/split.html",
+      "sourceSha256": "041240854898aa74b11330d441b9a03713e73ed7a972ff94f3febbfdce14aad5",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-split.light.png",
+          "sha256": "7b8f3beabac3a1f2ad26acf50b086f91347e4930088633fdcdaf9e4e17a3f26c"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-split.dark.png",
+          "sha256": "8d4c124b68dfbe3af2886733dd348bd74ca257e2c9d9a27f619b86e9fc8f54c5"
+        }
+      ]
+    },
+    {
+      "id": "iphone-trip-detail",
+      "source": "docs/design/penny-ios/iphone/trip-detail.html",
+      "sourceSha256": "cb48f21004224045d973583c6d9b2456ae185c19585d5c85beaccbb850702002",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-trip-detail.light.png",
+          "sha256": "27f5e14ce144436de483323bf2b0f070e22e0fc84979d577cdb8fd201826d0a9"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-trip-detail.dark.png",
+          "sha256": "282d24bf194987bb308dcc15d6d0ccb5f35f7c0a4c6eb420165c5b80e0f432fc"
+        }
+      ]
+    },
+    {
+      "id": "iphone-trip-form",
+      "source": "docs/design/penny-ios/iphone/trip-form.html",
+      "sourceSha256": "d1c48c5e52af25908876280f5b328926fab0e9e7eb9c71d7e4b2a52b8505cdb4",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-trip-form.light.png",
+          "sha256": "84db467421931cbee76a6be7ae990a9719b45185d085c61ab4df099b0d7e9236"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-trip-form.dark.png",
+          "sha256": "c7d38cadfd29e9ac00513555b5f68bfe6257a4d64ffcd022a4722004b37c7a23"
+        }
+      ]
+    },
+    {
+      "id": "iphone-trips",
+      "source": "docs/design/penny-ios/iphone/trips.html",
+      "sourceSha256": "d19a1b5bfa450fa16d72860ef3247315728cd3207e4aecb2ef181e335fefd5d3",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-trips.light.png",
+          "sha256": "83aca425fd05d990e62f789db96618e58489dad0f0100b77ac184a755d8f0d3a"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-trips.dark.png",
+          "sha256": "79d8f521f2f4f4c56aaba19be2792409a17332b0861b561d651c161f5b08976d"
+        }
+      ]
+    },
+    {
+      "id": "ipad-activity",
+      "source": "docs/design/penny-ios/ipad/activity.html",
+      "sourceSha256": "6f56b81f193f97c377f6305743e51e499369f533d000959c5eecfb77876ee993",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/ipad-activity.light.png",
+          "sha256": "f862b198cb9f22d36ab56445e9b7ea8a7530c170bf3261bd9d2033c78e7bf694"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/ipad-activity.dark.png",
+          "sha256": "ff081dff4e67a56557d2e74eba662021d8ffe67d4daec2e299ff810d273e3282"
+        }
+      ]
+    },
+    {
+      "id": "ipad-add-entry",
+      "source": "docs/design/penny-ios/ipad/add-entry.html",
+      "sourceSha256": "63f739da730f8282570b13a64e9433a73ec6c2a872e212828f17ce5e0e597971",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/ipad-add-entry.light.png",
+          "sha256": "b6df183c5fa85c771473d1de2fc89c228333fd77b9d16e5cc25f5146cf214723"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/ipad-add-entry.dark.png",
+          "sha256": "348ec9550e36fb8c6b29b8fdaed69eaafe2a03d9c4b3eaffb1db32685c5ef80f"
+        }
+      ]
+    },
+    {
+      "id": "ipad-home",
+      "source": "docs/design/penny-ios/ipad/home.html",
+      "sourceSha256": "66502f73418007473c6932c677b29ab03501366a303a7b3ef985d69ab2b0afde",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/ipad-home.light.png",
+          "sha256": "d691b7efdce6c7edcb35423b80879edcf698b0caca6aebe738d791e09770fda9"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/ipad-home.dark.png",
+          "sha256": "1e5e004dbdab54f0728895b774deba779e5b1bdf34cc67c1193f0a2b56bbc04b"
+        }
+      ]
+    },
+    {
+      "id": "ipad-settings",
+      "source": "docs/design/penny-ios/ipad/settings.html",
+      "sourceSha256": "8edf0f1e534cd7637c0e5a2e7bc808bb13e9c73d8c02139433e8db560bef2283",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/ipad-settings.light.png",
+          "sha256": "1ae67adc410c3eafe88244256800c8c93e9e470005a7cf1bc24eae445d68fde8"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/ipad-settings.dark.png",
+          "sha256": "f4e1ce5298b47e3ae3e06ab7d76cdf441779233d8b3b10a9de1c6f28c6d58dfb"
+        }
+      ]
+    },
+    {
+      "id": "ipad-shared",
+      "source": "docs/design/penny-ios/ipad/shared.html",
+      "sourceSha256": "54e4c8d6742721fa12faffe9a82f6b1c5fd0eec4c898c3066c592b538b341284",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/ipad-shared.light.png",
+          "sha256": "1a454aa5cef99918b7a78d15407e39aa21ab750672a834e2d01b7882b4e3e0e7"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/ipad-shared.dark.png",
+          "sha256": "53b10dea24e623371882433108d1bc54ca1453a5960cc92bb1a0294b04c7c54b"
+        }
+      ]
+    },
+    {
+      "id": "ipad-trip",
+      "source": "docs/design/penny-ios/ipad/trip.html",
+      "sourceSha256": "5a0f9cfeb5f9a5b2a1ac297c15283f556beea58e1bf4b0a870b9e020f2c86372",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/ipad-trip.light.png",
+          "sha256": "497eb8bb07ad2922e65e61a9e953862f46b79018740dadb8c9c7b34fa2fdc55c"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/ipad-trip.dark.png",
+          "sha256": "38742386f900244723c517c6cc8ed96b2d548127e59df0ed05ca0552dc2b3ed7"
+        }
+      ]
+    },
+    {
+      "id": "web-activity",
+      "source": "docs/design/penny-ios/web/activity.html",
+      "sourceSha256": "0f81e00619ae7aee0fe1582311f055acaaf172964ad9fdc25f0de3e98fe83213",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-activity.light.png",
+          "sha256": "9143bfce9668af0dfd4504db4af61ae66fc38e222366ead5cd1a4b6ecfe1fc80"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-activity.dark.png",
+          "sha256": "e14d3793f0f6c8c5ebf05e2dc1fb57bf0dfc2e17b6edb8b8517f3a4788b54a7b"
+        }
+      ]
+    },
+    {
+      "id": "web-add-entry",
+      "source": "docs/design/penny-ios/web/add-entry.html",
+      "sourceSha256": "11eb4f70c432ea5fa0dcf1e2683ece9328164f135af29fc6422d6283f7d2fe49",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-add-entry.light.png",
+          "sha256": "ca070dd3bb1721d1fe51809d99e325eb253cfbfb8910ff2bfbc430da61fcd7e7"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-add-entry.dark.png",
+          "sha256": "4ebf7267ebee68b3a8420902fdb4bedfcbb6e123e62f4c6bb7c55a6681b7e586"
+        }
+      ]
+    },
+    {
+      "id": "web-home",
+      "source": "docs/design/penny-ios/web/home.html",
+      "sourceSha256": "cf067ffbd70d4a2edfae86340d346e09ff7d964d1b158533b044a0204ced3f48",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-home.light.png",
+          "sha256": "c81601e912b7eab0570ae98008d984a5f87c2c869f15f58451316c538fb0d987"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-home.dark.png",
+          "sha256": "d86177576788faa5c272e8a65e0c86e03ba664cf5d544e7e083ba3671341a234"
+        }
+      ]
+    },
+    {
+      "id": "web-household",
+      "source": "docs/design/penny-ios/web/household.html",
+      "sourceSha256": "3f74ae3bc52e7a6e6eb477c6922f7b754b92529f80dd7a6d9457f6c45d1a4842",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-household.light.png",
+          "sha256": "c48f509004d952e93cbf982f211c3879a12e626296beb2f32ad68ac7f17202f6"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-household.dark.png",
+          "sha256": "aef870b199736f1b7d04daf60d4b6a76152bff4ee49a3b789c7dba411d2be919"
+        }
+      ]
+    },
+    {
+      "id": "web-insights",
+      "source": "docs/design/penny-ios/web/insights.html",
+      "sourceSha256": "c39a37d5ed78a9e901b26901ed7de075008f1e62b20369dac2bd2c074c95d94c",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-insights.light.png",
+          "sha256": "28437acf47f82381fe6ce1628b38ca73c48311ba50aa001afc4d9196d35c5812"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-insights.dark.png",
+          "sha256": "4a3e9b20bad33b561a65c4bc200b14d3c0a909b49f502efa14a61420dc4da9d3"
+        }
+      ]
+    },
+    {
+      "id": "web-settings",
+      "source": "docs/design/penny-ios/web/settings.html",
+      "sourceSha256": "72ca73fd5bc80c3e8e2e853932cc6d953e40d442531b1b1439d8aae15eb8eb62",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-settings.light.png",
+          "sha256": "84a1301893dcc61cce951fab4eab662dc445c3f39021d27986fc484da0f14384"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-settings.dark.png",
+          "sha256": "2d555be9113b75722c8cd939de2ed78aeb56b44fcd09e07210b27c5b98548e3f"
+        }
+      ]
+    },
+    {
+      "id": "web-sign-in",
+      "source": "docs/design/penny-ios/web/sign-in.html",
+      "sourceSha256": "31152c36d2b961a68bf0694be509ccddcc4751db79296c60d518023365118ad0",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-sign-in.light.png",
+          "sha256": "6ca3edb7e5ce8d9353abf2ea8be42721236102f6ecf4677a8a79920d5e548403"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-sign-in.dark.png",
+          "sha256": "cdd74bb67a125b0dd8d6281c31fa6b1624bd28b71be99cf305e8a1603200e74f"
+        }
+      ]
+    },
+    {
+      "id": "web-trips",
+      "source": "docs/design/penny-ios/web/trips.html",
+      "sourceSha256": "f063311a3f09134529adcbd47cdefab207d21921acef583b8caabbf28621d65c",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-trips.light.png",
+          "sha256": "b2c901cf7c35c1ca5a5dddd7ef0df7456d744b72eed19753599563aae72c3651"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-trips.dark.png",
+          "sha256": "98808077186cb358308a631b2a3f80389f3d8736cea4d8dc2314de77e4d2a18e"
+        }
+      ]
+    }
+  ]
+}
