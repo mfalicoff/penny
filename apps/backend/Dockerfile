@@ -25,7 +25,7 @@ COPY src/Penny.Backend.Persistence/Penny.Backend.Persistence.csproj src/Penny.Ba
 COPY src/Penny.Backend.Api/Penny.Backend.Api.csproj src/Penny.Backend.Api/packages.lock.json src/Penny.Backend.Api/
 RUN dotnet restore src/Penny.Backend.Api/Penny.Backend.Api.csproj --locked-mode
 COPY src/ src/
-COPY development/grant-runtime.sql development/
+COPY development/grant-runtime.sql development/bootstrap.sql development/
 ARG PENNY_VERSION=0.0.0-local
 RUN dotnet publish src/Penny.Backend.Api/Penny.Backend.Api.csproj \
       --configuration Release --no-restore --output /app \
