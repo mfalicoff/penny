@@ -12,8 +12,9 @@
 #   launch         install and launch on clean iPhone and iPad simulators, with screenshots
 #   ci             lint, package-test, test, release-check and distribution-test
 #   ui-build       build the app and the XCUITest bundle (no simulator, no stack)
-#   ui-test [plan] XCUITest plan smoke|full|screenshots|performance against the full-stack environment
-#                  on clean iPhone and iPad simulators (docs/ios-ui-tests.md)
+#   ui-test [plan] XCUITest plan smoke|full|screenshots|performance|cards against the full-stack
+#                  environment on clean iPhone and iPad simulators (docs/ios-ui-tests.md); cards also
+#                  writes test-results/cards/ios (the redesign card captures and report.json, MAZ-122)
 #   push <file> [simulator]  send a notification payload (.apns) to Penny with simctl push
 #                  (default: the booted simulator; no APNs, docs/ios-notifications.md)
 #   archive        signed Release archive for App Store Connect (needs PENNY_BUILD_NUMBER)
@@ -537,8 +538,8 @@ cmd_launch() {
 cmd_ui_test() {
   local plan="${1:-smoke}"
   case "$plan" in
-    smoke | full | screenshots | performance) ;;
-    *) echo "error: ui-test plan must be smoke, full, screenshots or performance." >&2; exit 2 ;;
+    smoke | full | screenshots | performance | cards) ;;
+    *) echo "error: ui-test plan must be smoke, full, screenshots, performance or cards." >&2; exit 2 ;;
   esac
   if [[ -n "${PENNY_API_URL:-}" && -n "${PENNY_TEST_TOKEN:-}" ]]; then
     ui_test_run "$plan"
@@ -637,6 +638,11 @@ ui_test_run() {
     xcrun simctl shutdown "$id" >/dev/null 2>&1 || true
   done
   echo "UI test results: $out"
+  # Redesign cards (MAZ-122): the captures as <id>.<appearance>.png and report.json, for review
+  # next to docs/design/penny-ios/previews.
+  if [[ $plan == cards ]]; then
+    node "$IOS_DIR/scripts/card-report.mjs" "$out" "$ROOT/test-results/cards/ios" || failed=1
+  fi
   return "$failed"
 }
 
@@ -668,7 +674,7 @@ main() {
     distribution-test) cmd_distribution_test ;;
     ci) cmd_lint; cmd_package_test; cmd_test; cmd_release_check; cmd_distribution_test ;;
     push) cmd_push "${2:-}" "${3:-booted}" ;;
-    *) sed -n '2,30p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2 ;;
+    *) sed -n '2,31p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2 ;;
   esac
 }
 
