@@ -48,8 +48,8 @@ Each card has a state in `redesign-states.json`: a `full-stack-seeds.json` scena
 
 | Platform | Command | Devices and viewports | Output |
 | --- | --- | --- | --- |
-| iOS | `apps/ios/scripts/ios.sh ui-test cards` | `iphone-*` on the iPhone simulator, `ipad-*` on the iPad simulator, `system-widgets` on the home screen when available | `test-results/cards/ios/<id>.<appearance>.png`, `report.json` |
-| Web | `npm run test:e2e:cards` in `apps/web` | `web-*` at 1440×900, `ipad-*` at 1194×834, `iphone-*` at 402×874 | `test-results/cards/web/<id>.<appearance>.png`, `report.json` |
+| iOS | `apps/ios/scripts/ios.sh ui-test cards` | `iphone-*` on the iPhone simulator, `ipad-*` on the iPad simulator in landscape. XCUITest can't add widgets or enroll Face ID, so `system-widgets` and the `iphone-lock` cover are device checks | `test-results/cards/ios/<id>.<appearance>.png`, `report.json` |
+| Web | `npm run build && npm run test:e2e:cards` in `apps/web` (starts its own environment; `PENNY_E2E_REUSE_STACK=1` reuses a running one) | `web-*` at 1440×900, `ipad-*` at 1194×834, `iphone-*` at 402×874 | `test-results/cards/web/<id>.<appearance>.png`, `report.json` |
 
 Each report lists every card and appearance with a status: `captured`, `not-built` (the screen or state doesn't exist yet), `blocked` (the state can't be seeded yet, for example `iphone-receipt`), or `not-applicable` (`web-*` cards on iOS, `system-widgets` on the web, and the `system-foundations` token sheet, which `TokenBaselineTests` and `npm run design:check` cover instead).
 
@@ -91,6 +91,18 @@ A difference in a "must match" column is either an **approved deviation**, recor
 Each deviation has a `summary`, a `kind` and a `ref`. An `approved` deviation's `ref` is its anchor in `docs/migration/redesign.md`. A `follow-up` deviation (a defect, or a design change still to make) names its `MAZ-` issue. `tests/core/contracts.test.ts` enforces these rules, the owners, the views and the full set of cards. No card may be left unreviewed.
 
 To review: run both capture suites, build the sheets, walk through every card, update its entry, and set `reviewedAt`. Commit the record with the change it reviews. Captures aren't committed, because they depend on the simulator, browser and OS. Attach representative sheets to the pull request or the issue.
+
+## Results (2026-11-12)
+
+Both capture suites passed against a fresh environment: iOS on the iPhone 18 Pro and iPad Pro 11-inch (M5) simulators (iOS 27), and the web in Chromium. Every capture opened the card's screen and state. The verdicts are in `contracts/visual-comparisons.json`:
+
+| | Matches | Deviates | Not built | Blocked | Not applicable |
+| --- | --- | --- | --- | --- | --- |
+| iOS | 8 | 41 | 1 (`system-widgets`: device check) | 2 (`iphone-receipt`, `iphone-lock`) | 9 (web cards, foundations) |
+| Web | 0 | 55 | 0 | 1 (`iphone-receipt`) | 5 (widgets, foundations, lock, app lock, server) |
+
+- **iOS** follows the cards closely on iPhone. The differences are mostly approved platform adaptations: the Add entry tab, popovers, local-first saving, and emails as names. The follow-ups cover the missing hero glow, two keyboard overlaps (sign-in, empty search), entry gaps (category grid, shared trips in the picker, the amount separator), shared and trip detail layouts, and iPad (sidebar households and trips, the two-column Add entry, a collapsing portrait detail pane).
+- **The web** shows every card's content, with web forms and dialogs in place of iOS sheets (approved). At phone width it departs further from the iPhone cards. The follow-ups cover the shell (More instead of the Settings sheet, sidebar households and trips), Home and Insights hierarchy, Activity's layout, shared actions, a stale-payment message that blames the wrong edit, recurring rows that break at 402px, and sign-in, sign-out and feedback copy.
 
 ## Review scenarios
 
