@@ -1,0 +1,39 @@
+{
+  "configurations" : [
+    {
+      "id" : "C02D47BF-5446-4440-9BFB-58E37F977C63",
+      "name" : "Cards",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : false,
+    "defaultTestExecutionTimeAllowance" : 300,
+    "environmentVariableEntries" : [
+      {
+        "key" : "PENNY_UITEST_PLAN",
+        "value" : "cards"
+      }
+    ],
+    "maximumTestExecutionTimeAllowance" : 600,
+    "systemAttachmentLifetime" : "deleteOnSuccess",
+    "testTimeoutsEnabled" : true,
+    "userAttachmentLifetime" : "keepAlways"
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : false,
+      "selectedTests" : [
+        "CardCaptureTests"
+      ],
+      "target" : {
+        "containerPath" : "container:Penny.xcodeproj",
+        "identifier" : "A10000000000000000000070",
+        "name" : "PennyUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

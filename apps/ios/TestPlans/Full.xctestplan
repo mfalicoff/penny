@@ -29,6 +29,7 @@
       "parallelizable" : false,
       "skippedTests" : [
         "AccessibilityAuditTests",
+        "CardCaptureTests",
         "PerformanceTests",
         "ScreenshotTests"
       ],

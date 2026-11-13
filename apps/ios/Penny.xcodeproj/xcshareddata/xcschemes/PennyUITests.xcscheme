@@ -41,6 +41,9 @@
          <TestPlanReference
             reference = "container:TestPlans/Performance.xctestplan">
          </TestPlanReference>
+         <TestPlanReference
+            reference = "container:TestPlans/Cards.xctestplan">
+         </TestPlanReference>
       </TestPlans>
    </TestAction>
    <LaunchAction
