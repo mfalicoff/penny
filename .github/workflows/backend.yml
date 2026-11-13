@@ -24,7 +24,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - uses: actions/setup-dotnet@v5
+      - uses: actions/setup-dotnet@v6
         with:
           global-json-file: apps/backend/global.json
           cache: true
@@ -35,7 +35,7 @@ jobs:
             apps/backend/src/Penny.Backend.AppHost/Penny.Backend.AppHost.csproj
       - uses: actions/setup-node@v7
         with:
-          node-version: '24'
+          node-version: '26'
       # The search embedding model (MAZ-121) is pinned by SHA-256 in the script and
       # never committed; the cache key follows the script, which holds the hashes.
       - name: Cache search model
@@ -79,7 +79,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v7
         with:
-          node-version: '24'
+          node-version: '26'
           cache: npm
       - run: npm ci
       - run: npm run lint
@@ -95,7 +95,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - uses: actions/setup-dotnet@v5
+      - uses: actions/setup-dotnet@v6
         with:
           global-json-file: apps/backend/global.json
           cache: true
@@ -106,7 +106,7 @@ jobs:
             apps/backend/src/Penny.Backend.AppHost/Penny.Backend.AppHost.csproj
       - uses: actions/setup-node@v7
         with:
-          node-version: '24'
+          node-version: '26'
           cache: npm
       - run: npm ci
       - name: Cache search model
@@ -143,7 +143,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     # Swift 6.2 (Ubuntu 24.04), pinned by digest.
-    container: docker.io/library/swift:6.2-noble@sha256:22edf4bb29f6d43ad77bfdb1757666992d63a50ab124c41176f8c8c44ab69855
+    container: docker.io/library/swift:6.4-noble@sha256:65e886503ecbfb4c6dc40bdd7620bcfd970a562c6028a33ee403c423650dd700
     steps:
       - uses: actions/checkout@v7
         with:

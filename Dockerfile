@@ -1,7 +1,7 @@
 # Legacy Node/SQLite API (pre-cutover reference and rollback image). Since MAZ-97 it serves
 # only /api/: the browser app is the penny-web image (deploy/web), and the Expo web export
 # is retired.
-FROM node:24-bookworm-slim
+FROM node:26-bookworm-slim
 WORKDIR /app
 ENV NODE_ENV=production PORT=3001 DATABASE_PATH=/data/penny.sqlite
 COPY package*.json ./
