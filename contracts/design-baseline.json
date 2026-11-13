@@ -6,9 +6,12 @@
     "source": "docs/design/penny-ios",
     "kit": "design-kit",
     "claudeDesign": "https://claude.ai/design/p/173b576e-aa32-44dc-9f83-23f0ea8df538",
-    "previews": "node docs/design/penny-ios/render.mjs 2"
+    "previews": "node docs/design/penny-ios/render.mjs 2",
+    "baselines": "docs/design/penny-ios/previews/manifest.json",
+    "comparisons": "contracts/visual-comparisons.json",
+    "method": "docs/design/visual-acceptance.md"
   },
-  "status": "baseline on the iOS-native redesign (MAZ-132); visual comparison against implementations remains MAZ-122",
+  "status": "baseline on the iOS-native redesign (MAZ-132), with light and dark visual baselines and per-card comparisons of the iOS and web apps (MAZ-122)",
   "appearances": [
     "light",
     "dark"
@@ -72,11 +75,11 @@
   "sources": [
     {
       "path": "docs/design/penny-ios/README.md",
-      "sha256": "7919c1136047889540f9d18675abc2358496f7b9391080bc44341aedabe7cc8c"
+      "sha256": "9eb3e5431310e060baddca4a776d1c8b4bf2931cdd1ae82c8d618a99d45e438c"
     },
     {
       "path": "docs/design/penny-ios/render.mjs",
-      "sha256": "1a8e2897dc2b39d97e19b98d3ccd3e303e34288ae143b5e8d3dab429d63ef669"
+      "sha256": "6a028ec6558ea0d41617a9e9a8c56396489514ce049f3cb193980df501ce853f"
     },
     {
       "path": "docs/design/penny-ios/assets/penny.css",
@@ -128,7 +131,19 @@
     },
     {
       "path": ".design-sync/NOTES.md",
-      "sha256": "3431c78f708082dc13f984de71237dc38982edad87841dda0be9b260046cf6ec"
+      "sha256": "837c06f80a1eba9ad8b925edff010b9709d2d3e884a846f7ab48312d8f6909f8"
+    },
+    {
+      "path": "docs/design/penny-ios/compare.mjs",
+      "sha256": "37f4ef380b04178ba77d4ef4aee2bf694100592ae15d8163d66ec3b52013898e"
+    },
+    {
+      "path": "docs/design/penny-ios/glow-contrast.mjs",
+      "sha256": "0e490843d9513411b59dfc0241da03702014296976f07a342e9ba2d0c443d199"
+    },
+    {
+      "path": "docs/design/visual-acceptance.md",
+      "sha256": "22765acc1da791e249670d0065b7f00a71f68845c7e8bd65e36a045969dcde19"
     }
   ],
   "tokens": {
@@ -2450,8 +2465,8 @@
     }
   ],
   "knownGaps": [
-    "Cards are static HTML; CSS blur only approximates Liquid Glass, and Inter and Ionicons stand in for SF Pro and SF Symbols.",
-    "No visual comparison of implementations exists yet; MAZ-122 owns it.",
-    "Larger text, real keyboard and focus, native pickers, app lock and server-search loading states need implementation validation (MAZ-82/96)."
+    "Cards are static HTML; CSS blur only approximates Liquid Glass, and Inter and Ionicons stand in for SF Pro and SF Symbols (also in the baselines).",
+    "Light-mode secondary text over the hero glow is below 4.5:1 on 15 cards (docs/design/penny-ios/glow-contrast-known.json); fixing it is a token change across the cards, design-kit and both apps.",
+    "Larger text, keyboard and focus, native pickers, app lock and server-search loading states follow platform rules recorded in docs/design/visual-acceptance.md#design-gaps rather than per-state cards."
   ]
 }

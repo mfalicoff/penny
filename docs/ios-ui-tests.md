@@ -126,7 +126,7 @@ Large text uses the system launch argument `-UIPreferredContentSizeCategoryName`
 | `AccessibilityAuditTests` | Accessibility audits of the main screens in five variants and of sign-in; VoiceOver labels; keyboard-safe Add entry at AX-XXXL (MAZ-82) | Screenshots |
 | `PerformanceTests` | Launch, first sync, Activity, scroll and search baselines (MAZ-82) | Performance |
 
-The [native QA matrix](ios-qa.md) traces every parity area and redesign card to these suites and lists device-only checks, budgets and gaps. The per-card baseline comparison (MAZ-122) builds on this harness: seed with `npm run test-env -- seed searchable-household` or `Stack` calls, and capture with `screenshot(_:)` named after the card id in `contracts/fixtures/redesign-states.json`.
+The [native QA matrix](ios-qa.md) traces every parity area and redesign card to these suites and lists device-only checks, budgets and gaps. The per-card comparison (MAZ-122) builds on this harness: the **Cards** plan (`ios.sh ui-test cards`) seeds each card's state from `contracts/fixtures/redesign-states.json` and captures it as `card-<id>-<appearance>` ([visual acceptance](design/visual-acceptance.md#captures)).
 
 ## Accessibility identifiers
 
