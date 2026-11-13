@@ -7,7 +7,7 @@
       "text": "Food & drinks · Today, 8:42 AM",
       "contrast": 4.21,
       "needs": 4.5,
-      "issue": "MAZ-122"
+      "issue": "MAZ-183"
     },
     {
       "id": "ipad-activity",
@@ -15,7 +15,7 @@
       "text": "your share of $12.80",
       "contrast": 4.19,
       "needs": 4.5,
-      "issue": "MAZ-122"
+      "issue": "MAZ-183"
     },
     {
       "id": "ipad-home",
@@ -23,7 +23,7 @@
       "text": "Invested",
       "contrast": 4.11,
       "needs": 4.5,
-      "issue": "MAZ-122"
+      "issue": "MAZ-183"
     },
     {
       "id": "ipad-home",
@@ -31,7 +31,7 @@
       "text": "Left to spend",
       "contrast": 3.76,
       "needs": 4.5,
-      "issue": "MAZ-122"
+      "issue": "MAZ-183"
     },
     {
       "id": "ipad-home",
@@ -39,7 +39,7 @@
       "text": "projected · includes $2,250 expected pay",
       "contrast": 4.11,
       "needs": 4.5,
-      "issue": "MAZ-122"
+      "issue": "MAZ-183"
     },
     {
       "id": "ipad-home",
@@ -47,7 +47,7 @@
       "text": "Spent · your share",
       "contrast": 4.32,
       "needs": 4.5,
-      "issue": "MAZ-122"
+      "issue": "MAZ-183"
     },
     {
       "id": "ipad-shared",
@@ -55,7 +55,7 @@
       "text": "November · you're owed",
       "contrast": 4.24,
       "needs": 4.5,
-      "issue": "MAZ-122"
+      "issue": "MAZ-183"
     },
     {
       "id": "ipad-trip",
@@ -63,7 +63,7 @@
       "text": "In 3 days",
       "contrast": 2.89,
       "needs": 4.5,
-      "issue": "MAZ-122"
+      "issue": "MAZ-183"
     },
     {
       "id": "ipad-trip",
@@ -71,7 +71,7 @@
       "text": "Nov 12–19, 2026 · shared with 3 people",
       "contrast": 4.13,
       "needs": 4.5,
-      "issue": "MAZ-122"
+      "issue": "MAZ-183"
     },
     {
       "id": "ipad-trip",
@@ -79,7 +79,7 @@
       "text": "Your share",
       "contrast": 4.37,
       "needs": 4.5,
-      "issue": "MAZ-122"
+      "issue": "MAZ-183"
     },
     {
       "id": "iphone-create-account",
@@ -87,7 +87,7 @@
       "text": "Your account lives on this server. Penny",
       "contrast": 4.07,
       "needs": 4.5,
-      "issue": "MAZ-122"
+      "issue": "MAZ-183"
     },
     {
       "id": "iphone-empty-home",
@@ -95,7 +95,7 @@
       "text": "$0",
       "contrast": 1.86,
       "needs": 3,
-      "issue": "MAZ-122"
+      "issue": "MAZ-183"
     },
     {
       "id": "iphone-empty-home",
@@ -103,7 +103,7 @@
       "text": "Left to spend",
       "contrast": 3.81,
       "needs": 4.5,
-      "issue": "MAZ-122"
+      "issue": "MAZ-183"
     },
     {
       "id": "iphone-empty-home",
@@ -111,7 +111,7 @@
       "text": "Your month fills in as you add entries.",
       "contrast": 4.34,
       "needs": 4.5,
-      "issue": "MAZ-122"
+      "issue": "MAZ-183"
     },
     {
       "id": "iphone-entry-detail",
@@ -119,7 +119,7 @@
       "text": "Food & drinks · Monday, Nov 9",
       "contrast": 4.18,
       "needs": 4.5,
-      "issue": "MAZ-122"
+      "issue": "MAZ-183"
     },
     {
       "id": "iphone-home",
@@ -127,7 +127,7 @@
       "text": "Left to spend",
       "contrast": 3.43,
       "needs": 4.5,
-      "issue": "MAZ-122"
+      "issue": "MAZ-183"
     },
     {
       "id": "iphone-home",
@@ -135,7 +135,7 @@
       "text": "projected with expected pay",
       "contrast": 4.11,
       "needs": 4.5,
-      "issue": "MAZ-122"
+      "issue": "MAZ-183"
     },
     {
       "id": "iphone-offline",
@@ -143,7 +143,7 @@
       "text": "Left to spend",
       "contrast": 3.61,
       "needs": 4.5,
-      "issue": "MAZ-122"
+      "issue": "MAZ-183"
     },
     {
       "id": "iphone-offline",
@@ -151,7 +151,7 @@
       "text": "projected · as of last sync",
       "contrast": 4.17,
       "needs": 4.5,
-      "issue": "MAZ-122"
+      "issue": "MAZ-183"
     },
     {
       "id": "iphone-saved-toast",
@@ -159,7 +159,7 @@
       "text": "Left to spend",
       "contrast": 3.43,
       "needs": 4.5,
-      "issue": "MAZ-122"
+      "issue": "MAZ-183"
     },
     {
       "id": "iphone-saved-toast",
@@ -167,7 +167,7 @@
       "text": "projected with expected pay",
       "contrast": 4.11,
       "needs": 4.5,
-      "issue": "MAZ-122"
+      "issue": "MAZ-183"
     },
     {
       "id": "iphone-shared",
@@ -175,7 +175,7 @@
       "text": "November · you're owed",
       "contrast": 4,
       "needs": 4.5,
-      "issue": "MAZ-122"
+      "issue": "MAZ-183"
     },
     {
       "id": "iphone-sign-in",
@@ -183,7 +183,7 @@
       "text": "Sign in to see your month.",
       "contrast": 4.11,
       "needs": 4.5,
-      "issue": "MAZ-122"
+      "issue": "MAZ-183"
     },
     {
       "id": "iphone-trip-detail",
@@ -191,7 +191,7 @@
       "text": "Nov 12–19 · 4 people",
       "contrast": 3.88,
       "needs": 4.5,
-      "issue": "MAZ-122"
+      "issue": "MAZ-183"
     },
     {
       "id": "iphone-trip-detail",
@@ -199,7 +199,7 @@
       "text": "trip total · your share",
       "contrast": 4.28,
       "needs": 4.5,
-      "issue": "MAZ-122"
+      "issue": "MAZ-183"
     },
     {
       "id": "iphone-trips",
@@ -207,7 +207,7 @@
       "text": "Upcoming",
       "contrast": 4.49,
       "needs": 4.5,
-      "issue": "MAZ-122"
+      "issue": "MAZ-183"
     }
   ]
 }
