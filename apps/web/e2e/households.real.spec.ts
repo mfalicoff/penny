@@ -94,8 +94,8 @@ test("two people: invite, splits, private account, stale payment, monthly settle
     ["Internet", "60", ["40", "20"]],
   ] as const) {
     await alex.page.getByRole("button", { name: "Shared expense" }).click();
-    const form = alex.page.getByRole("dialog", { name: "New shared expense" });
-    await form.getByLabel(/^Total/).fill(amount);
+    const form = alex.page.getByRole("dialog", { name: "Add entry" });
+    await form.getByLabel(/^Amount \(/).fill(amount);
     await form.getByLabel("Title").fill(title);
     await form.getByLabel("Date").fill("2026-10-30");
     await form.getByLabel("Your account").selectOption({ label: "Alex everyday card" });
@@ -104,7 +104,7 @@ test("two people: invite, splits, private account, stale payment, monthly settle
       await form.getByLabel("Your share in CAD").fill(shares[0]);
       await form.getByLabel(`${bea.email}'s share in CAD`).fill(shares[1]);
     }
-    await form.getByRole("button", { name: "Add expense" }).click();
+    await form.getByRole("button", { name: "Save" }).click();
     await expect(form).toBeHidden();
   }
 

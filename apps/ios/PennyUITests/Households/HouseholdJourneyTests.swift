@@ -45,7 +45,7 @@ final class HouseholdJourneyTests: PennyUITestCase {
         try penny.selectSegment("Expenses", in: IDs.section)
         try penny.tap(IDs.addExpense)
         try penny.wait(for: IDs.Screen.expenseForm)
-        try penny.type("90", into: IDs.formAmount)
+        try penny.enterAmount("90", into: IDs.formAmount)
         try penny.type("Groceries", into: IDs.formTitle)
         screenshot("shared-expense-form")
         try penny.tap(IDs.formSave)

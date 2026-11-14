@@ -1,3 +1,4 @@
+import { AddEntryDialog } from "../entries/AddEntryDialog";
 import type { Ledger, Transaction, Trip } from "@domain/ledger.ts";
 import { useQuery } from "@tanstack/react-query";
 import { Link, Navigate, useNavigate } from "@tanstack/react-router";
@@ -403,7 +404,11 @@ function SharedTripPage({ householdId, search }: { householdId: string; search: 
           onClose={() => void navigate({ to: "/trips/$id", params: { id: householdId }, search: linkSearch({}) })}
         />
       ) : null}
-      {form ? <ExpenseFormDialog view={view} target={form} onClose={() => { setForm(null); }} /> : null}
+      {form?.kind === "new" ? (
+        <AddEntryDialog householdId={view.householdId} onClose={() => { setForm(null); }} />
+      ) : form ? (
+        <ExpenseFormDialog view={view} target={form} onClose={() => { setForm(null); }} />
+      ) : null}
       {editing ? <TripFormDialog target={{ kind: "shared", household }} onClose={() => { setEditing(false); }} /> : null}
       {openPrivate ? <EntryDetailDialog entry={openPrivate} onClose={() => { setOpenPrivate(null); }} /> : null}
     </div>

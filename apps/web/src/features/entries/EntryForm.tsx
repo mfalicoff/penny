@@ -28,6 +28,7 @@ import {
   type ShareMode,
 } from "./model";
 import { CategoryPickerDialog, NewAccountDialog } from "./pickers";
+import { HouseholdField, type EntrySeed, type HouseholdScope } from "./scope";
 import { useLedgerWriter, type LedgerWriter } from "./writer";
 
 /** `tripId` starts a new expense on that trip (MAZ-93: Trip expense), apart from any kept draft. */
@@ -55,7 +56,21 @@ const isMac = () => typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(n
  * Ctrl+Enter. The save goes to the durable offline store, so it works offline; any failure keeps
  * the dialog open with the draft and names the next step.
  */
-export function EntryFormDialog({ target, onClose, onSaved }: { target: EntryTarget; onClose: () => void; onSaved?: (entry: Transaction) => void }) {
+export function EntryFormDialog({
+  target,
+  onClose,
+  onSaved,
+  seed,
+  scope,
+}: {
+  target: EntryTarget;
+  onClose: () => void;
+  onSaved?: (entry: Transaction) => void;
+  /** What was typed in the shared form before switching here (Add entry's Household). */
+  seed?: EntrySeed;
+  /** Add entry's Household choice: a new expense can go to a household instead. */
+  scope?: HouseholdScope;
+}) {
   const writer = useLedgerWriter();
   const online = useOnline();
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -79,20 +94,45 @@ export function EntryFormDialog({ target, onClose, onSaved }: { target: EntryTar
       </Dialog>
     );
   }
-  return <EntryForm writer={writer} ledger={writer.ledger} target={target} onClose={onClose} {...(onSaved ? { onSaved } : {})} />;
+  return <EntryForm writer={writer} ledger={writer.ledger} target={target} onClose={onClose} {...(onSaved ? { onSaved } : {})} {...(seed ? { seed } : {})} {...(scope ? { scope } : {})} />;
 }
 
 type Conflict = { type: "changed"; latest: Transaction } | { type: "deleted" };
 
-function EntryForm({ writer, ledger, target, onClose, onSaved }: { writer: LedgerWriter; ledger: Ledger; target: EntryTarget; onClose: () => void; onSaved?: (entry: Transaction) => void }) {
+function EntryForm({
+  writer,
+  ledger,
+  target,
+  onClose,
+  onSaved,
+  seed,
+  scope,
+}: {
+  writer: LedgerWriter;
+  ledger: Ledger;
+  target: EntryTarget;
+  onClose: () => void;
+  onSaved?: (entry: Transaction) => void;
+  seed?: EntrySeed;
+  scope?: HouseholdScope;
+}) {
   const email = useAccountEmail();
   const toast = useToast();
   const editing = target.kind === "edit" ? target.entry : undefined;
   const tripId = target.kind === "new" ? target.tripId : undefined;
   // A trip expense starts fresh and never replaces the draft kept for Add entry.
   const keepsDraft = target.kind === "new" && !tripId;
-  const [restored] = useState(() => (keepsDraft ? draftStore.get(email) : undefined));
-  const [draft, setDraftState] = useState<EntryDraft>(() => editing ? draftFromEntry(editing) : tripId ? { ...newDraft(ledger, "expense"), tripId } : (restored ?? newDraft(ledger, target.kind === "new" ? target.entryKind : undefined)));
+  // Coming back from the shared form, what was typed there wins over a kept draft.
+  const [restored] = useState(() => (keepsDraft && !seed ? draftStore.get(email) : undefined));
+  const [draft, setDraftState] = useState<EntryDraft>(() =>
+    editing
+      ? draftFromEntry(editing)
+      : tripId
+        ? { ...newDraft(ledger, "expense"), tripId }
+        : seed
+          ? seededDraft(ledger, seed, target.kind === "new" ? target.entryKind : undefined)
+          : (restored ?? newDraft(ledger, target.kind === "new" ? target.entryKind : undefined)),
+  );
   // The version the edit is based on. A stale save is refused against it (the shared `saveEntry` rule).
   const [base, setBase] = useState<Transaction | undefined>(editing);
   const [errors, setErrors] = useState<DraftErrors>({});
@@ -141,6 +181,8 @@ function EntryForm({ writer, ledger, target, onClose, onSaved }: { writer: Ledge
   const showTrips = draft.kind === "expense";
   const preview = buildEntry(draft, ledger, base).built?.transaction;
   const futureNote = futureIncomeNote(draft);
+  // Add entry can send a new expense to a household instead (not a personal trip's expense or an edit).
+  const householdScope = scope && target.kind === "new" && !tripId && draft.kind === "expense" && scope.households.length ? scope : undefined;
 
   function focusField(field: DraftField) {
     if (field === "share" || field === "trip" || field === "note") setMore(true);
@@ -323,6 +365,19 @@ function EntryForm({ writer, ledger, target, onClose, onSaved }: { writer: Ledge
         <p id={ids.kindHint} className="note">
           {KIND_HINT[draft.kind]}
         </p>
+        {householdScope ? (
+          <HouseholdField
+            scope={{
+              ...householdScope,
+              onChoose: (choice, next) => {
+                // The shared form takes over what was typed, so the kept draft can't come back as a duplicate.
+                draftStore.clear(email);
+                householdScope.onChoose(choice, next);
+              },
+            }}
+            seed={() => seedFrom(draft, ledger)}
+          />
+        ) : null}
 
         <div className="form-grid">
           <div className="form-field form-amount">
@@ -421,7 +476,7 @@ function EntryForm({ writer, ledger, target, onClose, onSaved }: { writer: Ledge
                 <span>Your share · counts in your spending</span>
                 <span className="pk-num">{preview ? money(preview.share) : "—"}</span>
               </div>
-              <p className="note">Only your share counts in totals. To split with a household, add a shared expense from Shared.</p>
+              <p className="note">{householdScope ? "Only your share counts in totals. To split with a household's members, choose it under Household." : "Only your share counts in totals."}</p>
             </div>
           ) : null}
           <div className="form-grid">
@@ -496,6 +551,35 @@ function EntryForm({ writer, ledger, target, onClose, onSaved }: { writer: Ledge
       ) : null}
     </Dialog>
   );
+}
+
+/** What a personal draft carries to the shared form. */
+function seedFrom(draft: EntryDraft, ledger: Ledger): EntrySeed {
+  const category = ledger.categories.find((item) => item.id === draft.categoryId);
+  return {
+    amount: draft.amount,
+    title: draft.title,
+    date: draft.date,
+    ...(category ? { categoryName: category.name } : {}),
+    accountId: draft.accountId,
+    note: draft.note,
+    receipt: draft.receipt,
+  };
+}
+
+/** A new draft holding what was typed in the shared form; the category is matched by name. */
+function seededDraft(ledger: Ledger, seed: EntrySeed, kind: Kind = "expense"): EntryDraft {
+  const fresh = newDraft(ledger, kind, seed.date);
+  const category = ledger.categories.find((item) => item.kind === kind && item.name === seed.categoryName);
+  return {
+    ...fresh,
+    amount: seed.amount,
+    title: seed.title,
+    note: seed.note,
+    accountId: ledger.accounts.some((item) => item.id === seed.accountId) ? seed.accountId : "",
+    receipt: kind === "expense" ? seed.receipt : null,
+    ...(category ? { categoryId: category.id } : {}),
+  };
 }
 
 function moreSummary(draft: EntryDraft, ledger: Ledger): string {

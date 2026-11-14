@@ -15,9 +15,11 @@ enum SharedFormText {
 }
 
 /// Add or edit a shared expense or a repeating one (`iphone-shared-expense-add`, the redesign's
-/// `shared-expense`, `shared-split` and `shared-payer`): amount, name, category, who paid, the
-/// split (equally, by amount, by percent) with each share and "your share", date, the payer's
-/// own account, repeat and note.
+/// `shared-expense`, `shared-split` and `shared-payer`). It is laid out like Add entry: a large
+/// amount with the keypad on iPhone, a name, the most used categories as chips, then labeled
+/// rows for Household, Date, Paid by, Split and Account, with repeat and note behind one
+/// disclosure row and Save as the toolbar check. Opened from Add entry (`scope`), it also has
+/// the type and Household, so it can go back to being a personal entry with what was typed.
 ///
 /// Payer privacy: the account row appears only when the viewer pays, lists only the viewer's
 /// own accounts, and is never sent for someone else; other members never see it. Online only:
@@ -28,6 +30,10 @@ struct SharedExpenseFormSheet: View {
     @Environment(\.dismiss) private var dismiss
     let request: SharedFormRequest
     let model: HouseholdModel
+    /// What was typed in the personal form before this household was chosen.
+    var handoff: EntryHandoff?
+    /// Add entry's type and Household choice (new expenses only).
+    var scope: EntryScope?
 
     @State private var form: SharedExpenseFormModel?
     @State private var restored = false
@@ -35,7 +41,7 @@ struct SharedExpenseFormSheet: View {
     var body: some View {
         Group {
             if let form {
-                SharedExpenseForm(form: form, model: model, restored: $restored, close: close)
+                SharedExpenseForm(form: form, model: model, scope: scope, restored: $restored, close: close)
             } else {
                 ProgressView()
             }
@@ -52,13 +58,19 @@ struct SharedExpenseFormSheet: View {
 
     private func initialDraft() -> (SharedExpenseDraft, Bool) {
         let viewerId = model.people.meId
-        let fresh: SharedExpenseDraft
+        let ledger = shell.workspace.load.ledger
+        var fresh: SharedExpenseDraft
         switch request {
         case .new:
-            let categories = shell.workspace.load.ledger?.categories.filter { $0.kind == .expense } ?? []
+            let categories = ledger?.categoriesByUse(.expense) ?? []
             fresh = SharedExpenseDraft(
                 householdId: model.id, payerId: viewerId ?? "", today: Self.defaultDate(model.month, shell.today),
                 category: categories.first.map(WireSharedCategory.init) ?? .other)
+            if let handoff {
+                // Carried over from the personal form: that wins over an older kept draft.
+                handoff.apply(to: &fresh, ledger: ledger)
+                return (fresh, false)
+            }
         case .expense(let expense):
             fresh = SharedExpenseDraft(editing: expense, viewerId: viewerId)
         case .rule(let rule):
@@ -76,10 +88,24 @@ struct SharedExpenseFormSheet: View {
     }
 }
 
+/// Pages pushed inside the shared expense sheet.
+private enum SharedFormPage: Hashable {
+    case account
+    case details
+}
+
+/// Sheets stacked over the shared expense form.
+private enum SharedFormOverlay: String, Identifiable {
+    case date, payer, split, category, household
+    var id: String { rawValue }
+}
+
 private struct SharedExpenseForm: View {
     @Environment(ShellModel.self) private var shell
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @Bindable var form: SharedExpenseFormModel
     let model: HouseholdModel
+    let scope: EntryScope?
     @Binding var restored: Bool
     let close: () -> Void
 
@@ -87,18 +113,47 @@ private struct SharedExpenseForm: View {
     @State private var confirmingClose = false
     @State private var saved = false
     @State private var discarded = false
+    @State private var overlay: SharedFormOverlay?
+    /// The Household sheet's choice, applied once the sheet has gone (`nil` inside: Personal).
+    @State private var pendingHousehold: String??
 
     var body: some View {
         NavigationStack {
-            Form {
-                banners
-                amountSection
-                payerSection
-                splitSection
-                detailsSection
+            ScrollView {
+                VStack(spacing: 16) {
+                    banners
+                    if let scope, isNew {
+                        kindPicker(scope)
+                    }
+                    amount
+                    TextField("What was it for?", text: $form.draft.title)
+                        .nameEntry()
+                        .focused($focus, equals: .title)
+                        .submitLabel(.done)
+                        .font(.title3)
+                        .padding(.horizontal, 16)
+                        .frame(minHeight: ControlSize.button)
+                        .background(
+                            PennyColor.surface,
+                            in: RoundedRectangle(cornerRadius: Metrics.rowRadius, style: .continuous)
+                        )
+                        .accessibilityLabel("Name")
+                        .accessibilityIdentifier("sharedForm.title")
+                    categories
+                    rows
+                    yourShare
+                    notes
+                }
+                .padding(.horizontal, Metrics.gutter)
+                .padding(.vertical, 12)
             }
-            .scrollContentBackground(.hidden)
+            .scrollDismissesKeyboard(.interactively)
             .background(PennyColor.background)
+            .safeAreaInset(edge: .bottom) {
+                if showsKeypad {
+                    AmountKeypad { key in form.draft.amountText = AmountInput.apply(key, to: form.draft.amountText) }
+                }
+            }
             .navigationTitle(title)
             .inlineNavigationTitle()
             .toolbar {
@@ -115,8 +170,41 @@ private struct SharedExpenseForm: View {
                     } label: {
                         if form.isSaving { ProgressView() } else { Label("Save", systemImage: "checkmark") }
                     }
+                    .buttonStyle(.borderedProminent)
+                    .tint(PennyColor.tint)
                     .disabled(form.isSaving || form.isStale)
+                    .accessibilityLabel(form.isSaving ? "Saving" : "Save")
                     .accessibilityIdentifier("sharedForm.save")
+                }
+            }
+            .navigationDestination(for: SharedFormPage.self) { page in
+                switch page {
+                case .account:
+                    if let ledger {
+                        EntryAccountPicker(selection: $form.draft.accountId, ledger: ledger)
+                    }
+                case .details:
+                    SharedDetailsPage(form: form)
+                }
+            }
+            .sheet(item: $overlay, onDismiss: applyHousehold) { overlay in
+                switch overlay {
+                case .date:
+                    EntryDatePickerSheet(date: dateText, today: shell.today)
+                case .payer:
+                    SharedPayerSheet(form: form, model: model)
+                case .split:
+                    SharedSplitSheet(form: form, model: model)
+                case .category:
+                    if let ledger {
+                        EntryCategoryPickerSheet(
+                            kind: .expense, selection: categoryId(in: ledger), ledger: ledger,
+                            editCategories: { self.overlay = nil })
+                    }
+                case .household:
+                    EntryHouseholdSheet(households: scope?.households ?? [], current: model.id) { id in
+                        pendingHousehold = .some(id)
+                    }
                 }
             }
             .confirmationDialog("Keep your changes?", isPresented: $confirmingClose, titleVisibility: .visible) {
@@ -139,29 +227,39 @@ private struct SharedExpenseForm: View {
         .interactiveDismissDisabled(form.hasChanges || form.isSaving)
         .sensoryFeedback(.error, trigger: form.refusedCount)
         .onAppear {
-            if restored { focus = form.draft.focus ?? .amount } else if form.draft.original == nil { focus = .amount }
+            // iPad types the amount in a field; iPhone uses the keypad, so nothing needs focus.
+            if sizeClass == .regular, restored || form.draft.original == nil {
+                focus = restored ? (form.draft.focus ?? .amount) : .amount
+            }
         }
         .onChange(of: focus) { if let focus { form.draft.focus = focus } }
         .onDisappear {
-            // Replaced by a link or closed some other way: keep what was typed for this session.
+            // Replaced by a link, switched to another household or closed some other way: keep
+            // what was typed for this session.
             if !saved, form.saved == nil, !discarded, form.hasChanges { form.keepDraft() }
         }
         .accessibilityIdentifier("screen.sharedExpenseForm")
     }
 
+    private var isNew: Bool { form.draft.original == nil }
+
     private var title: String {
         switch form.draft.original {
         case .expense: "Edit expense"
         case .rule: "Edit repeating expense"
+        case nil where scope != nil: "Add entry"
         case nil: form.draft.repeats == nil ? "New expense" : "New repeating expense"
         }
     }
 
+    private var ledger: Ledger? { shell.workspace.load.ledger }
     private var participants: [WireHouseholdMember] { form.participants }
     private var locked: Bool { form.draft.isPaidExpense }
     private var viewerId: String? { form.viewerId }
+    private var showsKeypad: Bool { sizeClass != .regular && focus != .title && !locked }
 
     private func save() async {
+        focus = nil
         if await form.save() != nil {
             saved = true
             restored = false
@@ -169,168 +267,392 @@ private struct SharedExpenseForm: View {
         }
     }
 
-    // MARK: Sections
+    // MARK: Parts
 
     @ViewBuilder private var banners: some View {
         if restored {
-            Section {
-                HStack {
-                    Text("Your unsaved expense is back").font(.subheadline.weight(.semibold))
-                        .accessibilityIdentifier("sharedForm.restoredDraft")
-                    Spacer()
-                    Button("Discard", role: .destructive) {
-                        form.discardDraft()
-                        discarded = true
-                        restored = false
-                        close()
-                    }
-                    .accessibilityIdentifier("sharedForm.discard")
+            StatusBanner(tone: .info, title: "Your unsaved expense is back") {
+                InlineActionButton("Discard") {
+                    form.discardDraft()
+                    discarded = true
+                    restored = false
+                    close()
                 }
+                .accessibilityIdentifier("sharedForm.discard")
             }
+            .accessibilityIdentifier("sharedForm.restoredDraft")
+        }
+        if let reason = model.readOnlyReason {
+            StatusBanner(tone: .info, title: "You can't add to this household", message: reason)
         }
         if let failure = form.failure {
-            Section {
-                StatusBanner(
-                    tone: failure.kind == .offline ? .offline : .error,
-                    title: form.isStale ? "Changed by someone else" : HouseholdFailureBanner.title(failure.kind),
-                    message: form.isStale
-                        ? (form.latest == nil
-                            ? "It was deleted after you opened it. Nothing was saved."
-                            : "Someone changed it after you opened it. Nothing was saved; review the latest version.")
-                        : failure.message + (failure.canRetry ? " Your changes are kept." : "")
-                )
-                .accessibilityIdentifier("sharedForm.error")
+            StatusBanner(
+                tone: failure.kind == .offline ? .offline : .error,
+                title: form.isStale ? "Changed by someone else" : HouseholdFailureBanner.title(failure.kind),
+                message: form.isStale
+                    ? (form.latest == nil
+                        ? "It was deleted after you opened it. Nothing was saved."
+                        : "Someone changed it after you opened it. Nothing was saved; review the latest version.")
+                    : failure.message + (failure.canRetry ? " Your changes are kept." : "")
+            ) {
                 if form.isStale, form.latest != nil {
-                    Button("Review latest") {
+                    InlineActionButton("Review latest") {
                         _ = form.reviewLatest()
                         restored = false
                     }
                     .accessibilityIdentifier("sharedForm.reviewLatest")
                 } else if failure.canRetry {
-                    Button("Try again") { Task { await save() } }
+                    InlineActionButton("Try again") { Task { await save() } }
                 }
             }
-            .listRowBackground(Color.clear)
+            .accessibilityIdentifier("sharedForm.error")
         }
         if let problem = form.problem {
-            Section {
-                Label(
-                    problem.message(money: HouseholdText.money(model.currency)), systemImage: "exclamationmark.circle"
-                )
+            Label(problem.message(money: HouseholdText.money(model.currency)), systemImage: "exclamationmark.circle")
                 .foregroundStyle(PennyColor.danger)
                 .font(.subheadline)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .accessibilityIdentifier("sharedForm.problem")
-            }
+        }
+        if locked {
+            Text(
+                "Someone has repaid a share, so the total, payer, month and shares stay as they are. The name, "
+                    + "category, note and day can still change."
+            )
+            .font(.footnote)
+            .foregroundStyle(PennyColor.secondaryLabel)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
-    @ViewBuilder private var amountSection: some View {
-        Section {
-            TextField("0.00", text: $form.draft.amountText)
-                .font(.largeTitle.weight(.bold).monospacedDigit())
-                .amountEntry()
-                .focused($focus, equals: .amount)
+    /// Expense, Income or Investment, as in Add entry: the last two are personal only, so
+    /// choosing one goes back to the personal form with what was typed.
+    private func kindPicker(_ scope: EntryScope) -> some View {
+        Picker(
+            "Type",
+            selection: Binding(
+                get: { EntryKind.expense },
+                set: { kind in
+                    guard kind != .expense else { return }
+                    discarded = true
+                    form.discardDraft()
+                    scope.choose(nil, EntryHandoff(form.draft, viewerId: viewerId, kind: kind))
+                })
+        ) {
+            ForEach(EntryKind.allCases, id: \.self) { Text(EntryText.kind($0)).tag($0) }
+        }
+        .pickerStyle(.segmented)
+        .accessibilityIdentifier("sharedForm.kind")
+    }
+
+    @ViewBuilder private var amount: some View {
+        VStack(spacing: 6) {
+            if sizeClass == .regular {
+                TextField("0.00", text: $form.draft.amountText)
+                    .amountEntry()
+                    .multilineTextAlignment(.center)
+                    .modifier(HeroAmountFont())
+                    .focused($focus, equals: .amount)
+                    .disabled(locked)
+                    .accessibilityLabel("Total amount, \(model.currency)")
+                    .accessibilityIdentifier("sharedForm.amount")
+            } else {
+                Button {
+                    focus = nil
+                } label: {
+                    AmountDisplay(text: form.draft.amountText, kind: .expense, currency: model.currency)
+                }
+                .buttonStyle(.plain)
                 .disabled(locked)
                 .accessibilityLabel("Total amount, \(model.currency)")
+                .accessibilityValue(form.draft.amountText.isEmpty ? "Empty" : form.draft.amountText)
+                .accessibilityHint("Use the keypad below to type the amount.")
                 .accessibilityIdentifier("sharedForm.amount")
-            TextField("What was it for?", text: $form.draft.title)
-                .focused($focus, equals: .title)
-                .submitLabel(.done)
-                .accessibilityIdentifier("sharedForm.title")
-            Picker("Category", selection: $form.draft.category) {
-                ForEach(categories, id: \.self) { category in
-                    Label(category.name, systemImage: category.symbol).tag(category)
+            }
+            Text(model.currency)
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(PennyColor.secondaryLabel)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(PennyColor.fill, in: Capsule())
+                .accessibilityLabel("Currency \(model.currency)")
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    /// The ledger's most used expense categories as chips, as in Add entry. The expense keeps a
+    /// category the ledger no longer has until another is chosen.
+    @ViewBuilder private var categories: some View {
+        if let ledger {
+            VStack(alignment: .leading, spacing: 4) {
+                EntryCategoryChips(
+                    kind: .expense, selection: categoryId(in: ledger), ledger: ledger, more: { overlay = .category })
+                if !ledger.categories.contains(where: { $0.kind == .expense && $0.name == form.draft.category.name }) {
+                    Label(form.draft.category.name, systemImage: form.draft.category.symbol)
+                        .font(.footnote)
+                        .foregroundStyle(PennyColor.secondaryLabel)
+                        .accessibilityLabel("Category \(form.draft.category.name)")
                 }
             }
             .accessibilityIdentifier("sharedForm.category")
-        } header: {
-            Text(model.household?.name ?? "Shared")
-        } footer: {
-            if locked {
-                Text(
-                    "Someone has repaid a share, so the total, payer, month and shares stay as they are. The name, "
-                        + "category, note and day can still change.")
-            }
         }
     }
 
-    /// The ledger's expense categories, plus the expense's own when the ledger doesn't have it.
-    private var categories: [WireSharedCategory] {
-        var list = (shell.workspace.load.ledger?.categories.filter { $0.kind == .expense } ?? [])
-            .map(WireSharedCategory.init)
-        if !list.contains(form.draft.category) { list.insert(form.draft.category, at: 0) }
-        if list.isEmpty { list = [.other] }
-        return list
+    /// Chips and the picker work with ledger ids; the shared expense keeps the category by value.
+    private func categoryId(in ledger: Ledger) -> Binding<String> {
+        Binding(
+            get: {
+                ledger.categories.first { $0.kind == .expense && $0.name == form.draft.category.name }?.id ?? ""
+            },
+            set: { id in
+                if let category = ledger.category(id: id) { form.draft.category = WireSharedCategory(category) }
+            })
     }
 
-    @ViewBuilder private var payerSection: some View {
-        Section("Paid by") {
-            ForEach(participants) { member in
+    private var dateText: Binding<String> {
+        Binding(
+            get: { form.draft.date.description },
+            set: { text in if let date = CalendarDate.ledgerDate(text) { form.draft.date = date } })
+    }
+
+    @ViewBuilder private var rows: some View {
+        VStack(spacing: 0) {
+            if let scope, isNew {
                 Button {
-                    form.draft.choosePayer(member.userId, viewerId: viewerId)
+                    overlay = .household
                 } label: {
-                    HStack(spacing: 12) {
-                        Monogram(initials: model.people.initials(member.userId))
-                        Text(model.people.name(member.userId)).foregroundStyle(PennyColor.label)
+                    EntryFieldRow("Household", systemImage: "house", value: scope.name(of: model.id))
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("sharedForm.household")
+                divider
+            }
+            Button {
+                overlay = .date
+            } label: {
+                EntryFieldRow(
+                    form.draft.isRule ? "Next date" : "Date", systemImage: "calendar",
+                    value: EntryText.day(form.draft.date, today: shell.today))
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("sharedForm.date")
+            divider
+            Button {
+                overlay = .payer
+            } label: {
+                EntryFieldRow(
+                    "Paid by", systemImage: "person.crop.circle",
+                    value: form.draft.payerId == viewerId ? "You" : model.people.name(form.draft.payerId))
+            }
+            .buttonStyle(.plain)
+            .disabled(locked)
+            .accessibilityIdentifier("sharedForm.paidBy")
+            divider
+            Button {
+                overlay = .split
+            } label: {
+                EntryFieldRow("Split", systemImage: "person.2", value: splitValue)
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("sharedForm.splitRow")
+            if form.draft.payerId == viewerId, let ledger {
+                divider
+                NavigationLink(value: SharedFormPage.account) {
+                    EntryFieldRow(
+                        "Account", systemImage: "creditcard",
+                        value: form.draft.accountId.flatMap(ledger.account(id:))?.name ?? "None", chevron: true)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("sharedForm.account")
+            }
+            divider
+            NavigationLink(value: SharedFormPage.details) {
+                EntryFieldRow(
+                    isNew || form.draft.isEditingRule ? "Repeat, note" : "Note", systemImage: "ellipsis",
+                    value: detailsValue, chevron: true)
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("sharedForm.details")
+        }
+        .background(PennyColor.surface, in: RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous))
+    }
+
+    private var divider: some View { Divider().padding(.leading, 52) }
+
+    private var splitValue: String {
+        let people = participants.count
+        guard people > 0 else { return "Nobody on that date" }
+        switch form.draft.mode {
+        case .equal: return "Equally · \(people) \(people == 1 ? "person" : "people")"
+        case .exact: return "By amount"
+        case .percent: return "By percent"
+        }
+    }
+
+    private var detailsValue: String {
+        var parts: [String] = []
+        if let repeats = form.draft.repeats { parts.append(SharedFormText.frequency(repeats)) }
+        if form.draft.isEditingRule, !form.draft.active { parts.append("Paused") }
+        if !form.draft.note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { parts.append("Note") }
+        return parts.joined(separator: " · ")
+    }
+
+    private var yourShare: some View {
+        HStack {
+            Text("Your share · counts in your spending").font(.subheadline.weight(.semibold))
+            Spacer()
+            if let share = form.viewerShare {
+                MoneyText(share, meaning: .expense, currency: model.currency)
+            } else {
+                Text("—").foregroundStyle(PennyColor.secondaryLabel)
+            }
+        }
+        .padding(.horizontal, 16)
+        .frame(minHeight: ControlSize.row)
+        .background(PennyColor.surface, in: RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous))
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("sharedForm.yourShare")
+    }
+
+    private var notes: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(
+                "Everyone in \(model.household?.name ?? "the household") sees the full amount. Only your share "
+                    + "counts in your spending.")
+            if form.draft.payerId == viewerId {
+                Text("Only you see which of your accounts paid. Other members never get it.")
+            }
+            Text(HouseholdText.onlineRequirement)
+        }
+        .font(.footnote)
+        .foregroundStyle(PennyColor.secondaryLabel)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// After the Household sheet: Personal or another household takes what was typed.
+    private func applyHousehold() {
+        guard let choice = pendingHousehold else { return }
+        pendingHousehold = nil
+        guard let scope, choice != model.id else { return }
+        discarded = true
+        form.discardDraft()
+        scope.choose(choice, EntryHandoff(form.draft, viewerId: viewerId))
+    }
+}
+
+/// Paid by: the members on the expense's date. Only the viewer's own account goes with them.
+private struct SharedPayerSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @Bindable var form: SharedExpenseFormModel
+    let model: HouseholdModel
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    ForEach(form.participants) { member in
+                        Button {
+                            form.draft.choosePayer(member.userId, viewerId: form.viewerId)
+                            dismiss()
+                        } label: {
+                            HStack(spacing: 12) {
+                                Monogram(initials: model.people.initials(member.userId))
+                                Text(model.people.name(member.userId)).foregroundStyle(PennyColor.label)
+                                Spacer()
+                                if form.draft.payerId == member.userId {
+                                    Image(systemName: "checkmark").foregroundStyle(PennyColor.tint)
+                                }
+                            }
+                            .frame(minHeight: Metrics.minTouchTarget)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityAddTraits(form.draft.payerId == member.userId ? .isSelected : [])
+                        .accessibilityIdentifier("sharedForm.payer.\(member.userId)")
+                    }
+                    if form.participants.isEmpty {
+                        Text("Nobody was a member on that date. Choose another date.")
+                            .font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
+                    }
+                } footer: {
+                    Text("Only the person who paid chooses which of their accounts it came from.")
+                }
+            }
+            .insetGroupedList()
+            .background(PennyColor.background)
+            .navigationTitle("Paid by")
+            .toolbarTitleDisplayModeInline()
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done", systemImage: "checkmark") { dismiss() }
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
+    }
+}
+
+/// Split: equally, by amount or by percent, with each member's share and yours.
+private struct SharedSplitSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @Bindable var form: SharedExpenseFormModel
+    let model: HouseholdModel
+
+    private var participants: [WireHouseholdMember] { form.participants }
+    private var locked: Bool { form.draft.isPaidExpense }
+
+    var body: some View {
+        let preview = form.draft.preview(participants: participants)
+        NavigationStack {
+            Form {
+                Section {
+                    Picker(
+                        "Split",
+                        selection: Binding(
+                            get: { form.draft.mode }, set: { form.draft.switchMode($0, participants: participants) })
+                    ) {
+                        Text("Equally").tag(SharedSplitMode.equal)
+                        Text("Amounts").tag(SharedSplitMode.exact)
+                        Text("Percent").tag(SharedSplitMode.percent)
+                    }
+                    .pickerStyle(.segmented)
+                    .disabled(locked)
+                    .accessibilityIdentifier("sharedForm.mode")
+                    ForEach(participants) { member in
+                        splitRow(member, preview: preview)
+                            .accessibilityIdentifier("sharedForm.split.\(member.userId)")
+                    }
+                    HStack {
+                        Text("Your share · counts in your spending").font(.subheadline.weight(.semibold))
                         Spacer()
-                        if form.draft.payerId == member.userId {
-                            Image(systemName: "checkmark").foregroundStyle(PennyColor.tint)
+                        if let share = form.viewerShare {
+                            MoneyText(share, meaning: .expense, currency: model.currency)
+                        } else {
+                            Text("—").foregroundStyle(PennyColor.secondaryLabel)
                         }
                     }
-                    .frame(minHeight: Metrics.minTouchTarget)
-                }
-                .disabled(locked)
-                .accessibilityAddTraits(form.draft.payerId == member.userId ? .isSelected : [])
-                .accessibilityIdentifier("sharedForm.payer.\(member.userId)")
-            }
-            if participants.isEmpty {
-                Text("Nobody was a member on that date. Choose another date.")
-                    .font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
-            }
-        }
-    }
-
-    @ViewBuilder private var splitSection: some View {
-        let preview = form.draft.preview(participants: participants)
-        Section {
-            Picker(
-                "Split",
-                selection: Binding(
-                    get: { form.draft.mode }, set: { form.draft.switchMode($0, participants: participants) })
-            ) {
-                Text("Equally").tag(SharedSplitMode.equal)
-                Text("Amounts").tag(SharedSplitMode.exact)
-                Text("Percent").tag(SharedSplitMode.percent)
-            }
-            .pickerStyle(.segmented)
-            .disabled(locked)
-            .accessibilityIdentifier("sharedForm.mode")
-            ForEach(participants) { member in
-                splitRow(member, preview: preview)
-                    .accessibilityIdentifier("sharedForm.split.\(member.userId)")
-            }
-            HStack {
-                Text("Your share · in your spending").font(.subheadline.weight(.semibold))
-                Spacer()
-                if let share = form.viewerShare {
-                    MoneyText(share, meaning: .expense, currency: model.currency)
-                } else {
-                    Text("—").foregroundStyle(PennyColor.secondaryLabel)
+                    .accessibilityElement(children: .combine)
+                } footer: {
+                    if case .failure(let problem) = preview, form.draft.totalCents != nil {
+                        Text(problem.message(money: HouseholdText.money(model.currency)))
+                    } else {
+                        Text(
+                            "Only your share counts in your spending. Splits include the members on the expense's "
+                                + "date; the server rounds leftover cents the same way.")
+                    }
                 }
             }
-            .accessibilityElement(children: .combine)
-            .accessibilityIdentifier("sharedForm.yourShare")
-        } header: {
-            Text("Split")
-        } footer: {
-            if case .failure(let problem) = preview, form.draft.totalCents != nil {
-                Text(problem.message(money: HouseholdText.money(model.currency)))
-            } else {
-                Text(
-                    "Only your share counts in your spending. Splits include the members on the expense's date; "
-                        + "the server rounds leftover cents the same way.")
+            .scrollContentBackground(.hidden)
+            .background(PennyColor.background)
+            .navigationTitle("Split")
+            .toolbarTitleDisplayModeInline()
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done", systemImage: "checkmark") { dismiss() }
+                }
             }
         }
+        .presentationDetents([.large])
     }
 
     @ViewBuilder
@@ -351,7 +673,6 @@ private struct SharedExpenseForm: View {
                     .amountEntry()
                     .multilineTextAlignment(.trailing)
                     .frame(maxWidth: 120)
-                    .focused($focus, equals: .split)
                     .disabled(locked)
                     .accessibilityLabel("\(model.people.name(member.userId))'s share")
             case .percent:
@@ -359,7 +680,6 @@ private struct SharedExpenseForm: View {
                     .amountEntry()
                     .multilineTextAlignment(.trailing)
                     .frame(maxWidth: 80)
-                    .focused($focus, equals: .split)
                     .disabled(locked)
                     .accessibilityLabel("\(model.people.name(member.userId))'s percentage")
                 Text("%").foregroundStyle(PennyColor.secondaryLabel)
@@ -375,57 +695,47 @@ private struct SharedExpenseForm: View {
     {
         Binding(get: { form.draft[keyPath: path][id] ?? "" }, set: { form.draft[keyPath: path][id] = $0 })
     }
+}
 
-    @ViewBuilder private var detailsSection: some View {
-        Section {
-            DatePicker(
-                form.draft.isRule ? "Next date" : "Date",
-                selection: Binding(
-                    get: { DayText.date(form.draft.date) },
-                    set: { form.draft.date = CalendarDate($0, in: Calendar(identifier: .gregorian)) }),
-                in: DayText.date(.earliest)...DayText.date(.latest), displayedComponents: .date
-            )
-            .accessibilityIdentifier("sharedForm.date")
-            if form.draft.payerId == viewerId {
-                Picker("Paid with", selection: $form.draft.accountId) {
-                    Text("None").tag(String?.none)
-                    ForEach(shell.workspace.load.ledger?.accounts ?? [], id: \.id) { account in
-                        Text(account.name).tag(String?.some(account.id))
-                    }
-                }
-                .accessibilityIdentifier("sharedForm.account")
-            }
+/// Repeat, Active (a repeating expense) and Note, behind the form's last row as in Add entry.
+private struct SharedDetailsPage: View {
+    @Bindable var form: SharedExpenseFormModel
+    @FocusState private var noteFocused: Bool
+
+    var body: some View {
+        Form {
             if form.draft.original == nil || form.draft.isEditingRule {
-                Picker("Repeat", selection: $form.draft.repeats) {
-                    if form.draft.original == nil { Text("Never").tag(RecurrenceFrequency?.none) }
-                    ForEach(RecurrenceFrequency.allCases, id: \.self) { frequency in
-                        Text(SharedFormText.frequency(frequency)).tag(RecurrenceFrequency?.some(frequency))
+                Section {
+                    Picker("Repeat", selection: $form.draft.repeats) {
+                        if form.draft.original == nil { Text("Never").tag(RecurrenceFrequency?.none) }
+                        ForEach(RecurrenceFrequency.allCases, id: \.self) { frequency in
+                            Text(SharedFormText.frequency(frequency)).tag(RecurrenceFrequency?.some(frequency))
+                        }
+                    }
+                    .accessibilityIdentifier("sharedForm.repeat")
+                    if form.draft.isEditingRule {
+                        Toggle("Active", isOn: $form.draft.active)
+                            .accessibilityIdentifier("sharedForm.active")
+                    }
+                } footer: {
+                    if form.draft.isRule {
+                        Text(
+                            "A repeating expense is added on each date, split among the members active that day; "
+                                + "when the members change, it's split equally.")
                     }
                 }
-                .accessibilityIdentifier("sharedForm.repeat")
             }
-            if form.draft.isEditingRule {
-                Toggle("Active", isOn: $form.draft.active)
-                    .accessibilityIdentifier("sharedForm.active")
-            }
-            TextField("Note", text: $form.draft.note, axis: .vertical)
-                .focused($focus, equals: .note)
-                .accessibilityIdentifier("sharedForm.note")
-        } header: {
-            Text("Details")
-        } footer: {
-            VStack(alignment: .leading, spacing: 6) {
-                if form.draft.payerId == viewerId {
-                    Text("Only you see which of your accounts paid. Other members never get it.")
-                }
-                if form.draft.isRule {
-                    Text(
-                        "A repeating expense is added on each date, split among the members active that day; when "
-                            + "the members change, it's split equally.")
-                }
-                Text(HouseholdText.onlineRequirement)
+            Section {
+                TextField("Note", text: $form.draft.note, axis: .vertical)
+                    .focused($noteFocused)
+                    .accessibilityIdentifier("sharedForm.note")
             }
         }
+        .scrollContentBackground(.hidden)
+        .background(PennyColor.background)
+        .navigationTitle(form.draft.original == nil || form.draft.isEditingRule ? "Repeat, note" : "Note")
+        .toolbarTitleDisplayModeInline()
+        .onChange(of: noteFocused) { if noteFocused { form.draft.focus = .note } }
     }
 }
 

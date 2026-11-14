@@ -215,15 +215,16 @@ struct Penny {
 
     /// Types an amount such as "12.34". The form shows the in-sheet keypad at compact width
     /// (iPhone, and the iPad form sheet) and a text field at regular width, so this follows
-    /// whichever control the amount actually is rather than the device.
-    func enterAmount(_ amount: String) throws {
-        if try wait(for: AccessibilityID.EntryForm.amount).elementType == .textField {
-            try type(amount, into: AccessibilityID.EntryForm.amount)
+    /// whichever control the amount actually is rather than the device. The shared expense form
+    /// has the same amount and keypad (`into: AccessibilityID.Households.formAmount`).
+    func enterAmount(_ amount: String, into id: String = AccessibilityID.EntryForm.amount) throws {
+        if try wait(for: id).elementType == .textField {
+            try type(amount, into: id)
             return
         }
         // A tap that lands while the sheet is still presenting can be dropped, so the display
         // (its accessibility value is the typed amount) is checked and the entry retried once.
-        let display = element(AccessibilityID.EntryForm.amount)
+        let display = element(id)
         for attempt in 0..<2 {
             if attempt > 0 {
                 for _ in 0..<((display.value as? String)?.count ?? 0) + 1 {

@@ -52,7 +52,7 @@ const dialog = (name: string | RegExp) => screen.findByRole("dialog", { name });
 
 async function fillExpense(user: UserEvent, form: HTMLElement, title: string, amount: string) {
   await user.type(within(form).getByLabelText("Title"), title);
-  await user.type(within(form).getByLabelText(/^Total/), amount);
+  await user.type(within(form).getByLabelText("Amount (CAD)"), amount);
   await user.clear(within(form).getByLabelText("Date"));
   await user.type(within(form).getByLabelText("Date"), "2026-10-05");
 }
@@ -142,14 +142,14 @@ describe("shared expense form", () => {
     const user = userEvent.setup();
     renderApp(`/households/${id}`);
     await user.click(await screen.findByRole("button", { name: "Shared expense" }));
-    const form = await dialog("New shared expense");
+    const form = await dialog("Add entry");
     await fillExpense(user, form, "Groceries run", "100");
     const shares = within(form).getByRole("list", { name: "Shares" });
     const rows = within(shares).getAllByRole("listitem").map((row) => row.textContent);
     expect(rows).toEqual([expect.stringContaining("$33.34"), expect.stringContaining("$33.33"), expect.stringContaining("$33.33")]);
-    expect(within(form).getByText("Your share · in your spending").parentElement).toHaveTextContent("$33.34");
+    expect(within(form).getByText("Your share · counts in your spending").parentElement).toHaveTextContent("$33.34");
 
-    await user.click(within(form).getByRole("button", { name: "Add expense" }));
+    await user.click(within(form).getByRole("button", { name: "Save" }));
     expect(await screen.findByText("Groceries run added")).toBeInTheDocument();
     const post = callsTo(fetchMock, `/api/households/${id}/expenses`).find((init) => init?.method === "POST");
     expect(bodyOf(post)).toMatchObject({ title: "Groceries run", totalCents: 10000, splitMode: "equal", date: "2026-10-05", payerUserId: ids().alex });
@@ -164,21 +164,21 @@ describe("shared expense form", () => {
     const user = userEvent.setup();
     renderApp(`/households/${id}`);
     await user.click(await screen.findByRole("button", { name: "Shared expense" }));
-    const form = await dialog("New shared expense");
+    const form = await dialog("Add entry");
     await fillExpense(user, form, "Internet", "90");
     await user.click(within(form).getByRole("radio", { name: "Amounts" }));
     await user.type(within(form).getByLabelText("Your share in CAD"), "50");
     await user.type(within(form).getByLabelText(`${BEA}'s share in CAD`), "20");
     await user.type(within(form).getByLabelText(`${CAM}'s share in CAD`), "10");
     expect(within(form).getByText("$10.00 left to assign of $90.00.")).toBeInTheDocument();
-    await user.click(within(form).getByRole("button", { name: "Add expense" }));
+    await user.click(within(form).getByRole("button", { name: "Save" }));
     expect(within(form).getByText(/Shares must add up to \$90.00/)).toBeInTheDocument();
     expect(within(form).getByLabelText("Your share in CAD")).toHaveFocus();
     expect(callsTo(fetchMock, `/api/households/${id}/expenses`).filter((init) => init?.method === "POST")).toHaveLength(0);
 
     await user.clear(within(form).getByLabelText(`${CAM}'s share in CAD`));
     await user.type(within(form).getByLabelText(`${CAM}'s share in CAD`), "20");
-    await user.click(within(form).getByRole("button", { name: "Add expense" }));
+    await user.click(within(form).getByRole("button", { name: "Save" }));
     expect(await screen.findByText("Internet added")).toBeInTheDocument();
     const post = callsTo(fetchMock, `/api/households/${id}/expenses`).find((init) => init?.method === "POST");
     expect(bodyOf(post)).toMatchObject({
@@ -197,7 +197,7 @@ describe("shared expense form", () => {
     const user = userEvent.setup();
     renderApp(`/households/${id}`);
     await user.click(await screen.findByRole("button", { name: "Shared expense" }));
-    const form = await dialog("New shared expense");
+    const form = await dialog("Add entry");
     await fillExpense(user, form, "Rent", "1000");
     await user.click(within(form).getByRole("radio", { name: "Percent" }));
     await user.type(within(form).getByLabelText("Your share in percent"), "50");
@@ -205,8 +205,8 @@ describe("shared expense form", () => {
     expect(within(form).getByText("16.67% left to assign.")).toBeInTheDocument();
     await user.type(within(form).getByLabelText(`${CAM}'s share in percent`), "16.67");
     expect(within(form).getByText("Adds up to 100%.")).toBeInTheDocument();
-    expect(within(form).getByText("Your share · in your spending").parentElement).toHaveTextContent("$500.00");
-    await user.click(within(form).getByRole("button", { name: "Add expense" }));
+    expect(within(form).getByText("Your share · counts in your spending").parentElement).toHaveTextContent("$500.00");
+    await user.click(within(form).getByRole("button", { name: "Save" }));
     expect(await screen.findByText("Rent added")).toBeInTheDocument();
     expect(bodyOf(callsTo(fetchMock, `/api/households/${id}/expenses`).find((init) => init?.method === "POST"))).toMatchObject({
       splitMode: "percent",
@@ -225,7 +225,7 @@ describe("shared expense form", () => {
     const user = userEvent.setup();
     renderApp(`/households/${id}`);
     await user.click(await screen.findByRole("button", { name: "Shared expense" }));
-    const form = await dialog("New shared expense");
+    const form = await dialog("Add entry");
     expect(within(form).getByLabelText("Your account")).toHaveAccessibleDescription(/only you see/);
     await user.click(within(form).getByRole("radio", { name: BEA }));
     expect(within(form).queryByLabelText("Your account")).not.toBeInTheDocument();
@@ -252,18 +252,23 @@ describe("shared expense form", () => {
     const user = userEvent.setup();
     renderApp(`/households/${id}`);
     await user.click(await screen.findByRole("button", { name: "Shared expense" }));
-    const form = await dialog("New shared expense");
+    const form = await dialog("Add entry");
     // Categories are sent by value, so one made offline can be used right away.
-    expect(await within(form).findByRole("option", { name: "Pets" })).toBeInTheDocument();
+    await user.click(await within(form).findByRole("button", { name: "All categories" }));
+    const picker = screen.getByRole("dialog", { name: "Choose a category" });
+    expect(await within(picker).findByRole("button", { name: /Pets/ })).toBeInTheDocument();
+    await user.keyboard("{Escape}");
     // The server checks the account against its copy of the ledger, so an unsynced one waits.
     expect(within(form).getByRole("option", { name: "Everyday card" })).toBeEnabled();
     expect(within(form).getByRole("option", { name: "Cash jar (waiting to sync)" })).toBeDisabled();
     expect(within(form).getByLabelText("Your account")).toHaveAccessibleDescription(/can be chosen once they've synced/);
 
     await fillExpense(user, form, "Vet", "60");
-    await user.selectOptions(within(form).getByLabelText("Category"), "Pets");
+    await user.click(within(form).getByRole("button", { name: "All categories" }));
+    await user.click(within(screen.getByRole("dialog", { name: "Choose a category" })).getByRole("button", { name: /Pets/ }));
+    expect(within(form).getByRole("radio", { name: "Pets" })).toBeChecked();
     await user.selectOptions(within(form).getByLabelText("Your account"), "acct-visa");
-    await user.click(within(form).getByRole("button", { name: "Add expense" }));
+    await user.click(within(form).getByRole("button", { name: "Save" }));
     expect(await screen.findByText("Vet added")).toBeInTheDocument();
     expect(bodyOf(callsTo(fetchMock, `/api/households/${id}/expenses`).find((init) => init?.method === "POST"))).toMatchObject({
       category: { name: "Pets", icon: "paw", color: "#7A6FB0" },
@@ -313,10 +318,11 @@ describe("shared expense form", () => {
     const user = userEvent.setup();
     renderApp(`/households/${id}`);
     await user.click(await screen.findByRole("button", { name: "Shared expense" }));
-    const form = await dialog("New shared expense");
+    const form = await dialog("Add entry");
     await fillExpense(user, form, "Streaming", "18");
+    await user.click(within(form).getByRole("button", { name: /More details/ }));
     await user.selectOptions(within(form).getByLabelText("Repeat"), "monthly");
-    await user.click(within(form).getByRole("button", { name: "Save repeating expense" }));
+    await user.click(within(form).getByRole("button", { name: "Save" }));
     expect(await screen.findByText("Streaming repeats monthly")).toBeInTheDocument();
     expect(bodyOf(callsTo(fetchMock, `/api/households/${id}/recurring`).find((init) => init?.method === "POST"))).toMatchObject({ nextDate: "2026-10-05", frequency: "monthly", totalCents: 1800 });
 
@@ -334,11 +340,11 @@ describe("shared expense form", () => {
     const user = userEvent.setup();
     renderApp(`/households/${id}`);
     await user.click(await screen.findByRole("button", { name: "Shared expense" }));
-    const form = await dialog("New shared expense");
+    const form = await dialog("Add entry");
     await fillExpense(user, form, "Plants", "12");
     offline = true;
     const online = vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
-    await user.click(within(form).getByRole("button", { name: "Add expense" }));
+    await user.click(within(form).getByRole("button", { name: "Save" }));
     expect(await within(form).findByRole("alert")).toHaveTextContent("You're offline. Shared households need a connection, so nothing was sent. Your changes are still here.");
     expect(within(form).getByLabelText("Title")).toHaveValue("Plants");
 
@@ -348,6 +354,62 @@ describe("shared expense form", () => {
     expect(await screen.findByText("Plants added")).toBeInTheDocument();
   });
 });
+
+describe("Add entry with a household", () => {
+  async function openAdd(user: UserEvent) {
+    await screen.findByRole("heading", { level: 1 });
+    await user.keyboard("n");
+    return screen.findByRole("form", { name: "Add entry" });
+  }
+
+  it("sends a new expense to a household from Add entry, keeping what was typed", async () => {
+    const id = seed();
+    const fetchMock = serve();
+    const user = userEvent.setup();
+    renderApp("/");
+    const form = await openAdd(user);
+    await user.type(within(form).getByLabelText("Amount (CAD)"), "100");
+    await user.type(within(form).getByLabelText("Title"), "Groceries run");
+    const household = await within(form).findByRole("option", { name: "Maison" });
+    await user.selectOptions(within(form).getByLabelText("Household"), household);
+
+    // The same dialog now holds the shared form, laid out like the personal one, with the typing kept.
+    const shared = await screen.findByRole("form", { name: "Add entry" });
+    expect(within(shared).getByRole("group", { name: "Paid by" })).toBeInTheDocument();
+    expect(within(shared).getByLabelText("Household")).toHaveValue(id);
+    expect(within(shared).getByLabelText("Household")).toHaveAccessibleDescription(/Shared with Maison/);
+    expect(within(shared).getByLabelText("Amount (CAD)")).toHaveValue("100");
+    expect(within(shared).getByLabelText("Title")).toHaveValue("Groceries run");
+    expect(within(shared).getByText("Your share · counts in your spending").parentElement).toHaveTextContent("$33.34");
+
+    await user.click(within(dialogOf(shared)).getByRole("button", { name: "Save" }));
+    expect(await screen.findByText("Groceries run added")).toBeInTheDocument();
+    const post = callsTo(fetchMock, `/api/households/${id}/expenses`).find((init) => init?.method === "POST");
+    expect(bodyOf(post)).toMatchObject({ title: "Groceries run", totalCents: 10000, splitMode: "equal", payerUserId: ids().alex });
+  });
+
+  it("goes back to a personal entry with the typing kept", async () => {
+    seed();
+    serve();
+    const user = userEvent.setup();
+    renderApp("/");
+    const form = await openAdd(user);
+    await user.type(within(form).getByLabelText("Amount (CAD)"), "12");
+    await user.type(within(form).getByLabelText("Title"), "Lunch");
+    await user.selectOptions(within(form).getByLabelText("Household"), await within(form).findByRole("option", { name: "Maison" }));
+    const shared = await screen.findByRole("form", { name: "Add entry" });
+    await within(shared).findByRole("group", { name: "Paid by" });
+
+    await user.selectOptions(within(shared).getByLabelText("Household"), "Personal (just me)");
+    const personal = await screen.findByRole("form", { name: "Add entry" });
+    expect(within(personal).queryByRole("group", { name: "Paid by" })).not.toBeInTheDocument();
+    expect(within(personal).getByLabelText("Amount (CAD)")).toHaveValue("12");
+    expect(within(personal).getByLabelText("Title")).toHaveValue("Lunch");
+    expect(within(personal).getByLabelText("Household")).toHaveValue("");
+  });
+});
+
+const dialogOf = (element: HTMLElement) => element.closest<HTMLElement>("[role=dialog]") ?? element;
 
 describe("payments and settlement", () => {
   it("records a share payment that documents an existing transfer", async () => {
