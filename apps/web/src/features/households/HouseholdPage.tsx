@@ -1,3 +1,4 @@
+import { AddEntryDialog } from "../entries/AddEntryDialog";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
@@ -168,7 +169,11 @@ export function HouseholdPage({ householdId, expenseId, search }: { householdId:
           onClose={() => void navigate({ to: "/households/$id", params: { id: householdId }, search: linkSearch({}) })}
         />
       ) : null}
-      {form ? <ExpenseFormDialog view={view} target={form} onClose={() => { setForm(null); }} /> : null}
+      {form?.kind === "new" ? (
+        <AddEntryDialog householdId={view.householdId} onClose={() => { setForm(null); }} />
+      ) : form ? (
+        <ExpenseFormDialog view={view} target={form} onClose={() => { setForm(null); }} />
+      ) : null}
     </div>
   );
 }

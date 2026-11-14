@@ -79,6 +79,8 @@ async function mockApi(context: BrowserContext, transactions: Entry[] = []): Pro
       return route.fulfill({ json: { revision: server.revision, ledger: server.ledger } });
     }
     if (pathname === "/api/households/projection") return route.fulfill({ json: { transactions: [], scheduled: [] } });
+    // Add entry's Household choice reads the list; this account has none.
+    if (pathname === "/api/households") return route.fulfill({ json: { households: [] } });
     if (pathname === "/api/v1/search/transactions") {
       const items = server.ledger.transactions.map((item) => ({ key: `personal:${item.id}`, source: "personal", match: null, entry: item }));
       return route.fulfill({ json: { version: 1, items, totalCount: items.length, nextCursor: null } });

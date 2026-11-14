@@ -151,7 +151,7 @@ struct HouseholdPage: View {
             await model.refresh()
             await refreshTrip()
             if wantsAdd, !Task.isCancelled, model.household?.trip != nil, !model.isReadOnly {
-                form = .new
+                addExpense()
             }
         }
         .onChange(of: model.writeCount) {
@@ -201,6 +201,16 @@ struct HouseholdPage: View {
 
     // MARK: Header
 
+    /// A new expense opens Add entry with this household chosen, so it is added in the same form
+    /// as any other entry. A page model the shell doesn't share (previews) uses its own sheet.
+    private func addExpense() {
+        if shell.households.model(for: model.id) === model {
+            shell.openSharedExpense(model.id)
+        } else {
+            form = .new
+        }
+    }
+
     private func refreshTrip() async {
         guard model.household?.trip != nil else { return }
         await shell.trips.expenses(for: model.id)?.refresh()
@@ -226,7 +236,7 @@ struct HouseholdPage: View {
                         }
                         .accessibilityHint("Shows balances and suggested payments to record")
                         .accessibilityIdentifier("household.recordPayment")
-                        PennyButton(isTrip ? "Trip expense" : "Expense", systemImage: "plus") { form = .new }
+                        PennyButton(isTrip ? "Trip expense" : "Expense", systemImage: "plus") { addExpense() }
                             .accessibilityIdentifier("household.addExpense")
                     }
                 }

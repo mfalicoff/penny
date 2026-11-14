@@ -288,7 +288,7 @@ const cards: Record<string, Card> = {
     open: async (run) => {
       await maison(run);
       await run.page.getByRole("button", { name: "Shared expense" }).click();
-      await expect(run.page.getByRole("dialog", { name: "New shared expense" })).toBeVisible();
+      await expect(run.page.getByRole("dialog", { name: "Add entry" })).toBeVisible();
     },
   },
   "iphone-record-payment": { open: (run) => recordAlexShare(run) },

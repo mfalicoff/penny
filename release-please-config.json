@@ -11,6 +11,10 @@
         {
           "type": "generic",
           "path": "apps/ios/Configuration/Version.xcconfig"
+        },
+        {
+          "type": "generic",
+          "path": "apps/backend/src/Penny.Backend.Api/Contracts/ServerInfo.cs"
         }
       ]
     }

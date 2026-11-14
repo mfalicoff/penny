@@ -32,7 +32,8 @@ export function CategoryPickerDialog({
   kind?: Kind;
   categories: Category[];
   selected: string | undefined;
-  onSelect: (id: string | undefined) => void;
+  /** The chosen category's id, with the category itself (also one just created, before the ledger shows it). */
+  onSelect: (id: string | undefined, category?: Category) => void;
   onClose: () => void;
   save?: Save | null;
   /** Offer a "no filter" choice with this label (Activity's "All categories"). */
@@ -68,7 +69,7 @@ export function CategoryPickerDialog({
         if (ledger.categories.length >= RECORD_LIMIT) throw new Error(`You have ${String(RECORD_LIMIT)} categories, the most Penny keeps. Remove one you don't use to add another.`);
         return saveCategory(category)(ledger);
       });
-      onSelect(category.id);
+      onSelect(category.id, category);
       onClose();
     } catch (failure) {
       setError(errorText(failure));
@@ -101,7 +102,7 @@ export function CategoryPickerDialog({
                 className={cx("picker-option", category.id === selected && "picker-option--on")}
                 aria-pressed={category.id === selected}
                 onClick={() => {
-                  onSelect(category.id);
+                  onSelect(category.id, category);
                   onClose();
                 }}
               >

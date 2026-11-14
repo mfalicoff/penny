@@ -72,6 +72,8 @@ final class ShellModel {
     let trips: TripDirectory
     /// The trip a Trip expense opens Add entry on, taken once by the entry form (MAZ-76).
     var addEntryTripId: String?
+    /// The household a page's Expense button opens Add entry on, taken once by the entry form.
+    var addEntryHouseholdId: String?
 
     // MARK: Overview (MAZ-77)
 
@@ -173,6 +175,13 @@ final class ShellModel {
     /// Trip expense on a personal trip (MAZ-76): Add entry, opened on that trip.
     func openTripExpense(_ tripId: String) {
         addEntryTripId = tripId
+        navigate { $0.openAddEntry() }
+    }
+
+    /// A household's (or shared trip's) Expense button: Add entry, opened with that household
+    /// chosen, so a shared expense is added in the same form as any other entry.
+    func openSharedExpense(_ householdId: String) {
+        addEntryHouseholdId = householdId
         navigate { $0.openAddEntry() }
     }
 

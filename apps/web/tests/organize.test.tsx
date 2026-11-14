@@ -365,29 +365,29 @@ describe("inline creation from an entry form", { timeout: 20_000 }, () => {
     const user = userEvent.setup();
     renderApp(`/households/${id}`);
     await user.click(await screen.findByRole("button", { name: "Shared expense" }));
-    const form = await dialog("New shared expense");
+    const form = await dialog("Add entry");
     await user.type(within(form).getByLabelText("Title"), "Vet visit");
-    await user.type(within(form).getByLabelText(/^Total/), "60");
+    await user.type(within(form).getByLabelText("Amount (CAD)"), "60");
     await user.clear(within(form).getByLabelText("Date"));
     await user.type(within(form).getByLabelText("Date"), "2026-10-05");
 
-    const opener = within(form).getByRole("button", { name: "New category" });
+    // The same All categories picker as the personal form, by keyboard.
+    const opener = within(form).getByRole("button", { name: "All categories" });
     opener.focus();
     await user.keyboard("{Enter}");
-    const inner = await dialog("New expense category");
-    expect(within(inner).getByLabelText("Name")).toHaveFocus();
-    expect(within(inner).queryByRole("radio", { name: "Income" })).not.toBeInTheDocument();
+    const inner = await dialog("Choose a category");
+    expect(within(inner).getByLabelText("Find a category")).toHaveFocus();
     // Escape closes only the inner dialog; the draft is untouched.
     await user.keyboard("{Escape}");
     await waitFor(() => {
-      expect(screen.queryByRole("dialog", { name: "New expense category" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("dialog", { name: "Choose a category" })).not.toBeInTheDocument();
     });
-    expect(screen.getByRole("dialog", { name: "New shared expense" })).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Add entry" })).toBeInTheDocument();
     expect(opener).toHaveFocus();
 
     await user.keyboard("{Enter}");
-    const again = await dialog("New expense category");
-    await user.keyboard("Pets");
+    const again = await dialog("Choose a category");
+    await user.type(within(again).getByLabelText("New category"), "Pets");
     // Tab stays inside the inner dialog.
     for (let step = 0; step < 40; step += 1) {
       await user.tab();
@@ -395,18 +395,20 @@ describe("inline creation from an entry form", { timeout: 20_000 }, () => {
     }
     await user.click(within(again).getByRole("button", { name: "Add category" }));
     await waitFor(() => {
-      expect(screen.queryByRole("dialog", { name: "New expense category" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("dialog", { name: "Choose a category" })).not.toBeInTheDocument();
     });
-    expect(within(form).getByLabelText("Category")).toHaveDisplayValue("Pets");
+    expect(within(form).getByRole("radio", { name: "Pets" })).toBeChecked();
     expect(within(form).getByLabelText("Title")).toHaveValue("Vet visit");
-    expect(within(form).getByLabelText(/^Total/)).toHaveValue("60");
+    expect(within(form).getByLabelText("Amount (CAD)")).toHaveValue("60");
     await synced(ledger, 1);
     expect(ledger.state.ledger.categories.map((category) => category.name)).toEqual(["Groceries", "Pets"]);
 
-    await user.click(within(form).getByRole("button", { name: "Add expense" }));
+    await user.click(within(screen.getByRole("dialog", { name: "Add entry" })).getByRole("button", { name: "Save" }));
     expect(await screen.findByText("Vet visit added")).toBeInTheDocument();
     const post = callsTo(fetchMock, `/api/households/${id}/expenses`).find((init) => init?.method === "POST");
-    expect(bodyOf(post)).toMatchObject({ title: "Vet visit", category: { name: "Pets", icon: "pricetag-outline", color: "#3B82F6" } });
+    // Sent by value: the same name, icon and color the ledger saved.
+    const pets = ledger.state.ledger.categories.find((category) => category.name === "Pets");
+    expect(bodyOf(post)).toMatchObject({ title: "Vet visit", category: { name: "Pets", icon: "pricetag-outline", color: pets?.color } });
   });
 });
 

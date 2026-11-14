@@ -210,6 +210,14 @@
       "issue": "MAZ-183"
     },
     {
+      "id": "iphone-trip-detail",
+      "appearance": "light",
+      "text": "4 expenses",
+      "contrast": 4.47,
+      "needs": 4.5,
+      "issue": "MAZ-183"
+    },
+    {
       "id": "iphone-trips",
       "appearance": "light",
       "text": "Upcoming",

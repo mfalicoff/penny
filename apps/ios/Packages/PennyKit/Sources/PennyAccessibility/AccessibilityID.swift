@@ -47,6 +47,8 @@ public enum AccessibilityID {
         public static let datePicker = "screen.datePicker"
         public static let split = "screen.split"
         public static let entryExtras = "screen.entryExtras"
+        /// Add entry's Household: personal, or a household to split with.
+        public static let householdPicker = "screen.householdPicker"
         // Accounts, categories and schedules (MAZ-74).
         public static let accountForm = "screen.accountForm"
         public static let categoryForm = "screen.categoryForm"
@@ -62,6 +64,7 @@ public enum AccessibilityID {
             home, activity, shared, household, householdExpense, trips, trip, addEntry, settings, appearance, currency,
             appLock, recurring, accounts, categories, lock,
             editEntry, entryDetail, activityFilters, categoryPicker, accountPicker, datePicker, split, entryExtras,
+            householdPicker,
             accountForm, categoryForm, schedule, scheduleForm,
             moneyFlow, insights, calendar, categorySpending,
         ]
@@ -249,11 +252,15 @@ public enum AccessibilityID {
         public static let close = "entryForm.close"
         public static let discard = "entryForm.discard"
         public static let retry = "entryForm.retry"
+        /// Where a new expense goes: Personal or a household (opens the Household picker).
+        public static let household = "entryForm.household"
         public static func keypad(_ key: String) -> String { "keypad.\(key)" }
         public static func category(_ id: String) -> String { "entryForm.category.\(id)" }
+        /// A Household picker row: a household id, or `personal`.
+        public static func householdOption(_ id: String?) -> String { "householdPicker.\(id ?? "personal")" }
 
-        static let all = [kind, amount, title, account, date, save, close, discard, retry]
-        static let prefixes = ["keypad.", "entryForm.category."]
+        static let all = [kind, amount, title, account, date, save, close, discard, retry, household]
+        static let prefixes = ["keypad.", "entryForm.category.", "householdPicker."]
     }
 
     /// Activity and its filters (MAZ-73). `kindFilter(_:)` takes an `EntryKind` raw value or `all`.

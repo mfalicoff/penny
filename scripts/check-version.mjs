@@ -11,6 +11,13 @@ if (typeof version !== "string" || !/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/
   throw new Error("apps/ios/Configuration/Version.xcconfig MARKETING_VERSION must be MAJOR.MINOR.PATCH without leading zeros or prerelease/build suffixes, marked // x-release-please-version.");
 }
 
+const serverInfoPath = "apps/backend/src/Penny.Backend.Api/Contracts/ServerInfo.cs";
+const serverInfo = readFileSync(new URL(`../${serverInfoPath}`, import.meta.url), "utf8");
+const apiVersion = serverInfo.match(/CurrentVersion = "([^"]+)"; \/\/ x-release-please-version$/m)?.[1];
+if (apiVersion !== version) {
+  throw new Error(`${serverInfoPath} CurrentVersion must be ${version}; found ${apiVersion ?? "none"}.`);
+}
+
 const ref = process.env.GITHUB_REF;
 if (ref?.startsWith("refs/tags/") && ref !== `refs/tags/v${version}`) {
   throw new Error(`Release tag must be v${version}; received ${ref.slice("refs/tags/".length)}.`);
