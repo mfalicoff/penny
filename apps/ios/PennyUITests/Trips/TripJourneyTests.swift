@@ -150,7 +150,7 @@ final class TripJourneyTests: PennyUITestCase {
     @MainActor
     private func addSharedExpense(_ penny: Penny, amount: String, title: String) throws {
         try penny.tap(Shared.addExpense, opening: Shared.Screen.expenseForm)
-        try penny.type(amount, into: Shared.formAmount)
+        try penny.enterAmount(amount, into: Shared.formAmount)
         try penny.type(title, into: Shared.formTitle)
         try penny.tap(Shared.formSave)
         try penny.waitForAbsence(of: Shared.Screen.expenseForm, timeout: 20)

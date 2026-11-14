@@ -14,26 +14,92 @@ import SwiftUI
 /// and category creation and failed saves never lose it. Closing with changes asks first; a
 /// sheet replaced by something else (a deep link, Settings) keeps the draft on the shell's
 /// shelf and restores it next time.
+///
+/// Household: a new expense can go to a household or shared trip instead. The same sheet then
+/// shows the shared expense form, laid out the same way, with what was typed carried over
+/// (`EntryHandoff`); choosing Personal brings it back.
 struct EntryFormSheet: View {
     @Environment(ShellModel.self) private var shell
     @Environment(\.dismiss) private var dismiss
     let mode: EntryEditor.Mode
 
+    /// The household a new expense goes to, with what was typed: shows the shared form.
+    @State private var shared: SharedEntry?
+    /// Back from the shared form: what was typed there, for a fresh personal form.
+    @State private var personal: EntryHandoff?
+    /// Bumped on every switch, so each form starts from its handoff.
+    @State private var generation = 0
+    @State private var started = false
+
+    struct SharedEntry {
+        let model: HouseholdModel
+        let handoff: EntryHandoff?
+    }
+
     var body: some View {
-        NavigationStack {
-            WorkspaceContent { ledger in
-                EntryForm(mode: mode, ledger: ledger)
-            }
-            .toolbar {
-                if shell.workspace.load.ledger == nil {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Close", systemImage: "xmark") { dismiss() }
+        Group {
+            if let shared {
+                SharedExpenseFormSheet(request: .new, model: shared.model, handoff: shared.handoff, scope: scope)
+                    .environment(shell)
+                    .id(generation)
+                    .task { await shared.model.refresh() }
+            } else {
+                NavigationStack {
+                    WorkspaceContent { ledger in
+                        EntryForm(mode: mode, ledger: ledger, handoff: personal, scope: mode == .new ? scope : nil)
+                    }
+                    .toolbar {
+                        if shell.workspace.load.ledger == nil {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button("Close", systemImage: "xmark") { dismiss() }
+                            }
+                        }
                     }
                 }
+                .id(generation)
+                .accessibilityIdentifier(mode == .new ? "screen.addEntry" : "screen.editEntry")
             }
         }
         .presentationDetents([.large])
-        .accessibilityIdentifier(mode == .new ? "screen.addEntry" : "screen.editEntry")
+        .onAppear(perform: start)
+        .task {
+            // The list the Household row offers; the Shared tab may not have read it yet.
+            if mode == .new, shell.households.isAvailable, shell.households.load == .idle {
+                await shell.households.refresh()
+            }
+        }
+    }
+
+    /// Where a new expense can go, or nil when there is nowhere but the personal ledger (the
+    /// demo, or no households yet).
+    private var scope: EntryScope? {
+        guard mode == .new, shell.households.isAvailable else { return nil }
+        var households = shell.households.households
+        if let current = shared?.model.household, !households.contains(where: { $0.id == current.id }) {
+            households.insert(current, at: 0)
+        }
+        guard !households.isEmpty || shared != nil else { return nil }
+        return EntryScope(households: households, current: shared?.model.id, choose: choose)
+    }
+
+    /// A household's Expense button opened Add entry on that household (taken once).
+    private func start() {
+        guard !started else { return }
+        started = true
+        guard mode == .new, let id = shell.addEntryHouseholdId else { return }
+        shell.addEntryHouseholdId = nil
+        if let model = shell.households.model(for: id) { shared = SharedEntry(model: model, handoff: nil) }
+    }
+
+    private func choose(_ householdId: String?, _ handoff: EntryHandoff) {
+        if let householdId, let model = shell.households.model(for: householdId) {
+            shared = SharedEntry(model: model, handoff: handoff)
+            personal = nil
+        } else {
+            shared = nil
+            personal = handoff
+        }
+        generation += 1
     }
 }
 
@@ -45,7 +111,7 @@ enum EntryFormPage: Hashable {
 
 /// Sheets stacked over the entry form.
 enum EntryFormOverlay: String, Identifiable {
-    case date, split, category
+    case date, split, category, household
     var id: String { rawValue }
 }
 
@@ -55,8 +121,14 @@ private struct EntryForm: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
     let mode: EntryEditor.Mode
     let ledger: Ledger
+    /// What was typed in the shared form before Personal was chosen.
+    var handoff: EntryHandoff?
+    /// Add entry's Household choice (new entries only).
+    var scope: EntryScope?
 
     @State private var model: EntryFormModel?
+    /// The household picked in the Household sheet, applied once the sheet has gone.
+    @State private var pendingHousehold: String??
     /// The receipt upload (MAZ-78). Owned by the form so it survives leaving More details; it
     /// is cancelled when the form closes.
     @State private var upload: ReceiptUploadModel?
@@ -83,7 +155,12 @@ private struct EntryForm: View {
 
     private func start() {
         var editor: EntryEditor
-        if let kept = shell.drafts.take(mode) {
+        if mode == .new, let handoff {
+            // Back from the shared form: what was typed there, not an older kept draft.
+            shell.drafts.discard(mode)
+            editor = Self.fresh(mode, today: shell.today, ledger: ledger)
+            handoff.apply(to: &editor, ledger: ledger)
+        } else if let kept = shell.drafts.take(mode) {
             editor = kept
             restored = true
         } else {
@@ -188,7 +265,7 @@ private struct EntryForm: View {
                 }
             }
         }
-        .sheet(item: $overlay) { overlay in
+        .sheet(item: $overlay, onDismiss: { applyHousehold(model) }) { overlay in
             switch overlay {
             case .date:
                 EntryDatePickerSheet(date: $model.editor.draft.date, today: shell.today)
@@ -198,6 +275,10 @@ private struct EntryForm: View {
                 EntryCategoryPickerSheet(
                     kind: draft.kind, selection: $model.editor.draft.categoryId, ledger: ledger,
                     editCategories: { editCategories() })
+            case .household:
+                EntryHouseholdSheet(households: scope?.households ?? [], current: nil) { id in
+                    pendingHousehold = .some(id)
+                }
             }
         }
         .interactiveDismissDisabled(model.editor.isDirty && !model.editor.isSaved)
@@ -311,6 +392,17 @@ private struct EntryForm: View {
         let draft = model.draft
         let currency = ledger.currency.rawValue
         VStack(spacing: 0) {
+            if offersHousehold(model) {
+                Button {
+                    overlay = .household
+                } label: {
+                    EntryFieldRow("Household", systemImage: "house", value: "Personal")
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("Choose a household to split this expense with")
+                .accessibilityIdentifier("entryForm.household")
+                Divider().padding(.leading, 52)
+            }
             Button {
                 overlay = .date
             } label: {
@@ -349,6 +441,23 @@ private struct EntryForm: View {
             .accessibilityIdentifier("entryForm.details")
         }
         .background(PennyColor.surface, in: RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous))
+    }
+
+    /// A new expense, not on a personal trip, with a household to go to.
+    private func offersHousehold(_ model: EntryFormModel) -> Bool {
+        guard let scope, !scope.households.isEmpty, model.editor.isNew else { return false }
+        return model.draft.kind == .expense && model.draft.tripId == nil
+    }
+
+    /// After the Household sheet: a household hands what was typed to the shared form. Nothing
+    /// is kept here, so the draft can't come back as a second copy.
+    private func applyHousehold(_ model: EntryFormModel) {
+        guard let choice = pendingHousehold else { return }
+        pendingHousehold = nil
+        guard let id = choice, let scope else { return }
+        closing = true
+        shell.drafts.discard(mode)
+        scope.choose(id, EntryHandoff(model.draft, ledger: ledger))
     }
 
     private func splitValue(_ draft: EntryDraft, currency: String) -> String {

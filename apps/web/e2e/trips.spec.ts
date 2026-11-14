@@ -39,11 +39,11 @@ const horizontalOverflow = (page: Page) => page.evaluate(() => document.document
 /** A shared expense through the trip's own form (Trip expense). */
 async function addTripExpense(page: Page, title: string, amount: string, date: string) {
   await page.getByRole("button", { name: "Trip expense" }).click();
-  const form = page.getByRole("dialog", { name: "New shared expense" });
-  await form.getByLabel(/^Total/).fill(amount);
+  const form = page.getByRole("dialog", { name: "Add entry" });
+  await form.getByLabel(/^Amount \(/).fill(amount);
   await form.getByLabel("Title").fill(title);
   await form.getByLabel("Date").fill(date);
-  await form.getByRole("button", { name: "Add expense" }).click();
+  await form.getByRole("button", { name: "Save" }).click();
   await expect(form).toBeHidden();
 }
 

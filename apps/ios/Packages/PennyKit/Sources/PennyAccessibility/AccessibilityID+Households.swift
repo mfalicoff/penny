@@ -103,6 +103,12 @@ extension AccessibilityID {
         public static let formRestoredDraft = "sharedForm.restoredDraft"
         public static let formKeepDraft = "sharedForm.keepDraft"
         public static let formDiscard = "sharedForm.discard"
+        /// The rows laid out like Add entry's: type, household, who paid, the split and details.
+        public static let formKind = "sharedForm.kind"
+        public static let formHousehold = "sharedForm.household"
+        public static let formPaidBy = "sharedForm.paidBy"
+        public static let formSplit = "sharedForm.splitRow"
+        public static let formDetails = "sharedForm.details"
         public static func payer(_ userId: String) -> String { "sharedForm.payer.\(userId)" }
         public static func split(_ userId: String) -> String { "sharedForm.split.\(userId)" }
 
@@ -131,7 +137,8 @@ extension AccessibilityID {
                 expenseHistory, formAmount, formTitle, formDate, formMode, formYourShare, formAccount, formNote,
                 formRepeat, formSave, formClose, formCategory, formActive, formProblem, formError, formReviewLatest,
                 formRestoredDraft,
-                formKeepDraft, formDiscard, recordShareConfirm, recordShareExplanation, recordMonthlyConfirm,
+                formKeepDraft, formDiscard, formKind, formHousehold, formPaidBy, formSplit, formDetails,
+                recordShareConfirm, recordShareExplanation, recordMonthlyConfirm,
                 recordMonthlyExplanation, paymentError, staleOld, staleNew, staleReview, historyEmpty,
             ]
         static let prefixes = [
