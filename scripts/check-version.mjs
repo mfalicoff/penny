@@ -20,6 +20,13 @@ if (nativeVersion !== version) {
   throw new Error(`apps/ios/Configuration/Version.xcconfig MARKETING_VERSION must be ${version}; found ${nativeVersion ?? "none"}.`);
 }
 
+const serverInfoPath = "apps/backend/src/Penny.Backend.Api/Contracts/ServerInfo.cs";
+const serverInfo = readFileSync(new URL(`../${serverInfoPath}`, import.meta.url), "utf8");
+const apiVersion = serverInfo.match(/CurrentVersion = "([^"]+)"; \/\/ x-release-please-version$/m)?.[1];
+if (apiVersion !== version) {
+  throw new Error(`${serverInfoPath} CurrentVersion must be ${version}; found ${apiVersion ?? "none"}.`);
+}
+
 const ref = process.env.GITHUB_REF;
 if (ref?.startsWith("refs/tags/") && ref !== `refs/tags/v${version}`) {
   throw new Error(`Release tag must be v${version}; received ${ref.slice("refs/tags/".length)}.`);
