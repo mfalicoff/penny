@@ -31,8 +31,6 @@ final class FixtureDecodingTests: XCTestCase {
         XCTAssertTrue(recurrence.sequences.allSatisfy { $0.dates.first == $0.start && $0.dates.count == 13 })
         let merge = try Fixtures.decode(MergeFixture.self, from: "merge-conflicts.json")
         XCTAssertTrue(merge.cases.allSatisfy { $0.expected.version == 4 })
-        let upgrades = try Fixtures.decode([LedgerUpgradeCase].self, from: "ledger-upgrades.json")
-        XCTAssertTrue(upgrades.allSatisfy { $0.expected.version == 4 && $0.expected.accounts != nil })
         let splits = try Fixtures.decode(SharedSplitsFixture.self, from: "shared-splits.json")
         for item in splits.cases where item.error != true {
             XCTAssertEqual(item.expected?.reduce(0) { $0 + $1.amountCents }, item.totalCents, item.name)
@@ -41,7 +39,7 @@ final class FixtureDecodingTests: XCTestCase {
         XCTAssertFalse(parity.dates.isEmpty)
         let totals = try Fixtures.decode(MonthTotalsFixture.self, from: "month-totals.json")
         XCTAssertTrue(totals.cases.allSatisfy { totals.ledgers[$0.ledger] != nil })
-        XCTAssertTrue(totals.cases.contains { $0.clock != nil } && totals.cases.contains { $0.today == nil })
+        XCTAssertTrue(totals.cases.contains { $0.clock != nil })
     }
 
     func testScenarioFixturesDecodeStrictlyAndAgree() throws {

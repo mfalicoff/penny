@@ -10,8 +10,6 @@ public enum DeviceSearchReason: Equatable, Sendable {
     case pendingChanges
     /// No network.
     case offline
-    /// The server has no search v1 (it answered 404).
-    case serverWithoutSearch
     /// The server search failed; the message names what happened.
     case serverFailed(String)
 }
@@ -24,7 +22,7 @@ public protocol EntrySearchService: AnyObject {
     /// Changes whenever the local ledger or the account changes (a save, a sync).
     var searchEpoch: Int { get }
     /// Why to search this device's data instead of the server, or nil to use the server.
-    func deviceReason(serverHasSearch: Bool) -> DeviceSearchReason?
+    func deviceReason() -> DeviceSearchReason?
     func reconcile(_ page: SearchPage, startedAt epoch: Int) -> SearchReconciliation
     /// Starts a new search from its first page, cancelling the previous one.
     func search(_ request: SearchRequest) async throws -> SearchPage
@@ -46,8 +44,7 @@ public final class AccountEntrySearch: EntrySearchService {
 
     public var searchEpoch: Int { model.searchEpoch }
 
-    public func deviceReason(serverHasSearch: Bool) -> DeviceSearchReason? {
-        if !serverHasSearch { return .serverWithoutSearch }
+    public func deviceReason() -> DeviceSearchReason? {
         if !model.isOnline { return .offline }
         if model.state.hasPendingChanges { return .pendingChanges }
         return nil
@@ -62,11 +59,11 @@ public final class AccountEntrySearch: EntrySearchService {
     public func cancel() async { await coordinator.cancel() }
 }
 
-/// Activity's search state (MAZ-73, docs/migration/search.md "Offline, pending edits and demo").
+/// Activity's search state (MAZ-73, docs/reference/search.md "Offline, pending edits and demo").
 ///
 /// Browsing without a query lists this device's ledger. A query goes to the server (search v1:
 /// typo and meaning matches, shared expenses) unless changes are pending, the device is
-/// offline, the server has no search v1 or this is the demo; then the screen searches this
+/// offline or this is the demo; then the screen searches this
 /// device's data and says so. Local rows are never mixed into server pages.
 ///
 /// Server search is debounced, cancels the previous request, pages with the server's cursor
@@ -105,7 +102,6 @@ public final class ActivitySearchModel {
 
     @ObservationIgnored private let service: (any EntrySearchService)?
     @ObservationIgnored private let debounce: Duration
-    @ObservationIgnored private var serverHasSearch = true
     @ObservationIgnored private var current: ActivityFilters?
     @ObservationIgnored private var epoch: Int?
     @ObservationIgnored private var task: Task<Void, Never>?
@@ -168,7 +164,7 @@ public final class ActivitySearchModel {
                 switch service.reconcile(page, startedAt: started) {
                 case .show(let page): self.results?.append(page)
                 case .searchAgain: self.start(filters, debounced: false)
-                case .useLocalResults: self.showDevice(service.deviceReason(serverHasSearch: self.serverHasSearch))
+                case .useLocalResults: self.showDevice(service.deviceReason())
                 }
             } catch {
                 guard let self, generation == self.generation else { return }
@@ -203,7 +199,7 @@ public final class ActivitySearchModel {
             showDevice(nil)
             return
         }
-        if let reason = service.deviceReason(serverHasSearch: serverHasSearch) {
+        if let reason = service.deviceReason() {
             showDevice(reason)
             return
         }
@@ -232,7 +228,7 @@ public final class ActivitySearchModel {
                         self.showDevice(.pendingChanges)
                     }
                 case .useLocalResults:
-                    self.showDevice(service.deviceReason(serverHasSearch: self.serverHasSearch) ?? .pendingChanges)
+                    self.showDevice(service.deviceReason() ?? .pendingChanges)
                 }
             } catch {
                 guard let self, generation == self.generation, !(error is CancellationError) else { return }
@@ -250,11 +246,6 @@ public final class ActivitySearchModel {
     }
 
     private func fail(_ error: any Error) {
-        if case APIError.notFound = error {
-            serverHasSearch = false
-            showDevice(.serverWithoutSearch)
-            return
-        }
         let message = Self.message(error)
         results = nil
         totalCount = nil

@@ -4,7 +4,7 @@ import Testing
 @Suite("Server URL")
 struct ServerURLTests {
     @Test(
-        "whenValidAddress_ServerURL_ShouldNormalizeLikeTheLegacyApp",
+        "whenValidAddress_ServerURL_ShouldNormalizeIt",
         arguments: [
             ("https://penny.example.com", "https://penny.example.com"),
             ("  https://Penny.Example.com/  ", "https://penny.example.com"),

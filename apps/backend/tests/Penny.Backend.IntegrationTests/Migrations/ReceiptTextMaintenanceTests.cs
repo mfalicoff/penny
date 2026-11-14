@@ -32,9 +32,9 @@ public sealed class ReceiptTextMaintenanceTests(ApiFixture fixture) : ReceiptTex
         return (exit, JsonDocument.Parse(output).RootElement.Clone());
     }
 
-    // A receipt as the SQLite import (or an upload before MAZ-125) leaves it: the
+    // A receipt as an upload before MAZ-125 left it: the
     // encrypted file and its row, but no text row.
-    private async Task<string> LegacyReceiptAsync(string userId, params string[] lines)
+    private async Task<string> UnreadReceiptAsync(string userId, params string[] lines)
     {
         var id = Convert.ToHexStringLower(
             System.Security.Cryptography.RandomNumberGenerator.GetBytes(16)
@@ -42,7 +42,7 @@ public sealed class ReceiptTextMaintenanceTests(ApiFixture fixture) : ReceiptTex
         var encrypted = Fixture.Receipts.Encrypt(
             userId,
             id,
-            "legacy.pdf",
+            "unread.pdf",
             "application/pdf",
             SyntheticReceipts.TextPdf(lines),
             Noon
@@ -58,12 +58,12 @@ public sealed class ReceiptTextMaintenanceTests(ApiFixture fixture) : ReceiptTex
     public async Task whenReceiptsPredateOcr_ReceiptsOcr_ShouldBackfillLinkedReceiptsAndRerunAfterEngineChange()
     {
         var (token, userId) = await AccountAsync("backfill@example.test");
-        var linked = await LegacyReceiptAsync(
+        var linked = await UnreadReceiptAsync(
             userId,
             "Librairie Drawn and Quarterly",
             "Roman graphique en couleur 32.95"
         );
-        var unlinked = await LegacyReceiptAsync(
+        var unlinked = await UnreadReceiptAsync(
             userId,
             "Marche Jean-Talon kiosque fermier",
             "Panier de fraises du Quebec 8.00"

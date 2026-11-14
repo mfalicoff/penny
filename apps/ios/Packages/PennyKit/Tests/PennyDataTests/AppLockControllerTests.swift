@@ -328,15 +328,4 @@ struct DevicePreferencesTests {
         UserDefaultsDevicePreferences(suiteName: suite).setAppearance(.dark)
         #expect(UserDefaultsDevicePreferences(suiteName: suite).appearance == .dark)
     }
-
-    @Test(
-        "whenALegacyThemeIsImported_AppearancePreference_ShouldMapAmoledAndCatppuccinToDark",
-        arguments: [
-            ("light", AppearancePreference.light), ("dark", .dark), ("amoled", .dark), ("catppuccin", .dark),
-            ("system", .system), ("unknown", .system),
-        ])
-    func legacy(value: String, expected: AppearancePreference) {
-        #expect(AppearancePreference(legacy: value) == expected)
-        #expect(AppearancePreference(legacy: nil) == .system)
-    }
 }

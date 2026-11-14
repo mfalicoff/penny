@@ -40,7 +40,7 @@ export function GroupLink({ route, householdId, search, exact, children, ...rest
   );
 }
 
-/** One expense's detail: the legacy `/households/$id/expenses/$expenseId`, or `?expense=` on a shared trip. */
+/** One expense's detail: `/households/$id/expenses/$expenseId`, or `?expense=` on a shared trip. */
 export function ExpenseLink({ route, householdId, expenseId, search, className, children }: Omit<GroupLinkProps, "exact"> & { expenseId: string }) {
   if (route === "trips") {
     return (
@@ -58,8 +58,8 @@ export function ExpenseLink({ route, householdId, expenseId, search, className, 
 }
 
 /** A household's own search: everything but the shared-trip-only `expense`. */
-function householdOnly({ month, tab, add }: GroupSearch): HouseholdSearch {
-  return { ...(month ? { month } : {}), ...(tab ? { tab } : {}), ...(add ? { add } : {}) };
+function householdOnly({ month, tab }: GroupSearch): HouseholdSearch {
+  return { ...(month ? { month } : {}), ...(tab ? { tab } : {}) };
 }
 
 /** Where to go after leaving, removal of oneself or archiving. */

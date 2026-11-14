@@ -97,7 +97,7 @@ struct RecurringListView: View {
         Task { failure = await shell.commit(action.0, summary: action.1) }
     }
 
-    /// Active schedules by next date, then paused ones (legacy order is by next date).
+    /// Active schedules by next date, then paused ones.
     static func sorted(_ rules: [RecurringRule]) -> [RecurringRule] {
         rules.sorted { lhs, rhs in
             if lhs.active != rhs.active { return lhs.active }

@@ -92,7 +92,7 @@ public struct ReceiptReference: Hashable, Sendable {
 /// both in integer cents (the minor unit of the ledger currency). Reports always use `share`.
 ///
 /// Optional fields are absent when nil, never an empty string or a JSON `null`: clearing one
-/// means setting it to nil, and the wire layer then omits the key (docs/migration/ledger.md).
+/// means setting it to nil, and the wire layer then omits the key (docs/reference/ledger.md).
 public struct LedgerEntry: Hashable, Sendable {
     public var id: String
     public var title: String
@@ -179,7 +179,7 @@ public struct Ledger: Hashable, Sendable {
     public static let maxCategories = 300
     public static let maxEntries = 100_000
     public static let maxRules = 1_000
-    /// The longest id, in UTF-16 code units (`LedgerLimits.IdLength`, zod `max(100)`).
+    /// The longest id, in UTF-16 code units (`LedgerLimits.IdLength`).
     public static let maxIDLength = 100
 
     public var currency: Currency
@@ -202,11 +202,11 @@ public struct Ledger: Hashable, Sendable {
         self.recurring = recurring
     }
 
-    /// The investment category version 1 ledgers gain on upgrade (legacy `investmentCategory`).
+    /// The default investment category.
     public static let investmentCategory = LedgerCategory(
         id: "investments", name: "Investments", icon: "trending-up-outline", color: "#678DB1", kind: .investment)
 
-    /// The categories a new ledger starts with (legacy `initialCategories`).
+    /// The categories a new ledger starts with.
     public static let defaultCategories: [LedgerCategory] = [
         LedgerCategory(id: "groceries", name: "Groceries", icon: "basket-outline", color: "#6C9C79", kind: .expense),
         LedgerCategory(id: "food", name: "Food & drinks", icon: "cafe-outline", color: "#E47850", kind: .expense),
@@ -224,7 +224,7 @@ public struct Ledger: Hashable, Sendable {
         investmentCategory,
     ]
 
-    /// The category palette (legacy `palette`).
+    /// The category palette.
     public static let palette = ["#E47850", "#C6953A", "#6C9C79", "#678DB1", "#9D83BA", "#C8798D"]
 
     public func entry(id: String) -> LedgerEntry? { transactions.first { $0.id == id } }

@@ -6,9 +6,9 @@ using Penny.Backend.Application.Households;
 
 namespace Penny.Backend.Api.Controllers;
 
-// Shared expenses, individual share payments and the personal projection (legacy
-// server/http/households.ts, MAZ-57). Session-protected by the fallback policy. See
-// docs/migration/shared-expenses.md. Month recaps, monthly reimbursements and audit
+// Shared expenses, individual share payments and the personal projection
+// (MAZ-57). Session-protected by the fallback policy. See
+// docs/reference/shared-expenses.md. Month recaps, monthly reimbursements and audit
 // history are HouseholdSettlementController (MAZ-58); shared recurrence is
 // HouseholdRecurringController.
 [ApiController]
@@ -119,7 +119,7 @@ public sealed class HouseholdExpensesController(SharedExpenseService expenses) :
         );
     }
 
-    // The revision travels in the DELETE body, as in the legacy client.
+    // The revision travels in the DELETE body.
     [HttpDelete("{id}/expenses/{expenseId}", Name = "deleteApiHouseholdsIdExpensesExpenseid")]
     [ProducesResponseType<OkResponse>(200)]
     [ProducesResponseType<ApiError>(400)]
@@ -167,7 +167,7 @@ public sealed class HouseholdExpensesController(SharedExpenseService expenses) :
         return StatusCode(201, new ExpenseEnvelopeResponse(ExpenseResponse.From(paid)));
     }
 
-    // Express `typeof req.query.x === "string"`: one non-empty value, else absent
+    // One non-empty value, else absent
     // (a repeated parameter is an array and is ignored, as is an empty value).
     private string? Query(string name) =>
         Request.Query.TryGetValue(name, out var values)

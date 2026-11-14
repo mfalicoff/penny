@@ -1,10 +1,10 @@
 # Native QA matrix and release gates (MAZ-82)
 
-[Documentation](README.md) · [Native UI tests](ios-ui-tests.md) · [Native app](../apps/ios/README.md) · [Redesign baseline](migration/redesign.md) · [Feature parity](migration/feature-parity.md)
+[Documentation](README.md) · [Native UI tests](ios-ui-tests.md) · [Native app](../apps/ios/README.md) · [Redesign baseline](reference/redesign.md)
 
 This page is the native iOS release gate: which journeys are covered on the simulator and how, which redesign cards they trace to, the accessibility and performance checks with their budgets, what was actually run (execution evidence), what only a physical device can check, how to triage a failure, and the known coverage gaps. The harness itself (plans, launch controls, the stack, artifacts, flaky-test policy) is described in [native UI tests](ios-ui-tests.md); this page does not repeat it.
 
-Everything here runs against the real .NET API on PostgreSQL from the [full-stack test environment](migration/test-environment.md), with synthetic `.test` accounts and fixed synthetic amounts. No test mocks the business API, and no fixture contains personal financial data or credentials.
+Everything here runs against the real .NET API on PostgreSQL from the [full-stack test environment](reference/test-environment.md), with synthetic `.test` accounts and fixed synthetic amounts. No test mocks the business API, and no fixture contains personal financial data or credentials.
 
 ## Plans
 
@@ -19,7 +19,7 @@ All four run on clean iPhone and iPad simulators (`PENNY_UI_DEVICES`), on the mi
 
 ## Journey matrix
 
-Each row is a parity area from [feature parity](migration/feature-parity.md). "Server-checked" means the test reads the account's ledger back through `GET /api/ledger` after the write and compares amounts in cents, including the recorded totals per kind (`LedgerJSON.shareTotal`).
+Each row is a feature area. "Server-checked" means the test reads the account's ledger back through `GET /api/ledger` after the write and compares amounts in cents, including the recorded totals per kind (`LedgerJSON.shareTotal`).
 
 | Area | Suites | What is exercised | Durable after | Server-checked totals |
 | --- | --- | --- | --- | --- |
@@ -38,7 +38,7 @@ Each row is a parity area from [feature parity](migration/feature-parity.md). "S
 
 ### Redesign card trace
 
-Every card in [design-baseline.json](../contracts/design-baseline.json) whose native acceptance is MAZ-82 has a row. `tests/core/native-qa.test.ts` fails if a card is missing here or if this page names an XCUITest suite or test that does not exist. Visual comparison against the cards is MAZ-122's; a row marked Covered means the behavior is exercised, not that the screen matches the card pixel for pixel. The eight `web-*` cards are browser references (MAZ-96); their native counterparts are named.
+Every card in [design-baseline.json](../contracts/design-baseline.json) whose native acceptance is MAZ-82 has a row. `scripts/tests/native-qa.test.ts` fails if a card is missing here or if this page names an XCUITest suite or test that does not exist. Visual comparison against the cards is MAZ-122's; a row marked Covered means the behavior is exercised, not that the screen matches the card pixel for pixel. The eight `web-*` cards are browser references (MAZ-96); their native counterparts are named.
 
 | Card | Native suites | Notes | Status |
 | --- | --- | --- | --- |
@@ -104,7 +104,7 @@ Every card in [design-baseline.json](../contracts/design-baseline.json) whose na
 | `web-add-entry` | — | Web-only reference: native behavior is traced through `iphone-add-expense`; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-sign-in` | — | Web-only reference: native behavior is traced through `iphone-sign-in`; the browser journeys are MAZ-96 | Not applicable to native |
 
-Justified native adaptations are recorded in [redesign](migration/redesign.md#native-implementation-notes-maz-69). Android has no card (the Android app is retired, MAZ-98), and the desktop-only `web-*` cards have no native screen.
+Justified native adaptations are recorded in [redesign](reference/redesign.md#native-implementation-notes-maz-69). Android has no card (the Android app is retired, MAZ-98), and the desktop-only `web-*` cards have no native screen.
 
 ## Accessibility
 
@@ -170,7 +170,7 @@ Recorded for MAZ-82 on 2026-11-12, on an Apple Silicon Mac with Xcode 27.2, the 
 | Full plan | iPad | MAZ-82 suites | Entries, search, sync conflicts and settings: 8 passed. Organize: 3 of 3 crashed the app (Settings › Manage page in the detail column), fixed in this branch; see the rerun below |
 | Full plan, after the iPad fix | iPad | `OrganizeJourneyTests`, `AddEntryOverSettingsTests`, the join link over Settings | 5 passed (the three organize journeys, Add entry over a pushed Settings page, the join link over Settings) |
 
-Also run on this branch: `apps/ios/scripts/ios.sh lint` (pass), `ios.sh package-test` (775 Swift tests in PennyKit, pass, including AccessibilityIDTests with the new identifiers), `ios.sh ui-build` and `ios.sh release-check` (pass; no test controls in Release), `npm run test:core` (155 tests, pass, including `tests/core/native-qa.test.ts`), `npm run lint`, `npm run typecheck`, `npm run version:check` (pass). The backend is unchanged by MAZ-82; its unit tests ran with 510 of 511 passing: `OcrOptionsTests.whenValueInvalid_Read_ShouldFailWithTheSettingName(Ocr:EngineMemoryMegabytes, 128)` fails. This branch changes no backend file, so the failure is pre-existing on `origin/v2` (not investigated here). The run also needed `TESTINGPLATFORM_PIPE_DIRECTORY` set to a short path: the worktree's default `.cache/p` exceeded the 103-byte Unix socket limit.
+Also run on this branch: `apps/ios/scripts/ios.sh lint` (pass), `ios.sh package-test` (775 Swift tests in PennyKit, pass, including AccessibilityIDTests with the new identifiers), `ios.sh ui-build` and `ios.sh release-check` (pass; no test controls in Release), `npm run test:core` (155 tests, pass, including `scripts/tests/native-qa.test.ts`), `npm run lint`, `npm run typecheck`, `node scripts/check-version.mjs` (pass). The backend is unchanged by MAZ-82; its unit tests ran with 510 of 511 passing: `OcrOptionsTests.whenValueInvalid_Read_ShouldFailWithTheSettingName(Ocr:EngineMemoryMegabytes, 128)` fails. This branch changes no backend file, so the failure is pre-existing on `origin/v2` (not investigated here). The run also needed `TESTINGPLATFORM_PIPE_DIRECTORY` set to a short path: the worktree's default `.cache/p` exceeded the 103-byte Unix socket limit.
 
 Not run here: the existing `HouseholdJourneyTests` (except the join link), `TripJourneyTests`, `ReceiptJourneyTests`, `AuthJourneyTests`, `NotificationJourneyTests`, `OverviewJourneyTests` and `ScreenshotTests` (their harness is unchanged apart from `openSettings` retrying and faults being cleared at the start; the nightly matrix runs them), the backend integration tests, and the iOS 26.0 minimum-OS row.
 
@@ -185,7 +185,7 @@ Defects found and fixed by these runs:
 
 Simulators cannot check these; run them on a physical iPhone and iPad with the release candidate from TestFlight before submitting, and record the device, OS and build in the release issue.
 
-- [ ] **Upgrade from the App Store/Expo build**: install the current store build, sign in, add an entry offline, then install the candidate over it (TestFlight). The session, the pending entry and the appearance survive (MAZ-72/98).
+- [ ] **Upgrade from the App Store build**: install the current store build, sign in, add an entry offline, then install the candidate over it (TestFlight). The session, the pending entry and the appearance survive (MAZ-98).
 - [ ] **Face ID lock**: turn on the lock, background and return; content and open sheets are concealed and drafts kept; cancel and passcode fallback work (MAZ-69, `iphone-lock`, `iphone-app-lock`).
 - [ ] **Push notifications**: register on the production APNs environment, receive a household expense notification from a second account, tap it locked and unlocked (MAZ-79, [notifications](ios-notifications.md)).
 - [ ] **Widgets**: add small widgets to the Home Screen, check light and dark, refresh after a new entry, tap through to Add entry and Home, sign out clears them (MAZ-80, `system-widgets`).
@@ -206,7 +206,7 @@ Simulators cannot check these; run them on a physical iPhone and iPad with the r
    - Test bug (a changed identifier, a new system presentation such as a popover instead of an action sheet): fix the driver (`PennyUITests/Support`) in the same day.
    - Flaky (passes on the Full plan's retry): follow the [flaky-test policy](ios-ui-tests.md#flaky-test-policy): issue with the xcresult, fix or `XCTSkip("Flaky: MAZ-…")` within a week.
    - Environment (simulator runtime missing, stack did not start): re-run; if it persists, fix the runner, not the test.
-4. **Reproduce one test**: `PENNY_UI_DEVICES=iphone PENNY_UI_ONLY=PennyUITests/<Class>/<test> apps/ios/scripts/ios.sh ui-test full`, or keep a stack up (`npm run test-env -- up --oidc`) and run it from Xcode.
+4. **Reproduce one test**: `PENNY_UI_DEVICES=iphone PENNY_UI_ONLY=PennyUITests/<Class>/<test> apps/ios/scripts/ios.sh ui-test full`, or keep a stack up (`node scripts/test-env/penny-env.mjs up --oidc`) and run it from Xcode.
 5. **Accessibility findings**: read the `audit-*.txt` attachment. Fix in the view (labels, `accessibilityElement`, Dynamic Type styles, contrast tokens) or, for a system control Penny does not draw, add a reviewed entry to `AccessibilityAuditTests.accepted` and to the table above.
 6. **Performance budget exceeded**: re-run the Performance plan once; if it is still over, compare the `perf-*.json` attachments with the last green nightly and bisect.
 

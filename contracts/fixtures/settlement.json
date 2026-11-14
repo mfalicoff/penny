@@ -1,5 +1,5 @@
 {
-  "description": "Golden monthly settlement cases for calculateMonthlyBalances and suggestReimbursements (src/domain/households.ts) and the .NET MonthlySettlement port. Amounts are integer cents; expenses with deletedAt are soft-deleted. Expected values were produced by the TypeScript implementation.",
+  "description": "Golden monthly settlement cases for calculateMonthlyBalances and suggestReimbursements (apps/web/src/domain/households.ts) and the .NET MonthlySettlement port. Amounts are integer cents; expenses with deletedAt are soft-deleted. Expected values were produced by the TypeScript implementation.",
   "cases": [
     {
       "name": "one payer, equal shares among three",

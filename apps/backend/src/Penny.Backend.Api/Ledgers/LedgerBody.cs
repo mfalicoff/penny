@@ -3,7 +3,7 @@ using Microsoft.Net.Http.Headers;
 
 namespace Penny.Backend.Api.Ledgers;
 
-// Reads the ledger body the way express.json() fed the legacy validator: a non-JSON
+// Reads the ledger body. A non-JSON
 // content type or empty body is "no body" (validation then fails), malformed JSON or
 // a top-level scalar is a 400 "Invalid JSON.". The body is never logged.
 public static class LedgerBody

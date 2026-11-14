@@ -12,8 +12,6 @@ var maintenance =
     args.FirstOrDefault()
     is "migrate"
         or "bootstrap"
-        or "snapshot-sqlite"
-        or "import-sqlite"
         or PasswordResetCommand.Name
         or SearchCommand.Rebuild
         or SearchCommand.Verify
@@ -49,8 +47,8 @@ if (app.Services.GetRequiredService<TestControlOptions>().Enabled)
 app.UseRouting();
 app.UseRequestTimeouts();
 
-// Origin check first: CORS would answer a disallowed preflight itself, while the
-// legacy server refused it with 403.
+// Origin check first: CORS would answer a disallowed preflight itself; the contract
+// refuses it with 403.
 app.UseMiddleware<OriginPolicyMiddleware>();
 app.UseCors();
 app.UseRateLimiter();

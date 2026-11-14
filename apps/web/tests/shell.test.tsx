@@ -5,8 +5,8 @@ import { renderApp, stubServer } from "./render";
 
 const main = () => screen.getByRole("navigation", { name: "Main" });
 
-describe("legacy deep links", () => {
-  // Every legacy Expo URL keeps a destination (docs/migration/redesign.md#legacy-deep-links).
+describe("app URLs", () => {
+  // Every route opens its page (contracts/design-baseline.json navigation.routes).
   it.each([
     ["/", "Home"],
     ["/transactions", "Activity"],

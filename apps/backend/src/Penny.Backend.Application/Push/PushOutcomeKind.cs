@@ -2,7 +2,7 @@ namespace Penny.Backend.Application.Push;
 
 public enum PushOutcomeKind
 {
-    // The provider took the message (an Expo ticket or an APNs 200).
+    // The provider took the message (an APNs 200).
     Accepted,
 
     // Transient: network, timeout, rate limit, provider outage or provider

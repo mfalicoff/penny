@@ -12,8 +12,8 @@ namespace Penny.Backend.IntegrationTests.Contracts;
 
 // MAZ-62: runs the language-neutral scenarios of contracts/fixtures/full-stack-seeds.json
 // through real HTTP, PostgreSQL (pg_trgm, pgvector) and the real model with the pinned
-// clock, then checks their published search and state expectations. The Node runner
-// (scripts/test-env/seed.mjs) runs the same steps against a full-stack environment.
+// clock, then checks their published search and state expectations. The script
+// `scripts/test-env/seed.mjs` runs the same steps against a full-stack environment.
 public sealed partial class FullStackSeedTests(ApiFixture fixture) : SearchTestBase(fixture)
 {
     private static JsonNode Seeds => ContractFixtures.Read("full-stack-seeds.json");

@@ -1,11 +1,11 @@
 namespace Penny.Backend.Domain.Households;
 
-// The settlement rules that gate membership exits (legacy `calculateMonthlyBalances`
-// over every month with expenses or reimbursements). Months are independent: a debt
+// The settlement rules that gate membership exits (the monthly balances of every
+// month with expenses or reimbursements). Months are independent: a debt
 // in one month is never offset by a credit in another.
 public static class HouseholdSettlement
 {
-    // Legacy `canLeave`: the member's balance is zero in every month.
+    // A member may leave when the member's balance is zero in every month.
     public static bool IsSettled(IEnumerable<BalanceContribution> contributions, string userId) =>
         Net(contributions)
             .All(balance =>
@@ -13,7 +13,7 @@ public static class HouseholdSettlement
                 || balance.Value == 0
             );
 
-    // Legacy archive check: no month has a suggested reimbursement, that is, every
+    // A household may be archived when no month has a suggested reimbursement, that is, every
     // member's balance is zero in every month (balances always net to zero).
     public static bool IsSettled(IEnumerable<BalanceContribution> contributions) =>
         Net(contributions).All(balance => balance.Value == 0);

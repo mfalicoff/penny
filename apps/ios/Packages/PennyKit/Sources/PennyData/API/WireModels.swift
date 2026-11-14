@@ -143,8 +143,7 @@ public struct WireRecurring: Codable, Equatable, Sendable {
     }
 }
 
-/// The whole personal ledger. Reads and writes return version 4; older inputs (1-3) are
-/// accepted by the server and upgraded.
+/// The whole personal ledger, version 4. `Ledger(wire:)` refuses any other version.
 public struct WireLedger: Codable, Equatable, Sendable {
     public var version: Int
     public var currency: String
@@ -236,8 +235,8 @@ public struct WireProjectedExpense: Codable, Equatable, Sendable {
     public var receipt: WireReceipt?
     public var accountId: String?
     public var scheduled: Bool?
-    /// The shared rule: on previews, and on recorded occurrences it recorded (MAZ-139; older
-    /// servers omit it there). Previews are matched to recorded rows by household, rule and date.
+    /// The shared rule: on previews, and on recorded occurrences it recorded (MAZ-139); absent
+    /// on one-off expenses. Previews are matched to recorded rows by household, rule and date.
     public var recurringId: String?
     public var receiptId: String?
 }

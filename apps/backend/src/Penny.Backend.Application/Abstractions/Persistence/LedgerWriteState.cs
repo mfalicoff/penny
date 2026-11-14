@@ -4,8 +4,6 @@ namespace Penny.Backend.Application.Abstractions.Persistence;
 // OwnedReceiptIds and ExistingHouseholdIds are limited to the ids the new ledger
 // references.
 public sealed record LedgerWriteState(
-    bool HasAccounts,
-    bool HasTrips,
     IReadOnlySet<string> HouseholdCurrencies,
     IReadOnlySet<string> LinkedAccountIds,
     IReadOnlySet<string> OwnedReceiptIds,

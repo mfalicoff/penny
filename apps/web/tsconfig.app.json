@@ -29,7 +29,7 @@
         "../../design-kit/*"
       ],
       "@domain/*": [
-        "../../src/domain/*"
+        "./src/domain/*"
       ]
     }
   },
@@ -37,6 +37,8 @@
     "src"
   ],
   "exclude": [
+    "src/domain",
+    "src/validation",
     "src/**/*.test.ts",
     "src/**/*.test.tsx"
   ]

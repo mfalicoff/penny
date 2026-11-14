@@ -1,8 +1,8 @@
 namespace Penny.Backend.Application.Push;
 
 // A transport's answer for one message. `Reason` is a redacted diagnostic code such
-// as `apns:410:Unregistered` or `expo:http-503`: never a token, payload or response
-// body. `RetryAfter` is the provider's requested delay, if any.
+// as `apns:410:Unregistered` or `apns:transport-error`: never a token, payload or
+// response body. `RetryAfter` is the provider's requested delay, if any.
 public sealed record PushOutcome(
     PushOutcomeKind Kind,
     string? Reason = null,

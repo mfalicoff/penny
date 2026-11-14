@@ -10,7 +10,7 @@ export const categoriesSearchSchema = z.object({
   kind: z.enum(["expense", "income", "investment"]).optional().catch(undefined),
 });
 
-/** Categories (MAZ-89), at the legacy URL kept from the Expo app. */
+/** Categories (MAZ-89). */
 export const Route = createFileRoute("/categories")({
   staticData: { title: "Categories" },
   validateSearch: categoriesSearchSchema,

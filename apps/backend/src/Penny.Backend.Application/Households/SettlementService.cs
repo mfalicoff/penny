@@ -5,10 +5,9 @@ using Penny.Backend.Domain.Households;
 
 namespace Penny.Backend.Application.Households;
 
-// Port of the legacy monthly settlement and audit reads
-// (server/infrastructure/households.ts: month, recap, reimburse, audit). Messages,
-// failure kinds and the order of checks are part of the client contract; deviations
-// are listed in docs/migration/settlement.md. A reimbursement runs in one transaction
+// Month recaps, monthly reimbursements and audit reads. Messages, failure kinds and
+// the order of checks are part of the client contract; see
+// docs/reference/settlement.md. A reimbursement runs in one transaction
 // that first locks the household row (the lock every expense, payment and membership
 // writer takes), re-checks access, recomputes the month's suggestions under the lock
 // and writes the reimbursement, its audit row and push outbox rows before commit, so
@@ -21,7 +20,7 @@ public sealed class SettlementService(ISharedExpenseRepository expenses, TimePro
     public const string MonthOpen = "Record reimbursements on the last day of the month or later.";
     public const string NotSuggested = "This is no longer the full suggested reimbursement.";
 
-    // Legacy `audit()` returns at most this many household events (an expense's
+    // The household audit returns at most this many events (an expense's
     // history is not limited).
     public const int AuditLimit = 500;
 

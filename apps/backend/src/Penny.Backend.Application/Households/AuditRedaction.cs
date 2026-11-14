@@ -3,9 +3,9 @@ using System.Text.Json.Nodes;
 namespace Penny.Backend.Application.Households;
 
 // Audit snapshots are written without the payer's private `accountId` and without the
-// receipt's filename (encrypted at rest). Rows imported from SQLite, or written by an
-// older legacy version, may still carry them, so every snapshot is redacted again when
-// it is read: the response never depends on how a row was written.
+// receipt's filename (encrypted at rest). Stored snapshots may still carry
+// them, so every snapshot is redacted again when it is read: the response never
+// depends on how a row was written.
 public static class AuditRedaction
 {
     public static string? Redact(string? json)

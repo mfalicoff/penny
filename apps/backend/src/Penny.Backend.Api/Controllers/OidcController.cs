@@ -10,8 +10,8 @@ using Penny.Backend.Domain.Errors;
 
 namespace Penny.Backend.Api.Controllers;
 
-// Legacy routes in server/http/auth.ts. OidcService is registered only when OIDC is
-// configured; otherwise start/complete return 404 after the body is parsed, as before.
+// OIDC sign-in routes. OidcService is registered only when OIDC is
+// configured; otherwise start/complete return 404 after the body is parsed.
 [ApiController]
 [Route("api/auth/oidc")]
 [AllowAnonymous]

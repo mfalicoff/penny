@@ -17,12 +17,12 @@ public sealed class AuthOptionsTests
         );
 
     [Fact]
-    public void whenNothingConfigured_Read_ShouldUseLegacyDefaults()
+    public void whenNothingConfigured_Read_ShouldUseDefaults()
     {
         var options = Read();
         options.AllowRegistration.ShouldBeTrue();
         options.SecureCookies.ShouldBeFalse();
-        options.AllowedOrigins.ShouldBe(["http://localhost:8081", "http://localhost:3001"]);
+        options.AllowedOrigins.ShouldBe(["http://localhost:4173", "http://127.0.0.1:4173"]);
         options.TrustedProxies.ShouldBeEmpty();
         options.RateLimitPermits.ShouldBe(40);
         options.PasswordResetHours.ShouldBe(24);

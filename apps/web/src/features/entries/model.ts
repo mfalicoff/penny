@@ -20,11 +20,10 @@ import type { IconName } from "../../design/Icon";
 import { MAX_SCHEDULES } from "../recurring/model";
 
 /**
- * The personal entry form's draft and its validation (MAZ-88). The rules are the legacy app's
- * (`src/features/entries/entryDraft.ts`) on top of the shared domain (`@domain/ledger.ts`,
- * `@domain/commands.ts`): integer cents, the personal share modes, a repeat that creates a rule
- * whose first occurrence is this entry, and trips and receipts on expenses only. Saving goes
- * through the durable offline store as a `LedgerChange`, never straight to the API.
+ * The personal entry form's draft and its validation (MAZ-88), on top of the shared domain
+ * (`@domain/ledger.ts`, `@domain/commands.ts`): integer cents, the personal share modes, a repeat
+ * that creates a rule whose first occurrence is this entry, and trips and receipts on expenses
+ * only. Saving goes through the durable offline store as a `LedgerChange`, never straight to the API.
  */
 
 export type ShareMode = "full" | "equal" | "amount" | "percent";

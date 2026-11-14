@@ -8,11 +8,10 @@ using Xunit;
 
 namespace Penny.Backend.IntegrationTests.Migrations;
 
-// MAZ-64 post-cutover recovery rehearsal. After writes reopen on v2, recovery is
-// forward-only: a PostgreSQL base backup plus archived WAL, replayed to a point
-// in time, together with the receipt root (docs/migration/postgresql.md#cutover-and-forward-only-recovery).
+// MAZ-64 recovery rehearsal. Recovery is forward-only: a PostgreSQL base backup plus archived WAL, replayed to a point
+// in time, together with the receipt root (docs/reference/postgresql.md#forward-only-recovery).
 // The rehearsal takes a base backup, accepts more writes through the API (the
-// post-cutover writes a dump alone would lose), marks a restore point, then makes
+// writes a dump alone would lose), marks a restore point, then makes
 // "incident" writes. A second PostgreSQL instance in the same container recovers to
 // the restore point, and a new API host over it must keep every accepted write,
 // none of the incident writes, working sessions and decryptable receipts.
@@ -54,7 +53,7 @@ public sealed class PointInTimeRecoveryTests(ApiFixture fixture) : SharedExpense
             $"gosu postgres pg_basebackup --username=foundation_admin --pgdata={Base} --wal-method=stream --checkpoint=fast"
         );
 
-        // Post-cutover writes: accepted after the backup and must survive.
+        // Writes accepted after the backup must survive.
         await SaveEntryAsync(alex.Token, "after-backup");
         var accepted = await CreateExpenseAsync(
             home,

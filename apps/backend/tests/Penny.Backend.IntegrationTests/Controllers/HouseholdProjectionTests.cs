@@ -56,7 +56,7 @@ public sealed class HouseholdProjectionTests(ApiFixture fixture) : SharedExpense
             .Select(Id)
             .ShouldBe([Id(october), Id(september)]);
         (await ProjectionAsync(bea, "")).GetProperty("transactions").GetArrayLength().ShouldBe(3);
-        // An empty value is absent, as in Express.
+        // An empty value is absent.
         (await ProjectionAsync(bea, "?month=&year="))
             .GetProperty("transactions")
             .GetArrayLength()
@@ -88,7 +88,7 @@ public sealed class HouseholdProjectionTests(ApiFixture fixture) : SharedExpense
     }
 
     [Fact]
-    public async Task whenQueryIsInvalid_Projection_ShouldRejectLikeLegacy()
+    public async Task whenQueryIsInvalid_Projection_ShouldRejectWithContractErrors()
     {
         var (alex, _) = await AccountAsync("alex@example.test");
         await ExpectErrorAsync(
@@ -112,7 +112,7 @@ public sealed class HouseholdProjectionTests(ApiFixture fixture) : SharedExpense
             HttpStatusCode.BadRequest,
             SharedExpenseService.InvalidYear
         );
-        // Repeated parameters are arrays in Express and are ignored.
+        // Repeated parameters are ignored.
         (await ProjectionAsync(alex, "?month=2026-13&month=x"))
             .GetProperty("transactions")
             .GetArrayLength()
@@ -147,7 +147,8 @@ public sealed class HouseholdProjectionTests(ApiFixture fixture) : SharedExpense
         await ExpectAsync(HttpMethod.Post, $"/api/households/{home}/leave", bea, HttpStatusCode.OK);
         await CreateExpenseAsync(home, alex, Expense(1200, alexId, "2026-10-01"));
 
-        // Legacy answered 404 here once the household had expenses without them.
+        // A former member still gets a projection after the household records
+        // expenses without them.
         var past = await ProjectionAsync(bea, "");
         past.GetProperty("transactions")
             .EnumerateArray()

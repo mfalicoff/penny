@@ -176,7 +176,7 @@ struct DeepLinkInboxTests {
         #expect(inbox.pending == .home)
     }
 
-    @Test("whenSignedInAndUnlockedAfterALegacyLink_Shell_ShouldOpenTheLinksDestination")
+    @Test("whenSignedInAndUnlockedAfterADeepLink_Shell_ShouldOpenTheLinksDestination")
     func afterAuthentication() throws {
         var inbox = DeepLinkInbox()
         let url = try #require(URL(string: "penny://households/h1/expenses/e2"))

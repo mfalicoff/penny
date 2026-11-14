@@ -10,7 +10,7 @@ import SwiftUI
 /// The browser session is **ephemeral**: no cookies are shared with Safari or kept between
 /// attempts. On a shared device, signing out of Penny and handing it to someone else must
 /// not sign them straight back in to the previous person's provider account (and so their
-/// Penny data). The legacy app shared Safari's cookies; this is a deliberate difference.
+/// Penny data). It deliberately does not share Safari's cookies.
 nonisolated struct SystemWebAuthenticator: WebAuthenticator {
     let session: WebAuthenticationSession
 

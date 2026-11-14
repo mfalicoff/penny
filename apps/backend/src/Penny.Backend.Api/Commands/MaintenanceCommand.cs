@@ -1,16 +1,30 @@
-using System.Text.Json;
-using Microsoft.Data.Sqlite;
 using Penny.Backend.Persistence.Configuration;
-using Penny.Backend.Persistence.Import;
 using Penny.Backend.Persistence.Migrations;
-using Penny.Backend.Persistence.Receipts;
 
 namespace Penny.Backend.Api.Commands;
 
+// `migrate [--bootstrap] [--grant-runtime]` and `bootstrap`: schema changes with the
+// migration (and, for the bootstrap, administrator) credentials. Never starts HTTP.
 internal static class MaintenanceCommand
 {
+    private const string Usage =
+        "Usage: migrate [--bootstrap] [--grant-runtime] | bootstrap | reset-password EMAIL. See apps/backend/README.md.";
+
     public static async Task<int> RunAsync(string[] args, IConfiguration configuration)
     {
+        var valid =
+            args is ["bootstrap"]
+            || (
+                args is ["migrate", ..]
+                && args.Skip(1).All(option => option is "--bootstrap" or "--grant-runtime")
+                && args.Skip(1).Distinct().Count() == args.Length - 1
+            );
+        if (!valid)
+        {
+            Console.Error.WriteLine("command-usage");
+            Console.Error.WriteLine(Usage);
+            return 1;
+        }
         using var stopping = new CancellationTokenSource();
         ConsoleCancelEventHandler cancel = (_, signal) =>
         {
@@ -22,94 +36,35 @@ internal static class MaintenanceCommand
         {
             // Roles, schema and extensions only, without migrating: an empty server that a
             // backup is restored into needs the roles that own its objects.
-            if (args is ["bootstrap"])
+            if (args is ["bootstrap"] || args.Contains("--bootstrap"))
             {
-                await BootstrapAsync(configuration, stopping.Token);
+                if (!await BootstrapAsync(configuration, stopping.Token))
+                {
+                    Console.Error.WriteLine("bootstrap-configuration");
+                    Console.Error.WriteLine(Usage);
+                    return 1;
+                }
                 Console.WriteLine("Database bootstrap complete.");
-                return 0;
+                if (args is ["bootstrap"])
+                    return 0;
             }
-            if (args is ["snapshot-sqlite", var sourcePath, var snapshotPath])
-            {
-                Console.WriteLine(
-                    "Snapshot SHA-256: " + SqliteSnapshot.Create(sourcePath, snapshotPath)
-                );
-                return 0;
-            }
-            ImportMode mode = ImportMode.Import;
-            if (args[0] == "import-sqlite")
-            {
-                if (args.Length is not (4 or 5) || args[2] != "--sha256")
-                    throw new ImportFailure("command-usage");
-                mode =
-                    args.Length == 4
-                        ? ImportMode.Import
-                        : args[4] switch
-                        {
-                            "--dry-run" => ImportMode.DryRun,
-                            "--resume" => ImportMode.Resume,
-                            "--verify" => ImportMode.Verify,
-                            _ => throw new ImportFailure("command-usage"),
-                        };
-            }
-            else if (
-                args[0] != "migrate"
-                || args.Skip(1).Any(option => option is not ("--bootstrap" or "--grant-runtime"))
-                || args.Skip(1).Distinct().Count() != args.Length - 1
-            )
-                throw new ImportFailure("command-usage");
             var settings = DatabaseSettings.Create(
                 configuration.GetConnectionString("Migration"),
                 maxPoolSize: 1
             );
             await using var database = settings.CreateDataSource();
-            if (args[0] == "migrate")
+            await DatabaseMigrator.ApplyAsync(database, stopping.Token);
+            Console.WriteLine("Database migration complete.");
+            if (args.Contains("--grant-runtime"))
             {
-                if (args.Contains("--bootstrap"))
-                {
-                    await BootstrapAsync(configuration, stopping.Token);
-                    Console.WriteLine("Database bootstrap complete.");
-                }
-                await DatabaseMigrator.ApplyAsync(database, stopping.Token);
-                Console.WriteLine("Database migration complete.");
-                if (args.Contains("--grant-runtime"))
-                {
-                    await RuntimeGrants.ApplyAsync(database, stopping.Token);
-                    Console.WriteLine("Runtime grants applied.");
-                }
-            }
-            else
-            {
-                var receipts = new ReceiptFileStore(
-                    ReceiptStoreSettings.Create(
-                        configuration["Receipts:Root"],
-                        configuration["Receipts:MasterKey"]
-                    )
-                );
-                var report = await SqliteImporter.RunAsync(
-                    database,
-                    receipts,
-                    args[1],
-                    args[3],
-                    mode,
-                    (table, count) => Console.Error.WriteLine($"Validated {table}: {count} rows."),
-                    stopping.Token
-                );
-                Console.WriteLine(JsonSerializer.Serialize(report));
+                await RuntimeGrants.ApplyAsync(database, stopping.Token);
+                Console.WriteLine("Runtime grants applied.");
             }
             return 0;
-        }
-        catch (ImportFailure error)
-        {
-            Console.Error.WriteLine(error.Message);
-            Console.Error.WriteLine(
-                "Usage: migrate [--bootstrap] [--grant-runtime] | bootstrap | snapshot-sqlite SOURCE NEW_SNAPSHOT | import-sqlite SNAPSHOT --sha256 HASH [--dry-run|--resume|--verify] | reset-password EMAIL. See docs/migration/postgresql.md."
-            );
-            return 1;
         }
         catch (Exception error)
             when (error
                     is Npgsql.NpgsqlException
-                        or SqliteException
                         or TimeoutException
                         or OperationCanceledException
                         or InvalidOperationException
@@ -117,11 +72,10 @@ internal static class MaintenanceCommand
                         or UnauthorizedAccessException
                         or ArgumentException
                         or Microsoft.EntityFrameworkCore.DbUpdateException
-                        or System.Security.Cryptography.CryptographicException
             )
         {
             Console.Error.WriteLine(
-                "Database migration/import failed. Check source access, connectivity, PostgreSQL 18, schema compatibility, migration-role privileges, the receipt store and the migration lock. No credentials or row values are logged."
+                "Database migration failed. Check connectivity, PostgreSQL 18, schema compatibility, migration-role privileges and the migration lock. No credentials or row values are logged."
             );
             return 1;
         }
@@ -133,7 +87,8 @@ internal static class MaintenanceCommand
 
     // The administrator connection is used only here. The role passwords come from the
     // connection strings the migration and the API use, so they cannot drift apart.
-    private static async Task BootstrapAsync(
+    // Returns false when those connection strings do not name the expected roles.
+    private static async Task<bool> BootstrapAsync(
         IConfiguration configuration,
         CancellationToken cancellationToken
     )
@@ -150,7 +105,7 @@ internal static class MaintenanceCommand
             || string.IsNullOrEmpty(migration.Password)
             || string.IsNullOrEmpty(runtime.Password)
         )
-            throw new ImportFailure("bootstrap-configuration");
+            return false;
         var settings = DatabaseSettings.Create(
             configuration.GetConnectionString("Admin"),
             maxPoolSize: 1
@@ -162,5 +117,6 @@ internal static class MaintenanceCommand
             runtime.Password,
             cancellationToken
         );
+        return true;
     }
 }

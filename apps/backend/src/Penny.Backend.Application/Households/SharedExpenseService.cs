@@ -9,11 +9,9 @@ using Penny.Backend.Domain.Ledgers;
 
 namespace Penny.Backend.Application.Households;
 
-// Port of the legacy shared-expense operations and the personal projection
-// (server/infrastructure/households.ts: expenses, getExpense, createExpense,
-// updateExpense, deleteExpense, payExpense, projection). Messages, failure kinds and
-// the order of checks are part of the client contract; deviations are listed in
-// docs/migration/shared-expenses.md. Every write runs in one transaction that first
+// Shared-expense list, read, create, update, delete and payment, and the personal
+// projection. Messages, failure kinds and the order of checks are part of the client
+// contract; see docs/reference/shared-expenses.md. Every write runs in one transaction that first
 // locks the household row (both rows, in id order, for a move), then the payer's
 // ledger row when it validates a payment account, re-checks access inside the lock,
 // compare-and-increments the expense revision and writes its audit (and push outbox)
@@ -102,7 +100,7 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
         return await expenses.WriteAsync(
             async store =>
             {
-                // Access is checked before the body, as in the legacy route.
+                // Access is checked before the body.
                 var household = await RequireMemberAsync(store, householdId, actorId);
                 if (input is null)
                     throw new BackendFailure(FailureKind.Invalid, HouseholdService.InvalidData);
@@ -358,7 +356,7 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
         CancellationToken cancellationToken
     )
     {
-        // The legacy route validates the body before checking access.
+        // Payments validate the body before checking access.
         var request =
             ExpenseReader.ReadPayment(body)
             ?? throw new BackendFailure(FailureKind.Invalid, HouseholdService.InvalidData);
@@ -650,7 +648,7 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
             throw new BackendFailure(FailureKind.Invalid, ReceiptUnavailable);
     }
 
-    // Legacy `requireMember(..., historical = true)`: any membership, archived or not.
+    // Any membership, current or former, of a household archived or not.
     internal static async Task<StoredMember> HistoricalMemberAsync(
         ISharedExpenseTransaction store,
         string householdId,
@@ -662,7 +660,7 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
                 : null
         ) ?? throw new BackendFailure(FailureKind.NotFound, HouseholdService.NotFound);
 
-    // Legacy `canSeeExpense`: current members see every expense; former members only
+    // Current members see every expense; former members only
     // those they have a share in.
     internal static bool CanSee(StoredMember membership, StoredExpense expense, string userId) =>
         membership.IsCurrent
@@ -670,7 +668,7 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
             string.Equals(share.UserId, userId, StringComparison.Ordinal)
         );
 
-    // Legacy `requireMember`: a current member of an unarchived household, holding the
+    // A current member of an unarchived household, holding the
     // household lock for the rest of the unit.
     internal static async Task<StoredHousehold> RequireMemberAsync(
         ISharedExpenseTransaction store,
@@ -774,10 +772,10 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
         );
 
     // Writes the audit row and, for events that notify (`month` set: created, updated
-    // and payment events, as legacy), one push outbox row for every other current
+    // and payment events), one push outbox row for every other current
     // member, all in this transaction. Monthly reimbursements have no expense: their
-    // outbox rows use the event id as entity and omit `expenseId` from the payload, as
-    // legacy. The push worker is MAZ-61's.
+    // outbox rows use the event id as entity and omit `expenseId` from the payload.
+    // The push worker is MAZ-61's.
     internal static async Task AuditAsync(
         ISharedExpenseTransaction store,
         string householdId,
@@ -837,7 +835,7 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
     // Route values that PostgreSQL text cannot hold match nothing.
     internal static bool Storable(string id) => LedgerText.IsStorable(id);
 
-    // Legacy `randomId(16)`: 16 random bytes as lower-case hex.
+    // Ids are 16 random bytes as lower-case hex.
     internal static string NewId() => RandomNumberGenerator.GetHexString(32, lowercase: true);
 
     private DateTimeOffset Now() => MembershipDates.Truncate(clock.GetUtcNow());

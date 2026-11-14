@@ -5,10 +5,9 @@ using Penny.Backend.Domain.Ledgers;
 
 namespace Penny.Backend.Application.Households;
 
-// The legacy shared rule view (src/data/households.ts `HouseholdRecurring`), also the
-// audit payload of rule events. `Allocations` is absent for equal rules; `AccountId`
-// is the payer's private account, present only when the viewer is the payer and
-// never in audit.
+// The shared rule view (contract schema `SharedRecurring`), also the audit payload of
+// rule events. `Allocations` is absent for equal rules; `AccountId` is the payer's
+// private account, present only when the viewer is the payer and never in audit.
 public sealed record SharedRuleView(
     string Id,
     string HouseholdId,
@@ -54,6 +53,6 @@ public sealed record SharedRuleView(
         );
     }
 
-    // Legacy audit payloads drop the payer's account (`{...rule, accountId: undefined}`).
+    // Audit payloads drop the payer's account.
     public SharedRuleView ForAudit() => this with { AccountId = null };
 }

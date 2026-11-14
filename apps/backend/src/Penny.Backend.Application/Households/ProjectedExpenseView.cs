@@ -5,7 +5,7 @@ using Penny.Backend.Domain.Ledgers;
 
 namespace Penny.Backend.Application.Households;
 
-// Legacy `ProjectedExpense`: the viewer's share of a recorded shared expense, or of a
+// A projected expense: the viewer's share of a recorded shared expense, or of a
 // scheduled occurrence (`Scheduled`; month projections only). `RecurringId` names the
 // shared rule on previews and on recorded occurrences the rule recorded (MAZ-139), so
 // clients drop a cached preview of the same household, rule and date. Shares stay

@@ -121,11 +121,11 @@ function findUserId(value) {
   return undefined;
 }
 
-// The v2 browser app as the web image serves it (MAZ-97): every legacy URL keeps a page, the
+// The v2 browser app as the web image serves it (MAZ-97): every app URL opens the page, the
 // page policy and cache rules match apps/web and nix/module.nix, and the fingerprinted assets
 // (scripts, the Inter font, the pdf.js worker) are served with JavaScript/font types.
 async function checkWebArtifact(page) {
-  const legacyRoutes = [
+  const appRoutes = [
     "/transactions",
     "/entries/new",
     "/accounts",
@@ -140,19 +140,17 @@ async function checkWebArtifact(page) {
     "/settings",
     "/auth/callback?code=c&state=s",
   ];
-  for (const route of legacyRoutes) {
+  for (const route of appRoutes) {
     const response = await http(route);
-    check(response.status === 200 && response.text === page.text, `legacy URL ${route} opens the app`);
+    check(response.status === 200 && response.text === page.text, `${route} opens the app`);
   }
-  check(page.text.includes('<div id="root">') && !page.text.includes("_expo"), "index.html is the v2 app, not the Expo export");
+  check(page.text.includes('<div id="root">'), "index.html is the v2 app");
   const csp = page.headers.get("content-security-policy") ?? "";
   check(csp.includes("script-src 'self'") && csp.includes("worker-src 'self'") && csp.includes("frame-ancestors 'none'"), "page sends the app's Content-Security-Policy", csp);
   check(page.headers.get("x-content-type-options") === "nosniff" && page.headers.get("x-frame-options") === "DENY", "page sends nosniff and frame denial");
 
   const version = await http("/version.json");
   check(version.status === 200 && typeof version.json?.version === "string" && version.headers.get("cache-control") === "no-store", "version.json names the serving build, uncached", version.text);
-  const expo = await http("/_expo/static/js/web/entry-0000.js");
-  check(expo.status === 404, "retired Expo bundle paths are 404, not index.html");
   const missingAsset = await http("/assets/missing-0000.js");
   check(missingAsset.status === 404 && !(missingAsset.headers.get("cache-control") ?? "").includes("immutable"), "a missing fingerprinted asset is an uncached 404, not index.html");
 

@@ -28,7 +28,7 @@ public sealed class PasswordResetTests(ApiFixture fixture) : IntegrationTestBase
         var userId = (string)
             (await ScalarAsync("SELECT id FROM penny.users WHERE email = @p", Email))!;
         await Fixture.SqlAsync(
-            $"INSERT INTO penny.push_devices (token, user_id, session_hash, platform, updated_at) VALUES ('device-1', '{userId}', '{SessionTokens.Hash(bearer)}', 'ios', now())",
+            $"INSERT INTO penny.push_devices (token, user_id, session_hash, platform, provider, environment, updated_at) VALUES ('device-1', '{userId}', '{SessionTokens.Hash(bearer)}', 'ios', 'apns', 'production', now())",
             Ct
         );
 
@@ -65,11 +65,10 @@ public sealed class PasswordResetTests(ApiFixture fixture) : IntegrationTestBase
         (await StatusAsync(bearer: other)).ShouldBe(HttpStatusCode.OK);
         (await ScalarAsync("SELECT count(*) FROM penny.password_resets", null)).ShouldBe(0L);
 
-        // The new password is an Identity hash with an empty legacy salt.
+        // The new password is an Identity hash.
         var stored = (string)
             (await ScalarAsync("SELECT password FROM penny.users WHERE email = @p", Email))!;
         new IdentityPasswordHasher().Verify(stored, NewPassword).ShouldBe(PasswordCheck.Success);
-        (await ScalarAsync("SELECT salt FROM penny.users WHERE email = @p", Email)).ShouldBe("");
         using (
             var old = await Client.PostAsJsonAsync(
                 "/api/auth/login",

@@ -1,6 +1,6 @@
 # Native sign-in and sessions (MAZ-68)
 
-The SwiftUI app signs in with a password or with single sign-on (OIDC), keeps one session per server in the Keychain, restores it at launch and ends it on expiry or sign-out. The state machine and storage are in `apps/ios/Packages/PennyKit/Sources/PennyData/Auth`; the screens are in `Sources/PennyUI/Auth`. Both build on the [API client](ios-api-client.md). The server side is described in [authentication](migration/authentication.md).
+The SwiftUI app signs in with a password or with single sign-on (OIDC), keeps one session per server in the Keychain, restores it at launch and ends it on expiry or sign-out. The state machine and storage are in `apps/ios/Packages/PennyKit/Sources/PennyData/Auth`; the screens are in `Sources/PennyUI/Auth`. Both build on the [API client](ios-api-client.md). The server side is described in [authentication](reference/authentication.md).
 
 ## What people see
 
@@ -60,7 +60,7 @@ Rules the tests hold:
 3. `POST /api/auth/logout`. A `401` means it already ended. Any other failure returns to `signedIn` with `serverUnreachable`; **Remove from this device** (`removeEvenIfUnreachable: true`) continues, and the server session then stays valid until it expires (at most 30 days). A retry from that alert passes the same agreed count, so step 1 discards only as many changes as the person agreed to lose; newer changes bring the warning back.
 4. Delete the Keychain item, move to `signedOut(.signedOut)`, then `AccountLocalData.removeLocalData(for:)`. If removal fails, the person is signed out anyway (the session is gone), `AuthController.unremovedLocalData` names the account, and the sign-in screen says "You're signed out, but entries for <email> couldn't be removed from this device" with **Remove them now** (`removeUnremovedLocalData()`). The data stays under its own scope, so nobody else sees it; signing in again as that account makes it theirs again. The notice is kept in memory only; after a relaunch, `OfflineLedgerStore.storedScopes()` lists accounts that still have entries on the device, so the UI can offer the removal again (not wired to a screen yet).
 
-The legacy app refused to sign out offline at all; the native app keeps that default and adds the explicit removal. The app passes `OfflineLedgerStore` (MAZ-71) as `AccountLocalData`: pending changes are the difference between the stored base and local ledgers, a copy that cannot be read counts as one pending change, and "Sync, then sign out" fails unless the server acknowledged everything ([offline sync](ios-offline-sync.md#sign-out-and-cache-clearing)). The app passes `APNsDeviceRegistration` (MAZ-79); `NoDeviceRegistration` remains for tests and previews.
+By default, sign-out does not go ahead while the server is unreachable; **Remove from this device** is the explicit way out. The app passes `OfflineLedgerStore` (MAZ-71) as `AccountLocalData`: pending changes are the difference between the stored base and local ledgers, a copy that cannot be read counts as one pending change, and "Sync, then sign out" fails unless the server acknowledged everything ([offline sync](ios-offline-sync.md#sign-out-and-cache-clearing)). The app passes `APNsDeviceRegistration` (MAZ-79); `NoDeviceRegistration` remains for tests and previews.
 
 ## Keychain storage
 
@@ -68,7 +68,7 @@ The legacy app refused to sign out offline at all; the native app keeps that def
 
 | Attribute | Value | Why |
 | --- | --- | --- |
-| Service | `com.mfalicoff.penny.session` | Separate from the Expo app's `expo-secure-store` items |
+| Service | `com.mfalicoff.penny.session` | Its own service, so the fresh-install purge touches nothing else |
 | Account | The normalized server URL (`ServerURL`) | One session per server; a token is never read for another server |
 | Value | JSON `{"version":1,"server":…,"email":…,"token":…}` | The server is checked again on read |
 | Accessibility | `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly` | Background sync (later) can read it after the first unlock; never restored from a backup onto another device |
@@ -76,15 +76,12 @@ The legacy app refused to sign out offline at all; the native app keeps that def
 | Keychain | Data protection keychain, the app's default access group | The widget extension never needs the token |
 
 The token is redacted from every `description`; `SessionStoreError` carries only an `OSStatus`. The server address and install marker are not secrets and live in `UserDefaults` (`penny.auth.server`, `penny.auth.launched`).
-
-**Expo upgrade.** The legacy app stored its token with `expo-secure-store` under `penny-session` (or `penny-session.<hex of the URL>` for a server other than the original one) and its server in AsyncStorage (`penny:server-connection`). `ExpoMigration` (MAZ-72) imports them at the first native launch: the server choice when the native app has none, and each server's session when its email is known (`penny:active-account`) and the native app has none there. It runs the fresh-install purge itself first, so the imported session survives it; `restore` then verifies it like any other. Without a known email, or with an expired token, the person signs in again and their imported entries reappear ([Expo upgrade](ios-expo-migration.md)). The fresh-install purge only touches the native service above, never the Expo items.
-
 ## Single sign-on
 
 The app uses `ASWebAuthenticationSession` through SwiftUI's `WebAuthenticationSession` (`SystemWebAuthenticator`), with the `penny` callback scheme:
 
 1. `POST /api/auth/oidc/start` with `redirectUri: "penny://auth/callback"`. The transaction must be 64 lowercase hex characters and the authorization URL HTTPS (HTTP only for a loopback provider). `expiresAt` is on the server's clock, so the app never compares it with the device clock: the attempt's lifetime is `expiresAt` minus the response's `Date` header (both server time), and the local deadline is the device time of the request plus that lifetime. A device clock that is off by any amount therefore neither breaks single sign-on nor keeps an expired attempt alive. Without a `Date` header the app does not judge expiry and the server's check on complete decides.
-2. The system sheet opens the provider. It is an **ephemeral** browser session: no cookies are shared with Safari or kept between attempts. On a shared device this stops the next person from being signed straight in to the previous person's provider account, at the cost of entering provider credentials each time (AutoFill helps). The legacy app shared Safari's cookies.
+2. The system sheet opens the provider. It is an **ephemeral** browser session: no cookies are shared with Safari or kept between attempts. On a shared device this stops the next person from being signed straight in to the previous person's provider account, at the cost of entering provider credentials each time (AutoFill helps).
 3. The callback must be `penny://auth/callback` with exactly one `state` and no fragment. The in-memory attempt is consumed before anything else, so one attempt redeems at most one callback, and an attempt whose deadline passed while the sheet was open is not sent. The app also refuses a callback URL it has already sent, but that check is only a convenience: it remembers the last 32 URLs, in memory, in one process (a relaunch forgets them). The real guard is the server, which consumes the attempt before calling the provider, so a replayed callback can never create a second session.
 4. `POST /api/auth/oidc/complete` with the transaction and the full callback URL; the response is the same `{token, email}` session as password sign-in.
 
@@ -99,12 +96,12 @@ Oidc__RedirectUris=https://penny.example.com/auth/callback,penny://auth/callback
 ```
 
 - `penny://auth/callback` must be listed **exactly** on the server and registered with the provider as a redirect URI. Otherwise start answers `400 This sign-in redirect is not configured on the server.`, which the app shows.
-- The `penny` URL scheme is registered in the app's `Info.plist` (unchanged from the Expo app; `PennyTests` checks it). No associated domain or entitlement is needed.
+- The `penny` URL scheme is registered in the app's `Info.plist` (frozen for TestFlight/App Store continuity; `PennyTests` checks it). No associated domain or entitlement is needed.
 - The provider must accept a custom-scheme redirect URI for this client. If it does not, single sign-on is unavailable in the app (password sign-in still works) and the server shows its own error on start or complete.
 
 ## Server choice
 
-`checkServer` normalizes the address like the legacy app, calls `GET /api/info` (no credential, 10-second timeout, redirects refused) and reads `GET /api/auth/oidc` for the sign-in methods. An answer that is not `{"name":"penny","version":…}` is "This address did not identify itself as a Penny server". Debug builds default to `http://localhost:3001` (or `PENNY_TEST_SERVER_URL` through the test controls); Release has no default and starts at server connect. The app's `Info.plist` sets no `NSAppTransportSecurity` keys, so the default App Transport Security rules apply (the deployment target is iOS 26). According to Apple's [`NSAllowsLocalNetworking`](https://developer.apple.com/documentation/bundleresources/information-property-list/nsapptransportsecurity/nsallowslocalnetworking) documentation: plain HTTP to a fully qualified host (`http://penny.example.com`) is blocked, and the check reports it as "Cannot reach this server"; unqualified names such as `localhost` and `.local` hosts are allowed, which is how the Debug default works; and since iOS 17, plain HTTP to an IP address (including `127.0.0.1` and LAN addresses) is blocked unless listed as an exception, which the app does not do. The server-connect screen warns about any HTTP address it can reach. This has not been checked on a device against each kind of address.
+`checkServer` normalizes the address (`ServerURL`), calls `GET /api/info` (no credential, 10-second timeout, redirects refused) and reads `GET /api/auth/oidc` for the sign-in methods. An answer that is not `{"name":"penny","version":…}` is "This address did not identify itself as a Penny server". Debug builds default to `http://localhost:5001`, the backend's development stack (or `PENNY_TEST_SERVER_URL` through the test controls); Release has no default and starts at server connect. The app's `Info.plist` sets no `NSAppTransportSecurity` keys, so the default App Transport Security rules apply (the deployment target is iOS 26). According to Apple's [`NSAllowsLocalNetworking`](https://developer.apple.com/documentation/bundleresources/information-property-list/nsapptransportsecurity/nsallowslocalnetworking) documentation: plain HTTP to a fully qualified host (`http://penny.example.com`) is blocked, and the check reports it as "Cannot reach this server"; unqualified names such as `localhost` and `.local` hosts are allowed, which is how the Debug default works; and since iOS 17, plain HTTP to an IP address (including `127.0.0.1` and LAN addresses) is blocked unless listed as an exception, which the app does not do. The server-connect screen warns about any HTTP address it can reach. This has not been checked on a device against each kind of address.
 
 ## Failure messages
 
@@ -135,4 +132,4 @@ Oidc__RedirectUris=https://penny.example.com/auth/callback,penny://auth/callback
 
 Run `apps/ios/scripts/ios.sh package-test` for the PennyKit suites on the Mac (seconds) and `apps/ios/scripts/ios.sh test` for everything on clean iPhone and iPad simulators. Tests use `.test` domains and fixture tokens only, never a real provider or credentials.
 
-Not automated yet: simulator journeys against the real API and a local OIDC provider (login, failed login, cancellation, expiry, logout, account switching with VoiceOver and keyboard checks). They need XCUITest, which is MAZ-81, plus the [full-stack test environment](migration/test-environment.md) with a provider that accepts `penny://auth/callback`. Point the Debug app at a test server with `PENNY_TEST_SERVER_URL` in the launch environment (`Penny/TestControls.swift`).
+Not automated yet: simulator journeys against the real API and a local OIDC provider (login, failed login, cancellation, expiry, logout, account switching with VoiceOver and keyboard checks). They need XCUITest, which is MAZ-81, plus the [full-stack test environment](reference/test-environment.md) with a provider that accepts `penny://auth/callback`. Point the Debug app at a test server with `PENNY_TEST_SERVER_URL` in the launch environment (`Penny/TestControls.swift`).

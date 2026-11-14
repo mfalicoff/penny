@@ -6,19 +6,16 @@ Run all commands from the repository root. For a deployed server, use the [self-
 
 ## Run the complete web app
 
-The browser app is `apps/web` (React, Vite, TanStack) on the .NET API. The Expo web app was retired in MAZ-97. Use Node **24 or newer**, npm, and Docker or Podman for the disposable PostgreSQL and API stack:
+The browser app is `apps/web` (React, Vite, TanStack) on the .NET API. Use Node **24 or newer**, npm, and Docker or Podman for the disposable PostgreSQL and API stack:
 
 ```sh
-npm ci
-npm run test-env -- up --seed searchable-household   # prints the API URL
+node scripts/test-env/penny-env.mjs up --seed searchable-household   # prints the API URL
 cd apps/web
 npm ci
 PENNY_API_URL=http://127.0.0.1:<port> npm run dev     # http://localhost:4173
 ```
 
-Open **http://localhost:4173**. Create an account, or choose the sample-data demo, which needs no API. See the [web app's developer setup](../apps/web/README.md#developer-setup) for the commands and the [test environment](migration/test-environment.md) for the stack. To run the production containers locally, follow [self-hosting](deployment.md#quick-start).
-
-The legacy Node/SQLite server (`npm run server`) serves only `/api/`. It is kept as the pre-cutover reference for the legacy test suites and as the rollback image. It saves data to `data/penny.sqlite`, which Git ignores. The Expo mobile app it once served was removed in MAZ-98.
+Open **http://localhost:4173**. Create an account, or choose the sample-data demo, which needs no API. See the [web app's developer setup](../apps/web/README.md#developer-setup) for the commands and the [test environment](reference/test-environment.md) for the stack. To run the production containers locally, follow [self-hosting](deployment.md#quick-start).
 
 ## Native iOS and backend development
 
@@ -29,7 +26,8 @@ The legacy Node/SQLite server (`npm run server`) serves only `/api/`. It is kept
 ## Nix / direnv development shell
 
 The pinned `flake.nix` / `flake.lock` environment provides Node 24 (including npm)
-and the SQLite CLI on Apple Silicon and Intel macOS, as well as Linux.
+and the receipt OCR tools (Tesseract, poppler, libvips) on Apple Silicon and Intel macOS,
+as well as Linux.
 It does not install dependencies, load `.env`, or start services automatically.
 
 On nix-darwin, enable direnv and its flake integration in your system configuration,
@@ -66,15 +64,6 @@ Xcode tools inside this shell. Existing platform settings are left unchanged. Fo
 browser tests, install Chromium with `npx playwright install chromium` (Linux may
 also need host browser dependencies).
 
-## Run the legacy API with live reload
-
-The web app's `npm run dev` (above) reloads on save. To run the legacy API:
-
-```sh
-cp .env.example .env
-npm run server
-```
-
 ## iOS builds and TestFlight
 
 The [iOS TestFlight workflow](../.github/workflows/ios-testflight.yml) runs checks, archives and signs the native iOS app, and uploads it to TestFlight when a GitHub Release is published or on manual dispatch. Release builds attach `penny.ipa` and its SHA-256 checksum to the release's **Assets**. Complete the setup in [iOS IPA and TestFlight builds](ios-ipa.md#one-time-setup) before running it.
@@ -93,7 +82,7 @@ install or enable the [Renovate GitHub App](https://github.com/apps/renovate) fo
 this repository. No repository token or scheduled workflow is needed.
 See [Renovate onboarding](https://docs.renovatebot.com/getting-started/installing-onboarding/).
 
-The root toolchain runs TypeScript 7 and ESLint 10:
+The tooling package (`scripts/`) runs TypeScript 7 and ESLint 10:
 
 - `@typescript/native` aliases TypeScript 7 and supplies `tsc` for
   `npm run typecheck`. The `typescript` dependency aliases
@@ -101,11 +90,11 @@ The root toolchain runs TypeScript 7 and ESLint 10:
   `typescript-eslint` and other tooling. Preserve this
   [official side-by-side setup](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/#running-side-by-side-with-typescript-6.0)
   until those tools support the new API.
-- `eslint.config.js` uses `typescript-eslint` and keeps the domain and server
-  layer boundaries.
+- `scripts/eslint.config.js` uses `typescript-eslint`; `apps/web/eslint.config.js` keeps
+  `apps/web/src/domain` free of packages and Node APIs.
 
-After dependency updates, run lint, typecheck and the core tests at the root, and
-each app's own checks.
+After dependency updates, run the checks of each package you updated (`scripts/` and
+each app).
 
 Validate configuration changes from the repository root:
 
@@ -113,27 +102,20 @@ Validate configuration changes from the repository root:
 npx --yes --package renovate -- renovate-config-validator --strict --no-global renovate.json
 ```
 
-## Implementation
+## Source layout
 
-- `src/domain/`: shared TypeScript ledger types, integer-cent calculations, recurrence, immutable mutation commands, entry-draft conversion and the household projection. See [Frontend architecture](frontend-architecture.md#shared-typescript-rules).
-- `server/app.ts`: wires storage, services and Express middleware/routes together.
-- `server/http/`: thin routes, cookies, authentication middleware and HTTP error mapping.
-- `server/application/`: account, ledger and receipt operations with typed storage/security interfaces.
-- `server/validation/`: input schemas, ledger invariants and receipt signature checks.
-- `server/infrastructure/`: SQLite schema/repositories, atomic writes and password/token cryptography.
-- `server/index.ts`: process lifecycle and environment configuration (API only since MAZ-97).
 - `apps/ios/`, `apps/web/`, `apps/backend/`: the native iOS app, the browser app and the .NET API, each with its own README.
-
-See [Backend architecture](backend-architecture.md) for service boundaries, persistence guarantees, API regression coverage and the Hono assessment.
+- `apps/web/src/domain/`: the pure TypeScript ledger rules (types, integer-cent calculations, recurrence, immutable commands, merge, search, summaries, entry-draft conversion and the household projection), the reference the native and web apps port. See [domain rules](reference/domain-rules.md).
+- `apps/web/src/validation/ledger.ts`: the ledger write schema the golden fixtures and the reference tests (`apps/web/tests/domain`) check ledgers against.
+- `contracts/`: OpenAPI, the golden fixtures and the design baseline shared by every client.
+- `scripts/`: the tooling package: the full-stack test environment, deployment and observability smoke tests, the Grafana dashboards and the version check. There is no package at the repository root.
+- `deploy/`, `nix/`: the Compose stack and the NixOS module.
 
 ## Verification
 
 ```sh
-npm run lint
-npm run typecheck
-npm test
-npm run fixtures:check
-(cd apps/web && npm ci && npm run check)
+(cd scripts && npm ci && npm run lint && npm run typecheck && npm test)
+(cd apps/web && npm ci && npm run check)   # includes fixtures:check and the shared rules' tests
 apps/ios/scripts/ios.sh ci
 ```
 

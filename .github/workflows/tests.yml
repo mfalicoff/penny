@@ -1,16 +1,25 @@
-name: Application tests
+name: Repository tooling and contracts
 
 on:
+  pull_request:
+  push:
+    branches: [master]
   workflow_call:
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
   tests:
-    name: Legacy API, shared rules and contracts
+    # scripts/ is its own package. The golden fixtures and the shared ledger rules' tests run
+    # with the web app (web.yml).
+    name: Repository tooling and contracts
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: scripts
     steps:
       - name: Check out source
         uses: actions/checkout@v7
@@ -22,6 +31,7 @@ jobs:
         with:
           node-version: '24'
           cache: npm
+          cache-dependency-path: scripts/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -36,17 +46,10 @@ jobs:
         run: npm run typecheck
 
       - name: Validate API contract
-        run: npm exec --yes --package @redocly/cli@2.76.0 -- redocly lint contracts/openapi.json
+        run: npm exec --yes --package @redocly/cli@2.76.0 -- redocly lint ../contracts/openapi.json
 
-      - name: Run core tests with coverage
-        run: npm run test:coverage
+      - name: Grafana dashboards are current
+        run: npm run dashboards:check
 
-      - name: Upload code coverage
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: code-coverage
-          path: |
-            coverage/
-            !coverage/core/tmp/**
-          if-no-files-found: ignore
+      - name: Run tooling tests
+        run: npm test

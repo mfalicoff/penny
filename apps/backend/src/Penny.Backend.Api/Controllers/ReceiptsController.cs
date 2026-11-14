@@ -8,10 +8,10 @@ using Penny.Backend.Domain.Ledgers;
 
 namespace Penny.Backend.Api.Controllers;
 
-// Receipt upload and download (legacy server/http/receipts.ts, MAZ-60). Session-
+// Receipt upload and download (MAZ-60). Session-
 // protected by the fallback policy. Large bodies on slow links legitimately outlast
 // the default request timeout, so these two operations opt out of it; Kestrel's
-// minimum data rates still end stalled transfers. See docs/migration/receipts.md.
+// minimum data rates still end stalled transfers. See docs/reference/receipts.md.
 [ApiController]
 [Route("api/receipts")]
 [DisableRequestTimeout]

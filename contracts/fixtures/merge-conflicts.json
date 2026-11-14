@@ -1,5 +1,5 @@
 {
-  "generator": "scripts/fixtures/generate-golden.ts",
+  "generator": "apps/web/scripts/fixtures/generate-golden.ts",
   "description": "Three-way ledger merge (offline sync after a 409): base is the last synced server ledger, local the unsynced device ledger, remote the newer server ledger.",
   "cases": [
     {

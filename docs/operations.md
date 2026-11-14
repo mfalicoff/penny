@@ -9,7 +9,7 @@ Running a v2 deployment from [`deploy/compose.yaml`](deployment.md): monitoring,
 | Endpoint | Meaning | Use |
 | --- | --- | --- |
 | `GET /api/health` | The API process is serving (no dependency checks) | Liveness: restart only if this fails |
-| `GET /api/ready` | Ready for traffic: PostgreSQL, schema, grants, extensions, import state and receipt storage all pass | Readiness, uptime alerting, load balancers |
+| `GET /api/ready` | Ready for traffic: PostgreSQL, schema, grants, extensions and receipt storage all pass | Readiness, uptime alerting, load balancers |
 | `GET /nginx-health` | nginx in `web` is up | `web` container health |
 
 The `api` container's health check runs `dotnet Penny.Backend.Api.dll health-probe` (it calls its own `/api/ready`), so `docker compose ps` shows `unhealthy` whenever readiness fails. `/api/ready` returns 503 with `Retry-After: 5` and one of these messages. It never changes the database or leaks connection details:
@@ -22,7 +22,6 @@ The `api` container's health check runs `dotnet Penny.Backend.Api.dll health-pro
 | `permissions` | "Runtime database role cannot read compatibility metadata…" | Grants missing: `penny run --rm migrate` |
 | `search-extensions` | "Database is missing the pg_trgm or vector extension…" | [Extension missing](#extension-missing) |
 | `schema` | "Database schema is missing or incompatible…" | Run `migrate` with this release, or you are running an older build against a newer schema ([rollback](deployment.md#roll-back)) |
-| `import` | "SQLite import is incomplete…" | Finish `import-sqlite --resume`/`--verify` ([import](migration/postgresql.md#implemented-maz-52-commands)) |
 | `receipt-storage` | "Receipt storage is not writable…" | [Receipt volume](#receipt-volume-not-writable-or-full) |
 | `disk-space` | "Receipt storage is low on free disk space…" | [Receipt volume](#receipt-volume-not-writable-or-full) |
 
@@ -38,7 +37,7 @@ The API writes one JSON object per line to stdout (`docker compose logs api`):
 
 - **Correlation.** nginx sends its `$request_id` as `X-Request-Id`; the API keeps a well-formed id (1–64 of `A–Z a–z 0–9 - _ . :`) or issues one, uses it as the trace identifier, returns it in the `X-Request-Id` response header and puts `RequestId` in the scope of every line written for that request. Users reporting a failure can give you the response header. 500 errors log `API request failed (<ExceptionType>); request <RequestId>, trace <TraceId>`, where `<TraceId>` is the W3C trace id (`-` when the request was not traced); with [telemetry](#telemetry-opentelemetry) on, search traces by either id.
 - **Access line.** One `Information` line per request with the method, the **route template** (for example `api/households/{id}`), status and duration. 499 means the client disconnected.
-- **Never logged:** request or response bodies, query strings, concrete paths, cookies, bearer tokens, passwords, reset or invite codes, OIDC codes and tokens, APNs/Expo tokens, connection strings, SQL parameter values, exception messages and stack traces from request handling, search text and financial text. ASP.NET's own request logging (which includes raw paths) is turned off. Workers log counts, provider reason codes and exception types only. Tests enforce this for search, password reset and the access log.
+- **Never logged:** request or response bodies, query strings, concrete paths, cookies, bearer tokens, passwords, reset or invite codes, OIDC codes and tokens, APNs device tokens, connection strings, SQL parameter values, exception messages and stack traces from request handling, search text and financial text. ASP.NET's own request logging (which includes raw paths) is turned off. Workers log counts, provider reason codes and exception types only. Tests enforce this for search, password reset and the access log.
 - **Levels.** `Logging__LogLevel__Default=Warning` in `api.env` drops the access lines. Startup and shutdown lines come from `Microsoft.Hosting.Lifetime`.
 - **Retention.** Configure your container runtime's log rotation (for Docker, the `json-file` driver's `max-size`/`max-file` options or a log shipper). Logs contain email-free operational data but should still be kept private.
 - **Other services.** nginx writes its standard access log (client address, path, status) to stdout, and PostgreSQL its server log. The nginx access log contains concrete paths and query strings; restrict it accordingly.
@@ -74,7 +73,7 @@ Export runs in the background, in batches. A slow, failing or unreachable collec
 
 ### What each signal contains
 
-- **Traces.** One server span per request, named by method and **route template** (`PUT api/ledger`), with the standard HTTP server attributes (such as `http.request.method`, `http.route`, `http.response.status_code`, `url.scheme`, `server.address`, `network.protocol.version`, `user_agent.original`) and `penny.request_id` (the `X-Request-Id`). Its children are a span per PostgreSQL command (`db.query.text` is the parameterized statement; `db.namespace`, `server.address`) and a span per outgoing HTTP call to the OIDC provider, APNs or Expo (`url.full` is reduced to the origin, such as `https://api.push.apple.com`). Failed requests carry the error status and `error.type` (the status code). An incoming W3C `traceparent` is honoured, so a client's trace continues into the API, and outgoing provider calls pass the trace context on. Background workers trace each pass that claimed work as `push.delivery`, `push.receipts`, `search.embedding` or `recurrence` (attributes `penny.job`, `penny.job.items` and, on failure, `error.type`), with their SQL as children. `/api/health` and `/api/ready` requests and idle worker polls are not traced.
+- **Traces.** One server span per request, named by method and **route template** (`PUT api/ledger`), with the standard HTTP server attributes (such as `http.request.method`, `http.route`, `http.response.status_code`, `url.scheme`, `server.address`, `network.protocol.version`, `user_agent.original`) and `penny.request_id` (the `X-Request-Id`). Its children are a span per PostgreSQL command (`db.query.text` is the parameterized statement; `db.namespace`, `server.address`) and a span per outgoing HTTP call to the OIDC provider or APNs (`url.full` is reduced to the origin, such as `https://api.push.apple.com`). Failed requests carry the error status and `error.type` (the status code). An incoming W3C `traceparent` is honoured, so a client's trace continues into the API, and outgoing provider calls pass the trace context on. Background workers trace each pass that claimed work as `push.delivery`, `search.embedding` or `recurrence` (attributes `penny.job`, `penny.job.items` and, on failure, `error.type`), with their SQL as children. `/api/health` and `/api/ready` requests and idle worker polls are not traced.
 - **Metrics.** ASP.NET Core and Kestrel (`http.server.request.duration`, `http.server.active_requests`, `kestrel.*`, `aspnetcore.routing.*`, `aspnetcore.rate_limiting.*`, `aspnetcore.diagnostics.exceptions`), outgoing HTTP (`http.client.request.duration` and related), the .NET runtime (`dotnet.gc.*`, `dotnet.thread_pool.*`, `dotnet.process.*` and related) and the Npgsql pool (`db.client.connection.*`, `db.client.operation.duration`, pool name `penny-backend`). App metrics:
 
   | Metric | Attributes | Meaning |
@@ -90,7 +89,7 @@ Export runs in the background, in batches. A slow, failing or unreachable collec
 
 ### Privacy guarantees
 
-The [log rules](#logs) apply to every signal. Spans and metrics carry ids, route templates, status codes, fixed vocabularies and exception type names, never user content. No signal contains passwords, session or bearer tokens, cookies, invite or reset codes, OIDC codes or tokens, client secrets, APNs or Expo device tokens, connection strings, SQL parameter values, request or response bodies, query strings or concrete paths, search text, emails, names, notes or amounts. Exception messages and stack traces are not recorded on spans. Integration tests run registration, sign-in, ledger saves and conflicts, household invites and joins, password reset, search, OIDC sign-in and an unexpected error with telemetry on. They fail if any of those values appears in any exported span, metric or log record.
+The [log rules](#logs) apply to every signal. Spans and metrics carry ids, route templates, status codes, fixed vocabularies and exception type names, never user content. No signal contains passwords, session or bearer tokens, cookies, invite or reset codes, OIDC codes or tokens, client secrets, APNs device tokens, connection strings, SQL parameter values, request or response bodies, query strings or concrete paths, search text, emails, names, notes or amounts. Exception messages and stack traces are not recorded on spans. Integration tests run registration, sign-in, ledger saves and conflicts, household invites and joins, password reset, search, OIDC sign-in and an unexpected error with telemetry on. They fail if any of those values appears in any exported span, metric or log record.
 
 ## Shutdown and restarts
 
@@ -161,7 +160,7 @@ The dump keeps object owners and grants, which the target's bootstrapped roles s
 
 ## Maintenance
 
-**Vacuum and statistics.** Autovacuum is on by default and sufficient. After a restore or a large import, run `ANALYZE` so the planner has statistics:
+**Vacuum and statistics.** Autovacuum is on by default and sufficient. After a restore, run `ANALYZE` so the planner has statistics:
 
 ```sh
 penny exec postgres psql -U postgres -d penny -c 'ANALYZE;'
@@ -177,22 +176,22 @@ WHERE indrelid = 'penny.search_documents'::regclass;
 SELECT indexrelid::regclass FROM pg_index WHERE NOT indisvalid;
 ```
 
-Never create, drop or alter Penny's tables or indexes by hand; schema changes ship only as EF migrations applied by `migrate` ([changing the schema](migration/postgresql.md#changing-the-schema)).
+Never create, drop or alter Penny's tables or indexes by hand; schema changes ship only as EF migrations applied by `migrate` ([changing the schema](reference/postgresql.md#changing-the-schema)).
 
-**Search reconciliation.** Search documents and embeddings are derived data. `search-verify` is read-only and prints `{Documents, Missing, Orphaned, StaleText, PendingEmbeddings, StaleModel, ReceiptTexts, MissingReceiptText, StaleReceiptText, PendingReceiptText}`, exiting 0 when all but the two totals are zero and 2 otherwise (pending embeddings and pending receipt text are normal for a short while after writes and uploads). `search-rebuild [--user USER_ID]` recomputes documents and the normalized text and chunks of stored receipt text (it never re-runs OCR), and embeds what is missing. `MissingReceiptText` means a linked receipt has no text yet: run [`receipts-ocr`](#receipt-text-ocr). Run it after a restore that `search-verify` flags, after `import-sqlite`, and after an upgrade whose release notes say the search model or normalization changed. The embedding model is pinned in the image, so it changes only with a release.
+**Search reconciliation.** Search documents and embeddings are derived data. `search-verify` is read-only and prints `{Documents, Missing, Orphaned, StaleText, PendingEmbeddings, StaleModel, ReceiptTexts, MissingReceiptText, StaleReceiptText, PendingReceiptText}`, exiting 0 when all but the two totals are zero and 2 otherwise (pending embeddings and pending receipt text are normal for a short while after writes and uploads). `search-rebuild [--user USER_ID]` recomputes documents and the normalized text and chunks of stored receipt text (it never re-runs OCR), and embeds what is missing. `MissingReceiptText` means a linked receipt has no text yet: run [`receipts-ocr`](#receipt-text-ocr). Run it after a restore that `search-verify` flags and after an upgrade whose release notes say the search model or normalization changed. The embedding model is pinned in the image, so it changes only with a release.
 
 ```sh
 penny exec api dotnet Penny.Backend.Api.dll search-verify
 penny exec api dotnet Penny.Backend.Api.dll search-rebuild
 ```
 
-**Receipts.** `receipts-verify` decrypts every receipt and reports `{Receipts, Verified, Missing, Corrupt, Unreferenced, Bytes}` (exit 2 on missing or corrupt files). `receipts-sweep [--dry-run]` removes unreferenced files older than an hour ([receipts](migration/receipts.md#commands)).
+**Receipts.** `receipts-verify` decrypts every receipt and reports `{Receipts, Verified, Missing, Corrupt, Unreferenced, Bytes}` (exit 2 on missing or corrupt files). `receipts-sweep [--dry-run]` removes unreferenced files older than an hour ([receipts](reference/receipts.md#commands)).
 
-**Password resets.** `penny exec api dotnet Penny.Backend.Api.dll reset-password user@example.com` issues a one-time code ([password reset](migration/authentication.md#password-reset-maz-123)).
+**Password resets.** `penny exec api dotnet Penny.Backend.Api.dll reset-password user@example.com` issues a one-time code ([password reset](reference/authentication.md#password-reset-maz-123)).
 
 ## Receipt text (OCR)
 
-MAZ-125 makes the text of receipts searchable: search finds an entry or shared expense by what is printed on its receipt (a store name, an item), by substring, typo and meaning ([search](migration/search.md#receipt-text-maz-125)).
+MAZ-125 makes the text of receipts searchable: search finds an entry or shared expense by what is printed on its receipt (a store name, an item), by substring, typo and meaning ([search](reference/search.md#receipt-text-maz-125)).
 
 **Everything runs on this server.** Receipts are never sent to a third-party service. PDFs with an embedded text layer are read directly by poppler's `pdftotext`; photos (JPEG, PNG, GIF, WebP) are decoded by libvips and scanned PDF pages (fewer than 40 letters or digits of embedded text) are rendered by `pdftoppm`, then read by Tesseract. Each program runs as a short-lived child process fed through standard input and read from standard output, so the decrypted receipt exists only in the API's memory (its buffers, and every engine output buffer, are zeroed after use) and never on disk. HEIC/HEIF photos are not readable by Tesseract's image library and are marked `unsupported`.
 
@@ -226,11 +225,11 @@ MAZ-125 makes the text of receipts searchable: search finds an entry or shared e
 | `Ocr__MaxAttempts` | 4 | Failed attempts before `failed` |
 | `Ocr__PollSeconds` | 5 | Idle delay between passes |
 
-Extracted text is cut at 20,000 characters (about ten dense pages: typo matching costs grow with the length of every receipt a viewer can read, see [search](migration/search.md#receipt-text-maz-125)) and split into at most 32 chunks of 512 model tokens.
+Extracted text is cut at 20,000 characters (about ten dense pages: typo matching costs grow with the length of every receipt a viewer can read, see [search](reference/search.md#receipt-text-maz-125)) and split into at most 32 chunks of 512 model tokens.
 
 **Engine and language data.** The container image installs `tesseract-ocr`, `tesseract-ocr-eng`, `tesseract-ocr-fra`, `poppler-utils` and `libvips-tools` at pinned versions from the base image's Ubuntu 24.04 archive (`prlimit` comes with the base image's util-linux). To read another language, build a derived image (`FROM ghcr.io/mfalicoff/penny-api`, `USER root`, `apt-get install tesseract-ocr-deu`, `USER $APP_UID`) and set `Ocr__Languages=eng+fra+deu`. The NixOS module wires the programs and data from `services.penny.ocr` ([NixOS](nixos.md)). For a bare-metal or development host, install Tesseract 5 with the language data, poppler-utils, libvips' command-line tools (`libvips-tools`, `vips`) and util-linux (the Nix dev shell provides them). With the worker on, the host fails at startup when one of them is missing.
 
-**Backfill and re-runs.** Receipts uploaded before MAZ-125 and receipts imported by `import-sqlite` have no text. `receipts-ocr` queues every **linked** receipt without text (one referenced by an entry, a live shared expense or a shared rule), every `failed` receipt and every receipt extracted by another engine version or language set, then extracts and embeds them in the command's own process (the worker does not need to be running) and prints counts. An unlinked receipt without text is left alone: its text was deleted when its last link let go (or it was never linked since an upload before MAZ-125), and the backfill must not bring it back; linking it again queues it. `--user USER_ID` limits it to one user's uploads; `--all` re-runs every receipt that has text; `--status` only reports `{Receipts, Missing, Pending, Done, Failed, Unsupported, OtherEngine}` (`Missing`: linked receipts without text). Run it once after upgrading to MAZ-125, after `import-sqlite` (after `search-rebuild`, which creates the links: it also queues the linked receipts itself), and after an engine upgrade or a change of `Ocr__Languages`. It uses the same bounds and settings as the worker, and adds its own `Ocr__Concurrency` to the API worker's while both run.
+**Backfill and re-runs.** Receipts uploaded before MAZ-125 have no text. `receipts-ocr` queues every **linked** receipt without text (one referenced by an entry, a live shared expense or a shared rule), every `failed` receipt and every receipt extracted by another engine version or language set, then extracts and embeds them in the command's own process (the worker does not need to be running) and prints counts. An unlinked receipt without text is left alone: its text was deleted when its last link let go (or it was never linked since an upload before MAZ-125), and the backfill must not bring it back; linking it again queues it. `--user USER_ID` limits it to one user's uploads; `--all` re-runs every receipt that has text; `--status` only reports `{Receipts, Missing, Pending, Done, Failed, Unsupported, OtherEngine}` (`Missing`: linked receipts without text). Run it once after upgrading to MAZ-125, and after an engine upgrade or a change of `Ocr__Languages`. It uses the same bounds and settings as the worker, and adds its own `Ocr__Concurrency` to the API worker's while both run.
 
 ```sh
 penny exec api dotnet Penny.Backend.Api.dll receipts-ocr --status
@@ -257,13 +256,13 @@ penny exec api dotnet Penny.Backend.Api.dll receipts-ocr
 | --- | --- | --- |
 | `postgres` (administrator) | First initialization, extensions, backups, diagnostics | Superuser in the bundled container; never given to the API |
 | `penny_migrator` | `migrate` only (`ConnectionStrings__Migration`) | Owns schema `penny`; creates and alters its objects; applies the runtime grants |
-| `penny_runtime` | The API and maintenance commands (`ConnectionStrings__Postgres`) | DML on `penny` tables and sequences; read-only migration history and import checkpoint; no DDL. Readiness refuses a role that could change schema |
+| `penny_runtime` | The API and maintenance commands (`ConnectionStrings__Postgres`) | DML on `penny` tables and sequences; read-only migration history; no DDL. Readiness refuses a role that could change schema |
 
 Connection strings are Npgsql key/value strings (`Host=…;Port=…;Database=…;Username=…;Password=…;SSL Mode=…`). Compose assembles them from `deploy/.env`. Use `SSL Mode=VerifyFull` (plus `Root Certificate=` for a private CA) for every server outside the Compose network. The bundled container is reachable only on the internal network and uses no TLS. Penny forces pooling bounds, connect, command and cancellation timeouts, disables parameter logging and error detail, and disables Kerberos/GSS negotiation unless `GSS Encryption Mode` is set explicitly.
 
 ### Migrations and locks
 
-`migrate` checks PostgreSQL 18 and the extensions, takes the session advisory lock `0x50454E4E59` (also used by `import-sqlite`), refuses a database with migrations unknown to the build, applies pending migrations (each in its own transaction), then runs `grant-runtime.sql`. If a migration seems stuck:
+`migrate` checks PostgreSQL 18 and the extensions, takes the session advisory lock `0x50454E4E59`, refuses a database with migrations unknown to the build, applies pending migrations (each in its own transaction), then runs `grant-runtime.sql`. If a migration seems stuck:
 
 ```sql
 -- The advisory lock shows as classid 80, objid 1162760793
@@ -271,7 +270,7 @@ SELECT l.pid, a.usename, now() - a.backend_start AS connected, a.state FROM pg_l
 WHERE l.locktype = 'advisory' AND l.classid = 80 AND l.objid = 1162760793;
 ```
 
-The lock belongs to that session and is released when it ends. Terminate it (`SELECT pg_terminate_backend(<pid>)`) only after confirming no migration or import is still running. The interrupted migration's transaction rolls back.
+The lock belongs to that session and is released when it ends. Terminate it (`SELECT pg_terminate_backend(<pid>)`) only after confirming no migration is still running. The interrupted migration's transaction rolls back.
 
 ### Extensions
 
@@ -309,10 +308,8 @@ Restoring a backup discards everything written after it. Rolling forward is pref
 1. **Freeze writes** (stop `web` and `api`) and take a dump of the current database ("post-incident dump") plus the receipt volume, even if the data is suspect.
 2. **Restore** the last good backup ([restore](#restore)) with the matching images.
 3. **Find what was lost.** Restore the post-incident dump into a scratch database (`createdb penny_incident`, `pg_restore --no-owner --no-privileges`) and compare against the restored database by time: `household_audit.created_at` lists every shared-expense, reimbursement and membership change; `ledgers.revision` shows which personal ledgers changed; `receipts.created_at`, `users.created_at` and `sessions.created_at` show new receipts, accounts and sign-ins.
-4. **Reconcile.** Personal ledgers: the apps keep their own copy. A device that saved after the backup expects a newer revision than the restored one, so its next save gets 409 ([ledger sync](migration/ledger.md)); tell affected users to check their recent personal entries after the app resyncs. Shared expenses and reimbursements: re-enter them from the audit history in the scratch database (as the users involved, or with their agreement). New accounts and receipts: affected users sign up or upload again. There is no automatic merge.
+4. **Reconcile.** Personal ledgers: the apps keep their own copy. A device that saved after the backup expects a newer revision than the restored one, so its next save gets 409 ([ledger sync](reference/ledger.md)); tell affected users to check their recent personal entries after the app resyncs. Shared expenses and reimbursements: re-enter them from the audit history in the scratch database (as the users involved, or with their agreement). New accounts and receipts: affected users sign up or upload again. There is no automatic merge.
 5. **Tell users** the window of lost writes. Drop the scratch database once reconciled, and keep the post-incident dump through your retention period.
-
-For the one-time SQLite cutover, the rules are different: before writes reopen on v2, roll back to the untouched SQLite source; after that, recovery is forward-only ([cutover](migration/postgresql.md#cutover-and-forward-only-recovery)). Keep the sealed SQLite snapshot, its hash and the legacy volume through the observation window.
 
 ## Failure runbooks
 

@@ -12,9 +12,13 @@ Penny uses [Semantic Versioning](https://semver.org/): **MAJOR.MINOR.PATCH**.
 - **Minor**: backward-compatible features.
 - **Major**: breaking changes to supported behavior, API contracts, or stored-data compatibility.
 
-`package.json` is the version source of truth, starting at the existing `1.0.0`.
-The native iOS archive checks that its `CFBundleShortVersionString` matches it,
-and the backend's `/api/info` also reads it.
+`MARKETING_VERSION` in `apps/ios/Configuration/Version.xcconfig` is the version
+source of truth (Release Please's `simple` strategy, with that file as an extra
+file; there is no package at the repository root). The native iOS archive checks
+that its `CFBundleShortVersionString` matches it, and the API reports the same
+version from `apps/backend/src/Penny.Backend.Api/Contracts/ServerInfo.cs` (also
+updated by Release Please; `check-version.mjs` checks they match). The container
+images take their version from the release tag.
 Store releases use three numeric components without leading zeros; prerelease
 and build suffixes are not supported by this release workflow because iOS
 requires a numeric marketing version. TestFlight builds use the same release
@@ -28,7 +32,8 @@ commit:
 
 1. Merge changes to `master` using Conventional Commit messages (see below).
 2. Release Please opens or updates a release PR with the next semantic version,
-   matching changes to `package.json` and `package-lock.json`, an updated
+   matching changes to `apps/ios/Configuration/Version.xcconfig` and
+   `ServerInfo.cs`, an updated
    `.release-please-manifest.json`, and generated `CHANGELOG.md` entries.
 3. Review the proposed version and notes, wait for the existing PR checks, then
    merge the release PR. No local version commands or manual Actions run is
@@ -55,8 +60,8 @@ does not need advancing.
 
 Before the first release, `Could not find releases`, `Expected 1 releases,
 only found 0`, `Missing 1 paths: .`, and `No version for path .` are expected
-bootstrap warnings. The `.` is the configured root package, not a missing
-directory. There is no prior GitHub Release or manifest version to find;
+bootstrap warnings. The `.` is the configured release path (the whole
+repository), not a missing directory. There is no prior GitHub Release or manifest version to find;
 `initial-version` selects the first proposed version rather than recording a
 previous release. Keep the manifest empty and leave `bootstrap-sha` unchanged.
 This follows Release Please's [manual bootstrap
@@ -124,16 +129,15 @@ secret is missing. See the
 [Release Please credential requirements](https://github.com/googleapis/release-please-action#github-credentials).
 
 Complete the Apple signing and App Store Connect setup in
-[iOS one-time setup](ios-ipa.md#one-time-setup). `EXPO_TOKEN` and `ASC_APP_ID`
-are no longer needed; see [Expo retirement](ios-ipa.md#expo-retirement).
+[iOS one-time setup](ios-ipa.md#one-time-setup).
 Protect `master` with the existing PR checks to gate release PR merges. Prefer squash merging so each PR's release intent is
 unambiguous.
 
 ### Builds, deployment, and recovery
 
-Shared CI for release tags runs `npm run version:check`, rejecting invalid
-versions, lockfile drift, or tags that do not exactly match `v` plus the package
-version. Branch builds also check consistency without requiring a tag.
+Shared CI for release tags runs `node scripts/check-version.mjs`, rejecting invalid
+versions or tags that do not exactly match `v` plus the version in
+`Version.xcconfig`. Branch builds also check consistency without requiring a tag.
 The GitHub Release is published before the downstream builds finish;
 assets appear when the iOS build completes, not immediately on publication.
 Monitor the container and iOS runs. If a build or upload fails, rerun that
@@ -160,6 +164,6 @@ publish it; do not remove its release labels manually.
 
 Native TestFlight builds use the build number
 `IOS_BUILD_NUMBER_BASE.<run>.<attempt>`, independently of semantic versions,
-so every run and rerun is higher than the last and above the build numbers of
-the released Expo builds. See
+so every run and rerun is higher than the last and above every earlier
+TestFlight build. See
 [iOS one-time setup](ios-ipa.md#one-time-setup).

@@ -62,7 +62,7 @@ export function CategoryFormDialog({ category, workspace, initialKind = "expense
   const kindLocked = fixedKind || used;
   const others = category ? ledger.categories.filter((item) => item.id !== category.id && item.kind === category.kind) : [];
   const atLimit = !category && ledger.categories.length >= RECORD_LIMIT;
-  // A color saved by an older app (not in today's palette) stays selectable, so editing never forces a change.
+  // A color outside today's palette (a default category's, say) stays selectable, so editing never forces a change.
   const colors = CATEGORY_COLORS.some((option) => option.value.toLowerCase() === color.toLowerCase()) || !category
     ? CATEGORY_COLORS
     : [{ value: category.color, name: "Current color" }, ...CATEGORY_COLORS];

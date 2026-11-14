@@ -23,7 +23,7 @@ public sealed class PostgresAccountRepository(NpgsqlDataSource source) : IAccoun
         return await context
             .Users.AsNoTracking()
             .Where(user => user.Email == email)
-            .Select(user => new StoredUser(user.Id, user.Email, user.Password, user.Salt))
+            .Select(user => new StoredUser(user.Id, user.Email, user.Password))
             .SingleOrDefaultAsync(cancellationToken);
     }
 
@@ -41,7 +41,7 @@ public sealed class PostgresAccountRepository(NpgsqlDataSource source) : IAccoun
                 context.Users,
                 identity => identity.UserId,
                 user => user.Id,
-                (_, user) => new StoredUser(user.Id, user.Email, user.Password, user.Salt)
+                (_, user) => new StoredUser(user.Id, user.Email, user.Password)
             )
             .SingleOrDefaultAsync(cancellationToken);
     }
@@ -116,7 +116,6 @@ public sealed class PostgresAccountRepository(NpgsqlDataSource source) : IAccoun
                 Id = user.Id,
                 Email = user.Email,
                 Password = user.Password,
-                Salt = user.Salt,
             }
         );
         context.Ledgers.Add(

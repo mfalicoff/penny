@@ -16,9 +16,7 @@ final class FakeEntrySearch: EntrySearchService {
     var holdNext = false
     private var held: [CheckedContinuation<Void, Never>] = []
 
-    func deviceReason(serverHasSearch: Bool) -> DeviceSearchReason? {
-        serverHasSearch ? reason : .serverWithoutSearch
-    }
+    func deviceReason() -> DeviceSearchReason? { reason }
 
     func reconcile(_ page: SearchPage, startedAt epoch: Int) -> SearchReconciliation {
         if !reconciliations.isEmpty { return reconciliations.removeFirst() }
@@ -164,14 +162,19 @@ struct ActivitySearchModelTests {
         #expect(model.source == .device(.pendingChanges))
     }
 
-    @Test("whenTheServerHasNoSearch_ActivitySearch_ShouldUseThisDeviceFromThenOn")
+    @Test("whenTheServerAnswers404_ActivitySearch_ShouldFailAndAskTheServerAgainNextTime")
     func notFound() async throws {
         service.answers = [.failure(APIError.notFound(message: nil))]
         model.update(Self.filters("lunch"))
-        await eventually("fallback") { model.source == .device(.serverWithoutSearch) }
+        await eventually("failed") { model.status != .searching }
+        let message = "Your server couldn't search right now. These results are from this device."
+        #expect(model.status == .failed(message))
+        #expect(model.source == .device(.serverFailed(message)))
+        service.answers = [.success(try Self.page(["personal:dinner"]))]
         model.update(Self.filters("dinner"))
-        #expect(service.requests.count == 1, "a server without search is not asked again")
-        #expect(model.source == .device(.serverWithoutSearch))
+        await eventually("results") { model.status == .results }
+        #expect(service.requests.count == 2, "a 404 is an ordinary failure, not a server without search")
+        #expect(model.source == .server)
     }
 
     @Test("whenTheServerFails_ActivitySearch_ShouldExplainAndRetry")

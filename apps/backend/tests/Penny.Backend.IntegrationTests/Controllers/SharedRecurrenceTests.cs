@@ -8,8 +8,8 @@ using Xunit;
 
 namespace Penny.Backend.IntegrationTests.Controllers;
 
-// Shared recurring rule writes (MAZ-59) over HTTP with real PostgreSQL: legacy
-// envelopes, messages and check order, revisions, payer privacy, anchor days and
+// Shared recurring rule writes (MAZ-59) over HTTP with real PostgreSQL:
+// contract envelopes, messages and check order, revisions, payer privacy, anchor days and
 // pause/resume. All data is synthetic.
 public sealed class SharedRecurrenceTests(ApiFixture fixture) : SharedRecurrenceTestBase(fixture)
 {
@@ -78,12 +78,12 @@ public sealed class SharedRecurrenceTests(ApiFixture fixture) : SharedRecurrence
             var action in new[] { "recurring.created", "recurring.updated", "recurring.deleted" }
         )
             (await AuditCountAsync(home, action)).ShouldBe(1);
-        // Rule events notify nobody, as legacy.
+        // Rule events notify nobody.
         (await CountAsync("SELECT count(*) FROM penny.push_outbox")).ShouldBe(0);
     }
 
     [Fact]
-    public async Task whenRequestIsInvalid_RecurringFlow_ShouldFollowLegacyCheckOrder()
+    public async Task whenRequestIsInvalid_RecurringFlow_ShouldFollowContractCheckOrder()
     {
         var (alex, alexId, bea, beaId, home) = await HomeAsync();
         var (outsider, outsiderId) = await AccountAsync("outsider@example.test");

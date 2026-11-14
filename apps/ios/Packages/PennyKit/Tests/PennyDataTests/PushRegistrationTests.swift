@@ -70,7 +70,7 @@ struct PushRegistrationTests {
         let root = try JSONSerialization.jsonObject(with: Data(contentsOf: Self.openAPI)) as? [String: Any]
         let schemas = (root?["components"] as? [String: Any])?["schemas"] as? [String: Any]
         let device = try #require((schemas?["PushDevice"] as? [String: Any])?["properties"] as? [String: Any])
-        #expect((device["provider"] as? [String: Any])?["enum"] as? [String] == ["expo", "apns"])
+        #expect(((device["provider"] as? [String: Any])?["enum"] as? [String])?.contains("apns") == true)
         #expect(
             Set((device["environment"] as? [String: Any])?["enum"] as? [String] ?? [])
                 == Set(PushEnvironment.allCases.map(\.rawValue)))
@@ -173,7 +173,7 @@ struct PushRegistrationTests {
         #expect(registrar.status == .failed(retryable: true))
         #expect(store.load() == nil)
         await registrar.retry()
-        #expect(registrar.status == .failed(retryable: false), "a Node server refuses APNs bodies")
+        #expect(registrar.status == .failed(retryable: false), "a refused device is not retried by itself")
         await registrar.retry()
         #expect(registrar.status == .registered)
         await registrar.retry()
@@ -304,7 +304,6 @@ struct PushRegistrationTests {
         #expect(one == store.owner(for: AccountScope(server: server, email: "alex@example.test")))
         #expect(one != store.owner(for: AccountScope(server: APIFixtures.otherServer, email: "alex@example.test")))
         #expect(!one.digest.contains("alex") && one.digest.count == 64)
-        #expect(one != PushOwner.legacy(AccountScope(server: server, email: "alex@example.test")), "keyed")
     }
 
     @Test("whenMakingOwners_PushRegistrationStore_ShouldKeyThemWithThisDevicesKeychainKey")
@@ -328,24 +327,6 @@ struct PushRegistrationTests {
         #expect(PushAccount(client: client, store: store) == nil, "nothing registers or opens until it unlocks")
         keychain.forcedStatus.withLock { $0 = nil }
         #expect(PushAccount(client: client, store: store) != nil)
-    }
-
-    @Test("whenADevelopmentBuildStoredAnUnkeyedOwner_PushRegistrationStore_ShouldAdoptItOnlyForThatAccount")
-    func legacyOwner() throws {
-        let transport = StubTransport { Self.ok($0) }
-        let alex = try account("alex@example.test", transport)
-        let bea = try account("bea@example.test", transport)
-        let legacy = PushOwner.legacy(AccountScope(server: APIFixtures.server, email: "alex@example.test"))
-        let data = try JSONEncoder().encode(
-            StoredPushRegistration(token: Self.tokenA, environment: .sandbox, owner: legacy))
-        UserDefaults(suiteName: suite)?.set(data, forKey: "penny.push.registration")
-        #expect(store.lastOwner() == legacy)
-
-        store.adoptLegacyRegistration(for: bea)
-        #expect(store.lastOwner() == legacy, "not Bea's")
-        store.adoptLegacyRegistration(for: alex)
-        #expect(store.load() == StoredPushRegistration(token: Self.tokenA, environment: .sandbox, owner: alex.owner))
-        #expect(store.lastOwner() == alex.owner)
     }
 
     @Test("whenTheStoredValueIsDamaged_PushRegistrationStore_ShouldReadNone")

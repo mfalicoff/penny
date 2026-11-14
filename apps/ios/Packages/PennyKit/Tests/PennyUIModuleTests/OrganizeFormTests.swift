@@ -168,15 +168,15 @@ struct OrganizeFormTests {
         #expect(saved.kind == .expense)
     }
 
-    @Test("whenALegacyCategoryIsRenamed_CategoryForm_ShouldKeepItsStoredColor")
-    func legacyColorKept() async throws {
+    @Test("whenACategoryWithAnOffPaletteColorIsRenamed_CategoryForm_ShouldKeepItsStoredColor")
+    func storedColorKept() async throws {
         let workspace = Self.workspace()
         let food = try #require(Ledger.defaultCategories.first { $0.id == "food" })
         let model = CategoryFormModel(category: food)
         #expect(model.paletteColor == .food)
         model.name = "Eating out"
         let saved = try #require(await model.save(with: Self.commit(workspace)))
-        #expect(saved.color == "#E47850", "an untouched legacy color is saved back as it was")
+        #expect(saved.color == "#E47850", "an untouched stored color is saved back as it was")
         #expect(saved.name == "Eating out")
     }
 

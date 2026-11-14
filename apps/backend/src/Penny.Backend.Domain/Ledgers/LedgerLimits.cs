@@ -1,6 +1,6 @@
 namespace Penny.Backend.Domain.Ledgers;
 
-// Bounds and choices from the legacy zod schema (server/validation/ledger.ts).
+// Bounds and choices of the v4 ledger, shared with the iOS and web clients.
 public static class LedgerLimits
 {
     public const int IdLength = 100;

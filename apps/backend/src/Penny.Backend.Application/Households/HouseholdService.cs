@@ -8,10 +8,9 @@ using Penny.Backend.Domain.Ledgers;
 
 namespace Penny.Backend.Application.Households;
 
-// Port of the legacy household membership, invitation, trip and archive operations
-// (server/infrastructure/households.ts). Messages, failure kinds and the order of
-// checks are part of the client contract; deviations are listed in
-// docs/migration/households.md. Every mutation runs in one transaction that first
+// Household membership, invitation, trip and archive operations. Messages, failure
+// kinds and the order of checks are part of the client contract; see
+// docs/reference/households.md. Every mutation runs in one transaction that first
 // locks the household row, so membership changes of one household serialize, and
 // re-checks access inside it.
 public sealed class HouseholdService(IHouseholdRepository households, TimeProvider clock)
@@ -133,7 +132,7 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
         return await households.WriteAsync(
             async store =>
             {
-                // Access is checked before the body, as in the legacy route.
+                // Access is checked before the body.
                 var before = HouseholdView.From(
                     await RequireCreatorAsync(store, householdId, userId)
                 );
@@ -246,7 +245,7 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
             cancellationToken
         );
 
-    // Legacy invites admit any number of accounts until they expire (10 minutes) or
+    // Invites admit any number of accounts until they expire (10 minutes) or
     // a new invite replaces them; joining never consumes the code.
     public async Task<HouseholdView> JoinAsync(
         string userId,
@@ -278,7 +277,7 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
                     await store.FindAsync(householdId, includeArchived: false)
                     ?? throw new BackendFailure(FailureKind.Invalid, InvalidInvite);
                 // The ledger row stays locked, so a concurrent PUT /api/ledger cannot
-                // change currency between this check and the commit (ledger check 5).
+                // change currency between this check and the commit (ledger check 3).
                 var currency = await LedgerCurrencyAsync(store, userId);
                 if (!string.Equals(currency, household.Currency, StringComparison.Ordinal))
                     throw new BackendFailure(FailureKind.Invalid, HouseholdCurrency);
@@ -367,7 +366,7 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
         await AuditAsync(store, householdId, actorId, action, new { userId }, null, now);
     }
 
-    // Legacy `requireMember` (current member of an unarchived household), holding the
+    // A current member of an unarchived household, holding the
     // household lock for the rest of the unit.
     private static async Task<StoredHousehold> RequireMemberAsync(
         IHouseholdTransaction store,
@@ -439,7 +438,7 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
     // Route values that PostgreSQL text cannot hold match no household or member.
     private static bool Storable(string id) => LedgerText.IsStorable(id);
 
-    // Legacy `randomId(16)`: 16 random bytes as lower-case hex.
+    // Ids are 16 random bytes as lower-case hex.
     private static string NewId() => RandomNumberGenerator.GetHexString(32, lowercase: true);
 
     private DateTimeOffset Now() => MembershipDates.Truncate(clock.GetUtcNow());

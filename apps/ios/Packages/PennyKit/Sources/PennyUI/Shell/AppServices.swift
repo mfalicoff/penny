@@ -37,29 +37,10 @@ public struct AppServices {
     /// and in a build without the App Group entitlement.
     public var widgets: WidgetPublisher?
 
-    /// What the Expo data import did at this launch (MAZ-72), for diagnostics. Nil when it did
-    /// not run (previews, tests).
-    public var expoMigration: ExpoMigrationReport?
-
-    /// The real device services. First imports the Expo app's data in place (MAZ-72), before
-    /// the lock, the sign-in state or the offline store read anything; the lock stays
-    /// concealed until the Expo lock setting has been applied. `importingExpoData: false`
-    /// is only for Debug upgrade rehearsals that stage Expo data at this launch: nothing is
-    /// imported until the next launch.
-    public static func live(importingExpoData: Bool = true) -> AppServices {
-        let native = KeychainAppLockSettingStore()
-        guard importingExpoData else {
-            var services = AppServices(
-                preferences: UserDefaultsDevicePreferences(), lock: AppLockController(store: native))
-            services.widgets = WidgetPublisher.live()
-            return services
-        }
-        let migration = ExpoMigration.live(lockStore: native)
-        let report = migration.run()
+    /// The real device services.
+    public static func live() -> AppServices {
         var services = AppServices(
-            preferences: UserDefaultsDevicePreferences(),
-            lock: AppLockController(store: ExpoImportingLockStore(native: native, migration: migration)))
-        services.expoMigration = report
+            preferences: UserDefaultsDevicePreferences(), lock: AppLockController(store: KeychainAppLockSettingStore()))
         services.widgets = WidgetPublisher.live()
         return services
     }

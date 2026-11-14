@@ -3,7 +3,7 @@ using Penny.Backend.Application.Households;
 
 namespace Penny.Backend.Api.Contracts;
 
-// Contract schema `Expense` (legacy `HouseholdExpense`). Optional fields are omitted
+// Contract schema `Expense`. Optional fields are omitted
 // when absent; `accountId` is present only for the payer.
 public sealed record ExpenseResponse(
     string Id,

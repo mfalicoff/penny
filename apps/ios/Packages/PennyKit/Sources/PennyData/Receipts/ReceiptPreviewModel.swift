@@ -125,7 +125,7 @@ public struct ReceiptPreviewFile: Equatable, Sendable {
 public enum ReceiptPreviewFailure: Equatable, Sendable {
     /// 404: missing, or this account may not read it (the API doesn't tell them apart).
     case notAvailable
-    /// A link the server doesn't serve (a receipt attached by the legacy native app).
+    /// A link the server doesn't serve (`ReceiptRules.servedID` is nil), such as a device file path.
     case notServed
     case sessionEnded
     case offline
@@ -135,7 +135,7 @@ public enum ReceiptPreviewFailure: Equatable, Sendable {
         switch self {
         case .notAvailable:
             "This receipt isn't available. It may have been removed, or you no longer have access to it."
-        case .notServed: "This receipt was attached by an earlier version of Penny and can only be shown by name."
+        case .notServed: "This receipt isn't stored on the server, so only its name can be shown."
         case .sessionEnded: "Your session ended. Sign in again to see this receipt."
         case .offline: "Penny can't reach the server, so the receipt can't be shown. Try again when you're online."
         case .failed: "Penny couldn't load this receipt. Try again."

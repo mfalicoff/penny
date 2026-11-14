@@ -2,10 +2,11 @@
 /// is drawn.
 ///
 /// The ledger stores a category's color as `#RRGGBB` and its icon as an Ionicons name, because
-/// the Expo and web apps read the same ledger. The form only offers the redesign's category
+/// the web app reads the same ledger. The form only offers the redesign's category
 /// palette (`CategoryColor`, never a meaning color) and icons that have an SF Symbol here, and
-/// it writes them in those stored forms. Older ledgers carry the legacy palette, which is
-/// mapped onto the closest redesign color so every category still has one of the eight.
+/// it writes them in those stored forms. The default categories and many existing ledgers store
+/// the ledger palette (`Ledger.palette`), which is mapped onto the closest redesign color so
+/// every category still has one of the eight.
 nonisolated extension CategoryStyle {
     /// The colors the form offers, in the card's order.
     public static let pickerColors: [CategoryColor] = [
@@ -13,7 +14,7 @@ nonisolated extension CategoryStyle {
     ]
 
     /// The icons the form offers, as the Ionicons names the ledger stores: the card's grid,
-    /// then the legacy form's choices.
+    /// then the default categories' icons and a few more.
     public static let pickerIcons: [String] = [
         "home-outline", "basket-outline", "bus-outline", "cafe-outline", "pricetag-outline", "play-outline",
         "airplane-outline", "leaf-outline", "people-outline", "receipt-outline", "card-outline", "cash-outline",
@@ -23,9 +24,9 @@ nonisolated extension CategoryStyle {
         "ellipsis-horizontal",
     ]
 
-    /// The legacy category palette (`palette` in the Expo app) mapped onto the redesign colors,
-    /// by the default category that used each legacy color.
-    static let legacyPalette: [String: CategoryColor] = [
+    /// The ledger palette (`Ledger.palette`, the default categories' colors) mapped onto the
+    /// redesign colors, by the default category that uses each color.
+    static let ledgerPalette: [String: CategoryColor] = [
         "#E47850": .food, "#C6953A": .home, "#6C9C79": .groceries, "#678DB1": .transport,
         "#9D83BA": .entertainment, "#C8798D": .shopping, "#89918C": .other,
     ]
@@ -42,13 +43,13 @@ nonisolated extension CategoryStyle {
     }
 
     /// The palette color to draw a category with: the stored color when it is a redesign
-    /// color; otherwise the default category's color for a default id (their stored colors
-    /// are legacy ones); otherwise the legacy color's mapping; otherwise `.other`.
+    /// color; otherwise the default category's color for a default id (they store
+    /// ledger palette colors); otherwise the ledger palette color's mapping; otherwise `.other`.
     public static func color(forCategoryID id: String, hex stored: String) -> CategoryColor {
         let upper = stored.uppercased()
         if let match = CategoryColor.allCases.first(where: { hex($0) == upper }) { return match }
         if CategoryColor(rawValue: id) != nil || aliases[id] != nil { return color(forCategoryID: id) }
-        return legacyPalette[upper] ?? .other
+        return ledgerPalette[upper] ?? .other
     }
 
     /// Whether two Ionicons names are the same icon (`home` and `home-outline`).

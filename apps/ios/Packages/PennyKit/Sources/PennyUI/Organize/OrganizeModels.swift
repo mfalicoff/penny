@@ -8,8 +8,7 @@ import PennyDomain
 /// changed nothing, so the form keeps the person's draft and shows it.
 typealias LedgerCommit = (LedgerChange, ChangeSummary) async -> SaveFailure?
 
-/// New record ids. The legacy app used random ids too; any unique string up to 100 UTF-16
-/// units is valid on the wire.
+/// New record ids: random; any unique string up to 100 UTF-16 units is valid on the wire.
 nonisolated enum OrganizeID {
     static func make() -> String { UUID().uuidString.lowercased() }
 }
@@ -81,7 +80,8 @@ final class CategoryFormModel {
     let id: String
     var name: String
     var kind: EntryKind
-    /// The stored `#RRGGBB`. An untouched legacy color is saved back unchanged.
+    /// The stored `#RRGGBB`. An untouched color is saved back unchanged, even one outside
+    /// the form's palette.
     var color: String
     /// The stored Ionicons name.
     var icon: String
@@ -262,7 +262,7 @@ enum OrganizeText {
         }
     }
 
-    /// The legacy `accountTypeLabels`.
+    /// The account type's label.
     static func accountType(_ type: AccountType) -> String {
         switch type {
         case .bank: "Bank account"

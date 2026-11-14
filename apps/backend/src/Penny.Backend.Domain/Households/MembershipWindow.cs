@@ -1,11 +1,11 @@
 namespace Penny.Backend.Domain.Households;
 
-// One membership period as calendar days (legacy `HouseholdMember`): the member takes
+// One membership period as calendar days: the member takes
 // part in expenses dated from `JoinedOn` up to, but excluding, `LeftOn`.
 public sealed record MembershipWindow(string UserId, DateOnly JoinedOn, DateOnly? LeftOn)
 {
-    // Legacy `membershipPeriods`: the recorded local join day, otherwise the join
-    // instant shifted by the caller's offset (older clients sent none: UTC). The
+    // The recorded local join day, otherwise the join instant shifted by the
+    // caller's offset (UTC when the join recorded none). The
     // departure day is the UTC day of the leave instant.
     public static MembershipWindow From(
         string userId,
@@ -20,7 +20,7 @@ public sealed record MembershipWindow(string UserId, DateOnly JoinedOn, DateOnly
             leftAt is { } left ? DateOnly.FromDateTime(left.UtcDateTime) : null
         );
 
-    // Legacy `activeMemberIds`: distinct members active on `date`, ordered by id.
+    // Distinct members active on `date`, ordered by id.
     public static IReadOnlyList<string> ActiveOn(
         IEnumerable<MembershipWindow> windows,
         DateOnly date

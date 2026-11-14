@@ -243,15 +243,14 @@ public sealed class PostgresPushRepository(NpgsqlDataSource source) : IPushRepos
             )
         )
         {
-            var devices = await live.AsNoTracking()
-                .Select(device => new { device.Token, device.Provider })
+            var tokens = await live.AsNoTracking()
+                .Select(device => device.Token)
                 .ToListAsync(cancellationToken);
             context.PushDeliveries.AddRange(
-                devices.Select(device => new PushDelivery
+                tokens.Select(token => new PushDelivery
                 {
                     OutboxId = outboxId,
-                    Token = device.Token,
-                    Provider = device.Provider,
+                    Token = token,
                     NextAttemptAt = now,
                 })
             );
@@ -342,21 +341,15 @@ public sealed class PostgresPushRepository(NpgsqlDataSource source) : IPushRepos
             switch (result.Kind)
             {
                 case PushOutcomeKind.Accepted:
-                {
-                    // Expo tickets wait ReceiptDelay for their receipt; APNs has none.
-                    DateTimeOffset? checkedAt = result.AwaitReceipt ? null : now;
-                    var nextAt = result.AwaitReceipt ? now + PushDeliveryRunner.ReceiptDelay : now;
                     await delivery.ExecuteUpdateAsync(
                         set =>
                             set.SetProperty(row => row.SentAt, now)
                                 .SetProperty(row => row.TicketId, result.TicketId)
-                                .SetProperty(row => row.ReceiptCheckedAt, checkedAt)
-                                .SetProperty(row => row.NextAttemptAt, nextAt)
+                                .SetProperty(row => row.NextAttemptAt, now)
                                 .SetProperty(row => row.LastError, (string?)null),
                         cancellationToken
                     );
                     break;
-                }
                 case PushOutcomeKind.Retry:
                     lastError = result.Reason;
                     await delivery.ExecuteUpdateAsync(
@@ -404,120 +397,6 @@ public sealed class PostgresPushRepository(NpgsqlDataSource source) : IPushRepos
         await transaction.CommitAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<PushReceiptClaim>> ClaimReceiptsAsync(
-        string leaseOwner,
-        string leaseToken,
-        DateTimeOffset now,
-        DateTimeOffset leaseUntil,
-        int limit,
-        CancellationToken cancellationToken
-    )
-    {
-        await using var context = PennyDbContext.Create(source);
-        Expression<Func<PushDelivery, bool>> due = delivery =>
-            delivery.Provider == PushProviders.Expo
-            && delivery.TicketId != null
-            && delivery.SentAt != null
-            && delivery.ReceiptCheckedAt == null
-            && delivery.NextAttemptAt <= now
-            && (delivery.LeaseExpiresAt == null || delivery.LeaseExpiresAt <= now);
-        var candidates = await context
-            .PushDeliveries.AsNoTracking()
-            .Where(due)
-            .OrderBy(delivery => delivery.SentAt)
-            .Take(limit)
-            .Select(delivery => delivery.TicketId!)
-            .ToListAsync(cancellationToken);
-        if (candidates.Count == 0)
-            return [];
-        await context
-            .PushDeliveries.Where(delivery => candidates.Contains(delivery.TicketId!))
-            .Where(due)
-            .ExecuteUpdateAsync(
-                set =>
-                    set.SetProperty(delivery => delivery.LeaseOwner, leaseOwner)
-                        .SetProperty(delivery => delivery.LeaseToken, leaseToken)
-                        .SetProperty(delivery => delivery.LeaseExpiresAt, leaseUntil)
-                        .SetProperty(
-                            delivery => delivery.Attempts,
-                            delivery => delivery.Attempts + 1
-                        ),
-                cancellationToken
-            );
-        return await context
-            .PushDeliveries.AsNoTracking()
-            .Where(delivery =>
-                candidates.Contains(delivery.TicketId!) && delivery.LeaseToken == leaseToken
-            )
-            .OrderBy(delivery => delivery.SentAt)
-            .Select(delivery => new PushReceiptClaim(
-                delivery.OutboxId,
-                delivery.Token,
-                delivery.TicketId!,
-                delivery.SentAt!.Value,
-                delivery.Attempts
-            ))
-            .ToListAsync(cancellationToken);
-    }
-
-    public async Task RecordReceiptsAsync(
-        string leaseToken,
-        IReadOnlyList<PushReceiptResult> results,
-        DateTimeOffset now,
-        CancellationToken cancellationToken
-    )
-    {
-        await using var context = PennyDbContext.Create(source);
-        await using var transaction = await context.Database.BeginTransactionAsync(
-            IsolationLevel.ReadCommitted,
-            cancellationToken
-        );
-        foreach (var result in results)
-        {
-            var claim = result.Claim;
-            var delivery = context.PushDeliveries.Where(row =>
-                row.OutboxId == claim.OutboxId
-                && row.Token == claim.Token
-                && row.LeaseToken == leaseToken
-            );
-            if (result.Decision == PushReceiptDecision.Retry)
-            {
-                await delivery.ExecuteUpdateAsync(
-                    set =>
-                        set.SetProperty(row => row.NextAttemptAt, result.RetryAt ?? now)
-                            .SetProperty(row => row.LeaseOwner, (string?)null)
-                            .SetProperty(row => row.LeaseToken, (string?)null)
-                            .SetProperty(row => row.LeaseExpiresAt, (DateTimeOffset?)null),
-                    cancellationToken
-                );
-                continue;
-            }
-            string? reason =
-                result.Decision == PushReceiptDecision.InvalidToken
-                    ? "expo:receipt:DeviceNotRegistered"
-                    : null;
-            var changed = await delivery.ExecuteUpdateAsync(
-                set =>
-                    set.SetProperty(row => row.ReceiptCheckedAt, now)
-                        .SetProperty(row => row.LastError, row => reason ?? row.LastError)
-                        .SetProperty(row => row.LeaseOwner, (string?)null)
-                        .SetProperty(row => row.LeaseToken, (string?)null)
-                        .SetProperty(row => row.LeaseExpiresAt, (DateTimeOffset?)null),
-                cancellationToken
-            );
-            if (changed > 0 && reason is not null)
-                await RemoveInvalidAsync(
-                    context,
-                    claim.Token,
-                    claim.SentAt,
-                    now,
-                    reason,
-                    cancellationToken
-                );
-        }
-        await transaction.CommitAsync(cancellationToken);
-    }
-
     // Deletes a token a provider rejected, unless it was registered again after the
     // rejected send (a fresh registration proves it valid), and finishes every pending
     // delivery to it. Other messages settle when next claimed.
@@ -552,7 +431,7 @@ public sealed class PostgresPushRepository(NpgsqlDataSource source) : IPushRepos
         return FinishPendingAsync(deliveries, now, reason, cancellationToken);
     }
 
-    // Ends deliveries undelivered: sent_at marks them final, with no receipt to check.
+    // Ends deliveries undelivered: sent_at marks them final.
     private static Task<int> FinishPendingAsync(
         IQueryable<PushDelivery> deliveries,
         DateTimeOffset now,
@@ -566,7 +445,6 @@ public sealed class PostgresPushRepository(NpgsqlDataSource source) : IPushRepos
             .ExecuteUpdateAsync(
                 set =>
                     set.SetProperty(delivery => delivery.SentAt, now)
-                        .SetProperty(delivery => delivery.ReceiptCheckedAt, now)
                         .SetProperty(delivery => delivery.LastError, error),
                 cancellationToken
             );

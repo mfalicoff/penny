@@ -54,8 +54,8 @@ public struct HouseholdPeople: Equatable, Sendable {
     public func isCreator(_ household: WireHousehold) -> Bool { meId != nil && household.creatorId == meId }
 
     /// Members active on `date`, the ones an expense that day is split among. Households use
-    /// each member's local join day (or the join instant on this device's calendar for older
-    /// clients) up to, but excluding, the UTC day they left; shared trips use every current
+    /// each member's local join day (or the join instant on this device's calendar when the
+    /// server has no `joinedOn`) up to, but excluding, the UTC day they left; shared trips use every current
     /// member. The server applies the same rule and rejects a split that doesn't match.
     public func eligible(on date: PennyDomain.CalendarDate, household: WireHousehold, calendar: Calendar = .current)
         -> [WireHouseholdMember]

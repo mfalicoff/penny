@@ -1,23 +1,14 @@
 import { readFileSync } from "node:fs";
 
-const readJson = (path) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
-const { version } = readJson("../package.json");
-const lock = readJson("../package-lock.json");
+// The release version lives in apps/ios/Configuration/Version.xcconfig, the one file that ships
+// it (the native app's marketing version). Release Please updates the line marked
+// x-release-please-version; the container images take their version from the release tag.
+const xcconfig = readFileSync(new URL("../apps/ios/Configuration/Version.xcconfig", import.meta.url), "utf8");
+const version = xcconfig.match(/^MARKETING_VERSION = (\S+) \/\/ x-release-please-version$/m)?.[1];
 
 // Store releases use three numeric components; prerelease suffixes are not valid on iOS.
 if (typeof version !== "string" || !/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(version)) {
-  throw new Error("package.json version must be MAJOR.MINOR.PATCH without leading zeros or prerelease/build suffixes.");
-}
-
-if (lock.version !== version || lock.packages?.[""]?.version !== version) {
-  throw new Error("package-lock.json version must match package.json. Use npm version to update both files.");
-}
-
-// The native iOS app (MAZ-66) ships the same version; release-please updates this line.
-const xcconfig = readFileSync(new URL("../apps/ios/Configuration/Version.xcconfig", import.meta.url), "utf8");
-const nativeVersion = xcconfig.match(/^MARKETING_VERSION = (\S+) \/\/ x-release-please-version$/m)?.[1];
-if (nativeVersion !== version) {
-  throw new Error(`apps/ios/Configuration/Version.xcconfig MARKETING_VERSION must be ${version}; found ${nativeVersion ?? "none"}.`);
+  throw new Error("apps/ios/Configuration/Version.xcconfig MARKETING_VERSION must be MAJOR.MINOR.PATCH without leading zeros or prerelease/build suffixes, marked // x-release-please-version.");
 }
 
 const serverInfoPath = "apps/backend/src/Penny.Backend.Api/Contracts/ServerInfo.cs";

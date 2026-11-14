@@ -1,0 +1,22 @@
+{
+  // The shared ledger rules and write schema, their reference tests and the golden fixture
+  // generator (MAZ-86), with the compiler settings they were written for: strict, without
+  // unchecked index access. The app and test projects still check what the app imports.
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.cache/tsconfig.domain.tsbuildinfo",
+    "target": "ES2024",
+    "lib": ["ES2024", "DOM", "DOM.Iterable"],
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "types": ["node"],
+    "strict": true,
+    "allowJs": true,
+    "checkJs": false,
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "skipLibCheck": true
+  },
+  "include": ["src/domain", "src/validation", "tests/domain", "scripts/fixtures"]
+}

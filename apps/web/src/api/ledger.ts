@@ -41,7 +41,7 @@ export const ledgerCurrencyQuery = (email: string) =>
   });
 
 /**
- * Whether the currency can still change. Like the legacy app, one currency per account keeps
+ * Whether the currency can still change. One currency per account keeps
  * totals consistent, so it is fixed once any entry or recurring rule exists. `unknown` when the
  * server didn't send the lists (never guess that a ledger is empty).
  */

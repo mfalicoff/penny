@@ -1,5 +1,5 @@
 {
-  "generator": "scripts/fixtures/generate-golden.ts",
+  "generator": "apps/web/scripts/fixtures/generate-golden.ts",
   "description": "Integer-cent money: client amount parsing (cents), personal share entry, and the stored entry total/share bounds every server enforces.",
   "parse": [
     {

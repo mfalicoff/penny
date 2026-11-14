@@ -112,7 +112,7 @@ public sealed class ApiFixture : IAsyncLifetime
             GRANT CONNECT ON DATABASE penny_tests TO penny_runtime;
             GRANT USAGE ON SCHEMA penny TO penny_runtime;
             GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA penny TO penny_runtime;
-            REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON penny."__EFMigrationsHistory", penny.sqlite_import FROM penny_runtime;
+            REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON penny."__EFMigrationsHistory" FROM penny_runtime;
             GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA penny TO penny_runtime;
             """,
             ct
@@ -207,7 +207,7 @@ public sealed class ApiFixture : IAsyncLifetime
 
     public async Task ResetAsync(CancellationToken ct)
     {
-        // Compatibility tests deliberately destroy schema or history. Only those
+        // Migration tests deliberately destroy schema or history. Only those
         // cases rebuild; ordinary tests retain migration history and use Respawn.
         try
         {

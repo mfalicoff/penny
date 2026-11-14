@@ -48,32 +48,40 @@ async function mockApi(context: BrowserContext): Promise<Server> {
   return server;
 }
 
-const legacyKey = `penny:ledger:${EMAIL}`;
-
-/** What the legacy Expo web app left in localStorage on this origin: a pending "Bakery" entry. */
-async function seedLegacyCopy(page: Page) {
-  // Any same-origin page will do; the app itself would start syncing before the copy exists.
+/**
+ * A pending "Bakery" entry already in this browser's offline store (`penny-offline`, format 1),
+ * on top of the server's revision 3, as a save made offline leaves it.
+ */
+async function seedPendingChange(page: Page) {
+  // Any same-origin page will do; the app itself would start syncing before the record exists.
   await page.goto("/licenses/Inter-OFL.txt");
   const base = { ...emptyLedger, transactions: [entry("a", "Rent")] };
   const local = { ...emptyLedger, transactions: [entry("a", "Rent"), entry("b", "Bakery")] };
-  await page.evaluate(([key, value]) => {
-    localStorage.setItem(key, value);
-  }, [legacyKey, JSON.stringify({ base, local })] as const);
+  await page.evaluate(async ([email, value]) => {
+    const record = { format: 1, server: location.origin, email, baseRevision: 3, lastSyncedAt: null, savedAt: new Date().toISOString(), ...value };
+    await new Promise<void>((resolve, reject) => {
+      const opening = indexedDB.open("penny-offline", 1);
+      opening.onupgradeneeded = () => opening.result.createObjectStore("ledgers");
+      opening.onerror = () => { reject(opening.error ?? new Error("open failed")); };
+      opening.onsuccess = () => {
+        const db = opening.result;
+        const write = db.transaction("ledgers", "readwrite");
+        write.objectStore("ledgers").put(record, `ledger\n${location.origin}\n${email}`);
+        write.oncomplete = () => { db.close(); resolve(); };
+        write.onerror = () => { reject(write.error ?? new Error("write failed")); };
+      };
+    });
+  }, [EMAIL, { base, local }] as const);
 }
 
-const legacyCopy = (page: Page) => page.evaluate((key) => localStorage.getItem(key), legacyKey);
-
-test("imports the legacy copy, keeps it through reloads and tabs while offline, then syncs it once", async ({ context, page }) => {
+test("keeps a pending change through reloads and tabs while offline, then syncs it once", async ({ context, page }) => {
   const server = await mockApi(context);
-  await seedLegacyCopy(page);
+  await seedPendingChange(page);
   server.down = true;
 
   await page.goto("/");
   await expect(page.getByText("Not synced · 1 change waiting")).toBeVisible();
-  // The original stays until the server has the change.
-  expect(await legacyCopy(page)).not.toBeNull();
-
-  // Reload: the change is read back from IndexedDB, not imported twice.
+  // Reload: the change is read back from IndexedDB.
   await page.reload();
   await expect(page.getByText("Not synced · 1 change waiting")).toBeVisible();
 
@@ -93,7 +101,6 @@ test("imports the legacy copy, keeps it through reloads and tabs while offline, 
   await expect(second.getByText(/change waiting/)).toHaveCount(0);
   expect(server.puts).toHaveLength(1);
   expect(server.ledger.transactions.map((item) => item.title)).toEqual(["Rent", "Bakery"]);
-  expect(await legacyCopy(page)).toBeNull();
 
   // Both tabs stay converged: another reload sends nothing new.
   await second.reload();
@@ -105,7 +112,7 @@ test("imports the legacy copy, keeps it through reloads and tabs while offline, 
 test("refuses to sign out while a change is waiting, and allows it once synced", async ({ context, page }) => {
   const server = await mockApi(context);
   await context.route("**/api/auth/logout", (route) => route.fulfill({ json: { ok: true } }));
-  await seedLegacyCopy(page);
+  await seedPendingChange(page);
   server.down = true;
   await page.goto("/settings");
   await expect(page.getByText("Not synced · 1 change waiting")).toBeVisible();

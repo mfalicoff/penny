@@ -1,6 +1,6 @@
 namespace Penny.Backend.Domain.Households;
 
-// The legacy `expenseInput` body. `Title` and the category name are trimmed; `Note`
+// The shared expense body. `Title` and the category name are trimmed; `Note`
 // defaults to empty; `Allocations` is null when absent.
 public sealed record ExpenseInput(
     string Title,

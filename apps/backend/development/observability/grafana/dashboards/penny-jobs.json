@@ -199,7 +199,7 @@
       "title": "",
       "options": {
         "mode": "markdown",
-        "content": "Workers claim **due** work: push deliveries and receipts, search embeddings, shared recurrences and receipt text. **Lag** is the time from when work became due to when a worker claimed it; recurrence lag counts from the start of the occurrence's UTC day, so hours there are normal. Failed items are retried."
+        "content": "Workers claim **due** work: push deliveries, search embeddings, shared recurrences and receipt text. **Lag** is the time from when work became due to when a worker claimed it; recurrence lag counts from the start of the occurrence's UTC day, so hours there are normal. Failed items are retried."
       }
     },
     {
@@ -856,7 +856,7 @@
       },
       "type": "timeseries",
       "title": "Outgoing HTTP by host and status",
-      "description": "Calls to the OIDC provider, APNs and Expo.",
+      "description": "Calls to the OIDC provider and APNs.",
       "datasource": {
         "type": "prometheus",
         "uid": "${prometheus}"

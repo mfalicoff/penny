@@ -116,7 +116,7 @@ public sealed class PostgresLedgerRepository(NpgsqlDataSource source) : ILedgerR
                 cancellationToken
             );
         // Checks run even for a stale revision so their errors take precedence over
-        // the conflict, as in the legacy service. When the revision matched, the
+        // the conflict (part of the client contract). When the revision matched, the
         // ledger row is locked, so these reads see every write committed before it.
         verify(await ReadWriteStateAsync(context, userId, ledger, cancellationToken));
         if (updated != 1)
@@ -258,7 +258,7 @@ public sealed class PostgresLedgerRepository(NpgsqlDataSource source) : ILedgerR
             .OfType<string>()
             .Distinct(StringComparer.Ordinal)
             .ToList();
-        // Active memberships of non-archived households, as the legacy query.
+        // Active memberships of non-archived households.
         var currencies = await context
             .HouseholdMemberPeriods.Where(member =>
                 member.UserId == userId && member.LeftAt == null
@@ -286,8 +286,6 @@ public sealed class PostgresLedgerRepository(NpgsqlDataSource source) : ILedgerR
             )
             .ToListAsync(cancellationToken);
         return new(
-            await context.LedgerAccounts.AnyAsync(row => row.UserId == userId, cancellationToken),
-            await context.LedgerTrips.AnyAsync(row => row.UserId == userId, cancellationToken),
             currencies.ToHashSet(StringComparer.Ordinal),
             linkedAccounts.ToHashSet(StringComparer.Ordinal),
             receiptIds.Count == 0

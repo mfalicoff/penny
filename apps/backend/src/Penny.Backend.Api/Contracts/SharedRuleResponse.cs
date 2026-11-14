@@ -3,7 +3,7 @@ using Penny.Backend.Application.Households;
 
 namespace Penny.Backend.Api.Contracts;
 
-// Contract schema `SharedRecurring` (legacy `HouseholdRecurring`). Optional fields are
+// Contract schema `SharedRecurring`. Optional fields are
 // omitted when absent; `accountId` is present only for the payer.
 public sealed record SharedRuleResponse(
     string Id,

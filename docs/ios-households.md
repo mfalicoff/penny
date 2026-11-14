@@ -1,6 +1,6 @@
 # Native households and shared expenses (MAZ-75)
 
-[Native app](../apps/ios/README.md) · [Households on the server](migration/households.md) · [Shared expenses](migration/shared-expenses.md) · [Settlement](migration/settlement.md) · [Shared recurrence](migration/shared-recurrence.md) · [Native overview](ios-overview.md)
+[Native app](../apps/ios/README.md) · [Households on the server](reference/households.md) · [Shared expenses](reference/shared-expenses.md) · [Settlement](reference/settlement.md) · [Shared recurrence](reference/shared-recurrence.md) · [Native overview](ios-overview.md)
 
 This page describes the Shared tab of the SwiftUI app: households, invitations, shared expenses and their splits, recording payments, monthly balances, history, repeating shared expenses, and leaving, removing and archiving. It covers what people see, how shared money differs from personal money, what recording a payment means, the code, the accessibility identifiers and the acceptance scenarios.
 
@@ -21,7 +21,7 @@ This page describes the Shared tab of the SwiftUI app: households, invitations, 
 | Screens | `PennyUI/Households/` | `HouseholdViewTests`, `PennyUITests/Households/HouseholdJourneyTests` |
 | Previews of every specimen | `PennyUI/Households/HouseholdSpecimens.swift` | |
 
-The app talks to the endpoints MAZ-56–59 already serve (`contracts/openapi.json`); no endpoint was added. The client sends the legacy bodies (`timezoneOffsetMinutes` on create, join and expenses, `{revision}` on deletes, `{fromUserId, revision}` on share payments) and encodes every id as a single path segment.
+The app talks to the endpoints MAZ-56–59 already serve (`contracts/openapi.json`); no endpoint was added. The client sends the documented bodies (`timezoneOffsetMinutes` on create, join and expenses, `{revision}` on deletes, `{fromUserId, revision}` on share payments) and encodes every id as a single path segment.
 
 ## Shared versus personal
 
@@ -118,7 +118,7 @@ Identifiers (`AccessibilityID.Households`): screens `screen.shared`, `screen.hou
 
 ## Acceptance scenarios
 
-Run on clean iPhone and iPad simulators against the [full-stack environment](migration/test-environment.md); the automated ones are `HouseholdJourneyTests` in the Full plan (`PENNY_UI_ONLY=PennyUITests/HouseholdJourneyTests apps/ios/scripts/ios.sh ui-test full`).
+Run on clean iPhone and iPad simulators against the [full-stack environment](reference/test-environment.md); the automated ones are `HouseholdJourneyTests` in the Full plan (`PENNY_UI_ONLY=PennyUITests/HouseholdJourneyTests apps/ios/scripts/ios.sh ui-test full`).
 
 1. **Create, invite, join (automated):** create a household; the invite shows the code, the QR code and the countdown; the second person joins with the code through the API; they appear under People.
 2. **Equal split and share payment (automated):** add an expense of $90 split equally; the server stores $45/$45 and never sends the other member your account; the other person records their share; the share shows Repaid and offers no payment.

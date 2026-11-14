@@ -18,7 +18,7 @@ public interface ISharedExpenseTransaction : IHouseholdTransaction
     // Locks the user's `ledgers` row (the row PUT /api/ledger compare-and-increments)
     // and reports whether their ledger has the payment account. A concurrent ledger
     // save that deletes the account either commits first (false) or waits and then
-    // sees the expense that links it (ledger check 6).
+    // sees the expense that links it (ledger check 4).
     Task<bool> LockLedgerAccountAsync(string userId, string accountId);
 
     Task<bool> ReceiptOwnedAsync(string userId, string receiptId);

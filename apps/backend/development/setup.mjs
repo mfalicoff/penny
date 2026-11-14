@@ -6,7 +6,7 @@ const admin = randomBytes(24).toString("hex");
 const migration = randomBytes(24).toString("hex");
 const runtime = randomBytes(24).toString("hex");
 const receiptKey = randomBytes(32).toString("base64");
-// Encrypted receipt files for local imports; .cache/ is git-ignored.
+// Encrypted receipt files for local development; .cache/ is git-ignored.
 // The pinned search model (download-model.mjs); .cache/ is git-ignored.
 const modelDirectory = fileURLToPath(new URL("../../../.cache/backend/models/multilingual-e5-small", import.meta.url));
 const receiptRoot = fileURLToPath(new URL("../../../.cache/backend/receipts", import.meta.url));

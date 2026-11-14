@@ -34,7 +34,7 @@ struct MoneyFormatTests {
         #expect(frenchParts.fraction.hasPrefix(","))
     }
 
-    @Test("whenTheLegacyIconAndCategoryAreMapped_CategoryStyle_ShouldUseSFSymbolsAndThePalette")
+    @Test("whenTheStoredIconAndCategoryAreMapped_CategoryStyle_ShouldUseSFSymbolsAndThePalette")
     func categories() {
         #expect(CategoryStyle.symbol(forIonicon: "basket-outline") == "basket")
         #expect(CategoryStyle.symbol(forIonicon: "not-an-icon") == "tag")

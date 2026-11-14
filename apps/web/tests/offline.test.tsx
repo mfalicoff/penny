@@ -4,7 +4,6 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { clearPrivateData } from "../src/auth/lifecycle";
 import { openIndexedDb } from "../src/offline/database";
-import { legacyLedgerKey } from "../src/offline/legacy";
 import { accountScope, RECORD_FORMAT, recordKey, type LedgerRecord } from "../src/offline/record";
 import { ALEX, bodyOf, callsTo, emptySearch, emptyWireLedger, json, openSignOut, renderApp, stubServer, wasCalled } from "./render";
 
@@ -193,18 +192,6 @@ describe("durable offline ledger in the app", () => {
     renderApp("/");
     expect(await screen.findByText(/Your session ended/)).toBeInTheDocument();
     expect((await stored())?.local.transactions).toHaveLength(1);
-  });
-
-  it("imports the legacy Expo web copy and removes it once its edits reached the server", async () => {
-    const base = { ...emptyWireLedger(), transactions: [entry("a", "Rent")] };
-    localStorage.setItem(legacyLedgerKey(ALEX), JSON.stringify({ base, local: { ...base, transactions: [entry("a", "Rent"), entry("b", "Bakery")] } }));
-    const server = ledgerServer({ transactions: [entry("a", "Rent")] });
-    renderApp("/");
-    await waitFor(() => {
-      expect(localStorage.getItem(legacyLedgerKey(ALEX))).toBeNull();
-    });
-    expect((server.state.ledger.transactions as { title: string }[]).map((item) => item.title)).toEqual(["Rent", "Bakery"]);
-    expect((await stored())?.legacy?.removedAt).toEqual(expect.any(String));
   });
 
   it("says when the browser blocks storage, and still shows the server's ledger", async () => {

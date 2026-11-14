@@ -1,6 +1,6 @@
 namespace Penny.Backend.Application.Push;
 
-// Notification text per household event (legacy `messageFor`). The text never names
+// Notification text per household event. The text never names
 // people, amounts or titles, so lock screens reveal no financial details.
 public static class PushContent
 {

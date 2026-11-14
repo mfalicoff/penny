@@ -1,6 +1,6 @@
 # Native receipts (MAZ-78)
 
-[Native app](../apps/ios/README.md) · [Native entries](ios-entries.md) · [Receipt API](migration/receipts.md) · [Browser receipts](web-receipts.md)
+[Native app](../apps/ios/README.md) · [Native entries](ios-entries.md) · [Receipt API](reference/receipts.md) · [Browser receipts](web-receipts.md)
 
 The iPhone and iPad app attaches a photo or PDF receipt to an expense, uploads it with progress, previews it and shares it. The server side is the MAZ-60 receipt API over the encrypted file store; nothing about its contract changed. The rules and messages match the browser app (MAZ-94).
 
@@ -62,7 +62,7 @@ Add entry › Receipt, repeat, trip (More details) has a **Receipt** group (card
 - **Ended session:** a 401 ends the session the usual way (sign-in with "Your session ended"). The unsaved entry is on the draft shelf (stored per account, [native entries](ios-entries.md#failures-and-drafts)), so after signing in again Add entry says "Your unsaved entry is back" with every value as typed.
 - **Offline:** the buttons are disabled and the footer says to connect (`LedgerSyncModel.canUseOnlineOnlyActions`: online, signed in, not signing out, session not expired). The rest of the entry still saves offline, and a receipt uploaded earlier stays linked in the draft and syncs with the entry.
 - **The demo** has no server: the footer says receipts need an account.
-- **Removing** (× or the viewer's trash) unlinks the receipt when the entry is saved. The encrypted file stays on the server: there is no receipt delete endpoint, as in the legacy app and the browser. The same applies to a file uploaded into a draft that is then discarded.
+- **Removing** (× or the viewer's trash) unlinks the receipt when the entry is saved. The encrypted file stays on the server: there is no receipt delete endpoint, as in the browser. The same applies to a file uploaded into a draft that is then discarded.
 - **Closing the form** (Discard, Keep as draft, or a deep link replacing it) cancels an upload in flight; nothing is attached.
 - **Ownership:** an upload belongs to the signed-in account. A personal entry can link only its owner's receipts; the server refuses anything else on save.
 
@@ -85,13 +85,13 @@ States:
 | Offline, timeout | "Penny can't reach the server, so the receipt can't be shown. Try again when you're online." | Try again |
 | Server error | "Penny couldn't load this receipt. Try again." | Try again |
 | 401 | "Your session ended. Sign in again to see this receipt." (the session ends) | Sign in |
-| A link the server doesn't serve (attached by the legacy native app, not `/api/receipts/…`) | Shown by name only | None |
+| A link the server doesn't serve (not `/api/receipts/…`, such as a device file path) | Shown by name only | None |
 | A photo iOS can't decode | "This photo can't be shown", Share kept | Share |
 | A damaged or password-protected PDF | "This PDF can't be shown", Share kept | Share |
 
 **Cleanup:** closing the viewer cancels a download in flight and removes the temporary file. Share is only offered once the file exists.
 
-**Private and shared access:** the server decides. The owner can always read a receipt; a household member can read one linked by a live shared expense of a household they belong to (or belonged to, with a share in that expense). Anyone else gets the same 404 as for a missing receipt ([access](migration/receipts.md#access)).
+**Private and shared access:** the server decides. The owner can always read a receipt; a household member can read one linked by a live shared expense of a household they belong to (or belonged to, with a share in that expense). Anyone else gets the same 404 as for a missing receipt ([access](reference/receipts.md#access)).
 
 **App lock:** the lock cover is its own window above every sheet and full-screen cover, so the viewer, the pickers and the share sheet are hidden while Penny is locked, and the form underneath (with its upload) stays as it was.
 
@@ -106,7 +106,7 @@ States:
 
 - `ReceiptRulesTests` (PennyData, Mac host): every type's signature, mismatches, unsupported and empty files, the 10 MiB boundary and one byte over, signature sniffing (HEIC and HEIF brands), extensions, name cleanup and UTF-16 shortening, byte formatting, served links, a sparse 10 MiB + 1 file refused before reading, a renamed file, a missing file.
 - `ReceiptUploadModelTests`: progress then attach with the size; offline failure and Try again with the same file; 400, 413 and 401 without Try again; a 5xx with it; cancel dropping the late answer; a second file replacing the first; refusals; offline and demo; closing the form cancelling the upload.
-- `ReceiptPreviewModelTests`: download into the cache with a SHA-256 match and a safe file name, removal on close; 404, 401, offline and 5xx; legacy links; offline without a download; local bytes; closing during the download; purge leaving other files alone.
+- `ReceiptPreviewModelTests`: download into the cache with a SHA-256 match and a safe file name, removal on close; 404, 401, offline and 5xx; links the server doesn't serve; offline without a download; local bytes; closing during the download; purge leaving other files alone.
 - `AccountReceiptsTests` (real `AuthController` over a stub transport): upload mapping, a 401 ending the session, 404 for another account's receipt. `ReceiptUploadProgressTests`: body progress forwarded, empty and oversized files refused before sending.
 - `ReceiptViewTests` (PennyUI): the row text, the demo without receipts, the picker's types, the preview PDF.
 - `ReceiptJourneyTests` (XCUITest, Full plan, real .NET API and PostgreSQL on clean iPhone and iPad simulators):

@@ -9,7 +9,7 @@ import Testing
 struct BuiltAppTests {
     let info = Bundle.main.infoDictionary ?? [:]
 
-    @Test("whenBuilt_AppBundle_ShouldKeepTheLegacyIdentity")
+    @Test("whenBuilt_AppBundle_ShouldKeepTheReleasedIdentity")
     func identity() {
         #expect(Bundle.main.bundleIdentifier == AppIdentity.bundleIdentifier)
         #expect(info["CFBundleDisplayName"] as? String == "Penny")
@@ -32,7 +32,7 @@ struct BuiltAppTests {
     func configuration() throws {
         let configuration = try AppConfiguration.fromMainBundle()
         #expect(configuration.environment == .development)
-        #expect(configuration.defaultServerURL == (try ServerURL("http://localhost:3001")))
+        #expect(configuration.defaultServerURL == (try ServerURL("http://localhost:5001")))
         #expect(configuration.appGroup == AppIdentity.appGroup)
     }
 
@@ -58,8 +58,8 @@ struct BuiltAppTests {
         #expect(Bundle.main.url(forResource: "PrivacyInfo", withExtension: "xcprivacy") != nil)
     }
 
-    /// MAZ-80: the WidgetKit extension keeps the Expo extension's id, so placed widgets stay.
-    @Test("whenBuilt_WidgetExtension_ShouldBeEmbeddedWithTheLegacyIdentity")
+    /// MAZ-80: the WidgetKit extension keeps its frozen id, so placed widgets stay.
+    @Test("whenBuilt_WidgetExtension_ShouldBeEmbeddedWithTheFrozenIdentity")
     func widgetExtension() throws {
         let url = try #require(Bundle.main.builtInPlugInsURL?.appending(path: "PennyWidgets.appex"))
         let widgets = try #require(Bundle(url: url))

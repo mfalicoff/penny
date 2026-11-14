@@ -188,6 +188,14 @@
     {
       "id": "iphone-trip-detail",
       "appearance": "light",
+      "text": "4 expenses",
+      "contrast": 4.47,
+      "needs": 4.5,
+      "issue": "MAZ-183"
+    },
+    {
+      "id": "iphone-trip-detail",
+      "appearance": "light",
       "text": "Nov 12–19 · 4 people",
       "contrast": 3.88,
       "needs": 4.5,
@@ -198,14 +206,6 @@
       "appearance": "light",
       "text": "trip total · your share",
       "contrast": 4.28,
-      "needs": 4.5,
-      "issue": "MAZ-183"
-    },
-    {
-      "id": "iphone-trip-detail",
-      "appearance": "light",
-      "text": "4 expenses",
-      "contrast": 4.47,
       "needs": 4.5,
       "issue": "MAZ-183"
     },

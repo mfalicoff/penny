@@ -2,16 +2,16 @@ public import PennyDomain
 
 /// A wire ledger that cannot become a domain ledger. It is never saved over local data:
 /// an unknown version or value means a newer or broken peer, and writing back what this
-/// build understood would destroy what it did not (docs/migration/architecture.md, ADR 003).
+/// build understood would destroy what it did not (docs/reference/architecture.md, ADR 003).
 public enum LedgerMappingError: Error, Equatable, Sendable {
     case unsupportedVersion(Int)
     case invalidValue(field: String, value: String)
 }
 
 extension Ledger {
-    /// The domain ledger for a wire ledger. Versions 1–3 are upgraded the way the server and
-    /// the legacy client upgrade them (`Ledger.upgradedCategories`; missing accounts and trips
-    /// become empty lists). A rule without `anchorDay` (pre-v4) anchors on its start day.
+    /// The domain ledger for a wire ledger. Only version 4 (`Ledger.version`) is accepted; any
+    /// other version is `unsupportedVersion`. Missing `accounts` and `trips` are empty lists, and
+    /// every rule must carry its `anchorDay`.
     public init(wire: WireLedger) throws(LedgerMappingError) {
         // PennyData has its own wire-format `CalendarDate` check; this is the domain value.
         func date(_ text: String, _ field: String) throws(LedgerMappingError) -> PennyDomain.CalendarDate {
@@ -25,6 +25,7 @@ extension Ledger {
             case .investment: .investment
             }
         }
+        guard wire.version == Ledger.version else { throw .unsupportedVersion(wire.version) }
         guard let currency = Currency(rawValue: wire.currency) else {
             throw .invalidValue(field: "currency", value: wire.currency)
         }
@@ -42,11 +43,8 @@ extension Ledger {
                     id: trip.id, name: trip.name, startDate: try date(trip.startDate, "trips.startDate"),
                     endDate: try date(trip.endDate, "trips.endDate"), sharedHouseholdId: trip.sharedHouseholdId))
         }
-        let wireCategories = wire.categories.map {
+        let categories = wire.categories.map {
             LedgerCategory(id: $0.id, name: $0.name, icon: $0.icon, color: $0.color, kind: kind($0.kind))
-        }
-        guard let categories = Ledger.upgradedCategories(wireCategories, fromVersion: wire.version) else {
-            throw .unsupportedVersion(wire.version)
         }
         var transactions: [LedgerEntry] = []
         transactions.reserveCapacity(wire.transactions.count)
@@ -66,13 +64,16 @@ extension Ledger {
             guard let frequency = RecurrenceFrequency(rawValue: rule.frequency) else {
                 throw .invalidValue(field: "recurring.frequency", value: rule.frequency)
             }
-            let start = try date(rule.date, "recurring.date")
+            guard let anchorDay = rule.anchorDay else {
+                throw .invalidValue(field: "recurring.anchorDay", value: "missing")
+            }
             recurring.append(
                 RecurringRule(
                     id: rule.id, title: rule.title, kind: kind(rule.kind), total: rule.total, share: rule.share,
-                    categoryId: rule.categoryId, accountId: rule.accountId, date: start, note: rule.note,
+                    categoryId: rule.categoryId, accountId: rule.accountId, date: try date(rule.date, "recurring.date"),
+                    note: rule.note,
                     frequency: frequency, nextDate: try date(rule.nextDate, "recurring.nextDate"),
-                    anchorDay: rule.anchorDay ?? start.day, active: rule.active))
+                    anchorDay: anchorDay, active: rule.active))
         }
         self.init(
             currency: currency, accounts: accounts, trips: trips, categories: categories, transactions: transactions,
@@ -82,7 +83,7 @@ extension Ledger {
 
 extension WireLedger {
     /// The version 4 wire ledger for a domain ledger. Optional fields that are nil are
-    /// omitted, never sent as JSON `null` (docs/migration/ledger.md).
+    /// omitted, never sent as JSON `null` (docs/reference/ledger.md).
     public init(_ ledger: Ledger) {
         func kind(_ value: EntryKind) -> WireEntryKind {
             switch value {

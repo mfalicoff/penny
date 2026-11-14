@@ -2,21 +2,22 @@ using System.Text.Json;
 
 namespace Penny.Backend.Domain.Ledgers;
 
-// Port of the legacy `ledgerWriteSchema` (server/validation/ledger.ts, zod 4) and
-// its transform. Semantics kept on purpose:
+// Validates a `PUT /api/ledger` body (`{revision, ledger}`) with the v4 ledger rules
+// shared with the iOS and web clients:
+// - The ledger must be version 4 and carry every collection, `accounts` and `trips`
+//   included. Any other version is invalid.
 // - Numbers follow JavaScript: any JSON number that is a safe integer is accepted
 //   (`1.0`, `1e2`); strings, booleans and null are not.
 // - Optional fields may be absent but never JSON null. Unknown keys are ignored and
 //   the last duplicate key wins, as with JSON.parse.
 // - Account and trip names are trimmed with JavaScript whitespace rules; other
 //   strings are kept verbatim. Lengths count UTF-16 code units.
-// - v1-v3 documents are upgraded to v4 with the client's `upgradeLedger` rule.
-// Deliberate additions for PostgreSQL storage: strings with NUL or unpaired
-// surrogates are rejected, and the last safe revision cannot be written because its
-// successor would not be a safe integer.
+// - Strings with NUL or unpaired surrogates are rejected (PostgreSQL text cannot hold
+//   them), and the last safe revision cannot be written because its successor would
+//   not be a safe integer.
 public static class LedgerReader
 {
-    // Returns null for any invalid body: the legacy API reported one message for all.
+    // Returns null for any invalid body: every problem is reported with one message.
     public static LedgerWrite? Read(JsonElement body)
     {
         try
@@ -34,14 +35,10 @@ public static class LedgerReader
         var root = Fields(body);
         var revision = Integer(Required(root, "revision"), 0, LedgerLimits.MaxSafeInteger);
         var ledger = Fields(Required(root, "ledger"));
-        var version = (int)Integer(Required(ledger, "version"), 1, LedgerDocument.Version);
+        Integer(Required(ledger, "version"), LedgerDocument.Version, LedgerDocument.Version);
         var currency = Choice(Required(ledger, "currency"), LedgerLimits.Currencies);
-        var accounts = ledger.TryGetValue("accounts", out var accountItems)
-            ? List(accountItems, LedgerLimits.MaxAccounts, ReadAccount)
-            : null;
-        var trips = ledger.TryGetValue("trips", out var tripItems)
-            ? List(tripItems, LedgerLimits.MaxTrips, ReadTrip)
-            : null;
+        var accounts = List(Required(ledger, "accounts"), LedgerLimits.MaxAccounts, ReadAccount);
+        var trips = List(Required(ledger, "trips"), LedgerLimits.MaxTrips, ReadTrip);
         var categories = List(
             Required(ledger, "categories"),
             LedgerLimits.MaxCategories,
@@ -58,12 +55,7 @@ public static class LedgerReader
             ReadRecurring
         );
 
-        // The legacy superRefine rules.
-        Require(version < 3 || accounts is not null);
-        Require(version != LedgerDocument.Version || trips is not null);
-        var omittedTrips = trips is null;
-        accounts ??= [];
-        trips ??= [];
+        // Cross-field rules: unique ids, ordered trip dates and consistent references.
         Unique(accounts.Select(account => account.Id));
         Unique(trips.Select(trip => trip.Id));
         Unique(categories.Select(category => category.Id));
@@ -102,19 +94,7 @@ public static class LedgerReader
 
         // Its successor would exceed Number.MAX_SAFE_INTEGER (and the column bound).
         Require(revision < LedgerLimits.MaxSafeInteger);
-        return new(
-            revision,
-            version,
-            omittedTrips,
-            new(
-                currency,
-                accounts,
-                trips,
-                LedgerUpgrade.Categories(version, categories),
-                transactions,
-                recurring
-            )
-        );
+        return new(revision, new(currency, accounts, trips, categories, transactions, recurring));
     }
 
     private static PaymentAccount ReadAccount(JsonElement value)
@@ -271,7 +251,8 @@ public static class LedgerReader
             ? date
             : throw new FormatException();
 
-    // zod 4 `z.number().int()`: a finite JavaScript number that is a safe integer.
+    // A finite JSON number with an integral value no larger in magnitude than
+    // Number.MAX_SAFE_INTEGER, within [min, max].
     internal static long Integer(JsonElement value, long min, long max)
     {
         Require(

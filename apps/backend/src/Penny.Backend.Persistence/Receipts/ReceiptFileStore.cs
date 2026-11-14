@@ -182,7 +182,7 @@ public sealed partial class ReceiptFileStore(ReceiptStoreSettings settings)
     private byte[] DeriveKey(byte[] salt) =>
         HKDF.DeriveKey(HashAlgorithmName.SHA256, settings.MasterKey, 32, salt, KeyInfo);
 
-    // IDs never contain NUL (import and API validation), so the encoding is unambiguous.
+    // IDs never contain NUL (API validation), so the encoding is unambiguous.
     private static byte[] Context(string part, string userId, string receiptId) =>
         Encoding.UTF8.GetBytes($"penny/receipt/v1\0{part}\0{userId}\0{receiptId}");
 

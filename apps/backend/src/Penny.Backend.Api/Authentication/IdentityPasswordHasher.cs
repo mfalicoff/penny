@@ -6,7 +6,8 @@ using Penny.Backend.Application.Abstractions.Security;
 namespace Penny.Backend.Api.Authentication;
 
 // ASP.NET Core Identity's versioned PBKDF2 format (v3: HMAC-SHA512, salt embedded).
-// Legacy scrypt hex hashes and empty OIDC-only passwords never verify.
+// Any other stored value, including the empty password of OIDC-only accounts, never
+// verifies.
 public sealed class IdentityPasswordHasher : IPasswordHasher
 {
     private const byte CurrentFormat = 0x01;
@@ -26,7 +27,7 @@ public sealed class IdentityPasswordHasher : IPasswordHasher
     {
         if (!IsCurrentFormat(storedHash))
         {
-            // Same cost as a real check, so unknown and legacy accounts are not distinguishable.
+            // Same cost as a real check, so unknown and unusable accounts look alike.
             hasher.VerifyHashedPassword(Subject, unusable, password);
             return PasswordCheck.Failed;
         }

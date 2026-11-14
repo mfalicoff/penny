@@ -35,7 +35,7 @@ public sealed class OidcTests(ApiFixture fixture, FakeOidcProvider provider)
                 HttpStatusCode.NotFound,
                 OidcService.NotConfigured
             );
-            // As with express.json(), malformed JSON is rejected before the route runs.
+            // Malformed JSON is rejected before the route runs.
             using var malformed = await Client.PostAsync(
                 path,
                 new StringContent("{", Encoding.UTF8, "application/json"),
@@ -152,12 +152,9 @@ public sealed class OidcTests(ApiFixture fixture, FakeOidcProvider provider)
         completed.Headers.CacheControl!.NoStore.ShouldBeTrue();
         (await MeAsync(client, session.Token)).ShouldBe(Email);
 
-        // One user with an empty password, a random salt, the identity, the initial
+        // One user with an empty password, the identity, the initial
         // ledger and a hashed session; the attempt is gone.
         (await ScalarAsync("SELECT count(*) FROM penny.users WHERE password = ''")).ShouldBe(1L);
-        (await ScalarAsync("SELECT salt FROM penny.users"))
-            .ShouldBeOfType<string>()
-            .ShouldMatch("^[a-f0-9]{32}$");
         (
             await ScalarAsync(
                 $"SELECT count(*) FROM penny.oidc_identities i JOIN penny.users u ON u.id = i.user_id WHERE i.issuer = '{FakeOidcProvider.Issuer}' AND i.subject = 'subject-01' AND u.email = '{Email}'"
@@ -551,7 +548,7 @@ public sealed class OidcTests(ApiFixture fixture, FakeOidcProvider provider)
             }
         );
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        // Provider emails are lowercased, as in the legacy server.
+        // Provider emails are lowercased.
         (await response.Content.ReadFromJsonAsync<SessionResponse>(Ct))!.Email.ShouldBe(
             "mixed.case@example.test"
         );

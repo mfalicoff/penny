@@ -45,11 +45,9 @@ export function TripsPage() {
   const sharedUnavailable = demo
     ? "The demo has no shared trips. Sign in to your own Penny server to share one."
     : households.isError && !households.data
-      ? households.error instanceof ApiError && households.error.status === 404
-        ? "This server doesn't offer shared trips. Your personal trips are all here."
-        : households.error instanceof ApiError && households.error.status === 0
-          ? "Shared trips need a connection. Your personal trips are all here."
-          : "Penny couldn't load your shared trips. Your personal trips are all here."
+      ? households.error instanceof ApiError && households.error.status === 0
+        ? "Shared trips need a connection. Your personal trips are all here."
+        : "Penny couldn't load your shared trips. Your personal trips are all here."
       : null;
   const rest = cards.filter((card) => card !== featured);
 

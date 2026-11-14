@@ -1,4 +1,4 @@
-/// The wire ledger (v1–v4 inputs; v4 output adds accounts and trips).
+/// The wire ledger, version 4 (`accounts` and `trips` may be absent).
 public struct Ledger: Codable, Equatable, Sendable {
     public var version: Int
     public var currency: String

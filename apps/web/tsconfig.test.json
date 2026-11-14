@@ -31,12 +31,17 @@
         "../../design-kit/*"
       ],
       "@domain/*": [
-        "../../src/domain/*"
+        "./src/domain/*"
       ]
     }
   },
   "include": [
     "src",
     "tests"
+  ],
+  "exclude": [
+    "src/domain",
+    "src/validation",
+    "tests/domain"
   ]
 }

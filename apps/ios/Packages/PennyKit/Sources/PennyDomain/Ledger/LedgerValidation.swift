@@ -1,5 +1,5 @@
-/// A reason the server would refuse a ledger as "Invalid ledger data." (the legacy zod schema
-/// and refinements, ported by the .NET `LedgerReader`; docs/migration/ledger.md).
+/// A reason the server would refuse a ledger as "Invalid ledger data." (the .NET
+/// `LedgerReader`; docs/reference/ledger.md).
 public enum LedgerViolation: Hashable, Sendable {
     case invalidID(String)
     case duplicateID(String)
@@ -29,7 +29,7 @@ extension Ledger {
     /// represented in a Swift `String`, so the type already guarantees it.
     public var violations: [LedgerViolation] {
         var found: [LedgerViolation] = []
-        /// zod `z.string().min(min).max(max)` plus `IsStorable`, on the string itself.
+        /// A length in UTF-16 code units within `range`, plus `IsStorable`, on the string itself.
         func text(_ value: String, _ range: ClosedRange<Int>) -> Bool {
             range.contains(JavaScriptText.length(value)) && JavaScriptText.isStorable(value)
         }
@@ -78,7 +78,7 @@ extension Ledger {
 
         let accountIDs = Set(accounts.map(\.id))
         let tripIDs = Set(trips.map(\.id))
-        // A duplicate id is already a violation; the last one wins, as in the legacy `Map`.
+        // A duplicate id is already a violation; the last one wins.
         let kinds = Dictionary(categories.map { ($0.id, $0.kind) }, uniquingKeysWith: { _, last in last })
         func amounts(
             _ owner: String, kind: EntryKind, total: Int64, share: Int64, categoryId: String, accountId: String?,
@@ -127,29 +127,5 @@ extension Ledger {
             && bytes[1...].allSatisfy {
                 (0x30...0x39).contains($0) || (0x41...0x46).contains($0) || (0x61...0x66).contains($0)
             }
-    }
-
-    /// The categories after upgrading a version 1–3 ledger to version 4 (legacy `upgradeLedger`).
-    ///
-    /// Only version 1 changes: it gains the Investments category, with id `investments`, or
-    /// `investments-1`, `-2`… on a collision, unless it already has an investment category or
-    /// already has 300 categories. Versions 2–4 never gain or restore a category, and historical
-    /// expenses are never reclassified. Missing accounts and trips become empty lists in the
-    /// wire layer. Returns nil for an unknown version, which must never be saved.
-    public static func upgradedCategories(_ categories: [LedgerCategory], fromVersion version: Int) -> [LedgerCategory]?
-    {
-        guard (1...4).contains(version) else { return nil }
-        guard version == 1, !categories.contains(where: { $0.kind == .investment }),
-            categories.count < maxCategories
-        else { return categories }
-        var id = investmentCategory.id
-        var suffix = 1
-        while categories.contains(where: { $0.id == id }) {
-            id = "\(investmentCategory.id)-\(suffix)"
-            suffix += 1
-        }
-        var category = investmentCategory
-        category.id = id
-        return categories + [category]
     }
 }

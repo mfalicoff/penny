@@ -5,10 +5,10 @@ using Penny.Backend.Application.Push;
 namespace Penny.Backend.Api.Push;
 
 // Background push delivery (MAZ-61): passes run back to back while full batches are
-// claimed, then every `Push__PollSeconds`; each pass also checks due Expo receipts.
-// Every process may run it; leases keep runners apart and PostgreSQL state makes
-// restarts resume. Logs carry counts, provider reason codes and exception types only
-// (no tokens, ids, payloads or response bodies).
+// claimed, then every `Push__PollSeconds`. Every process may run it; leases keep
+// runners apart and PostgreSQL state makes restarts resume. Logs carry counts,
+// provider reason codes and exception types only (no tokens, ids, payloads or response
+// bodies).
 public sealed partial class PushDeliveryWorker(
     PushDeliveryRunner runner,
     PushOptions options,
@@ -32,9 +32,6 @@ public sealed partial class PushDeliveryWorker(
                     MessageFailed(logger, failure);
                     BackendTelemetry.JobFailed(BackendTelemetry.PushDeliveryJob, failure);
                 }
-                var receipts = await runner.CheckReceiptsAsync(stoppingToken);
-                if (receipts > 0)
-                    ReceiptsChecked(logger, receipts);
                 if (run.Claimed == PushDeliveryRunner.BatchSize && run.Failures.Count == 0)
                     continue;
             }
@@ -69,9 +66,6 @@ public sealed partial class PushDeliveryWorker(
         int failed,
         int invalid
     );
-
-    [LoggerMessage(Level = LogLevel.Information, Message = "Checked {Receipts} Expo push receipts")]
-    private static partial void ReceiptsChecked(ILogger logger, int receipts);
 
     [LoggerMessage(
         Level = LogLevel.Warning,

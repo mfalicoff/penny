@@ -56,7 +56,7 @@ enum ContractLedger {
 }
 
 /// search-cases.json has no strict Swift model in PennyContracts yet (its Swift consumer is
-/// listed as MAZ-73), so the legacy local parts are read with a lenient one here.
+/// listed as MAZ-73), so its local parts are read with a lenient one here.
 struct LocalSearchCases: Decodable {
     struct SubstringCase: Decodable {
         var query: String

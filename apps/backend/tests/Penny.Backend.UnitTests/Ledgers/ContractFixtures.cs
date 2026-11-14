@@ -2,7 +2,7 @@ using System.Text.Json.Nodes;
 
 namespace Penny.Backend.UnitTests.Ledgers;
 
-// Reads the language-neutral fixtures shared with the legacy Node tests.
+// Reads the language-neutral fixtures in `contracts/fixtures`, shared with the clients.
 public static class ContractFixtures
 {
     public static JsonNode Read(string name) => JsonNode.Parse(Text(name))!;

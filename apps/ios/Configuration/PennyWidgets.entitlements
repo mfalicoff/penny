@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<!-- The app's App Group: the widgets read the snapshot the app writes (docs/ios-widgets.md).
-	     The legacy com.mfalicoff.penny.ExpoWidgetsTarget App ID already has it (docs/ios-ipa.md). -->
+	     The com.mfalicoff.penny.ExpoWidgetsTarget App ID already has it (docs/ios-ipa.md). -->
 	<key>com.apple.security.application-groups</key>
 	<array>
 		<string>group.com.mfalicoff.penny</string>

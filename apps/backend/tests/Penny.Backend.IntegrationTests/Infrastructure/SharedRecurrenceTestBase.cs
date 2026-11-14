@@ -21,7 +21,7 @@ public abstract class SharedRecurrenceTestBase(ApiFixture fixture) : SharedExpen
     protected static string RulePath(string householdId, string ruleId) =>
         $"/api/households/{householdId}/recurring/{ruleId}";
 
-    // A legacy rule body; `extra` adds or replaces fields (null removes one).
+    // A valid rule body; `extra` adds or replaces fields (null removes one).
     protected static Dictionary<string, object?> Rule(
         long totalCents,
         string payerUserId,

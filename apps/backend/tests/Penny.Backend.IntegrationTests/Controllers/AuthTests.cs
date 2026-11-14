@@ -48,7 +48,7 @@ public sealed class AuthTests(ApiFixture fixture) : IntegrationTestBase(fixture)
         (await MeAsync(cookie: cookie)).ShouldBe(Email);
         (await MeAsync(bearer: session.Token)).ShouldBe(Email);
 
-        // Only the token hash is stored; the account gets the legacy initial ledger.
+        // Only the token hash is stored; the account gets the initial ledger.
         (
             await ScalarAsync(
                 "SELECT count(*) FROM penny.sessions WHERE token_hash = @p",
@@ -74,14 +74,8 @@ public sealed class AuthTests(ApiFixture fixture) : IntegrationTestBase(fixture)
             )
         ).ShouldBe(12L);
         var hash = (string)
-            (
-                await ScalarAsync(
-                    "SELECT password || ':' || salt FROM penny.users WHERE email = @p",
-                    Email
-                )
-            )!;
+            (await ScalarAsync("SELECT password FROM penny.users WHERE email = @p", Email))!;
         hash.ShouldStartWith("AQAAAAI"); // Identity v3 hash, salt embedded
-        hash.ShouldEndWith(":");
 
         using var logout = await Client.SendAsync(
             Authorized(HttpMethod.Post, "/api/auth/logout", cookie: cookie),
@@ -113,7 +107,7 @@ public sealed class AuthTests(ApiFixture fixture) : IntegrationTestBase(fixture)
         );
         (await StatusAsync(cookie: cookie)).ShouldBe(HttpStatusCode.OK);
 
-        // Malformed Authorization headers fall back to the cookie, as in the legacy regex.
+        // Malformed Authorization headers fall back to the cookie.
         foreach (
             var header in new[]
             {
@@ -240,7 +234,7 @@ public sealed class AuthTests(ApiFixture fixture) : IntegrationTestBase(fixture)
     }
 
     [Fact]
-    public async Task whenRegistrationInvalidOrDuplicate_Register_ShouldReturnLegacyErrors()
+    public async Task whenRegistrationInvalidOrDuplicate_Register_ShouldReturnContractErrors()
     {
         await RegisterAsync(Email);
         using var duplicate = await Client.PostAsJsonAsync(
@@ -350,7 +344,7 @@ public sealed class AuthTests(ApiFixture fixture) : IntegrationTestBase(fixture)
             new Dictionary<string, string> { ["Auth:AllowRegistration"] = "false" }
         );
         using var client = CreateClient(factory);
-        // Policy is checked before validation, as in the legacy service.
+        // Policy is checked before validation.
         using var disabled = await client.PostAsJsonAsync("/api/auth/register", new { }, Ct);
         await ShouldBeErrorAsync(
             disabled,

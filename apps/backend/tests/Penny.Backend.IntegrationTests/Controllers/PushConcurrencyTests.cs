@@ -18,7 +18,7 @@ public sealed class PushConcurrencyTests(ApiFixture fixture) : PushTestBase(fixt
     {
         var (householdId, alex, sam) = await HouseholdAsync();
         await RegisterApnsAsync(sam.Token, ApnsToken(1), "production");
-        await RegisterExpoAsync(sam.Token);
+        await RegisterApnsAsync(sam.Token, ApnsToken(2), "sandbox");
         for (var index = 0; index < 30; index++)
             await CreateExpenseAsync(householdId, alex.Token, Expense(1000 + index, alex.UserId));
         await using var first = DatabaseSettings
@@ -40,7 +40,7 @@ public sealed class PushConcurrencyTests(ApiFixture fixture) : PushTestBase(fixt
         );
 
         (await Apns.SentToAsync(ApnsToken(1))).Count.ShouldBe(30);
-        (await Expo.SentToAsync(ExpoToken)).Count.ShouldBe(30);
+        (await Apns.SentToAsync(ApnsToken(2))).Count.ShouldBe(30);
         (await Apns.SentToAsync(ApnsToken(1)))
             .Select(message => message.OutboxId)
             .Distinct()
@@ -104,8 +104,7 @@ public sealed class PushConcurrencyTests(ApiFixture fixture) : PushTestBase(fixt
                     PushOutcomeKind.Retry,
                     "apns:network",
                     null,
-                    Noon.AddHours(1),
-                    false
+                    Noon.AddHours(1)
                 ),
             ],
             Noon + PushDeliveryRunner.Lease,

@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { signOut } from "./shell";
 
 // The same journeys as auth.spec.ts against the real .NET API, PostgreSQL and the local
-// OIDC provider from the full-stack test environment (docs/migration/test-environment.md).
+// OIDC provider from the full-stack test environment (docs/reference/test-environment.md).
 // Skipped unless PENNY_REAL_STACK=1. CI runs it on Chromium, Firefox and WebKit (MAZ-95). In
 // apps/web:
 //

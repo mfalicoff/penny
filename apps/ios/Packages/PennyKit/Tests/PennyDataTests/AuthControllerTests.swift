@@ -796,13 +796,20 @@ struct AuthControllerTests {
         await #expect(throws: AuthFailure.self) { try await down.checkServer("https://u:p@penny.example.test") }
     }
 
-    @Test("whenOlderServerHasNoSingleSignOnRoute_AuthController_ShouldReportItUnavailable")
+    @Test("whenSingleSignOnIsOffOrItsCheckFails_AuthController_ShouldSaySoOrNotKnow")
     func checkServerWithoutOidc() async throws {
-        let controller = AuthFixtures.controller(
-            transport: Routes.transport(["GET /api/info": Routes.json(AuthFixtures.info)]))
-        let check = try await controller.checkServer("http://localhost:3001")
+        let off = AuthFixtures.controller(
+            transport: Routes.transport([
+                "GET /api/info": Routes.json(AuthFixtures.info),
+                "GET /api/auth/oidc": Routes.json(#"{"enabled":false}"#),
+            ]))
+        let check = try await off.checkServer("http://localhost:3001")
         #expect(check.singleSignOn == false)
         #expect(!check.isEncrypted)
+        // A 404 is an ordinary failure: the server did not say.
+        let missing = AuthFixtures.controller(
+            transport: Routes.transport(["GET /api/info": Routes.json(AuthFixtures.info)]))
+        #expect(try await missing.checkServer("http://localhost:3001").singleSignOn == nil)
     }
 
     @Test("whenUsingANewServerAfterExpiry_AuthController_ShouldSaveItAndDropTheOldNotice")
@@ -840,5 +847,10 @@ struct AuthControllerTests {
         await failing.restore()
         await failing.refreshSingleSignOn()
         #expect(failing.singleSignOn == .failed)
+
+        let missing = AuthFixtures.controller(transport: Routes.transport([:]))
+        await missing.restore()
+        await missing.refreshSingleSignOn()
+        #expect(missing.singleSignOn == .failed, "a 404 is an ordinary failure")
     }
 }

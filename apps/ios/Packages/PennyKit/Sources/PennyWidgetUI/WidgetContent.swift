@@ -63,7 +63,7 @@ public enum WidgetContent: Hashable, Sendable {
 public enum WidgetLink {
     /// Monthly balance: Home (`DeepLink.home`).
     public static let balance = url("penny:///")
-    /// Recent expenses: the add entry sheet, as the legacy widget's + (`DeepLink.addEntry`).
+    /// Recent expenses: the add entry sheet, the widget's + (`DeepLink.addEntry`).
     public static let addEntry = url("penny://entries/new")
 
     private static func url(_ text: String) -> URL {

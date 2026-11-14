@@ -16,7 +16,7 @@ using Xunit;
 
 namespace Penny.Backend.IntegrationTests.Controllers;
 
-// Performance evidence for docs/migration/search.md (explicit: run with
+// Performance evidence for docs/reference/search.md (explicit: run with
 // `--filter-class *SearchBenchmarkTests --explicit on`). Seeds 100,000 synthetic personal
 // entries for one viewer plus shared expenses, backfills documents and embeddings
 // with `search-rebuild`'s code path, measures p95 latencies through HTTP and records

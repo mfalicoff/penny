@@ -2,12 +2,10 @@ using System.Globalization;
 
 namespace Penny.Backend.Domain.Households;
 
-// Ports of the legacy monthly settlement rules (src/domain/households.ts
-// `calculateMonthlyBalances`, `suggestReimbursements`, `monthIsOverdue` and the
-// month-end cutoff in server/infrastructure/households.ts `reimburse`). Months are
-// independent: a credit in one month never offsets a debt in another. Integer cents
-// only, ordinal id order (legacy `localeCompare` gives the same order for generated
-// lower-case hex ids).
+// Monthly settlement rules: balances, suggested reimbursements, overdue months and
+// the month-end cutoff for recording a reimbursement. Months are independent: a
+// credit in one month never offsets a debt in another. Integer cents only, ordinal id
+// order.
 public static class MonthlySettlement
 {
     // An expense's contributions: the payer is credited the total and each member is
@@ -37,7 +35,7 @@ public static class MonthlySettlement
         yield return new(month, toUserId, -amountCents);
     }
 
-    // Legacy `calculateMonthlyBalances`: every member with a contribution in `month`,
+    // Every member with a contribution in `month`,
     // ordered by id. Contributions of other months are ignored.
     public static IReadOnlyList<MemberBalance> Balances(
         string month,
@@ -79,7 +77,7 @@ public static class MonthlySettlement
         ];
     }
 
-    // Legacy `suggestReimbursements`: greedy matching of the largest debtor with the
+    // Greedy matching of the largest debtor with the
     // largest creditor (ties by id), at most debtors + creditors - 1 full transfers.
     // Balances must name each member once and net to zero.
     public static IReadOnlyList<SuggestedReimbursement> Suggest(
@@ -115,7 +113,7 @@ public static class MonthlySettlement
         return suggestions;
     }
 
-    // Legacy `overdue`: an earlier month (UTC) that still has a suggestion.
+    // Overdue: an earlier month (UTC) that still has a suggestion.
     public static bool IsOverdue(string month, string currentMonth, bool hasSuggestions) =>
         hasSuggestions && string.CompareOrdinal(month, currentMonth) < 0;
 
@@ -128,7 +126,7 @@ public static class MonthlySettlement
         return new DateOnly(year, number, DateTime.DaysInMonth(year, number));
     }
 
-    // Legacy cutoff: `today < lastDay` refuses. `today` is the UTC calendar day.
+    // Cutoff: `today < lastDay` refuses. `today` is the UTC calendar day.
     public static bool CanRecord(string month, DateOnly today) => today >= LastDay(month);
 
     public static string MonthOf(DateOnly date) =>

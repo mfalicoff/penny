@@ -67,7 +67,7 @@ public struct PennyTimelineProvider: TimelineProvider {
     }
 }
 
-/// Monthly balance (`BalanceChartWidget`, the legacy kind so placed widgets stay): Left to
+/// Monthly balance (`BalanceChartWidget`, a frozen kind so placed widgets stay): Left to
 /// spend for the month, Projected, and the recorded flow. Taps open Home.
 public struct BalanceWidget: Widget {
     public init() {}
@@ -85,7 +85,7 @@ public struct BalanceWidget: Widget {
 }
 
 /// Recent expenses (`RecentExpensesWidget`): the latest recorded expenses and the + shortcut.
-/// Taps open the add entry sheet, as the legacy widget did.
+/// Taps open the add entry sheet.
 public struct RecentExpensesWidget: Widget {
     public init() {}
 

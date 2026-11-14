@@ -16,16 +16,6 @@ public struct PushOwner: Hashable, Sendable, Codable {
         digest = Self.hex(HMAC<SHA256>.authenticationCode(for: Data(Self.text(scope).utf8), using: key))
     }
 
-    /// The unkeyed SHA-256 that development builds stored before the key existed. Only compared,
-    /// to adopt such a registration for its account (`adoptLegacyRegistration`).
-    static func legacy(_ scope: AccountScope) -> PushOwner {
-        PushOwner(digest: hex(SHA256.hash(data: Data(text(scope).utf8))))
-    }
-
-    private init(digest: String) {
-        self.digest = digest
-    }
-
     private static func text(_ scope: AccountScope) -> String {
         "\(scope.server.description) \(scope.email.lowercased())"
     }
@@ -165,17 +155,6 @@ public struct PushRegistrationStore: Sendable {
     /// The owner digest for `scope` on this device. Nil while the Keychain cannot be read.
     public func owner(for scope: AccountScope) -> PushOwner? {
         keychain.key().map { PushOwner(scope, key: $0) }
-    }
-
-    /// A registration stored by a development build before owner digests were keyed belongs to
-    /// `account` when its unkeyed digest is the account's: it is rewritten with the keyed one,
-    /// so the upgrade neither clears that account's notifications nor drops a tap on one.
-    public func adoptLegacyRegistration(for account: PushAccount) {
-        guard defaults.data(forKey: Self.ownerKey) == nil, var stored = load(), let scope = account.client.scope,
-            stored.owner == PushOwner.legacy(scope)
-        else { return }
-        stored.owner = account.owner
-        save(stored)
     }
 }
 

@@ -20,7 +20,7 @@ public sealed class BoundaryTests(ApiFixture fixture) : IntegrationTestBase(fixt
     [InlineData(FailureKind.Forbidden, HttpStatusCode.Forbidden)]
     [InlineData(FailureKind.NotFound, HttpStatusCode.NotFound)]
     [InlineData(FailureKind.Conflict, HttpStatusCode.Conflict)]
-    public async Task whenDomainFailureThrown_ApiBoundary_ShouldReturnLegacyErrorEnvelope(
+    public async Task whenDomainFailureThrown_ApiBoundary_ShouldReturnErrorEnvelope(
         FailureKind kind,
         HttpStatusCode expected
     )
@@ -40,7 +40,7 @@ public sealed class BoundaryTests(ApiFixture fixture) : IntegrationTestBase(fixt
         body.ShouldContain("error");
         body.ShouldNotContain("synthetic-secret");
         body.ShouldNotContain("stack");
-        // Unknown routes are session-protected like the legacy server; see AuthTests.
+        // Unknown routes are session-protected; see AuthTests.
         var token = await RegisterAsync("boundary@example.test");
         using var missingRequest = Authorized(HttpMethod.Get, "/api/missing", bearer: token);
         using var missing = await Client.SendAsync(missingRequest, Ct);
@@ -91,7 +91,7 @@ public sealed class BoundaryTests(ApiFixture fixture) : IntegrationTestBase(fixt
     // A client that uploads a body somewhat over the limit (a receipt a little too
     // large) writes the whole body before reading the reply. Closing the connection
     // with that body unread resets it and can discard the 413, so the client would
-    // see a network error instead of the legacy message. Every attempt must read it.
+    // see a network error instead of the error message. Every attempt must read it.
     [Fact]
     public async Task whenBodyModeratelyOverLimitIsSent_RequestBodyFlow_ShouldAlwaysDeliverPayloadTooLarge()
     {

@@ -2,11 +2,9 @@ using Penny.Backend.Domain.Ledgers;
 
 namespace Penny.Backend.Domain.Households;
 
-// Port of the legacy `calculateHouseholdSplits` (src/domain/households.ts): integer
-// cents only, deterministic remainder allocation, shares ordered by member id. Every
-// rule violation throws ArgumentException, as the TypeScript function throws Error.
-// Ids are compared ordinally (JavaScript's default sort); the percentage tie-break,
-// `localeCompare` in TypeScript, is ordinal too (identical for generated ids).
+// Household split allocation: integer cents only, deterministic remainder allocation,
+// shares ordered by member id. Every rule violation throws ArgumentException. Ids are
+// compared ordinally, including in the percentage tie-break.
 public static class HouseholdSplits
 {
     public const long PercentWhole = 10_000;

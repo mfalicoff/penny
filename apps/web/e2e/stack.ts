@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { expect, type Browser, type BrowserContext, type Page } from "@playwright/test";
 
 // Shared helpers for the real-stack acceptance journeys (MAZ-96). They talk to the full-stack
-// test environment (docs/migration/test-environment.md) only through what `test-env run`
+// test environment (docs/reference/test-environment.md) only through what `test-env run`
 // exports: PENNY_API_URL, PENNY_TEST_TOKEN and PENNY_TEST_RUN. Test controls (`/api/test/*`)
 // arrange the clock, faults and accounts; every business call goes through the same API the
 // browser and the iOS app use. Accounts are synthetic `.test` addresses.
@@ -18,7 +18,7 @@ export const skipReason = "needs the full-stack test environment (PENNY_REAL_STA
 function environment() {
   const api = process.env.PENNY_API_URL;
   const token = process.env.PENNY_TEST_TOKEN;
-  if (!api || !token) throw new Error("PENNY_API_URL and PENNY_TEST_TOKEN come from `npm run test-env -- run` or `env`.");
+  if (!api || !token) throw new Error("PENNY_API_URL and PENNY_TEST_TOKEN come from `node scripts/test-env/penny-env.mjs run` or `env`.");
   return { api, token, run: process.env.PENNY_TEST_RUN };
 }
 

@@ -3,9 +3,10 @@ using System.Text.RegularExpressions;
 
 namespace Penny.Backend.Application.Authentication;
 
-// Mirrors the legacy zod schema `{ email: string().trim().toLowerCase().email().max(254),
-// password: string().min(10).max(256) }` so existing accounts resolve to the same
-// stored (bytewise) email. Lengths are UTF-16 code units, as in JavaScript.
+// Sign-in credentials: the email is trimmed, lowercased, checked against the email
+// pattern below and at most 254 characters; the password has 10-256 characters. Trimming and
+// lowercasing make each spelling of an email resolve to the same stored (bytewise)
+// email. Lengths are UTF-16 code units, as in JavaScript.
 public sealed partial record Credentials(string Email, string Password)
 {
     public const int MaxEmailLength = 254;
@@ -67,7 +68,7 @@ public sealed partial record Credentials(string Email, string Password)
     public static bool IsValidPassword([NotNullWhen(true)] string? password) =>
         password is { Length: >= MinPasswordLength and <= MaxPasswordLength };
 
-    // Legacy OIDC email rule `z.email().max(254).parse(email).toLowerCase()`: validated
+    // Provider (OIDC) emails: at most 254 characters and the email pattern, validated
     // as sent (no trimming), then lowercased. The pattern is ASCII-only, so ASCII
     // lowercasing equals JavaScript's toLowerCase here.
     public static string? NormalizeProviderEmail(string? email) =>
@@ -94,7 +95,7 @@ public sealed partial record Credentials(string Email, string Password)
             }
         );
 
-    // zod 4 `z.email()` default pattern.
+    // The email pattern every client applies.
     [GeneratedRegex(
         @"^(?:[A-Za-z0-9_'+\-]+\.)*[A-Za-z0-9_'+\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}\z",
         RegexOptions.CultureInvariant,

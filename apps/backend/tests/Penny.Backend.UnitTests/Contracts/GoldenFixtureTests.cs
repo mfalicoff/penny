@@ -11,7 +11,7 @@ using Xunit;
 namespace Penny.Backend.UnitTests.Contracts;
 
 // MAZ-62 golden fixtures generated from the TypeScript reference rules
-// (scripts/fixtures/generate-golden.ts), decoded into strict models and checked
+// (apps/web/scripts/fixtures/generate-golden.ts), decoded into strict models and checked
 // against the .NET domain.
 public sealed class GoldenFixtureTests
 {

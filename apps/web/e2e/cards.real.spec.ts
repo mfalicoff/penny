@@ -165,7 +165,7 @@ async function armFault(run: Run) {
   await control("PUT", "faults", { rules: [{ pathPrefix: "/", ...fault }] });
 }
 
-const NO_LOCK = "The web has no app lock by design (docs/migration/redesign.md, Access: the web uses the current origin and has no lock).";
+const NO_LOCK = "The web has no app lock by design (docs/reference/redesign.md, Access: the web uses the current origin and has no lock).";
 
 const cards: Record<string, Card> = {
   "system-foundations": { skip: { status: "not-applicable", note: "Token and component sheet; checked by `npm run design:check`, not a screen." } },

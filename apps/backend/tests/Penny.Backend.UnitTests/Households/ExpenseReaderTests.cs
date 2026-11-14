@@ -43,7 +43,7 @@ public sealed class ExpenseReaderTests
         ExpenseReader.ReadInput(Parse(Valid.Replace("\"extra\":true", field))).ShouldBeNull();
 
     [Fact]
-    public void whenAllocationMatchesBothShapes_ReadInput_ShouldPreferAmountLikeZodUnion()
+    public void whenAllocationMatchesBothShapes_ReadInput_ShouldPreferAmountShape()
     {
         var input = ExpenseReader.ReadInput(
             Parse(
@@ -81,14 +81,16 @@ public sealed class ExpenseReaderTests
     [InlineData("2026-13", false)]
     [InlineData("2026-9", false)]
     [InlineData("2026-09\n", false)]
-    public void whenMonthQueryChecked_IsMonth_ShouldMatchLegacyPattern(string value, bool valid) =>
-        ExpenseReader.IsMonth(value).ShouldBe(valid);
+    public void whenMonthQueryChecked_IsMonth_ShouldMatchYearMonthPattern(
+        string value,
+        bool valid
+    ) => ExpenseReader.IsMonth(value).ShouldBe(valid);
 
     [Theory]
     [InlineData("2026", true)]
     [InlineData("26", false)]
     [InlineData("2026\n", false)]
-    public void whenYearQueryChecked_IsYear_ShouldMatchLegacyPattern(string value, bool valid) =>
+    public void whenYearQueryChecked_IsYear_ShouldMatchFourDigitPattern(string value, bool valid) =>
         ExpenseReader.IsYear(value).ShouldBe(valid);
 
     private static JsonElement Parse(string json) => JsonDocument.Parse(json).RootElement;

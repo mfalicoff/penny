@@ -24,7 +24,7 @@ struct HouseholdClientTests {
         #expect(sent.value(forHTTPHeaderField: "Authorization") == "Bearer \(APIFixtures.token)")
     }
 
-    @Test("whenCreatingAndJoining_APIClient_ShouldSendTheLegacyBodies")
+    @Test("whenCreatingAndJoining_APIClient_ShouldSendTheDocumentedBodies")
     func createAndJoin() async throws {
         let transport = StubTransport(status: 201, json: #"{"household":\#(Self.householdJSON)}"#)
         let client = try Self.client(transport)

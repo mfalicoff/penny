@@ -1,6 +1,6 @@
 # Native app shell, settings, lock and demo (MAZ-69)
 
-[Documentation](README.md) · [Native iOS app](../apps/ios/README.md) · [Redesign baseline](migration/redesign.md) · [Native sign-in](ios-authentication.md)
+[Documentation](README.md) · [Native iOS app](../apps/ios/README.md) · [Redesign baseline](reference/redesign.md) · [Native sign-in](ios-authentication.md)
 
 This page describes the SwiftUI shell that MAZ-69 adds to `apps/ios`: the navigation for iPhone and iPad, the shared components, the settings, the biometric app lock, the temporary demo and the loading, empty, offline and error states. It follows the iOS-native redesign in [`docs/design/penny-ios`](design/penny-ios/README.md) and [`contracts/design-baseline.json`](../contracts/design-baseline.json) (MAZ-132). The feature screens behind it (entries, households, trips, recurring, insights) belong to MAZ-73 to MAZ-77; Accounts, Categories and Recurring are described in [organize](ios-organize.md) (MAZ-74).
 
@@ -13,7 +13,7 @@ This page describes the SwiftUI shell that MAZ-69 adds to `apps/ios`: the naviga
 | PennyDomain | `Navigation/ShellRoute.swift` | `AppTab`, `DetailRoute`, `SettingsRoute`, `SidebarItem`, `ShellRoute` (all navigation state and rules) and `DeepLinkInbox` (links waiting for sign-in and unlock) |
 | PennyDomain | `Demo/DemoLedger.swift` | The made-up sample ledger, dated around today, with `demo-` ids |
 | PennyData | `AppLock/` | `AppLockController`, the `DeviceAuthenticator` protocol and its LocalAuthentication implementation, and the Keychain setting store |
-| PennyData | `Preferences/DevicePreferences.swift` | Appearance (system, light, dark) and the legacy theme mapping |
+| PennyData | `Preferences/DevicePreferences.swift` | Appearance (system, light, dark) |
 | PennyData | `Workspace/` | The `LedgerWorkspace` protocol and `SyncStatus`, `AccountWorkspace` (a signed-in account over the MAZ-71 offline engine), `DemoWorkspace` and `FixedWorkspace` |
 | PennyDesign | `Components/` | `MoneyText`, `MoneyFormat`, `HeroAmount`, `GlassIconButton`, `GlassCapsuleButton`, `PennyButton`, `PennyMark`, `pennyCard`, `StatusBanner`, `SaveToast`, `PennyStateView`, `CategoryIcon`, `CategoryStyle`, `ControlSize` |
 | PennyUI | `Shell/`, `Home/`, `Activity/`, `Together/`, `Settings/`, `Specimens.swift` | The shell (tab bar and split view), Home, Activity, Shared, Trips, Settings and its pages, the lock cover, the toast and banners, and Xcode previews named after the cards |
@@ -25,7 +25,7 @@ This page describes the SwiftUI shell that MAZ-69 adds to `apps/ios`: the naviga
 ### iPhone (and any compact width)
 
 - The system iOS 26 `TabView`: **Home**, **Activity**, **Shared** and **Trips**, a floating Liquid Glass tab bar. There is no More tab.
-- **Add entry** is the separate circular button at the trailing end of the tab bar. It is a `Tab` with the search role; selecting it opens the Add entry sheet and never becomes the selected tab. On the iOS 26 and 27 simulators it renders as a fifth item inside the glass bar ("Add entry"), not as a separate copper circle, and iOS doesn't let one tab item have its own tint. This is a recorded adaptation ([redesign](migration/redesign.md#native-implementation-notes-maz-69)).
+- **Add entry** is the separate circular button at the trailing end of the tab bar. It is a `Tab` with the search role; selecting it opens the Add entry sheet and never becomes the selected tab. On the iOS 26 and 27 simulators it renders as a fifth item inside the glass bar ("Add entry"), not as a separate copper circle, and iOS doesn't let one tab item have its own tint. This is a recorded adaptation ([redesign](reference/redesign.md#native-implementation-notes-maz-69)).
 - **Settings** opens as a sheet from the gear button in Home's toolbar. Recurring, Accounts and Categories (the old More tab) are its Manage pages.
 - Each tab keeps its own navigation stack. Choosing the tab that is already shown returns it to its root.
 
@@ -45,7 +45,7 @@ The households and trips listed directly in the sidebar, the Insights item and t
 
 ### Deep links
 
-Every legacy route keeps a destination (`DeepLink`, MAZ-66; [legacy deep links](migration/redesign.md#legacy-deep-links)).
+Every route keeps a destination (`DeepLink`, MAZ-66; [deep links](reference/redesign.md#routes-and-deep-links)).
 
 | Link | Destination |
 | --- | --- |
@@ -71,7 +71,7 @@ PennyDesign keeps the tokens of the baseline (`Tokens.swift`, checked by `TokenB
 - **Glass.** `GlassIconButton` (round toolbar controls, sheet × and ✓, the tinted primary action) and `GlassCapsuleButton` (the month picker) use `pennyGlass`, which is `.glassEffect` and an opaque surface under Reduce Transparency. Toolbars, the tab bar, search fields and sheets are system controls, so they are Liquid Glass without help. Money, lists and cards (`pennyCard`) are always solid.
 - **Feedback.** `StatusBanner` (offline, error, info, demo), `SaveToast` (glass, with Undo) and `PennyStateView` (loading, empty, offline, error, unavailable).
 - **Sizes.** `ControlSize`: buttons 50pt, glass buttons 44pt, the floating button 62pt, rows 60pt. Every control is at least `Metrics.minTouchTarget` (44pt) and grows with Dynamic Type through `@ScaledMetric`.
-- **Icons.** SF Symbols only. `CategoryStyle` maps the legacy Ionicons names stored in categories to SF Symbols and category ids to the category palette, which never reuses a meaning color. The leaf mark is `PennyMark` (`leaf.fill` on copper).
+- **Icons.** SF Symbols only. `CategoryStyle` maps the Ionicons names stored in categories to SF Symbols and category ids to the category palette, which never reuses a meaning color. The leaf mark is `PennyMark` (`leaf.fill` on copper).
 
 ## Supported devices and accessibility
 
@@ -88,16 +88,16 @@ PennyDesign keeps the tokens of the baseline (`Tokens.swift`, checked by `TokenB
 
 | Setting | Where it's stored | Behavior |
 | --- | --- | --- |
-| Appearance: System (default), Light, Dark | `UserDefaults` (`penny.appearance`), this device only | Applied at the root with `preferredColorScheme`. A legacy `amoled` or `catppuccin` theme maps to Dark, `AppearancePreference(legacy:)`; The Expo value is imported at the first native launch ([Expo upgrade](ios-expo-migration.md)). Text size follows the device. |
-| Currency: CAD, USD, EUR or GBP | The ledger (through the workspace) | The four currencies `contracts/openapi.json` allows. Locked, with the legacy message, once the ledger has entries or recurring rules, as the ledger rule does; locked while in an active household ("Currency is locked while you're in a household."), which the server enforces (`Your ledger currency must match your active households.`). The household count comes from MAZ-75; until then only the ledger rule applies on the device. A change shows the save toast; a failure shows the save error and keeps the choice to retry. |
+| Appearance: System (default), Light, Dark | `UserDefaults` (`penny.appearance`), this device only | Applied at the root with `preferredColorScheme`. An unknown stored value falls back to System. Text size follows the device. |
+| Currency: CAD, USD, EUR or GBP | The ledger (through the workspace) | The four currencies `contracts/openapi.json` allows. Locked, with the ledger rule's message, once the ledger has entries or recurring rules, as the ledger rule does; locked while in an active household ("Currency is locked while you're in a household."), which the server enforces (`Your ledger currency must match your active households.`). The household count comes from MAZ-75; until then only the ledger rule applies on the device. A change shows the save toast; a failure shows the save error and keeps the choice to retry. |
 | Face ID lock | Keychain, this device only, not synced | See [App lock](#app-lock). |
 | Server | The saved server (MAZ-68) | Read-only while signed in: "Sign out to change servers." |
 
-When this launch's import of the Expo app's data needs the person (a damaged record set aside, an unknown server, a locked device or a full disk), Settings starts with a row that says what happened and what to do (`ExpoImportNotice`, `settings.expoImport`). Settings also shows the account with its sync status and Sign out (the MAZ-68 flow, which warns about unsynced changes), or Leave demo. An account's Settings has a **Notifications** row (MAZ-79, [native notifications](ios-notifications.md#permission)). The **Lock after** delay (MAZ-133) is not in this build.
+Settings shows the account with its sync status and Sign out (the MAZ-68 flow, which warns about unsynced changes), or Leave demo. An account's Settings has a **Notifications** row (MAZ-79, [native notifications](ios-notifications.md#permission)). The **Lock after** delay (MAZ-133) is not in this build.
 
 ## App lock
 
-The legacy `AppLockProvider`, ported to `AppLockController` with the same rules:
+`AppLockController` follows these rules:
 
 - **Fails closed.** The app is concealed from launch until the setting has been read. If the Keychain can't be read (for example before the first unlock after a restart), the lock screen says so and offers Try again; it also retries when the app becomes active. It never opens on a failed read.
 - **Conceals, doesn't unmount.** The lock screen is drawn in its own window above the app's windows, so it covers open sheets and alerts too, while everything underneath stays mounted: drafts survive. It shows no amount. The app is also concealed while inactive or in the background, so the app switcher snapshot shows no money, except while Penny's own prompt is up. `RootView` applies inactive and background to the lock synchronously (`AppLockController.setActivity`) in the scene-phase change itself, so the cover is up in the same update, before the system takes the snapshot; only becoming active, which may prompt, runs in a task.
@@ -105,7 +105,7 @@ The legacy `AppLockProvider`, ported to `AppLockController` with the same rules:
 - **Turning it on or off** asks for biometrics first (turning on accepts biometrics only, so the person proves the sensor works for them; turning off and unlocking accept the passcode too). The new value is saved before it takes effect; if saving fails, the previous setting stays and the screen says so.
 - **Recovery.** Unlocking accepts the device passcode, so a biometric lockout or a removed face or finger doesn't lock the person out. A device with no passcode can't verify anyone: the lock screen says to set a passcode in Settings, then unlock.
 - **Privacy outside the app.** Widgets and notification previews aren't covered by the lock; the setting says so. MAZ-79/80 keep their contents non-sensitive; an opened notification waits for unlock like any deep link ([native notifications](ios-notifications.md#privacy-and-gates)).
-- The setting is in the Keychain (`com.mfalicoff.penny.app-lock`, `AfterFirstUnlockThisDeviceOnly`, not synchronizable). The Expo app's `penny-app-lock` value is imported before the lock first reads its setting: on (or damaged) turns the native lock on, and until the Expo value can be read and saved, the lock's read fails so the app stays concealed (`ExpoImportingLockStore`, [Expo upgrade](ios-expo-migration.md)).
+- The setting is in the Keychain (`com.mfalicoff.penny.app-lock`, `AfterFirstUnlockThisDeviceOnly`, not synchronizable).
 
 ## Demo
 
@@ -225,8 +225,8 @@ The Xcode previews in `PennyUI/Specimens.swift` are named after the cards. MAZ-6
 
 Swift Testing, run by `apps/ios/scripts/ios.sh package-test` on the Mac and `ios.sh test` on clean iPhone and iPad simulators:
 
-- `ShellRouteTests` (PennyDomain): every legacy link's destination and Back path, sheets closing for a link, per-tab stacks, reselecting a tab, the iPad sidebar mapping, the tab list against the baseline, links held until sign-in and unlock and tied to the account they arrived for, with the demo leaving account links waiting (`DeepLinkInboxTests`), the demo ledger (valid, current month, `demo-` ids) and the currencies against `contracts/openapi.json`.
-- `AppLockControllerTests` (PennyData): failed and closed-Keychain reads stay concealed, launch and return prompts, cancel and failure messages, stale answers after backgrounding, a quick return before the cancelled prompt answers (prompts again, ignores the stale success), single-flight unlock, no flash during Penny's own prompt, durable on/off with failed authentication and failed saves, backgrounding while turning on, missing enrolment and passcode, a failed device check without an error never reported as success; the Keychain store with a fake Keychain; appearance persistence and the legacy theme mapping.
+- `ShellRouteTests` (PennyDomain): every route's destination and Back path, sheets closing for a link, per-tab stacks, reselecting a tab, the iPad sidebar mapping, the tab list against the baseline, links held until sign-in and unlock and tied to the account they arrived for, with the demo leaving account links waiting (`DeepLinkInboxTests`), the demo ledger (valid, current month, `demo-` ids) and the currencies against `contracts/openapi.json`.
+- `AppLockControllerTests` (PennyData): failed and closed-Keychain reads stay concealed, launch and return prompts, cancel and failure messages, stale answers after backgrounding, a quick return before the cancelled prompt answers (prompts again, ignores the stale success), single-flight unlock, no flash during Penny's own prompt, durable on/off with failed authentication and failed saves, backgrounding while turning on, missing enrolment and passcode, a failed device check without an error never reported as success; the Keychain store with a fake Keychain; appearance persistence.
 - `WorkspaceTests` (PennyData): demo isolation, Undo, refused changes keeping the ledger, sync status counts.
 - `AccountWorkspaceTests` (PennyData): the phase, sync issue, storage and save error mapping; with the MAZ-71 fake server and a real `AuthController` and `LedgerSyncModel`: an offline save shown at once as pending, kept on disk and synced on reconnect; a refused save changing nothing; Undo saved and synced, refused after another device edited the record, and only once; session expiry asking for sign-in with the count; an unreadable copy recovered through Try again or the banner's Retry; "Saved on this device" in the toast; Undo after a save that made recurring entries due; nothing shown or saved for another account.
 - `LedgerRevertTests` (PennyDomain): Undo of adds, edits, deletes and other records restores the ledger exactly (order included), keeps unrelated work synced since, and is refused for a record changed since or a currency under entries.

@@ -16,7 +16,7 @@ using Pgvector.EntityFrameworkCore;
 
 namespace Penny.Backend.Persistence.Repositories;
 
-// Search over `search_documents` (docs/migration/search.md). Every query applies the
+// Search over `search_documents` (docs/reference/search.md). Every query applies the
 // viewer's authorization (own entries; shared expenses under the household-view rule:
 // a current member sees every live expense, a former member those they have a share
 // in) before matching, ranking, counting and paging, inside one REPEATABLE READ
@@ -341,7 +341,7 @@ public sealed class PostgresSearchRepository(NpgsqlDataSource source, ReceiptFil
         var model = criteria.ModelId;
         // Exact, not through the HNSW index: the viewer's readable, linked chunks are a
         // small set, and a filtered HNSW scan loses recall when other users' chunks are
-        // closer (docs/migration/search.md, receipt search benchmark). The best chunk per
+        // closer (docs/reference/search.md, receipt search benchmark). The best chunk per
         // receipt is kept, so the cap counts receipts, not chunks.
         var closest = await context
             .ReceiptTextChunks.AsNoTracking()

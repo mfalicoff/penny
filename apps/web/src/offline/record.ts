@@ -15,14 +15,12 @@ export interface LedgerRecord {
   format: typeof RECORD_FORMAT;
   server: string;
   email: string;
-  /** The revision `base` was read or written at. `null` for a copy imported from the legacy web app, which kept none. */
-  baseRevision: number | null;
+  /** The revision `base` was read or written at. */
+  baseRevision: number;
   base: Ledger;
   local: Ledger;
   lastSyncedAt: string | null;
   savedAt: string;
-  /** Set when this record took in the legacy web app's copy (see `legacy.ts`). */
-  legacy?: { fingerprint: string; importedAt: string; removedAt?: string };
 }
 
 export interface AccountScope {
@@ -60,12 +58,11 @@ const recordShape = z.object({
   format: z.number().int(),
   server: z.string(),
   email: z.string(),
-  baseRevision: z.number().int().min(0).nullable(),
+  baseRevision: z.number().int().min(0),
   base: z.unknown(),
   local: z.unknown(),
   lastSyncedAt: z.string().nullable(),
   savedAt: z.string(),
-  legacy: z.object({ fingerprint: z.string(), importedAt: z.string(), removedAt: z.string().optional() }).optional(),
 });
 
 function ledgerVersion(value: unknown): number {
@@ -96,13 +93,6 @@ export function parseRecord(value: unknown, scope: AccountScope): LedgerRecord |
       lastSyncedAt: data.lastSyncedAt,
       savedAt: data.savedAt,
     };
-    if (data.legacy) {
-      record.legacy = {
-        fingerprint: data.legacy.fingerprint,
-        importedAt: data.legacy.importedAt,
-        ...(data.legacy.removedAt ? { removedAt: data.legacy.removedAt } : {}),
-      };
-    }
     return record;
   } catch (cause) {
     const newer = cause instanceof IncompatibleLedgerError && [data.base, data.local].some((ledger) => ledgerVersion(ledger) > 4);

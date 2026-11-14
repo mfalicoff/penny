@@ -6,9 +6,9 @@ using Penny.Backend.Application.Households;
 
 namespace Penny.Backend.Api.Controllers;
 
-// Shared recurring rules (legacy server/http/households.ts, MAZ-59). Session-protected
+// Shared recurring rules (MAZ-59). Session-protected
 // by the fallback policy. Occurrences are recorded by SharedRecurrenceWorker; see
-// docs/migration/shared-recurrence.md.
+// docs/reference/shared-recurrence.md.
 [ApiController]
 [Route("api/households/{id}/recurring")]
 [ProducesResponseType<ApiError>(401)]
@@ -77,7 +77,7 @@ public sealed class HouseholdRecurringController(SharedRecurrenceService rules) 
         );
     }
 
-    // The revision travels in the DELETE body, as in the legacy client.
+    // The revision travels in the DELETE body.
     [HttpDelete("{ruleId}", Name = "deleteApiHouseholdsIdRecurringRuleid")]
     [ProducesResponseType<OkResponse>(200)]
     [ProducesResponseType<ApiError>(400)]

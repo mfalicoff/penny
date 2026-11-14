@@ -1,0 +1,24 @@
+{
+  "name": "penny-scripts",
+  "private": true,
+  "description": "Repository tooling: full-stack test environment, image smoke tests, Grafana dashboards and the release version check. Node built-ins only at run time.",
+  "devDependencies": {
+    "@eslint/js": "^10.0.0",
+    "@types/node": "^26.6.3",
+    "@typescript/native": "npm:typescript@~7.0.0",
+    "eslint": "^10.0.0",
+    "globals": "^17.0.0",
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
+    "typescript-eslint": "8.72.2"
+  },
+  "scripts": {
+    "lint": "eslint --max-warnings=0 .",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test tests/*.test.ts",
+    "test:fullstack": "node --test --test-concurrency=1 tests/fullstack/*.test.mjs",
+    "test-env": "node test-env/penny-env.mjs",
+    "dashboards:generate": "node grafana-dashboards.mjs",
+    "dashboards:check": "node grafana-dashboards.mjs --check",
+    "version:check": "node check-version.mjs"
+  }
+}

@@ -65,7 +65,7 @@ public struct SaveReceipt: Equatable, Sendable {
     public let after: Ledger
 }
 
-/// What to do with a server search page (docs/migration/search.md, "Offline, pending edits").
+/// What to do with a server search page (docs/reference/search.md, "Offline, pending edits").
 public enum SearchReconciliation: Equatable, Sendable {
     /// Show the page: nothing changed locally since the search started.
     case show(SearchPage)
@@ -171,10 +171,9 @@ public final class LedgerSyncModel {
     }
 
     /// Whether search should use this device's ledger instead of server pages
-    /// (`LocalSearch.searchesLocally`). Pass whether the server has search v1 (a 404 says not).
-    public func searchesLocally(serverHasSearch: Bool) -> Bool {
-        LocalSearch.searchesLocally(
-            hasPendingChanges: state.hasPendingChanges, isOnline: isOnline, serverHasSearch: serverHasSearch)
+    /// (`LocalSearch.searchesLocally`).
+    public var searchesLocally: Bool {
+        LocalSearch.searchesLocally(hasPendingChanges: state.hasPendingChanges, isOnline: isOnline)
     }
 
     // MARK: Save
@@ -495,7 +494,7 @@ public final class LedgerSyncModel {
     /// Decides what to do with a server page for a search started at `epoch`.
     public func reconcile(_ page: SearchPage, startedAt epoch: Int) -> SearchReconciliation {
         guard epoch == searchEpoch, let account, page.scope == account.scope else { return .searchAgain }
-        if searchesLocally(serverHasSearch: true) { return .useLocalResults }
+        if searchesLocally { return .useLocalResults }
         return .show(page)
     }
 }

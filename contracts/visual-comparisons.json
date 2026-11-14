@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "description": "Visual comparison of the iOS and web apps with each redesign card (MAZ-122). Method, statuses and re-sync steps: docs/design/visual-acceptance.md. Approved deviations are in docs/migration/redesign.md; follow-ups name their issue.",
+  "description": "Visual comparison of the iOS and web apps with each redesign card (MAZ-122). Method, statuses and re-sync steps: docs/design/visual-acceptance.md. Approved deviations are in docs/reference/redesign.md; follow-ups name their issue.",
   "reviewedAt": "2026-11-12",
   "cards": [
     {
@@ -52,12 +52,12 @@
           {
             "summary": "Add entry is a tab with the search role inside the system tab bar, not a separate copper button",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#native-implementation-notes-maz-69"
+            "ref": "docs/reference/redesign.md#native-implementation-notes-maz-69"
           },
           {
             "summary": "Insights and the calendar are reached from Explore your month; the calendar is a page, not a sheet",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#native-overview-notes-maz-77"
+            "ref": "docs/reference/redesign.md#native-overview-notes-maz-77"
           }
         ]
       },
@@ -102,12 +102,12 @@
           {
             "summary": "Add entry is a tab with the search role inside the system tab bar, not a separate copper button",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#native-implementation-notes-maz-69"
+            "ref": "docs/reference/redesign.md#native-implementation-notes-maz-69"
           },
           {
             "summary": "Insights and the calendar are reached from Explore your month; the calendar is a page, not a sheet",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#native-overview-notes-maz-77"
+            "ref": "docs/reference/redesign.md#native-overview-notes-maz-77"
           }
         ]
       },
@@ -147,7 +147,7 @@
           {
             "summary": "The money flow is recorded-only, with a value list under the chart",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#native-overview-notes-maz-77"
+            "ref": "docs/reference/redesign.md#native-overview-notes-maz-77"
           }
         ]
       },
@@ -163,7 +163,7 @@
           {
             "summary": "On phones the flow is two stacked bars with a value list, not the Sankey; Follow your money is a section of Insights",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#web-adaptations-maz-122"
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           }
         ]
       }
@@ -183,7 +183,7 @@
           {
             "summary": "Insights and the calendar are reached from Explore your month; the calendar is a page, not a sheet",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#native-overview-notes-maz-77"
+            "ref": "docs/reference/redesign.md#native-overview-notes-maz-77"
           }
         ]
       },
@@ -219,7 +219,7 @@
           {
             "summary": "Insights and the calendar are reached from Explore your month; the calendar is a page, not a sheet",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#native-overview-notes-maz-77"
+            "ref": "docs/reference/redesign.md#native-overview-notes-maz-77"
           }
         ]
       },
@@ -235,7 +235,7 @@
           {
             "summary": "The calendar is a section of Home, not a sheet",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#web-adaptations-maz-122"
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           }
         ]
       }
@@ -255,7 +255,7 @@
           {
             "summary": "Search is the system searchable field in the navigation bar, and the month is a toolbar menu",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#native-adaptations-maz-122"
+            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
           }
         ]
       },
@@ -276,7 +276,7 @@
           {
             "summary": "Row actions open the entry dialog instead of swipe actions",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#interaction-baseline"
+            "ref": "docs/reference/redesign.md#interaction-baseline"
           }
         ]
       }
@@ -342,7 +342,7 @@
           {
             "summary": "Add entry and other forms are keyboard dialogs over the page, with no hero amount or keypad",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#interaction-baseline"
+            "ref": "docs/reference/redesign.md#interaction-baseline"
           }
         ]
       }
@@ -378,7 +378,7 @@
           {
             "summary": "Add entry and other forms are keyboard dialogs over the page, with no hero amount or keypad",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#interaction-baseline"
+            "ref": "docs/reference/redesign.md#interaction-baseline"
           },
           {
             "summary": "The Income form doesn't explain that income dated after today counts toward Projected",
@@ -419,7 +419,7 @@
           {
             "summary": "More details expands inside the form instead of a stacked sheet",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#interaction-baseline"
+            "ref": "docs/reference/redesign.md#interaction-baseline"
           }
         ]
       }
@@ -439,7 +439,7 @@
           {
             "summary": "Split is a full sheet with the keypad over the form, not a stacked half sheet",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#native-adaptations-maz-122"
+            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
           }
         ]
       },
@@ -455,7 +455,7 @@
           {
             "summary": "Your share is a section of the form (All mine, Split equally, Amount, Percent) instead of a stacked sheet",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#interaction-baseline"
+            "ref": "docs/reference/redesign.md#interaction-baseline"
           }
         ]
       }
@@ -521,7 +521,7 @@
           {
             "summary": "The entry detail is a dialog over Activity",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#interaction-baseline"
+            "ref": "docs/reference/redesign.md#interaction-baseline"
           }
         ]
       }
@@ -555,7 +555,7 @@
           {
             "summary": "Confirmations are iOS 27 popovers anchored to their button, not bottom action sheets",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#native-adaptations-maz-122"
+            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
           }
         ]
       },
@@ -571,7 +571,7 @@
           {
             "summary": "Delete confirms in a dialog; the card's shared-expense wording applies only to shared expenses",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#interaction-baseline"
+            "ref": "docs/reference/redesign.md#interaction-baseline"
           }
         ]
       }
@@ -591,7 +591,7 @@
           {
             "summary": "A notification prompt (Hear about household changes) sits above the list until answered",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#native-adaptations-maz-122"
+            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
           }
         ]
       },
@@ -632,7 +632,7 @@
           {
             "summary": "Members are shown by email and initials from the email",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#native-adaptations-maz-122"
+            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
           }
         ]
       },
@@ -653,12 +653,12 @@
           {
             "summary": "Members are shown by email and initials from the email",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#web-shared-household-notes-maz-91"
+            "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
           },
           {
             "summary": "Expenses, Balances, People and History are links (?tab=) styled as the segmented control",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#web-shared-household-notes-maz-91"
+            "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
           }
         ]
       }
@@ -678,7 +678,7 @@
           {
             "summary": "Members are shown by email and initials from the email",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#native-adaptations-maz-122"
+            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
           }
         ]
       },
@@ -699,12 +699,12 @@
           {
             "summary": "Members are shown by email and initials from the email",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#web-shared-household-notes-maz-91"
+            "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
           },
           {
             "summary": "Expenses, Balances, People and History are links (?tab=) styled as the segmented control",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#web-shared-household-notes-maz-91"
+            "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
           }
         ]
       }
@@ -724,7 +724,7 @@
           {
             "summary": "Members are shown by email and initials from the email",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#native-adaptations-maz-122"
+            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
           },
           {
             "summary": "No inline invite card under People; inviting is in the menu",
@@ -745,12 +745,12 @@
           {
             "summary": "Members are shown by email and initials from the email",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#web-shared-household-notes-maz-91"
+            "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
           },
           {
             "summary": "The invite code is shown with a live countdown and Copy; the web has no share sheet",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#web-shared-household-notes-maz-91"
+            "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
           }
         ]
       }
@@ -786,12 +786,12 @@
           {
             "summary": "Add entry and other forms are keyboard dialogs over the page, with no hero amount or keypad",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#interaction-baseline"
+            "ref": "docs/reference/redesign.md#interaction-baseline"
           },
           {
             "summary": "Members are shown by email and initials from the email",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#web-shared-household-notes-maz-91"
+            "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
           }
         ]
       }
@@ -811,7 +811,7 @@
           {
             "summary": "Members are shown by email and initials from the email",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#native-adaptations-maz-122"
+            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
           }
         ]
       },
@@ -827,12 +827,12 @@
           {
             "summary": "Record payment is a dialog over the household",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#web-shared-household-notes-maz-91"
+            "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
           },
           {
             "summary": "Members are shown by email and initials from the email",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#web-shared-household-notes-maz-91"
+            "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
           }
         ]
       }
@@ -904,7 +904,7 @@
           {
             "summary": "Add entry and other forms are keyboard dialogs over the page, with no hero amount or keypad",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#interaction-baseline"
+            "ref": "docs/reference/redesign.md#interaction-baseline"
           }
         ]
       }
@@ -924,7 +924,7 @@
           {
             "summary": "Members are shown by email and initials from the email",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#native-adaptations-maz-122"
+            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
           }
         ]
       },
@@ -940,7 +940,7 @@
           {
             "summary": "Expenses, Balances, People and History are links (?tab=) styled as the segmented control",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#web-shared-household-notes-maz-91"
+            "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
           }
         ]
       }
@@ -1012,7 +1012,7 @@
           {
             "summary": "Expenses, Balances, People and History are links (?tab=) styled as the segmented control",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#web-shared-household-notes-maz-91"
+            "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
           }
         ]
       }
@@ -1042,7 +1042,7 @@
           {
             "summary": "Add entry and other forms are keyboard dialogs over the page, with no hero amount or keypad",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#interaction-baseline"
+            "ref": "docs/reference/redesign.md#interaction-baseline"
           }
         ]
       }
@@ -1062,7 +1062,7 @@
           {
             "summary": "Settings opens as a sheet from Home; Notifications has no row because it follows the system permission",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#native-adaptations-maz-122"
+            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
           }
         ]
       },
@@ -1119,7 +1119,7 @@
           {
             "summary": "No swipe actions: a row opens the schedule detail",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#web-recurring-notes-maz-90"
+            "ref": "docs/reference/redesign.md#web-recurring-notes-maz-90"
           }
         ]
       }
@@ -1149,7 +1149,7 @@
           {
             "summary": "The schedule detail is a dialog with Pause/Resume and Remove buttons",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#web-recurring-notes-maz-90"
+            "ref": "docs/reference/redesign.md#web-recurring-notes-maz-90"
           }
         ]
       }
@@ -1179,7 +1179,7 @@
           {
             "summary": "Add entry and other forms are keyboard dialogs over the page, with no hero amount or keypad",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#interaction-baseline"
+            "ref": "docs/reference/redesign.md#interaction-baseline"
           }
         ]
       }
@@ -1209,7 +1209,7 @@
           {
             "summary": "Add entry and other forms are keyboard dialogs over the page, with no hero amount or keypad",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#interaction-baseline"
+            "ref": "docs/reference/redesign.md#interaction-baseline"
           }
         ]
       }
@@ -1239,7 +1239,7 @@
           {
             "summary": "Add entry and other forms are keyboard dialogs over the page, with no hero amount or keypad",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#interaction-baseline"
+            "ref": "docs/reference/redesign.md#interaction-baseline"
           }
         ]
       }
@@ -1269,7 +1269,7 @@
           {
             "summary": "Add entry and other forms are keyboard dialogs over the page, with no hero amount or keypad",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#interaction-baseline"
+            "ref": "docs/reference/redesign.md#interaction-baseline"
           }
         ]
       }
@@ -1305,7 +1305,7 @@
           {
             "summary": "Appearance is a Settings pane with Reduce transparency; text size follows the browser",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#web-adaptations-maz-122"
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           }
         ]
       }
@@ -1325,7 +1325,7 @@
           {
             "summary": "Lock after (Immediately, 1 minute, 5 minutes) is MAZ-133; without enrolled Face ID the page shows the lock unavailable",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#native-implementation-notes-maz-69"
+            "ref": "docs/reference/redesign.md#native-implementation-notes-maz-69"
           }
         ]
       },
@@ -1466,7 +1466,7 @@
           {
             "summary": "Add entry is a tab with the search role inside the system tab bar, not a separate copper button",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#native-implementation-notes-maz-69"
+            "ref": "docs/reference/redesign.md#native-implementation-notes-maz-69"
           }
         ]
       },
@@ -1502,7 +1502,7 @@
           {
             "summary": "Offline adds a \"Shared expenses may be missing\" banner when shared data couldn't load",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#native-adaptations-maz-122"
+            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
           },
           {
             "summary": "No tinted hero glow behind the header (Home, empty Home, offline, create account), and Home has no calendar button in the toolbar",
@@ -1548,7 +1548,7 @@
           {
             "summary": "A save is local first, so a failed upload shows Couldn't sync with Retry over the screen, not Couldn't save in the form",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#native-adaptations-maz-122"
+            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
           }
         ]
       },
@@ -1564,7 +1564,7 @@
           {
             "summary": "A failed save is a failed sync on the web: the entry is saved in the browser, and Home shows the not-synced banner with Retry",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#web-adaptations-maz-122"
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           }
         ]
       }
@@ -1584,7 +1584,7 @@
           {
             "summary": "The toast appears on the local save, before the upload",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#native-adaptations-maz-122"
+            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
           }
         ]
       },
@@ -1620,7 +1620,7 @@
           {
             "summary": "Confirmations are iOS 27 popovers anchored to their button, not bottom action sheets",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#native-adaptations-maz-122"
+            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
           }
         ]
       },
@@ -1661,7 +1661,7 @@
           {
             "summary": "Insights and the calendar are reached from Explore your month; the calendar is a page, not a sheet",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#native-overview-notes-maz-77"
+            "ref": "docs/reference/redesign.md#native-overview-notes-maz-77"
           }
         ]
       },
@@ -1723,7 +1723,7 @@
           {
             "summary": "The entry detail is a dialog, not a side pane",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#interaction-baseline"
+            "ref": "docs/reference/redesign.md#interaction-baseline"
           }
         ]
       }
@@ -1759,7 +1759,7 @@
           {
             "summary": "Add entry and other forms are keyboard dialogs over the page, with no hero amount or keypad",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#interaction-baseline"
+            "ref": "docs/reference/redesign.md#interaction-baseline"
           }
         ]
       }
@@ -1810,12 +1810,12 @@
           {
             "summary": "Members are shown by email and initials from the email",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#web-shared-household-notes-maz-91"
+            "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
           },
           {
             "summary": "Balances are their own section, not a column beside the expenses",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#web-shared-household-notes-maz-91"
+            "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
           }
         ]
       }
@@ -1856,7 +1856,7 @@
           {
             "summary": "Expenses, Balances, People and History are links (?tab=) styled as the segmented control",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#web-shared-household-notes-maz-91"
+            "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
           }
         ]
       }
@@ -1881,7 +1881,7 @@
           {
             "summary": "Settings and the Manage pages open in the detail column instead of a sheet",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#native-implementation-notes-maz-69"
+            "ref": "docs/reference/redesign.md#native-implementation-notes-maz-69"
           },
           {
             "summary": "Settings is a single column; the selected page doesn't open beside the list",
@@ -1957,7 +1957,7 @@
           {
             "summary": "The entry detail is a dialog, not a side panel",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#interaction-baseline"
+            "ref": "docs/reference/redesign.md#interaction-baseline"
           }
         ]
       }
@@ -2012,12 +2012,12 @@
           {
             "summary": "Members are shown by email and initials from the email",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#web-shared-household-notes-maz-91"
+            "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
           },
           {
             "summary": "Balances are their own section; from 1100px the side column holds repeating expenses",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#web-shared-household-notes-maz-91"
+            "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
           }
         ]
       }
@@ -2042,7 +2042,7 @@
           {
             "summary": "The next trip is a feature card without its expense list; other trips are a grid",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#web-adaptations-maz-122"
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           }
         ]
       }
@@ -2092,7 +2092,7 @@
           {
             "summary": "Add entry and other forms are keyboard dialogs over the page, with no hero amount or keypad",
             "kind": "approved",
-            "ref": "docs/migration/redesign.md#interaction-baseline"
+            "ref": "docs/reference/redesign.md#interaction-baseline"
           }
         ]
       }

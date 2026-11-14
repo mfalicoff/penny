@@ -1,6 +1,6 @@
 # Native household notifications (MAZ-79)
 
-The native iOS app registers for Apple Push Notification service (APNs) and opens household notifications on the right household month or shared expense. The server side, which stores device registrations and delivers through APNs, is MAZ-61 ([push delivery](migration/push.md)).
+The native iOS app registers for Apple Push Notification service (APNs) and opens household notifications on the right household month or shared expense. The server side, which stores device registrations and delivers through APNs, is MAZ-61 ([push delivery](reference/push.md)).
 
 | Area | Code |
 | --- | --- |
@@ -16,9 +16,9 @@ UIKit and UserNotifications stay in PennyUI and the app target. PennyDomain and 
 
 The app's entitlements now include `aps-environment`. Simulator builds sign ad hoc and need nothing. **Before the next device build, archive or TestFlight upload**, the App ID needs the capability. Without it, signing fails or the profile lacks the entitlement:
 
-1. In [Apple Developer → Certificates, Identifiers & Profiles → Identifiers](https://developer.apple.com/account/resources/identifiers/list), open the App ID `com.mfalicoff.penny` and check that **Push Notifications** is enabled. The released Expo builds' `expo-notifications` plugin added the same entitlement, so it may already be on. If not, enable it and save. Leave the certificate options alone: the server uses a token-based `.p8` key, not a push certificate.
+1. In [Apple Developer → Certificates, Identifiers & Profiles → Identifiers](https://developer.apple.com/account/resources/identifiers/list), open the App ID `com.mfalicoff.penny` and check that **Push Notifications** is enabled. Earlier builds already used it, so it may already be on. If not, enable it and save. Leave the certificate options alone: the server uses a token-based `.p8` key, not a push certificate.
 2. Regenerate the app's provisioning profiles: development profiles for Xcode device builds and the App Store profile for archives. With automatic signing (`Configuration/Signing.local.xcconfig` with `DEVELOPMENT_TEAM`), Xcode does this on the next build if your account may manage the team's profiles. Otherwise, regenerate them in the portal and download them in Xcode (**Settings → Accounts → Download Manual Profiles**). The widget extension `com.mfalicoff.penny.ExpoWidgetsTarget` does not need the capability.
-3. For the backend, create the APNs auth key and configure `Push__Apns__*` as described in [Apple credentials](migration/push.md#apple-credentials). One key serves both gateways.
+3. For the backend, create the APNs auth key and configure `Push__Apns__*` as described in [Apple credentials](reference/push.md#apple-credentials). One key serves both gateways.
 
 The bundle id, App Group and URL scheme are unchanged.
 
@@ -56,24 +56,23 @@ A token sent with the wrong environment fails at Apple with `BadDeviceToken`. Th
 | Sign-out does not go ahead (server unreachable, not signing out anyway) | The device may already be unregistered, so the registrar registers it again at once for the same account (`DeviceRegistration.signOutCancelled`) |
 | Session expired | No request is possible. The server never sends to an expired session. The stored owner stays until another account registers, so a leftover notification cannot open in the next account |
 | Turned off in iOS Settings | The registration is removed with `DELETE`; the last owner stays, so earlier notifications still open only in that account. Turning it back on registers again |
-| First launch after the owner key was introduced (development builds only) | A registration stored with the earlier unkeyed SHA-256 digest is rewritten with the keyed one when its account signs in, so its notifications are neither cleared nor dropped. For any other account it counts as someone else's |
 | Keychain not readable yet (before the first unlock) | No account is handed to push: nothing registers or opens until it can be read |
 | APNs fails (no network at first launch, simulator without push, a build without the entitlement) | Status **Unavailable**. Everything else works, and Penny tries again at the next launch |
-| Server refuses or is unreachable | Status **Not connected**. Penny retries when it becomes active. A Node server refuses APNs bodies with `400`; only the .NET backend accepts them |
+| Server refuses or is unreachable | Status **Not connected**. Penny retries when it becomes active. A device the server refuses (`400 Invalid push device.`) is not retried by itself |
 | An answer arrives after the account changed | Dropped. It never claims the registration for the earlier account |
 
 The demo never registers and never opens a notification.
 
 ## Payloads and navigation
 
-The server sends the legacy deep-link object as top-level custom keys next to `aps` ([payloads](migration/push.md#events-recipients-and-payloads)):
+The server sends the deep-link object as top-level custom keys next to `aps` ([payloads](reference/push.md#events-recipients-and-payloads)):
 
 ```json
 { "aps": { "alert": { "title": "New household expense", "body": "A member added an expense. Open Penny to see your share." }, "thread-id": "household-<id>" },
   "householdId": "<id>", "month": "2026-09", "expenseId": "<id>", "eventId": "<id>" }
 ```
 
-`HouseholdNotification(userInfo:)` applies the allowlist of the released Expo builds: `householdId` and an optional `expenseId` must match `[A-Za-z0-9_-]{1,100}`, and `month` must be `YYYY-MM` within the ledger range. Anything else (a missing or mistyped key, a URL, path segments, `null`) makes the whole payload invalid, and the notification then just opens the app where it was. `eventId` and unknown keys are ignored. The legacy in-app route `penny:///households/<id>?month=YYYY-MM&expenseId=<id>` parses to the same destination (`DeepLink.householdMonth`); without a valid month it opens the household as before.
+`HouseholdNotification(userInfo:)` applies the payload allowlist: `householdId` and an optional `expenseId` must match `[A-Za-z0-9_-]{1,100}`, and `month` must be `YYYY-MM` within the ledger range. Anything else (a missing or mistyped key, a URL, path segments, `null`) makes the whole payload invalid, and the notification then just opens the app where it was. `eventId` and unknown keys are ignored. The in-app route `penny:///households/<id>?month=YYYY-MM&expenseId=<id>` parses to the same destination (`DeepLink.householdMonth`); without a valid month it opens the household as before.
 
 | Payload | Opens | Back |
 | --- | --- | --- |
@@ -97,9 +96,9 @@ The server sends the legacy deep-link object as top-level custom keys next to `a
 
 Automated (part of `ios.sh ci` unless noted):
 
-- `HouseholdNotificationTests` (host): valid payloads, 19 malformed ones, the legacy query route, Shared routing and Back paths, the inbox gate (signed out, demo, locked, another account), token limits and redaction.
-- `PushRegistrationTests` (host): the request bodies against `contracts/openapi.json`, registering once, token refresh, account change, denial, server failure and retry, APNs unavailable, a stale answer after an account change, sign-out `DELETE` for this account only (kept when offline, forgotten on `401`/`404`), a sign-out that does not go ahead (registers again), a registration removed behind the registrar's back, the keyed owner digest (Keychain key made once, this device only, locked Keychain, the earlier unkeyed digest adopted only by its account), a damaged stored value and reading `aps-environment` from a provisioning profile.
-- `NotificationTests` (PennyUI, host and simulators): cold start before sign-in, warm start, malformed payloads, notifications for another account (held, then dropped; also after an offline sign-out or after turning notifications off), clearing delivered notifications when launching into another account, an unkeyed development registration, foreground presentation, the contextual prompt (never at launch, one system prompt, Not now), declined permission, APNs unavailable, and the shell opening the household on the notification's month.
+- `HouseholdNotificationTests` (host): valid payloads, 19 malformed ones, the query route, Shared routing and Back paths, the inbox gate (signed out, demo, locked, another account), token limits and redaction.
+- `PushRegistrationTests` (host): the request bodies against `contracts/openapi.json`, registering once, token refresh, account change, denial, server failure and retry, APNs unavailable, a stale answer after an account change, sign-out `DELETE` for this account only (kept when offline, forgotten on `401`/`404`), a sign-out that does not go ahead (registers again), a registration removed behind the registrar's back, the keyed owner digest (Keychain key made once, this device only, locked Keychain), a damaged stored value and reading `aps-environment` from a provisioning profile.
+- `NotificationTests` (PennyUI, host and simulators): cold start before sign-in, warm start, malformed payloads, notifications for another account (held, then dropped; also after an offline sign-out or after turning notifications off), clearing delivered notifications when launching into another account, foreground presentation, the contextual prompt (never at launch, one system prompt, Not now), declined permission, APNs unavailable, and the shell opening the household on the notification's month.
 - `BuiltAppTests` checks the entitlements and `TestControlsTests` the injection controls.
 - **Simulator payload injection** (`NotificationJourneyTests`, Full UI plan, `ios.sh ui-test full`, needs the full-stack environment): Debug-only test controls hand a payload to `PushNotifications.didOpen`, the same call the app delegate makes, at launch (`PENNY_TEST_NOTIFICATION`) or on the first return from the background (`PENNY_TEST_NOTIFICATION_ON_RESUME`). The journeys cover a cold start signed out (the expense opens only after sign-in; Back shows the household on its month, then Shared), a cold start signed in (relaunch), a warm start for the previous month (the household opens on September, not the current month), another account's household (named error state, no data), and a malformed payload (Home). Release builds contain none of it (`ios.sh release-check`).
 
@@ -110,16 +109,15 @@ Manual, on a simulator: `apps/ios/scripts/ios.sh push <file.apns> [device]` send
 Injection and `simctl push` do not prove transport: they skip Apple's gateway, the provider token, the topic and the environment. Before each release, on a physical iPhone with a development build (sandbox) and with a TestFlight build (production):
 
 1. Complete the [Apple Developer setup](#apple-developer-setup), install, sign in and turn notifications on from the Shared tab. Confirm a `push_devices` row with `provider = 'apns'` and the expected environment.
-2. Run the [physical-device smoke test](migration/push.md#physical-device-smoke-test) (`push-smoke-apns`): the banner shows on the locked and unlocked device.
+2. Run the [physical-device smoke test](reference/push.md#physical-device-smoke-test) (`push-smoke-apns`): the banner shows on the locked and unlocked device.
 3. End to end: a second account adds a shared expense in the same household. Tap the notification from the lock screen with Face ID lock on: Penny asks to unlock first, then opens the expense on its month. Repeat with Penny running in the background, and with Penny force-quit (cold start).
 4. Sign out, add another expense from the second account: no notification. Sign in as a different account: the earlier notifications are gone from Notification Center.
 5. Turn notifications off in iOS Settings, return to Penny (the registration is removed), and turn them back on.
 
-Record the date, build, environment and results with the release ([verification](migration/verification.md)).
+Record the date, build, environment and results with the release.
 
 ## Limitations
 
 - Delivery is at least once (MAZ-61). A repeated delivery replaces the earlier banner (`apns-collapse-id`).
-- Notifications are household events only. Personal ledger changes never notify (legacy).
+- Notifications are household events only. Personal ledger changes never notify.
 - There are no notification actions, Notification Service Extension, rich content or badges beyond clearing them. The app does not refresh household data on a foreground notification until it is opened.
-- A device that ran the Expo app and the native app can briefly receive both Expo and APNs notifications until the Expo session ends ([token migration](migration/push.md#token-and-provider-migration)).

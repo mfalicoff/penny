@@ -2,7 +2,7 @@ using System.Globalization;
 
 namespace Penny.Backend.Domain.Ledgers;
 
-// Calendar dates without time zones, as the legacy `validDate`: strict `YYYY-MM-DD`
+// Calendar dates without time zones: strict `YYYY-MM-DD`
 // with ASCII digits, a real calendar day, from 2000-01-01 through 2100-12-31.
 public static class LedgerDates
 {

@@ -16,7 +16,7 @@ using Penny.Backend.Application.Authentication;
 
 namespace Penny.Backend.Api.Authentication;
 
-// Port of the legacy openid-client provider (server/infrastructure/oidc.ts): discovery,
+// The OpenID Connect provider client: discovery,
 // Authorization Code with S256 PKCE, a server-side code exchange (client_secret_post
 // for confidential clients) and ID token validation, using Microsoft.IdentityModel for
 // discovery/JWKS caching, signature, issuer, audience, lifetime and nonce checks. No

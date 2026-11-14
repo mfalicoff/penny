@@ -32,7 +32,7 @@ internal static class SearchCommand
                 break;
             default:
                 Console.Error.WriteLine(
-                    "Usage: search-rebuild [--user USER_ID] | search-verify [--user USER_ID]. See docs/migration/search.md."
+                    "Usage: search-rebuild [--user USER_ID] | search-verify [--user USER_ID]. See docs/reference/search.md."
                 );
                 return 1;
         }

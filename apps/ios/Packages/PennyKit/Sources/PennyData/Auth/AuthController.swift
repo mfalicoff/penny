@@ -35,7 +35,7 @@ public final class AuthController {
     /// Moving local data after a launch-time email change; sign-out waits for it.
     @ObservationIgnored private var emailMigration: Task<Void, Never>?
 
-    /// Timeout for checking a candidate server, as in the legacy app.
+    /// Timeout for checking a candidate server.
     static let probeTimeout: TimeInterval = 10
 
     public init(
@@ -213,8 +213,6 @@ public final class AuthController {
         do {
             let config = try await anonymousClient(server.server).oidcConfiguration()
             status = config.enabled ? .available(label: Self.label(config.label)) : .unavailable
-        } catch APIError.notFound {
-            status = .unavailable
         } catch {
             status = .failed
         }
@@ -451,20 +449,15 @@ public final class AuthController {
         } catch {
             throw AuthFailure(
                 .notAPennyServer,
-                "This address did not identify itself as a Penny server. Check the URL and update older Penny servers.")
+                "This address did not identify itself as a Penny server. Check the URL.")
         }
         let trimmed = info.version.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, info.version.utf16.count <= 100 else {
             throw AuthFailure(
                 .notAPennyServer,
-                "This address did not identify itself as a Penny server. Check the URL and update older Penny servers.")
+                "This address did not identify itself as a Penny server. Check the URL.")
         }
-        let config: WireOidcConfig?
-        do { config = try await client.oidcConfiguration() } catch APIError.notFound {
-            config = WireOidcConfig(enabled: false)
-        } catch {
-            config = nil
-        }
+        let config = try? await client.oidcConfiguration()
         return ServerCheck(
             server: server, version: info.version, singleSignOn: config?.enabled,
             singleSignOnLabel: config?.enabled == true ? Self.label(config?.label) : nil)

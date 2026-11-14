@@ -9,12 +9,11 @@ internal static class PushSamples
 {
     public const string ApnsToken =
         "a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90";
-    public const string ExpoToken = "ExponentPushToken[device_one]";
     public static readonly DateTimeOffset Now = new(2026, 9, 28, 12, 0, 0, TimeSpan.Zero);
 
     public static PushMessage Message(
         string token = ApnsToken,
-        string? environment = PushProviders.Production,
+        string environment = PushProviders.Production,
         string outboxId = "0123456789abcdef0123456789abcdef"
     ) =>
         new(

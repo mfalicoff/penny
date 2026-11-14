@@ -16,8 +16,7 @@ import { tmpdir } from "node:os";
 
 export const clientId = "penny-test";
 export const redirectUris = [
-  "http://localhost:8081/auth/callback",
-  "http://127.0.0.1:8081/auth/callback",
+  "http://localhost:4173/auth/callback",
   "http://127.0.0.1:4173/auth/callback",
   "penny://auth/callback",
 ];

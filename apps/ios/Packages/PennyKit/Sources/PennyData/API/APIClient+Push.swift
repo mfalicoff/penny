@@ -3,8 +3,8 @@ public import PennyDomain
 
 /// Push device registration (MAZ-61 on the server, MAZ-79 here): `POST` and `DELETE
 /// /api/push/devices`. Both need a session; the registration belongs to the session that
-/// made it, and server logout removes it. Only the .NET backend accepts APNs bodies (Node
-/// rejects them with `400 Invalid push device.`). See docs/migration/push.md.
+/// made it, and server logout removes it. A token the server cannot use is refused with
+/// `400 Invalid push device.` (docs/reference/push.md).
 extension APIClient {
     private struct RegisterBody: Encodable {
         var token: String

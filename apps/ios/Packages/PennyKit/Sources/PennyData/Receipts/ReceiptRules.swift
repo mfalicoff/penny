@@ -2,7 +2,7 @@ public import Foundation
 public import PennyDomain
 
 /// The receipt file rules (MAZ-78), the same as the server's `ReceiptFormat` and the browser's
-/// `apps/web/src/api/receipts.ts` (docs/migration/receipts.md, docs/ios-receipts.md): seven
+/// `apps/web/src/api/receipts.ts` (docs/reference/receipts.md, docs/ios-receipts.md): seven
 /// types, 1 byte to 10 MiB, the type's signature in the first bytes, and a name of at most 255
 /// UTF-16 units. The app checks them before uploading, so a bad file fails at once and sends
 /// nothing; the server checks them all again.
@@ -152,7 +152,7 @@ public enum ReceiptRules {
     }
 
     /// The receipt id in a served receipt link (`/api/receipts/<id>`), or nil for a link this
-    /// server doesn't serve (a legacy native file path), which can only be shown by name.
+    /// server doesn't serve (such as a device file path), which can only be shown by name.
     public static func servedID(_ receipt: ReceiptReference) -> String? {
         let prefix = "/api/receipts/"
         guard receipt.uri.hasPrefix(prefix) else { return nil }

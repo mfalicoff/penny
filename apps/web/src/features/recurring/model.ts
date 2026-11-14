@@ -5,13 +5,13 @@ import { cents, dateKey, nextOccurrence, parseDate, personalShare, uid, validDat
  * Personal recurring schedules (MAZ-90): labels, upcoming dates and the schedule form's draft.
  * Recurrence itself (`nextOccurrence`, `materialize`, pause and remove) is the shared domain code;
  * this module only builds and describes rules. Dates are the browser's local calendar days
- * (`dateKey`), as in the native and legacy apps.
+ * (`dateKey`), as in the native app.
  */
 
 export const KIND_ORDER: Kind[] = ["income", "expense", "investment"];
 export const KIND_HEADINGS: Record<Kind, string> = { income: "Income", expense: "Expenses", investment: "Investments" };
 export const FREQUENCY_LABELS: Record<Frequency, string> = { weekly: "Weekly", monthly: "Monthly", yearly: "Yearly" };
-/** The ledger's limits (server/validation/ledger.ts). */
+/** The ledger's limits (src/validation/ledger.ts). */
 export const MAX_SCHEDULES = 1000;
 export const MAX_TITLE = 100;
 export const MAX_NOTE = 1000;
@@ -211,7 +211,7 @@ export function newRule(draft: ScheduleDraft, built: Built, id = uid()): Recurri
 }
 
 /**
- * The edited rule (the legacy and native `buildSchedule`): the first date never changes, moving the
+ * The edited rule (as `buildSchedule` in the domain and the native app): the first date never changes, moving the
  * next date re-anchors on the new day, keeping it keeps the anchor (a rule on the 31st stays on the
  * 31st after February). Clearing the account removes it. Recorded occurrences are not touched.
  */

@@ -2,7 +2,7 @@ using System.Text;
 
 namespace Penny.Backend.Api.Contracts;
 
-// The download's Content-Disposition, byte-for-byte as the legacy server built it:
+// The download's Content-Disposition, byte for byte:
 // `inline; filename*=UTF-8''` + encodeURIComponent(name).
 public static class ReceiptDisposition
 {

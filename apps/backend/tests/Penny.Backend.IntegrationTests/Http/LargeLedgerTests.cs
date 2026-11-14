@@ -13,9 +13,9 @@ namespace Penny.Backend.IntegrationTests.Http;
 // MAZ-64 large-ledger and bounded-concurrency checks over real HTTP and PostgreSQL,
 // on a host with the production body limit (20 MiB) and a long request deadline.
 // Timings are written to the test output (TRX) as the regression baseline. The
-// budgets are deliberately generous upper bounds, several times the measured
-// baseline in docs/migration/parity-report.md#baseline-timings: they catch a
-// pathological regression (a quadratic write, a lost index), not normal runner noise.
+// budgets are deliberately generous upper bounds, several times the baseline
+// measured for MAZ-64: they catch a pathological regression (a quadratic write, a
+// lost index), not normal runner noise.
 // The full-ledger write budget is the exception: it is capped below the production
 // request deadline, because a slower write would fail in production.
 public sealed class LargeLedgerTests(ApiFixture fixture) : IntegrationTestBase(fixture)

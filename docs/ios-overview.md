@@ -1,6 +1,6 @@
 # Native Home, money flow, Insights and calendar (MAZ-77)
 
-[Native app](../apps/ios/README.md) · [Native ledger rules](ios-ledger-domain.md) · [Native app shell](ios-shell.md) · [Redesign baseline](migration/redesign.md) · [Domain rules](migration/domain-rules.md)
+[Native app](../apps/ios/README.md) · [Native ledger rules](ios-ledger-domain.md) · [Native app shell](ios-shell.md) · [Redesign baseline](reference/redesign.md) · [Domain rules](reference/domain-rules.md)
 
 This page describes how the SwiftUI app shows a month: Home, the money flow, Insights (spending by category), the calendar and a category's entries. It covers the formulas, how shared and private money is combined, what investments mean here, chart accessibility, the iPhone and iPad layouts, and how performance was checked.
 
@@ -41,7 +41,7 @@ All amounts are integer cents of the ledger currency and use `share` (your part)
 | Calendar day | Recorded spent, received and invested on the day; net = received − spent − invested; scheduled occurrences and income dated after today counted apart | Dots, the amber ring, the day header, "N expected or scheduled" |
 | Daily average (iPad) | Recorded spending ÷ days elapsed (through today in the current month, the whole month for a past month; none for a future month), integer cents | "Avg $62.78" |
 
-Money flow rows: at most five per column (`MoneyFlow.maxRows`). With more categories the four largest stay and the rest become one "N more" row holding every cent; the value list under the chart lists the categories inside it. This follows the redesign card ("2 more") and `design-kit` `MoneyFlow`; the legacy Expo chart kept up to six rows.
+Money flow rows: at most five per column (`MoneyFlow.maxRows`). With more categories the four largest stay and the rest become one "N more" row holding every cent; the value list under the chart lists the categories inside it. This follows the redesign card ("2 more") and `design-kit` `MoneyFlow`.
 
 ### Recorded and projected stay apart
 
@@ -50,7 +50,7 @@ Money flow rows: at most five per column (`MoneyFlow.maxRows`). With more catego
 - The calendar marks scheduled occurrences and income dated after today with an amber ring, never a filled dot. The legend says "Expected or scheduled", and a day with any says "N expected or scheduled, not in Left to spend yet" (the same words on screen and for VoiceOver, `OverviewText.calendarPending`).
 - Every entry row (`EntryRow`) says its status once, after the date: "Expected" for income dated after today and for scheduled income, "Scheduled" for any other preview, nothing for a recorded entry; the category name stays when there is no account or split. While a change waits to sync, "Waiting to sync" replaces that line and keeps the status ("Waiting to sync · Expected"), so the meaning is never the amber color alone. Previews don't open an entry.
 - `ShellModel.today` follows the device: it is read again on every calendar day change (midnight, a clock or time zone change; `CalendarDayMonitoring`, the signal `LedgerSyncModel` materializes recurrence on) and when the app returns to the foreground. Income dated on the new day moves from Expected to Left to spend without a relaunch. The month on screen does not change.
-- The legacy Expo chart added expected income to the money flow (`moneyFlowEntries`). The native flow does not: it matches Left to spend, so the two never disagree.
+- Expected income is not part of the money flow: the flow matches Left to spend, so the two never disagree.
 
 ## Shared and private money
 
@@ -91,14 +91,14 @@ Navigation: these pages are `DetailRoute.moneyFlow`, `.insights`, `.calendar` an
 | --- | --- | --- |
 | home | `iphone-home` | `HomeView` |
 | home-dark | `iphone-home-dark` | `HomeView` in dark |
-| home-amoled, home-catppuccin | none: dropped by MAZ-132 | A saved legacy `amoled` or `catppuccin` preference opens as dark (`AppearancePreference(legacy:)`, `ExpoMigrationTests`), so these are `iphone-home-dark` |
+| home-amoled, home-catppuccin | none: dropped by MAZ-132 | `iphone-home-dark` (dark is true black; there are no other appearances) |
 | insights | `iphone-insights` | `InsightsView` |
 | calendar | `iphone-calendar` | `CalendarView` |
 | money-flow | `iphone-money-flow` | `MoneyFlowView` |
 | desktop | `ipad-home` (and `web-home` on the web) | `HomeDashboard` |
 | empty-home | `iphone-empty-home` | `EmptyHomeContent` |
 
-`docs/design/penny-redesign/screen-inventory.json` and the Penpot proposal named in the issue were removed in #30 and replaced by `docs/design/penny-ios` (MAZ-132); the cards above are their successors. MAZ-122's finalized handoff is not in the repository yet, so these screens follow the cards and `docs/migration/redesign.md`; MAZ-122 owns the visual comparison.
+`docs/design/penny-redesign/screen-inventory.json` and the Penpot proposal named in the issue were removed in #30 and replaced by `docs/design/penny-ios` (MAZ-132); the cards above are their successors. MAZ-122's finalized handoff is not in the repository yet, so these screens follow the cards and `docs/reference/redesign.md`; MAZ-122 owns the visual comparison.
 
 ## Chart accessibility
 

@@ -28,8 +28,6 @@ public sealed class PostgresReadiness(NpgsqlDataSource source) : IStorageReadine
                     .SequenceEqual(context.Database.GetMigrations().Order(StringComparer.Ordinal))
             )
                 return new(false, "schema");
-            if (await context.SqliteImport.AnyAsync(i => i.Status != "complete", cancellationToken))
-                return new(false, "import");
             return new(true, "ready");
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)

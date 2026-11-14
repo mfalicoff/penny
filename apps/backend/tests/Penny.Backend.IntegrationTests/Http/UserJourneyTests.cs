@@ -26,7 +26,10 @@ public sealed class UserJourneyTests(ApiFixture fixture, FakeOidcProvider provid
 {
     private const string AlexEmail = "alex.journey@example.test";
     private const string SamEmail = "sam.journey@example.test";
-    private const string SamDevice = "ExponentPushToken[sam_journey]";
+
+    // A synthetic 32-byte APNs device token.
+    private const string SamDevice =
+        "5a5b5c5d5e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f9";
 
     [Fact]
     public async Task whenTwoUsersShareAMonth_ReleaseJourney_ShouldSurviveRestartIntact()
@@ -66,16 +69,21 @@ public sealed class UserJourneyTests(ApiFixture fixture, FakeOidcProvider provid
             "/api/push/devices",
             sam.Token,
             HttpStatusCode.Created,
-            new { token = SamDevice, platform = "ios" }
+            new
+            {
+                token = SamDevice,
+                platform = "ios",
+                provider = "apns",
+                environment = "production",
+            }
         );
 
         // 4. A shared expense alex pays, split equally; the push worker's next pass
         // notifies sam's device (never alex, the actor) with a deep link to it.
-        var expo = new FakePushTransport(PushProviders.Expo);
         var apns = new FakePushTransport(PushProviders.Apns);
         var groceries = await CreateExpenseAsync(home, alexToken, Expense(10000, alexId));
-        await PushRunner(expo, apns).RunUntilIdleAsync(Ct);
-        var notified = (await expo.SentToAsync(SamDevice)).Single();
+        await PushRunner(apns).RunUntilIdleAsync(Ct);
+        var notified = (await apns.SentToAsync(SamDevice)).Single();
         notified.Title.ShouldBe("New household expense");
         notified.Payload.HouseholdId.ShouldBe(home);
         notified.Payload.ExpenseId.ShouldBe(Id(groceries));
@@ -107,11 +115,11 @@ public sealed class UserJourneyTests(ApiFixture fixture, FakeOidcProvider provid
         );
 
         // 7. The reimbursement reaches sam too; nothing is left in the outbox.
-        await PushRunner(expo, apns).RunUntilIdleAsync(Ct);
-        (await expo.SentToAsync(SamDevice))
+        await PushRunner(apns).RunUntilIdleAsync(Ct);
+        (await apns.SentToAsync(SamDevice))
             .Select(message => message.Title)
             .ShouldContain("Reimbursement recorded");
-        expo.Sent.ShouldAllBe(message => message.Token == SamDevice);
+        apns.Sent.ShouldAllBe(message => message.Token == SamDevice);
         (await CountAsync("SELECT count(*) FROM penny.push_outbox WHERE sent_at IS NULL")).ShouldBe(
             0L
         );
@@ -186,7 +194,7 @@ public sealed class UserJourneyTests(ApiFixture fixture, FakeOidcProvider provid
         members.ShouldBe(2);
 
         // Nothing is redelivered after the restart.
-        (await PushRunner(expo, apns).RunOnceAsync(Ct)).Claimed.ShouldBe(0);
+        (await PushRunner(apns).RunOnceAsync(Ct)).Claimed.ShouldBe(0);
 
         // Logging out on the new host revokes the session everywhere.
         using (
@@ -260,9 +268,7 @@ public sealed class UserJourneyTests(ApiFixture fixture, FakeOidcProvider provid
                 Fixture.Factory.Services.GetRequiredService<NpgsqlDataSource>()
             ),
             transports,
-            new PushSettings(true),
-            Fixture.Factory.Clock,
-            new FakePushReceipts()
+            Fixture.Factory.Clock
         );
 
     private static async Task<string> MeAsync(HttpClient client, string token)

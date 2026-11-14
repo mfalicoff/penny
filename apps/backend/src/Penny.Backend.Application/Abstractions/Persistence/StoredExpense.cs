@@ -2,7 +2,7 @@ using Penny.Backend.Domain.Households;
 
 namespace Penny.Backend.Application.Abstractions.Persistence;
 
-// A live shared expense with everything its legacy view needs: splits ordered by
+// A live shared expense with everything its view needs: splits ordered by
 // member id, individual payments ordered by time then debtor, whether the month has
 // a monthly reimbursement (`PaymentsClosed`), and the receipt's name and MIME when one
 // is linked. `AccountId` is the payer's private account and must only reach the payer.

@@ -5,9 +5,9 @@ using Penny.Backend.Domain.Ledgers;
 
 namespace Penny.Backend.Application.Households;
 
-// The legacy `expense()` view (src/data/households.ts `HouseholdExpense`), also the
-// audit payload of expense events. Instants are Unix milliseconds. `AccountId` is the
-// payer's private account: present only when the viewer is the payer, never in audit.
+// The shared expense view (contract schema `Expense`), also the audit payload of
+// expense events. Instants are Unix milliseconds. `AccountId` is the payer's private
+// account: present only when the viewer is the payer, never in audit.
 public sealed record ExpenseView(
     string Id,
     string HouseholdId,
@@ -69,7 +69,7 @@ public sealed record ExpenseView(
             expense.RecurringId
         );
 
-    // Legacy audit payloads drop the payer's account (`{...view, accountId: undefined}`).
+    // Audit payloads drop the payer's account.
     public ExpenseView ForAudit() =>
         this with
         {

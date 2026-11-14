@@ -1,6 +1,6 @@
 import Foundation
 
-/// The search v1 text normalization (docs/migration/search.md, "Text normalization";
+/// The search v1 text normalization (docs/reference/search.md, "Text normalization";
 /// `contracts/fixtures/search-cases.json` `foldCases`), shared with the server and the web:
 ///
 /// 1. Unicode NFKD decomposition.
@@ -9,7 +9,7 @@ import Foundation
 /// 4. Final sigma `ς` becomes `σ`, and `ß` becomes `ss`.
 /// 5. Each run of Unicode whitespace becomes one space, then the ends are trimmed.
 ///
-/// The legacy substring rule (`LocalSearch`) stays for the legacy fixtures; the native entry
+/// The plain substring rule (`LocalSearch`) is the one search-cases.json checks; the entry
 /// screens search pending, offline and demo data with this normalization and the server's
 /// literal tiers 1–2 only (`FoldedSearchIndex`), MAZ-73.
 public enum SearchText {

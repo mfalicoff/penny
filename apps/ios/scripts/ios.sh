@@ -212,7 +212,7 @@ cmd_test() {
 assert_no_test_controls() {
   local file found=0
   while IFS= read -r -d "" file; do
-    if /usr/bin/strings -a "$file" | grep -qE "PENNY_TEST_[A-Z_]+|TestControls|TestStateReset|ContainerSeed|ExpoUpgradeFixture"; then
+    if /usr/bin/strings -a "$file" | grep -qE "PENNY_TEST_[A-Z_]+|TestControls|TestStateReset|ContainerSeed"; then
       echo "error: $file contains test controls." >&2
       found=1
     fi
@@ -238,7 +238,8 @@ ARCHIVE="$CACHE/Penny.xcarchive"
 EXPORT_DIR="$CACHE/export"
 BUNDLE_ID="com.mfalicoff.penny"
 APP_GROUP="group.com.mfalicoff.penny"
-# The WidgetKit extension (MAZ-80) keeps the Expo extension's id so placed widgets survive.
+# The WidgetKit extension's id (MAZ-80) is frozen for TestFlight/App Store continuity, so placed
+# widgets survive upgrades. Never rename it.
 WIDGETS_ID="com.mfalicoff.penny.ExpoWidgetsTarget"
 WIDGETS_APPEX="PlugIns/PennyWidgets.appex"
 
@@ -296,11 +297,11 @@ team_id() {
   echo "$team"
 }
 
-package_version() { sed -n 's/^  "version": "\([^"]*\)".*/\1/p' "$ROOT/package.json" | head -1; }
+release_version() { sed -n 's|^MARKETING_VERSION = \([^ ]*\) // x-release-please-version$|\1|p' "$ROOT/apps/ios/Configuration/Version.xcconfig" | head -1; }
 
 # App Store Connect compares CFBundleVersion component by component and rejects any build
-# number that is not higher than every earlier upload for this version, including the legacy
-# EAS builds. One to three dot-separated integers, no leading zeros.
+# number that is not higher than every earlier upload for this version. One to three
+# dot-separated integers, no leading zeros.
 require_build_number() {
   [[ "${PENNY_BUILD_NUMBER:-}" =~ ^(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*)){0,2}$ ]] \
     || { echo "error: set PENNY_BUILD_NUMBER to 1-3 dot-separated integers above the last TestFlight build (README.md#versions)." >&2; exit 1; }
@@ -310,11 +311,11 @@ require_build_number() {
 # controls. $1 is a Penny.app directory.
 verify_app() {
   local app="$1" plist="$1/Info.plist" version
-  version="$(package_version)"
+  version="$(release_version)"
   [[ "$(plist_value CFBundleIdentifier "$plist")" == "$BUNDLE_ID" ]] \
     || { echo "error: $app is not $BUNDLE_ID." >&2; exit 1; }
   [[ "$(plist_value CFBundleShortVersionString "$plist")" == "$version" ]] \
-    || { echo "error: $app version is not package.json's $version." >&2; exit 1; }
+    || { echo "error: $app version is not Version.xcconfig's $version." >&2; exit 1; }
   [[ "$(plist_value CFBundleVersion "$plist")" == "$PENNY_BUILD_NUMBER" ]] \
     || { echo "error: $app build number is not $PENNY_BUILD_NUMBER." >&2; exit 1; }
   [[ "$(plist_value PennyEnvironment "$plist")" == "production" ]] \
@@ -374,7 +375,7 @@ cmd_archive() {
     -archivePath "$ARCHIVE" archive \
     DEVELOPMENT_TEAM="$team" CURRENT_PROJECT_VERSION="$PENNY_BUILD_NUMBER" ${SIGN_FLAGS[@]+"${SIGN_FLAGS[@]}"}
   verify_app "$ARCHIVE/Products/Applications/Penny.app"
-  echo "Archive: $ARCHIVE ($(package_version) build $PENNY_BUILD_NUMBER, team $team)"
+  echo "Archive: $ARCHIVE ($(release_version) build $PENNY_BUILD_NUMBER, team $team)"
 }
 
 # Re-signs the archive for App Store Connect and writes Penny.ipa with its checksum.
@@ -409,7 +410,7 @@ cmd_export() {
   verify_app "$unpacked/Payload/Penny.app"
   verify_distribution_signature "$unpacked/Payload/Penny.app" "$team"
   (cd "$EXPORT_DIR" && /usr/bin/shasum -a 256 Penny.ipa > Penny.ipa.sha256)
-  echo "IPA: $EXPORT_DIR/Penny.ipa (App Store signed, $(package_version) build $PENNY_BUILD_NUMBER)"
+  echo "IPA: $EXPORT_DIR/Penny.ipa (App Store signed, $(release_version) build $PENNY_BUILD_NUMBER)"
 }
 
 # Exercises the distribution checks without signing: the Release simulator app from
@@ -446,7 +447,7 @@ cmd_distribution_test() {
   expect pass "Release app passes the archive checks" with_build "$build" verify_app "$app"
   expect fail "another bundle id is refused" with_build "$build" verify_app \
     "$(tampered bundle 'Set :CFBundleIdentifier com.example.other')"
-  expect fail "a version other than package.json's is refused" with_build "$build" verify_app \
+  expect fail "a version other than Version.xcconfig's is refused" with_build "$build" verify_app \
     "$(tampered version 'Set :CFBundleShortVersionString 0.0.1')"
   expect fail "a different build number is refused" with_build "$build.1" verify_app "$app"
   expect fail "a development environment is refused" with_build "$build" verify_app \

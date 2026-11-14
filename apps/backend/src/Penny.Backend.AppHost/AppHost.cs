@@ -1,4 +1,4 @@
-// Local development orchestration for the v2 stack (MAZ-138): PostgreSQL, the migration
+// Local development orchestration (MAZ-138): PostgreSQL, the migration
 // step, the search model download, the .NET API, the Vite web app and a Grafana stack
 // (Alloy, Loki, Tempo, Prometheus, Grafana). Start it with
 // `bash apps/backend/dotnet.sh run --project src/Penny.Backend.AppHost`.
@@ -210,9 +210,7 @@ var web = builder
 
 api.WithEnvironment(
     "Auth__AllowedOrigins",
-    ReferenceExpression.Create(
-        $"{web.GetEndpoint("http")},http://127.0.0.1:4173,http://localhost:8081,http://localhost:3001"
-    )
+    ReferenceExpression.Create($"{web.GetEndpoint("http")},http://127.0.0.1:4173")
 );
 
 builder.Build().Run();

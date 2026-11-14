@@ -4,7 +4,7 @@ using Penny.Backend.Persistence.Schema.Entities;
 
 namespace Penny.Backend.Persistence.Receipts;
 
-// Who may read a receipt (legacy `canReadReceipt`, docs/migration/receipts.md#access):
+// Who may read a receipt (docs/reference/receipts.md#access):
 // its uploader, or another user when a live shared expense links it and they are a
 // current member of that expense's household, or a former member with a share in it.
 // One rule for downloads and for receipt text search (MAZ-125), evaluated in SQL in the

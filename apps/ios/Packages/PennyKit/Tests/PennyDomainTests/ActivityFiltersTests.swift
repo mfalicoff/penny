@@ -122,7 +122,7 @@ struct ActivityFiltersTests {
             let ids = report.activity(
                 ActivityFilters(period: .month(month), query: item.query), index: FoldedSearchIndex(report)
             ).entries.map(\.id)
-            // The pending fixtures use plain ASCII queries, where folding and the legacy rule agree.
+            // The pending fixtures use plain ASCII queries, where folding and the plain substring rule agree.
             #expect(ids == item.expectedIds, "\(item.name)")
         }
     }

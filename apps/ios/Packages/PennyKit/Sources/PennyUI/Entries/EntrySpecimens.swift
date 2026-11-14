@@ -4,7 +4,7 @@ import PennyDomain
 import SwiftUI
 
 // Xcode previews of the redesign cards MAZ-73 owns, named after their cards (the iOS-native
-// cards in docs/design/penny-ios and the legacy specimen names listed in the issue). Open
+// cards in docs/design/penny-ios). Open
 // them in light and dark, at large text sizes and on iPhone and iPad. Made-up data only.
 
 private struct EntrySpecimenHost<Content: View>: View {

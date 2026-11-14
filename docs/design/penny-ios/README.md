@@ -1,6 +1,6 @@
 # Penny for iOS: native redesign proposal
 
-This proposal targets iPhone and iPad (the SwiftUI app in `apps/ios`) and the desktop web app (`apps/web`). It replaces the warm card-heavy look of both the current Expo app and the earlier Penpot proposal (which this change removes) with a design that feels native to iOS 26.
+This proposal targets iPhone and iPad (the SwiftUI app in `apps/ios`) and the desktop web app (`apps/web`). It replaces the app's earlier warm, card-heavy look and the Penpot proposal (which this change removes) with a design that feels native to iOS 26.
 
 Each screen is a standalone HTML file with a `@dsCard` marker, so the folder can be imported straight into a Claude Design design-system project. Rendered PNGs of every card in light and dark are in [previews/](previews/); they are the visual acceptance baselines ([visual acceptance](../visual-acceptance.md)).
 
@@ -68,7 +68,7 @@ The web app uses the same tokens, color rules and money semantics as the iOS app
 - **iOS (`apps/ios`, SwiftUI):** use the system `TabView` (iOS 26 floating tab bar plus a separate add action) on iPhone and `NavigationSplitView` on iPad. Use real Liquid Glass (`.glassEffect`) only on toolbars, the tab bar and floating controls; the CSS blur in these cards only approximates it. SF Pro and SF Symbols replace Inter and Ionicons. Use `.sheet` with detents for entry flows, `.swipeActions` for edit and delete, and `.searchable` for search.
 - **Web (`apps/web`, React):** `design-kit/` (`@penny/ios-kit`) is a React reference of these components, including the web shell (WebFrame, WebSidebar, TopBar, DataTable, Dialog). Its tokens and `pk-*` classes can be ported directly; the shared money calculations stay in the API.
 - **Themes:** light and dark follow the system setting. Dark already uses a true-black background, so AMOLED and Catppuccin are dropped (MAZ-132).
-- **Baseline contract:** `contracts/design-baseline.json` traces every card here and every `design-kit` control (MAZ-132). Its tests check the card markers and file hashes, so update the contract in the same change as a card ([redesign baseline](../../migration/redesign.md)).
+- **Baseline contract:** `contracts/design-baseline.json` traces every card here and every `design-kit` control (MAZ-132). Its tests check the card markers and file hashes, so update the contract in the same change as a card ([redesign baseline](../../reference/redesign.md)).
 
 ## Rendering
 

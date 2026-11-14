@@ -3,9 +3,8 @@ using Penny.Backend.Application.Abstractions.Persistence;
 
 namespace Penny.Backend.Application.Households;
 
-// The legacy reimbursement view (src/data/households.ts `HouseholdReimbursement`), also
-// the audit payload of `reimbursement.created`. `CreatedAt` is Unix milliseconds;
-// `ExpenseId` is present only for an individual expense payment.
+// The reimbursement view, also the audit payload of `reimbursement.created`.
+// `CreatedAt` is Unix milliseconds; `ExpenseId` is present only for an individual expense payment.
 public sealed record ReimbursementView(
     string Id,
     string HouseholdId,

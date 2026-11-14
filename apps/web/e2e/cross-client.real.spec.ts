@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
-import type { Ledger } from "../../../src/domain/ledger.ts";
-import { mergeLedger } from "../../../src/domain/merge.ts";
+import type { Ledger } from "../src/domain/ledger.ts";
+import { mergeLedger } from "../src/domain/merge.ts";
 import { LedgerClient, realStack, signIn, skipReason, testUser, type LedgerSnapshot } from "./stack";
 
 // MAZ-96 cross-client convergence: the browser and a second client that speaks the native app's

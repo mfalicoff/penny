@@ -23,7 +23,6 @@ const PAGE = 50;
 
 function describeSearchError(error: unknown): string {
   if (error instanceof ApiError) {
-    if (error.status === 404) return "This server doesn't offer full search yet. Showing nothing rather than guessing.";
     if (error.status === 429) return "Too many searches. Wait a minute and try again.";
     if (error.status === 503) return "Search is busy. Try again in a moment.";
     if (error.status === 0) return "Penny can't reach the server.";
@@ -236,7 +235,7 @@ function RowList({ rows, ledger, currency, onOpen }: { rows: ActivityRow[]; ledg
                 {entry.householdName ? `Shared · ${entry.householdName}` : "Shared"} · {entry.category.name} · <time dateTime={entry.date}>{dayLabel(entry.date, true)}</time>
               </span>
               <span className="results__amount">
-                <Money cents={entry.shareCents} currency={entry.householdCurrency ?? currency} />
+                <Money cents={entry.shareCents} currency={entry.householdCurrency} />
                 <span className="results__sub">your share</span>
               </span>
             </Link>

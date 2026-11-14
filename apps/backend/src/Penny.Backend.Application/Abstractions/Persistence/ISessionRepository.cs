@@ -3,7 +3,7 @@ namespace Penny.Backend.Application.Abstractions.Persistence;
 // Sessions are keyed by SHA-256(token); raw tokens are never stored.
 public interface ISessionRepository
 {
-    // Also purges sessions that expired before `now`, as the legacy server does.
+    // Also purges sessions that expired before `now`.
     Task CreateAsync(
         string tokenHash,
         string userId,

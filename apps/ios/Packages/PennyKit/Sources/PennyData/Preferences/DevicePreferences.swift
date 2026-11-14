@@ -2,7 +2,7 @@ import Foundation
 import Synchronization
 
 /// Light, dark or the system setting (the default). There are no other appearances: Dark is
-/// true black, so the legacy AMOLED theme is dark, and Catppuccin was dropped (MAZ-132).
+/// true black (MAZ-132).
 public enum AppearancePreference: String, CaseIterable, Sendable {
     case system, light, dark
 
@@ -11,17 +11,6 @@ public enum AppearancePreference: String, CaseIterable, Sendable {
         case .system: "System"
         case .light: "Light"
         case .dark: "Dark"
-        }
-    }
-
-    /// A theme the legacy app saved. AMOLED and Catppuccin become dark, as the baseline
-    /// decides; anything unknown falls back to the system setting. MAZ-72 calls this when it
-    /// imports the Expo app's preferences.
-    public init(legacy value: String?) {
-        switch value {
-        case "light": self = .light
-        case "dark", "amoled", "catppuccin": self = .dark
-        default: self = .system
         }
     }
 }

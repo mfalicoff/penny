@@ -13,11 +13,8 @@ namespace Penny.Backend.IntegrationTests.Infrastructure;
 public abstract class PushTestBase(ApiFixture fixture) : SharedExpenseTestBase(fixture)
 {
     protected const string DevicesPath = "/api/push/devices";
-    protected const string ExpoToken = "ExponentPushToken[device_one]";
 
-    protected FakePushTransport Expo { get; } = new(PushProviders.Expo);
     protected FakePushTransport Apns { get; } = new(PushProviders.Apns);
-    protected FakePushReceipts Receipts { get; } = new();
 
     protected NpgsqlDataSource Source =>
         Fixture.Factory.Services.GetRequiredService<NpgsqlDataSource>();
@@ -27,30 +24,14 @@ public abstract class PushTestBase(ApiFixture fixture) : SharedExpenseTestBase(f
         Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData([(byte)seed]));
 
     protected PushDeliveryRunner Runner(
-        bool expoEnabled = true,
         NpgsqlDataSource? source = null,
         TimeProvider? clock = null,
-        params IPushTransport[] transports
+        IPushTransport[]? transports = null
     ) =>
         new(
             new PostgresPushRepository(source ?? Source),
-            transports.Length == 0 ? [Expo, Apns] : transports,
-            new PushSettings(expoEnabled),
-            clock ?? Fixture.Factory.Clock,
-            Receipts
-        );
-
-    protected Task RegisterExpoAsync(
-        string bearer,
-        string token = ExpoToken,
-        string platform = "ios"
-    ) =>
-        ExpectAsync(
-            HttpMethod.Post,
-            DevicesPath,
-            bearer,
-            HttpStatusCode.Created,
-            new { token, platform }
+            transports ?? [Apns],
+            clock ?? Fixture.Factory.Clock
         );
 
     protected Task RegisterApnsAsync(string bearer, string token, string environment) =>

@@ -75,7 +75,7 @@ Sign in and open **Trips** to create a shared trip or join one with its invitati
 
 To invite people to a personal trip, open it and tap **Invite people**. Expenses already assigned to that personal trip remain private and appear in a separate section for you. Add new shared expenses in the shared trip for everyone to see. Trip expenses are shown together across dates, while reimbursements stay in separate monthly balances.
 
-See [Phone notifications](deployment.md#phone-notifications) for device registration and push prerequisites. The [household implementation plan](households-implementation-plan.md) records the original design tasks and acceptance examples; this guide describes current behavior.
+See [Phone notifications](deployment.md#phone-notifications) for device registration and push prerequisites.
 
 ## Recurring schedules in the browser app
 
@@ -88,9 +88,3 @@ The app caches each signed-in personal ledger on the device. A personal entry, a
 Recurring entries are materialized when a client syncs or saves, using that device's local calendar date. Missed dates catch up once. Monthly schedules retain their original day through short months (Jan 31 → Feb 28 → Mar 31). Pausing skips paused dates on resume. Deleting an occurrence does not regenerate it. Deleting a schedule preserves history. Editing an occurrence changes only that occurrence. Edit the schedule in **Recurring** to change its amount, account, category, next date or cadence; entries it already recorded keep their details. Attachments belong to individual occurrences and are not copied onto future entries.
 
 Browsing the overview does not record future income or advance schedules. When a scheduled payment is materialized, its recorded occurrence replaces the preview without increasing the projected income again. Paused or removed schedules contribute no future income. For pay twice per month on fixed dates, use two monthly income schedules (for example, the 15th and the 31st; the 31st falls on the last day in shorter months).
-
-## Ledger upgrades
-
-Existing ledgers upgrade to version 4 on read and persist that version on the next save. Payment accounts and trips start empty when absent in older versions; historical entries stay unassigned. For version 1 ledgers, an Investments category is added unless one already exists or the 300-category limit is reached. Historical expenses retain their classification; edit an entry and select Investment to reclassify it. Editing a recurring occurrence does not change its schedule. Edit the recurring schedule to change future contributions or their payment account. Deploy the updated server alongside the client so payment accounts, trips and investment entries can be saved.
-
-

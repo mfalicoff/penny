@@ -1,8 +1,8 @@
 name: Build the iOS app for TestFlight
 
 # MAZ-98: signs a native Xcode archive of apps/ios and uploads it to TestFlight, where it
-# upgrades the retired Expo build in place (same bundle id, team, App Group and URL scheme).
-# Setup, secrets and the release runbook: docs/ios-ipa.md. Android and Expo builds are retired.
+# upgrades earlier builds in place (same bundle id, team, App Group and URL scheme).
+# Setup, secrets and the release runbook: docs/ios-ipa.md.
 on:
   release:
     types: [published]
@@ -62,7 +62,7 @@ jobs:
           check "the ASC_API_KEY_P8 secret" "$ASC_API_KEY_P8"
           [ "$missing" -eq 0 ] || exit 1
           if [[ ! "$BUILD_NUMBER_BASE" =~ ^[1-9][0-9]*$ ]]; then
-            echo "::error::IOS_BUILD_NUMBER_BASE must be a whole number above the last legacy EAS build number."
+            echo "::error::IOS_BUILD_NUMBER_BASE must be a whole number above every earlier whole-number build uploaded to App Store Connect."
             exit 1
           fi
 
@@ -70,7 +70,8 @@ jobs:
         env:
           BUILD_NUMBER_BASE: ${{ vars.IOS_BUILD_NUMBER_BASE }}
         # <base>.<run>.<attempt>: App Store Connect compares the parts in order, so every run and
-        # rerun is higher than the last, and all of them are above the legacy EAS builds.
+        # rerun is higher than the last. The base sits above the earlier builds, which were uploaded
+        # with whole build numbers; never lower it.
         run: echo "PENNY_BUILD_NUMBER=$BUILD_NUMBER_BASE.$GITHUB_RUN_NUMBER.$GITHUB_RUN_ATTEMPT" >> "$GITHUB_ENV"
 
       - name: Install the distribution certificate, profiles and API key

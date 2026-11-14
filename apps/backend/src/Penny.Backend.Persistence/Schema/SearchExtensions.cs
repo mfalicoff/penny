@@ -7,7 +7,7 @@ namespace Penny.Backend.Persistence.Schema;
 public static class SearchExtensions
 {
     public const string Missing =
-        "PostgreSQL extensions vector (pgvector 0.8 or later) and pg_trgm must be created by an administrator before migrating. See docs/migration/search.md. No migration was applied.";
+        "PostgreSQL extensions vector (pgvector 0.8 or later) and pg_trgm must be created by an administrator before migrating. See docs/reference/search.md. No migration was applied.";
 
     public static async Task<bool> AvailableAsync(
         NpgsqlConnection connection,

@@ -5,7 +5,7 @@ using Xunit;
 
 namespace Penny.Backend.UnitTests.Households;
 
-// Ports of the legacy zod household schemas' accept/reject cases.
+// Accept/reject cases of the household request readers.
 public sealed class HouseholdReaderTests
 {
     private static JsonElement Json(string text) => JsonDocument.Parse(text).RootElement.Clone();

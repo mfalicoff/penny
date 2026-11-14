@@ -12,15 +12,15 @@ using Xunit;
 
 namespace Penny.Backend.IntegrationTests.Controllers;
 
-// Real HTTP + PostgreSQL ports of the legacy ledger journeys (tests/core/server,
-// accounts, trips and contracts tests). All data is synthetic.
+// Personal ledger sync over real HTTP and PostgreSQL: the shared HTTP journey,
+// accounts, trips, receipts, conflicts and isolation. All data is synthetic.
 public sealed class LedgerTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string Invalid = "Invalid ledger data.";
     private static readonly DateTimeOffset Now = new(2026, 10, 1, 12, 0, 0, TimeSpan.Zero);
 
     [Fact]
-    public async Task whenSnapshotWrittenAndReread_LedgerFlow_ShouldMatchLegacyJourney()
+    public async Task whenSnapshotWrittenAndReread_LedgerFlow_ShouldMatchContractJourney()
     {
         var journey = ContractFixtures.Read("http-journey.json");
         var token = await RegisterAsync("owner@example.test");
@@ -69,7 +69,7 @@ public sealed class LedgerTests(ApiFixture fixture) : IntegrationTestBase(fixtur
     }
 
     [Fact]
-    public async Task whenOptionalFieldsAbsent_GetLedger_ShouldOmitThemInLegacyKeyOrder()
+    public async Task whenOptionalFieldsAbsent_GetLedger_ShouldOmitThemInContractKeyOrder()
     {
         var token = await RegisterAsync("owner@example.test");
         var snapshot = await GetAsync(token);
@@ -163,7 +163,7 @@ public sealed class LedgerTests(ApiFixture fixture) : IntegrationTestBase(fixtur
     }
 
     [Fact]
-    public async Task whenBodyMalformedOrUnsupported_PutLedger_ShouldReturnLegacyErrors()
+    public async Task whenBodyMalformedOrUnsupported_PutLedger_ShouldReturnContractErrors()
     {
         var token = await RegisterAsync("owner@example.test");
         var snapshot = await GetAsync(token);
@@ -218,37 +218,9 @@ public sealed class LedgerTests(ApiFixture fixture) : IntegrationTestBase(fixtur
     }
 
     [Fact]
-    public async Task whenOldClientOmitsNewCollections_PutLedger_ShouldUpgradeOrRefuseErasure()
+    public async Task whenLedgerIsNotCompleteVersionFour_PutLedger_ShouldRejectAndKeepData()
     {
         var token = await RegisterAsync("owner@example.test");
-        var snapshot = await GetAsync(token);
-
-        // A v1 client on a ledger without accounts or trips is upgraded to v4.
-        var legacy = snapshot.DeepClone();
-        var ledger = legacy["ledger"]!.AsObject();
-        ledger["version"] = 1;
-        ledger.Remove("accounts");
-        ledger.Remove("trips");
-        ledger["categories"] = new JsonArray([
-            .. ledger["categories"]!
-                .AsArray()
-                .Where(category => category!["kind"]!.GetValue<string>() != "investment")
-                .Select(category => category!.DeepClone()),
-        ]);
-        using (var upgraded = await PutAsync(token, legacy))
-        {
-            upgraded.StatusCode.ShouldBe(HttpStatusCode.OK);
-            var saved = (await ReadNodeAsync(upgraded))["ledger"]!;
-            saved["version"]!.GetValue<int>().ShouldBe(4);
-            saved["accounts"]!.AsArray().ShouldBeEmpty();
-            saved["trips"]!.AsArray().ShouldBeEmpty();
-            saved["categories"]!
-                .AsArray()
-                .Single(category => category!["kind"]!.GetValue<string>() == "investment")!["id"]!
-                .GetValue<string>()
-                .ShouldBe("investments");
-        }
-
         var current = await GetAsync(token);
         current["ledger"]!["accounts"]!
             .AsArray()
@@ -264,20 +236,24 @@ public sealed class LedgerTests(ApiFixture fixture) : IntegrationTestBase(fixtur
         (await PutAsync(token, current)).StatusCode.ShouldBe(HttpStatusCode.OK);
         var stored = await GetAsync(token);
 
-        var withoutAccounts = stored.DeepClone();
-        withoutAccounts["ledger"]!["version"] = 2;
-        withoutAccounts["ledger"]!.AsObject().Remove("accounts");
-        withoutAccounts["ledger"]!.AsObject().Remove("trips");
-        await ShouldFailAsync(token, withoutAccounts, LedgerService.ReloadForAccounts);
-        var withoutTrips = stored.DeepClone();
-        withoutTrips["ledger"]!["version"] = 3;
-        withoutTrips["ledger"]!.AsObject().Remove("trips");
-        await ShouldFailAsync(token, withoutTrips, LedgerService.ReloadForTrips);
-        // A v3 client that does send trips keeps them.
-        var v3WithTrips = stored.DeepClone();
-        v3WithTrips["ledger"]!["version"] = 3;
-        (await PutAsync(token, v3WithTrips)).StatusCode.ShouldBe(HttpStatusCode.OK);
-        (await GetAsync(token))["ledger"]!["trips"]!.AsArray().Count.ShouldBe(1);
+        // Versions before 4 and ledgers that omit accounts or trips are invalid, so
+        // nothing a client leaves out is erased.
+        foreach (var version in new[] { 1, 2, 3 })
+        {
+            var older = stored.DeepClone();
+            older["ledger"]!["version"] = version;
+            await ShouldFailAsync(token, older, Invalid);
+        }
+        foreach (var collection in new[] { "accounts", "trips" })
+        {
+            var partial = stored.DeepClone();
+            partial["ledger"]!.AsObject().Remove(collection);
+            await ShouldFailAsync(token, partial, Invalid);
+        }
+        var after = await GetAsync(token);
+        after["revision"]!.GetValue<long>().ShouldBe(stored["revision"]!.GetValue<long>());
+        after["ledger"]!["accounts"]!.AsArray().Count.ShouldBe(1);
+        after["ledger"]!["trips"]!.AsArray().Count.ShouldBe(1);
     }
 
     [Fact]
@@ -292,7 +268,7 @@ public sealed class LedgerTests(ApiFixture fixture) : IntegrationTestBase(fixtur
         stolen["receipt"] = Receipt("receipt-1");
         foreign["ledger"]!["transactions"]!.AsArray().Add(stolen);
         await ShouldFailAsync(other, foreign, LedgerService.ForeignReceipt);
-        // Checks precede the revision comparison, as in the legacy service.
+        // Checks precede the revision comparison.
         foreign["revision"] = 7;
         await ShouldFailAsync(other, foreign, LedgerService.ForeignReceipt);
 
@@ -451,7 +427,7 @@ public sealed class LedgerTests(ApiFixture fixture) : IntegrationTestBase(fixtur
     }
 
     [Fact]
-    public async Task whenImportedRevisionIsHuge_LedgerFlow_ShouldIncrementExactlyThenStop()
+    public async Task whenRevisionIsHuge_LedgerFlow_ShouldIncrementExactlyThenStop()
     {
         var token = await RegisterAsync("owner@example.test");
         var userId = await UserIdAsync("owner@example.test");

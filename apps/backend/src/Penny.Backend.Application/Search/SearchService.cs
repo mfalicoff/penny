@@ -8,7 +8,7 @@ using Penny.Backend.Domain.Search;
 
 namespace Penny.Backend.Application.Search;
 
-// POST /api/v1/search/transactions (docs/migration/search.md). The viewer is always
+// POST /api/v1/search/transactions (docs/reference/search.md). The viewer is always
 // the session's user. Authorization, matching, counting and paging run in one SQL
 // snapshot; this service validates the request, embeds the query and builds cursors.
 // Search text is never logged.

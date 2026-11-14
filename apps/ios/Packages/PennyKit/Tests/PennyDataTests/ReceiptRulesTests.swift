@@ -117,7 +117,7 @@ struct ReceiptRulesTests {
         #expect(ReceiptRules.formatBytes(ReceiptRules.maxBytes) == "10.0 MB")
     }
 
-    @Test("whenLinkIsServedOrLegacy_ServedID_ShouldReturnTheIdOnlyForServedLinks")
+    @Test("whenLinkIsServedOrNot_ServedID_ShouldReturnTheIdOnlyForServedLinks")
     func servedID() {
         func reference(_ uri: String) -> ReceiptReference {
             ReceiptReference(id: "r", name: "n", uri: uri, mime: ReceiptRules.pdf)

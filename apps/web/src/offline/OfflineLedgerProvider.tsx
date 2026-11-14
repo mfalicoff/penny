@@ -9,7 +9,6 @@ import { registerPendingChanges } from "../auth/pendingChanges";
 import { useIsDemo } from "../demo/demo";
 import { openIndexedDb, type LedgerDatabase } from "./database";
 import { LedgerSyncEngine, type LedgerApi, type LedgerSyncState } from "./engine";
-import type { LegacyStorage } from "./legacy";
 import { parseLedger } from "./wire";
 
 const EngineContext = createContext<LedgerSyncEngine | null>(null);
@@ -39,23 +38,13 @@ export const ledgerApi: LedgerApi = {
   },
 };
 
-function browserLegacyStorage(): LegacyStorage | null {
-  try {
-    return window.localStorage;
-  } catch {
-    return null;
-  }
-}
-
 export interface OfflineDependencies {
   openDatabase: () => Promise<LedgerDatabase>;
-  legacyStorage: () => LegacyStorage | null;
   api: LedgerApi;
 }
 
 const browserDependencies: OfflineDependencies = {
   openDatabase: () => openIndexedDb(),
-  legacyStorage: browserLegacyStorage,
   api: ledgerApi,
 };
 
@@ -65,7 +54,6 @@ export function createAccountEngine(queryClient: QueryClient, email: string, dep
     email,
     api: dependencies.api,
     openDatabase: dependencies.openDatabase,
-    legacyStorage: dependencies.legacyStorage(),
     onSessionExpired: () => {
       // Only the account this engine belongs to can be expired by its 401, never a newer session.
       const session = queryClient.getQueryData<{ email: string } | null>(sessionKey);

@@ -10,8 +10,8 @@ public sealed class IdentityPasswordHasherTests
 {
     private const string Password = "a secure test password";
 
-    // A hash written by the legacy Node scrypt implementation (synthetic credentials).
-    private const string LegacyScryptHash =
+    // A hex digest: not an Identity hash, so it never verifies.
+    private const string HexDigest =
         "6d4347584d1b837f80c695dc3f951ee36ebae6ff975402cba940f8a1c9b2574b5ba24380bd1a1de4d757032e9d6ed1f00131af295fd99083028916b841e48058";
 
     [Fact]
@@ -29,7 +29,7 @@ public sealed class IdentityPasswordHasherTests
     [Theory]
     [InlineData(null)]
     [InlineData("")]
-    [InlineData(LegacyScryptHash)]
+    [InlineData(HexDigest)]
     [InlineData("not base64!")]
     [InlineData("AAAA")]
     public void whenStoredHashUnusable_Verify_ShouldFail(string? stored) =>

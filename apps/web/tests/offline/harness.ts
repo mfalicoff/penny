@@ -4,7 +4,6 @@ import { ApiError } from "../../src/api/client";
 import type { LedgerChannel } from "../../src/offline/coordination";
 import { MemoryLedgerDatabase, type LedgerDatabase } from "../../src/offline/database";
 import { LedgerSyncEngine, type LedgerApi } from "../../src/offline/engine";
-import type { LegacyStorage } from "../../src/offline/legacy";
 import { parseLedger, type ServerSnapshot } from "../../src/offline/wire";
 
 /** Synthetic data only: made-up names and amounts. */
@@ -123,27 +122,6 @@ export function channelHub() {
   };
 }
 
-export class MemoryStorage implements LegacyStorage {
-  readonly items = new Map<string, string>();
-  failWrites = false;
-  getItem(key: string) {
-    return this.items.get(key) ?? null;
-  }
-  setItem(key: string, value: string) {
-    if (this.failWrites) throw new DOMException("Full", "QuotaExceededError");
-    this.items.set(key, value);
-  }
-  removeItem(key: string) {
-    this.items.delete(key);
-  }
-  key(index: number) {
-    return [...this.items.keys()][index] ?? null;
-  }
-  get length() {
-    return this.items.size;
-  }
-}
-
 // Every engine a test opened is stopped afterwards, so no retry timer or channel outlives it.
 const openEngines = new Set<LedgerSyncEngine>();
 afterEach(() => {
@@ -162,7 +140,6 @@ export function openTab(options: {
   server: FakeServer;
   db?: LedgerDatabase | null;
   email?: string;
-  legacy?: LegacyStorage | null;
   hub?: ReturnType<typeof channelHub>;
   online?: boolean;
   today?: () => string;
@@ -177,7 +154,6 @@ export function openTab(options: {
     email: options.email ?? ALEX,
     api: options.server.api,
     openDatabase: () => (db ? Promise.resolve(db) : Promise.reject(new Error("IndexedDB is blocked"))),
-    legacyStorage: options.legacy ?? null,
     onSessionExpired: expired,
     onServerSnapshot: (snapshot, changed) => {
       snapshots.push({ revision: snapshot.revision, changed });

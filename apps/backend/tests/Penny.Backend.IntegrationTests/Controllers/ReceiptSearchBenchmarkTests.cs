@@ -15,7 +15,7 @@ using Xunit;
 
 namespace Penny.Backend.IntegrationTests.Controllers;
 
-// Performance evidence for the receipt text part of docs/migration/search.md (MAZ-125;
+// Performance evidence for the receipt text part of docs/reference/search.md (MAZ-125;
 // explicit: run with `--filter-class *ReceiptSearchBenchmarkTests --explicit on`).
 // Seeds one viewer with many long receipts (substring and typo cost) and a much larger
 // set of other users' receipt chunks closer to the query than the viewer's (meaning

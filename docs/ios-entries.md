@@ -30,7 +30,7 @@ Previews of every card this issue owns are in `PennyUI/Entries/EntrySpecimens.sw
 
 - A personal split stores only two numbers: the receipt `total` and your `share`. Every report, total and Activity row uses your share; the total is shown beside it ("−$6.40 of $12.80").
 - **Equally** is a head count including you (2–100), rounded half up to the cent. **Amount** is your share as money; **Percent** is 0–100 with two decimals. A share above the total is refused.
-- Editing a split entry opens it as **Amount** with your share, as the legacy form did: the ledger does not keep how the share was computed.
+- Editing a split entry opens it as **Amount** with your share: the ledger does not keep how the share was computed.
 - Income and investments are always the full amount. An investment is a contribution (money put in), not a portfolio value; it counts against Left to spend like spending and shows in indigo, unsigned.
 - A date after today is recorded now; the form says so. Income dated after today is expected (MAZ-136): it counts toward Projected, not Left to spend or Activity's Came in, until its date. Expenses and contributions dated after today count at once.
 
@@ -39,7 +39,7 @@ Previews of every card this issue owns are in `PennyUI/Entries/EntrySpecimens.sw
 - A refused draft (no name, zero amount, invalid split…) stays as typed and the banner says why, with an error haptic.
 - A failed save (storage full, ledger still loading) keeps the draft and offers Try again.
 - **Stale edit:** if the entry changed on another device after the form opened, the save is refused (`entryChangedOnAnotherDevice`); the banner offers **Review latest**, which reopens the form on the current version. If it was deleted elsewhere, the form says so and closes. A stale delete is refused the same way (`entryChangedBeforeDelete`). Nothing is overwritten.
-- Removed account, category or trip: refused with the legacy message naming the field to choose again.
+- Removed account, category or trip: refused with the shared message naming the field to choose again.
 - **Closing with changes** asks: Discard changes, Keep as draft, or Keep editing. Swipe-to-dismiss is disabled while there are changes. If something else replaces the sheet (a deep link, Settings, Edit categories), the draft is kept on the shell's shelf (`EntryDraftShelf`, one for a new entry and one per edited entry) and comes back with "Your unsaved entry is back" and Discard. Drafts are stored on this device per account (`<ledger file>.drafts`, written durably beside the ledger), so they survive quitting the app; they are removed with the account at sign-out and move with it on an email change. A draft whose save is still running stays on the shelf until that save succeeds, so if a deep link replaced the sheet and the save then fails, the draft comes back.
 - **Offline:** saving works the same; the entry is on this device and the row says "Waiting to sync" until the server has it.
 
@@ -56,12 +56,12 @@ Previews of every card this issue owns are in `PennyUI/Entries/EntrySpecimens.sw
 | --- | --- | --- |
 | No query | This device's ledger | The list |
 | Query, online, nothing pending, server has search v1 | `POST /api/v1/search/transactions` with the filters, `sort: date-desc`, 50 per page | "N results from your server, including similar words and meanings"; more pages load at the end of the list |
-| Query with pending changes, offline, a server without search (404), or the demo | This device: the shared normalization (accents, case, width, whitespace) and literal title/document matches only | "On this device", with the reason and what it leaves out (typo and meaning matches, shared expenses) |
+| Query with pending changes, offline, or the demo | This device: the shared normalization (accents, case, width, whitespace) and literal title/document matches only | "On this device", with the reason and what it leaves out (typo and meaning matches, shared expenses) |
 | Server search failed | This device | The error with Retry, above this device's results |
 
 - Server search is debounced (300 ms), cancels the previous request, and drops any answer for older filters, another account, or a ledger that changed since it started (a save or sync): it searches again instead (`LedgerSyncModel.reconcile`). Local rows are never mixed into server pages, and a result key appears once across pages.
 - The category filter is applied to server rows on the device (search v1 has no category field), so a page can hold fewer rows than its size.
-- A server 404 means no search v1: the session searches this device from then on.
+- A server 404 is an ordinary search failure: the screen shows this device's results with the error, and the next query asks the server again.
 
 ## Accessibility identifiers
 
@@ -71,7 +71,7 @@ Controls: `entryForm.{kind,amount,title,category.<id>,moreCategories,date,accoun
 
 ## Simulator scenarios (for MAZ-81/82)
 
-Each runs on a clean iPhone and iPad simulator against the [full-stack test environment](migration/test-environment.md) (real .NET and PostgreSQL), or in the demo (`PENNY_TEST_DEMO=1`) where noted.
+Each runs on a clean iPhone and iPad simulator against the [full-stack test environment](reference/test-environment.md) (real .NET and PostgreSQL), or in the demo (`PENNY_TEST_DEMO=1`) where noted.
 
 1. **All kinds and splits:** add an expense split equally three ways, by amount and by percent; an income repeating monthly; an investment. Check the rows, the day nets and the period totals (your shares).
 2. **Inline creation:** from the account picker add an account; from the category picker add a category; the draft's amount, name and note survive and the entry saves with both.
@@ -80,7 +80,7 @@ Each runs on a clean iPhone and iPad simulator against the [full-stack test envi
 5. **Draft recovery:** type an entry, open Edit categories (or a `penny://` link); reopen Add entry and see "Your unsaved entry is back".
 6. **Offline save:** go offline, add and edit entries ("Waiting to sync"), search finds them "On this device"; reconnect and see them on the server.
 7. **Conflicts:** open an entry for editing, change it from the web, save on iOS: "Changed on another device" → Review latest. Delete it from the web, then delete on iOS: refused.
-8. **Search:** online typo and meaning queries; filters by kind, month, year and day; paging past 50 results; rename and delete an entry, then search again; reconnect after offline; switch account and server (no results from the previous one); a server without search v1 (404) falls back with the explanation; a signed-out (401) search asks to sign in.
+8. **Search:** online typo and meaning queries; filters by kind, month, year and day; paging past 50 results; rename and delete an entry, then search again; reconnect after offline; switch account and server (no results from the previous one); a signed-out (401) search asks to sign in.
 
 ## Not done yet
 

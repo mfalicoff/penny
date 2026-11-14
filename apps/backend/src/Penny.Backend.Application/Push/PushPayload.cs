@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 namespace Penny.Backend.Application.Push;
 
 // The household deep-link payload stored in `push_outbox.payload` and delivered to
-// clients unchanged (legacy zod `payload`): the client navigates only to the
+// clients unchanged: the client navigates only to the
 // allowlisted `/households/{householdId}?month=…&expenseId=…` route.
 public sealed partial record PushPayload(
     string HouseholdId,
@@ -14,7 +14,7 @@ public sealed partial record PushPayload(
 )
 {
     // Null when the stored JSON is not a valid payload (the delivery then fails
-    // permanently, as in the legacy sender).
+    // permanently).
     public static PushPayload? Parse(string json)
     {
         try
@@ -53,7 +53,7 @@ public sealed partial record PushPayload(
         }
     }
 
-    // The custom keys every transport sends, in the legacy order.
+    // The custom keys every transport sends, in contract order.
     public IReadOnlyDictionary<string, string> ToDictionary()
     {
         var values = new Dictionary<string, string>(StringComparer.Ordinal)

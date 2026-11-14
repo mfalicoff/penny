@@ -3,46 +3,8 @@ import PennyContracts
 import PennyDomain
 import Testing
 
-@Suite("Ledger validation and upgrades")
+@Suite("Ledger validation")
 struct LedgerValidationTests {
-    @Test("whenGoldenUpgradeCase_UpgradedCategories_ShouldMatchLedgerUpgradesFixture")
-    func goldenUpgrades() throws {
-        let cases = try Fixtures.decode([LedgerUpgradeCase].self, from: "ledger-upgrades.json")
-        #expect(cases.count == 4)
-        for item in cases {
-            let input = try ContractLedger.ledger(item.input)
-            let expected = try ContractLedger.ledger(item.expected)
-            let categories = try #require(
-                PennyDomain.Ledger.upgradedCategories(input.categories, fromVersion: item.input.version))
-            var upgraded = input
-            upgraded.categories = categories
-            #expect(upgraded == expected, "\(item.name)")
-            #expect(expected.violations.isEmpty, "\(item.name)")
-        }
-    }
-
-    @Test("whenVersion1Upgrade_UpgradedCategories_ShouldSuffixOnCollisionAndRespectLimits")
-    func upgradeEdges() throws {
-        let food = LedgerCategory(id: "food", name: "Food", icon: "i", color: "#E47850", kind: .expense)
-        let taken = [
-            food, LedgerCategory(id: "investments", name: "Inv", icon: "i", color: "#E47850", kind: .expense),
-            LedgerCategory(id: "investments-1", name: "Inv1", icon: "i", color: "#E47850", kind: .expense),
-        ]
-        #expect(PennyDomain.Ledger.upgradedCategories(taken, fromVersion: 1)?.last?.id == "investments-2")
-        let hasInvestment = [
-            food, LedgerCategory(id: "etf", name: "ETF", icon: "i", color: "#E47850", kind: .investment),
-        ]
-        #expect(PennyDomain.Ledger.upgradedCategories(hasInvestment, fromVersion: 1) == hasInvestment)
-        let full = (0..<300).map {
-            LedgerCategory(id: "c\($0)", name: "C", icon: "i", color: "#E47850", kind: .expense)
-        }
-        #expect(PennyDomain.Ledger.upgradedCategories(full, fromVersion: 1) == full)
-        #expect(PennyDomain.Ledger.upgradedCategories([food], fromVersion: 2) == [food])
-        for version in [0, 5, -1] {
-            #expect(PennyDomain.Ledger.upgradedCategories([food], fromVersion: version) == nil)
-        }
-    }
-
     @Test("whenSeedAndSearchLedgers_Violations_ShouldBeEmpty")
     func fixtureLedgersAreValid() throws {
         #expect(try ContractLedger.alexSeed().ledger.violations.isEmpty)
@@ -61,7 +23,7 @@ struct LedgerValidationTests {
         #expect(
             violations { $0.transactions.append(Sample.entry("e", "2026-01-02")) } == [.duplicateID("transactions")])
         #expect(violations { $0.transactions[0].id = "" } == [.invalidID("transactions")])
-        // The id limit is 1...100 UTF-16 code units of the id itself (zod `max(100)`).
+        // The id limit is 1...100 UTF-16 code units of the id itself (`LedgerLimits.IdLength`).
         #expect(violations { $0.transactions[0].id = String(repeating: "x", count: 100) }.isEmpty)
         #expect(
             violations { $0.transactions[0].id = String(repeating: "x", count: 101) } == [.invalidID("transactions")])

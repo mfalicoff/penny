@@ -2,7 +2,7 @@ import Foundation
 import XCTest
 
 /// The full-stack test environment the UI tests run against (MAZ-62,
-/// docs/migration/test-environment.md): the real .NET API on PostgreSQL, with its test
+/// docs/reference/test-environment.md): the real .NET API on PostgreSQL, with its test
 /// controls. Nothing here mocks the business API: tests arrange data through the same HTTP
 /// API the app uses, and move the server clock or inject faults through `/api/test/*`.
 struct StackConfiguration: Sendable {
@@ -13,7 +13,7 @@ struct StackConfiguration: Sendable {
 
     /// From the runner's environment (`scripts/ios.sh ui-test` passes `TEST_RUNNER_PENNY_*`,
     /// which xcodebuild hands to this process without the prefix), else from the environment
-    /// `npm run test-env -- up` left running in this checkout (for Xcode ⌘U).
+    /// `node scripts/test-env/penny-env.mjs up` left running in this checkout (for Xcode ⌘U).
     static func load(environment: [String: String] = ProcessInfo.processInfo.environment) -> StackConfiguration? {
         if let api = environment["PENNY_API_URL"].flatMap(URL.init(string:)),
             let token = environment["PENNY_TEST_TOKEN"],

@@ -1,6 +1,6 @@
 # Native personal and shared trips (MAZ-76)
 
-[Native app](../apps/ios/README.md) · [Native households](ios-households.md) · [Households on the server](migration/households.md) · [Shared expenses](migration/shared-expenses.md) · [Settlement](migration/settlement.md) · [Browser trips](../apps/web/README.md#trips-maz-93)
+[Native app](../apps/ios/README.md) · [Native households](ios-households.md) · [Households on the server](reference/households.md) · [Shared expenses](reference/shared-expenses.md) · [Settlement](reference/settlement.md) · [Browser trips](../apps/web/README.md#trips-maz-93)
 
 This page describes the Trips tab of the SwiftUI app: personal trips, shared trips, sharing a personal trip, joining a trip, what each total counts, how travel dates behave and how a shared trip settles. It covers the code, the accessibility identifiers and the acceptance scenarios.
 
@@ -31,7 +31,7 @@ No endpoint was added: the app uses the routes MAZ-56–59 already serve (`contr
 - **Trips tab** (`trips`, card `iphone-trips`): the trip happening now (or the next one) with when it is, your spending or its people, and **Trip expense**; then Now, Upcoming and Past. Personal rows show "Personal", the expense count and your spending; shared rows show "Shared" and the number of people. **New trip** and **Join a trip** are at the bottom. Pull to refresh syncs the ledger and reads the shared trips again; when they can't be read, the last list stays with "Shared trips may be out of date".
 - **Personal trip** (`personal-trip`, card `iphone-trip-detail`): the phase ("In 3 days", "Now", "Past"; always words), "Personal", the dates, **Your spending**, the expense count and how many are outside the dates, the receipt total when a split makes it differ, every assigned expense (each opens the entry), and spending by category. **Trip expense** opens Add entry on the trip; **Share trip** and **Edit trip** (toolbar).
 - **Shared trip** (`shared-trip`, `trip-people`, `trip-balances`; cards `iphone-trip-detail`, `ipad-trip`): the household page in trip words. Above the month balance: the phase, "Shared", the dates, people and currency, **Trip total** and **Your spending**. **Expenses** is the whole trip whatever the month ("Shared with everyone", each opening its detail), then **Only you**; **Balances** is the month's (previous and next month); **People** has Invite, **Edit trip** (the organizer), Leave trip and Archive trip. History is in the toolbar. **Trip expense** opens the shared expense form, as **Expense** does on a household (the context-specific add action).
-- **Where shared trips are listed.** In the Trips tab and in the Shared tab's Trips section; both open the trip page (`penny://trips/<household id>`). `penny://households/<id>` of a shared trip opens the same page under Shared. A personal trip id is looked up first, then a household id, as in the Expo app and the browser.
+- **Where shared trips are listed.** In the Trips tab and in the Shared tab's Trips section; both open the trip page (`penny://trips/<household id>`). `penny://households/<id>` of a shared trip opens the same page under Shared. A personal trip id is looked up first, then a household id, as in the browser.
 
 ## Names, dates and travel-date behavior
 
@@ -87,7 +87,7 @@ As for households, `docs/design/penny-redesign/screen-inventory.json` and the Pe
 
 ## Acceptance scenarios
 
-Run on clean iPhone and iPad simulators against the [full-stack environment](migration/test-environment.md); the automated ones are `TripJourneyTests` in the Full plan (`PENNY_UI_ONLY=PennyUITests/TripJourneyTests apps/ios/scripts/ios.sh ui-test full`). Both journeys pass on the iPhone and iPad simulators; the system "Save Password?" sheet that can appear after a password sign-in is dismissed by the tests.
+Run on clean iPhone and iPad simulators against the [full-stack environment](reference/test-environment.md); the automated ones are `TripJourneyTests` in the Full plan (`PENNY_UI_ONLY=PennyUITests/TripJourneyTests apps/ios/scripts/ios.sh ui-test full`). Both journeys pass on the iPhone and iPad simulators; the system "Save Password?" sheet that can appear after a password sign-in is dismissed by the tests.
 
 1. **Conversion and two users (automated):** a personal trip with an expense dated before it; Share trip; the server's shared trip has no expenses and the ledger links the trip; the expense shows under Only you; a shared expense before anyone joins (only you in it); the second person joins through the API; a second shared expense splits between both while the first keeps its participants; Trip total $170.00 and Your spending $134.00 count each expense once; Balances shows the other person.
 2. **CRUD and deletion (automated):** New trip; Trip expense opens Add entry on the trip and the entry is assigned on the server; Delete trip is disabled with the reason while it has the entry; once the entry is moved to No trip from another device, the trip is deleted.

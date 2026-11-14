@@ -2,7 +2,7 @@
 # Penny web front end (MAZ-63, MAZ-97): the v2 browser app (apps/web: React, Vite,
 # TanStack) served by unprivileged nginx, which also forwards /api/ to the .NET API so
 # the browser sees one origin. The Expo web export is no longer part of this image.
-# Build context: the repository root (apps/web imports ../../design-kit and ../../src/domain).
+# Build context: the repository root (apps/web imports ../../design-kit).
 #   docker buildx build --platform linux/amd64,linux/arm64 -f deploy/web/Dockerfile -t penny-web .
 
 ARG NODE_IMAGE=docker.io/library/node:24.21.0-bookworm-slim@sha256:d6aa754f16b3197301076f047b5def2f02ea1dbbc2ca920407d46d7ec7f87b20
@@ -14,7 +14,6 @@ WORKDIR /src/apps/web
 COPY apps/web/package.json apps/web/package-lock.json ./
 RUN npm ci --no-audit --no-fund
 COPY design-kit/ /src/design-kit/
-COPY src/domain/ /src/src/domain/
 COPY apps/web/ ./
 # No server URL, secret or connection string is compiled into the bundle: the browser
 # calls /api/ on the origin that served the page. `build` also runs scripts/verify-dist.ts.

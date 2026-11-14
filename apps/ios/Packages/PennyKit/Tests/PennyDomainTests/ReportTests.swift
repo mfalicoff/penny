@@ -8,7 +8,7 @@ struct ReportTests {
     static let october = MonthKey(year: 2026, month: 10)
 
     /// alex's shares of the seeded Maison expenses. Equal splits use the members active on the
-    /// expense date (cam left on 2026-10-02), as in tests/core/golden-fixtures.test.ts. The seed
+    /// expense date (cam left on 2026-10-02), as in apps/web/tests/domain/golden-fixtures.test.ts. The seed
     /// only has equal splits that divide exactly, so no remainder rule is needed here (shared
     /// remainder allocation is server-owned and MAZ-75's to port).
     static func alexShared(_ scenario: SeedFixture.Scenario) throws -> [SharedExpenseShare] {
@@ -80,10 +80,10 @@ struct ReportTests {
         }
     }
 
-    /// A shared Streaming occurrence as both servers send it: a preview has the id
+    /// A shared Streaming occurrence as the server sends it: a preview has the id
     /// `{rule}:{date}`, `scheduled: true` and `recurringId`; a recorded occurrence has the
-    /// expense's random id and, since MAZ-139, the rule as `recurringId`. `recurringId: nil`
-    /// is a recorded row from an older server.
+    /// expense's random id and the rule as `recurringId` (MAZ-139). `recurringId: nil` is a
+    /// recorded row with no rule.
     static func streaming(
         _ date: String = "2026-10-20", scheduled: Bool = true, recurringId: String? = "streaming"
     ) -> SharedExpenseShare {
@@ -277,13 +277,13 @@ struct ReportTests {
         // Shared categories are matched by look and appear once.
         #expect(after.categories.filter { $0.name == "Utilities" }.count == 1)
         #expect(after.month(month).spending.map(\.amount) == [4000, 800])
-        // A recorded row from an older server has no `recurringId`: it cannot be matched to the
+        // A recorded row without a `recurringId` cannot be matched to the
         // cached preview, so both count until the preview response is refreshed.
-        let legacy = LedgerReport(
+        let unlinked = LedgerReport(
             ledger: ledger, shared: [Self.streaming(scheduled: false, recurringId: nil)],
             sharedScheduled: [Self.streaming()])
-        #expect(legacy.month(month).recorded.expense == 800)
-        #expect(legacy.month(month).projected.expense == 1600)
+        #expect(unlinked.month(month).recorded.expense == 800)
+        #expect(unlinked.month(month).projected.expense == 1600)
         // Another household's preview of a rule with the same id and date is a different occurrence.
         var other = Self.streaming()
         other.householdId = "cabin"
@@ -292,8 +292,8 @@ struct ReportTests {
         #expect(twoHomes.month(month).projected.expense == 1600)
     }
 
-    /// Legacy `HouseholdProvider` kept the projection in a `Map` and called `unique.set` for
-    /// every row: the last copy's values win, at the position the id was first seen.
+    /// A row repeated across responses: the last copy's values win, at the position the id was
+    /// first seen.
     @Test("whenASharedRowRepeatsWithNewValues_LedgerReport_ShouldKeepTheLastCopyAtTheFirstPosition")
     func sharedProjectionLastWins() throws {
         let month = try #require(Self.october)
@@ -376,9 +376,9 @@ struct ReportTests {
         #expect(LedgerReport(ledger: paused).month(month).projected == before.recorded)
     }
 
-    /// v2 `summarizeMonth` (src/domain/summary.ts, tests/core/domain-rules.test.ts) and
+    /// v2 `summarizeMonth` (apps/web/src/domain/summary.ts, apps/web/tests/domain/domain-rules.test.ts) and
     /// redesign-states.json: projected adds every scheduled occurrence of the month, income,
-    /// expenses and investment contributions alike. The legacy app added scheduled income only.
+    /// expenses and investment contributions alike.
     @Test("whenExpensesAndInvestmentsAreScheduled_MonthSummary_ShouldProjectEveryScheduledOccurrence")
     func projectionCountsEveryScheduledOccurrence() throws {
         let october = try #require(Self.october)
@@ -414,7 +414,7 @@ struct ReportTests {
         #expect(recorded.recordedRemaining == summary.projectedRemaining)
     }
 
-    /// v2 `byDateDescThenId` (src/domain/search.ts): Home, Activity, search and trips share one
+    /// v2 `byDateDescThenId` (apps/web/src/domain/search.ts): Home, Activity, search and trips share one
     /// order. Trips used to break date ties by id descending.
     @Test("whenDatesTie_HomeActivitySearchAndTrips_ShouldOrderByDateDescendingThenId")
     func oneOrdering() throws {

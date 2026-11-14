@@ -57,7 +57,7 @@ public sealed class SharedExpensePaymentTests(ApiFixture fixture) : SharedExpens
     }
 
     [Fact]
-    public async Task whenPaymentIsNotAllowed_PayExpense_ShouldRejectInLegacyOrder()
+    public async Task whenPaymentIsNotAllowed_PayExpense_ShouldRejectInContractOrder()
     {
         var (alex, alexId, bea, beaId, _, camId, home) = await HomeAsync();
         var (outsider, outsiderId) = await AccountAsync("outsider@example.test");

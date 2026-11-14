@@ -67,9 +67,6 @@ jobs:
         if: steps.selected.outputs.run == 'true'
         with:
           node-version: '24'
-          cache: npm
-      - if: steps.selected.outputs.run == 'true'
-        run: npm ci
       - if: steps.selected.outputs.run == 'true'
         uses: cachix/install-nix-action@v31
       - name: PostgreSQL 18 with pgvector from the flake

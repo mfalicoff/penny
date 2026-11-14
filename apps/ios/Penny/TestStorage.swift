@@ -32,8 +32,7 @@
     }
 
     /// The stored state an earlier install left behind, written by a UI test as a property list
-    /// and applied before launch (`PENNY_TEST_CONTAINER_SEED`). It is the plug-in point for
-    /// upgrade rehearsals: MAZ-72 seeds the legacy Expo layout here and checks the migration.
+    /// and applied before launch (`PENNY_TEST_CONTAINER_SEED`), for upgrade rehearsals.
     ///
     /// Keys (all optional):
     /// - `standardDefaults`, `appGroupDefaults`: dictionaries written into UserDefaults.

@@ -6,8 +6,8 @@ import { clearFaults, LedgerClient, pinClock, realStack, setFaults, signIn, skip
 // MAZ-96 failure and recovery journeys against the real .NET API and PostgreSQL: injected 503s and
 // dropped connections (the environment's fault controls, applied before routing), a server that is
 // unreachable through a reload, a session that expires by server time with a change waiting, a
-// failed receipt upload, a paused database, and a legacy browser cache upgraded onto a server copy
-// that moved on. Every journey ends with the server holding each change exactly once.
+// failed receipt upload and a paused database. Every journey ends with the server holding each
+// change exactly once.
 //
 //   npm run build && npm run test:e2e:real -- recovery.real
 test.skip(!realStack, skipReason);
@@ -212,35 +212,5 @@ test("a paused database turns writes into waiting changes, and they sync once it
     )
     .toEqual(["Written while the database was down"]);
   await expect(page.getByText(/change(s)? waiting/)).toHaveCount(0);
-  await context.close();
-});
-
-test("a legacy browser copy with an unsynced entry upgrades onto a server copy that moved on, without duplicates", async ({ browser, baseURL }) => {
-  const user = await testUser("upgrade");
-  const native = await LedgerClient.signIn(user);
-  const base = await native.read();
-  const category = base.ledger.categories.find((item) => item.kind === "expense");
-  if (!category) throw new Error("no expense category");
-  const entry = (id: string, title: string, date: string) => ({ id, title, kind: "expense", total: 1500, share: 1500, categoryId: category.id, date, note: "" });
-  const local = { ...base.ledger, transactions: [...base.ledger.transactions, entry("legacy-bakery", "Legacy bakery", "2026-10-03")] };
-
-  // After the old web app last synced, another device wrote to the server.
-  const moved = await native.write(base.revision, { ...base.ledger, transactions: [...base.ledger.transactions, entry("other-device", "From the phone", "2026-10-04")] });
-  expect(moved.status).toBe(200);
-
-  const { page, context } = await signIn(browser, baseURL, user, AT);
-  await page.goto("/licenses/Inter-OFL.txt");
-  await page.evaluate(([key, value]) => {
-    localStorage.setItem(key, value);
-  }, [`penny:ledger:${user.email}`, JSON.stringify({ base: base.ledger, local })] as const);
-  await page.goto("/transactions?month=2026-10");
-  await expect.poll(async () => (await native.read()).ledger.transactions.map((item) => item.title).sort(), { timeout: 20_000 }).toEqual(["From the phone", "Legacy bakery"]);
-  await expect(page.getByText(/change(s)? waiting/)).toHaveCount(0);
-  await expect(results(page).locator(".results__title")).toHaveText(["From the phone", "Legacy bakery"]);
-  // The legacy copy is removed once the server has it, so a reload imports nothing twice.
-  expect(await page.evaluate((key) => localStorage.getItem(key), `penny:ledger:${user.email}`)).toBeNull();
-  await page.reload();
-  await expect(results(page).locator(".results__title")).toHaveText(["From the phone", "Legacy bakery"]);
-  expect((await native.read()).ledger.transactions).toHaveLength(2);
   await context.close();
 });

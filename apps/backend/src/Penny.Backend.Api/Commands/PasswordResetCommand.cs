@@ -21,7 +21,7 @@ internal static class PasswordResetCommand
         if (args is not [Name, var email])
         {
             Console.Error.WriteLine(
-                "Usage: reset-password EMAIL. See docs/migration/authentication.md#password-reset."
+                "Usage: reset-password EMAIL. See docs/reference/authentication.md#password-reset."
             );
             return 1;
         }

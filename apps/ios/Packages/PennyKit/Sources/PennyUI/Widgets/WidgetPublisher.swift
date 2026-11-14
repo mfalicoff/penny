@@ -68,9 +68,7 @@ public final class WidgetPublisher {
             if store.clear() { reload() }
         case .account(let id):
             written = store.snapshot(for: id)
-            // The Expo layouts are never shown by these widgets; drop them on the first launch.
-            let legacy = store.removeLegacyData()
-            if store.clear(unlessOwnedBy: id) || legacy { reload() }
+            if store.clear(unlessOwnedBy: id) { reload() }
             let pending = waiting
             waiting = nil
             if let pending, pending.owner == id { publish(pending.snapshot, owner: id) }

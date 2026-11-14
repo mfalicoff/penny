@@ -9,10 +9,11 @@ import type { SharedRow } from "../../api/projection";
 /**
  * Home and Insights reporting (MAZ-92). Every number comes from the shared domain
  * (`src/domain/summary.ts` `monthBreakdown`, `selectors/overview.ts`, `selectors/moneyFlow.ts`),
- * the same rules the legacy Overview and the iOS app use. This module only:
+ * the same rules the iOS app uses. This module only:
  *
  * - joins the person's shared-expense shares into a read-only view of their ledger, the way the
- *   legacy `ledgerWithHouseholds` does, so the domain can deduplicate shared previews (MAZ-139);
+ *   domain's `ledgerWithHouseholds` (`src/domain/householdProjection.ts`) does, so the domain can
+ *   deduplicate shared previews (MAZ-139);
  * - groups and labels the results for the screens (small categories, calendar days, comparisons).
  *
  * Nothing here is stored or sent: the view never reaches the offline store or `PUT /api/ledger`.
@@ -134,10 +135,10 @@ const byDateDescThenId = (a: Transaction, b: Transaction) => b.date.localeCompar
 
 /**
  * The month's report from the ledger view. Every total is independent of the list's filters.
- * `today` (the local date) makes income dated after it expected (MAZ-136); Home always passes it.
+ * `today` (the local date) makes income dated after it expected (MAZ-136).
  */
-export function monthReport(view: Ledger, month: string, today?: string): MonthReport {
-  const overview = selectOverview(view, { month, day: null, filter: "all", categoryId: null, search: "", ...(today === undefined ? {} : { today }) });
+export function monthReport(view: Ledger, month: string, today: string): MonthReport {
+  const overview = selectOverview(view, { month, day: null, filter: "all", categoryId: null, search: "", today });
   const recordedEntries = [...overview.monthEntries].sort(byDateDescThenId);
   const shared = recordedEntries.filter(isSharedEntry);
   return {
@@ -152,7 +153,7 @@ export function monthReport(view: Ledger, month: string, today?: string): MonthR
     sharedSpent: shared.reduce((sum, entry) => sum + entry.share, 0),
     sharedCount: shared.length,
     // Recorded entries only (personal and shared, at your share), like Left to spend and the native
-    // iOS flow, so Left over always matches it. Not the legacy `moneyFlowEntries` (MAZ-136).
+    // iOS flow, so Left over always matches it (MAZ-136).
     flow: buildMoneyFlow(overview.monthEntries, view.categories),
     spending: overview.spending,
     calendarEntries: overview.calendarEntries,
@@ -172,7 +173,8 @@ export interface ListFilters {
 /** The list under the calendar: the domain's filter (day, kind, category, the shared substring search), newest first. */
 export function monthEntries(view: Ledger, month: string, filters: ListFilters): OverviewEntry[] {
   const day = filters.day?.startsWith(`${month}-`) ? filters.day : null;
-  return selectOverview(view, { month, day, filter: filters.kind ?? "all", categoryId: filters.category ?? null, search: filters.q ?? "" }).visibleEntries;
+  // The list holds recorded, expected and scheduled entries alike, so any `today` gives the same rows.
+  return selectOverview(view, { month, day, filter: filters.kind ?? "all", categoryId: filters.category ?? null, search: filters.q ?? "", today: `${month}-31` }).visibleEntries;
 }
 
 /* ---------- small-category grouping ---------- */
@@ -219,7 +221,7 @@ export interface CalendarDay {
  * scans). Scheduled occurrences and income dated after `today` (MAZ-136) count as `scheduled`
  * ("expected or scheduled"): an amber ring, never a recorded dot.
  */
-export function calendarDays(month: string, entries: readonly OverviewEntry[], today?: string): { offset: number; days: CalendarDay[] } {
+export function calendarDays(month: string, entries: readonly OverviewEntry[], today: string): { offset: number; days: CalendarDay[] } {
   const { daysInMonth, offset } = calendarMonth(month);
   const days: CalendarDay[] = Array.from({ length: daysInMonth }, (_, index) => ({
     date: `${month}-${String(index + 1).padStart(2, "0")}`,

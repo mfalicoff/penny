@@ -1,7 +1,7 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 
 // The MAZ-91 two-person journeys against the real .NET API and PostgreSQL from the full-stack
-// test environment (docs/migration/test-environment.md). Skipped unless PENNY_REAL_STACK=1. It
+// test environment (docs/reference/test-environment.md). Skipped unless PENNY_REAL_STACK=1. It
 // pins the server clock through the environment's test controls (PENNY_API_URL and
 // PENNY_TEST_TOKEN, exported by `test-env run`), so it never runs against a real server. CI runs
 // it on Chromium, Firefox and WebKit (MAZ-95). In apps/web:
@@ -19,7 +19,7 @@ const OCT_31 = "2026-10-31T15:00:00Z";
 async function pinClock(iso: string | null) {
   const api = process.env.PENNY_API_URL;
   const token = process.env.PENNY_TEST_TOKEN;
-  if (!api || !token) throw new Error("PENNY_API_URL and PENNY_TEST_TOKEN come from `npm run test-env -- run`.");
+  if (!api || !token) throw new Error("PENNY_API_URL and PENNY_TEST_TOKEN come from `node scripts/test-env/penny-env.mjs run`.");
   const response = await fetch(`${api}/api/test/clock`, {
     method: iso ? "PUT" : "DELETE",
     headers: { "X-Penny-Test-Token": token, "Content-Type": "application/json" },

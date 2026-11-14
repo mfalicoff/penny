@@ -1,10 +1,10 @@
 # Visual acceptance against the redesign cards (MAZ-122)
 
-[Redesign cards](penny-ios/README.md) · [Redesign baseline and deviations](../migration/redesign.md) · [Native UI tests](../ios-ui-tests.md) · [Web app](../../apps/web/README.md) · [Test environment](../migration/test-environment.md#redesign-specimens)
+[Redesign cards](penny-ios/README.md) · [Redesign baseline and deviations](../reference/redesign.md) · [Native UI tests](../ios-ui-tests.md) · [Web app](../../apps/web/README.md) · [Test environment](../reference/test-environment.md#redesign-specimens)
 
 The 61 cards in `docs/design/penny-ios` are v2's visual baseline. This page explains how the iOS and web apps are compared with them: the reference images, the captures, what must match and what may differ, where verdicts are recorded, and how to re-sync after a design change.
 
-A visual comparison checks that a screen looks and reads as designed. It does not prove the screen works. Functional parity ([feature parity](../migration/feature-parity.md)), the MAZ-82/96 journeys and real-device checks are still required separately, and a matching capture never replaces them.
+A visual comparison checks that a screen looks and reads as designed. It does not prove the screen works. Functional checks (the MAZ-82/96 journeys and real-device checks) are still required separately, and a matching capture never replaces them.
 
 ## Files
 
@@ -40,11 +40,11 @@ Each card is rendered at its `@dsCard` viewport at 2x, full page, in every appea
 
 `--check` compares each fresh render with its committed image at a quarter of the resolution. That absorbs the glyph antialiasing difference between macOS and Linux (up to 3% of pixels at full resolution), while a moved, recolored or resized element still shows. A check fails when an image is missing, its size changed, or more than 0.5% of its downsampled pixels differ by more than 24 of 255 in any channel (`PENNY_BASELINE_TOLERANCE` changes the share). Renders that fail are written to `test-results/design-baselines/`. The web workflow runs the check on every pull request.
 
-A pixel check can't catch a one-word copy change. `tests/core/contracts.test.ts` covers that: it fails when a card or a shared asset changed since its baselines were rendered (the manifest's hashes), when an image doesn't match the manifest, or when `previews/` holds anything else.
+A pixel check can't catch a one-word copy change. `apps/web/tests/domain/contracts.test.ts` covers that: it fails when a card or a shared asset changed since its baselines were rendered (the manifest's hashes), when an image doesn't match the manifest, or when `previews/` holds anything else.
 
 ## Captures
 
-Each card has a state in `redesign-states.json`: a `full-stack-seeds.json` scenario and alias (or a client-only state), the view to open at the scenario clock (2026-10-15), the appearances, and any injected fault or stale write. The capture runs seed that state in a fresh [test environment](../migration/test-environment.md) and open the view through the app's real UI.
+Each card has a state in `redesign-states.json`: a `full-stack-seeds.json` scenario and alias (or a client-only state), the view to open at the scenario clock (2026-10-15), the appearances, and any injected fault or stale write. The capture runs seed that state in a fresh [test environment](../reference/test-environment.md) and open the view through the app's real UI.
 
 | Platform | Command | Devices and viewports | Output |
 | --- | --- | --- | --- |
@@ -74,7 +74,7 @@ Compare each capture with its baseline in the same appearance. Judge by what the
 | **Copy:** labels, empty and error text, and confirmation wording, with the same meaning and tone. Wording may change only through an approved deviation. | **Platform chrome:** the status bar, home indicator, keyboard, system sheets and pickers, the browser window, and the device frame. |
 | **States:** the card's state is visible, for example the offline banner with pending rows, a kept draft, or the stale-payment comparison. | **Geometry:** spacing and sizes that follow safe areas, Dynamic Type or a resizable window, as long as layout and hierarchy hold. |
 
-A difference in a "must match" column is either an **approved deviation**, recorded in [redesign.md](../migration/redesign.md#approved-deviations-maz-122) with its reason, or a **defect**, filed against the card's feature issue.
+A difference in a "must match" column is either an **approved deviation**, recorded in [redesign.md](../reference/redesign.md#approved-deviations-maz-122) with its reason, or a **defect**, filed against the card's feature issue.
 
 ## Recording verdicts
 
@@ -88,7 +88,7 @@ A difference in a "must match" column is either an **approved deviation**, recor
 | `blocked` | The state can't be seeded yet (`blockedBy` in the states file) | `note` |
 | `not-applicable` | The platform has no such screen | `note` |
 
-Each deviation has a `summary`, a `kind` and a `ref`. An `approved` deviation's `ref` is its anchor in `docs/migration/redesign.md`. A `follow-up` deviation (a defect, or a design change still to make) names its `MAZ-` issue. `tests/core/contracts.test.ts` enforces these rules, the owners, the views and the full set of cards. No card may be left unreviewed.
+Each deviation has a `summary`, a `kind` and a `ref`. An `approved` deviation's `ref` is its anchor in `docs/reference/redesign.md`. A `follow-up` deviation (a defect, or a design change still to make) names its `MAZ-` issue. `apps/web/tests/domain/contracts.test.ts` enforces these rules, the owners, the views and the full set of cards. No card may be left unreviewed.
 
 To review: run both capture suites, build the sheets, walk through every card, update its entry, and set `reviewedAt`. Commit the record with the change it reviews. Captures aren't committed, because they depend on the simulator, browser and OS. Attach representative sheets to the pull request or the issue.
 
@@ -148,4 +148,4 @@ A change to a card, a shared asset in `docs/design/penny-ios/assets/`, or a `des
 3. **Contract.** Update the card's `sha256` and the `sources` hashes in `contracts/design-baseline.json`. Add or update its state in `redesign-states.json` if the data it shows changed.
 4. **Claude Design.** Re-sync the kit and cards to the [Penny Claude Design project](https://claude.ai/design/p/173b576e-aa32-44dc-9f83-23f0ea8df538) as `.design-sync/NOTES.md` describes, and record any new render warnings there.
 5. **Verdicts.** Set the changed cards' entries in `contracts/visual-comparisons.json` back to what the implementations show now. A design change usually turns `matches` into `deviates` (with a follow-up) until the apps catch up.
-6. **Check.** Run `npm run test:core` (contract and baseline hashes) and `render.mjs 2 --check`.
+6. **Check.** Run `npm test` in `apps/web` (contract and baseline hashes, `tests/domain/contracts.test.ts`) and `render.mjs 2 --check`.

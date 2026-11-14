@@ -22,7 +22,7 @@ namespace Penny.Backend.IntegrationTests.Migrations;
 // the EF down migrations to the target. Down migrations only remove what later
 // migrations added (tables and columns), so what remains is exactly the data an
 // older release could hold. They are a fixture device here: production recovery is
-// forward-only (docs/migration/postgresql.md).
+// forward-only (docs/reference/postgresql.md).
 public sealed class PopulatedUpgradeTests(ApiFixture fixture) : SharedRecurrenceTestBase(fixture)
 {
     public static TheoryData<string> EarlierMigrations()
@@ -37,14 +37,16 @@ public sealed class PopulatedUpgradeTests(ApiFixture fixture) : SharedRecurrence
         return data;
     }
 
-    [Theory]
+    // The squashed history has one migration, so there is nothing earlier to upgrade
+    // from yet; each migration added after it gets a case here automatically.
+    [Theory(SkipTestWithoutData = true)]
     [MemberData(nameof(EarlierMigrations))]
     public async Task whenPopulatedDatabaseAtEarlierMigration_Migrate_ShouldKeepEveryRecordUsable(
         string target
     )
     {
         // Product data written through HTTP: accounts and sessions, a personal ledger
-        // entry, a household with a shared expense and rule, a receipt and an Expo device.
+        // entry, a household with a shared expense and rule, a receipt and an APNs device.
         At(Noon);
         var alex = await AccountAsync("alex.upgrade@example.test");
         var sam = await AccountAsync("sam.upgrade@example.test");
@@ -74,7 +76,13 @@ public sealed class PopulatedUpgradeTests(ApiFixture fixture) : SharedRecurrence
             "/api/push/devices",
             sam.Token,
             HttpStatusCode.Created,
-            new { token = "ExponentPushToken[upgrade]", platform = "ios" }
+            new
+            {
+                token = Convert.ToHexStringLower(new byte[32]),
+                platform = "ios",
+                provider = "apns",
+                environment = "production",
+            }
         );
 
         // Back to the earlier schema, then the release upgrade path.
@@ -134,7 +142,7 @@ public sealed class PopulatedUpgradeTests(ApiFixture fixture) : SharedRecurrence
             )
         )
             download.StatusCode.ShouldBe(HttpStatusCode.OK);
-        (await ScalarAsync("SELECT provider FROM penny.push_devices")).ShouldBe("expo");
+        (await ScalarAsync("SELECT provider FROM penny.push_devices")).ShouldBe("apns");
 
         // Data written before search existed is searchable after the documented rebuild.
         var personal = await SearchAsync(client, alex.Token, "boulangerie");

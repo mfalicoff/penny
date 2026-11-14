@@ -8,12 +8,12 @@ using Xunit;
 
 namespace Penny.Backend.IntegrationTests.Controllers;
 
-// Real HTTP + PostgreSQL ports of the legacy household creation, detail, rename, trip
-// and access journeys (tests/core/households-server.test.ts). All data is synthetic.
+// Household creation, detail, rename, trip and access journeys over real HTTP and
+// PostgreSQL. All data is synthetic.
 public sealed class HouseholdTests(ApiFixture fixture) : HouseholdTestBase(fixture)
 {
     [Fact]
-    public async Task whenHouseholdsCreated_HouseholdFlow_ShouldReturnLegacyShapes()
+    public async Task whenHouseholdsCreated_HouseholdFlow_ShouldReturnContractShapes()
     {
         At(Noon);
         var (alex, alexId) = await AccountAsync("alex@example.test");
@@ -33,7 +33,7 @@ public sealed class HouseholdTests(ApiFixture fixture) : HouseholdTestBase(fixtu
         )
         {
             created.StatusCode.ShouldBe(HttpStatusCode.Created);
-            // Legacy key order and envelope; regular households have no `trip`.
+            // Contract key order and envelope; regular households have no `trip`.
             var text = await created.Content.ReadAsStringAsync(Ct);
             var household = JsonDocument.Parse(text).RootElement.GetProperty("household");
             var id = household.GetProperty("id").GetString()!;
@@ -55,7 +55,7 @@ public sealed class HouseholdTests(ApiFixture fixture) : HouseholdTestBase(fixtu
         creator.GetProperty("userId").GetString().ShouldBe(alexId);
         creator.GetProperty("email").GetString().ShouldBe("alex@example.test");
         creator.GetProperty("joinedAt").GetInt64().ShouldBe(Millis(Noon));
-        // Without an offset there is no local join day, as with older clients.
+        // Without an offset there is no local join day.
         creator.TryGetProperty("joinedOn", out _).ShouldBeFalse();
         creator.TryGetProperty("leftAt", out _).ShouldBeFalse();
 
@@ -73,7 +73,7 @@ public sealed class HouseholdTests(ApiFixture fixture) : HouseholdTestBase(fixtu
     }
 
     [Fact]
-    public async Task whenBodyInvalid_CreateHousehold_ShouldReturnLegacyErrors()
+    public async Task whenBodyInvalid_CreateHousehold_ShouldReturnContractErrors()
     {
         var (alex, _) = await AccountAsync("alex@example.test");
         object[] invalidHouseholds =
@@ -199,7 +199,7 @@ public sealed class HouseholdTests(ApiFixture fixture) : HouseholdTestBase(fixtu
     }
 
     [Fact]
-    public async Task whenCallerIsNotMemberOrCreator_HouseholdRoutes_ShouldReturnLegacyAccessErrors()
+    public async Task whenCallerIsNotMemberOrCreator_HouseholdRoutes_ShouldReturnAccessErrors()
     {
         var (alex, alexId) = await AccountAsync("alex@example.test");
         var (bea, beaId) = await AccountAsync("bea@example.test");

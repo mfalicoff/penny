@@ -5,7 +5,7 @@ using Penny.Backend.UnitTests.Ledgers;
 namespace Penny.Backend.UnitTests.Contracts;
 
 // Typed fixture decoding that fails on unknown, missing or null-for-non-null members,
-// matching the strict zod (TypeScript) and Codable (Swift) fixture models.
+// matching the strict TypeScript and Swift (Codable) fixture models.
 public static class StrictJson
 {
     public static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web)

@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { HouseholdPage } from "../../../features/households/HouseholdPage";
 import { householdSearchSchema } from "../../../features/households/search";
 
-/** Legacy URL kept from the Expo app: one household, with `?month=`, `?tab=` and the legacy `?add=1` (MAZ-91). */
+/** One household, with `?month=` and `?tab=` (MAZ-91). */
 export const Route = createFileRoute("/households/$id/")({
   staticData: { title: "Household" },
   validateSearch: householdSearchSchema,

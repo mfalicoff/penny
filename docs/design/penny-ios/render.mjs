@@ -179,7 +179,7 @@ if (check) {
 }
 
 // The manifest ties each image to the card source and assets it was rendered from, so
-// tests/core/contracts.test.ts can tell a stale baseline without rendering. A filtered run
+// apps/web/tests/domain/contracts.test.ts can tell a stale baseline without rendering. A filtered run
 // replaces only the entries it rendered.
 const manifestPath = join(out, "manifest.json");
 const previous = existsSync(manifestPath) && filter ? JSON.parse(readFileSync(manifestPath, "utf8")).cards : [];

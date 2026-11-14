@@ -3,7 +3,7 @@ using System.Text;
 
 namespace Penny.Backend.Domain.Search;
 
-// The search normalization shared by the server, iOS and web (docs/migration/search.md,
+// The search normalization shared by the server, iOS and web (docs/reference/search.md,
 // "Text normalization"): NFKD, drop nonspacing marks (General Category Mn),
 // locale-independent lowercase, final sigma to sigma and sharp s to "ss", then every
 // run of Unicode White_Space becomes one space and the ends are trimmed. The shared

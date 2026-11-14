@@ -4,7 +4,7 @@ namespace Penny.Backend.Api.Testing;
 
 // MAZ-62 `push` faults for full-stack runs: before each provider call the delivery
 // worker asks the registry for a `push` rule whose `method` names the provider
-// (`apns` or `expo`; any when null). The rule waits `delayMs`, then either answers
+// (`apns`; any when null). The rule waits `delayMs`, then either answers
 // for the whole call (`abort`: a network failure; `status`: 410 invalid token, 429 or
 // 5xx retry, other 4xx permanent) or, with neither, lets the real provider answer.
 public sealed class FaultInjectingPushTransport(IPushTransport inner, FaultRegistry faults)

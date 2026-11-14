@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 
 namespace Penny.Backend.Application.Authentication;
 
-// Legacy session tokens: 32 random bytes as lowercase hex. Only SHA-256(token text)
+// Session tokens: 32 random bytes as lowercase hex. Only SHA-256(token text)
 // is stored, so database contents cannot be replayed as credentials.
 public static partial class SessionTokens
 {
