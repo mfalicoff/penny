@@ -16,7 +16,8 @@ public sealed class OperationsController(IEnumerable<IStorageReadiness> probes) 
     public ActionResult<HealthResponse> Health() => Ok(new HealthResponse(true));
 
     [HttpGet("info", Name = "getApiInfo")]
-    public ActionResult<ServerInfo> Info() => Ok(new ServerInfo("penny", ServerInfo.CurrentVersion));
+    public ActionResult<ServerInfo> Info() =>
+        Ok(new ServerInfo("penny", ServerInfo.CurrentVersion));
 
     [HttpGet("ready", Name = "getApiReady")]
     [ProducesResponseType<HealthResponse>(200)]
