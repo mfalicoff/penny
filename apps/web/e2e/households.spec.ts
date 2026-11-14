@@ -78,7 +78,10 @@ async function addExpense(page: Page, title: string, amount: string, options: { 
   await form.getByLabel("Title").fill(title);
   await form.getByLabel("Date").fill(options.date ?? "2026-10-20");
   if (options.split) {
-    await form.getByRole("radio", { name: options.split }).check({ force: true });
+    // The form is taller now; centre the split so the dialog's sticky footer can't take the click.
+    const mode = form.getByRole("radio", { name: options.split });
+    await mode.evaluate((element) => { element.scrollIntoView({ block: "center" }); });
+    await mode.check({ force: true });
     for (const [label, value] of options.shares ?? []) await form.getByLabel(label).fill(value);
   }
   await form.getByRole("button", { name: "Save" }).click();
@@ -159,6 +162,8 @@ test("concurrent edits keep the loser's draft and a stale payment records nothin
   await bea.page.getByRole("link", { name: /Hydro/ }).click();
   await bea.page.getByRole("dialog", { name: "Hydro" }).getByRole("button", { name: "Edit" }).click();
   const beaForm = bea.page.getByRole("dialog", { name: "Edit expense" });
+  // Note sits under More details, as in Add entry.
+  await beaForm.getByRole("button", { name: /More details/ }).click();
   await beaForm.getByLabel("Note").fill("Includes the late fee");
   const alexForm = alex.page.getByRole("dialog", { name: "Edit expense" });
   await alexForm.getByLabel(/^Amount \(/).fill("104.10");

@@ -129,6 +129,7 @@ struct EntryHouseholdSheet: View {
 
     private func row(_ id: String?, title: String, detail: String, symbol: String) -> some View {
         let selected = id == current
+        let option = id ?? "personal"
         return Button {
             choose(id)
             dismiss()
@@ -152,6 +153,6 @@ struct EntryHouseholdSheet: View {
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(selected ? .isSelected : [])
-        .accessibilityIdentifier("householdPicker.\(id ?? "personal")")
+        .accessibilityIdentifier("householdPicker.\(option)")
     }
 }
