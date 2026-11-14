@@ -15,8 +15,10 @@ Penny uses [Semantic Versioning](https://semver.org/): **MAJOR.MINOR.PATCH**.
 `MARKETING_VERSION` in `apps/ios/Configuration/Version.xcconfig` is the version
 source of truth (Release Please's `simple` strategy, with that file as an extra
 file; there is no package at the repository root). The native iOS archive checks
-that its `CFBundleShortVersionString` matches it. The container images take their
-version from the release tag.
+that its `CFBundleShortVersionString` matches it, and the API reports the same
+version from `apps/backend/src/Penny.Backend.Api/Contracts/ServerInfo.cs` (also
+updated by Release Please; `check-version.mjs` checks they match). The container
+images take their version from the release tag.
 Store releases use three numeric components without leading zeros; prerelease
 and build suffixes are not supported by this release workflow because iOS
 requires a numeric marketing version. TestFlight builds use the same release
@@ -30,7 +32,8 @@ commit:
 
 1. Merge changes to `master` using Conventional Commit messages (see below).
 2. Release Please opens or updates a release PR with the next semantic version,
-   a matching change to `apps/ios/Configuration/Version.xcconfig`, an updated
+   matching changes to `apps/ios/Configuration/Version.xcconfig` and
+   `ServerInfo.cs`, an updated
    `.release-please-manifest.json`, and generated `CHANGELOG.md` entries.
 3. Review the proposed version and notes, wait for the existing PR checks, then
    merge the release PR. No local version commands or manual Actions run is
