@@ -100,7 +100,10 @@ test("two people: invite, splits, private account, stale payment, monthly settle
     await form.getByLabel("Date").fill("2026-10-30");
     await form.getByLabel("Your account").selectOption({ label: "Alex everyday card" });
     if (shares) {
-      await form.getByRole("radio", { name: "Amounts" }).check({ force: true });
+      // The form is taller now; centre the split so the dialog's sticky footer can't take the click.
+      const amounts = form.getByRole("radio", { name: "Amounts" });
+      await amounts.evaluate((element) => { element.scrollIntoView({ block: "center" }); });
+      await amounts.check({ force: true });
       await form.getByLabel("Your share in CAD").fill(shares[0]);
       await form.getByLabel(`${bea.email}'s share in CAD`).fill(shares[1]);
     }
