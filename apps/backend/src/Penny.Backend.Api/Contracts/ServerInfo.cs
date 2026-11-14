@@ -6,5 +6,5 @@ public sealed record ServerInfo(string Name, string Version)
     /// The release version /api/info reports. It follows package.json: release-please updates
     /// this line, and the full-stack comparison checks it against the legacy API.
     /// </summary>
-    public const string CurrentVersion = "2.0.0"; // x-release-please-version
+    public const string CurrentVersion = "1.0.1"; // x-release-please-version
 }
