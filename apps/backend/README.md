@@ -165,70 +165,20 @@ Every endpoint and unknown route requires a session unless marked `[AllowAnonymo
 
 ## Upgrading a database from before the squash
 
-Once, for a database last migrated by a build from before the squash, whose `penny."__EFMigrationsHistory"` lists the seven migrations from `20261108152101_InitialSchema` to `20261112020756_AddReceiptTexts`. The seven were replaced by one `20261113183852_InitialSchema`, which no longer has the retired push provider's columns and rows, the one-time import's checkpoint table (`sqlite_import`) or the unused `users.salt` column (password hashes embed their own salt). A new build refuses such a database: `migrate` exits 1 without changes because the history names migrations the build does not know, and `/api/ready` returns 503 (`schema`) because the applied migrations must be exactly the build's. Fresh databases need nothing: `migrate` creates them from `InitialSchema`.
+The seven migrations from `20261108152101_InitialSchema` to `20261112020756_AddReceiptTexts` were squashed into one `20261113183852_InitialSchema`, which no longer has the retired push provider's columns and rows, the one-time import's checkpoint table (`sqlite_import`) or the unused `users.salt` column (password hashes embed their own salt). No manual step is needed: upgrade as usual, with `migrate --grant-runtime` (the Compose `migrate` service and the AppHost's `migrate` resource do this on start).
 
-1. Stop every API process (no push worker may run), then back up the database (`pg_dump`, see [operations](../../docs/operations.md)).
-2. Run the SQL below once, with `psql --set=ON_ERROR_STOP=1`, as the migration role (`penny_migrator`, which owns the `penny` tables) or an administrator. It runs in one transaction under the `migrate` advisory lock and changes nothing unless the history is exactly the seven old migrations. It deletes the push devices of the retired provider (`provider = 'expo'`) and every delivery planned for or addressed to them (sent or not), drops that provider's receipt columns, lease, index and checks from `push_deliveries`, restricts `push_devices` to APNs on iOS with a required environment and no default provider, drops `sqlite_import` and `users.salt`, and replaces the history with the new migration.
-3. Deploy the new build and run `migrate --grant-runtime` as usual. It finds nothing to apply, and the grants no longer name `sqlite_import`. Readiness then returns 200.
+When `migrate` finds a history of exactly those seven migrations, it first moves the database onto the squashed history (`PreSquashUpgrade`), in one transaction under the migration advisory lock it already holds, and then continues as for any other database. The upgrade:
+
+- deletes the push devices of the retired provider (`provider = 'expo'`) and every delivery planned for or addressed to them (sent or not);
+- drops that provider's receipt columns, lease, index and checks from `push_deliveries`, and restricts `push_devices` to APNs on iOS with a required environment and no default provider;
+- drops `sqlite_import` and `users.salt`;
+- replaces the seven history rows with `20261113183852_InitialSchema`.
+
+Any other history is untouched: a partial or unknown history still makes `migrate` exit 1 without changes. Unsent household notifications keep their outbox rows; one whose only deliveries were to removed devices is planned again for the recipient's APNs devices on the next pass, or expires after 24 hours. Back up before upgrading, as for any release ([operations](../../docs/operations.md)).
 
 Personal ledgers need no check or conversion. They are stored as typed rows (`ledgers` with `ledger_accounts`, `ledger_trips`, `ledger_categories`, `ledger_entries` and `ledger_recurring`), not as JSON documents, and have no version column: every row was validated as a version 4 ledger when it was written, so every stored ledger is version 4. The server now accepts only version 4 writes; a client that sends any other version gets `400 Invalid ledger data.` and nothing is stored. Older app builds that still send version 1–3 ledgers must be updated before they can sync again.
 
-```sql
-BEGIN;
-DO $$
-BEGIN
-  -- The lock `migrate` takes, so no migration runs at the same time.
-  PERFORM pg_advisory_xact_lock(344760143449);
-  IF ARRAY(SELECT "MigrationId"::text FROM penny."__EFMigrationsHistory" ORDER BY 1) <> ARRAY[
-    '20261108152101_InitialSchema', '20261108163050_AddOidcAttempts',
-    '20261108200954_AddPasswordResets', '20261109015841_AddSearchDocuments',
-    '20261109222927_AddApnsPushDelivery', '20261111135519_AddReceiptEncryptionVersion',
-    '20261112020756_AddReceiptTexts'] THEN
-    RAISE EXCEPTION 'Migration history is not at 20261112020756_AddReceiptTexts; nothing changed.';
-  END IF;
-END $$;
-
--- Retired push provider: its deliveries, deliveries to its devices, then the devices.
-DELETE FROM penny.push_deliveries
- WHERE provider = 'expo'
-    OR token IN (SELECT token FROM penny.push_devices WHERE provider = 'expo');
-DELETE FROM penny.push_devices WHERE provider = 'expo';
-
--- push_deliveries: drop that provider's receipt columns, their lease, index and checks.
-DROP INDEX penny.ix_push_deliveries_receipts;
-ALTER TABLE penny.push_deliveries
-  DROP CONSTRAINT ck_push_deliveries_lease,
-  DROP CONSTRAINT ck_push_deliveries_provider,
-  DROP COLUMN receipt_checked_at,
-  DROP COLUMN lease_owner,
-  DROP COLUMN lease_token,
-  DROP COLUMN lease_expires_at,
-  DROP COLUMN provider;
-
--- push_devices: APNs on iOS only, no default provider, environment required.
-ALTER TABLE penny.push_devices
-  DROP CONSTRAINT ck_push_devices_platform,
-  DROP CONSTRAINT ck_push_devices_provider,
-  ALTER COLUMN provider DROP DEFAULT,
-  ALTER COLUMN environment SET NOT NULL,
-  ADD CONSTRAINT ck_push_devices_platform CHECK (platform = 'ios'),
-  ADD CONSTRAINT ck_push_devices_provider
-    CHECK (provider = 'apns' AND environment IN ('sandbox','production'));
-
--- The one-time import's checkpoint table.
-DROP TABLE penny.sqlite_import;
-
--- users: the unused salt column.
-ALTER TABLE penny.users DROP COLUMN salt;
-
--- One squashed migration replaces the seven.
-DELETE FROM penny."__EFMigrationsHistory";
-INSERT INTO penny."__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-VALUES ('20261113183852_InitialSchema', '10.0.14');
-COMMIT;
-```
-
-Unsent household notifications keep their outbox rows; one whose only deliveries were to removed devices is planned again for the recipient's APNs devices on the next pass, or expires after 24 hours. The upgraded schema matches a database created by the new `InitialSchema` except for the physical order of a few columns (`push_devices.provider`/`environment`, `receipts.encryption_version`, `search_documents.receipt_id`), which EF Core does not depend on. This was checked on PostgreSQL 18.6 by building a database from the seven old migrations with synthetic users (non-empty salts), ledgers, push devices and deliveries of both providers and an import checkpoint, applying this SQL as `penny_migrator`, and comparing a catalog listing (columns, types, nullability, defaults, collations, constraints, indexes, extensions, history) with a fresh `InitialSchema` database: identical. Running the SQL a second time stopped at the history check. `migrate --grant-runtime` then reported nothing to apply, and a runtime-role API returned 200 from `/api/ready`.
+`MigrationTests.whenHistoryFromBeforeTheSquash_ApplyAsync_ShouldUpgradeToTheSquashedSchema` builds the pre-squash schema from `Fixtures/pre-squash-schema.sql` (the seven migrations' script) as `penny_migrator`, with synthetic users, push devices and deliveries of both providers and an import checkpoint, runs `migrate` twice, and requires the same catalog (columns, types, nullability, defaults, collations, identity, constraints, indexes, history) as a database created by the squashed `InitialSchema`, ignoring only the physical order of columns, which EF Core does not depend on.
 
 ## Verification and CI
 

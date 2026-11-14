@@ -163,7 +163,7 @@ Then in `deploy/.env`: `COMPOSE_PROFILES=` (empty), `PENNY_DB_HOST`, `PENNY_DB_P
 
 ## Upgrade
 
-Every release is forward-only. Read the release notes first: they state whether the release contains a database migration. A database created before the EF migrations were squashed into `InitialSchema` needs the one-time step in the [backend README](../apps/backend/README.md) before its first upgrade to such a release.
+Every release is forward-only. Read the release notes first: they state whether the release contains a database migration. A database created before the EF migrations were squashed into `InitialSchema` is moved onto the squashed history by `migrate` itself, with no extra step ([backend README](../apps/backend/README.md#upgrading-a-database-from-before-the-squash)).
 
 1. Take a backup ([backup](operations.md#back-up)) and note the current image tags.
 2. Set `PENNY_API_IMAGE` and `PENNY_WEB_IMAGE` to the new **exact** version tags in `deploy/.env`, and use `deploy/compose.yaml` from the same release.

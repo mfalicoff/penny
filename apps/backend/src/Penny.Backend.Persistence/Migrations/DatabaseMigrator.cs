@@ -27,6 +27,13 @@ public static class DatabaseMigrator
             context.Database.SetCommandTimeout(TimeSpan.FromMinutes(5));
             var known = context.Database.GetMigrations().ToHashSet(StringComparer.Ordinal);
             var applied = await context.Database.GetAppliedMigrationsAsync(cancellationToken);
+            // A database from before the migrations were squashed is moved onto the squashed
+            // history first, so it upgrades without a manual step.
+            if (PreSquashUpgrade.Applies(applied))
+            {
+                await PreSquashUpgrade.ApplyAsync(guard, cancellationToken);
+                applied = await context.Database.GetAppliedMigrationsAsync(cancellationToken);
+            }
             if (applied.Any(migration => !known.Contains(migration)))
                 throw new InvalidOperationException(
                     "Database schema is newer than this build. No migration was applied."

@@ -73,6 +73,7 @@ Everything else is EF-generated or a LINQ query. Check-constraint and partial-in
 | Where | Why EF can't do it |
 | --- | --- |
 | `DatabaseMigrator`: `pg_try_advisory_lock` / `pg_advisory_unlock` | One session lock, so two `migrate` runs never overlap |
+| `PreSquashUpgrade` (run by `DatabaseMigrator`): history check, then `DELETE` of the retired push provider's rows, `DROP`/`ALTER` of its columns, `sqlite_import` and `users.salt`, and the history rewrite to `20261113183852_InitialSchema` | Moves a database migrated by the seven pre-squash migrations onto the squashed history in one transaction; EF cannot apply a migration to a history it doesn't know ([upgrading from before the squash](../../apps/backend/README.md#upgrading-a-database-from-before-the-squash)) |
 | `PostgresReadiness`: role/privilege check (`pg_roles`, `has_*_privilege`) | Proves the runtime role cannot change schema |
 | `development/grant-runtime.sql`, `bootstrap.sql` | Role and grant administration and `CREATE EXTENSION pg_trgm/vector` (administrator). `RuntimeGrants` (MAZ-63) executes the embedded `grant-runtime.sql` for `migrate --grant-runtime`; `DatabaseBootstrap` executes the embedded `bootstrap.sql` and sets the role passwords (`format('ALTER ROLE %I PASSWORD %L')` with a SCRAM verifier) for `migrate --bootstrap` and `bootstrap` |
 | `TestDataReset` (MAZ-62, test environments only): `DELETE FROM penny."<table>"` per EF table, children first | Clears a disposable `penny_test*` database between full-stack runs with the runtime role (which has DELETE, not TRUNCATE); table names come from the EF model and the database name is checked first ([test environment](test-environment.md#test-controls)) |
@@ -111,7 +112,7 @@ Run from the repository root. Local `dotnet.sh run` loads the ignored developmen
 bash apps/backend/dotnet.sh run --project src/Penny.Backend.Api -- migrate
 ```
 
-The migrations were squashed into a single `InitialSchema` migration; a database created before that needs the one-time upgrade procedure in the [backend README](../../apps/backend/README.md#upgrading-a-database-from-before-the-squash) before `migrate` accepts it.
+The migrations were squashed into a single `InitialSchema` migration. `migrate` moves a database created before that onto the squashed history automatically, before applying anything else ([backend README](../../apps/backend/README.md#upgrading-a-database-from-before-the-squash)).
 
 ### Runtime grants
 

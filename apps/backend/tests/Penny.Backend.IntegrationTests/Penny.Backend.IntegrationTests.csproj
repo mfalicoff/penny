@@ -19,4 +19,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Fixtures/*.sql" />
+  </ItemGroup>
 </Project>
