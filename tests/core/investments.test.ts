@@ -1,11 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { emptyLedger, materialize, totals } from "../../src/domain/ledger.ts";
-import { buildEntry, type EntryDraft } from "../../src/domain/entryDraft.ts";
-import { saveEntry } from "../../src/domain/commands.ts";
-import { selectOverview } from "../../src/domain/selectors/overview.ts";
-import { buildMoneyFlow, layoutMoneyFlow } from "../../src/domain/selectors/moneyFlow.ts";
-import { ledgerWriteSchema } from "../../src/validation/ledger.ts";
+import { emptyLedger, materialize, totals } from "../../apps/web/src/domain/ledger.ts";
+import { buildEntry, type EntryDraft } from "../../apps/web/src/domain/entryDraft.ts";
+import { saveEntry } from "../../apps/web/src/domain/commands.ts";
+import { selectOverview } from "../../apps/web/src/domain/selectors/overview.ts";
+import { buildMoneyFlow, layoutMoneyFlow } from "../../apps/web/src/domain/selectors/moneyFlow.ts";
+import { ledgerWriteSchema } from "../../apps/web/src/validation/ledger.ts";
 
 const draft: EntryDraft = {
   kind: "investment", title: "TFSA contribution", amount: "1000.00",

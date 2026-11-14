@@ -1,6 +1,6 @@
 # Reusable TypeScript domain rules (MAZ-86)
 
-`src/domain/` is the pure, platform-neutral rules module used by the core tests, the golden fixture generator and the web client (`apps/web`). It is the TypeScript counterpart of the Swift `PennyDomain` rules and the C# domain, and all three read the same `contracts/fixtures/`.
+`apps/web/src/domain/` is the pure, platform-neutral rules module used by the core tests, the golden fixture generator and the web client (`apps/web`). It is the TypeScript counterpart of the Swift `PennyDomain` rules and the C# domain, and all three read the same `contracts/fixtures/`.
 
 ## Ownership
 
@@ -16,11 +16,11 @@
 | `entryDraft.ts` | Entry form draft validation and conversion to ledger records (moved from `src/features/entries/` in MAZ-98) |
 | `householdProjection.ts` | Merging the household projection (`GET /api/households/projection`) into a personal ledger view, the reference for how clients combine shared and private rows |
 
-The wire format (HTTP envelopes in `contracts/openapi.json`) is converted explicitly at the data layer; domain types are never serialized as the API contract. The ledger write contract itself (`PUT /api/ledger` validation, v4 only) is the zod schema in `src/validation/ledger.ts`, outside `src/domain/` because it uses a package; the .NET `LedgerReader` enforces the same rules.
+The wire format (HTTP envelopes in `contracts/openapi.json`) is converted explicitly at the data layer; domain types are never serialized as the API contract. The ledger write contract itself (`PUT /api/ledger` validation, v4 only) is the zod schema in `apps/web/src/validation/ledger.ts`, outside `apps/web/src/domain/` because it uses a package; the .NET `LedgerReader` enforces the same rules.
 
 ## Allowed imports
 
-Files under `src/domain/` may import only other relative files inside `src/domain/`. No packages, `node:*`, `process.env`, network, storage or clock injection beyond `new Date()`/`dateKey` defaults. `tests/core/domain-rules.test.ts` and ESLint fail if a package or out-of-module import appears. Callers pass `today` explicitly where determinism matters.
+Files under `apps/web/src/domain/` may import only other relative files inside `apps/web/src/domain/`. No packages, `node:*`, `process.env`, network, storage or clock injection beyond `new Date()`/`dateKey` defaults. `tests/core/domain-rules.test.ts` and ESLint fail if a package or out-of-module import appears. Callers pass `today` explicitly where determinism matters.
 
 ## Invariants
 

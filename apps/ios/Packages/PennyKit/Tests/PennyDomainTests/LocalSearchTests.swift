@@ -94,7 +94,7 @@ struct LocalSearchTests {
             LocalSearch.matches(query: "rent old", title: "Rent", note: "Old note", categoryName: "", accountName: ""))
     }
 
-    /// v2 `searchMatcher` (src/domain/search.ts): Home, Activity and whole-ledger search trim
+    /// v2 `searchMatcher` (apps/web/src/domain/search.ts): Home, Activity and whole-ledger search trim
     /// and lowercase the query identically (the old `selectOverview` did not trim). Fields are
     /// joined by single spaces, so a query can cross fields but cannot skip one.
     @Test("whenQueryHasSurroundingSpacesOrCrossesFields_HomeActivityAndSearch_ShouldMatchIdentically")

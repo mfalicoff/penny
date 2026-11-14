@@ -10,7 +10,7 @@ The API keeps `/api` paths, camelCase JSON, ledger v4, arbitrary existing string
 
 | Path | Ownership |
 | --- | --- |
-| `src/domain/`, `tests/` | Shared TypeScript rules, golden fixture generator and their regression suites |
+| `apps/web/src/domain/`, `tests/` | Shared TypeScript rules (run by the web app), golden fixture generator and their regression suites |
 | `apps/backend/` | ASP.NET Core API, application/domain ports, PostgreSQL persistence and integration tests |
 | `apps/ios/` | Swift/SwiftUI iPhone/iPad presentation, domain rules, durable local data and XCUITest |
 | `apps/web/` | React/TypeScript, TanStack Router/Query, accessible DOM and durable browser data |
@@ -19,9 +19,9 @@ The API keeps `/api` paths, camelCase JSON, ledger v4, arbitrary existing string
 
 ## ADR 002: calculation and conflict ownership
 
-Personal commands, recurrence materialization and three-way merge are client-owned (`src/domain/ledger.ts`, `commands.ts`, `merge.ts` and their Swift ports). Save `{base,local}` durably before acknowledging a personal save. Generate IDs once, serialize saves and refetch/merge/retry 409s. Local edited fields win same-field races; untouched remote fields survive. Local deletions remove entries; locally edited remotely deleted entries can reappear under the existing algorithm. Preserve failed pending work. The API validates whole-ledger writes and atomically compares/increments revisions; it never silently merges or generates personal recurrence. Personal recurrence uses the local calendar and preserves anchor days.
+Personal commands, recurrence materialization and three-way merge are client-owned (`apps/web/src/domain/ledger.ts`, `commands.ts`, `merge.ts` and their Swift ports). Save `{base,local}` durably before acknowledging a personal save. Generate IDs once, serialize saves and refetch/merge/retry 409s. Local edited fields win same-field races; untouched remote fields survive. Local deletions remove entries; locally edited remotely deleted entries can reappear under the existing algorithm. Preserve failed pending work. The API validates whole-ledger writes and atomically compares/increments revisions; it never silently merges or generates personal recurrence. Personal recurrence uses the local calendar and preserves anchor days.
 
-Shared allocation, historical membership, recurrence, monthly settlement, reimbursements and personal projections are server-owned (`src/domain/households.ts` is the TypeScript reference for the split and settlement rules). Project shared expenses exactly once; do not insert them into private ledgers. Only the payer sees their private account reference. Recorded `transactions` and month-only `scheduled` previews remain separate. Home labels expected income; Activity, spending and widgets use recorded entries. Reimbursements record existing payments, never move money or create spending. All stacks use integer cents, basis points and date-only calendar strings.
+Shared allocation, historical membership, recurrence, monthly settlement, reimbursements and personal projections are server-owned (`apps/web/src/domain/households.ts` is the TypeScript reference for the split and settlement rules). Project shared expenses exactly once; do not insert them into private ledgers. Only the payer sees their private account reference. Recorded `transactions` and month-only `scheduled` previews remain separate. Home labels expected income; Activity, spending and widgets use recorded entries. Reimbursements record existing payments, never move money or create spending. All stacks use integer cents, basis points and date-only calendar strings.
 
 ## ADR 003: versioning
 

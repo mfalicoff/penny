@@ -1,22 +1,22 @@
-// MAZ-86: the reusable domain module (src/domain) imports no packages or platform APIs, and
+// MAZ-86: the reusable domain module (apps/web/src/domain) imports no packages or platform APIs, and
 // its money, calendar, merge, projection and search rules agree with the shared fixtures.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { cents, emptyLedger, materialize, nextOccurrence, personalShare, type Ledger, type Recurring, type Transaction } from "../../src/domain/ledger.ts";
-import { mergeLedger } from "../../src/domain/merge.ts";
-import { calculateHouseholdSplits } from "../../src/domain/households.ts";
-import { searchEntries } from "../../src/domain/search.ts";
-import { scheduledEntries, summarizeMonth } from "../../src/domain/summary.ts";
-import { calendarMonth, selectOverview, shiftMonthKey } from "../../src/domain/selectors/overview.ts";
-import { dateKeyIn } from "../../src/domain/calendar.ts";
-import { selectTransactions } from "../../src/domain/selectors/transactions.ts";
-import { buildMoneyFlow } from "../../src/domain/selectors/moneyFlow.ts";
-import { tripOverview } from "../../src/domain/selectors/trips.ts";
-import { ledgerWithHouseholds } from "../../src/domain/householdProjection.ts";
-import type { ProjectedExpense } from "../../src/domain/householdProjection.ts";
+import { cents, emptyLedger, materialize, nextOccurrence, personalShare, type Ledger, type Recurring, type Transaction } from "../../apps/web/src/domain/ledger.ts";
+import { mergeLedger } from "../../apps/web/src/domain/merge.ts";
+import { calculateHouseholdSplits } from "../../apps/web/src/domain/households.ts";
+import { searchEntries } from "../../apps/web/src/domain/search.ts";
+import { scheduledEntries, summarizeMonth } from "../../apps/web/src/domain/summary.ts";
+import { calendarMonth, selectOverview, shiftMonthKey } from "../../apps/web/src/domain/selectors/overview.ts";
+import { dateKeyIn } from "../../apps/web/src/domain/calendar.ts";
+import { selectTransactions } from "../../apps/web/src/domain/selectors/transactions.ts";
+import { buildMoneyFlow } from "../../apps/web/src/domain/selectors/moneyFlow.ts";
+import { tripOverview } from "../../apps/web/src/domain/selectors/trips.ts";
+import { ledgerWithHouseholds } from "../../apps/web/src/domain/householdProjection.ts";
+import type { ProjectedExpense } from "../../apps/web/src/domain/householdProjection.ts";
 
 const root = new URL("../../", import.meta.url);
 const fixture = (name: string) => JSON.parse(readFileSync(new URL(`contracts/fixtures/${name}`, root), "utf8"));
@@ -26,8 +26,8 @@ function sources(dir: string): string[] {
     item.isDirectory() ? sources(join(dir, item.name)) : item.name.endsWith(".ts") ? [join(dir, item.name)] : []);
 }
 
-test("src/domain imports only relative files inside src/domain", () => {
-  const domain = fileURLToPath(new URL("src/domain", root));
+test("apps/web/src/domain imports only relative files inside apps/web/src/domain", () => {
+  const domain = fileURLToPath(new URL("apps/web/src/domain", root));
   const files = sources(domain);
   assert.ok(files.length >= 8);
   for (const file of files) {
@@ -36,7 +36,7 @@ test("src/domain imports only relative files inside src/domain", () => {
       const specifier = match[1]!;
       assert.ok(specifier.startsWith("."), `${file} imports package ${specifier}`);
       const target = resolve(dirname(file), specifier);
-      assert.ok(target === domain || target.startsWith(domain + sep),`${file} escapes src/domain via ${specifier}`);
+      assert.ok(target === domain || target.startsWith(domain + sep),`${file} escapes apps/web/src/domain via ${specifier}`);
     }
     assert.doesNotMatch(text, /\b(?:process\.env|AsyncStorage|expo-)/, file);
   }

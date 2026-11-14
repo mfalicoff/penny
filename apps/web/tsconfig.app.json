@@ -29,7 +29,7 @@
         "../../design-kit/*"
       ],
       "@domain/*": [
-        "../../src/domain/*"
+        "./src/domain/*"
       ]
     }
   },

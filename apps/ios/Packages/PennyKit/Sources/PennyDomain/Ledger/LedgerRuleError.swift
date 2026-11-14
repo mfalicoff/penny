@@ -2,7 +2,7 @@
 /// the server, the web client and this one explain the same failure the same way. A caller
 /// shows `message`, keeps the user's draft and offers the next step.
 ///
-/// Four cases have no sentence of their own in src/domain: `invalidCategoryName`
+/// Four cases have no sentence of their own in apps/web/src/domain: `invalidCategoryName`
 /// (an empty name, or one over 50 UTF-16 units), `tooManyCategories` and
 /// `categoryKindInUse` (which the server refuses as "Invalid ledger data." only after
 /// sync) follow the wording of their account and trip counterparts; `scheduleAfterLedgerRange`

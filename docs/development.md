@@ -91,7 +91,7 @@ The root toolchain runs TypeScript 7 and ESLint 10:
   `typescript-eslint` and other tooling. Preserve this
   [official side-by-side setup](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/#running-side-by-side-with-typescript-6.0)
   until those tools support the new API.
-- `eslint.config.js` uses `typescript-eslint` and keeps `src/domain` free of
+- `eslint.config.js` uses `typescript-eslint`; `apps/web/eslint.config.js` keeps `apps/web/src/domain` free of
   packages and Node APIs.
 
 After dependency updates, run lint, typecheck and the core tests at the root, and
@@ -106,8 +106,8 @@ npx --yes --package renovate -- renovate-config-validator --strict --no-global r
 ## Source layout
 
 - `apps/ios/`, `apps/web/`, `apps/backend/`: the native iOS app, the browser app and the .NET API, each with its own README.
-- `src/domain/`: the pure TypeScript ledger rules (types, integer-cent calculations, recurrence, immutable commands, merge, search, summaries, entry-draft conversion and the household projection), the reference the native and web apps port. See [domain rules](reference/domain-rules.md).
-- `src/validation/ledger.ts`: the ledger write schema the golden fixtures and core tests check ledgers against.
+- `apps/web/src/domain/`: the pure TypeScript ledger rules (types, integer-cent calculations, recurrence, immutable commands, merge, search, summaries, entry-draft conversion and the household projection), the reference the native and web apps port. See [domain rules](reference/domain-rules.md).
+- `apps/web/src/validation/ledger.ts`: the ledger write schema the golden fixtures and core tests check ledgers against.
 - `contracts/`: OpenAPI, the golden fixtures and the design baseline shared by every client.
 - `scripts/`: the fixture generator, the full-stack test environment, deployment and observability smoke tests, and the version check.
 - `deploy/`, `nix/`: the Compose stack and the NixOS module.

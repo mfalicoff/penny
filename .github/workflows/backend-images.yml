@@ -15,7 +15,6 @@ on:
       - 'scripts/deploy-smoke.mjs'
       - 'scripts/observability-smoke.mjs'
       - 'scripts/grafana-dashboards.mjs'
-      - 'src/domain/**'
       - '.dockerignore'
       - '.github/workflows/backend-images.yml'
   push:

@@ -6,7 +6,7 @@ Choose the lowest layer that proves the behavior; add an end-to-end journey only
 
 ## Layout and ownership
 
-The root package holds the shared TypeScript rules (`src/domain/`), the ledger write schema (`src/validation/`), the golden fixtures' generator and their tests. Each app owns its own tests.
+The root package holds the golden fixtures' generator and the core tests for the shared TypeScript rules (`apps/web/src/domain/`) and the ledger write schema (`apps/web/src/validation/`), which live in the web app. Each app owns its own tests.
 
 | Location | Runner | Responsibility |
 | --- | --- | --- |

@@ -18,7 +18,7 @@
     "typecheck": "tsc --noEmit",
     "version": "npm run version:check",
     "version:check": "node scripts/check-version.mjs",
-    "lint": "eslint --max-warnings=0 src tests scripts",
+    "lint": "eslint --max-warnings=0 tests scripts",
     "test:core": "node --test tests/core/*.test.ts",
     "test:fullstack": "node --test --test-concurrency=1 tests/fullstack/*.test.mjs",
     "test-env": "node scripts/test-env/penny-env.mjs",
@@ -30,10 +30,12 @@
   "c8": {
     "all": true,
     "src": [
-      "src"
+      "apps/web/src/domain",
+      "apps/web/src/validation"
     ],
     "include": [
-      "src/**/*.ts"
+      "apps/web/src/domain/**/*.ts",
+      "apps/web/src/validation/**/*.ts"
     ],
     "exclude": [
       "**/*.d.ts"

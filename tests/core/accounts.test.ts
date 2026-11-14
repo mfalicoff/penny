@@ -1,10 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { emptyLedger, materialize, type PaymentAccount } from "../../src/domain/ledger.ts";
-import { saveAccount, saveEntry, saveSchedule } from "../../src/domain/commands.ts";
-import { buildEntry, buildSchedule, type EntryDraft } from "../../src/domain/entryDraft.ts";
-import { selectOverview, scheduledEntries } from "../../src/domain/selectors/overview.ts";
-import { ledgerWriteSchema } from "../../src/validation/ledger.ts";
+import { emptyLedger, materialize, type PaymentAccount } from "../../apps/web/src/domain/ledger.ts";
+import { saveAccount, saveEntry, saveSchedule } from "../../apps/web/src/domain/commands.ts";
+import { buildEntry, buildSchedule, type EntryDraft } from "../../apps/web/src/domain/entryDraft.ts";
+import { selectOverview, scheduledEntries } from "../../apps/web/src/domain/selectors/overview.ts";
+import { ledgerWriteSchema } from "../../apps/web/src/validation/ledger.ts";
 
 const card: PaymentAccount = { id: "visa", name: "Visa", type: "credit" };
 const cash: PaymentAccount = { id: "cash", name: "Wallet", type: "cash" };

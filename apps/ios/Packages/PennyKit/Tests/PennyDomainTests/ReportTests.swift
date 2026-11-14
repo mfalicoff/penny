@@ -376,7 +376,7 @@ struct ReportTests {
         #expect(LedgerReport(ledger: paused).month(month).projected == before.recorded)
     }
 
-    /// v2 `summarizeMonth` (src/domain/summary.ts, tests/core/domain-rules.test.ts) and
+    /// v2 `summarizeMonth` (apps/web/src/domain/summary.ts, tests/core/domain-rules.test.ts) and
     /// redesign-states.json: projected adds every scheduled occurrence of the month, income,
     /// expenses and investment contributions alike.
     @Test("whenExpensesAndInvestmentsAreScheduled_MonthSummary_ShouldProjectEveryScheduledOccurrence")
@@ -414,7 +414,7 @@ struct ReportTests {
         #expect(recorded.recordedRemaining == summary.projectedRemaining)
     }
 
-    /// v2 `byDateDescThenId` (src/domain/search.ts): Home, Activity, search and trips share one
+    /// v2 `byDateDescThenId` (apps/web/src/domain/search.ts): Home, Activity, search and trips share one
     /// order. Trips used to break date ties by id descending.
     @Test("whenDatesTie_HomeActivitySearchAndTrips_ShouldOrderByDateDescendingThenId")
     func oneOrdering() throws {

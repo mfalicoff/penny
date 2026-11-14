@@ -95,7 +95,7 @@ The redesign's web cards (`contracts/design-baseline.json`, `acceptance.web: "MA
 
 ## Cross-client convergence
 
-`cross-client.real.spec.ts` runs the browser next to a second client that speaks the native app's ledger protocol ([native offline sync](ios-offline-sync.md)): bearer `GET /api/ledger`, a whole-ledger `PUT` with the revision it read, 409 on a stale revision, then the shared three-way merge `src/domain/merge.ts` (which the Swift `LedgerMerge` is held to through `contracts/fixtures/merge-conflicts.json`) and up to five retries. Server, database and protocol are real; only the client is not the Swift app.
+`cross-client.real.spec.ts` runs the browser next to a second client that speaks the native app's ledger protocol ([native offline sync](ios-offline-sync.md)): bearer `GET /api/ledger`, a whole-ledger `PUT` with the revision it read, 409 on a stale revision, then the shared three-way merge `apps/web/src/domain/merge.ts` (which the Swift `LedgerMerge` is held to through `contracts/fixtures/merge-conflicts.json`) and up to five retries. Server, database and protocol are real; only the client is not the Swift app.
 
 1. The protocol client records two expenses offline while the browser adds one online; on reconnect the server refuses the stale write once (409), the client merges and writes, and the server holds all three exactly once.
 2. The browser lists the other client's entries; Activity's October total equals the sum the server stores.

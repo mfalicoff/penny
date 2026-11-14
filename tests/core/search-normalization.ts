@@ -1,6 +1,6 @@
 // Reference implementation of the search v1 text normalization (docs/reference/search.md,
 // "Text normalization") used to check the shared fixtures. Local search in the clients
-// (src/domain/search.ts) is a plain substring match and does no folding.
+// (apps/web/src/domain/search.ts) is a plain substring match and does no folding.
 export function normalizeSearchText(value: string): string {
   return value
     .normalize("NFKD")

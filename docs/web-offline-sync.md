@@ -2,7 +2,7 @@
 
 [Documentation](README.md) · [Web app](../apps/web/README.md) · [Native offline sync](ios-offline-sync.md) · [Server ledger sync](reference/ledger.md) · [Domain rules](reference/domain-rules.md)
 
-The v2 web app (`apps/web`) keeps each signed-in account's personal ledger in the browser, saves to it while offline, and syncs it with the server's whole-ledger `GET`/`PUT /api/ledger`. It follows the native engine's rules ([native offline sync](ios-offline-sync.md)) and the shared TypeScript merge and recurrence (`src/domain/merge.ts`, `src/domain/ledger.ts`, [ADR 002](reference/architecture.md#adr-002-calculation-and-conflict-ownership)), which carries the native app's recurrence refinements (MAZ-90; moved into the shared module by MAZ-141, `apps/web/src/offline/merge.ts` re-exports it). The server never merges: it refuses a stale revision with 409.
+The v2 web app (`apps/web`) keeps each signed-in account's personal ledger in the browser, saves to it while offline, and syncs it with the server's whole-ledger `GET`/`PUT /api/ledger`. It follows the native engine's rules ([native offline sync](ios-offline-sync.md)) and the shared TypeScript merge and recurrence (`apps/web/src/domain/merge.ts`, `apps/web/src/domain/ledger.ts`, [ADR 002](reference/architecture.md#adr-002-calculation-and-conflict-ownership)), which carries the native app's recurrence refinements (MAZ-90; moved into the shared module by MAZ-141, `apps/web/src/offline/merge.ts` re-exports it). The server never merges: it refuses a stale revision with 409.
 
 TanStack Query is **not** the offline store. Query keeps server copies that can always be fetched again; pending work lives only in IndexedDB, so clearing or refetching Query (sign-out, expiry, `clearPrivateData`, a 401) never erases it.
 
@@ -12,7 +12,7 @@ TanStack Query is **not** the offline store. Query keeps server copies that can 
 | `openIndexedDb`, `MemoryLedgerDatabase` | `src/offline/database.ts` | The `penny-offline` database (atomic read-modify-write per key, `durability: "strict"`), and the in-memory stand-in used for tests and when the browser blocks storage |
 | `LedgerRecord`, `parseRecord` | `src/offline/record.ts` | The stored record (format 1), account scope and keys; unreadable, misplaced and newer-format copies |
 | `parseLedger`, `normalizeLedger` | `src/offline/wire.ts` | Wire ledger checks (v4 only; anything else is an incompatible ledger), unknown fields kept |
-| `mergeOfflineLedger` | `src/offline/merge.ts` | The shared three-way merge (`src/domain/merge.ts`), with the native recurrence refinements (below), used for every sync and the merge of saves that landed during a sync |
+| `mergeOfflineLedger` | `src/offline/merge.ts` | The shared three-way merge (`apps/web/src/domain/merge.ts`), with the native recurrence refinements (below), used for every sync and the merge of saves that landed during a sync |
 | `pendingChanges` | `src/offline/pending.ts` | "N changes waiting", the entries and schedules waiting to sync, and the entries deleted here |
 | `withLock`, `openLedgerChannel` | `src/offline/coordination.ts` | Web Locks (one sync per account across tabs) and the `penny-offline-ledger` BroadcastChannel |
 | `OfflineLedgerProvider`, `useLedgerSync`, `useLedgerEngine` | `src/offline/OfflineLedgerProvider.tsx` | One engine per signed-in account below `AuthGate`; Query, session and sign-out wiring |
@@ -47,7 +47,7 @@ IndexedDB database `penny-offline`, schema version 1, one object store `ledgers`
 
 ## Saving
 
-`LedgerSyncEngine.save(change)` (a `LedgerChange` from `src/domain/commands.ts`):
+`LedgerSyncEngine.save(change)` (a `LedgerChange` from `apps/web/src/domain/commands.ts`):
 
 1. Refused while signing out or switching accounts (`unavailable`), or when the stored copy is unreadable, from a newer version, or storage is blocked (`storage*`).
 2. In one transaction: read the record (none yet: `notLoaded`), apply the change (a rule refusal, including "changed on another device", is `rule` with the command's message), `materialize` due recurring entries with the browser's local date, write. A failed write is `writeFailed` (quota has its own message). Nothing changes on any failure, so the form keeps the draft.
@@ -70,7 +70,7 @@ The `PUT` is a whole-ledger compare-and-swap, so repeating it after an ambiguous
 
 The same as the native app, field by field and by record id in every list: a record only the server changed takes the server's version; different fields changed on each side both survive; **the same field changed on both sides takes this browser's value**; deleted here and edited on the server is deleted; edited here and deleted on the server comes back with this browser's version; created here is appended; a currency change here wins. Occurrence ids are `{ruleId}:{date}`, so materializing after any merge adds nothing that exists.
 
-Recurrence refinements (MAZ-90, the same four as the native `LedgerMerge`; in the shared `src/domain/merge.ts` since MAZ-141, so the golden `merge-conflicts.json` cases have them too). An occurrence is "untouched" when it equals what its rule (here or in the base) generates for its date, ignoring key order:
+Recurrence refinements (MAZ-90, the same four as the native `LedgerMerge`; in the shared `apps/web/src/domain/merge.ts` since MAZ-141, so the golden `merge-conflicts.json` cases have them too). An occurrence is "untouched" when it equals what its rule (here or in the base) generates for its date, ignoring key order:
 
 - When both sides advanced a rule's `nextDate`, the later one wins, so a date the server already consumed is not recorded again.
 - An occurrence both sides recorded keeps the server's copy when this browser's is untouched, so an edit made on the other device survives.
@@ -133,7 +133,7 @@ Recurrence refinements (MAZ-90, the same four as the native `LedgerMerge`; in th
 
 ## Search
 
-Activity (`/transactions`) searches the browser's ledger instead of the server while changes are pending, while offline, when the server can't be reached, and when the server's results predate the latest change shown here (`changedAt`, until the invalidated search refetches). Local results use the matcher from `src/domain/search.ts` (the trimmed, case-insensitive substring rule, newest first) with Activity's period, day, type and category filters (MAZ-88, `apps/web/src/features/activity/data.ts`), and say "on this device": pending creates and edits are found and marked "Waiting to sync", pending deletes are not, and server pages are never mixed in, so a deleted row can't come back and an accepted entry isn't listed twice. Shared expenses aren't kept offline: local results add the shared rows Query last loaded from `GET /api/households/projection` for the period (labelled "as Penny last loaded them"), never anything written to the offline store.
+Activity (`/transactions`) searches the browser's ledger instead of the server while changes are pending, while offline, when the server can't be reached, and when the server's results predate the latest change shown here (`changedAt`, until the invalidated search refetches). Local results use the matcher from `apps/web/src/domain/search.ts` (the trimmed, case-insensitive substring rule, newest first) with Activity's period, day, type and category filters (MAZ-88, `apps/web/src/features/activity/data.ts`), and say "on this device": pending creates and edits are found and marked "Waiting to sync", pending deletes are not, and server pages are never mixed in, so a deleted row can't come back and an accepted entry isn't listed twice. Shared expenses aren't kept offline: local results add the shared rows Query last loaded from `GET /api/households/projection` for the period (labelled "as Penny last loaded them"), never anything written to the offline store.
 
 ## Online-only actions
 

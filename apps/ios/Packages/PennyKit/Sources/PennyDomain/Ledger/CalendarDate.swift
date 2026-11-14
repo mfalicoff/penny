@@ -4,7 +4,7 @@
 /// change or device calendar can move them. All arithmetic here is proleptic Gregorian
 /// and pure integer math, so it behaves the same on every platform and never touches
 /// `Calendar`. Ordering is chronological, and equals the lexicographic order of the
-/// `YYYY-MM-DD` text, as the web app and src/domain compare dates.
+/// `YYYY-MM-DD` text, as the web app and apps/web/src/domain compare dates.
 public struct CalendarDate: Hashable, Comparable, Sendable, CustomStringConvertible {
     public let year: Int
     public let month: Int

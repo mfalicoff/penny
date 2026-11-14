@@ -54,6 +54,22 @@
 
       devShells = forSystems systems (pkgs: {
         default = pkgs.mkShell ({
+          # Entering an interactive `nix develop` opens the repo in Zed and the backend
+          # solution in Rider, so both inherit this shell's environment. Skipped under
+          # direnv (which evaluates the hook on every load), non-interactive runs and
+          # when PENNY_NO_EDITORS is set; each editor is skipped if it is not installed.
+          shellHook = ''
+            if [ -t 0 ] && [ -z "''${DIRENV_IN_ENVRC:-}" ] && [ -z "''${PENNY_NO_EDITORS:-}" ]; then
+              penny_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+              if command -v zeditor >/dev/null 2>&1; then
+                (zeditor "$penny_root" >/dev/null 2>&1 &)
+              fi
+              if command -v rider >/dev/null 2>&1; then
+                (rider "$penny_root/apps/backend/Penny.Backend.slnx" >/dev/null 2>&1 &)
+              fi
+              unset penny_root
+            fi
+          '';
           packages = with pkgs; [
             nodejs_24
             # Receipt OCR (MAZ-125): the API's text extraction and its tests need

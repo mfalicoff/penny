@@ -1,6 +1,6 @@
 {
-  // The shared TypeScript rules, the ledger write schema, tests and scripts (Node 24, run with
-  // --experimental-strip-types).
+  // The core tests and scripts (Node 24, run with --experimental-strip-types), and the shared
+  // ledger rules they import from apps/web/src.
   "compilerOptions": {
     "target": "ES2024",
     // ES modules resolved by the bundler rules, with the DOM lib for fetch/Response types.
@@ -17,6 +17,6 @@
     "isolatedModules": true,
     "types": ["node"]
   },
-  "include": ["src/**/*.ts", "tests/**/*.ts", "scripts/**/*.ts"],
+  "include": ["tests/**/*.ts", "scripts/**/*.ts"],
   "exclude": ["node_modules", "apps", "design-kit"]
 }

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { changeCurrency, deleteEntry, removeSchedule, saveCategory, saveEntry, saveSchedule, setScheduleActive } from "../../src/domain/commands.ts";
-import { emptyLedger, type Recurring, type Transaction } from "../../src/domain/ledger.ts";
+import { changeCurrency, deleteEntry, removeSchedule, saveCategory, saveEntry, saveSchedule, setScheduleActive } from "../../apps/web/src/domain/commands.ts";
+import { emptyLedger, type Recurring, type Transaction } from "../../apps/web/src/domain/ledger.ts";
 
 const entry: Transaction = { id: "lunch", title: "Lunch", kind: "expense", total: 2000, share: 1000, categoryId: "food", date: "2026-01-31", note: "" };
 const rule: Recurring = { ...entry, id: "weekly-lunch", frequency: "monthly", anchorDay: 31, active: false, nextDate: "2026-01-31" };

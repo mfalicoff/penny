@@ -1,6 +1,6 @@
-// Lint for the shared TypeScript rules (src/domain) and the ledger write schema (src/validation),
-// the core and full-stack tests and the scripts. The native app and the web app (apps/ios,
-// apps/web) have their own linters.
+// Lint for the core and full-stack tests and the scripts. The native app and the web app
+// (apps/ios, apps/web, including the shared ledger rules in apps/web/src/domain) have their own
+// linters.
 const { defineConfig } = require("eslint/config");
 const js = require("@eslint/js");
 const tseslint = require("typescript-eslint");
@@ -19,12 +19,4 @@ module.exports = defineConfig([
     },
   },
   { files: ["**/*.js", "**/*.cjs"], rules: { "@typescript-eslint/no-require-imports": "off" } },
-  {
-    files: ["src/domain/**/*.ts"],
-    rules: {
-      "no-restricted-imports": ["error", {
-        patterns: [{ group: ["node:*", "zod", "../validation/**"], message: "Domain rules must remain platform-independent: no packages or Node APIs." }],
-      }],
-    },
-  },
 ]);

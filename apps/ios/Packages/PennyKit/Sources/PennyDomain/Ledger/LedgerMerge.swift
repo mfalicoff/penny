@@ -1,4 +1,4 @@
-/// The three-way merge of unsynced local work onto a newer server ledger (`src/domain/merge.ts`;
+/// The three-way merge of unsynced local work onto a newer server ledger (`apps/web/src/domain/merge.ts`;
 /// golden cases in `contracts/fixtures/merge-conflicts.json`).
 ///
 /// `base` is the last ledger this device received from the server, `local` is `base` plus the
@@ -29,7 +29,7 @@
 ///   `nextDate`), and the occurrences this device recorded for it, untouched, go with it. A
 ///   rule edited here in any other field comes back, as any edited record does.
 ///
-/// The TypeScript merge (`src/domain/merge.ts`) runs the same four, and the golden fixture
+/// The TypeScript merge (`apps/web/src/domain/merge.ts`) runs the same four, and the golden fixture
 /// generated from it holds a `recurring:` case for each, so web and iOS check the same results.
 ///
 /// The merge is pure. Callers materialize recurrence on the result (`Recurrence.materialize`).
@@ -69,7 +69,7 @@ public enum LedgerMerge {
         return generators.contains { Recurrence.occurrence(of: $0, on: date) == entry } ? date : nil
     }
 
-    /// `mergeItems` (src/domain/merge.ts): remote order, minus local deletes, with local edits merged
+    /// `mergeItems` (apps/web/src/domain/merge.ts): remote order, minus local deletes, with local edits merged
     /// field by field, then local creations (and edits of remotely deleted records).
     static func items<Record: MergeableRecord>(_ base: [Record], _ local: [Record], _ remote: [Record]) -> [Record] {
         // Later duplicates win, as with a JavaScript `Map` built from the list.

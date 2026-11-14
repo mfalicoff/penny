@@ -9,11 +9,11 @@
 // date rules run at local noon, so any TZ produces the same files (tests check this).
 import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
-import { cents, nextOccurrence, personalShare, type Frequency, type Ledger } from "../../src/domain/ledger.ts";
-import { mergeLedger } from "../../src/domain/merge.ts";
-import { dateKeyIn } from "../../src/domain/calendar.ts";
-import { monthBreakdown, summarizeMonth } from "../../src/domain/summary.ts";
-import { ledgerWriteSchema } from "../../src/validation/ledger.ts";
+import { cents, nextOccurrence, personalShare, type Frequency, type Ledger } from "../../apps/web/src/domain/ledger.ts";
+import { mergeLedger } from "../../apps/web/src/domain/merge.ts";
+import { dateKeyIn } from "../../apps/web/src/domain/calendar.ts";
+import { monthBreakdown, summarizeMonth } from "../../apps/web/src/domain/summary.ts";
+import { ledgerWriteSchema } from "../../apps/web/src/validation/ledger.ts";
 
 const directory = new URL("../../contracts/fixtures/", import.meta.url);
 const generator = "scripts/fixtures/generate-golden.ts";

@@ -1,5 +1,5 @@
 {
-  "description": "Golden shared-expense split cases for calculateHouseholdSplits (src/domain/households.ts) and the .NET HouseholdSplits port. Amounts are integer cents; `error: true` means the split is rejected.",
+  "description": "Golden shared-expense split cases for calculateHouseholdSplits (apps/web/src/domain/households.ts) and the .NET HouseholdSplits port. Amounts are integer cents; `error: true` means the split is rejected.",
   "cases": [
     {
       "name": "equal remainder goes to the lexically first members",

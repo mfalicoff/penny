@@ -13,7 +13,7 @@ import {
   type HouseholdReimbursement,
   type SharedExpense,
   type SplitInput,
-} from "../../src/domain/households.ts";
+} from "../../apps/web/src/domain/households.ts";
 
 function expense(
   id: string,

@@ -16,7 +16,7 @@ public struct SharedShare: Hashable, Sendable {
     }
 }
 
-/// The server's shared-expense split (`HouseholdSplits`, src/domain `calculateHouseholdSplits`),
+/// The server's shared-expense split (`HouseholdSplits`, apps/web/src/domain `calculateHouseholdSplits`),
 /// so the form previews exactly what the server will store. The
 /// server still decides: it recomputes the split and rejects one that doesn't add up. Golden
 /// cases: `contracts/fixtures/shared-splits.json`.

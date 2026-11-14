@@ -43,5 +43,23 @@ export default defineConfig(
     languageOptions: { globals: globals.node },
     rules: { "no-restricted-properties": "off" },
   },
+  {
+    // The shared ledger rules are the reference the golden fixtures are generated from and the
+    // Swift and C# rules are held to: they stay platform-independent.
+    files: ["src/domain/**/*.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["node:*", "zod", "../validation/**"],
+              message: "Domain rules must remain platform-independent: no packages or Node APIs.",
+            },
+          ],
+        },
+      ],
+    },
+  },
   { files: ["eslint.config.js"], extends: [tseslint.configs.disableTypeChecked] },
 );

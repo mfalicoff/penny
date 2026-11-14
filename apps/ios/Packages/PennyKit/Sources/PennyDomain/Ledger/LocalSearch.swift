@@ -1,6 +1,6 @@
 /// The local search the current app uses for offline, pending and demo data
 /// (search-cases.json `substringCases` and `pendingCases`); v2 `searchMatcher` in
-/// src/domain/search.ts (docs/reference/domain-rules.md).
+/// apps/web/src/domain/search.ts (docs/reference/domain-rules.md).
 ///
 /// A row matches when the query, trimmed with JavaScript's `trim` and lowercased, is an exact
 /// substring of its one search document, `"{title} {note} {category name} {account name}"`

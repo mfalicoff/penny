@@ -300,9 +300,9 @@ struct LedgerChangeTests {
         }
     }
 
-    /// The exact shared sentence for every case, as in `src/domain/ledger.ts`
-    /// (`cents`, `personalShare`), `src/domain/commands.ts` and
-    /// `src/domain/entryDraft.ts`. The switch is exhaustive, so a new case cannot be
+    /// The exact shared sentence for every case, as in `apps/web/src/domain/ledger.ts`
+    /// (`cents`, `personalShare`), `apps/web/src/domain/commands.ts` and
+    /// `apps/web/src/domain/entryDraft.ts`. The switch is exhaustive, so a new case cannot be
     /// added without its sentence here.
     static func sharedMessage(_ error: LedgerRuleError) -> String {
         switch error {
@@ -338,7 +338,7 @@ struct LedgerChangeTests {
         case .tooManyAccounts: "You can add up to 300 accounts."
         case .duplicateCategoryName: "You already have a category with this name."
         case .currencyLocked: "Currency can only be changed before adding entries."
-        // src/domain has no sentence for these four (LedgerRuleError's doc comment); they are
+        // apps/web/src/domain has no sentence for these four (LedgerRuleError's doc comment); they are
         // pinned to the wording chosen in docs/ios-ledger-domain.md.
         case .invalidCategoryName: "Give your category a name of up to 50 characters."
         case .tooManyCategories: "You can add up to 300 categories."
