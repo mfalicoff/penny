@@ -1,7 +1,8 @@
-import { test } from "node:test";
+// @vitest-environment node
+import { test } from "vitest";
 import assert from "node:assert/strict";
-import { emptyLedger, type Transaction } from "../../apps/web/src/domain/ledger.ts";
-import { PAGE_SIZE, selectTransactions, shiftTransactionPeriod, type TransactionFilters } from "../../apps/web/src/domain/selectors/transactions.ts";
+import { emptyLedger, type Transaction } from "../../src/domain/ledger.ts";
+import { PAGE_SIZE, selectTransactions, shiftTransactionPeriod, type TransactionFilters } from "../../src/domain/selectors/transactions.ts";
 
 const expense: Transaction = { id: "meal", title: "Lunch", kind: "expense", total: 4000, share: 1000, categoryId: "food", accountId: "visa", date: "2024-02-29", note: "With Alex" };
 const ledger = { ...emptyLedger(), accounts: [{ id: "visa", name: "Everyday Visa", type: "credit" as const }], transactions: [

@@ -69,7 +69,7 @@ Wiring is done in the AppHost, not by hand: the API gets runtime and migration c
 
 To see a request end to end, use the web app (or `curl http://localhost:4173/api/ready`), then in Grafana open **Explore → Loki**, query `{service_name="penny-backend"}`, expand a line and follow **View trace** to Tempo; the trace links back to its logs and to Prometheus metrics such as `http_server_request_duration_seconds_count`.
 
-Grafana provisions the **Penny** dashboards (API, database, auth and rate limits, background jobs, .NET runtime, clients) and the example alert rules, from the same files the [operator stack](../../docs/observability.md) uses. Client ingest for the web and iOS apps listens on `http://localhost:4319` (OTLP/HTTP) and `http://localhost:12347/collect` (Faro). Grafana reads dashboard files at startup: restart the `grafana` resource after `npm run dashboards:generate`.
+Grafana provisions the **Penny** dashboards (API, database, auth and rate limits, background jobs, .NET runtime, clients) and the example alert rules, from the same files the [operator stack](../../docs/observability.md) uses. Client ingest for the web and iOS apps listens on `http://localhost:4319` (OTLP/HTTP) and `http://localhost:12347/collect` (Faro). Grafana reads dashboard files at startup: restart the `grafana` resource after `node scripts/grafana-dashboards.mjs`.
 
 Notes:
 
@@ -187,13 +187,11 @@ bash apps/backend/dotnet.sh csharpier check .
 bash apps/backend/dotnet.sh format analyzers Penny.Backend.slnx --verify-no-changes --no-restore
 bash apps/backend/dotnet.sh build Penny.Backend.slnx --configuration Release --no-restore
 bash apps/backend/dotnet.sh test --solution Penny.Backend.slnx --configuration Release --no-build --no-restore --report-trx --results-directory ../../test-results/backend
-npm run lint
-npm run typecheck
 ```
 
 Tests require the real container runtime; missing Docker/Podman fails the suite rather than skipping or substituting in-memory storage. For rootless Podman, enable its user socket and set `DOCKER_HOST=unix://$XDG_RUNTIME_DIR/podman/podman.sock`. Where Ryuk cannot run, set `TESTCONTAINERS_RYUK_DISABLED=true`; the fixture still explicitly disposes its container. Docker CI retains the resource reaper. Test output goes to `test-results/backend/` and containers use ephemeral test databases, never the development database.
 
-`.github/workflows/backend.yml` runs tool/locked restore, formatting, analyzers, Release build and real PostgreSQL tests on PRs and v2 pushes, with test reports on failure. A separate job runs the root npm lint/typecheck.
+`.github/workflows/backend.yml` runs tool/locked restore, formatting, analyzers, Release build and real PostgreSQL tests on PRs and v2 pushes, with test reports on failure.
 
 Troubleshooting: install exactly the SDK in global.json for SDK selection errors; fix/review package locks rather than disabling locked-mode; verify the container socket/image pull for container startup failures; check runtime grants and applied migrations (`penny."__EFMigrationsHistory"`) when readiness returns 503. The wrapper uses the short project-local `.cache/p` for test IPC sockets; very deep Unix checkout paths may require an explicitly shorter `TESTINGPLATFORM_PIPE_DIRECTORY` within the workspace. Do not log connection strings to diagnose failures. Explicitly update tool/package/image pins together and repeat clean-checkout tests.
 

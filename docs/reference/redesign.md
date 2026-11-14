@@ -10,7 +10,7 @@ The iOS-native redesign in [`docs/design/penny-ios/`](../design/penny-ios/README
 - the tokens (`--pk-*` in `design-kit/src/styles.css`), fonts, icons, materials, navigation and the route map (`navigation.routes`);
 - the decisions below, the behavior issues the design implies, and known gaps.
 
-`tests/core/contracts.test.ts` checks the baseline against the files on disk: the card list, markers and hashes, the kit components and Claude Design source map, the source hashes, and that every route in the baseline (`navigation.routes`) keeps a destination on iPhone, iPad and web. After a design change, update the affected entries and hashes in the same change.
+`apps/web/tests/domain/contracts.test.ts` checks the baseline against the files on disk: the card list, markers and hashes, the kit components and Claude Design source map, the source hashes, and that every route in the baseline (`navigation.routes`) keeps a destination on iPhone, iPad and web. After a design change, update the affected entries and hashes in the same change.
 
 ## Decisions (MAZ-132)
 

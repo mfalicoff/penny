@@ -22,7 +22,7 @@ All versions are exact in `package.json` and locked in `package-lock.json`.
 
 ## Developer setup
 
-Requirements: Node 24 (from the repository's Nix shell or your own install). The web app has its own `package.json` and lockfile, separate from the root package.
+Requirements: Node 24 (from the repository's Nix shell or your own install). The web app has its own `package.json` and lockfile; there is no package at the repository root.
 
 ```sh
 cd apps/web
@@ -34,7 +34,7 @@ The dev server forwards `/api/` to `PENNY_API_URL`, which defaults to `http://12
 
 ```sh
 # From the repository root: start the stack and note the API URL it prints.
-npm run test-env -- up --seed searchable-household
+node scripts/test-env/penny-env.mjs up --seed searchable-household
 # Then, in apps/web:
 PENNY_API_URL=http://127.0.0.1:<port> npm run dev
 ```
@@ -447,7 +447,7 @@ Firefox has no mobile emulation (Playwright refuses `isMobile` there) and the sp
 
 **Retries and flaky tests.** CI retries a failed test once. WebKit projects get a 60s test timeout instead of 30s, because the two-person household journeys run 3-4 times slower there. A test that passes on retry is reported as flaky in the list output, the job's annotations and the HTML report, and its failed attempt keeps its trace, screenshot and video. Triage: open the failed attempt's trace (network, console and DOM at each step) next to `api.log` from the same run, decide whether the app, the test or the environment is at fault, and fix it or file an issue with the trace. Don't raise timeouts or retries to hide it. Reproduce with the same project, for example `npm run test:e2e:real -- --project=webkit-phone --repeat-each=5`. Example: on `webkit-phone` (iPhone 15), `households.real` first waited out its 3-minute timeout because the "Share marked as paid" toast covered the next expense row, and Playwright's pointer resting on the toast paused it (the toast pauses on hover), so it never left; the spec now moves the pointer away and waits for the toast to close.
 
-On NixOS, where Playwright's downloaded browsers can't run, give `test-env run` a command that runs Playwright in the official image on the host network, with the repository at the same path. From the repository root: `npm run test-env -- run --oidc -- podman run --rm --network host --userns=keep-id -e HOME=/tmp -e PENNY_REAL_STACK=1 -e PENNY_API_URL -e PENNY_TEST_TOKEN -e PENNY_E2E_BROWSERS -v "$PWD:$PWD" -w "$PWD/apps/web" mcr.microsoft.com/playwright:v1.64.1-noble npx playwright test`. Without `PENNY_REAL_STACK=1` and the `test-env` wrapper, the same `podman run` runs the mocked smoke.
+On NixOS, where Playwright's downloaded browsers can't run, give `test-env run` a command that runs Playwright in the official image on the host network, with the repository at the same path. From the repository root: `node scripts/test-env/penny-env.mjs run --oidc -- podman run --rm --network host --userns=keep-id -e HOME=/tmp -e PENNY_REAL_STACK=1 -e PENNY_API_URL -e PENNY_TEST_TOKEN -e PENNY_E2E_BROWSERS -v "$PWD:$PWD" -w "$PWD/apps/web" mcr.microsoft.com/playwright:v1.64.1-noble npx playwright test`. Without `PENNY_REAL_STACK=1` and the `test-env` wrapper, the same `podman run` runs the mocked smoke.
 
 `e2e/auth.spec.ts` has the password and SSO sign-in journeys (including a real popup, cancellation, a blocked popup and a failed callback), expiry and sign-out, with `/api` and the provider mocked. `e2e/auth.real.spec.ts` runs the same journeys against the real stack.
 

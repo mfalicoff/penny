@@ -74,8 +74,7 @@ export default defineConfig({
   resolve: {
     alias: { "@design-kit": designKit, "@domain": sharedDomain },
   },
-  // Transform every file with this app's tsconfig rather than the root tsconfig.json, which
-  // targets the root package.
+  // Transform every file with this app's tsconfig.
   tsconfig: "./tsconfig.app.json",
   envPrefix: "PENNY_PUBLIC_",
   server: {

@@ -3,7 +3,7 @@
   "bootstrap-sha": "92f6bc3e6495278a28b0df59b8a55ab0806fc7b4",
   "packages": {
     ".": {
-      "release-type": "node",
+      "release-type": "simple",
       "initial-version": "1.0.0",
       "include-component-in-tag": false,
       "include-v-in-tag": true,

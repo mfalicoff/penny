@@ -13,6 +13,8 @@
     "preview": "vite preview",
     "design:sync": "node scripts/sync-design.ts",
     "design:check": "node scripts/sync-design.ts --check",
+    "fixtures:generate": "node scripts/fixtures/generate-golden.ts",
+    "fixtures:check": "node scripts/fixtures/generate-golden.ts --check",
     "lint": "eslint --max-warnings=0 .",
     "typecheck": "tsc -b --noEmit",
     "test": "vitest run",
@@ -20,7 +22,7 @@
     "test:e2e": "playwright test",
     "test:e2e:real": "node scripts/e2e-real.ts",
     "test:e2e:cards": "PENNY_CARDS=1 PENNY_E2E_BROWSERS=chromium PENNY_E2E_DEVICES=desktop node scripts/e2e-real.ts cards.real",
-    "check": "npm run design:check && npm run lint && npm run typecheck && npm run test && npm run build"
+    "check": "npm run design:check && npm run fixtures:check && npm run lint && npm run typecheck && npm run test && npm run build"
   },
   "dependencies": {
     "@grafana/faro-web-sdk": "2.13.0",

@@ -1,6 +1,6 @@
 // MAZ-62 full-stack environment suite: real .NET API processes, pinned PostgreSQL
 // containers and the local OIDC provider. Opt-in
-// (`npm run test:fullstack`): needs Docker or Podman, the .NET SDK and the search model.
+// (`npm --prefix scripts run test:fullstack`): needs Docker or Podman, the .NET SDK and the search model.
 import { after, before, test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -8,9 +8,9 @@ import { existsSync } from "node:fs";
 import { request as httpsRequest } from "node:https";
 import {
   buildApi, collectArtifacts, containerCli, control, down, downAll, label, statePath, up,
-} from "../../scripts/test-env/environment.mjs";
-import { client, scenario, seed } from "../../scripts/test-env/seed.mjs";
-import { clientId, startOidcProvider } from "../../scripts/test-env/oidc-provider.mjs";
+} from "../../test-env/environment.mjs";
+import { client, scenario, seed } from "../../test-env/seed.mjs";
+import { clientId, startOidcProvider } from "../../test-env/oidc-provider.mjs";
 
 const started = [];
 const start = async (options = {}) => {

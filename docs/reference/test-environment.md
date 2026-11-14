@@ -2,7 +2,7 @@
 
 One command starts a disposable environment: a pinned PostgreSQL 18 container (pg_trgm and pgvector), its own migrated database and restricted roles, and the real .NET API built from this checkout. Browser (MAZ-95) and simulator (MAZ-81) runners point at it, seed deterministic data, move the server clock, inject failures and tear it down. The same seeds and language-neutral fixtures are consumed by the TypeScript, C# and Swift suites.
 
-Code: `scripts/test-env/` (runner, seeder, local OIDC provider), `scripts/fixtures/generate-golden.ts`, `apps/backend/src/Penny.Backend.Api/Testing/` (test controls) and `Persistence/Testing/TestDataReset.cs`, `contracts/fixtures/`, `contracts/swift/`. Tests: `tests/core/golden-fixtures.test.ts`, `tests/core/test-env.test.ts`, `tests/fullstack/environment.test.mjs`, `UnitTests/Contracts/GoldenFixtureTests`, `UnitTests/Configuration/TestControlOptionsTests` and `FaultRegistryTests`, `IntegrationTests/Http/TestControlsTests`, `IntegrationTests/Contracts/FullStackSeedTests`, `contracts/swift/Tests`.
+Code: `scripts/test-env/` (runner, seeder, local OIDC provider), `apps/web/scripts/fixtures/generate-golden.ts`, `apps/backend/src/Penny.Backend.Api/Testing/` (test controls) and `Persistence/Testing/TestDataReset.cs`, `contracts/fixtures/`, `contracts/swift/`. Tests: `apps/web/tests/domain/golden-fixtures.test.ts`, `scripts/tests/test-env.test.ts`, `scripts/tests/fullstack/environment.test.mjs`, `UnitTests/Contracts/GoldenFixtureTests`, `UnitTests/Configuration/TestControlOptionsTests` and `FaultRegistryTests`, `IntegrationTests/Http/TestControlsTests`, `IntegrationTests/Contracts/FullStackSeedTests`, `contracts/swift/Tests`.
 
 ## Prerequisites
 
@@ -32,11 +32,11 @@ Each run `initdb`s a cluster in `.cache/test-env/<id>/pgdata` (random admin pass
 
 ```sh
 # Start, seed, run a command against it, collect artifacts, always tear down:
-npm run test-env -- run --seed searchable-household -- npx playwright test
+node scripts/test-env/penny-env.mjs run --seed searchable-household -- npx playwright test
 # Or keep an environment up while you work:
-npm run test-env -- up --seed searchable-household
-npm run test-env -- status
-npm run test-env -- down
+node scripts/test-env/penny-env.mjs up --seed searchable-household
+node scripts/test-env/penny-env.mjs status
+node scripts/test-env/penny-env.mjs down
 ```
 
 `up` prints the run id, API URL and state file; `run` exports `PENNY_TEST_RUN`, `PENNY_API_URL` and `PENNY_TEST_TOKEN` (and `PENNY_OIDC_ISSUER` with `--oidc`) to the command and exits with its status. Options: `--seed NAME`, `--host 0.0.0.0` (listen on every interface), `--port N`, `--origins a,b` (browser origins allowed by CORS), `--oidc`, `--no-build` (reuse the Release build), `--no-worker` (no shared recurrence worker), `--run-id ID`, `--keep` (`run` only: leave it up). Other commands act on the most recent environment unless `--run-id` is given: `env` (print exports), `reset`, `clock <ISO>|reset`, `fault '<json>'|clear`, `user [label]`, `seed <scenario>`, `artifacts [dir]`, `down [--all]`.
@@ -107,7 +107,7 @@ Browsers must ignore HTTPS errors for the provider origin (Playwright `ignoreHTT
 | `redesign-states.json` | Data state for each of the 61 redesign cards (scenario, alias, view, appearances, faults, stale write) and recorded/projected totals | TS (coverage, totals recomputed from the seed), C# (stale payment 409, totals from the API), Swift decoding |
 | `manifest.json` | SHA-256 and consumers of every fixture | TS, C#, Swift |
 
-`money`, `recurrence` and `merge-conflicts` are generated from the reference TypeScript rules (`apps/web/src/domain`) by `npm run fixtures:generate`; `npm run fixtures:check` (CI) fails if any generated file or the manifest is stale. Generation reads no clock, randomness or locale; the TS suite regenerates under UTC+14, UTC−3:30 and Lord Howe and compares bytes. Hand-written fixtures are covered by the manifest hash, so an edit must regenerate the manifest, which every language checks. All consumers decode into strict typed models (zod `strictObject`, `System.Text.Json` with unmapped members disallowed and required members enforced, Swift `Codable` with a re-encode comparison), so an unknown, missing or mistyped field fails everywhere. `FullStackSeedTests` also seeds the scenario twice and compares normalized ledgers and projections.
+`money`, `recurrence` and `merge-conflicts` are generated from the reference TypeScript rules (`apps/web/src/domain`) by `npm --prefix apps/web run fixtures:generate`; `npm --prefix apps/web run fixtures:check` (CI) fails if any generated file or the manifest is stale. Generation reads no clock, randomness or locale; the TS suite regenerates under UTC+14, UTC−3:30 and Lord Howe and compares bytes. Hand-written fixtures are covered by the manifest hash, so an edit must regenerate the manifest, which every language checks. All consumers decode into strict typed models (zod `strictObject`, `System.Text.Json` with unmapped members disallowed and required members enforced, Swift `Codable` with a re-encode comparison), so an unknown, missing or mistyped field fails everywhere. `FullStackSeedTests` also seeds the scenario twice and compares normalized ledgers and projections.
 
 The Swift package (`contracts/swift`, Swift 6, no dependencies) supplies the models, loader and hashes; behavior assertions are added by MAZ-70 (ledger, recurrence, reports and local search: `apps/ios/Packages/PennyKit/Tests/PennyDomainTests`, [ledger rules](../ios-ledger-domain.md#fixtures)), 71 (sync), 73 (search) and 75 (shared money) as they port the rules.
 
@@ -117,7 +117,7 @@ The Swift package (`contracts/swift`, Swift 6, no dependencies) supplies the mod
 
 ## Artifacts and CI
 
-`run` and the full-stack suite copy `api.log`, `postgres.log` and `environment.json` (no token or passwords) to `test-results/fullstack/<run id>/`. CI (`.github/workflows/backend.yml`) runs `fixtures:check` and `npm run test:fullstack` in the `fullstack` job, always sweeps leftovers with `down --all` and uploads `test-results/fullstack/`; `.github/workflows/web.yml` runs the browser specs `apps/web/e2e/*.real.spec.ts` in one environment per engine (Chromium, Firefox, WebKit) through `npm run test:e2e:real` in `apps/web` and uploads the Playwright evidence with these logs ([browser tests](../../apps/web/README.md#browser-tests)); the `swift-contracts` job runs `swift test --package-path contracts/swift` in the digest-pinned `swift:6.2-noble` image. Reproduce locally with the same commands; for the Swift job without a Mac:
+`run` and the full-stack suite copy `api.log`, `postgres.log` and `environment.json` (no token or passwords) to `test-results/fullstack/<run id>/`. CI (`.github/workflows/backend.yml`) runs `fixtures:check` and `npm --prefix scripts run test:fullstack` in the `fullstack` job, always sweeps leftovers with `down --all` and uploads `test-results/fullstack/`; `.github/workflows/web.yml` runs the browser specs `apps/web/e2e/*.real.spec.ts` in one environment per engine (Chromium, Firefox, WebKit) through `npm run test:e2e:real` in `apps/web` and uploads the Playwright evidence with these logs ([browser tests](../../apps/web/README.md#browser-tests)); the `swift-contracts` job runs `swift test --package-path contracts/swift` in the digest-pinned `swift:6.2-noble` image. Reproduce locally with the same commands; for the Swift job without a Mac:
 
 ```sh
 podman run --rm -v "$PWD/contracts:/work/contracts:ro,z" -w /work/contracts/swift \

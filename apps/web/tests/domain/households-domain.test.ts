@@ -1,4 +1,5 @@
-import { test } from "node:test";
+// @vitest-environment node
+import { test } from "vitest";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
@@ -13,7 +14,7 @@ import {
   type HouseholdReimbursement,
   type SharedExpense,
   type SplitInput,
-} from "../../apps/web/src/domain/households.ts";
+} from "../../src/domain/households.ts";
 
 function expense(
   id: string,
@@ -29,7 +30,7 @@ function expense(
 }
 
 test("golden split fixtures shared with the .NET backend", () => {
-  const golden = JSON.parse(readFileSync(new URL("../../contracts/fixtures/shared-splits.json", import.meta.url), "utf8")) as {
+  const golden = JSON.parse(readFileSync(new URL("../../../../contracts/fixtures/shared-splits.json", import.meta.url), "utf8")) as {
     cases: { name: string; totalCents: number; input: SplitInput; expected?: unknown; error?: true }[];
   };
   for (const item of golden.cases) {
@@ -39,7 +40,7 @@ test("golden split fixtures shared with the .NET backend", () => {
 });
 
 test("golden monthly settlement fixtures shared with the .NET backend", () => {
-  const golden = JSON.parse(readFileSync(new URL("../../contracts/fixtures/settlement.json", import.meta.url), "utf8")) as {
+  const golden = JSON.parse(readFileSync(new URL("../../../../contracts/fixtures/settlement.json", import.meta.url), "utf8")) as {
     cases: { name: string; month: string; expenses: SharedExpense[]; reimbursements: HouseholdReimbursement[]; expected: unknown }[];
     suggestionErrors: { name: string; balances: { userId: string; balanceCents: number }[] }[];
   };

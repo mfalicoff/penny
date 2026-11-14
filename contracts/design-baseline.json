@@ -79,7 +79,7 @@
     },
     {
       "path": "docs/design/penny-ios/render.mjs",
-      "sha256": "6a028ec6558ea0d41617a9e9a8c56396489514ce049f3cb193980df501ce853f"
+      "sha256": "48f863420f35a204c886af4e6f38d307403624a6e1f96cafaec5fc026b374374"
     },
     {
       "path": "docs/design/penny-ios/assets/penny.css",
@@ -143,7 +143,7 @@
     },
     {
       "path": "docs/design/visual-acceptance.md",
-      "sha256": "b719be0765ffe97d9c94e23258eb32201d57ca192667612ce873b6b2ec4c78e3"
+      "sha256": "5470d89cc7860471a8028072489f5e4c94fecafbc1581a87a787bd36f5eb4373"
     }
   ],
   "tokens": {

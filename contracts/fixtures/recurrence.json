@@ -1,5 +1,5 @@
 {
-  "generator": "scripts/fixtures/generate-golden.ts",
+  "generator": "apps/web/scripts/fixtures/generate-golden.ts",
   "description": "Recurrence: next occurrence by frequency and anchor day (short months, leap years, year ends, DST weeks) and 12-step sequences that keep the anchor.",
   "next": [
     {

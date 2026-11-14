@@ -9,8 +9,7 @@ Run all commands from the repository root. For a deployed server, use the [self-
 The browser app is `apps/web` (React, Vite, TanStack) on the .NET API. Use Node **24 or newer**, npm, and Docker or Podman for the disposable PostgreSQL and API stack:
 
 ```sh
-npm ci
-npm run test-env -- up --seed searchable-household   # prints the API URL
+node scripts/test-env/penny-env.mjs up --seed searchable-household   # prints the API URL
 cd apps/web
 npm ci
 PENNY_API_URL=http://127.0.0.1:<port> npm run dev     # http://localhost:4173
@@ -83,7 +82,7 @@ install or enable the [Renovate GitHub App](https://github.com/apps/renovate) fo
 this repository. No repository token or scheduled workflow is needed.
 See [Renovate onboarding](https://docs.renovatebot.com/getting-started/installing-onboarding/).
 
-The root toolchain runs TypeScript 7 and ESLint 10:
+The tooling package (`scripts/`) runs TypeScript 7 and ESLint 10:
 
 - `@typescript/native` aliases TypeScript 7 and supplies `tsc` for
   `npm run typecheck`. The `typescript` dependency aliases
@@ -91,11 +90,11 @@ The root toolchain runs TypeScript 7 and ESLint 10:
   `typescript-eslint` and other tooling. Preserve this
   [official side-by-side setup](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/#running-side-by-side-with-typescript-6.0)
   until those tools support the new API.
-- `eslint.config.js` uses `typescript-eslint`; `apps/web/eslint.config.js` keeps `apps/web/src/domain` free of
-  packages and Node APIs.
+- `scripts/eslint.config.js` uses `typescript-eslint`; `apps/web/eslint.config.js` keeps
+  `apps/web/src/domain` free of packages and Node APIs.
 
-After dependency updates, run lint, typecheck and the core tests at the root, and
-each app's own checks.
+After dependency updates, run the checks of each package you updated (`scripts/` and
+each app).
 
 Validate configuration changes from the repository root:
 
@@ -107,19 +106,16 @@ npx --yes --package renovate -- renovate-config-validator --strict --no-global r
 
 - `apps/ios/`, `apps/web/`, `apps/backend/`: the native iOS app, the browser app and the .NET API, each with its own README.
 - `apps/web/src/domain/`: the pure TypeScript ledger rules (types, integer-cent calculations, recurrence, immutable commands, merge, search, summaries, entry-draft conversion and the household projection), the reference the native and web apps port. See [domain rules](reference/domain-rules.md).
-- `apps/web/src/validation/ledger.ts`: the ledger write schema the golden fixtures and core tests check ledgers against.
+- `apps/web/src/validation/ledger.ts`: the ledger write schema the golden fixtures and the reference tests (`apps/web/tests/domain`) check ledgers against.
 - `contracts/`: OpenAPI, the golden fixtures and the design baseline shared by every client.
-- `scripts/`: the fixture generator, the full-stack test environment, deployment and observability smoke tests, and the version check.
+- `scripts/`: the tooling package: the full-stack test environment, deployment and observability smoke tests, the Grafana dashboards and the version check. There is no package at the repository root.
 - `deploy/`, `nix/`: the Compose stack and the NixOS module.
 
 ## Verification
 
 ```sh
-npm run lint
-npm run typecheck
-npm test
-npm run fixtures:check
-(cd apps/web && npm ci && npm run check)
+(cd scripts && npm ci && npm run lint && npm run typecheck && npm test)
+(cd apps/web && npm ci && npm run check)   # includes fixtures:check and the shared rules' tests
 apps/ios/scripts/ios.sh ci
 ```
 

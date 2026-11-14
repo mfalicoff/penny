@@ -244,7 +244,7 @@ Code: `Application/Receipts` (`ReceiptTextService`, `ReceiptTextChunker`, `Recei
 ## Contract changes (done in MAZ-121, contract 1.4.0)
 
 - `SearchRequest` is the request above (`SearchPeriod`, `day` and `mode` are gone); `SearchItem` has `match`; `SearchResponse` no longer has `ledgerRevision`, `searchRevision` or `scope`.
-- `contracts/fixtures/search-cases.json` has the new `foldCases` (21 normalization cases, checked by the TypeScript reference normalizer `tests/core/search-normalization.ts` and the .NET `SearchTextTests`), a server ledger with title/text/typo/filter/sort/pagination cases and English, French and mixed-language meaning cases (run by `SearchFixtureTests` on real PostgreSQL with the real model). `substringCases` and `pendingCases` describe the clients' local search.
+- `contracts/fixtures/search-cases.json` has the new `foldCases` (21 normalization cases, checked by the TypeScript reference normalizer `apps/web/tests/domain/search-normalization.ts` and the .NET `SearchTextTests`), a server ledger with title/text/typo/filter/sort/pagination cases and English, French and mixed-language meaning cases (run by `SearchFixtureTests` on real PostgreSQL with the real model). `substringCases` and `pendingCases` describe the clients' local search.
 - MAZ-125 (no schema change to the contract): the description mentions receipt text, and `receiptCases` in `search-cases.json` holds a ledger, synthetic receipt lines and text, typo and English/French meaning cases run by `ReceiptTextSearchTests` with the real engine and model.
 
 ## Out of scope for v1

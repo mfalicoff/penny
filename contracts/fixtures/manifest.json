@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "description": "Every shared fixture, its SHA-256 (LF line endings) and the suites consuming it. Regenerate with `node --experimental-strip-types scripts/fixtures/generate-golden.ts`; tests in each language verify the hashes, so an unreviewed edit fails everywhere.",
+  "description": "Every shared fixture, its SHA-256 (LF line endings) and the suites consuming it. Regenerate with `node --experimental-strip-types apps/web/scripts/fixtures/generate-golden.ts`; tests in each language verify the hashes, so an unreviewed edit fails everywhere.",
   "fixtures": [
     {
       "file": "full-stack-seeds.json",
@@ -8,8 +8,8 @@
       "generatedBy": null,
       "consumers": {
         "typescript": [
-          "tests/core/golden-fixtures.test.ts",
-          "tests/fullstack/environment.test.mjs"
+          "apps/web/tests/domain/golden-fixtures.test.ts",
+          "scripts/tests/fullstack/environment.test.mjs"
         ],
         "csharp": [
           "apps/backend/tests/Penny.Backend.IntegrationTests/Contracts/FullStackSeedTests.cs"
@@ -25,7 +25,7 @@
       "generatedBy": null,
       "consumers": {
         "typescript": [
-          "tests/core/contracts.test.ts"
+          "apps/web/tests/domain/contracts.test.ts"
         ],
         "csharp": [
           "apps/backend/tests/Penny.Backend.IntegrationTests/Controllers/LedgerTests.cs"
@@ -35,11 +35,11 @@
     },
     {
       "file": "merge-conflicts.json",
-      "sha256": "4538510c5350d48b9931ec8b1347b094c0ad6ea65971b274d5b490f8b604e349",
-      "generatedBy": "scripts/fixtures/generate-golden.ts",
+      "sha256": "5858c476bba1153fb9bc2b71ebcf941bffd6dbe09bc2de5d5c8e6efa445c6833",
+      "generatedBy": "apps/web/scripts/fixtures/generate-golden.ts",
       "consumers": {
         "typescript": [
-          "tests/core/golden-fixtures.test.ts"
+          "apps/web/tests/domain/golden-fixtures.test.ts"
         ],
         "csharp": "not applicable: the server never merges; it rejects stale writes with 409 (http-journey.json)",
         "swift": [
@@ -50,11 +50,11 @@
     },
     {
       "file": "money.json",
-      "sha256": "17ca9f55f480cd0766a20f1e11863b02d83d2e5d7e2fff0e5bcb43bdd126a96a",
-      "generatedBy": "scripts/fixtures/generate-golden.ts",
+      "sha256": "e2d53b34ebb35a58998d9862b2de1266bf24aa1d4d922190746bbe8ce956a42a",
+      "generatedBy": "apps/web/scripts/fixtures/generate-golden.ts",
       "consumers": {
         "typescript": [
-          "tests/core/golden-fixtures.test.ts"
+          "apps/web/tests/domain/golden-fixtures.test.ts"
         ],
         "csharp": [
           "apps/backend/tests/Penny.Backend.UnitTests/Contracts/GoldenFixtureTests.cs"
@@ -66,11 +66,11 @@
     },
     {
       "file": "month-totals.json",
-      "sha256": "3701a5b197689b8a337e51600eaa6740dc67d3df0aade8b9634a2caa46a3b462",
-      "generatedBy": "scripts/fixtures/generate-golden.ts",
+      "sha256": "92acc116477daeda86bc1f5873271e3d2ec4333003776c8d9c70b2c2dc66da6a",
+      "generatedBy": "apps/web/scripts/fixtures/generate-golden.ts",
       "consumers": {
         "typescript": [
-          "tests/core/golden-fixtures.test.ts"
+          "apps/web/tests/domain/golden-fixtures.test.ts"
         ],
         "csharp": "not applicable: Left to spend and Projected are client calculations; the seeded server's ledger is checked against redesign-states.json totals (FullStackSeedTests)",
         "swift": [
@@ -85,7 +85,7 @@
       "generatedBy": null,
       "consumers": {
         "typescript": [
-          "tests/core/contracts.test.ts"
+          "apps/web/tests/domain/contracts.test.ts"
         ],
         "csharp": [
           "apps/backend/tests/Penny.Backend.UnitTests/Households/HouseholdSplitsTests.cs"
@@ -97,11 +97,11 @@
     },
     {
       "file": "recurrence.json",
-      "sha256": "5354085bf14750e36ddc884ba1e2be40f4b9138a6450e141466f0e32139a46cc",
-      "generatedBy": "scripts/fixtures/generate-golden.ts",
+      "sha256": "f790714cdf18aa143277db815c9dcffcbb9e98b398d1584624a58f72713e2499",
+      "generatedBy": "apps/web/scripts/fixtures/generate-golden.ts",
       "consumers": {
         "typescript": [
-          "tests/core/golden-fixtures.test.ts"
+          "apps/web/tests/domain/golden-fixtures.test.ts"
         ],
         "csharp": [
           "apps/backend/tests/Penny.Backend.UnitTests/Contracts/GoldenFixtureTests.cs"
@@ -117,7 +117,7 @@
       "generatedBy": null,
       "consumers": {
         "typescript": [
-          "tests/core/golden-fixtures.test.ts"
+          "apps/web/tests/domain/golden-fixtures.test.ts"
         ],
         "csharp": "not applicable: client presentation states",
         "swift": [
@@ -131,8 +131,8 @@
       "generatedBy": null,
       "consumers": {
         "typescript": [
-          "tests/core/contracts.test.ts",
-          "tests/core/transactions.test.ts"
+          "apps/web/tests/domain/contracts.test.ts",
+          "apps/web/tests/domain/transactions.test.ts"
         ],
         "csharp": [
           "apps/backend/tests/Penny.Backend.UnitTests/Search/SearchTextTests.cs",
@@ -147,7 +147,7 @@
       "generatedBy": null,
       "consumers": {
         "typescript": [
-          "tests/core/households-domain.test.ts"
+          "apps/web/tests/domain/households-domain.test.ts"
         ],
         "csharp": [
           "apps/backend/tests/Penny.Backend.UnitTests/Households/MonthlySettlementTests.cs"
@@ -161,7 +161,7 @@
       "generatedBy": null,
       "consumers": {
         "typescript": [
-          "tests/core/households-domain.test.ts"
+          "apps/web/tests/domain/households-domain.test.ts"
         ],
         "csharp": [
           "apps/backend/tests/Penny.Backend.UnitTests/Households/HouseholdSplitsTests.cs"

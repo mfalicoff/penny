@@ -226,7 +226,7 @@ All are in the **Penny** folder and linked from each other's **Penny dashboards*
 
 Vertical purple markers show API starts.
 
-Provisioned dashboards are read-only. To change one, edit `scripts/grafana-dashboards.mjs`, run `npm run dashboards:generate` and restart Grafana. `npm run dashboards:check` (also part of `npm test`) fails when the JSON and the script disagree. To experiment, use **Save as** in Grafana for your own copy.
+Provisioned dashboards are read-only. To change one, edit `scripts/grafana-dashboards.mjs`, run `node scripts/grafana-dashboards.mjs` and restart Grafana. `node scripts/grafana-dashboards.mjs --check` (also part of `npm test`) fails when the JSON and the script disagree. To experiment, use **Save as** in Grafana for your own copy.
 
 ## Alerts
 
@@ -273,7 +273,7 @@ The Aspire AppHost (`apps/backend/README.md`) starts the same Alloy, Loki, Tempo
 
 ## Tests
 
-- `npm test` runs `tests/core/observability.test.ts`: dashboards match their generator, panels use data source variables and the standard filters, alert rules use provisioned data sources, only client ingest and Grafana are published, and images match the AppHost pins.
+- `npm test` runs `scripts/tests/observability.test.ts`: dashboards match their generator, panels use data source variables and the standard filters, alert rules use provisioned data sources, only client ingest and Grafana are published, and images match the AppHost pins.
 - `scripts/observability-smoke.mjs` (CI, after the deploy smoke test) starts Penny with telemetry on and this stack beside it. It then checks that API metrics, logs and traces (including SQL spans) for a request id reach Prometheus, Loki and Tempo through Grafana. It also checks that client errors and crashes arrive, and that foreign origins, oversized bodies and records impersonating the API are refused. Finally it checks that Grafana provisioned every data source, dashboard and alert rule, that every rule evaluates, and that the crash alert fires.
 
 ```sh

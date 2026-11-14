@@ -1,7 +1,8 @@
-import { test } from "node:test";
+// @vitest-environment node
+import { test } from "vitest";
 import assert from "node:assert/strict";
-import { buildMoneyFlow, layoutMoneyFlow } from "../../apps/web/src/domain/selectors/moneyFlow.ts";
-import { emptyLedger, type Transaction } from "../../apps/web/src/domain/ledger.ts";
+import { buildMoneyFlow, layoutMoneyFlow } from "../../src/domain/selectors/moneyFlow.ts";
+import { emptyLedger, type Transaction } from "../../src/domain/ledger.ts";
 const categories = emptyLedger().categories;
 const entry = (
   kind: Transaction["kind"],

@@ -38,7 +38,7 @@ Each row is a feature area. "Server-checked" means the test reads the account's 
 
 ### Redesign card trace
 
-Every card in [design-baseline.json](../contracts/design-baseline.json) whose native acceptance is MAZ-82 has a row. `tests/core/native-qa.test.ts` fails if a card is missing here or if this page names an XCUITest suite or test that does not exist. Visual comparison against the cards is MAZ-122's; a row marked Covered means the behavior is exercised, not that the screen matches the card pixel for pixel. The eight `web-*` cards are browser references (MAZ-96); their native counterparts are named.
+Every card in [design-baseline.json](../contracts/design-baseline.json) whose native acceptance is MAZ-82 has a row. `scripts/tests/native-qa.test.ts` fails if a card is missing here or if this page names an XCUITest suite or test that does not exist. Visual comparison against the cards is MAZ-122's; a row marked Covered means the behavior is exercised, not that the screen matches the card pixel for pixel. The eight `web-*` cards are browser references (MAZ-96); their native counterparts are named.
 
 | Card | Native suites | Notes | Status |
 | --- | --- | --- | --- |
@@ -170,7 +170,7 @@ Recorded for MAZ-82 on 2026-11-12, on an Apple Silicon Mac with Xcode 27.2, the 
 | Full plan | iPad | MAZ-82 suites | Entries, search, sync conflicts and settings: 8 passed. Organize: 3 of 3 crashed the app (Settings › Manage page in the detail column), fixed in this branch; see the rerun below |
 | Full plan, after the iPad fix | iPad | `OrganizeJourneyTests`, `AddEntryOverSettingsTests`, the join link over Settings | 5 passed (the three organize journeys, Add entry over a pushed Settings page, the join link over Settings) |
 
-Also run on this branch: `apps/ios/scripts/ios.sh lint` (pass), `ios.sh package-test` (775 Swift tests in PennyKit, pass, including AccessibilityIDTests with the new identifiers), `ios.sh ui-build` and `ios.sh release-check` (pass; no test controls in Release), `npm run test:core` (155 tests, pass, including `tests/core/native-qa.test.ts`), `npm run lint`, `npm run typecheck`, `npm run version:check` (pass). The backend is unchanged by MAZ-82; its unit tests ran with 510 of 511 passing: `OcrOptionsTests.whenValueInvalid_Read_ShouldFailWithTheSettingName(Ocr:EngineMemoryMegabytes, 128)` fails. This branch changes no backend file, so the failure is pre-existing on `origin/v2` (not investigated here). The run also needed `TESTINGPLATFORM_PIPE_DIRECTORY` set to a short path: the worktree's default `.cache/p` exceeded the 103-byte Unix socket limit.
+Also run on this branch: `apps/ios/scripts/ios.sh lint` (pass), `ios.sh package-test` (775 Swift tests in PennyKit, pass, including AccessibilityIDTests with the new identifiers), `ios.sh ui-build` and `ios.sh release-check` (pass; no test controls in Release), `npm run test:core` (155 tests, pass, including `scripts/tests/native-qa.test.ts`), `npm run lint`, `npm run typecheck`, `node scripts/check-version.mjs` (pass). The backend is unchanged by MAZ-82; its unit tests ran with 510 of 511 passing: `OcrOptionsTests.whenValueInvalid_Read_ShouldFailWithTheSettingName(Ocr:EngineMemoryMegabytes, 128)` fails. This branch changes no backend file, so the failure is pre-existing on `origin/v2` (not investigated here). The run also needed `TESTINGPLATFORM_PIPE_DIRECTORY` set to a short path: the worktree's default `.cache/p` exceeded the 103-byte Unix socket limit.
 
 Not run here: the existing `HouseholdJourneyTests` (except the join link), `TripJourneyTests`, `ReceiptJourneyTests`, `AuthJourneyTests`, `NotificationJourneyTests`, `OverviewJourneyTests` and `ScreenshotTests` (their harness is unchanged apart from `openSettings` retrying and faults being cleared at the start; the nightly matrix runs them), the backend integration tests, and the iOS 26.0 minimum-OS row.
 
@@ -206,7 +206,7 @@ Simulators cannot check these; run them on a physical iPhone and iPad with the r
    - Test bug (a changed identifier, a new system presentation such as a popover instead of an action sheet): fix the driver (`PennyUITests/Support`) in the same day.
    - Flaky (passes on the Full plan's retry): follow the [flaky-test policy](ios-ui-tests.md#flaky-test-policy): issue with the xcresult, fix or `XCTSkip("Flaky: MAZ-…")` within a week.
    - Environment (simulator runtime missing, stack did not start): re-run; if it persists, fix the runner, not the test.
-4. **Reproduce one test**: `PENNY_UI_DEVICES=iphone PENNY_UI_ONLY=PennyUITests/<Class>/<test> apps/ios/scripts/ios.sh ui-test full`, or keep a stack up (`npm run test-env -- up --oidc`) and run it from Xcode.
+4. **Reproduce one test**: `PENNY_UI_DEVICES=iphone PENNY_UI_ONLY=PennyUITests/<Class>/<test> apps/ios/scripts/ios.sh ui-test full`, or keep a stack up (`node scripts/test-env/penny-env.mjs up --oidc`) and run it from Xcode.
 5. **Accessibility findings**: read the `audit-*.txt` attachment. Fix in the view (labels, `accessibilityElement`, Dynamic Type styles, contrast tokens) or, for a system control Penny does not draw, add a reviewed entry to `AccessibilityAuditTests.accepted` and to the table above.
 6. **Performance budget exceeded**: re-run the Performance plan once; if it is still over, compare the `perf-*.json` attachments with the last green nightly and bisect.
 

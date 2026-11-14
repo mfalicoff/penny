@@ -13,7 +13,7 @@ struct StackConfiguration: Sendable {
 
     /// From the runner's environment (`scripts/ios.sh ui-test` passes `TEST_RUNNER_PENNY_*`,
     /// which xcodebuild hands to this process without the prefix), else from the environment
-    /// `npm run test-env -- up` left running in this checkout (for Xcode ⌘U).
+    /// `node scripts/test-env/penny-env.mjs up` left running in this checkout (for Xcode ⌘U).
     static func load(environment: [String: String] = ProcessInfo.processInfo.environment) -> StackConfiguration? {
         if let api = environment["PENNY_API_URL"].flatMap(URL.init(string:)),
             let token = environment["PENNY_TEST_TOKEN"],

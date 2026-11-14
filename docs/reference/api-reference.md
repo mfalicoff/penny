@@ -36,4 +36,4 @@ Shared expense/rule edits and deletes carry the entity revision; creation begins
 
 ## Drift gates
 
-`tests/core/contracts.test.ts` checks unique operations and resolved refs, fixture schema subsets (including the sanitized `http-journey.json`, which the .NET `LedgerTests` replay over HTTP), substring fixtures and design trace coverage. Its matcher is not a complete JSON Schema engine; Redocly validates the OpenAPI document separately (CI). The .NET integration suites exercise every operation on real PostgreSQL.
+`apps/web/tests/domain/contracts.test.ts` checks unique operations and resolved refs, fixture schema subsets (including the sanitized `http-journey.json`, which the .NET `LedgerTests` replay over HTTP), substring fixtures and design trace coverage. Its matcher is not a complete JSON Schema engine; Redocly validates the OpenAPI document separately (CI). The .NET integration suites exercise every operation on real PostgreSQL.

@@ -22,7 +22,7 @@ type Dashboard = { uid: string; title: string; panels: Panel[]; tags: string[] }
 const rendered: Record<string, string> = render();
 const boards = Object.entries(rendered).map(([file, text]) => [file, JSON.parse(text) as Dashboard] as const);
 
-test("dashboard JSON matches scripts/grafana-dashboards.mjs (npm run dashboards:generate)", () => {
+test("dashboard JSON matches scripts/grafana-dashboards.mjs (node scripts/grafana-dashboards.mjs)", () => {
   const files = readdirSync(dashboardDirectory).filter((file) => file.endsWith(".json")).sort();
   assert.deepEqual(files, Object.keys(rendered).sort());
   for (const [file, text] of Object.entries(rendered)) {

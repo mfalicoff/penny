@@ -25,7 +25,7 @@ apps/ios/scripts/ios.sh ui-test screenshots  # appearance and accessibility capt
 apps/ios/scripts/ios.sh ui-build             # compile the app and the UI tests only
 ```
 
-`ui-test` needs what the full-stack environment needs (Docker or Podman, or the [native PostgreSQL mode](reference/test-environment.md#without-a-container-runtime); the .NET SDK, Node 24 and the search model; see [prerequisites](reference/test-environment.md#prerequisites)) plus Xcode 27.2. Without `PENNY_API_URL` it runs `penny-env run --oidc` around itself: the environment is created, the plan runs, server logs are collected and everything is torn down, also on failure. With an environment already up (`PENNY_API_URL`, `PENNY_TEST_TOKEN` and `PENNY_TEST_RUN` exported, for example from `npm run test-env -- env`), it uses that one.
+`ui-test` needs what the full-stack environment needs (Docker or Podman, or the [native PostgreSQL mode](reference/test-environment.md#without-a-container-runtime); the .NET SDK, Node 24 and the search model; see [prerequisites](reference/test-environment.md#prerequisites)) plus Xcode 27.2. Without `PENNY_API_URL` it runs `penny-env run --oidc` around itself: the environment is created, the plan runs, server logs are collected and everything is torn down, also on failure. With an environment already up (`PENNY_API_URL`, `PENNY_TEST_TOKEN` and `PENNY_TEST_RUN` exported, for example from `node scripts/test-env/penny-env.mjs env`), it uses that one.
 
 | Variable | Effect |
 | --- | --- |
@@ -36,7 +36,7 @@ apps/ios/scripts/ios.sh ui-build             # compile the app and the UI tests 
 | `PENNY_STACK_BUILD=0` | Reuse the API's Release build instead of rebuilding it |
 | `PENNY_UPGRADE_FROM_APP` | A previous `Penny.app`: installed and launched first, so the plan upgrades it in place |
 
-In Xcode: start an environment with `npm run test-env -- up --oidc`, keep it running, choose the **PennyUITests** scheme, a simulator and a test plan, and test (⌘U). The runner finds the environment through `.cache/test-env/current`. Without one, every UI test is skipped (under `ios.sh` a missing stack is a failure instead). For single sign-on, trust the provider's certificate first: `xcrun simctl keychain booted add-root-cert <oidcCertificate>` from `up`'s output.
+In Xcode: start an environment with `node scripts/test-env/penny-env.mjs up --oidc`, keep it running, choose the **PennyUITests** scheme, a simulator and a test plan, and test (⌘U). The runner finds the environment through `.cache/test-env/current`. Without one, every UI test is skipped (under `ios.sh` a missing stack is a failure instead). For single sign-on, trust the provider's certificate first: `xcrun simctl keychain booted add-root-cert <oidcCertificate>` from `up`'s output.
 
 ### Results
 
@@ -162,7 +162,7 @@ Tests find elements only by identifier, never by visible text (except system-pro
 1. Open `test-results/ios/ui/<plan>/<device>.xcresult` in Xcode: the failing step, its UI snapshot and the "App UI hierarchy" attachment (search it for the identifier that was not found).
 2. Check `server/api.log` for the requests around the failure (status codes, faults applied).
 3. Re-run one test: `PENNY_UI_DEVICES=iphone PENNY_UI_ONLY=PennyUITests/<Class>/<test> apps/ios/scripts/ios.sh ui-test full`.
-4. Or keep an environment up (`npm run test-env -- up --oidc`) and run the test from Xcode with breakpoints; `npm run test-env -- status` shows the clock and active faults.
+4. Or keep an environment up (`node scripts/test-env/penny-env.mjs up --oidc`) and run the test from Xcode with breakpoints; `node scripts/test-env/penny-env.mjs status` shows the clock and active faults.
 
 ## CI
 

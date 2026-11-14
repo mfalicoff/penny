@@ -1,22 +1,23 @@
+// @vitest-environment node
 // MAZ-62 shared golden fixtures, consumed through strict typed models: an unknown,
 // missing or mistyped field fails here just as it does in the C# and Swift suites.
-import { test } from "node:test";
+import { test } from "vitest";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { readdirSync, readFileSync } from "node:fs";
 import { z } from "zod";
-import { cents, nextOccurrence, personalShare, type Ledger } from "../../apps/web/src/domain/ledger.ts";
-import { mergeLedger } from "../../apps/web/src/domain/merge.ts";
-import { calculateHouseholdSplits } from "../../apps/web/src/domain/households.ts";
-import { ledgerWriteSchema } from "../../apps/web/src/validation/ledger.ts";
-import { selectTransactions } from "../../apps/web/src/domain/selectors/transactions.ts";
-import { dateKeyIn } from "../../apps/web/src/domain/calendar.ts";
-import { isExpected, summarizeMonth } from "../../apps/web/src/domain/summary.ts";
-import { selectOverview } from "../../apps/web/src/domain/selectors/overview.ts";
+import { cents, nextOccurrence, personalShare, type Ledger } from "../../src/domain/ledger.ts";
+import { mergeLedger } from "../../src/domain/merge.ts";
+import { calculateHouseholdSplits } from "../../src/domain/households.ts";
+import { ledgerWriteSchema } from "../../src/validation/ledger.ts";
+import { selectTransactions } from "../../src/domain/selectors/transactions.ts";
+import { dateKeyIn } from "../../src/domain/calendar.ts";
+import { isExpected, summarizeMonth } from "../../src/domain/summary.ts";
+import { selectOverview } from "../../src/domain/selectors/overview.ts";
 import { generated, manifest, sha256 } from "../../scripts/fixtures/generate-golden.ts";
-import { applyPendingEdits } from "../../scripts/test-env/seed.mjs";
+import { applyPendingEdits } from "../../../../scripts/test-env/seed.mjs";
 
-const root = new URL("../../", import.meta.url);
+const root = new URL("../../../../", import.meta.url);
 const text = (name: string) => readFileSync(new URL(`contracts/fixtures/${name}`, root), "utf8");
 const parse = <T>(schema: z.ZodType<T>, name: string): T => schema.parse(JSON.parse(text(name)));
 
@@ -250,7 +251,7 @@ test("golden fixtures regenerate byte-for-byte in any time zone", () => {
   for (const [name, content] of Object.entries(files)) assert.equal(content, text(name).replace(/\r\n/g, "\n"), name);
   assert.equal(manifest(files), text("manifest.json").replace(/\r\n/g, "\n"));
   for (const zone of ["Pacific/Kiritimati", "America/St_Johns", "Australia/Lord_Howe"]) {
-    const run = spawnSync(process.execPath, ["--experimental-strip-types", "--no-warnings", "scripts/fixtures/generate-golden.ts", "--check"], {
+    const run = spawnSync(process.execPath, ["--experimental-strip-types", "--no-warnings", "apps/web/scripts/fixtures/generate-golden.ts", "--check"], {
       cwd: root, env: { ...process.env, TZ: zone }, encoding: "utf8",
     });
     assert.equal(run.status, 0, `${zone}: ${run.stderr}`);

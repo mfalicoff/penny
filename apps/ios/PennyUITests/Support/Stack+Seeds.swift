@@ -100,7 +100,7 @@ struct SeedContext {
 }
 
 /// Seeds a scenario of contracts/fixtures/full-stack-seeds.json through the public API, step for
-/// step like scripts/test-env/seed.mjs (the web runner's and `npm run test-env -- seed`'s seeder),
+/// step like scripts/test-env/seed.mjs (the web runner's and `node scripts/test-env/penny-env.mjs seed`'s seeder),
 /// so the UI tests can seed from Xcode as well as under `ios.sh`. Every call registers new users
 /// (`<alias>.<tag>@penny.test`), so seeded data is never shared with another test. Ends with the
 /// server clock pinned at the scenario's clock and fresh sessions.

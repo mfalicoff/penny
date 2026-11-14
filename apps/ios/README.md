@@ -127,7 +127,7 @@ TestFlight distribution (MAZ-98): `ios.sh archive`, `export` and `upload`, run b
 
 ## Versions
 
-`MARKETING_VERSION` in `Configuration/Version.xcconfig` follows `package.json`. Release-please updates it with each release, and `npm run version:check` fails when they differ. `CURRENT_PROJECT_VERSION` is `1` locally. `ios.sh archive` sets it from `PENNY_BUILD_NUMBER`; CI uses `<IOS_BUILD_NUMBER_BASE>.<run>.<attempt>`, with the base above the earlier whole-number builds in TestFlight, because App Store Connect rejects build numbers that do not increase ([build numbers](../../docs/ios-ipa.md#versions-and-build-numbers)).
+`MARKETING_VERSION` in `Configuration/Version.xcconfig` is the release version for the whole repository. Release-please updates it with each release, and `node scripts/check-version.mjs` fails when it is not a valid store version or does not match the release tag. `CURRENT_PROJECT_VERSION` is `1` locally. `ios.sh archive` sets it from `PENNY_BUILD_NUMBER`; CI uses `<IOS_BUILD_NUMBER_BASE>.<run>.<attempt>`, with the base above the earlier whole-number builds in TestFlight, because App Store Connect rejects build numbers that do not increase ([build numbers](../../docs/ios-ipa.md#versions-and-build-numbers)).
 
 ## Tests
 

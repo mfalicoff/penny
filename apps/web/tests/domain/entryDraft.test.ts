@@ -1,7 +1,8 @@
-import { test } from "node:test";
+// @vitest-environment node
+import { test } from "vitest";
 import assert from "node:assert/strict";
-import { emptyLedger } from "../../apps/web/src/domain/ledger.ts";
-import { buildEntry, buildSchedule, type EntryDraft } from "../../apps/web/src/domain/entryDraft.ts";
+import { emptyLedger } from "../../src/domain/ledger.ts";
+import { buildEntry, buildSchedule, type EntryDraft } from "../../src/domain/entryDraft.ts";
 
 const draft: EntryDraft = { kind: "expense", title: " Dinner ", amount: "10.01", date: "2026-01-31", categoryId: "food", note: " shared ", split: "equal", shareInput: "3", frequency: "monthly", receipt: { id: "receipt", name: "Bill", mime: "image/png", uri: "receipt" } };
 const categories = emptyLedger().categories;

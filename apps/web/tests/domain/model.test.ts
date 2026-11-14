@@ -1,4 +1,5 @@
-import { test } from "node:test";
+// @vitest-environment node
+import { test } from "vitest";
 import assert from "node:assert/strict";
 import {
   cents,
@@ -8,7 +9,7 @@ import {
   emptyLedger,
   totals,
   validDate,
-} from "../../apps/web/src/domain/ledger.ts";
+} from "../../src/domain/ledger.ts";
 
 test("money uses integer cents and rejects ambiguous or invalid input", () => {
   assert.equal(cents("10.29"), 1029);

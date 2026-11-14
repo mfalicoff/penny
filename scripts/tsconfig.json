@@ -1,6 +1,5 @@
 {
-  // The core tests and scripts (Node 24, run with --experimental-strip-types), and the shared
-  // ledger rules they import from apps/web/src.
+  // Repository tooling and its tests (Node 24, which strips the types when it runs them).
   "compilerOptions": {
     "target": "ES2024",
     // ES modules resolved by the bundler rules, with the DOM lib for fetch/Response types.
@@ -17,6 +16,6 @@
     "isolatedModules": true,
     "types": ["node"]
   },
-  "include": ["tests/**/*.ts", "scripts/**/*.ts"],
-  "exclude": ["node_modules", "apps", "design-kit"]
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules"]
 }

@@ -1,14 +1,15 @@
-import { test } from "node:test";
+// @vitest-environment node
+import { test } from "vitest";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
-import { cents, emptyLedger, nextOccurrence, personalShare } from "../../apps/web/src/domain/ledger.ts";
-import { calculateHouseholdSplits } from "../../apps/web/src/domain/households.ts";
-import { ledgerWriteSchema } from "../../apps/web/src/validation/ledger.ts";
-import { selectTransactions } from "../../apps/web/src/domain/selectors/transactions.ts";
+import { cents, emptyLedger, nextOccurrence, personalShare } from "../../src/domain/ledger.ts";
+import { calculateHouseholdSplits } from "../../src/domain/households.ts";
+import { ledgerWriteSchema } from "../../src/validation/ledger.ts";
+import { selectTransactions } from "../../src/domain/selectors/transactions.ts";
 import { createHash } from "node:crypto";
 import { normalizeSearchText } from "./search-normalization.ts";
 
-const root = new URL("../../", import.meta.url);
+const root = new URL("../../../../", import.meta.url);
 const fixture = (name: string) => JSON.parse(readFileSync(new URL(`contracts/fixtures/${name}`, root), "utf8"));
 const spec = JSON.parse(readFileSync(new URL("contracts/openapi.json", root), "utf8"));
 

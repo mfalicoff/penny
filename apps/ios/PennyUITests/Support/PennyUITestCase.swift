@@ -81,7 +81,7 @@ class PennyUITestCase: XCTestCase {
             if ProcessInfo.processInfo.environment["PENNY_UITEST_REQUIRE_STACK"] == "1" {
                 XCTFail("No full-stack environment: run through `apps/ios/scripts/ios.sh ui-test`.")
             }
-            throw XCTSkip("No full-stack environment. Start one with `npm run test-env -- up --oidc`.")
+            throw XCTSkip("No full-stack environment. Start one with `node scripts/test-env/penny-env.mjs up --oidc`.")
         }
         let stack = Stack(configuration: configuration)
         try await stack.setClock(Stack.defaultNow)

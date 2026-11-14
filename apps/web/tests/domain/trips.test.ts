@@ -1,10 +1,11 @@
-import { test } from "node:test";
+// @vitest-environment node
+import { test } from "vitest";
 import assert from "node:assert/strict";
-import { saveEntry, saveTrip } from "../../apps/web/src/domain/commands.ts";
-import { emptyLedger, type Transaction, type Trip } from "../../apps/web/src/domain/ledger.ts";
-import { buildEntry, type EntryDraft } from "../../apps/web/src/domain/entryDraft.ts";
-import { tripOverview } from "../../apps/web/src/domain/selectors/trips.ts";
-import { ledgerWriteSchema } from "../../apps/web/src/validation/ledger.ts";
+import { saveEntry, saveTrip } from "../../src/domain/commands.ts";
+import { emptyLedger, type Transaction, type Trip } from "../../src/domain/ledger.ts";
+import { buildEntry, type EntryDraft } from "../../src/domain/entryDraft.ts";
+import { tripOverview } from "../../src/domain/selectors/trips.ts";
+import { ledgerWriteSchema } from "../../src/validation/ledger.ts";
 
 const trip: Trip = { id: "montreal", name: "Montréal", startDate: "2026-09-10", endDate: "2026-09-14" };
 const draft: EntryDraft = { title: "Train", kind: "expense", amount: "120.00", date: "2026-08-01", categoryId: "transport", tripId: trip.id, note: "", split: "equal", shareInput: "2", frequency: "monthly" };

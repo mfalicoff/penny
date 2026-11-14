@@ -17,7 +17,7 @@ const OCT_20 = "2026-10-20T15:00:00Z";
 async function pinClock(iso: string | null) {
   const api = process.env.PENNY_API_URL;
   const token = process.env.PENNY_TEST_TOKEN;
-  if (!api || !token) throw new Error("PENNY_API_URL and PENNY_TEST_TOKEN come from `npm run test-env -- run`.");
+  if (!api || !token) throw new Error("PENNY_API_URL and PENNY_TEST_TOKEN come from `node scripts/test-env/penny-env.mjs run`.");
   const response = await fetch(`${api}/api/test/clock`, {
     method: iso ? "PUT" : "DELETE",
     headers: { "X-Penny-Test-Token": token, "Content-Type": "application/json" },

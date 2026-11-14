@@ -18,7 +18,7 @@ export const skipReason = "needs the full-stack test environment (PENNY_REAL_STA
 function environment() {
   const api = process.env.PENNY_API_URL;
   const token = process.env.PENNY_TEST_TOKEN;
-  if (!api || !token) throw new Error("PENNY_API_URL and PENNY_TEST_TOKEN come from `npm run test-env -- run` or `env`.");
+  if (!api || !token) throw new Error("PENNY_API_URL and PENNY_TEST_TOKEN come from `node scripts/test-env/penny-env.mjs run` or `env`.");
   return { api, token, run: process.env.PENNY_TEST_RUN };
 }
 

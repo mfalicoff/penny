@@ -8,7 +8,7 @@ struct ReportTests {
     static let october = MonthKey(year: 2026, month: 10)
 
     /// alex's shares of the seeded Maison expenses. Equal splits use the members active on the
-    /// expense date (cam left on 2026-10-02), as in tests/core/golden-fixtures.test.ts. The seed
+    /// expense date (cam left on 2026-10-02), as in apps/web/tests/domain/golden-fixtures.test.ts. The seed
     /// only has equal splits that divide exactly, so no remainder rule is needed here (shared
     /// remainder allocation is server-owned and MAZ-75's to port).
     static func alexShared(_ scenario: SeedFixture.Scenario) throws -> [SharedExpenseShare] {
@@ -376,7 +376,7 @@ struct ReportTests {
         #expect(LedgerReport(ledger: paused).month(month).projected == before.recorded)
     }
 
-    /// v2 `summarizeMonth` (apps/web/src/domain/summary.ts, tests/core/domain-rules.test.ts) and
+    /// v2 `summarizeMonth` (apps/web/src/domain/summary.ts, apps/web/tests/domain/domain-rules.test.ts) and
     /// redesign-states.json: projected adds every scheduled occurrence of the month, income,
     /// expenses and investment contributions alike.
     @Test("whenExpensesAndInvestmentsAreScheduled_MonthSummary_ShouldProjectEveryScheduledOccurrence")

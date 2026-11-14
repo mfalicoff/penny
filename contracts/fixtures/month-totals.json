@@ -1,5 +1,5 @@
 {
-  "generator": "scripts/fixtures/generate-golden.ts",
+  "generator": "apps/web/scripts/fixtures/generate-golden.ts",
   "description": "Left to spend (recorded) versus Projected around today (MAZ-136). Income dated after the person's local date is expected: it counts toward Projected, not recorded totals or Left to spend, until its date; the entry itself never changes. Projected also adds every scheduled occurrence not yet recorded. Scope: income only; future-dated expenses and investment contributions stay recorded (MAZ-139). `todayCases` turn an instant and an IANA time zone into the local date.",
   "todayCases": [
     {

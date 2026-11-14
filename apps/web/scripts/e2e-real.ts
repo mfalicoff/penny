@@ -9,7 +9,7 @@
 // PENNY_E2E_BROWSERS and PENNY_E2E_DEVICES choose the projects (playwright.config.ts).
 //
 // With PENNY_E2E_REUSE_STACK=1 and an environment already up (PENNY_API_URL, PENNY_TEST_TOKEN and
-// PENNY_TEST_RUN exported, e.g. from `npm run test-env -- env`), the specs run against that one
+// PENNY_TEST_RUN exported, e.g. from `node scripts/test-env/penny-env.mjs env`), the specs run against that one
 // and nothing is torn down, so an iOS Simulator run (`apps/ios/scripts/ios.sh ui-test`, which
 // reuses the same variables) and the browser share one API and database (MAZ-96,
 // docs/acceptance.md).
@@ -27,7 +27,7 @@ if (!existsSync(`${app}/dist/index.html`)) {
 
 const reuse = process.env.PENNY_E2E_REUSE_STACK === "1";
 if (reuse && !(process.env.PENNY_API_URL && process.env.PENNY_TEST_TOKEN && process.env.PENNY_TEST_RUN)) {
-  console.error("PENNY_E2E_REUSE_STACK=1 needs PENNY_API_URL, PENNY_TEST_TOKEN and PENNY_TEST_RUN: export them from `npm run test-env -- env`.");
+  console.error("PENNY_E2E_REUSE_STACK=1 needs PENNY_API_URL, PENNY_TEST_TOKEN and PENNY_TEST_RUN: export them from `node scripts/test-env/penny-env.mjs env`.");
   process.exit(1);
 }
 

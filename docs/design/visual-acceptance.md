@@ -40,7 +40,7 @@ Each card is rendered at its `@dsCard` viewport at 2x, full page, in every appea
 
 `--check` compares each fresh render with its committed image at a quarter of the resolution. That absorbs the glyph antialiasing difference between macOS and Linux (up to 3% of pixels at full resolution), while a moved, recolored or resized element still shows. A check fails when an image is missing, its size changed, or more than 0.5% of its downsampled pixels differ by more than 24 of 255 in any channel (`PENNY_BASELINE_TOLERANCE` changes the share). Renders that fail are written to `test-results/design-baselines/`. The web workflow runs the check on every pull request.
 
-A pixel check can't catch a one-word copy change. `tests/core/contracts.test.ts` covers that: it fails when a card or a shared asset changed since its baselines were rendered (the manifest's hashes), when an image doesn't match the manifest, or when `previews/` holds anything else.
+A pixel check can't catch a one-word copy change. `apps/web/tests/domain/contracts.test.ts` covers that: it fails when a card or a shared asset changed since its baselines were rendered (the manifest's hashes), when an image doesn't match the manifest, or when `previews/` holds anything else.
 
 ## Captures
 
@@ -88,7 +88,7 @@ A difference in a "must match" column is either an **approved deviation**, recor
 | `blocked` | The state can't be seeded yet (`blockedBy` in the states file) | `note` |
 | `not-applicable` | The platform has no such screen | `note` |
 
-Each deviation has a `summary`, a `kind` and a `ref`. An `approved` deviation's `ref` is its anchor in `docs/reference/redesign.md`. A `follow-up` deviation (a defect, or a design change still to make) names its `MAZ-` issue. `tests/core/contracts.test.ts` enforces these rules, the owners, the views and the full set of cards. No card may be left unreviewed.
+Each deviation has a `summary`, a `kind` and a `ref`. An `approved` deviation's `ref` is its anchor in `docs/reference/redesign.md`. A `follow-up` deviation (a defect, or a design change still to make) names its `MAZ-` issue. `apps/web/tests/domain/contracts.test.ts` enforces these rules, the owners, the views and the full set of cards. No card may be left unreviewed.
 
 To review: run both capture suites, build the sheets, walk through every card, update its entry, and set `reviewedAt`. Commit the record with the change it reviews. Captures aren't committed, because they depend on the simulator, browser and OS. Attach representative sheets to the pull request or the issue.
 
@@ -148,4 +148,4 @@ A change to a card, a shared asset in `docs/design/penny-ios/assets/`, or a `des
 3. **Contract.** Update the card's `sha256` and the `sources` hashes in `contracts/design-baseline.json`. Add or update its state in `redesign-states.json` if the data it shows changed.
 4. **Claude Design.** Re-sync the kit and cards to the [Penny Claude Design project](https://claude.ai/design/p/173b576e-aa32-44dc-9f83-23f0ea8df538) as `.design-sync/NOTES.md` describes, and record any new render warnings there.
 5. **Verdicts.** Set the changed cards' entries in `contracts/visual-comparisons.json` back to what the implementations show now. A design change usually turns `matches` into `deviates` (with a follow-up) until the apps catch up.
-6. **Check.** Run `npm run test:core` (contract and baseline hashes) and `render.mjs 2 --check`.
+6. **Check.** Run `npm test` in `apps/web` (contract and baseline hashes, `tests/domain/contracts.test.ts`) and `render.mjs 2 --check`.

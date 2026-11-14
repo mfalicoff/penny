@@ -1,5 +1,5 @@
-// The user-visible version follows package.json (release-please updates this line and
-// scripts/check-version.mjs checks it). CI sets CURRENT_PROJECT_VERSION when archiving
+// The release version: release-please updates this line, scripts/check-version.mjs and
+// apps/ios/scripts/ios.sh read it. CI sets CURRENT_PROJECT_VERSION when archiving
 // so the build number stays above every earlier upload (README.md#versions).
 MARKETING_VERSION = 2.0.0 // x-release-please-version
 CURRENT_PROJECT_VERSION = 2

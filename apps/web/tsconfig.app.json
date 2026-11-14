@@ -37,6 +37,8 @@
     "src"
   ],
   "exclude": [
+    "src/domain",
+    "src/validation",
     "src/**/*.test.ts",
     "src/**/*.test.tsx"
   ]

@@ -8,7 +8,7 @@ on:
       - apps/ios/**
       - .github/workflows/ios-testflight.yml
       - contracts/**
-      - package.json
+      - apps/ios/Configuration/Version.xcconfig
       - docs/ios-ipa.md
       - apps/backend/**
       - scripts/test-env/**
@@ -20,7 +20,7 @@ on:
     paths:
       - apps/ios/**
       - contracts/**
-      - package.json
+      - apps/ios/Configuration/Version.xcconfig
       - docs/ios-ipa.md
       - apps/backend/**
       - scripts/test-env/**
@@ -98,8 +98,6 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: '24'
-          cache: npm
-      - run: npm ci
       - uses: cachix/install-nix-action@v31
       - name: PostgreSQL 18 with pgvector from the flake
         run: nix build .#test-postgres --out-link .cache/test-postgres

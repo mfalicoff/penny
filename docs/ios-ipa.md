@@ -76,13 +76,13 @@ A local upload uses a build number too; choose one that CI will not reuse (a hig
 
 ## Versions and build numbers
 
-- **Version** (`CFBundleShortVersionString`): `MARKETING_VERSION` in `apps/ios/Configuration/Version.xcconfig`, kept equal to `package.json` by release-please and `npm run version:check`. `ios.sh archive` checks the archive carries it.
+- **Version** (`CFBundleShortVersionString`): `MARKETING_VERSION` in `apps/ios/Configuration/Version.xcconfig`, the release version: release-please updates it and `node scripts/check-version.mjs` checks it. `ios.sh archive` checks the archive carries it.
 - **Build number** (`CFBundleVersion`): `PENNY_BUILD_NUMBER`, set by CI to `<IOS_BUILD_NUMBER_BASE>.<run number>.<run attempt>`. App Store Connect compares the parts in order, so every run and rerun is higher than the last, and all are higher than the earlier whole-number builds below the base. Xcode is told not to change it (`manageAppVersionAndBuildNumber` off).
 - Never lower `IOS_BUILD_NUMBER_BASE`. Raise it (for example at a new major version) only above every build already uploaded.
 
 ## Release runbook
 
-1. Merge the [release PR](releases.md#automated-release-flow); it bumps `package.json` and `Version.xcconfig` and publishes the GitHub Release, which starts the workflow. Pushing a tag alone does not.
+1. Merge the [release PR](releases.md#automated-release-flow); it bumps `Version.xcconfig` and publishes the GitHub Release, which starts the workflow. Pushing a tag alone does not.
 2. Wait for the workflow. If a gate fails, fix it on `v2` and rerun; nothing was uploaded. If GitHub times out after the upload started, check App Store Connect → TestFlight before rerunning (a rerun gets a new build number, so it cannot collide).
 3. In App Store Connect → Penny → TestFlight, add the build to the internal group. External groups need Beta App Review.
 4. Run the [device checklist](#testflight-upgrade-and-device-checklist) on at least one iPhone and one iPad that have the previous TestFlight build installed with real-shaped (not personal) data, and record the results on the release.

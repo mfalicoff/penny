@@ -1,4 +1,4 @@
-name: Shared rules and contracts
+name: Repository tooling and contracts
 
 on:
   pull_request:
@@ -12,9 +12,14 @@ permissions:
 
 jobs:
   tests:
-    name: Shared rules, fixtures and contracts
+    # scripts/ is its own package. The golden fixtures and the shared ledger rules' tests run
+    # with the web app (web.yml).
+    name: Repository tooling and contracts
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: scripts
     steps:
       - name: Check out source
         uses: actions/checkout@v7
@@ -26,6 +31,7 @@ jobs:
         with:
           node-version: '24'
           cache: npm
+          cache-dependency-path: scripts/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -40,23 +46,10 @@ jobs:
         run: npm run typecheck
 
       - name: Validate API contract
-        run: npm exec --yes --package @redocly/cli@2.76.0 -- redocly lint contracts/openapi.json
-
-      - name: Golden fixtures are current
-        run: npm run fixtures:check
+        run: npm exec --yes --package @redocly/cli@2.76.0 -- redocly lint ../contracts/openapi.json
 
       - name: Grafana dashboards are current
         run: npm run dashboards:check
 
-      - name: Run core tests with coverage
-        run: npm run test:coverage
-
-      - name: Upload code coverage
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: code-coverage
-          path: |
-            coverage/
-            !coverage/core/tmp/**
-          if-no-files-found: ignore
+      - name: Run tooling tests
+        run: npm test

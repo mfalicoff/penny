@@ -2,21 +2,21 @@
 // observable contract) and the fixture manifest (MAZ-62). Inputs are curated here;
 // expectations are computed, so the files never drift from the reference behavior.
 //
-//   node --experimental-strip-types scripts/fixtures/generate-golden.ts          # write
-//   node --experimental-strip-types scripts/fixtures/generate-golden.ts --check  # verify
+//   node --experimental-strip-types apps/web/scripts/fixtures/generate-golden.ts          # write
+//   node --experimental-strip-types apps/web/scripts/fixtures/generate-golden.ts --check  # verify
 //
 // Output is byte-for-byte deterministic: no clock, randomness or locale is read, and the
 // date rules run at local noon, so any TZ produces the same files (tests check this).
 import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
-import { cents, nextOccurrence, personalShare, type Frequency, type Ledger } from "../../apps/web/src/domain/ledger.ts";
-import { mergeLedger } from "../../apps/web/src/domain/merge.ts";
-import { dateKeyIn } from "../../apps/web/src/domain/calendar.ts";
-import { monthBreakdown, summarizeMonth } from "../../apps/web/src/domain/summary.ts";
-import { ledgerWriteSchema } from "../../apps/web/src/validation/ledger.ts";
+import { cents, nextOccurrence, personalShare, type Frequency, type Ledger } from "../../src/domain/ledger.ts";
+import { mergeLedger } from "../../src/domain/merge.ts";
+import { dateKeyIn } from "../../src/domain/calendar.ts";
+import { monthBreakdown, summarizeMonth } from "../../src/domain/summary.ts";
+import { ledgerWriteSchema } from "../../src/validation/ledger.ts";
 
-const directory = new URL("../../contracts/fixtures/", import.meta.url);
-const generator = "scripts/fixtures/generate-golden.ts";
+const directory = new URL("../../../../contracts/fixtures/", import.meta.url);
+const generator = "apps/web/scripts/fixtures/generate-golden.ts";
 
 type Outcome<T> = { value: T } | { error: string };
 function attempt<T>(run: () => T): Outcome<T> {
@@ -199,17 +199,17 @@ function monthTotals() {
 // Which suites consume each fixture. A language with no implementation yet names the
 // issue that adds it; a fixture only meaningful to some layers says so.
 const consumers: Record<string, Record<string, string[] | string>> = {
-  "money.json": { typescript: ["tests/core/golden-fixtures.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Contracts/GoldenFixtureTests.cs"], swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"] },
-  "recurrence.json": { typescript: ["tests/core/golden-fixtures.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Contracts/GoldenFixtureTests.cs"], swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"] },
-  "merge-conflicts.json": { typescript: ["tests/core/golden-fixtures.test.ts"], csharp: "not applicable: the server never merges; it rejects stale writes with 409 (http-journey.json)", swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift", "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/LedgerMergeTests.swift"] },
-  "month-totals.json": { typescript: ["tests/core/golden-fixtures.test.ts"], csharp: "not applicable: Left to spend and Projected are client calculations; the seeded server's ledger is checked against redesign-states.json totals (FullStackSeedTests)", swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift", "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/ReportTests.swift"] },
-  "parity-cases.json": { typescript: ["tests/core/contracts.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Households/HouseholdSplitsTests.cs"], swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"] },
-  "shared-splits.json": { typescript: ["tests/core/households-domain.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Households/HouseholdSplitsTests.cs"], swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"] },
-  "settlement.json": { typescript: ["tests/core/households-domain.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Households/MonthlySettlementTests.cs"], swift: "MAZ-75 (shared settlement in Swift)" },
-  "search-cases.json": { typescript: ["tests/core/contracts.test.ts", "tests/core/transactions.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Search/SearchTextTests.cs", "apps/backend/tests/Penny.Backend.IntegrationTests/Controllers/SearchFixtureTests.cs"], swift: "MAZ-73 (search screens and offline normalization in Swift)" },
-  "http-journey.json": { typescript: ["tests/core/contracts.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.IntegrationTests/Controllers/LedgerTests.cs"], swift: "MAZ-71 (Swift API client)" },
-  "full-stack-seeds.json": { typescript: ["tests/core/golden-fixtures.test.ts", "tests/fullstack/environment.test.mjs"], csharp: ["apps/backend/tests/Penny.Backend.IntegrationTests/Contracts/FullStackSeedTests.cs"], swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"] },
-  "redesign-states.json": { typescript: ["tests/core/golden-fixtures.test.ts"], csharp: "not applicable: client presentation states", swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"] },
+  "money.json": { typescript: ["apps/web/tests/domain/golden-fixtures.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Contracts/GoldenFixtureTests.cs"], swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"] },
+  "recurrence.json": { typescript: ["apps/web/tests/domain/golden-fixtures.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Contracts/GoldenFixtureTests.cs"], swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"] },
+  "merge-conflicts.json": { typescript: ["apps/web/tests/domain/golden-fixtures.test.ts"], csharp: "not applicable: the server never merges; it rejects stale writes with 409 (http-journey.json)", swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift", "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/LedgerMergeTests.swift"] },
+  "month-totals.json": { typescript: ["apps/web/tests/domain/golden-fixtures.test.ts"], csharp: "not applicable: Left to spend and Projected are client calculations; the seeded server's ledger is checked against redesign-states.json totals (FullStackSeedTests)", swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift", "apps/ios/Packages/PennyKit/Tests/PennyDomainTests/ReportTests.swift"] },
+  "parity-cases.json": { typescript: ["apps/web/tests/domain/contracts.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Households/HouseholdSplitsTests.cs"], swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"] },
+  "shared-splits.json": { typescript: ["apps/web/tests/domain/households-domain.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Households/HouseholdSplitsTests.cs"], swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"] },
+  "settlement.json": { typescript: ["apps/web/tests/domain/households-domain.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Households/MonthlySettlementTests.cs"], swift: "MAZ-75 (shared settlement in Swift)" },
+  "search-cases.json": { typescript: ["apps/web/tests/domain/contracts.test.ts", "apps/web/tests/domain/transactions.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.UnitTests/Search/SearchTextTests.cs", "apps/backend/tests/Penny.Backend.IntegrationTests/Controllers/SearchFixtureTests.cs"], swift: "MAZ-73 (search screens and offline normalization in Swift)" },
+  "http-journey.json": { typescript: ["apps/web/tests/domain/contracts.test.ts"], csharp: ["apps/backend/tests/Penny.Backend.IntegrationTests/Controllers/LedgerTests.cs"], swift: "MAZ-71 (Swift API client)" },
+  "full-stack-seeds.json": { typescript: ["apps/web/tests/domain/golden-fixtures.test.ts", "scripts/tests/fullstack/environment.test.mjs"], csharp: ["apps/backend/tests/Penny.Backend.IntegrationTests/Contracts/FullStackSeedTests.cs"], swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"] },
+  "redesign-states.json": { typescript: ["apps/web/tests/domain/golden-fixtures.test.ts"], csharp: "not applicable: client presentation states", swift: ["contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift"] },
 };
 
 export function serialize(value: unknown): string {
@@ -234,7 +234,7 @@ export function manifest(files: Record<string, string>): string {
   const read = (name: string) => files[name] ?? readFileSync(new URL(name, directory), "utf8");
   return serialize({
     version: 1,
-    description: "Every shared fixture, its SHA-256 (LF line endings) and the suites consuming it. Regenerate with `node --experimental-strip-types scripts/fixtures/generate-golden.ts`; tests in each language verify the hashes, so an unreviewed edit fails everywhere.",
+    description: "Every shared fixture, its SHA-256 (LF line endings) and the suites consuming it. Regenerate with `node --experimental-strip-types apps/web/scripts/fixtures/generate-golden.ts`; tests in each language verify the hashes, so an unreviewed edit fails everywhere.",
     fixtures: Object.keys(consumers).sort().map((file) => ({
       file, sha256: sha256(read(file)), generatedBy: file in files ? generator : null, consumers: consumers[file],
     })),

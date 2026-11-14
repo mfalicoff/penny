@@ -37,6 +37,8 @@ jobs:
         run: npm ci --no-audit --no-fund
       - name: Check design tokens against design-kit
         run: npm run design:check
+      - name: Golden fixtures are current
+        run: npm run fixtures:check
       - name: Lint
         run: npm run lint
       - name: Check types

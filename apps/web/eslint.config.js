@@ -44,6 +44,28 @@ export default defineConfig(
     rules: { "no-restricted-properties": "off" },
   },
   {
+    // The shared ledger rules and write schema, their reference tests and the fixture generator
+    // keep the rules they were written for (typescript-eslint recommended, untyped JSON
+    // fixtures allowed) rather than the app's strict type-checked set.
+    files: [
+      "src/domain/**/*.ts",
+      "src/validation/**/*.ts",
+      "tests/domain/**/*.ts",
+      "scripts/fixtures/**/*.ts",
+    ],
+    extends: [tseslint.configs.disableTypeChecked],
+    languageOptions: { globals: globals.node },
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-non-null-assertion": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrors: "none" },
+      ],
+      "no-restricted-properties": "off",
+    },
+  },
+  {
     // The shared ledger rules are the reference the golden fixtures are generated from and the
     // Swift and C# rules are held to: they stay platform-independent.
     files: ["src/domain/**/*.ts"],

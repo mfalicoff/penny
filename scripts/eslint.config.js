@@ -1,13 +1,11 @@
-// Lint for the core and full-stack tests and the scripts. The native app and the web app
-// (apps/ios, apps/web, including the shared ledger rules in apps/web/src/domain) have their own
-// linters.
+// Lint for the repository tooling in scripts/ and its tests. The apps have their own linters.
 const { defineConfig } = require("eslint/config");
 const js = require("@eslint/js");
 const tseslint = require("typescript-eslint");
 const globals = require("globals");
 
 module.exports = defineConfig([
-  { ignores: ["apps/**", "node_modules/**", "coverage/**", "dist/**", ".cache/**", "design-kit/**"] },
+  { ignores: ["node_modules/**"] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

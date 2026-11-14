@@ -18,4 +18,4 @@ This is the SwiftUI iPhone/iPad app (MAZ-66 onward). It is Penny's only iOS app;
 
 ## Before you finish
 
-Run `apps/ios/scripts/ios.sh format`, then `apps/ios/scripts/ios.sh ci` (lint, host package tests, clean iPhone and iPad simulator tests, Release check), plus root `npm run lint`, `npm run typecheck` and `npm run version:check` when shared files change. APNs, widgets and TestFlight upgrades also need physical-device evidence.
+Run `apps/ios/scripts/ios.sh format`, then `apps/ios/scripts/ios.sh ci` (lint, host package tests, clean iPhone and iPad simulator tests, Release check), plus `node scripts/check-version.mjs` when the version changes. APNs, widgets and TestFlight upgrades also need physical-device evidence.

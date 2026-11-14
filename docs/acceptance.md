@@ -27,7 +27,7 @@ The browser runner and the XCUITest runner both use an environment that is alrea
 
 ```sh
 # Repository root, terminal 1: one environment, kept up while this command runs.
-npm run test-env -- up --oidc
+node scripts/test-env/penny-env.mjs up --oidc
 
 # Terminal 2, repository root.
 eval "$(npm run --silent test-env -- env)"
@@ -39,7 +39,7 @@ apps/ios/scripts/ios.sh ui-test full
 # when 4173 is busy; single sign-on specs need 4173.
 cd apps/web && PENNY_E2E_REUSE_STACK=1 npm run test:e2e:real -- --trace off
 
-npm run test-env -- down
+node scripts/test-env/penny-env.mjs down
 ```
 
 What this gives: both suites run against one server, database, clock and fault registry. Run the halves one after the other, not at once: both move the server clock and inject faults, which are global to the environment. The browser specs were run against a kept-up environment here (Playwright with the exported variables); the native half was not, because Xcode is not installed on the machine this suite was written on. It also does not yet make one journey hand off between a simulator and a browser (an entry created offline in the simulator, then read in the browser): that needs a scenario hand-off between XCUITest and Playwright, listed under [known gaps](#known-gaps). The browser specs in `cross-client.real.spec.ts` cover the same convergence with a second client that speaks the native app's protocol ([below](#cross-client-convergence)).
