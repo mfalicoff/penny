@@ -8,7 +8,7 @@ public import PennyDomain
 ///
 /// Every answer that arrives after the state moved on (another sign-in, a sign-out, a server
 /// change) is dropped, so one account's session or data never reaches another's screen.
-/// See docs/ios-authentication.md.
+/// See docs/ios/authentication.md.
 @MainActor
 @Observable
 public final class AuthController {
@@ -300,7 +300,7 @@ public final class AuthController {
     /// Local work is kept so signing in again as the same account picks it up.
     ///
     /// No request path calls this by itself yet: each feature that holds a client must call
-    /// it on `APIError.unauthorized` (see docs/ios-authentication.md).
+    /// it on `APIError.unauthorized` (see docs/ios/authentication.md).
     public func sessionDidExpire(for account: SignedInAccount) {
         guard case .signedIn = state, isCurrent(account) else { return }
         try? sessions.delete(server: account.server)

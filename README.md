@@ -3,7 +3,7 @@ Hi!
 
 A little more clarity about your money. Track expenses, income, and investment contributions on **iOS and web**, with a self-hosted server that keeps your devices in sync. Android is no longer supported.
 
-[Try it locally](docs/development.md#run-the-complete-web-app) · [Self-host Penny](docs/deployment.md) · [Documentation](docs/README.md)
+[Try it locally](docs/development/setup.md#run-the-complete-web-app) · [Self-host Penny](docs/self-hosting/deployment.md) · [Documentation](docs/README.md)
 
 ![Penny's monthly overview showing income, expenses, invested contributions, cash remaining, a spending calendar, and category totals.](docs/screenshots/overview.jpg)
 
@@ -32,8 +32,8 @@ Record an expense, income, or investment contribution. Split a bill equally, by 
 - **Across your devices:** save personal ledger changes offline and sync when reconnected. Shared actions and receipt uploads need a connection.
 - **A low-commitment look around:** choose **Take a look around with sample data** on the sign-in screen. The demo is temporary and needs no account.
 
-Penny tracks investment contributions, not portfolio performance. It is not a bank-connected account-balance tracker. See [app behavior and current limits](docs/app-guide.md) for the details.
+Penny tracks investment contributions, not portfolio performance. It is not a bank-connected account-balance tracker. See [app behavior and current limits](docs/product/app-guide.md) for the details.
 
 ## Run it or build on it
 
-Start with [local setup](docs/development.md) or [self-hosting](docs/deployment.md). For architecture, testing, configuration, and mobile releases, head to the [technical documentation](docs/README.md).
+Start with [local setup](docs/development/setup.md) or [self-hosting](docs/self-hosting/deployment.md). For architecture, testing, configuration, and mobile releases, head to the [technical documentation](docs/README.md).

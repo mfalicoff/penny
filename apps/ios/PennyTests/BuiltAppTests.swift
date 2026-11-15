@@ -44,7 +44,7 @@ struct BuiltAppTests {
 
     @Test("whenSigned_Entitlements_ShouldRequestAPNsAndKeepTheAppGroup")
     func entitlements() throws {
-        // MAZ-79: the checkout's entitlements file, as signed into the build (docs/ios-notifications.md).
+        // MAZ-79: the checkout's entitlements file, as signed into the build (docs/ios/notifications.md).
         let file = URL(filePath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
             .appending(path: "Configuration/Penny.entitlements")
         let plist = try #require(

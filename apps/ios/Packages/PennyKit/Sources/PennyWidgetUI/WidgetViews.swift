@@ -4,7 +4,7 @@ import PennyDomain
 import SwiftUI
 import WidgetKit
 
-/// Widget styling: the redesign's tokens adapted to WidgetKit (docs/ios-widgets.md#design).
+/// Widget styling: the redesign's tokens adapted to WidgetKit (docs/ios/widgets.md#design).
 /// Home Screen widgets sit on the solid surface (no glass), with SF text styles and the
 /// meaning colors; copper is the only tint.
 enum PennyWidgetStyle {

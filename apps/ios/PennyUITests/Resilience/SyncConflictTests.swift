@@ -4,7 +4,7 @@ import XCTest
 /// Two devices writing the same personal ledger (MAZ-71's merge, MAZ-82 "conflicting devices"
 /// and "reconnect"): this app edits while it cannot reach the server, another device writes
 /// through the API meanwhile, and on reconnect the field-by-field merge keeps both sides'
-/// changes, as `docs/ios-offline-sync.md#conflict-policy` specifies. Totals are checked on the
+/// changes, as `docs/ios/offline-sync.md#conflict-policy` specifies. Totals are checked on the
 /// server after every merge.
 final class SyncConflictTests: PennyUITestCase {
     /// Different fields of one entry changed on each device, plus a new entry on the other

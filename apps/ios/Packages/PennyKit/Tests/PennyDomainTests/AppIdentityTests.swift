@@ -18,7 +18,7 @@ struct AppIdentityTests {
 
     @Test("whenComparedWithSigningDocs_AppIdentity_ShouldKeepAppGroupAndWidgetId")
     func matchesSigningDocs() throws {
-        let doc = try String(contentsOf: Repository.root.appendingPathComponent("docs/ios-ipa.md"), encoding: .utf8)
+        let doc = try String(contentsOf: Repository.root.appendingPathComponent("docs/ios/ipa.md"), encoding: .utf8)
         #expect(doc.contains(AppIdentity.appGroup))
         #expect(doc.contains(AppIdentity.widgetExtensionBundleIdentifier))
         #expect(AppIdentity.widgetExtensionBundleIdentifier.hasPrefix(AppIdentity.bundleIdentifier + "."))

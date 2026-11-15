@@ -1,4 +1,4 @@
-// XCUITest bundle (MAZ-81, docs/ios-ui-tests.md). It runs in its own runner process and drives
+// XCUITest bundle (MAZ-81, docs/ios/ui-tests.md). It runs in its own runner process and drives
 // the installed Penny.app; it never links the app's code. Only the PennyUITests scheme builds it.
 PRODUCT_NAME = PennyUITests
 PRODUCT_BUNDLE_IDENTIFIER = com.mfalicoff.penny.uitests

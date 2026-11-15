@@ -24,7 +24,7 @@ jobs:
           RELEASE_PLEASE_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
         run: |
           if [ -z "$RELEASE_PLEASE_TOKEN" ]; then
-            echo "::error::Add the RELEASE_PLEASE_TOKEN repository secret. See docs/releases.md#one-time-github-setup."
+            echo "::error::Add the RELEASE_PLEASE_TOKEN repository secret. See docs/development/releases.md#one-time-github-setup."
             exit 1
           fi
 

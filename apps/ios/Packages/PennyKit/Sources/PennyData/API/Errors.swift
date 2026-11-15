@@ -47,7 +47,7 @@ public enum APIError: Error, Equatable, Sendable {
 
     /// Whether repeating the same request later can succeed without a change to it.
     /// Reads may retry on their own; writes should be retried only by a caller that knows
-    /// the write is idempotent or has confirmed it did not apply (see docs/ios-api-client.md).
+    /// the write is idempotent or has confirmed it did not apply (see docs/ios/api-client.md).
     public var isRetryable: Bool {
         switch self {
         case .offline, .timeout, .unreachable, .rateLimited, .unavailable, .server: true

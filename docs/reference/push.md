@@ -57,7 +57,7 @@ apns-id: <UUID derived from outbox id + token; stable across retries>
 }
 ```
 
-The deep-link keys are top-level custom keys (MAZ-79 reads them from `userInfo`; [native notifications](../ios-notifications.md)); `expenseId` is omitted for reimbursements. `thread-id` groups a household's notifications.
+The deep-link keys are top-level custom keys (MAZ-79 reads them from `userInfo`; [native notifications](../ios/notifications.md)); `expenseId` is omitted for reimbursements. `thread-id` groups a household's notifications.
 
 ## Delivery: outbox, leases and retries
 

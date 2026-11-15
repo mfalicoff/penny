@@ -2,7 +2,7 @@ public import Foundation
 public import PennyDomain
 
 /// The receipt file rules (MAZ-78), the same as the server's `ReceiptFormat` and the browser's
-/// `apps/web/src/api/receipts.ts` (docs/reference/receipts.md, docs/ios-receipts.md): seven
+/// `apps/web/src/api/receipts.ts` (docs/reference/receipts.md, docs/ios/receipts.md): seven
 /// types, 1 byte to 10 MiB, the type's signature in the first bytes, and a name of at most 255
 /// UTF-16 units. The app checks them before uploading, so a bad file fails at once and sends
 /// nothing; the server checks them all again.

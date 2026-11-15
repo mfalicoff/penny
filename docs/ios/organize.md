@@ -1,8 +1,8 @@
 # Native accounts, categories and recurring schedules (MAZ-74)
 
-[Documentation](README.md) · [Native iOS app](../apps/ios/README.md) · [Native app shell](ios-shell.md) · [Ledger rules](ios-ledger-domain.md) · [Offline sync](ios-offline-sync.md)
+[Documentation](../README.md) · [Native iOS app](../../apps/ios/README.md) · [Native app shell](shell.md) · [Ledger rules](ledger-domain.md) · [Offline sync](offline-sync.md)
 
-This page describes the organize pages of the SwiftUI app: payment accounts, categories and personal recurring schedules. They open from Settings › Manage on iPhone and from the sidebar's Manage section on iPad. Every change goes through the same path as any other ledger change (`LedgerChange` → `LedgerWorkspace.commit` → the MAZ-71 offline engine), so it is kept on the device first, works offline, shows the save toast and syncs later. The rules themselves were ported by MAZ-70 ([ledger rules](ios-ledger-domain.md)); this issue adds the screens, the forms and the tests around them.
+This page describes the organize pages of the SwiftUI app: payment accounts, categories and personal recurring schedules. They open from Settings › Manage on iPhone and from the sidebar's Manage section on iPad. Every change goes through the same path as any other ledger change (`LedgerChange` → `LedgerWorkspace.commit` → the MAZ-71 offline engine), so it is kept on the device first, works offline, shows the save toast and syncs later. The rules themselves were ported by MAZ-70 ([ledger rules](ledger-domain.md)); this issue adds the screens, the forms and the tests around them.
 
 ## Where the code is
 

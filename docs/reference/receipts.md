@@ -44,7 +44,7 @@ Responses and logs never contain storage paths, file names on disk, keys or nonc
 
 ## Receipt text (MAZ-125)
 
-The upload also queues the receipt's text extraction (a `pending` `receipt_texts` row in the same insert). A background worker extracts it on the server only (poppler for PDF text, Tesseract for photos and scans), never delaying or failing the upload. The extracted text is stored unencrypted so search can index it, and it matches only for users who may read the receipt under the access rules above (`ReceiptAccess.Readable`, shared with downloads). When the last entry, shared expense or rule linking a receipt lets go of it, its text is deleted in the same transaction. See [operations](../operations.md#receipt-text-ocr) and [search](search.md#receipt-text-maz-125).
+The upload also queues the receipt's text extraction (a `pending` `receipt_texts` row in the same insert). A background worker extracts it on the server only (poppler for PDF text, Tesseract for photos and scans), never delaying or failing the upload. The extracted text is stored unencrypted so search can index it, and it matches only for users who may read the receipt under the access rules above (`ReceiptAccess.Readable`, shared with downloads). When the last entry, shared expense or rule linking a receipt lets go of it, its text is deleted in the same transaction. See [operations](../self-hosting/operations.md#receipt-text-ocr) and [search](search.md#receipt-text-maz-125).
 
 ## Storage, failures and recovery
 
@@ -83,7 +83,7 @@ Receipt metadata lives in PostgreSQL and the bytes on the filesystem, so a backu
 
 ## Clients
 
-Clients fetch `/api/receipts/<id>` with their session and display the bytes locally; they do not depend on `Content-Disposition`, CSP or HTTP caching. HEIC/HEIF previews depend on the platform: iOS renders them, most desktop browsers do not and show the download fallback. The browser app (MAZ-94) uses its session cookie: it checks the file against the rules above before uploading, sends the JSON body over `XMLHttpRequest` for upload progress, and previews photos from a blob URL and PDFs with pdf.js; see [browser receipts](../web-receipts.md). The native app (MAZ-78) applies the same checks, uploads with progress over its bearer session and previews from a protected temporary file; see [native receipts](../ios-receipts.md).
+Clients fetch `/api/receipts/<id>` with their session and display the bytes locally; they do not depend on `Content-Disposition`, CSP or HTTP caching. HEIC/HEIF previews depend on the platform: iOS renders them, most desktop browsers do not and show the download fallback. The browser app (MAZ-94) uses its session cookie: it checks the file against the rules above before uploading, sends the JSON body over `XMLHttpRequest` for upload progress, and previews photos from a blob URL and PDFs with pdf.js; see [browser receipts](../web/receipts.md). The native app (MAZ-78) applies the same checks, uploads with progress over its bearer session and previews from a protected temporary file; see [native receipts](../ios/receipts.md).
 
 ## Behavior notes
 

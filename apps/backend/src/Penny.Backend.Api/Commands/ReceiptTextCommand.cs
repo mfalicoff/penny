@@ -142,7 +142,7 @@ internal static class ReceiptTextCommand
     private static int Usage()
     {
         Console.Error.WriteLine(
-            "Usage: receipts-ocr [--user USER_ID] [--all] | receipts-ocr --status [--user USER_ID]. See docs/operations.md#receipt-text-ocr."
+            "Usage: receipts-ocr [--user USER_ID] [--all] | receipts-ocr --status [--user USER_ID]. See docs/self-hosting/operations.md#receipt-text-ocr."
         );
         return 1;
     }

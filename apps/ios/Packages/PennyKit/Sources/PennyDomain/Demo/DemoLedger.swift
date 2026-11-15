@@ -3,7 +3,7 @@
 /// month. Ids start with `demo-`, so a demo record is recognizable if one ever leaked.
 ///
 /// The demo is temporary and isolated: it never touches an account's data, never reaches a
-/// server and is gone when the demo ends (docs/ios-shell.md, "Demo").
+/// server and is gone when the demo ends (docs/ios/shell.md, "Demo").
 public enum DemoLedger {
     public static let idPrefix = "demo-"
 

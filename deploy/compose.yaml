@@ -10,7 +10,7 @@
 #
 # Only `web` publishes a port. The API, migration and PostgreSQL are reachable only on
 # the internal network. Secrets come from .env (and api.env) and are passed only to the
-# services that need them. See docs/deployment.md.
+# services that need them. See docs/self-hosting/deployment.md.
 #
 # External PostgreSQL: set COMPOSE_PROFILES= (empty), PENNY_DB_HOST/PORT/NAME,
 # PENNY_DB_SSL_MODE=VerifyFull, PENNY_DB_OPTIONS and an administrator login
@@ -31,7 +31,7 @@ services:
   postgres:
     profiles: [bundled-postgres]
     # PostgreSQL 18.6 with pgvector 0.8.7: the digest pinned in apps/backend/compose.yaml
-    # and DatabaseSchema.Image. Upgrades follow docs/deployment.md#upgrade-postgresql.
+    # and DatabaseSchema.Image. Upgrades follow docs/self-hosting/deployment.md#upgrade-postgresql.
     image: docker.io/pgvector/pgvector:0.8.7-pg18-trixie@sha256:5895949dfcdf308eb0cd31c950c93c14895c77f33fbedfecf1fa511ab1d4bcd2
     environment:
       POSTGRES_DB: ${PENNY_DB_NAME:-penny}
@@ -78,7 +78,7 @@ services:
     <<: *api
     # The API with the search model needs about 1 GiB, plus up to Ocr__EngineMemoryMegabytes
     # (default 1024) per receipt extracted at once (Ocr__Concurrency, default 1); past the
-    # limit the kernel kills the container and it restarts (docs/operations.md#receipt-text-ocr).
+    # limit the kernel kills the container and it restarts (docs/self-hosting/operations.md#receipt-text-ocr).
     mem_limit: ${PENNY_API_MEMORY:-3g}
     pids_limit: 1024
     env_file:

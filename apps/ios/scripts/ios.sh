@@ -13,10 +13,10 @@
 #   ci             lint, package-test, test, release-check and distribution-test
 #   ui-build       build the app and the XCUITest bundle (no simulator, no stack)
 #   ui-test [plan] XCUITest plan smoke|full|screenshots|performance|cards against the full-stack
-#                  environment on clean iPhone and iPad simulators (docs/ios-ui-tests.md); cards also
+#                  environment on clean iPhone and iPad simulators (docs/ios/ui-tests.md); cards also
 #                  writes test-results/cards/ios (the redesign card captures and report.json, MAZ-122)
 #   push <file> [simulator]  send a notification payload (.apns) to Penny with simctl push
-#                  (default: the booted simulator; no APNs, docs/ios-notifications.md)
+#                  (default: the booted simulator; no APNs, docs/ios/notifications.md)
 #   archive        signed Release archive for App Store Connect (needs PENNY_BUILD_NUMBER)
 #   export         re-sign the archive for App Store Connect and verify .cache/ios/export/Penny.ipa
 #   upload         validate and upload that IPA to TestFlight (needs the PENNY_ASC_* key)
@@ -28,7 +28,7 @@
 # ui-test: PENNY_UI_DEVICES (iphone, ipad or both), PENNY_STACK_BUILD=0 (reuse the API build),
 # PENNY_UPGRADE_FROM_APP (a previous Penny.app to upgrade from).
 # archive/export/upload: PENNY_TEAM_ID, PENNY_BUILD_NUMBER, PENNY_ASC_KEY_PATH, PENNY_ASC_KEY_ID,
-# PENNY_ASC_ISSUER_ID (docs/ios-ipa.md).
+# PENNY_ASC_ISSUER_ID (docs/ios/ipa.md).
 set -euo pipefail
 
 IOS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -232,7 +232,7 @@ cmd_release_check() {
   echo "Release configuration: production, no default server, no test controls."
 }
 
-# --- TestFlight distribution (MAZ-98, docs/ios-ipa.md) -----------------------------------
+# --- TestFlight distribution (MAZ-98, docs/ios/ipa.md) -----------------------------------
 
 ARCHIVE="$CACHE/Penny.xcarchive"
 EXPORT_DIR="$CACHE/export"
@@ -245,7 +245,7 @@ WIDGETS_APPEX="PlugIns/PennyWidgets.appex"
 
 plist_value() { /usr/libexec/PlistBuddy -c "Print :$1" "$2" 2>/dev/null || true; }
 
-# Two signing modes (docs/ios-ipa.md#signing):
+# Two signing modes (docs/ios/ipa.md#signing):
 # - manual (CI): PENNY_PROFILE_SPECIFIER and PENNY_WIDGETS_PROFILE_SPECIFIER name installed App
 #   Store provisioning profiles for the app and the widget extension, and their "Apple
 #   Distribution" certificate is in a keychain. Archive and export both use them, so Xcode never
@@ -343,7 +343,7 @@ verify_distribution_signature() {
   verify_bundle_signature "$app" "$BUNDLE_ID" "$team"
   # APNs (MAZ-79): an App Store profile turns the development entitlement into production.
   [[ "$(plist_value aps-environment "$CACHE/distribution-entitlements.plist")" == "production" ]] \
-    || { echo "error: $app is not signed for production APNs; enable Push Notifications on the App ID and regenerate its profile (docs/ios-notifications.md)." >&2; exit 1; }
+    || { echo "error: $app is not signed for production APNs; enable Push Notifications on the App ID and regenerate its profile (docs/ios/notifications.md)." >&2; exit 1; }
   verify_bundle_signature "$app/$WIDGETS_APPEX" "$WIDGETS_ID" "$team"
 }
 
@@ -361,7 +361,7 @@ verify_bundle_signature() {
   [[ "$(plist_value beta-reports-active "$entitlements")" == "true" ]] \
     || { echo "error: $app is not signed with an App Store profile (no beta-reports-active)." >&2; exit 1; }
   [[ "$(plist_value com.apple.security.application-groups:0 "$entitlements")" == "$APP_GROUP" ]] \
-    || { echo "error: $app lacks the $APP_GROUP entitlement; update the App ID and profiles (docs/ios-ipa.md)." >&2; exit 1; }
+    || { echo "error: $app lacks the $APP_GROUP entitlement; update the App ID and profiles (docs/ios/ipa.md)." >&2; exit 1; }
 }
 
 cmd_archive() {
@@ -531,7 +531,7 @@ cmd_launch() {
   launch_on "$IPAD_ID" ipad
 }
 
-# --- XCUITest (MAZ-81, docs/ios-ui-tests.md) ---------------------------------------------
+# --- XCUITest (MAZ-81, docs/ios/ui-tests.md) ---------------------------------------------
 
 # Without a running stack (PENNY_API_URL unset), starts the full-stack environment (.NET API,
 # PostgreSQL, local OIDC provider) around this same command, then copies its logs next to the
@@ -584,7 +584,7 @@ prepare_ui_device() {
   fi
 }
 
-# Receipt journeys (MAZ-78, docs/ios-receipts.md): synthetic files from receipt-fixtures.mjs. The
+# Receipt journeys (MAZ-78, docs/ios/receipts.md): synthetic files from receipt-fixtures.mjs. The
 # photo goes into the photo library for the system photo picker; the PDFs and the refused files
 # into Files › On My iPhone/iPad (the Files app's local storage), where the document picker finds
 # them. The UI tests read manifest.json from RECEIPT_FIXTURES for the checksums.
@@ -648,7 +648,7 @@ ui_test_run() {
 }
 
 # A notification payload through simctl (MAZ-79): exercises presentation and the tap on a
-# simulator, never APNs transport (docs/ios-notifications.md#tests-and-verification).
+# simulator, never APNs transport (docs/ios/notifications.md#tests-and-verification).
 cmd_push() {
   local file="$1" device="$2"
   [[ -f "$file" ]] || { echo "usage: ios.sh push <payload.apns> [simulator id]" >&2; exit 2; }

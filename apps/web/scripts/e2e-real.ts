@@ -12,7 +12,7 @@
 // PENNY_TEST_RUN exported, e.g. from `node scripts/test-env/penny-env.mjs env`), the specs run against that one
 // and nothing is torn down, so an iOS Simulator run (`apps/ios/scripts/ios.sh ui-test`, which
 // reuses the same variables) and the browser share one API and database (MAZ-96,
-// docs/acceptance.md).
+// docs/development/acceptance.md).
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";

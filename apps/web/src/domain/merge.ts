@@ -10,7 +10,7 @@ import type { Ledger, Recurring, Transaction } from "./ledger.ts";
 // back; records created here are appended after the server's. Currency: a local change wins.
 //
 // Four personal-recurrence refinements keep a rule this device only caught up offline from undoing
-// what another device did (docs/ios-offline-sync.md). An occurrence is "untouched" when it equals
+// what another device did (docs/ios/offline-sync.md). An occurrence is "untouched" when it equals
 // what its rule generates for its date:
 //
 // - When both sides advanced a rule's `nextDate`, the later one wins, so dates the server already

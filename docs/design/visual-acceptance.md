@@ -1,6 +1,6 @@
 # Visual acceptance against the redesign cards (MAZ-122)
 
-[Redesign cards](penny-ios/README.md) · [Redesign baseline and deviations](../reference/redesign.md) · [Native UI tests](../ios-ui-tests.md) · [Web app](../../apps/web/README.md) · [Test environment](../reference/test-environment.md#redesign-specimens)
+[Redesign cards](penny-ios/README.md) · [Redesign baseline and deviations](../reference/redesign.md) · [Native UI tests](../ios/ui-tests.md) · [Web app](../../apps/web/README.md) · [Test environment](../reference/test-environment.md#redesign-specimens)
 
 The 61 cards in `docs/design/penny-ios` are v2's visual baseline. This page explains how the iOS and web apps are compared with them: the reference images, the captures, what must match and what may differ, where verdicts are recorded, and how to re-sync after a design change.
 
@@ -110,7 +110,7 @@ A capture shows one state at one size. The scenarios below are covered by these 
 
 | Scenario | iOS | Web |
 | --- | --- | --- |
-| 320px through desktop | iPhone and iPad simulators; iPad compact widths use the iPhone tab bar ([shell](../ios-shell.md)) | `shell.spec.ts` at 320, 390, 768, 1024, 1100 and 1440px with no horizontal scrolling; `visual.spec.ts` at 320, 768 and 1440px |
+| 320px through desktop | iPhone and iPad simulators; iPad compact widths use the iPhone tab bar ([shell](../ios/shell.md)) | `shell.spec.ts` at 320, 390, 768, 1024, 1100 and 1440px with no horizontal scrolling; `visual.spec.ts` at 320, 768 and 1440px |
 | iPhone and iPad | Cards plan on both simulators; `ScreenshotTests` | Phone and tablet Playwright projects (`PENNY_E2E_DEVICES`) |
 | Light and dark | Cards plan and `ScreenshotTests` in both; `AccessibilityAuditTests` in both | Cards spec and `visual.spec.ts` in both |
 | Text scaling | `ScreenshotTests` and `AccessibilityAuditTests` at accessibility XL | `shell.spec.ts`: 200% zoom and doubled text |
@@ -132,7 +132,7 @@ The cards are static and show one state each. These gaps were open at the MAZ-13
 
 | Gap | Resolution |
 | --- | --- |
-| Larger text | **Filled by the platform rule.** iOS uses Dynamic Type styles. At accessibility sizes, the iPad dashboard falls back to the iPhone layout, the money flow and Insights chart give way to their value lists, the calendar grid becomes a list of days, and Insights and recurring rows stack ([native overview](../ios-overview.md)). The web follows the browser's text size and zoom with no horizontal scrolling. `ScreenshotTests`, `AccessibilityAuditTests` and `shell.spec.ts` capture these. No card is drawn per text size. |
+| Larger text | **Filled by the platform rule.** iOS uses Dynamic Type styles. At accessibility sizes, the iPad dashboard falls back to the iPhone layout, the money flow and Insights chart give way to their value lists, the calendar grid becomes a list of days, and Insights and recurring rows stack ([native overview](../ios/overview.md)). The web follows the browser's text size and zoom with no horizontal scrolling. `ScreenshotTests`, `AccessibilityAuditTests` and `shell.spec.ts` capture these. No card is drawn per text size. |
 | Real keyboard and focus | **Filled by the platform rule.** iPhone Add entry keeps the always-visible keypad. Text fields use the system keyboard, and Save stays reachable above it (`AccessibilityAuditTests`). On iPad, Add entry uses the keyboard instead of the keypad. The web draws a copper focus ring on every focusable element (`:focus-visible`) and has the shortcuts on the cards: N for Add entry, ⌘K for search, ⌘↵ to save and Esc to close (`transactions.spec.ts` adds an expense with the keyboard only). |
 | Native pickers | **Filled by the platform rule.** The date, split and repeat rows open the system controls: SwiftUI `DatePicker` and `Picker` in a sheet on iOS, and a date input and native `select`s on the web. The cards show only the labeled row that opens them. The category and account pickers are custom lists, and the category picker has its card (`iphone-category-picker`). |
 | App lock | **Filled.** `iphone-lock` and `iphone-app-lock` show the lock and its settings. The lock draws no amount behind it (an approved deviation). The **Lock after** delay is MAZ-133. The web has no lock. |

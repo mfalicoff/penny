@@ -70,7 +70,7 @@ The cards are static HTML rendered with Inter and Ionicons as stand-ins for SF P
 
 ## Native implementation notes (MAZ-69)
 
-The SwiftUI shell, settings, lock and demo are described in [native app shell](../ios-shell.md). Adaptations from the cards:
+The SwiftUI shell, settings, lock and demo are described in [native app shell](../ios/shell.md). Adaptations from the cards:
 
 - **Add entry on iPhone** is a `Tab` with the search role in the system tab bar, so it is real Liquid Glass and follows system accessibility. On the simulator it renders as a fifth item inside the bar, not as the card's separate copper circle; a custom separate button over the system bar is a follow-up for MAZ-122's comparison.
 - **iPad** uses the same navigation state in a `NavigationSplitView`; Settings and the Manage pages open in the detail column instead of a sheet. In compact widths (Slide Over, narrow Split View) the iPad uses the iPhone tab bar.
@@ -80,7 +80,7 @@ The SwiftUI shell, settings, lock and demo are described in [native app shell](.
 
 ## Native overview notes (MAZ-77)
 
-The SwiftUI app builds `iphone-home`, `iphone-home-dark`, `iphone-empty-home`, `iphone-money-flow`, `iphone-insights`, `iphone-calendar` and `ipad-home` ([native overview](../ios-overview.md)). Adaptations from the cards:
+The SwiftUI app builds `iphone-home`, `iphone-home-dark`, `iphone-empty-home`, `iphone-money-flow`, `iphone-insights`, `iphone-calendar` and `ipad-home` ([native overview](../ios/overview.md)). Adaptations from the cards:
 
 - **Home** adds an Expected income card under Projected when a schedule expects income, and an **Explore your month** list (Calendar, Spending by category, Money flow). The Follow your money card opens the money flow; Insights is reached from Explore instead of a pill on the card.
 - **The calendar is a page**, not a sheet: it shares the month with Home and the other pages and has its own previous/next and Today.

@@ -4,7 +4,7 @@ using Penny.Backend.Persistence.Receipts;
 
 namespace Penny.Backend.Api.Configuration;
 
-// Receipt text extraction settings (MAZ-125, docs/operations.md#receipt-text-ocr).
+// Receipt text extraction settings (MAZ-125, docs/self-hosting/operations.md#receipt-text-ocr).
 // `Ocr__Worker=false` stops this process from extracting (another process may; leases
 // keep them apart). When the worker runs, the engine and every language in
 // `Ocr__Languages` (default `eng+fra`) are checked at startup and the host fails before

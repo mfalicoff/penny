@@ -2,7 +2,7 @@ name: Build the iOS app for TestFlight
 
 # MAZ-98: signs a native Xcode archive of apps/ios and uploads it to TestFlight, where it
 # upgrades earlier builds in place (same bundle id, team, App Group and URL scheme).
-# Setup, secrets and the release runbook: docs/ios-ipa.md.
+# Setup, secrets and the release runbook: docs/ios/ipa.md.
 on:
   release:
     types: [published]
@@ -50,7 +50,7 @@ jobs:
           ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
         run: |
           missing=0
-          check() { if [ -z "$2" ]; then echo "::error::Set $1. See docs/ios-ipa.md#one-time-setup."; missing=1; fi; }
+          check() { if [ -z "$2" ]; then echo "::error::Set $1. See docs/ios/ipa.md#one-time-setup."; missing=1; fi; }
           check "the APPLE_TEAM_ID variable" "$PENNY_TEAM_ID"
           check "the ASC_API_KEY_ID variable" "$PENNY_ASC_KEY_ID"
           check "the ASC_API_ISSUER_ID variable" "$PENNY_ASC_ISSUER_ID"
@@ -114,7 +114,7 @@ jobs:
               return 1
             fi
             if [ "$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:com.apple.security.application-groups:0' "$plist" 2>/dev/null)" != "group.com.mfalicoff.penny" ]; then
-              echo "::error::$secret lacks the App Group group.com.mfalicoff.penny. See docs/ios-ipa.md#widget-app-groups-setup." >&2
+              echo "::error::$secret lacks the App Group group.com.mfalicoff.penny. See docs/ios/ipa.md#widget-app-groups-setup." >&2
               return 1
             fi
             for dir in "$HOME/Library/MobileDevice/Provisioning Profiles" \
@@ -128,7 +128,7 @@ jobs:
           widgets_profile=$(install IOS_WIDGETS_APPSTORE_PROFILE "$WIDGETS_APPSTORE_PROFILE" com.mfalicoff.penny.ExpoWidgetsTarget)
           # Push (MAZ-79): the app's profile must carry APNs, or the signed app cannot register.
           if [ "$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:aps-environment' "$RUNNER_TEMP/com.mfalicoff.penny.profile.plist" 2>/dev/null)" != "production" ]; then
-            echo "::error::IOS_APPSTORE_PROFILE has no production aps-environment. Enable Push Notifications on the App ID and regenerate it (docs/ios-notifications.md)."
+            echo "::error::IOS_APPSTORE_PROFILE has no production aps-environment. Enable Push Notifications on the App ID and regenerate it (docs/ios/notifications.md)."
             exit 1
           fi
           mkdir -p "$RUNNER_TEMP/private_keys"

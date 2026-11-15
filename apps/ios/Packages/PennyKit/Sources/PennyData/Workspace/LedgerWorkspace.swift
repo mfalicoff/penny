@@ -8,7 +8,7 @@ public import PennyDomain
 /// Two implementations run in the app: `DemoWorkspace` (the isolated sample data) and
 /// `AccountWorkspace`, which presents a signed-in account through the MAZ-71 offline engine
 /// (`LedgerSyncModel`); the engine owns persistence, the pending queue, merging and retries.
-/// `FixedWorkspace` is for previews and tests. See docs/ios-shell.md, "Sync status".
+/// `FixedWorkspace` is for previews and tests. See docs/ios/shell.md, "Sync status".
 @MainActor
 public protocol LedgerWorkspace: AnyObject, Observable {
     /// The ledger to show.

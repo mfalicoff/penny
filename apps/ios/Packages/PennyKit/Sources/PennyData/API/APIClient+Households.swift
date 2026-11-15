@@ -7,7 +7,7 @@ public import PennyDomain
 /// segment each, so an id can never add segments, a query or a fragment.
 ///
 /// Errors are the usual `APIError` cases; `HouseholdFailure` turns them into what the screens
-/// say (a stale revision, a membership change, a restriction). See docs/ios-households.md.
+/// say (a stale revision, a membership change, a restriction). See docs/ios/households.md.
 extension APIClient {
     private struct HouseholdEnvelope: Decodable { var household: WireHousehold }
     private struct HouseholdsEnvelope: Decodable { var households: [WireHousehold] }

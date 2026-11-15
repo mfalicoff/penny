@@ -5,7 +5,7 @@ import XCTest
 /// Opening household notifications on the real API (MAZ-79, Full plan). The payload is injected
 /// in process (`PENNY_TEST_NOTIFICATION*`, the same `PushNotifications.didOpen` path the app
 /// delegate uses), at a cold launch or on a return from the background; APNs transport is
-/// verified on a physical device instead (docs/ios-notifications.md#verification).
+/// verified on a physical device instead (docs/ios/notifications.md#verification).
 final class NotificationJourneyTests: PennyUITestCase {
     /// The pinned server month. Members only share from the day they joined (the stack's 2026-10-15),
     /// so the expense is in this month; the warm journey opens the month before.

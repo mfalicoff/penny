@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Synthetic receipt files for the native receipt UI tests (MAZ-78, docs/ios-receipts.md), built
+// Synthetic receipt files for the native receipt UI tests (MAZ-78, docs/ios/receipts.md), built
 // byte by byte so nothing personal or copyrighted is committed. The shapes match the browser's
 // apps/web/e2e/fixtures/receipts.ts. `scripts/ios.sh ui-test` writes them to
 // .cache/ios/receipt-fixtures/ and seeds each UI test simulator with them: the photo into the

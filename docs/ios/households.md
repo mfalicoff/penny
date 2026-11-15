@@ -1,6 +1,6 @@
 # Native households and shared expenses (MAZ-75)
 
-[Native app](../apps/ios/README.md) · [Households on the server](reference/households.md) · [Shared expenses](reference/shared-expenses.md) · [Settlement](reference/settlement.md) · [Shared recurrence](reference/shared-recurrence.md) · [Native overview](ios-overview.md)
+[Native app](../../apps/ios/README.md) · [Households on the server](../reference/households.md) · [Shared expenses](../reference/shared-expenses.md) · [Settlement](../reference/settlement.md) · [Shared recurrence](../reference/shared-recurrence.md) · [Native overview](overview.md)
 
 This page describes the Shared tab of the SwiftUI app: households, invitations, shared expenses and their splits, recording payments, monthly balances, history, repeating shared expenses, and leaving, removing and archiving. It covers what people see, how shared money differs from personal money, what recording a payment means, the code, the accessibility identifiers and the acceptance scenarios.
 
@@ -25,7 +25,7 @@ The app talks to the endpoints MAZ-56–59 already serve (`contracts/openapi.jso
 
 ## Shared versus personal
 
-- **Personal entries** live in the offline ledger on the device and sync (MAZ-71). **Shared expenses** live only on the server: the app reads and writes them online and never copies them into the personal ledger. A shared expense counts in your spending at **your share**, through the household projection Home already reads ([native overview](ios-overview.md#shared-and-private-money)); the rest belongs to the others.
+- **Personal entries** live in the offline ledger on the device and sync (MAZ-71). **Shared expenses** live only on the server: the app reads and writes them online and never copies them into the personal ledger. A shared expense counts in your spending at **your share**, through the household projection Home already reads ([native overview](overview.md#shared-and-private-money)); the rest belongs to the others.
 - Each shared write goes to the server at once and then the page reads again, because balances, suggestions, eligibility and restrictions are the server's. Nothing shared is stored on disk; the Shared tab keeps the last answer in memory and says when it couldn't refresh.
 - **Online requirement.** Offline, the Shared tab and household pages keep what they last showed and name the problem ("You're offline. Shared households need a connection, so nothing was sent."). Forms keep everything typed; Try again is offered when it can help.
 
@@ -118,7 +118,7 @@ Identifiers (`AccessibilityID.Households`): screens `screen.shared`, `screen.hou
 
 ## Acceptance scenarios
 
-Run on clean iPhone and iPad simulators against the [full-stack environment](reference/test-environment.md); the automated ones are `HouseholdJourneyTests` in the Full plan (`PENNY_UI_ONLY=PennyUITests/HouseholdJourneyTests apps/ios/scripts/ios.sh ui-test full`).
+Run on clean iPhone and iPad simulators against the [full-stack environment](../reference/test-environment.md); the automated ones are `HouseholdJourneyTests` in the Full plan (`PENNY_UI_ONLY=PennyUITests/HouseholdJourneyTests apps/ios/scripts/ios.sh ui-test full`).
 
 1. **Create, invite, join (automated):** create a household; the invite shows the code, the QR code and the countdown; the second person joins with the code through the API; they appear under People.
 2. **Equal split and share payment (automated):** add an expense of $90 split equally; the server stores $45/$45 and never sends the other member your account; the other person records their share; the share shows Repaid and offers no payment.
@@ -136,7 +136,7 @@ Run on clean iPhone and iPad simulators against the [full-stack environment](ref
 
 ## Limitations
 
-- Shared trips open their trip page (MAZ-76, [native trips](ios-trips.md)): the household page with the trip's dates and totals, Expenses for the whole trip and Only you.
+- Shared trips open their trip page (MAZ-76, [native trips](trips.md)): the household page with the trip's dates and totals, Expenses for the whole trip and Only you.
 - Receipts on shared expenses: an existing receipt stays linked and shows on the detail; picking one is MAZ-78.
 - Kept shared drafts last for the session only (shared data is online-only and isn't stored on the device).
 - The iPad sidebar doesn't list households directly yet (Shared opens the list); the `ipad-shared` card's balances column is the Balances section.

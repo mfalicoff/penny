@@ -554,11 +554,11 @@ public sealed partial class LocalReceiptTextExtractor(OcrEngineSettings settings
             // prlimit exits 126 or 127 when it cannot execute the program.
             if (settings.Limits is not null && result.ExitCode is 126 or 127)
                 throw new InvalidOperationException(
-                    $"The OCR program {Path.GetFileName(program)} could not be started. Install it or set its path (see docs/operations.md#receipt-text-ocr)."
+                    $"The OCR program {Path.GetFileName(program)} could not be started. Install it or set its path (see docs/self-hosting/operations.md#receipt-text-ocr)."
                 );
             if (result.ExitCode != 0)
                 throw new InvalidOperationException(
-                    $"The OCR program {Path.GetFileName(program)} failed `{string.Join(' ', arguments)}` (exit code {result.ExitCode}). Check the installation (see docs/operations.md#receipt-text-ocr)."
+                    $"The OCR program {Path.GetFileName(program)} failed `{string.Join(' ', arguments)}` (exit code {result.ExitCode}). Check the installation (see docs/self-hosting/operations.md#receipt-text-ocr)."
                 );
             return Encoding.UTF8.GetString(result.Output) + "\n" + result.Error;
         }
@@ -572,7 +572,7 @@ public sealed partial class LocalReceiptTextExtractor(OcrEngineSettings settings
         var missing = settings.Languages.Where(language => !available.Contains(language)).ToList();
         if (missing.Count > 0)
             throw new InvalidOperationException(
-                $"OCR language data is missing for {string.Join(", ", missing)} (Ocr__Languages is {string.Join('+', settings.Languages)}). Install the Tesseract language data (Debian/Ubuntu: tesseract-ocr-{missing[0]}; Nix: tesseract.override {{ enableLanguages = [ ... ]; }}) or set Ocr__TessdataDirectory. See docs/operations.md#receipt-text-ocr."
+                $"OCR language data is missing for {string.Join(", ", missing)} (Ocr__Languages is {string.Join('+', settings.Languages)}). Install the Tesseract language data (Debian/Ubuntu: tesseract-ocr-{missing[0]}; Nix: tesseract.override {{ enableLanguages = [ ... ]; }}) or set Ocr__TessdataDirectory. See docs/self-hosting/operations.md#receipt-text-ocr."
             );
         var poppler = PopplerVersion().Match(Run(settings.PdfToText, "-v"));
         if (!poppler.Success)

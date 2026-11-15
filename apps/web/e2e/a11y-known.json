@@ -1,5 +1,5 @@
 {
-  "description": "MAZ-96 baseline of axe violations found when the scans were added (Chromium 1248, axe-core 4.14; Firefox and WebKit are held to the same layout's entries, minus any `except`). Every entry is an open accessibility gap listed in docs/acceptance.md; remove it when fixed. The scan fails on any violation not listed here and on any listed one that no longer occurs.",
+  "description": "MAZ-96 baseline of axe violations found when the scans were added (Chromium 1248, axe-core 4.14; Firefox and WebKit are held to the same layout's entries, minus any `except`). Every entry is an open accessibility gap listed in docs/development/acceptance.md; remove it when fixed. The scan fails on any violation not listed here and on any listed one that no longer occurs.",
   "violations": [
     {
       "scan": "sign-in light",

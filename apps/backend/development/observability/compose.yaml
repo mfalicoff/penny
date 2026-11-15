@@ -6,12 +6,12 @@
 #   docker compose up -d --wait               # after deploy/compose.yaml is up
 #
 # Then in deploy/api.env: OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy:4317 and restart the API.
-# Guide: docs/observability.md.
+# Guide: docs/self-hosting/observability.md.
 #
 # Alloy joins Penny's network (`penny_penny`, created by deploy/compose.yaml) under the name
 # `alloy`, so the API reaches it without a published port. Everything else stays on this
 # stack's own network. Only loopback ports are published: Grafana, and the two client ingest
-# endpoints for a reverse proxy to expose (docs/observability.md#client-ingest).
+# endpoints for a reverse proxy to expose (docs/self-hosting/observability.md#client-ingest).
 #
 # Sized for a modest server (example: i7-4790K, 32 GB): single-binary Loki and Tempo,
 # local disk, short retention, and memory limits that add up to under 4 GiB.

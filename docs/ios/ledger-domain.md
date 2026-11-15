@@ -1,19 +1,19 @@
 # Native ledger rules (PennyDomain)
 
-[Documentation](README.md) · [Native iOS app](../apps/ios/README.md) · [API client](ios-api-client.md) · [Ledger sync](reference/ledger.md) · [TypeScript domain rules](reference/domain-rules.md)
+[Documentation](../README.md) · [Native iOS app](../../apps/ios/README.md) · [API client](api-client.md) · [Ledger sync](../reference/ledger.md) · [TypeScript domain rules](../reference/domain-rules.md)
 
 MAZ-70 ports the personal ledger rules of the shared TypeScript reference (`apps/web/src/domain/ledger.ts`, `apps/web/src/domain/commands.ts`, `apps/web/src/domain/entryDraft.ts`, the overview, transactions and trip selectors in `apps/web/src/domain/selectors/` and `apps/web/src/domain/householdProjection.ts`) to pure Swift in `apps/ios/Packages/PennyKit/Sources/PennyDomain/Ledger/`. The rules have no I/O, no UI, no clock and no randomness: callers pass today's date and generated ids. They are checked against the shared golden fixtures in `contracts/fixtures` and Swift Testing boundary tests in `Tests/PennyDomainTests`.
 
-The reference for reports and search is the pure TypeScript module MAZ-86 extracted on v2 ([domain rules](reference/domain-rules.md)): `apps/web/src/domain/summary.ts` (`monthBreakdown`, `summarizeMonth`, `isRecorded`), `search.ts` (`searchMatcher`, `byDateDescThenId`, `searchEntries`) and `selectors/` (overview, transactions, trips), tested in `apps/web/tests/domain/domain-rules.test.ts`. Where that module changed the old selectors, PennyDomain follows the new module.
+The reference for reports and search is the pure TypeScript module MAZ-86 extracted on v2 ([domain rules](../reference/domain-rules.md)): `apps/web/src/domain/summary.ts` (`monthBreakdown`, `summarizeMonth`, `isRecorded`), `search.ts` (`searchMatcher`, `byDateDescThenId`, `searchEntries`) and `selectors/` (overview, transactions, trips), tested in `apps/web/tests/domain/domain-rules.test.ts`. Where that module changed the old selectors, PennyDomain follows the new module.
 
 ## Ownership
 
 | Concern | Owner | Notes |
 | --- | --- | --- |
-| Money parsing, personal shares, entry validation, ledger commands, personal recurrence, reports, local substring search | PennyDomain (MAZ-70) | Client-owned ([ADR 002](reference/architecture.md#adr-002-calculation-and-conflict-ownership)) |
+| Money parsing, personal shares, entry validation, ledger commands, personal recurrence, reports, local substring search | PennyDomain (MAZ-70) | Client-owned ([ADR 002](../reference/architecture.md#adr-002-calculation-and-conflict-ownership)) |
 | Wire models, decoding, HTTP | PennyData (MAZ-67, 71) | `Ledger(wire:)` / `WireLedger(_:)` (MAZ-71, `PennyData/Offline/LedgerWireMapping.swift`); `WireProjectedExpense` → `SharedExpenseShare` is MAZ-75's |
-| Three-way merge, pending summary | PennyDomain (MAZ-71) | `LedgerMerge`, `PendingChanges` in `LedgerMerge.swift` ([offline sync](ios-offline-sync.md#conflict-policy)) |
-| Durable `{base, local}` snapshots, sync and retries | PennyData (MAZ-71) | `LedgerSyncEngine` applies a `LedgerChange` to the latest local snapshot, then `Recurrence.materialize`, then persists before acknowledging ([offline sync](ios-offline-sync.md)) |
+| Three-way merge, pending summary | PennyDomain (MAZ-71) | `LedgerMerge`, `PendingChanges` in `LedgerMerge.swift` ([offline sync](offline-sync.md#conflict-policy)) |
+| Durable `{base, local}` snapshots, sync and retries | PennyData (MAZ-71) | `LedgerSyncEngine` applies a `LedgerChange` to the latest local snapshot, then `Recurrence.materialize`, then persists before acknowledging ([offline sync](offline-sync.md)) |
 | Shared splits, settlement, shared recurrence and projection | Server (MAZ-56–59); Swift settlement MAZ-75 | PennyDomain only reads the caller's projected shares; it never splits or records shared expenses |
 | Search v1 folded normalization, typo and meaning tiers | Server (MAZ-121); iOS screens MAZ-73 | PennyDomain keeps the local substring search |
 | Screens | MAZ-73, 74, 76, 77 | They call these rules and show `LedgerRuleError.message` |
@@ -73,11 +73,11 @@ Optional fields (`accountId`, `tripId`, `receipt`, `recurringId`, `sharedHouseho
 - **Search** (`search`, TypeScript `searchEntries`): recorded entries of the whole report, any date, filtered by query, kind and day.
 - **One order**: Home, Activity, search and trip expenses all sort by date descending, then id ascending (TypeScript `byDateDescThenId`); scheduled previews in `MonthSummary.scheduled` are oldest first.
 - **Investments** are contributions, reported separately from spending. **Trips** sum personal expense shares and receipt totals.
-- **Overview (MAZ-77)**: the money flow (`selectors/moneyFlow.ts`), the calendar grid (`calendarMonth`), the category breakdown and the month comparison are in `Ledger/Overview.swift`, derived from `MonthSummary` ([native overview](ios-overview.md)). The native flow is recorded-only and keeps at most five rows per column.
+- **Overview (MAZ-77)**: the money flow (`selectors/moneyFlow.ts`), the calendar grid (`calendarMonth`), the category breakdown and the month comparison are in `Ledger/Overview.swift`, derived from `MonthSummary` ([native overview](overview.md)). The native flow is recorded-only and keeps at most five rows per column.
 
 ## Local search
 
-`LocalSearch.matches` is the offline/demo search (TypeScript `searchMatcher`): the query, trimmed with JavaScript `trim` and lowercased once, must be an exact UTF-16 substring of one search document, `"{title} {note} {category} {account}"` lowercased. Home, Activity and `search` use the same matcher, so `" coffee"` finds a row titled "Coffee" everywhere and a query of spaces matches everything. Because the fields are joined with single spaces, "beans morning" finds title "Coffee beans" with note "Morning", but "lunch  with" (two spaces) does not cross a field. "cafe" does not find "Café"; `%`, `_` and `\` are plain characters. Shared rows search their shared category and, for the payer only, their account. With pending local changes, offline, or without server search v1, the client searches its local snapshot (`LocalSearch.searchesLocally`), so an unsynced create, edit or delete is never hidden or revived by a server page; local and server rows are never mixed ([search](reference/search.md#offline-pending-edits-and-demo)).
+`LocalSearch.matches` is the offline/demo search (TypeScript `searchMatcher`): the query, trimmed with JavaScript `trim` and lowercased once, must be an exact UTF-16 substring of one search document, `"{title} {note} {category} {account}"` lowercased. Home, Activity and `search` use the same matcher, so `" coffee"` finds a row titled "Coffee" everywhere and a query of spaces matches everything. Because the fields are joined with single spaces, "beans morning" finds title "Coffee beans" with note "Morning", but "lunch  with" (two spaces) does not cross a field. "cafe" does not find "Café"; `%`, `_` and `\` are plain characters. Shared rows search their shared category and, for the payer only, their account. With pending local changes, offline, or without server search v1, the client searches its local snapshot (`LocalSearch.searchesLocally`), so an unsynced create, edit or delete is never hidden or revived by a server page; local and server rows are never mixed ([search](../reference/search.md#offline-pending-edits-and-demo)).
 
 ## Fixtures
 
@@ -87,7 +87,7 @@ No fixture was added or changed. Known gaps, for the fixture owners rather than 
 
 - `manifest.json` still lists only `contracts/swift/Tests/PennyContractsTests/FixtureDecodingTests.swift` as the Swift consumer of these files (and MAZ-73 for `search-cases.json`); the generator's consumer table (`apps/web/scripts/fixtures/generate-golden.ts`) should add `apps/ios/Packages/PennyKit/Tests/PennyDomainTests` when it is next regenerated.
 - There is no shared fixture for the entry draft rules, the command check order and messages, pause/resume, materialization or the projected formula with expected income; the Swift tests port the v2 TypeScript behavior (`apps/web/tests/domain/domain-rules.test.ts`) and the redesign totals. The message test pins every `LedgerRuleError` sentence word for word to `apps/web/src/domain` (`apps/web/src/domain/ledger.ts`, `commands.ts`, `entryDraft.ts`), and the four new ones to the wording chosen here.
-- `merge-conflicts.json` is consumed by MAZ-71's `LedgerMergeTests` (listed in the manifest); `shared-splits.json` is consumed by MAZ-75's `HouseholdSplitTests` (the form's split preview); settlement stays on the server, so the app shows its balances and suggestions and never computes them ([native households](ios-households.md)).
+- `merge-conflicts.json` is consumed by MAZ-71's `LedgerMergeTests` (listed in the manifest); `shared-splits.json` is consumed by MAZ-75's `HouseholdSplitTests` (the form's split preview); settlement stays on the server, so the app shows its balances and suggestions and never computes them ([native households](households.md)).
 
 ## Rule decisions
 

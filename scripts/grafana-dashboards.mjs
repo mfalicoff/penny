@@ -6,7 +6,7 @@
 //   node scripts/grafana-dashboards.mjs --check      # fail when the JSON files differ from this script
 //
 // Metric names are what Prometheus stores for the API's OpenTelemetry instruments
-// (docs/operations.md#what-each-signal-contains) after OTLP translation: dots become
+// (docs/self-hosting/operations.md#what-each-signal-contains) after OTLP translation: dots become
 // underscores, counters gain `_total`, and units become suffixes (`_seconds`, `_bytes`).
 // Every dashboard picks its data sources from variables, so it imports into a Grafana whose
 // Prometheus, Loki and Tempo have other names.
@@ -791,7 +791,7 @@ function runtime() {
 
 // --- Clients --------------------------------------------------------------------------------
 
-// The client telemetry contract (docs/observability.md#client-telemetry): web and iOS send
+// The client telemetry contract (docs/self-hosting/observability.md#client-telemetry): web and iOS send
 // OTLP with service.name penny-web or penny-ios and service.version set to the app version.
 // An error is a log record with severity ERROR (17-20) and exception.type; a crash is a log
 // record with severity FATAL (21+) sent on the next launch. Faro (web) errors are Loki lines

@@ -14,7 +14,7 @@ import Testing
 /// Renders every widget state at the small family's size, light and dark, so layout problems
 /// (a long amount, three long titles, the stale notes) surface as a failed render rather than
 /// on a device. With `PENNY_WIDGET_RENDER_DIR` set, the images are saved there for review
-/// (docs/ios-widgets.md#verification).
+/// (docs/ios/widgets.md#verification).
 @Suite("Widgets: rendering every state")
 @MainActor
 struct WidgetRenderTests {

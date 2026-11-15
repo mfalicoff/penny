@@ -1,6 +1,6 @@
 # Native Home Screen widgets
 
-[Documentation](README.md) · [Native iOS app](../apps/ios/README.md) · [Native Home and overview](ios-overview.md)
+[Documentation](../README.md) · [Native iOS app](../../apps/ios/README.md) · [Native Home and overview](overview.md)
 
 MAZ-80 builds two widgets with WidgetKit: **Monthly balance** and **Recent expenses**, small family. The app computes a small snapshot of the month, writes it to the App Group, and the widget extension only draws it. Medium and Lock Screen widgets are MAZ-135.
 
@@ -23,7 +23,7 @@ The extension's identity is frozen for TestFlight/App Store continuity, so widge
 | Widget kinds | `BalanceChartWidget` (Monthly balance), `RecentExpensesWidget` (Recent expenses) |
 | App Group | `group.com.mfalicoff.penny`, in both `Penny.entitlements` and `PennyWidgets.entitlements` |
 
-No new entitlement: both App IDs already have the App Group from earlier builds ([widget App Groups setup](ios-ipa.md#widget-app-groups-setup)). A device or archive build signs the extension with the same team as the app (`Signing.local.xcconfig`); automatic signing uses the existing `ExpoWidgetsTarget` App ID. If that App ID or its App Group is missing, the archive fails to sign rather than shipping widgets that can't read the snapshot. Simulator builds sign ad hoc and embed the entitlements.
+No new entitlement: both App IDs already have the App Group from earlier builds ([widget App Groups setup](ipa.md#widget-app-groups-setup)). A device or archive build signs the extension with the same team as the app (`Signing.local.xcconfig`); automatic signing uses the existing `ExpoWidgetsTarget` App ID. If that App ID or its App Group is missing, the archive fails to sign rather than shipping widgets that can't read the snapshot. Simulator builds sign ad hoc and embed the entitlements.
 
 Without the App Group (a misconfigured build), the app writes nothing anywhere (`WidgetPublisher.live()` is nil, never the private container), and the widgets show **Open Penny to update**.
 
@@ -51,7 +51,7 @@ One JSON file, `Widgets/snapshot.json` in the App Group container, written atomi
 ```
 
 - Money is integer cents, the viewer's share, in the ledger's currency. The widgets format it with `MoneyFormat`; they never add or compute amounts.
-- `leftToSpend`, `projectedRemaining` and the recorded `income`, `spent`, `invested` come from `LedgerReport.month(today's month, today:)`, the same call as Home ([overview formulas](ios-overview.md)): **Left to spend** is recorded only; **Projected** adds scheduled occurrences (personal and shared) and income dated after today; shared household rows count once, at the viewer's share; investments are contributions, not spending.
+- `leftToSpend`, `projectedRemaining` and the recorded `income`, `spent`, `invested` come from `LedgerReport.month(today's month, today:)`, the same call as Home ([overview formulas](overview.md)): **Left to spend** is recorded only; **Projected** adds scheduled occurrences (personal and shared) and income dated after today; shared household rows count once, at the viewer's share; investments are contributions, not spending.
 - `recentExpenses`: at most 3 recorded expenses dated today or earlier, newest first (then id), personal or shared (the viewer's share, `shared: true`). Scheduled previews and future-dated expenses are left out. Titles are cut to 60 characters.
 - `waitingToSync`: this device has changes the server hasn't acknowledged and sync is offline, failing or needs sign-in (`SyncStatus.needsAttention` with pending changes). The widget says **As of last sync**.
 - `owner`: the first 16 bytes, in hex, of SHA-256 of `widget\n<server>\n<lowercased email>`. It lets the app recognize another account's file; it reveals neither.
@@ -83,7 +83,7 @@ The widgets' own timeline is one entry, reloaded a minute after the next local m
 | Old | Built more than 12 hours ago | numbers, **Updated … ago** (live relative time) | same |
 | Past month | The device's month is after the snapshot's | that month's numbers and name, **Open Penny to update** | rows, **Open Penny to update** |
 
-Taps: Monthly balance opens Home (`penny:///`); Recent expenses opens the add entry sheet (`penny://entries/new`). A small widget has a single tap target, so the + is a picture of the widget's action. Links go through the app's deep-link inbox, so they wait for sign-in and the app lock like any other link ([native shell](ios-shell.md)).
+Taps: Monthly balance opens Home (`penny:///`); Recent expenses opens the add entry sheet (`penny://entries/new`). A small widget has a single tap target, so the + is a picture of the widget's action. Links go through the app's deep-link inbox, so they wait for sign-in and the app lock like any other link ([native shell](shell.md)).
 
 ## Privacy
 
@@ -92,12 +92,12 @@ Widgets show money outside the app, so:
 - **Account changes clear them first.** `AuthGate` tells `WidgetPublisher` who owns the widgets on every auth change: signing out (or an expired session) deletes the file and reloads; signing in to another account deletes another account's file before anything is shown; the new shell publishes only for its own account. A late update from a shell that is going away is ignored. While the app is restoring or waiting for the Keychain, the file is left as it is.
 - **Redacted when the device is locked.** Amounts, the projected line, the flow bar and expense titles are `privacySensitive`, so iOS redacts them wherever it shows widgets on a locked device (StandBy, the iPad Lock Screen) if the person hides sensitive widget data there.
 - **File protection.** The file is written with `completeUntilFirstUserAuthentication`: unreadable after a restart until the first unlock, readable by the widget afterwards (WidgetKit requires this for widgets to render).
-- **Independent of the app lock.** The in-app Face ID lock protects the app's UI, not widgets; turning it on doesn't change or clear them, and the Settings lock row says so ([app lock](ios-shell.md#app-lock)). To keep amounts off the Home Screen, remove the widgets.
+- **Independent of the app lock.** The in-app Face ID lock protects the app's UI, not widgets; turning it on doesn't change or clear them, and the Settings lock row says so ([app lock](shell.md#app-lock)). To keep amounts off the Home Screen, remove the widgets.
 - **Minimal data.** Only the fields above; expense titles are the only free text. The extension's privacy manifest declares App Group `UserDefaults` (reason `1C8F.1`); it collects nothing.
 
 ## Design
 
-The 79 screen specimens include one widget card (`system-widgets`, [widgets.html](design/penny-ios/system/widgets.html)) that shows the restyled small widgets alongside the new medium and Lock Screen ones; it is not a complete widget-family design. This implementation adapts it to WidgetKit for the small family:
+The 79 screen specimens include one widget card (`system-widgets`, [widgets.html](../design/penny-ios/system/widgets.html)) that shows the restyled small widgets alongside the new medium and Lock Screen ones; it is not a complete widget-family design. This implementation adapts it to WidgetKit for the small family:
 
 - **Monthly balance**: the leaf header and **LEFT TO SPEND**, the hero amount with smaller cents (the redesign's `HeroAmount`), the month, **Projected** on its own line only when it differs, then an 8 pt bar of recorded spending (label color), contributions (indigo) and what's left (green) as shares of the larger of income and outflow. It shows Left to spend, as the redesign proposes.
 - **Recent expenses**: **RECENT**, up to three rows (title, `−$48.90` in the label color; a people glyph for shared rows), and the copper + in the corner.

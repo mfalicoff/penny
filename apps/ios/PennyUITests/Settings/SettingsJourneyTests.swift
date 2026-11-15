@@ -5,7 +5,7 @@ import XCTest
 /// appearance choice survives a relaunch and restyles the app, and turning the lock on where the
 /// device cannot authenticate (a simulator without Face ID enrolled or a passcode) explains why
 /// and leaves the lock off. The lock's success path needs enrolled biometrics and is a device
-/// check (docs/ios-qa.md#device-release-checklist).
+/// check (docs/ios/qa.md#device-release-checklist).
 final class SettingsJourneyTests: PennyUITestCase {
     override func tearDown() async throws {
         await MainActor.run { XCUIDevice.shared.appearance = .light }
