@@ -12,6 +12,7 @@ Each folder holds one kind of document:
 | [`ios/`](ios/) | The native iPhone and iPad app, area by area |
 | [`web/`](web/) | The browser app's offline sync and receipts |
 | [`reference/`](reference/) | The .NET API and shared rules, area by area |
+| [`plans/`](plans/) | Proposed features that aren't built yet |
 | [`design/`](design/) | The redesign card baseline and visual acceptance |
 | [`screenshots/`](screenshots/) | Images for the showcase README |
 
@@ -64,6 +65,10 @@ Each folder holds one kind of document:
 - [Web app foundation](../apps/web/README.md): the React/Vite/TanStack browser client, pinned versions, route and data conventions, design-kit boundaries and web CI.
 - [Browser offline ledger and sync](web/offline-sync.md): the IndexedDB schema, durable saves, recovery, the shared merge and same-field policy, multi-tab coordination, sync triggers and failure states, sign-out protection, local search, the origin requirement and offline limits.
 - [Browser receipts](web/receipts.md): supported files and limits, upload with progress, cancel and retry, the draft, authenticated photo and PDF preview and download, the pdf.js worker and Content-Security-Policy for deployment, receipt encryption and key configuration, and troubleshooting.
+
+## Plans
+
+- [Emailed receipts](plans/email-receipts.md) (MAZ-184, proposed): per-user receipt email addresses through a Cloudflare Email Worker, parsing and sandboxed PDF rendering in Penny, the receipt inbox and UX for attaching, the threat model, and implementation tasks.
 
 ## Showcase screenshots
 
