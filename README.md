@@ -1,4 +1,5 @@
 # Penny
+Hi!
 
 A little more clarity about your money. Track expenses, income, and investment contributions on **iOS and web**, with a self-hosted server that keeps your devices in sync. Android is no longer supported.
 
