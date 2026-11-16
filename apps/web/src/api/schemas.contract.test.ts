@@ -32,6 +32,13 @@ import {
   oidcConfigSchema,
   okSchema,
   projectedExpenseSchema,
+  receiptEmailAddressSchema,
+  receiptEmailSchema,
+  receiptEmailUpdateSchema,
+  receiptInboxCleanupSchema,
+  receiptInboxFileSchema,
+  receiptInboxItemSchema,
+  receiptInboxPageSchema,
   receiptSchema,
   searchRequestSchema,
   searchResponseSchema,
@@ -85,6 +92,13 @@ const models: [string, z.ZodType][] = [
   ["SharedRecurringInput", sharedRecurringInputSchema],
   ["SharedRecurringUpdate", sharedRecurringUpdateSchema],
   ["SharedRecurring", sharedRecurringSchema],
+  ["ReceiptEmailAddress", receiptEmailAddressSchema],
+  ["ReceiptEmail", receiptEmailSchema],
+  ["ReceiptEmailUpdate", receiptEmailUpdateSchema],
+  ["ReceiptInboxFile", receiptInboxFileSchema],
+  ["ReceiptInboxItem", receiptInboxItemSchema],
+  ["ReceiptInboxPage", receiptInboxPageSchema],
+  ["ReceiptInboxCleanup", receiptInboxCleanupSchema],
 ];
 
 describe("DTO models match contracts/openapi.json", () => {

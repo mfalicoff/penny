@@ -6,7 +6,9 @@ import { AddEntryDialog } from "../../features/entries/AddEntryDialog";
 import { Avatar, Button, Kbd } from "../../design/controls";
 import { Icon } from "../../design/Icon";
 import { ModalDialog } from "../../design/ModalDialog";
-import { Banner, ServerUnreachableBanner } from "../../design/states";
+import { Banner, ServerUnreachableBanner, useOnline } from "../../design/states";
+import { countLabel, OFFLINE_HINT } from "../../features/receiptInbox/model";
+import { useInboxStatus } from "../../features/receiptInbox/useInbox";
 import { SyncStatusBanner } from "../../offline/SyncStatusBanner";
 import { leaveDemo, useIsDemo } from "../../demo/demo";
 import { serverInfoQuery } from "../../api/info";
@@ -177,6 +179,44 @@ function NavLink({ item, showShortcut }: { item: NavItem; showShortcut: boolean 
   );
 }
 
+/**
+ * Receipts to attach (MAZ-184), with its count. Shown only when the server accepts emailed
+ * receipts and an address exists (or items are still waiting). Offline it can't open: the inbox
+ * needs a connection, as uploads do.
+ */
+function InboxNavItem() {
+  const status = useInboxStatus();
+  const online = useOnline();
+  if (!status.visible) return null;
+  // The visible label stays in the name (label in name); the count is read as "3 receipts to attach".
+  const spoken = status.count > 0 ? `Receipts to attach, ${countLabel(status.count, status.more)}` : "Receipts to attach";
+  const badge = status.count > 0 ? (
+    <span className="navlink__count" aria-hidden="true">
+      {status.more ? `${String(status.count)}+` : status.count}
+    </span>
+  ) : null;
+  if (!online) {
+    return (
+      <li>
+        <span className="navlink navlink--off" role="link" aria-disabled="true" aria-label={`${spoken}. ${OFFLINE_HINT}`} title={OFFLINE_HINT}>
+          <Icon name="receipt" size={18} />
+          <span className="navlink__label">Receipts to attach</span>
+          {badge}
+        </span>
+      </li>
+    );
+  }
+  return (
+    <li>
+      <Link to="/receipts" search={{ status: "to_attach" }} className="navlink" activeOptions={{ includeSearch: false }} aria-label={spoken}>
+        <Icon name="receipt" size={18} />
+        <span className="navlink__label">Receipts to attach</span>
+        {badge}
+      </Link>
+    </li>
+  );
+}
+
 /** Brand, the three navigation sections and the account footer (kit `WebSidebar`). */
 function Sidebar({ variant }: { variant: "rail" | "drawer" }) {
   const email = useAccountEmail();
@@ -198,6 +238,7 @@ function Sidebar({ variant }: { variant: "rail" | "drawer" }) {
                   <NavLink item={item} showShortcut={variant === "rail"} />
                 </li>
               ))}
+              {section.heading ? null : <InboxNavItem />}
             </ul>
           </div>
         ))}

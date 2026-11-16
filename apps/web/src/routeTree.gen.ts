@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AccountsRouteImport } from './routes/accounts'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as InsightsRouteImport } from './routes/insights'
+import { Route as ReceiptsRouteImport } from './routes/receipts'
 import { Route as RecurringRouteImport } from './routes/recurring'
 import { Route as SettingsRouteRouteImport } from './routes/settings/route'
 import { Route as TransactionsRouteImport } from './routes/transactions'
@@ -22,6 +23,7 @@ import { Route as HouseholdsIndexRouteImport } from './routes/households/index'
 import { Route as SettingsIndexRouteImport } from './routes/settings/index'
 import { Route as SettingsAppearanceRouteImport } from './routes/settings/appearance'
 import { Route as SettingsCurrencyRouteImport } from './routes/settings/currency'
+import { Route as SettingsReceiptEmailRouteImport } from './routes/settings/receipt-email'
 import { Route as SettingsServerRouteImport } from './routes/settings/server'
 import { Route as TripsIndexRouteImport } from './routes/trips/index'
 import { Route as TripsIdRouteImport } from './routes/trips/$id'
@@ -46,6 +48,11 @@ const CategoriesRoute = CategoriesRouteImport.update({
 const InsightsRoute = InsightsRouteImport.update({
   id: '/insights',
   path: '/insights',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReceiptsRoute = ReceiptsRouteImport.update({
+  id: '/receipts',
+  path: '/receipts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RecurringRoute = RecurringRouteImport.update({
@@ -93,6 +100,11 @@ const SettingsCurrencyRoute = SettingsCurrencyRouteImport.update({
   path: '/currency',
   getParentRoute: () => SettingsRouteRoute,
 } as any)
+const SettingsReceiptEmailRoute = SettingsReceiptEmailRouteImport.update({
+  id: '/receipt-email',
+  path: '/receipt-email',
+  getParentRoute: () => SettingsRouteRoute,
+} as any)
 const SettingsServerRoute = SettingsServerRouteImport.update({
   id: '/server',
   path: '/server',
@@ -126,12 +138,14 @@ export interface FileRoutesByFullPath {
   '/accounts': typeof AccountsRoute
   '/categories': typeof CategoriesRoute
   '/insights': typeof InsightsRoute
+  '/receipts': typeof ReceiptsRoute
   '/recurring': typeof RecurringRoute
   '/transactions': typeof TransactionsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/entries/new': typeof EntriesNewRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/currency': typeof SettingsCurrencyRoute
+  '/settings/receipt-email': typeof SettingsReceiptEmailRoute
   '/settings/server': typeof SettingsServerRoute
   '/trips/$id': typeof TripsIdRoute
   '/households/': typeof HouseholdsIndexRoute
@@ -145,12 +159,14 @@ export interface FileRoutesByTo {
   '/accounts': typeof AccountsRoute
   '/categories': typeof CategoriesRoute
   '/insights': typeof InsightsRoute
+  '/receipts': typeof ReceiptsRoute
   '/recurring': typeof RecurringRoute
   '/transactions': typeof TransactionsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/entries/new': typeof EntriesNewRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/currency': typeof SettingsCurrencyRoute
+  '/settings/receipt-email': typeof SettingsReceiptEmailRoute
   '/settings/server': typeof SettingsServerRoute
   '/trips/$id': typeof TripsIdRoute
   '/households': typeof HouseholdsIndexRoute
@@ -166,12 +182,14 @@ export interface FileRoutesById {
   '/accounts': typeof AccountsRoute
   '/categories': typeof CategoriesRoute
   '/insights': typeof InsightsRoute
+  '/receipts': typeof ReceiptsRoute
   '/recurring': typeof RecurringRoute
   '/transactions': typeof TransactionsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/entries/new': typeof EntriesNewRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/currency': typeof SettingsCurrencyRoute
+  '/settings/receipt-email': typeof SettingsReceiptEmailRoute
   '/settings/server': typeof SettingsServerRoute
   '/trips/$id': typeof TripsIdRoute
   '/households/': typeof HouseholdsIndexRoute
@@ -188,12 +206,14 @@ export interface FileRouteTypes {
     | '/accounts'
     | '/categories'
     | '/insights'
+    | '/receipts'
     | '/recurring'
     | '/transactions'
     | '/auth/callback'
     | '/entries/new'
     | '/settings/appearance'
     | '/settings/currency'
+    | '/settings/receipt-email'
     | '/settings/server'
     | '/trips/$id'
     | '/households/'
@@ -207,12 +227,14 @@ export interface FileRouteTypes {
     | '/accounts'
     | '/categories'
     | '/insights'
+    | '/receipts'
     | '/recurring'
     | '/transactions'
     | '/auth/callback'
     | '/entries/new'
     | '/settings/appearance'
     | '/settings/currency'
+    | '/settings/receipt-email'
     | '/settings/server'
     | '/trips/$id'
     | '/households'
@@ -227,12 +249,14 @@ export interface FileRouteTypes {
     | '/accounts'
     | '/categories'
     | '/insights'
+    | '/receipts'
     | '/recurring'
     | '/transactions'
     | '/auth/callback'
     | '/entries/new'
     | '/settings/appearance'
     | '/settings/currency'
+    | '/settings/receipt-email'
     | '/settings/server'
     | '/trips/$id'
     | '/households/'
@@ -248,6 +272,7 @@ export interface RootRouteChildren {
   AccountsRoute: typeof AccountsRoute
   CategoriesRoute: typeof CategoriesRoute
   InsightsRoute: typeof InsightsRoute
+  ReceiptsRoute: typeof ReceiptsRoute
   RecurringRoute: typeof RecurringRoute
   TransactionsRoute: typeof TransactionsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
@@ -287,6 +312,13 @@ declare module '@tanstack/react-router' {
       path: '/insights'
       fullPath: '/insights'
       preLoaderRoute: typeof InsightsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/receipts': {
+      id: '/receipts'
+      path: '/receipts'
+      fullPath: '/receipts'
+      preLoaderRoute: typeof ReceiptsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/recurring': {
@@ -352,6 +384,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsCurrencyRouteImport
       parentRoute: typeof SettingsRouteRoute
     }
+    '/settings/receipt-email': {
+      id: '/settings/receipt-email'
+      path: '/receipt-email'
+      fullPath: '/settings/receipt-email'
+      preLoaderRoute: typeof SettingsReceiptEmailRouteImport
+      parentRoute: typeof SettingsRouteRoute
+    }
     '/settings/server': {
       id: '/settings/server'
       path: '/server'
@@ -393,6 +432,7 @@ declare module '@tanstack/react-router' {
 interface SettingsRouteRouteChildren {
   SettingsAppearanceRoute: typeof SettingsAppearanceRoute
   SettingsCurrencyRoute: typeof SettingsCurrencyRoute
+  SettingsReceiptEmailRoute: typeof SettingsReceiptEmailRoute
   SettingsServerRoute: typeof SettingsServerRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
 }
@@ -400,6 +440,7 @@ interface SettingsRouteRouteChildren {
 const SettingsRouteRouteChildren: SettingsRouteRouteChildren = {
   SettingsAppearanceRoute: SettingsAppearanceRoute,
   SettingsCurrencyRoute: SettingsCurrencyRoute,
+  SettingsReceiptEmailRoute: SettingsReceiptEmailRoute,
   SettingsServerRoute: SettingsServerRoute,
   SettingsIndexRoute: SettingsIndexRoute,
 }
@@ -414,6 +455,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountsRoute: AccountsRoute,
   CategoriesRoute: CategoriesRoute,
   InsightsRoute: InsightsRoute,
+  ReceiptsRoute: ReceiptsRoute,
   RecurringRoute: RecurringRoute,
   TransactionsRoute: TransactionsRoute,
   AuthCallbackRoute: AuthCallbackRoute,

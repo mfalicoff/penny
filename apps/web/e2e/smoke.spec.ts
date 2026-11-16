@@ -21,6 +21,8 @@ test.beforeEach(async ({ page }) => {
   await page.route("/api/v1/search/transactions", (route) => route.fulfill({ json: { version: 1, items: [], totalCount: 0, nextCursor: null } }));
   // Activity adds your share of shared expenses (MAZ-88).
   await page.route("/api/households/projection**", (route) => route.fulfill({ json: { transactions: [], scheduled: [] } }));
+  // Emailed receipts (MAZ-184) are off on this server; the route still answers 200.
+  await page.route("/api/receipt-email", (route) => route.fulfill({ json: { enabled: false, domain: null, address: null } }));
 });
 
 test("production build renders Home with the bundled font and no console errors", async ({ page }) => {
