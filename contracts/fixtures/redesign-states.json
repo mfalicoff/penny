@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "description": "Deterministic data states for the 61 redesign cards in contracts/design-baseline.json (docs/design/penny-ios, MAZ-132). Each names a full-stack-seeds.json scenario and alias (or a client-only state), the view to open at the scenario clock, the appearances to capture (light and dark unless the card pins one) and any injected fault or stale write. Clients capture these against a test environment; MAZ-122 owns the visual comparison.",
+  "description": "Deterministic data states for the 82 redesign cards in contracts/design-baseline.json (docs/design/penny-ios, MAZ-132). Each names a full-stack-seeds.json scenario and alias (or a client-only state), the view to open at the scenario clock, the appearances to capture (light and dark unless the card pins one) and any injected fault or stale write. Clients capture these against a test environment; MAZ-122 owns the visual comparison.",
   "clock": "2026-10-15T12:00:00Z",
   "palettes": [
     "light",
@@ -649,6 +649,90 @@
       "view": "sign out confirmation with no pending changes"
     },
     {
+      "specimen": "iphone-receipt-inbox",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "receipt inbox, To attach: Acme Store (2 files), Mill St. Coffee, Fabrikam Hardware (1 of 2 attached), Northwind Rail (sender not verified) and Contoso Books (deleted in 3 days)",
+      "blockedBy": "full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184)"
+    },
+    {
+      "specimen": "iphone-receipt-inbox-item",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "inbox email from Acme Store: the email and acme-receipt-4412.pdf, with Attach to\u2026, New expense and Discard",
+      "blockedBy": "full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184)"
+    },
+    {
+      "specimen": "iphone-receipt-attach-file",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "attach sheet, which file: Acme Store's email with acme-receipt-4412.pdf preselected",
+      "blockedBy": "full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184)"
+    },
+    {
+      "specimen": "iphone-receipt-attach-entry",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "attach sheet, which entry: five suggested expenses without a receipt within 7 days of the email",
+      "blockedBy": "full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184)"
+    },
+    {
+      "specimen": "iphone-receipt-attach-confirm",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "attach sheet, confirm acme-receipt-4412.pdf on the shared expense Printer ink (Flat 4B), which already has invoice-0412.pdf",
+      "blockedBy": "full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184)"
+    },
+    {
+      "specimen": "iphone-receipt-attached-toast",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "receipt inbox after attaching Mill St. Coffee's receipt to Coffee at Mill St., with View entry and Undo",
+      "blockedBy": "full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184)"
+    },
+    {
+      "specimen": "iphone-receipt-email-settings",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "receipt email settings: a live address until 2027-02-10 and two allowed senders",
+      "blockedBy": "full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184)"
+    },
+    {
       "specimen": "ipad-home",
       "platform": "iPad",
       "appearances": [
@@ -714,6 +798,90 @@
       "scenario": "searchable-household",
       "as": "alex",
       "view": "iPad settings"
+    },
+    {
+      "specimen": "ipad-receipt-inbox",
+      "platform": "iPad",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "iPad receipt inbox, To attach: Acme Store (2 files), Mill St. Coffee, Fabrikam Hardware (1 of 2 attached), Northwind Rail (sender not verified) and Contoso Books (deleted in 3 days)",
+      "blockedBy": "full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184)"
+    },
+    {
+      "specimen": "ipad-receipt-inbox-item",
+      "platform": "iPad",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "iPad inbox email from Acme Store: the email and acme-receipt-4412.pdf, with Attach to\u2026, New expense and Discard",
+      "blockedBy": "full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184)"
+    },
+    {
+      "specimen": "ipad-receipt-attach-file",
+      "platform": "iPad",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "iPad attach sheet, which file: Acme Store's email with acme-receipt-4412.pdf preselected",
+      "blockedBy": "full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184)"
+    },
+    {
+      "specimen": "ipad-receipt-attach-entry",
+      "platform": "iPad",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "iPad attach sheet, which entry: five suggested expenses without a receipt within 7 days of the email",
+      "blockedBy": "full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184)"
+    },
+    {
+      "specimen": "ipad-receipt-attach-confirm",
+      "platform": "iPad",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "iPad attach sheet, confirm acme-receipt-4412.pdf on the shared expense Printer ink (Flat 4B), which already has invoice-0412.pdf",
+      "blockedBy": "full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184)"
+    },
+    {
+      "specimen": "ipad-receipt-attached-toast",
+      "platform": "iPad",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "iPad receipt inbox after attaching Mill St. Coffee's receipt to Coffee at Mill St., with View entry and Undo",
+      "blockedBy": "full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184)"
+    },
+    {
+      "specimen": "ipad-receipt-email-settings",
+      "platform": "iPad",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "iPad receipt email settings: a live address until 2027-02-10 and two allowed senders",
+      "blockedBy": "full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184)"
     },
     {
       "specimen": "web-home",
@@ -805,6 +973,90 @@
       "as": "solo",
       "client": "signed-out",
       "view": "web password sign-in"
+    },
+    {
+      "specimen": "web-receipt-inbox",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web receipt inbox, To attach: Acme Store (2 files), Mill St. Coffee, Fabrikam Hardware (1 of 2 attached), Northwind Rail (sender not verified) and Contoso Books (deleted in 3 days)",
+      "blockedBy": "full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184)"
+    },
+    {
+      "specimen": "web-receipt-inbox-item",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web inbox email from Acme Store: the email and acme-receipt-4412.pdf, with Attach to\u2026, New expense and Discard",
+      "blockedBy": "full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184)"
+    },
+    {
+      "specimen": "web-receipt-attach-file",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web attach sheet, which file: Acme Store's email with acme-receipt-4412.pdf preselected",
+      "blockedBy": "full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184)"
+    },
+    {
+      "specimen": "web-receipt-attach-entry",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web attach sheet, which entry: five suggested expenses without a receipt within 7 days of the email",
+      "blockedBy": "full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184)"
+    },
+    {
+      "specimen": "web-receipt-attach-confirm",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web attach sheet, confirm acme-receipt-4412.pdf on the shared expense Printer ink (Flat 4B), which already has invoice-0412.pdf",
+      "blockedBy": "full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184)"
+    },
+    {
+      "specimen": "web-receipt-attached-toast",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web receipt inbox after attaching Mill St. Coffee's receipt to Coffee at Mill St., with View entry and Undo",
+      "blockedBy": "full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184)"
+    },
+    {
+      "specimen": "web-receipt-email-settings",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web receipt email settings: a live address until 2027-02-10 and two allowed senders",
+      "blockedBy": "full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184)"
     }
   ]
 }

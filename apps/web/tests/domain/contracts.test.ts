@@ -153,9 +153,9 @@ test("design baseline traces every penny-ios card and design-kit control to feat
   // Cards: exactly the @dsCard files on disk, with their marker, viewport and hash.
   const cardFiles = ["iphone", "ipad", "web", "system"].flatMap((dir) =>
     readdirSync(new URL(`docs/design/penny-ios/${dir}/`, root)).filter((name) => name.endsWith(".html")).map((name) => `docs/design/penny-ios/${dir}/${name}`));
-  assert.equal(baseline.specimens.length, 61);
+  assert.equal(baseline.specimens.length, 82);
   assert.deepEqual(baseline.specimens.map((item: any) => item.sourcePath).sort(), cardFiles.sort());
-  assert.equal(new Set(baseline.specimens.map((item: any) => item.id)).size, 61);
+  assert.equal(new Set(baseline.specimens.map((item: any) => item.id)).size, 82);
   for (const item of baseline.specimens) {
     const [, dir, name] = item.sourcePath.match(/penny-ios\/(\w+)\/([\w-]+)\.html$/);
     assert.equal(item.id, `${dir}-${name}`, "stable id is <folder>-<file>");
@@ -167,7 +167,7 @@ test("design baseline traces every penny-ios card and design-kit control to feat
     if (item.platform === "Web") assert.match(item.webIssue, /^MAZ-\d+$/);
   }
   assert.deepEqual(Object.fromEntries(["iPhone", "iPad", "Web", "System"].map((platform) =>
-    [platform, baseline.specimens.filter((item: any) => item.platform === platform).length])), { iPhone: 45, iPad: 6, Web: 8, System: 2 });
+    [platform, baseline.specimens.filter((item: any) => item.platform === platform).length])), { iPhone: 52, iPad: 13, Web: 15, System: 2 });
 
   // Controls: exactly the documented design-kit components, at the source Claude Design syncs.
   const sync = JSON.parse(file(".design-sync/config.json").toString("utf8"));
@@ -202,8 +202,8 @@ test("design baseline traces every penny-ios card and design-kit control to feat
   assert.equal(baseline.tokens.icons.ios.family, "SF Symbols");
 
   // Every route (web URL and iOS deep link) has a destination on each platform.
-  assert.equal(baseline.navigation.routes.length, 12);
-  assert.equal(new Set(baseline.navigation.routes.map((item: any) => item.route)).size, 12);
+  assert.equal(baseline.navigation.routes.length, 14);
+  assert.equal(new Set(baseline.navigation.routes.map((item: any) => item.route)).size, 14);
   for (const item of baseline.navigation.routes) for (const platform of ["iPhone", "iPad", "web"]) assert.ok(item[platform], `${item.route} on ${platform}`);
   for (const item of baseline.specimens) if (item.route) assert.ok(baseline.navigation.routes.some((route: any) => route.route === item.route), item.route);
 

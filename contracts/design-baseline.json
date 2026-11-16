@@ -27,7 +27,7 @@
     },
     {
       "topic": "navigation",
-      "decision": "iPhone tabs Home, Activity, Shared and Trips with a separate add button; More is replaced by a Settings sheet. Every route keeps a destination on iPhone, iPad and web (navigation.routes)."
+      "decision": "iPhone tabs Home, Activity, Shared and Trips with a separate add button; More is replaced by a Settings sheet. Every route keeps a destination on iPhone, iPad and web (navigation.routes). A route with pennyURL false has no penny:// link: it opens from the app, or from a notification."
     },
     {
       "topic": "fonts and icons",
@@ -75,7 +75,7 @@
   "sources": [
     {
       "path": "docs/design/penny-ios/README.md",
-      "sha256": "d6a5a7de2f0cbcc020ce4caa4272813c0abf9fff46d3bf2dcf34484fd73b11a9"
+      "sha256": "5eac14411184caff1c6089fb2922b8db5d8930b599103e9589c88086c078576b"
     },
     {
       "path": "docs/design/penny-ios/render.mjs",
@@ -131,7 +131,7 @@
     },
     {
       "path": ".design-sync/NOTES.md",
-      "sha256": "449b21f9e50eed88203274049bf80006d278c548d53afd5942761c541b590951"
+      "sha256": "c61c82ea0807e989c6765f64720219151827f4de4267dd1a35d9fe1ffdee0385"
     },
     {
       "path": "docs/design/penny-ios/compare.mjs",
@@ -143,7 +143,7 @@
     },
     {
       "path": "docs/design/visual-acceptance.md",
-      "sha256": "5f2128476cbaac94de04c6c6983ee409f54fe8801133350d50678077cae88de5"
+      "sha256": "7f4f6ab2a12250d446be320af375c7a97de5abaab2b39dbebfa9741cc365bf19"
     }
   ],
   "tokens": {
@@ -371,6 +371,20 @@
         "iPhone": "OIDC callback, then Home",
         "iPad": "OIDC callback, then Home",
         "web": "OIDC callback, then Home"
+      },
+      {
+        "route": "/receipts",
+        "pennyURL": false,
+        "iPhone": "Home › Receipts to attach (while there is something to attach) or Settings sheet › Receipts to attach; the New receipt notification opens its item (DeepLink.receiptInbox, DetailRoute.receiptInbox)",
+        "iPad": "Home › Receipts to attach or Settings › Receipts to attach; the New receipt notification opens its item",
+        "web": "Sidebar › Receipts to attach; ?status=to_attach|attached is the filter and ?item=<id> opens one email"
+      },
+      {
+        "route": "/settings/receipt-email",
+        "pennyURL": false,
+        "iPhone": "Settings sheet › Receipt email (SettingsRoute.receiptEmail)",
+        "iPad": "Settings › Receipt email",
+        "web": "Settings › Receipt email"
       }
     ]
   },
@@ -1473,6 +1487,167 @@
       "status": "planned"
     },
     {
+      "id": "iphone-receipt-inbox",
+      "name": "Receipts to attach",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Receipts",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/receipt-inbox.html",
+      "sha256": "f5653acaa2ed309bc535828efbc65f7b6e57bf608890e710e6bcae9ca9404ba0",
+      "nativeIssue": "MAZ-184",
+      "webIssue": "MAZ-184",
+      "route": "/receipts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "emailed receipts newest first, To attach and Attached filters, badges, discard with confirmation; nothing attaches without a tap"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-receipt-inbox-item",
+      "name": "Receipt inbox · email",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Receipts",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/receipt-inbox-item.html",
+      "sha256": "5517bcdc599b3fdf4d3ba27fad26683f07f38bc35181a5fad542fac93f694218",
+      "nativeIssue": "MAZ-184",
+      "webIssue": "MAZ-184",
+      "route": "/receipts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "emailed receipts newest first, To attach and Attached filters, badges, discard with confirmation; nothing attaches without a tap"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-receipt-attach-file",
+      "name": "Attach receipt · file",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Receipts",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/receipt-attach-file.html",
+      "sha256": "c92b4626e1e0f7a1e3150d9e97b4bd0d76e8887df766c6d462050cb54a9b4369",
+      "nativeIssue": "MAZ-184",
+      "webIssue": "MAZ-184",
+      "route": "/receipts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "which file, suggested and searched expenses, shared and replace notes, unverified sender warning, Attach with View entry and Undo"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-receipt-attach-entry",
+      "name": "Attach receipt · entry",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Receipts",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/receipt-attach-entry.html",
+      "sha256": "1ba512a0b3429aec994d28aadbe7cc6ef84c8be032c7d944a6643c5326ef2ad1",
+      "nativeIssue": "MAZ-184",
+      "webIssue": "MAZ-184",
+      "route": "/receipts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "which file, suggested and searched expenses, shared and replace notes, unverified sender warning, Attach with View entry and Undo"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-receipt-attach-confirm",
+      "name": "Attach receipt · confirm",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Receipts",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/receipt-attach-confirm.html",
+      "sha256": "2d870ae1172592ea80cd7bf48643774724ca85251bfc78677cec712f6a8b99d5",
+      "nativeIssue": "MAZ-184",
+      "webIssue": "MAZ-184",
+      "route": "/receipts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "which file, suggested and searched expenses, shared and replace notes, unverified sender warning, Attach with View entry and Undo"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-receipt-attached-toast",
+      "name": "Receipt attached",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Receipts",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/receipt-attached-toast.html",
+      "sha256": "194d6958fa598f6d699d596e295953bb1db160023e3aa05c0c74e77b1202da20",
+      "nativeIssue": "MAZ-184",
+      "webIssue": "MAZ-184",
+      "route": "/receipts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "emailed receipts newest first, To attach and Attached filters, badges, discard with confirmation; nothing attaches without a tap"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-receipt-email-settings",
+      "name": "Receipt email",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Receipts",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/receipt-email-settings.html",
+      "sha256": "c06ccbeba0385f9f6ca4665352cb59d53268e63e4898ba4855e6cd667e3881ee",
+      "nativeIssue": "MAZ-184",
+      "webIssue": "MAZ-184",
+      "route": "/settings/receipt-email",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "private address with copy and share, extend, new address and turn off with confirmation, allowed senders"
+      },
+      "status": "planned"
+    },
+    {
       "id": "ipad-home",
       "name": "Home",
       "group": "iPad",
@@ -1610,6 +1785,167 @@
         "native": "MAZ-82",
         "web": "MAZ-96",
         "scenario": "settings sheet or pane, persistence, larger text, VoiceOver and keyboard"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "ipad-receipt-inbox",
+      "name": "Receipts to attach",
+      "group": "iPad",
+      "platform": "iPad",
+      "category": "iPad",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/ipad/receipt-inbox.html",
+      "sha256": "944cb36ccb61bb1a8548c207ef1f5843bbf3a59dfc759dbebb612f6a7eef7321",
+      "nativeIssue": "MAZ-184",
+      "webIssue": "MAZ-184",
+      "route": "/receipts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "emailed receipts newest first, To attach and Attached filters, badges, discard with confirmation; nothing attaches without a tap"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "ipad-receipt-inbox-item",
+      "name": "Receipt inbox · email",
+      "group": "iPad",
+      "platform": "iPad",
+      "category": "iPad",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/ipad/receipt-inbox-item.html",
+      "sha256": "45c4e04a4e1814a3b5aec1ce58b9a50b29992d091dbf7875829f3fba791796b5",
+      "nativeIssue": "MAZ-184",
+      "webIssue": "MAZ-184",
+      "route": "/receipts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "emailed receipts newest first, To attach and Attached filters, badges, discard with confirmation; nothing attaches without a tap"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "ipad-receipt-attach-file",
+      "name": "Attach receipt · file",
+      "group": "iPad",
+      "platform": "iPad",
+      "category": "iPad",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/ipad/receipt-attach-file.html",
+      "sha256": "c978110a8f545fab30ac1d68c4aec78b6947aa74b70c81e678c29f853df6ffe9",
+      "nativeIssue": "MAZ-184",
+      "webIssue": "MAZ-184",
+      "route": "/receipts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "which file, suggested and searched expenses, shared and replace notes, unverified sender warning, Attach with View entry and Undo"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "ipad-receipt-attach-entry",
+      "name": "Attach receipt · entry",
+      "group": "iPad",
+      "platform": "iPad",
+      "category": "iPad",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/ipad/receipt-attach-entry.html",
+      "sha256": "154cd566f55d0bfb624c6bad58f918b0bfe119b5508c701ba4e62314dde4a661",
+      "nativeIssue": "MAZ-184",
+      "webIssue": "MAZ-184",
+      "route": "/receipts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "which file, suggested and searched expenses, shared and replace notes, unverified sender warning, Attach with View entry and Undo"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "ipad-receipt-attach-confirm",
+      "name": "Attach receipt · confirm",
+      "group": "iPad",
+      "platform": "iPad",
+      "category": "iPad",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/ipad/receipt-attach-confirm.html",
+      "sha256": "aaee1b33042f9d53cef58f02cfb672f8dcb134b941ae50a0d4cc30587fc0e597",
+      "nativeIssue": "MAZ-184",
+      "webIssue": "MAZ-184",
+      "route": "/receipts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "which file, suggested and searched expenses, shared and replace notes, unverified sender warning, Attach with View entry and Undo"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "ipad-receipt-attached-toast",
+      "name": "Receipt attached",
+      "group": "iPad",
+      "platform": "iPad",
+      "category": "iPad",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/ipad/receipt-attached-toast.html",
+      "sha256": "4f731643add4174debeb711273937ecf46aa1e2cb58cdbc5238ee982d7f15ced",
+      "nativeIssue": "MAZ-184",
+      "webIssue": "MAZ-184",
+      "route": "/receipts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "emailed receipts newest first, To attach and Attached filters, badges, discard with confirmation; nothing attaches without a tap"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "ipad-receipt-email-settings",
+      "name": "Receipt email",
+      "group": "iPad",
+      "platform": "iPad",
+      "category": "iPad",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/ipad/receipt-email-settings.html",
+      "sha256": "a294291093181a3141802ff65ebb07c8ace68d908731c3a1029f9605572b373e",
+      "nativeIssue": "MAZ-184",
+      "webIssue": "MAZ-184",
+      "route": "/settings/receipt-email",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "private address with copy and share, extend, new address and turn off with confirmation, allowed senders"
       },
       "status": "planned"
     },
@@ -1797,6 +2133,167 @@
         "native": "MAZ-82",
         "web": "MAZ-96",
         "scenario": "password and OIDC sign-in, registration, sign-out with pending changes"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-receipt-inbox",
+      "name": "Receipts to attach",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/receipt-inbox.html",
+      "sha256": "e6c49423eae11a8f03b5e3bdd0be1cfec8e0445d01575c6b8f8877319aac2a5b",
+      "nativeIssue": "MAZ-184",
+      "webIssue": "MAZ-184",
+      "route": "/receipts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "emailed receipts newest first, To attach and Attached filters, badges, discard with confirmation; nothing attaches without a tap"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-receipt-inbox-item",
+      "name": "Receipt inbox · email",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/receipt-inbox-item.html",
+      "sha256": "98119a3adb2fd6959f3cd03c22d41a8025edddf6fe0381c6dbf2075514f57bda",
+      "nativeIssue": "MAZ-184",
+      "webIssue": "MAZ-184",
+      "route": "/receipts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "emailed receipts newest first, To attach and Attached filters, badges, discard with confirmation; nothing attaches without a tap"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-receipt-attach-file",
+      "name": "Attach receipt · file",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/receipt-attach-file.html",
+      "sha256": "95a1ea19fe4fd80fd7b2c847543cb8d8f4fa539705c32d07b46df468a1396b0e",
+      "nativeIssue": "MAZ-184",
+      "webIssue": "MAZ-184",
+      "route": "/receipts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "which file, suggested and searched expenses, shared and replace notes, unverified sender warning, Attach with View entry and Undo"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-receipt-attach-entry",
+      "name": "Attach receipt · entry",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/receipt-attach-entry.html",
+      "sha256": "1a93738c0fa77b6074d5957c8d48d2479ed8e8761476a3f297e3ad281edf6633",
+      "nativeIssue": "MAZ-184",
+      "webIssue": "MAZ-184",
+      "route": "/receipts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "which file, suggested and searched expenses, shared and replace notes, unverified sender warning, Attach with View entry and Undo"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-receipt-attach-confirm",
+      "name": "Attach receipt · confirm",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/receipt-attach-confirm.html",
+      "sha256": "c31680fe2da59c87a31bd7b7dc13e910b31fcee82933608a342ec3de68e84b3c",
+      "nativeIssue": "MAZ-184",
+      "webIssue": "MAZ-184",
+      "route": "/receipts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "which file, suggested and searched expenses, shared and replace notes, unverified sender warning, Attach with View entry and Undo"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-receipt-attached-toast",
+      "name": "Receipt attached",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/receipt-attached-toast.html",
+      "sha256": "d0f4772736d2f664e8dd074004cb74db7d7bdab1afd719a6ac087e3a4d26bfae",
+      "nativeIssue": "MAZ-184",
+      "webIssue": "MAZ-184",
+      "route": "/receipts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "emailed receipts newest first, To attach and Attached filters, badges, discard with confirmation; nothing attaches without a tap"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-receipt-email-settings",
+      "name": "Receipt email",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/receipt-email-settings.html",
+      "sha256": "7d7f7b5297420abe135dcb0a0478a488d87abb8da35eafb7c17803fdb945ab86",
+      "nativeIssue": "MAZ-184",
+      "webIssue": "MAZ-184",
+      "route": "/settings/receipt-email",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "private address with copy and share, extend, new address and turn off with confirmation, allowed senders"
       },
       "status": "planned"
     }
