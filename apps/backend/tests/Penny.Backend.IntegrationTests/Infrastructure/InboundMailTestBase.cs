@@ -10,7 +10,7 @@ namespace Penny.Backend.IntegrationTests.Infrastructure;
 
 // HTTP helpers for the emailed receipt suites (MAZ-184): receipt addresses and requests
 // signed like apps/email-worker signs them. All mail is synthetic.
-public abstract class InboundMailTestBase(ApiFixture fixture) : HouseholdTestBase(fixture)
+public abstract class InboundMailTestBase(ApiFixture fixture) : ReceiptTextTestBase(fixture)
 {
     protected const string AddressPath = "/api/receipt-email";
     protected const string IngressPath = "/api/inbound-mail";

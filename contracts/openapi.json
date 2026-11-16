@@ -4642,6 +4642,257 @@
           }
         }
       }
+    },
+    "/api/receipt-inbox": {
+      "get": {
+        "summary": "List the receipt inbox",
+        "description": "Newest first, 50 per page. status=to_attach (default: To attach and Partly attached) or attached (attached in the last 30 days).",
+        "operationId": "getApiReceiptInbox",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "to_attach",
+                "attached"
+              ]
+            }
+          },
+          {
+            "name": "before",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptInboxPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "status must be to_attach or attached.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Inbox item not found, or receipt email is not enabled on this server.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/receipt-inbox/{id}": {
+      "delete": {
+        "summary": "Discard an inbox item",
+        "description": "Deletes the item and its files that nothing links. Linked files stay on their entries.",
+        "operationId": "deleteApiReceiptInboxId",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{32}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptInboxCleanup"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Inbox item not found, or receipt email is not enabled on this server.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/receipt-inbox/{id}/done": {
+      "post": {
+        "summary": "Finish a partly attached inbox item",
+        "description": "Deletes the item's files that nothing links and marks it attached.",
+        "operationId": "postApiReceiptInboxIdDone",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{32}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptInboxCleanup"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Inbox item not found, or receipt email is not enabled on this server.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -7175,6 +7426,146 @@
           "version",
           "generatedAt",
           "hashes"
+        ]
+      },
+      "ReceiptInboxFile": {
+        "type": "object",
+        "description": "One file of an inbox item: the rendered email or an imported attachment. Download it from uri (GET /api/receipts/{id}); attach it with the normal entry or shared expense save.",
+        "properties": {
+          "receiptId": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "email",
+              "attachment"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "description": "Display text only."
+          },
+          "mime": {
+            "type": "string"
+          },
+          "sizeBytes": {
+            "type": "integer"
+          },
+          "linked": {
+            "type": "boolean",
+            "description": "An entry, live shared expense or shared rule links it."
+          },
+          "uri": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "receiptId",
+          "kind",
+          "name",
+          "mime",
+          "sizeBytes",
+          "linked",
+          "uri"
+        ]
+      },
+      "ReceiptInboxItem": {
+        "type": "object",
+        "description": "One received email in the owner-only receipt inbox (MAZ-184). from and subject are plain text: never interpret them as HTML or Markdown. Times are Unix milliseconds.",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "from": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "receivedAt": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "to_attach",
+              "partly_attached",
+              "attached"
+            ]
+          },
+          "senderVerified": {
+            "type": "boolean",
+            "description": "The sender domain passed DMARC at Penny ingress. Show Sender not verified when false."
+          },
+          "expiresAt": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "When an unhandled item is discarded. Null once attached."
+          },
+          "attachedAt": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReceiptInboxFile"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "from",
+          "subject",
+          "receivedAt",
+          "status",
+          "senderVerified",
+          "expiresAt",
+          "attachedAt",
+          "files"
+        ]
+      },
+      "ReceiptInboxPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReceiptInboxItem"
+            }
+          },
+          "next": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Pass as before for the next page."
+          }
+        },
+        "required": [
+          "items",
+          "next"
+        ]
+      },
+      "ReceiptInboxCleanup": {
+        "type": "object",
+        "description": "Files deleted, and files kept because something links them.",
+        "properties": {
+          "deleted": {
+            "type": "integer"
+          },
+          "kept": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "deleted",
+          "kept"
         ]
       }
     }

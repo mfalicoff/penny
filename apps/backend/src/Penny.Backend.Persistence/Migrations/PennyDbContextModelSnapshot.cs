@@ -1582,6 +1582,10 @@ namespace Penny.Backend.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("received_at");
 
+                    b.Property<DateTimeOffset?>("ReturnedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("returned_at");
+
                     b.Property<bool>("SenderVerified")
                         .HasColumnType("boolean")
                         .HasColumnName("sender_verified");

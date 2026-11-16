@@ -199,6 +199,8 @@ public static class BackendServices
             worker.AuthServId
         ));
         services.AddSingleton<IInboundMailQueue, PostgresInboundMailQueue>();
+        services.AddSingleton<IReceiptInboxRepository, PostgresReceiptInboxRepository>();
+        services.AddSingleton<ReceiptInboxService>();
         services.AddSingleton<InboundMailProcessor>();
         if (inboundMail.Enabled && worker.Worker)
         {

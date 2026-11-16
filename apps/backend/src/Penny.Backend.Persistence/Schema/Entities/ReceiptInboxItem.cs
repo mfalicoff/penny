@@ -18,5 +18,10 @@ public sealed class ReceiptInboxItem
     public DateTimeOffset ReceivedAt { get; set; }
     public required string Status { get; set; }
     public DateTimeOffset? AttachedAt { get; set; }
+
+    // When the item last went back to To attach because a receipt lost its last link.
+    // Unhandled items expire `InboundMail__InboxRetentionDays` after the later of this
+    // and `ReceivedAt`; `ExpiresAt` is that deadline as first set.
+    public DateTimeOffset? ReturnedAt { get; set; }
     public DateTimeOffset ExpiresAt { get; set; }
 }

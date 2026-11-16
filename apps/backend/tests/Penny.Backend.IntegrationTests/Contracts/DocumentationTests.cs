@@ -110,6 +110,9 @@ public sealed class DocumentationTests(ApiFixture fixture) : IntegrationTestBase
                 ("/api/receipt-email", "delete"),
                 ("/api/inbound-mail", "post"),
                 ("/api/inbound-mail/recipients", "get"),
+                ("/api/receipt-inbox", "get"),
+                ("/api/receipt-inbox/{id}", "delete"),
+                ("/api/receipt-inbox/{id}/done", "post"),
             }
         )
         {

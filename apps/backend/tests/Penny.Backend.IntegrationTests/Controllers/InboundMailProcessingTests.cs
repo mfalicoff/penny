@@ -19,49 +19,15 @@ namespace Penny.Backend.IntegrationTests.Controllers;
 // The renderer is a fake that returns a fixed PDF (penny-render has its own test).
 public sealed class InboundMailProcessingTests(ApiFixture fixture) : InboundMailTestBase(fixture)
 {
-    private sealed class FakeRenderer : IEmailRenderer
-    {
-        public bool Down { get; set; }
-        public int Calls { get; private set; }
-
-        public Task<byte[]?> RenderAsync(
-            string html,
-            long maxBytes,
-            CancellationToken cancellationToken
-        )
-        {
-            Calls++;
-            if (Down)
-                throw new MailRendererUnavailableException();
-            return Task.FromResult<byte[]?>(TestPdf.Create());
-        }
-    }
-
     private readonly FakeRenderer renderer = new();
 
-    private WebApplicationFactory<Program> Host() =>
-        Fixture.Factory.WithWebHostBuilder(builder =>
-            builder.ConfigureTestServices(services =>
-                services.AddSingleton<IEmailRenderer>(renderer)
-            )
-        );
+    private WebApplicationFactory<Program> Host() => InboundMailHost.With(Fixture, renderer);
 
-    private static byte[] MailWithInvoice(byte[] invoice, string subject = "Order 1042 confirmed")
-    {
-        var body = new BodyBuilder { HtmlBody = "<p>Total $12.50</p>" };
-        body.Attachments.Add("invoice-0412.pdf", invoice, new ContentType("application", "pdf"));
-        var message = new MimeMessage();
-        message.From.Add(new MailboxAddress("Acme Store", "orders@shop.example.test"));
-        message.To.Add(new MailboxAddress("", "someone@receipts.example.test"));
-        message.Subject = subject;
-        message.Body = body.ToMessageBody();
-        using var stream = new MemoryStream();
-        message.WriteTo(stream);
-        return stream.ToArray();
-    }
+    private static byte[] MailWithInvoice(byte[] invoice) =>
+        InboundMailHost.MailWithInvoice(invoice);
 
     private static Task<long> RunAsync(WebApplicationFactory<Program> host) =>
-        host.Services.GetRequiredService<InboundMailProcessor>().CatchUpAsync(Ct);
+        InboundMailHost.ProcessAsync(host, Ct);
 
     private async Task<string> StatusAsync() =>
         (string)

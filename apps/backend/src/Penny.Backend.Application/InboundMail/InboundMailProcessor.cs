@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Security.Cryptography;
 using Penny.Backend.Application.Abstractions.InboundMail;
+using Penny.Backend.Application.Abstractions.Persistence;
 using Penny.Backend.Application.Diagnostics;
 
 namespace Penny.Backend.Application.InboundMail;
@@ -12,6 +13,7 @@ namespace Penny.Backend.Application.InboundMail;
 public sealed class InboundMailProcessor(
     IInboundMailQueue queue,
     IInboundMailConverter converter,
+    IReceiptInboxRepository inbox,
     InboundMailSettings settings,
     InboundMailProcessingSettings processing,
     TimeProvider clock
@@ -27,6 +29,12 @@ public sealed class InboundMailProcessor(
             now,
             processing.RawRetention,
             processing.MaxAttempts,
+            cancellationToken
+        );
+        // Unhandled inbox items past their deadline are discarded (unlinked files deleted).
+        await inbox.ExpireAsync(
+            now,
+            TimeSpan.FromDays(settings.InboxRetentionDays),
             cancellationToken
         );
         var token = RandomNumberGenerator.GetHexString(32, lowercase: true);
