@@ -37,6 +37,8 @@ public sealed class InboundMailProcessor(
             TimeSpan.FromDays(settings.InboxRetentionDays),
             cancellationToken
         );
+        var (waiting, unhandled) = await queue.BacklogAsync(cancellationToken);
+        BackendTelemetry.InboundMailBacklog(waiting, unhandled);
         var token = RandomNumberGenerator.GetHexString(32, lowercase: true);
         var work = await queue.ClaimAsync(
             token,

@@ -39,6 +39,9 @@ public interface IInboundMailQueue
         CancellationToken cancellationToken
     );
 
+    // Messages waiting to be converted and unhandled inbox items, for the backlog gauges.
+    Task<(long Waiting, long Unhandled)> BacklogAsync(CancellationToken cancellationToken);
+
     Task<bool> RetryAsync(
         InboundWork work,
         string leaseToken,

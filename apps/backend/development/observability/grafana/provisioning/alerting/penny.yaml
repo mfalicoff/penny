@@ -216,6 +216,59 @@ groups:
           summary: '{{ $labels.penny_job }} failed more than 5 times in 15 minutes.'
           description: Failed items are retried; persistent failures need attention. The exception type is on the failures panel and the failed worker-pass traces.
 
+      - uid: penny-inbound-mail-unauthorized
+        title: Penny emailed receipt ingress refusing signatures
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange: { from: 3600, to: 0 }
+            datasourceUid: prometheus
+            model:
+              refId: A
+              instant: true
+              expr: sum(increase(penny_inbound_mail_ingress_total{job="penny-backend", penny_inbound_mail_outcome=~"unauthorized|recipients_unauthorized"}[15m])) or vector(0)
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: { type: gt, params: [10] }
+        noDataState: OK
+        execErrState: Error
+        for: 15m
+        labels: { severity: warning }
+        annotations:
+          summary: More than 10 unsigned or badly signed emailed receipt requests in 15 minutes.
+          description: The Email Worker's PENNY_WEBHOOK_SECRET may differ from InboundMail__WebhookSecret, or something other than the Worker reaches /api/inbound-mail (check the Tunnel or Access policy). Mail is refused with a temporary failure meanwhile (docs/self-hosting/operations.md#emailed-receipts).
+
+      - uid: penny-inbound-mail-render-failing
+        title: Penny emailed receipts not converting
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange: { from: 3600, to: 0 }
+            datasourceUid: prometheus
+            model:
+              refId: A
+              instant: true
+              expr: sum(increase(penny_inbound_mail_results_total{job="penny-backend", penny_inbound_mail_outcome=~"retry|render_unavailable"}[30m])) or vector(0)
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: { type: gt, params: [3] }
+        noDataState: OK
+        execErrState: Error
+        for: 15m
+        labels: { severity: warning }
+        annotations:
+          summary: Emailed receipts are waiting for penny-render.
+          description: penny-render is down or unreachable on the render network. Messages back off and fail as render_unavailable after four attempts (docs/self-hosting/operations.md#penny-render-is-down).
   - orgId: 1
     name: Penny clients
     folder: Penny

@@ -130,6 +130,32 @@ public static class BackendTelemetry
         advice: new InstrumentAdvice<double> { HistogramBucketBoundaries = ExtractionBuckets }
     );
 
+    // Backlog gauges (MAZ-184), set by the inbound mail worker pass: messages waiting to be
+    // converted and unhandled inbox items across all users. Counts only.
+    private static long inboundMailQueue;
+    private static long receiptInboxUnhandled;
+
+    private static readonly ObservableGauge<long> InboundMailQueue = Meter.CreateObservableGauge(
+        "penny.inbound_mail.queue",
+        () => Interlocked.Read(ref inboundMailQueue),
+        "{message}",
+        "Emailed receipts waiting to be converted (pending or being processed)."
+    );
+
+    private static readonly ObservableGauge<long> ReceiptInboxUnhandled =
+        Meter.CreateObservableGauge(
+            "penny.receipt_inbox.unhandled",
+            () => Interlocked.Read(ref receiptInboxUnhandled),
+            "{item}",
+            "Receipt inbox items not attached yet, across all users."
+        );
+
+    public static void InboundMailBacklog(long queue, long unhandled)
+    {
+        Interlocked.Exchange(ref inboundMailQueue, queue);
+        Interlocked.Exchange(ref receiptInboxUnhandled, unhandled);
+    }
+
     public static void InboundMailProcessed(string outcome, TimeSpan duration)
     {
         var tag = new KeyValuePair<string, object?>(InboundMailOutcomeAttribute, outcome);

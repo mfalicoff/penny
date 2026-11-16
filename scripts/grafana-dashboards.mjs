@@ -698,6 +698,8 @@ function jobs() {
   );
 
   b.row("Emailed receipts");
+  b.stat("Emails waiting to convert", 12, `max(penny_inbound_mail_queue{${F}})`, { decimals: 0, graph: "area", steps: [["green", null], ["orange", 50], ["red", 500]] });
+  b.stat("Unhandled inbox items", 12, `max(penny_receipt_inbox_unhandled{${F}})`, { decimals: 0, graph: "area" });
   b.counts(
     "Ingress by outcome",
     8,

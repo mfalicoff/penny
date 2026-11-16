@@ -849,10 +849,140 @@
     {
       "id": 14,
       "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 0,
+        "y": 34
+      },
+      "type": "stat",
+      "title": "Emails waiting to convert",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${prometheus}"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus}"
+          },
+          "refId": "A",
+          "expr": "max(penny_inbound_mail_queue{job=\"$service\", instance=~\"$instance\", deployment_environment_name=~\"$environment\"})",
+          "range": true,
+          "legendFormat": ""
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "noValue": "0",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 50
+              },
+              {
+                "color": "red",
+                "value": 500
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "textMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 15,
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 12,
+        "y": 34
+      },
+      "type": "stat",
+      "title": "Unhandled inbox items",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${prometheus}"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus}"
+          },
+          "refId": "A",
+          "expr": "max(penny_receipt_inbox_unhandled{job=\"$service\", instance=~\"$instance\", deployment_environment_name=~\"$environment\"})",
+          "range": true,
+          "legendFormat": ""
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "noValue": "0",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "textMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 16,
+      "gridPos": {
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 34
+        "y": 38
       },
       "type": "timeseries",
       "title": "Ingress by outcome",
@@ -928,12 +1058,12 @@
       }
     },
     {
-      "id": 15,
+      "id": 17,
       "gridPos": {
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 34
+        "y": 38
       },
       "type": "timeseries",
       "title": "Processing results",
@@ -1009,12 +1139,12 @@
       }
     },
     {
-      "id": 16,
+      "id": 18,
       "gridPos": {
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 34
+        "y": 38
       },
       "type": "timeseries",
       "title": "Conversion time",
@@ -1084,24 +1214,24 @@
     },
     {
       "type": "row",
-      "id": 17,
+      "id": 19,
       "title": "Push and providers",
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 42
+        "y": 46
       },
       "panels": []
     },
     {
-      "id": 18,
+      "id": 20,
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 43
+        "y": 47
       },
       "type": "timeseries",
       "title": "Outgoing HTTP by host and status",
@@ -1177,12 +1307,12 @@
       }
     },
     {
-      "id": 19,
+      "id": 21,
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 43
+        "y": 47
       },
       "type": "timeseries",
       "title": "Outgoing HTTP p95",
@@ -1242,24 +1372,24 @@
     },
     {
       "type": "row",
-      "id": 20,
+      "id": 22,
       "title": "Traces and logs",
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 51
+        "y": 55
       },
       "panels": []
     },
     {
-      "id": 21,
+      "id": 23,
       "gridPos": {
         "h": 10,
         "w": 12,
         "x": 0,
-        "y": 52
+        "y": 56
       },
       "type": "table",
       "title": "Worker passes",
@@ -1295,12 +1425,12 @@
       }
     },
     {
-      "id": 22,
+      "id": 24,
       "gridPos": {
         "h": 10,
         "w": 12,
         "x": 12,
-        "y": 52
+        "y": 56
       },
       "type": "table",
       "title": "Failed worker passes",
@@ -1335,12 +1465,12 @@
       }
     },
     {
-      "id": 23,
+      "id": 25,
       "gridPos": {
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 62
+        "y": 66
       },
       "type": "logs",
       "title": "Worker warnings and errors",

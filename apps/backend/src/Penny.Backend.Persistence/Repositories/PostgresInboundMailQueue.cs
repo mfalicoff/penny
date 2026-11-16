@@ -267,6 +267,22 @@ public sealed class PostgresInboundMailQueue(
                 ) == 1;
     }
 
+    public async Task<(long Waiting, long Unhandled)> BacklogAsync(
+        CancellationToken cancellationToken
+    )
+    {
+        await using var context = PennyDbContext.Create(source);
+        var waiting = await context.InboundMessages.LongCountAsync(
+            message => Waiting.Contains(message.Status),
+            cancellationToken
+        );
+        var unhandled = await context.ReceiptInboxItems.LongCountAsync(
+            item => item.Status == "to_attach" || item.Status == "partly_attached",
+            cancellationToken
+        );
+        return (waiting, unhandled);
+    }
+
     public async Task<bool> RetryAsync(
         InboundWork work,
         string leaseToken,
