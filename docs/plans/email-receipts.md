@@ -345,7 +345,7 @@ The rendered email of a partly attached item counts as a file. People who attach
 
 ### Design specimens
 
-New cards are added to the design baseline ([visual acceptance](../design/visual-acceptance.md)) for iPhone, iPad and web, in light and dark: `receipt-inbox`, `receipt-inbox-item`, `receipt-attach-sheet` (the file step, the entry step and the confirm step, including the shared and replace notes), `receipt-attached-toast` and `receipt-email-settings`.
+New cards are added to the design baseline ([visual acceptance](../design/visual-acceptance.md)) for iPhone, iPad and web, in light and dark: `receipt-inbox`, `receipt-inbox-item`, `receipt-attach-file`, `receipt-attach-entry` and `receipt-attach-confirm` (the attach sheet's three steps, the last with the shared and replace notes), `receipt-attached-toast` and `receipt-email-settings`.
 
 ## Implementation tasks
 
@@ -400,3 +400,4 @@ New cards are added to the design baseline ([visual acceptance](../design/visual
 | **The new-receipt push names no sender** (2026-11-16) | Existing push text never names people, merchants or amounts, because it shows on the lock screen; the notification reads "New receipt" instead of "New receipt from Acme Store". It is a personal `receipt.received` event (`push_outbox.household_id` is nullable) whose payload `{inboxItemId, eventId}` opens the inbox item on iOS |
 | **NixOS renderer uses loopback-only IP filtering, not `PrivateNetwork`** (2026-11-16) | Gotenberg serves TCP, so a unit without a network couldn't be reached by the API. `IPAddressDeny=any` with `IPAddressAllow=localhost`, Gotenberg's private-IP and URL deny rules, and the systemd sandbox (DynamicUser, syscall filter, no capabilities) keep it from reaching anything else |
 | **Alerts and gauges** (2026-11-16) | Two provisioned Grafana alerts: repeated unauthorized ingress (secret mismatch or probing) and conversions waiting on penny-render. Inbound mail failures also count in the existing background job failure alert. `penny.inbound_mail.queue` and `penny.receipt_inbox.unhandled` are gauges updated by the worker pass |
+| **Specimens are in the baseline but not yet compared with captures** (2026-11-16) | The 21 cards (iPhone, iPad and web, light and dark) are recorded `blocked` in `contracts/visual-comparisons.json`: the full-stack seeds can't create a receipt inbox yet. Two small known differences from the apps: the cards draw the attached confirmation with a brand checkmark on two rows (iOS), the apps with an info icon on one |

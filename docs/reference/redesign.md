@@ -1,6 +1,6 @@
 # Redesign baseline and adaptations
 
-The iOS-native redesign in [`docs/design/penny-ios/`](../design/penny-ios/README.md) is v2's visual and interaction baseline. It has 61 cards for iPhone, iPad, web and system, and the [`design-kit/`](../../design-kit/package.json) component kit (`@penny/ios-kit`, 42 components). Both are synced to the [Penny Claude Design project](https://claude.ai/design/p/173b576e-aa32-44dc-9f83-23f0ea8df538); read [`.design-sync/NOTES.md`](../../.design-sync/NOTES.md) before re-syncing. It replaces the earlier Penpot proposal (`docs/design/penny-redesign/`, removed in #30).
+The iOS-native redesign in [`docs/design/penny-ios/`](../design/penny-ios/README.md) is v2's visual and interaction baseline. It has 82 cards for iPhone, iPad, web and system, and the [`design-kit/`](../../design-kit/package.json) component kit (`@penny/ios-kit`, 42 components). Both are synced to the [Penny Claude Design project](https://claude.ai/design/p/173b576e-aa32-44dc-9f83-23f0ea8df538); read [`.design-sync/NOTES.md`](../../.design-sync/NOTES.md) before re-syncing. It replaces the earlier Penpot proposal (`docs/design/penny-redesign/`, removed in #30).
 
 [design-baseline.json](../../contracts/design-baseline.json) (version 2, MAZ-132) records:
 
