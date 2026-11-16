@@ -32,6 +32,7 @@ struct HomeView: View {
                     SyncBanner()
                     DemoBanner()
                     SharedProjectionNotice()
+                    ReceiptInboxHomeRow()
                     if Self.isEmpty(ledger: ledger, report: report) {
                         EmptyHomeContent(currency: currency)
                     } else if dashboard {

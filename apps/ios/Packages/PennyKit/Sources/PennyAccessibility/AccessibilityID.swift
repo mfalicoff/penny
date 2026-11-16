@@ -365,6 +365,7 @@ public enum AccessibilityID {
         + Activity.all + Organize.all + Feedback.all + Lock.all + Overview.all
         + Households.all
         + Receipt.all
+        + ReceiptInbox.all
         + Trips.all
         + Notifications.all
         + Journeys.all
@@ -375,5 +376,6 @@ public enum AccessibilityID {
         Tab.prefixes + Sidebar.prefixes + Settings.prefixes + Row.prefixes + Feedback.prefixes + EntryForm.prefixes
         + Activity.prefixes + Organize.prefixes + Overview.prefixes
         + Households.prefixes
+        + ReceiptInbox.prefixes
         + Trips.prefixes
 }

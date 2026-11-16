@@ -144,6 +144,7 @@ struct DetailPage: View {
         case .insights: InsightsView()
         case .calendar: CalendarView()
         case .categorySpending(let ids, let title): CategorySpendingView(categoryIds: ids, title: title)
+        case .receiptInbox(let item): ReceiptInboxView(openItemID: item)
         }
     }
 }

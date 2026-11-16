@@ -1,8 +1,8 @@
 # Push notifications: APNs delivery and the notification outbox (MAZ-61)
 
-The .NET API registers native **APNs device tokens** from the iOS app and delivers household notifications through a PostgreSQL-leased delivery worker. The device operations' paths and messages are in `contracts/openapi.json`.
+The .NET API registers native **APNs device tokens** from the iOS app and delivers household notifications, and the personal "New receipt" notification for emailed receipts (MAZ-184), through a PostgreSQL-leased delivery worker. The device operations' paths and messages are in `contracts/openapi.json`.
 
-Code: `Application/Push` (`PushDeviceService` validation, `PushDeliveryRunner` claim/prepare/send/record, `PushPayload`, `PushContent`, outcomes), `Persistence/Repositories/PostgresPushRepository` (devices, leases, outcomes), `Api/Push` (`ApnsTransport`, `ApnsProviderToken`, `ApnsCredentials`, `PushDeliveryWorker`), `Api/Controllers/PushDevicesController`, `Api/Commands/PushSmokeCommand`, `Api/Testing/FaultInjectingPushTransport`. Tests: `UnitTests/Push` (APNs request shape, status/reason classification, provider-token signing and refresh, payload allowlist, backoff) and the real-PostgreSQL `IntegrationTests/Controllers/PushDeviceTests` (HTTP), `PushDeliveryTests` (recipients, retries, cleanup, expiry) and `PushConcurrencyTests` (competing workers, crash and lease takeover, lost lease after send, cancellation). Every test uses a deterministic fake provider; none calls Apple.
+Code: `Application/Push` (`PushDeviceService` validation, `PushDeliveryRunner` claim/prepare/send/record, `PushPayload` with its `HouseholdPushPayload` and `ReceiptInboxPushPayload` shapes, `PushContent`, outcomes), `Persistence/Repositories/PostgresPushRepository` (devices, leases, outcomes), `Api/Push` (`ApnsTransport`, `ApnsProviderToken`, `ApnsCredentials`, `PushDeliveryWorker`), `Api/Controllers/PushDevicesController`, `Api/Commands/PushSmokeCommand`, `Api/Testing/FaultInjectingPushTransport`. Tests: `UnitTests/Push` (APNs request shape, status/reason classification, provider-token signing and refresh, payload allowlist, backoff) and the real-PostgreSQL `IntegrationTests/Controllers/PushDeviceTests` (HTTP), `PushDeliveryTests` (recipients, retries, cleanup, expiry) and `PushConcurrencyTests` (competing workers, crash and lease takeover, lost lease after send, cancellation), plus `InboundMailProcessingTests` for the `receipt.received` enqueue and delivery. Every test uses a deterministic fake provider; none calls Apple.
 
 ## Device registration
 
@@ -24,15 +24,21 @@ Both operations require a session (cookie or bearer). Errors use `{error: string
 
 Financial writers add `push_outbox` rows **in the same transaction** as the mutation and its audit row (MAZ-57/58/59): `expense.created`, `expense.updated` (shared expense writes and recurring occurrences) and `reimbursement.created` (settlement). One row per *current member except the actor*. A mutation that rolls back leaves no outbox row (`PushDeliveryTests.whenExpenseWriteFails_*`). Expense deletions, membership changes and rule edits never notify.
 
-The payload is the deep-link object, stored as `jsonb` and validated again before sending: `householdId` and optional `expenseId` (`[A-Za-z0-9_-]{1,100}`), `month` (`YYYY-MM`), `eventId` (1–100 characters). An invalid stored payload fails permanently (`invalid-payload`). Clients navigate only to the allowlisted `/households/{householdId}?month=…&expenseId=…` route.
+The inbound mail worker adds one **personal** `receipt.received` row when it creates a receipt inbox item, in the same transaction as the item (`PostgresInboundMailQueue.CompleteAsync`): for the item's owner only, and only when the owner has at least one registered push device. Its `household_id` is NULL (the column is nullable for personal events) and its `entity_id` is the inbox item id. A resent message that the per-user SHA-256 de-duplication drops creates no item and so no notification; mail that is rejected or fails creates none either.
 
-Notification text never names people, amounts or titles, so lock screens reveal nothing financial:
+The payload is the deep-link object, stored as `jsonb` and validated again before sending. It has exactly one of two shapes, and a stored object that mixes them, or does not fit the event type, fails permanently (`invalid-payload`):
 
-| Event | Title | Body |
-| --- | --- | --- |
-| `expense.created` | New household expense | A member added an expense. Open Penny to see your share. |
-| `expense.updated` | Household expense updated | A shared expense changed. Open Penny to review it. |
-| `reimbursement.created` | Reimbursement recorded | A household reimbursement was recorded. |
+- **Household** (`expense.*`, `reimbursement.created`): `householdId` and optional `expenseId` (`[A-Za-z0-9_-]{1,100}`), `month` (`YYYY-MM`), `eventId` (1–100 characters). Clients navigate only to the allowlisted `/households/{householdId}?month=…&expenseId=…` route.
+- **Receipt inbox** (`receipt.received`): exactly `inboxItemId` (`[A-Za-z0-9_-]{1,100}`; today 32 lower-case hex digits) and `eventId` (1–100 characters, the outbox row id); any other key is invalid. Clients open that item in the receipt inbox.
+
+Notification text never names people, senders, subjects, amounts or titles, so lock screens reveal nothing financial:
+
+| Event | Recipients | Title | Body |
+| --- | --- | --- | --- |
+| `expense.created` | Current members except the actor | New household expense | A member added an expense. Open Penny to see your share. |
+| `expense.updated` | Current members except the actor | Household expense updated | A shared expense changed. Open Penny to review it. |
+| `reimbursement.created` | Current members except the actor | Reimbursement recorded | A household reimbursement was recorded. |
+| `receipt.received` | The inbox item's owner, if they have a registered device | New receipt | An emailed receipt is ready to attach. |
 
 **APNs request** — `POST https://api.push.apple.com/3/device/{token}` (production) or `https://api.sandbox.push.apple.com/3/device/{token}` (sandbox), HTTP/2 only:
 
@@ -57,7 +63,20 @@ apns-id: <UUID derived from outbox id + token; stable across retries>
 }
 ```
 
-The deep-link keys are top-level custom keys (MAZ-79 reads them from `userInfo`; [native notifications](../ios/notifications.md)); `expenseId` is omitted for reimbursements. `thread-id` groups a household's notifications.
+The `receipt.received` body carries only the inbox link, in its own thread:
+
+```json
+{
+  "aps": {
+    "alert": { "title": "New receipt", "body": "An emailed receipt is ready to attach." },
+    "sound": "default",
+    "thread-id": "receipt-inbox"
+  },
+  "inboxItemId": "<id>", "eventId": "<id>"
+}
+```
+
+The deep-link keys are top-level custom keys (MAZ-79 reads them from `userInfo`; [native notifications](../ios/notifications.md)); `expenseId` is omitted for reimbursements. `thread-id` groups a household's notifications (`household-<householdId>`) and the receipt inbox notifications (`receipt-inbox`).
 
 ## Delivery: outbox, leases and retries
 

@@ -22,7 +22,7 @@ internal static class PushSamples
             environment,
             "New household expense",
             "A member added an expense. Open Penny to see your share.",
-            new PushPayload("home", "2026-09", "expense-1", "event-1"),
+            new HouseholdPushPayload("home", "2026-09", "expense-1", "event-1"),
             Now.AddHours(24)
         );
 

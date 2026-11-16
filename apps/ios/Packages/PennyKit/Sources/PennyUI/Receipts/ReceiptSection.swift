@@ -18,6 +18,7 @@ struct ReceiptAttachmentSection: View {
     let context: ReceiptPreviewContext?
     @State private var picker: ReceiptPickerKind?
     @State private var previewing: ReceiptPreviewRequest?
+    @State private var choosingFromInbox = false
 
     var body: some View {
         Section {
@@ -39,8 +40,18 @@ struct ReceiptAttachmentSection: View {
     private var footer: String {
         if !upload.isSupported { return ReceiptText.demo }
         if !upload.isAvailable { return ReceiptText.offline }
-        if receipt != nil { return "Removing the receipt detaches it from this entry when you save." }
+        if let receipt {
+            let text = "Removing the receipt detaches it from this entry when you save."
+            // An emailed receipt (MAZ-184) isn't lost: it returns to the receipt inbox.
+            return shell.receiptInbox.isInboxReceipt(receipt.id) ? "\(text) \(InboxText.returnsToInbox)" : text
+        }
         return ReceiptText.supported
+    }
+
+    /// From inbox is offered when the server takes emailed receipts and there is something to
+    /// attach (MAZ-184).
+    private var offersInbox: Bool {
+        shell.receiptInbox.isEnabled && shell.receiptInbox.toAttachCount > 0
     }
 
     private func attached(_ receipt: ReceiptReference) -> some View {
@@ -152,10 +163,36 @@ struct ReceiptAttachmentSection: View {
                 systemImage: "doc", .file
             )
             .accessibilityIdentifier("entryExtras.receiptFile")
+            if offersInbox {
+                Divider()
+                Button {
+                    choosingFromInbox = true
+                } label: {
+                    Label("From inbox", systemImage: "tray.and.arrow.down")
+                        .font(.body.weight(.semibold))
+                        .frame(maxWidth: .infinity, minHeight: Metrics.minTouchTarget)
+                }
+                .foregroundStyle(PennyColor.tintText)
+                .disabled(!shell.receiptInbox.isAvailable)
+                .accessibilityLabel(receipt == nil ? "From inbox" : "Replace with a receipt from your inbox")
+                .accessibilityIdentifier("entryExtras.receiptInbox")
+            }
         }
         .buttonStyle(.borderless)
         .disabled(upload.isBusy || !upload.isAvailable)
         .receiptPickers($picker, upload: upload)
+        .sheet(isPresented: $choosingFromInbox) {
+            ReceiptInboxPicker { file in
+                upload.cancel()
+                receipt = ReceiptInboxRules.reference(file)
+            }
+            .environment(shell)
+        }
+        .task {
+            // Which receipts came from the inbox, for the removal hint (MAZ-184).
+            await shell.receiptInbox.refresh()
+            if shell.receiptInbox.isEnabled, receipt != nil { await shell.receiptInbox.refresh(.attached) }
+        }
     }
 
     private func pickerButton(_ label: String, short: String, systemImage: String, _ kind: ReceiptPickerKind)

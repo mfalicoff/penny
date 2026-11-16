@@ -29,12 +29,14 @@ public enum DetailRoute: Hashable, Sendable {
     case insights
     case calendar
     case categorySpending(categoryIds: [String], title: String)
+    /// The receipt inbox (MAZ-184), opened on one item when `itemID` is set (a notification).
+    case receiptInbox(itemID: String?)
 }
 
 /// Pages inside Settings. The first three are the old More tab's "Manage" pages, which the
 /// iPad sidebar lists directly.
 public enum SettingsRoute: String, CaseIterable, Hashable, Sendable {
-    case recurring, accounts, categories, appearance, currency, appLock, server
+    case recurring, accounts, categories, appearance, currency, appLock, server, receiptEmail, receiptInbox
 
     public static let manage: [SettingsRoute] = [.recurring, .accounts, .categories]
 
@@ -47,6 +49,8 @@ public enum SettingsRoute: String, CaseIterable, Hashable, Sendable {
         case .currency: "Currency"
         case .appLock: "Face ID lock"
         case .server: "Server"
+        case .receiptEmail: "Receipt email"
+        case .receiptInbox: "Receipts to attach"
         }
     }
 
@@ -152,6 +156,7 @@ public struct ShellRoute: Equatable, Sendable {
             var path: [DetailRoute] = [.household(id: household)]
             if let expense { path.append(.householdExpense(householdID: household, expenseID: expense)) }
             show(.shared, path)
+        case .receiptInbox(let item): show(.home, [.receiptInbox(itemID: item)])
         case .trips: show(.trips, [])
         case .trip(let id): show(.trips, [.trip(id: id)])
         case .join(let code, let server):
@@ -160,6 +165,9 @@ public struct ShellRoute: Equatable, Sendable {
         case .authCallback: break
         }
     }
+
+    /// Shows a personal entry from the root of Activity (a receipt attach confirmation's View entry).
+    public mutating func openEntry(id: String) { show(.activity, [.entry(id: id)]) }
 
     /// Presents the waiting join sheet, unless another sheet is still up. Returns whether it did.
     @discardableResult

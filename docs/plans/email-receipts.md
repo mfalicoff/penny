@@ -168,7 +168,7 @@ On NixOS, the module runs the renderer as a separate systemd unit with `PrivateN
 - **Unlinking returns the file to the inbox.** When an inbox receipt loses its last link (removed or replaced on an entry, or the entry deleted), its item goes back to *To attach*, and its expiry restarts at 30 days. The file is not lost and can be attached somewhere else.
 - **Discard** deletes the inbox item and its *unlinked* receipts: the file, the row and the OCR text. Today there is no receipt delete. This adds one only for receipts that came from an inbox item and are linked nowhere, checked in the same transaction as the delete.
 - An unhandled item expires after 30 days (`InboundMail__InboxRetentionDays`) and is deleted the same way.
-- A new item sends a push notification ("New receipt from <sender display name>") through the existing outbox, if the user has push enabled. The notification includes no subject or amounts.
+- A new item sends a push notification ("New receipt": no sender, subject or amounts, see [Decisions](#decisions)) through the existing outbox, if the user has push enabled. It opens the inbox item.
 - Subjects, sender names and filenames are shown in the clients as **text only**. They are never interpreted as HTML or Markdown.
 
 ### 5. Addresses
@@ -280,7 +280,7 @@ These rules apply to both web and iOS. They extend the current receipt behaviour
 | **Receipt inbox › item › Attach to…** | Opens the *attach sheet* (below). This is the main route. |
 | **Receipt inbox › item › New expense** | Opens Add entry as an expense with the receipt already attached. The date is the day the email was received, in the person's time zone, and the title is the sender's display name (for example "Acme Store"). Both are editable, and the amount is left empty. |
 | **Entry form › Receipt › From inbox** | A third source next to Photo and File or PDF, shown only when the server has the feature on and the inbox has items. It opens the inbox as a picker. Choosing a file attaches it to the form, the same way a finished upload does, with no upload step. |
-| **Push notification** "New receipt from Acme Store" | Opens that inbox item. It never attaches anything by itself. |
+| **Push notification** "New receipt" | Opens that inbox item. It never attaches anything by itself. |
 
 ### The receipt inbox
 
@@ -397,6 +397,6 @@ New cards are added to the design baseline ([visual acceptance](../design/visual
 | **Inbox states are refreshed where receipt links change** (2026-11-16) | Every write that links or releases receipts already goes through `ReceiptTextIndex.ApplyAsync` (personal saves, shared expenses and rules, search rebuilds), so the inbox refresh runs there, in the same transaction. A file counts as linked while a personal entry, a live shared expense or a shared rule references it |
 | **Expiry restarts from `returned_at`** (2026-11-16) | An unhandled item expires `InboxRetentionDays` after the later of its arrival and the last time it went back to To attach. The refresh records `returned_at` and `attached_at` with the database clock |
 | **Done is `POST /api/receipt-inbox/{id}/done`** (2026-11-16) | Task 8 names Done but the API table had no route for it |
-| **The new-receipt push names no sender, and ships with the iOS client** (2026-11-16) | Existing push text never names people, merchants or amounts, because it shows on the lock screen; the notification reads "New receipt" instead of "New receipt from Acme Store". The push payload is a household deep link today, so the inbox notification lands together with the iOS handling of its deep link |
+| **The new-receipt push names no sender** (2026-11-16) | Existing push text never names people, merchants or amounts, because it shows on the lock screen; the notification reads "New receipt" instead of "New receipt from Acme Store". It is a personal `receipt.received` event (`push_outbox.household_id` is nullable) whose payload `{inboxItemId, eventId}` opens the inbox item on iOS |
 | **NixOS renderer uses loopback-only IP filtering, not `PrivateNetwork`** (2026-11-16) | Gotenberg serves TCP, so a unit without a network couldn't be reached by the API. `IPAddressDeny=any` with `IPAddressAllow=localhost`, Gotenberg's private-IP and URL deny rules, and the systemd sandbox (DynamicUser, syscall filter, no capabilities) keep it from reaching anything else |
 | **No alerts yet** (2026-11-16) | `scripts/grafana-dashboards.mjs` generates dashboards only; the emailed receipt metrics are on the background jobs dashboard. Queue depth and inbox size gauges are not exported yet |
