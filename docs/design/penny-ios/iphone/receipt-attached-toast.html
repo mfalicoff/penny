@@ -1,0 +1,78 @@
+<!-- @dsCard group="iPhone" name="Receipt attached" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Receipt attached</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<style>
+  .gh { padding: 22px 32px 7px; font-size: 13px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .03em; }
+  .gf { padding: 7px 32px 0; font-size: 13px; color: var(--label-2); line-height: 1.4; }
+  .glist { background: var(--surface); border-radius: 22px; margin: 0 16px; overflow: hidden; }
+  .irow { display: flex; align-items: flex-start; gap: 12px; padding: 11px 16px; position: relative; }
+  .irow + .irow::before { content: ""; position: absolute; top: 0; left: 60px; right: 0; border-top: .5px solid var(--separator); }
+  .irow .env { width: 32px; height: 32px; display: grid; place-items: center; color: var(--label-2); flex: none; }
+  .irow .env [data-i] { width: 22px; height: 22px; }
+  .irow .t { flex: 1; min-width: 0; }
+  .irow .top { display: flex; align-items: baseline; gap: 8px; }
+  .irow .top b { flex: 1; font-size: 17px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .irow .top span { font-size: 13px; color: var(--label-2); white-space: nowrap; }
+  .irow .sub { font-size: 15px; color: var(--label-2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .irow .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: 5px; font-size: 13px; color: var(--label-2); }
+  .irow .meta .exp { font-weight: 600; color: var(--pending); }
+  .badge { display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px; border-radius: 11px; background: var(--fill); color: var(--pending); font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .badge [data-i] { width: 13px; height: 13px; --sw: 48px; }
+  .att { display: flex; align-items: center; gap: 12px; padding: 10px 16px; position: relative; min-height: 64px; }
+  .att + .att::before { content: ""; position: absolute; top: 0; left: 72px; right: 0; border-top: .5px solid var(--separator); }
+  .thumb { width: 44px; height: 54px; border-radius: 8px; background: #FBFAF7; border: .5px solid var(--separator); padding: 7px 6px; display: flex; flex-direction: column; gap: 4px; flex: none; }
+  .thumb i { display: block; height: 3px; border-radius: 2px; background: #D9D5CE; }
+  .att .t { flex: 1; min-width: 0; } .att b { display: block; font-size: 17px; font-weight: 600; } .att span { display: block; font-size: 15px; color: var(--label-2); margin-top: 1px; }
+  .att .ck { color: var(--tint); } .att .ck[data-i] { width: 20px; height: 20px; --sw: 48px; }
+  .pb { height: 50px; border-radius: 25px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 17px; font-weight: 600; background: var(--fill); color: var(--label); }
+  .pb [data-i] { width: 19px; height: 19px; --sw: 44px; }
+  .pb.primary { background: var(--tint); color: #fff; }
+  .pb.danger { color: var(--danger); }
+  .trow { display: flex; align-items: center; gap: 12px; padding: 10px 16px; min-height: 62px; position: relative; }
+  .trow + .trow::before { content: ""; position: absolute; top: 0; left: 68px; right: 0; border-top: .5px solid var(--separator); }
+  .cic { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; color: #fff; flex: none; }
+  .cic [data-i] { width: 21px; height: 21px; --sw: 40px; }
+  .trow .t { flex: 1; min-width: 0; } .trow b { display: block; font-size: 17px; font-weight: 600; } .trow span { display: block; font-size: 15px; color: var(--label-2); margin-top: 1px; }
+  .banner { display: grid; grid-template-columns: auto 1fr; column-gap: 12px; align-items: center; padding: 12px 6px 4px 14px; border-radius: 14px; background: var(--surface); }
+  .banner .acts2 { grid-column: 1 / -1; display: flex; justify-content: flex-end; }
+  .banner > [data-i] { width: 21px; height: 21px; color: var(--tint); }
+  .banner .t { font-size: 15px; font-weight: 600; line-height: 1.3; }
+  .banner .act { height: 44px; padding: 0 10px; display: grid; place-items: center; font-size: 15px; font-weight: 600; color: var(--tint-text); white-space: nowrap; }
+  .banner .x { width: 40px; height: 44px; display: grid; place-items: center; color: var(--label-2); }
+  .banner .x [data-i] { width: 16px; height: 16px; --sw: 48px; }
+
+  .head { padding: 112px 20px 0; }
+  .segwrap { margin: 14px 16px 0; }
+  .gf.first { padding-top: 8px; }
+  .list-top { margin-top: 16px; }
+  .bwrap { margin: 14px 16px 0; }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <div class="scroll">
+    <div class="navbar"><div class="glass gbtn"><i data-i="chevron-back"></i></div><div></div></div>
+    <div class="head"><div class="largetitle">Receipts to attach</div></div>
+    <div class="bwrap"><div class="banner"><i data-i="checkmark-circle"></i><div class="t">Receipt attached to Coffee at Mill St.</div><div class="acts2"><div class="act">View entry</div><div class="act">Undo</div><div class="x"><i data-i="close"></i></div></div></div></div>
+    <div class="segwrap"><div class="seg"><div class="on">To attach</div><div>Attached</div></div></div>
+    <div class="glist list-top">
+      <div class="irow"><div class="env"><i data-i="receipt"></i></div><div class="t"><div class="top"><b>Acme Store</b><span>Nov 12, 9:12 AM</span></div><div class="sub">Your Acme Store receipt for order 4412</div><div class="meta"><span>2 files</span></div></div></div>
+      <div class="irow"><div class="env"><i data-i="receipt"></i></div><div class="t"><div class="top"><b>Fabrikam Hardware</b><span>Nov 11, 6:40 PM</span></div><div class="sub">Order 2291: your invoice and delivery note</div><div class="meta"><span>2 files</span><span>1 of 2 attached</span></div></div></div>
+      <div class="irow"><div class="env"><i data-i="receipt"></i></div><div class="t"><div class="top"><b>Northwind Rail</b><span>Nov 10, 7:58 AM</span></div><div class="sub">Your e-ticket and receipt</div><div class="meta"><span>1 file</span><span class="badge"><i data-i="alert-circle"></i>Sender not verified</span></div></div></div>
+      <div class="irow"><div class="env"><i data-i="receipt"></i></div><div class="t"><div class="top"><b>Contoso Books</b><span>Oct 16, 2:21 PM</span></div><div class="sub">Thanks for your order</div><div class="meta"><span>1 file</span><span class="exp">Deleted in 3 days</span></div></div></div>
+    </div>
+  </div>
+  <div class="tabbar">
+    <div class="tabs glass">
+      <div class="tab on"><i data-i="home"></i>Home</div>
+      <div class="tab"><i data-i="list"></i>Activity</div>
+      <div class="tab"><i data-i="people"></i>Shared</div>
+      <div class="tab"><i data-i="airplane"></i>Trips</div>
+    </div>
+    <div class="fab glass tinted"><i data-i="add"></i></div>
+  </div>
+  <div class="island"></div>
+  <div class="status"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="home-ind"></div>
+</div>
+</body></html>

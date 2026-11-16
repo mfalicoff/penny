@@ -1,0 +1,102 @@
+<!-- @dsCard group="iPhone" name="Receipt email" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Receipt email</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<style>
+  .gh { padding: 22px 32px 7px; font-size: 13px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .03em; }
+  .gf { padding: 7px 32px 0; font-size: 13px; color: var(--label-2); line-height: 1.4; }
+  .glist { background: var(--surface); border-radius: 22px; margin: 0 16px; overflow: hidden; }
+  .irow { display: flex; align-items: flex-start; gap: 12px; padding: 11px 16px; position: relative; }
+  .irow + .irow::before { content: ""; position: absolute; top: 0; left: 60px; right: 0; border-top: .5px solid var(--separator); }
+  .irow .env { width: 32px; height: 32px; display: grid; place-items: center; color: var(--label-2); flex: none; }
+  .irow .env [data-i] { width: 22px; height: 22px; }
+  .irow .t { flex: 1; min-width: 0; }
+  .irow .top { display: flex; align-items: baseline; gap: 8px; }
+  .irow .top b { flex: 1; font-size: 17px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .irow .top span { font-size: 13px; color: var(--label-2); white-space: nowrap; }
+  .irow .sub { font-size: 15px; color: var(--label-2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .irow .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: 5px; font-size: 13px; color: var(--label-2); }
+  .irow .meta .exp { font-weight: 600; color: var(--pending); }
+  .badge { display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px; border-radius: 11px; background: var(--fill); color: var(--pending); font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .badge [data-i] { width: 13px; height: 13px; --sw: 48px; }
+  .att { display: flex; align-items: center; gap: 12px; padding: 10px 16px; position: relative; min-height: 64px; }
+  .att + .att::before { content: ""; position: absolute; top: 0; left: 72px; right: 0; border-top: .5px solid var(--separator); }
+  .thumb { width: 44px; height: 54px; border-radius: 8px; background: #FBFAF7; border: .5px solid var(--separator); padding: 7px 6px; display: flex; flex-direction: column; gap: 4px; flex: none; }
+  .thumb i { display: block; height: 3px; border-radius: 2px; background: #D9D5CE; }
+  .att .t { flex: 1; min-width: 0; } .att b { display: block; font-size: 17px; font-weight: 600; } .att span { display: block; font-size: 15px; color: var(--label-2); margin-top: 1px; }
+  .att .ck { color: var(--tint); } .att .ck[data-i] { width: 20px; height: 20px; --sw: 48px; }
+  .pb { height: 50px; border-radius: 25px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 17px; font-weight: 600; background: var(--fill); color: var(--label); }
+  .pb [data-i] { width: 19px; height: 19px; --sw: 44px; }
+  .pb.primary { background: var(--tint); color: #fff; }
+  .pb.danger { color: var(--danger); }
+  .trow { display: flex; align-items: center; gap: 12px; padding: 10px 16px; min-height: 62px; position: relative; }
+  .trow + .trow::before { content: ""; position: absolute; top: 0; left: 68px; right: 0; border-top: .5px solid var(--separator); }
+  .cic { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; color: #fff; flex: none; }
+  .cic [data-i] { width: 21px; height: 21px; --sw: 40px; }
+  .trow .t { flex: 1; min-width: 0; } .trow b { display: block; font-size: 17px; font-weight: 600; } .trow span { display: block; font-size: 15px; color: var(--label-2); margin-top: 1px; }
+  .banner { display: grid; grid-template-columns: auto 1fr; column-gap: 12px; align-items: center; padding: 12px 6px 4px 14px; border-radius: 14px; background: var(--surface); }
+  .banner .acts2 { grid-column: 1 / -1; display: flex; justify-content: flex-end; }
+  .banner > [data-i] { width: 21px; height: 21px; color: var(--tint); }
+  .banner .t { font-size: 15px; font-weight: 600; line-height: 1.3; }
+  .banner .act { height: 44px; padding: 0 10px; display: grid; place-items: center; font-size: 15px; font-weight: 600; color: var(--tint-text); white-space: nowrap; }
+  .banner .x { width: 40px; height: 44px; display: grid; place-items: center; color: var(--label-2); }
+  .banner .x [data-i] { width: 16px; height: 16px; --sw: 48px; }
+
+  .behind { position: absolute; inset: 0; background: var(--bg); }
+  .scrim { position: absolute; inset: 0; background: var(--dim); z-index: 5; }
+  .sheet { position: absolute; left: 6px; right: 6px; top: 62px; bottom: 6px; border-radius: 44px; background: var(--bg); z-index: 10; overflow: hidden; }
+  .grabber { width: 36px; height: 5px; border-radius: 3px; background: var(--label-3); opacity: .5; margin: 7px auto 0; }
+  .bar { display: flex; justify-content: space-between; align-items: center; padding: 6px 14px 0; height: 56px; }
+  .ltitle { font-size: 30px; font-weight: 700; letter-spacing: -0.025em; padding: 4px 22px 0; }
+  .gh { padding-top: 16px; }
+  .sr { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 7px 16px; position: relative; font-size: 17px; }
+  .sr + .sr::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; border-top: .5px solid var(--separator); }
+  .addr { font-family: ui-monospace, "SF Mono", monospace; font-size: 16px; line-height: 1.35; word-break: break-all; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; padding: 0; }
+  .two div { height: 46px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; color: var(--tint-text); }
+  .two div + div { border-left: .5px solid var(--separator); }
+  .two [data-i] { width: 18px; height: 18px; }
+  .exp .t { flex: 1; } .exp small { display: block; font-size: 15px; color: var(--label-2); }
+  .bordered { height: 34px; padding: 0 14px; border-radius: 17px; background: var(--fill); color: var(--tint-text); font-size: 15px; font-weight: 600; display: grid; place-items: center; }
+  .ph { color: var(--label-3); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .add { color: var(--label-3); font-weight: 600; }
+  .tint { color: var(--tint-text); } .red { color: var(--danger); }
+  .chev { margin-left: auto; }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <div class="behind"><div class="glow"></div></div>
+  <div class="scrim"></div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="bar"><div class="glass gbtn"><i data-i="chevron-back"></i></div><div></div></div>
+    <div class="ltitle">Receipt email</div>
+    <div class="gh">Your receipt address</div>
+    <div class="glist">
+      <div class="sr"><span class="addr">r-7kq2m9xh4tdw3pzc8vbn@receipts.example.com</span></div>
+      <div class="sr two"><div><i data-i="copy"></i>Copy</div><div><i data-i="arrow-up"></i>Share</div></div>
+      <div class="sr exp"><div class="t"><small>Works until</small>February 10, 2027</div><div class="bordered">Extend</div></div>
+    </div>
+    <div class="gf">Anyone with this address can send you receipts. Nothing is attached until you choose to.</div>
+    <div class="gh">Allowed senders</div>
+    <div class="glist">
+      <div class="sr">receipts@acme.example</div>
+      <div class="sr">me@mail.example</div>
+      <div class="sr"><span class="ph">name@example.com or example.com</span><span class="add">Add</span></div>
+    </div>
+    <div class="gf">Only email that passes sender verification from these addresses reaches your inbox. If you forward receipts, add the address you forward from.</div>
+    <div class="glist" style="margin-top:20px">
+      <div class="sr tint">New address</div>
+      <div class="sr red">Turn off</div>
+    </div>
+    <div class="gh">How it works</div>
+    <div class="glist">
+      <div class="sr" style="font-size:16px;line-height:1.35">Forward a receipt email to this address, or send a photo of a paper receipt to it. It shows up in Receipts to attach within a minute.</div>
+      <div class="sr">Receipts to attach<i data-i="chevron-forward" class="chev"></i></div>
+    </div>
+  </div>
+  <div class="island"></div>
+  <div class="status" style="color:#fff"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="home-ind"></div>
+</div>
+</body></html>

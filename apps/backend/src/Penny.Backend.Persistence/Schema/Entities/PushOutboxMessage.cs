@@ -4,7 +4,7 @@ public sealed class PushOutboxMessage
 {
     public required string Id { get; set; }
     public required string UserId { get; set; }
-    public required string HouseholdId { get; set; }
+    public string? HouseholdId { get; set; }
     public required string EventType { get; set; }
     public required string EntityId { get; set; }
     public required string Payload { get; set; }

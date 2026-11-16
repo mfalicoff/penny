@@ -1,0 +1,47 @@
+<!-- @dsCard group="Web" name="Receipts to attach" viewport="1520x980" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · Web · Receipts to attach</title>
+<link rel="stylesheet" href="../assets/penny.css"><link rel="stylesheet" href="../assets/web.css">
+<script src="../assets/icons.js"></script><script src="../assets/sankey.js"></script><script src="../assets/web.js"></script>
+<script>WEB_NAV[0].items.push(["receipts", "receipt", "Receipts to attach", "", "5"]); WEB_NAV[1].items[0][2] = "Flat 4B";</script>
+<style>
+  .ibar { display: flex; align-items: center; gap: 12px; }
+  .choice { display: flex; background: var(--fill); border-radius: 10px; padding: 3px; height: 36px; width: 260px; }
+  .choice div { flex: 1; display: grid; place-items: center; font-size: 13.5px; font-weight: 600; border-radius: 8px; }
+  .choice .on { background: var(--surface); box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+  .dark .choice .on { background: var(--surface-2); }
+  .ilist { margin-top: 16px; max-width: 880px; padding: 6px; }
+  .wrow { display: grid; grid-template-columns: 36px minmax(0,1fr) auto; grid-template-areas: "icon sender date" "icon subject subject" "icon meta meta"; column-gap: 12px; row-gap: 2px; padding: 12px 14px; border-radius: 12px; position: relative; }
+  .wrow + .wrow::before { content: ""; position: absolute; top: 0; left: 62px; right: 14px; border-top: .5px solid var(--separator); }
+  .wrow.focus { box-shadow: 0 0 0 2.5px var(--tint); }
+  .wrow .ri { grid-area: icon; width: 36px; height: 36px; border-radius: 10px; background: var(--fill); color: var(--label-2); display: grid; place-items: center; }
+  .wrow .ri [data-i] { width: 18px; height: 18px; }
+  .wrow b { grid-area: sender; font-size: 15px; font-weight: 600; }
+  .wrow time { grid-area: date; font-size: 13px; color: var(--label-2); }
+  .wrow .s { grid-area: subject; font-size: 14px; color: var(--label-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .wrow .m { grid-area: meta; font-size: 12.5px; color: var(--label-2); display: flex; align-items: center; gap: 8px; margin-top: 3px; }
+  .wrow .m .exp { color: var(--pending); font-weight: 600; }
+  .toast { position: absolute; z-index: 30; left: 50%; bottom: 28px; transform: translateX(-50%); width: 560px; display: flex; align-items: center; gap: 12px; padding: 10px 10px 10px 16px; border-radius: 16px; }
+  .toast > [data-i] { width: 20px; height: 20px; color: var(--tint); }
+  .toast .t { flex: 1; font-size: 14.5px; font-weight: 600; }
+  .toast .btn [data-i] { width: 14px; height: 14px; }
+</style></head>
+<body class="canvas">
+<div class="browser" data-active="receipts" data-url="penny.example.com/receipts?status=to_attach">
+  <main class="wmain">
+    <div class="wtop"><h1>Receipts to attach</h1><div class="sp"></div>
+      <div class="wsearch"><i data-i="search"></i>Search entries<kbd>⌘K</kbd></div>
+      <div class="btn primary"><i data-i="add"></i>Add entry <kbd>N</kbd></div></div>
+    <div class="wbody">
+      <div class="ibar"><div class="choice"><div class="on">To attach</div><div>Attached</div></div></div>
+      <div class="panel ilist">
+          <div class="wrow"><span class="ri"><i data-i="receipt"></i></span><b>Acme Store</b><time>Nov 12</time><span class="s">Your Acme Store receipt for order 4412</span><span class="m">2 files</span></div>
+          <div class="wrow"><span class="ri"><i data-i="receipt"></i></span><b>Mill St. Coffee</b><time>Nov 12</time><span class="s">Your receipt from Mill St. Coffee</span><span class="m">1 file</span></div>
+          <div class="wrow"><span class="ri"><i data-i="receipt"></i></span><b>Fabrikam Hardware</b><time>Nov 11</time><span class="s">Order 2291: your invoice and delivery note</span><span class="m">2 files · 1 of 2 attached</span></div>
+          <div class="wrow"><span class="ri"><i data-i="receipt"></i></span><b>Northwind Rail</b><time>Nov 10</time><span class="s">Your e-ticket and receipt</span><span class="m">1 file <span class="tag pend"><i data-i="alert-circle"></i>Sender not verified</span></span></div>
+          <div class="wrow"><span class="ri"><i data-i="receipt"></i></span><b>Contoso Books</b><time>Oct 16</time><span class="s">Thanks for your order</span><span class="m">1 file · <span class="exp">Deleted in 3 days</span></span></div>
+      </div>
+    </div>
+  </main>
+</div>
+</body></html>

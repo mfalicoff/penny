@@ -661,7 +661,7 @@ function auth() {
 function jobs() {
   const b = new Board();
   b.text(
-    "Workers claim **due** work: push deliveries, search embeddings, shared recurrences and receipt text. **Lag** is the time from when work became due to when a worker claimed it; recurrence lag counts from the start of the occurrence's UTC day, so hours there are normal. Failed items are retried.",
+    "Workers claim **due** work: push deliveries, search embeddings, shared recurrences, receipt text and emailed receipts. **Lag** is the time from when work became due to when a worker claimed it; recurrence lag counts from the start of the occurrence's UTC day, so hours there are normal. Failed items are retried.",
   );
   b.row("Throughput and failures");
   b.stat("Items claimed", 8, `sum(increase(penny_job_items_total{${F}}[$__range]))`, { decimals: 0, graph: "none" });
@@ -697,6 +697,40 @@ function jobs() {
     { unit: "s" },
   );
 
+  b.row("Emailed receipts");
+  b.stat("Emails waiting to convert", 12, `max(penny_inbound_mail_queue{${F}})`, { decimals: 0, graph: "area", steps: [["green", null], ["orange", 50], ["red", 500]] });
+  b.stat("Unhandled inbox items", 12, `max(penny_receipt_inbox_unhandled{${F}})`, { decimals: 0, graph: "area" });
+  b.counts(
+    "Ingress by outcome",
+    8,
+    8,
+    [[`sum by (penny_inbound_mail_outcome) (increase(penny_inbound_mail_ingress_total{${F}}[$__interval]))`, "{{penny_inbound_mail_outcome}}"]],
+    {
+      overrides: [red(".*unauthorized")],
+      description: "Signed requests from the Cloudflare Email Worker. unauthorized means a bad or replayed signature; unknown_address and rate_limited become SMTP rejects.",
+    },
+  );
+  b.counts(
+    "Processing results",
+    8,
+    8,
+    [[`sum by (penny_inbound_mail_outcome) (increase(penny_inbound_mail_results_total{${F}}[$__interval]))`, "{{penny_inbound_mail_outcome}}"]],
+    {
+      overrides: [red("render_unavailable|unreadable|lease_lost")],
+      description: "done stored receipts in the inbox; retry waits for penny-render; the rest are rejection reason codes (never message content).",
+    },
+  );
+  b.series(
+    "Conversion time",
+    8,
+    8,
+    [
+      [histogram(0.5, "penny_inbound_mail_duration_seconds", "le", F), "p50"],
+      [histogram(0.95, "penny_inbound_mail_duration_seconds", "le", F), "p95"],
+    ],
+    { unit: "s" },
+  );
+
   b.row("Push and providers");
   b.series(
     "Outgoing HTTP by host and status",
@@ -712,7 +746,7 @@ function jobs() {
   b.traces("Failed worker passes", 12, 10, '{ resource.service.name = "$service" && span.penny.job != nil && status = error }');
   b.logs("Worker warnings and errors", 24, 8, `${LSEL} | severity_number >= 13 | scope_name =~ "(?i).*(worker|push|search|recurrence|receipt|ocr|outbox).*"`);
 
-  return dashboard("penny-jobs", "Penny background jobs", "Push delivery, search embeddings, shared recurrences and receipt text: throughput, failures and lag.", b, apiVariables(), { tags: ["jobs"] });
+  return dashboard("penny-jobs", "Penny background jobs", "Push delivery, search embeddings, shared recurrences, receipt text and emailed receipts: throughput, failures and lag.", b, apiVariables(), { tags: ["jobs"] });
 }
 
 // --- .NET runtime ---------------------------------------------------------------------------

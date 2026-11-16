@@ -17,6 +17,9 @@
 ## Known render warns
 - None open. All 34 components render cleanly with authored previews graded good.
 
+## Pending sync
+- **Emailed receipts (MAZ-184):** the 21 `receipt-*` cards in `docs/design/penny-ios/{iphone,ipad,web}` were added without a kit change (they reuse `penny.css`, `ipad.css`, `web.css` and existing icons) and are not yet in the Claude Design project. Import them at the next re-sync. The web cards add the sidebar's "Receipts to attach" item in their own script, so `assets/web.js` and the other web cards are unchanged.
+
 ## Re-sync risks
 - **Do the whole re-sync in one change:** after a card or kit change, re-render the baselines (`node docs/design/penny-ios/render.mjs 2`), update the hashes in `contracts/design-baseline.json`, re-sync this project, and update the affected verdicts in `contracts/visual-comparisons.json`. The steps are in [visual acceptance](../docs/design/visual-acceptance.md#re-sync-after-a-design-change); `npm run test:core` and the web workflow fail on a stale baseline or hash.
 - **Token drift:** the kit's tokens and CSS are copied by hand from `docs/design/penny-ios/assets/penny.css`. When the proposal's colors or category palette change, update `design-kit/src/styles.css` too, or the two drift apart silently.

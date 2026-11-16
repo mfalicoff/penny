@@ -185,7 +185,7 @@ penny exec api dotnet Penny.Backend.Api.dll search-verify
 penny exec api dotnet Penny.Backend.Api.dll search-rebuild
 ```
 
-**Receipts.** `receipts-verify` decrypts every receipt and reports `{Receipts, Verified, Missing, Corrupt, Unreferenced, Bytes}` (exit 2 on missing or corrupt files). `receipts-sweep [--dry-run]` removes unreferenced files older than an hour ([receipts](../reference/receipts.md#commands)).
+**Receipts.** `receipts-verify` decrypts every receipt and reports `{Receipts, Verified, Missing, Corrupt, Unreferenced, Bytes}` (exit 2 on missing or corrupt files). `receipts-sweep [--dry-run]` removes unreferenced files older than an hour, including orphaned raw emailed receipts under `inbound/` ([receipts](../reference/receipts.md#commands))./
 
 **Password resets.** `penny exec api dotnet Penny.Backend.Api.dll reset-password user@example.com` issues a one-time code ([password reset](../reference/authentication.md#password-reset-maz-123)).
 
@@ -247,6 +247,22 @@ penny exec api dotnet Penny.Backend.Api.dll receipts-ocr
 - *A receipt is `unsupported`.* `unsupported-format` (HEIC/HEIF) or `too-large`. Re-uploading a HEIC photo as JPEG makes it readable.
 - *A receipt's text is wrong or poor.* OCR quality depends on the photo (focus, contrast, crumpling). Text and typo matches still work on the parts that were read.
 - Logs and telemetry carry only failure codes and exception type names, never receipt text, file names or ids.
+
+## Emailed receipts
+
+[Setup](deployment.md#emailed-receipts) · [design](../plans/email-receipts.md). Logs and metrics carry only outcome and reason codes, never addresses, senders, subjects or content.
+
+- **Metrics** (the *Emailed receipts* row of the Penny background jobs dashboard): `penny.inbound_mail.ingress` by outcome (`accepted`, `duplicate`, `unknown_address`, `rate_limited`, `too_large`, `invalid`, `unauthorized`), `penny.inbound_mail.results` by outcome (`done`, `retry`, `lease_lost` or a reason code) and `penny.inbound_mail.duration`. A steady `unauthorized` count means the Worker's secret differs from `InboundMail__WebhookSecret`, or something other than the Worker is calling the endpoint.
+- **Reason codes** on rejected and failed messages (`penny.inbound_messages.reason_code`): `headers_too_large`, `too_deep`, `too_many_parts`, `decoded_too_large`, `html_too_large`, `unparseable`, `timeout`, `sender_not_allowed`, `render_too_large`, `render_too_many_pages`, `render_invalid`, `render_unavailable` (penny-render was down for every attempt), `unreadable` (the raw file was missing or didn't decrypt), `lease_expired` (the worker died on the last attempt).
+- **Retention:** raw mail is encrypted under `Receipts__Root/inbound/`, deleted as soon as a message is converted, and kept 7 days for rejected or failed messages. `receipts-sweep` also removes orphaned files under `inbound/`. Unhandled inbox items are discarded after `InboundMail__InboxRetentionDays`; files linked to an entry are never deleted.
+
+### penny-render is down
+
+Messages back off (30 s, 2 min, 8 min) and fail as `render_unavailable` after the fourth attempt. Check `docker compose ps penny-render` and its health check; it restarts on crash. Failed raw mail stays 7 days, but there is no replay command yet, so ask senders to resend.
+
+### Mail is refused
+
+Unknown or revoked addresses, and senders over a limit, are refused during the SMTP session by the Worker, so senders see a bounce from their own provider. If every message is refused with a temporary failure, the Worker hasn't been able to fetch the recipient list for over an hour: check the tunnel or Access policy and the shared secret.
 
 ## PostgreSQL
 

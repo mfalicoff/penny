@@ -49,14 +49,15 @@ internal static class ReceiptCommand
                 commandTimeoutSeconds: 30
             );
             await using var database = settings.CreateDataSource();
+            var store = ReceiptStoreSettings.Create(
+                configuration["Receipts:Root"],
+                configuration["Receipts:MasterKey"]
+            );
+            // The sweep also covers raw emailed receipts under `inbound/` (MAZ-184).
             var maintenance = new ReceiptMaintenance(
                 database,
-                new ReceiptFileStore(
-                    ReceiptStoreSettings.Create(
-                        configuration["Receipts:Root"],
-                        configuration["Receipts:MasterKey"]
-                    )
-                )
+                new ReceiptFileStore(store),
+                new Penny.Backend.Persistence.InboundMail.InboundMailSealer(store)
             );
             if (args[0] == Verify)
             {

@@ -2,12 +2,15 @@ using System.Diagnostics;
 using Microsoft.AspNetCore.Http.Features;
 using Penny.Backend.Api.Configuration;
 using Penny.Backend.Api.Errors;
+using Penny.Backend.Api.InboundMail;
+using Penny.Backend.Application.InboundMail;
 
 namespace Penny.Backend.Api.Middleware;
 
 public sealed partial class ApiBoundaryMiddleware(
     RequestDelegate next,
     BackendOptions options,
+    InboundMailSettings inboundMail,
     ILogger<ApiBoundaryMiddleware> logger
 )
 {
@@ -23,14 +26,15 @@ public sealed partial class ApiBoundaryMiddleware(
             return Task.CompletedTask;
         });
         var limit = context.Features.Get<IHttpMaxRequestBodySizeFeature>();
-        if (context.Request.ContentLength is { } declared && declared > options.MaxRequestBodyBytes)
+        var maxBody = MaxBodyBytes(context);
+        if (context.Request.ContentLength is { } declared && declared > maxBody)
         {
-            await DiscardOversizedBodyAsync(context, limit, declared);
+            await DiscardOversizedBodyAsync(context, limit, declared, maxBody);
             await ApiErrors.WriteAsync(context, 413, "The upload is too large.");
             return;
         }
         if (limit is { IsReadOnly: false })
-            limit.MaxRequestBodySize = options.MaxRequestBodyBytes;
+            limit.MaxRequestBodySize = maxBody;
         try
         {
             await next(context);
@@ -70,6 +74,16 @@ public sealed partial class ApiBoundaryMiddleware(
         }
     }
 
+    // The signed ingress (MAZ-184) takes a whole raw message, up to
+    // `InboundMail__MaxMessageBytes` (25 MiB), while the feature is on. Every other
+    // request keeps the JSON body limit.
+    private long MaxBodyBytes(HttpContext context) =>
+        inboundMail.Enabled
+        && HttpMethods.IsPost(context.Request.Method)
+        && context.Request.Path.Equals(InboundMailHeaders.Path, StringComparison.OrdinalIgnoreCase)
+            ? Math.Max(options.MaxRequestBodyBytes, inboundMail.MaxMessageBytes)
+            : options.MaxRequestBodyBytes;
+
     // Replying before reading a declared body and then closing the connection resets
     // it while the client is still writing, so clients that send the whole body
     // before reading (fetch, URLSession, HttpClient) lose the 413 and report a network
@@ -80,13 +94,11 @@ public sealed partial class ApiBoundaryMiddleware(
     private async Task DiscardOversizedBodyAsync(
         HttpContext context,
         IHttpMaxRequestBodySizeFeature? limit,
-        long declared
+        long declared,
+        long maxBody
     )
     {
-        if (
-            limit is not { IsReadOnly: false }
-            || declared - options.MaxRequestBodyBytes > DrainAllowance(options)
-        )
+        if (limit is not { IsReadOnly: false } || declared - maxBody > DrainAllowance(options))
             return;
         limit.MaxRequestBodySize = declared;
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(

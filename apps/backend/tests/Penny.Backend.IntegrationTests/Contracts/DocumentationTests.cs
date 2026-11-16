@@ -103,6 +103,16 @@ public sealed class DocumentationTests(ApiFixture fixture) : IntegrationTestBase
                 // Receipt upload and download (MAZ-60).
                 ("/api/receipts", "post"),
                 ("/api/receipts/{id}", "get"),
+                // Emailed receipts (MAZ-184).
+                ("/api/receipt-email", "get"),
+                ("/api/receipt-email", "post"),
+                ("/api/receipt-email", "patch"),
+                ("/api/receipt-email", "delete"),
+                ("/api/inbound-mail", "post"),
+                ("/api/inbound-mail/recipients", "get"),
+                ("/api/receipt-inbox", "get"),
+                ("/api/receipt-inbox/{id}", "delete"),
+                ("/api/receipt-inbox/{id}/done", "post"),
             }
         )
         {

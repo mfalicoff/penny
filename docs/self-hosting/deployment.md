@@ -231,3 +231,36 @@ On iOS, Penny requests notification permission and registers the signed-in devic
 The .NET API delivers notifications through APNs (`Push__Apns__*`). Provider calls go out from the `api` container; allow outbound HTTPS to `api.push.apple.com` (`api.sandbox.push.apple.com` for development builds). Credentials, the `push-smoke-apns` check and delivery diagnostics: [push](../reference/push.md).
 
 For signed mobile distribution and release tags, see [Releases](../development/releases.md).
+
+## Emailed receipts
+
+Off by default. Each user can get a private address such as `r-7kq2m9xh4tdw3pzc8vbn@receipts.example.com`; mail sent there becomes a PDF of the email plus each receipt attachment, in the user's receipt inbox ([design](../plans/email-receipts.md)). Penny never sends mail.
+
+1. **A receipts-only subdomain on Cloudflare** with Email Routing enabled (it creates the MX records). Nothing else should receive mail there.
+2. **The Email Worker** in [`apps/email-worker`](../../apps/email-worker/README.md), deployed with Wrangler, with a catch-all Email Routing rule to it. It refuses unknown recipients and forwards signed raw mail.
+3. **A private path from the Worker to the API.** The public `web` proxy answers 404 for `/api/inbound-mail`. Recommended: a Cloudflare Tunnel (`cloudflared`) to a separate internal hostname that routes to `api:8080`. Alternatively, a hostname behind Cloudflare Access with a service token (the Worker's `CF_ACCESS_CLIENT_ID` and `CF_ACCESS_CLIENT_SECRET`).
+4. **The renderer and settings.** Add `email-receipts` to `COMPOSE_PROFILES` (for example `COMPOSE_PROFILES=bundled-postgres,email-receipts`) to start `penny-render`: Gotenberg with JavaScript off, read-only, without capabilities, on the internal-only `render` network. Then set in `deploy/api.env`:
+
+   ```sh
+   InboundMail__Enabled=true
+   InboundMail__Domain=receipts.example.com
+   InboundMail__WebhookSecret=<openssl rand -base64 32>   # also the Worker's PENNY_WEBHOOK_SECRET
+   ```
+
+| Setting | Default | Notes |
+| --- | --- | --- |
+| `InboundMail__Enabled` | `false` | Off: the routes answer 404 (GET `/api/receipt-email` reports `enabled: false`) and no worker runs |
+| `InboundMail__Domain` | | The receipts subdomain |
+| `InboundMail__WebhookSecret` | | Base64 of at least 32 bytes, shared with the Worker |
+| `InboundMail__Worker` | `true` | Converts received mail in this process (leased, like OCR) |
+| `InboundMail__RendererUrl` | `http://penny-render:3000` | Internal network only |
+| `InboundMail__AuthServId` | `mx.cloudflare.net` | Whose `ARC-Authentication-Results` decide "sender verified" |
+| `InboundMail__MaxMessageBytes` | `26214400` | 25 MiB |
+| `InboundMail__AddressLifetimeDays` | `90` | Users can extend |
+| `InboundMail__InboxRetentionDays` | `30` | Unhandled inbox items are then discarded |
+| `InboundMail__HourlyLimit`, `__DailyLimit` | `20`, `100` | Per address |
+| `InboundMail__MaxPendingPerUser`, `__MaxPendingTotal` | `200`, `10000` | Over a limit, mail is refused during the SMTP session |
+
+The worker uses the OCR engine's libvips and poppler, so the API image needs no extra packages.
+
+**NixOS:** `services.penny.inboundMail = { enable = true; domain = "receipts.example.com"; webhookSecretFile = "/run/secrets/penny-inbound-mail-secret"; };` runs `penny-render` as a hardened systemd unit (`DynamicUser`, loopback-only `IPAddressAllow`, syscall filter, `MemoryMax`) and keeps `/api/inbound-mail` out of nginx. Point the tunnel at the API's `listenAddress:port`.

@@ -39,6 +39,10 @@ public sealed class PennyDbContext(DbContextOptions<PennyDbContext> options) : D
     public DbSet<SearchDocument> SearchDocuments => Set<SearchDocument>();
     public DbSet<ReceiptText> ReceiptTexts => Set<ReceiptText>();
     public DbSet<ReceiptTextChunk> ReceiptTextChunks => Set<ReceiptTextChunk>();
+    public DbSet<ReceiptMailAddress> ReceiptMailAddresses => Set<ReceiptMailAddress>();
+    public DbSet<InboundMessage> InboundMessages => Set<InboundMessage>();
+    public DbSet<ReceiptInboxItem> ReceiptInboxItems => Set<ReceiptInboxItem>();
+    public DbSet<ReceiptInboxReceipt> ReceiptInboxReceipts => Set<ReceiptInboxReceipt>();
 
     public static PennyDbContext Create(NpgsqlDataSource source) =>
         new(Configure(new DbContextOptionsBuilder<PennyDbContext>(), source).Options);

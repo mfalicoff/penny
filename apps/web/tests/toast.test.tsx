@@ -119,6 +119,37 @@ describe("ToastProvider", () => {
     expect(screen.queryByText("Share marked as paid")).not.toBeInTheDocument();
   });
 
+  it("stays for its own duration (the 8-second attached confirmation) and runs its extra action", () => {
+    const view = vi.fn();
+    function Attached() {
+      const toast = useToast();
+      return (
+        <button
+          type="button"
+          onClick={() => {
+            toast.show({ title: "Receipt attached to Lunch.", durationMs: 8000, action: { label: "View entry", onClick: view }, onUndo: vi.fn() });
+          }}
+        >
+          Show
+        </button>
+      );
+    }
+    render(
+      <ToastProvider>
+        <Attached />
+      </ToastProvider>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Show" }));
+    advance(TOAST_MS + 500);
+    expect(screen.getByText("Receipt attached to Lunch.")).toBeInTheDocument();
+    advance(8000 - TOAST_MS);
+    expect(screen.queryByText("Receipt attached to Lunch.")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Show" }));
+    fireEvent.click(screen.getByRole("button", { name: "View entry" }));
+    expect(view).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText("Receipt attached to Lunch.")).not.toBeInTheDocument();
+  });
+
   it("stays while keyboard focus is on Undo, past the hover limit, and closes once focus leaves", () => {
     const undo = vi.fn();
     showToast(undo);

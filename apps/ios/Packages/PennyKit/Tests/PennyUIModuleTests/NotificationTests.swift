@@ -340,6 +340,56 @@ struct NotificationTests {
         model.followCurrentMonth(MonthKey(today))
         #expect(model.month == month, "opening the page keeps the notification's month")
     }
+
+    @Test("whenANewReceiptNotificationOpens_PushNotifications_ShouldOpenThatInboxItemInTheAccount")
+    func receiptNotification() async throws {
+        let push = notifications(FakeNotificationSystem())
+        var opened: [DeepLink] = []
+        push.deliver = { opened.append($0) }
+        let item = "0123456789abcdef0123456789abcdef"
+        let payload: [AnyHashable: Any] = ["inboxItemId": item, "eventId": "e1"]
+        push.didOpen(target: NotificationTarget(userInfo: payload))
+        #expect(opened.isEmpty, "a receipt notification waits for the account like any other")
+        await push.accountChanged(try account("alex@example.test"))
+        #expect(opened == [.receiptInbox(itemID: item)])
+        #expect(push.showsInForeground(target: NotificationTarget(userInfo: payload)))
+        // A mixed or malformed payload opens nothing.
+        push.didOpen(
+            target: NotificationTarget(userInfo: ["inboxItemId": item, "householdId": "h1", "month": "2026-09"]))
+        #expect(opened.count == 1)
+    }
+
+    @Test("whenANewReceiptNotificationOpens_ShellModel_ShouldShowTheInboxFromHomeAndAttachNothing")
+    func shellOpensInbox() {
+        let workspace = FixedWorkspace(load: .ready(Ledger()))
+        let shell = ShellModel(workspace: workspace, session: .demo, today: today)
+        shell.navigate { $0.openSettings() }
+        shell.open(.receiptInbox(itemID: "0123456789abcdef0123456789abcdef"))
+        #expect(shell.route.tab == .home)
+        #expect(shell.route.path(for: .home) == [.receiptInbox(itemID: "0123456789abcdef0123456789abcdef")])
+        #expect(!shell.route.isSettingsPresented)
+        #expect(workspace.commits.isEmpty, "opening never saves anything")
+    }
+
+    @Test("whenOffline_ReceiptInbox_ShouldBeUnavailableSoTheRowAndFromInboxAreDisabled")
+    func inboxOffline() async throws {
+        let client = try APIClient(
+            configuration: APIConfiguration(server: Self.server),
+            session: ServerSession(
+                server: Self.server, email: "alex@example.test", token: String(repeating: "ab", count: 32)),
+            transport: OfflineTransport())
+        let inbox = ReceiptInboxModel(service: APIReceiptInboxService(client: client), available: { false })
+        await inbox.refresh()
+        #expect(inbox.isSupported)
+        #expect(!inbox.isAvailable)
+        #expect(inbox.toAttachCount == 0)
+        #expect(await inbox.createAddress() == ReceiptInboxFailure.offline)
+        // The demo has no inbox at all.
+        let demo = ShellModel(
+            workspace: FixedWorkspace(load: .ready(Ledger()), isDemo: true), session: .demo, today: today)
+        #expect(!demo.receiptInbox.isSupported)
+        #expect(demo.receiptAttacher == nil)
+    }
 }
 
 private struct OfflineTransport: HTTPTransport {

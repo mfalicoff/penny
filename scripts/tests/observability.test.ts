@@ -69,7 +69,7 @@ test("alert rules use provisioned data sources and unique ids", () => {
   const datasources = [...read("grafana/provisioning/datasources/datasources.yaml").matchAll(/^\s+uid: (\S+)$/gm)].map((match) => match[1]);
   const alerts = read("grafana/provisioning/alerting/penny.yaml");
   const uids = [...alerts.matchAll(/^\s+- uid: (\S+)$/gm)].map((match) => match[1]);
-  assert.equal(uids.length, 8);
+  assert.equal(uids.length, 10);
   assert.equal(new Set(uids).size, uids.length);
   for (const [, uid] of alerts.matchAll(/datasourceUid: (\S+)/g)) {
     assert.ok(uid === "__expr__" || datasources.includes(uid), `alert rule data source ${uid} is not provisioned`);

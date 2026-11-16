@@ -8,7 +8,12 @@ import { Button, cx } from "../../design/controls";
 import { Icon } from "../../design/Icon";
 import { useOnline } from "../../design/states";
 import "../../design/receipts.css";
+import { InboxPicker, pickable, useEmailedReceiptIds } from "../receiptInbox/InboxPicker";
+import { useInboxStatus } from "../receiptInbox/useInbox";
 import { ReceiptPreviewDialog } from "./ReceiptPreviewDialog";
+
+/** Said when an emailed receipt is removed from an entry (MAZ-184): the server returns it to the inbox. */
+export const BACK_TO_INBOX = "The receipt goes back to your inbox.";
 
 type Phase =
   | { kind: "idle" }
@@ -46,6 +51,12 @@ export function ReceiptField({ value, onChange, onBusyChange, hint }: ReceiptFie
   const [dragging, setDragging] = useState(false);
   // Sizes of files uploaded here; a receipt loaded with the entry has no size in its link.
   const [sizes, setSizes] = useState<Record<string, number>>({});
+  // Emailed receipts (MAZ-184): From inbox is a third source while the inbox has something to attach.
+  const inbox = useInboxStatus();
+  const [picking, setPicking] = useState(false);
+  const emailed = useEmailedReceiptIds(inbox.enabled && value !== null);
+  const [returned, setReturned] = useState(false);
+  const fromInbox = inbox.enabled && pickable(inbox.items).length > 0;
   const controllerRef = useRef<AbortController | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -79,6 +90,12 @@ export function ReceiptField({ value, onChange, onBusyChange, hint }: ReceiptFie
     }, 0);
   };
 
+  /** Links `next` (or nothing). An emailed receipt it replaces goes back to the inbox when the entry saves. */
+  function link(next: Receipt | null) {
+    setReturned(Boolean(value && emailed.has(value.id) && value.id !== next?.id));
+    onChange(next);
+  }
+
   async function start(file: File) {
     controllerRef.current?.abort();
     const controller = new AbortController();
@@ -95,7 +112,7 @@ export function ReceiptField({ value, onChange, onBusyChange, hint }: ReceiptFie
       });
       if (controller.signal.aborted) return;
       setSizes((previous) => ({ ...previous, [receipt.id]: file.size }));
-      onChange(receipt);
+      link(receipt);
       setPhase({ kind: "idle" });
       setAnnouncement(`${receipt.name} attached. It's saved with the entry when you press Save.`);
       focusAttach();
@@ -177,8 +194,9 @@ export function ReceiptField({ value, onChange, onBusyChange, hint }: ReceiptFie
             iconOnly
             aria-label={`Remove ${value.name || "receipt"}`}
             onClick={() => {
-              onChange(null);
-              setAnnouncement("Receipt removed. Save to keep the entry without it.");
+              const wasEmailed = emailed.has(value.id);
+              link(null);
+              setAnnouncement(`Receipt removed. Save to keep the entry without it.${wasEmailed ? ` ${BACK_TO_INBOX}` : ""}`);
               focusAttach();
             }}
           />
@@ -270,6 +288,11 @@ export function ReceiptField({ value, onChange, onBusyChange, hint }: ReceiptFie
           >
             File or PDF
           </Button>
+          {fromInbox ? (
+            <Button icon="receipt" busy={disabled} aria-label={replacing ? "Replace with a receipt from your inbox" : "Attach a receipt from your inbox"} aria-haspopup="dialog" onClick={() => { setPicking(true); }}>
+              From inbox
+            </Button>
+          ) : null}
         </span>
         <input
           ref={photoInputRef}
@@ -297,11 +320,25 @@ export function ReceiptField({ value, onChange, onBusyChange, hint }: ReceiptFie
       <p id={ids.hint} className="note">
         {online ? "Photos (JPEG, PNG, WebP, GIF, HEIC) or PDFs up to 10 MB." : "Connect to the internet to attach a receipt. The rest of the entry saves offline."}
         {value && !served ? " This receipt was added in the Penny app and opens there." : null}
+        {returned ? ` ${BACK_TO_INBOX}` : null}
         {hint ? <> {hint}</> : null}
       </p>
       <p id={ids.status} className="visually-hidden" role="status">
         {announcement}
       </p>
+      {picking ? (
+        <InboxPicker
+          onPick={(receipt) => {
+            link(receipt);
+            setPicking(false);
+            setAnnouncement(`${receipt.name} attached. It's saved with the entry when you press Save.`);
+            focusAttach();
+          }}
+          onClose={() => {
+            setPicking(false);
+          }}
+        />
+      ) : null}
       {preview && value ? (
         <ReceiptPreviewDialog
           receipt={value}

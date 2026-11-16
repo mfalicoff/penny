@@ -60,6 +60,13 @@ final class ShellModel {
     /// Receipt upload and download for the signed-in account (MAZ-78); nil in the demo and
     /// previews, where the entry form says receipts need an account.
     var receipts: (any ReceiptTransfers)?
+    /// The receipt address and the receipt inbox (MAZ-184). Without a service (the demo,
+    /// previews) it shows nothing.
+    var receiptInbox = ReceiptInboxModel(service: nil)
+    /// Attaches inbox files with the normal saves; nil in the demo and previews.
+    var receiptAttacher: ReceiptAttacher?
+    /// An inbox file Receipt inbox › New expense opens Add entry with, taken once by the form.
+    var addEntryInbox: InboxEntryPrefill?
     /// Writes the Home Screen widgets' snapshot for the signed-in account (MAZ-80); nil in the
     /// demo, previews and tests.
     var widgets: WidgetPublisher?
@@ -175,6 +182,13 @@ final class ShellModel {
     /// Trip expense on a personal trip (MAZ-76): Add entry, opened on that trip.
     func openTripExpense(_ tripId: String) {
         addEntryTripId = tripId
+        navigate { $0.openAddEntry() }
+    }
+
+    /// Receipt inbox › New expense: Add entry as an expense dated the day the email arrived,
+    /// titled with the sender, with the receipt attached (MAZ-184).
+    func openInboxExpense(_ prefill: InboxEntryPrefill) {
+        addEntryInbox = prefill
         navigate { $0.openAddEntry() }
     }
 
@@ -302,4 +316,11 @@ enum SyncText {
         case .localOnly: "play.circle"
         }
     }
+}
+
+/// What Receipt inbox › New expense starts Add entry with.
+struct InboxEntryPrefill: Equatable {
+    var title: String
+    var date: CalendarDate
+    var receipt: ReceiptReference
 }

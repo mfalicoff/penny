@@ -16,6 +16,9 @@ public enum DeepLink: Equatable, Sendable {
     /// household notification opens (`HouseholdNotification`), also reached by the notification
     /// route `penny:///households/<id>?month=YYYY-MM&expenseId=<id>`.
     case householdMonth(householdID: String, month: MonthKey, expenseID: String?)
+    /// The receipt inbox (MAZ-184), optionally opened on one item: what a "New receipt"
+    /// notification opens (`ReceiptInboxNotification`). Not a URL route.
+    case receiptInbox(itemID: String?)
     case trips
     case trip(id: String)
     /// A household invite (MAZ-75): `penny://join?code=<CODE>&server=<server URL>`, from a QR

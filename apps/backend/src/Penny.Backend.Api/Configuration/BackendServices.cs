@@ -8,23 +8,27 @@ using Penny.Backend.Api.Authentication;
 using Penny.Backend.Api.Contracts;
 using Penny.Backend.Api.Errors;
 using Penny.Backend.Api.Households;
+using Penny.Backend.Api.InboundMail;
 using Penny.Backend.Api.Middleware;
 using Penny.Backend.Api.Push;
 using Penny.Backend.Api.Receipts;
 using Penny.Backend.Api.Search;
 using Penny.Backend.Api.Testing;
+using Penny.Backend.Application.Abstractions.InboundMail;
 using Penny.Backend.Application.Abstractions.Persistence;
 using Penny.Backend.Application.Abstractions.Receipts;
 using Penny.Backend.Application.Abstractions.Search;
 using Penny.Backend.Application.Abstractions.Security;
 using Penny.Backend.Application.Authentication;
 using Penny.Backend.Application.Households;
+using Penny.Backend.Application.InboundMail;
 using Penny.Backend.Application.Ledgers;
 using Penny.Backend.Application.Push;
 using Penny.Backend.Application.Receipts;
 using Penny.Backend.Application.Search;
 using Penny.Backend.Persistence.Configuration;
 using Penny.Backend.Persistence.Health;
+using Penny.Backend.Persistence.InboundMail;
 using Penny.Backend.Persistence.Receipts;
 using Penny.Backend.Persistence.Repositories;
 using Penny.Backend.Persistence.Search;
@@ -92,6 +96,12 @@ public static class BackendServices
         AddSearchServices(builder.Services, SearchOptions.Read(configuration));
         AddReceiptTextServices(builder.Services, OcrOptions.Read(configuration));
         AddPushServices(builder.Services, PushOptions.Read(configuration), controls);
+        AddInboundMailServices(
+            builder.Services,
+            InboundMailOptions.Read(configuration),
+            InboundMailWorkerOptions.Read(configuration),
+            OcrOptions.Read(configuration)
+        );
     }
 
     // MAZ-62 full-stack test controls: a pinnable clock, injected faults, unique users
@@ -138,6 +148,67 @@ public static class BackendServices
         services.AddSingleton<SharedRecurrenceRunner>();
         if (recurrence.Worker)
             services.AddHostedService<SharedRecurrenceWorker>();
+    }
+
+    // Emailed receipts (MAZ-184): the address API and the signed ingress always exist and
+    // answer 404 while `InboundMail__Enabled` is false. Raw messages are sealed with the
+    // receipt master key under their own HKDF info.
+    private static void AddInboundMailServices(
+        IServiceCollection services,
+        InboundMailSettings inboundMail,
+        InboundMailWorkerOptions worker,
+        OcrOptions ocr
+    )
+    {
+        services.AddSingleton(inboundMail);
+        services.AddSingleton(provider => new InboundMailSealer(
+            provider.GetRequiredService<ReceiptStoreSettings>()
+        ));
+        services.AddSingleton<IReceiptMailRepository, PostgresReceiptMailRepository>();
+        services.AddSingleton<InboundMailReplayCache>();
+        services.AddSingleton<ReceiptEmailService>();
+        services.AddSingleton<InboundMailService>();
+        // Processing (stage 2): the converter calls penny-render over the internal render
+        // network. Calls follow no redirects, are bounded and are not logged (they carry
+        // the email).
+        services.AddSingleton(worker);
+        services.AddSingleton(worker.Processing);
+        services
+            .AddHttpClient(
+                GotenbergRenderer.HttpClientName,
+                client =>
+                {
+                    client.BaseAddress = worker.RendererUrl;
+                    client.Timeout = TimeSpan.FromSeconds(worker.RenderTimeoutSeconds);
+                }
+            )
+            .ConfigurePrimaryHttpMessageHandler(() =>
+                new SocketsHttpHandler { AllowAutoRedirect = false, UseProxy = false }
+            )
+            .RemoveAllLoggers();
+        services.AddSingleton<IEmailRenderer>(provider => new GotenbergRenderer(
+            provider
+                .GetRequiredService<IHttpClientFactory>()
+                .CreateClient(GotenbergRenderer.HttpClientName)
+        ));
+        services.AddSingleton(new MailImageTools(ocr.Engine));
+        services.AddSingleton<IInboundMailConverter>(provider => new MailConverter(
+            provider.GetRequiredService<IEmailRenderer>(),
+            provider.GetRequiredService<MailImageTools>(),
+            worker.Limits,
+            worker.AuthServId
+        ));
+        services.AddSingleton<IInboundMailQueue, PostgresInboundMailQueue>();
+        services.AddSingleton<IReceiptInboxRepository, PostgresReceiptInboxRepository>();
+        services.AddSingleton<ReceiptInboxService>();
+        services.AddSingleton<InboundMailProcessor>();
+        if (inboundMail.Enabled && worker.Worker)
+        {
+            // The worker re-encodes images with libvips and counts pages with pdfinfo:
+            // check the engine programs now, so a missing one stops the host.
+            _ = new LocalReceiptTextExtractor(ocr.Engine).Engine;
+            services.AddHostedService<InboundMailWorker>();
+        }
     }
 
     // Push devices and delivery (MAZ-61): registration always; the outbox worker unless
@@ -241,6 +312,7 @@ public static class BackendServices
             configuration["Receipts:Root"],
             configuration["Receipts:MasterKey"]
         );
+        services.AddSingleton(receipts);
         services.AddSingleton(new ReceiptFileStore(receipts));
         // Readiness after PostgreSQL (MAZ-63): writable receipt root with free space.
         var minimumFreeMegabytes = BackendOptions.ReadBounded(
@@ -359,6 +431,10 @@ public static class BackendServices
             AuthRateLimit.Configure(limits, auth.RateLimitPermits);
             InviteRateLimit.Configure(limits, auth.InviteRateLimitPermits);
             SearchRateLimit.Configure(limits, SearchOptions.Read(configuration).RateLimitPermits);
+            InboundMailRateLimit.Configure(
+                limits,
+                InboundMailOptions.RecipientsRateLimitPermits(configuration)
+            );
         });
         services.Configure<ForwardedHeadersOptions>(forwarded =>
         {

@@ -138,6 +138,69 @@ public sealed class ReceiptMaintenanceTests(ApiFixture fixture) : ReceiptTestBas
         exit.ShouldBe(0);
     }
 
+    // Raw emailed receipts (MAZ-184): an aged file no inbound message references and an
+    // aged temporary write go; a referenced raw message and a recent orphan stay.
+    [Fact]
+    public async Task whenInboundFilesAreOrphaned_ReceiptsSweep_ShouldRemoveOnlyOldOrphans()
+    {
+        var token = await RegisterAsync("mail@example.test");
+        using var create = Authorized(HttpMethod.Post, "/api/receipt-email", bearer: token);
+        using var created = await Client.SendAsync(create, Ct);
+        var address = System
+            .Text.Json.JsonDocument.Parse(await created.Content.ReadAsStringAsync(Ct))
+            .RootElement.GetProperty("address")
+            .GetProperty("address")
+            .GetString()!;
+        var local = address.Split('@')[0];
+        var raw = "Subject: Receipt\r\n\r\nThanks\r\n"u8.ToArray();
+        var timestamp = DateTimeOffset
+            .UtcNow.ToUnixTimeSeconds()
+            .ToString(System.Globalization.CultureInfo.InvariantCulture);
+        using var deliver = new HttpRequestMessage(HttpMethod.Post, "/api/inbound-mail")
+        {
+            Content = new ByteArrayContent(raw),
+        };
+        deliver.Headers.Add("X-Penny-Recipient", local);
+        deliver.Headers.Add("X-Penny-Timestamp", timestamp);
+        deliver.Headers.Add(
+            "X-Penny-Signature",
+            Penny.Backend.Application.InboundMail.InboundMailSignature.Compute(
+                Fixture.InboundMailSecret,
+                "message",
+                timestamp,
+                local,
+                raw
+            )
+        );
+        using (var accepted = await Client.SendAsync(deliver, Ct))
+            accepted.StatusCode.ShouldBe(System.Net.HttpStatusCode.Accepted);
+        var referenced = (string)
+            (await ScalarAsync("SELECT storage_path FROM penny.inbound_messages"))!;
+        var old = DateTime.UtcNow - ReceiptMaintenance.SweepGrace - TimeSpan.FromMinutes(5);
+        Age(referenced, old);
+        var orphan = "inbound/ab/ab" + new string('1', 30);
+        var temporary = "inbound/ab/ab" + new string('2', 30) + ".tmp-0123456789abcdef";
+        var recent = "inbound/cd/cd" + new string('3', 30);
+        foreach (var path in new[] { orphan, temporary, recent })
+        {
+            Directory.CreateDirectory(
+                Path.GetDirectoryName(Path.Combine(Fixture.ReceiptRoot, path))!
+            );
+            await File.WriteAllBytesAsync(Path.Combine(Fixture.ReceiptRoot, path), [1], Ct);
+        }
+        Age(orphan, old);
+        Age(temporary, old);
+
+        var (exit, report) = await RunAsync("receipts-sweep");
+
+        exit.ShouldBe(0);
+        report.GetProperty("Removed").GetInt64().ShouldBe(2);
+        StoredFiles()
+            .Select(path => path.Replace('\\', '/'))
+            .Order(StringComparer.Ordinal)
+            .ShouldBe(new[] { referenced, recent }.Order(StringComparer.Ordinal));
+    }
+
     [Fact]
     public async Task whenArgumentsAreUnknown_ReceiptCommand_ShouldPrintUsage()
     {

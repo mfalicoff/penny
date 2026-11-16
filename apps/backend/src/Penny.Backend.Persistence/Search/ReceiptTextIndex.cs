@@ -51,6 +51,8 @@ internal static class ReceiptTextIndex
         var touched = links.Gained.Union(links.Released).Order(StringComparer.Ordinal).ToList();
         if (touched.Count == 0)
             return;
+        // Emailed receipts (MAZ-184): inbox items follow the links in this transaction.
+        await InboundMail.ReceiptInboxStates.RefreshAsync(context, touched, cancellationToken);
         // A no-op update takes the row lock (FOR NO KEY UPDATE, which does not block
         // foreign-key checks of concurrent inserts).
         await context

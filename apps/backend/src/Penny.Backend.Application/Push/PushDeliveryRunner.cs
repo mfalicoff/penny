@@ -197,7 +197,11 @@ public sealed class PushDeliveryRunner(
             foreach (var dispatch in dispatches)
             {
                 var key = (dispatch.OutboxId, dispatch.Token);
-                if (payload is null || content is not { } text)
+                if (
+                    payload is null
+                    || content is not { } text
+                    || !PushContent.Fits(claim.EventType, payload)
+                )
                 {
                     outcomes[key] = PushOutcome.Permanent("invalid-payload");
                     continue;

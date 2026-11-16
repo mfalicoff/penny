@@ -8,6 +8,8 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
     <PackageReference Include="Pgvector.EntityFrameworkCore" />
+    <PackageReference Include="MimeKit" />
+    <PackageReference Include="HtmlSanitizer" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime" />
     <PackageReference Include="Microsoft.ML.Tokenizers" />
     <PackageReference Include="System.Numerics.Tensors" />

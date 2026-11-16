@@ -21,6 +21,8 @@ describe("app URLs", () => {
     ["/categories", "Categories"],
     ["/settings", "Settings"],
     ["/settings/appearance", "Settings"],
+    ["/settings/receipt-email", "Settings"],
+    ["/receipts", "Receipts to attach"],
   ])("%s opens with the title %s", async (path, title) => {
     stubServer();
     renderApp(path);

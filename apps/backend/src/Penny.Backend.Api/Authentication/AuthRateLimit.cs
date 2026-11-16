@@ -4,6 +4,7 @@ using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
 using Penny.Backend.Api.Errors;
 using Penny.Backend.Api.Households;
+using Penny.Backend.Api.InboundMail;
 using Penny.Backend.Api.Search;
 using Penny.Backend.Application.Diagnostics;
 
@@ -52,6 +53,7 @@ public static class AuthRateLimit
                     {
                         InviteRateLimit.Policy => InviteRateLimit.Message,
                         SearchRateLimit.Policy => SearchRateLimit.Message,
+                        InboundMailRateLimit.Policy => InboundMailRateLimit.Message,
                         _ => Message,
                     },
                     cancellationToken

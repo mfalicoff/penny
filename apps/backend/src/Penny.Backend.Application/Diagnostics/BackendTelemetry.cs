@@ -15,6 +15,7 @@ public static class BackendTelemetry
     public const string SearchEmbeddingJob = "search.embedding";
     public const string RecurrenceJob = "recurrence";
     public const string ReceiptTextJob = "receipt.text";
+    public const string InboundMailJob = "inbound.mail";
 
     public const string JobAttribute = "penny.job";
     public const string ItemsAttribute = "penny.job.items";
@@ -24,6 +25,7 @@ public static class BackendTelemetry
     public const string ErrorTypeAttribute = "error.type";
     public const string ReceiptTextStatusAttribute = "penny.receipt_text.status";
     public const string ReceiptTextMethodAttribute = "penny.receipt_text.method";
+    public const string InboundMailOutcomeAttribute = "penny.inbound_mail.outcome";
 
     public const string Success = "success";
     public const string Failure = "failure";
@@ -108,6 +110,65 @@ public static class BackendTelemetry
         "Wall time of one receipt text extraction attempt, by status.",
         advice: new InstrumentAdvice<double> { HistogramBucketBoundaries = ExtractionBuckets }
     );
+
+    private static readonly Counter<long> InboundMailRequests = Meter.CreateCounter<long>(
+        "penny.inbound_mail.ingress",
+        "{request}",
+        "Emailed receipt ingress requests (MAZ-184) by outcome: accepted, duplicate, unknown_address, rate_limited, too_large, invalid, unauthorized, recipients_unauthorized."
+    );
+
+    private static readonly Counter<long> InboundMailResults = Meter.CreateCounter<long>(
+        "penny.inbound_mail.results",
+        "{message}",
+        "Inbound messages processed (MAZ-184) by outcome: done, retry, lease_lost or a rejection reason code."
+    );
+
+    private static readonly Histogram<double> InboundMailDuration = Meter.CreateHistogram(
+        "penny.inbound_mail.duration",
+        "s",
+        "Wall time of one inbound message conversion and store, by outcome.",
+        advice: new InstrumentAdvice<double> { HistogramBucketBoundaries = ExtractionBuckets }
+    );
+
+    // Backlog gauges (MAZ-184), set by the inbound mail worker pass: messages waiting to be
+    // converted and unhandled inbox items across all users. Counts only.
+    private static long inboundMailQueue;
+    private static long receiptInboxUnhandled;
+
+    private static readonly ObservableGauge<long> InboundMailQueue = Meter.CreateObservableGauge(
+        "penny.inbound_mail.queue",
+        () => Interlocked.Read(ref inboundMailQueue),
+        "{message}",
+        "Emailed receipts waiting to be converted (pending or being processed)."
+    );
+
+    private static readonly ObservableGauge<long> ReceiptInboxUnhandled =
+        Meter.CreateObservableGauge(
+            "penny.receipt_inbox.unhandled",
+            () => Interlocked.Read(ref receiptInboxUnhandled),
+            "{item}",
+            "Receipt inbox items not attached yet, across all users."
+        );
+
+    public static void InboundMailBacklog(long queue, long unhandled)
+    {
+        Interlocked.Exchange(ref inboundMailQueue, queue);
+        Interlocked.Exchange(ref receiptInboxUnhandled, unhandled);
+    }
+
+    public static void InboundMailProcessed(string outcome, TimeSpan duration)
+    {
+        var tag = new KeyValuePair<string, object?>(InboundMailOutcomeAttribute, outcome);
+        InboundMailResults.Add(1, tag);
+        InboundMailDuration.Record(Math.Max(0, duration.TotalSeconds), tag);
+    }
+
+    // One ingress request; `outcome` is a fixed vocabulary, never an address or content.
+    public static void InboundMail(string outcome) =>
+        InboundMailRequests.Add(
+            1,
+            new KeyValuePair<string, object?>(InboundMailOutcomeAttribute, outcome)
+        );
 
     // One extraction attempt. `status` is done, failed, unsupported or retry; `method`
     // is text, ocr or mixed for done results, otherwise null.

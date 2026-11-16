@@ -2,7 +2,7 @@
 
 [Redesign cards](penny-ios/README.md) · [Redesign baseline and deviations](../reference/redesign.md) · [Native UI tests](../ios/ui-tests.md) · [Web app](../../apps/web/README.md) · [Test environment](../reference/test-environment.md#redesign-specimens)
 
-The 61 cards in `docs/design/penny-ios` are v2's visual baseline. This page explains how the iOS and web apps are compared with them: the reference images, the captures, what must match and what may differ, where verdicts are recorded, and how to re-sync after a design change.
+The 82 cards in `docs/design/penny-ios` are v2's visual baseline. This page explains how the iOS and web apps are compared with them: the reference images, the captures, what must match and what may differ, where verdicts are recorded, and how to re-sync after a design change.
 
 A visual comparison checks that a screen looks and reads as designed. It does not prove the screen works. Functional checks (the MAZ-82/96 journeys and real-device checks) are still required separately, and a matching capture never replaces them.
 
@@ -10,7 +10,7 @@ A visual comparison checks that a screen looks and reads as designed. It does no
 
 | Path | Contents |
 | --- | --- |
-| `docs/design/penny-ios/previews/<id>.<appearance>.png` | Reference image of each card in each appearance (120 images: 59 cards × light and dark, plus `iphone-home-dark` and `iphone-receipt`, which are dark only). Committed. |
+| `docs/design/penny-ios/previews/<id>.<appearance>.png` | Reference image of each card in each appearance (162 images: 80 cards × light and dark, plus `iphone-home-dark` and `iphone-receipt`, which are dark only). Committed. |
 | `docs/design/penny-ios/previews/manifest.json` | For each image: the card, its viewport, the card's SHA-256, the image's SHA-256, and the hashes of the shared `assets/` it was rendered with |
 | `docs/design/penny-ios/render.mjs` | Renders the baselines (`2` is the scale), or checks them (`--check`) |
 | `docs/design/penny-ios/compare.mjs` | Builds side-by-side review sheets from a capture run |
@@ -103,6 +103,7 @@ Both capture suites passed against a fresh environment: iOS on the iPhone 18 Pro
 
 - **iOS** follows the cards closely on iPhone. The differences are mostly approved platform adaptations: the Add entry tab, popovers, local-first saving, and emails as names. The follow-ups (MAZ-179 to MAZ-182) cover the missing hero glow, two keyboard overlaps (sign-in, empty search), entry gaps (category grid, shared trips in the picker, the amount separator), shared and trip detail layouts, and iPad (sidebar households and trips, the two-column Add entry, a collapsing portrait detail pane).
 - **The web** shows every card's content, with web forms and dialogs in place of iOS sheets (approved). At phone width it departs further from the iPhone cards. The follow-ups (MAZ-173 to MAZ-178) cover the shell (More instead of the Settings sheet, sidebar households and trips), Home and Insights hierarchy, Activity's layout, shared actions, a stale-payment message that blames the wrong edit, recurring rows that break at 402px, and sign-in, sign-out and feedback copy.
+- **Emailed receipts (MAZ-184).** The 21 receipt cards (`iphone-receipt-*`, `ipad-receipt-*`, `web-receipt-*`) were added after this review. Their states are `blockedBy` in `redesign-states.json`: the full-stack seed has no receipt address or inbox items yet, so neither capture suite can open them, and their verdicts are recorded as `blocked` (`not-applicable` for the `web-*` cards on iOS). The counts above cover the 61 cards reviewed on 2026-11-12.
 
 ## Review scenarios
 

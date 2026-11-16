@@ -96,6 +96,8 @@ services:
       Backend__ShutdownTimeoutSeconds: "30"
     volumes:
       - penny-receipts:/var/lib/penny/receipts
+    # `render` reaches penny-render (emailed receipts, MAZ-184) and nothing else.
+    networks: [penny, render]
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -109,6 +111,49 @@ services:
     # are released before the container is killed.
     stop_grace_period: 45s
     restart: unless-stopped
+
+  # Emailed receipts (MAZ-184): HTML-to-PDF for received mail, started with
+  # COMPOSE_PROFILES=bundled-postgres,email-receipts. Headless Chromium with JavaScript
+  # off renders sanitized email HTML. It is attached only to the `render` network,
+  # which is internal (no route out): it can't reach the internet, PostgreSQL or the
+  # API's other ports. The API calls it; it never calls back. Every URL but its own
+  # temporary files is denied inside Chromium too, as a second layer.
+  # Flags are pinned by apps/backend/tests/.../RendererIsolationTests.
+  penny-render:
+    profiles: [email-receipts]
+    image: docker.io/gotenberg/gotenberg:8.39.0@sha256:13672f317b443c793e972b1bd2155ec62a3e7b6891b411e8196442cc053ee5f5
+    command:
+      - gotenberg
+      - --api-timeout=30s
+      - --api-disable-download-from
+      - --chromium-disable-javascript
+      - --chromium-deny-list=^(?!file:///tmp/).*
+      - --chromium-deny-private-ips
+      - --chromium-deny-public-ips
+      - --chromium-max-queue-size=4
+      - --chromium-restart-after=50
+      - --libreoffice-disable-routes
+      - --pdfengines-disable-routes
+      - --webhook-disable
+      - --prometheus-disable-collect
+      - --log-level=error
+    read_only: true
+    tmpfs:
+      - /tmp:size=256m
+      - /home/gotenberg:size=64m
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: ${PENNY_RENDER_MEMORY:-1g}
+    cpus: ${PENNY_RENDER_CPUS:-1}
+    pids_limit: 512
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://127.0.0.1:3000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+    networks: [render]
 
   web:
     image: ${PENNY_WEB_IMAGE:-ghcr.io/mfalicoff/penny-web:latest}
@@ -142,6 +187,9 @@ networks:
     ipam:
       config:
         - subnet: ${PENNY_SUBNET:-172.31.63.0/24}
+  # No route out: penny-render can talk only to the API.
+  render:
+    internal: true
 
 volumes:
   penny-postgres:

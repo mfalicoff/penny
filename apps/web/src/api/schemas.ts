@@ -283,3 +283,66 @@ export const sharedRecurringSchema = z.object({
   revision: z.number().int().min(0),
 });
 export type SharedRecurring = z.infer<typeof sharedRecurringSchema>;
+
+/* ---------- emailed receipts (server MAZ-184) ---------- */
+
+/** A live private receipt address. Times are Unix milliseconds. */
+export const receiptEmailAddressSchema = z.object({
+  address: z.string().min(3).max(320),
+  createdAt: instant,
+  expiresAt: instant,
+  lastReceivedAt: instant.nullable(),
+  allowedSenders: z.array(z.string()).max(50),
+});
+export type ReceiptEmailAddress = z.infer<typeof receiptEmailAddressSchema>;
+
+/** `GET`, `POST` and `PATCH /api/receipt-email`. `enabled: false`: the server has the feature off, so nothing is shown. */
+export const receiptEmailSchema = z.object({
+  enabled: z.boolean(),
+  domain: z.string().nullable(),
+  address: receiptEmailAddressSchema.nullable(),
+});
+export type ReceiptEmail = z.infer<typeof receiptEmailSchema>;
+
+/** `PATCH /api/receipt-email` body: extend the lifetime, or replace the allowed senders. */
+export const receiptEmailUpdateSchema = z.object({
+  extend: z.boolean().optional(),
+  allowedSenders: z.array(z.string().max(254)).max(50).optional(),
+});
+export type ReceiptEmailUpdate = z.infer<typeof receiptEmailUpdateSchema>;
+
+/** One file of an inbox item: the rendered email or an attachment. `name` is display text only, never markup. */
+export const receiptInboxFileSchema = z.object({
+  receiptId: id,
+  kind: z.enum(["email", "attachment"]),
+  name: z.string().max(255),
+  mime: z.string().max(100),
+  sizeBytes: z.number().int().min(0),
+  linked: z.boolean(),
+  uri: z.string().max(500),
+});
+export type ReceiptInboxFile = z.infer<typeof receiptInboxFileSchema>;
+
+/** One received email in the owner-only inbox. `from` and `subject` are plain text, never markup. */
+export const receiptInboxItemSchema = z.object({
+  id,
+  from: z.string(),
+  subject: z.string(),
+  receivedAt: instant,
+  status: z.enum(["to_attach", "partly_attached", "attached"]),
+  senderVerified: z.boolean(),
+  expiresAt: instant.nullable(),
+  attachedAt: instant.nullable(),
+  files: z.array(receiptInboxFileSchema),
+});
+export type ReceiptInboxItem = z.infer<typeof receiptInboxItemSchema>;
+
+export const receiptInboxPageSchema = z.object({
+  items: z.array(receiptInboxItemSchema),
+  next: z.string().nullable(),
+});
+export type ReceiptInboxPage = z.infer<typeof receiptInboxPageSchema>;
+
+/** Discard and Done: files deleted, and files kept because something links them. */
+export const receiptInboxCleanupSchema = z.object({ deleted: z.number().int().min(0), kept: z.number().int().min(0) });
+export type ReceiptInboxCleanup = z.infer<typeof receiptInboxCleanupSchema>;

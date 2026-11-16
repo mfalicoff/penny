@@ -72,7 +72,7 @@ public final class PushNotifications {
     /// The person chose Not now on the Shared tab's prompt (this device, `penny.push.promptDismissed`).
     public private(set) var promptDismissed: Bool
     /// A tapped notification waiting for an account to open in.
-    private(set) var pending: HouseholdNotification?
+    private(set) var pending: NotificationTarget?
 
     @ObservationIgnored let system: any NotificationSystem
     @ObservationIgnored private let store: PushRegistrationStore
@@ -171,6 +171,12 @@ public final class PushNotifications {
     /// The person opened a notification (cold start or not). `notification` is nil for a
     /// payload that isn't a valid household target: the app then just opens.
     public func didOpen(_ notification: HouseholdNotification?) {
+        didOpen(target: notification.map(NotificationTarget.household))
+    }
+
+    /// A household or a receipt inbox notification (MAZ-184): either one waits for its account
+    /// the same way. A receipt notification only opens the inbox item; it never attaches anything.
+    public func didOpen(target notification: NotificationTarget?) {
         guard let notification else { return }
         pending = notification
         deliverPending()
@@ -182,6 +188,10 @@ public final class PushNotifications {
     /// one made with another device's key) shows none. Only an install that never registered
     /// has no owner; APNs cannot have reached it.
     public func showsInForeground(_ notification: HouseholdNotification?) -> Bool {
+        showsInForeground(target: notification.map(NotificationTarget.household))
+    }
+
+    public func showsInForeground(target notification: NotificationTarget?) -> Bool {
         guard notification != nil, let account else { return false }
         return registrar.owner.map { $0 == account.owner } ?? true
     }
@@ -227,15 +237,15 @@ public final class PushNotifications {
             _ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse
         ) async {
             guard response.actionIdentifier == UNNotificationDefaultActionIdentifier else { return }
-            let notification = HouseholdNotification(userInfo: response.notification.request.content.userInfo)
-            await notifications.didOpen(notification)
+            let notification = NotificationTarget(userInfo: response.notification.request.content.userInfo)
+            await notifications.didOpen(target: notification)
         }
 
         public nonisolated func userNotificationCenter(
             _ center: UNUserNotificationCenter, willPresent notification: UNNotification
         ) async -> UNNotificationPresentationOptions {
-            let target = HouseholdNotification(userInfo: notification.request.content.userInfo)
-            return await notifications.showsInForeground(target) ? [.banner, .list, .sound] : []
+            let target = NotificationTarget(userInfo: notification.request.content.userInfo)
+            return await notifications.showsInForeground(target: target) ? [.banner, .list, .sound] : []
         }
     }
 #endif

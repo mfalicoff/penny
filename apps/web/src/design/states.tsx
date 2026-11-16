@@ -151,6 +151,10 @@ export interface ToastInput {
   tone?: "success" | "error";
   /** Shows an Undo button that calls this, then dismisses. */
   onUndo?: () => void;
+  /** Another action before Undo (e.g. View entry). It calls `onClick`, then dismisses. */
+  action?: { label: string; onClick: () => void };
+  /** How long it stays, instead of `TOAST_MS`. */
+  durationMs?: number;
 }
 
 interface ToastState extends ToastInput {
@@ -226,7 +230,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     setFocused(false);
   }, []);
 
-  const delay = toastDelay({ hovered, focused });
+  const held = toastDelay({ hovered, focused });
+  const delay = held === TOAST_MS && toast?.durationMs ? toast.durationMs : held;
   useEffect(() => {
     if (!toast || delay === null) return;
     const timer = window.setTimeout(dismiss, delay);
@@ -264,6 +269,17 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               <div className="pk-toast__title">{toast.title}</div>
               {toast.detail ? <div className="pk-toast__sub">{toast.detail}</div> : null}
             </div>
+            {toast.action ? (
+              <Button
+                variant="quiet"
+                onClick={() => {
+                  toast.action?.onClick();
+                  dismiss();
+                }}
+              >
+                {toast.action.label}
+              </Button>
+            ) : null}
             {toast.onUndo ? (
               <Button
                 variant="quiet"

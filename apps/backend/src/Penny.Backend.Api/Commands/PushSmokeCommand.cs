@@ -71,7 +71,7 @@ internal static partial class PushSmokeCommand
                             environment,
                             "Penny push test",
                             "If you can read this, APNs delivery works.",
-                            new PushPayload(
+                            new HouseholdPushPayload(
                                 "smoke-test",
                                 now.ToString(
                                     "yyyy-MM",
