@@ -601,6 +601,153 @@
       ]
     },
     {
+      "id": "iphone-receipt-attach-confirm",
+      "source": "docs/design/penny-ios/iphone/receipt-attach-confirm.html",
+      "sourceSha256": "2d870ae1172592ea80cd7bf48643774724ca85251bfc78677cec712f6a8b99d5",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-receipt-attach-confirm.light.png",
+          "sha256": "dcce44784114e238ba592486cf069c63a4469f00a08c7032698ce3e2e2dbf83f"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-receipt-attach-confirm.dark.png",
+          "sha256": "a55bf801d238f4717fb1b773aacd1ef0066c663c9d8b4c329a04143959a2072f"
+        }
+      ]
+    },
+    {
+      "id": "iphone-receipt-attach-entry",
+      "source": "docs/design/penny-ios/iphone/receipt-attach-entry.html",
+      "sourceSha256": "1ba512a0b3429aec994d28aadbe7cc6ef84c8be032c7d944a6643c5326ef2ad1",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-receipt-attach-entry.light.png",
+          "sha256": "9f1d6be5c0cd5d1555af9cafab665557f499302179044fc8acf73d60b3a73dfd"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-receipt-attach-entry.dark.png",
+          "sha256": "d3c624fce19a723d460cd785634359cdd793200beec92760aed34ec5a99a769a"
+        }
+      ]
+    },
+    {
+      "id": "iphone-receipt-attach-file",
+      "source": "docs/design/penny-ios/iphone/receipt-attach-file.html",
+      "sourceSha256": "c92b4626e1e0f7a1e3150d9e97b4bd0d76e8887df766c6d462050cb54a9b4369",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-receipt-attach-file.light.png",
+          "sha256": "3aa562c0396c7b91939cc82687b60e2db19f1bfa3388e455a897ff99578e5c2b"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-receipt-attach-file.dark.png",
+          "sha256": "37666421db1efea2e744982054fe0ecc88d825fda184c56ebb1177e1b39991e9"
+        }
+      ]
+    },
+    {
+      "id": "iphone-receipt-attached-toast",
+      "source": "docs/design/penny-ios/iphone/receipt-attached-toast.html",
+      "sourceSha256": "194d6958fa598f6d699d596e295953bb1db160023e3aa05c0c74e77b1202da20",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-receipt-attached-toast.light.png",
+          "sha256": "a0468fb406cc2d605eccb0f998101c58da6d59f830b5774df9581747b1a02c44"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-receipt-attached-toast.dark.png",
+          "sha256": "b77463adf8a35deca181c5100aa1ad7772d70c0b0d8f1ffb7a20153bc71c501a"
+        }
+      ]
+    },
+    {
+      "id": "iphone-receipt-email-settings",
+      "source": "docs/design/penny-ios/iphone/receipt-email-settings.html",
+      "sourceSha256": "c06ccbeba0385f9f6ca4665352cb59d53268e63e4898ba4855e6cd667e3881ee",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-receipt-email-settings.light.png",
+          "sha256": "28df59ecd3c3e6efb396e53ba578f9da6f4bfa0b51947c157a2def303a05d8d4"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-receipt-email-settings.dark.png",
+          "sha256": "1982a3e0774820a171edf679abe2e51a01a11fc476a757e60bd94fcd2e960b3b"
+        }
+      ]
+    },
+    {
+      "id": "iphone-receipt-inbox-item",
+      "source": "docs/design/penny-ios/iphone/receipt-inbox-item.html",
+      "sourceSha256": "5517bcdc599b3fdf4d3ba27fad26683f07f38bc35181a5fad542fac93f694218",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-receipt-inbox-item.light.png",
+          "sha256": "591c0201543bc2bce5b6ea62dabc0664b85578afa2f40f384de872dbb7f29bf0"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-receipt-inbox-item.dark.png",
+          "sha256": "9ce20613af16fd3cc638c0cff831b1368ce1373576ea3d77c32067df05f401f1"
+        }
+      ]
+    },
+    {
+      "id": "iphone-receipt-inbox",
+      "source": "docs/design/penny-ios/iphone/receipt-inbox.html",
+      "sourceSha256": "f5653acaa2ed309bc535828efbc65f7b6e57bf608890e710e6bcae9ca9404ba0",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-receipt-inbox.light.png",
+          "sha256": "b38c19ec4c906dba072a94bfe372ec8746b68ae0f859a5719147ad89a33087d6"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-receipt-inbox.dark.png",
+          "sha256": "c64f86929c549de89028eb085ea6d3d5b2c32bb225770ffa32883207aa8af83c"
+        }
+      ]
+    },
+    {
       "id": "iphone-receipt",
       "source": "docs/design/penny-ios/iphone/receipt.html",
       "sourceSha256": "08b74fe26bd5ea6015932cd48eddab90615559ded294ff21461ed9b8184a6b5d",
@@ -1079,6 +1226,153 @@
       ]
     },
     {
+      "id": "ipad-receipt-attach-confirm",
+      "source": "docs/design/penny-ios/ipad/receipt-attach-confirm.html",
+      "sourceSha256": "aaee1b33042f9d53cef58f02cfb672f8dcb134b941ae50a0d4cc30587fc0e597",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/ipad-receipt-attach-confirm.light.png",
+          "sha256": "9a72daa412e7a1092341ee3b33fe5ce04e53245bc121296015113ea6e5750644"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/ipad-receipt-attach-confirm.dark.png",
+          "sha256": "c26625b119b322034e67f30ecb2cb5f3307dee37611f24ca13d0ed248b7eb7ba"
+        }
+      ]
+    },
+    {
+      "id": "ipad-receipt-attach-entry",
+      "source": "docs/design/penny-ios/ipad/receipt-attach-entry.html",
+      "sourceSha256": "154cd566f55d0bfb624c6bad58f918b0bfe119b5508c701ba4e62314dde4a661",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/ipad-receipt-attach-entry.light.png",
+          "sha256": "164b7260effe9d6151e3c7dc3f947a1599d730028405a82087f198940f610c09"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/ipad-receipt-attach-entry.dark.png",
+          "sha256": "bc73f307d7cc3e48ebb2c344890ad3d42aa1c6ec4bca7cdb4e05a38c01550a31"
+        }
+      ]
+    },
+    {
+      "id": "ipad-receipt-attach-file",
+      "source": "docs/design/penny-ios/ipad/receipt-attach-file.html",
+      "sourceSha256": "c978110a8f545fab30ac1d68c4aec78b6947aa74b70c81e678c29f853df6ffe9",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/ipad-receipt-attach-file.light.png",
+          "sha256": "32ad3c3cae30875f4f0e77e769d9c73962eca84a863785f3905cc5ba74af00d2"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/ipad-receipt-attach-file.dark.png",
+          "sha256": "15121c71ccbfe7872ee1b3fb1aada2e6145393b5a71d854f2816f72e214123ff"
+        }
+      ]
+    },
+    {
+      "id": "ipad-receipt-attached-toast",
+      "source": "docs/design/penny-ios/ipad/receipt-attached-toast.html",
+      "sourceSha256": "4f731643add4174debeb711273937ecf46aa1e2cb58cdbc5238ee982d7f15ced",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/ipad-receipt-attached-toast.light.png",
+          "sha256": "3f371ef92f02dea88c618aadf8b2135f64d72bd6ef78f6818ee68f13d5baac79"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/ipad-receipt-attached-toast.dark.png",
+          "sha256": "98b176df013319dc0244dd91d007e844811a26a0ebc19b430c626fbd544eb9fe"
+        }
+      ]
+    },
+    {
+      "id": "ipad-receipt-email-settings",
+      "source": "docs/design/penny-ios/ipad/receipt-email-settings.html",
+      "sourceSha256": "a294291093181a3141802ff65ebb07c8ace68d908731c3a1029f9605572b373e",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/ipad-receipt-email-settings.light.png",
+          "sha256": "13e8414f181dcc15f178856de1f02f0543c023055048e60c48deea70da06ac82"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/ipad-receipt-email-settings.dark.png",
+          "sha256": "3d8966b24c10597f81f0a401b04006808fbf9c38032c4b76b3286617238b774b"
+        }
+      ]
+    },
+    {
+      "id": "ipad-receipt-inbox-item",
+      "source": "docs/design/penny-ios/ipad/receipt-inbox-item.html",
+      "sourceSha256": "45c4e04a4e1814a3b5aec1ce58b9a50b29992d091dbf7875829f3fba791796b5",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/ipad-receipt-inbox-item.light.png",
+          "sha256": "8499d6087f7597688ff1a16155f4a201469874e2a354f88ab3e23619de39e8a2"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/ipad-receipt-inbox-item.dark.png",
+          "sha256": "f4a959806b18878d858051be679459b1aeef6415b682da0a8cbbd94ee2c81a2c"
+        }
+      ]
+    },
+    {
+      "id": "ipad-receipt-inbox",
+      "source": "docs/design/penny-ios/ipad/receipt-inbox.html",
+      "sourceSha256": "944cb36ccb61bb1a8548c207ef1f5843bbf3a59dfc759dbebb612f6a7eef7321",
+      "viewport": {
+        "w": 1290,
+        "h": 914
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/ipad-receipt-inbox.light.png",
+          "sha256": "ddb9bc8dcad4a65d747c7d8e804f2a10e1a5f1349c5b0b5e10fcb4cef48023e6"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/ipad-receipt-inbox.dark.png",
+          "sha256": "0c26789acf1dcaa47c40c131b2490814128ac31e82ecf72103bce75c7d570346"
+        }
+      ]
+    },
+    {
       "id": "ipad-settings",
       "source": "docs/design/penny-ios/ipad/settings.html",
       "sourceSha256": "8edf0f1e534cd7637c0e5a2e7bc808bb13e9c73d8c02139433e8db560bef2283",
@@ -1243,6 +1537,153 @@
           "appearance": "dark",
           "file": "previews/web-insights.dark.png",
           "sha256": "4a3e9b20bad33b561a65c4bc200b14d3c0a909b49f502efa14a61420dc4da9d3"
+        }
+      ]
+    },
+    {
+      "id": "web-receipt-attach-confirm",
+      "source": "docs/design/penny-ios/web/receipt-attach-confirm.html",
+      "sourceSha256": "c31680fe2da59c87a31bd7b7dc13e910b31fcee82933608a342ec3de68e84b3c",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-receipt-attach-confirm.light.png",
+          "sha256": "81027ebc921171ae5103d452f0383fee05ded40b62b8141cff3ed1a1cbf161f6"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-receipt-attach-confirm.dark.png",
+          "sha256": "27b81ae3a6d4238bed997f1696aa6ddd5b7aba8ecb4ea1c4eab1941070ee2edf"
+        }
+      ]
+    },
+    {
+      "id": "web-receipt-attach-entry",
+      "source": "docs/design/penny-ios/web/receipt-attach-entry.html",
+      "sourceSha256": "1a93738c0fa77b6074d5957c8d48d2479ed8e8761476a3f297e3ad281edf6633",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-receipt-attach-entry.light.png",
+          "sha256": "586faf1b4a29639fbdc1b7f8797a7323eb1e91df4f652ae79d8eac280229a822"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-receipt-attach-entry.dark.png",
+          "sha256": "fc39b1c90058ab2384710099fae9aa813075306a840f55a1479a2a9f915a6195"
+        }
+      ]
+    },
+    {
+      "id": "web-receipt-attach-file",
+      "source": "docs/design/penny-ios/web/receipt-attach-file.html",
+      "sourceSha256": "95a1ea19fe4fd80fd7b2c847543cb8d8f4fa539705c32d07b46df468a1396b0e",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-receipt-attach-file.light.png",
+          "sha256": "74e36593b72d4af7c9f42efc471814ffec9093fae696ae6c3cc160867b268a14"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-receipt-attach-file.dark.png",
+          "sha256": "932ee4f943c42ca6c31cf17873c0e0596717b109767c8ddd32a8922016f2f222"
+        }
+      ]
+    },
+    {
+      "id": "web-receipt-attached-toast",
+      "source": "docs/design/penny-ios/web/receipt-attached-toast.html",
+      "sourceSha256": "d0f4772736d2f664e8dd074004cb74db7d7bdab1afd719a6ac087e3a4d26bfae",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-receipt-attached-toast.light.png",
+          "sha256": "3d233f3f619b954bce3c1c9ad98fe26b4d8c05cedcfd9dc1eec09e13acc0e1fe"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-receipt-attached-toast.dark.png",
+          "sha256": "cf709d8b8dd44bf0e10e0ac6b90e8d64a18bb93eceae3f778935c0251649d0ba"
+        }
+      ]
+    },
+    {
+      "id": "web-receipt-email-settings",
+      "source": "docs/design/penny-ios/web/receipt-email-settings.html",
+      "sourceSha256": "7d7f7b5297420abe135dcb0a0478a488d87abb8da35eafb7c17803fdb945ab86",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-receipt-email-settings.light.png",
+          "sha256": "23be9d154928f0b6167068377bacceadad52c8f069e49068c944419d4ef39117"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-receipt-email-settings.dark.png",
+          "sha256": "f62e4de830ac08c5e3dbcca6903f10a47ba014cdae9120b66097ff48f858219d"
+        }
+      ]
+    },
+    {
+      "id": "web-receipt-inbox-item",
+      "source": "docs/design/penny-ios/web/receipt-inbox-item.html",
+      "sourceSha256": "98119a3adb2fd6959f3cd03c22d41a8025edddf6fe0381c6dbf2075514f57bda",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-receipt-inbox-item.light.png",
+          "sha256": "633f8617827c470fe0e5078b3a09e498a2cd31bd836ff2aa104e92c903b96555"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-receipt-inbox-item.dark.png",
+          "sha256": "2f388d190f427f10b162899a2613687e9f629982cf9057fcd2a5601b38dac06f"
+        }
+      ]
+    },
+    {
+      "id": "web-receipt-inbox",
+      "source": "docs/design/penny-ios/web/receipt-inbox.html",
+      "sourceSha256": "e6c49423eae11a8f03b5e3bdd0be1cfec8e0445d01575c6b8f8877319aac2a5b",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/web-receipt-inbox.light.png",
+          "sha256": "28b62d12a218f13e252cfe284109c9eee7b92d90fcc9af94e331489f4bed9519"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/web-receipt-inbox.dark.png",
+          "sha256": "e421dbd74fdf0cc60079d73989ed6262daff716f5b78f8c98bb14eec506bcfb8"
         }
       ]
     },

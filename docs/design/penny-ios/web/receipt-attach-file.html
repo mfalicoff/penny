@@ -1,0 +1,103 @@
+<!-- @dsCard group="Web" name="Attach receipt · file" viewport="1520x980" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · Web · Attach receipt file</title>
+<link rel="stylesheet" href="../assets/penny.css"><link rel="stylesheet" href="../assets/web.css">
+<script src="../assets/icons.js"></script><script src="../assets/sankey.js"></script><script src="../assets/web.js"></script>
+<script>WEB_NAV[0].items.push(["receipts", "receipt", "Receipts to attach", "", "5"]); WEB_NAV[1].items[0][2] = "Flat 4B";</script>
+<style>
+  .ibar { display: flex; align-items: center; gap: 12px; }
+  .choice { display: flex; background: var(--fill); border-radius: 10px; padding: 3px; height: 36px; width: 260px; }
+  .choice div { flex: 1; display: grid; place-items: center; font-size: 13.5px; font-weight: 600; border-radius: 8px; }
+  .choice .on { background: var(--surface); box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+  .dark .choice .on { background: var(--surface-2); }
+  .ilist { margin-top: 16px; max-width: 880px; padding: 6px; }
+  .wrow { display: grid; grid-template-columns: 36px minmax(0,1fr) auto; grid-template-areas: "icon sender date" "icon subject subject" "icon meta meta"; column-gap: 12px; row-gap: 2px; padding: 12px 14px; border-radius: 12px; position: relative; }
+  .wrow + .wrow::before { content: ""; position: absolute; top: 0; left: 62px; right: 14px; border-top: .5px solid var(--separator); }
+  .wrow.focus { box-shadow: 0 0 0 2.5px var(--tint); }
+  .wrow .ri { grid-area: icon; width: 36px; height: 36px; border-radius: 10px; background: var(--fill); color: var(--label-2); display: grid; place-items: center; }
+  .wrow .ri [data-i] { width: 18px; height: 18px; }
+  .wrow b { grid-area: sender; font-size: 15px; font-weight: 600; }
+  .wrow time { grid-area: date; font-size: 13px; color: var(--label-2); }
+  .wrow .s { grid-area: subject; font-size: 14px; color: var(--label-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .wrow .m { grid-area: meta; font-size: 12.5px; color: var(--label-2); display: flex; align-items: center; gap: 8px; margin-top: 3px; }
+  .wrow .m .exp { color: var(--pending); font-weight: 600; }
+  .toast { position: absolute; z-index: 30; left: 50%; bottom: 28px; transform: translateX(-50%); width: 560px; display: flex; align-items: center; gap: 12px; padding: 10px 10px 10px 16px; border-radius: 16px; }
+  .toast > [data-i] { width: 20px; height: 20px; color: var(--tint); }
+  .toast .t { flex: 1; font-size: 14.5px; font-weight: 600; }
+  .toast .btn [data-i] { width: 14px; height: 14px; }
+
+  .modal { left: 50%; top: 96px; transform: translateX(-50%); }
+  .mh { flex-wrap: wrap; }
+  .mh .desc { flex-basis: 100%; font-size: 14px; color: var(--label-2); margin-top: -4px; }
+  .mbody { padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+  .meta { font-size: 14px; color: var(--label-2); }
+  .flist { border-radius: 14px; box-shadow: 0 0 0 .5px var(--separator); overflow: hidden; }
+  .fitem { display: flex; align-items: center; gap: 12px; padding: 10px 12px; }
+  .fitem + .fitem { border-top: .5px solid var(--separator); }
+  .fthumb { width: 40px; height: 48px; border-radius: 8px; background: var(--surface-2); box-shadow: inset 0 0 0 .5px var(--separator); display: grid; place-items: center; color: var(--label-2); flex: none; }
+  .fthumb [data-i] { width: 20px; height: 20px; }
+  .fitem .t { flex: 1; } .fitem b { display: block; font-size: 14.5px; } .fitem span { font-size: 13px; color: var(--label-2); }
+  .radio { width: 18px; height: 18px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--label-3); flex: none; }
+  .radio.on { box-shadow: inset 0 0 0 5px var(--tint); }
+  .fitem.on { background: var(--tint-soft); }
+  .sh { font-size: 12px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .04em; }
+  .crow { display: grid; grid-template-columns: 32px minmax(0,1fr) auto; column-gap: 12px; align-items: center; padding: 9px 12px; }
+  .crow + .crow { border-top: .5px solid var(--separator); }
+  .crow .ci { width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; grid-row: span 2; color: #fff; }
+  .crow .ci [data-i] { width: 16px; height: 16px; --sw: 40px; }
+  .crow b { font-size: 14.5px; font-weight: 600; } .crow .mt { font-size: 12.5px; color: var(--label-2); grid-column: 2; }
+  .crow .am { grid-column: 3; grid-row: 1 / span 2; align-self: center; font-weight: 600; font-size: 14.5px; }
+  .lab { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .input { height: 38px; border-radius: 10px; background: var(--surface-2); box-shadow: inset 0 0 0 .5px var(--separator); display: flex; align-items: center; padding: 0 12px; font-size: 14.5px; color: var(--label-3); gap: 8px; }
+  .input [data-i] { width: 15px; height: 15px; }
+  .confirm { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .confirm > [data-i] { width: 18px; height: 18px; color: var(--label-2); }
+  .cfile { width: 100%; display: flex; gap: 14px; align-items: center; padding: 12px; border-radius: 14px; box-shadow: 0 0 0 .5px var(--separator); }
+  .cpaper { width: 72px; height: 96px; border-radius: 6px; background: #FBFAF7; box-shadow: 0 1px 4px rgba(0,0,0,.14); padding: 9px 8px; display: flex; flex-direction: column; gap: 5px; flex: none; }
+  .cpaper i { display: block; height: 3px; border-radius: 2px; background: #D9D5CE; }
+  .cpaper i.h { height: 6px; width: 60%; background: #BDB7AE; margin-bottom: 3px; }
+  .cfile .t b { display: block; font-size: 15px; } .cfile .t span { display: block; font-size: 13px; color: var(--label-2); }
+  .cfile .t .btn { margin-top: 6px; }
+  .ecard { width: 100%; display: flex; gap: 12px; align-items: center; padding: 12px; border-radius: 14px; background: var(--surface-2); box-shadow: inset 0 0 0 .5px var(--separator); }
+  .ecard .ci { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; color: #fff; }
+  .ecard .ci [data-i] { width: 18px; height: 18px; --sw: 40px; }
+  .ecard .t { flex: 1; } .ecard b { display: block; font-size: 15px; } .ecard span { font-size: 13px; color: var(--label-2); }
+  .ecard .am { font-weight: 600; font-size: 15px; }
+  .notes { display: flex; flex-direction: column; gap: 8px; }
+  .notes div { display: flex; gap: 10px; font-size: 14px; line-height: 1.4; padding: 10px 12px; border-radius: 12px; background: var(--fill); }
+  .notes [data-i] { width: 16px; height: 16px; color: var(--label-2); flex: none; margin-top: 2px; }
+  .fn { font-style: italic; }
+  .btn.dq { background: transparent; box-shadow: none; color: var(--danger); }
+  .btn.q { background: transparent; box-shadow: none; }
+</style></head>
+<body class="canvas">
+<div class="browser" data-active="receipts" data-url="penny.example.com/receipts?status=to_attach">
+  <main class="wmain">
+    <div class="wtop"><h1>Receipts to attach</h1><div class="sp"></div>
+      <div class="wsearch"><i data-i="search"></i>Search entries<kbd>⌘K</kbd></div>
+      <div class="btn primary"><i data-i="add"></i>Add entry <kbd>N</kbd></div></div>
+    <div class="wbody">
+      <div class="ibar"><div class="choice"><div class="on">To attach</div><div>Attached</div></div></div>
+      <div class="panel ilist">
+          <div class="wrow"><span class="ri"><i data-i="receipt"></i></span><b>Acme Store</b><time>Nov 12</time><span class="s">Your Acme Store receipt for order 4412</span><span class="m">2 files</span></div>
+          <div class="wrow"><span class="ri"><i data-i="receipt"></i></span><b>Mill St. Coffee</b><time>Nov 12</time><span class="s">Your receipt from Mill St. Coffee</span><span class="m">1 file</span></div>
+          <div class="wrow"><span class="ri"><i data-i="receipt"></i></span><b>Fabrikam Hardware</b><time>Nov 11</time><span class="s">Order 2291: your invoice and delivery note</span><span class="m">2 files · 1 of 2 attached</span></div>
+          <div class="wrow"><span class="ri"><i data-i="receipt"></i></span><b>Northwind Rail</b><time>Nov 10</time><span class="s">Your e-ticket and receipt</span><span class="m">1 file <span class="tag pend"><i data-i="alert-circle"></i>Sender not verified</span></span></div>
+          <div class="wrow"><span class="ri"><i data-i="receipt"></i></span><b>Contoso Books</b><time>Oct 16</time><span class="s">Thanks for your order</span><span class="m">1 file · <span class="exp">Deleted in 3 days</span></span></div>
+      </div>
+    </div>
+  </main>
+  <div class="scrimw"></div>
+  <div class="modal" style="width:560px">
+    <div class="mh"><h3>Which file?</h3><div class="btn icon q"><i data-i="close"></i></div><div class="desc">Choose the receipt to attach. Usually it's the merchant's invoice rather than the email itself.</div></div>
+    <div class="mbody">
+      <div class="flist">
+        <div class="fitem"><span class="radio"></span><div class="t"><b>Email</b><span>Email · 38 KB</span></div></div>
+        <div class="fitem on"><span class="radio on"></span><div class="t"><b>acme-receipt-4412.pdf</b><span>PDF · 84 KB</span></div></div>
+      </div>
+      <div><span class="btn q" style="color:var(--tint-text)"><i data-i="document-text"></i>Preview</span></div>
+    </div>
+    <div class="mf"><span style="flex:1"></span><span class="btn">Cancel</span><span class="btn primary">Next</span></div>
+  </div>
+</div>
+</body></html>

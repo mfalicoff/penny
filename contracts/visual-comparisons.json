@@ -1642,6 +1642,104 @@
       }
     },
     {
+      "id": "iphone-receipt-inbox",
+      "view": "receipt inbox, To attach: Acme Store (2 files), Mill St. Coffee, Fabrikam Hardware (1 of 2 attached), Northwind Rail (sender not verified) and Contoso Books (deleted in 3 days)",
+      "native": {
+        "status": "blocked",
+        "owner": "MAZ-184",
+        "note": "No seeded receipt inbox yet (full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184))"
+      },
+      "web": {
+        "status": "blocked",
+        "owner": "MAZ-184",
+        "note": "No seeded receipt inbox yet (full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184))"
+      }
+    },
+    {
+      "id": "iphone-receipt-inbox-item",
+      "view": "inbox email from Acme Store: the email and acme-receipt-4412.pdf, with Attach to…, New expense and Discard",
+      "native": {
+        "status": "blocked",
+        "owner": "MAZ-184",
+        "note": "No seeded receipt inbox yet (full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184))"
+      },
+      "web": {
+        "status": "blocked",
+        "owner": "MAZ-184",
+        "note": "No seeded receipt inbox yet (full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184))"
+      }
+    },
+    {
+      "id": "iphone-receipt-attach-file",
+      "view": "attach sheet, which file: Acme Store's email with acme-receipt-4412.pdf preselected",
+      "native": {
+        "status": "blocked",
+        "owner": "MAZ-184",
+        "note": "No seeded receipt inbox yet (full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184))"
+      },
+      "web": {
+        "status": "blocked",
+        "owner": "MAZ-184",
+        "note": "No seeded receipt inbox yet (full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184))"
+      }
+    },
+    {
+      "id": "iphone-receipt-attach-entry",
+      "view": "attach sheet, which entry: five suggested expenses without a receipt within 7 days of the email",
+      "native": {
+        "status": "blocked",
+        "owner": "MAZ-184",
+        "note": "No seeded receipt inbox yet (full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184))"
+      },
+      "web": {
+        "status": "blocked",
+        "owner": "MAZ-184",
+        "note": "No seeded receipt inbox yet (full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184))"
+      }
+    },
+    {
+      "id": "iphone-receipt-attach-confirm",
+      "view": "attach sheet, confirm acme-receipt-4412.pdf on the shared expense Printer ink (Flat 4B), which already has invoice-0412.pdf",
+      "native": {
+        "status": "blocked",
+        "owner": "MAZ-184",
+        "note": "No seeded receipt inbox yet (full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184))"
+      },
+      "web": {
+        "status": "blocked",
+        "owner": "MAZ-184",
+        "note": "No seeded receipt inbox yet (full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184))"
+      }
+    },
+    {
+      "id": "iphone-receipt-attached-toast",
+      "view": "receipt inbox after attaching Mill St. Coffee's receipt to Coffee at Mill St., with View entry and Undo",
+      "native": {
+        "status": "blocked",
+        "owner": "MAZ-184",
+        "note": "No seeded receipt inbox yet (full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184))"
+      },
+      "web": {
+        "status": "blocked",
+        "owner": "MAZ-184",
+        "note": "No seeded receipt inbox yet (full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184))"
+      }
+    },
+    {
+      "id": "iphone-receipt-email-settings",
+      "view": "receipt email settings: a live address until 2027-02-10 and two allowed senders",
+      "native": {
+        "status": "blocked",
+        "owner": "MAZ-184",
+        "note": "No seeded receipt inbox yet (full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184))"
+      },
+      "web": {
+        "status": "blocked",
+        "owner": "MAZ-184",
+        "note": "No seeded receipt inbox yet (full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184))"
+      }
+    },
+    {
       "id": "ipad-home",
       "view": "iPad home dashboard, October 2026",
       "native": {
@@ -1908,6 +2006,104 @@
       }
     },
     {
+      "id": "ipad-receipt-inbox",
+      "view": "iPad receipt inbox, To attach: Acme Store (2 files), Mill St. Coffee, Fabrikam Hardware (1 of 2 attached), Northwind Rail (sender not verified) and Contoso Books (deleted in 3 days)",
+      "native": {
+        "status": "blocked",
+        "owner": "MAZ-184",
+        "note": "No seeded receipt inbox yet (full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184))"
+      },
+      "web": {
+        "status": "blocked",
+        "owner": "MAZ-184",
+        "note": "No seeded receipt inbox yet (full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184))"
+      }
+    },
+    {
+      "id": "ipad-receipt-inbox-item",
+      "view": "iPad inbox email from Acme Store: the email and acme-receipt-4412.pdf, with Attach to…, New expense and Discard",
+      "native": {
+        "status": "blocked",
+        "owner": "MAZ-184",
+        "note": "No seeded receipt inbox yet (full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184))"
+      },
+      "web": {
+        "status": "blocked",
+        "owner": "MAZ-184",
+        "note": "No seeded receipt inbox yet (full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184))"
+      }
+    },
+    {
+      "id": "ipad-receipt-attach-file",
+      "view": "iPad attach sheet, which file: Acme Store's email with acme-receipt-4412.pdf preselected",
+      "native": {
+        "status": "blocked",
+        "owner": "MAZ-184",
+        "note": "No seeded receipt inbox yet (full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184))"
+      },
+      "web": {
+        "status": "blocked",
+        "owner": "MAZ-184",
+        "note": "No seeded receipt inbox yet (full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184))"
+      }
+    },
+    {
+      "id": "ipad-receipt-attach-entry",
+      "view": "iPad attach sheet, which entry: five suggested expenses without a receipt within 7 days of the email",
+      "native": {
+        "status": "blocked",
+        "owner": "MAZ-184",
+        "note": "No seeded receipt inbox yet (full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184))"
+      },
+      "web": {
+        "status": "blocked",
+        "owner": "MAZ-184",
+        "note": "No seeded receipt inbox yet (full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184))"
+      }
+    },
+    {
+      "id": "ipad-receipt-attach-confirm",
+      "view": "iPad attach sheet, confirm acme-receipt-4412.pdf on the shared expense Printer ink (Flat 4B), which already has invoice-0412.pdf",
+      "native": {
+        "status": "blocked",
+        "owner": "MAZ-184",
+        "note": "No seeded receipt inbox yet (full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184))"
+      },
+      "web": {
+        "status": "blocked",
+        "owner": "MAZ-184",
+        "note": "No seeded receipt inbox yet (full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184))"
+      }
+    },
+    {
+      "id": "ipad-receipt-attached-toast",
+      "view": "iPad receipt inbox after attaching Mill St. Coffee's receipt to Coffee at Mill St., with View entry and Undo",
+      "native": {
+        "status": "blocked",
+        "owner": "MAZ-184",
+        "note": "No seeded receipt inbox yet (full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184))"
+      },
+      "web": {
+        "status": "blocked",
+        "owner": "MAZ-184",
+        "note": "No seeded receipt inbox yet (full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184))"
+      }
+    },
+    {
+      "id": "ipad-receipt-email-settings",
+      "view": "iPad receipt email settings: a live address until 2027-02-10 and two allowed senders",
+      "native": {
+        "status": "blocked",
+        "owner": "MAZ-184",
+        "note": "No seeded receipt inbox yet (full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184))"
+      },
+      "web": {
+        "status": "blocked",
+        "owner": "MAZ-184",
+        "note": "No seeded receipt inbox yet (full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184))"
+      }
+    },
+    {
       "id": "web-home",
       "view": "web home dashboard, October 2026",
       "native": {
@@ -2120,6 +2316,104 @@
             "ref": "MAZ-178"
           }
         ]
+      }
+    },
+    {
+      "id": "web-receipt-inbox",
+      "view": "web receipt inbox, To attach: Acme Store (2 files), Mill St. Coffee, Fabrikam Hardware (1 of 2 attached), Northwind Rail (sender not verified) and Contoso Books (deleted in 3 days)",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-184",
+        "note": "Desktop browser card; the native counterpart is the matching ipad-* card."
+      },
+      "web": {
+        "status": "blocked",
+        "owner": "MAZ-184",
+        "note": "No seeded receipt inbox yet (full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184))"
+      }
+    },
+    {
+      "id": "web-receipt-inbox-item",
+      "view": "web inbox email from Acme Store: the email and acme-receipt-4412.pdf, with Attach to…, New expense and Discard",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-184",
+        "note": "Desktop browser card; the native counterpart is the matching ipad-* card."
+      },
+      "web": {
+        "status": "blocked",
+        "owner": "MAZ-184",
+        "note": "No seeded receipt inbox yet (full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184))"
+      }
+    },
+    {
+      "id": "web-receipt-attach-file",
+      "view": "web attach sheet, which file: Acme Store's email with acme-receipt-4412.pdf preselected",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-184",
+        "note": "Desktop browser card; the native counterpart is the matching ipad-* card."
+      },
+      "web": {
+        "status": "blocked",
+        "owner": "MAZ-184",
+        "note": "No seeded receipt inbox yet (full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184))"
+      }
+    },
+    {
+      "id": "web-receipt-attach-entry",
+      "view": "web attach sheet, which entry: five suggested expenses without a receipt within 7 days of the email",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-184",
+        "note": "Desktop browser card; the native counterpart is the matching ipad-* card."
+      },
+      "web": {
+        "status": "blocked",
+        "owner": "MAZ-184",
+        "note": "No seeded receipt inbox yet (full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184))"
+      }
+    },
+    {
+      "id": "web-receipt-attach-confirm",
+      "view": "web attach sheet, confirm acme-receipt-4412.pdf on the shared expense Printer ink (Flat 4B), which already has invoice-0412.pdf",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-184",
+        "note": "Desktop browser card; the native counterpart is the matching ipad-* card."
+      },
+      "web": {
+        "status": "blocked",
+        "owner": "MAZ-184",
+        "note": "No seeded receipt inbox yet (full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184))"
+      }
+    },
+    {
+      "id": "web-receipt-attached-toast",
+      "view": "web receipt inbox after attaching Mill St. Coffee's receipt to Coffee at Mill St., with View entry and Undo",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-184",
+        "note": "Desktop browser card; the native counterpart is the matching ipad-* card."
+      },
+      "web": {
+        "status": "blocked",
+        "owner": "MAZ-184",
+        "note": "No seeded receipt inbox yet (full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184))"
+      }
+    },
+    {
+      "id": "web-receipt-email-settings",
+      "view": "web receipt email settings: a live address until 2027-02-10 and two allowed senders",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-184",
+        "note": "Desktop browser card; the native counterpart is the matching ipad-* card."
+      },
+      "web": {
+        "status": "blocked",
+        "owner": "MAZ-184",
+        "note": "No seeded receipt inbox yet (full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184))"
       }
     }
   ]

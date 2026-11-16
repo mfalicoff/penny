@@ -35,7 +35,11 @@ struct DeepLinkTests {
     func everyBaselineRoute() throws {
         let navigation = try #require(
             try Repository.json("contracts/design-baseline.json")["navigation"] as? [String: Any])
-        let routes = try #require(navigation["routes"] as? [[String: Any]]).compactMap { $0["route"] as? String }
+        // A route with `pennyURL: false` opens from the app or a notification, not a penny:// link
+        // (the MAZ-184 receipt inbox and receipt email settings).
+        let routes = try #require(navigation["routes"] as? [[String: Any]])
+            .filter { ($0["pennyURL"] as? Bool) != false }
+            .compactMap { $0["route"] as? String }
         #expect(routes.count >= 12)
         for route in routes {
             let path = route.replacingOccurrences(of: "[id]", with: "x").replacingOccurrences(

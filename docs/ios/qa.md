@@ -38,7 +38,7 @@ Each row is a feature area. "Server-checked" means the test reads the account's 
 
 ### Redesign card trace
 
-Every card in [design-baseline.json](../../contracts/design-baseline.json) whose native acceptance is MAZ-82 has a row. `scripts/tests/native-qa.test.ts` fails if a card is missing here or if this page names an XCUITest suite or test that does not exist. Visual comparison against the cards is MAZ-122's; a row marked Covered means the behavior is exercised, not that the screen matches the card pixel for pixel. The eight `web-*` cards are browser references (MAZ-96); their native counterparts are named.
+Every card in [design-baseline.json](../../contracts/design-baseline.json) whose native acceptance is MAZ-82 has a row. `scripts/tests/native-qa.test.ts` fails if a card is missing here or if this page names an XCUITest suite or test that does not exist. Visual comparison against the cards is MAZ-122's; a row marked Covered means the behavior is exercised, not that the screen matches the card pixel for pixel. The fifteen `web-*` cards are browser references (MAZ-96); their native counterparts are named.
 
 | Card | Native suites | Notes | Status |
 | --- | --- | --- | --- |
@@ -89,12 +89,26 @@ Every card in [design-baseline.json](../../contracts/design-baseline.json) whose
 | `iphone-save-error` | `EntryJourneyTests` | HTTP 500 on sync keeps the entry and syncs once | Partly: the form's Couldn't save banner (local write failure) is unit-tested only |
 | `iphone-saved-toast` | — | The toast is unit-tested (EntryFlowTests); it shows for 4 s during dismissal, which XCTest's idle waits outlast | Gap: not asserted in a UI journey |
 | `iphone-sign-out` | `AuthJourneyTests` | Pending change asks and syncs first | Covered |
+| `iphone-receipt-inbox` | — | Filter and cursor, the expiry notice and discard are unit-tested (ReceiptInboxTests in PennyKit) | Gap: no UI journey; the full-stack seed has no receipt inbox yet |
+| `iphone-receipt-inbox-item` | — | Email-first order, the preselected attachment and the discard counts are unit-tested (ReceiptInboxTests) | Gap: no UI journey; the full-stack seed has no receipt inbox yet |
+| `iphone-receipt-attach-file` | — | The preselected first attachment is unit-tested (ReceiptInboxTests) | Gap: no UI journey; the full-stack seed has no receipt inbox yet |
+| `iphone-receipt-attach-entry` | — | Suggestions within a week (personal and shared) and search are unit-tested (ReceiptInboxTests) | Gap: no UI journey; the full-stack seed has no receipt inbox yet |
+| `iphone-receipt-attach-confirm` | — | Personal and shared attach writes and the changed-expense reload are unit-tested (ReceiptInboxTests); the notes are not | Gap: no UI journey; the full-stack seed has no receipt inbox yet |
+| `iphone-receipt-attached-toast` | — | No test covers the confirmation or its Undo yet | Gap: no UI journey; the full-stack seed has no receipt inbox yet |
+| `iphone-receipt-email-settings` | — | Address decoding, address changes, the new-address limit and sender rules are unit-tested (ReceiptInboxTests) | Gap: no UI journey; the full-stack seed has no receipt inbox yet |
 | `ipad-home` | `OverviewJourneyTests`, `ScreenshotTests` | Run with PENNY_UI_DEVICES=ipad | Covered on iPad runs |
 | `ipad-activity` | `EntryJourneyTests`, `SearchJourneyTests` | List with detail beside it | Covered on iPad runs |
 | `ipad-add-entry` | `AddEntryOverSettingsTests`, `EntryJourneyTests` | Text-field amount at regular width | Covered on iPad runs |
 | `ipad-shared` | `HouseholdJourneyTests` | — | Covered on iPad runs |
 | `ipad-trip` | `TripJourneyTests` | — | Covered on iPad runs |
 | `ipad-settings` | `AddEntryOverSettingsTests`, `SettingsJourneyTests` | Settings as the detail column | Covered on iPad runs |
+| `ipad-receipt-inbox` | — | Filter and cursor, the expiry notice and discard are unit-tested (ReceiptInboxTests in PennyKit) | Gap: no UI journey; the full-stack seed has no receipt inbox yet |
+| `ipad-receipt-inbox-item` | — | Email-first order, the preselected attachment and the discard counts are unit-tested (ReceiptInboxTests) | Gap: no UI journey; the full-stack seed has no receipt inbox yet |
+| `ipad-receipt-attach-file` | — | The preselected first attachment is unit-tested (ReceiptInboxTests) | Gap: no UI journey; the full-stack seed has no receipt inbox yet |
+| `ipad-receipt-attach-entry` | — | Suggestions within a week (personal and shared) and search are unit-tested (ReceiptInboxTests) | Gap: no UI journey; the full-stack seed has no receipt inbox yet |
+| `ipad-receipt-attach-confirm` | — | Personal and shared attach writes and the changed-expense reload are unit-tested (ReceiptInboxTests); the notes are not | Gap: no UI journey; the full-stack seed has no receipt inbox yet |
+| `ipad-receipt-attached-toast` | — | No test covers the confirmation or its Undo yet | Gap: no UI journey; the full-stack seed has no receipt inbox yet |
+| `ipad-receipt-email-settings` | — | Address decoding, address changes, the new-address limit and sender rules are unit-tested (ReceiptInboxTests) | Gap: no UI journey; the full-stack seed has no receipt inbox yet |
 | `web-home` | — | Web-only reference: native behavior is traced through `iphone-home`; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-activity` | — | Web-only reference: native behavior is traced through `iphone-activity`; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-insights` | — | Web-only reference: native behavior is traced through `iphone-insights`; the browser journeys are MAZ-96 | Not applicable to native |
@@ -103,6 +117,13 @@ Every card in [design-baseline.json](../../contracts/design-baseline.json) whose
 | `web-settings` | — | Web-only reference: native behavior is traced through `iphone-settings`; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-add-entry` | — | Web-only reference: native behavior is traced through `iphone-add-expense`; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-sign-in` | — | Web-only reference: native behavior is traced through `iphone-sign-in`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-receipt-inbox` | — | Web-only reference: native behavior is traced through `ipad-receipt-inbox`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-receipt-inbox-item` | — | Web-only reference: native behavior is traced through `ipad-receipt-inbox-item`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-receipt-attach-file` | — | Web-only reference: native behavior is traced through `ipad-receipt-attach-file`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-receipt-attach-entry` | — | Web-only reference: native behavior is traced through `ipad-receipt-attach-entry`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-receipt-attach-confirm` | — | Web-only reference: native behavior is traced through `ipad-receipt-attach-confirm`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-receipt-attached-toast` | — | Web-only reference: native behavior is traced through `ipad-receipt-attached-toast`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-receipt-email-settings` | — | Web-only reference: native behavior is traced through `ipad-receipt-email-settings`; the browser journeys are MAZ-96 | Not applicable to native |
 
 Justified native adaptations are recorded in [redesign](../reference/redesign.md#native-implementation-notes-maz-69). Android has no card (the Android app is retired, MAZ-98), and the desktop-only `web-*` cards have no native screen.
 

@@ -1,0 +1,69 @@
+<!-- @dsCard group="Web" name="Receipt email" viewport="1520x980" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · Web · Receipt email</title>
+<link rel="stylesheet" href="../assets/penny.css"><link rel="stylesheet" href="../assets/web.css">
+<script src="../assets/icons.js"></script><script src="../assets/sankey.js"></script><script src="../assets/web.js"></script>
+<script>WEB_NAV[0].items.push(["receipts", "receipt", "Receipts to attach", "", "5"]); WEB_NAV[1].items[0][2] = "Flat 4B";</script>
+<style>
+  .sx { display: grid; grid-template-columns: 240px minmax(0,1fr); gap: 28px; }
+  .snav { display: flex; flex-direction: column; gap: 2px; }
+  .snav .wnav [data-i] { color: var(--label-2); }
+  .snav .wnav .chev { margin-left: auto; }
+  .stack { display: flex; flex-direction: column; gap: 18px; max-width: 720px; }
+  .panel h3 { font-size: 13px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 12px; }
+  .lab { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .fwa { display: flex; gap: 8px; }
+  .input { flex: 1; height: 38px; border-radius: 10px; background: var(--surface-2); box-shadow: inset 0 0 0 .5px var(--separator); display: flex; align-items: center; padding: 0 12px; font-size: 14.5px; }
+  .input.addr { font-family: ui-monospace, "SF Mono", monospace; font-size: 14px; }
+  .input.ph { color: var(--label-3); }
+  .srow { display: flex; align-items: center; gap: 12px; padding: 14px 0 4px; font-size: 14.5px; }
+  .srow > [data-i] { width: 18px; height: 18px; color: var(--label-2); }
+  .srow .t { flex: 1; } .srow .t span { display: block; font-size: 12.5px; color: var(--label-2); margin-top: 1px; }
+  .snote { font-size: 13.5px; color: var(--label-2); line-height: 1.45; margin-top: 12px; }
+  .acts { display: flex; gap: 10px; margin-top: 14px; }
+  .btn.dq { background: transparent; box-shadow: none; color: var(--danger); }
+  .sender { display: flex; align-items: center; padding: 8px 0; border-top: .5px solid var(--separator); font-size: 14.5px; }
+  .sender:first-child { border-top: 0; }
+  .sender .btn { margin-left: auto; }
+  .senders { margin: 6px 0 14px; }
+</style></head>
+<body class="canvas">
+<div class="browser" data-active="" data-url="penny.example.com/settings/receipt-email">
+  <main class="wmain">
+    <div class="wtop"><h1>Settings</h1><div class="sp"></div>
+      <div class="wsearch"><i data-i="search"></i>Search entries<kbd>⌘K</kbd></div>
+      <div class="btn primary"><i data-i="add"></i>Add entry <kbd>N</kbd></div></div>
+    <div class="wbody">
+      <div class="sx">
+        <div class="snav">
+          <div class="wnav"><i data-i="person-add"></i>Account</div>
+          <div class="wnav"><i data-i="sunny"></i>Appearance</div>
+          <div class="wnav"><i data-i="cash"></i>Currency</div>
+          <div class="wnav on"><i data-i="receipt"></i>Receipt email</div>
+          <div class="wnav"><i data-i="server"></i>Server</div>
+        </div>
+        <div class="stack">
+          <div class="panel">
+            <h3>Receipt email</h3>
+            <div class="lab">Your receipt address</div>
+            <div class="fwa"><div class="input addr">r-7kq2m9xh4tdw3pzc8vbn@receipts.example.com</div><span class="btn"><i data-i="copy"></i>Copy</span></div>
+            <div class="srow"><i data-i="time"></i><div class="t">Works until February 10, 2027<span>Last receipt received November 12, 2026. Extend it to keep using it.</span></div><span class="btn">Extend</span></div>
+            <p class="snote">Forward a receipt email to this address, or send a photo of a paper receipt to it. It shows up in Receipts to attach within a minute.</p>
+            <div class="acts"><span class="btn">New address</span><span class="btn dq">Turn off</span></div>
+          </div>
+          <div class="panel">
+            <h3>Allowed senders</h3>
+            <p class="snote" style="margin-top:0">Only email that passes sender verification from these addresses reaches your inbox. If you forward receipts, add the address you forward from.</p>
+            <div class="senders">
+              <div class="sender">receipts@acme.example<span class="btn dq icon"><i data-i="close"></i></span></div>
+              <div class="sender">me@mail.example<span class="btn dq icon"><i data-i="close"></i></span></div>
+            </div>
+            <div class="lab">Address or domain</div>
+            <div class="fwa"><div class="input ph">you@example.com</div><span class="btn"><i data-i="add"></i>Add</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</body></html>
