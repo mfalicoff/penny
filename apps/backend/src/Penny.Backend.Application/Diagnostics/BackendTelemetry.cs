@@ -15,6 +15,7 @@ public static class BackendTelemetry
     public const string SearchEmbeddingJob = "search.embedding";
     public const string RecurrenceJob = "recurrence";
     public const string ReceiptTextJob = "receipt.text";
+    public const string InboundMailJob = "inbound.mail";
 
     public const string JobAttribute = "penny.job";
     public const string ItemsAttribute = "penny.job.items";
@@ -115,6 +116,26 @@ public static class BackendTelemetry
         "{request}",
         "Emailed receipt ingress requests (MAZ-184) by outcome: accepted, duplicate, unknown_address, rate_limited, too_large, invalid, unauthorized, recipients_unauthorized."
     );
+
+    private static readonly Counter<long> InboundMailResults = Meter.CreateCounter<long>(
+        "penny.inbound_mail.results",
+        "{message}",
+        "Inbound messages processed (MAZ-184) by outcome: done, retry, lease_lost or a rejection reason code."
+    );
+
+    private static readonly Histogram<double> InboundMailDuration = Meter.CreateHistogram(
+        "penny.inbound_mail.duration",
+        "s",
+        "Wall time of one inbound message conversion and store, by outcome.",
+        advice: new InstrumentAdvice<double> { HistogramBucketBoundaries = ExtractionBuckets }
+    );
+
+    public static void InboundMailProcessed(string outcome, TimeSpan duration)
+    {
+        var tag = new KeyValuePair<string, object?>(InboundMailOutcomeAttribute, outcome);
+        InboundMailResults.Add(1, tag);
+        InboundMailDuration.Record(Math.Max(0, duration.TotalSeconds), tag);
+    }
 
     // One ingress request; `outcome` is a fixed vocabulary, never an address or content.
     public static void InboundMail(string outcome) =>

@@ -14,6 +14,7 @@ using Penny.Backend.Api.Push;
 using Penny.Backend.Api.Receipts;
 using Penny.Backend.Api.Search;
 using Penny.Backend.Api.Testing;
+using Penny.Backend.Application.Abstractions.InboundMail;
 using Penny.Backend.Application.Abstractions.Persistence;
 using Penny.Backend.Application.Abstractions.Receipts;
 using Penny.Backend.Application.Abstractions.Search;
@@ -95,7 +96,12 @@ public static class BackendServices
         AddSearchServices(builder.Services, SearchOptions.Read(configuration));
         AddReceiptTextServices(builder.Services, OcrOptions.Read(configuration));
         AddPushServices(builder.Services, PushOptions.Read(configuration), controls);
-        AddInboundMailServices(builder.Services, InboundMailOptions.Read(configuration));
+        AddInboundMailServices(
+            builder.Services,
+            InboundMailOptions.Read(configuration),
+            InboundMailWorkerOptions.Read(configuration),
+            OcrOptions.Read(configuration)
+        );
     }
 
     // MAZ-62 full-stack test controls: a pinnable clock, injected faults, unique users
@@ -149,7 +155,9 @@ public static class BackendServices
     // receipt master key under their own HKDF info.
     private static void AddInboundMailServices(
         IServiceCollection services,
-        InboundMailSettings inboundMail
+        InboundMailSettings inboundMail,
+        InboundMailWorkerOptions worker,
+        OcrOptions ocr
     )
     {
         services.AddSingleton(inboundMail);
@@ -160,6 +168,45 @@ public static class BackendServices
         services.AddSingleton<InboundMailReplayCache>();
         services.AddSingleton<ReceiptEmailService>();
         services.AddSingleton<InboundMailService>();
+        // Processing (stage 2): the converter calls penny-render over the internal render
+        // network. Calls follow no redirects, are bounded and are not logged (they carry
+        // the email).
+        services.AddSingleton(worker);
+        services.AddSingleton(worker.Processing);
+        services
+            .AddHttpClient(
+                GotenbergRenderer.HttpClientName,
+                client =>
+                {
+                    client.BaseAddress = worker.RendererUrl;
+                    client.Timeout = TimeSpan.FromSeconds(worker.RenderTimeoutSeconds);
+                }
+            )
+            .ConfigurePrimaryHttpMessageHandler(() =>
+                new SocketsHttpHandler { AllowAutoRedirect = false, UseProxy = false }
+            )
+            .RemoveAllLoggers();
+        services.AddSingleton<IEmailRenderer>(provider => new GotenbergRenderer(
+            provider
+                .GetRequiredService<IHttpClientFactory>()
+                .CreateClient(GotenbergRenderer.HttpClientName)
+        ));
+        services.AddSingleton(new MailImageTools(ocr.Engine));
+        services.AddSingleton<IInboundMailConverter>(provider => new MailConverter(
+            provider.GetRequiredService<IEmailRenderer>(),
+            provider.GetRequiredService<MailImageTools>(),
+            worker.Limits,
+            worker.AuthServId
+        ));
+        services.AddSingleton<IInboundMailQueue, PostgresInboundMailQueue>();
+        services.AddSingleton<InboundMailProcessor>();
+        if (inboundMail.Enabled && worker.Worker)
+        {
+            // The worker re-encodes images with libvips and counts pages with pdfinfo:
+            // check the engine programs now, so a missing one stops the host.
+            _ = new LocalReceiptTextExtractor(ocr.Engine).Engine;
+            services.AddHostedService<InboundMailWorker>();
+        }
     }
 
     // Push devices and delivery (MAZ-61): registration always; the outbox worker unless
