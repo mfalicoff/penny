@@ -3,7 +3,7 @@ public import PennyDomain
 
 /// Uploads and downloads receipts for the signed-in account (MAZ-78). Receipts are
 /// online-only: they go straight through the account's `APIClient` and are never queued in the
-/// offline ledger (docs/ios-offline-sync.md). A protocol so tests and previews can stand in.
+/// offline ledger (docs/ios/offline-sync.md). A protocol so tests and previews can stand in.
 ///
 /// Both calls throw `APIError` or `CancellationError`. A 401 has already ended the session
 /// when it is thrown (`AuthController.sessionDidExpire(for:)`).

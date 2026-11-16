@@ -2,7 +2,7 @@ import CryptoKit
 public import Foundation
 public import PennyDomain
 
-/// What the widget extension finds in the App Group (docs/ios-widgets.md#states).
+/// What the widget extension finds in the App Group (docs/ios/widgets.md#states).
 public enum WidgetSnapshotRead: Equatable, Sendable {
     /// Nobody is signed in, or the app has not written a snapshot yet.
     case signedOut

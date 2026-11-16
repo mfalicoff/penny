@@ -3,7 +3,7 @@ public import PennyData
 public import PennyDomain
 
 /// What a widget shows at one moment, decided from the stored snapshot and the entry's date.
-/// Pure, so the rules are tested without WidgetKit (docs/ios-widgets.md#states).
+/// Pure, so the rules are tested without WidgetKit (docs/ios/widgets.md#states).
 public enum WidgetContent: Hashable, Sendable {
     /// Nobody is signed in, or the app has not written a snapshot yet.
     case signedOut

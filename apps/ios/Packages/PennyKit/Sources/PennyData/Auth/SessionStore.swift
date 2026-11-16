@@ -34,7 +34,7 @@ public enum SessionStoreError: Error, Equatable, Sendable {
 /// - the data protection keychain on every platform, in the app's default access group
 ///   (the widget extension never needs the token).
 ///
-/// See docs/ios-authentication.md.
+/// See docs/ios/authentication.md.
 public struct KeychainSessionStore: SessionStore {
     public static let service = "\(AppIdentity.bundleIdentifier).session"
     static let recordVersion = 1

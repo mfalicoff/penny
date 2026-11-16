@@ -21,7 +21,7 @@ public enum AppActivity: Equatable, Sendable {
 ///
 /// Widgets and notification previews are outside the lock; the settings screen says so. The
 /// widgets' own privacy rules (cleared on sign-out, redacted on a locked device) don't depend
-/// on it (docs/ios-widgets.md#privacy).
+/// on it (docs/ios/widgets.md#privacy).
 @MainActor
 @Observable
 public final class AppLockController {

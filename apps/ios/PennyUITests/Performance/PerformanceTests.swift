@@ -5,7 +5,7 @@ import XCTest
 /// of a large ledger after sign-in, scrolling it, and searching it online and on the device.
 ///
 /// Every measurement is attached as `perf-<name>.json` and compared with its budget in
-/// `PerformanceTests.budgets` (documented in docs/ios-qa.md#performance-budgets). Budgets are
+/// `PerformanceTests.budgets` (documented in docs/ios/qa.md#performance-budgets). Budgets are
 /// for the CI simulator, generous enough to absorb runner noise but tight enough to catch an
 /// order-of-magnitude regression; the XCTest metrics (launch, scroll hitches) are recorded in the
 /// result bundle for trend review rather than asserted, because simulator hitch numbers are not
@@ -14,7 +14,7 @@ final class PerformanceTests: PennyUITestCase {
     /// Seconds.
     /// Regression budgets: about 1.5 times the first baseline (iPhone 18 Pro simulator, iOS 27.0,
     /// Debug, 2026-11-12), so an order-of-magnitude regression fails while runner noise does not.
-    /// The targets the product should reach are in docs/ios-qa.md; `activity-open-large-ledger`
+    /// The targets the product should reach are in docs/ios/qa.md; `activity-open-large-ledger`
     /// is far from its target and tracked there.
     static let budgets: [String: Double] = [
         "launch-to-home-demo": 10,

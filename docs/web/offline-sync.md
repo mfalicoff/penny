@@ -1,8 +1,8 @@
 # Browser offline ledger and sync (MAZ-87)
 
-[Documentation](README.md) · [Web app](../apps/web/README.md) · [Native offline sync](ios-offline-sync.md) · [Server ledger sync](reference/ledger.md) · [Domain rules](reference/domain-rules.md)
+[Documentation](../README.md) · [Web app](../../apps/web/README.md) · [Native offline sync](../ios/offline-sync.md) · [Server ledger sync](../reference/ledger.md) · [Domain rules](../reference/domain-rules.md)
 
-The v2 web app (`apps/web`) keeps each signed-in account's personal ledger in the browser, saves to it while offline, and syncs it with the server's whole-ledger `GET`/`PUT /api/ledger`. It follows the native engine's rules ([native offline sync](ios-offline-sync.md)) and the shared TypeScript merge and recurrence (`apps/web/src/domain/merge.ts`, `apps/web/src/domain/ledger.ts`, [ADR 002](reference/architecture.md#adr-002-calculation-and-conflict-ownership)), which carries the native app's recurrence refinements (MAZ-90; moved into the shared module by MAZ-141, `apps/web/src/offline/merge.ts` re-exports it). The server never merges: it refuses a stale revision with 409.
+The v2 web app (`apps/web`) keeps each signed-in account's personal ledger in the browser, saves to it while offline, and syncs it with the server's whole-ledger `GET`/`PUT /api/ledger`. It follows the native engine's rules ([native offline sync](../ios/offline-sync.md)) and the shared TypeScript merge and recurrence (`apps/web/src/domain/merge.ts`, `apps/web/src/domain/ledger.ts`, [ADR 002](../reference/architecture.md#adr-002-calculation-and-conflict-ownership)), which carries the native app's recurrence refinements (MAZ-90; moved into the shared module by MAZ-141, `apps/web/src/offline/merge.ts` re-exports it). The server never merges: it refuses a stale revision with 409.
 
 TanStack Query is **not** the offline store. Query keeps server copies that can always be fetched again; pending work lives only in IndexedDB, so clearing or refetching Query (sign-out, expiry, `clearPrivateData`, a 401) never erases it.
 
@@ -150,7 +150,7 @@ IndexedDB belongs to one origin (scheme, host and port), so pending browser work
 - Same-field conflicts are last-sync-wins for this browser; there is no per-field prompt. An edit of an entry another device deleted brings it back.
 - Shared data and receipts aren't available offline; local search is personal entries only, with substring matching (no typo or meaning matching).
 - Every personal write goes through the store: the entry forms (MAZ-88), Recurring schedules (MAZ-90, `/recurring`), Accounts and Categories (MAZ-89), other tabs and the tests.
-- Only the server knows which shared expenses link a payment account. Removing such an account offline is accepted here and refused at sync (`400 Remove household expense links…`), which holds back every pending change until Accounts' **Put it back** restores it ([accounts and categories](../apps/web/README.md#accounts-and-categories-maz-89)).
+- Only the server knows which shared expenses link a payment account. Removing such an account offline is accepted here and refused at sync (`400 Remove household expense links…`), which holds back every pending change until Accounts' **Put it back** restores it ([accounts and categories](../../apps/web/README.md#accounts-and-categories-maz-89)).
 
 ## Tests
 
@@ -161,6 +161,6 @@ IndexedDB belongs to one origin (scheme, host and port), so pending browser work
 | `tests/offline/database.test.ts` | The IndexedDB adapter (fake-indexeddb): round trip across connections, aborted changes, no lost update across three connections, a newer schema version taking over (calls then fail as `closed`), missing and refused IndexedDB |
 | `tests/offline.test.tsx` | The real app: banner from a previous visit, offline, reconnect and Retry; sign-out refused with pending work and the copy removed after it; local search with pending and deleted rows, then server results; clearing Query keeps the work; 401 keeps it; blocked storage |
 | `e2e/offline.spec.ts` | Real Chromium (desktop and phone): a pending change kept through a reload and a second tab while the server is down, the browser's offline switch, one PUT on reconnect, both tabs converged; sign-out refused then allowed |
-| `e2e/recurring.spec.ts` | Real Chromium (desktop and phone): a schedule saved while the server is down, kept through a reload and synced with one PUT and no duplicate occurrence; a schedule deleted on another device after an offline catch-up at a later date stays deleted ([recurring](../apps/web/README.md#recurring-schedules-maz-90)) |
+| `e2e/recurring.spec.ts` | Real Chromium (desktop and phone): a schedule saved while the server is down, kept through a reload and synced with one PUT and no duplicate occurrence; a schedule deleted on another device after an offline catch-up at a later date stays deleted ([recurring](../../apps/web/README.md#recurring-schedules-maz-90)) |
 
-Run `npm test` and `npm run test:e2e` in `apps/web`. The offline journeys run with `/api` mocked on Chromium, Firefox and WebKit in CI; a real .NET/PostgreSQL variant of them is not written yet (the real-stack suite, `npm run test:e2e:real`, covers sign-in and households: [browser tests](../apps/web/README.md#browser-tests)).
+Run `npm test` and `npm run test:e2e` in `apps/web`. The offline journeys run with `/api` mocked on Chromium, Firefox and WebKit in CI; a real .NET/PostgreSQL variant of them is not written yet (the real-stack suite, `npm run test:e2e:real`, covers sign-in and households: [browser tests](../../apps/web/README.md#browser-tests)).

@@ -1,6 +1,6 @@
 public import Foundation
 
-/// What the Home Screen widgets show (MAZ-80, docs/ios-widgets.md): a small, derived summary of
+/// What the Home Screen widgets show (MAZ-80, docs/ios/widgets.md): a small, derived summary of
 /// one month that the app writes to the App Group and the widget extension reads. It holds only
 /// what the two widgets draw, never the ledger, ids, notes, accounts, the server or the email.
 ///

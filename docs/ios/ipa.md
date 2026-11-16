@@ -1,12 +1,12 @@
 # iOS builds, signing and TestFlight
 
-[App showcase](../README.md) · [Documentation](README.md) · [Native iOS app](../apps/ios/README.md)
+[App showcase](../../README.md) · [Documentation](../README.md) · [Native iOS app](../../apps/ios/README.md)
 
-Penny for iPhone and iPad ships as the native SwiftUI app in [`apps/ios`](../apps/ios/README.md), built with Xcode and uploaded to TestFlight (MAZ-98). Its bundle id, Apple team, App Group, URL scheme and widget identifiers are frozen for TestFlight/App Store continuity, so every TestFlight or App Store update installs over the previous build in place.
+Penny for iPhone and iPad ships as the native SwiftUI app in [`apps/ios`](../../apps/ios/README.md), built with Xcode and uploaded to TestFlight (MAZ-98). Its bundle id, Apple team, App Group, URL scheme and widget identifiers are frozen for TestFlight/App Store continuity, so every TestFlight or App Store update installs over the previous build in place.
 
-The **Build the iOS app for TestFlight** workflow ([`.github/workflows/ios-testflight.yml`](../.github/workflows/ios-testflight.yml)) runs when a GitHub Release is published for a version tag such as `v1.2.3`, or by manual dispatch. It:
+The **Build the iOS app for TestFlight** workflow ([`.github/workflows/ios-testflight.yml`](../../.github/workflows/ios-testflight.yml)) runs when a GitHub Release is published for a version tag such as `v1.2.3`, or by manual dispatch. It:
 
-1. runs the application tests ([`tests.yml`](../.github/workflows/tests.yml): release version, lint, types, unit and browser tests) and the iOS gates ([`ios.yml`](../.github/workflows/ios.yml): swift-format, PennyKit and app tests on iPhone and iPad, the Release check, launch, and the XCUITest smoke plan against the full stack);
+1. runs the application tests ([`tests.yml`](../../.github/workflows/tests.yml): release version, lint, types, unit and browser tests) and the iOS gates ([`ios.yml`](../../.github/workflows/ios.yml): swift-format, PennyKit and app tests on iPhone and iPad, the Release check, launch, and the XCUITest smoke plan against the full stack);
 2. signs a Release archive with the App Store distribution certificate and the app's and widget extension's App Store profiles (`apps/ios/scripts/ios.sh archive`), and checks the archive embeds `PennyWidgets.appex` with the app's version and build;
 3. exports an App Store signed IPA and checks it (`ios.sh export`): bundle id, version, build number, production environment, no default server, no test controls, the App Group, `get-task-allow` off and an App Store profile (`beta-reports-active`) on both the app and the widget extension, and production APNs (`aps-environment`) on the app;
 4. attaches `penny.ipa` and `penny.ipa.sha256` to the release's **Assets** and keeps the IPA and dSYMs as an Actions artifact for 30 days;
@@ -19,7 +19,7 @@ The IPA is store signed: it installs only through TestFlight or the App Store, n
 Everything uses the Apple team that already owns `com.mfalicoff.penny` in App Store Connect. Never create a new App ID: a different bundle id or team is a different app, and existing installs would not upgrade.
 
 1. **Distribution certificate.** Use the team's Apple Distribution certificate as a `.p12` with its password (export it from Keychain Access). A new Apple Distribution certificate also works; revoking an old one does not affect installed apps.
-2. **App Store provisioning profiles.** In [Certificates, Identifiers & Profiles → Profiles](https://developer.apple.com/account/resources/profiles/list), create (or reuse) two **App Store Connect** distribution profiles with that certificate: one for `com.mfalicoff.penny` (the app) and one for `com.mfalicoff.penny.ExpoWidgetsTarget` (the `PennyWidgets` extension). Both App IDs need the App Groups capability with `group.com.mfalicoff.penny` ([App Groups](#widget-app-groups-setup)), and the app's also needs **Push Notifications** ([APNs setup](ios-notifications.md#apple-developer-setup)). The workflow refuses a profile without the App Group, or an app profile without production `aps-environment`, before it builds. Download both `.mobileprovision` files; the workflow reads their names from the files.
+2. **App Store provisioning profiles.** In [Certificates, Identifiers & Profiles → Profiles](https://developer.apple.com/account/resources/profiles/list), create (or reuse) two **App Store Connect** distribution profiles with that certificate: one for `com.mfalicoff.penny` (the app) and one for `com.mfalicoff.penny.ExpoWidgetsTarget` (the `PennyWidgets` extension). Both App IDs need the App Groups capability with `group.com.mfalicoff.penny` ([App Groups](#widget-app-groups-setup)), and the app's also needs **Push Notifications** ([APNs setup](notifications.md#apple-developer-setup)). The workflow refuses a profile without the App Group, or an app profile without production `aps-environment`, before it builds. Download both `.mobileprovision` files; the workflow reads their names from the files.
 3. **App Store Connect API key.** In [App Store Connect → Users and Access → Integrations → App Store Connect API](https://appstoreconnect.apple.com/access/integrations/api), create a team key with the **App Manager** role. Download `AuthKey_<KEY ID>.p8` (Apple offers it once) and note the key ID and issuer ID. The key only uploads builds; signing uses the certificate and profile.
 4. **Build number base.** App Store Connect rejects a build number that is not higher than every earlier upload of the same version. Earlier builds were uploaded with whole build numbers, so read the highest build number in App Store Connect → Penny → TestFlight and use a whole number above it as the base. Native builds are numbered `<base>.<run>.<attempt>` ([build numbers](#versions-and-build-numbers)).
 5. In GitHub, under **Settings → Secrets and variables → Actions**, add:
@@ -48,7 +48,7 @@ The app and its widgets share data through the App Group `group.com.mfalicoff.pe
 2. Under **Identifiers → App IDs**, open `com.mfalicoff.penny` and `com.mfalicoff.penny.ExpoWidgetsTarget`. Enable **App Groups** on each and assign `group.com.mfalicoff.penny`. Save both.
 3. Regenerate the App Store provisioning profiles for both ids so their entitlements include the group, and update `IOS_APPSTORE_PROFILE` and `IOS_WIDGETS_APPSTORE_PROFILE`.
 
-The `PennyWidgets` extension (MAZ-80) keeps the id `com.mfalicoff.penny.ExpoWidgetsTarget`. The name predates the native app; the id is frozen for TestFlight/App Store continuity, so widgets people already placed keep working ([native widgets](ios-widgets.md#identity-and-app-group-entitlements)). Any new entitlement must be enabled on the App ID, and the profiles regenerated and their secrets replaced, **before** the first CI build that uses it.
+The `PennyWidgets` extension (MAZ-80) keeps the id `com.mfalicoff.penny.ExpoWidgetsTarget`. The name predates the native app; the id is frozen for TestFlight/App Store continuity, so widgets people already placed keep working ([native widgets](widgets.md#identity-and-app-group-entitlements)). Any new entitlement must be enabled on the App ID, and the profiles regenerated and their secrets replaced, **before** the first CI build that uses it.
 
 ## Signing
 
@@ -61,7 +61,7 @@ The `PennyWidgets` extension (MAZ-80) keeps the id `com.mfalicoff.penny.ExpoWidg
 | Export | re-signs with the same certificate and profiles | Xcode picks or creates the distribution certificate and profile (`-allowProvisioningUpdates`) |
 | Apple-side changes | none | may create profiles or a cloud-managed certificate |
 
-To build and upload from a Mac, set `DEVELOPMENT_TEAM` in `apps/ios/Configuration/Signing.local.xcconfig` ([native app signing](../apps/ios/README.md#signing-and-entitlements)) or export `PENNY_TEAM_ID`, then:
+To build and upload from a Mac, set `DEVELOPMENT_TEAM` in `apps/ios/Configuration/Signing.local.xcconfig` ([native app signing](../../apps/ios/README.md#signing-and-entitlements)) or export `PENNY_TEAM_ID`, then:
 
 ```sh
 export PENNY_BUILD_NUMBER=24.1000.1   # above every earlier upload for this version
@@ -82,7 +82,7 @@ A local upload uses a build number too; choose one that CI will not reuse (a hig
 
 ## Release runbook
 
-1. Merge the [release PR](releases.md#automated-release-flow); it bumps `Version.xcconfig` and publishes the GitHub Release, which starts the workflow. Pushing a tag alone does not.
+1. Merge the [release PR](../development/releases.md#automated-release-flow); it bumps `Version.xcconfig` and publishes the GitHub Release, which starts the workflow. Pushing a tag alone does not.
 2. Wait for the workflow. If a gate fails, fix it on `v2` and rerun; nothing was uploaded. If GitHub times out after the upload started, check App Store Connect → TestFlight before rerunning (a rerun gets a new build number, so it cannot collide).
 3. In App Store Connect → Penny → TestFlight, add the build to the internal group. External groups need Beta App Review.
 4. Run the [device checklist](#testflight-upgrade-and-device-checklist) on at least one iPhone and one iPad that have the previous TestFlight build installed with real-shaped (not personal) data, and record the results on the release.
@@ -98,8 +98,8 @@ Run on physical devices with iOS 26 or later, upgrading from the previous TestFl
 - [ ] **Biometrics**: Face ID / Touch ID unlocks; cancelling falls back to the passcode.
 - [ ] **OIDC**: sign out and sign in with the provider; `penny://auth/callback` returns to the app.
 - [ ] **Pickers**: attach a receipt from Photos, Files and the camera; preview and share it.
-- [ ] **Push (APNs)**: allow notifications; another member's shared expense notifies this device through the production gateway, and tapping it opens the expense ([notifications](ios-notifications.md)).
-- [ ] **Widgets**: the widgets placed under the previous build still show and update after the upgrade; Recent expenses opens `penny://entries/new` ([widgets](ios-widgets.md)).
+- [ ] **Push (APNs)**: allow notifications; another member's shared expense notifies this device through the production gateway, and tapping it opens the expense ([notifications](notifications.md)).
+- [ ] **Widgets**: the widgets placed under the previous build still show and update after the upgrade; Recent expenses opens `penny://entries/new` ([widgets](widgets.md)).
 - [ ] **Redesign**: Liquid Glass controls on iOS 26, light/dark with Reduce Transparency on and off, the largest Dynamic Type size, VoiceOver through Home → add entry → save, forms stay above the keyboard, inline categories, recorded vs projected money, and recovery from a stale shared payment.
 - [ ] **PostgreSQL backend**: read, write and keyword search against the migrated .NET/PostgreSQL server (MAZ-65), and reconcile an offline edit.
 

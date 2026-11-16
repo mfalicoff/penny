@@ -1,6 +1,6 @@
 # Operations runbook
 
-[Documentation](README.md) · [Self-hosting](deployment.md)
+[Documentation](../README.md) · [Self-hosting](deployment.md)
 
 Running a v2 deployment from [`deploy/compose.yaml`](deployment.md): monitoring, logs, PostgreSQL operations, backup and restore, maintenance, and what to do when something fails. The shorthand `penny` below stands for `docker compose -f deploy/compose.yaml`. Maintenance commands run inside the `api` container (`penny exec api dotnet Penny.Backend.Api.dll <command>`) with the runtime role and the receipt settings already configured. Nothing here puts a password on a command line.
 
@@ -176,7 +176,7 @@ WHERE indrelid = 'penny.search_documents'::regclass;
 SELECT indexrelid::regclass FROM pg_index WHERE NOT indisvalid;
 ```
 
-Never create, drop or alter Penny's tables or indexes by hand; schema changes ship only as EF migrations applied by `migrate` ([changing the schema](reference/postgresql.md#changing-the-schema)).
+Never create, drop or alter Penny's tables or indexes by hand; schema changes ship only as EF migrations applied by `migrate` ([changing the schema](../reference/postgresql.md#changing-the-schema)).
 
 **Search reconciliation.** Search documents and embeddings are derived data. `search-verify` is read-only and prints `{Documents, Missing, Orphaned, StaleText, PendingEmbeddings, StaleModel, ReceiptTexts, MissingReceiptText, StaleReceiptText, PendingReceiptText}`, exiting 0 when all but the two totals are zero and 2 otherwise (pending embeddings and pending receipt text are normal for a short while after writes and uploads). `search-rebuild [--user USER_ID]` recomputes documents and the normalized text and chunks of stored receipt text (it never re-runs OCR), and embeds what is missing. `MissingReceiptText` means a linked receipt has no text yet: run [`receipts-ocr`](#receipt-text-ocr). Run it after a restore that `search-verify` flags and after an upgrade whose release notes say the search model or normalization changed. The embedding model is pinned in the image, so it changes only with a release.
 
@@ -185,13 +185,13 @@ penny exec api dotnet Penny.Backend.Api.dll search-verify
 penny exec api dotnet Penny.Backend.Api.dll search-rebuild
 ```
 
-**Receipts.** `receipts-verify` decrypts every receipt and reports `{Receipts, Verified, Missing, Corrupt, Unreferenced, Bytes}` (exit 2 on missing or corrupt files). `receipts-sweep [--dry-run]` removes unreferenced files older than an hour ([receipts](reference/receipts.md#commands)).
+**Receipts.** `receipts-verify` decrypts every receipt and reports `{Receipts, Verified, Missing, Corrupt, Unreferenced, Bytes}` (exit 2 on missing or corrupt files). `receipts-sweep [--dry-run]` removes unreferenced files older than an hour ([receipts](../reference/receipts.md#commands)).
 
-**Password resets.** `penny exec api dotnet Penny.Backend.Api.dll reset-password user@example.com` issues a one-time code ([password reset](reference/authentication.md#password-reset-maz-123)).
+**Password resets.** `penny exec api dotnet Penny.Backend.Api.dll reset-password user@example.com` issues a one-time code ([password reset](../reference/authentication.md#password-reset-maz-123)).
 
 ## Receipt text (OCR)
 
-MAZ-125 makes the text of receipts searchable: search finds an entry or shared expense by what is printed on its receipt (a store name, an item), by substring, typo and meaning ([search](reference/search.md#receipt-text-maz-125)).
+MAZ-125 makes the text of receipts searchable: search finds an entry or shared expense by what is printed on its receipt (a store name, an item), by substring, typo and meaning ([search](../reference/search.md#receipt-text-maz-125)).
 
 **Everything runs on this server.** Receipts are never sent to a third-party service. PDFs with an embedded text layer are read directly by poppler's `pdftotext`; photos (JPEG, PNG, GIF, WebP) are decoded by libvips and scanned PDF pages (fewer than 40 letters or digits of embedded text) are rendered by `pdftoppm`, then read by Tesseract. Each program runs as a short-lived child process fed through standard input and read from standard output, so the decrypted receipt exists only in the API's memory (its buffers, and every engine output buffer, are zeroed after use) and never on disk. HEIC/HEIF photos are not readable by Tesseract's image library and are marked `unsupported`.
 
@@ -225,7 +225,7 @@ MAZ-125 makes the text of receipts searchable: search finds an entry or shared e
 | `Ocr__MaxAttempts` | 4 | Failed attempts before `failed` |
 | `Ocr__PollSeconds` | 5 | Idle delay between passes |
 
-Extracted text is cut at 20,000 characters (about ten dense pages: typo matching costs grow with the length of every receipt a viewer can read, see [search](reference/search.md#receipt-text-maz-125)) and split into at most 32 chunks of 512 model tokens.
+Extracted text is cut at 20,000 characters (about ten dense pages: typo matching costs grow with the length of every receipt a viewer can read, see [search](../reference/search.md#receipt-text-maz-125)) and split into at most 32 chunks of 512 model tokens.
 
 **Engine and language data.** The container image installs `tesseract-ocr`, `tesseract-ocr-eng`, `tesseract-ocr-fra`, `poppler-utils` and `libvips-tools` at pinned versions from the base image's Ubuntu 24.04 archive (`prlimit` comes with the base image's util-linux). To read another language, build a derived image (`FROM ghcr.io/mfalicoff/penny-api`, `USER root`, `apt-get install tesseract-ocr-deu`, `USER $APP_UID`) and set `Ocr__Languages=eng+fra+deu`. The NixOS module wires the programs and data from `services.penny.ocr` ([NixOS](nixos.md)). For a bare-metal or development host, install Tesseract 5 with the language data, poppler-utils, libvips' command-line tools (`libvips-tools`, `vips`) and util-linux (the Nix dev shell provides them). With the worker on, the host fails at startup when one of them is missing.
 
@@ -308,7 +308,7 @@ Restoring a backup discards everything written after it. Rolling forward is pref
 1. **Freeze writes** (stop `web` and `api`) and take a dump of the current database ("post-incident dump") plus the receipt volume, even if the data is suspect.
 2. **Restore** the last good backup ([restore](#restore)) with the matching images.
 3. **Find what was lost.** Restore the post-incident dump into a scratch database (`createdb penny_incident`, `pg_restore --no-owner --no-privileges`) and compare against the restored database by time: `household_audit.created_at` lists every shared-expense, reimbursement and membership change; `ledgers.revision` shows which personal ledgers changed; `receipts.created_at`, `users.created_at` and `sessions.created_at` show new receipts, accounts and sign-ins.
-4. **Reconcile.** Personal ledgers: the apps keep their own copy. A device that saved after the backup expects a newer revision than the restored one, so its next save gets 409 ([ledger sync](reference/ledger.md)); tell affected users to check their recent personal entries after the app resyncs. Shared expenses and reimbursements: re-enter them from the audit history in the scratch database (as the users involved, or with their agreement). New accounts and receipts: affected users sign up or upload again. There is no automatic merge.
+4. **Reconcile.** Personal ledgers: the apps keep their own copy. A device that saved after the backup expects a newer revision than the restored one, so its next save gets 409 ([ledger sync](../reference/ledger.md)); tell affected users to check their recent personal entries after the app resyncs. Shared expenses and reimbursements: re-enter them from the audit history in the scratch database (as the users involved, or with their agreement). New accounts and receipts: affected users sign up or upload again. There is no automatic merge.
 5. **Tell users** the window of lost writes. Drop the scratch database once reconciled, and keep the post-incident dump through your retention period.
 
 ## Failure runbooks

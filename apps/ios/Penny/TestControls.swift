@@ -5,7 +5,7 @@
     import PennyUI
     import SwiftUI
 
-    /// Launch-time overrides for unit tests and XCUITest (MAZ-81, docs/ios-ui-tests.md).
+    /// Launch-time overrides for unit tests and XCUITest (MAZ-81, docs/ios/ui-tests.md).
     /// Compiled only when Debug.xcconfig defines PENNY_TEST_CONTROLS; Release builds contain
     /// none of this, and `scripts/ios.sh release-check` fails if any `PENNY_TEST_` name or
     /// this type's name appears in a Release binary.
@@ -14,7 +14,7 @@
         /// full-stack test environment (docs/reference/test-environment.md).
         static let serverURLVariable = "PENNY_TEST_SERVER_URL"
         /// Environment variable (`1`) that opens the temporary demo at launch, so UI tests and
-        /// screenshots reach the shell without a server (docs/ios-shell.md).
+        /// screenshots reach the shell without a server (docs/ios/shell.md).
         static let demoVariable = "PENNY_TEST_DEMO"
         /// Environment variable (`1`) that erases everything this app stored on the simulator
         /// before anything reads it: the result is the same as a fresh install (TestStateReset).

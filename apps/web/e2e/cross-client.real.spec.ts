@@ -4,11 +4,11 @@ import { mergeLedger } from "../src/domain/merge.ts";
 import { LedgerClient, realStack, signIn, skipReason, testUser, type LedgerSnapshot } from "./stack";
 
 // MAZ-96 cross-client convergence: the browser and a second client that speaks the native app's
-// ledger protocol (docs/ios-offline-sync.md: bearer GET, revision-checked whole-ledger PUT, 409 on
+// ledger protocol (docs/ios/offline-sync.md: bearer GET, revision-checked whole-ledger PUT, 409 on
 // a stale revision, then the shared three-way merge `src/domain/merge.ts`, which the Swift
 // `LedgerMerge` is held to through contracts/fixtures/merge-conflicts.json) against one real .NET
 // API and PostgreSQL. The protocol client stands in for the iOS Simulator where Xcode is not
-// available; `docs/acceptance.md` gives the simulator orchestration and what it still has to prove.
+// available; `docs/development/acceptance.md` gives the simulator orchestration and what it still has to prove.
 //
 //   npm run build && npm run test:e2e:real -- cross-client.real
 test.skip(!realStack, skipReason);

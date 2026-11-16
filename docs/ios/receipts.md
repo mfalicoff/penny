@@ -1,6 +1,6 @@
 # Native receipts (MAZ-78)
 
-[Native app](../apps/ios/README.md) · [Native entries](ios-entries.md) · [Receipt API](reference/receipts.md) · [Browser receipts](web-receipts.md)
+[Native app](../../apps/ios/README.md) · [Native entries](entries.md) · [Receipt API](../reference/receipts.md) · [Browser receipts](../web/receipts.md)
 
 The iPhone and iPad app attaches a photo or PDF receipt to an expense, uploads it with progress, previews it and shares it. The server side is the MAZ-60 receipt API over the encrypted file store; nothing about its contract changed. The rules and messages match the browser app (MAZ-94).
 
@@ -48,7 +48,7 @@ Refusals say what to do next and send nothing:
 - **No camera.** Taking a photo in Penny isn't offered; people take it with the Camera app and pick it. A camera capture would need `NSCameraUsageDescription` and a new App Store privacy answer.
 - **Privacy manifest:** unchanged. Reading a picked file's size is not a required-reason API (only disk space and file timestamps are).
 - **On the device:** a picked file is copied to Penny's temporary folder (the copy is set to complete file protection, whatever the picker's file had), checked, and removed again once read. The receipt's bytes stay in memory in the open entry form (so it can be previewed offline right after the upload) and are dropped when the form closes. The viewer writes the receipt to `tmp/PennyReceipts/<random>/<name>` with complete file protection (unreadable while the device is locked), and removes it when it closes. Everything left there (a crash, an account change) is removed at launch and whenever the signed-in account changes. Temporary files are never backed up.
-- **On the server:** encrypted at rest; the app never sees keys or storage paths ([browser receipts](web-receipts.md#encryption-and-key-configuration)).
+- **On the server:** encrypted at rest; the app never sees keys or storage paths ([browser receipts](../web/receipts.md#encryption-and-key-configuration)).
 
 ## Attaching a receipt
 
@@ -59,7 +59,7 @@ Add entry › Receipt, repeat, trip (More details) has a **Receipt** group (card
 - **Upload:** the file is sent as the API's JSON body (`{name, mime, base64}`) over the account's `APIClient`. The row shows the name, a progress bar of the bytes sent ("Uploading… 46%", read out as a percentage) and **Cancel upload** (×). The upload belongs to the form, not to the page: going back to the form keeps it running. **Save waits:** pressing Save during an upload saves nothing and the form says "The receipt is still uploading".
 - **Done:** the row shows the name, "Photo · 1.2 MB" or "PDF · 1 KB", and × to remove it. Tapping the row opens the viewer with the bytes just sent, so it works offline too.
 - **Failures keep the draft** and the receipt already attached. A network or server failure (offline, timeout, 5xx, 503) offers **Try again** with the same file; a refused file (the rules above, or the server's 400/413) offers **Dismiss** only. Choosing another file replaces an upload in flight. A late answer from a cancelled or replaced upload is ignored.
-- **Ended session:** a 401 ends the session the usual way (sign-in with "Your session ended"). The unsaved entry is on the draft shelf (stored per account, [native entries](ios-entries.md#failures-and-drafts)), so after signing in again Add entry says "Your unsaved entry is back" with every value as typed.
+- **Ended session:** a 401 ends the session the usual way (sign-in with "Your session ended"). The unsaved entry is on the draft shelf (stored per account, [native entries](entries.md#failures-and-drafts)), so after signing in again Add entry says "Your unsaved entry is back" with every value as typed.
 - **Offline:** the buttons are disabled and the footer says to connect (`LedgerSyncModel.canUseOnlineOnlyActions`: online, signed in, not signing out, session not expired). The rest of the entry still saves offline, and a receipt uploaded earlier stays linked in the draft and syncs with the entry.
 - **The demo** has no server: the footer says receipts need an account.
 - **Removing** (× or the viewer's trash) unlinks the receipt when the entry is saved. The encrypted file stays on the server: there is no receipt delete endpoint, as in the browser. The same applies to a file uploaded into a draft that is then discarded.
@@ -91,7 +91,7 @@ States:
 
 **Cleanup:** closing the viewer cancels a download in flight and removes the temporary file. Share is only offered once the file exists.
 
-**Private and shared access:** the server decides. The owner can always read a receipt; a household member can read one linked by a live shared expense of a household they belong to (or belonged to, with a share in that expense). Anyone else gets the same 404 as for a missing receipt ([access](reference/receipts.md#access)).
+**Private and shared access:** the server decides. The owner can always read a receipt; a household member can read one linked by a live shared expense of a household they belong to (or belonged to, with a share in that expense). Anyone else gets the same 404 as for a missing receipt ([access](../reference/receipts.md#access)).
 
 **App lock:** the lock cover is its own window above every sheet and full-screen cover, so the viewer, the pickers and the share sheet are hidden while Penny is locked, and the form underneath (with its upload) stays as it was.
 
@@ -142,5 +142,5 @@ The simulator covers the pickers, upload, preview, sharing and every failure abo
 
 - No camera capture inside Penny (pick from the photo library instead).
 - No document scanning (VisionKit) or OCR; receipt text search is MAZ-125.
-- HEIC photos are uploaded as HEIC; browsers other than Safari show them as a download (`web-receipts.md`).
+- HEIC photos are uploaded as HEIC; browsers other than Safari show them as a download ([browser receipts](../web/receipts.md)).
 - The redesign baseline's `iphone-receipt` state (`contracts/fixtures/redesign-states.json`) still waits for a seeded receipt in `full-stack-seeds.json` (MAZ-122).

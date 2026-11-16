@@ -5,7 +5,7 @@ import SwiftUI
 import WidgetKit
 
 /// Keeps the Home Screen widgets' snapshot in step with the signed-in account (MAZ-80,
-/// docs/ios-widgets.md). The app is the only writer of the App Group snapshot:
+/// docs/ios/widgets.md). The app is the only writer of the App Group snapshot:
 ///
 /// - the account's shell publishes a new snapshot whenever what the widgets show changes (a
 ///   saved, synced or undone change, shared rows arriving, a new day, the sync state);

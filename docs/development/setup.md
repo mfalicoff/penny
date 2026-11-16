@@ -1,8 +1,8 @@
 # Development
 
-[App showcase](../README.md) · [Documentation](README.md)
+[App showcase](../../README.md) · [Documentation](../README.md)
 
-Run all commands from the repository root. For a deployed server, use the [self-hosting guide](deployment.md).
+Run all commands from the repository root. For a deployed server, use the [self-hosting guide](../self-hosting/deployment.md).
 
 ## Run the complete web app
 
@@ -15,13 +15,13 @@ npm ci
 PENNY_API_URL=http://127.0.0.1:<port> npm run dev     # http://localhost:4173
 ```
 
-Open **http://localhost:4173**. Create an account, or choose the sample-data demo, which needs no API. See the [web app's developer setup](../apps/web/README.md#developer-setup) for the commands and the [test environment](reference/test-environment.md) for the stack. To run the production containers locally, follow [self-hosting](deployment.md#quick-start).
+Open **http://localhost:4173**. Create an account, or choose the sample-data demo, which needs no API. See the [web app's developer setup](../../apps/web/README.md#developer-setup) for the commands and the [test environment](../reference/test-environment.md) for the stack. To run the production containers locally, follow [self-hosting](../self-hosting/deployment.md#quick-start).
 
 ## Native iOS and backend development
 
-- **iOS:** the SwiftUI app has its own setup, commands and tests in the [native iOS app README](../apps/ios/README.md). Android is no longer supported; see [Android retirement](ios-ipa.md#android-retirement).
-- **Backend:** the .NET API and PostgreSQL setup are in the [backend README](../apps/backend/README.md).
-- **Web:** see the [web app README](../apps/web/README.md).
+- **iOS:** the SwiftUI app has its own setup, commands and tests in the [native iOS app README](../../apps/ios/README.md). Android is no longer supported; see [Android retirement](../ios/ipa.md#android-retirement).
+- **Backend:** the .NET API and PostgreSQL setup are in the [backend README](../../apps/backend/README.md).
+- **Web:** see the [web app README](../../apps/web/README.md).
 
 ## Nix / direnv development shell
 
@@ -59,18 +59,18 @@ with `nix flake update` and commit the resulting lockfile.
 
 The shell uses the existing npm lockfile. Xcode/Command Line Tools and simulators
 must be installed separately for local iOS builds; see the
-[native iOS app README](../apps/ios/README.md#first-time-xcode-setup) for using
+[native iOS app README](../../apps/ios/README.md#first-time-xcode-setup) for using
 Xcode tools inside this shell. Existing platform settings are left unchanged. For
 browser tests, install Chromium with `npx playwright install chromium` (Linux may
 also need host browser dependencies).
 
 ## iOS builds and TestFlight
 
-The [iOS TestFlight workflow](../.github/workflows/ios-testflight.yml) runs checks, archives and signs the native iOS app, and uploads it to TestFlight when a GitHub Release is published or on manual dispatch. Release builds attach `penny.ipa` and its SHA-256 checksum to the release's **Assets**. Complete the setup in [iOS IPA and TestFlight builds](ios-ipa.md#one-time-setup) before running it.
+The [iOS TestFlight workflow](../../.github/workflows/ios-testflight.yml) runs checks, archives and signs the native iOS app, and uploads it to TestFlight when a GitHub Release is published or on manual dispatch. Release builds attach `penny.ipa` and its SHA-256 checksum to the release's **Assets**. Complete the setup in [iOS IPA and TestFlight builds](../ios/ipa.md#one-time-setup) before running it.
 
 ## Dependency updates
 
-[`renovate.json`](../renovate.json) uses Renovate's recommended preset with a
+[`renovate.json`](../../renovate.json) uses Renovate's recommended preset with a
 Dependency Dashboard. All regular updates, including major versions, are grouped
 into one pull request, with at most one regular Renovate PR open at a time.
 It checks npm dependencies and their lockfiles, GitHub Actions, Dockerfiles, and
@@ -105,7 +105,7 @@ npx --yes --package renovate -- renovate-config-validator --strict --no-global r
 ## Source layout
 
 - `apps/ios/`, `apps/web/`, `apps/backend/`: the native iOS app, the browser app and the .NET API, each with its own README.
-- `apps/web/src/domain/`: the pure TypeScript ledger rules (types, integer-cent calculations, recurrence, immutable commands, merge, search, summaries, entry-draft conversion and the household projection), the reference the native and web apps port. See [domain rules](reference/domain-rules.md).
+- `apps/web/src/domain/`: the pure TypeScript ledger rules (types, integer-cent calculations, recurrence, immutable commands, merge, search, summaries, entry-draft conversion and the household projection), the reference the native and web apps port. See [domain rules](../reference/domain-rules.md).
 - `apps/web/src/validation/ledger.ts`: the ledger write schema the golden fixtures and the reference tests (`apps/web/tests/domain`) check ledgers against.
 - `contracts/`: OpenAPI, the golden fixtures and the design baseline shared by every client.
 - `scripts/`: the tooling package: the full-stack test environment, deployment and observability smoke tests, the Grafana dashboards and the version check. There is no package at the repository root.

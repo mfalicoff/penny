@@ -53,7 +53,7 @@ Startup: create the container, wait for TCP readiness, run `migrate --bootstrap 
 | iOS Simulator | Same URL: the simulator shares the host's loopback |
 | Physical device or another machine | `--host 0.0.0.0`, then `http://<host LAN address>:<port>`. Only on a trusted network: the API has test controls |
 
-The environment serves plain HTTP. The native app reaches `http://127.0.0.1:<port>` without an App Transport Security exception (loopback IP addresses are exempt); `apps/ios/scripts/ios.sh ui-test` starts this environment with `--oidc` around the XCUITest plans and trusts the provider certificate (`PENNY_OIDC_CERTIFICATE` in the runner environment) on each simulator ([native UI tests](../ios-ui-tests.md)).
+The environment serves plain HTTP. The native app reaches `http://127.0.0.1:<port>` without an App Transport Security exception (loopback IP addresses are exempt); `apps/ios/scripts/ios.sh ui-test` starts this environment with `--oidc` around the XCUITest plans and trusts the provider certificate (`PENNY_OIDC_CERTIFICATE` in the runner environment) on each simulator ([native UI tests](../ios/ui-tests.md)).
 
 ## Seeding, users and reset
 
@@ -109,7 +109,7 @@ Browsers must ignore HTTPS errors for the provider origin (Playwright `ignoreHTT
 
 `money`, `recurrence` and `merge-conflicts` are generated from the reference TypeScript rules (`apps/web/src/domain`) by `npm --prefix apps/web run fixtures:generate`; `npm --prefix apps/web run fixtures:check` (CI) fails if any generated file or the manifest is stale. Generation reads no clock, randomness or locale; the TS suite regenerates under UTC+14, UTC−3:30 and Lord Howe and compares bytes. Hand-written fixtures are covered by the manifest hash, so an edit must regenerate the manifest, which every language checks. All consumers decode into strict typed models (zod `strictObject`, `System.Text.Json` with unmapped members disallowed and required members enforced, Swift `Codable` with a re-encode comparison), so an unknown, missing or mistyped field fails everywhere. `FullStackSeedTests` also seeds the scenario twice and compares normalized ledgers and projections.
 
-The Swift package (`contracts/swift`, Swift 6, no dependencies) supplies the models, loader and hashes; behavior assertions are added by MAZ-70 (ledger, recurrence, reports and local search: `apps/ios/Packages/PennyKit/Tests/PennyDomainTests`, [ledger rules](../ios-ledger-domain.md#fixtures)), 71 (sync), 73 (search) and 75 (shared money) as they port the rules.
+The Swift package (`contracts/swift`, Swift 6, no dependencies) supplies the models, loader and hashes; behavior assertions are added by MAZ-70 (ledger, recurrence, reports and local search: `apps/ios/Packages/PennyKit/Tests/PennyDomainTests`, [ledger rules](../ios/ledger-domain.md#fixtures)), 71 (sync), 73 (search) and 75 (shared money) as they port the rules.
 
 ## Redesign specimens
 

@@ -7,7 +7,7 @@
 /// `categoryKindInUse` (which the server refuses as "Invalid ledger data." only after
 /// sync) follow the wording of their account and trip counterparts; `scheduleAfterLedgerRange`
 /// (a new schedule whose next date is after 2100, which the server also refused only after
-/// sync) follows the date message (docs/ios-ledger-domain.md, "Rule decisions").
+/// sync) follows the date message (docs/ios/ledger-domain.md, "Rule decisions").
 public enum LedgerRuleError: Error, Hashable, Sendable, CustomStringConvertible {
     case invalidAmount
     case invalidSplitPeople

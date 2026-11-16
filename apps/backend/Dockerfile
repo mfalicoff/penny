@@ -61,7 +61,7 @@ ENV ASPNETCORE_ENVIRONMENT=Production \
 # part of the base image. A pin that the archive has replaced (a security update) fails
 # the build: bump it to the version `apt-cache policy <package>` shows. To read other
 # languages, derive an image that installs tesseract-ocr-<lang> and set Ocr__Languages
-# (docs/operations.md#receipt-text-ocr).
+# (docs/self-hosting/operations.md#receipt-text-ocr).
 ARG TESSERACT_VERSION=5.3.4-1build5
 ARG TESSDATA_VERSION=1:4.1.0-2
 ARG POPPLER_VERSION=24.02.0-1ubuntu9.11

@@ -133,7 +133,7 @@ const defaultSleep = (ms: number) =>
 
 /**
  * One signed-in account's durable offline ledger and its sync with `GET`/`PUT /api/ledger`,
- * following the native engine's rules (docs/ios-offline-sync.md):
+ * following the native engine's rules (docs/ios/offline-sync.md):
  *
  * - A save is applied to `local`, materialized, written to IndexedDB, and only then acknowledged.
  * - One sync per account at a time across tabs: read, merge (`./merge.ts`: the shared merge plus the

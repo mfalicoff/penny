@@ -1,10 +1,10 @@
 # Native QA matrix and release gates (MAZ-82)
 
-[Documentation](README.md) · [Native UI tests](ios-ui-tests.md) · [Native app](../apps/ios/README.md) · [Redesign baseline](reference/redesign.md)
+[Documentation](../README.md) · [Native UI tests](ui-tests.md) · [Native app](../../apps/ios/README.md) · [Redesign baseline](../reference/redesign.md)
 
-This page is the native iOS release gate: which journeys are covered on the simulator and how, which redesign cards they trace to, the accessibility and performance checks with their budgets, what was actually run (execution evidence), what only a physical device can check, how to triage a failure, and the known coverage gaps. The harness itself (plans, launch controls, the stack, artifacts, flaky-test policy) is described in [native UI tests](ios-ui-tests.md); this page does not repeat it.
+This page is the native iOS release gate: which journeys are covered on the simulator and how, which redesign cards they trace to, the accessibility and performance checks with their budgets, what was actually run (execution evidence), what only a physical device can check, how to triage a failure, and the known coverage gaps. The harness itself (plans, launch controls, the stack, artifacts, flaky-test policy) is described in [native UI tests](ui-tests.md); this page does not repeat it.
 
-Everything here runs against the real .NET API on PostgreSQL from the [full-stack test environment](reference/test-environment.md), with synthetic `.test` accounts and fixed synthetic amounts. No test mocks the business API, and no fixture contains personal financial data or credentials.
+Everything here runs against the real .NET API on PostgreSQL from the [full-stack test environment](../reference/test-environment.md), with synthetic `.test` accounts and fixed synthetic amounts. No test mocks the business API, and no fixture contains personal financial data or credentials.
 
 ## Plans
 
@@ -38,7 +38,7 @@ Each row is a feature area. "Server-checked" means the test reads the account's 
 
 ### Redesign card trace
 
-Every card in [design-baseline.json](../contracts/design-baseline.json) whose native acceptance is MAZ-82 has a row. `scripts/tests/native-qa.test.ts` fails if a card is missing here or if this page names an XCUITest suite or test that does not exist. Visual comparison against the cards is MAZ-122's; a row marked Covered means the behavior is exercised, not that the screen matches the card pixel for pixel. The eight `web-*` cards are browser references (MAZ-96); their native counterparts are named.
+Every card in [design-baseline.json](../../contracts/design-baseline.json) whose native acceptance is MAZ-82 has a row. `scripts/tests/native-qa.test.ts` fails if a card is missing here or if this page names an XCUITest suite or test that does not exist. Visual comparison against the cards is MAZ-122's; a row marked Covered means the behavior is exercised, not that the screen matches the card pixel for pixel. The eight `web-*` cards are browser references (MAZ-96); their native counterparts are named.
 
 | Card | Native suites | Notes | Status |
 | --- | --- | --- | --- |
@@ -104,7 +104,7 @@ Every card in [design-baseline.json](../contracts/design-baseline.json) whose na
 | `web-add-entry` | — | Web-only reference: native behavior is traced through `iphone-add-expense`; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-sign-in` | — | Web-only reference: native behavior is traced through `iphone-sign-in`; the browser journeys are MAZ-96 | Not applicable to native |
 
-Justified native adaptations are recorded in [redesign](reference/redesign.md#native-implementation-notes-maz-69). Android has no card (the Android app is retired, MAZ-98), and the desktop-only `web-*` cards have no native screen.
+Justified native adaptations are recorded in [redesign](../reference/redesign.md#native-implementation-notes-maz-69). Android has no card (the Android app is retired, MAZ-98), and the desktop-only `web-*` cards have no native screen.
 
 ## Accessibility
 
@@ -187,7 +187,7 @@ Simulators cannot check these; run them on a physical iPhone and iPad with the r
 
 - [ ] **Upgrade from the App Store build**: install the current store build, sign in, add an entry offline, then install the candidate over it (TestFlight). The session, the pending entry and the appearance survive (MAZ-98).
 - [ ] **Face ID lock**: turn on the lock, background and return; content and open sheets are concealed and drafts kept; cancel and passcode fallback work (MAZ-69, `iphone-lock`, `iphone-app-lock`).
-- [ ] **Push notifications**: register on the production APNs environment, receive a household expense notification from a second account, tap it locked and unlocked (MAZ-79, [notifications](ios-notifications.md)).
+- [ ] **Push notifications**: register on the production APNs environment, receive a household expense notification from a second account, tap it locked and unlocked (MAZ-79, [notifications](notifications.md)).
 - [ ] **Widgets**: add small widgets to the Home Screen, check light and dark, refresh after a new entry, tap through to Add entry and Home, sign out clears them (MAZ-80, `system-widgets`).
 - [ ] **Camera**: scan an invite QR code from a second device (MAZ-75); simulators have no camera.
 - [ ] **VoiceOver pass**: navigate Home, Activity, Add entry and Settings with VoiceOver on; every control is announced with its purpose; the amount keypad is usable.
@@ -204,7 +204,7 @@ Simulators cannot check these; run them on a physical iPhone and iPad with the r
 3. **Classify.**
    - Product bug (the app or API does the wrong thing): open a Linear issue with the xcresult, the failing step and the server log excerpt, label it with the feature's issue, and link it from the release issue. Release blockers: data loss, wrong totals, a crash, a privacy leak, a journey that cannot be completed.
    - Test bug (a changed identifier, a new system presentation such as a popover instead of an action sheet): fix the driver (`PennyUITests/Support`) in the same day.
-   - Flaky (passes on the Full plan's retry): follow the [flaky-test policy](ios-ui-tests.md#flaky-test-policy): issue with the xcresult, fix or `XCTSkip("Flaky: MAZ-…")` within a week.
+   - Flaky (passes on the Full plan's retry): follow the [flaky-test policy](ui-tests.md#flaky-test-policy): issue with the xcresult, fix or `XCTSkip("Flaky: MAZ-…")` within a week.
    - Environment (simulator runtime missing, stack did not start): re-run; if it persists, fix the runner, not the test.
 4. **Reproduce one test**: `PENNY_UI_DEVICES=iphone PENNY_UI_ONLY=PennyUITests/<Class>/<test> apps/ios/scripts/ios.sh ui-test full`, or keep a stack up (`node scripts/test-env/penny-env.mjs up --oidc`) and run it from Xcode.
 5. **Accessibility findings**: read the `audit-*.txt` attachment. Fix in the view (labels, `accessibilityElement`, Dynamic Type styles, contrast tokens) or, for a system control Penny does not draw, add a reviewed entry to `AccessibilityAuditTests.accepted` and to the table above.
@@ -223,6 +223,6 @@ Explicit gaps, not covered by any automated native test in this repository:
 - **Face ID lock success path, push, widgets, camera**: need hardware; see the device release checklist. On the simulator only the app lock's refusal path runs.
 - **Hardware keyboard and focus on iPad.** Penny defines no keyboard shortcuts, and XCUITest does not model a hardware keyboard's focus ring; this is a device checklist item. The software keyboard is covered (keyboard-safe Add entry).
 - **VoiceOver navigation order and rotor.** Labels are checked automatically; the order and grouping need the device VoiceOver pass.
-- **Visual comparison with the redesign cards** (MAZ-122): the Cards plan captures each card's state, and each verdict is in [visual-comparisons.json](../contracts/visual-comparisons.json) ([visual acceptance](design/visual-acceptance.md)). Captures are reviewed side by side with the baselines, not diffed pixel by pixel, because SF Pro and Liquid Glass differ from the cards by design.
+- **Visual comparison with the redesign cards** (MAZ-122): the Cards plan captures each card's state, and each verdict is in [visual-comparisons.json](../../contracts/visual-comparisons.json) ([visual acceptance](../design/visual-acceptance.md)). Captures are reviewed side by side with the baselines, not diffed pixel by pixel, because SF Pro and Liquid Glass differ from the cards by design.
 - **Performance on devices.** Budgets above are simulator Debug-build numbers; device numbers are a release checklist item.
 - **Multiple Penny devices of one person at once** are exercised as "this app plus the API as another device", not as two simulators running the app.

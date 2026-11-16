@@ -70,7 +70,7 @@ internal static class EngineProcess
         catch (Win32Exception failure)
         {
             throw new InvalidOperationException(
-                $"The OCR program {Path.GetFileName(start.FileName)} could not be started. Install it or set its path (see docs/operations.md#receipt-text-ocr).",
+                $"The OCR program {Path.GetFileName(start.FileName)} could not be started. Install it or set its path (see docs/self-hosting/operations.md#receipt-text-ocr).",
                 failure
             );
         }

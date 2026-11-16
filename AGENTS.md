@@ -27,7 +27,7 @@ Run lint, typecheck and tests before declaring a change to `scripts/` done. The 
 
 ## Rules
 
-- There is no Android app and no Expo app. Don't add React Native, Expo or Android code or dependencies. Android is retired without a migration path (`docs/ios-ipa.md#android-retirement`).
+- There is no Android app and no Expo app. Don't add React Native, Expo or Android code or dependencies. Android is retired without a migration path (`docs/ios/ipa.md#android-retirement`).
 - `apps/web/src/domain` stays pure TypeScript: no Node APIs and no packages (ESLint enforces this). Together with the golden fixtures in `contracts/fixtures` it is the reference for the rules the native app, the web app and the API implement; change it only with the fixtures (`npm --prefix apps/web run fixtures:generate`) and the matching Swift, web and C# rules.
-- iOS builds, signing and TestFlight: `apps/ios/scripts/ios.sh` and `docs/ios-ipa.md`. Never change the bundle id, App Group, URL scheme or widget identifiers.
+- iOS builds, signing and TestFlight: `apps/ios/scripts/ios.sh` and `docs/ios/ipa.md`. Never change the bundle id, App Group, URL scheme or widget identifiers.
 - Keep secrets and real personal financial data out of fixtures, logs and test artifacts.

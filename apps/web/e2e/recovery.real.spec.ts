@@ -129,7 +129,7 @@ test("a session that expires by server time keeps the waiting change and syncs i
   expect(await serverTitles(user)).toEqual([]);
   await expect(page.getByRole("heading", { level: 1, name: "Welcome back" })).toBeVisible();
   // Signing in again returns to the page and sends the change once. (Unlike iOS, the web does not
-  // prefill the expired account's email: docs/acceptance.md, known gaps.)
+  // prefill the expired account's email: docs/development/acceptance.md, known gaps.)
   await page.getByLabel("Email").fill(user.email);
   await page.getByLabel("Password").fill(user.password);
   await page.getByRole("button", { name: "Sign in" }).click();

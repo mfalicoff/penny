@@ -1,8 +1,8 @@
 # Native app shell, settings, lock and demo (MAZ-69)
 
-[Documentation](README.md) · [Native iOS app](../apps/ios/README.md) · [Redesign baseline](reference/redesign.md) · [Native sign-in](ios-authentication.md)
+[Documentation](../README.md) · [Native iOS app](../../apps/ios/README.md) · [Redesign baseline](../reference/redesign.md) · [Native sign-in](authentication.md)
 
-This page describes the SwiftUI shell that MAZ-69 adds to `apps/ios`: the navigation for iPhone and iPad, the shared components, the settings, the biometric app lock, the temporary demo and the loading, empty, offline and error states. It follows the iOS-native redesign in [`docs/design/penny-ios`](design/penny-ios/README.md) and [`contracts/design-baseline.json`](../contracts/design-baseline.json) (MAZ-132). The feature screens behind it (entries, households, trips, recurring, insights) belong to MAZ-73 to MAZ-77; Accounts, Categories and Recurring are described in [organize](ios-organize.md) (MAZ-74).
+This page describes the SwiftUI shell that MAZ-69 adds to `apps/ios`: the navigation for iPhone and iPad, the shared components, the settings, the biometric app lock, the temporary demo and the loading, empty, offline and error states. It follows the iOS-native redesign in [`docs/design/penny-ios`](../design/penny-ios/README.md) and [`contracts/design-baseline.json`](../../contracts/design-baseline.json) (MAZ-132). The feature screens behind it (entries, households, trips, recurring, insights) belong to MAZ-73 to MAZ-77; Accounts, Categories and Recurring are described in [organize](organize.md) (MAZ-74).
 
 > MAZ-69's description predates MAZ-132. It names AMOLED and Catppuccin, DM Sans, a More tab, 52px controls and 48px targets, and Penpot specimen names. The baseline replaced those decisions: light and dark only, SF Pro and SF Symbols, Home / Activity / Shared / Trips with Settings as a sheet, and the design-kit sizes (44pt minimum target). This implementation follows the baseline. The table at the end maps the old specimen names to the cards.
 
@@ -25,7 +25,7 @@ This page describes the SwiftUI shell that MAZ-69 adds to `apps/ios`: the naviga
 ### iPhone (and any compact width)
 
 - The system iOS 26 `TabView`: **Home**, **Activity**, **Shared** and **Trips**, a floating Liquid Glass tab bar. There is no More tab.
-- **Add entry** is the separate circular button at the trailing end of the tab bar. It is a `Tab` with the search role; selecting it opens the Add entry sheet and never becomes the selected tab. On the iOS 26 and 27 simulators it renders as a fifth item inside the glass bar ("Add entry"), not as a separate copper circle, and iOS doesn't let one tab item have its own tint. This is a recorded adaptation ([redesign](reference/redesign.md#native-implementation-notes-maz-69)).
+- **Add entry** is the separate circular button at the trailing end of the tab bar. It is a `Tab` with the search role; selecting it opens the Add entry sheet and never becomes the selected tab. On the iOS 26 and 27 simulators it renders as a fifth item inside the glass bar ("Add entry"), not as a separate copper circle, and iOS doesn't let one tab item have its own tint. This is a recorded adaptation ([redesign](../reference/redesign.md#native-implementation-notes-maz-69)).
 - **Settings** opens as a sheet from the gear button in Home's toolbar. Recurring, Accounts and Categories (the old More tab) are its Manage pages.
 - Each tab keeps its own navigation stack. Choosing the tab that is already shown returns it to its root.
 
@@ -45,7 +45,7 @@ The households and trips listed directly in the sidebar, the Insights item and t
 
 ### Deep links
 
-Every route keeps a destination (`DeepLink`, MAZ-66; [deep links](reference/redesign.md#routes-and-deep-links)).
+Every route keeps a destination (`DeepLink`, MAZ-66; [deep links](../reference/redesign.md#routes-and-deep-links)).
 
 | Link | Destination |
 | --- | --- |
@@ -60,7 +60,7 @@ Every route keeps a destination (`DeepLink`, MAZ-66; [deep links](reference/rede
 
 A link that arrives while signed out, while the session is being restored or while the app is locked waits in `DeepLinkInbox`. It opens once the shell is showing and the lock is open, never behind the lock. A newer link replaces an older one. A link belongs to the session showing when it arrived (`DeepLinkSession`, kept current by `AuthGate`): one that arrived while an account was signed in opens only in that account, and another account's shell drops it, so a link kept from before a sign-out never opens in the next account. A link that arrived while no session showed opens in the next account. The demo opens only links that arrived during the demo; an account's link waits through it.
 
-Household and expense links open their pages (MAZ-75, [native households](ios-households.md)); `penny://join` invite links wait in `InviteHandoff` instead of the inbox, for an account on the server they name. A trip link takes a personal trip id or a shared trip's household id (MAZ-76, [native trips](ios-trips.md)); a personal trip that isn't on the device and isn't a shared trip shows "Trip not found" (in the demo) or the shared trip's "Trip not available".
+Household and expense links open their pages (MAZ-75, [native households](households.md)); `penny://join` invite links wait in `InviteHandoff` instead of the inbox, for an account on the server they name. A trip link takes a personal trip id or a shared trip's household id (MAZ-76, [native trips](trips.md)); a personal trip that isn't on the device and isn't a shared trip shows "Trip not found" (in the demo) or the shared trip's "Trip not available".
 
 ## Components and tokens
 
@@ -93,7 +93,7 @@ PennyDesign keeps the tokens of the baseline (`Tokens.swift`, checked by `TokenB
 | Face ID lock | Keychain, this device only, not synced | See [App lock](#app-lock). |
 | Server | The saved server (MAZ-68) | Read-only while signed in: "Sign out to change servers." |
 
-Settings shows the account with its sync status and Sign out (the MAZ-68 flow, which warns about unsynced changes), or Leave demo. An account's Settings has a **Notifications** row (MAZ-79, [native notifications](ios-notifications.md#permission)). The **Lock after** delay (MAZ-133) is not in this build.
+Settings shows the account with its sync status and Sign out (the MAZ-68 flow, which warns about unsynced changes), or Leave demo. An account's Settings has a **Notifications** row (MAZ-79, [native notifications](notifications.md#permission)). The **Lock after** delay (MAZ-133) is not in this build.
 
 ## App lock
 
@@ -104,7 +104,7 @@ Settings shows the account with its sync status and Sign out (the MAZ-68 flow, w
 - **One prompt at a time.** Unlock is single-flight. Going to the background cancels the prompt, invalidates its answer and ends the single-flight hold at once, so a success from before backgrounding can't open a later session, and a quick return that beats the cancelled prompt's answer still asks again. Returning from the background asks again.
 - **Turning it on or off** asks for biometrics first (turning on accepts biometrics only, so the person proves the sensor works for them; turning off and unlocking accept the passcode too). The new value is saved before it takes effect; if saving fails, the previous setting stays and the screen says so.
 - **Recovery.** Unlocking accepts the device passcode, so a biometric lockout or a removed face or finger doesn't lock the person out. A device with no passcode can't verify anyone: the lock screen says to set a passcode in Settings, then unlock.
-- **Privacy outside the app.** Widgets and notification previews aren't covered by the lock; the setting says so. MAZ-79/80 keep their contents non-sensitive; an opened notification waits for unlock like any deep link ([native notifications](ios-notifications.md#privacy-and-gates)).
+- **Privacy outside the app.** Widgets and notification previews aren't covered by the lock; the setting says so. MAZ-79/80 keep their contents non-sensitive; an opened notification waits for unlock like any deep link ([native notifications](notifications.md#privacy-and-gates)).
 - The setting is in the Keychain (`com.mfalicoff.penny.app-lock`, `AfterFirstUnlockThisDeviceOnly`, not synchronizable).
 
 ## Demo
@@ -135,7 +135,7 @@ Limitations: the demo has no households, so Shared shows its "coming" state; Add
 
 ## Sync status
 
-The shell binds only to `LedgerWorkspace` (`PennyData/Workspace/LedgerWorkspace.swift`); nothing in the shell stores or syncs anything. For a signed-in account, `AppServices.accountWorkspace` returns an `AccountWorkspace` (`PennyData/Workspace/AccountWorkspace.swift`) over MAZ-71's offline ledger and sync engine ([offline sync](ios-offline-sync.md)).
+The shell binds only to `LedgerWorkspace` (`PennyData/Workspace/LedgerWorkspace.swift`); nothing in the shell stores or syncs anything. For a signed-in account, `AppServices.accountWorkspace` returns an `AccountWorkspace` (`PennyData/Workspace/AccountWorkspace.swift`) over MAZ-71's offline ledger and sync engine ([offline sync](offline-sync.md)).
 
 ```swift
 @MainActor

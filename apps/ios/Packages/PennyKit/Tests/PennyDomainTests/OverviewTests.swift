@@ -280,7 +280,7 @@ struct OverviewTests {
     /// Performance budget for the largest ledger the rules allow (`Ledger.maxEntries`):
     /// joining it, summarizing a month and building every overview must stay well under a
     /// frame budget per change on the Mac host, and give exact totals. The bound is generous
-    /// so a busy CI machine doesn't flake; docs/ios-overview.md records measured times.
+    /// so a busy CI machine doesn't flake; docs/ios/overview.md records measured times.
     @Test("whenTheLedgerHasAHundredThousandEntries_Overview_ShouldStayFastAndExact")
     func largeLedger() throws {
         let month = try #require(Self.november)

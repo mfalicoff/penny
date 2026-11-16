@@ -9,7 +9,7 @@ import known from "./a11y-known.json" with { type: "json" };
 // under forced colors, on each project's layout (desktop, phone). No request reaches the API.
 //
 // Violations the scans found when this suite was added are listed, with their reason, in
-// e2e/a11y-known.json (docs/acceptance.md, accessibility results). They are tracked gaps, not
+// e2e/a11y-known.json (docs/development/acceptance.md, accessibility results). They are tracked gaps, not
 // accepted behavior: a violation that isn't listed fails the test, and a listed one that no longer
 // occurs fails it too, so the list only shrinks. PENNY_A11Y_REPORT=<file> appends every violation
 // found as JSON lines, for triage.

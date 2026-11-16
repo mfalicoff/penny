@@ -1,6 +1,6 @@
 public import PennyDomain
 
-/// Where sign-in stands. Transitions (see docs/ios-authentication.md):
+/// Where sign-in stands. Transitions (see docs/ios/authentication.md):
 ///
 /// ```
 /// restoring ──► signedIn(unverified) ──► signedIn(verified)

@@ -339,7 +339,7 @@ struct LedgerChangeTests {
         case .duplicateCategoryName: "You already have a category with this name."
         case .currencyLocked: "Currency can only be changed before adding entries."
         // apps/web/src/domain has no sentence for these four (LedgerRuleError's doc comment); they are
-        // pinned to the wording chosen in docs/ios-ledger-domain.md.
+        // pinned to the wording chosen in docs/ios/ledger-domain.md.
         case .invalidCategoryName: "Give your category a name of up to 50 characters."
         case .tooManyCategories: "You can add up to 300 categories."
         case .categoryKindInUse: "This category has entries. Keep its type to preserve your history."

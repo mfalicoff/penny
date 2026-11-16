@@ -1,6 +1,6 @@
 # Native sign-in and sessions (MAZ-68)
 
-The SwiftUI app signs in with a password or with single sign-on (OIDC), keeps one session per server in the Keychain, restores it at launch and ends it on expiry or sign-out. The state machine and storage are in `apps/ios/Packages/PennyKit/Sources/PennyData/Auth`; the screens are in `Sources/PennyUI/Auth`. Both build on the [API client](ios-api-client.md). The server side is described in [authentication](reference/authentication.md).
+The SwiftUI app signs in with a password or with single sign-on (OIDC), keeps one session per server in the Keychain, restores it at launch and ends it on expiry or sign-out. The state machine and storage are in `apps/ios/Packages/PennyKit/Sources/PennyData/Auth`; the screens are in `Sources/PennyUI/Auth`. Both build on the [API client](api-client.md). The server side is described in [authentication](../reference/authentication.md).
 
 ## What people see
 
@@ -15,7 +15,7 @@ The SwiftUI app signs in with a password or with single sign-on (OIDC), keeps on
 | Sign out (`sign-out`) | With no unsynced changes: "Sign out of <server>?". With unsynced changes: "N changes haven't synced" with **Sync, then sign out**, **Sign out anyway** and **Cancel**. If the server cannot be reached, nothing changes and an alert offers **Try again** or **Remove from this device**. |
 | Session ended | When the server ends the session (expired after 30 days, revoked by a password reset or sign-out elsewhere), the app returns to sign-in with "Your session for <email> ended" and the email filled in. Changes on the device are kept. |
 
-The redesign cards are `docs/design/penny-ios/iphone/{sign-in,create-account,server-connect,sign-out}.html`. `sign-in-sso`, `server-verified` and `server-info` have no card of their own in this baseline; they are the states of those cards described above (`server-info` follows the Server row of `settings.html`). `docs/design/penny-redesign/screen-inventory.json` (MAZ-122's handoff) does not exist on `v2` yet, so the screens follow `contracts/design-baseline.json` and the cards. After sign-in the MAZ-69 shell takes over; it also adds the demo ("Take a look around with sample data") and the app lock ([native shell](ios-shell.md)).
+The redesign cards are `docs/design/penny-ios/iphone/{sign-in,create-account,server-connect,sign-out}.html`. `sign-in-sso`, `server-verified` and `server-info` have no card of their own in this baseline; they are the states of those cards described above (`server-info` follows the Server row of `settings.html`). `docs/design/penny-redesign/screen-inventory.json` (MAZ-122's handoff) does not exist on `v2` yet, so the screens follow `contracts/design-baseline.json` and the cards. After sign-in the MAZ-69 shell takes over; it also adds the demo ("Take a look around with sample data") and the app lock ([native shell](shell.md)).
 
 ## State machine
 
@@ -35,7 +35,7 @@ Rules the tests hold:
 - **One session per server, one signed-in account.** A new sign-in replaces the server's stored session. Everything signed-in work uses comes from `AuthController.client`, which carries the current account's token to its own server only.
 - **Stale answers are dropped.** Every sign-in, restore, expiry, sign-out and server change bumps a generation, and every await is followed by a check that the generation and state are still the ones the work started with. An answer for an earlier generation (a slow launch check after the session ended or while signing out) changes nothing. While `signingIn` or `signingOut`, nothing else can start: no second sign-in or sign-out, no server change, no expiry.
 - **Only the current session's 401 ends it.** Call `sessionDidExpire(for: account)` with the `SignedInAccount` whose client got the 401. It is ignored unless that account is the current session: a late 401 from an earlier session, even of the same account and server, or one that arrives while signing out, changes nothing.
-- **Only the features that hold a client call `sessionDidExpire`.** The launch check, "Sync, then sign out" and the offline ledger sync (`LedgerSyncModel`, MAZ-71, [offline sync](ios-offline-sync.md)) call it for the account their request was made for; there is no 401 hook in `APIClient`'s request path. Other features (shared, receipts, search screens) must route their own 401s to it.
+- **Only the features that hold a client call `sessionDidExpire`.** The launch check, "Sync, then sign out" and the offline ledger sync (`LedgerSyncModel`, MAZ-71, [offline sync](offline-sync.md)) call it for the account their request was made for; there is no 401 hook in `APIClient`'s request path. Other features (shared, receipts, search screens) must route their own 401s to it.
 - **Account switching never shows another person's data.** Data is partitioned by `AccountScope`. After an expiry, signing in as someone else gives a new scope and generation; the earlier account's local entries are neither shown, synced nor removed for them. `SearchCoordinator.reset(client:)` and every cache must key on the scope.
 - **The server is read-only while signed in.** `useServer` works only while signed out; a candidate server is checked with an anonymous client, so it never receives a token.
 
@@ -56,11 +56,11 @@ Rules the tests hold:
 `signOut(discardingUpTo:removeEvenIfUnreachable:)`, in this order:
 
 1. `AccountLocalData.beginRemoval(for:)` stops the account's local data taking saves and returns the pending count in the same step, so a save made during sign-out is refused (the draft stays) rather than acknowledged and then removed. Refuse with `pendingChanges(count)` while that count is above `discardingUpTo`: 0 by default, and for **Sign out anyway** the count the person was shown, so changes saved after the warning bring it back with the new count. Whenever sign-out stops before removal (refused, unreachable, account changed, removal failed), `cancelRemoval(for:)` lets saves resume. **Sync, then sign out** (`syncThenSignOut`) syncs first and stops with `syncFailed` (nothing removed) when it cannot.
-2. Enter `signingOut` (a new generation), then `DeviceRegistration.unregister(using:)` while the session still works, so the push `DELETE` is authenticated (`APNsDeviceRegistration`, MAZ-79: it removes this account's APNs token and never throws, [native notifications](ios-notifications.md#registration-lifecycle)).
+2. Enter `signingOut` (a new generation), then `DeviceRegistration.unregister(using:)` while the session still works, so the push `DELETE` is authenticated (`APNsDeviceRegistration`, MAZ-79: it removes this account's APNs token and never throws, [native notifications](notifications.md#registration-lifecycle)).
 3. `POST /api/auth/logout`. A `401` means it already ended. Any other failure returns to `signedIn` with `serverUnreachable`; **Remove from this device** (`removeEvenIfUnreachable: true`) continues, and the server session then stays valid until it expires (at most 30 days). A retry from that alert passes the same agreed count, so step 1 discards only as many changes as the person agreed to lose; newer changes bring the warning back.
 4. Delete the Keychain item, move to `signedOut(.signedOut)`, then `AccountLocalData.removeLocalData(for:)`. If removal fails, the person is signed out anyway (the session is gone), `AuthController.unremovedLocalData` names the account, and the sign-in screen says "You're signed out, but entries for <email> couldn't be removed from this device" with **Remove them now** (`removeUnremovedLocalData()`). The data stays under its own scope, so nobody else sees it; signing in again as that account makes it theirs again. The notice is kept in memory only; after a relaunch, `OfflineLedgerStore.storedScopes()` lists accounts that still have entries on the device, so the UI can offer the removal again (not wired to a screen yet).
 
-By default, sign-out does not go ahead while the server is unreachable; **Remove from this device** is the explicit way out. The app passes `OfflineLedgerStore` (MAZ-71) as `AccountLocalData`: pending changes are the difference between the stored base and local ledgers, a copy that cannot be read counts as one pending change, and "Sync, then sign out" fails unless the server acknowledged everything ([offline sync](ios-offline-sync.md#sign-out-and-cache-clearing)). The app passes `APNsDeviceRegistration` (MAZ-79); `NoDeviceRegistration` remains for tests and previews.
+By default, sign-out does not go ahead while the server is unreachable; **Remove from this device** is the explicit way out. The app passes `OfflineLedgerStore` (MAZ-71) as `AccountLocalData`: pending changes are the difference between the stored base and local ledgers, a copy that cannot be read counts as one pending change, and "Sync, then sign out" fails unless the server acknowledged everything ([offline sync](offline-sync.md#sign-out-and-cache-clearing)). The app passes `APNsDeviceRegistration` (MAZ-79); `NoDeviceRegistration` remains for tests and previews.
 
 ## Keychain storage
 
@@ -89,7 +89,7 @@ A `penny://auth/callback` link that arrives through `onOpenURL` (not from the sh
 
 ### Provider and callback setup
 
-On the server (see [deployment](deployment.md#openid-connect-oidc-sign-in)):
+On the server (see [deployment](../self-hosting/deployment.md#openid-connect-oidc-sign-in)):
 
 ```dotenv
 Oidc__RedirectUris=https://penny.example.com/auth/callback,penny://auth/callback
@@ -132,4 +132,4 @@ Oidc__RedirectUris=https://penny.example.com/auth/callback,penny://auth/callback
 
 Run `apps/ios/scripts/ios.sh package-test` for the PennyKit suites on the Mac (seconds) and `apps/ios/scripts/ios.sh test` for everything on clean iPhone and iPad simulators. Tests use `.test` domains and fixture tokens only, never a real provider or credentials.
 
-Not automated yet: simulator journeys against the real API and a local OIDC provider (login, failed login, cancellation, expiry, logout, account switching with VoiceOver and keyboard checks). They need XCUITest, which is MAZ-81, plus the [full-stack test environment](reference/test-environment.md) with a provider that accepts `penny://auth/callback`. Point the Debug app at a test server with `PENNY_TEST_SERVER_URL` in the launch environment (`Penny/TestControls.swift`).
+Not automated yet: simulator journeys against the real API and a local OIDC provider (login, failed login, cancellation, expiry, logout, account switching with VoiceOver and keyboard checks). They need XCUITest, which is MAZ-81, plus the [full-stack test environment](../reference/test-environment.md) with a provider that accepts `penny://auth/callback`. Point the Debug app at a test server with `PENNY_TEST_SERVER_URL` in the launch environment (`Penny/TestControls.swift`).

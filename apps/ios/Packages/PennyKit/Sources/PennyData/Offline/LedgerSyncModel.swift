@@ -3,7 +3,7 @@ public import Observation
 public import PennyDomain
 
 /// What the sync banner, pending rows and save feedback show (redesign cards "Offline" and
-/// "Save error"; docs/ios-offline-sync.md). The UI binds to `LedgerSyncModel.state`.
+/// "Save error"; docs/ios/offline-sync.md). The UI binds to `LedgerSyncModel.state`.
 public struct LedgerSyncState: Equatable, Sendable {
     public enum Phase: Equatable, Sendable {
         /// No account is signed in.

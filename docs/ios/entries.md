@@ -1,6 +1,6 @@
 # Native entries, Activity and search (MAZ-73)
 
-How the iPhone and iPad app adds, edits, deletes, finds and filters personal entries. The ledger rules themselves (amounts, splits, recurrence, stale checks) are in [native ledger rules](ios-ledger-domain.md); the offline engine behind every save is in [native offline sync](ios-offline-sync.md).
+How the iPhone and iPad app adds, edits, deletes, finds and filters personal entries. The ledger rules themselves (amounts, splits, recurrence, stale checks) are in [native ledger rules](ledger-domain.md); the offline engine behind every save is in [native offline sync](offline-sync.md).
 
 ## Where the code is
 
@@ -11,7 +11,7 @@ How the iPhone and iPad app adds, edits, deletes, finds and filters personal ent
 | Save flow over any workspace | `PennyData/Entries/EntryFormModel.swift` | `EntryFormModelTests` (including an offline save through `AccountWorkspace` and the fake server) |
 | Server search state (MAZ-121), paging, reconciliation | `PennyData/Search/ActivitySearch.swift` | `ActivitySearchModelTests` |
 | Entry sheet, keypad, pickers, split, More details | `PennyUI/Entries/` | `EntryFlowTests` |
-| Inline account and category creation | The pickers present MAZ-74's `AccountFormSheet` and `CategoryFormSheet` (`PennyUI/Organize/`, the category form prefilled with the search text) and select the saved record; see [organize](ios-organize.md) | `OrganizeFormTests`, `EntryFormModelTests` |
+| Inline account and category creation | The pickers present MAZ-74's `AccountFormSheet` and `CategoryFormSheet` (`PennyUI/Organize/`, the category form prefilled with the search text) and select the saved record; see [organize](organize.md) | `OrganizeFormTests`, `EntryFormModelTests` |
 | Activity list, chips, search scope, filters sheet | `PennyUI/Activity/` | `EntryFlowTests` |
 
 Previews of every card this issue owns are in `PennyUI/Entries/EntrySpecimens.swift`, named after their cards.
@@ -23,7 +23,7 @@ Previews of every card this issue owns are in `PennyUI/Entries/EntrySpecimens.sw
 - **Amount:** on iPhone a keypad under the form (the system keyboard appears only for the name); on iPad the decimal keyboard. Up to nine whole digits and two decimals, as `Money.cents` accepts.
 - **Category:** the three most used categories of the type (by their use in the latest 500 entries and the schedules) as chips, the selected one always visible, and a More chip for every category with search, New (inline) and Edit categories (opens Settings › Categories; the draft is kept).
 - **Date, Account, Split:** labeled rows. Accounts are labels, never balances; None is allowed. New account creates one inline and selects it.
-- **More details:** receipt (expenses only: photo or file picker, upload with progress, preview; see [native receipts](ios-receipts.md)), repeat (new entries only), trip (expenses only) and note. Repeating creates a schedule whose first occurrence is this entry.
+- **More details:** receipt (expenses only: photo or file picker, upload with progress, preview; see [native receipts](receipts.md)), repeat (new entries only), trip (expenses only) and note. Repeating creates a schedule whose first occurrence is this entry.
 - **Save:** the toolbar check, so the keyboard never covers it. It shows a spinner and can't be tapped twice; a save that succeeded never runs again. The sheet closes on success and the shell shows the toast with Undo and a success haptic.
 
 ### Splits and investments
@@ -65,13 +65,13 @@ Previews of every card this issue owns are in `PennyUI/Entries/EntrySpecimens.sw
 
 ## Accessibility identifiers
 
-Screens: `screen.addEntry`, `screen.editEntry`, `screen.categoryPicker`, `screen.accountPicker`, `screen.datePicker`, `screen.split`, `screen.entryExtras`, `screen.accountForm` and `screen.categoryForm` (inline creation, see [organize](ios-organize.md)), `screen.entryDetail`, `screen.activity`, `screen.activityFilters`.
+Screens: `screen.addEntry`, `screen.editEntry`, `screen.categoryPicker`, `screen.accountPicker`, `screen.datePicker`, `screen.split`, `screen.entryExtras`, `screen.accountForm` and `screen.categoryForm` (inline creation, see [organize](organize.md)), `screen.entryDetail`, `screen.activity`, `screen.activityFilters`.
 
-Controls: `entryForm.{kind,amount,title,category.<id>,moreCategories,date,account,split,details,save,close,discard,keepDraft,discardDraft,restoredDraft,reviewLatest,conflict,deleted,retry,futureDate}`, `banner.saveError`, `keypad.{0-9,separator,delete}`, `categoryPicker.{<id>,new,edit,close}`, `accountPicker.{none,<id>,new}`, `datePicker.{calendar,today,yesterday,done}`, `split.{mode,people,input,share,error,done,cancel}`, `entryExtras.{repeat,note,trip.none,trip.<id>}`, `entryDetail.{edit,delete}`, the receipt identifiers in [native receipts](ios-receipts.md#accessibility), `deleteEntry.{confirm,cancel}`, `activity.{filters,period,filter.<all|expense|income|investment>,category.<all|id>,totals,edit,delete,loadMore,showMore,searching,searchEmpty,searchAllMonths,clearFilters,searchError,searchRetry,scope.server,scope.device}`, `filters.{period,month.previous,month.next,year.previous,year.next,oneDay,day,kind,category,clear,done}`, and the existing `entry.<id>` rows.
+Controls: `entryForm.{kind,amount,title,category.<id>,moreCategories,date,account,split,details,save,close,discard,keepDraft,discardDraft,restoredDraft,reviewLatest,conflict,deleted,retry,futureDate}`, `banner.saveError`, `keypad.{0-9,separator,delete}`, `categoryPicker.{<id>,new,edit,close}`, `accountPicker.{none,<id>,new}`, `datePicker.{calendar,today,yesterday,done}`, `split.{mode,people,input,share,error,done,cancel}`, `entryExtras.{repeat,note,trip.none,trip.<id>}`, `entryDetail.{edit,delete}`, the receipt identifiers in [native receipts](receipts.md#accessibility), `deleteEntry.{confirm,cancel}`, `activity.{filters,period,filter.<all|expense|income|investment>,category.<all|id>,totals,edit,delete,loadMore,showMore,searching,searchEmpty,searchAllMonths,clearFilters,searchError,searchRetry,scope.server,scope.device}`, `filters.{period,month.previous,month.next,year.previous,year.next,oneDay,day,kind,category,clear,done}`, and the existing `entry.<id>` rows.
 
 ## Simulator scenarios (for MAZ-81/82)
 
-Each runs on a clean iPhone and iPad simulator against the [full-stack test environment](reference/test-environment.md) (real .NET and PostgreSQL), or in the demo (`PENNY_TEST_DEMO=1`) where noted.
+Each runs on a clean iPhone and iPad simulator against the [full-stack test environment](../reference/test-environment.md) (real .NET and PostgreSQL), or in the demo (`PENNY_TEST_DEMO=1`) where noted.
 
 1. **All kinds and splits:** add an expense split equally three ways, by amount and by percent; an income repeating monthly; an investment. Check the rows, the day nets and the period totals (your shares).
 2. **Inline creation:** from the account picker add an account; from the category picker add a category; the draft's amount, name and note survive and the entry saves with both.

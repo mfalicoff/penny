@@ -21,7 +21,7 @@ final class CardCaptureTests: CardTestCase {
             "system-widgets",
             note:
                 "The widgets exist (PennyWidgets, MAZ-80) but XCUITest cannot add them to the Home or Lock Screen; "
-                + "captured in WidgetKit previews and the device checklist (docs/ios-qa.md)")
+                + "captured in WidgetKit previews and the device checklist (docs/ios/qa.md)")
     }
 
     // MARK: iPhone overview
@@ -324,7 +324,7 @@ final class CardCaptureTests: CardTestCase {
             "iphone-lock",
             note:
                 "The lock cover needs the Face ID lock turned on, which needs enrolled, matching Face ID; XCUITest "
-                + "cannot enroll or match biometrics (device checklist, docs/ios-qa.md)")
+                + "cannot enroll or match biometrics (device checklist, docs/ios/qa.md)")
     }
 
     @MainActor

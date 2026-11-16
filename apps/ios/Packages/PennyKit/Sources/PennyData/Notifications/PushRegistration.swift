@@ -7,7 +7,7 @@ import Security
 /// Which account a push registration belongs to, without storing who it is: an HMAC-SHA256 of
 /// the normalized server and lower-cased email, keyed with a random key kept in this device's
 /// Keychain (`PushOwnerKeychain`). Kept with the stored registration so a notification left from
-/// one account is never opened in another (docs/ios-notifications.md). Without the key, the
+/// one account is never opened in another (docs/ios/notifications.md). Without the key, the
 /// digest in `UserDefaults` (and in backups) cannot be matched to an email.
 public struct PushOwner: Hashable, Sendable, Codable {
     public let digest: String

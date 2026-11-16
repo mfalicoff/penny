@@ -150,7 +150,7 @@ public struct DurableFileSystem: LedgerFileSystem {
 /// share a file: the name is a hash of the server and the lowercased email, and the record
 /// repeats both so a misplaced file is refused (`wrongAccount`).
 ///
-/// Format 1 (see docs/ios-offline-sync.md for the schema and the migration rules):
+/// Format 1 (see docs/ios/offline-sync.md for the schema and the migration rules):
 ///
 /// ```json
 /// {"format":1,"server":"https://…","email":"…","baseRevision":12,

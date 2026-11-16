@@ -1,8 +1,8 @@
 # Releases
 
-[App showcase](../README.md) · [Documentation](README.md)
+[App showcase](../../README.md) · [Documentation](../README.md)
 
-A release publishes the container images and the native iOS TestFlight build. Run release commands from the repository root. Platform-specific credentials and distribution instructions live in [iOS IPA and TestFlight builds](ios-ipa.md). Android builds are retired; see [Android retirement](ios-ipa.md#android-retirement). Container publishing is covered in [Self-hosting](deployment.md#container-images-and-releases).
+A release publishes the container images and the native iOS TestFlight build. Run release commands from the repository root. Platform-specific credentials and distribution instructions live in [iOS IPA and TestFlight builds](../ios/ipa.md). Android builds are retired; see [Android retirement](../ios/ipa.md#android-retirement). Container publishing is covered in [Self-hosting](../self-hosting/deployment.md#container-images-and-releases).
 
 ## Semantic versioning and releases
 
@@ -41,7 +41,7 @@ commit:
 4. Release Please creates a matching `vMAJOR.MINOR.PATCH` tag and publishes a
    GitHub Release with the changelog entry as its release notes. The tag starts
    the container workflow; publishing the release starts the
-   [iOS TestFlight workflow](../.github/workflows/ios-testflight.yml).
+   [iOS TestFlight workflow](../../.github/workflows/ios-testflight.yml).
 5. When the iOS build finishes, it attaches `penny.ipa` and `penny.ipa.sha256`
    to that release's **Assets**, then uploads the IPA to TestFlight.
 
@@ -129,7 +129,7 @@ secret is missing. See the
 [Release Please credential requirements](https://github.com/googleapis/release-please-action#github-credentials).
 
 Complete the Apple signing and App Store Connect setup in
-[iOS one-time setup](ios-ipa.md#one-time-setup).
+[iOS one-time setup](../ios/ipa.md#one-time-setup).
 Protect `master` with the existing PR checks to gate release PR merges. Prefer squash merging so each PR's release intent is
 unambiguous.
 
@@ -155,7 +155,7 @@ publish its GitHub Release instead.
 iOS is submitted to TestFlight after its release assets are uploaded, not to
 the App Store. The store signed IPA is downloadable but cannot be installed
 directly; testers use TestFlight. See the
-[release runbook](ios-ipa.md#release-runbook) for rollout.
+[release runbook](../ios/ipa.md#release-runbook) for rollout.
 
 For an expired or missing release token, replace the secret, then rerun the
 failed **Release Please** run. Merging a release PR with the generated
@@ -166,4 +166,4 @@ Native TestFlight builds use the build number
 `IOS_BUILD_NUMBER_BASE.<run>.<attempt>`, independently of semantic versions,
 so every run and rerun is higher than the last and above every earlier
 TestFlight build. See
-[iOS one-time setup](ios-ipa.md#one-time-setup).
+[iOS one-time setup](../ios/ipa.md#one-time-setup).

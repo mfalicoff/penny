@@ -1438,7 +1438,7 @@
       "native": {
         "status": "blocked",
         "owner": "MAZ-69",
-        "note": "The lock cover needs an enrolled, matching Face ID, which XCUITest can't enroll; checked on a device (docs/ios-qa.md)."
+        "note": "The lock cover needs an enrolled, matching Face ID, which XCUITest can't enroll; checked on a device (docs/ios/qa.md)."
       },
       "web": {
         "status": "not-applicable",

@@ -138,7 +138,7 @@ export interface LedgerSnapshot {
 }
 
 /**
- * A second client that speaks the ledger protocol the iOS app uses (docs/ios-offline-sync.md):
+ * A second client that speaks the ledger protocol the iOS app uses (docs/ios/offline-sync.md):
  * bearer-token `GET /api/ledger` and revision-checked `PUT /api/ledger`, answered by 409 when the
  * revision is stale. It stands in for the simulator where no Xcode is available; the protocol, the
  * server and the database are real.

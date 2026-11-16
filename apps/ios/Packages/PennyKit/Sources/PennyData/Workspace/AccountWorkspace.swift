@@ -8,7 +8,7 @@ public import PennyDomain
 /// `.ledgerSync`); one workspace is made per signed-in shell, and it only shows the model's
 /// ledger while the model is on the same account, so nothing of another account appears here.
 ///
-/// Mapping (docs/ios-shell.md, "Sync status"): a session expiry asks for sign-in; a copy that
+/// Mapping (docs/ios/shell.md, "Sync status"): a session expiry asks for sign-in; a copy that
 /// can't be read, is locked or was written by a newer app fails the load with its next step;
 /// a sync issue becomes a failing problem; a save error becomes a `SaveFailure`. A failed save
 /// changed nothing, so the form keeps its draft.

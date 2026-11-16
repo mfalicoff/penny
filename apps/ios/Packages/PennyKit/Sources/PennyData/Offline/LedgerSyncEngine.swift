@@ -2,7 +2,7 @@ public import Foundation
 public import PennyDomain
 
 /// One account's durable offline ledger and its sync with the server (MAZ-71). See
-/// docs/ios-offline-sync.md.
+/// docs/ios/offline-sync.md.
 ///
 /// - **Save.** `commit` applies a `LedgerChange` to the local ledger, materializes due
 ///   recurrence, checks the result against the server's rules and writes `{base, local}` to
@@ -139,7 +139,7 @@ public actor LedgerSyncEngine {
         }
         let local = Recurrence.materialize(changed, today: today())
         // Only problems this change introduces: a ledger that already breaks a rule (the 2100
-        // recurrence limit, docs/ios-ledger-domain.md) must not block every later save.
+        // recurrence limit, docs/ios/ledger-domain.md) must not block every later save.
         let existing = Set(next.local.violations)
         let violations = local.violations.filter { !existing.contains($0) }
         guard violations.isEmpty else { throw .invalid(violations) }

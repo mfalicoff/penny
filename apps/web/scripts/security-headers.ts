@@ -1,5 +1,5 @@
 // The browser security policy for the app's pages (MAZ-94). Production front ends send the same
-// header (nix/module.nix and deploy/web/default.conf.template; see docs/web-receipts.md), and
+// header (nix/module.nix and deploy/web/default.conf.template; see docs/web/receipts.md), and
 // `vite preview` sends it so the Playwright suite runs the production build under it.
 // Same-origin scripts, workers (the pdf.js worker) and requests only; receipt photos are shown
 // from `blob:` URLs. Inline style attributes stay allowed because the design kit's icon SVGs

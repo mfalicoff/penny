@@ -1,8 +1,8 @@
 # Self-hosting and configuration
 
-[App showcase](../README.md) · [Documentation](README.md) · [Operations runbook](operations.md)
+[App showcase](../../README.md) · [Documentation](../README.md) · [Operations runbook](operations.md)
 
-Penny v2 runs as a .NET API with PostgreSQL 18, behind an nginx front end that serves the web app and forwards `/api/` on the same origin. This page covers installing, configuring, upgrading and rolling back that stack. Day-to-day monitoring, backups, PostgreSQL maintenance and incident runbooks are in [Operations](operations.md). For local development, see [Development](development.md). On NixOS, use the flake's module instead: [Self-hosting on NixOS](nixos.md).
+Penny v2 runs as a .NET API with PostgreSQL 18, behind an nginx front end that serves the web app and forwards `/api/` on the same origin. This page covers installing, configuring, upgrading and rolling back that stack. Day-to-day monitoring, backups, PostgreSQL maintenance and incident runbooks are in [Operations](operations.md). For local development, see [Development](../development/setup.md). On NixOS, use the flake's module instead: [Self-hosting on NixOS](nixos.md).
 
 `deploy/compose.yaml` is self-contained: a server needs only that file, `deploy/.env` (from `deploy/.env.example`) and the optional `deploy/api.env`, in one directory. No checkout or script is required. The commands below run from a checkout's root, where `-f deploy/compose.yaml` points at it. From a directory holding just those files, plain `docker compose` works.
 
@@ -27,9 +27,9 @@ One `api` container runs every worker. Each worker claims rows with PostgreSQL l
 
 | Worker | Setting (default `true`) | Work |
 | --- | --- | --- |
-| Shared recurrence | `Recurrence__Worker` | Records due recurring household expenses ([shared recurrence](reference/shared-recurrence.md)) |
-| Push delivery | `Push__Worker` | Drains the notification outbox to APNs ([push](reference/push.md)) |
-| Search embeddings | `Search__EmbeddingWorker` | Embeds new search documents and receipt text chunks ([search](reference/search.md)) |
+| Shared recurrence | `Recurrence__Worker` | Records due recurring household expenses ([shared recurrence](../reference/shared-recurrence.md)) |
+| Push delivery | `Push__Worker` | Drains the notification outbox to APNs ([push](../reference/push.md)) |
+| Search embeddings | `Search__EmbeddingWorker` | Embeds new search documents and receipt text chunks ([search](../reference/search.md)) |
 | Receipt text | `Ocr__Worker` | Extracts the text of uploaded receipts on this server with Tesseract, poppler and libvips ([receipt OCR](operations.md#receipt-text-ocr)) |
 
 Supported topologies:
@@ -67,7 +67,7 @@ Check `https://penny.example.com/api/ready` returns `{"ok":true}`. Mobile users 
 Terminate TLS in your existing proxy and forward the whole hostname to the `web` port (`PENNY_BIND:PENNY_PORT`, default `127.0.0.1:8080`). The API is never published.
 
 - **Origin and cookies.** `PENNY_PUBLIC_ORIGIN` must be exactly the origin in the browser's address bar (scheme, host and non-default port, no path); the API rejects mutating requests from other origins with 403 and answers CORS preflights only for it. To serve more than one origin, set `PENNY_PUBLIC_ORIGIN` to a comma-separated list (the Compose `environment` value wins over `api.env`). With `PENNY_SECURE_COOKIES=true` (the default, required for an `https://` origin) session cookies are `Secure; HttpOnly; SameSite=Lax`. Use `http://` only for `localhost` testing.
-- **Keep the browser origin stable.** Browsers keep Penny's offline changes per origin. Serving Penny from a new host, port or scheme starts every browser with an empty offline store, so ask users to let their tabs finish syncing ("changes waiting" gone) before such a move. See [browser offline sync](web-offline-sync.md#deployment-origin-continuity).
+- **Keep the browser origin stable.** Browsers keep Penny's offline changes per origin. Serving Penny from a new host, port or scheme starts every browser with an empty offline store, so ask users to let their tabs finish syncing ("changes waiting" gone) before such a move. See [browser offline sync](../web/offline-sync.md#deployment-origin-continuity).
 - **Client addresses.** nginx replaces `X-Forwarded-For` with the address of its peer, and the API trusts exactly that one hop (`Auth__TrustedProxies` = the Compose subnet, default `172.31.63.0/24`; change `PENNY_SUBNET` if it collides with a local network). When your TLS proxy runs elsewhere, set `PENNY_REAL_IP_FROM` to its address or CIDR so nginx takes the real client from that proxy's `X-Forwarded-For`; otherwise every client shares the proxy's rate-limit bucket.
 - **Body size and timeouts.** nginx allows 21 MB (`PENNY_MAX_BODY`), just above the API's 20 MiB limit for encoded receipts. Allow at least that in your proxy, and a read timeout of at least the API's 30-second request timeout.
 - **Request ids.** nginx sends `X-Request-Id` (its `$request_id`) to the API, which echoes it and logs it with every line ([logging](operations.md#logs)). If your proxy sets its own `X-Request-Id`, nginx replaces it; use nginx's access log or the response header to correlate.
@@ -134,9 +134,9 @@ Copy `deploy/api.env.example` to `deploy/api.env` (mode 0600, git-ignored). It i
 | --- | --- | --- |
 | `Auth__AllowRegistration` | `true` | Password sign-up |
 | `Auth__RateLimitPermits` / `Auth__InviteRateLimitPermits` | 40 / 20 | Sign-in attempts per client per 15 minutes / invite joins per client per 10 minutes, per process |
-| `Auth__PasswordResetHours` | 24 | Lifetime of operator-issued reset codes ([password reset](reference/authentication.md#password-reset-maz-123)) |
+| `Auth__PasswordResetHours` | 24 | Lifetime of operator-issued reset codes ([password reset](../reference/authentication.md#password-reset-maz-123)) |
 | `Oidc__Issuer`, `Oidc__ClientId`, `Oidc__ClientSecret`, `Oidc__RedirectUris`, `Oidc__Label`, `Oidc__AllowRegistration` | off | See [OIDC](#openid-connect-oidc-sign-in) |
-| `Push__Apns__TeamId`, `Push__Apns__KeyId`, `Push__Apns__Topic`, `Push__Apns__PrivateKey` | off | All four or none ([push](reference/push.md)) |
+| `Push__Apns__TeamId`, `Push__Apns__KeyId`, `Push__Apns__Topic`, `Push__Apns__PrivateKey` | off | All four or none ([push](../reference/push.md)) |
 | `Recurrence__Worker`, `Push__Worker`, `Search__EmbeddingWorker`, `Ocr__Worker` | `true` | [Workers](#background-workers) |
 | `Ocr__Languages` | `eng+fra` | Tesseract languages for receipt text; each needs its language data, checked at startup ([receipt OCR](operations.md#receipt-text-ocr)) |
 | `Ocr__Concurrency` / `Ocr__TimeoutSeconds` / `Ocr__MaxPages` / `Ocr__MaxFileMegabytes` / `Ocr__MaxAttempts` | 1 / 120 / 10 / 10 / 4 | Receipt text bounds per process |
@@ -157,13 +157,13 @@ Keep secrets out of the image, the repository and command lines. If your platfor
 
 ### External PostgreSQL
 
-Requirements: PostgreSQL **18** (readiness rejects other majors), with `pg_trgm` and pgvector **0.8 or later** available, and an administrator login on the target database that can create roles and extensions. `migrate --bootstrap` uses that login to create the `penny_migrator` and `penny_runtime` roles, the `penny` schema and both extensions in `public` when they are missing, and to set the role passwords. It does nothing else, and the API never receives the login. The statements are [`apps/backend/development/bootstrap.sql`](../apps/backend/development/bootstrap.sql). If you can't give `migrate` an administrator login, have your DBA run that script once, set each role's password, and override `migrate`'s `command` to `["migrate", "--grant-runtime"]` in a `compose.override.yaml`. On managed services where the administrator is not a superuser, use the provider's extension mechanism (for example an allow-list parameter) and confirm availability first: `SELECT name, default_version FROM pg_available_extensions WHERE name IN ('pg_trgm', 'vector');`. See [managed hosts](operations.md#managed-postgresql-hosts).
+Requirements: PostgreSQL **18** (readiness rejects other majors), with `pg_trgm` and pgvector **0.8 or later** available, and an administrator login on the target database that can create roles and extensions. `migrate --bootstrap` uses that login to create the `penny_migrator` and `penny_runtime` roles, the `penny` schema and both extensions in `public` when they are missing, and to set the role passwords. It does nothing else, and the API never receives the login. The statements are [`apps/backend/development/bootstrap.sql`](../../apps/backend/development/bootstrap.sql). If you can't give `migrate` an administrator login, have your DBA run that script once, set each role's password, and override `migrate`'s `command` to `["migrate", "--grant-runtime"]` in a `compose.override.yaml`. On managed services where the administrator is not a superuser, use the provider's extension mechanism (for example an allow-list parameter) and confirm availability first: `SELECT name, default_version FROM pg_available_extensions WHERE name IN ('pg_trgm', 'vector');`. See [managed hosts](operations.md#managed-postgresql-hosts).
 
 Then in `deploy/.env`: `COMPOSE_PROFILES=` (empty), `PENNY_DB_HOST`, `PENNY_DB_PORT`, `PENNY_DB_NAME`, `PENNY_DB_SSL_MODE=VerifyFull`, `PENNY_ADMIN_USER`, `PENNY_ADMIN_PASSWORD` and the role passwords. For a private CA, mount the certificate read-only into `migrate` and `api` with a `compose.override.yaml` and point `PENNY_DB_OPTIONS=;Root Certificate=/run/penny/ca.pem` at it. A connection pooler in front of PostgreSQL must run in **session** mode: `migrate` holds a session advisory lock.
 
 ## Upgrade
 
-Every release is forward-only. Read the release notes first: they state whether the release contains a database migration. A database created before the EF migrations were squashed into `InitialSchema` is moved onto the squashed history by `migrate` itself, with no extra step ([backend README](../apps/backend/README.md#upgrading-a-database-from-before-the-squash)).
+Every release is forward-only. Read the release notes first: they state whether the release contains a database migration. A database created before the EF migrations were squashed into `InitialSchema` is moved onto the squashed history by `migrate` itself, with no extra step ([backend README](../../apps/backend/README.md#upgrading-a-database-from-before-the-squash)).
 
 1. Take a backup ([backup](operations.md#back-up)) and note the current image tags.
 2. Set `PENNY_API_IMAGE` and `PENNY_WEB_IMAGE` to the new **exact** version tags in `deploy/.env`, and use `deploy/compose.yaml` from the same release.
@@ -178,7 +178,7 @@ The `web` image serves the browser app (`apps/web`: React, Vite, TanStack). It t
 
 - **Caching.** `index.html` is `no-cache`, so a new release takes effect on the next page load. Files under `/assets/` are fingerprinted and `immutable`; a missing asset is a plain 404 and is not cached. `/version.json` (no-store) reports the image's `version` and `revision`: check it after an upgrade or rollback. A tab left open from before the upgrade recovers when it is reloaded.
 - **URLs and sign-in.** Every app route (`contracts/design-baseline.json` `navigation.routes`), including the OIDC callback `/auth/callback`, opens the app's page, so `Oidc__RedirectUris` and bookmarks keep working across releases.
-- **Offline changes carry over.** Unsynced changes stay in the browser's offline store across releases ([browser offline sync](web-offline-sync.md)). Keep the same origin, or the browser starts with an empty store.
+- **Offline changes carry over.** Unsynced changes stay in the browser's offline store across releases ([browser offline sync](../web/offline-sync.md)). Keep the same origin, or the browser starts with an empty store.
 - **Supported browsers:** current and previous major versions of Chrome, Edge, Firefox and Safari (macOS and iOS), which are tested in CI on Chromium, Firefox and WebKit. The app needs ES2022, IndexedDB, Web Locks and module workers. Older browsers aren't supported.
 
 ## Roll back
@@ -222,12 +222,12 @@ Oidc__AllowRegistration=true
 
 Use the exact issuer URL advertised by your provider. Register each exact redirect URI with the provider; wildcards are unsupported. Web sign-in uses a popup and requires HTTPS or localhost; keep the popup and original window on the same origin (the `web` container serves `/auth/callback`). The client secret is optional for public clients; confidential clients use `client_secret_post`. Never put it in client configuration. Pending sign-in attempts are stored in PostgreSQL, so they survive restarts and work with several API containers.
 
-New OIDC accounts are disabled by default. Set `Oidc__AllowRegistration=true` to provision an empty ledger on first sign-in, then set it back to `false`. This is independent of password sign-up. Existing users are identified by the stable `(issuer, subject)` pair; an existing account with the same email is **never automatically linked**. The native iOS app uses the same `penny://auth/callback` redirect in an ephemeral system sign-in sheet ([native sign-in](ios-authentication.md#provider-and-callback-setup)). Details and troubleshooting: [OIDC on the .NET backend](reference/authentication.md#openid-connect-maz-54).
+New OIDC accounts are disabled by default. Set `Oidc__AllowRegistration=true` to provision an empty ledger on first sign-in, then set it back to `false`. This is independent of password sign-up. Existing users are identified by the stable `(issuer, subject)` pair; an existing account with the same email is **never automatically linked**. The native iOS app uses the same `penny://auth/callback` redirect in an ephemeral system sign-in sheet ([native sign-in](../ios/authentication.md#provider-and-callback-setup)). Details and troubleshooting: [OIDC on the .NET backend](../reference/authentication.md#openid-connect-maz-54).
 
 ## Phone notifications
 
 On iOS, Penny requests notification permission and registers the signed-in device. Other active members receive a push for a new expense, an edited expense, or a recorded reimbursement; a recurring occurrence counts as a new expense. Web does not register for push.
 
-The .NET API delivers notifications through APNs (`Push__Apns__*`). Provider calls go out from the `api` container; allow outbound HTTPS to `api.push.apple.com` (`api.sandbox.push.apple.com` for development builds). Credentials, the `push-smoke-apns` check and delivery diagnostics: [push](reference/push.md).
+The .NET API delivers notifications through APNs (`Push__Apns__*`). Provider calls go out from the `api` container; allow outbound HTTPS to `api.push.apple.com` (`api.sandbox.push.apple.com` for development builds). Credentials, the `push-smoke-apns` check and delivery diagnostics: [push](../reference/push.md).
 
-For signed mobile distribution and release tags, see [Releases](releases.md).
+For signed mobile distribution and release tags, see [Releases](../development/releases.md).

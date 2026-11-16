@@ -1,6 +1,6 @@
 # Example alert rules for Penny (MAZ-128), evaluated by Grafana. They read the provisioned
 # `prometheus` and `loki` data sources; thresholds are starting points for a small household
-# server, documented in docs/observability.md#alerts. No contact point is provisioned: add one
+# server, documented in docs/self-hosting/observability.md#alerts. No contact point is provisioned: add one
 # (email, ntfy, Slack, ...) under Alerting > Contact points, or alerts only show in Grafana.
 #
 # Provisioned rules are read-only in the UI. To change one, edit this file and restart Grafana,
@@ -65,7 +65,7 @@ groups:
         labels: { severity: critical }
         annotations:
           summary: /api/ready answered non-200 for 2 minutes.
-          description: PostgreSQL, the search model or receipt storage is unavailable to the API. See docs/operations.md.
+          description: PostgreSQL, the search model or receipt storage is unavailable to the API. See docs/self-hosting/operations.md.
 
       - uid: penny-api-5xx-ratio
         title: Penny API 5xx error ratio high

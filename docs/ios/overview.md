@@ -1,12 +1,12 @@
 # Native Home, money flow, Insights and calendar (MAZ-77)
 
-[Native app](../apps/ios/README.md) · [Native ledger rules](ios-ledger-domain.md) · [Native app shell](ios-shell.md) · [Redesign baseline](reference/redesign.md) · [Domain rules](reference/domain-rules.md)
+[Native app](../../apps/ios/README.md) · [Native ledger rules](ledger-domain.md) · [Native app shell](shell.md) · [Redesign baseline](../reference/redesign.md) · [Domain rules](../reference/domain-rules.md)
 
 This page describes how the SwiftUI app shows a month: Home, the money flow, Insights (spending by category), the calendar and a category's entries. It covers the formulas, how shared and private money is combined, what investments mean here, chart accessibility, the iPhone and iPad layouts, and how performance was checked.
 
 | Piece | Where |
 | --- | --- |
-| Month totals (recorded, projected, expected income, scheduled) | `PennyDomain` `LedgerReport.month` (MAZ-70/139, [ledger rules](ios-ledger-domain.md#reports)) |
+| Month totals (recorded, projected, expected income, scheduled) | `PennyDomain` `LedgerReport.month` (MAZ-70/139, [ledger rules](ledger-domain.md#reports)) |
 | Money flow, Sankey layout, calendar grid, category breakdown, month comparison, percentages | `PennyDomain/Ledger/Overview.swift` |
 | The household projection (the viewer's shares) | `PennyData/Shared/SharedProjection.swift`, `APIClient.householdProjection(month:)` |
 | Home, the iPad dashboard, Explore your month | `PennyUI/Home/HomeView.swift` |

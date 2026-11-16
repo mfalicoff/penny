@@ -49,7 +49,7 @@ public sealed class TestApiFactory(
         // APNs transport is never called.
         builder.UseSetting("Push:Worker", "false");
         // Tests run receipt text extraction explicitly (MAZ-125); it still uses the real
-        // local OCR engine, which must be installed (docs/testing.md).
+        // local OCR engine, which must be installed (docs/development/testing.md).
         builder.UseSetting("Ocr:Worker", "false");
         builder.UseSetting("Backend:RequestTimeoutSeconds", "2");
         builder.UseSetting("Backend:ShutdownTimeoutSeconds", "5");

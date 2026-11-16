@@ -1,6 +1,6 @@
 # Native household notifications (MAZ-79)
 
-The native iOS app registers for Apple Push Notification service (APNs) and opens household notifications on the right household month or shared expense. The server side, which stores device registrations and delivers through APNs, is MAZ-61 ([push delivery](reference/push.md)).
+The native iOS app registers for Apple Push Notification service (APNs) and opens household notifications on the right household month or shared expense. The server side, which stores device registrations and delivers through APNs, is MAZ-61 ([push delivery](../reference/push.md)).
 
 | Area | Code |
 | --- | --- |
@@ -18,7 +18,7 @@ The app's entitlements now include `aps-environment`. Simulator builds sign ad h
 
 1. In [Apple Developer → Certificates, Identifiers & Profiles → Identifiers](https://developer.apple.com/account/resources/identifiers/list), open the App ID `com.mfalicoff.penny` and check that **Push Notifications** is enabled. Earlier builds already used it, so it may already be on. If not, enable it and save. Leave the certificate options alone: the server uses a token-based `.p8` key, not a push certificate.
 2. Regenerate the app's provisioning profiles: development profiles for Xcode device builds and the App Store profile for archives. With automatic signing (`Configuration/Signing.local.xcconfig` with `DEVELOPMENT_TEAM`), Xcode does this on the next build if your account may manage the team's profiles. Otherwise, regenerate them in the portal and download them in Xcode (**Settings → Accounts → Download Manual Profiles**). The widget extension `com.mfalicoff.penny.ExpoWidgetsTarget` does not need the capability.
-3. For the backend, create the APNs auth key and configure `Push__Apns__*` as described in [Apple credentials](reference/push.md#apple-credentials). One key serves both gateways.
+3. For the backend, create the APNs auth key and configure `Push__Apns__*` as described in [Apple credentials](../reference/push.md#apple-credentials). One key serves both gateways.
 
 The bundle id, App Group and URL scheme are unchanged.
 
@@ -65,7 +65,7 @@ The demo never registers and never opens a notification.
 
 ## Payloads and navigation
 
-The server sends the deep-link object as top-level custom keys next to `aps` ([payloads](reference/push.md#events-recipients-and-payloads)):
+The server sends the deep-link object as top-level custom keys next to `aps` ([payloads](../reference/push.md#events-recipients-and-payloads)):
 
 ```json
 { "aps": { "alert": { "title": "New household expense", "body": "A member added an expense. Open Penny to see your share." }, "thread-id": "household-<id>" },
@@ -89,7 +89,7 @@ The server sends the deep-link object as top-level custom keys next to `aps` ([p
 - **Auth and app lock.** An opened notification goes through the same `DeepLinkInbox` as `penny://` links. It waits while signed out, restoring the session or locked, and opens once the account's shell is shown and the lock is open. Nothing is shown behind the lock screen.
 - **Another account.** A notification opens only in the account the device's token was last registered for (`penny.push.lastOwner`), also after sign-out or turning notifications off removed the registration. A tap that arrives while nobody is signed in waits for the next account, then is dropped if the device's last owner is someone else, including an owner made with another device's key (a restored backup). Only an install that never registered has no owner; APNs cannot have reached it. Leaving or changing the account, or launching into another account than the last owner, clears Penny's delivered notifications and badge.
 - **Foreground.** A notification that arrives while Penny is open shows a banner only for a valid payload while the device's last owner is signed in. Otherwise it is suppressed.
-- **Lock screen.** Titles and bodies never name people, amounts or titles (server rule, MAZ-61), so lock screens and notification previews reveal nothing financial. The app lock does not cover iOS notification previews; the [App lock](ios-shell.md#app-lock) setting says so.
+- **Lock screen.** Titles and bodies never name people, amounts or titles (server rule, MAZ-61), so lock screens and notification previews reveal nothing financial. The app lock does not cover iOS notification previews; the [App lock](shell.md#app-lock) setting says so.
 - No token, payload or email is logged. The token's `description` is redacted.
 
 ## Tests and verification
@@ -109,7 +109,7 @@ Manual, on a simulator: `apps/ios/scripts/ios.sh push <file.apns> [device]` send
 Injection and `simctl push` do not prove transport: they skip Apple's gateway, the provider token, the topic and the environment. Before each release, on a physical iPhone with a development build (sandbox) and with a TestFlight build (production):
 
 1. Complete the [Apple Developer setup](#apple-developer-setup), install, sign in and turn notifications on from the Shared tab. Confirm a `push_devices` row with `provider = 'apns'` and the expected environment.
-2. Run the [physical-device smoke test](reference/push.md#physical-device-smoke-test) (`push-smoke-apns`): the banner shows on the locked and unlocked device.
+2. Run the [physical-device smoke test](../reference/push.md#physical-device-smoke-test) (`push-smoke-apns`): the banner shows on the locked and unlocked device.
 3. End to end: a second account adds a shared expense in the same household. Tap the notification from the lock screen with Face ID lock on: Penny asks to unlock first, then opens the expense on its month. Repeat with Penny running in the background, and with Penny force-quit (cold start).
 4. Sign out, add another expense from the second account: no notification. Sign in as a different account: the earlier notifications are gone from Notification Center.
 5. Turn notifications off in iOS Settings, return to Penny (the registration is removed), and turn them back on.

@@ -87,7 +87,7 @@ function ledger(transactions: object[], extra: Partial<Ledger> = {}): Ledger {
   };
 }
 
-// Personal recurrence after an offline catch-up (docs/ios-offline-sync.md): the base was synced
+// Personal recurrence after an offline catch-up (docs/ios/offline-sync.md): the base was synced
 // with the pass due Nov 1; this device then recorded Nov 1 and moved the rule to Dec 1 offline.
 function recurringMergeCases() {
   const pass = { id: "pass", title: "Transit pass", kind: "expense", total: 15600, share: 15600, categoryId: "food", accountId: "chq", date: "2026-10-01", note: "", frequency: "monthly", nextDate: "2026-11-01", anchorDay: 1, active: true } as const;

@@ -1,6 +1,6 @@
 name: iOS UI matrix
 
-# The broader XCUITest matrix (MAZ-81/82, docs/ios-ui-tests.md): the Full, Screenshots (with the
+# The broader XCUITest matrix (MAZ-81/82, docs/ios/ui-tests.md): the Full, Screenshots (with the
 # accessibility audits) and Performance plans on
 # iPhone and iPad, on the minimum supported OS (iOS 26) and the newest runtime the pinned Xcode
 # offers, against the real .NET API on PostgreSQL with the local OIDC provider. The Smoke plan

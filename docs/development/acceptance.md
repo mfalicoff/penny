@@ -1,6 +1,6 @@
 # Browser and cross-client acceptance (MAZ-96)
 
-[Documentation](README.md) · [Web app](../apps/web/README.md#browser-tests) · [Full-stack test environment](reference/test-environment.md) · [Native UI tests](ios-ui-tests.md) · [Redesign baseline](reference/redesign.md)
+[Documentation](../README.md) · [Web app](../../apps/web/README.md#browser-tests) · [Full-stack test environment](../reference/test-environment.md) · [Native UI tests](../ios/ui-tests.md) · [Redesign baseline](../reference/redesign.md)
 
 This is the release acceptance evidence for the v2 browser app and for the browser and the native app working against one .NET API and PostgreSQL database. It lists every journey by feature, how to run it, what the last recorded run found, and what is still not proven. Native-only acceptance (XCUITest on simulators, VoiceOver, Liquid Glass, devices) is MAZ-82's; comparing implementations with the design cards is MAZ-122's.
 
@@ -14,7 +14,7 @@ All browser commands run from `apps/web` against the production build (`npm ci &
 | --- | --- | --- |
 | Mocked browser suite (smoke, journeys, accessibility, performance) | `npm run test:e2e -- --trace off` | Playwright Chromium (`npx playwright install chromium`) |
 | Same on Firefox and WebKit | `PENNY_E2E_BROWSERS=firefox,webkit npm run test:e2e -- --trace off` | `npx playwright install firefox webkit` |
-| Real .NET/PostgreSQL journeys, disposable environment | `npm run test:e2e:real -- --trace off` | Docker or Podman (`PENNY_CONTAINER_CLI=podman`), the .NET SDK, the search model and restored packages ([prerequisites](reference/test-environment.md#prerequisites)) |
+| Real .NET/PostgreSQL journeys, disposable environment | `npm run test:e2e:real -- --trace off` | Docker or Podman (`PENNY_CONTAINER_CLI=podman`), the .NET SDK, the search model and restored packages ([prerequisites](../reference/test-environment.md#prerequisites)) |
 | One real journey, one project | `npm run test:e2e:real -- search.real --project=chromium-phone --trace off` | as above |
 | Visual baselines (compare) | `PENNY_VISUAL=1 npx playwright test visual --project=chromium-desktop` | Chromium; baselines are per platform |
 | Visual baselines (record after an intended change) | `PENNY_VISUAL=1 npx playwright test visual --project=chromium-desktop --update-snapshots` | Review every changed PNG before committing |
@@ -32,7 +32,7 @@ node scripts/test-env/penny-env.mjs up --oidc
 # Terminal 2, repository root.
 eval "$(npm run --silent test-env -- env)"
 
-# Native half (needs Xcode 27.2; see docs/ios-ui-tests.md).
+# Native half (needs Xcode 27.2; see docs/ios/ui-tests.md).
 apps/ios/scripts/ios.sh ui-test full
 
 # Browser half, against the same API and database. Set PENNY_E2E_PORT=8081 (another allowed origin)
@@ -46,7 +46,7 @@ What this gives: both suites run against one server, database, clock and fault r
 
 ## Acceptance matrix
 
-`mocked` specs run with `/api` mocked per test (CI: Chromium desktop and phone; Firefox and WebKit smoke jobs). `real` specs run against the [full-stack test environment](reference/test-environment.md) (CI: Chromium, Firefox and WebKit, one environment each). Spec files are in `apps/web/e2e/`.
+`mocked` specs run with `/api` mocked per test (CI: Chromium desktop and phone; Firefox and WebKit smoke jobs). `real` specs run against the [full-stack test environment](../reference/test-environment.md) (CI: Chromium, Firefox and WebKit, one environment each). Spec files are in `apps/web/e2e/`.
 
 | Feature | Browser, mocked | Browser, real .NET/PostgreSQL | Cross-client | Native (MAZ-82) |
 | --- | --- | --- | --- | --- |
@@ -54,9 +54,9 @@ What this gives: both suites run against one server, database, clock and fault r
 | Single sign-on (OIDC), forged callback | `auth.spec.ts` | `auth.real.spec.ts` (local provider) | | `AuthJourneyTests` |
 | Session expiry with a waiting change | `auth.spec.ts` | `recovery.real.spec.ts` (server clock + 31 days) | | `AuthJourneyTests` |
 | Temporary demo, isolation | `shell.spec.ts`, `home.spec.ts` | n/a (no server) | | `ScreenshotTests` (demo) |
-| Currency, accounts, categories | `organize.spec.ts` | `financial.real.spec.ts` | | `ios-organize.md` |
-| Income, expense, investment entries | `transactions.spec.ts` | `financial.real.spec.ts`, `cross-client.real.spec.ts` | `cross-client.real.spec.ts` | `ios-entries.md` |
-| Recurring schedules | `recurring.spec.ts` | `financial.real.spec.ts` (schedule stored, projected on Home) | | `ios-organize.md` |
+| Currency, accounts, categories | `organize.spec.ts` | `financial.real.spec.ts` | | [`ios/organize.md`](../ios/organize.md) |
+| Income, expense, investment entries | `transactions.spec.ts` | `financial.real.spec.ts`, `cross-client.real.spec.ts` | `cross-client.real.spec.ts` | [`ios/entries.md`](../ios/entries.md) |
+| Recurring schedules | `recurring.spec.ts` | `financial.real.spec.ts` (schedule stored, projected on Home) | | [`ios/organize.md`](../ios/organize.md) |
 | Home recorded vs projected | `home.spec.ts` | `financial.real.spec.ts` | `cross-client.real.spec.ts` (totals) | `OverviewJourneyTests` |
 | Activity search: substring, accents, CJK, renames, privacy | `transactions.spec.ts` (stand-in) | `search.real.spec.ts` (every `searchable-household` expectation) | | MAZ-73 |
 | Search paging and filters | | `search.real.spec.ts` | | |
@@ -76,11 +76,11 @@ What this gives: both suites run against one server, database, clock and fault r
 | Keyboard use and focus | `shell.spec.ts`, `transactions.spec.ts`, `organize.spec.ts`, `a11y.spec.ts` | | | MAZ-82 |
 | Responsive 320px to desktop, zoom, doubled text | `shell.spec.ts`, `visual.spec.ts` | | | `ScreenshotTests` |
 | Light, dark, forced colors, reduced motion | `shell.spec.ts`, `a11y.spec.ts`, `visual.spec.ts` | | | `ScreenshotTests` |
-| Large-ledger performance | `performance.spec.ts` | `search.real.spec.ts` (latency) | | `ios-overview.md` |
+| Large-ledger performance | `performance.spec.ts` | `search.real.spec.ts` (latency) | | [`ios/overview.md`](../ios/overview.md) |
 
 ### Web redesign cards
 
-The redesign's web cards (`contracts/design-baseline.json`, `acceptance.web: "MAZ-96"`) and the journeys that hold their scenario. Each card's visual comparison with the web app is recorded in [visual-comparisons.json](../contracts/visual-comparisons.json) ([visual acceptance](design/visual-acceptance.md), MAZ-122).
+The redesign's web cards (`contracts/design-baseline.json`, `acceptance.web: "MAZ-96"`) and the journeys that hold their scenario. Each card's visual comparison with the web app is recorded in [visual-comparisons.json](../../contracts/visual-comparisons.json) ([visual acceptance](../design/visual-acceptance.md), MAZ-122).
 
 | Card | Scenario | Journeys |
 | --- | --- | --- |
@@ -95,7 +95,7 @@ The redesign's web cards (`contracts/design-baseline.json`, `acceptance.web: "MA
 
 ## Cross-client convergence
 
-`cross-client.real.spec.ts` runs the browser next to a second client that speaks the native app's ledger protocol ([native offline sync](ios-offline-sync.md)): bearer `GET /api/ledger`, a whole-ledger `PUT` with the revision it read, 409 on a stale revision, then the shared three-way merge `apps/web/src/domain/merge.ts` (which the Swift `LedgerMerge` is held to through `contracts/fixtures/merge-conflicts.json`) and up to five retries. Server, database and protocol are real; only the client is not the Swift app.
+`cross-client.real.spec.ts` runs the browser next to a second client that speaks the native app's ledger protocol ([native offline sync](../ios/offline-sync.md)): bearer `GET /api/ledger`, a whole-ledger `PUT` with the revision it read, 409 on a stale revision, then the shared three-way merge `apps/web/src/domain/merge.ts` (which the Swift `LedgerMerge` is held to through `contracts/fixtures/merge-conflicts.json`) and up to five retries. Server, database and protocol are real; only the client is not the Swift app.
 
 1. The protocol client records two expenses offline while the browser adds one online; on reconnect the server refuses the stale write once (409), the client merges and writes, and the server holds all three exactly once.
 2. The browser lists the other client's entries; Activity's October total equals the sum the server stores.
@@ -138,7 +138,7 @@ Observed while recording: at 320px, Activity's Search button and the totals card
 | Server search over HTTP, p95 / max (small seed, 33 requests) | 300 ms / 1,000 ms | 55–68 ms / 135–159 ms (Firefox, WebKit) | 46 ms / 67 ms (WebKit) |
 | Browser search: navigate, query, render | 3,000 ms per query | under budget | under budget |
 
-The server-side budgets at 100,000 entries per viewer are measured by MAZ-121 ([search](reference/search.md)); this suite checks that the end-to-end path through the browser stays inside them on a small seed.
+The server-side budgets at 100,000 entries per viewer are measured by MAZ-121 ([search](../reference/search.md)); this suite checks that the end-to-end path through the browser stays inside them on a small seed.
 
 ## Results
 
@@ -169,7 +169,7 @@ Search latency over HTTP in `search.real.spec.ts` (small seed, every request the
 - **Search index rebuild.** `search-rebuild` and `search-verify` are covered by backend tests, not by a browser journey after a rebuild.
 - **Upgrade from a real previous build.** No test installs a previous production bundle and upgrades it with a service worker or cache in place.
 - **Accessibility.** The violations listed above are open. Manual screen-reader, zoom and high-contrast checks have not been run.
-- **Visual comparison.** `visual.spec.ts` baselines are web-only regressions on macOS. The card-by-card comparison with the design uses the card baselines, which CI checks on Linux, and the `cards.real.spec.ts` captures ([visual acceptance](design/visual-acceptance.md), MAZ-122).
+- **Visual comparison.** `visual.spec.ts` baselines are web-only regressions on macOS. The card-by-card comparison with the design uses the card baselines, which CI checks on Linux, and the `cards.real.spec.ts` captures ([visual acceptance](../design/visual-acceptance.md), MAZ-122).
 - **Session expiry prefill.** After a session expires the browser asks for the email again; the iOS app keeps it. Product decision pending.
 - **Shared money semantics from both clients.** Per-share and monthly payments, stale-payment recovery and settlement run in the browser (`households.real.spec.ts`) and natively (`HouseholdJourneyTests`) separately, not interleaved between a simulator and a browser.
 - **App lock.** Biometric app lock is native only; the browser has none.

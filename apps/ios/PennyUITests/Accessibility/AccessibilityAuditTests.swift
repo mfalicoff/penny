@@ -10,7 +10,7 @@ import XCTest
 /// Each audit's findings are attached as `audit-<screen>-<variant>.txt`. A finding fails the test
 /// unless its type is one of `recordedDebt` (findings the first MAZ-82 run found, attached and
 /// counted but not failing until their follow-up fixes them) or it matches `accepted`. Both are
-/// recorded in `docs/ios-qa.md#accessibility`; remove a type from `recordedDebt` once its
+/// recorded in `docs/ios/qa.md#accessibility`; remove a type from `recordedDebt` once its
 /// findings are fixed, so the gate holds the line.
 final class AccessibilityAuditTests: PennyUITestCase {
     struct Variant {
@@ -30,7 +30,7 @@ final class AccessibilityAuditTests: PennyUITestCase {
     ]
 
     /// A reviewed exception: an audit type, and text the issue's description or element must
-    /// contain. Each has a reason in docs/ios-qa.md.
+    /// contain. Each has a reason in docs/ios/qa.md.
     struct Accepted {
         let type: XCUIAccessibilityAuditType
         let match: String
@@ -38,10 +38,10 @@ final class AccessibilityAuditTests: PennyUITestCase {
 
     /// Reviewed audit findings that are not Penny's to fix (system controls) or are deliberate.
     /// Keep this list short and documented; never add an entry to make a red run green without
-    /// recording why in docs/ios-qa.md.
+    /// recording why in docs/ios/qa.md.
     static let accepted: [Accepted] = []
 
-    /// Audit types with known findings on iOS 27.0 (2026-11-12, docs/ios-qa.md#accessibility):
+    /// Audit types with known findings on iOS 27.0 (2026-11-12, docs/ios/qa.md#accessibility):
     /// low-contrast secondary text and chips, fixed-size text in the hero and banners, small hit
     /// areas on chips and links, text clipped at AX-XXXL, and one "potentially inaccessible text"
     /// on Activity that the audit reports without an element. Their findings are attached and

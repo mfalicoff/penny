@@ -1,8 +1,8 @@
 # App behavior and limits
 
-[App showcase](../README.md) · [Documentation](README.md)
+[App showcase](../../README.md) · [Documentation](../README.md)
 
-Detailed behavior behind the features shown in the [showcase](../README.md). Setup and operating instructions live in [Development](development.md) and [Self-hosting](deployment.md).
+Detailed behavior behind the features shown in the [showcase](../../README.md). Setup and operating instructions live in [Development](../development/setup.md) and [Self-hosting](../self-hosting/deployment.md).
 
 ## Entries, reports, and accounts
 
@@ -32,7 +32,7 @@ When enabled, Penny requires authentication at launch and after returning from t
 
 This protects access to the app UI, not the server account or cached ledger with an additional encryption layer. Existing home-screen widgets and notification previews are outside the app lock; remove widgets or adjust system notification previews if they expose information you want hidden.
 
-The native iOS app's lock is described in [App lock](ios-shell.md#app-lock).
+The native iOS app's lock is described in [App lock](../ios/shell.md#app-lock).
 
 ## Shared households
 
@@ -75,7 +75,7 @@ Sign in and open **Trips** to create a shared trip or join one with its invitati
 
 To invite people to a personal trip, open it and tap **Invite people**. Expenses already assigned to that personal trip remain private and appear in a separate section for you. Add new shared expenses in the shared trip for everyone to see. Trip expenses are shown together across dates, while reimbursements stay in separate monthly balances.
 
-See [Phone notifications](deployment.md#phone-notifications) for device registration and push prerequisites.
+See [Phone notifications](../self-hosting/deployment.md#phone-notifications) for device registration and push prerequisites.
 
 ## Recurring schedules in the browser app
 

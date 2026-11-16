@@ -1,6 +1,6 @@
 # Browser receipts (MAZ-94)
 
-The v2 browser app (`apps/web`) attaches receipts to personal expenses and shared expenses, previews them and downloads them. The server side is the MAZ-60 receipt API over the encrypted file store ([receipts](reference/receipts.md), [receipt storage](reference/postgresql.md#receipt-storage)); nothing about its contract changed. Code: `apps/web/src/api/receipts.ts` (checks, upload, download), `apps/web/src/features/receipts/` (`ReceiptField`, `ReceiptPreviewDialog`, `ReceiptLink`, `pdf.ts`), styles in `apps/web/src/design/receipts.css`.
+The v2 browser app (`apps/web`) attaches receipts to personal expenses and shared expenses, previews them and downloads them. The server side is the MAZ-60 receipt API over the encrypted file store ([receipts](../reference/receipts.md), [receipt storage](../reference/postgresql.md#receipt-storage)); nothing about its contract changed. Code: `apps/web/src/api/receipts.ts` (checks, upload, download), `apps/web/src/features/receipts/` (`ReceiptField`, `ReceiptPreviewDialog`, `ReceiptLink`, `pdf.ts`), styles in `apps/web/src/design/receipts.css`.
 
 ## Supported files and limits
 
@@ -50,10 +50,10 @@ States: a damaged PDF ("This PDF can't be shown", Download kept), a photo the br
   default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'
   ```
 
-  With [browser telemetry](observability.md#web-app-telemetry) on, `connect-src` also lists the configured collector URL, and nothing else.
+  With [browser telemetry](../self-hosting/observability.md#web-app-telemetry) on, `connect-src` also lists the configured collector URL, and nothing else.
 
   `worker-src 'self'` allows the pdf.js worker and `img-src blob:` the photo preview. `style-src 'unsafe-inline'` is there for the design kit's inline SVG icon styles. The NixOS module's nginx sends exactly this header with the SPA (`nix/module.nix`; `tests/security-headers.test.ts` keeps them identical), and `vite preview` sends it too, so the whole Playwright suite runs under it. If you serve `apps/web/dist` from your own proxy, send the same header on `/` and keep `nosniff`. The receipt downloads themselves keep the API's `Content-Security-Policy: default-src 'none'; sandbox`.
-- **Body size.** Uploads are JSON with base64, about 14 MB for a 10 MiB file; proxies must accept 20 MB request bodies on `/api/receipts` ([receipts](reference/receipts.md#proxies-and-timeouts)).
+- **Body size.** Uploads are JSON with base64, about 14 MB for a 10 MiB file; proxies must accept 20 MB request bodies on `/api/receipts` ([receipts](../reference/receipts.md#proxies-and-timeouts)).
 
 ## Encryption and key configuration
 
@@ -62,7 +62,7 @@ The API encrypts every receipt before it touches disk; the browser never sees ke
 - **Per-file key:** `HKDF-SHA256(master key, salt = 32 random bytes per file, info = "penny/receipt/v1")` gives a 256-bit AES-GCM key. The file body and the original name are sealed with separate random 96-bit nonces and a 128-bit tag.
 - **Owner binding:** the associated data is `penny/receipt/v1 ‖ part ‖ user id ‖ receipt id`, so a file or name moved to another row, another owner or another receipt id fails authentication instead of decrypting.
 - **Stored per file** (PostgreSQL `receipts`): `key_salt`, `file_nonce`, `name_nonce`, `name_encrypted` and `encryption_version` (scheme 1; added by migration `AddReceiptEncryptionVersion`). Unknown versions are refused. All receipts are encrypted; there is no plaintext version to read.
-- **Configuration:** `Receipts__Root` (absolute directory for the encrypted files) and `Receipts__MasterKey` (base64 of 32 random bytes, e.g. `openssl rand -base64 32`) from your secret manager. The NixOS module generates the key on first start unless `receiptKeyFile` is set ([NixOS](nixos.md)). Back up the key separately from the database and files: without it no receipt can be read. The key is never rotated, by decision ([receipt storage](reference/postgresql.md#receipt-storage)). Never commit a real key; the development `.env` and tests use generated throwaway keys.
+- **Configuration:** `Receipts__Root` (absolute directory for the encrypted files) and `Receipts__MasterKey` (base64 of 32 random bytes, e.g. `openssl rand -base64 32`) from your secret manager. The NixOS module generates the key on first start unless `receiptKeyFile` is set ([NixOS](../self-hosting/nixos.md)). Back up the key separately from the database and files: without it no receipt can be read. The key is never rotated, by decision ([receipt storage](../reference/postgresql.md#receipt-storage)). Never commit a real key; the development `.env` and tests use generated throwaway keys.
 
 ## Troubleshooting
 
@@ -74,7 +74,7 @@ The API encrypts every receipt before it touches disk; the browser never sees ke
 | HEIC photo shows "can't display this photo format" | Expected outside Safari; download it, or export the photo as JPEG. |
 | Upload stops with "This file is too large to upload" | A proxy limit below 20 MB answered 413. Raise `client_max_body_size` (nginx) for `/api/receipts`. |
 | "This receipt isn't available" | The API answered 404: the receipt was never this account's, or a household change (leaving, the linking expense deleted) withdrew access. |
-| Receipt download 500 / `receipts-verify` reports corrupt rows | The file was altered, the row's owner or id changed, or the master key differs from the one that wrote it. Restore the file and keep the original key ([backup and restore](reference/receipts.md#backup-and-restore)). |
+| Receipt download 500 / `receipts-verify` reports corrupt rows | The file was altered, the row's owner or id changed, or the master key differs from the one that wrote it. Restore the file and keep the original key ([backup and restore](../reference/receipts.md#backup-and-restore)). |
 | The buttons are disabled | The browser is offline. Connect, then attach; the entry itself can be saved first and edited later. |
 
 ## Tests

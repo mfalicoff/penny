@@ -2,7 +2,7 @@
 // breakdown and the month-over-month comparison. Every value here is derived from a
 // `MonthSummary`, so the recorded/projected rules stay in one place (`LedgerReport.month`):
 // these types never decide what is recorded, what is projected or what a shared row is worth.
-// Amounts are the person's shares in integer cents (docs/ios-overview.md).
+// Amounts are the person's shares in integer cents (docs/ios/overview.md).
 
 /// A whole-number percentage for display: `part` of `whole`, rounded half up. Nil when the
 /// whole is zero or negative (there is nothing to take a share of).

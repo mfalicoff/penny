@@ -15,7 +15,7 @@
 /// - Currency: a local change wins, otherwise the server's.
 ///
 /// Four v2 refinements keep personal recurrence from duplicating, overwriting or resurrecting
-/// rules and occurrences when a device caught a rule up offline (docs/ios-offline-sync.md). An
+/// rules and occurrences when a device caught a rule up offline (docs/ios/offline-sync.md). An
 /// occurrence is "untouched" when it equals what its rule generates for its date.
 ///
 /// - When both sides advanced a rule's `nextDate`, the later one wins, so dates the server

@@ -8,7 +8,7 @@
 #   };
 #   services.nginx.virtualHosts."penny.example.com" = { enableACME = true; forceSSL = true; };
 #
-# See docs/nixos.md.
+# See docs/self-hosting/nixos.md.
 { self }:
 
 { config, lib, pkgs, ... }:
@@ -224,7 +224,7 @@ in
         Opt-in browser telemetry (MAZ-129): the Faro collector the web app sends errors,
         performance and traces to, such as Grafana Cloud Frontend Observability's URL. Published
         as /telemetry.json and allowed in the page's connect-src. null keeps it off.
-        See docs/observability.md.
+        See docs/self-hosting/observability.md.
       '';
     };
 
@@ -400,7 +400,7 @@ in
         }
       '';
       description = ''
-        API configuration (see the `deploy/api.env` table in docs/deployment.md). Nested
+        API configuration (see the `deploy/api.env` table in docs/self-hosting/deployment.md). Nested
         attributes become ASP.NET double-underscore names, lists are joined with commas.
         Values land in the Nix store: put secrets in `environmentFiles`.
       '';
@@ -521,7 +521,7 @@ in
     assertions = [
       {
         assertion = localDatabase -> lib.versions.major config.services.postgresql.package.version == "18";
-        message = "Penny requires PostgreSQL 18; services.postgresql.package is ${config.services.postgresql.package.version}. See docs/operations.md for upgrading an existing cluster.";
+        message = "Penny requires PostgreSQL 18; services.postgresql.package is ${config.services.postgresql.package.version}. See docs/self-hosting/operations.md for upgrading an existing cluster.";
       }
       {
         assertion = localDatabase -> lib.hasPrefix "/" db.host;

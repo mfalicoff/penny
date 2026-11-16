@@ -1,6 +1,6 @@
 # Observability with Grafana
 
-[Back to the documentation index](README.md)
+[Back to the documentation index](../README.md)
 
 MAZ-128. A reference stack that collects Penny's telemetry and shows it in Grafana: the API's traces, metrics and logs ([what each signal contains](operations.md#telemetry-opentelemetry)) and, once the apps send it (MAZ-129), errors and crashes from the web and iOS apps. It ships with dashboards and example alerts, and is sized for a small home server (example: i7-4790K, 32 GB).
 

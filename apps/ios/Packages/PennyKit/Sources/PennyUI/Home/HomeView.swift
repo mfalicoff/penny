@@ -11,7 +11,7 @@ import SwiftUI
 /// month (calendar, categories, money flow). The month picker and the settings button are
 /// system toolbar controls, so they are Liquid Glass on iOS 26.
 ///
-/// Every number comes from `LedgerReport.month` (docs/ios-overview.md): Left to spend and the
+/// Every number comes from `LedgerReport.month` (docs/ios/overview.md): Left to spend and the
 /// flow use recorded entries only; projected income and scheduled previews are never shown as
 /// Activity or spending. Shared household rows count once, at the viewer's share.
 struct HomeView: View {

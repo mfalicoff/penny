@@ -37,7 +37,7 @@ public struct ReceiptFile: Equatable, Sendable {
 /// one with a session per signed-in account. Each call suspends without blocking, honors
 /// task cancellation (throwing `CancellationError`) and throws `APIError` otherwise.
 ///
-/// The client never retries by itself and never logs. See docs/ios-api-client.md.
+/// The client never retries by itself and never logs. See docs/ios/api-client.md.
 public struct APIClient: Sendable {
     public let configuration: APIConfiguration
     private let session: ServerSession?

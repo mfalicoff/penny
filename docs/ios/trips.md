@@ -1,6 +1,6 @@
 # Native personal and shared trips (MAZ-76)
 
-[Native app](../apps/ios/README.md) · [Native households](ios-households.md) · [Households on the server](reference/households.md) · [Shared expenses](reference/shared-expenses.md) · [Settlement](reference/settlement.md) · [Browser trips](../apps/web/README.md#trips-maz-93)
+[Native app](../../apps/ios/README.md) · [Native households](households.md) · [Households on the server](../reference/households.md) · [Shared expenses](../reference/shared-expenses.md) · [Settlement](../reference/settlement.md) · [Browser trips](../../apps/web/README.md#trips-maz-93)
 
 This page describes the Trips tab of the SwiftUI app: personal trips, shared trips, sharing a personal trip, joining a trip, what each total counts, how travel dates behave and how a shared trip settles. It covers the code, the accessibility identifiers and the acceptance scenarios.
 
@@ -60,11 +60,11 @@ No endpoint was added: the app uses the routes MAZ-56–59 already serve (`contr
 - **Trip total**: the shared expenses' full amounts, every month.
 - **Your spending** on a shared trip: your shares of its shared expenses plus your private expenses from before sharing (only when the trip's currency is your ledger's: two currencies can't be added up). Each expense counts once: private entries are personal ledger rows, shared ones live on the server, and none is both (`SharedTripTotals`).
 - **Personal trip**: your share of each assigned expense; the receipt total is shown apart when a split makes it differ.
-- **Home and Insights** already count a shared expense once, at your share, through the household projection, and private trip expenses once, as personal entries ([native overview](ios-overview.md#shared-and-private-money)).
+- **Home and Insights** already count a shared expense once, at your share, through the household projection, and private trip expenses once, as personal entries ([native overview](overview.md#shared-and-private-money)).
 
 ## Monthly settlement
 
-A shared trip settles like a household, month by month: Balances shows the month's positions, suggested payments and older unpaid months separately, with Record paid for full suggested transfers and Mark as paid on a single share. Months never offset each other, so October bookings and November meals are reimbursed separately. Penny records transfers that already happened; it never moves money. A stale payment shows the old and new amounts and only Review expense ([native households](ios-households.md#recording-payments-reimbursements)).
+A shared trip settles like a household, month by month: Balances shows the month's positions, suggested payments and older unpaid months separately, with Record paid for full suggested transfers and Mark as paid on a single share. Months never offset each other, so October bookings and November meals are reimbursed separately. Penny records transfers that already happened; it never moves money. A stale payment shows the old and new amounts and only Review expense ([native households](households.md#recording-payments-reimbursements)).
 
 ## Accessibility
 
@@ -87,7 +87,7 @@ As for households, `docs/design/penny-redesign/screen-inventory.json` and the Pe
 
 ## Acceptance scenarios
 
-Run on clean iPhone and iPad simulators against the [full-stack environment](reference/test-environment.md); the automated ones are `TripJourneyTests` in the Full plan (`PENNY_UI_ONLY=PennyUITests/TripJourneyTests apps/ios/scripts/ios.sh ui-test full`). Both journeys pass on the iPhone and iPad simulators; the system "Save Password?" sheet that can appear after a password sign-in is dismissed by the tests.
+Run on clean iPhone and iPad simulators against the [full-stack environment](../reference/test-environment.md); the automated ones are `TripJourneyTests` in the Full plan (`PENNY_UI_ONLY=PennyUITests/TripJourneyTests apps/ios/scripts/ios.sh ui-test full`). Both journeys pass on the iPhone and iPad simulators; the system "Save Password?" sheet that can appear after a password sign-in is dismissed by the tests.
 
 1. **Conversion and two users (automated):** a personal trip with an expense dated before it; Share trip; the server's shared trip has no expenses and the ledger links the trip; the expense shows under Only you; a shared expense before anyone joins (only you in it); the second person joins through the API; a second shared expense splits between both while the first keeps its participants; Trip total $170.00 and Your spending $134.00 count each expense once; Balances shows the other person.
 2. **CRUD and deletion (automated):** New trip; Trip expense opens Add entry on the trip and the entry is assigned on the server; Delete trip is disabled with the reason while it has the entry; once the entry is moved to No trip from another device, the trip is deleted.

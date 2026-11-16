@@ -1,4 +1,4 @@
-/// Identifiers frozen for TestFlight/App Store continuity (docs/ios-ipa.md). Changing any of
+/// Identifiers frozen for TestFlight/App Store continuity (docs/ios/ipa.md). Changing any of
 /// them breaks in-place upgrades of installed builds: a new bundle id is a new app, a new App
 /// Group loses the widgets' shared data, and a new widget extension id or kind removes widgets
 /// people already placed. The app's tests check the released values, the signing docs, the
