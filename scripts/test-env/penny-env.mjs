@@ -15,6 +15,9 @@ import {
 } from "./environment.mjs";
 import { scenario, seed } from "./seed.mjs";
 import { startOidcProvider } from "./oidc-provider.mjs";
+import { emailSummary, receiptEmail, sendEmail } from "./email.mjs";
+import { readFileSync } from "node:fs";
+import { basename } from "node:path";
 
 function parse(argv) {
   const separator = argv.indexOf("--");
@@ -25,7 +28,7 @@ function parse(argv) {
   for (let index = 0; index < own.length; index++) {
     const item = own[index];
     if (!item.startsWith("--")) positional.push(item);
-    else if (["--no-build", "--all", "--oidc", "--keep", "--no-worker"].includes(item)) flags[item.slice(2)] = true;
+    else if (["--no-build", "--all", "--oidc", "--keep", "--no-worker", "--email"].includes(item)) flags[item.slice(2)] = true;
     else flags[item.slice(2)] = own[++index];
   }
   return { verb: positional.shift() ?? "help", positional, flags, command };
@@ -43,6 +46,7 @@ async function start(flags) {
       build: !flags["no-build"],
       worker: !flags["no-worker"],
       oidc: oidc?.settings,
+      email: flags.email === true,
     });
     if (oidc) await oidc.attach(state);
     if (flags.seed) await seedInto(state, flags.seed);
@@ -76,6 +80,7 @@ function summary(state) {
     stateFile: `${state.directory}/env.json`,
     oidcIssuer: state.oidc?.issuer,
     oidcCertificate: state.oidc?.certificate,
+    ...emailSummary(state),
   };
 }
 
@@ -151,6 +156,16 @@ async function main() {
       console.log(JSON.stringify({ users: Object.keys(context.users), userIds: context.userIds, households: context.households, expenses: context.expenseIds }, null, 2));
       return;
     }
+    case "mail": {
+      // Delivers a synthetic receipt email through the run's Email Worker (MAZ-184).
+      if (!flags.to) throw new Error("Usage: penny-env mail --to ADDRESS [--subject S] [--attach FILE.pdf] [--eml FILE]");
+      const attachments = flags.attach
+        ? [{ name: basename(flags.attach), mime: flags.attach.toLowerCase().endsWith(".pdf") ? "application/pdf" : "image/png", content: readFileSync(flags.attach) }]
+        : [];
+      const raw = flags.eml ? readFileSync(flags.eml) : receiptEmail({ to: flags.to, subject: flags.subject, attachments });
+      console.log(JSON.stringify(await sendEmail(readState(id), { to: flags.to, raw })));
+      return;
+    }
     case "artifacts":
       console.log(collectArtifacts(readState(id), positional[0]));
       return;
@@ -166,7 +181,9 @@ async function main() {
 function help() {
   return [
     "penny-env: disposable .NET API + PostgreSQL environments for browser and simulator runs.",
-    "  up [--seed NAME] [--host 0.0.0.0] [--port N] [--origins a,b] [--oidc] [--no-build] [--no-worker] [--run-id ID]",
+    "  up [--seed NAME] [--host 0.0.0.0] [--port N] [--origins a,b] [--oidc] [--email] [--no-build] [--no-worker] [--run-id ID]",
+    "     --email: emailed receipts end to end: penny-render and the Email Worker (wrangler dev) (MAZ-184)",
+    "  mail --to ADDRESS [--subject S] [--attach FILE] [--eml FILE]   send through the Email Worker",
     "  run [up options] [--keep] -- <command...>   start, run, collect artifacts, always tear down",
     "  status | env | reset | clock <ISO|reset> | user [label] | fault '<json>'|clear | seed <scenario>",
     "  artifacts [dir] | down [--all]",

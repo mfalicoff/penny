@@ -100,8 +100,15 @@ jobs:
         run: node apps/backend/development/download-model.mjs
       - name: Restore locked packages
         run: bash apps/backend/dotnet.sh restore Penny.Backend.slnx --locked-mode
+      # Emailed receipts end to end (MAZ-184): the inbound mail worker checks poppler,
+      # libvips and Tesseract at startup, and the suite runs the Email Worker under
+      # wrangler dev (workerd ships as a platform package; no install script needed).
+      - name: Install receipt engines
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng tesseract-ocr-fra poppler-utils libvips-tools
+      - name: Install Email Worker dependencies
+        run: npm --prefix apps/email-worker ci --no-audit --no-fund
       # Isolated PostgreSQL + API per test, seeds, OIDC and crash cleanup (MAZ-62). The
-      # environment uses Node built-ins only, so it needs no npm install.
+      # environment itself uses Node built-ins only.
       - name: Full-stack environment suite
         run: node --test --test-concurrency=1 scripts/tests/fullstack/*.test.mjs
       - name: Remove leftover environments

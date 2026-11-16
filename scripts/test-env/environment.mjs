@@ -8,6 +8,7 @@
 // with the run, for hosts that cannot run Linux containers (GitHub-hosted macOS runners).
 // It needs PostgreSQL 18 with pgvector 0.8+ binaries: PENNY_POSTGRES_BIN, or `pg_config`
 // on PATH. The guarantee is the same: it never connects to a server it did not create.
+import { apiEmailEnvironment, emailSettings, startRenderer, startWorker, stopWorker } from "./email.mjs";
 import { spawn, spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { closeSync, existsSync, mkdirSync, openSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -313,6 +314,12 @@ export async function up(options = {}) {
     state.apiUrl = `http://${host === "0.0.0.0" ? "127.0.0.1" : host}:${state.apiPort}`;
     state.origins = options.origins ?? ["http://localhost:4173", "http://127.0.0.1:4173"];
     if (options.oidc) state.oidc = { issuer: options.oidc.issuer, clientId: options.oidc.clientId, certificate: options.oidc.certificate };
+    // Emailed receipts (MAZ-184): penny-render now, the Email Worker once the API is ready.
+    const email = options.email ? emailSettings() : undefined;
+    if (email) {
+      state.email = { domain: email.domain, rendererUrl: await startRenderer(state, { root, cli: cli ?? containerCli(), label, run, waitFor }) };
+      writeState(state);
+    }
     const log = openSync(state.apiLog, "a", 0o600);
     const api = spawn("bash", [join(backend, "dotnet.sh"), apiDll], {
       cwd: backend,
@@ -338,6 +345,7 @@ export async function up(options = {}) {
         TestControls__Enabled: "true",
         TestControls__Token: state.controlToken,
         Logging__LogLevel__Default: "Information",
+        ...(email ? apiEmailEnvironment(email, state.email.rendererUrl) : { InboundMail__Worker: "false" }),
         ...(options.oidc ? {
           Oidc__Issuer: options.oidc.issuer,
           Oidc__ClientId: options.oidc.clientId,
@@ -360,6 +368,12 @@ export async function up(options = {}) {
       const response = await fetch(`${state.apiUrl}/api/ready`);
       return response.ok;
     }, { timeoutMs: 120_000, what: "the API to become ready" });
+    if (email) {
+      const worker = await startWorker(state, email, { root, freePort, waitFor });
+      state.email = { domain: email.domain, rendererUrl: state.email.rendererUrl, workerUrl: worker.url };
+      state.emailWorkerPid = worker.pid;
+      writeState(state);
+    }
     return state;
   } catch (error) {
     error.logs = existsSync(state.apiLog) ? readFileSync(state.apiLog, "utf8").split("\n").slice(-20).join("\n") : "";
@@ -413,6 +427,7 @@ export async function down(runId, { keepArtifacts } = {}) {
       }
     }
   }
+  stopWorker(state.emailWorkerPid);
   // A native cluster (also one left by a crashed runner) is stopped before its files go.
   const dataDirectory = state.dataDirectory ?? join(directory, "pgdata");
   await stopNativePostgres(dataDirectory, state.postgresBin);

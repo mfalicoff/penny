@@ -96,6 +96,25 @@ Tests: `TestControlOptionsTests`, `FaultRegistryTests`, `TestControlsTests` (abs
 
 Browsers must ignore HTTPS errors for the provider origin (Playwright `ignoreHTTPSErrors`). The iOS Simulator needs the certificate trusted: `xcrun simctl keychain booted add-root-cert <certificate.pem>`, using the `oidcCertificate` path that `up --oidc` prints. ID tokens use real time because token lifetime validation does not use the pinned clock.
 
+## Emailed receipts end to end
+
+`--email` (MAZ-184) adds the whole receipt-email path to an environment:
+- `penny-render`, from the image and flags pinned in `deploy/compose.yaml`, read-only and without capabilities;
+- the API with `InboundMail__*` on and a throwaway webhook secret;
+- the real Cloudflare Email Worker (`apps/email-worker`) under `wrangler dev` (workerd), pointed at that API.
+
+`mail` hands a raw message to the Worker through wrangler's local email handler, exactly as Cloudflare Email Routing would, and prints the Worker's answer (accepted, or the SMTP reject reason).
+
+```sh
+npm --prefix apps/email-worker ci          # once: wrangler and workerd
+node scripts/test-env/penny-env.mjs up --email
+# create an address in the web app or with POST /api/receipt-email, then:
+node scripts/test-env/penny-env.mjs mail --to r-…@receipts.penny.test --subject "Order 1042" --attach invoice.pdf
+node scripts/test-env/penny-env.mjs mail --to r-…@receipts.penny.test --eml forwarded.eml
+```
+
+It also needs Docker or Podman (for penny-render) and poppler, libvips and Tesseract on the host (the inbound mail worker checks them at startup). `scripts/tests/fullstack/email.test.mjs` runs the same path in the full-stack suite: a Worker reject for an unknown address, delivery with plus-addressing, the rendered email PDF and the attachment in the inbox, a normal ledger save that attaches it, then Done. Sender verification stays "not verified" locally, because only Cloudflare's ingress adds the ARC result Penny trusts.
+
 ## Golden fixtures
 
 | Fixture | Contents | Consumers |

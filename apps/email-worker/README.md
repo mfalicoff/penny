@@ -37,3 +37,7 @@ The tests run the handler on Node with fake messages and a fake Penny. The signa
 6. Keep Workers observability off (it is off in `wrangler.toml`), use an API token scoped to this Worker and zone, turn on 2FA, and set a usage or billing alert for the Worker.
 
 Rotating the secret: set the new value on Penny and the Worker at about the same time; mail in between is retried by the sender.
+
+## Run it locally against Penny
+
+`node scripts/test-env/penny-env.mjs up --email` starts a disposable Penny with penny-render and this Worker under `wrangler dev`, and `penny-env.mjs mail --to <address>` delivers a message through it ([test environment](../../docs/reference/test-environment.md#emailed-receipts-end-to-end)). The entry module (`src/index.ts`) must export only the handler: workerd treats every named export there as an entrypoint and refuses to start otherwise (a test pins this).
