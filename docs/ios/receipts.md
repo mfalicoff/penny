@@ -138,6 +138,53 @@ The simulator covers the pickers, upload, preview, sharing and every failure abo
 - upload progress and Cancel on a slow cellular connection;
 - the app lock (Face ID) covering the viewer and pickers, and VoiceOver on the viewer.
 
+## Emailed receipts (MAZ-184)
+
+The app follows the [UX guidelines](../plans/email-receipts.md#ux-guidelines-attaching-an-emailed-receipt). An emailed receipt is an ordinary receipt that arrived by another route. Penny never attaches one by itself.
+
+| Piece | File | Tests |
+| --- | --- | --- |
+| Wire models and calls (`/api/receipt-email`, `/api/receipt-inbox`) | `PennyData/API/APIClient+ReceiptInbox.swift` | `ReceiptInboxTests` |
+| Rules: suggestions, search, file order, expiry, the Discard text, plain text, the shared update body | `PennyData/ReceiptInbox/ReceiptInboxRules.swift` | `ReceiptInboxTests` |
+| The address and inbox state, online-only (`ReceiptInboxModel`, `APIReceiptInboxService`) | `PennyData/ReceiptInbox/ReceiptInboxModel.swift` | `ReceiptInboxTests` |
+| Attach and Undo through the normal saves (`ReceiptAttacher`) | `PennyData/ReceiptInbox/ReceiptAttacher.swift` | `ReceiptInboxTests` |
+| Settings › Receipt email | `PennyUI/ReceiptInbox/ReceiptEmailSettingsView.swift` | |
+| The inbox, its rows, the item page, the Home row | `PennyUI/ReceiptInbox/ReceiptInboxView.swift` | |
+| The attach sheet and the entry form's From inbox picker | `PennyUI/ReceiptInbox/ReceiptAttachSheet.swift` | |
+| The "New receipt" notification | `PennyDomain/Notifications/NotificationTarget.swift` | `NotificationTargetTests`, `NotificationTests` |
+
+- **Settings › Receipt email** is shown only when `GET /api/receipt-email` reports `enabled: true`.
+  - With no address it offers **Get a receipt address**.
+  - Otherwise it shows the address in monospace, with **Copy** and **Share** (`ShareLink`), the expiry with **Extend**, the allowed senders and the how-to.
+  - **New address** and **Turn off** each ask first, with the guideline text.
+- **Receipts to attach** is a row with a count ("3 receipts to attach" for VoiceOver).
+  - It is on Home while the count is above zero, and in Settings once an address exists or items are waiting.
+  - The inbox opens on Home's stack, or on Settings' stack.
+  - The list shows the newest first, with **To attach** and **Attached** filters.
+  - Swiping a row offers **Discard**. VoiceOver offers it as an action too.
+  - A row shows "Deleted in N days" for an item's last 3 days.
+  - A row shows "Attaching…" while a personal attach waits to sync.
+- **The item page** lists the files with the email first; each one opens the existing viewer. It offers **Attach to…**, **New expense**, **Done** (for a partly attached item) and **Discard**. Done and Discard ask first and say how many files are kept.
+- **The attach sheet** has three steps:
+  1. **File:** skipped for a one-file email. Otherwise the first attachment is preselected.
+  2. **Entry:**
+     - **Suggested** lists up to 5 expenses with no receipt, within 7 days of the received day, nearest first. The received day is the day in this device's time zone. Shared expenses come from households where the person is a current member, and show the household's name.
+     - **Search** filters every expense on the device: the personal ledger plus those shared expenses.
+  3. **Confirm:** the file's first page (decorative to VoiceOver; tap to open the viewer), the entry card, and the shared, replace and not-verified notes.
+- **Attaching to a personal expense** is a ledger edit (`LedgerChange.saveEntry`), so it saves offline and syncs like any change.
+- **Attaching to a shared expense** is the shared expense update with its revision, and the split is kept. A 409 reloads the expense and shows Confirm again.
+- **After attaching,** the inbox shows "Receipt attached to …" with **View entry** and **Undo**. It stays until dismissed.
+- **New expense** opens Add entry with:
+  - the sender as the title;
+  - the received day as the date;
+  - no amount;
+  - the receipt attached.
+- **Entry form › Receipt › From inbox** is a third source, shown when the feature is on and items are waiting. It picks a file without an upload.
+- **The removal hint:** the form's footer adds "The receipt goes back to your inbox." for a receipt from the inbox.
+- **Offline:** the inbox row, From inbox and every inbox action are disabled with the connect hint. The demo shows none of it.
+- **Untrusted text:** sender, subject and file names are shown with `Text(verbatim:)` after `ReceiptInboxText.plain`, which removes control, format and bidi characters and collapses line breaks. They are never read as Markdown or HTML.
+- **Identifiers:** they are in `AccessibilityID.ReceiptInbox`. No XCUITest journey covers emailed receipts yet: the full-stack environment has no inbound mail.
+
 ## Not done
 
 - No camera capture inside Penny (pick from the photo library instead).

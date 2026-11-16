@@ -155,7 +155,17 @@ private struct EntryForm: View {
 
     private func start() {
         var editor: EntryEditor
-        if mode == .new, let handoff {
+        if mode == .new, let prefill = shell.addEntryInbox {
+            // Receipt inbox › New expense (MAZ-184): an expense dated the day the email arrived,
+            // titled with the sender, the amount empty and the receipt attached. A kept draft
+            // stays on the shelf for next time.
+            shell.addEntryInbox = nil
+            editor = Self.fresh(mode, today: shell.today, ledger: ledger)
+            if editor.draft.kind != .expense { editor.setKind(.expense, ledger: ledger) }
+            editor.draft.title = prefill.title
+            editor.draft.date = prefill.date.description
+            editor.draft.receipt = prefill.receipt
+        } else if mode == .new, let handoff {
             // Back from the shared form: what was typed there, not an older kept draft.
             shell.drafts.discard(mode)
             editor = Self.fresh(mode, today: shell.today, ledger: ledger)

@@ -84,6 +84,14 @@ The server sends the deep-link object as top-level custom keys next to `aps` ([p
 - Shared trips are households, so their notifications also open from Shared, where v2 lists them. The Trips tab lists personal trips only.
 - A household or expense the account cannot see (left, removed, archived or never joined) opens the page's named state ("Household not available", "Expense not found"). The server refuses the read, so no data is shown.
 
+### New receipt (MAZ-184)
+
+An emailed receipt sends a personal notification, "New receipt" / "An emailed receipt is ready to attach." It never names the sender, subject or amount. Its payload is exactly `{"inboxItemId": "<id>", "eventId": "<id>"}` next to `aps` (`thread-id` `receipt-inbox`). The app delegate reads every payload through `NotificationTarget(userInfo:)` (`PennyDomain/Notifications/NotificationTarget.swift`). That function returns `.household` for the payload above, or `.receiptInbox` when `inboxItemId` is present and matches `[A-Za-z0-9_-]{1,100}`. A payload that mixes `inboxItemId` with household keys opens nothing.
+
+- **Where it opens:** the **Home** tab, then Receipts to attach (`DeepLink.receiptInbox`, `DetailRoute.receiptInbox`). It then opens the item once the list has found it. An item that's gone (discarded on another device, or expired) says "This receipt isn't available".
+- **It never attaches anything.** Opening the item only shows it.
+- **Gates:** it goes through the same gates as a household notification (the deep-link inbox, the app lock, the account check). There is no URL route for it.
+
 ## Privacy and gates
 
 - **Auth and app lock.** An opened notification goes through the same `DeepLinkInbox` as `penny://` links. It waits while signed out, restoring the session or locked, and opens once the account's shell is shown and the lock is open. Nothing is shown behind the lock screen.

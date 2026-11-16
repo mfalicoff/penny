@@ -39,6 +39,38 @@ struct SettingsView: View {
                 if let ledger, let reason = CurrencyPolicy.lockReason(ledger: ledger) { Text(reason) }
             }
             if let account = shell.account {
+                // MAZ-184: emailed receipts, only when the server takes them.
+                if shell.receiptInbox.isEnabled {
+                    Section {
+                        row(
+                            .receiptEmail, symbol: "envelope",
+                            value: shell.receiptInbox.address == nil ? "Off" : "On")
+                        if shell.receiptInbox.address != nil || shell.receiptInbox.toAttachCount > 0 {
+                            let count = shell.receiptInbox.toAttachCount
+                            NavigationLink(value: SettingsRoute.receiptInbox) {
+                                HStack {
+                                    Label(SettingsRoute.receiptInbox.title, systemImage: "tray.and.arrow.down")
+                                    Spacer()
+                                    if count > 0 {
+                                        Text(shell.receiptInbox.hasMoreToAttach ? "\(count)+" : "\(count)")
+                                            .monospacedDigit()
+                                            .foregroundStyle(PennyColor.secondaryLabel)
+                                    }
+                                }
+                                .frame(minHeight: Metrics.minTouchTarget)
+                            }
+                            .disabled(!shell.receiptInbox.isAvailable)
+                            .accessibilityElement(children: .ignore)
+                            .accessibilityLabel(ReceiptInboxRules.spokenCount(count))
+                            .accessibilityAddTraits(.isButton)
+                            .accessibilityIdentifier("settings.receiptInbox")
+                        }
+                    } header: {
+                        Text("Emailed receipts")
+                    } footer: {
+                        if !shell.receiptInbox.isAvailable { Text(InboxText.offline) }
+                    }
+                }
                 if let push {
                     // MAZ-79: household notifications, for an account only.
                     Section {
@@ -74,6 +106,7 @@ struct SettingsView: View {
         .insetGroupedList()
         .background(PennyColor.background)
         .navigationTitle("Settings")
+        .task { await shell.receiptInbox.refresh() }
         .toolbar {
             if let onDone {
                 ToolbarItem(placement: .confirmationAction) {
@@ -179,6 +212,8 @@ struct SettingsPage: View {
         case .currency: CurrencySettingsView()
         case .appLock: AppLockSettingsView()
         case .server: ServerPage()
+        case .receiptEmail: ReceiptEmailSettingsView()
+        case .receiptInbox: ReceiptInboxView()
         }
     }
 }

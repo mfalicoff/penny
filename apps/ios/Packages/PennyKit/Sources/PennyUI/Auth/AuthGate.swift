@@ -65,6 +65,18 @@ struct AuthGate: View {
                                     APIHouseholdService(client: $0) { auth.sessionDidExpire(for: account) }
                                 })
                             shell.receipts = AccountReceipts(auth: auth, account: account, sync: sync)
+                            // Emailed receipts (MAZ-184): online-only, like uploads.
+                            shell.receiptInbox = ReceiptInboxModel(
+                                service: auth.client.map {
+                                    APIReceiptInboxService(client: $0) { auth.sessionDidExpire(for: account) }
+                                },
+                                available: { sync.canUseOnlineOnlyActions })
+                            shell.receiptAttacher = ReceiptAttacher(
+                                workspace: shell.workspace,
+                                households: auth.client.map {
+                                    APIHouseholdService(client: $0) { auth.sessionDidExpire(for: account) }
+                                },
+                                email: account.email)
                             shell.widgets = services.widgets
                             return shell
                         }
