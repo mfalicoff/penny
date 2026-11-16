@@ -1,7 +1,7 @@
 {
   "uid": "penny-jobs",
   "title": "Penny background jobs",
-  "description": "Push delivery, search embeddings, shared recurrences and receipt text: throughput, failures and lag.",
+  "description": "Push delivery, search embeddings, shared recurrences, receipt text and emailed receipts: throughput, failures and lag.",
   "tags": [
     "penny",
     "jobs"
@@ -199,7 +199,7 @@
       "title": "",
       "options": {
         "mode": "markdown",
-        "content": "Workers claim **due** work: push deliveries, search embeddings, shared recurrences and receipt text. **Lag** is the time from when work became due to when a worker claimed it; recurrence lag counts from the start of the occurrence's UTC day, so hours there are normal. Failed items are retried."
+        "content": "Workers claim **due** work: push deliveries, search embeddings, shared recurrences, receipt text and emailed receipts. **Lag** is the time from when work became due to when a worker claimed it; recurrence lag counts from the start of the occurrence's UTC day, so hours there are normal. Failed items are retried."
       }
     },
     {
@@ -836,7 +836,7 @@
     {
       "type": "row",
       "id": 13,
-      "title": "Push and providers",
+      "title": "Emailed receipts",
       "collapsed": false,
       "gridPos": {
         "h": 1,
@@ -850,9 +850,258 @@
       "id": 14,
       "gridPos": {
         "h": 8,
-        "w": 12,
+        "w": 8,
         "x": 0,
         "y": 34
+      },
+      "type": "timeseries",
+      "title": "Ingress by outcome",
+      "description": "Signed requests from the Cloudflare Email Worker. unauthorized means a bad or replayed signature; unknown_address and rate_limited become SMTP rejects.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${prometheus}"
+      },
+      "interval": "1m",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus}"
+          },
+          "refId": "A",
+          "expr": "sum by (penny_inbound_mail_outcome) (increase(penny_inbound_mail_ingress_total{job=\"$service\", instance=~\"$instance\", deployment_environment_name=~\"$environment\"}[$__interval]))",
+          "legendFormat": "{{penny_inbound_mail_outcome}}",
+          "range": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 1,
+            "fillOpacity": 60,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*unauthorized"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "sum"
+          ],
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 15,
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 34
+      },
+      "type": "timeseries",
+      "title": "Processing results",
+      "description": "done stored receipts in the inbox; retry waits for penny-render; the rest are rejection reason codes (never message content).",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${prometheus}"
+      },
+      "interval": "1m",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus}"
+          },
+          "refId": "A",
+          "expr": "sum by (penny_inbound_mail_outcome) (increase(penny_inbound_mail_results_total{job=\"$service\", instance=~\"$instance\", deployment_environment_name=~\"$environment\"}[$__interval]))",
+          "legendFormat": "{{penny_inbound_mail_outcome}}",
+          "range": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 1,
+            "fillOpacity": 60,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "render_unavailable|unreadable|lease_lost"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "sum"
+          ],
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 16,
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 34
+      },
+      "type": "timeseries",
+      "title": "Conversion time",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${prometheus}"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus}"
+          },
+          "refId": "A",
+          "expr": "histogram_quantile(0.5, sum by (le) (rate(penny_inbound_mail_duration_seconds_bucket{job=\"$service\", instance=~\"$instance\", deployment_environment_name=~\"$environment\"}[$__rate_interval])))",
+          "legendFormat": "p50",
+          "range": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus}"
+          },
+          "refId": "B",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(penny_inbound_mail_duration_seconds_bucket{job=\"$service\", instance=~\"$instance\", deployment_environment_name=~\"$environment\"}[$__rate_interval])))",
+          "legendFormat": "p95",
+          "range": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "row",
+      "id": 17,
+      "title": "Push and providers",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 42
+      },
+      "panels": []
+    },
+    {
+      "id": 18,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 43
       },
       "type": "timeseries",
       "title": "Outgoing HTTP by host and status",
@@ -928,12 +1177,12 @@
       }
     },
     {
-      "id": 15,
+      "id": 19,
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 34
+        "y": 43
       },
       "type": "timeseries",
       "title": "Outgoing HTTP p95",
@@ -993,24 +1242,24 @@
     },
     {
       "type": "row",
-      "id": 16,
+      "id": 20,
       "title": "Traces and logs",
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 42
+        "y": 51
       },
       "panels": []
     },
     {
-      "id": 17,
+      "id": 21,
       "gridPos": {
         "h": 10,
         "w": 12,
         "x": 0,
-        "y": 43
+        "y": 52
       },
       "type": "table",
       "title": "Worker passes",
@@ -1046,12 +1295,12 @@
       }
     },
     {
-      "id": 18,
+      "id": 22,
       "gridPos": {
         "h": 10,
         "w": 12,
         "x": 12,
-        "y": 43
+        "y": 52
       },
       "type": "table",
       "title": "Failed worker passes",
@@ -1086,12 +1335,12 @@
       }
     },
     {
-      "id": 19,
+      "id": 23,
       "gridPos": {
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 53
+        "y": 62
       },
       "type": "logs",
       "title": "Worker warnings and errors",

@@ -16,6 +16,7 @@
 let
   cfg = config.services.penny;
   db = cfg.database;
+  mail = cfg.inboundMail;
   system = pkgs.stdenv.hostPlatform.system;
   pennyPackages = self.packages.${system} or (throw "penny: no packages for ${system}");
 
@@ -66,6 +67,11 @@ let
     Auth__TrustedProxies = lib.concatStringsSep "," cfg.trustedProxies;
     Auth__AllowRegistration = lib.boolToString cfg.allowRegistration;
     Backend__ShutdownTimeoutSeconds = "30";
+  } // lib.optionalAttrs mail.enable {
+    # Emailed receipts (MAZ-184): penny-render on loopback; the webhook secret is a credential.
+    InboundMail__Enabled = "true";
+    InboundMail__Domain = mail.domain;
+    InboundMail__RendererUrl = "http://127.0.0.1:${toString mail.renderer.port}";
   } // lib.mapAttrs (_: render) (flatten "" cfg.settings);
 
   migrationEnvironment = {
@@ -82,6 +88,8 @@ let
     else
       "${var}=${lib.escapeShellArg "${connectionString user};Password="}\"$(< ${passwordFile})\"; export ${var}";
   exportReceiptKey = file: ''Receipts__MasterKey="$(< ${file})"; export Receipts__MasterKey'';
+  exportWebhookSecret = file:
+    lib.optionalString mail.enable ''InboundMail__WebhookSecret="$(< ${file})"; export InboundMail__WebhookSecret'';
 
   credential = name: "\"$CREDENTIALS_DIRECTORY/${name}\"";
   optionalCredential = name: file: if file == null then null else credential name;
@@ -89,6 +97,7 @@ let
   apiStart = pkgs.writeShellScript "penny-api-start" ''
     set -euo pipefail
     ${exportReceiptKey (credential "receipt-key")}
+    ${exportWebhookSecret (credential "inbound-mail-secret")}
     ${exportConnection "ConnectionStrings__Postgres" db.runtimeUser (optionalCredential "runtime-password" db.runtimePasswordFile)}
     exec ${lib.getExe cfg.package}
   '';
@@ -104,7 +113,8 @@ let
   credentials =
     [ "receipt-key:${receiptKeyPath}" ]
     ++ lib.optional (db.runtimePasswordFile != null) "runtime-password:${db.runtimePasswordFile}"
-    ++ lib.optional (db.migrationPasswordFile != null) "migration-password:${db.migrationPasswordFile}";
+    ++ lib.optional (db.migrationPasswordFile != null) "migration-password:${db.migrationPasswordFile}"
+    ++ lib.optional mail.enable "inbound-mail-secret:${mail.webhookSecretFile}";
 
   # Generates the receipt master key on first start when none is supplied. It is never
   # rotated: losing it makes every stored receipt unreadable, so back it up.
@@ -133,6 +143,7 @@ let
     if [ -r ${lib.escapeShellArg receiptKeyPath} ]; then
       ${exportReceiptKey (lib.escapeShellArg receiptKeyPath)}
     fi
+    ${lib.optionalString mail.enable (exportWebhookSecret (lib.escapeShellArg mail.webhookSecretFile))}
     ${exportConnection "ConnectionStrings__Postgres" db.runtimeUser (optionalFile db.runtimePasswordFile)}
     ${exportConnection "ConnectionStrings__Migration" db.migrationUser (optionalFile db.migrationPasswordFile)}
     cd ${lib.escapeShellArg cfg.stateDir}
@@ -289,6 +300,55 @@ in
         1). The kernel kills the service past it (systemd restarts it); null leaves it
         unlimited.
       '';
+    };
+
+    inboundMail = {
+      enable = mkEnableOption ''
+        emailed receipts (MAZ-184, docs/plans/email-receipts.md): a private receipt address per
+        user, mail delivered by the Cloudflare Email Worker (apps/email-worker) and rendered to
+        PDF by a hardened local Gotenberg (`penny-render`). The Worker must reach the API
+        through a Cloudflare Tunnel or Cloudflare Access; nginx never routes /api/inbound-mail
+      '';
+      domain = mkOption {
+        type = types.str;
+        default = "";
+        example = "receipts.example.com";
+        description = "The receipts-only subdomain (`InboundMail__Domain`), whose MX is Cloudflare Email Routing.";
+      };
+      webhookSecretFile = mkOption {
+        type = types.nullOr types.path;
+        default = null;
+        example = "/run/secrets/penny-inbound-mail-secret";
+        description = ''
+          File with the HMAC secret shared with the Email Worker (`InboundMail__WebhookSecret`,
+          base64 of at least 32 random bytes: `openssl rand -base64 32`). Read through systemd
+          credentials; the same value is the Worker's `PENNY_WEBHOOK_SECRET`.
+        '';
+      };
+      renderer = {
+        package = mkOption {
+          type = types.package;
+          default = pkgs.gotenberg;
+          defaultText = lib.literalExpression "pkgs.gotenberg";
+          description = "Gotenberg for `penny-render`.";
+        };
+        chromium = mkOption {
+          type = types.package;
+          default = pkgs.chromium;
+          defaultText = lib.literalExpression "pkgs.chromium";
+          description = "Chromium used by `penny-render` (JavaScript is always off).";
+        };
+        port = mkOption {
+          type = types.port;
+          default = 3011;
+          description = "Loopback port of `penny-render`.";
+        };
+        memoryMax = mkOption {
+          type = types.nullOr types.str;
+          default = "1G";
+          description = "systemd `MemoryMax=` of `penny-render`; null for unlimited.";
+        };
+      };
     };
 
     tasksMax = mkOption {
@@ -532,6 +592,10 @@ in
         message = "services.penny.database password files are only used with an external database (createLocally = false).";
       }
       {
+        assertion = mail.enable -> (mail.domain != "" && mail.webhookSecretFile != null);
+        message = "services.penny.inboundMail needs domain and webhookSecretFile when enabled.";
+      }
+      {
         assertion = lib.all (o: builtins.match "https?://[^/]+" o != null) cfg.publicOrigins;
         message = "services.penny.publicOrigins must be origins like https://penny.example.com (no path or trailing slash).";
       }
@@ -609,12 +673,81 @@ in
       };
     };
 
+    # penny-render (MAZ-184): HTML-to-PDF for emailed receipts, Chromium with JavaScript off.
+    # Gotenberg serves TCP, so instead of PrivateNetwork the unit may only use loopback
+    # (IPAddressDeny/IPAddressAllow): Chromium can't reach the internet, and Gotenberg's
+    # URL deny-list and private-IP denial block loopback and local files as well. Flags
+    # match deploy/compose.yaml.
+    systemd.services.penny-render = mkIf mail.enable {
+      description = "Penny email receipt renderer (Gotenberg)";
+      wantedBy = [ "multi-user.target" ];
+      before = [ "penny.service" ];
+      environment = {
+        CHROMIUM_BIN_PATH = lib.getExe mail.renderer.chromium;
+        FONTCONFIG_FILE = pkgs.makeFontsConf { fontDirectories = [ pkgs.liberation_ttf_v2 pkgs.dejavu_fonts pkgs.noto-fonts ]; };
+        HOME = "/run/penny-render";
+      };
+      serviceConfig = {
+        Type = "simple";
+        ExecStart = lib.escapeShellArgs [
+          (lib.getExe mail.renderer.package)
+          "--api-port=${toString mail.renderer.port}"
+          "--api-timeout=30s"
+          "--api-disable-download-from"
+          "--chromium-disable-javascript"
+          "--chromium-deny-list=^(?!file:///tmp/).*"
+          "--chromium-deny-private-ips"
+          "--chromium-deny-public-ips"
+          "--chromium-max-queue-size=4"
+          "--chromium-restart-after=50"
+          "--libreoffice-disable-routes"
+          "--pdfengines-disable-routes"
+          "--webhook-disable"
+          "--prometheus-disable-collect"
+          "--log-level=error"
+        ];
+        Restart = "on-failure";
+        RestartSec = 5;
+        DynamicUser = true;
+        RuntimeDirectory = "penny-render";
+        WorkingDirectory = "/run/penny-render";
+        PrivateTmp = true;
+        PrivateDevices = true;
+        PrivateIPC = true;
+        PrivateUsers = true;
+        ProtectSystem = "strict";
+        ProtectHome = true;
+        ProtectClock = true;
+        ProtectControlGroups = true;
+        ProtectHostname = true;
+        ProtectKernelLogs = true;
+        ProtectKernelModules = true;
+        ProtectKernelTunables = true;
+        ProtectProc = "invisible";
+        NoNewPrivileges = true;
+        CapabilityBoundingSet = "";
+        IPAddressDeny = "any";
+        IPAddressAllow = "localhost";
+        RestrictAddressFamilies = [ "AF_UNIX" "AF_INET" "AF_INET6" "AF_NETLINK" ];
+        RestrictNamespaces = true;
+        RestrictRealtime = true;
+        RestrictSUIDSGID = true;
+        LockPersonality = true;
+        SystemCallFilter = [ "@sandbox" "@system-service" "@chown" "@pkey" "mincore" ];
+        SystemCallArchitectures = "native";
+        UMask = "0077";
+        TasksMax = 512;
+      } // lib.optionalAttrs (mail.renderer.memoryMax != null) {
+        MemoryMax = mail.renderer.memoryMax;
+      };
+    };
+
     systemd.services.penny = {
       description = "Penny API";
       wantedBy = [ "multi-user.target" ];
       requires = [ "penny-migrate.service" ];
-      after = [ "penny-migrate.service" "network-online.target" ];
-      wants = [ "network-online.target" ];
+      wants = [ "network-online.target" ] ++ lib.optional mail.enable "penny-render.service";
+      after = [ "penny-migrate.service" "network-online.target" ] ++ lib.optional mail.enable "penny-render.service";
       environment = apiEnvironment;
       serviceConfig = hardening // {
         Type = "exec";
@@ -661,6 +794,14 @@ in
             '';
           };
           # Fingerprinted Vite bundles never change. Without `always`, a 404 is not cached.
+          # The Email Worker's endpoints (MAZ-184) are never public: it reaches the API
+          # through a Cloudflare Tunnel or Cloudflare Access, not through this proxy.
+          "^~ /api/inbound-mail" = {
+            extraConfig = ''
+              default_type application/json;
+              return 404 '{"error":"API route not found."}';
+            '';
+          };
           "/assets/" = {
             tryFiles = "$uri =404";
             extraConfig = ''

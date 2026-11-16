@@ -153,6 +153,41 @@ public sealed partial class InboundMailSealer(ReceiptStoreSettings settings)
 
     public void Delete(string storagePath) => File.Delete(FullPath(storagePath));
 
+    // Raw messages (`inbound/xx/<32 hex>`) and temporary files a crash left behind, for
+    // `receipts-sweep`. Nothing else under `inbound/` is listed or touched.
+    public IEnumerable<ReceiptStoreFile> ListFiles()
+    {
+        var root = Path.Combine(settings.Root, Directory);
+        if (!System.IO.Directory.Exists(root))
+            yield break;
+        foreach (var directory in System.IO.Directory.EnumerateDirectories(root))
+        {
+            var prefix = Path.GetFileName(directory);
+            foreach (var path in System.IO.Directory.EnumerateFiles(directory))
+            {
+                var relative = $"{Directory}/{prefix}/{Path.GetFileName(path)}";
+                var temporary = TemporaryPathPattern().IsMatch(relative);
+                if (temporary || StoragePathPattern().IsMatch(relative))
+                    yield return new(
+                        relative,
+                        temporary,
+                        new DateTimeOffset(File.GetLastWriteTimeUtc(path), TimeSpan.Zero)
+                    );
+            }
+        }
+    }
+
+    public void Delete(ReceiptStoreFile file)
+    {
+        if (
+            !(file.Temporary ? TemporaryPathPattern() : StoragePathPattern()).IsMatch(
+                file.StoragePath
+            )
+        )
+            throw new InvalidOperationException("Inbound mail storage path is invalid.");
+        File.Delete(Path.Combine(settings.Root, file.StoragePath));
+    }
+
     private byte[] DeriveKey(byte[] salt) =>
         HKDF.DeriveKey(HashAlgorithmName.SHA256, settings.MasterKey, 32, salt, KeyInfo);
 
@@ -169,4 +204,10 @@ public sealed partial class InboundMailSealer(ReceiptStoreSettings settings)
 
     [GeneratedRegex("^inbound/[0-9a-f]{2}/[0-9a-f]{32}$", RegexOptions.CultureInvariant)]
     private static partial Regex StoragePathPattern();
+
+    [GeneratedRegex(
+        "^inbound/([0-9a-f]{2})/\\1[0-9a-f]{30}\\.tmp-[0-9a-f]{16}$",
+        RegexOptions.CultureInvariant
+    )]
+    private static partial Regex TemporaryPathPattern();
 }
