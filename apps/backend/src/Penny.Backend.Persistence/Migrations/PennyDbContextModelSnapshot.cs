@@ -650,6 +650,149 @@ namespace Penny.Backend.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.InboundMessage", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text")
+                        .HasColumnName("id")
+                        .UseCollation("C");
+
+                    b.Property<string>("AddressId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("address_id")
+                        .UseCollation("C");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("integer")
+                        .HasColumnName("attempts");
+
+                    b.Property<string>("AuthDkim")
+                        .HasColumnType("text")
+                        .HasColumnName("auth_dkim")
+                        .UseCollation("C");
+
+                    b.Property<string>("AuthDmarc")
+                        .HasColumnType("text")
+                        .HasColumnName("auth_dmarc")
+                        .UseCollation("C");
+
+                    b.Property<string>("AuthSpf")
+                        .HasColumnType("text")
+                        .HasColumnName("auth_spf")
+                        .UseCollation("C");
+
+                    b.Property<DateTimeOffset?>("DueAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("due_at");
+
+                    b.Property<short>("EncryptionVersion")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("smallint")
+                        .HasDefaultValue((short)1)
+                        .HasColumnName("encryption_version");
+
+                    b.Property<byte[]>("FileNonce")
+                        .IsRequired()
+                        .HasColumnType("bytea")
+                        .HasColumnName("file_nonce");
+
+                    b.Property<byte[]>("KeySalt")
+                        .IsRequired()
+                        .HasColumnType("bytea")
+                        .HasColumnName("key_salt");
+
+                    b.Property<DateTimeOffset?>("LeaseExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lease_expires_at");
+
+                    b.Property<string>("LeaseToken")
+                        .HasColumnType("text")
+                        .HasColumnName("lease_token")
+                        .UseCollation("C");
+
+                    b.Property<DateTimeOffset?>("ProcessedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("processed_at");
+
+                    b.Property<string>("ReasonCode")
+                        .HasColumnType("text")
+                        .HasColumnName("reason_code")
+                        .UseCollation("C");
+
+                    b.Property<DateTimeOffset>("ReceivedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("received_at");
+
+                    b.Property<string>("Sha256")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("sha256")
+                        .UseCollation("C");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint")
+                        .HasColumnName("size_bytes");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status")
+                        .UseCollation("C");
+
+                    b.Property<string>("StoragePath")
+                        .HasColumnType("text")
+                        .HasColumnName("storage_path")
+                        .UseCollation("C");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("user_id")
+                        .UseCollation("C");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DueAt")
+                        .HasDatabaseName("ix_inbound_messages_due")
+                        .HasFilter("due_at IS NOT NULL");
+
+                    b.HasIndex("StoragePath")
+                        .IsUnique();
+
+                    b.HasIndex("AddressId", "ReceivedAt");
+
+                    b.HasIndex("UserId", "Sha256")
+                        .IsUnique();
+
+                    b.ToTable("inbound_messages", "penny", t =>
+                        {
+                            t.HasCheckConstraint("ck_inbound_messages_attempts", "attempts >= 0");
+
+                            t.HasCheckConstraint("ck_inbound_messages_auth", "(auth_spf IS NULL OR auth_spf IN ('pass','fail','none','unknown')) AND (auth_dkim IS NULL OR auth_dkim IN ('pass','fail','none','unknown')) AND (auth_dmarc IS NULL OR auth_dmarc IN ('pass','fail','none','unknown'))");
+
+                            t.HasCheckConstraint("ck_inbound_messages_due", "(status IN ('pending','processing')) = (due_at IS NOT NULL)");
+
+                            t.HasCheckConstraint("ck_inbound_messages_encryption_version", "encryption_version = 1");
+
+                            t.HasCheckConstraint("ck_inbound_messages_file_nonce", "length(file_nonce) = 12");
+
+                            t.HasCheckConstraint("ck_inbound_messages_key_salt", "length(key_salt) = 32");
+
+                            t.HasCheckConstraint("ck_inbound_messages_lease", "(lease_token IS NULL) = (lease_expires_at IS NULL)");
+
+                            t.HasCheckConstraint("ck_inbound_messages_reason", "reason_code IS NULL OR reason_code ~ '^[a-z_]{1,40}$'");
+
+                            t.HasCheckConstraint("ck_inbound_messages_sha256", "sha256 ~ '^[0-9a-f]{64}$'");
+
+                            t.HasCheckConstraint("ck_inbound_messages_size", "size_bytes >= 0");
+
+                            t.HasCheckConstraint("ck_inbound_messages_status", "status IN ('pending','processing','done','rejected','failed')");
+
+                            t.HasCheckConstraint("ck_inbound_messages_storage_path", "storage_path IS NULL OR storage_path ~ '^inbound/[0-9a-f]{2}/[0-9a-f]{32}$'");
+                        });
+                });
+
             modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.Ledger", b =>
                 {
                     b.Property<string>("UserId")
@@ -1393,6 +1536,241 @@ namespace Penny.Backend.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.ReceiptInboxItem", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text")
+                        .HasColumnName("id")
+                        .UseCollation("C");
+
+                    b.Property<DateTimeOffset?>("AttachedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("attached_at");
+
+                    b.Property<short>("EncryptionVersion")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("smallint")
+                        .HasDefaultValue((short)1)
+                        .HasColumnName("encryption_version");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<byte[]>("FromEncrypted")
+                        .IsRequired()
+                        .HasColumnType("bytea")
+                        .HasColumnName("from_encrypted");
+
+                    b.Property<byte[]>("FromNonce")
+                        .IsRequired()
+                        .HasColumnType("bytea")
+                        .HasColumnName("from_nonce");
+
+                    b.Property<string>("InboundMessageId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("inbound_message_id")
+                        .UseCollation("C");
+
+                    b.Property<byte[]>("KeySalt")
+                        .IsRequired()
+                        .HasColumnType("bytea")
+                        .HasColumnName("key_salt");
+
+                    b.Property<DateTimeOffset>("ReceivedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("received_at");
+
+                    b.Property<bool>("SenderVerified")
+                        .HasColumnType("boolean")
+                        .HasColumnName("sender_verified");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status")
+                        .UseCollation("C");
+
+                    b.Property<byte[]>("SubjectEncrypted")
+                        .IsRequired()
+                        .HasColumnType("bytea")
+                        .HasColumnName("subject_encrypted");
+
+                    b.Property<byte[]>("SubjectNonce")
+                        .IsRequired()
+                        .HasColumnType("bytea")
+                        .HasColumnName("subject_nonce");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("user_id")
+                        .UseCollation("C");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExpiresAt")
+                        .HasDatabaseName("ix_receipt_inbox_items_expiry")
+                        .HasFilter("status IN ('to_attach','partly_attached')");
+
+                    b.HasIndex("InboundMessageId")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "Status", "ReceivedAt");
+
+                    b.ToTable("receipt_inbox_items", "penny", t =>
+                        {
+                            t.HasCheckConstraint("ck_receipt_inbox_items_attached", "(status = 'attached') = (attached_at IS NOT NULL)");
+
+                            t.HasCheckConstraint("ck_receipt_inbox_items_encryption_version", "encryption_version = 1");
+
+                            t.HasCheckConstraint("ck_receipt_inbox_items_key_salt", "length(key_salt) = 32");
+
+                            t.HasCheckConstraint("ck_receipt_inbox_items_nonces", "length(subject_nonce) = 12 AND length(from_nonce) = 12");
+
+                            t.HasCheckConstraint("ck_receipt_inbox_items_status", "status IN ('to_attach','partly_attached','attached','discarded')");
+                        });
+                });
+
+            modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.ReceiptInboxReceipt", b =>
+                {
+                    b.Property<string>("InboxItemId")
+                        .HasColumnType("text")
+                        .HasColumnName("inbox_item_id")
+                        .UseCollation("C");
+
+                    b.Property<string>("ReceiptId")
+                        .HasColumnType("text")
+                        .HasColumnName("receipt_id")
+                        .UseCollation("C");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("kind")
+                        .UseCollation("C");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer")
+                        .HasColumnName("position");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("user_id")
+                        .UseCollation("C");
+
+                    b.HasKey("InboxItemId", "ReceiptId");
+
+                    b.HasIndex("ReceiptId")
+                        .IsUnique();
+
+                    b.HasIndex("InboxItemId", "Position")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "InboxItemId");
+
+                    b.HasIndex("UserId", "ReceiptId");
+
+                    b.ToTable("receipt_inbox_receipts", "penny", t =>
+                        {
+                            t.HasCheckConstraint("ck_receipt_inbox_receipts_kind", "kind IN ('email','attachment')");
+
+                            t.HasCheckConstraint("ck_receipt_inbox_receipts_position", "position >= 0");
+                        });
+                });
+
+            modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.ReceiptMailAddress", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text")
+                        .HasColumnName("id")
+                        .UseCollation("C");
+
+                    b.Property<byte[]>("AddressEncrypted")
+                        .IsRequired()
+                        .HasColumnType("bytea")
+                        .HasColumnName("address_encrypted");
+
+                    b.Property<byte[]>("AddressNonce")
+                        .IsRequired()
+                        .HasColumnType("bytea")
+                        .HasColumnName("address_nonce");
+
+                    b.Property<byte[]>("AllowedSendersEncrypted")
+                        .IsRequired()
+                        .HasColumnType("bytea")
+                        .HasColumnName("allowed_senders_encrypted");
+
+                    b.Property<byte[]>("AllowedSendersNonce")
+                        .IsRequired()
+                        .HasColumnType("bytea")
+                        .HasColumnName("allowed_senders_nonce");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<short>("EncryptionVersion")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("smallint")
+                        .HasDefaultValue((short)1)
+                        .HasColumnName("encryption_version");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<byte[]>("KeySalt")
+                        .IsRequired()
+                        .HasColumnType("bytea")
+                        .HasColumnName("key_salt");
+
+                    b.Property<DateTimeOffset?>("LastReceivedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_received_at");
+
+                    b.Property<string>("LocalPartHash")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("local_part_hash")
+                        .UseCollation("C");
+
+                    b.Property<DateTimeOffset?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("revoked_at");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("user_id")
+                        .UseCollation("C");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LocalPartHash")
+                        .IsUnique();
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_receipt_mail_addresses_current")
+                        .HasFilter("revoked_at IS NULL");
+
+                    b.ToTable("receipt_mail_addresses", "penny", t =>
+                        {
+                            t.HasCheckConstraint("ck_receipt_mail_addresses_encryption_version", "encryption_version = 1");
+
+                            t.HasCheckConstraint("ck_receipt_mail_addresses_expiry", "expires_at > created_at");
+
+                            t.HasCheckConstraint("ck_receipt_mail_addresses_hash", "local_part_hash ~ '^[0-9a-f]{64}$'");
+
+                            t.HasCheckConstraint("ck_receipt_mail_addresses_key_salt", "length(key_salt) = 32");
+
+                            t.HasCheckConstraint("ck_receipt_mail_addresses_nonces", "length(address_nonce) = 12 AND length(allowed_senders_nonce) = 12");
+                        });
+                });
+
             modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.ReceiptText", b =>
                 {
                     b.Property<string>("ReceiptId")
@@ -1944,6 +2322,19 @@ namespace Penny.Backend.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.InboundMessage", b =>
+                {
+                    b.HasOne("Penny.Backend.Persistence.Schema.Entities.ReceiptMailAddress", null)
+                        .WithMany()
+                        .HasForeignKey("AddressId")
+                        .IsRequired();
+
+                    b.HasOne("Penny.Backend.Persistence.Schema.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.Ledger", b =>
                 {
                     b.HasOne("Penny.Backend.Persistence.Schema.Entities.User", null)
@@ -2075,6 +2466,43 @@ namespace Penny.Backend.Persistence.Migrations
                 });
 
             modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.Receipt", b =>
+                {
+                    b.HasOne("Penny.Backend.Persistence.Schema.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.ReceiptInboxItem", b =>
+                {
+                    b.HasOne("Penny.Backend.Persistence.Schema.Entities.InboundMessage", null)
+                        .WithMany()
+                        .HasForeignKey("InboundMessageId")
+                        .IsRequired();
+
+                    b.HasOne("Penny.Backend.Persistence.Schema.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.ReceiptInboxReceipt", b =>
+                {
+                    b.HasOne("Penny.Backend.Persistence.Schema.Entities.ReceiptInboxItem", null)
+                        .WithMany()
+                        .HasForeignKey("UserId", "InboxItemId")
+                        .HasPrincipalKey("UserId", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Penny.Backend.Persistence.Schema.Entities.Receipt", null)
+                        .WithMany()
+                        .HasForeignKey("UserId", "ReceiptId")
+                        .HasPrincipalKey("UserId", "Id")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Penny.Backend.Persistence.Schema.Entities.ReceiptMailAddress", b =>
                 {
                     b.HasOne("Penny.Backend.Persistence.Schema.Entities.User", null)
                         .WithMany()

@@ -10,4 +10,7 @@ public enum FailureKind
 
     // A dependency did not answer in time (search statement timeout): 503, retry.
     Unavailable,
+
+    // A per-user limit was reached (receipt address creation): 429.
+    RateLimited,
 }

@@ -24,6 +24,7 @@ public static class BackendTelemetry
     public const string ErrorTypeAttribute = "error.type";
     public const string ReceiptTextStatusAttribute = "penny.receipt_text.status";
     public const string ReceiptTextMethodAttribute = "penny.receipt_text.method";
+    public const string InboundMailOutcomeAttribute = "penny.inbound_mail.outcome";
 
     public const string Success = "success";
     public const string Failure = "failure";
@@ -108,6 +109,19 @@ public static class BackendTelemetry
         "Wall time of one receipt text extraction attempt, by status.",
         advice: new InstrumentAdvice<double> { HistogramBucketBoundaries = ExtractionBuckets }
     );
+
+    private static readonly Counter<long> InboundMailRequests = Meter.CreateCounter<long>(
+        "penny.inbound_mail.ingress",
+        "{request}",
+        "Emailed receipt ingress requests (MAZ-184) by outcome: accepted, duplicate, unknown_address, rate_limited, too_large, invalid, unauthorized, recipients_unauthorized."
+    );
+
+    // One ingress request; `outcome` is a fixed vocabulary, never an address or content.
+    public static void InboundMail(string outcome) =>
+        InboundMailRequests.Add(
+            1,
+            new KeyValuePair<string, object?>(InboundMailOutcomeAttribute, outcome)
+        );
 
     // One extraction attempt. `status` is done, failed, unsupported or retry; `method`
     // is text, ocr or mixed for done results, otherwise null.

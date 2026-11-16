@@ -4130,6 +4130,518 @@
           }
         }
       }
+    },
+    "/api/receipt-email": {
+      "get": {
+        "summary": "Read receipt email settings",
+        "operationId": "getApiReceiptEmail",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptEmail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create or rotate the receipt address",
+        "description": "Revokes the current address at once. At most InboundMail__MaxAddressesPerDay (10) per user per day.",
+        "operationId": "postApiReceiptEmail",
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptEmail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Receipt email is not enabled on this server, or there is no receipt address.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many new receipt addresses today.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Extend the receipt address or edit allowed senders",
+        "operationId": "patchApiReceiptEmail",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReceiptEmailUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptEmail"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Receipt email is not enabled on this server, or there is no receipt address.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON request body too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Revoke the receipt address",
+        "description": "Idempotent.",
+        "operationId": "deleteApiReceiptEmail",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or expired session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or untrusted origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Receipt email is not enabled on this server, or there is no receipt address.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/inbound-mail": {
+      "post": {
+        "summary": "Ingest a raw message from the Email Worker",
+        "description": "MAZ-184. Not routed by the public web proxy. 404 also while InboundMail__Enabled is false.",
+        "operationId": "postApiInboundMail",
+        "security": [
+          {
+            "webhookSignature": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Penny-Recipient",
+            "in": "header",
+            "required": true,
+            "description": "The recipient local part, lowercased, without +tag.",
+            "schema": {
+              "type": "string",
+              "pattern": "^r-[a-z2-7]{20}$"
+            }
+          },
+          {
+            "name": "X-Penny-Timestamp",
+            "in": "header",
+            "required": true,
+            "description": "Unix seconds.",
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]{1,12}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "message/rfc822": {
+              "schema": {
+                "type": "string",
+                "contentMediaType": "message/rfc822"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted (or a duplicate of an accepted message)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The message is empty.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The request signature is missing or invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown, revoked or expired address.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The message is too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Over a per-address, per-user or global limit.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/inbound-mail/recipients": {
+      "get": {
+        "summary": "List live receipt address hashes for the Email Worker",
+        "description": "MAZ-184. Supports If-None-Match with the version (ETag); rate-limited per client.",
+        "operationId": "getApiInboundMailRecipients",
+        "security": [
+          {
+            "webhookSignature": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Penny-Timestamp",
+            "in": "header",
+            "required": true,
+            "description": "Unix seconds.",
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]{1,12}$"
+            }
+          },
+          {
+            "name": "If-None-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InboundRecipients"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "The list is unchanged."
+          },
+          "401": {
+            "description": "The request signature is missing or invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "API route not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4143,6 +4655,12 @@
         "type": "apiKey",
         "in": "cookie",
         "name": "penny_session"
+      },
+      "webhookSignature": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Penny-Signature",
+        "description": "MAZ-184: lowercase hex HMAC-SHA256 with InboundMail__WebhookSecret over `penny/inbound-mail/v1\\n<purpose>\\n<X-Penny-Timestamp>\\n<subject>\\n<sha256(body) hex>`. Purpose `message` (subject: X-Penny-Recipient) or `recipients` (subject: the request path). Timestamps more than 5 minutes off are refused. Used only by the Cloudflare Email Worker (apps/email-worker)."
       }
     },
     "schemas": {
@@ -6548,6 +7066,115 @@
           "items",
           "totalCount",
           "nextCursor"
+        ]
+      },
+      "ReceiptEmailAddress": {
+        "type": "object",
+        "description": "A live private receipt address (MAZ-184). Times are Unix milliseconds.",
+        "properties": {
+          "address": {
+            "type": "string",
+            "description": "r-<20 lowercase base32 characters>@<domain>"
+          },
+          "createdAt": {
+            "type": "integer"
+          },
+          "expiresAt": {
+            "type": "integer"
+          },
+          "lastReceivedAt": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "allowedSenders": {
+            "type": "array",
+            "maxItems": 50,
+            "items": {
+              "type": "string"
+            },
+            "description": "Lowercase addresses or domains. Empty: any sender."
+          }
+        },
+        "required": [
+          "address",
+          "createdAt",
+          "expiresAt",
+          "lastReceivedAt",
+          "allowedSenders"
+        ]
+      },
+      "ReceiptEmail": {
+        "type": "object",
+        "description": "Whether this server accepts emailed receipts, its receipt domain, and the user's live address (MAZ-184).",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "domain": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "address": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ReceiptEmailAddress"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "enabled",
+          "domain",
+          "address"
+        ]
+      },
+      "ReceiptEmailUpdate": {
+        "type": "object",
+        "description": "At least one of: extend (restart the lifetime from now), allowedSenders (replace the list).",
+        "properties": {
+          "extend": {
+            "type": "boolean"
+          },
+          "allowedSenders": {
+            "type": "array",
+            "maxItems": 50,
+            "items": {
+              "type": "string",
+              "maxLength": 254
+            }
+          }
+        }
+      },
+      "InboundRecipients": {
+        "type": "object",
+        "description": "SHA-256 hex of each live receipt address local part, sorted, for the Email Worker (MAZ-184). No user ids or expiry dates.",
+        "properties": {
+          "version": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{32}$"
+          },
+          "generatedAt": {
+            "type": "integer"
+          },
+          "hashes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        "required": [
+          "version",
+          "generatedAt",
+          "hashes"
         ]
       }
     }

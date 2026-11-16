@@ -109,9 +109,10 @@ public sealed class MigrationTests(ApiFixture fixture) : IntegrationTestBase(fix
 
         (await CatalogAsync()).ShouldBe(fresh);
         await using var context = PennyDbContext.Create(Fixture.Admin);
-        (await context.Database.GetAppliedMigrationsAsync(Ct)).ShouldBe([
-            PreSquashUpgrade.SquashedMigration,
-        ]);
+        // Moved onto the squashed history, then every later migration applied.
+        var applied = (await context.Database.GetAppliedMigrationsAsync(Ct)).ToList();
+        applied[0].ShouldBe(PreSquashUpgrade.SquashedMigration);
+        applied.ShouldBe(context.Database.GetMigrations());
         (await ScalarAsync("SELECT string_agg(token, ',') FROM penny.push_devices")).ShouldBe(
             "apns-synthetic"
         );

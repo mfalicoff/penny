@@ -1,0 +1,26 @@
+{
+  "name": "penny-email-worker",
+  "private": true,
+  "description": "Cloudflare Email Worker for emailed receipts (MAZ-184): refuses unknown recipients and forwards signed raw MIME to Penny.",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "lint": "eslint --max-warnings=0 .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20261102.1",
+    "@eslint/js": "10.0.1",
+    "eslint": "10.14.0",
+    "globals": "17.14.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.2",
+    "vitest": "5.1.0",
+    "wrangler": "4.156.2"
+  }
+}

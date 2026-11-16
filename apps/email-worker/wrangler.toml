@@ -1,0 +1,25 @@
+# Cloudflare Email Worker for emailed receipts (MAZ-184, docs/plans/email-receipts.md).
+# Email Routing on the receipts-only subdomain sends every address (catch-all) here.
+# Secrets are never in this file:
+#   wrangler secret put PENNY_WEBHOOK_SECRET      # = Penny's InboundMail__WebhookSecret
+#   wrangler secret put CF_ACCESS_CLIENT_ID       # only when Penny sits behind Cloudflare Access
+#   wrangler secret put CF_ACCESS_CLIENT_SECRET
+name = "penny-receipt-email"
+main = "src/index.ts"
+compatibility_date = "2026-11-01"
+workers_dev = false
+
+[vars]
+# Penny's internal hostname, reached through a Cloudflare Tunnel (recommended) or a
+# hostname protected by Cloudflare Access. Never the public web hostname.
+PENNY_ORIGIN = "https://penny-inbound.example.com"
+# The receipts-only subdomain (Penny's InboundMail__Domain).
+RECEIPT_DOMAIN = "receipts.example.com"
+# 25 MiB, Penny's InboundMail__MaxMessageBytes.
+MAX_MESSAGE_BYTES = "26214400"
+RECIPIENT_LIST_TTL_SECONDS = "60"
+
+# Mail content and addresses must never reach Workers Logs: the Worker logs only
+# outcome codes, and invocation logs (which include request metadata) stay off.
+[observability]
+enabled = false

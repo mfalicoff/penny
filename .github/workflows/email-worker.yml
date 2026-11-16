@@ -1,0 +1,53 @@
+name: Email Worker checks
+
+on:
+  pull_request:
+    paths:
+      - 'apps/email-worker/**'
+      - '.github/workflows/email-worker.yml'
+  push:
+    branches: [master]
+    paths:
+      - 'apps/email-worker/**'
+      - '.github/workflows/email-worker.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: email-worker-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  worker:
+    # The Cloudflare Email Worker for emailed receipts (MAZ-184). Deploying is manual
+    # (`wrangler deploy` by the operator, see apps/email-worker/README.md); CI never
+    # holds Cloudflare credentials.
+    name: Email Worker lint, types, tests and bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: apps/email-worker
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: apps/email-worker/package-lock.json
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Lint
+        run: npm run lint
+      - name: Check types
+        run: npm run typecheck
+      - name: Tests
+        run: npm test
+      - name: Bundle without deploying
+        run: npx wrangler deploy --dry-run --outdir dist
+        env:
+          WRANGLER_SEND_METRICS: 'false'

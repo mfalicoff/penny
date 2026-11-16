@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using Penny.Backend.IntegrationTests.Infrastructure.Probes;
 using Penny.Backend.Persistence.Configuration;
+using Penny.Backend.Persistence.InboundMail;
 using Penny.Backend.Persistence.Migrations;
 using Penny.Backend.Persistence.Receipts;
 using Penny.Backend.Persistence.Schema;
@@ -56,6 +57,12 @@ public sealed class ApiFixture : IAsyncLifetime
         );
     public string ReceiptKey { get; } =
         Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
+    public const string InboundMailDomain = "receipts.example.test";
+    public const int InboundMailMaxBytes = 1024 * 1024;
+    public byte[] InboundMailSecret { get; } =
+        System.Security.Cryptography.RandomNumberGenerator.GetBytes(32);
+    public InboundMailSealer InboundMail =>
+        new(ReceiptStoreSettings.Create(ReceiptRoot, ReceiptKey));
     public ReceiptFileStore Receipts => new(ReceiptStoreSettings.Create(ReceiptRoot, ReceiptKey));
 
     public async ValueTask InitializeAsync()
@@ -99,6 +106,14 @@ public sealed class ApiFixture : IAsyncLifetime
             {
                 ["Receipts:Root"] = ReceiptRoot,
                 ["Receipts:MasterKey"] = ReceiptKey,
+                // Emailed receipts (MAZ-184) are on in the shared host; suites that need
+                // them off derive a host with `InboundMail:Enabled=false`.
+                ["InboundMail:Enabled"] = "true",
+                ["InboundMail:Domain"] = InboundMailDomain,
+                ["InboundMail:WebhookSecret"] = Convert.ToBase64String(InboundMailSecret),
+                ["InboundMail:MaxMessageBytes"] = InboundMailMaxBytes.ToString(
+                    System.Globalization.CultureInfo.InvariantCulture
+                ),
             }
         );
         Factory.UseKestrel(0);
