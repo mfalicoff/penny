@@ -3,6 +3,7 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Penny.Backend.Application.Abstractions.InboundMail;
+using Penny.Backend.Application.Push;
 using Penny.Backend.Persistence.InboundMail;
 using Penny.Backend.Persistence.Receipts;
 using Penny.Backend.Persistence.Schema;
@@ -15,8 +16,8 @@ namespace Penny.Backend.Persistence.Repositories;
 // candidates by the partial due index, then a conditional update that re-checks the
 // lease, so concurrent workers never share a message. Completion writes the receipt
 // files first, then one transaction inserts the receipts (with their text extraction
-// queued), the inbox item and its links and marks the message done, conditional on the
-// lease. A worker that lost its lease changes nothing and its files are removed.
+// queued), the inbox item and its links and the owner's `receipt.received` push, and
+// marks the message done, conditional on the lease. A worker that lost its lease changes nothing and its files are removed.
 public sealed class PostgresInboundMailQueue(
     NpgsqlDataSource source,
     InboundMailSealer sealer,
@@ -212,6 +213,7 @@ public sealed class PostgresInboundMailQueue(
                             }
                     )
                 );
+                await AddReceivedPushAsync(context, item, now);
                 // Not cancellable: once the files are in place, the outcome must be known.
                 await context.SaveChangesAsync(CancellationToken.None);
                 await transaction.CommitAsync(CancellationToken.None);
@@ -353,6 +355,38 @@ public sealed class PostgresInboundMailQueue(
         context.InboundMessages.Where(message =>
             message.Id == work.Id && message.LeaseToken == leaseToken
         );
+
+    // The owner's "New receipt" notification, in the transaction that creates the item,
+    // when the owner has a registered device (the delivery worker sends only to devices
+    // with a live session). Personal: no household; the payload is the inbox link only.
+    private static async Task AddReceivedPushAsync(
+        PennyDbContext context,
+        ReceiptInboxItem item,
+        DateTimeOffset now
+    )
+    {
+        if (
+            !await context.PushDevices.AnyAsync(
+                device => device.UserId == item.UserId,
+                CancellationToken.None
+            )
+        )
+            return;
+        var id = RandomNumberGenerator.GetHexString(32, lowercase: true);
+        context.PushOutbox.Add(
+            new PushOutboxMessage
+            {
+                Id = id,
+                UserId = item.UserId,
+                HouseholdId = null,
+                EventType = PushContent.ReceiptReceived,
+                EntityId = item.Id,
+                Payload = new ReceiptInboxPushPayload(item.Id, id).ToJson(),
+                CreatedAt = now,
+                NextAttemptAt = now,
+            }
+        );
+    }
 
     private ReceiptInboxItem InboxItem(
         InboundWork work,

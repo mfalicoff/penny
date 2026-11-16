@@ -99,6 +99,33 @@ public sealed class ApnsTransportTests
     }
 
     [Fact]
+    public void whenHouseholdMessageRendered_Body_ShouldKeepTheHouseholdShapeByteForByte()
+    {
+        System
+            .Text.Encoding.UTF8.GetString(ApnsTransport.Body(PushSamples.Message()))
+            .ShouldBe(
+                """{"aps":{"alert":{"title":"New household expense","body":"A member added an expense. Open Penny to see your share."},"sound":"default","thread-id":"household-home"},"householdId":"home","month":"2026-09","expenseId":"expense-1","eventId":"event-1"}"""
+            );
+    }
+
+    [Fact]
+    public void whenReceiptMessageRendered_Body_ShouldCarryOnlyTheInboxLinkInTheReceiptThread()
+    {
+        var message = PushSamples.Message() with
+        {
+            Title = "New receipt",
+            Body = "An emailed receipt is ready to attach.",
+            Payload = new ReceiptInboxPushPayload("item-1", "event-1"),
+        };
+
+        System
+            .Text.Encoding.UTF8.GetString(ApnsTransport.Body(message))
+            .ShouldBe(
+                """{"aps":{"alert":{"title":"New receipt","body":"An emailed receipt is ready to attach."},"sound":"default","thread-id":"receipt-inbox"},"inboxItemId":"item-1","eventId":"event-1"}"""
+            );
+    }
+
+    [Fact]
     public void whenSameDeliveryRetried_NotificationId_ShouldStayStablePerDevice()
     {
         ApnsTransport

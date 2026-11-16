@@ -1393,7 +1393,6 @@ namespace Penny.Backend.Persistence.Migrations
                         .UseCollation("C");
 
                     b.Property<string>("HouseholdId")
-                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("household_id")
                         .UseCollation("C");
@@ -2460,8 +2459,7 @@ namespace Penny.Backend.Persistence.Migrations
                 {
                     b.HasOne("Penny.Backend.Persistence.Schema.Entities.Household", null)
                         .WithMany()
-                        .HasForeignKey("HouseholdId")
-                        .IsRequired();
+                        .HasForeignKey("HouseholdId");
 
                     b.HasOne("Penny.Backend.Persistence.Schema.Entities.User", null)
                         .WithMany()

@@ -52,7 +52,8 @@ public sealed partial class ApnsTransport(
         return await Task.WhenAll(sends);
     }
 
-    // The JSON body: `aps` plus the household deep-link keys at the top level.
+    // The JSON body: `aps` plus the deep-link keys (household or receipt inbox) at the
+    // top level.
     public static byte[] Body(PushMessage message)
     {
         var body = new JsonObject
@@ -61,7 +62,7 @@ public sealed partial class ApnsTransport(
             {
                 ["alert"] = new JsonObject { ["title"] = message.Title, ["body"] = message.Body },
                 ["sound"] = "default",
-                ["thread-id"] = $"household-{message.Payload.HouseholdId}",
+                ["thread-id"] = message.Payload.ThreadId,
             },
         };
         foreach (var (key, value) in message.Payload.ToDictionary())

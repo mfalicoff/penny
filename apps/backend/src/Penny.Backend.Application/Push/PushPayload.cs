@@ -3,16 +3,16 @@ using System.Text.RegularExpressions;
 
 namespace Penny.Backend.Application.Push;
 
-// The household deep-link payload stored in `push_outbox.payload` and delivered to
-// clients unchanged: the client navigates only to the
-// allowlisted `/households/{householdId}?month=…&expenseId=…` route.
-public sealed partial record PushPayload(
-    string HouseholdId,
-    string Month,
-    string? ExpenseId,
-    string EventId
-)
+// The deep-link payload stored in `push_outbox.payload` and delivered to clients
+// unchanged as top-level custom keys. It is exactly one of two shapes: a household
+// link (`HouseholdPushPayload`, the allowlisted
+// `/households/{householdId}?month=…&expenseId=…` route) or a personal receipt inbox
+// link (`ReceiptInboxPushPayload`, MAZ-184). A stored object mixing the two is invalid.
+public abstract partial record PushPayload(string EventId)
 {
+    // The APNs `thread-id` that groups related notifications.
+    public abstract string ThreadId { get; }
+
     // Null when the stored JSON is not a valid payload (the delivery then fails
     // permanently).
     public static PushPayload? Parse(string json)
@@ -23,29 +23,9 @@ public sealed partial record PushPayload(
             var root = document.RootElement;
             if (root.ValueKind != JsonValueKind.Object)
                 return null;
-            var household = Text(root, "householdId");
-            var month = Text(root, "month");
-            var eventId = Text(root, "eventId");
-            string? expense = null;
-            if (root.TryGetProperty("expenseId", out var expenseValue))
-            {
-                expense =
-                    expenseValue.ValueKind == JsonValueKind.String
-                        ? expenseValue.GetString()
-                        : null;
-                if (expense is null || !Id().IsMatch(expense))
-                    return null;
-            }
-            if (
-                household is null
-                || !Id().IsMatch(household)
-                || month is null
-                || !MonthPattern().IsMatch(month)
-                || eventId is null
-                || eventId.Length is < 1 or > 100
-            )
-                return null;
-            return new(household, month, expense, eventId);
+            return root.TryGetProperty(ReceiptInboxPushPayload.InboxItemKey, out _)
+                ? ReceiptInboxPushPayload.Read(root)
+                : HouseholdPushPayload.Read(root);
         }
         catch (Exception error) when (error is JsonException or InvalidOperationException)
         {
@@ -54,27 +34,19 @@ public sealed partial record PushPayload(
     }
 
     // The custom keys every transport sends, in contract order.
-    public IReadOnlyDictionary<string, string> ToDictionary()
-    {
-        var values = new Dictionary<string, string>(StringComparer.Ordinal)
-        {
-            ["householdId"] = HouseholdId,
-            ["month"] = Month,
-        };
-        if (ExpenseId is not null)
-            values["expenseId"] = ExpenseId;
-        values["eventId"] = EventId;
-        return values;
-    }
+    public abstract IReadOnlyDictionary<string, string> ToDictionary();
 
-    private static string? Text(JsonElement root, string name) =>
+    // The payload as stored in `push_outbox.payload`.
+    public string ToJson() => JsonSerializer.Serialize(ToDictionary());
+
+    private protected static string? Text(JsonElement root, string name) =>
         root.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String
             ? value.GetString()
             : null;
 
-    [GeneratedRegex("^[A-Za-z0-9_-]{1,100}$")]
-    private static partial Regex Id();
+    private protected static bool IsEventId(string? eventId) =>
+        eventId is { Length: >= 1 and <= 100 };
 
-    [GeneratedRegex("^[0-9]{4}-(0[1-9]|1[0-2])$")]
-    private static partial Regex MonthPattern();
+    [GeneratedRegex("^[A-Za-z0-9_-]{1,100}$")]
+    private protected static partial Regex Id();
 }

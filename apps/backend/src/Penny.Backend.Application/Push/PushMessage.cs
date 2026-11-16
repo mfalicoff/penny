@@ -1,6 +1,6 @@
 namespace Penny.Backend.Application.Push;
 
-// A rendered household notification for one device. `Environment` is the APNs
+// A rendered notification for one device. `Environment` is the APNs
 // gateway. `ExpiresAt` bounds provider-side storage; `CollapseId` (the outbox id)
 // lets the device replace an at-least-once duplicate.
 public sealed record PushMessage(

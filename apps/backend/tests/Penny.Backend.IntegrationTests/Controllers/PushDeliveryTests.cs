@@ -30,7 +30,7 @@ public sealed class PushDeliveryTests(ApiFixture fixture) : PushTestBase(fixture
         production.Environment.ShouldBe(PushProviders.Production);
         sandbox.Title.ShouldBe("New household expense");
         sandbox.Payload.ShouldBe(
-            new PushPayload(householdId, "2026-09", Id(expense), sandbox.Payload.EventId)
+            new HouseholdPushPayload(householdId, "2026-09", Id(expense), sandbox.Payload.EventId)
         );
         production.Payload.ShouldBe(sandbox.Payload);
         sandbox.CollapseId.ShouldBe(production.CollapseId);
@@ -65,7 +65,7 @@ public sealed class PushDeliveryTests(ApiFixture fixture) : PushTestBase(fixture
         Apns.Sent.Select(message => message.Title)
             .Order()
             .ShouldBe(["Household expense updated", "New household expense"]);
-        Apns.Sent.Select(message => message.Payload.ExpenseId)
+        Apns.Sent.Select(message => ((HouseholdPushPayload)message.Payload).ExpenseId)
             .Distinct()
             .Single()
             .ShouldBe(Id(expense));

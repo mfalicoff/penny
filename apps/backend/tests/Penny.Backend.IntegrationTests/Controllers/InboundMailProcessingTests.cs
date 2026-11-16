@@ -4,9 +4,12 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using MimeKit;
+using Npgsql;
 using Penny.Backend.Application.Abstractions.InboundMail;
 using Penny.Backend.Application.InboundMail;
+using Penny.Backend.Application.Push;
 using Penny.Backend.IntegrationTests.Infrastructure;
+using Penny.Backend.Persistence.Repositories;
 using Shouldly;
 using Xunit;
 
@@ -266,4 +269,116 @@ public sealed class InboundMailProcessingTests(ApiFixture fixture) : InboundMail
 
         (await StatusAsync()).ShouldBe("failed:unreadable");
     }
+
+    [Fact]
+    public async Task whenOwnerHasDevice_Process_ShouldEnqueueOneReceiptPushDeliveredWithTheInboxLink()
+    {
+        At(Noon);
+        await using var host = Host();
+        using var client = CreateClient(host);
+        var (token, userId) = await AccountAsync("push@example.test");
+        var (other, _) = await AccountAsync("bystander@example.test");
+        await RegisterApnsAsync(token, ApnsToken(1));
+        await RegisterApnsAsync(other, ApnsToken(2));
+        var local = await CreateAddressAsync(token);
+        (await DeliverAsync(local, MailWithInvoice(TestPdf.Create()), client)).ShouldBe(
+            HttpStatusCode.Accepted
+        );
+
+        await RunAsync(host);
+
+        var itemId = (string)(await ScalarAsync("SELECT id FROM penny.receipt_inbox_items"))!;
+        (
+            await CountAsync(
+                $"SELECT count(*) FROM penny.push_outbox WHERE user_id = '{userId}' AND household_id IS NULL AND event_type = 'receipt.received' AND entity_id = '{itemId}' AND payload->>'inboxItemId' = '{itemId}' AND payload->>'eventId' = id AND (SELECT count(*) FROM jsonb_object_keys(payload)) = 2"
+            )
+        ).ShouldBe(1);
+        (await CountAsync("SELECT count(*) FROM penny.push_outbox")).ShouldBe(1);
+
+        var apns = new FakePushTransport(PushProviders.Apns);
+        (await PushRunner(apns).RunOnceAsync(Ct)).Accepted.ShouldBe(1);
+        (await apns.SentToAsync(ApnsToken(2))).ShouldBeEmpty("only the owner is notified");
+        var sent = (await apns.SentToAsync(ApnsToken(1))).Single();
+        sent.Title.ShouldBe("New receipt");
+        sent.Body.ShouldBe("An emailed receipt is ready to attach.");
+        var payload = sent.Payload.ShouldBeOfType<ReceiptInboxPushPayload>();
+        payload.InboxItemId.ShouldBe(itemId);
+        payload.ThreadId.ShouldBe("receipt-inbox");
+        payload.ToDictionary().Keys.ShouldBe(["inboxItemId", "eventId"]);
+        (await CountAsync("SELECT count(*) FROM penny.push_outbox WHERE sent_at IS NULL")).ShouldBe(
+            0
+        );
+    }
+
+    [Fact]
+    public async Task whenOwnerHasNoDevice_Process_ShouldEnqueueNoPush()
+    {
+        await using var host = Host();
+        using var client = CreateClient(host);
+        var (token, _) = await AccountAsync("quiet@example.test");
+        var (other, _) = await AccountAsync("elsewhere@example.test");
+        await RegisterApnsAsync(other, ApnsToken(3));
+        var local = await CreateAddressAsync(token);
+        (await DeliverAsync(local, MailWithInvoice(TestPdf.Create()), client)).ShouldBe(
+            HttpStatusCode.Accepted
+        );
+
+        await RunAsync(host);
+
+        (await CountAsync("SELECT count(*) FROM penny.receipt_inbox_items")).ShouldBe(1);
+        (await CountAsync("SELECT count(*) FROM penny.push_outbox")).ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task whenSameMessageResent_Process_ShouldNotEnqueueASecondPush()
+    {
+        await using var host = Host();
+        using var client = CreateClient(host);
+        var (token, _) = await AccountAsync("resend@example.test");
+        await RegisterApnsAsync(token, ApnsToken(4));
+        var local = await CreateAddressAsync(token);
+        var mail = MailWithInvoice(TestPdf.Create());
+        (await DeliverAsync(local, mail, client)).ShouldBe(HttpStatusCode.Accepted);
+        await RunAsync(host);
+
+        // A later timestamp, so the replay cache does not refuse the copy.
+        Fixture.Factory.Clock.Set(Fixture.Factory.Clock.GetUtcNow().AddSeconds(1));
+        (await DeliverAsync(local, mail, client)).ShouldBe(HttpStatusCode.Accepted);
+        await RunAsync(host);
+
+        (await StoredMessagesAsync()).ShouldBe(1);
+        (await CountAsync("SELECT count(*) FROM penny.receipt_inbox_items")).ShouldBe(1);
+        (
+            await CountAsync(
+                "SELECT count(*) FROM penny.push_outbox WHERE event_type = 'receipt.received'"
+            )
+        ).ShouldBe(1);
+    }
+
+    private static string ApnsToken(int seed) =>
+        Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData([(byte)seed]));
+
+    private Task RegisterApnsAsync(string bearer, string token) =>
+        ExpectAsync(
+            HttpMethod.Post,
+            "/api/push/devices",
+            bearer,
+            HttpStatusCode.Created,
+            new
+            {
+                token,
+                platform = "ios",
+                provider = "apns",
+                environment = "production",
+            }
+        );
+
+    private PushDeliveryRunner PushRunner(FakePushTransport apns) =>
+        new(
+            new PostgresPushRepository(
+                Fixture.Factory.Services.GetRequiredService<NpgsqlDataSource>()
+            ),
+            [apns],
+            Fixture.Factory.Clock
+        );
 }

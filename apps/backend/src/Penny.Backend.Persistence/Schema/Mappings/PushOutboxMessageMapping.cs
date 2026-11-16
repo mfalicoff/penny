@@ -19,6 +19,7 @@ internal sealed class PushOutboxMessageMapping : IEntityTypeConfiguration<PushOu
         builder.HasKey(message => message.Id);
         builder.Property(message => message.Payload).HasColumnType("jsonb");
         builder.HasOne<User>().WithMany().HasForeignKey(message => message.UserId);
+        // Null for personal events (`receipt.received`, MAZ-184).
         builder.HasOne<Household>().WithMany().HasForeignKey(message => message.HouseholdId);
         builder
             .HasIndex(message => message.NextAttemptAt)

@@ -85,8 +85,9 @@ public sealed class UserJourneyTests(ApiFixture fixture, FakeOidcProvider provid
         await PushRunner(apns).RunUntilIdleAsync(Ct);
         var notified = (await apns.SentToAsync(SamDevice)).Single();
         notified.Title.ShouldBe("New household expense");
-        notified.Payload.HouseholdId.ShouldBe(home);
-        notified.Payload.ExpenseId.ShouldBe(Id(groceries));
+        var link = notified.Payload.ShouldBeOfType<HouseholdPushPayload>();
+        link.HouseholdId.ShouldBe(home);
+        link.ExpenseId.ShouldBe(Id(groceries));
 
         // 5. A monthly rule sam pays; the worker records the occurrence on its due day.
         var rule = await CreateRuleAsync(home, sam.Token, Rule(200000, sam.UserId, "2026-09-29"));
