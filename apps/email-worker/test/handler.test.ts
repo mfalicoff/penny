@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { handleEmail, recipientFetcher, REJECT_LIMIT, REJECT_SIZE, REJECT_UNKNOWN, type Env } from "../src/index.ts";
+import { handleEmail, recipientFetcher, REJECT_LIMIT, REJECT_SIZE, REJECT_UNKNOWN, type Env } from "../src/handler.ts";
 import { base64Bytes, sha256Hex } from "../src/crypto.ts";
 import { RecipientList, RecipientListUnavailable } from "../src/recipients.ts";
 import { sign } from "../src/signature.ts";
@@ -161,5 +161,13 @@ describe("handleEmail", () => {
     const lines = log.mock.calls.map((call) => call.join(" "));
     log.mockRestore();
     expect(lines).toEqual(['{"outcome":"forwarded","status":202}', '{"outcome":"rejected_address"}']);
+  });
+});
+
+describe("entry module", () => {
+  // workerd refuses to start when the main module has named exports that aren't handlers.
+  it("exports only the default handler", async () => {
+    const entry = await import("../src/index.ts");
+    expect(Object.keys(entry)).toEqual(["default"]);
   });
 });
