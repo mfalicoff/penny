@@ -34,8 +34,9 @@ server {
     resolver ${NGINX_LOCAL_RESOLVERS} valid=10s ipv6=off;
 
     # The Email Worker's endpoints (MAZ-184) are never public: the Worker reaches the API
-    # through a Cloudflare Tunnel or Cloudflare Access, not through this proxy.
-    location ^~ /api/inbound-mail {
+    # through a Cloudflare Tunnel or Cloudflare Access, not through this proxy. Case-
+    # insensitive, because the API's routing is (a regex location wins over the /api/ prefix).
+    location ~* ^/api/inbound-mail(/|$) {
         default_type application/json;
         return 404 '{"error":"API route not found."}';
     }

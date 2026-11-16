@@ -60,4 +60,52 @@ public sealed class MailAuthenticationReaderTests
         result.ShouldBe(new MailAuthentication("none", "unknown", "unknown"));
         result.Verified.ShouldBeFalse();
     }
+
+    // The reviewer's case: a forged set numbered above the ingress' own.
+    [Theory]
+    [InlineData("i=50")]
+    [InlineData("i=2")]
+    [InlineData("i=999")]
+    [InlineData("i=0")]
+    public void whenSenderAddsAHigherOrInvalidSet_Read_ShouldNotBeVerified(string forged) =>
+        Read(
+            (
+                "ARC-Authentication-Results",
+                "i=1; mx.cloudflare.net; dkim=fail; dmarc=fail; spf=fail"
+            ),
+            (
+                "ARC-Authentication-Results",
+                forged + "; mx.cloudflare.net; dkim=pass; dmarc=pass; spf=pass"
+            )
+        )
+            .Verified.ShouldBeFalse();
+
+    [Fact]
+    public void whenInstancesRepeat_Read_ShouldBeUnknown() =>
+        Read(
+                (
+                    "ARC-Authentication-Results",
+                    "i=1; mx.cloudflare.net; dkim=pass; dmarc=pass; spf=pass"
+                ),
+                (
+                    "ARC-Authentication-Results",
+                    "i=1; mx.cloudflare.net; dkim=pass; dmarc=pass; spf=pass"
+                )
+            )
+            .ShouldBe(MailAuthentication.Missing);
+
+    [Fact]
+    public void whenIngressSetIsTopmostAndHighest_Read_ShouldTrustItOverLowerForgedSets() =>
+        Read(
+            (
+                "ARC-Authentication-Results",
+                "i=3; mx.cloudflare.net; dkim=pass; dmarc=pass; spf=pass"
+            ),
+            ("ARC-Authentication-Results", "i=2; mx.google.com; dkim=fail; dmarc=fail; spf=fail"),
+            (
+                "ARC-Authentication-Results",
+                "i=1; mx.cloudflare.net; dkim=fail; dmarc=fail; spf=fail"
+            )
+        )
+            .Verified.ShouldBeTrue();
 }

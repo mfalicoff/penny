@@ -157,12 +157,44 @@ public sealed class PostgresReceiptInboxRepository(
     }
 
     // `doneAt` null discards the item (it is deleted); otherwise it becomes Attached.
+    // A save that links one of these receipts at the same moment takes its locks in the
+    // opposite order (the receipt's key lock, then the item), so PostgreSQL may abort one
+    // side as a deadlock; the cleanup then starts over and sees the new link.
     private async Task<InboxCleanup?> CleanUpAsync(
         string userId,
         string itemId,
         DateTimeOffset? doneAt,
         CancellationToken cancellationToken,
         bool onlyUnhandled = false
+    )
+    {
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                return await CleanUpOnceAsync(
+                    userId,
+                    itemId,
+                    doneAt,
+                    onlyUnhandled,
+                    cancellationToken
+                );
+            }
+            catch (Exception error) when (attempt < 3 && IsDeadlock(error)) { }
+        }
+    }
+
+    private static bool IsDeadlock(Exception error) =>
+        error is PostgresException { SqlState: PostgresErrorCodes.DeadlockDetected }
+        || error.InnerException
+            is PostgresException { SqlState: PostgresErrorCodes.DeadlockDetected };
+
+    private async Task<InboxCleanup?> CleanUpOnceAsync(
+        string userId,
+        string itemId,
+        DateTimeOffset? doneAt,
+        bool onlyUnhandled,
+        CancellationToken cancellationToken
     )
     {
         List<string> deletedPaths;
@@ -172,6 +204,16 @@ public sealed class PostgresReceiptInboxRepository(
             await using var transaction = await context.Database.BeginTransactionAsync(
                 cancellationToken
             );
+            // The owner's ledger row first: every personal save takes it first too, so a
+            // save linking one of these files either commits before (the file is kept) or
+            // waits and then fails validation cleanly (the file is gone). Taking it before
+            // the item also keeps the lock order the same as those saves.
+            await context
+                .Ledgers.Where(ledger => ledger.UserId == userId)
+                .ExecuteUpdateAsync(
+                    set => set.SetProperty(ledger => ledger.Revision, ledger => ledger.Revision),
+                    cancellationToken
+                );
             var items = context.ReceiptInboxItems.Where(item =>
                 item.UserId == userId && item.Id == itemId
             );

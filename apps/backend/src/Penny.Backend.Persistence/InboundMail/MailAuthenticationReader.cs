@@ -6,20 +6,28 @@ using Penny.Backend.Application.Abstractions.InboundMail;
 namespace Penny.Backend.Persistence.InboundMail;
 
 // Reads SPF, DKIM and DMARC results added by Penny's own ingress (MAZ-184). A sender can
-// put any header in a message, so only one header is trusted: the
-// ARC-Authentication-Results with the highest instance (`i=`) whose authserv-id is the
-// configured ingress (Cloudflare Email Routing: `mx.cloudflare.net`). An ARC sealer
-// always numbers its set above every set already in the message, so a forged set
-// can't outrank the ingress' own. Without that header every result is `unknown`.
-// Which header Email Routing adds must be confirmed in a staging zone (doc task 4).
+// put any header in a message, so only one header is trusted: the topmost
+// ARC-Authentication-Results (the ingress prepends its headers), and only when it is
+// also the highest valid instance, every instance is unique and in range, and its
+// authserv-id is the configured ingress (Cloudflare Email Routing: mx.cloudflare.net).
+// Anything else is "unknown", so a forged chain can only lose verification, never gain
+// it. If the ingress adds no ARC set at all, the topmost set would be the sender's:
+// confirm in a staging zone that Email Routing seals every message (doc task 4).
 public static partial class MailAuthenticationReader
 {
     public const string DefaultAuthServId = "mx.cloudflare.net";
 
+    // RFC 8617: an ARC instance is 1 to 50.
+    public const int MaxInstance = 50;
+
+    // The ingress prepends its headers, so its set is the topmost ARC-Authentication-Results.
+    // That set is trusted only when it also has the highest instance, the instances are
+    // valid (1 to 50) and unique, and its authserv-id is the ingress. A sender can add sets
+    // below it, but a forged set numbered above it (or out of range, or a duplicate)
+    // makes the whole chain untrusted rather than verified.
     public static MailAuthentication Read(HeaderList headers, string authServId)
     {
-        string? best = null;
-        var bestInstance = -1;
+        var sets = new List<(int Instance, string Value)>();
         foreach (var header in headers)
         {
             if (
@@ -31,21 +39,27 @@ public static partial class MailAuthenticationReader
                 continue;
             var match = Instance().Match(header.Value);
             if (
-                match.Success
-                && int.TryParse(
+                !match.Success
+                || !int.TryParse(
                     match.Groups[1].ValueSpan,
                     NumberStyles.None,
                     CultureInfo.InvariantCulture,
                     out var instance
                 )
-                && instance > bestInstance
+                || instance is < 1 or > MaxInstance
             )
-            {
-                bestInstance = instance;
-                best = header.Value[match.Length..];
-            }
+                return MailAuthentication.Missing;
+            sets.Add((instance, header.Value[match.Length..]));
         }
-        return best is null ? MailAuthentication.Missing : Parse(best, authServId);
+        if (sets.Count == 0)
+            return MailAuthentication.Missing;
+        var topmost = sets[0];
+        if (
+            sets.Select(set => set.Instance).Distinct().Count() != sets.Count
+            || sets.Any(set => set.Instance > topmost.Instance)
+        )
+            return MailAuthentication.Missing;
+        return Parse(topmost.Value, authServId);
     }
 
     // `<authserv-id> [version]; method=result ...; method=result ...` (RFC 8601).

@@ -796,7 +796,8 @@ in
           # Fingerprinted Vite bundles never change. Without `always`, a 404 is not cached.
           # The Email Worker's endpoints (MAZ-184) are never public: it reaches the API
           # through a Cloudflare Tunnel or Cloudflare Access, not through this proxy.
-          "^~ /api/inbound-mail" = {
+          # Case-insensitive, because the API's routing is.
+          "~* ^/api/inbound-mail(/|$)" = {
             extraConfig = ''
               default_type application/json;
               return 404 '{"error":"API route not found."}';

@@ -242,6 +242,133 @@ public sealed class ReceiptInboxTests(ApiFixture fixture) : InboundMailTestBase(
         kept.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
+    // Review findings (MAZ-184): files kept only by a shared expense, live or deleted, are
+    // never deleted, and another user can't finish someone else's item.
+    [Fact]
+    public async Task whenOnlyASharedExpenseLinksAFile_Discard_ShouldKeepIt()
+    {
+        var (token, userId) = await InboxAsync("shared-keep@example.test", count: 2);
+        var items = await ListAsync(token);
+        var home = Id(await CreateHouseholdAsync(token));
+        var live = await CreateExpenseAsync(
+            home,
+            token,
+            Expense(1250, userId, extra: new { receiptId = items[0].Attachment })
+        );
+        var deleted = await CreateExpenseAsync(
+            home,
+            token,
+            Expense(900, userId, extra: new { receiptId = items[1].Attachment })
+        );
+        (await ListAsync(token))
+            .Select(item => item.Status)
+            .ShouldBe(["partly_attached", "partly_attached"]);
+        await ExpectAsync(
+            HttpMethod.Delete,
+            ExpensePath(home, Id(deleted)),
+            token,
+            HttpStatusCode.OK,
+            new { revision = deleted.GetProperty("revision").GetInt64() }
+        );
+        // The deleted expense no longer counts as a link, but its row still references the file.
+        (await ListAsync(token))
+            .Single(item => item.Id == items[1].Id)
+            .Status.ShouldBe("to_attach");
+
+        foreach (var item in items)
+        {
+            var result = await ExpectAsync(
+                HttpMethod.Delete,
+                $"{InboxPath}/{item.Id}",
+                token,
+                HttpStatusCode.OK
+            );
+            (
+                result.GetProperty("deleted").GetInt32(),
+                result.GetProperty("kept").GetInt32()
+            ).ShouldBe((1, 1));
+        }
+        using (
+            var kept = await SendAsync(
+                HttpMethod.Get,
+                "/api/receipts/" + items[0].Attachment,
+                token
+            )
+        )
+            kept.StatusCode.ShouldBe(HttpStatusCode.OK);
+        (
+            await CountAsync(
+                $"SELECT count(*) FROM penny.receipts WHERE id = '{items[1].Attachment}'"
+            )
+        ).ShouldBe(1);
+        Id(live).ShouldNotBeNullOrEmpty();
+    }
+
+    [Fact]
+    public async Task whenAnotherUserFinishesAnItem_Done_ShouldReturnNotFound()
+    {
+        var (token, _) = await InboxAsync("done-owner@example.test");
+        var (other, _) = await AccountAsync("done-other@example.test");
+        var item = await OnlyItemAsync(token);
+        await ExpectErrorAsync(
+            HttpMethod.Post,
+            $"{InboxPath}/{item.Id}/done",
+            other,
+            HttpStatusCode.NotFound,
+            ReceiptInboxService.NotFound
+        );
+        (await OnlyItemAsync(token)).Status.ShouldBe("to_attach");
+    }
+
+    // Discard and an attach of the same file at once: either may win, neither fails with a
+    // 500, and a file the saved ledger links always still exists.
+    [Fact]
+    public async Task whenDiscardRacesAnAttach_Inbox_ShouldNeverLoseALinkedFile()
+    {
+        var (token, _) = await InboxAsync("race-inbox@example.test", count: 5);
+        var items = await ListAsync(token);
+        var round = 0;
+        foreach (var item in items)
+        {
+            var snapshot = await GetLedgerAsync(token);
+            var ledger = snapshot["ledger"]!;
+            ledger["transactions"]!
+                .AsArray()
+                .Add(
+                    new System.Text.Json.Nodes.JsonObject
+                    {
+                        ["id"] = $"race-{round++}",
+                        ["title"] = "Race",
+                        ["kind"] = "expense",
+                        ["total"] = 1000,
+                        ["share"] = 1000,
+                        ["categoryId"] = ledger["categories"]![0]!["id"]!.GetValue<string>(),
+                        ["date"] = "2026-09-28",
+                        ["note"] = "",
+                        ["receipt"] = Link(item.Attachment),
+                    }
+                );
+            var save = PutLedgerAsync(token, snapshot);
+            var discard = SendAsync(HttpMethod.Delete, $"{InboxPath}/{item.Id}", token);
+            using var saved = await save;
+            using var discarded = await discard;
+            ((int)saved.StatusCode).ShouldBeLessThan(
+                500,
+                await saved.Content.ReadAsStringAsync(Ct)
+            );
+            discarded.StatusCode.ShouldBe(
+                HttpStatusCode.OK,
+                await discarded.Content.ReadAsStringAsync(Ct)
+            );
+            if (saved.StatusCode == HttpStatusCode.OK)
+                (
+                    await CountAsync(
+                        $"SELECT count(*) FROM penny.receipts WHERE id = '{item.Attachment}'"
+                    )
+                ).ShouldBe(1);
+        }
+    }
+
     [Fact]
     public async Task whenFeatureDisabled_Inbox_ShouldReturnNotFound()
     {
