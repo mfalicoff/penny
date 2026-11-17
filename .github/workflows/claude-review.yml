@@ -1,0 +1,67 @@
+name: Claude review
+
+# The reviewer in the agent pipeline (docs/development/agents/README.md). Reviews pull
+# requests labelled `agent` from this repository and sets the `claude-review` commit status
+# that the dev worker waits for before it merges.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, labeled]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  statuses: write
+
+concurrency:
+  group: claude-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    name: Claude review
+    if: >-
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      contains(github.event.pull_request.labels.*.name, 'agent') &&
+      (github.event.action != 'labeled' || github.event.label.name == 'agent')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      STATUS_URL: repos/${{ github.repository }}/statuses/${{ github.event.pull_request.head.sha }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - name: Mark review pending
+        run: gh api "$STATUS_URL" -f state=pending -f context=claude-review -f description="Reviewing" -f target_url="$RUN_URL"
+
+      - name: Check out source
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Review
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ github.token }}
+          prompt: |
+            Review pull request #${{ github.event.pull_request.number }} in ${{ github.repository }}.
+            Follow docs/development/agents/reviewer.md exactly.
+            Write the verdict, the single word approve or request-changes, to the file
+            .claude-review-verdict at the root of the checkout.
+          claude_args: >-
+            --allowedTools "Read,Grep,Glob,Write,Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr comment:*),mcp__github_inline_comment__create_inline_comment"
+
+      - name: Set claude-review status
+        if: always()
+        run: |
+          verdict="$(tr -d '[:space:]' < .claude-review-verdict 2>/dev/null || true)"
+          case "$verdict" in
+            approve) state=success; description="Approved" ;;
+            request-changes) state=failure; description="Changes requested" ;;
+            *) state=error; description="The review did not finish" ;;
+          esac
+          gh api "$STATUS_URL" -f state="$state" -f context=claude-review -f description="$description" -f target_url="$RUN_URL"
