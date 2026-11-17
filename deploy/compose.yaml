@@ -32,7 +32,7 @@ services:
     profiles: [bundled-postgres]
     # PostgreSQL 18.6 with pgvector 0.8.7: the digest pinned in apps/backend/compose.yaml
     # and DatabaseSchema.Image. Upgrades follow docs/self-hosting/deployment.md#upgrade-postgresql.
-    image: docker.io/pgvector/pgvector:0.8.7-pg18-trixie@sha256:5895949dfcdf308eb0cd31c950c93c14895c77f33fbedfecf1fa511ab1d4bcd2
+    image: docker.io/pgvector/pgvector:0.8.7-pg18-trixie@sha256:ab49524d18df7200b74ac9a475e1db6297fc1eb57da4c214c63d10ecc4b754fa
     environment:
       POSTGRES_DB: ${PENNY_DB_NAME:-penny}
       POSTGRES_USER: postgres
@@ -121,7 +121,7 @@ services:
   # Flags are pinned by apps/backend/tests/.../RendererIsolationTests.
   penny-render:
     profiles: [email-receipts]
-    image: docker.io/gotenberg/gotenberg:8.39.0@sha256:13672f317b443c793e972b1bd2155ec62a3e7b6891b411e8196442cc053ee5f5
+    image: docker.io/gotenberg/gotenberg:9.6.0@sha256:bf8a2296b58bad169f052ef59a7f4c22f55b7fdbafd708c2c5da06ef5b95c926
     command:
       - gotenberg
       - --api-timeout=30s
