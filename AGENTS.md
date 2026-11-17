@@ -6,6 +6,7 @@ Penny is a self-hosted expense tracker. There is no package at the repository ro
 | `apps/web` | TanStack web app (the `penny-web` image), plus the shared TypeScript ledger rules (`src/domain`), the ledger write schema (`src/validation`), their reference tests (`tests/domain`) and the golden fixture generator (`scripts/fixtures`) | [apps/web/AGENTS.md](apps/web/AGENTS.md) |
 | `apps/backend` | .NET API on PostgreSQL (the `penny-api` image) | [apps/backend/AGENTS.md](apps/backend/AGENTS.md) |
 | `apps/email-worker` | Cloudflare Email Worker for emailed receipts (MAZ-184): refuses unknown recipients and forwards signed raw mail to the API | [apps/email-worker/README.md](apps/email-worker/README.md) |
+| `apps/site` | Product page (static, Cloudflare Workers static assets): real app screens in device frames, with its own WebGL2 Gaussian-splat renderer and procedural splat scenes | [apps/site/README.md](apps/site/README.md) |
 | `contracts/` | OpenAPI, golden fixtures and the design baseline shared by every client | [contracts/README.md](contracts/README.md) |
 | `scripts/` | Repository tooling package: full-stack test environment (`test-env`), image and observability smoke tests, Grafana dashboards, release version check, and their tests (`tests`, `tests/fullstack`) | this file |
 
