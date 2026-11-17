@@ -81,7 +81,10 @@ bootstrap warnings.
 ### Commit messages and version selection
 
 Use these prefixes in commits landing on `master`. With squash merges, the
-final squash commit message (normally the PR title) is what matters.
+final squash commit message (normally the PR title) is what matters. The
+**PR title** workflow (`.github/workflows/pr-title.yml`, `scripts/pr-title.mjs`)
+fails a PR whose title isn't a Conventional Commit, and reruns when the title
+is edited.
 
 | Message | Version change |
 | --- | --- |
