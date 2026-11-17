@@ -36,6 +36,13 @@
         /// same path as a real notification (`PushNotifications.didOpen`); only APNs is skipped.
         static let notificationVariable = "PENNY_TEST_NOTIFICATION"
         static let notificationOnResumeVariable = "PENNY_TEST_NOTIFICATION_ON_RESUME"
+        /// Environment variable (`1`) that answers the app lock's Face ID prompts with a stand-in
+        /// (`StandInAuthenticator`), because XCUITest cannot enroll or match biometrics. Only the
+        /// device check is replaced; the lock itself, its Keychain setting and its rules are real.
+        static let deviceAuthVariable = "PENNY_TEST_DEVICE_AUTH"
+        /// Environment variable (seconds) for the length of a Lock after minute (MAZ-133), so UI
+        /// tests can wait out "After 1 minute" in a few seconds.
+        static let lockMinuteVariable = "PENNY_TEST_LOCK_MINUTE"
 
         var serverURL: ServerURL?
         var startsInDemo = false
@@ -46,6 +53,8 @@
         var reduceMotion = false
         var notificationAtLaunch: String?
         var notificationOnResume: String?
+        var standInAuthenticator = false
+        var lockMinute: Duration?
 
         static func fromProcess(_ environment: [String: String] = ProcessInfo.processInfo.environment) -> TestControls {
             TestControls(
@@ -57,7 +66,11 @@
                 reduceTransparency: environment[reduceTransparencyVariable] == "1",
                 reduceMotion: environment[reduceMotionVariable] == "1",
                 notificationAtLaunch: environment[notificationVariable],
-                notificationOnResume: environment[notificationOnResumeVariable])
+                notificationOnResume: environment[notificationOnResumeVariable],
+                standInAuthenticator: environment[deviceAuthVariable] == "1",
+                lockMinute: environment[lockMinuteVariable].flatMap { Double($0) }.flatMap {
+                    $0 > 0 ? Duration.milliseconds(Int($0 * 1000)) : nil
+                })
         }
 
         /// Runs before the app reads any stored state: the reset, then the seed.
@@ -77,7 +90,33 @@
             var services = services
             services.startsInDemo = startsInDemo
             if let today { services.today = { today } }
+            if standInAuthenticator || lockMinute != nil {
+                services.lock = AppLockController(
+                    store: KeychainAppLockSettingStore(),
+                    authenticator: standInAuthenticator ? StandInAuthenticator() : LocalDeviceAuthenticator(),
+                    preferences: services.preferences, minute: lockMinute ?? .seconds(60))
+            }
             return services
+        }
+
+        /// Face ID for UI tests: turning the lock on or off succeeds, and unlock prompts alternate
+        /// between cancelled and success, starting with cancelled. So each time the app locks, its
+        /// own prompt is cancelled and the lock screen stays up (a test can see that it locked);
+        /// the test's tap on Unlock then succeeds.
+        @MainActor
+        final class StandInAuthenticator: DeviceAuthenticator {
+            let biometry = BiometryKind.faceID
+            private var unlocks = 0
+
+            func canEnable() -> AuthenticationResult { .success }
+
+            func authenticate(_ purpose: AuthenticationPurpose, reason: String) async -> AuthenticationResult {
+                guard purpose == .unlock else { return .success }
+                unlocks += 1
+                return unlocks.isMultiple(of: 2) ? .success : .cancelled
+            }
+
+            func cancel() {}
         }
     }
 

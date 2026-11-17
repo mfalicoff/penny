@@ -109,3 +109,29 @@ struct UITestLaunchControlsTests {
         }
     }
 }
+
+@Suite("App lock test controls")
+struct AppLockTestControlsTests {
+    @Test("whenLockVariablesSet_TestControls_ShouldReplaceOnlyTheDeviceCheckAndTheMinute")
+    @MainActor
+    func lockControls() async {
+        let controls = TestControls.fromProcess(["PENNY_TEST_DEVICE_AUTH": "1", "PENNY_TEST_LOCK_MINUTE": "2.5"])
+        #expect(controls.standInAuthenticator)
+        #expect(controls.lockMinute == .milliseconds(2500))
+        let stub = TestControls.StandInAuthenticator()
+        #expect(await stub.authenticate(.enable, reason: "") == .success)
+        #expect(await stub.authenticate(.unlock, reason: "") == .cancelled, "the app's own prompt keeps it locked")
+        #expect(await stub.authenticate(.unlock, reason: "") == .success, "the test's Unlock tap opens it")
+    }
+
+    @Test("whenLockVariablesAreMissingOrInvalid_TestControls_ShouldKeepTheRealLock")
+    @MainActor
+    func noLockControls() {
+        for value in ["0", "-1", "soon", ""] {
+            #expect(TestControls.fromProcess(["PENNY_TEST_LOCK_MINUTE": value]).lockMinute == nil)
+        }
+        #expect(!TestControls.fromProcess(["PENNY_TEST_DEVICE_AUTH": "yes"]).standInAuthenticator)
+        let live = AppServices.live()
+        #expect(TestControls.fromProcess([:]).apply(live).lock === live.lock)
+    }
+}

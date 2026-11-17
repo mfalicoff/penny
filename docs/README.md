@@ -32,6 +32,7 @@ Each folder holds one kind of document:
 - [Development](development/setup.md): local web setup, Nix/direnv, dependency updates, pointers to the iOS, web and backend app setup, and the source layout.
 - [Testing strategy](development/testing.md): test ownership, root and per-app commands, coverage, browser and native setup pointers, and CI policy.
 - [Browser and cross-client acceptance](development/acceptance.md): the acceptance matrix by feature, real .NET/PostgreSQL and cross-client journeys, simulator and browser runner commands, accessibility, responsive and performance results, known gaps and device-only exclusions (MAZ-96).
+- [Agent pipeline](development/agents/README.md): how Claude Code picks up Linear issues, routes iOS work to the Mac, reviews pull requests and merges once CI is green.
 - [Releases](development/releases.md): semantic versioning, version checks, release commands, Git tags, and native build counters.
 
 ## Architecture and API reference

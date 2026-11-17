@@ -33,7 +33,7 @@ Each row is a feature area. "Server-checked" means the test reads the account's 
 | Trips | `TripJourneyTests` | Personal trip shared with earlier private expenses, splits, totals counted once, delete guard | — | Yes |
 | Receipts | `ReceiptJourneyTests` | Photo and PDF round trips (SHA-256), failures, oversized and renamed files, session end during upload | — | Bytes |
 | Reports | `OverviewJourneyTests` | Left to spend before Projected, money flow focus, calendar day selection keeps month totals, Insights drill-down, XXXL value lists | — | Demo data |
-| Settings and links | `SettingsJourneyTests`, `SmokeJourneyTests`, `HouseholdJourneyTests`, `NotificationJourneyTests`, `AddEntryOverSettingsTests` | Appearance kept across relaunch, app lock refused where the device cannot authenticate, currency, `penny://join` links, notification navigation | App relaunch | Currency |
+| Settings and links | `SettingsJourneyTests`, `AppLockDelayTests`, `SmokeJourneyTests`, `HouseholdJourneyTests`, `NotificationJourneyTests`, `AddEntryOverSettingsTests` | Appearance kept across relaunch, app lock refused where the device cannot authenticate, Lock after delays, currency, `penny://join` links, notification navigation | App relaunch | Currency |
 | Upgrades | `LifecycleTests` | Seeded earlier-install state; `PENNY_UPGRADE_FROM_APP` installs a previous build first | Upgrade | — |
 
 ### Redesign card trace
@@ -79,7 +79,7 @@ Every card in [design-baseline.json](../../contracts/design-baseline.json) whose
 | `iphone-categories` | `OrganizeJourneyTests` | — | Covered |
 | `iphone-category-form` | `OrganizeJourneyTests` | Create and rename; entries show the new name | Covered; in-use removal guard is unit-tested only |
 | `iphone-appearance` | `SettingsJourneyTests`, `LifecycleTests` | Light, Dark, System kept across relaunch | Covered |
-| `iphone-app-lock` | `SettingsJourneyTests` | Unavailable biometrics explained, lock stays off | Partly: enabling, unlocking and concealing sheets are device checks |
+| `iphone-app-lock` | `SettingsJourneyTests`, `AppLockDelayTests` | Unavailable biometrics explained, lock stays off; Lock after: Immediately, After 1 minute and After 5 minutes, drafts kept, cold launch always locks (MAZ-133, with the Face ID stand-in) | Partly: real Face ID enabling, unlocking and the passcode fallback are device checks |
 | `iphone-sign-in` | `AuthJourneyTests`, `NetworkFailureTests`, `AccessibilityAuditTests` | Password, SSO, wrong password, dropped request, audit | Covered |
 | `iphone-create-account` | `AuthJourneyTests` | — | Covered |
 | `iphone-server-connect` | `SmokeJourneyTests` | Clean install shows the test server | Partly: credential-free verification of another server is unit-tested only |
@@ -207,7 +207,7 @@ Defects found and fixed by these runs:
 Simulators cannot check these; run them on a physical iPhone and iPad with the release candidate from TestFlight before submitting, and record the device, OS and build in the release issue.
 
 - [ ] **Upgrade from the App Store build**: install the current store build, sign in, add an entry offline, then install the candidate over it (TestFlight). The session, the pending entry and the appearance survive (MAZ-98).
-- [ ] **Face ID lock**: turn on the lock, background and return; content and open sheets are concealed and drafts kept; cancel and passcode fallback work (MAZ-69, `iphone-lock`, `iphone-app-lock`).
+- [ ] **Face ID lock**: turn on the lock, background and return; content and open sheets are concealed and drafts kept; cancel and passcode fallback work; with Lock after set to After 1 minute, a quick return stays open and a return after a minute asks (MAZ-69, `iphone-lock`, `iphone-app-lock`).
 - [ ] **Push notifications**: register on the production APNs environment, receive a household expense notification from a second account, tap it locked and unlocked (MAZ-79, [notifications](notifications.md)).
 - [ ] **Widgets**: add small widgets to the Home Screen, check light and dark, refresh after a new entry, tap through to Add entry and Home, sign out clears them (MAZ-80, `system-widgets`).
 - [ ] **Camera**: scan an invite QR code from a second device (MAZ-75); simulators have no camera.
@@ -241,7 +241,7 @@ Explicit gaps, not covered by any automated native test in this repository:
 - **Category rename onto an existing name (merge)** and **in-use removal guards** for accounts and categories: unit-tested only.
 - **Category picker sheet, personal split sheet, entry extras (repeat, trip), household history, schedule pause/remove swipes, anchor-31 month ends, stale monthly payment recovery**: no UI journey; the rules are unit-tested in PennyKit.
 - **Signed-out verification of another server** (`iphone-server-connect`): only the default test server is exercised in UI tests.
-- **Face ID lock success path, push, widgets, camera**: need hardware; see the device release checklist. On the simulator only the app lock's refusal path runs.
+- **Face ID lock success path, push, widgets, camera**: need hardware; see the device release checklist. On the simulator the app lock's refusal path runs on the real device check, and Lock after (`AppLockDelayTests`) runs with the Debug Face ID stand-in (`PENNY_TEST_DEVICE_AUTH`).
 - **Hardware keyboard and focus on iPad.** Penny defines no keyboard shortcuts, and XCUITest does not model a hardware keyboard's focus ring; this is a device checklist item. The software keyboard is covered (keyboard-safe Add entry).
 - **VoiceOver navigation order and rotor.** Labels are checked automatically; the order and grouping need the device VoiceOver pass.
 - **Visual comparison with the redesign cards** (MAZ-122): the Cards plan captures each card's state, and each verdict is in [visual-comparisons.json](../../contracts/visual-comparisons.json) ([visual acceptance](../design/visual-acceptance.md)). Captures are reviewed side by side with the baselines, not diffed pixel by pixel, because SF Pro and Liquid Glass differ from the cards by design.

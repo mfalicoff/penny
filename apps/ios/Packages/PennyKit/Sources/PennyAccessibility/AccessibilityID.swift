@@ -226,9 +226,11 @@ public enum AccessibilityID {
         public static func appearance(_ rawValue: String) -> String { "appearance.\(rawValue)" }
         public static let appLockToggle = "appLock.toggle"
         public static let appLockMessage = "appLock.message"
+        /// `AppLockDelay` raw values (`immediately`, `oneMinute`, `fiveMinutes`).
+        public static func appLockDelay(_ rawValue: String) -> String { "appLock.delay.\(rawValue)" }
 
         static let all = [done, server, syncStatus, leaveDemo, appLockToggle, appLockMessage]
-        static let prefixes = ["settings.", "currency.", "appearance."]
+        static let prefixes = ["settings.", "currency.", "appearance.", "appLock.delay."]
     }
 
     /// Entries, trips and other model rows.
