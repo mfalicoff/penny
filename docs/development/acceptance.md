@@ -132,11 +132,13 @@ Observed while recording: at 320px, Activity's Search button and the totals card
 | --- | --- | --- | --- |
 | First Home with the whole ledger (download, IndexedDB, report) | 2,500 ms | 340 ms | 343 ms |
 | Home month change | 750 ms | 73 ms | 70 ms |
-| Activity month with totals | 2,000 ms | 575 ms | 455 ms |
+| Activity month with totals | 3,000 ms | 575 ms | 455 ms |
 | Offline search over the whole local copy | 1,000 ms | 198 ms | 51 ms |
 | Longest main-thread task | 500 ms | 149 ms | 147 ms |
 | Server search over HTTP, p95 / max (small seed, 33 requests) | 300 ms / 1,000 ms | 55–68 ms / 135–159 ms (Firefox, WebKit) | 46 ms / 67 ms (WebKit) |
 | Browser search: navigate, query, render | 3,000 ms per query | under budget | under budget |
+
+Activity's budget was 2,000 ms until 2026-11-17. On slower hosts every measure scales up together: on a Linux workstation in the Playwright container, first Home took 1.1–1.5 s and Activity 1.4–2.2 s, the same spread before and after emailed receipts (MAZ-184). GitHub's hosted runners measured Activity at 2,050–2,450 ms on the phone project, so it failed intermittently on unrelated PRs. It is now 3,000 ms, the same as browser search.
 
 The server-side budgets at 100,000 entries per viewer are measured by MAZ-121 ([search](../reference/search.md)); this suite checks that the end-to-end path through the browser stays inside them on a small seed.
 

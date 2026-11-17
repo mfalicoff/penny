@@ -12,7 +12,7 @@ import { expect, test, type BrowserContext, type Page } from "@playwright/test";
 const EMAIL = "perf@example.test";
 const ENTRIES = 20_000;
 const NOW = Date.parse("2026-11-10T15:00:00Z");
-const BUDGET = { firstHome: 2_500, monthChange: 750, activity: 2_000, offlineSearch: 1_000, longestTask: 500 };
+const BUDGET = { firstHome: 2_500, monthChange: 750, activity: 3_000, offlineSearch: 1_000, longestTask: 500 };
 
 const TITLES = ["Groceries", "Coffee", "Rent", "Transit", "Pharmacy", "Bookshop", "Dinner out", "Hardware", "Streaming", "Gym"];
 
