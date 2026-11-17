@@ -32,14 +32,11 @@ public sealed class AuthController(
     [ProducesResponseType<ApiError>(429)]
     public async Task<IActionResult> Register(CancellationToken cancellationToken)
     {
-        var session = await Measured.SignInAsync(
-            Measured.Registration,
-            async () =>
-            {
-                var (email, password) = await CredentialsBody.ReadAsync(Request, cancellationToken);
-                return await auth.RegisterAsync(email, password, cancellationToken);
-            }
-        );
+        var session = await Measured.SignInAsync(Measured.Registration, async () =>
+        {
+            var (email, password) = await CredentialsBody.ReadAsync(Request, cancellationToken);
+            return await auth.RegisterAsync(email, password, cancellationToken);
+        });
         SessionCookie.Append(Response, session.Token, options.SecureCookies, clock);
         return StatusCode(201, new SessionResponse(session.Token, session.Email));
     }
@@ -55,14 +52,11 @@ public sealed class AuthController(
     [ProducesResponseType<ApiError>(429)]
     public async Task<IActionResult> Login(CancellationToken cancellationToken)
     {
-        var session = await Measured.SignInAsync(
-            Measured.Password,
-            async () =>
-            {
-                var (email, password) = await CredentialsBody.ReadAsync(Request, cancellationToken);
-                return await auth.LoginAsync(email, password, cancellationToken);
-            }
-        );
+        var session = await Measured.SignInAsync(Measured.Password, async () =>
+        {
+            var (email, password) = await CredentialsBody.ReadAsync(Request, cancellationToken);
+            return await auth.LoginAsync(email, password, cancellationToken);
+        });
         SessionCookie.Append(Response, session.Token, options.SecureCookies, clock);
         return Ok(new SessionResponse(session.Token, session.Email));
     }

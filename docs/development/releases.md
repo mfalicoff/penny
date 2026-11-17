@@ -81,7 +81,10 @@ bootstrap warnings.
 ### Commit messages and version selection
 
 Use these prefixes in commits landing on `master`. With squash merges, the
-final squash commit message (normally the PR title) is what matters.
+final squash commit message (normally the PR title) is what matters. The
+**PR title** workflow (`.github/workflows/pr-title.yml`, `scripts/pr-title.mjs`)
+fails a PR whose title isn't a Conventional Commit, and reruns when the title
+is edited.
 
 | Message | Version change |
 | --- | --- |
@@ -100,6 +103,14 @@ Do not run `npm version` or create release tags for routine releases: the
 release PR owns version bumps, the manifest, and the changelog. To correct the
 proposed version or notes before publishing, follow
 [Release Please's override instructions](https://github.com/googleapis/release-please#how-do-i-change-the-version-number).
+
+Don't edit `MARKETING_VERSION` or `CurrentVersion` by hand. Release Please
+computes the next version from `.release-please-manifest.json` and the commit
+messages, not from those lines, so a hand edit is ignored and later overwritten.
+To choose a version, land a commit with a `Release-As: 2.1.0` footer (an empty
+commit works: `git commit --allow-empty -m "chore: release 2.1.0" -m "Release-As: 2.1.0"`).
+`npm --prefix scripts run version:check` fails when the version lines and the
+manifest disagree.
 
 ### One-time GitHub setup
 

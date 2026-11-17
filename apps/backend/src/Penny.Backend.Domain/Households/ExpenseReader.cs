@@ -22,36 +22,29 @@ public static partial class ExpenseReader
 
     // `expenseInput.extend({revision, targetHouseholdId?})` for PUT.
     public static ExpenseUpdate? ReadUpdate(JsonElement? body) =>
-        Read(
-            body,
-            fields => new ExpenseUpdate(
-                Input(fields),
-                Revision(fields),
-                fields.TryGetValue("targetHouseholdId", out var target)
-                    ? LedgerReader.Text(target, 1, LedgerLimits.IdLength)
-                    : null
-            )
-        );
+        Read(body, fields => new ExpenseUpdate(
+            Input(fields),
+            Revision(fields),
+            fields.TryGetValue("targetHouseholdId", out var target)
+                ? LedgerReader.Text(target, 1, LedgerLimits.IdLength)
+                : null
+        ));
 
     // Shared `recurringInput` (`expenseInput` without `date`, plus `nextDate` and
     // `frequency`) for POST /api/households/{id}/recurring.
     public static RecurringInput? ReadRecurring(JsonElement? body) => Read(body, Recurring);
 
     // `recurringInput.extend({revision, active})` for PUT .../recurring/{ruleId}.
-    public static RecurringUpdate? ReadRecurringUpdate(JsonElement? body) =>
-        Read(
-            body,
-            fields =>
-            {
-                var active = LedgerReader.Required(fields, "active");
-                LedgerReader.Require(active.ValueKind is JsonValueKind.True or JsonValueKind.False);
-                return new RecurringUpdate(
-                    Recurring(fields),
-                    active.ValueKind == JsonValueKind.True,
-                    Revision(fields)
-                );
-            }
-        );
+    public static RecurringUpdate? ReadRecurringUpdate(JsonElement? body) => Read(body, fields =>
+        {
+            var active = LedgerReader.Required(fields, "active");
+            LedgerReader.Require(active.ValueKind is JsonValueKind.True or JsonValueKind.False);
+            return new RecurringUpdate(
+                Recurring(fields),
+                active.ValueKind == JsonValueKind.True,
+                Revision(fields)
+            );
+        });
 
     // `{revision}` for DELETE; null when invalid.
     public static long? ReadRevision(JsonElement? body)
@@ -70,34 +63,28 @@ public static partial class ExpenseReader
 
     // `{fromUserId, revision}` for POST .../payments.
     public static PaymentRequest? ReadPayment(JsonElement? body) =>
-        Read(
-            body,
-            fields => new PaymentRequest(
-                LedgerReader.Text(
-                    LedgerReader.Required(fields, "fromUserId"),
-                    1,
-                    LedgerLimits.IdLength
-                ),
-                Revision(fields)
-            )
-        );
+        Read(body, fields => new PaymentRequest(
+            LedgerReader.Text(
+                LedgerReader.Required(fields, "fromUserId"),
+                1,
+                LedgerLimits.IdLength
+            ),
+            Revision(fields)
+        ));
 
     // `reimbursementInput` (`{fromUserId, toUserId, amountCents}`) for POST
     // .../months/{month}/reimbursements: ids 1–100, a positive amount up to the cent
     // limit.
     public static ReimbursementRequest? ReadReimbursement(JsonElement? body) =>
-        Read(
-            body,
-            fields => new ReimbursementRequest(
-                Id(LedgerReader.Required(fields, "fromUserId")),
-                Id(LedgerReader.Required(fields, "toUserId")),
-                LedgerReader.Integer(
-                    LedgerReader.Required(fields, "amountCents"),
-                    1,
-                    LedgerLimits.MaxCents
-                )
+        Read(body, fields => new ReimbursementRequest(
+            Id(LedgerReader.Required(fields, "fromUserId")),
+            Id(LedgerReader.Required(fields, "toUserId")),
+            LedgerReader.Integer(
+                LedgerReader.Required(fields, "amountCents"),
+                1,
+                LedgerLimits.MaxCents
             )
-        );
+        ));
 
     // The `month` query: /^\d{4}-(0[1-9]|1[0-2])$/ with ASCII digits.
     public static bool IsMonth(string value) => MonthFormat().IsMatch(value);

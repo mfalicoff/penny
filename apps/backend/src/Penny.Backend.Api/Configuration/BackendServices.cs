@@ -174,14 +174,11 @@ public static class BackendServices
         services.AddSingleton(worker);
         services.AddSingleton(worker.Processing);
         services
-            .AddHttpClient(
-                GotenbergRenderer.HttpClientName,
-                client =>
-                {
-                    client.BaseAddress = worker.RendererUrl;
-                    client.Timeout = TimeSpan.FromSeconds(worker.RenderTimeoutSeconds);
-                }
-            )
+            .AddHttpClient(GotenbergRenderer.HttpClientName, client =>
+            {
+                client.BaseAddress = worker.RendererUrl;
+                client.Timeout = TimeSpan.FromSeconds(worker.RenderTimeoutSeconds);
+            })
             .ConfigurePrimaryHttpMessageHandler(() =>
                 new SocketsHttpHandler { AllowAutoRedirect = false, UseProxy = false }
             )
@@ -230,16 +227,13 @@ public static class BackendServices
             services.AddSingleton(apns);
             services.AddSingleton<ApnsProviderToken>();
             services
-                .AddHttpClient(
-                    ApnsTransport.HttpClientName,
-                    client =>
-                    {
-                        client.Timeout = TimeSpan.FromSeconds(10);
-                        client.MaxResponseContentBufferSize = 64 * 1024;
-                        client.DefaultRequestVersion = System.Net.HttpVersion.Version20;
-                        client.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionExact;
-                    }
-                )
+                .AddHttpClient(ApnsTransport.HttpClientName, client =>
+                {
+                    client.Timeout = TimeSpan.FromSeconds(10);
+                    client.MaxResponseContentBufferSize = 64 * 1024;
+                    client.DefaultRequestVersion = System.Net.HttpVersion.Version20;
+                    client.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionExact;
+                })
                 .ConfigurePrimaryHttpMessageHandler(() =>
                     new SocketsHttpHandler
                     {
@@ -347,14 +341,11 @@ public static class BackendServices
         // Provider calls follow no redirects, are bounded by a 10-second
         // timeout and are not logged (they carry codes, tokens and the client secret).
         services
-            .AddHttpClient(
-                OidcProviderClient.HttpClientName,
-                client =>
-                {
-                    client.Timeout = TimeSpan.FromSeconds(10);
-                    client.MaxResponseContentBufferSize = 1024 * 1024;
-                }
-            )
+            .AddHttpClient(OidcProviderClient.HttpClientName, client =>
+            {
+                client.Timeout = TimeSpan.FromSeconds(10);
+                client.MaxResponseContentBufferSize = 1024 * 1024;
+            })
             .ConfigurePrimaryHttpMessageHandler(() =>
                 new SocketsHttpHandler
                 {

@@ -15,18 +15,12 @@ public static partial class HouseholdReader
 
     // `householdInput`, or `tripInput` when `trip` is set.
     public static NewHousehold? ReadNew(JsonElement? body, bool trip) =>
-        Read(
-            body,
-            fields => new NewHousehold(
-                Name(fields),
-                LedgerReader.Choice(
-                    LedgerReader.Required(fields, "currency"),
-                    LedgerLimits.Currencies
-                ),
-                Offset(fields),
-                trip ? Dates(fields) : null
-            )
-        );
+        Read(body, fields => new NewHousehold(
+            Name(fields),
+            LedgerReader.Choice(LedgerReader.Required(fields, "currency"), LedgerLimits.Currencies),
+            Offset(fields),
+            trip ? Dates(fields) : null
+        ));
 
     // `{name}` for PATCH /api/households/{id}.
     public static string? ReadName(JsonElement? body) => Read(body, Name);
@@ -36,16 +30,12 @@ public static partial class HouseholdReader
         Read(body, fields => new TripChange(Name(fields), Dates(fields)));
 
     // `{code: /^[A-Fa-f0-9]{10}$/, timezoneOffsetMinutes?}`.
-    public static JoinRequest? ReadJoin(JsonElement? body) =>
-        Read(
-            body,
-            fields =>
-            {
-                var code = LedgerReader.Text(LedgerReader.Required(fields, "code"), 10, 10);
-                LedgerReader.Require(CodeFormat().IsMatch(code));
-                return new JoinRequest(code.ToUpperInvariant(), Offset(fields));
-            }
-        );
+    public static JoinRequest? ReadJoin(JsonElement? body) => Read(body, fields =>
+        {
+            var code = LedgerReader.Text(LedgerReader.Required(fields, "code"), 10, 10);
+            LedgerReader.Require(CodeFormat().IsMatch(code));
+            return new JoinRequest(code.ToUpperInvariant(), Offset(fields));
+        });
 
     private static T? Read<T>(JsonElement? body, Func<Dictionary<string, JsonElement>, T> read)
         where T : class

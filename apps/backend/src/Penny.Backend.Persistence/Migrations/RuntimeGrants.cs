@@ -11,8 +11,7 @@ public static class RuntimeGrants
 
     public static string Sql()
     {
-        using var stream =
-            typeof(RuntimeGrants).Assembly.GetManifestResourceStream(ResourceName)
+        using var stream = typeof(RuntimeGrants).Assembly.GetManifestResourceStream(ResourceName)
             ?? throw new InvalidOperationException("The runtime grant script is missing.");
         using var reader = new StreamReader(stream);
         return reader.ReadToEnd();

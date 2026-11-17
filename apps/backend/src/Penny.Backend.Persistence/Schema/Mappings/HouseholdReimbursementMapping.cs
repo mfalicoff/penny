@@ -9,20 +9,17 @@ internal sealed class HouseholdReimbursementMapping
 {
     public void Configure(EntityTypeBuilder<HouseholdReimbursement> builder)
     {
-        builder.ToTable(
-            "household_reimbursements",
-            table =>
-            {
-                table.HasCheckConstraint(
-                    "ck_household_reimbursements_month",
-                    "month ~ '^[0-9]{4}-(0[1-9]|1[0-2])$'"
-                );
-                table.HasCheckConstraint(
-                    "ck_household_reimbursements_amount",
-                    Checks.Cents("amount_cents")
-                );
-            }
-        );
+        builder.ToTable("household_reimbursements", table =>
+        {
+            table.HasCheckConstraint(
+                "ck_household_reimbursements_month",
+                "month ~ '^[0-9]{4}-(0[1-9]|1[0-2])$'"
+            );
+            table.HasCheckConstraint(
+                "ck_household_reimbursements_amount",
+                Checks.Cents("amount_cents")
+            );
+        });
         builder.HasKey(payment => payment.Id);
         builder.HasOne<Household>().WithMany().HasForeignKey(payment => payment.HouseholdId);
         builder.HasOne<User>().WithMany().HasForeignKey(payment => payment.FromUserId);
