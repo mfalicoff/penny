@@ -4,6 +4,9 @@
   "enabledManagers": ["npm", "github-actions", "dockerfile", "docker-compose", "nuget"],
   "automerge": false,
   "prConcurrentLimit": 1,
+  "semanticCommits": "enabled",
+  "semanticCommitType": "fix",
+  "semanticCommitScope": "deps",
   "packageRules": [
     {
       "description": "Majors often need a migration (.NET, TypeScript, Tempo, Gotenberg): approve them one at a time from the dependency dashboard instead of in the grouped PR.",
