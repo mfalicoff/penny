@@ -9,7 +9,7 @@ import Testing
 /// One fixed projection for every month (also used by WidgetPublisherTests).
 struct FixedProjection: SharedProjectionService {
     let answer: WireHouseholdProjection
-    func projection(month: MonthKey) async throws -> WireHouseholdProjection { answer }
+    func projection(period: ActivityFilters.Period) async throws -> WireHouseholdProjection { answer }
 }
 
 @Suite("Home overview, money flow, Insights and calendar")

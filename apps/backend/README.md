@@ -12,7 +12,7 @@ Install SDK **10.0.403** (pinned without roll-forward), Node 24 for the model do
 | `src/Penny.Backend.Application` | Use cases (password auth, ledger read/save, household membership, shared expenses and projection), persistence and security ports; no SQL/HTTP references |
 | `src/Penny.Backend.Persistence` | EF Core model (`PennyDbContext`) and migrations, repositories, read-only readiness probe and encrypted receipt store |
 | `src/Penny.Backend.Api` | Standard CreateBuilder/AddControllers/Build/MapControllers/Run flow, configuration, session authentication, origin/CORS/rate-limit middleware, operational, auth, ledger, household and shared-expense controllers |
-| `src/Penny.Backend.AppHost` | Local development only: the Aspire AppHost that orchestrates PostgreSQL, migration, the API, the web app and the Grafana stack (MAZ-138). Never deployed |
+| `src/Penny.Backend.AppHost` | Local development only: the Aspire AppHost that orchestrates PostgreSQL, migration, the API, the web app, emailed receipts (penny-render and the Email Worker, MAZ-184) and the Grafana stack (MAZ-138). Never deployed |
 | `tests/Penny.Backend.UnitTests` | Configuration bounds/redaction, password hasher, credential/token parity and inward dependency checks |
 | `tests/Penny.Backend.IntegrationTests` | One PostgreSQL container and shared WebApplicationFactory, real Kestrel/SQL, per-test data reset, a local HTTPS fake OIDC provider (no external network) |
 
@@ -46,7 +46,7 @@ Tests use `whenCondition_MethodOrFunctionOrFlow_ShouldExpectedOutcome`, such as 
 
 ## Run the whole stack with Aspire (MAZ-138)
 
-`src/Penny.Backend.AppHost` is a [.NET Aspire](https://aspire.dev) 13.6 AppHost that starts everything for local development with one command: PostgreSQL, the migration step, the search model download, this API, the web app (`apps/web`) and a Grafana stack (Alloy, Loki, Tempo, Prometheus, Grafana). You need the SDK, Node 24 and Docker or Podman; nothing else to set up.
+`src/Penny.Backend.AppHost` is a [.NET Aspire](https://aspire.dev) 13.6 AppHost that starts everything for local development with one command: PostgreSQL, the migration step, the search model download, this API, the web app (`apps/web`), emailed receipts (`penny-render` and the Cloudflare Email Worker under `wrangler dev`) and a Grafana stack (Alloy, Loki, Tempo, Prometheus, Grafana). You need the SDK, Node 24 and Docker or Podman; nothing else to set up.
 
 ```sh
 bash apps/backend/dotnet.sh run --project src/Penny.Backend.AppHost
@@ -61,11 +61,22 @@ The console prints the Aspire dashboard's login link. The dashboard shows each r
 | `migrate` | This API's `migrate --bootstrap --grant-runtime` (administrator for the bootstrap, then the migration role); exits when done | — |
 | `api` | This API with the runtime role, started after `migrate` and `search-model` finish | `http://localhost:5001` (Scalar at `/scalar/v1`) |
 | `web` | `npm run dev` in `apps/web`; Vite forwards `/api/` to `api` | `http://localhost:4173` |
+| `penny-render` | Emailed receipts' HTML-to-PDF renderer: the Gotenberg image and flags read from `deploy/compose.yaml`, read-only, no capabilities | loopback port chosen on each run |
+| `email-worker-install`, `email-worker` | `npm ci`, then the Cloudflare Email Worker (`apps/email-worker`) under `wrangler dev`, pointed at `api` | `http://127.0.0.1:8788` (its local email handler) |
 | `alloy` | OTLP receiver; forwards traces to Tempo, logs to Loki and metrics to Prometheus | gRPC on a port chosen on the first run, OTLP/HTTP on `localhost:4318` |
 | `loki`, `tempo`, `prometheus` | Single-binary stores with 3-day retention, in `penny-aspire-*` volumes | loopback ports chosen on the first run |
 | `grafana` | Data sources provisioned and linked (log → trace, trace → logs and metrics). Anonymous admin, no login | `http://localhost:3000` |
 
-Wiring is done in the AppHost, not by hand: the API gets runtime and migration connection strings for the restricted roles, its receipt and model settings, `OTEL_EXPORTER_OTLP_ENDPOINT` pointing at Alloy and `Auth__AllowedOrigins` with the web origin; the web app gets `PENNY_API_URL`. The API's own [telemetry](../../docs/self-hosting/operations.md#telemetry-opentelemetry) settings apply unchanged; the AppHost only shortens the export intervals so a request shows up within seconds. Telemetry goes to Alloy only: the Aspire dashboard keeps resources and console logs but receives no traces, logs or metrics, so there is one copy, in Grafana. The configs for the Grafana stack are in `development/observability/` (the [reference operator stack](../../docs/self-hosting/observability.md), MAZ-128, runs the same files). Images are pinned by digest in `ObservabilityImages.cs`.
+Wiring is done in the AppHost, not by hand: the API gets runtime and migration connection strings for the restricted roles, its receipt and model settings, the `InboundMail__*` settings (feature on, domain `receipts.penny.test`, the renderer's URL, a webhook secret shared with the Worker), `OTEL_EXPORTER_OTLP_ENDPOINT` pointing at Alloy and `Auth__AllowedOrigins` with the web origin; the web app gets `PENNY_API_URL`. The API's own [telemetry](../../docs/self-hosting/operations.md#telemetry-opentelemetry) settings apply unchanged; the AppHost only shortens the export intervals so a request shows up within seconds. Telemetry goes to Alloy only: the Aspire dashboard keeps resources and console logs but receives no traces, logs or metrics, so there is one copy, in Grafana. The configs for the Grafana stack are in `development/observability/` (the [reference operator stack](../../docs/self-hosting/observability.md), MAZ-128, runs the same files). Images are pinned by digest in `ObservabilityImages.cs`.
+
+To try emailed receipts, create an address in the web app (**Settings › Receipt email**, `r-…@receipts.penny.test`), then hand a raw message to the Worker the way Cloudflare Email Routing would (it needs a `Message-ID` header):
+
+```sh
+printf 'From: Acme Store <orders@shop.example.test>\r\nTo: r-…@receipts.penny.test\r\nMessage-ID: <1@shop.example.test>\r\nSubject: Order 1042\r\n\r\nTotal $12.50\r\n' > /tmp/receipt.eml
+curl -X POST "http://127.0.0.1:8788/cdn-cgi/handler/email?from=orders@shop.example.test&to=r-…@receipts.penny.test" --data-binary @/tmp/receipt.eml
+```
+
+It shows up under **Receipts to attach** within a few seconds. Sender verification stays "not verified" locally, because only Cloudflare's ingress adds the ARC result Penny trusts.
 
 To see a request end to end, use the web app (or `curl http://localhost:4173/api/ready`), then in Grafana open **Explore → Loki**, query `{service_name="penny-backend"}`, expand a line and follow **View trace** to Tempo; the trace links back to its logs and to Prometheus metrics such as `http_server_request_duration_seconds_count`.
 
@@ -73,11 +84,11 @@ Grafana provisions the **Penny** dashboards (API, database, auth and rate limits
 
 Notes:
 
-- **Secrets.** On the first run the AppHost generates the PostgreSQL admin, migration and runtime passwords and the receipt master key and stores them in this project's user secrets (`dotnet user-secrets list --project src/Penny.Backend.AppHost`). The database volume is initialized with them, so do not delete them while the volume exists. If PostgreSQL ever rejects the password (for example after the secrets were cleared, or the very first run was interrupted before they were saved), remove the `penny-aspire-postgres` volume and its container, which loses that local data. Receipts are stored under `.cache/backend/aspire/receipts`, apart from the Compose setup's, because they are encrypted with a different key.
+- **Secrets.** On the first run the AppHost generates the PostgreSQL admin, migration and runtime passwords, the receipt master key and the inbound mail webhook secret and stores them in this project's user secrets (`dotnet user-secrets list --project src/Penny.Backend.AppHost`). The database volume is initialized with them, so do not delete them while the volume exists. If PostgreSQL ever rejects the password (for example after the secrets were cleared, or the very first run was interrupted before they were saved), remove the `penny-aspire-postgres` volume and its container, which loses that local data. Receipts are stored under `.cache/backend/aspire/receipts`, apart from the Compose setup's, because they are encrypted with a different key.
 - **Persistent containers.** PostgreSQL, Alloy, Loki, Tempo and Prometheus keep running after the AppHost stops, so restarts are fast; stop them with `docker`/`podman` when you are done. The API, web app and Grafana stop with the AppHost.
 - **Podman.** The AppHost selects Podman when there is no Docker CLI or `docker` is Podman's shim. Set `ASPIRE_CONTAINER_RUNTIME` to override.
 - **NixOS.** The dashboard needs libicu; the repository's dev shell (`nix develop`, or direnv) provides it on `LD_LIBRARY_PATH`.
-- **Ports.** `5001`, `4173`, `3000` and `4318` are fixed, so do not run the Compose-based API below or another Vite server at the same time.
+- **Ports.** `5001`, `4173`, `3000`, `4318` and `8788` are fixed, so do not run the Compose-based API below or another Vite server at the same time.
 - **Lock file.** The AppHost has no `packages.lock.json`: the Aspire SDK adds orchestrator and dashboard packages for the host OS, so a lock file would only restore on one OS. Its versions are pinned in `Directory.Packages.props` and the project's SDK reference.
 
 ## Start a local database and service

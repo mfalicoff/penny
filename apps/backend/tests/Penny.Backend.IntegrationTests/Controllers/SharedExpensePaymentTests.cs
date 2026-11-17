@@ -31,9 +31,7 @@ public sealed class SharedExpensePaymentTests(ApiFixture fixture) : SharedExpens
         paid.GetProperty("updatedAt").GetInt64().ShouldBe(Millis(Noon.AddMinutes(1)));
         paid.GetProperty("paymentsClosed").GetBoolean().ShouldBeFalse();
         // A payment settles a share; it is never spending.
-        (await ProjectionAsync(bea, "?month=2026-09"))
-            .GetRawText()
-            .ShouldBe(projection);
+        (await ProjectionAsync(bea, "?month=2026-09")).GetRawText().ShouldBe(projection);
         (
             await CountAsync(
                 $"SELECT count(*) FROM penny.household_reimbursements WHERE expense_id = '{expenseId}' AND from_user_id = '{beaId}' AND to_user_id = '{alexId}' AND month = '2026-09' AND amount_cents = 3000"

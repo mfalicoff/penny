@@ -92,43 +92,33 @@ public abstract class ReceiptTextTestBase(ApiFixture fixture) : SearchTestBase(f
         string? receiptId,
         string note = "",
         string date = "2026-11-02"
-    ) =>
-        SaveLedgerAsync(
-            token,
-            ledger =>
+    ) => SaveLedgerAsync(token, ledger =>
+        {
+            var entries = ledger["transactions"]!.AsArray();
+            var existing = entries.FirstOrDefault(entry => entry!["id"]!.GetValue<string>() == id);
+            if (existing is not null)
+                entries.Remove(existing);
+            var entry = new JsonObject
             {
-                var entries = ledger["transactions"]!.AsArray();
-                var existing = entries.FirstOrDefault(entry =>
-                    entry!["id"]!.GetValue<string>() == id
-                );
-                if (existing is not null)
-                    entries.Remove(existing);
-                var entry = new JsonObject
-                {
-                    ["id"] = id,
-                    ["title"] = title,
-                    ["kind"] = "expense",
-                    ["total"] = 1000,
-                    ["share"] = 1000,
-                    ["categoryId"] = ledger["categories"]![0]!["id"]!.GetValue<string>(),
-                    ["date"] = date,
-                    ["note"] = note,
-                };
-                if (receiptId is not null)
-                    entry["receipt"] = Link(receiptId);
-                entries.Add(entry);
-            }
-        );
+                ["id"] = id,
+                ["title"] = title,
+                ["kind"] = "expense",
+                ["total"] = 1000,
+                ["share"] = 1000,
+                ["categoryId"] = ledger["categories"]![0]!["id"]!.GetValue<string>(),
+                ["date"] = date,
+                ["note"] = note,
+            };
+            if (receiptId is not null)
+                entry["receipt"] = Link(receiptId);
+            entries.Add(entry);
+        });
 
-    protected Task RemoveEntryAsync(string token, string id) =>
-        SaveLedgerAsync(
-            token,
-            ledger =>
-            {
-                var entries = ledger["transactions"]!.AsArray();
-                entries.Remove(entries.Single(entry => entry!["id"]!.GetValue<string>() == id));
-            }
-        );
+    protected Task RemoveEntryAsync(string token, string id) => SaveLedgerAsync(token, ledger =>
+        {
+            var entries = ledger["transactions"]!.AsArray();
+            entries.Remove(entries.Single(entry => entry!["id"]!.GetValue<string>() == id));
+        });
 
     protected static JsonObject Link(string receiptId) =>
         new()

@@ -239,7 +239,19 @@ public struct APIClient: Sendable {
     /// expense recorded in the month, and previews of the month's shared rules. The server
     /// computes the shares; the app never splits a shared total itself.
     public func householdProjection(month: MonthKey) async throws -> WireHouseholdProjection {
-        try await json(.get, "/api/households/projection", query: [URLQueryItem(name: "month", value: "\(month)")])
+        try await householdProjection(period: .month(month))
+    }
+
+    /// The same projection for an Activity period: `?month=YYYY-MM`, `?year=YYYY`, or no
+    /// filter for all time (MAZ-185).
+    public func householdProjection(period: ActivityFilters.Period) async throws -> WireHouseholdProjection {
+        let query: [URLQueryItem] =
+            switch period {
+            case .month(let month): [URLQueryItem(name: "month", value: "\(month)")]
+            case .year(let year): [URLQueryItem(name: "year", value: String(format: "%04d", year))]
+            case .allTime: []
+            }
+        return try await json(.get, "/api/households/projection", query: query)
     }
 
     // MARK: Plumbing

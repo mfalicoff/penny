@@ -8,25 +8,19 @@ internal sealed class ReceiptTextChunkMapping : IEntityTypeConfiguration<Receipt
 {
     public void Configure(EntityTypeBuilder<ReceiptTextChunk> builder)
     {
-        builder.ToTable(
-            "receipt_text_chunks",
-            table =>
-            {
-                table.HasCheckConstraint("ck_receipt_text_chunks_ordinal", "ordinal >= 0");
-                table.HasCheckConstraint(
-                    "ck_receipt_text_chunks_attempts",
-                    "embedding_attempts >= 0"
-                );
-                table.HasCheckConstraint(
-                    "ck_receipt_text_chunks_lease",
-                    "(lease_token IS NULL) = (lease_expires_at IS NULL)"
-                );
-                table.HasCheckConstraint(
-                    "ck_receipt_text_chunks_embedding",
-                    "(embedding IS NULL) = (embedding_model IS NULL)"
-                );
-            }
-        );
+        builder.ToTable("receipt_text_chunks", table =>
+        {
+            table.HasCheckConstraint("ck_receipt_text_chunks_ordinal", "ordinal >= 0");
+            table.HasCheckConstraint("ck_receipt_text_chunks_attempts", "embedding_attempts >= 0");
+            table.HasCheckConstraint(
+                "ck_receipt_text_chunks_lease",
+                "(lease_token IS NULL) = (lease_expires_at IS NULL)"
+            );
+            table.HasCheckConstraint(
+                "ck_receipt_text_chunks_embedding",
+                "(embedding IS NULL) = (embedding_model IS NULL)"
+            );
+        });
         builder.HasKey(chunk => chunk.Id);
         builder.Property(chunk => chunk.Id).UseIdentityAlwaysColumn();
         builder

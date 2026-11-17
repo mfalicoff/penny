@@ -53,9 +53,8 @@ public sealed partial class FullStackSeedTests(ApiFixture fixture) : SearchTestB
     // References inside a path, such as /api/households/$household:maison/expenses.
     private static string Interpolate(string text, SeedContext context) =>
         EmbeddedReference()
-            .Replace(
-                text,
-                match => Resolve(JsonValue.Create(match.Value), context)!.GetValue<string>()
+            .Replace(text, match =>
+                Resolve(JsonValue.Create(match.Value), context)!.GetValue<string>()
             );
 
     private async Task RefreshSessionsAsync(SeedContext context)
@@ -106,16 +105,13 @@ public sealed partial class FullStackSeedTests(ApiFixture fixture) : SearchTestB
             else if (step["ledger"] is { } ledger)
                 await SeedLedgerAsync(token!, ledger);
             else if (step["rename"] is JsonObject rename)
-                await SaveLedgerAsync(
-                    token!,
-                    document =>
-                    {
-                        foreach (var (kind, names) in rename)
-                        foreach (var item in document[kind]!.AsArray())
-                            if (names![item!["id"]!.GetValue<string>()] is { } renamed)
-                                item["name"] = renamed.GetValue<string>();
-                    }
-                );
+                await SaveLedgerAsync(token!, document =>
+                {
+                    foreach (var (kind, names) in rename)
+                    foreach (var item in document[kind]!.AsArray())
+                        if (names![item!["id"]!.GetValue<string>()] is { } renamed)
+                            item["name"] = renamed.GetValue<string>();
+                });
             else if ((step["createHousehold"] ?? step["createTrip"]) is { } create)
             {
                 var body = create.DeepClone().AsObject();

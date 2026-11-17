@@ -94,12 +94,16 @@ struct EntryRow: View {
         return entry.kind == .income ? "Expected" : "Scheduled"
     }
 
-    /// The line under the title: the day, the status, then the account and "your share", or
-    /// the category when there is neither.
+    /// The line under the title: the day, the status, "Shared · <household>" for a shared
+    /// expense (MAZ-185), then the account and "your share", or the category when there is
+    /// neither.
     static func meta(_ entry: ReportEntry, category: LedgerCategory?, report: LedgerReport, today: CalendarDate)
         -> String
     {
         var details: [String] = []
+        if let household = entry.householdName {
+            details.append(household.isEmpty ? "Shared" : "Shared · \(household)")
+        }
         if let account = entry.accountId.flatMap(report.ledger.account(id:)) { details.append(account.name) }
         if entry.share != entry.total { details.append("your share") }
         if details.isEmpty, let category { details.append(category.name) }

@@ -50,8 +50,7 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
         CancellationToken cancellationToken
     )
     {
-        var input =
-            HouseholdReader.ReadNew(body, trip)
+        var input = HouseholdReader.ReadNew(body, trip)
             ?? throw new BackendFailure(FailureKind.Invalid, InvalidData);
         var now = Now();
         return await households.WriteAsync(
@@ -100,14 +99,10 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
         households.ReadAsync(
             async store =>
             {
-                var membership =
-                    (
-                        Storable(householdId)
-                            ? await store.MembershipAsync(householdId, userId)
-                            : null
-                    ) ?? throw new BackendFailure(FailureKind.NotFound, NotFound);
-                var household =
-                    await store.FindAsync(householdId, includeArchived: true)
+                var membership = (
+                    Storable(householdId) ? await store.MembershipAsync(householdId, userId) : null
+                ) ?? throw new BackendFailure(FailureKind.NotFound, NotFound);
+                var household = await store.FindAsync(householdId, includeArchived: true)
                     ?? throw new BackendFailure(FailureKind.NotFound, NotFound);
                 var members = await store.MembersAsync(householdId);
                 return new HouseholdDetail(
@@ -253,8 +248,7 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
         CancellationToken cancellationToken
     )
     {
-        var input =
-            HouseholdReader.ReadJoin(body)
+        var input = HouseholdReader.ReadJoin(body)
             ?? throw new BackendFailure(FailureKind.Invalid, InvalidData);
         var codeHash = InviteCodes.Hash(input.Code);
         return await households.WriteAsync(
@@ -273,8 +267,7 @@ public sealed class HouseholdService(IHouseholdRepository households, TimeProvid
                     || await store.FindInviteAsync(codeHash) is null
                 )
                     throw new BackendFailure(FailureKind.Invalid, InvalidInvite);
-                var household =
-                    await store.FindAsync(householdId, includeArchived: false)
+                var household = await store.FindAsync(householdId, includeArchived: false)
                     ?? throw new BackendFailure(FailureKind.Invalid, InvalidInvite);
                 // The ledger row stays locked, so a concurrent PUT /api/ledger cannot
                 // change currency between this check and the commit (ledger check 3).

@@ -86,6 +86,8 @@ final class ShellModel {
 
     /// The caller's household shares for Home's reports (none in the demo).
     let shared: SharedProjectionModel
+    /// The caller's shares for the Activity periods browsed this session (MAZ-185; none in the demo).
+    let activityShared: ActivitySharedModel
     /// The last report built, reused while the ledger and the shared answers are unchanged.
     /// Comparing a ledger that did not change is cheap (arrays share storage), so a large
     /// ledger is joined once per change instead of once per view update.
@@ -102,10 +104,11 @@ final class ShellModel {
     }
 
     /// Reads the shared projection for the month on screen and the one before it (Insights
-    /// compares the two).
+    /// compares the two), and the Activity periods already read, so a shared write shows there.
     func refreshShared() async {
         await shared.refresh(month)
         if let previous = month.shifted(by: -1) { await shared.refresh(previous) }
+        await activityShared.refreshLoaded()
     }
 
     @ObservationIgnored private var toastTask: Task<Void, Never>?
@@ -124,6 +127,7 @@ final class ShellModel {
             service: workspace.isDemo ? nil : householdService, email: email, month: { MonthKey(monthClock()) })
         trips = TripDirectory(households: households)
         shared = SharedProjectionModel(service: workspace.isDemo ? nil : sharedProjection)
+        activityShared = ActivitySharedModel(service: workspace.isDemo ? nil : sharedProjection)
         self.workspace = workspace
         self.session = session
         self.today = today

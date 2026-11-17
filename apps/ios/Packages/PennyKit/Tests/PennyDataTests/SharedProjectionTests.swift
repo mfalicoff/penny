@@ -4,8 +4,8 @@ import PennyDomain
 import Synchronization
 import Testing
 
-/// Answers queued per month; a month with no queued answer throws `error`.
-private final class QueuedProjection: SharedProjectionService {
+/// Answers queued per period (`2026-11`, `2026`, `all`); a period with none queued is unreachable.
+final class QueuedProjection: SharedProjectionService {
     private let answers: Mutex<[String: [Result<WireHouseholdProjection, APIError>]]>
     private let calls = Mutex<[String]>([])
 
@@ -15,12 +15,21 @@ private final class QueuedProjection: SharedProjectionService {
 
     var asked: [String] { calls.withLock { $0 } }
 
-    func projection(month: MonthKey) async throws -> WireHouseholdProjection {
-        calls.withLock { $0.append("\(month)") }
+    static func key(_ period: ActivityFilters.Period) -> String {
+        switch period {
+        case .month(let month): "\(month)"
+        case .year(let year): String(year)
+        case .allTime: "all"
+        }
+    }
+
+    func projection(period: ActivityFilters.Period) async throws -> WireHouseholdProjection {
+        let key = Self.key(period)
+        calls.withLock { $0.append(key) }
         let next = answers.withLock { queue -> Result<WireHouseholdProjection, APIError> in
-            guard var list = queue["\(month)"], !list.isEmpty else { return .failure(.unreachable) }
+            guard var list = queue[key], !list.isEmpty else { return .failure(.unreachable) }
             let first = list.removeFirst()
-            queue["\(month)"] = list
+            queue[key] = list
             return first
         }
         return try next.get()

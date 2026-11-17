@@ -108,12 +108,30 @@ extension LedgerReport {
         let needle = FoldedSearchIndex.needle(filters.query)
         let entries =
             periodEntries
-            .filter { filters.admits($0) && index.match($0, needle: needle) != nil }
+            .filter { admits($0, filters) && index.match($0, needle: needle) != nil }
             .sorted(by: ReportEntry.newestFirst)
         let expected = periodEntries.filter { $0.isExpectedIncome(today: today) }
         return ActivityResult(
             summary: KindTotals(periodEntries.filter { !$0.isExpectedIncome(today: today) }),
             expectedIncome: expected.reduce(0) { $0 + $1.share }, entries: entries)
+    }
+
+    /// Whether a row passes every filter except the query, as `ActivityFilters.admits(_:)`
+    /// but with the category matched by `matchesCategory(_:_:)`.
+    public func admits(_ entry: ReportEntry, _ filters: ActivityFilters) -> Bool {
+        var others = filters
+        others.categoryId = nil
+        return others.admits(entry) && matchesCategory(entry, filters.categoryId)
+    }
+
+    /// Whether `entry` is in the category `id` (nil: any). A shared row's category is sent by
+    /// value (`household-category:…`), so it matches a personal category by name, as the web
+    /// Activity does.
+    public func matchesCategory(_ entry: ReportEntry, _ id: String?) -> Bool {
+        guard let id, entry.categoryId != id else { return true }
+        guard entry.source != .personal else { return false }
+        let name = categoryName(id)
+        return !name.isEmpty && categoryName(entry.categoryId) == name
     }
 
     /// The period's recorded totals alone (what Activity shows above server results), without

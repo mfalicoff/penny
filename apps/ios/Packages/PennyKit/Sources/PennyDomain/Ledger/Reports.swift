@@ -63,6 +63,8 @@ public struct SharedExpenseShare: Hashable, Sendable {
     public var share: Int64
     public var category: Category
     public var note: String
+    /// The household's name, for "Shared · <household>" on a row; empty when the server sent none.
+    public var householdName: String
     /// Only the payer sees their own account.
     public var accountId: String?
     public var recurringId: String?
@@ -71,8 +73,8 @@ public struct SharedExpenseShare: Hashable, Sendable {
 
     public init(
         id: String, householdId: String, currency: Currency, title: String, date: CalendarDate, total: Int64,
-        share: Int64, category: Category, note: String = "", accountId: String? = nil, recurringId: String? = nil,
-        scheduled: Bool = false
+        share: Int64, category: Category, note: String = "", householdName: String = "", accountId: String? = nil,
+        recurringId: String? = nil, scheduled: Bool = false
     ) {
         self.id = id
         self.householdId = householdId
@@ -83,6 +85,7 @@ public struct SharedExpenseShare: Hashable, Sendable {
         self.share = share
         self.category = category
         self.note = note
+        self.householdName = householdName
         self.accountId = accountId
         self.recurringId = recurringId
         self.scheduled = scheduled
@@ -109,6 +112,8 @@ public struct ReportEntry: Hashable, Sendable, Identifiable {
     public var accountId: String?
     public var tripId: String?
     public var note: String
+    /// A shared row's household name (empty when the server sent none); nil for a personal row.
+    public var householdName: String?
     public var recurringId: String?
     /// Not recorded yet: a preview, never cash.
     public var scheduled: Bool
@@ -125,6 +130,7 @@ public struct ReportEntry: Hashable, Sendable, Identifiable {
         accountId = entry.accountId
         tripId = entry.tripId
         note = entry.note
+        householdName = nil
         recurringId = entry.recurringId
         self.scheduled = scheduled
     }
@@ -143,6 +149,7 @@ public struct ReportEntry: Hashable, Sendable, Identifiable {
         accountId = item.accountId
         tripId = nil
         note = item.note
+        householdName = item.householdName
         recurringId = item.recurringId
         scheduled = item.scheduled
     }

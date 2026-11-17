@@ -22,8 +22,8 @@ public sealed class ReceiptService(IReceiptRepository receipts, TimeProvider clo
         CancellationToken cancellationToken
     )
     {
-        var (name, mime, base64) =
-            Parse(body) ?? throw new BackendFailure(FailureKind.Invalid, InvalidUpload);
+        var (name, mime, base64) = Parse(body)
+            ?? throw new BackendFailure(FailureKind.Invalid, InvalidUpload);
         var content = ReceiptFormat.Decode(base64);
         if (!ReceiptFormat.IsAcceptable(mime, content))
             throw new BackendFailure(FailureKind.Invalid, UnsupportedFile);
