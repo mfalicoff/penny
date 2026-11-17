@@ -4,13 +4,13 @@ on:
   pull_request:
     paths:
       - 'apps/site/**'
-      - 'docs/screenshots/**'
+      - 'design-kit/src/icons.ts'
       - '.github/workflows/site.yml'
   push:
     branches: [master]
     paths:
       - 'apps/site/**'
-      - 'docs/screenshots/**'
+      - 'design-kit/src/icons.ts'
       - '.github/workflows/site.yml'
   workflow_dispatch:
 

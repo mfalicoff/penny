@@ -3,11 +3,10 @@
 import { sortCloud, SplatBuilder, type SplatCloud } from "../splats/cloud.ts";
 import { apportion, createRandom, gaussian, mixColor } from "../splats/random.ts";
 import { coinScene } from "./coin.ts";
-import { devicesScene } from "./devices.ts";
+import { loopScene, papersScene, ringsScene, trioScene } from "./ambient.ts";
 import { flowScene } from "./flow.ts";
 import { SCENE_IDS, type SceneId } from "./ids.ts";
 import { palette } from "./palette.ts";
-import { receiptScene } from "./receipt.ts";
 
 /** Keeps rare far outliers of the dust within the frame. */
 const soft = (v: number) => 1.8 * Math.tanh(v / 1.8);
@@ -46,9 +45,11 @@ export function nebulaScene(count: number, seed = 5): SplatCloud {
 const BUILDERS: Record<SceneId, (count: number) => SplatCloud> = {
   nebula: nebulaScene,
   coin: coinScene,
+  rings: ringsScene,
   flow: flowScene,
-  receipt: receiptScene,
-  devices: devicesScene,
+  papers: papersScene,
+  loop: loopScene,
+  trio: trioScene,
 };
 
 /** Order shared by every scene, so morphs sweep across the frame. */
@@ -56,6 +57,10 @@ export function morphOrder(x: number, y: number): number {
   return x * 0.85 + y * 0.35;
 }
 
+export function buildScene(id: SceneId, count: number): SplatCloud {
+  return sortCloud(BUILDERS[id](count), morphOrder);
+}
+
 export function buildScenes(count: number): SplatCloud[] {
-  return SCENE_IDS.map((id) => sortCloud(BUILDERS[id](count), morphOrder));
+  return SCENE_IDS.map((id) => buildScene(id, count));
 }

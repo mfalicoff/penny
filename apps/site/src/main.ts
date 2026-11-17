@@ -1,13 +1,13 @@
 import "./styles.css";
-import { morphBetween, sceneIndex, sceneModel, stageAt, STAGES, type Anchor } from "./choreography.ts";
+import { cameraFor, mixPlacement, morphBetween, sceneIndex, sceneModel, stageAt, STAGES, type Anchor, type Placement } from "./choreography.ts";
 import { SCENE_IDS } from "./scenes/ids.ts";
 import { lookAt, perspective } from "./splats/mat4.ts";
 import type { WorkerReply, WorkerRequest } from "./splats/protocol.ts";
 import { SplatRenderer } from "./splats/renderer.ts";
 
-const INTRO_SECONDS = 3.2;
-const FOV = (34 * Math.PI) / 180;
-/** Radius the scenes are built to fit in. */
+const INTRO_SECONDS = 3;
+const FOV = (30 * Math.PI) / 180;
+/** Radius the scenes are built to fit in, in world units. */
 const SUBJECT_RADIUS = 1.35;
 
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -19,7 +19,15 @@ function splatBudget(): number {
   if (Number.isInteger(requested) && requested >= 1000 && requested <= 400_000) return requested;
   const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 8;
   const small = Math.min(screen.width, screen.height) < 700;
-  return small || memory < 4 ? 60_000 : 120_000;
+  return small || memory < 4 ? 70_000 : 160_000;
+}
+
+/** Where a section wants its scene: its [data-splat] element, scaled by data-fit. */
+function placementOf(section: HTMLElement): Placement {
+  const target = section.querySelector<HTMLElement>("[data-splat]") ?? section;
+  const rect = target.getBoundingClientRect();
+  const fit = Number(target.dataset.fit ?? 1);
+  return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2, radius: (Math.min(rect.width, rect.height) / 2) * fit };
 }
 
 function start(canvas: HTMLCanvasElement): void {
@@ -40,16 +48,19 @@ function start(canvas: HTMLCanvasElement): void {
   let sorting = false;
   let spare: Uint32Array = new Uint32Array(0);
   let readyAt = -1;
-  let frame = 0;
 
   worker.addEventListener("message", (event: MessageEvent<WorkerReply>) => {
     const reply = event.data;
-    if (reply.type === "scenes") {
+    if (reply.type === "layout") {
+      splats.allocate(reply.layout);
+    } else if (reply.type === "scene") {
       splats.upload(reply.packed);
-      readyAt = performance.now();
-      document.documentElement.classList.add("splats-ready");
+      if (readyAt < 0 && splats.readyScenes >= 2) {
+        readyAt = performance.now();
+        document.documentElement.classList.add("splats-ready");
+      }
     } else {
-      splats.setOrder(reply.order);
+      if (reply.order.length === splats.splatCount) splats.setOrder(reply.order);
       spare = reply.order;
       sorting = false;
     }
@@ -57,29 +68,35 @@ function start(canvas: HTMLCanvasElement): void {
   worker.addEventListener("error", () => document.documentElement.classList.add("no-splats"));
   send({ type: "init", count: splatBudget() });
 
-  // Sections pick their scene with data-stage; recomputed when the layout changes.
+  // Sections pick their scene with data-stage, and where it sits with a [data-splat] element.
+  let sections: { stage: number; el: HTMLElement }[] = [];
   let anchors: Anchor[] = [];
-  // On wide screens a section owns the scene while it is centred; on phones, where the scene
-  // sits above the text, while its top (the empty space over its heading) is on screen.
   const measure = () => {
-    const wide = window.innerWidth >= 900;
-    anchors = [...document.querySelectorAll<HTMLElement>("[data-stage]")]
-      .map((el) => {
-        const rect = el.getBoundingClientRect();
-        const top = rect.top + window.scrollY;
-        const scroll = wide ? top + Math.min(rect.height, window.innerHeight * 1.4) / 2 - window.innerHeight / 2 : top;
-        return { scroll: Math.max(0, scroll), stage: Number(el.dataset.stage) };
+    sections = [...document.querySelectorAll<HTMLElement>("[data-stage]")].map((el) => ({ el, stage: Number(el.dataset.stage) }));
+    anchors = sections
+      .map(({ el, stage }) => {
+        const target = el.querySelector<HTMLElement>("[data-splat]") ?? el;
+        const rect = target.getBoundingClientRect();
+        const centre = rect.top + window.scrollY + rect.height / 2;
+        return { scroll: Math.max(0, centre - window.innerHeight / 2), stage };
       })
       .sort((a, b) => a.scroll - b.scroll);
   };
+  const placementFor = (stage: number): Placement => {
+    const section = sections.find((s) => s.stage === Math.max(1, stage)) ?? sections[0];
+    return section ? placementOf(section.el) : { x: window.innerWidth / 2, y: window.innerHeight / 2, radius: 200 };
+  };
 
+  // Full device resolution, stepped down while frames are slow.
+  const maxScale = Math.min(window.devicePixelRatio || 1, 2);
+  let scale = maxScale;
   const resize = () => {
-    const dpr = Math.min(window.devicePixelRatio || 1, 1.75);
-    canvas.width = Math.round(canvas.clientWidth * dpr);
-    canvas.height = Math.round(canvas.clientHeight * dpr);
+    canvas.width = Math.round(canvas.clientWidth * scale);
+    canvas.height = Math.round(canvas.clientHeight * scale);
     measure();
   };
   new ResizeObserver(resize).observe(document.body);
+  window.addEventListener("resize", resize);
   resize();
 
   let pointerX = 0, pointerY = 0, lookX = 0, lookY = 0;
@@ -91,16 +108,33 @@ function start(canvas: HTMLCanvasElement): void {
   let stage = 0;
   let introDone = false;
   let last = performance.now();
+  let slowFrames = 0, fastFrames = 0;
 
   const tick = (now: number) => {
     requestAnimationFrame(tick);
-    const dt = Math.min(0.25, (now - last) / 1000);
+    const rawDt = (now - last) / 1000;
+    const dt = Math.min(0.25, rawDt);
     last = now;
-    if (!splats.ready) return;
+    if (readyAt < 0) return;
+
+    // Adaptive resolution: a second of slow frames drops it, a few seconds of fast ones restore it.
+    if (rawDt > 1 / 40) slowFrames++; else slowFrames = Math.max(0, slowFrames - 1);
+    if (rawDt < 1 / 70) fastFrames++; else fastFrames = 0;
+    if (slowFrames > 45 && scale > 1) {
+      scale = Math.max(1, scale - 0.25);
+      slowFrames = 0;
+      resize();
+    } else if (fastFrames > 240 && scale < maxScale) {
+      scale = Math.min(maxScale, scale + 0.25);
+      fastFrames = 0;
+      resize();
+    }
 
     const still = reducedMotion.matches;
     const time = (now - readyAt) / 1000;
-    const target = stageAt(window.scrollY, anchors);
+    const loadedStages = STAGES.findIndex((id) => SCENE_IDS.indexOf(id) >= splats.readyScenes);
+    const maxStage = loadedStages < 0 ? STAGES.length - 1 : loadedStages - 1;
+    const target = Math.min(stageAt(window.scrollY, anchors), maxStage);
     if (still) {
       stage = Math.round(target);
     } else if (!introDone && target >= 1) {
@@ -109,7 +143,7 @@ function start(canvas: HTMLCanvasElement): void {
       stage = Math.min(target, p * p * (3 - 2 * p));
       introDone = p >= 1;
     } else {
-      stage += (target - stage) * (1 - Math.exp(-dt * 4));
+      stage += (target - stage) * (1 - Math.exp(-dt * 5));
       if (Math.abs(target - stage) < 1e-4) stage = target;
     }
 
@@ -119,31 +153,34 @@ function start(canvas: HTMLCanvasElement): void {
     const modelA = sceneModel(SCENE_IDS[from]!, time, still);
     const modelB = sceneModel(SCENE_IDS[to]!, time, still);
 
-    // Camera: far enough to fit the subject; on wide screens it sits right of the text.
+    // The camera follows the sections' [data-splat] boxes, so the scene stays attached to them.
     const width = canvas.clientWidth, height = canvas.clientHeight;
-    const aspect = width / Math.max(1, height);
-    const wide = width >= 900;
-    const tanV = Math.tan(FOV / 2), tanH = tanV * aspect;
-    const distance = Math.max(SUBJECT_RADIUS / (tanH * (wide ? 0.5 : 0.92)), SUBJECT_RADIUS / (tanV * (wide ? 0.82 : 0.5)));
-    const proj = perspective(FOV, aspect, 0.1, 60, wide ? 0.44 : 0, wide ? 0 : 0.4);
+    const placement = mixPlacement(placementFor(fromStage), placementFor(toStage), t);
+    const { distance, shiftX, shiftY } = cameraFor(placement, width, height, FOV, SUBJECT_RADIUS);
+    const proj = perspective(FOV, width / Math.max(1, height), 0.1, 200, shiftX, shiftY);
     const ease = 1 - Math.exp(-dt * 2.5);
     lookX += ((still ? 0 : pointerX) - lookX) * ease;
     lookY += ((still ? 0 : pointerY) - lookY) * ease;
-    const yaw = lookX * 0.16, pitch = lookY * 0.1;
-    const view = lookAt([distance * Math.sin(yaw) * Math.cos(pitch), distance * Math.sin(pitch), distance * Math.cos(yaw) * Math.cos(pitch)], [0, 0, 0]);
+    const yaw = lookX * 0.14, pitch = -lookY * 0.08;
+    const eye: [number, number, number] = [
+      distance * Math.sin(yaw) * Math.cos(pitch),
+      distance * Math.sin(pitch),
+      distance * Math.cos(yaw) * Math.cos(pitch),
+    ];
+    const view = lookAt(eye, [0, 0, 0]);
 
     if (!sorting) {
       sorting = true;
       const order = spare;
       spare = new Uint32Array(0);
-      send({ type: "sort", frame: frame++, from, to, t, modelA, modelB, view, order }, order.byteLength ? [order.buffer] : []);
+      send({ type: "sort", from, to, t, modelA, modelB, view, order }, order.byteLength ? [order.buffer] : []);
     }
-    canvas.dataset.stage = stage.toFixed(3);
-    splats.render({ from, to, t, time, modelA, modelB, view, proj, opacity: 1 });
+    canvas.dataset.debugStage = stage.toFixed(3);
+    splats.render({ from, to, t, time, modelA, modelB, view, proj, eye, opacity: 1 });
   };
   requestAnimationFrame(tick);
 }
 
-if (canvas && STAGES.length > 0) start(canvas);
+if (canvas) start(canvas);
 
 document.querySelector("#year")?.replaceChildren(String(new Date().getFullYear()));

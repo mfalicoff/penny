@@ -5,6 +5,10 @@ export const palette = {
   copper: hex("#E4572E"),
   copperDark: hex("#FF6F3F"),
   copperIcon: hex("#D96B3C"),
+  /** Coin metal: darker than the icon, since the renderer adds the highlights. */
+  copperMetal: hex("#B9582F"),
+  goldMetal: hex("#C08A35"),
+  roseMetal: hex("#B66A5C"),
   copperText: hex("#FF8A5E"),
   cream: hex("#F4EBDD"),
   ink: hex("#2A2420"),

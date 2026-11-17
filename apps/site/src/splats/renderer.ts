@@ -1,6 +1,6 @@
 // WebGL2 Gaussian splat renderer: no dependencies, one instanced draw per frame.
 import type { Mat4 } from "./mat4.ts";
-import type { PackedScenes } from "./pack.ts";
+import type { Layout, PackedScene } from "./pack.ts";
 import { fragmentShader, QUAD_EXTENT, vertexShader } from "./shaders.ts";
 
 export interface Frame {
@@ -12,13 +12,21 @@ export interface Frame {
   readonly modelB: Mat4;
   readonly view: Mat4;
   readonly proj: Mat4;
+  readonly eye: readonly [number, number, number];
   readonly opacity: number;
 }
 
 const UNIFORMS = [
-  "uCenters", "uCovA", "uCovB", "uColors", "uRows", "uFrom", "uTo", "uT", "uTime",
+  "uCenters", "uCovA", "uCovB", "uColors", "uNormals", "uEye", "uRows", "uFrom", "uTo", "uT", "uTime",
   "uModelA", "uModelB", "uView", "uProj", "uViewport", "uFocal", "uOpacity",
 ] as const;
+
+interface Texture {
+  readonly texture: WebGLTexture;
+  readonly unit: number;
+  readonly format: number;
+  readonly type: number;
+}
 
 export class SplatRenderer {
   private readonly gl: WebGL2RenderingContext;
@@ -26,7 +34,9 @@ export class SplatRenderer {
   private readonly uniforms: Record<(typeof UNIFORMS)[number], WebGLUniformLocation | null>;
   private readonly vao: WebGLVertexArrayObject;
   private readonly indexBuffer: WebGLBuffer;
-  private packed: PackedScenes | undefined;
+  private layout: Layout | undefined;
+  private textures: Record<"centers" | "covA" | "covB" | "colors" | "normals", Texture> | undefined;
+  private readonly loaded = new Set<number>();
 
   static create(canvas: HTMLCanvasElement): SplatRenderer | undefined {
     const gl = canvas.getContext("webgl2", { antialias: false, premultipliedAlpha: true, alpha: true, powerPreference: "high-performance" });
@@ -54,30 +64,58 @@ export class SplatRenderer {
     gl.bindVertexArray(null);
   }
 
-  get ready(): boolean {
-    return this.packed !== undefined;
+  /** Number of scenes, from the first, that are uploaded and can be drawn. */
+  get readyScenes(): number {
+    let n = 0;
+    while (this.loaded.has(n)) n++;
+    return n;
   }
 
-  upload(packed: PackedScenes): void {
+  get splatCount(): number {
+    return this.layout?.count ?? 0;
+  }
+
+  /** Allocates every texture for `layout`; scenes are uploaded into it as they arrive. */
+  allocate(layout: Layout): void {
     const { gl } = this;
-    const height = packed.rows * packed.sceneCount;
-    const texture = (unit: number, internal: number, format: number, type: number, data: ArrayBufferView) => {
-      const tex = gl.createTexture();
+    const height = layout.rows * layout.sceneCount;
+    const make = (unit: number, internal: number, format: number, type: number): Texture => {
+      const texture = gl.createTexture();
       gl.activeTexture(gl.TEXTURE0 + unit);
-      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.bindTexture(gl.TEXTURE_2D, texture);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-      gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-      gl.texImage2D(gl.TEXTURE_2D, 0, internal, packed.width, height, 0, format, type, data);
+      gl.texStorage2D(gl.TEXTURE_2D, 1, internal, layout.width, height);
+      return { texture, unit, format, type };
     };
-    texture(0, gl.RGBA32F, gl.RGBA, gl.FLOAT, packed.centers);
-    texture(1, gl.RGBA32F, gl.RGBA, gl.FLOAT, packed.covA);
-    texture(2, gl.RG32F, gl.RG, gl.FLOAT, packed.covB);
-    texture(3, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, packed.colors);
-    this.setOrder(Uint32Array.from({ length: packed.count }, (_, i) => i));
-    this.packed = packed;
+    this.textures = {
+      centers: make(0, gl.RGBA32F, gl.RGBA, gl.FLOAT),
+      covA: make(1, gl.RGBA32F, gl.RGBA, gl.FLOAT),
+      covB: make(2, gl.RG32F, gl.RG, gl.FLOAT),
+      colors: make(3, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE),
+      normals: make(4, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE),
+    };
+    this.layout = layout;
+    this.setOrder(Uint32Array.from({ length: layout.count }, (_, i) => i));
+  }
+
+  upload(scene: PackedScene): void {
+    const { gl, layout, textures } = this;
+    if (!layout || !textures) throw new Error("allocate() before upload()");
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    const put = (t: Texture, data: ArrayBufferView) => {
+      gl.activeTexture(gl.TEXTURE0 + t.unit);
+      gl.bindTexture(gl.TEXTURE_2D, t.texture);
+      gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, scene.index * layout.rows, layout.width, layout.rows, t.format, t.type, data);
+    };
+    put(textures.centers, scene.centers);
+    put(textures.covA, scene.covA);
+    put(textures.covB, scene.covB);
+    put(textures.colors, scene.colors);
+    put(textures.normals, scene.normals);
+    this.loaded.add(scene.index);
   }
 
   setOrder(order: Uint32Array): void {
@@ -87,13 +125,13 @@ export class SplatRenderer {
   }
 
   render(frame: Frame): void {
-    const { gl, packed, uniforms: u } = this;
+    const { gl, layout, uniforms: u } = this;
     const width = gl.drawingBufferWidth;
     const height = gl.drawingBufferHeight;
     gl.viewport(0, 0, width, height);
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);
-    if (!packed || frame.opacity <= 0) return;
+    if (!layout || frame.opacity <= 0 || !this.loaded.has(frame.from) || !this.loaded.has(frame.to)) return;
 
     gl.useProgram(this.program);
     gl.disable(gl.DEPTH_TEST);
@@ -103,7 +141,9 @@ export class SplatRenderer {
     gl.uniform1i(u.uCovA, 1);
     gl.uniform1i(u.uCovB, 2);
     gl.uniform1i(u.uColors, 3);
-    gl.uniform1i(u.uRows, packed.rows);
+    gl.uniform1i(u.uNormals, 4);
+    gl.uniform3f(u.uEye, frame.eye[0], frame.eye[1], frame.eye[2]);
+    gl.uniform1i(u.uRows, layout.rows);
     gl.uniform1i(u.uFrom, frame.from);
     gl.uniform1i(u.uTo, frame.to);
     gl.uniform1f(u.uT, frame.t);
@@ -116,7 +156,7 @@ export class SplatRenderer {
     gl.uniform2f(u.uViewport, width, height);
     gl.uniform2f(u.uFocal, (frame.proj[0]! * width) / 2, (frame.proj[5]! * height) / 2);
     gl.bindVertexArray(this.vao);
-    gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, packed.count);
+    gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, layout.count);
     gl.bindVertexArray(null);
   }
 }

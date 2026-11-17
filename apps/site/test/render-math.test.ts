@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { morphBetween, sceneIndex, stageAt, STAGES } from "../src/choreography.ts";
+import { cameraFor, mixPlacement, morphBetween, sceneIndex, stageAt, STAGES } from "../src/choreography.ts";
 import { SCENE_IDS } from "../src/scenes/ids.ts";
 import { identity, lookAt, perspective, transformPoint, translation } from "../src/splats/mat4.ts";
 import { morphedViewZ, morphProgress, STAGGER } from "../src/splats/morph.ts";
-import { packScenes } from "../src/splats/pack.ts";
+import { layoutFor, morphDelays, packScene } from "../src/splats/pack.ts";
 import { encodePly } from "../src/splats/ply.ts";
 import { DepthSorter } from "../src/splats/sort.ts";
 import { buildScenes } from "../src/scenes/index.ts";
@@ -62,7 +62,7 @@ describe("choreography", () => {
     expect(stageAt(0, anchors)).toBe(1);
     expect(stageAt(200, anchors)).toBe(1);
     expect(stageAt(500, anchors)).toBeCloseTo(1.5);
-    expect(stageAt(800, anchors)).toBe(2);
+    expect(stageAt(750, anchors)).toBe(2);
     expect(stageAt(5000, anchors)).toBe(3);
     expect(stageAt(10, [])).toBe(1);
   });
@@ -71,6 +71,18 @@ describe("choreography", () => {
     expect(morphBetween(1)).toEqual({ fromStage: 1, toStage: 1, t: 0 });
     expect(morphBetween(2.25)).toEqual({ fromStage: 2, toStage: 3, t: 0.25 });
     expect(morphBetween(99)).toEqual({ fromStage: STAGES.length - 1, toStage: STAGES.length - 1, t: 0 });
+  });
+
+  it("places the scene on its section's box", () => {
+    const placement = { x: 1080, y: 450, radius: 300 };
+    const camera = cameraFor(placement, 1440, 900, Math.PI / 6, 1.35);
+    expect(camera.shiftX).toBeCloseTo(0.5);
+    expect(camera.shiftY).toBeCloseTo(0);
+    // The subject's radius projects to the requested pixels.
+    const focal = 900 / (2 * Math.tan(Math.PI / 12));
+    expect((1.35 * focal) / camera.distance).toBeCloseTo(300);
+    const mid = mixPlacement(placement, { x: 360, y: 450, radius: 100 }, 0.5);
+    expect(mid).toEqual({ x: 720, y: 450, radius: 200 });
   });
 
   it("names only scenes that exist", () => {
@@ -82,15 +94,17 @@ describe("choreography", () => {
 describe("packing and export", () => {
   const scenes = buildScenes(3000);
 
-  it("lays scenes out in blocks of rows the shader can address", () => {
-    const packed = packScenes(scenes);
-    expect(packed.rows).toBe(Math.ceil(3000 / packed.width));
-    expect(packed.centers.length).toBe(packed.width * packed.rows * scenes.length * 4);
-    // Splat 7 of scene 2 sits at texel 7 of the scene's first row, with the shared delay.
-    const t = 2 * packed.rows * packed.width + 7;
-    expect(packed.centers[t * 4]).toBe(scenes[2]!.positions[7 * 3]);
-    expect(packed.centers[t * 4 + 3]).toBe(packed.delays[7]);
-    expect(packed.covA[t * 4]).toBeGreaterThan(0);
+  it("lays each scene out as a block of rows the shader can address", () => {
+    const layout = layoutFor(3000, scenes.length);
+    const delays = morphDelays(3000);
+    expect(layout.rows).toBe(Math.ceil(3000 / layout.width));
+    const packed = packScene(scenes[2]!, 2, layout, delays);
+    expect(packed.centers.length).toBe(layout.width * layout.rows * 4);
+    expect(packed.centers[7 * 4]).toBe(scenes[2]!.positions[7 * 3]);
+    expect(packed.centers[7 * 4 + 3]).toBe(delays[7]);
+    expect(packed.covA[7 * 4]).toBeGreaterThan(0);
+    expect([...packed.normals.subarray(0, 8)]).toEqual([...scenes[2]!.normals.subarray(0, 8)]);
+    expect(() => packScene(buildScenes(2000)[0]!, 0, layout, delays)).toThrow(/2000 splats/);
   });
 
   it("writes a standard 3DGS .ply", () => {

@@ -1,4 +1,4 @@
-import type { SplatBuilder, Vec3 } from "../splats/cloud.ts";
+import { normalize, type SplatBuilder, type SplatInput, type Vec3 } from "../splats/cloud.ts";
 import { gaussian, type Random } from "../splats/random.ts";
 
 /** Soft, faint, large splats scattered around `around`: the glow that makes splats read as light. */
@@ -31,33 +31,6 @@ export function surfaceSigma(area: number, count: number, overlap = 0.62): numbe
   return Math.sqrt(area / Math.max(1, count)) * overlap;
 }
 
-export interface Rect {
-  readonly x0: number;
-  readonly y0: number;
-  readonly x1: number;
-  readonly y1: number;
-  readonly radius?: number;
-  readonly color: Vec3;
-}
-
-/** Whether (x, y) is inside a rounded rectangle. */
-export function inRoundedRect(x: number, y: number, r: Rect): boolean {
-  if (x < r.x0 || x > r.x1 || y < r.y0 || y > r.y1) return false;
-  const rad = r.radius ?? 0;
-  if (rad <= 0) return true;
-  const cx = Math.min(Math.max(x, r.x0 + rad), r.x1 - rad);
-  const cy = Math.min(Math.max(y, r.y0 + rad), r.y1 - rad);
-  return (x - cx) ** 2 + (y - cy) ** 2 <= rad * rad;
-}
-
-/** Colour of the topmost rect under (x, y), or `fallback`. */
-export function paint(x: number, y: number, rects: readonly Rect[], fallback: Vec3): Vec3 {
-  for (let i = rects.length - 1; i >= 0; i--) {
-    if (inRoundedRect(x, y, rects[i]!)) return rects[i]!.color;
-  }
-  return fallback;
-}
-
 /**
  * Point i of the R2 low-discrepancy sequence in the unit square. Surfaces sampled with it
  * cover evenly with no clumps or holes, unlike independent random points.
@@ -71,4 +44,47 @@ const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 /** Point i of n on a Vogel spiral: an even fill of the unit disk. Returns radius and angle. */
 export function vogel(i: number, n: number): [number, number] {
   return [Math.sqrt((i + 0.5) / n), i * GOLDEN_ANGLE];
+}
+
+/** A local coordinate frame: maps an object built around the origin into the scene. */
+export interface Frame {
+  readonly origin: Vec3;
+  readonly x: Vec3;
+  readonly y: Vec3;
+  readonly z: Vec3;
+  readonly scale: number;
+}
+
+export const IDENTITY_FRAME: Frame = { origin: [0, 0, 0], x: [1, 0, 0], y: [0, 1, 0], z: [0, 0, 1], scale: 1 };
+
+/** Frame at `origin` whose local z axis points along `axis`, turned by `roll` around it. */
+export function frameAlong(origin: Vec3, axis: Vec3, scale = 1, roll = 0): Frame {
+  const z = normalize(axis);
+  const helper: Vec3 = Math.abs(z[1]) < 0.95 ? [0, 1, 0] : [1, 0, 0];
+  const x0 = normalize([helper[1] * z[2] - helper[2] * z[1], helper[2] * z[0] - helper[0] * z[2], helper[0] * z[1] - helper[1] * z[0]]);
+  const y0: Vec3 = [z[1] * x0[2] - z[2] * x0[1], z[2] * x0[0] - z[0] * x0[2], z[0] * x0[1] - z[1] * x0[0]];
+  const c = Math.cos(roll), s = Math.sin(roll);
+  const x: Vec3 = [x0[0] * c + y0[0] * s, x0[1] * c + y0[1] * s, x0[2] * c + y0[2] * s];
+  const y: Vec3 = [y0[0] * c - x0[0] * s, y0[1] * c - x0[1] * s, y0[2] * c - x0[2] * s];
+  return { origin, x, y, z, scale };
+}
+
+function apply(f: Frame, v: Vec3): [number, number, number] {
+  return [
+    f.x[0] * v[0] + f.y[0] * v[1] + f.z[0] * v[2],
+    f.x[1] * v[0] + f.y[1] * v[1] + f.z[1] * v[2],
+    f.x[2] * v[0] + f.y[2] * v[1] + f.z[2] * v[2],
+  ];
+}
+
+/** Pushes a splat given in the frame's local coordinates. */
+export function pushIn(builder: SplatBuilder, frame: Frame, splat: SplatInput): void {
+  const p = apply(frame, splat.position);
+  builder.push({
+    ...splat,
+    position: [frame.origin[0] + p[0] * frame.scale, frame.origin[1] + p[1] * frame.scale, frame.origin[2] + p[2] * frame.scale],
+    scale: [splat.scale[0] * frame.scale, splat.scale[1] * frame.scale, splat.scale[2] * frame.scale],
+    normal: apply(frame, splat.normal ?? [0, 0, 1]),
+    tangent: apply(frame, splat.tangent ?? [1, 0, 0]),
+  });
 }

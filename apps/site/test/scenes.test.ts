@@ -1,10 +1,8 @@
 import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { leafAt } from "../src/scenes/coin.ts";
-import { rasterize } from "../src/scenes/font.ts";
 import { SCENE_IDS } from "../src/scenes/ids.ts";
 import { buildScenes, morphOrder } from "../src/scenes/index.ts";
-import { ITEMS, SHARE, TOTAL } from "../src/scenes/receipt.ts";
 
 const COUNT = 6000;
 const scenes = buildScenes(COUNT);
@@ -45,8 +43,8 @@ describe.each(SCENE_IDS.map((id, i) => [id, i] as const))("%s scene", (_id, inde
 
   it("is identical on every build", () => {
     const again = buildScenes(COUNT)[index]!;
-    expect(digest([again.positions, again.scales, again.rotations, again.colors])).toBe(
-      digest([cloud.positions, cloud.scales, cloud.rotations, cloud.colors]),
+    expect(digest([again.positions, again.scales, again.rotations, again.colors, again.normals])).toBe(
+      digest([cloud.positions, cloud.scales, cloud.rotations, cloud.colors, cloud.normals]),
     );
   });
 });
@@ -60,15 +58,17 @@ describe("coin", () => {
   });
 });
 
-describe("receipt", () => {
-  it("adds up: the total is the items, the share is a third", () => {
-    expect(TOTAL).toBeCloseTo(ITEMS.reduce((sum, [, v]) => sum + v, 0));
-    expect(TOTAL.toFixed(2)).toBe("74.40");
-    expect(SHARE.toFixed(2)).toBe("24.80");
-  });
-
-  it("refuses text the font can't print", () => {
-    expect(rasterize("I").length).toBeGreaterThan(0);
-    expect(() => rasterize("a")).toThrow(/No glyph/);
+describe("lighting data", () => {
+  it("gives the coin lit, unit-length normals and leaves the nebula unlit", () => {
+    const coin = scenes[SCENE_IDS.indexOf("coin")]!;
+    let lit = 0;
+    for (let i = 0; i < COUNT; i++) {
+      const n = [0, 1, 2].map((k) => coin.normals[i * 4 + k]! / 127.5 - 1);
+      expect(Math.hypot(...n)).toBeCloseTo(1, 1);
+      if (coin.normals[i * 4 + 3]! > 200) lit++;
+    }
+    expect(lit / COUNT).toBeGreaterThan(0.6);
+    const nebula = scenes[SCENE_IDS.indexOf("nebula")]!;
+    expect(nebula.normals.filter((_, i) => i % 4 === 3).every((s) => s === 0)).toBe(true);
   });
 });

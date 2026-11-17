@@ -1,13 +1,17 @@
-// A copper coin with Penny's leaf (the app icon) embossed on its face.
+// A minted copper coin with Penny's leaf (the app icon) in relief. Splats carry normals, so the
+// renderer lights them: the domed face, the bevel and the reeded rim catch the light as it turns.
 import { SplatBuilder, type SplatCloud, type Vec3 } from "../splats/cloud.ts";
-import { apportion, clamp, createRandom, mixColor, shade } from "../splats/random.ts";
-import { halo, r2, surfaceSigma, vogel } from "./common.ts";
+import { apportion, clamp, createRandom, shade } from "../splats/random.ts";
+import { halo, IDENTITY_FRAME, pushIn, r2, surfaceSigma, vogel, type Frame } from "./common.ts";
 import { palette } from "./palette.ts";
 
 const RADIUS = 1;
-const THICKNESS = 0.14;
+const THICKNESS = 0.13;
+const BEVEL = 0.045;
 const LIP = 0.9;
-const RELIEF = 0.022;
+const RELIEF = 0.02;
+/** How domed the faces are: the slope of the normal at the edge. */
+const DOME = 0.14;
 
 const BASE: Vec3 = [-0.3, -0.29, 0];
 const TIP: Vec3 = [0.5, 0.52, 0];
@@ -35,15 +39,13 @@ export function leafAt(x: number, y: number): LeafPart {
         const veinWidth = 0.024 * Math.sin(Math.PI * vu) ** 0.7;
         if (Math.abs(v - veinCentre) < veinWidth) return "none";
       }
-      return Math.abs(off) > width - 0.012 ? "edge" : "leaf";
+      return Math.abs(off) > width - 0.016 ? "edge" : "leaf";
     }
   }
-  // The stem, curving slightly to the lower left.
   const STEM_END = -0.24;
   const STEM_HALF = 0.028;
   if (u < 0.04 && u > STEM_END - STEM_HALF) {
     const centre = -0.25 * Math.max(u, STEM_END) ** 2;
-    // Straight sides, rounded end.
     if (u >= STEM_END ? Math.abs(v - centre) < STEM_HALF : Math.hypot(u - STEM_END, v - centre) < STEM_HALF) {
       return "leaf";
     }
@@ -51,89 +53,124 @@ export function leafAt(x: number, y: number): LeafPart {
   return "none";
 }
 
-function faceColor(x: number, y: number, back: boolean): [number, number, number] {
-  const r = Math.hypot(x, y);
-  const theta = Math.atan2(y, x);
-  // Baked light from the upper left, lathe rings and a soft anisotropic highlight.
-  const light = 0.8 + 0.2 * (-0.55 * x + 0.75 * y) * (back ? -1 : 1);
-  const rings = 0.04 * Math.sin(r * 260) + 0.025 * Math.sin(r * 71 + 1.3);
-  const sheen = 0.28 * Math.exp(-((Math.cos(theta - 2.3) - 1) ** 2) / 0.02) * r;
-  let k = light + rings + sheen;
-  if (r > LIP) k += 0.12;
-  if (back) {
-    // Concentric grooves on the reverse.
-    for (const groove of [0.32, 0.55, 0.74]) k -= 0.25 * Math.exp(-(((r - groove) / 0.012) ** 2));
+const inLeaf = (x: number, y: number) => (leafAt(x, y) === "none" ? 0 : 1);
+
+export interface CoinOptions {
+  readonly frame?: Frame;
+  readonly color?: Vec3;
+  /** Emboss the leaf on the front face. */
+  readonly leaf?: boolean;
+  readonly seed?: number;
+}
+
+/** Pushes exactly `count` splats forming a coin of radius 1 (times the frame's scale). */
+export function pushCoin(builder: SplatBuilder, count: number, options: CoinOptions = {}): void {
+  const frame = options.frame ?? IDENTITY_FRAME;
+  const metal = options.color ?? palette.copperMetal;
+  const random = createRandom(options.seed ?? 1);
+  const inner = RADIUS - BEVEL;
+  const [front, back, bevel, rim] = apportion(count, [0.42, 0.36, 0.1, 0.12]) as [number, number, number, number];
+
+  const face = (n: number, side: 1 | -1) => {
+    const sigma = surfaceSigma(Math.PI * inner * inner, n, 0.78);
+    for (let i = 0; i < n; i++) {
+      const [unit, angle] = vogel(i, n);
+      const r = inner * unit;
+      const t = angle + (side < 0 ? 0.5 : 0);
+      const x = r * Math.cos(t), y = r * Math.sin(t);
+      let z = THICKNESS / 2;
+      // A gentle dome: the highlight sweeps across the face as the coin turns.
+      let normal: Vec3 = [x * DOME, y * DOME, 1];
+      let color: Vec3 = shade(metal, 0.96 + 0.08 * random());
+      let shading = 1;
+      if (r > LIP) {
+        z += 0.012;
+        if (r < LIP + 0.014) normal = [-x * 2.2, -y * 2.2, 1];
+      }
+      const part = options.leaf && side > 0 ? leafAt(x, y) : "none";
+      if (part !== "none") {
+        z += RELIEF;
+        color = palette.cream;
+        shading = 0.55;
+        if (part === "edge") {
+          // The relief's walls: tilt the normal away from the leaf so its outline glints.
+          const d = 0.01;
+          const gx = inLeaf(x + d, y) - inLeaf(x - d, y);
+          const gy = inLeaf(x, y + d) - inLeaf(x, y - d);
+          const g = Math.hypot(gx, gy) || 1;
+          normal = [(-gx / g) * 0.9, (-gy / g) * 0.9, 1];
+          z -= RELIEF * 0.4;
+        }
+      }
+      pushIn(builder, frame, {
+        position: [x, y, z * side],
+        scale: [sigma, sigma, 0.0012],
+        normal: [normal[0], normal[1], normal[2] * side],
+        tangent: [-Math.sin(t), Math.cos(t), 0],
+        color,
+        opacity: 1,
+        shading,
+      });
+    }
+  };
+  face(front, 1);
+  face(back, -1);
+
+  // The bevel: a quarter round from each face to the rim.
+  const bevelSigma = surfaceSigma(2 * Math.PI * RADIUS * BEVEL * Math.PI, bevel, 0.8);
+  for (let i = 0; i < bevel; i++) {
+    const [a, b] = r2(i);
+    const side = i % 2 ? 1 : -1;
+    const t = a * Math.PI * 2;
+    const phi = b * (Math.PI / 2);
+    const r = inner + BEVEL * Math.sin(phi);
+    const z = (THICKNESS / 2 - BEVEL * (1 - Math.cos(phi))) * side;
+    pushIn(builder, frame, {
+      position: [r * Math.cos(t), r * Math.sin(t), z],
+      scale: [bevelSigma, bevelSigma, 0.0012],
+      normal: [Math.cos(t) * Math.sin(phi), Math.sin(t) * Math.sin(phi), Math.cos(phi) * side],
+      tangent: [-Math.sin(t), Math.cos(t), 0],
+      color: shade(metal, 1.05),
+      opacity: 1,
+      shading: 1,
+    });
   }
-  return shade(palette.copperIcon, k);
+
+  // The rim, reeded: the normals ripple around it, so fine ridges glint as it turns.
+  const height = THICKNESS - 2 * BEVEL + 0.02;
+  const rimSigma = surfaceSigma(2 * Math.PI * RADIUS * height, rim, 0.8);
+  for (let i = 0; i < rim; i++) {
+    const [a, b] = r2(i);
+    const t = a * Math.PI * 2;
+    const ripple = 0.45 * Math.sin(t * 160);
+    pushIn(builder, frame, {
+      position: [RADIUS * Math.cos(t), RADIUS * Math.sin(t), (b - 0.5) * height],
+      scale: [rimSigma * 0.7, rimSigma * 1.3, 0.0012],
+      normal: [Math.cos(t + ripple * 0.5), Math.sin(t + ripple * 0.5), 0],
+      tangent: [-Math.sin(t), Math.cos(t), 0],
+      color: shade(metal, 0.9),
+      opacity: 1,
+      shading: 1,
+    });
+  }
 }
 
 export function coinScene(count: number, seed = 11): SplatCloud {
   const random = createRandom(seed);
   const builder = new SplatBuilder(count);
-  const [frontCount, backCount, rimCount, haloCount] = apportion(count, [0.46, 0.38, 0.13, 0.03]) as [number, number, number, number];
-
-  const face = (n: number, back: boolean) => {
-    const sigma = surfaceSigma(Math.PI * RADIUS * RADIUS, n, 0.75);
-    const sign = back ? -1 : 1;
-    for (let i = 0; i < n; i++) {
-      const [unit, angle] = vogel(i, n);
-      const r = RADIUS * unit;
-      const t = angle + (back ? 0.5 : 0);
-      const x = r * Math.cos(t);
-      const y = r * Math.sin(t);
-      let z = THICKNESS / 2;
-      let color = faceColor(x, y, back);
-      if (r > LIP) z += 0.016;
-      if (!back) {
-        const part = leafAt(x, y);
-        if (part !== "none") {
-          z += RELIEF;
-          const lit = 0.9 + 0.12 * (-0.55 * x + 0.75 * y);
-          color = part === "edge" ? shade(mixColor(palette.cream, palette.copperIcon, 0.35), lit * 0.85) : shade(palette.cream, lit);
-        }
-      }
-      builder.push({
-        position: [x, y, z * sign],
-        // Slightly stretched along the lathe direction for a brushed look.
-        scale: [sigma * 1.25, sigma * 0.85, 0.0015],
-        normal: [0, 0, sign],
-        tangent: [-Math.sin(t), Math.cos(t), 0],
-        color,
-        opacity: 1,
-      });
-    }
-  };
-  face(frontCount, false);
-  face(backCount, true);
-
-  const rimSigma = surfaceSigma(2 * Math.PI * RADIUS * (THICKNESS + 0.032), rimCount);
-  for (let i = 0; i < rimCount; i++) {
-    const [a, b] = r2(i);
-    const t = a * Math.PI * 2;
-    const z = (b - 0.5) * (THICKNESS + 0.032);
-    const reed = 0.82 + 0.22 * Math.sign(Math.sin(t * 140)) * 0.5 + 0.18 * Math.cos(t - 2.3);
-    builder.push({
-      position: [RADIUS * Math.cos(t), RADIUS * Math.sin(t), z],
-      scale: [rimSigma * 0.7, rimSigma * 1.4, 0.0015],
-      normal: [Math.cos(t), Math.sin(t), 0],
-      tangent: [-Math.sin(t), Math.cos(t), 0],
-      color: shade(palette.copperIcon, reed),
-      opacity: 1,
-    });
-  }
-
+  const [coinCount, haloCount] = apportion(count, [0.99, 0.01]) as [number, number];
+  pushCoin(builder, coinCount, { leaf: true, seed });
   halo(
     builder,
     haloCount,
     random,
     () => {
       const t = random() * Math.PI * 2;
-      const r = RADIUS * (0.85 + 0.35 * random());
-      return [r * Math.cos(t), r * Math.sin(t), (random() - 0.5) * 0.3];
+      const r = RADIUS * (1.05 + 0.5 * random());
+      return [r * Math.cos(t), r * Math.sin(t), (random() - 0.5) * 0.4];
     },
-    [palette.glow1, palette.glow2, palette.copperDark, palette.glow3],
-    { spread: 0.06, size: [0.015, 0.05], opacity: [0.015, 0.05] },
+    [palette.glow1, palette.glow2, palette.copperDark],
+    { spread: 0.08, size: [0.004, 0.012], opacity: [0.3, 0.8] },
   );
-
   return builder.build();
 }

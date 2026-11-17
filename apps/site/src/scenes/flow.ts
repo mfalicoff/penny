@@ -37,8 +37,8 @@ export const FLOWS: readonly { from: string; to: string; amount: number }[] = [
 const LEFT = -1.18;
 const RIGHT = 1.18;
 const BAR = 0.045;
-const HEIGHT = 1.9;
-const GAP = 0.07;
+const HEIGHT = 1.55;
+const GAP = 0.11;
 
 interface Slot {
   y0: number;
@@ -112,8 +112,10 @@ export function flowScene(count: number, seed = 23): SplatCloud {
         position: [x, lerp(y0, y1, across), z],
         scale: [sigma * 1.6, sigma * 0.8, sigma * 0.5],
         tangent: [RIGHT - LEFT, slope * 6 * a * (1 - a), 0],
-        color: shade(mixColor(ribbon.from, ribbon.to, smoothstep(0.15, 0.85, a)), 0.85 + 0.3 * edge),
-        opacity: 0.5 + 0.3 * edge,
+        normal: [0, 0, 1],
+        color: shade(mixColor(ribbon.from, ribbon.to, smoothstep(0.15, 0.85, a)), 0.9 + 0.2 * edge),
+        opacity: 0.32 + 0.3 * edge,
+        shading: 0.35,
       });
     }
   });
@@ -132,8 +134,8 @@ export function flowScene(count: number, seed = 23): SplatCloud {
       builder.push({
         position: [node.x + (random() - 0.5) * BAR * 2, y, (random() - 0.5) * 0.16],
         scale: [sigma, sigma, sigma],
-        color: shade(node.color, 0.95 + 0.2 * random()),
-        opacity: 0.92,
+        color: shade(node.color, 1.05),
+        opacity: 0.95,
       });
     }
   });

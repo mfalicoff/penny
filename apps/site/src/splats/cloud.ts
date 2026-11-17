@@ -14,6 +14,11 @@ export interface SplatCloud {
   readonly rotations: Float32Array;
   /** r, g, b, opacity per splat, 0–255. */
   readonly colors: Uint8Array;
+  /**
+   * Surface normal (x, y, z mapped from −1…1 to 0–255) and how much it is lit (0 = emissive
+   * glow, 255 = fully shaded metal) per splat.
+   */
+  readonly normals: Uint8Array;
 }
 
 export interface SplatInput {
@@ -27,6 +32,8 @@ export interface SplatInput {
   /** sRGB 0–1. */
   readonly color: Vec3;
   readonly opacity: number;
+  /** 0 = unlit (glow, dust), 1 = lit like polished metal. Needs a meaningful normal. */
+  readonly shading?: number;
 }
 
 export class SplatBuilder {
@@ -42,6 +49,7 @@ export class SplatBuilder {
       scales: new Float32Array(capacity * 3),
       rotations: new Float32Array(capacity * 4),
       colors: new Uint8Array(capacity * 4),
+      normals: new Uint8Array(capacity * 4),
     };
   }
 
@@ -56,10 +64,15 @@ export class SplatBuilder {
   push(splat: SplatInput): void {
     if (this.length >= this.capacity) throw new Error(`SplatBuilder is full (${this.capacity})`);
     const i = this.length++;
-    const { positions, scales, rotations, colors } = this.cloud;
+    const { positions, scales, rotations, colors, normals } = this.cloud;
     positions.set(splat.position, i * 3);
     scales.set(splat.scale, i * 3);
-    const q = quaternionFromNormal(splat.normal ?? [0, 0, 1], splat.tangent ?? [1, 0, 0]);
+    const normal = normalize(splat.normal ?? [0, 0, 1]);
+    normals[i * 4] = Math.round(normal[0] * 127.5 + 127.5);
+    normals[i * 4 + 1] = Math.round(normal[1] * 127.5 + 127.5);
+    normals[i * 4 + 2] = Math.round(normal[2] * 127.5 + 127.5);
+    normals[i * 4 + 3] = toByte(splat.shading ?? 0);
+    const q = quaternionFromNormal(normal, splat.tangent ?? [1, 0, 0]);
     rotations.set(q, i * 4);
     colors[i * 4] = toByte(splat.color[0]);
     colors[i * 4 + 1] = toByte(splat.color[1]);
@@ -181,19 +194,23 @@ export function sortCloud(cloud: SplatCloud, key: (x: number, y: number, z: numb
   for (let i = 0; i < n; i++) {
     keys[i] = key(cloud.positions[i * 3]!, cloud.positions[i * 3 + 1]!, cloud.positions[i * 3 + 2]!);
   }
-  const order = Array.from({ length: n }, (_, i) => i).sort((a, b) => keys[a]! - keys[b]! || a - b);
+  const order = new Uint32Array(n);
+  for (let i = 0; i < n; i++) order[i] = i;
+  order.sort((a, b) => keys[a]! - keys[b]! || a - b);
   const out: SplatCloud = {
     count: n,
     positions: new Float32Array(n * 3),
     scales: new Float32Array(n * 3),
     rotations: new Float32Array(n * 4),
     colors: new Uint8Array(n * 4),
+    normals: new Uint8Array(n * 4),
   };
   order.forEach((src, dst) => {
     out.positions.set(cloud.positions.subarray(src * 3, src * 3 + 3), dst * 3);
     out.scales.set(cloud.scales.subarray(src * 3, src * 3 + 3), dst * 3);
     out.rotations.set(cloud.rotations.subarray(src * 4, src * 4 + 4), dst * 4);
     out.colors.set(cloud.colors.subarray(src * 4, src * 4 + 4), dst * 4);
+    out.normals.set(cloud.normals.subarray(src * 4, src * 4 + 4), dst * 4);
   });
   return out;
 }

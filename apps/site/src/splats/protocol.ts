@@ -1,10 +1,9 @@
-import type { PackedScenes } from "./pack.ts";
+import type { Layout, PackedScene } from "./pack.ts";
 
 export type WorkerRequest =
   | { type: "init"; count: number }
   | {
       type: "sort";
-      frame: number;
       from: number;
       to: number;
       t: number;
@@ -16,5 +15,6 @@ export type WorkerRequest =
     };
 
 export type WorkerReply =
-  | { type: "scenes"; packed: PackedScenes }
-  | { type: "order"; frame: number; order: Uint32Array };
+  | { type: "layout"; layout: Layout }
+  | { type: "scene"; packed: PackedScene }
+  | { type: "order"; order: Uint32Array };
