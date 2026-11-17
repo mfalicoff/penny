@@ -7,10 +7,12 @@ import SwiftUI
 /// grouped by day with each day's net, the period's totals, kind and category chips, a filters
 /// sheet (month, year or all time, one day, type, category), and the system search field.
 ///
-/// Browsing lists this device's ledger. A query searches the server (MAZ-121: typo and meaning
-/// matches, shared expenses) in date order, with paging; with pending changes, offline or in
-/// the demo it searches this device's data with the shared
-/// normalization and says so. Rows open the entry; swipe for Edit and Delete (confirmed).
+/// Browsing lists this device's ledger with the period's shared expenses (your share, MAZ-185),
+/// which also count in the totals; offline or when they can't load, it says so. A query
+/// searches the server (MAZ-121: typo and meaning matches, shared expenses) in date order, with
+/// paging; with pending changes, offline or in the demo it searches this device's data with the
+/// shared normalization and says so. Rows open the entry, or a shared expense in its household;
+/// swipe a personal entry for Edit and Delete (confirmed).
 struct ActivityView: View {
     @Environment(ShellModel.self) private var shell
     @Environment(\.horizontalSizeClass) private var sizeClass
@@ -79,11 +81,12 @@ private struct ActivitySelectionDetail: View {
     }
 }
 
-/// Local results for the current ledger and filters, recomputed only when either changes.
-/// The search index (normalizing every row) is built only once there is a query.
+/// Local results for the current ledger, shared rows and filters, recomputed only when one
+/// changes. The search index (normalizing every row) is built only once there is a query.
 @MainActor
 final class ActivityLocalCache {
     private var ledger: Ledger?
+    private var shared: [SharedExpenseShare] = []
     private(set) var report = LedgerReport(ledger: Ledger())
     private var index: FoldedSearchIndex?
     private var filters: ActivityFilters?
@@ -91,10 +94,14 @@ final class ActivityLocalCache {
     private var result: ActivityResult?
 
     /// `today` decides which income is expected (MAZ-136), so a new day recomputes the totals.
-    func result(_ ledger: Ledger, _ filters: ActivityFilters, today: CalendarDate? = nil) -> ActivityResult {
-        if ledger != self.ledger {
+    /// `shared` is the period's recorded shares (MAZ-185): listed and counted like entries.
+    func result(
+        _ ledger: Ledger, _ filters: ActivityFilters, today: CalendarDate? = nil, shared: [SharedExpenseShare] = []
+    ) -> ActivityResult {
+        if ledger != self.ledger || shared != self.shared {
             self.ledger = ledger
-            report = LedgerReport(ledger: ledger)
+            self.shared = shared
+            report = LedgerReport(ledger: ledger, shared: shared)
             index = nil
             result = nil
         }
@@ -125,7 +132,8 @@ private struct ActivityList: View {
         @Bindable var shell = shell
         let filters = shell.activityFilters
         let search = shell.activitySearch
-        let local = cache.result(ledger, filters, today: shell.today)
+        let sharedRows = shell.activityShared.shares(for: filters.period, currency: ledger.currency)
+        let local = cache.result(ledger, filters, today: shell.today, shared: sharedRows)
         let server = Self.showsServer(search, filters: filters) ? search.rows(in: ledger) : nil
         let report = server?.report ?? cache.report
         let rows = server?.rows ?? local.entries
@@ -141,6 +149,10 @@ private struct ActivityList: View {
                 ActivityTotals(summary: local.summary, expectedIncome: local.expectedIncome, currency: currency)
                     .listRowInsets(EdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 4))
                     .listRowBackground(Color.clear)
+                if server == nil {
+                    ActivitySharedNote(model: shell.activityShared, period: filters.period)
+                        .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
+                }
                 if filters.hasQuery {
                     ActivitySearchScope(search: search, filters: filters)
                         .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
@@ -163,12 +175,14 @@ private struct ActivityList: View {
         .refreshable {
             await shell.workspace.reload()
             search.retry()
+            await shell.activityShared.refresh(filters.period)
         }
         .onChange(of: filters, initial: true) {
             visibleLimit = Self.pageSize
             search.update(filters)
         }
         .onChange(of: ledger) { search.update(filters) }
+        .task(id: filters.period) { await shell.activityShared.refresh(filters.period) }
         .deleteEntryConfirmation($deleting)
     }
 
@@ -264,6 +278,33 @@ private struct ActivityList: View {
     }
 }
 
+/// Says when the period's shared expenses aren't listed (offline, or the load failed), or may be
+/// out of date (an earlier answer is listed), with Retry. Personal entries list either way.
+private struct ActivitySharedNote: View {
+    let model: ActivitySharedModel
+    let period: ActivityFilters.Period
+
+    var body: some View {
+        if case .failed(let message) = model.status(for: period) {
+            StatusBanner(
+                tone: .info, title: ActivitySharedNoteText.title(hasAnswer: model.hasAnswer(for: period)),
+                message: message
+            ) {
+                InlineActionButton("Retry") { Task { await model.refresh(period) } }
+                    .accessibilityIdentifier("activity.sharedRetry")
+            }
+            .accessibilityIdentifier("activity.sharedNote")
+        }
+    }
+
+}
+
+enum ActivitySharedNoteText {
+    static func title(hasAnswer: Bool) -> String {
+        hasAnswer ? "Shared expenses may be out of date" : "Shared expenses aren't shown"
+    }
+}
+
 /// "No results for “sushi”" (`search-empty` card), with Search all months and Clear filters.
 private struct ActivitySearchEmpty: View {
     @Environment(ShellModel.self) private var shell
@@ -335,7 +376,7 @@ private struct ActivitySearchScope: View {
     }
 
     static func deviceText(_ reason: DeviceSearchReason?) -> String {
-        let words = "Matching words only; similar words, meanings and shared expenses need your server."
+        let words = "Matching words only; similar words and meanings need your server."
         switch reason {
         case .demo?: return "Searching the demo's sample data on this device."
         case .pendingChanges?: return "On this device: your latest changes haven't synced yet. \(words)"

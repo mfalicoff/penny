@@ -297,7 +297,7 @@ extension ActivitySearchModel {
         // another currency or out of range.
         let report = LedgerReport(ledger: ledger, shared: shared)
         let sharedRows = report.recorded.filter { $0.source != .personal }
-        let rows = (personal + sharedRows).filter { filters.categoryId == nil || $0.categoryId == filters.categoryId }
+        let rows = (personal + sharedRows).filter { report.matchesCategory($0, filters.categoryId) }
         return (rows.sorted(by: ReportEntry.chronological), report)
     }
 }
@@ -340,7 +340,7 @@ extension SharedExpenseShare {
             id: wire.id, householdId: wire.householdId, currency: currency, title: wire.title, date: date,
             total: wire.totalCents, share: wire.shareCents,
             category: Category(name: wire.category.name, icon: wire.category.icon, color: wire.category.color),
-            note: wire.note, accountId: wire.accountId, recurringId: wire.recurringId,
-            scheduled: wire.scheduled ?? false)
+            note: wire.note, householdName: wire.householdName ?? "", accountId: wire.accountId,
+            recurringId: wire.recurringId, scheduled: wire.scheduled ?? false)
     }
 }

@@ -25,7 +25,7 @@ The app talks to the endpoints MAZ-56–59 already serve (`contracts/openapi.jso
 
 ## Shared versus personal
 
-- **Personal entries** live in the offline ledger on the device and sync (MAZ-71). **Shared expenses** live only on the server: the app reads and writes them online and never copies them into the personal ledger. A shared expense counts in your spending at **your share**, through the household projection Home already reads ([native overview](overview.md#shared-and-private-money)); the rest belongs to the others.
+- **Personal entries** live in the offline ledger on the device and sync (MAZ-71). **Shared expenses** live only on the server: the app reads and writes them online and never copies them into the personal ledger. A shared expense counts in your spending at **your share**, through the household projection Home and Activity read ([native overview](overview.md#shared-and-private-money), [Activity](entries.md#activity)); the rest belongs to the others.
 - Each shared write goes to the server at once and then the page reads again, because balances, suggestions, eligibility and restrictions are the server's. Nothing shared is stored on disk; the Shared tab keeps the last answer in memory and says when it couldn't refresh.
 - **Online requirement.** Offline, the Shared tab and household pages keep what they last showed and name the problem ("You're offline. Shared households need a connection, so nothing was sent."). Forms keep everything typed; Try again is offered when it can help.
 
@@ -140,5 +140,4 @@ Run on clean iPhone and iPad simulators against the [full-stack environment](../
 - Receipts on shared expenses: an existing receipt stays linked and shows on the detail; picking one is MAZ-78.
 - Kept shared drafts last for the session only (shared data is online-only and isn't stored on the device).
 - The iPad sidebar doesn't list households directly yet (Shared opens the list); the `ipad-shared` card's balances column is the Balances section.
-- Activity still lists personal entries only; shared expenses show in Home (projection) and on the household pages.
 - Not verified on a physical device: scanning with the real camera and with the iOS Camera app, and the share sheet's targets; the simulator has no camera, so the scanner tests cover the denied and no-camera paths and the decoder is tested on the generated image.
