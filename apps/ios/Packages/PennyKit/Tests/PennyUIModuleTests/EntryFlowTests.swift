@@ -137,6 +137,34 @@ struct EntryFlowTests {
         #expect(cache.result(ledger, ActivityFilters(period: .month(month), kind: .income)).entries.isEmpty)
     }
 
+    @Test("whenSharedRowsArrive_ActivityLocalCache_ShouldListThemAndCountYourShare")
+    @MainActor
+    func localCacheShared() {
+        let cache = ActivityLocalCache()
+        let filters = ActivityFilters(period: .month(MonthKey(today)))
+        let ledger = Ledger(transactions: [entry("a")])
+        #expect(cache.result(ledger, filters).summary.expense == 640)
+        let share = SharedExpenseShare(
+            id: "e1", householdId: "maison", currency: ledger.currency, title: "Groceries",
+            date: CalendarDate(year: 2026, month: 11, day: 3) ?? .earliest, total: 9000, share: 3000,
+            category: .init(name: "Groceries", icon: "basket-outline", color: "#0FA3A3"), householdName: "Maison")
+        let result = cache.result(ledger, filters, shared: [share])
+        #expect(result.entries.map(\.id) == ["household:maison:e1", "a"])
+        #expect(result.summary.expense == 3640, "your share counts, as on Home")
+        #expect(cache.report.categories.contains { $0.id == result.entries[0].categoryId }, "the row's icon is known")
+        let shared = result.entries[0]
+        #expect(ActivityRoute.destination(shared) == .householdExpense(householdID: "maison", expenseID: "e1"))
+        let meta = EntryRow.meta(shared, category: nil, report: cache.report, today: today)
+        #expect(meta.components(separatedBy: " · ").dropFirst() == ["Shared", "Maison", "your share"])
+        #expect(cache.result(ledger, filters).entries.map(\.id) == ["a"], "rows gone from the answer go")
+    }
+
+    @Test("whenSharedRowsCantLoad_ActivitySharedNote_ShouldSayWhetherTheyAreMissingOrOld")
+    func sharedNoteTitle() {
+        #expect(ActivitySharedNoteText.title(hasAnswer: false) == "Shared expenses aren't shown")
+        #expect(ActivitySharedNoteText.title(hasAnswer: true) == "Shared expenses may be out of date")
+    }
+
     @Test("whenTheSelectedCategoryIsNotFrequent_EntryCategoryChips_ShouldStillShowIt")
     func chips() {
         let ledger = Ledger(transactions: [entry("a", category: "transport"), entry("b", category: "health")])

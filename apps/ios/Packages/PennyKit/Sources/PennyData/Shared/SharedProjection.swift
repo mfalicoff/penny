@@ -2,10 +2,17 @@ import Foundation
 public import Observation
 public import PennyDomain
 
-/// Where Home's reports get the caller's household shares: the server's personal projection.
-/// A protocol so tests and the demo can stand in for the API.
+/// Where Home's reports and Activity get the caller's household shares: the server's personal
+/// projection. A protocol so tests and the demo can stand in for the API.
 public protocol SharedProjectionService: Sendable {
-    func projection(month: MonthKey) async throws -> WireHouseholdProjection
+    /// The shares for a month, a year or all time (Activity's periods, MAZ-185).
+    func projection(period: ActivityFilters.Period) async throws -> WireHouseholdProjection
+}
+
+extension SharedProjectionService {
+    public func projection(month: MonthKey) async throws -> WireHouseholdProjection {
+        try await projection(period: .month(month))
+    }
 }
 
 /// The signed-in account's projection, straight from the API. A 401 ends the session it was
@@ -19,8 +26,8 @@ public struct APISharedProjection: SharedProjectionService {
         self.sessionExpired = sessionExpired
     }
 
-    public func projection(month: MonthKey) async throws -> WireHouseholdProjection {
-        try await SessionExpiry.run(sessionExpired) { try await client.householdProjection(month: month) }
+    public func projection(period: ActivityFilters.Period) async throws -> WireHouseholdProjection {
+        try await SessionExpiry.run(sessionExpired) { try await client.householdProjection(period: period) }
     }
 }
 

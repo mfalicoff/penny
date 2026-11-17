@@ -10,6 +10,9 @@ extension AccessibilityID {
         public static let searchError = "activity.searchError"
         public static let searchRetry = "activity.searchRetry"
         public static let searchAllMonths = "activity.searchAllMonths"
+        // Activity's shared rows (MAZ-185): the note when they can't load, and its Retry.
+        public static let sharedNote = "activity.sharedNote"
+        public static let sharedRetry = "activity.sharedRetry"
         public static let rowEdit = "activity.edit"
         public static let rowDelete = "activity.delete"
         public static let deleteCancel = "deleteEntry.cancel"
@@ -32,7 +35,8 @@ extension AccessibilityID {
         public static let scheduleCancel = "scheduleForm.cancel"
 
         static let all = [
-            searchScopeServer, searchScopeDevice, searchError, searchRetry, searchAllMonths, rowEdit, rowDelete,
+            searchScopeServer, searchScopeDevice, searchError, searchRetry, searchAllMonths, sharedNote, sharedRetry,
+            rowEdit, rowDelete,
             deleteCancel, detailEdit, detailDelete, conflict, reviewLatest, categoriesKind, categoryCancel,
             accountCancel, scheduleTitle, scheduleAmount, scheduleFrequency, scheduleCancel,
         ]
