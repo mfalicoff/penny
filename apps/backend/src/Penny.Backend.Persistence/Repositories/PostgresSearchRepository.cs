@@ -133,10 +133,8 @@ public sealed class PostgresSearchRepository(NpgsqlDataSource source, ReceiptFil
             var anyText = Predicates.Or(text, receiptText);
             var anySimilar = Predicates.Or(similar, receiptSimilar);
             branches.Add(
-                PersonalRows(
-                    personal.Where(text),
-                    1,
-                    document => EF.Functions.Like(document.TitleText, pattern, "\\") ? 1 : 2
+                PersonalRows(personal.Where(text), 1, document =>
+                    EF.Functions.Like(document.TitleText, pattern, "\\") ? 1 : 2
                 )
             );
             branches.Add(
@@ -197,12 +195,8 @@ public sealed class PostgresSearchRepository(NpgsqlDataSource source, ReceiptFil
             var anyText = Predicates.Or(text, receiptText);
             var anySimilar = Predicates.Or(similar, receiptSimilar);
             branches.Add(
-                SharedRows(
-                    context,
-                    shared.Where(text),
-                    viewer,
-                    1,
-                    document => EF.Functions.Like(document.TitleText, pattern, "\\") ? 1 : 2
+                SharedRows(context, shared.Where(text), viewer, 1, document =>
+                    EF.Functions.Like(document.TitleText, pattern, "\\") ? 1 : 2
                 )
             );
             branches.Add(

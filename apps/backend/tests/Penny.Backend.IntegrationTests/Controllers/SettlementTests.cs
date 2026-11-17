@@ -177,9 +177,7 @@ public sealed class SettlementTests(ApiFixture fixture) : SettlementTestBase(fix
         );
 
         // Reimbursements are never spending: projections and search are unchanged.
-        (await ProjectionAsync(bea, "?month=2026-09"))
-            .GetRawText()
-            .ShouldBe(projection);
+        (await ProjectionAsync(bea, "?month=2026-09")).GetRawText().ShouldBe(projection);
         (await CountAsync("SELECT count(*) FROM penny.search_documents")).ShouldBe(searchDocuments);
         // One audit row per transfer, without an expense, and push rows for the other
         // current members keyed by the event (payload without `expenseId`).

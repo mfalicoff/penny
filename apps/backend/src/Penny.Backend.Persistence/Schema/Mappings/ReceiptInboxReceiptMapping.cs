@@ -8,17 +8,14 @@ internal sealed class ReceiptInboxReceiptMapping : IEntityTypeConfiguration<Rece
 {
     public void Configure(EntityTypeBuilder<ReceiptInboxReceipt> builder)
     {
-        builder.ToTable(
-            "receipt_inbox_receipts",
-            table =>
-            {
-                table.HasCheckConstraint(
-                    "ck_receipt_inbox_receipts_kind",
-                    Checks.In("kind", "('email','attachment')")
-                );
-                table.HasCheckConstraint("ck_receipt_inbox_receipts_position", "position >= 0");
-            }
-        );
+        builder.ToTable("receipt_inbox_receipts", table =>
+        {
+            table.HasCheckConstraint(
+                "ck_receipt_inbox_receipts_kind",
+                Checks.In("kind", "('email','attachment')")
+            );
+            table.HasCheckConstraint("ck_receipt_inbox_receipts_position", "position >= 0");
+        });
         builder.HasKey(link => new { link.InboxItemId, link.ReceiptId });
         // A receipt belongs to at most one inbox item, and both belong to the same owner.
         builder.HasIndex(link => link.ReceiptId).IsUnique();

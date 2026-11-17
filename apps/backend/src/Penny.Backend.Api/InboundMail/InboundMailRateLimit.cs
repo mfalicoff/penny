@@ -14,17 +14,15 @@ public static class InboundMailRateLimit
     public static readonly TimeSpan Window = TimeSpan.FromMinutes(1);
 
     public static void Configure(RateLimiterOptions options, int permits) =>
-        options.AddPolicy(
-            Policy,
-            context =>
-                RateLimitPartition.GetFixedWindowLimiter(
-                    AuthRateLimit.ClientKey(context.Connection.RemoteIpAddress),
-                    _ => new FixedWindowRateLimiterOptions
-                    {
-                        PermitLimit = permits,
-                        Window = Window,
-                        QueueLimit = 0,
-                    }
-                )
+        options.AddPolicy(Policy, context =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                AuthRateLimit.ClientKey(context.Connection.RemoteIpAddress),
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = permits,
+                    Window = Window,
+                    QueueLimit = 0,
+                }
+            )
         );
 }

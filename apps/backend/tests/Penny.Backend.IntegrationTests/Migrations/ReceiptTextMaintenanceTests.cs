@@ -119,10 +119,7 @@ public sealed class ReceiptTextMaintenanceTests(ApiFixture fixture) : ReceiptTex
         await CatchUpAsync();
 
         // Nothing to do until the engine or its languages change.
-        (await RunAsync("receipts-ocr"))
-            .Report.GetProperty("Requeued")
-            .GetInt64()
-            .ShouldBe(0);
+        (await RunAsync("receipts-ocr")).Report.GetProperty("Requeued").GetInt64().ShouldBe(0);
         await Fixture.SqlAsync(
             $"UPDATE penny.receipt_texts SET engine = 'tesseract 4.1.1 (eng); poppler 22.02.0' WHERE receipt_id = '{linked}'",
             Ct

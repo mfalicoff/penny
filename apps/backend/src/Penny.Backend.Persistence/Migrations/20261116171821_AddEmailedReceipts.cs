@@ -243,10 +243,11 @@ namespace Penny.Backend.Persistence.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_receipt_inbox_items", x => x.id);
-                    table.UniqueConstraint(
-                        "AK_receipt_inbox_items_user_id_id",
-                        x => new { x.user_id, x.id }
-                    );
+                    table.UniqueConstraint("AK_receipt_inbox_items_user_id_id", x => new
+                    {
+                        x.user_id,
+                        x.id,
+                    });
                     table.CheckConstraint(
                         "ck_receipt_inbox_items_attached",
                         "(status = 'attached') = (attached_at IS NOT NULL)"
@@ -305,10 +306,11 @@ namespace Penny.Backend.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey(
-                        "PK_receipt_inbox_receipts",
-                        x => new { x.inbox_item_id, x.receipt_id }
-                    );
+                    table.PrimaryKey("PK_receipt_inbox_receipts", x => new
+                    {
+                        x.inbox_item_id,
+                        x.receipt_id,
+                    });
                     table.CheckConstraint(
                         "ck_receipt_inbox_receipts_kind",
                         "kind IN ('email','attachment')"

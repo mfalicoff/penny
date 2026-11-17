@@ -37,8 +37,7 @@ public sealed class AuthService(
     {
         if (!policy.AllowRegistration)
             throw new BackendFailure(FailureKind.Forbidden, RegistrationDisabled);
-        var credentials =
-            Credentials.Normalize(email, password)
+        var credentials = Credentials.Normalize(email, password)
             ?? throw new BackendFailure(FailureKind.Invalid, InvalidRegistration);
         if (await accounts.FindByEmailAsync(credentials.Email, cancellationToken) is not null)
             throw new BackendFailure(FailureKind.Conflict, DuplicateEmail);
@@ -62,8 +61,7 @@ public sealed class AuthService(
         CancellationToken cancellationToken
     )
     {
-        var credentials =
-            Credentials.Normalize(email, password)
+        var credentials = Credentials.Normalize(email, password)
             ?? throw new BackendFailure(FailureKind.Unauthorized, InvalidCredentials);
         var user = await accounts.FindByEmailAsync(credentials.Email, cancellationToken);
         // Always verify, so unknown emails cost the same as wrong passwords.

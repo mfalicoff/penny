@@ -52,14 +52,11 @@ public sealed class SearchIndexingTests(ApiFixture fixture) : SearchTestBase(fix
         var (token, _) = await AccountAsync("renamer@example.test");
         await SeedLedgerAsync(token);
         await CatchUpAsync();
-        await SaveLedgerAsync(
-            token,
-            ledger =>
-            {
-                ledger["categories"]![0]!["name"] = "Nourriture";
-                ledger["accounts"]![0]!["name"] = "Visa Voyage";
-            }
-        );
+        await SaveLedgerAsync(token, ledger =>
+        {
+            ledger["categories"]![0]!["name"] = "Nourriture";
+            ledger["accounts"]![0]!["name"] = "Visa Voyage";
+        });
         var renamed = await SearchAsync(token, new { query = "nourriture" });
         Keys(renamed)
             .Take(5)
@@ -90,9 +87,8 @@ public sealed class SearchIndexingTests(ApiFixture fixture) : SearchTestBase(fix
         var (token, _) = await AccountAsync("fresh@example.test");
         await SeedLedgerAsync(token);
         await CatchUpAsync();
-        await SaveLedgerAsync(
-            token,
-            ledger => ledger["transactions"]!.AsArray().Add(Entry("n1", "Espresso", "Double shot"))
+        await SaveLedgerAsync(token, ledger =>
+            ledger["transactions"]!.AsArray().Add(Entry("n1", "Espresso", "Double shot"))
         );
         var found = await SearchAsync(token, new { query = "espresso" });
         Keys(found)[0].ShouldBe("personal:n1");
@@ -108,24 +104,19 @@ public sealed class SearchIndexingTests(ApiFixture fixture) : SearchTestBase(fix
             .ShouldBe("meaning");
 
         // An edit clears the stale vector until the worker re-embeds it.
-        await SaveLedgerAsync(
-            token,
-            ledger =>
-                ledger["transactions"]!
-                    .AsArray()
-                    .Single(entry => entry!["id"]!.GetValue<string>() == "n1")!["title"] =
-                    "Bike tire"
+        await SaveLedgerAsync(token, ledger =>
+            ledger["transactions"]!
+                .AsArray()
+                .Single(entry => entry!["id"]!.GetValue<string>() == "n1")!["title"] = "Bike tire"
         );
         Keys(await SearchAsync(token, new { query = "beverage" })).ShouldNotContain("personal:n1");
         Keys(await SearchAsync(token, new { query = "espresso" })).ShouldNotContain("personal:n1");
         // A change that does not touch the embedded text keeps the vector.
         await CatchUpAsync();
-        await SaveLedgerAsync(
-            token,
-            ledger =>
-                ledger["transactions"]!
-                    .AsArray()
-                    .Single(entry => entry!["id"]!.GetValue<string>() == "n1")!["total"] = 900
+        await SaveLedgerAsync(token, ledger =>
+            ledger["transactions"]!
+                .AsArray()
+                .Single(entry => entry!["id"]!.GetValue<string>() == "n1")!["total"] = 900
         );
         (
             await CountAsync(
@@ -147,55 +138,52 @@ public sealed class SearchIndexingTests(ApiFixture fixture) : SearchTestBase(fix
         var (token, _) = await AccountAsync("mixed@example.test");
         await SeedLedgerAsync(token);
         await CatchUpAsync();
-        await SaveLedgerAsync(
-            token,
-            ledger =>
-            {
-                ledger["categories"]!
-                    .AsArray()
-                    .Add(
-                        new JsonObject
-                        {
-                            ["id"] = "pets",
-                            ["name"] = "Quokkas",
-                            ["icon"] = "paw-outline",
-                            ["color"] = "#7D5BB1",
-                            ["kind"] = "expense",
-                        }
-                    );
-                ledger["accounts"]!
-                    .AsArray()
-                    .Add(
-                        new JsonObject
-                        {
-                            ["id"] = "wallet",
-                            ["name"] = "Zeppelin purse",
-                            ["type"] = "cash",
-                        }
-                    );
-                ledger["trips"]!
-                    .AsArray()
-                    .Add(
-                        new JsonObject
-                        {
-                            ["id"] = "rome",
-                            ["name"] = "Rome",
-                            ["startDate"] = "2026-11-01",
-                            ["endDate"] = "2026-11-08",
-                        }
-                    );
-                var entries = ledger["transactions"]!.AsArray();
-                entries.Remove(entries.Single(entry => entry!["id"]!.GetValue<string>() == "s02"));
-                entries.Single(entry => entry!["id"]!.GetValue<string>() == "s01")!["title"] =
-                    "Ground coffee";
-                var kibble = Entry("n1", "Kibble sack");
-                kibble["categoryId"] = "pets";
-                kibble["accountId"] = "wallet";
-                kibble["tripId"] = "rome";
-                entries.Add(kibble);
-                entries.Add(Entry("n2", "Zebra crossing"));
-            }
-        );
+        await SaveLedgerAsync(token, ledger =>
+        {
+            ledger["categories"]!
+                .AsArray()
+                .Add(
+                    new JsonObject
+                    {
+                        ["id"] = "pets",
+                        ["name"] = "Quokkas",
+                        ["icon"] = "paw-outline",
+                        ["color"] = "#7D5BB1",
+                        ["kind"] = "expense",
+                    }
+                );
+            ledger["accounts"]!
+                .AsArray()
+                .Add(
+                    new JsonObject
+                    {
+                        ["id"] = "wallet",
+                        ["name"] = "Zeppelin purse",
+                        ["type"] = "cash",
+                    }
+                );
+            ledger["trips"]!
+                .AsArray()
+                .Add(
+                    new JsonObject
+                    {
+                        ["id"] = "rome",
+                        ["name"] = "Rome",
+                        ["startDate"] = "2026-11-01",
+                        ["endDate"] = "2026-11-08",
+                    }
+                );
+            var entries = ledger["transactions"]!.AsArray();
+            entries.Remove(entries.Single(entry => entry!["id"]!.GetValue<string>() == "s02"));
+            entries.Single(entry => entry!["id"]!.GetValue<string>() == "s01")!["title"] =
+                "Ground coffee";
+            var kibble = Entry("n1", "Kibble sack");
+            kibble["categoryId"] = "pets";
+            kibble["accountId"] = "wallet";
+            kibble["tripId"] = "rome";
+            entries.Add(kibble);
+            entries.Add(Entry("n2", "Zebra crossing"));
+        });
 
         // One document per entry: 11 seeded, one deleted, two added.
         (await CountAsync("SELECT count(*) FROM penny.search_documents")).ShouldBe(12);
