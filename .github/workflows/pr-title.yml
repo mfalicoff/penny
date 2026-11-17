@@ -23,7 +23,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: '24'
+          node-version: '26'
 
       # Node built-ins only: no install. The title goes through the environment so it is
       # never interpolated into the shell.

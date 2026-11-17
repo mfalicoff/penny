@@ -121,7 +121,7 @@ services:
   # Flags are pinned by apps/backend/tests/.../RendererIsolationTests.
   penny-render:
     profiles: [email-receipts]
-    image: docker.io/gotenberg/gotenberg:8.39.0@sha256:13672f317b443c793e972b1bd2155ec62a3e7b6891b411e8196442cc053ee5f5
+    image: docker.io/gotenberg/gotenberg:9.7.0@sha256:3f00eba12da1d3fc1795be0d3ba66e2e97b31087c92ae238ed23937441c7a941
     command:
       - gotenberg
       - --api-timeout=30s
