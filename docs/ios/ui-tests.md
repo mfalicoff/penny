@@ -125,7 +125,7 @@ Large text uses the system launch argument `-UIPreferredContentSizeCategoryName`
 | `OrganizeJourneyTests` | Create an account; create, use and rename a category; a monthly schedule records its first date and, relaunched a month later, the next one (MAZ-82) | Full |
 | `SyncConflictTests` | Two devices edit one entry while this one is offline: both fields survive, plus the other device's new entry; delete here versus edit there keeps the delete (MAZ-82) | Full |
 | `SettingsJourneyTests` | Light, Dark and System kept across relaunch; the app lock explains and stays off without Face ID or a passcode (MAZ-82) | Full |
-| `AppLockDelayTests` | Lock after: Immediately locks on return and keeps the Add entry draft; After 1 minute stays open on a quick return and locks after the (shortened) minute; After 5 minutes stays open past one minute; a cold launch always locks and keeps the choice (MAZ-133). Uses the Face ID stand-in and an 8-second minute | Full |
+| `AppLockDelayTests` | Lock after: Immediately locks on return and keeps the Add entry draft; After 1 minute stays open on a quick return and locks after the (shortened) minute; After 5 minutes stays open past one minute; a cold launch always locks and keeps the choice (MAZ-133). Uses the Face ID stand-in and a 15-second minute; a quick trip that takes longer than the minute fails as a slow runner, not as a lock bug | Full |
 | `AccessibilityAuditTests` | Accessibility audits of the main screens in five variants and of sign-in; VoiceOver labels; keyboard-safe Add entry at AX-XXXL (MAZ-82) | Screenshots |
 | `PerformanceTests` | Launch, first sync, Activity, scroll and search baselines (MAZ-82) | Performance |
 

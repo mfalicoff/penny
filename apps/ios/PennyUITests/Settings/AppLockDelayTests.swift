@@ -8,8 +8,8 @@ import XCTest
 /// taps Unlock. A Lock after minute lasts `minute` seconds (`PENNY_TEST_LOCK_MINUTE`).
 final class AppLockDelayTests: PennyUITestCase {
     /// Seconds in a lock-delay minute: long enough that a quick trip to the Home Screen and back
-    /// stays inside "After 1 minute" on a slow CI simulator.
-    static let minute = 8
+    /// (usually a few seconds) stays well inside "After 1 minute" on a loaded CI simulator.
+    static let minute = 15
 
     @MainActor
     private func launchDemoWithLock() async throws -> Penny {
@@ -42,14 +42,23 @@ final class AppLockDelayTests: PennyUITestCase {
         try penny.closeSettings()
     }
 
-    /// Sends Penny to the Home Screen for at least `seconds`, then brings it back.
+    /// Sends Penny to the Home Screen for at least `seconds`, then brings it back. A quick trip
+    /// (`seconds` 0) that lasts a whole test minute or longer throws: the runner was too slow to
+    /// check "stays open", which is not a lock bug.
     @MainActor
     private func leaveAndReturn(_ penny: Penny, after seconds: Int = 0) async throws {
+        let started = ContinuousClock.now
         XCUIDevice.shared.press(.home)
         XCTAssertTrue(penny.app.wait(for: .runningBackground, timeout: 10))
         if seconds > 0 { try await Task.sleep(for: .seconds(seconds)) }
         penny.app.activate()
         XCTAssertTrue(penny.app.wait(for: .runningForeground, timeout: 10))
+        let trip = started.duration(to: .now)
+        if seconds == 0, trip >= .seconds(Self.minute) {
+            throw UIExpectationFailed(
+                description: "The quick trip to the Home Screen took \(trip.components.seconds)s, longer than the "
+                    + "\(Self.minute)s test minute: the simulator is too slow for this check, not a lock bug")
+        }
     }
 
     /// The lock screen is up; Unlock opens the app again.

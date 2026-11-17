@@ -93,8 +93,8 @@ struct AppLockDelayTests {
         #expect(auth.prompts == [.unlock])
     }
 
-    @Test("whenAPromptFromBeforeBackgroundingSucceedsLate_AppLock_ShouldNotUnlockWithinTheDelay")
-    func staleSuccessWithADelay() async {
+    @Test("whenTheLaunchPromptSucceedsAfterBackgrounding_AppLock_ShouldStayLockedAndPromptOnReturn")
+    func staleLaunchSuccess() async {
         let auth = FakeDeviceAuthenticator([.success, .cancelled])
         auth.holdPrompts = true
         let lock = makeLock(.fiveMinutes, auth: auth)
@@ -111,6 +111,38 @@ struct AppLockDelayTests {
         auth.finish(.cancelled)
         await back.value
         #expect(lock.status == .locked, "a return within the delay does not reopen a locked app")
+    }
+
+    @Test("whenBackgroundedWhileTurningOnWithADelay_AppLock_ShouldComeBackLocked")
+    func backgroundWhileEnablingWithADelay() async {
+        let clock = clock
+        let store = EphemeralAppLockSettingStore()
+        let auth = FakeDeviceAuthenticator([.success, .cancelled])
+        auth.holdPrompts = true
+        let lock = AppLockController(
+            store: store, authenticator: auth, preferences: EphemeralDevicePreferences(lockDelay: .fiveMinutes),
+            now: { clock.now })
+        await lock.start()
+        #expect(lock.status == .unlocked)
+        let change = Task { await lock.setEnabled(true) }
+        await eventually("the enable prompt is open") { auth.isHolding }
+        // The lock was off when the app left, so no delay started: it must not open by itself.
+        lock.setActivity(.background)
+        auth.finish(.success)
+        await change.value
+        #expect(store.stored)
+        #expect(lock.isEnabled)
+        #expect(lock.status == .locked)
+        #expect(lock.conceals)
+        clock.advance(.seconds(5))
+        lock.setActivity(.inactive)
+        #expect(lock.status == .locked, "a return within the delay does not open a lock turned on mid-trip")
+        let back = Task { await lock.activityChanged(.active) }
+        await eventually("the return prompts to unlock") { auth.heldCount == 1 && auth.prompts == [.enable, .unlock] }
+        auth.finish(.cancelled)
+        await back.value
+        #expect(lock.status == .locked)
+        #expect(lock.conceals)
     }
 
     @Test("whenTimeIsSpentInactiveAfterReturning_AppLock_ShouldCountOnlyTheBackground")
