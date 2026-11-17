@@ -22,7 +22,7 @@ You own the issue until its pull request is merged or you hand it to a human. No
 
 ## 3. Implement
 
-- Keep to the issue's scope. Note follow-ups as comments on the Linear issue. Don't do them in this pull request.
+- Keep to the issue's scope. Record anything you leave out as a follow-up (see [Follow-ups](#follow-ups)), and don't do it in this pull request.
 - Run the checks of every app you changed, as listed in that app's guide (for example `npm run check` in `apps/web`, the .NET tests, `apps/ios/scripts/ios.sh` for the iOS tests). Everything has to pass locally before you push.
 - If this machine can't run a check (for example no Docker on the Mac for the full-stack tests), say so in the pull request body. CI runs it instead.
 
@@ -37,12 +37,29 @@ Hand the issue over instead of changing any of these:
 - repository secrets, settings or branch protection;
 - secrets or real personal financial data in any file.
 
+### Follow-ups
+
+Sometimes you leave something out: part of the issue that turned out bigger than expected, a bug you found next to your change, missing tests, a reviewer's optional suggestion you didn't take, or a needed change on another platform. Report each one to the orchestrator as a follow-up. The orchestrator turns follow-ups into new Linear issues.
+
+Post one Linear comment on your issue for each follow-up, as soon as you decide to leave it out (not at the end, so it survives if the session stops). Use exactly this format:
+
+```text
+Follow-up: <one-line title, written like an issue title>
+Why: <what was left out, and why it matters to someone using Penny or working on it>
+Platform: <ios, web, backend or infra; comma-separated if several>
+Context: <files, functions, the pull request link, how you found it>
+```
+
+Only record something a person would want tracked. Skip style nits and anything you fixed in this pull request. Also list the follow-ups under **Follow-ups** in the pull request body.
+
+If something you left out means the issue isn't actually done (the pull request would ship a half-finished feature), don't merge. Hand the issue over instead.
+
 ## 4. Open the pull request
 
 1. Commit with a Conventional Commit message and push the branch.
 2. Open the pull request with `gh pr create`:
    - **Title:** a Conventional Commit, `type(scope): summary`. The type is one of `feat`, `fix`, `perf`, `refactor`, `docs`, `test`, `build`, `ci` or `chore`. The `PR title` check enforces this, and Release Please reads it after the squash merge.
-   - **Body:** what changed and why, how you tested it, and anything you couldn't run. End with `Fixes MAZ-123` on its own line.
+   - **Body:** what changed and why, how you tested it, anything you couldn't run, and any **Follow-ups**. End with `Fixes MAZ-123` on its own line.
    - **Label:** `agent`. Only pull requests with this label are reviewed.
    - **Not a draft.**
 3. Subscribe this session to the pull request's activity, so review comments and CI results come back to you.
@@ -53,7 +70,7 @@ Hand the issue over instead of changing any of these:
 The Claude review workflow posts comments and sets the **`claude-review`** commit status on every push:
 
 - **`claude-review` success:** the review passed.
-- **`claude-review` failure:** changes were requested. Read the review and its inline comments, fix every point, run the checks again, then push one commit for the round. If you disagree with a point, explain why in a reply instead of changing the code.
+- **`claude-review` failure:** changes were requested. Read the review and its inline comments, fix every point, run the checks again, then push one commit for the round. If you disagree with a point, explain why in a reply instead of changing the code. If the reviewer asks for something outside the issue's scope, reply saying so and record it as a follow-up.
 - **`claude-review` error:** the review didn't finish. Re-run it once with `gh run rerun <run id> --failed`. If it errors again, hand the issue over.
 - **A CI check fails:** read the log (`gh run view --log-failed`), fix it, run it locally if this machine can, and push.
 

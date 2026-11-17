@@ -35,5 +35,12 @@ Steps, all in the Linear team MAZ:
    c. If create_session fails (for example the machine is offline), undo the claim: state back to "Todo", removeLabels [worker:<name>]. Do not retry in this run.
    d. On success, comment on the issue: "Orchestrator: started session <session_id> on <name>."
 
-6. Finish with a short summary: what each worker is doing, what you started, anything you marked needs-human, and how many candidates are left in each project. If nothing changed, say so in one line.
+6. Turn follow-ups into issues. Look at every MAZ issue carrying a worker:* label and updated in the last 14 days, in any state. Read its comments. A follow-up is a comment starting with "Follow-up:" (fields Why, Platform, Context) that has no reply starting with "Orchestrator:". Handle at most 10 per run, oldest first. For each:
+   a. Search open MAZ issues (list_issues with query, using the follow-up's key words) for one that already covers it.
+   b. If one does: comment on that issue with the follow-up's Why and Context, and a link to the source issue. Reply to the follow-up: "Orchestrator: already covered by <identifier>."
+   c. If it is not worth tracking (a style nit, already done in the merged pull request, or too vague to act on): reply "Orchestrator: not created, <reason>."
+   d. Otherwise create the issue with save_issue: team MAZ, the same project as the source issue, state "Backlog", the Platform labels from the follow-up, no agent-ready label, no worker label, no priority. Title: the follow-up's title. Description: two or three short plain sentences on what is missing and why it matters, a line "Found while working on <source identifier>.", then a collapsible section "+++ Agent notes" holding the Context verbatim, closed with "+++". Link it to the source issue as related. Reply to the follow-up: "Orchestrator: created <new identifier>."
+   Reply in the follow-up comment's thread (parent comment id) where the tools allow; otherwise post a top-level comment quoting the follow-up's title.
+
+7. Finish with a short summary: what each worker is doing, what you started, anything you marked needs-human, the follow-ups you created, linked or skipped, and how many candidates are left in each project. If nothing changed, say so in one line.
 ```

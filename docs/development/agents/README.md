@@ -36,6 +36,16 @@ The orchestrator only picks up Todo issues labelled `agent-ready`. It skips issu
 
 Each machine runs one issue at a time. A machine is busy while an issue carrying its `worker:*` label is In Progress or In Review. iOS work is never sent to Linux: it waits until the Mac is free and online.
 
+## Follow-ups
+
+When a dev worker leaves something out of scope, it posts a `Follow-up:` comment on its issue ([format](dev-worker.md#follow-ups)). On its next run the orchestrator handles each new follow-up in one of three ways:
+
+- **Creates an issue** in the same project, in **Backlog**, with the Platform labels, linked to the original issue as related. The new issue is never labelled `agent-ready`: you review it, then move it to Todo and add the label yourself.
+- **Links an existing issue** if one already covers it, and comments on that issue with the extra context.
+- **Skips it** if it isn't worth tracking, and replies with the reason.
+
+Either way the orchestrator replies under the follow-up (`Orchestrator: …`), so each follow-up is handled once.
+
 ## When it stops
 
 The pipeline adds `needs-human`, comments on the issue and stops when:
