@@ -19,6 +19,7 @@
     "test-env": "node test-env/penny-env.mjs",
     "dashboards:generate": "node grafana-dashboards.mjs",
     "dashboards:check": "node grafana-dashboards.mjs --check",
-    "version:check": "node check-version.mjs"
+    "version:check": "node check-version.mjs",
+    "pr-title:check": "node pr-title.mjs"
   }
 }
