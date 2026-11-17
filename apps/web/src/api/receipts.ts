@@ -93,12 +93,27 @@ export function receiptMimeOf(file: Pick<File, "name" | "type">): ReceiptMime | 
   return extension ? (BY_EXTENSION[extension] ?? null) : null;
 }
 
-/** Shortens a long name to the server's 255 characters, keeping the extension. */
+const LONE_SURROGATE = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g;
+
+/**
+ * `text` with every unpaired surrogate replaced by U+FFFD, like ES2024's
+ * `String.prototype.toWellFormed` (not in this app's ES2023 lib). The length is unchanged.
+ */
+export const wellFormed = (text: string) => text.replace(LONE_SURROGATE, "\uFFFD");
+
+/**
+ * Shortens a long name to the server's 255 UTF-16 units, keeping the extension. The cut never
+ * splits a surrogate pair, and unpaired surrogates (possible in Windows file names) become
+ * U+FFFD, so the result always encodes.
+ */
 export function receiptName(name: string): string {
-  const trimmed = name.trim() || "receipt";
+  const trimmed = wellFormed(name).trim() || "receipt";
   if (trimmed.length <= MAX_NAME_LENGTH) return trimmed;
   const extension = /\.[a-z0-9]{1,8}$/i.exec(trimmed)?.[0] ?? "";
-  return trimmed.slice(0, MAX_NAME_LENGTH - extension.length) + extension;
+  let end = MAX_NAME_LENGTH - extension.length;
+  const last = trimmed.charCodeAt(end - 1);
+  if (last >= 0xd800 && last <= 0xdbff) end -= 1;
+  return trimmed.slice(0, end) + extension;
 }
 
 async function readHeader(file: Blob): Promise<Uint8Array> {
@@ -124,10 +139,11 @@ const abortError = () => new DOMException("The upload was cancelled.", "AbortErr
 /**
  * The upload's `Content-Disposition` (MAZ-131): an RFC 8187 `filename*`, percent-encoding every
  * UTF-8 byte outside the unreserved set. `encodeURIComponent` leaves `! ' ( ) *`, which RFC 8187
- * does not allow literally, so those are escaped too.
+ * does not allow literally, so those are escaped too. Unpaired surrogates, which
+ * `encodeURIComponent` refuses, are sent as U+FFFD.
  */
 export const receiptDisposition = (name: string) =>
-  `attachment; filename*=UTF-8''${encodeURIComponent(name).replace(/[!'()*]/g, (character) => `%${character.charCodeAt(0).toString(16).toUpperCase()}`)}`;
+  `attachment; filename*=UTF-8''${encodeURIComponent(wellFormed(name)).replace(/[!'()*]/g, (character) => `%${character.charCodeAt(0).toString(16).toUpperCase()}`)}`;
 
 /** The upload as the demo's transport receives it: the file itself, never re-encoded. */
 export interface ReceiptUploadBody {

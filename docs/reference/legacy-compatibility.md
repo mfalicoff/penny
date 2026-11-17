@@ -42,4 +42,4 @@ Measured on one 10 MiB PDF uploaded six times through the real API (`WebApplicat
 | Managed allocations per upload | 146.5 MiB | 30.2 MiB | −79% |
 | Time per upload (steady state) | 184–241 ms | 58–84 ms | about 3× faster |
 
-The server now reads the body once into a buffer sized from `Content-Length`. Before, it buffered the JSON text, parsed it into a document, copied the base64 string and then decoded it. The browser app sends the `File` itself, so it no longer reads the file into a base64 data URL first. The iOS app no longer base64-encodes the file into a JSON body.
+The server now reads the body once into a buffer. These numbers were measured with the buffer sized exactly from `Content-Length`; its starting size is now capped at 1 MiB, so a large upload grows it a few times. Before, it buffered the JSON text, parsed it into a document, copied the base64 string and then decoded it. The browser app sends the `File` itself, so it no longer reads the file into a base64 data URL first. The iOS app no longer base64-encodes the file into a JSON body.

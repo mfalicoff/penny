@@ -7,12 +7,15 @@ namespace Penny.Backend.Api.Receipts;
 
 // Reads `POST /api/receipts` (MAZ-131): the body is the file's bytes, `Content-Type` its
 // MIME type and `Content-Disposition` its name as an RFC 8187 `filename*` (UTF-8,
-// percent-encoded). Nothing is decoded or copied twice. A body over the 10 MiB file limit
-// is read to the end and discarded, so the client receives the 400 instead of a reset;
-// the API-wide request limit still bounds it.
+// percent-encoded). Nothing is decoded. The buffer starts at the declared `Content-Length`
+// but at most 1 MiB, so a client that declares 10 MiB and then trickles bytes cannot pin
+// 10 MiB per connection; it grows as bytes arrive. A body over the 10 MiB file limit is
+// read to the end and discarded, so the client receives the 400 instead of a reset; the
+// API-wide request limit still bounds it.
 public static class ReceiptUploadReader
 {
     private const int ChunkBytes = 81920;
+    private const int MaxInitialBufferBytes = 1024 * 1024;
     private static readonly UTF8Encoding StrictUtf8 = new(false, throwOnInvalidBytes: true);
 
     public static async Task<ReceiptUpload> ReadAsync(
@@ -93,8 +96,9 @@ public static class ReceiptUploadReader
         }
     }
 
-    // The body, or null when it is longer than `ReceiptFormat.MaxBytes`. A declared length
-    // within the limit sizes the buffer exactly, so the bytes are copied once.
+    // The body, or null when it is longer than `ReceiptFormat.MaxBytes`. The buffer starts
+    // at the declared length capped at `MaxInitialBufferBytes`, and the array is returned
+    // without a copy when the body fills it exactly.
     private static async Task<byte[]?> ContentAsync(
         HttpRequest request,
         CancellationToken cancellationToken
@@ -105,7 +109,9 @@ public static class ReceiptUploadReader
             await request.Body.CopyToAsync(Stream.Null, cancellationToken);
             return null;
         }
-        using var buffer = new MemoryStream((int)(request.ContentLength ?? 0));
+        using var buffer = new MemoryStream(
+            (int)Math.Min(request.ContentLength ?? 0, MaxInitialBufferBytes)
+        );
         var chunk = ArrayPool<byte>.Shared.Rent(ChunkBytes);
         try
         {

@@ -161,6 +161,15 @@ describe("receipt file checks", () => {
     expect(receiptName(long)).toHaveLength(255);
     expect(receiptName(long).endsWith(".pdf")).toBe(true);
     expect(receiptName("  ")).toBe("receipt");
+    // An emoji across the cut is dropped whole, never split into a lone surrogate.
+    const emoji = receiptName(`${"a".repeat(250)}😀x.pdf`);
+    expect(emoji).toBe(`${"a".repeat(250)}.pdf`);
+    expect(emoji.length).toBeLessThanOrEqual(255);
+    expect(() => receiptDisposition(emoji)).not.toThrow();
+    const fits = receiptName(`${"a".repeat(249)}😀x.pdf`);
+    expect(fits).toBe(`${"a".repeat(249)}😀.pdf`);
+    expect(fits).toHaveLength(255);
+    expect(receiptName("bad\uD800name.pdf")).toBe("bad\uFFFDname.pdf");
     expect([formatBytes(900), formatBytes(2048), formatBytes(1.5 * 1024 * 1024)]).toEqual(["900 B", "2 KB", "1.5 MB"]);
   });
 });
@@ -169,6 +178,10 @@ describe("uploadReceipt", () => {
   it("names the file in an RFC 8187 header, escaping what encodeURIComponent keeps", () => {
     expect(receiptDisposition("Reçu (1)!*'~.pdf")).toBe("attachment; filename*=UTF-8''Re%C3%A7u%20%281%29%21%2A%27~.pdf");
     expect(receiptDisposition("東京 a+b.png")).toBe("attachment; filename*=UTF-8''%E6%9D%B1%E4%BA%AC%20a%2Bb.png");
+    expect(receiptDisposition("a😀.pdf")).toBe("attachment; filename*=UTF-8''a%F0%9F%98%80.pdf");
+    // Unpaired surrogates would make encodeURIComponent throw; they are sent as U+FFFD.
+    expect(receiptDisposition("a\uD83D.pdf")).toBe("attachment; filename*=UTF-8''a%EF%BF%BD.pdf");
+    expect(receiptDisposition("\uDE00b.pdf")).toBe("attachment; filename*=UTF-8''%EF%BF%BDb.pdf");
   });
 
   it("sends the file itself with its type, name header and progress, and returns the link", async () => {
