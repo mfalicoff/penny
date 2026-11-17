@@ -26,6 +26,12 @@ struct LaunchOptions {
     /// returns from the background (MAZ-79, `PENNY_TEST_NOTIFICATION*`).
     var notification: String?
     var notificationOnResume: String?
+    /// Answer Face ID with the Debug stand-in (`PENNY_TEST_DEVICE_AUTH`): turning the lock on
+    /// succeeds, and each lock's own prompt is cancelled so the lock screen stays up until the
+    /// test taps Unlock.
+    var standInFaceID = false
+    /// Seconds in a Lock after minute (`PENNY_TEST_LOCK_MINUTE`, MAZ-133).
+    var lockMinute: Int?
 }
 
 /// Base class for Penny's UI tests: launches against the full-stack environment, creates
@@ -117,6 +123,8 @@ class PennyUITestCase: XCTestCase {
         if let notification = options.notificationOnResume {
             environment["PENNY_TEST_NOTIFICATION_ON_RESUME"] = notification
         }
+        if options.standInFaceID { environment["PENNY_TEST_DEVICE_AUTH"] = "1" }
+        if let minute = options.lockMinute { environment["PENNY_TEST_LOCK_MINUTE"] = String(minute) }
         if let seed = options.seed { environment["PENNY_TEST_CONTAINER_SEED"] = try seed.write().path() }
         app.launchEnvironment = environment
         app.launchArguments = options.contentSize.map { ["-UIPreferredContentSizeCategoryName", $0] } ?? []
