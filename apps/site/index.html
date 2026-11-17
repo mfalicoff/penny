@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Penny: a little more clarity about your money</title>
+    <meta
+      name="description"
+      content="Penny is a self-hosted expense tracker for iPhone, iPad and the web. Track expenses, income and investment contributions, split bills, keep receipts, and keep your data on your own server."
+    />
+    <meta name="theme-color" content="#000000" />
+    <meta name="color-scheme" content="dark" />
+    <meta property="og:title" content="Penny: a little more clarity about your money" />
+    <meta
+      property="og:description"
+      content="A self-hosted expense tracker for iPhone, iPad and the web. No bank connection; your server, your data."
+    />
+    <meta property="og:type" content="website" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script type="module" src="/src/main.ts"></script>
+  </head>
+  <body>
+    <div class="backdrop" aria-hidden="true"></div>
+    <canvas id="splats" aria-hidden="true"></canvas>
+    <div class="fallback" aria-hidden="true"><img src="/favicon.svg" alt="" width="220" height="220" /></div>
+
+    <header class="nav">
+      <a class="brand" href="#top" aria-label="Penny home">
+        <img src="/favicon.svg" alt="" width="28" height="28" />
+        <span>Penny</span>
+      </a>
+      <nav aria-label="Main">
+        <a href="#glance">Features</a>
+        <a href="#everywhere">Apps</a>
+        <a href="#self-host">Self-host</a>
+        <a class="button button-small" href="https://github.com/mfalicoff/penny">GitHub</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero" data-stage="1">
+        <div class="copy">
+          <p class="eyebrow">Self-hosted expense tracking · iPhone, iPad &amp; web</p>
+          <h1>A little more clarity about your&nbsp;money.</h1>
+          <p class="lede">
+            Track expenses, income and investment contributions. Split the bill, keep the receipt, and see where every
+            dollar went, on a server you run yourself.
+          </p>
+          <div class="actions">
+            <a class="button" href="#self-host">Self-host Penny</a>
+            <a class="button button-ghost" href="https://github.com/mfalicoff/penny">View the source</a>
+          </div>
+          <p class="note">No bank connection. No ads. Your server, your data.</p>
+        </div>
+        <a class="scroll-hint" href="#glance" aria-label="Scroll to features"><span></span></a>
+      </section>
+
+      <section class="feature" id="glance" data-stage="1">
+        <div class="copy">
+          <p class="eyebrow">Overview</p>
+          <h2>Your month, at a glance.</h2>
+          <p>
+            See what came in, what you spent, what you invested and what's left. Expected recurring income is part of
+            the picture before payday arrives, clearly labeled as projected. Explore the calendar and category
+            breakdown, then search and filter every transaction.
+          </p>
+          <figure class="shot">
+            <img
+              src="../../docs/screenshots/overview.jpg"
+              alt="Penny's monthly overview with income, expenses, invested contributions, cash remaining, a spending calendar and category totals."
+              loading="lazy"
+              width="1800"
+              height="1113"
+            />
+          </figure>
+        </div>
+      </section>
+
+      <section class="feature" id="flow" data-stage="2">
+        <div class="copy">
+          <p class="eyebrow">Money flow</p>
+          <h2>Follow your money.</h2>
+          <p>
+            An interactive flow diagram connects income to spending, investments and money left over. Split expenses
+            count only your share, so the picture reflects your spending, not the whole bill.
+          </p>
+          <figure class="shot">
+            <img
+              src="../../docs/screenshots/sankey.jpg"
+              alt="Penny's money-flow diagram connecting salary and freelance income to expense categories and money left over."
+              loading="lazy"
+              width="1420"
+              height="848"
+            />
+          </figure>
+        </div>
+      </section>
+
+      <section class="feature" id="receipts" data-stage="3">
+        <div class="copy">
+          <p class="eyebrow">Entries</p>
+          <h2>Add it, split it, keep the receipt.</h2>
+          <p>
+            Record an expense, income or investment contribution. Split a bill equally, by amount or by percentage;
+            attach a photo or PDF; make regular entries recurring. Receipts are encrypted at rest on your server.
+          </p>
+          <ul class="ticks">
+            <li>Equal, exact or percentage splits; reports count your share</li>
+            <li>Photo and PDF receipts, read with on-server OCR</li>
+            <li>Weekly, monthly and yearly recurring entries</li>
+            <li>Coming soon: forward a receipt to your private address</li>
+          </ul>
+          <figure class="shot shot-phone">
+            <img
+              src="../../docs/screenshots/add-entry.jpg"
+              alt="Penny's entry form showing a 74.40 dinner split between three people, with a personal share of 24.80."
+              loading="lazy"
+              width="538"
+              height="1165"
+            />
+          </figure>
+        </div>
+      </section>
+
+      <section class="feature" id="everywhere" data-stage="4">
+        <div class="copy">
+          <p class="eyebrow">Apps</p>
+          <h2>On your phone, in your browser, on your server.</h2>
+          <p>
+            A native SwiftUI app for iPhone and iPad, with widgets and Face ID lock, and a fast web app for everything
+            else. Personal changes save offline and sync when you're back, through a .NET and PostgreSQL server you
+            host.
+          </p>
+          <div class="cards">
+            <article class="card">
+              <h3>iPhone &amp; iPad</h3>
+              <p>Native SwiftUI, with Home Screen widgets and Face ID app lock.</p>
+            </article>
+            <article class="card">
+              <h3>Web</h3>
+              <p>The full app in any browser, from phone width to a wide desktop.</p>
+            </article>
+            <article class="card">
+              <h3>Offline-first</h3>
+              <p>Edits are kept on the device and merged when it reconnects.</p>
+            </article>
+            <article class="card">
+              <h3>Sign-in your way</h3>
+              <p>Local accounts or your own OpenID Connect provider.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="feature" id="shared" data-stage="5">
+        <div class="copy">
+          <p class="eyebrow">Together</p>
+          <h2>Personal finances, shared plans.</h2>
+          <div class="cards">
+            <article class="card">
+              <h3>Households</h3>
+              <p>Record shared expenses once; everyone's reports keep only their share. Track balances and reimbursements.</p>
+            </article>
+            <article class="card">
+              <h3>Trips</h3>
+              <p>Invite friends with a short-lived code, add expenses together and settle up at the end.</p>
+            </article>
+            <article class="card">
+              <h3>Your categories</h3>
+              <p>Your own names, colors and icons, plus payment accounts tracked by hand.</p>
+            </article>
+            <article class="card">
+              <h3>Try it first</h3>
+              <p>Take a look around with sample data. The demo is temporary and needs no account.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="selfhost" id="self-host">
+        <div class="copy">
+          <p class="eyebrow">Self-host</p>
+          <h2>Run it yourself in a few minutes.</h2>
+          <p>
+            One Compose file starts PostgreSQL, the API and the web app. There's also a NixOS module. Fill in the
+            secrets, point your reverse proxy at it, and you're done.
+          </p>
+          <pre><code><span class="dim"># deploy/.env from deploy/.env.example, then:</span>
+docker compose -f deploy/compose.yaml up -d --wait</code></pre>
+          <div class="actions">
+            <a class="button" href="https://github.com/mfalicoff/penny/blob/master/docs/self-hosting/deployment.md">Self-hosting guide</a>
+            <a class="button button-ghost" href="https://github.com/mfalicoff/penny/blob/master/docs/README.md">Documentation</a>
+          </div>
+          <p class="note">
+            Penny tracks investment contributions, not portfolio performance, and never connects to your bank.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>© <span id="year">2026</span> Penny</span>
+      <span>The coin, flow, receipt and devices above are live Gaussian splats, generated in your browser.</span>
+    </footer>
+  </body>
+</html>
