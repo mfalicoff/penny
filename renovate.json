@@ -3,7 +3,7 @@
   "extends": ["config:recommended"],
   "enabledManagers": ["npm", "github-actions", "dockerfile", "docker-compose", "nuget"],
   "automerge": false,
-  "prConcurrentLimit": 1,
+  "prConcurrentLimit": 14,
   "semanticCommits": "enabled",
   "semanticCommitType": "fix",
   "semanticCommitScope": "deps",
