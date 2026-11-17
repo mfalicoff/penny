@@ -8,13 +8,11 @@ internal sealed class HouseholdMemberPeriodMapping : IEntityTypeConfiguration<Ho
 {
     public void Configure(EntityTypeBuilder<HouseholdMemberPeriod> builder)
     {
-        builder.ToTable(
-            "household_member_periods",
-            table =>
-                table.HasCheckConstraint(
-                    "ck_household_member_periods_order",
-                    "left_at IS NULL OR left_at >= joined_at"
-                )
+        builder.ToTable("household_member_periods", table =>
+            table.HasCheckConstraint(
+                "ck_household_member_periods_order",
+                "left_at IS NULL OR left_at >= joined_at"
+            )
         );
         builder.HasKey(period => period.Id);
         builder.HasOne<Household>().WithMany().HasForeignKey(period => period.HouseholdId);

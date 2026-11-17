@@ -74,13 +74,10 @@ public sealed class OnnxTextEmbedder : ITextEmbedder, IDisposable
         try
         {
             return Loaded
-                .GetOrAdd(
-                    full,
-                    path => new Lazy<OnnxTextEmbedder>(
-                        () => Create(path),
-                        LazyThreadSafetyMode.ExecutionAndPublication
-                    )
-                )
+                .GetOrAdd(full, path => new Lazy<OnnxTextEmbedder>(
+                    () => Create(path),
+                    LazyThreadSafetyMode.ExecutionAndPublication
+                ))
                 .Value;
         }
         catch (InvalidOperationException)

@@ -1366,10 +1366,11 @@ namespace Penny.Backend.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey(
-                        "PK_household_recurring_allocations",
-                        x => new { x.recurring_id, x.user_id }
-                    );
+                    table.PrimaryKey("PK_household_recurring_allocations", x => new
+                    {
+                        x.recurring_id,
+                        x.user_id,
+                    });
                     table.CheckConstraint(
                         "ck_household_recurring_allocations_amount",
                         "amount_cents IS NULL OR amount_cents BETWEEN 0 AND 99999999999"

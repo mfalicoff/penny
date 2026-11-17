@@ -275,8 +275,7 @@ public static class SyntheticReceipts
             }
         )
             start.ArgumentList.Add(argument);
-        using var process =
-            Process.Start(start)
+        using var process = Process.Start(start)
             ?? throw new InvalidOperationException("pdftoppm could not be started.");
         var error = process.StandardError.ReadToEndAsync();
         using var output = new MemoryStream();

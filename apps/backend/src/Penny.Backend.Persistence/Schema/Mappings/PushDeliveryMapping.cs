@@ -8,9 +8,8 @@ internal sealed class PushDeliveryMapping : IEntityTypeConfiguration<PushDeliver
 {
     public void Configure(EntityTypeBuilder<PushDelivery> builder)
     {
-        builder.ToTable(
-            "push_deliveries",
-            table => table.HasCheckConstraint("ck_push_deliveries_attempts", "attempts >= 0")
+        builder.ToTable("push_deliveries", table =>
+            table.HasCheckConstraint("ck_push_deliveries_attempts", "attempts >= 0")
         );
         builder.HasKey(delivery => new { delivery.OutboxId, delivery.Token });
         builder.HasOne<PushOutboxMessage>().WithMany().HasForeignKey(delivery => delivery.OutboxId);

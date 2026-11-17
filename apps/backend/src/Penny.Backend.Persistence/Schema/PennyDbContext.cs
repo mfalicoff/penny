@@ -51,9 +51,8 @@ public sealed class PennyDbContext(DbContextOptions<PennyDbContext> options) : D
     public static PennyDbContext Create(NpgsqlConnection connection) =>
         new(
             new DbContextOptionsBuilder<PennyDbContext>()
-                .UseNpgsql(
-                    connection,
-                    npgsql => npgsql.MigrationsHistoryTable(HistoryTable, SchemaName).UseVector()
+                .UseNpgsql(connection, npgsql =>
+                    npgsql.MigrationsHistoryTable(HistoryTable, SchemaName).UseVector()
                 )
                 .Options
         );
@@ -62,9 +61,8 @@ public sealed class PennyDbContext(DbContextOptions<PennyDbContext> options) : D
         DbContextOptionsBuilder<PennyDbContext> builder,
         NpgsqlDataSource source
     ) =>
-        builder.UseNpgsql(
-            source,
-            npgsql => npgsql.MigrationsHistoryTable(HistoryTable, SchemaName).UseVector()
+        builder.UseNpgsql(source, npgsql =>
+            npgsql.MigrationsHistoryTable(HistoryTable, SchemaName).UseVector()
         );
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)

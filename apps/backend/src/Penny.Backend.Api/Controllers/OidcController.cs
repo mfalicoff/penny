@@ -65,18 +65,15 @@ public sealed class OidcController(
     [ProducesResponseType<ApiError>(429)]
     public async Task<ActionResult<SessionResponse>> Complete(CancellationToken cancellationToken)
     {
-        var session = await Measured.SignInAsync(
-            Measured.Oidc,
-            async () =>
-            {
-                var fields = await JsonStringFields.ReadAsync(
-                    Request,
-                    CompleteFields,
-                    cancellationToken
-                );
-                return await Configured().CompleteAsync(fields[0], fields[1], cancellationToken);
-            }
-        );
+        var session = await Measured.SignInAsync(Measured.Oidc, async () =>
+        {
+            var fields = await JsonStringFields.ReadAsync(
+                Request,
+                CompleteFields,
+                cancellationToken
+            );
+            return await Configured().CompleteAsync(fields[0], fields[1], cancellationToken);
+        });
         SessionCookie.Append(Response, session.Token, options.SecureCookies, clock);
         return Ok(new SessionResponse(session.Token, session.Email));
     }

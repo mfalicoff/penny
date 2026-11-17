@@ -31,11 +31,9 @@ public sealed class PasswordResetService(
         CancellationToken cancellationToken
     )
     {
-        var normalized =
-            Credentials.NormalizeEmail(email)
+        var normalized = Credentials.NormalizeEmail(email)
             ?? throw new BackendFailure(FailureKind.Invalid, InvalidEmail);
-        var user =
-            await accounts.FindByEmailAsync(normalized, cancellationToken)
+        var user = await accounts.FindByEmailAsync(normalized, cancellationToken)
             ?? throw new BackendFailure(FailureKind.NotFound, UnknownEmail);
         var token = SessionTokens.Create();
         var now = Now();

@@ -8,35 +8,29 @@ internal sealed class SearchDocumentMapping : IEntityTypeConfiguration<SearchDoc
 {
     public void Configure(EntityTypeBuilder<SearchDocument> builder)
     {
-        builder.ToTable(
-            "search_documents",
-            table =>
-            {
-                table.HasCheckConstraint(
-                    "ck_search_documents_shape",
-                    "(source = 'personal' AND user_id IS NOT NULL AND entry_id IS NOT NULL"
-                        + " AND expense_id IS NULL AND household_id IS NULL AND payer_id IS NULL"
-                        + " AND amount_cents IS NOT NULL AND result_key = 'personal:' || entry_id)"
-                        + " OR (source = 'shared' AND user_id IS NULL AND entry_id IS NULL"
-                        + " AND expense_id IS NOT NULL AND household_id IS NOT NULL"
-                        + " AND payer_id IS NOT NULL AND amount_cents IS NULL"
-                        + " AND kind = 'expense' AND result_key = 'shared:' || expense_id)"
-                );
-                table.HasCheckConstraint(
-                    "ck_search_documents_kind",
-                    Checks.In("kind", Checks.Kinds)
-                );
-                table.HasCheckConstraint("ck_search_documents_attempts", "embedding_attempts >= 0");
-                table.HasCheckConstraint(
-                    "ck_search_documents_lease",
-                    "(lease_token IS NULL) = (lease_expires_at IS NULL)"
-                );
-                table.HasCheckConstraint(
-                    "ck_search_documents_embedding",
-                    "(embedding IS NULL) = (embedding_model IS NULL)"
-                );
-            }
-        );
+        builder.ToTable("search_documents", table =>
+        {
+            table.HasCheckConstraint(
+                "ck_search_documents_shape",
+                "(source = 'personal' AND user_id IS NOT NULL AND entry_id IS NOT NULL"
+                    + " AND expense_id IS NULL AND household_id IS NULL AND payer_id IS NULL"
+                    + " AND amount_cents IS NOT NULL AND result_key = 'personal:' || entry_id)"
+                    + " OR (source = 'shared' AND user_id IS NULL AND entry_id IS NULL"
+                    + " AND expense_id IS NOT NULL AND household_id IS NOT NULL"
+                    + " AND payer_id IS NOT NULL AND amount_cents IS NULL"
+                    + " AND kind = 'expense' AND result_key = 'shared:' || expense_id)"
+            );
+            table.HasCheckConstraint("ck_search_documents_kind", Checks.In("kind", Checks.Kinds));
+            table.HasCheckConstraint("ck_search_documents_attempts", "embedding_attempts >= 0");
+            table.HasCheckConstraint(
+                "ck_search_documents_lease",
+                "(lease_token IS NULL) = (lease_expires_at IS NULL)"
+            );
+            table.HasCheckConstraint(
+                "ck_search_documents_embedding",
+                "(embedding IS NULL) = (embedding_model IS NULL)"
+            );
+        });
         builder.HasKey(document => document.Id);
         builder.Property(document => document.Id).UseIdentityAlwaysColumn();
         builder

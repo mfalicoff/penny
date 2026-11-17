@@ -78,20 +78,19 @@ public sealed class ReceiptEmailService(
             var raw = new List<string?>();
             foreach (var item in sendersValue.EnumerateArray())
                 raw.Add(item.ValueKind == JsonValueKind.String ? Text(item) : null);
-            senders =
-                AllowedSenders.Normalize(raw)
+            senders = AllowedSenders.Normalize(raw)
                 ?? throw new BackendFailure(FailureKind.Invalid, AllowedSenders.Invalid);
         }
         if (!extend && senders is null)
             throw new BackendFailure(FailureKind.Invalid, InvalidUpdate);
         var now = clock.GetUtcNow();
         return await addresses.UpdateAsync(
-                userId,
-                now,
-                extend ? now + settings.AddressLifetime : null,
-                senders,
-                cancellationToken
-            ) ?? throw new BackendFailure(FailureKind.NotFound, NoAddress);
+            userId,
+            now,
+            extend ? now + settings.AddressLifetime : null,
+            senders,
+            cancellationToken
+        ) ?? throw new BackendFailure(FailureKind.NotFound, NoAddress);
     }
 
     // Idempotent: revoking when there is no live address succeeds.

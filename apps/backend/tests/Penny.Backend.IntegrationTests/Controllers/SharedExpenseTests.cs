@@ -441,9 +441,7 @@ public sealed class SharedExpenseTests(ApiFixture fixture) : SharedExpenseTestBa
         );
 
         // Month filter and its validation; newest first.
-        (await ListExpensesAsync(home, cam, "?month=2026-10"))
-            .Select(Id)
-            .ShouldBe([Id(newer)]);
+        (await ListExpensesAsync(home, cam, "?month=2026-10")).Select(Id).ShouldBe([Id(newer)]);
         (await ListExpensesAsync(home, cam)).Select(Id).ShouldBe([Id(newer), Id(old)]);
         await ExpectErrorAsync(
             HttpMethod.Get,

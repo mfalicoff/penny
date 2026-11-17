@@ -67,10 +67,10 @@ public sealed class ReceiptInboxService(
     {
         RequireEnabled();
         return (
-                IsId(itemId)
-                    ? await inbox.DoneAsync(userId, itemId, clock.GetUtcNow(), cancellationToken)
-                    : null
-            ) ?? throw new BackendFailure(FailureKind.NotFound, NotFound);
+            IsId(itemId)
+                ? await inbox.DoneAsync(userId, itemId, clock.GetUtcNow(), cancellationToken)
+                : null
+        ) ?? throw new BackendFailure(FailureKind.NotFound, NotFound);
     }
 
     private void RequireEnabled()

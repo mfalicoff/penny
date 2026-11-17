@@ -8,21 +8,18 @@ internal sealed class LedgerEntryMapping : IEntityTypeConfiguration<LedgerEntry>
 {
     public void Configure(EntityTypeBuilder<LedgerEntry> builder)
     {
-        builder.ToTable(
-            "ledger_entries",
-            table =>
-            {
-                table.HasCheckConstraint("ck_ledger_entries_id", Checks.Length("id", 1, 100));
-                table.HasCheckConstraint("ck_ledger_entries_title", Checks.Length("title", 1, 100));
-                table.HasCheckConstraint("ck_ledger_entries_kind", Checks.In("kind", Checks.Kinds));
-                table.HasCheckConstraint("ck_ledger_entries_total", Checks.Cents("total_cents", 1));
-                table.HasCheckConstraint(
-                    "ck_ledger_entries_share",
-                    "share_cents BETWEEN 0 AND total_cents"
-                );
-                table.HasCheckConstraint("ck_ledger_entries_note", Checks.Length("note", 0, 1000));
-            }
-        );
+        builder.ToTable("ledger_entries", table =>
+        {
+            table.HasCheckConstraint("ck_ledger_entries_id", Checks.Length("id", 1, 100));
+            table.HasCheckConstraint("ck_ledger_entries_title", Checks.Length("title", 1, 100));
+            table.HasCheckConstraint("ck_ledger_entries_kind", Checks.In("kind", Checks.Kinds));
+            table.HasCheckConstraint("ck_ledger_entries_total", Checks.Cents("total_cents", 1));
+            table.HasCheckConstraint(
+                "ck_ledger_entries_share",
+                "share_cents BETWEEN 0 AND total_cents"
+            );
+            table.HasCheckConstraint("ck_ledger_entries_note", Checks.Length("note", 0, 1000));
+        });
         builder.HasKey(entry => new { entry.UserId, entry.Id });
         builder.HasOne<Ledger>().WithMany().HasForeignKey(entry => entry.UserId);
         builder

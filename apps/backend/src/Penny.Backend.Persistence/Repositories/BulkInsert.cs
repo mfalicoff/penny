@@ -23,8 +23,7 @@ internal static class BulkInsert
     {
         if (rows.Count == 0)
             return;
-        var entity =
-            context.Model.FindEntityType(typeof(T))
+        var entity = context.Model.FindEntityType(typeof(T))
             ?? throw new InvalidOperationException($"{typeof(T).Name} is not mapped.");
         var table = StoreObjectIdentifier.Table(entity.GetTableName()!, entity.GetSchema());
         var columns = entity
