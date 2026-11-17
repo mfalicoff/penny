@@ -1,6 +1,7 @@
 // Local development orchestration (MAZ-138): PostgreSQL, the migration
-// step, the search model download, the .NET API, the Vite web app and a Grafana stack
-// (Alloy, Loki, Tempo, Prometheus, Grafana). Start it with
+// step, the search model download, the .NET API, the Vite web app, emailed receipts
+// (penny-render and the Cloudflare Email Worker under wrangler dev, MAZ-184) and a Grafana
+// stack (Alloy, Loki, Tempo, Prometheus, Grafana). Start it with
 // `bash apps/backend/dotnet.sh run --project src/Penny.Backend.AppHost`.
 using Penny.Backend.AppHost;
 using Penny.Backend.Persistence.Schema;
@@ -32,6 +33,14 @@ var runtimePassword = builder.AddParameter(
 );
 var receiptMasterKey = builder.AddParameter(
     "receipt-master-key",
+    new Base64KeyParameterDefault(32),
+    secret: true,
+    persist: true
+);
+
+// Shared by the API (InboundMail__WebhookSecret) and the local Email Worker.
+var inboundMailSecret = builder.AddParameter(
+    "inbound-mail-secret",
     new Base64KeyParameterDefault(32),
     secret: true,
     persist: true
@@ -150,6 +159,30 @@ var adminConnection = ReferenceExpression.Create(
     $"Host={host};Port={port};Database=penny;Username=postgres;Password={postgres.Resource.PasswordParameter};SSL Mode=Disable"
 );
 
+// --- Emailed receipts (MAZ-184) ------------------------------------------------------------
+// penny-render: the pinned Gotenberg and flags from deploy/compose.yaml, read-only and without
+// capabilities. In Compose it also sits on an internal-only network; here the API runs on the
+// host, so the renderer's own URL deny-list and private-IP denial are what keep it offline.
+
+var render = RenderService.Read(repository);
+var renderer = render
+    .Image.ApplyTo(builder.AddContainer("penny-render", render.Image.Image))
+    .WithArgs([.. render.Command])
+    .WithContainerRuntimeArgs(
+        "--read-only",
+        "--tmpfs",
+        "/tmp:size=256m",
+        "--tmpfs",
+        "/home/gotenberg:size=64m",
+        "--cap-drop",
+        "ALL",
+        "--security-opt",
+        "no-new-privileges"
+    )
+    .WithHttpEndpoint(targetPort: 3000, name: "http")
+    .WithHttpHealthCheck("/health", endpointName: "http")
+    .WithIconName("DocumentPdf");
+
 // --- API ------------------------------------------------------------------------------------
 
 var searchModel = builder
@@ -181,6 +214,12 @@ var api = builder
     .WithEnvironment("Receipts__Root", receiptRoot)
     .WithEnvironment("Receipts__MasterKey", receiptMasterKey)
     .WithEnvironment("Search__ModelDirectory", modelDirectory)
+    // Emailed receipts: mail to r-…@receipts.penny.test arrives through the local Worker.
+    .WithEnvironment("InboundMail__Enabled", "true")
+    .WithEnvironment("InboundMail__Domain", EmailWorker.Domain)
+    .WithEnvironment("InboundMail__WebhookSecret", inboundMailSecret)
+    .WithEnvironment("InboundMail__RendererUrl", renderer.GetEndpoint("http"))
+    .WithEnvironment("InboundMail__PollSeconds", "2")
     .WithoutAspireTelemetry()
     .WithEnvironment("OTEL_EXPORTER_OTLP_ENDPOINT", alloy.GetEndpoint("otlp-grpc"))
     .WithEnvironment("OTEL_EXPORTER_OTLP_PROTOCOL", "grpc")
@@ -194,8 +233,48 @@ var api = builder
     .WithHttpHealthCheck("/api/ready", endpointName: "http")
     .WaitFor(postgres)
     .WaitFor(alloy)
+    .WaitFor(renderer)
     .WaitForCompletion(migrate)
     .WaitForCompletion(searchModel);
+
+// The Cloudflare Email Worker (apps/email-worker) under wrangler dev (workerd), pointed at the
+// API. Its local email handler takes a raw message the way Email Routing hands one over:
+//   curl -X POST "http://127.0.0.1:8788/cdn-cgi/handler/email?from=a@shop.example.test&to=r-…@receipts.penny.test" --data-binary @mail.eml
+// (the message needs a Message-ID header). See docs/reference/test-environment.md.
+var workerDirectory = Path.Combine(repository, "apps/email-worker");
+var workerInstall = builder
+    .AddExecutable("email-worker-install", "npm", workerDirectory, "ci", "--no-audit", "--no-fund")
+    .WithIconName("ArrowDownload");
+builder
+    .AddExecutable(
+        "email-worker",
+        Path.Combine(workerDirectory, "node_modules/.bin/wrangler"),
+        workerDirectory
+    )
+    .WithHttpEndpoint(port: EmailWorker.Port, isProxied: false, name: "http")
+    .WithArgs(context =>
+    {
+        context.Args.Add("dev");
+        context.Args.Add("--ip");
+        context.Args.Add("127.0.0.1");
+        context.Args.Add("--port");
+        context.Args.Add(
+            EmailWorker.Port.ToString(System.Globalization.CultureInfo.InvariantCulture)
+        );
+        context.Args.Add("--show-interactive-dev-session=false");
+        context.Args.Add("--var");
+        context.Args.Add(ReferenceExpression.Create($"PENNY_ORIGIN:{api.GetEndpoint("http")}"));
+        context.Args.Add("--var");
+        context.Args.Add($"RECEIPT_DOMAIN:{EmailWorker.Domain}");
+        context.Args.Add("--var");
+        context.Args.Add("RECIPIENT_LIST_TTL_SECONDS:5");
+        context.Args.Add("--var");
+        context.Args.Add(ReferenceExpression.Create($"PENNY_WEBHOOK_SECRET:{inboundMailSecret}"));
+    })
+    .WithEnvironment("WRANGLER_SEND_METRICS", "false")
+    .WithIconName("Mail")
+    .WaitFor(api)
+    .WaitForCompletion(workerInstall);
 
 // --- Web ------------------------------------------------------------------------------------
 // Vite forwards /api/ to PENNY_API_URL (see apps/web/vite.config.ts), so the browser keeps a
