@@ -1,5 +1,4 @@
 using System.Net;
-using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -39,14 +38,24 @@ public abstract class ReceiptTestBase(ApiFixture fixture) : SharedExpenseTestBas
     protected static string Sha256(byte[] content) =>
         Convert.ToHexStringLower(SHA256.HashData(content));
 
+    // `POST /api/receipts` with the file as the body (MAZ-131). Null `mime` or
+    // `disposition` leaves that header out.
     protected Task<HttpResponseMessage> UploadAsync(
         string? token,
-        object body,
+        string? disposition,
+        string? mime,
+        byte[] content,
         HttpClient? client = null
     )
     {
         var request = Authorized(HttpMethod.Post, "/api/receipts", bearer: token);
-        request.Content = JsonContent.Create(body);
+        request.Content = new ByteArrayContent(content);
+        if (mime is not null)
+            request.Content.Headers.TryAddWithoutValidation("Content-Type", mime).ShouldBeTrue();
+        if (disposition is not null)
+            request
+                .Content.Headers.TryAddWithoutValidation("Content-Disposition", disposition)
+                .ShouldBeTrue();
         return (client ?? Client).SendAsync(request, Ct);
     }
 
@@ -70,16 +79,7 @@ public abstract class ReceiptTestBase(ApiFixture fixture) : SharedExpenseTestBas
         HttpClient? client = null
     )
     {
-        using var response = await UploadAsync(
-            token,
-            new
-            {
-                name,
-                mime,
-                base64 = Convert.ToBase64String(content),
-            },
-            client
-        );
+        using var response = await UploadAsync(token, Disposition(name), mime, content, client);
         var text = await response.Content.ReadAsStringAsync(Ct);
         response.StatusCode.ShouldBe(HttpStatusCode.Created, text);
         return JsonDocument.Parse(text).RootElement.Clone();

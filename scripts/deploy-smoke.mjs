@@ -55,7 +55,8 @@ function compose(args, { input, allowFailure = false, binary = false } = {}) {
 }
 
 let origin = "";
-async function http(pathname, { method = "GET", body, token, cookie, headers = {} } = {}) {
+// `raw` sends bytes as they are (receipt uploads, MAZ-131); `body` is sent as JSON.
+async function http(pathname, { method = "GET", body, raw, token, cookie, headers = {} } = {}) {
   const response = await fetch(origin + pathname, {
     method,
     headers: {
@@ -64,7 +65,7 @@ async function http(pathname, { method = "GET", body, token, cookie, headers = {
       ...(cookie ? { cookie } : {}),
       ...headers,
     },
-    body: body === undefined ? undefined : JSON.stringify(body),
+    body: raw ?? (body === undefined ? undefined : JSON.stringify(body)),
     redirect: "manual",
   });
   const text = await response.text();
@@ -287,7 +288,8 @@ async function main() {
   const receipt = await http("/api/receipts", {
     method: "POST",
     token,
-    body: { name: "smoke.pdf", mime: "application/pdf", base64: receiptBytes.toString("base64") },
+    raw: receiptBytes,
+    headers: { "content-type": "application/pdf", "content-disposition": "attachment; filename*=UTF-8''smoke.pdf" },
   });
   check(receipt.status === 201, "receipt uploaded to the volume", receipt.text);
   const receiptId = receipt.json.id;

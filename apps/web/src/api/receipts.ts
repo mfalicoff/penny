@@ -121,33 +121,19 @@ export async function checkReceiptFile(file: File): Promise<ReceiptMime> {
 
 const abortError = () => new DOMException("The upload was cancelled.", "AbortError");
 
-/** The file as base64 (the API's JSON body), without loading it into a string twice. */
-function readBase64(file: Blob, signal: AbortSignal): Promise<string> {
-  return new Promise((resolve, reject) => {
-    if (signal.aborted) {
-      reject(abortError());
-      return;
-    }
-    const reader = new FileReader();
-    const onAbort = () => {
-      reader.abort();
-    };
-    signal.addEventListener("abort", onAbort, { once: true });
-    reader.onload = () => {
-      signal.removeEventListener("abort", onAbort);
-      const url = typeof reader.result === "string" ? reader.result : "";
-      resolve(url.slice(url.indexOf(",") + 1));
-    };
-    reader.onerror = () => {
-      signal.removeEventListener("abort", onAbort);
-      reject(new ReceiptFileError(RECEIPT_MESSAGES.unreadable));
-    };
-    reader.onabort = () => {
-      signal.removeEventListener("abort", onAbort);
-      reject(abortError());
-    };
-    reader.readAsDataURL(file);
-  });
+/**
+ * The upload's `Content-Disposition` (MAZ-131): an RFC 8187 `filename*`, percent-encoding every
+ * UTF-8 byte outside the unreserved set. `encodeURIComponent` leaves `! ' ( ) *`, which RFC 8187
+ * does not allow literally, so those are escaped too.
+ */
+export const receiptDisposition = (name: string) =>
+  `attachment; filename*=UTF-8''${encodeURIComponent(name).replace(/[!'()*]/g, (character) => `%${character.charCodeAt(0).toString(16).toUpperCase()}`)}`;
+
+/** The upload as the demo's transport receives it: the file itself, never re-encoded. */
+export interface ReceiptUploadBody {
+  name: string;
+  mime: ReceiptMime;
+  file: Blob;
 }
 
 const errorText = (text: string): string | undefined => {
@@ -180,11 +166,11 @@ function parseReceipt(status: number, text: string): Receipt {
   return parsed.data;
 }
 
-/** How long an upload may take in all: 10 MiB as base64 over a slow (~100 kB/s) connection, with room to spare. */
+/** How long an upload may take in all: 10 MiB over a slow (~100 kB/s) connection, with room to spare. */
 export const UPLOAD_TIMEOUT_MS = 5 * 60_000;
 
 /** `POST /api/receipts` with upload progress (fetch has none), cancelled through `signal`. */
-function post(body: string, signal: AbortSignal, onProgress: (fraction: number) => void): Promise<{ status: number; text: string }> {
+function post(file: Blob, name: string, mime: ReceiptMime, signal: AbortSignal, onProgress: (fraction: number) => void): Promise<{ status: number; text: string }> {
   return new Promise((resolve, reject) => {
     const request = new XMLHttpRequest();
     const onAbort = () => {
@@ -196,7 +182,8 @@ function post(body: string, signal: AbortSignal, onProgress: (fraction: number) 
     request.open("POST", "/api/receipts");
     // A stalled upload ends as a retryable failure instead of holding Save forever.
     request.timeout = UPLOAD_TIMEOUT_MS;
-    request.setRequestHeader("Content-Type", "application/json");
+    request.setRequestHeader("Content-Type", mime);
+    request.setRequestHeader("Content-Disposition", receiptDisposition(name));
     request.setRequestHeader("Accept", "application/json");
     request.upload.onprogress = (event) => {
       if (event.lengthComputable && event.total > 0) onProgress(event.loaded / event.total);
@@ -215,7 +202,8 @@ function post(body: string, signal: AbortSignal, onProgress: (fraction: number) 
       reject(abortError());
     };
     signal.addEventListener("abort", onAbort, { once: true });
-    request.send(body);
+    // The file itself is the body (MAZ-131): the browser streams it, nothing is re-encoded.
+    request.send(file);
   });
 }
 
@@ -230,18 +218,19 @@ export interface UploadOptions {
  * session) or an `AbortError` when `signal` aborts, at any stage.
  */
 export async function uploadReceipt(file: File, mime: ReceiptMime, { signal, onProgress = () => undefined }: UploadOptions): Promise<Receipt> {
-  const base64 = await readBase64(file, signal);
-  const payload = { name: receiptName(file.name), mime, base64 };
+  if (signal.aborted) throw abortError();
+  const name = receiptName(file.name);
   const transport = currentTransport();
   if (transport) {
-    const response = await transport("/api/receipts", { method: "POST", body: payload, signal });
+    const body: ReceiptUploadBody = { name, mime, file };
+    const response = await transport("/api/receipts", { method: "POST", body, signal });
     const text = await response.text();
     if (!response.ok) throw uploadError(response.status, text);
     onProgress(1);
     return parseReceipt(response.status, text);
   }
   onProgress(0);
-  const { status, text } = await post(JSON.stringify(payload), signal, onProgress);
+  const { status, text } = await post(file, name, mime, signal, onProgress);
   if (status < 200 || status >= 300) throw uploadError(status, text);
   return parseReceipt(status, text);
 }

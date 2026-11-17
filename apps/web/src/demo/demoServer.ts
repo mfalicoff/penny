@@ -1,5 +1,6 @@
 import { initialCategories } from "@domain/ledger.ts";
 import type { Transport } from "../api/client";
+import type { ReceiptUploadBody } from "../api/receipts";
 import type { SearchItem, SearchRequest } from "../api/schemas";
 
 /** The demo account. `.invalid` can never be a real address, so its cache keys never collide. */
@@ -111,11 +112,11 @@ export function createDemoServer(today = new Date()): Transport {
 
   // Receipts uploaded in the demo (MAZ-94): kept in this tab's memory only, like everything else.
   const receipts = new Map<string, { name: string; mime: string; bytes: Uint8Array<ArrayBuffer> }>();
-  function receipt(path: string, method: string, body: unknown): Response | null {
+  async function receipt(path: string, method: string, body: unknown): Promise<Response | null> {
     if (method === "POST" && path === "/api/receipts") {
-      const upload = body as { name: string; mime: string; base64: string };
+      const upload = body as ReceiptUploadBody;
       const id = `demo-receipt-${String(receipts.size + 1)}`;
-      receipts.set(id, { name: upload.name, mime: upload.mime, bytes: Uint8Array.from(atob(upload.base64), (character) => character.charCodeAt(0)) });
+      receipts.set(id, { name: upload.name, mime: upload.mime, bytes: new Uint8Array(await upload.file.arrayBuffer()) });
       return json({ id, name: upload.name, mime: upload.mime, uri: `/api/receipts/${id}` }, 201);
     }
     const stored = method === "GET" && path.startsWith("/api/receipts/") ? receipts.get(path.slice("/api/receipts/".length)) : undefined;
@@ -126,7 +127,7 @@ export function createDemoServer(today = new Date()): Transport {
     // Answer asynchronously, like a network, so loading states and aborts behave the same.
     await new Promise((resolve) => setTimeout(resolve, 0));
     if (signal?.aborted) throw new DOMException("The request was aborted.", "AbortError");
-    const stored = receipt(path, method, body);
+    const stored = await receipt(path, method, body);
     if (stored) return stored;
 
     const route = `${method} ${path}`;

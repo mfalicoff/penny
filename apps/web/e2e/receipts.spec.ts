@@ -99,9 +99,11 @@ async function mockApi(context: BrowserContext, transactions: Entry[] = []): Pro
         server.failNext = null;
         return route.fulfill({ status, json: { error: "The server could not complete this request." } });
       }
-      // The server's checks (ReceiptService): schema, then decoded size and signature.
-      const body = request.postDataJSON() as { name: string; mime: string; base64: string };
-      const bytes = Buffer.from(body.base64, "base64");
+      // The server's checks (ReceiptService, MAZ-131): headers, then size and signature.
+      const headers = request.headers();
+      const disposition = /^attachment; filename\*=UTF-8''(.*)$/.exec(headers["content-disposition"] ?? "");
+      const body = { name: disposition ? decodeURIComponent(disposition[1] ?? "") : "", mime: headers["content-type"] ?? "" };
+      const bytes = request.postDataBuffer() ?? Buffer.alloc(0);
       const signature = body.mime === "application/pdf" ? bytes.subarray(0, 5).toString("latin1") === "%PDF-" : body.mime === "image/png" ? bytes[0] === 0x89 : true;
       if (!MIMES.includes(body.mime) || !body.name) return route.fulfill({ status: 400, json: { error: "Choose a photo or PDF smaller than 10 MB." } });
       if (!bytes.length || bytes.length > 10 * 1024 * 1024 || !signature) return route.fulfill({ status: 400, json: { error: "This file is not a supported photo or PDF, or exceeds 10 MB." } });

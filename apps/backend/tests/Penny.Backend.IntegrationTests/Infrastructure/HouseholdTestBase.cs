@@ -55,6 +55,29 @@ public abstract class HouseholdTestBase(ApiFixture fixture) : IntegrationTestBas
         return JsonDocument.Parse(text).RootElement.Clone();
     }
 
+    // The upload's Content-Disposition for `name` (RFC 8187, as the clients send it).
+    protected static string Disposition(string name) =>
+        "attachment; filename*=UTF-8''" + Uri.EscapeDataString(name);
+
+    // `POST /api/receipts` with the file as the body (MAZ-131); returns the created
+    // `{id, name, mime, uri}`.
+    protected async Task<JsonElement> UploadReceiptFileAsync(
+        string token,
+        string name,
+        string mime,
+        byte[] content
+    )
+    {
+        using var request = Authorized(HttpMethod.Post, "/api/receipts", bearer: token);
+        request.Content = new ByteArrayContent(content);
+        request.Content.Headers.ContentType = new(mime);
+        request.Content.Headers.TryAddWithoutValidation("Content-Disposition", Disposition(name));
+        using var response = await Client.SendAsync(request, Ct);
+        var text = await response.Content.ReadAsStringAsync(Ct);
+        response.StatusCode.ShouldBe(HttpStatusCode.Created, text);
+        return JsonDocument.Parse(text).RootElement.Clone();
+    }
+
     protected async Task ExpectErrorAsync(
         HttpMethod method,
         string path,

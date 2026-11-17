@@ -66,7 +66,7 @@ test("a PDF and a photo survive upload, save, reload, preview and download; anot
   await preview.getByRole("button", { name: "Close" }).click();
 
   // A photo straight through the API, then read back over HTTP with each account.
-  const uploaded = await page.request.post("/api/receipts", { data: { name: "photo.png", mime: "image/png", base64: png.toString("base64") } });
+  const uploaded = await page.request.post("/api/receipts", { data: png, headers: { "Content-Type": "image/png", "Content-Disposition": "attachment; filename*=UTF-8''photo.png" } });
   expect(uploaded.status()).toBe(201);
   const { uri } = (await uploaded.json()) as { uri: string };
   const mine = await page.request.get(uri);

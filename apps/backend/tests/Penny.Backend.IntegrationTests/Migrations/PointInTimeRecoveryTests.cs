@@ -61,17 +61,11 @@ public sealed class PointInTimeRecoveryTests(ApiFixture fixture) : SharedExpense
             Expense(5000, sam.UserId, extra: new { title = "Accepted after backup" })
         );
         var receipt = Id(
-            await ExpectAsync(
-                HttpMethod.Post,
-                "/api/receipts",
+            await UploadReceiptFileAsync(
                 alex.Token,
-                HttpStatusCode.Created,
-                new
-                {
-                    name = "Recovery.pdf",
-                    mime = "application/pdf",
-                    base64 = Convert.ToBase64String("%PDF-1.7\nrecovery"u8.ToArray()),
-                }
+                "Recovery.pdf",
+                "application/pdf",
+                "%PDF-1.7\nrecovery"u8.ToArray()
             )
         );
         var restoreLsn = (string)

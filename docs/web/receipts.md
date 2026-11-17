@@ -19,7 +19,7 @@ The browser checks all of these before uploading, with the same rules as `Receip
 Add entry › More details, and the shared expense form, have a **Receipt** group (specimens `entry-extras`, `receipt-upload` and the web `add-entry` drop zone):
 
 - **Photo** and **File or PDF** open the file picker (Photo offers images only). A file can also be dropped on the dashed area. Both buttons are labelled for screen readers ("Attach a photo", "Replace with a file or PDF") and keyboard-reachable; the hidden file inputs are not in the tab order.
-- **Upload** sends the file as the API's JSON body (`{name, mime, base64}`) over `XMLHttpRequest`, because `fetch` reports no upload progress. A progress bar shows the bytes sent, with **Cancel upload**. Save waits: pressing it during an upload says so and saves nothing.
+- **Upload** sends the file itself as the request body (its type in `Content-Type`, its name in an RFC 8187 `Content-Disposition`, MAZ-131) over `XMLHttpRequest`, because `fetch` reports no upload progress. The browser streams the file; nothing is read into memory or re-encoded first. A progress bar shows the bytes sent, with **Cancel upload**. Save waits: pressing it during an upload says so and saves nothing.
 - **Failures** keep the draft and the receipt already attached. A network or server failure offers **Try again** with the same file; a refused file offers **Dismiss** only. Dismissing an error, cancelling, removing or finishing an upload returns focus to Photo, unless focus has moved elsewhere meanwhile.
 - **Ended session:** a 401 during upload or preview ends the session the usual way (sign-in with "Your session ended"). An unsaved new-entry draft, with its receipt link, survives that, like offline work.
 - **Offline:** the buttons are disabled and the hint says to connect; the rest of the entry still saves offline. A receipt uploaded earlier stays linked in the draft and syncs with the entry.
@@ -67,7 +67,7 @@ States: a damaged PDF ("This PDF can't be shown", Download kept), a photo the br
   With [browser telemetry](../self-hosting/observability.md#web-app-telemetry) on, `connect-src` also lists the configured collector URL, and nothing else.
 
   `worker-src 'self'` allows the pdf.js worker and `img-src blob:` the photo preview. `style-src 'unsafe-inline'` is there for the design kit's inline SVG icon styles. The NixOS module's nginx sends exactly this header with the SPA (`nix/module.nix`; `tests/security-headers.test.ts` keeps them identical), and `vite preview` sends it too, so the whole Playwright suite runs under it. If you serve `apps/web/dist` from your own proxy, send the same header on `/` and keep `nosniff`. The receipt downloads themselves keep the API's `Content-Security-Policy: default-src 'none'; sandbox`.
-- **Body size.** Uploads are JSON with base64, about 14 MB for a 10 MiB file; proxies must accept 20 MB request bodies on `/api/receipts` ([receipts](../reference/receipts.md#proxies-and-timeouts)).
+- **Body size.** A 10 MiB file is a 10 MiB request body; proxies must accept 20 MB request bodies on `/api/receipts` ([receipts](../reference/receipts.md#proxies-and-timeouts)).
 
 ## Encryption and key configuration
 

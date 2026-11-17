@@ -2,14 +2,14 @@ using Microsoft.AspNetCore.Http.Timeouts;
 using Microsoft.AspNetCore.Mvc;
 using Penny.Backend.Api.Authentication;
 using Penny.Backend.Api.Contracts;
-using Penny.Backend.Api.Ledgers;
+using Penny.Backend.Api.Receipts;
 using Penny.Backend.Application.Receipts;
 using Penny.Backend.Domain.Ledgers;
 
 namespace Penny.Backend.Api.Controllers;
 
-// Receipt upload and download (MAZ-60). Session-
-// protected by the fallback policy. Large bodies on slow links legitimately outlast
+// Receipt upload and download (MAZ-60; raw-body uploads since MAZ-131). Session-
+// protected by the fallback policy. A 10 MiB file on a slow link legitimately outlasts
 // the default request timeout, so these two operations opt out of it; Kestrel's
 // minimum data rates still end stalled transfers. See docs/reference/receipts.md.
 [ApiController]
@@ -26,10 +26,9 @@ public sealed class ReceiptsController(ReceiptService receipts) : ControllerBase
     [ProducesResponseType<ApiError>(413)]
     public async Task<IActionResult> Upload(CancellationToken cancellationToken)
     {
-        using var body = await LedgerBody.ReadAsync(Request, cancellationToken);
         var uploaded = await receipts.UploadAsync(
             User.Session().UserId,
-            body?.RootElement,
+            await ReceiptUploadReader.ReadAsync(Request, cancellationToken),
             cancellationToken
         );
         return StatusCode(

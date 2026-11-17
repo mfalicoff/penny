@@ -59,17 +59,11 @@ public sealed class PopulatedUpgradeTests(ApiFixture fixture) : SharedRecurrence
             Expense(4200, alex.UserId, extra: new { title = "Fromagerie" })
         );
         var rule = await CreateRuleAsync(home, sam.Token, Rule(90000, sam.UserId, "2026-10-01"));
-        var receipt = await ExpectAsync(
-            HttpMethod.Post,
-            "/api/receipts",
+        var receipt = await UploadReceiptFileAsync(
             alex.Token,
-            HttpStatusCode.Created,
-            new
-            {
-                name = "Upgrade.pdf",
-                mime = "application/pdf",
-                base64 = Convert.ToBase64String("%PDF-1.7\nupgrade"u8.ToArray()),
-            }
+            "Upgrade.pdf",
+            "application/pdf",
+            "%PDF-1.7\nupgrade"u8.ToArray()
         );
         await ExpectAsync(
             HttpMethod.Post,

@@ -170,13 +170,17 @@ public struct APIClient: Sendable {
 
     // MARK: Receipts
 
-    private struct ReceiptUploadBody: Encodable {
-        var name: String
-        var mime: String
-        var base64: String
+    /// The upload's `Content-Disposition` (MAZ-131): an RFC 8187 `filename*` with every UTF-8
+    /// byte outside the unreserved set percent-encoded.
+    public static func receiptDisposition(_ name: String) -> String {
+        let unreserved = CharacterSet(
+            charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
+        return "attachment; filename*=UTF-8''"
+            + (name.addingPercentEncoding(withAllowedCharacters: unreserved) ?? "")
     }
 
-    /// Uploads receipt bytes (1 byte to 10 MiB; mime must be one the contract allows).
+    /// Uploads receipt bytes (1 byte to 10 MiB; mime must be one the contract allows) as the
+    /// request body, with the type in `Content-Type` and the name in `Content-Disposition`.
     /// `progress` receives the fraction of the request body sent (0 to 1), on any thread.
     public func uploadReceipt(
         name: String, mime: String, data: Data, progress: (@Sendable (Double) -> Void)? = nil
@@ -186,10 +190,8 @@ public struct APIClient: Sendable {
         }
         guard ReceiptRules.mimes.contains(mime) else { throw APIError.invalidRequest(.invalidField("mime")) }
         guard !data.isEmpty, data.count <= ReceiptRules.maxBytes else {
-            throw APIError.invalidRequest(.invalidField("base64"))
+            throw APIError.invalidRequest(.invalidField("data"))
         }
-        let body = try JSONEncoder().encode(
-            ReceiptUploadBody(name: name, mime: mime, base64: data.base64EncodedString()))
         var report: UploadProgress?
         if let progress {
             report = { sent, total in
@@ -197,7 +199,9 @@ public struct APIClient: Sendable {
             }
         }
         let result = try await perform(
-            .post, "/api/receipts", body: body, timeout: configuration.transferTimeout, progress: report)
+            .post, "/api/receipts", body: data,
+            headers: ["Content-Type": mime, "Content-Disposition": Self.receiptDisposition(name)],
+            timeout: configuration.transferTimeout, progress: report)
         return try decode(result.body)
     }
 
@@ -297,11 +301,13 @@ public struct APIClient: Sendable {
     }
 
     func perform(
-        _ method: Method, _ path: String, query: [URLQueryItem] = [], body: Data? = nil, authenticated: Bool = true,
+        _ method: Method, _ path: String, query: [URLQueryItem] = [], body: Data? = nil,
+        headers: [String: String] = [:], authenticated: Bool = true,
         timeout: TimeInterval? = nil, progress: UploadProgress? = nil
     ) async throws -> HTTPResult {
         let request = try makeRequest(
-            method, path, query: query, body: body, authenticated: authenticated, timeout: timeout)
+            method, path, query: query, body: body, headers: headers, authenticated: authenticated,
+            timeout: timeout)
         let result: HTTPResult
         do {
             try Task.checkCancellation()
@@ -325,8 +331,8 @@ public struct APIClient: Sendable {
     }
 
     func makeRequest(
-        _ method: Method, _ path: String, query: [URLQueryItem] = [], body: Data?, authenticated: Bool,
-        timeout: TimeInterval?
+        _ method: Method, _ path: String, query: [URLQueryItem] = [], body: Data?,
+        headers: [String: String] = [:], authenticated: Bool, timeout: TimeInterval?
     ) throws(APIError) -> URLRequest {
         guard var components = URLComponents(url: configuration.server.url, resolvingAgainstBaseURL: false) else {
             throw .invalidRequest(.wrongServer)
@@ -346,6 +352,8 @@ public struct APIClient: Sendable {
             request.httpBody = body
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         }
+        // Per-request headers win, e.g. a receipt upload's own type (MAZ-131).
+        for (name, value) in headers { request.setValue(value, forHTTPHeaderField: name) }
         if authenticated {
             // The session's server equals the configured one (checked in init), so the
             // token only ever goes to the server that issued it.

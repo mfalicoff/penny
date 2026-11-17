@@ -9,6 +9,7 @@ import {
   RECEIPT_MESSAGES,
   ReceiptFileError,
   receiptMimeOf,
+  receiptDisposition,
   receiptName,
   uploadReceipt,
   UPLOAD_TIMEOUT_MS,
@@ -67,17 +68,17 @@ class FakeXhr {
   setRequestHeader(name: string, value: string) {
     this.headers[name] = value;
   }
-  send(body: string) {
+  send(body: Blob) {
     FakeXhr.sent.push(this);
     void (async () => {
-      this.upload.onprogress?.({ lengthComputable: true, loaded: body.length / 2, total: body.length });
+      this.upload.onprogress?.({ lengthComputable: true, loaded: body.size / 2, total: body.size });
       if (FakeXhr.gate) await FakeXhr.gate;
       if (this.aborted) return;
       try {
         const response = await fetch(this.url, { method: this.method, body, headers: this.headers });
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- abort() may run while fetch is pending.
         if (this.aborted) return;
-        this.upload.onprogress?.({ lengthComputable: true, loaded: body.length, total: body.length });
+        this.upload.onprogress?.({ lengthComputable: true, loaded: body.size, total: body.size });
         this.status = response.status;
         this.responseText = await response.text();
         this.onload?.();
@@ -165,13 +166,20 @@ describe("receipt file checks", () => {
 });
 
 describe("uploadReceipt", () => {
-  it("sends the file as base64 JSON with progress and returns the link", async () => {
+  it("names the file in an RFC 8187 header, escaping what encodeURIComponent keeps", () => {
+    expect(receiptDisposition("Reçu (1)!*'~.pdf")).toBe("attachment; filename*=UTF-8''Re%C3%A7u%20%281%29%21%2A%27~.pdf");
+    expect(receiptDisposition("東京 a+b.png")).toBe("attachment; filename*=UTF-8''%E6%9D%B1%E4%BA%AC%20a%2Bb.png");
+  });
+
+  it("sends the file itself with its type, name header and progress, and returns the link", async () => {
     const fetchMock = ledgerServer().fetchMock;
     fetchMock.mockImplementationOnce(() => Promise.resolve(json({ id: "r1", name: "receipt.pdf", mime: "application/pdf", uri: "/api/receipts/r1" }, 201)));
     const progress: number[] = [];
     const receipt = await uploadReceipt(file(PDF_BYTES, "receipt.pdf", "application/pdf"), "application/pdf", { signal: new AbortController().signal, onProgress: (value) => progress.push(value) });
     expect(receipt).toEqual({ id: "r1", name: "receipt.pdf", mime: "application/pdf", uri: "/api/receipts/r1" });
-    expect(bodyOf(callsTo(fetchMock, "/api/receipts")[0])).toEqual({ name: "receipt.pdf", mime: "application/pdf", base64: btoa(String.fromCharCode(...PDF_BYTES)) });
+    const init = callsTo(fetchMock, "/api/receipts")[0];
+    expect(init?.headers).toMatchObject({ "Content-Type": "application/pdf", "Content-Disposition": "attachment; filename*=UTF-8''receipt.pdf" });
+    expect(Array.from(new Uint8Array(await (init?.body as Blob).arrayBuffer()))).toEqual(Array.from(PDF_BYTES));
     expect(progress).toEqual([0, 0.5, 1]);
   });
 
@@ -234,10 +242,14 @@ function receiptServer(initial: Parameters<typeof ledgerServer>[0] = {}) {
   server.fetchMock.mockImplementation((input, init) => {
     const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
     if (url === "/api/receipts" && init?.method === "POST") {
-      const body = bodyOf(init) as { name: string; mime: string; base64: string };
+      const headers = init.headers as Record<string, string>;
+      const mime = headers["Content-Type"] ?? "";
+      const name = decodeURIComponent((headers["Content-Disposition"] ?? "").replace(/^attachment; filename\*=UTF-8''/, ""));
       const id = `r${String(files.size + 1)}`;
-      files.set(id, { mime: body.mime, bytes: Uint8Array.from(atob(body.base64), (character) => character.charCodeAt(0)) });
-      return Promise.resolve(json({ id, name: body.name, mime: body.mime, uri: `/api/receipts/${id}` }, 201));
+      return (init.body as Blob).arrayBuffer().then((buffer) => {
+        files.set(id, { mime, bytes: new Uint8Array(buffer) });
+        return json({ id, name, mime, uri: `/api/receipts/${id}` }, 201);
+      });
     }
     const match = /^\/api\/receipts\/(\w+)$/.exec(url);
     if (match) {
@@ -481,7 +493,7 @@ describe("receipts on shared expenses", () => {
     const uploads: unknown[] = [];
     const fetchMock = stubServer((url, init) => {
       if (url === "/api/receipts" && init?.method === "POST") {
-        uploads.push(bodyOf(init));
+        uploads.push(init.body);
         return json({ id: "rs1", name: "groceries.png", mime: "image/png", uri: "/api/receipts/rs1" }, 201);
       }
       if (!url.startsWith("/api/households") && url !== "/api/ledger") return undefined;
