@@ -22,10 +22,9 @@ public static class TelemetryServices
         builder.Services.AddSingleton(options);
         if (!options.Enabled)
             return options;
-        var version =
-            typeof(TelemetryServices)
-                .Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-                ?.InformationalVersion.Split('+')[0]
+        var version = typeof(TelemetryServices)
+            .Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+            ?.InformationalVersion.Split('+')[0]
             ?? "unknown";
         builder
             .Services.AddOpenTelemetry()

@@ -23,8 +23,7 @@ public sealed class LedgerService(ILedgerRepository ledgers, IReceiptRepository 
     public async Task<LedgerSnapshot> ReadAsync(string userId, CancellationToken cancellationToken)
     {
         // Every account is created with a ledger; a missing one is a server fault.
-        var stored =
-            await ledgers.ReadAsync(userId, cancellationToken)
+        var stored = await ledgers.ReadAsync(userId, cancellationToken)
             ?? throw new InvalidOperationException("Account ledger is missing.");
         var receiptInfo = await receipts.DescribeAsync(
             userId,
@@ -41,8 +40,7 @@ public sealed class LedgerService(ILedgerRepository ledgers, IReceiptRepository 
         CancellationToken cancellationToken
     )
     {
-        var write =
-            (body is { } value ? LedgerReader.Read(value) : null)
+        var write = (body is { } value ? LedgerReader.Read(value) : null)
             ?? throw new BackendFailure(FailureKind.Invalid, InvalidLedger);
         var ledger = write.Ledger;
         if (

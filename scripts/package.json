@@ -9,7 +9,7 @@
     "eslint": "^10.0.0",
     "globals": "^17.0.0",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
-    "typescript-eslint": "8.72.2"
+    "typescript-eslint": "8.73.0"
   },
   "scripts": {
     "lint": "eslint --max-warnings=0 .",
@@ -19,6 +19,7 @@
     "test-env": "node test-env/penny-env.mjs",
     "dashboards:generate": "node grafana-dashboards.mjs",
     "dashboards:check": "node grafana-dashboards.mjs --check",
-    "version:check": "node check-version.mjs"
+    "version:check": "node check-version.mjs",
+    "pr-title:check": "node pr-title.mjs"
   }
 }

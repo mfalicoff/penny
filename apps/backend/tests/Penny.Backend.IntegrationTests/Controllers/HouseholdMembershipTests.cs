@@ -557,10 +557,7 @@ public sealed class HouseholdMembershipTests(ApiFixture fixture) : HouseholdTest
         (await ListIdsAsync(alex)).ShouldBeEmpty();
         (await ListIdsAsync(bea)).ShouldBeEmpty();
         // History stays readable by its members.
-        (await DetailAsync(home, bea))
-            .GetProperty("members")
-            .GetArrayLength()
-            .ShouldBe(2);
+        (await DetailAsync(home, bea)).GetProperty("members").GetArrayLength().ShouldBe(2);
         // Outstanding invites are revoked and no change is accepted.
         await ExpectErrorAsync(
             HttpMethod.Post,

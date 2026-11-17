@@ -240,9 +240,8 @@ public sealed class SearchAccessTests(ApiFixture fixture) : SearchTestBase(fixtu
         Total(page).ShouldBe(3);
         Keys(page).ShouldBe(["personal:s01", "personal:s02", "personal:s04"]);
         Total(await SearchAsync(bea, new { })).ShouldBe(11);
-        await SaveLedgerAsync(
-            alex,
-            ledger => ledger["transactions"] = new System.Text.Json.Nodes.JsonArray()
+        await SaveLedgerAsync(alex, ledger =>
+            ledger["transactions"] = new System.Text.Json.Nodes.JsonArray()
         );
         Total(await SearchAsync(alex, new { })).ShouldBe(0);
         Total(await SearchAsync(bea, new { })).ShouldBe(11);

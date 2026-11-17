@@ -100,18 +100,17 @@ public sealed class PostgresInboundMailQueue(
                 row.UserId,
                 row.Id
             );
-            var senders =
-                JsonSerializer.Deserialize<string[]>(
-                    sealer.OpenText(
-                        address.EncryptionVersion,
-                        address.KeySalt,
-                        address.AllowedSendersNonce,
-                        address.AllowedSendersEncrypted,
-                        SendersPart,
-                        address.UserId,
-                        address.Id
-                    )
-                ) ?? [];
+            var senders = JsonSerializer.Deserialize<string[]>(
+                sealer.OpenText(
+                    address.EncryptionVersion,
+                    address.KeySalt,
+                    address.AllowedSendersNonce,
+                    address.AllowedSendersEncrypted,
+                    SendersPart,
+                    address.UserId,
+                    address.Id
+                )
+            ) ?? [];
             return new OpenedMessage(raw, senders);
         }
         catch (Exception error)

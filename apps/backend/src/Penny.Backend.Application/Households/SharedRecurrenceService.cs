@@ -129,15 +129,13 @@ public sealed class SharedRecurrenceService(ISharedExpenseRepository expenses, T
                     template.ReceiptId
                 );
                 await ValidateSplitAsync(store, householdId, template);
-                var stored =
-                    await FindAsync(store, householdId, ruleId)
+                var stored = await FindAsync(store, householdId, ruleId)
                     ?? throw new BackendFailure(FailureKind.NotFound, RuleNotFound);
                 if (stored.Revision != update.Revision)
                     throw new BackendFailure(FailureKind.Conflict, RuleChanged);
                 // Another member's edit keeps the payer's private account; the payer
                 // replaces or clears it.
-                var accountId =
-                    template.AccountId
+                var accountId = template.AccountId
                     ?? (
                         !string.Equals(actorId, template.PayerUserId, StringComparison.Ordinal)
                         && string.Equals(
@@ -225,8 +223,7 @@ public sealed class SharedRecurrenceService(ISharedExpenseRepository expenses, T
                 await SharedExpenseService.RequireMemberAsync(store, householdId, actorId);
                 if (revision is not { } expected)
                     throw new BackendFailure(FailureKind.Invalid, HouseholdService.InvalidData);
-                var stored =
-                    await FindAsync(store, householdId, ruleId)
+                var stored = await FindAsync(store, householdId, ruleId)
                     ?? throw new BackendFailure(FailureKind.NotFound, RuleNotFound);
                 if (
                     stored.Revision != expected

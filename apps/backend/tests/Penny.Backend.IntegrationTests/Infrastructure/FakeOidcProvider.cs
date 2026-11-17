@@ -106,18 +106,13 @@ public sealed class FakeOidcProvider : IAsyncLifetime
         string connectionString,
         IReadOnlyDictionary<string, string>? settings = null,
         Action<IServiceCollection>? configure = null
-    ) =>
-        new(
-            connectionString,
-            settings ?? Settings(),
-            services =>
-            {
-                services
-                    .AddHttpClient(OidcProviderClient.HttpClientName)
-                    .ConfigurePrimaryHttpMessageHandler(CreateHandler);
-                configure?.Invoke(services);
-            }
-        );
+    ) => new(connectionString, settings ?? Settings(), services =>
+        {
+            services
+                .AddHttpClient(OidcProviderClient.HttpClientName)
+                .ConfigurePrimaryHttpMessageHandler(CreateHandler);
+            configure?.Invoke(services);
+        });
 
     // Plays the user approving sign-in at the provider and returns the redirect the
     // app receives. Asserts the request is a code flow with S256 PKCE.

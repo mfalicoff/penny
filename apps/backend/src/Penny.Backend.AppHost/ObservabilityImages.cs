@@ -7,15 +7,15 @@ public static class ObservabilityImages
     public static readonly PinnedImage Alloy = new(
         "docker.io",
         "grafana/alloy",
-        "v1.21.1",
-        "4039c971193053a84e53dd9ed3e7d4561c069256b024631cd3498a353ed7ece8"
+        "v1.22.0",
+        "9acc2529bc1edb7f5b2bd801dd8334ebc80c158e3a9e5526ecd7c9a273d43189"
     );
 
     public static readonly PinnedImage Loki = new(
         "docker.io",
         "grafana/loki",
-        "3.6.19",
-        "0f9cbc340cbe33ee498e654075034336962057db072f57b37f253e14d476443a"
+        "3.7.10",
+        "b43c257ccfc925d4a50b8717cac61a3b51df8c48d01847936057e5c4075a24a7"
     );
 
     public static readonly PinnedImage Tempo = new(
@@ -28,14 +28,14 @@ public static class ObservabilityImages
     public static readonly PinnedImage Prometheus = new(
         "docker.io",
         "prom/prometheus",
-        "v3.15.1",
-        "fa3302279710be2f21a8301ec17a8b4f2301fd829bd113839b3b6b02b6f191a2"
+        "v3.16.0",
+        "e04987641b57704f408e31f6373ba4138ecf27cb4a165d24aabb6c38fddd0f06"
     );
 
     public static readonly PinnedImage Grafana = new(
         "docker.io",
         "grafana/grafana",
-        "13.2.5",
-        "9f7aa1e1e3246aade5792d35a738049f7f32f89cd51d1956cf426a4e86268a84"
+        "13.3.1",
+        "0615ec4fbd4072004b7d86b46ded63013a74b7d6eb1119273dd89e8fa25c13cf"
     );
 }

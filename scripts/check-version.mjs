@@ -18,6 +18,18 @@ if (apiVersion !== version) {
   throw new Error(`${serverInfoPath} CurrentVersion must be ${version}; found ${apiVersion ?? "none"}.`);
 }
 
+// Release Please bumps from the manifest, not from these lines, so a hand edit here is
+// silently ignored (and then overwritten) by the next release PR. Release PRs change all
+// three together; pick a version with a `Release-As: x.y.z` commit footer instead.
+const manifest = JSON.parse(readFileSync(new URL("../.release-please-manifest.json", import.meta.url), "utf8"));
+const released = manifest["."];
+if (released !== version) {
+  throw new Error(
+    `apps/ios/Configuration/Version.xcconfig holds ${version} but .release-please-manifest.json holds ${released ?? "none"}. ` +
+      "Don't edit the version by hand: merge the release PR, or add a `Release-As: x.y.z` footer to a commit (docs/development/releases.md).",
+  );
+}
+
 const ref = process.env.GITHUB_REF;
 if (ref?.startsWith("refs/tags/") && ref !== `refs/tags/v${version}`) {
   throw new Error(`Release tag must be v${version}; received ${ref.slice("refs/tags/".length)}.`);

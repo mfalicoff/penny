@@ -16,19 +16,17 @@ public static class SearchRateLimit
     public static readonly TimeSpan Window = TimeSpan.FromMinutes(1);
 
     public static void Configure(RateLimiterOptions options, int permits) =>
-        options.AddPolicy(
-            Policy,
-            context =>
-                SessionCredentials.Read(context.Request) is { } token
-                    ? RateLimitPartition.GetFixedWindowLimiter(
-                        SessionTokens.Hash(token),
-                        _ => new FixedWindowRateLimiterOptions
-                        {
-                            PermitLimit = permits,
-                            Window = Window,
-                            QueueLimit = 0,
-                        }
-                    )
-                    : RateLimitPartition.GetNoLimiter("anonymous")
+        options.AddPolicy(Policy, context =>
+            SessionCredentials.Read(context.Request) is { } token
+                ? RateLimitPartition.GetFixedWindowLimiter(
+                    SessionTokens.Hash(token),
+                    _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = permits,
+                        Window = Window,
+                        QueueLimit = 0,
+                    }
+                )
+                : RateLimitPartition.GetNoLimiter("anonymous")
         );
 }

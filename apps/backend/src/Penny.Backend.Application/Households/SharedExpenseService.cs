@@ -169,8 +169,7 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
                 var destination = moving
                     ? await LockedMemberAsync(store, locked, destinationId, actorId)
                     : household;
-                var stored =
-                    await FindAsync(store, householdId, expenseId)
+                var stored = await FindAsync(store, householdId, expenseId)
                     ?? throw new BackendFailure(FailureKind.NotFound, ExpenseNotFound);
                 var before = ExpenseView.From(stored, actorId);
                 if (stored.Revision != update.Revision)
@@ -207,8 +206,7 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
                     throw new BackendFailure(FailureKind.Invalid, PayerNotMember);
                 // Another member's edit keeps the payer's private account; the payer
                 // replaces or clears it.
-                var accountId =
-                    input.AccountId
+                var accountId = input.AccountId
                     ?? (
                         !string.Equals(actorId, input.PayerUserId, StringComparison.Ordinal)
                         && string.Equals(
@@ -317,8 +315,7 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
                 await RequireMemberAsync(store, householdId, actorId);
                 if (revision is not { } expected)
                     throw new BackendFailure(FailureKind.Invalid, HouseholdService.InvalidData);
-                var stored =
-                    await FindAsync(store, householdId, expenseId)
+                var stored = await FindAsync(store, householdId, expenseId)
                     ?? throw new BackendFailure(FailureKind.NotFound, ExpenseNotFound);
                 if (stored.Revision != expected)
                     throw new BackendFailure(FailureKind.Conflict, Changed);
@@ -357,16 +354,14 @@ public sealed class SharedExpenseService(ISharedExpenseRepository expenses, Time
     )
     {
         // Payments validate the body before checking access.
-        var request =
-            ExpenseReader.ReadPayment(body)
+        var request = ExpenseReader.ReadPayment(body)
             ?? throw new BackendFailure(FailureKind.Invalid, HouseholdService.InvalidData);
         var now = Now();
         return await expenses.WriteAsync(
             async store =>
             {
                 await RequireMemberAsync(store, householdId, actorId);
-                var stored =
-                    await FindAsync(store, householdId, expenseId)
+                var stored = await FindAsync(store, householdId, expenseId)
                     ?? throw new BackendFailure(FailureKind.NotFound, ExpenseNotFound);
                 if (
                     !string.Equals(actorId, request.FromUserId, StringComparison.Ordinal)

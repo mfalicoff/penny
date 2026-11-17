@@ -20,18 +20,16 @@ public static class AuthRateLimit
 
     public static void Configure(RateLimiterOptions options, int permits)
     {
-        options.AddPolicy(
-            Policy,
-            context =>
-                RateLimitPartition.GetFixedWindowLimiter(
-                    ClientKey(context.Connection.RemoteIpAddress),
-                    _ => new FixedWindowRateLimiterOptions
-                    {
-                        PermitLimit = permits,
-                        Window = Window,
-                        QueueLimit = 0,
-                    }
-                )
+        options.AddPolicy(Policy, context =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                ClientKey(context.Connection.RemoteIpAddress),
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = permits,
+                    Window = Window,
+                    QueueLimit = 0,
+                }
+            )
         );
         options.OnRejected = (rejected, cancellationToken) =>
         {

@@ -19,9 +19,9 @@ public static class DatabaseBootstrap
 
     public static string Sql()
     {
-        using var stream =
-            typeof(DatabaseBootstrap).Assembly.GetManifestResourceStream(ResourceName)
-            ?? throw new InvalidOperationException("The bootstrap script is missing.");
+        using var stream = typeof(DatabaseBootstrap).Assembly.GetManifestResourceStream(
+            ResourceName
+        ) ?? throw new InvalidOperationException("The bootstrap script is missing.");
         using var reader = new StreamReader(stream);
         return reader.ReadToEnd();
     }

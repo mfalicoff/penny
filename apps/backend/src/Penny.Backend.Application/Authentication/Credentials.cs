@@ -80,20 +80,16 @@ public sealed partial record Credentials(string Email, string Password)
     // JavaScript lowercase is ASCII is KELVIN SIGN (U+212A -> "k"). Every other
     // non-ASCII character fails the pattern either way, so this matches toLowerCase().
     private static string LowerCase(string value) =>
-        string.Create(
-            value.Length,
-            value,
-            static (target, source) =>
-            {
-                for (var i = 0; i < source.Length; i++)
-                    target[i] = source[i] switch
-                    {
-                        >= 'A' and <= 'Z' => (char)(source[i] + 32),
-                        (char)0x212A => 'k',
-                        var other => other,
-                    };
-            }
-        );
+        string.Create(value.Length, value, static (target, source) =>
+        {
+            for (var i = 0; i < source.Length; i++)
+                target[i] = source[i] switch
+                {
+                    >= 'A' and <= 'Z' => (char)(source[i] + 32),
+                    (char)0x212A => 'k',
+                    var other => other,
+                };
+        });
 
     // The email pattern every client applies.
     [GeneratedRegex(

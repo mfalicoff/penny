@@ -192,8 +192,7 @@ internal sealed class PostgresSharedExpenseTransaction(
 
     public async Task<bool> AddPaymentAsync(StoredReimbursement payment, long revision)
     {
-        var expenseId =
-            payment.ExpenseId
+        var expenseId = payment.ExpenseId
             ?? throw new ArgumentException("A payment belongs to an expense.", nameof(payment));
         var updated = await Live(payment.HouseholdId, expenseId, revision)
             .ExecuteUpdateAsync(

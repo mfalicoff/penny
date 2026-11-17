@@ -33,8 +33,7 @@ public sealed class SearchService(ISearchRepository search, ITextEmbedder embedd
         var fingerprint = SearchCursor.Fingerprint(request);
         SearchPosition? after = null;
         if (request.Cursor is { } cursor)
-            after =
-                SearchCursor.Decode(cursor, fingerprint, request.Sort)
+            after = SearchCursor.Decode(cursor, fingerprint, request.Sort)
                 ?? throw new BackendFailure(FailureKind.Invalid, SearchCursor.Invalid);
         // The meaning tier needs a query with a letter or digit.
         var vector = SearchText.HasLetterOrDigit(request.Query)
@@ -82,8 +81,8 @@ public sealed class SearchService(ISearchRepository search, ITextEmbedder embedd
                 LedgerMapper.ToEntry(entry, receipts),
                 null
             );
-        var expense =
-            hit.Expense ?? throw new InvalidOperationException("A search hit has no result.");
+        var expense = hit.Expense
+            ?? throw new InvalidOperationException("A search hit has no result.");
         return new(
             hit.Key,
             SearchReader.Shared,

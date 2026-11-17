@@ -38,6 +38,24 @@ public sealed class MailConverterTests
         }
     }
 
+    // Without these the converter rejects every message as RenderInvalid, which reads as
+    // a converter bug. Fail with the cause instead (never skip: CI installs them).
+    public MailConverterTests()
+    {
+        string[] required = ["pdfinfo", "vipsthumbnail"];
+        var missing = required.Where(program => !OnPath(program)).ToArray();
+        if (missing.Length > 0)
+            throw new InvalidOperationException(
+                $"{string.Join(" and ", missing)} not found on PATH. Install poppler-utils and "
+                    + "libvips-tools, or run the tests from `nix develop` (flake.nix)."
+            );
+    }
+
+    private static bool OnPath(string program) =>
+        (Environment.GetEnvironmentVariable("PATH") ?? "")
+            .Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries)
+            .Any(directory => File.Exists(Path.Combine(directory, program)));
+
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     private static MailConverter Converter(RecordingRenderer renderer, MailLimits? limits = null) =>
