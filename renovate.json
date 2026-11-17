@@ -1,6 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended", "group:all"],
+  "extends": ["config:recommended"],
   "enabledManagers": ["npm", "github-actions", "dockerfile", "docker-compose", "nuget"],
   "automerge": false,
   "prConcurrentLimit": 1,
@@ -9,7 +9,72 @@
   "semanticCommitScope": "deps",
   "packageRules": [
     {
-      "description": "Majors often need a migration (.NET, TypeScript, Tempo, Gotenberg): approve them one at a time from the dependency dashboard instead of in the grouped PR.",
+      "description": "One PR per app for minor, patch, pin and digest updates.",
+      "matchFileNames": ["apps/web/**", "deploy/web/**"],
+      "groupName": "web (non-major)"
+    },
+    {
+      "matchFileNames": ["apps/backend/**"],
+      "groupName": "backend (non-major)"
+    },
+    {
+      "matchFileNames": ["apps/email-worker/**"],
+      "groupName": "email-worker (non-major)"
+    },
+    {
+      "matchFileNames": ["scripts/**"],
+      "groupName": "scripts (non-major)"
+    },
+    {
+      "matchFileNames": ["design-kit/**"],
+      "groupName": "design-kit (non-major)"
+    },
+    {
+      "matchFileNames": ["deploy/compose.yaml", "deploy/compose.build.yaml"],
+      "groupName": "deploy (non-major)"
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "groupName": "github-actions (non-major)"
+    },
+    {
+      "description": "A separate PR per app for majors.",
+      "matchFileNames": ["apps/web/**", "deploy/web/**"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "web (major)"
+    },
+    {
+      "matchFileNames": ["apps/backend/**"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "backend (major)"
+    },
+    {
+      "matchFileNames": ["apps/email-worker/**"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "email-worker (major)"
+    },
+    {
+      "matchFileNames": ["scripts/**"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "scripts (major)"
+    },
+    {
+      "matchFileNames": ["design-kit/**"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "design-kit (major)"
+    },
+    {
+      "matchFileNames": ["deploy/compose.yaml", "deploy/compose.build.yaml"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "deploy (major)"
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "github-actions (major)"
+    },
+    {
+      "description": "Majors often need a migration (.NET, TypeScript, Tempo, Gotenberg): approve each app's major PR from the dependency dashboard.",
       "matchUpdateTypes": ["major"],
       "dependencyDashboardApproval": true
     }
