@@ -49,6 +49,7 @@ struct AccessibilityIDTests {
         #expect(AccessibilityID.Settings.currency("EUR") == "currency.EUR")
         #expect(AccessibilityID.Settings.row("currency") == "settings.currency")
         #expect(AccessibilityID.Sidebar.item("activity") == "sidebar.activity")
+        #expect(AccessibilityID.Settings.appLockDelay("oneMinute") == "appLock.delay.oneMinute")
     }
 
     @Test("whenViewsSetIdentifiers_EveryLiteral_ShouldFollowTheConvention")

@@ -119,8 +119,9 @@ struct CurrencySettingsView: View {
     }
 }
 
-/// The lock settings (`app-lock` card). Turning it on asks for biometrics first; the setting
-/// stays on this device. Widgets and notification previews are outside the lock.
+/// The lock settings (`app-lock` card). Turning it on asks for biometrics first; while it is on,
+/// Lock after (MAZ-133) chooses how long Penny can stay in the background before it locks. Both
+/// settings stay on this device. Widgets and notification previews are outside the lock.
 struct AppLockSettingsView: View {
     @Environment(AppLockController.self) private var lock
 
@@ -144,14 +145,47 @@ struct AppLockSettingsView: View {
                 Text("Ask for \(name) when Penny opens or comes back from the background.")
                     .textCase(nil)
             } footer: {
-                Text(
-                    "Your device passcode works as a backup. This setting stays on this device and isn't synced. "
-                        + "Widgets and notification previews aren't covered by the lock.")
+                if !lock.isEnabled { footer }
+            }
+            if lock.isEnabled {
+                Section {
+                    ForEach(AppLockDelay.allCases, id: \.self) { option in
+                        Button {
+                            lock.setDelay(option)
+                        } label: {
+                            HStack {
+                                Text(option.title).foregroundStyle(PennyColor.label)
+                                Spacer()
+                                if lock.delay == option {
+                                    Image(systemName: "checkmark").foregroundStyle(PennyColor.tint)
+                                }
+                            }
+                            .frame(minHeight: Metrics.minTouchTarget)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(lock.isBusy)
+                        .accessibilityAddTraits(lock.delay == option ? .isSelected : [])
+                        .accessibilityIdentifier("appLock.delay.\(option.rawValue)")
+                    }
+                } header: {
+                    Text("Lock after")
+                } footer: {
+                    footer
+                }
             }
         }
         .insetGroupedList()
         .background(PennyColor.background)
         .navigationTitle(SettingsView.lockTitle(lock.biometry))
         .accessibilityIdentifier("screen.appLock")
+    }
+
+    /// Under the last section: the passcode fallback, where the setting lives, and what the
+    /// lock doesn't cover.
+    private var footer: some View {
+        Text(
+            "Your device passcode works as a backup. This setting stays on this device and isn't synced. "
+                + "Widgets and notification previews aren't covered by the lock.")
     }
 }

@@ -18,6 +18,10 @@ public enum AppActivity: Equatable, Sendable {
 ///   before the app-switcher snapshot.
 /// - The on/off setting changes only after the person authenticates and the new value is
 ///   saved; a failed save leaves the previous setting in force.
+/// - Lock after (`delay`, MAZ-133): with a delay, going to the background conceals the app
+///   (the snapshot) but locks only if it stays there for the delay or longer, measured on the
+///   continuous clock (it keeps counting while the device sleeps). A cold launch always locks.
+///   The delay is a device preference and changes without a prompt: the app is already open.
 ///
 /// Widgets and notification previews are outside the lock; the settings screen says so. The
 /// widgets' own privacy rules (cleared on sign-out, redacted on a locked device) don't depend
@@ -41,21 +45,36 @@ public final class AppLockController {
     /// What went wrong last, worded for the person, with the next step.
     public private(set) var message: String?
     public private(set) var activity: AppActivity
+    /// How long the app can stay in the background before it locks.
+    public private(set) var delay: AppLockDelay
 
     @ObservationIgnored private let store: any AppLockSettingStore
     @ObservationIgnored private let authenticator: any DeviceAuthenticator
     /// Bumped when the app goes to the background; answers from an older generation are dropped.
     @ObservationIgnored private var generation = 0
     @ObservationIgnored private var wasBackgrounded = false
+    @ObservationIgnored private let preferences: any DevicePreferences
+    /// The length of a lock-delay minute: 60 seconds, shorter only for Debug UI tests.
+    @ObservationIgnored private let minute: Duration
+    @ObservationIgnored private let now: @MainActor () -> ContinuousClock.Instant
+    /// When an unlocked app went to the background with a delay; nil otherwise.
+    @ObservationIgnored private var backgroundedAt: ContinuousClock.Instant?
 
     public init(
         store: any AppLockSettingStore = KeychainAppLockSettingStore(),
         authenticator: any DeviceAuthenticator = LocalDeviceAuthenticator(),
-        activity: AppActivity = .active
+        preferences: any DevicePreferences = EphemeralDevicePreferences(),
+        activity: AppActivity = .active,
+        minute: Duration = .seconds(60),
+        now: @escaping @MainActor () -> ContinuousClock.Instant = { ContinuousClock.now }
     ) {
         self.store = store
         self.authenticator = authenticator
+        self.preferences = preferences
         self.activity = activity
+        self.minute = minute
+        self.now = now
+        delay = preferences.lockDelay
     }
 
     public var biometry: BiometryKind { authenticator.biometry }
@@ -98,14 +117,36 @@ public final class AppLockController {
     /// update, before the system takes the app-switcher snapshot. Going to the background
     /// cancels a prompt and ends its single-flight hold, so a quick return can prompt again;
     /// the cancelled prompt's late answer is dropped by its generation and never unlocks.
+    /// With a delay, the app locks on the way back (the first inactive or active) when it was
+    /// in the background for the delay or longer.
     public func setActivity(_ next: AppActivity) {
         activity = next
-        guard next == .background else { return }
+        guard next == .background else {
+            guard let since = backgroundedAt else { return }
+            backgroundedAt = nil
+            if isEnabled, status == .unlocked, since.duration(to: now()) >= minute * delay.minutes {
+                status = .locked
+            }
+            return
+        }
         generation += 1
         wasBackgrounded = true
         isBusy = false
         authenticator.cancel()
-        if isEnabled, status == .unlocked { status = .locked }
+        guard isEnabled, status == .unlocked else { return }
+        if delay == .immediately {
+            status = .locked
+        } else if backgroundedAt == nil {
+            backgroundedAt = now()
+        }
+    }
+
+    /// Changes Lock after and saves it on this device. It takes effect from the next time the
+    /// app goes to the background.
+    public func setDelay(_ next: AppLockDelay) {
+        guard next != delay else { return }
+        preferences.setLockDelay(next)
+        delay = next
     }
 
     /// `setActivity`, then on `.active` reads a setting that was unreadable, or prompts when

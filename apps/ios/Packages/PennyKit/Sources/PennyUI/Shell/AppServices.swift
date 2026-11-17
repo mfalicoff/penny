@@ -39,8 +39,10 @@ public struct AppServices {
 
     /// The real device services.
     public static func live() -> AppServices {
+        let preferences = UserDefaultsDevicePreferences()
         var services = AppServices(
-            preferences: UserDefaultsDevicePreferences(), lock: AppLockController(store: KeychainAppLockSettingStore()))
+            preferences: preferences,
+            lock: AppLockController(store: KeychainAppLockSettingStore(), preferences: preferences))
         services.widgets = WidgetPublisher.live()
         return services
     }
