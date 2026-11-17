@@ -101,6 +101,14 @@ release PR owns version bumps, the manifest, and the changelog. To correct the
 proposed version or notes before publishing, follow
 [Release Please's override instructions](https://github.com/googleapis/release-please#how-do-i-change-the-version-number).
 
+Don't edit `MARKETING_VERSION` or `CurrentVersion` by hand. Release Please
+computes the next version from `.release-please-manifest.json` and the commit
+messages, not from those lines, so a hand edit is ignored and later overwritten.
+To choose a version, land a commit with a `Release-As: 2.1.0` footer (an empty
+commit works: `git commit --allow-empty -m "chore: release 2.1.0" -m "Release-As: 2.1.0"`).
+`npm --prefix scripts run version:check` fails when the version lines and the
+manifest disagree.
+
 ### One-time GitHub setup
 
 Create a dedicated fine-grained personal access token for this repository
