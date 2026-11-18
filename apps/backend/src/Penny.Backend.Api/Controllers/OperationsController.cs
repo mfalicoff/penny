@@ -44,11 +44,9 @@ public sealed class OperationsController(IEnumerable<IStorageReadiness> probes) 
                 {
                     "postgres-version" => "The backend requires PostgreSQL 18.",
                     "schema" =>
-                        "Database schema is missing or incompatible. Run the explicit migration command.",
-                    "runtime-role" =>
-                        "Use a restricted runtime database role without schema creation privileges.",
+                        "Database schema is missing or incompatible. Restart the API to migrate, and check its startup log.",
                     "permissions" =>
-                        "Runtime database role cannot read compatibility metadata. Check its grants.",
+                        "Database user cannot read compatibility metadata. Check its privileges.",
                     "search-extensions" =>
                         "Database is missing the pg_trgm or vector extension. Create them as administrator.",
                     "receipt-storage" =>

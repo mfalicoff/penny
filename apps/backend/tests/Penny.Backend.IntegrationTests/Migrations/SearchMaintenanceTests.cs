@@ -16,7 +16,7 @@ public sealed class SearchMaintenanceTests(ApiFixture fixture) : SearchTestBase(
     private Dictionary<string, string> Environment() =>
         new()
         {
-            ["ConnectionStrings__Postgres"] = Fixture.RuntimeConnection,
+            ["ConnectionStrings__Postgres"] = Fixture.Connection,
             ["Receipts__Root"] = Fixture.ReceiptRoot,
             ["Receipts__MasterKey"] = Fixture.ReceiptKey,
             ["Search__ModelDirectory"] = SearchModel.Directory,
@@ -109,7 +109,7 @@ public sealed class SearchMaintenanceTests(ApiFixture fixture) : SearchTestBase(
         {
             await using var target = DatabaseSettings
                 .Create(
-                    new NpgsqlConnectionStringBuilder(Fixture.MigrationConnection)
+                    new NpgsqlConnectionStringBuilder(Fixture.Connection)
                     {
                         Database = name,
                     }.ConnectionString

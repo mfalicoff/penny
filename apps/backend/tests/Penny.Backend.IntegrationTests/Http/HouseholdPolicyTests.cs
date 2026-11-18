@@ -15,7 +15,7 @@ public sealed class HouseholdPolicyTests(ApiFixture fixture) : IntegrationTestBa
     public async Task whenJoinAttemptsExceedWindow_InviteRateLimit_ShouldReturnTooManyRequests()
     {
         await using var factory = new TestApiFactory(
-            Fixture.RuntimeConnection,
+            Fixture.Connection,
             new Dictionary<string, string> { ["Auth:InviteRateLimitPermits"] = "3" }
         );
         factory.UseKestrel(0);

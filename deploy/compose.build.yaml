@@ -2,9 +2,6 @@
 #   docker compose -f deploy/compose.yaml -f deploy/compose.build.yaml build
 # Set PENNY_API_IMAGE/PENNY_WEB_IMAGE in deploy/.env to name the local tags.
 services:
-  migrate:
-    build:
-      context: ../apps/backend
   api:
     build:
       context: ../apps/backend

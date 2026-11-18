@@ -19,9 +19,7 @@ public sealed class DatabaseSettings
     )
     {
         if (string.IsNullOrWhiteSpace(value))
-            throw new InvalidOperationException(
-                "Set ConnectionStrings__Postgres (or ConnectionStrings__Migration for the migration command)."
-            );
+            throw new InvalidOperationException("Set ConnectionStrings__Postgres.");
         if (
             maxPoolSize is < 1 or > 100
             || connectTimeoutSeconds is < 1 or > 30

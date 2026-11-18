@@ -1,11 +1,9 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
-using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using Penny.Backend.Api.Contracts;
 using Penny.Backend.IntegrationTests.Infrastructure;
-using Penny.Backend.Persistence.Migrations;
 using Shouldly;
 using Xunit;
 
@@ -56,7 +54,7 @@ public sealed class OperationsTests(ApiFixture fixture) : IntegrationTestBase(fi
     }
 
     [Fact]
-    public async Task whenRestrictedDatabaseCompatible_OperationsFlow_ShouldReturnHealthyResponses()
+    public async Task whenDatabaseCompatible_OperationsFlow_ShouldReturnHealthyResponses()
     {
         using var health = await Client.GetAsync("/api/health", Ct);
         health.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -80,9 +78,7 @@ public sealed class OperationsTests(ApiFixture fixture) : IntegrationTestBase(fi
         """INSERT INTO penny."__EFMigrationsHistory" VALUES ('29990101000000_Future', '10.0.14')""",
         "schema"
     )]
-    [InlineData("""REVOKE SELECT ON penny."__EFMigrationsHistory" FROM penny_runtime""", "grants")]
-    [InlineData("GRANT CREATE ON SCHEMA penny TO penny_runtime", "restricted")]
-    [InlineData("GRANT CREATE ON DATABASE penny_tests TO penny_runtime", "restricted")]
+    [InlineData("""REVOKE SELECT ON penny."__EFMigrationsHistory" FROM penny_app""", "privileges")]
     public async Task whenDatabaseIncompatible_Readiness_ShouldFailWhileLivenessSurvives(
         string mutation,
         string errorFragment
@@ -192,7 +188,7 @@ public sealed class OperationsTests(ApiFixture fixture) : IntegrationTestBase(fi
 
     private TestApiFactory ReceiptHost(string root, string minFreeMegabytes = "0") =>
         new(
-            Fixture.RuntimeConnection,
+            Fixture.Connection,
             new Dictionary<string, string>
             {
                 ["Receipts:Root"] = root,
@@ -201,10 +197,10 @@ public sealed class OperationsTests(ApiFixture fixture) : IntegrationTestBase(fi
         );
 
     [Fact]
-    public async Task whenSchemaMissing_StartupAndReadinessFlow_ShouldNotRunMigrations()
+    public async Task whenMigrateOnStartupOff_StartupAndReadinessFlow_ShouldNotRunMigrations()
     {
         await Fixture.SqlAsync("DROP SCHEMA penny CASCADE", Ct);
-        await using var factory = new TestApiFactory(Fixture.RuntimeConnection);
+        await using var factory = new TestApiFactory(Fixture.Connection);
         using var client = factory.CreateClient();
         using var response = await client.GetAsync("/api/ready", Ct);
         response.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
@@ -215,19 +211,25 @@ public sealed class OperationsTests(ApiFixture fixture) : IntegrationTestBase(fi
     }
 
     [Fact]
-    public async Task whenRuntimeRoleUsed_DatabaseWrites_ShouldRejectMigrationsAndMetadataUpdates()
+    public async Task whenSchemaMissing_Startup_ShouldMigrateBeforeServing()
     {
-        var runtime = Fixture.Factory.Services.GetRequiredService<NpgsqlDataSource>();
-        var error = await Should.ThrowAsync<PostgresException>(() =>
-            DatabaseMigrator.ApplyAsync(runtime, Ct)
+        await Fixture.SqlAsync("DROP SCHEMA penny CASCADE", Ct);
+        await using var factory = new TestApiFactory(
+            Fixture.Connection,
+            new Dictionary<string, string> { ["Database:MigrateOnStartup"] = "true" }
         );
-        error.SqlState.ShouldBe(PostgresErrorCodes.InsufficientPrivilege);
-        await using var update = runtime.CreateCommand(
-            """UPDATE penny."__EFMigrationsHistory" SET "ProductVersion" = 'changed'"""
+        using var client = factory.CreateClient();
+        using var response = await client.GetAsync("/api/ready", Ct);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task whenMigrateOnStartupInvalid_CreateHost_ShouldIdentifySetting()
+    {
+        await using var factory = Fixture.Factory.WithWebHostBuilder(builder =>
+            builder.UseSetting("Database:MigrateOnStartup", "sometimes")
         );
-        var denied = await Should.ThrowAsync<PostgresException>(() =>
-            update.ExecuteNonQueryAsync(Ct)
-        );
-        denied.SqlState.ShouldBe(PostgresErrorCodes.InsufficientPrivilege);
+        var error = Should.Throw<InvalidOperationException>(() => factory.CreateClient());
+        error.Message.ShouldContain("Database:MigrateOnStartup");
     }
 }

@@ -275,8 +275,6 @@ export async function up(options = {}) {
   mkdirSync(join(directory, "logs"), { recursive: true, mode: 0o700 });
   const secrets = {
     admin: randomBytes(24).toString("hex"),
-    migration: randomBytes(24).toString("hex"),
-    runtime: randomBytes(24).toString("hex"),
   };
   const host = options.host ?? "127.0.0.1";
   const state = {
@@ -300,15 +298,6 @@ export async function up(options = {}) {
     else await startPostgresContainer(state, secrets);
     const connection = (user, password) =>
       `Host=127.0.0.1;Port=${state.databasePort};Database=${state.database};Username=${user};Password=${password};SSL Mode=Disable`;
-    // Roles, schema and extensions (as administrator), migrations and runtime grants.
-    run("bash", [join(backend, "dotnet.sh"), apiDll, "migrate", "--bootstrap", "--grant-runtime"], {
-      env: {
-        ...process.env,
-        ConnectionStrings__Admin: connection("postgres", secrets.admin),
-        ConnectionStrings__Migration: connection("penny_migrator", secrets.migration),
-        ConnectionStrings__Postgres: connection("penny_runtime", secrets.runtime),
-      },
-    });
     const receiptKey = randomBytes(32).toString("base64");
     state.apiPort = options.port ?? await freePort(host);
     state.apiUrl = `http://${host === "0.0.0.0" ? "127.0.0.1" : host}:${state.apiPort}`;
@@ -329,7 +318,8 @@ export async function up(options = {}) {
         ...process.env,
         ASPNETCORE_ENVIRONMENT: "Testing",
         ASPNETCORE_URLS: `http://${host}:${state.apiPort}`,
-        ConnectionStrings__Postgres: connection("penny_runtime", secrets.runtime),
+        // A disposable cluster: the API uses its administrator and migrates on startup.
+        ConnectionStrings__Postgres: connection("postgres", secrets.admin),
         Receipts__Root: state.receiptRoot,
         Receipts__MasterKey: receiptKey,
         Search__ModelDirectory: modelDirectory,
@@ -382,7 +372,7 @@ export async function up(options = {}) {
   }
 }
 
-/** Container mode: the pinned image (`migrate --bootstrap` creates the roles). Sets databasePort. */
+/** Container mode: the pinned image (the API migrates it on startup). Sets databasePort. */
 async function startPostgresContainer(state, secrets) {
   const cli = state.cli;
   // tmpfs storage: nothing outlives the container, and two runs never share a volume.

@@ -18,7 +18,7 @@ public sealed class OidcPolicyTests(ApiFixture fixture, FakeOidcProvider provide
     {
         var settings = FakeOidcProvider.Settings();
         settings["Auth:RateLimitPermits"] = "4";
-        await using var api = Provider.CreateApi(Fixture.RuntimeConnection, settings);
+        await using var api = Provider.CreateApi(Fixture.Connection, settings);
         using var client = CreateClient(api);
         using (var login = await client.PostAsJsonAsync("/api/auth/login", new { }, Ct))
             login.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
@@ -48,7 +48,7 @@ public sealed class OidcPolicyTests(ApiFixture fixture, FakeOidcProvider provide
     [Fact]
     public async Task whenOriginNotAllowed_OidcRoutes_ShouldRejectBrowserWrites()
     {
-        await using var api = Provider.CreateApi(Fixture.RuntimeConnection);
+        await using var api = Provider.CreateApi(Fixture.Connection);
         using var client = CreateClient(api);
         var (transaction, callbackUrl) = await BeginAsync(client);
         foreach (
