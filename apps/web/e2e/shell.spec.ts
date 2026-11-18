@@ -141,7 +141,7 @@ test.describe("keyboard and history", () => {
   test("shortcuts, dialog focus and back/forward work in a real browser", async ({ page }) => {
     await mockApi(page);
     await page.goto("/");
-    await expect(page.getByRole("heading", { level: 1, name: "Home" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Home", exact: true })).toBeVisible();
 
     await page.keyboard.press("ControlOrMeta+k");
     await expect(page.getByRole("searchbox", { name: "Search entries" })).toBeFocused();

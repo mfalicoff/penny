@@ -130,7 +130,7 @@ test("account creation reports a taken email on the email field", async ({ page,
 
   await page.getByLabel("Email").fill("new@example.test");
   await page.getByRole("button", { name: "Create account" }).click();
-  await expect(page.getByRole("heading", { level: 1, name: "Home" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Home", exact: true })).toBeVisible();
 });
 
 test("an expired session returns to sign-in with a notice", async ({ page, context }) => {
@@ -155,7 +155,7 @@ test.describe("single sign-on popup", () => {
     const popupPromise = page.waitForEvent("popup");
     await page.getByRole("button", { name: "Continue with Acme SSO" }).click();
     const popup = await popupPromise;
-    await expect(page.getByRole("heading", { level: 1, name: "Home" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Home", exact: true })).toBeVisible();
     await expect.poll(() => popup.isClosed()).toBe(true);
     expect(api.requests).toContain("POST /api/auth/oidc/complete");
   });
@@ -197,7 +197,7 @@ test.describe("single sign-on popup", () => {
     await page.getByRole("button", { name: "Continue with Acme SSO" }).click();
     await expect(page.getByText(/blocked the sign-in window/)).toBeVisible();
     await page.getByRole("button", { name: "Continue in this tab" }).click();
-    await expect(page.getByRole("heading", { level: 1, name: "Home" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Home", exact: true })).toBeVisible();
     await expect(page).toHaveURL(/\/$/);
   });
 });

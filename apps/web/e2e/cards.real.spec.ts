@@ -48,7 +48,7 @@ interface Card {
 
 async function home(page: Page, path = "/") {
   await page.goto(path);
-  await expect(page.getByRole("heading", { level: 1, name: "Home" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Home", exact: true })).toBeVisible();
   await expect(page.getByRole("region", { name: "Left to spend" })).toBeVisible();
 }
 
@@ -154,7 +154,7 @@ async function editWithFailingSync(run: Run) {
   const toast = run.page.getByText("Changes saved", { exact: true });
   await toast.hover();
   await run.page.getByRole("navigation", { name: "Tabs" }).getByRole("link", { name: "Home", exact: true }).press("Enter");
-  await expect(run.page.getByRole("heading", { level: 1, name: "Home" })).toBeVisible();
+  await expect(run.page.getByRole("heading", { level: 1, name: "Home", exact: true })).toBeVisible();
   await expect(run.page.getByRole("region", { name: "Recent" })).toContainText("Espresso");
   return { banner, toast };
 }
@@ -409,7 +409,7 @@ const cards: Record<string, Card> = {
   "iphone-empty-home": {
     open: async ({ page: p }) => {
       await p.goto("/");
-      await expect(p.getByRole("heading", { level: 1, name: "Home" })).toBeVisible();
+      await expect(p.getByRole("heading", { level: 1, name: "Home", exact: true })).toBeVisible();
       await expect(p.getByRole("link", { name: "Add your first entry" })).toBeVisible();
     },
   },

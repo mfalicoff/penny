@@ -23,7 +23,7 @@ test("register, sign out, sign in with the wrong and right password, and expire 
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(PASSWORD);
   await page.getByRole("button", { name: "Create account" }).click();
-  await expect(page.getByRole("heading", { level: 1, name: "Home" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Home", exact: true })).toBeVisible();
 
   const cookies = await context.cookies();
   const session = cookies.find((cookie) => cookie.name === "penny_session");
@@ -57,7 +57,7 @@ test("single sign-on through the local provider's popup", async ({ browser, base
   const popupPromise = page.waitForEvent("popup");
   await page.getByRole("button", { name: /^Continue with/ }).click();
   await popupPromise;
-  await expect(page.getByRole("heading", { level: 1, name: "Home" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Home", exact: true })).toBeVisible();
   await context.close();
 });
 

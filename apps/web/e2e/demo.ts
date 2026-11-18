@@ -20,7 +20,7 @@ export async function startDemo(page: Page, options: { colorScheme?: "light" | "
 export async function enterDemo(page: Page) {
   await page.getByRole("button", { name: "Take a look around with sample data" }).click();
   await expect(page.getByText("You're exploring a demo")).toBeVisible();
-  await expect(page.getByRole("heading", { level: 1, name: "Home" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Home", exact: true })).toBeVisible();
 }
 
 /** Opens a top-level page by its navigation label (Home, Activity, Insights, Trips, Recurring, Accounts, Categories, Settings). */
