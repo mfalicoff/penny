@@ -318,3 +318,64 @@ export function describeAudit(event: AuditEvent, name: (userId: string) => strin
   return { summary, changes };
 }
 
+
+/* ---------- a payment that went stale ---------- */
+
+export type StaleCause =
+  /** Someone recorded a share payment on this expense after it was opened (often the same person, on another device). */
+  | { kind: "payment"; recordedBy: string; fromUserId: string; at: number }
+  /** A monthly payment closed the month's per-expense payments. */
+  | { kind: "monthly" }
+  /** The expense itself was edited. */
+  | { kind: "edit"; editedBy: string; at: number };
+
+export interface StaleRow {
+  label: string;
+  before: string;
+  now: string;
+}
+
+const samePayment = (a: SharedExpense["payments"][number], b: SharedExpense["payments"][number]) => a.fromUserId === b.fromUserId && a.createdAt === b.createdAt;
+
+/** Whether the parts of the expense a person edits (not its payments) are the same. */
+function sameContent(before: SharedExpense, now: SharedExpense): boolean {
+  const splits = (expense: SharedExpense) => JSON.stringify([...expense.splits].sort((a, b) => a.userId.localeCompare(b.userId)));
+  return (
+    before.title === now.title &&
+    before.date === now.date &&
+    before.totalCents === now.totalCents &&
+    before.payerUserId === now.payerUserId &&
+    before.splitMode === now.splitMode &&
+    splits(before) === splits(now)
+  );
+}
+
+/**
+ * Why a share payment was refused as stale (card `iphone-payment-stale`), and only the values
+ * that changed between the copy the person opened and the server's copy. A newer revision can
+ * come from another payment rather than an edit, so the cause is read from what differs, never
+ * assumed to be an edit.
+ */
+export function staleChange(before: SharedExpense, now: SharedExpense, fromUserId: string, money: (cents: number) => string, name: (userId: string) => string) {
+  const added = now.payments.filter((payment) => !before.payments.some((old) => samePayment(old, payment)));
+  const latestPayment = [...added].sort((a, b) => b.createdAt - a.createdAt)[0];
+  const contentSame = sameContent(before, now);
+  const cause: StaleCause =
+    contentSame && latestPayment
+      ? { kind: "payment", recordedBy: latestPayment.createdBy, fromUserId: (added.find((payment) => payment.fromUserId === fromUserId) ?? latestPayment).fromUserId, at: latestPayment.createdAt }
+      : contentSame && now.paymentsClosed && !before.paymentsClosed
+        ? { kind: "monthly" }
+        : { kind: "edit", editedBy: now.updatedBy, at: now.updatedAt };
+
+  const who = name(fromUserId);
+  const shareLabel = who === "You" ? "Your share" : `${who}'s share`;
+  const rows: StaleRow[] = [];
+  if (before.totalCents !== now.totalCents) rows.push({ label: "Total", before: money(before.totalCents), now: money(now.totalCents) });
+  const oldShare = shareOf(before, fromUserId);
+  const newShare = shareOf(now, fromUserId);
+  if (oldShare !== newShare) rows.push({ label: shareLabel, before: money(oldShare), now: money(newShare) });
+  const oldStatus = SHARE_STATUS_LABEL[shareStatus(before, fromUserId, oldShare)];
+  const newStatus = SHARE_STATUS_LABEL[shareStatus(now, fromUserId, newShare)];
+  if (oldStatus !== newStatus) rows.push({ label: `${shareLabel} status`, before: oldStatus, now: newStatus });
+  return { cause, rows };
+}

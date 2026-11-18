@@ -10,7 +10,7 @@ import { Money } from "../../design/Money";
 import { Banner, SaveErrorBanner, useToast } from "../../design/states";
 import type { HouseholdView } from "./context";
 import { describeLoadError, describeSharedError } from "./errors";
-import { dayLabel, monthLabel, shareOf } from "./model";
+import { dayLabel, monthLabel, possessive, shareOf, staleChange } from "./model";
 
 const NO_TRANSFER_NOTE = "Recording a payment notes money already paid. Penny doesn't transfer money.";
 
@@ -139,9 +139,10 @@ export function RecordMonthlyDialog({ view, month, transfer, onClose }: { view: 
 
 /**
  * Mark one member's share of an expense as paid (card `iphone-record-payment`). It goes out with
- * the expense revision the person saw; if anyone edited the expense since, the server refuses and
- * the payment-changed state (card `iphone-payment-stale`) shows old and new amounts and offers
- * only Review expense. Nothing is ever recorded twice.
+ * the expense revision the person saw; if the expense changed since, the server refuses and the
+ * payment-changed state (card `iphone-payment-stale`) offers only Review expense. It names the real
+ * cause (another payment, often the same person on another device; a monthly payment; or an
+ * edit) and lists only the values that changed. Nothing is ever recorded twice.
  */
 export function RecordShareView({
   view,
@@ -194,44 +195,51 @@ export function RecordShareView({
   }, [changedRevision]);
 
   if (changed) {
-    const editor = view.who.name(changed.updatedBy);
+    const { cause, rows } = staleChange(expense, changed, fromUserId, view.money, view.who.name);
+    const actor = cause.kind === "payment" ? view.who.name(cause.recordedBy) : cause.kind === "edit" ? view.who.name(cause.editedBy) : null;
+    const message =
+      cause.kind === "payment"
+        ? cause.fromUserId === fromUserId
+          ? `${actor} already recorded ${possessive(from)} share as paid after you opened this payment${actor === "You" ? ", maybe on another device" : ""}. There's nothing left to record for it.`
+          : `${actor} recorded a payment on this expense after you opened it. Review it before recording a payment.`
+        : cause.kind === "monthly"
+          ? `A monthly payment was recorded for ${monthLabel(changed.date.slice(0, 7))} after you opened this payment, so this share now settles with the month.`
+          : `${actor} edited this expense after you opened it. Review it before recording a payment.`;
+    const at = cause.kind === "monthly" ? null : cause.at;
     return (
       <div ref={staleRef} tabIndex={-1} className="form" role="alert" aria-labelledby={titleId}>
         <h3 id={titleId} style={{ margin: 0 }}>
-          {changed.title} changed
+          {cause.kind === "edit" ? `${changed.title} changed` : `${changed.title} payment changed`}
         </h3>
-        <p>
-          {editor === "You" ? "You" : editor} edited this expense after you opened it. Review it before recording a payment.
-        </p>
-        <table className="compare">
-          <caption className="visually-hidden">Expense before and after the edit</caption>
-          <thead>
-            <tr>
-              <td />
-              <th scope="col">Before</th>
-              <th scope="col">Now</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th scope="row">Total</th>
-              <td>
-                <del>{view.money(expense.totalCents)}</del>
-              </td>
-              <td>{view.money(changed.totalCents)}</td>
-            </tr>
-            <tr>
-              <th scope="row">{from === "You" ? "Your share" : `${from}'s share`}</th>
-              <td>
-                <del>{view.money(amount)}</del>
-              </td>
-              <td>{view.money(shareOf(changed, fromUserId))}</td>
-            </tr>
-          </tbody>
-        </table>
-        <p className="muted">
-          Edited by {editor} · <time dateTime={new Date(changed.updatedAt).toISOString()}>{new Date(changed.updatedAt).toLocaleString("en-CA", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</time>
-        </p>
+        <p>{message}</p>
+        {rows.length ? (
+          <table className="compare">
+            <caption className="visually-hidden">What changed since you opened this payment</caption>
+            <thead>
+              <tr>
+                <td />
+                <th scope="col">Before</th>
+                <th scope="col">Now</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.label}>
+                  <th scope="row">{row.label}</th>
+                  <td>
+                    <del>{row.before}</del>
+                  </td>
+                  <td>{row.now}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : null}
+        {at !== null && actor !== null ? (
+          <p className="muted">
+            {cause.kind === "payment" ? "Recorded" : "Edited"} by {actor} · <time dateTime={new Date(at).toISOString()}>{new Date(at).toLocaleString("en-CA", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</time>
+          </p>
+        ) : null}
         <div className="form-actions">
           <Button variant="primary" onClick={onReview}>
             Review expense

@@ -285,19 +285,12 @@
       "id": "iphone-search-empty",
       "view": "search with no results",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-73",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "With the keyboard up, the centered No results view overlaps the totals line and the server-results row",
-            "kind": "follow-up",
-            "ref": "MAZ-179"
-          }
         ]
       },
       "web": {
@@ -646,11 +639,6 @@
         ],
         "deviations": [
           {
-            "summary": "The household header has no Record payment action, and a balance you owe is drawn in the label color",
-            "kind": "follow-up",
-            "ref": "MAZ-176"
-          },
-          {
             "summary": "Members are shown by email and initials from the email",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
@@ -691,11 +679,6 @@
           "dark"
         ],
         "deviations": [
-          {
-            "summary": "The household header has no Record payment action, and a balance you owe is drawn in the label color",
-            "kind": "follow-up",
-            "ref": "MAZ-176"
-          },
           {
             "summary": "Members are shown by email and initials from the email",
             "kind": "approved",
@@ -866,9 +849,9 @@
         ],
         "deviations": [
           {
-            "summary": "When another device recorded the payment, the dialog says \"You edited this expense\" and shows identical Before and Now values",
-            "kind": "follow-up",
-            "ref": "MAZ-176"
+            "summary": "The seeded state is a payment recorded on another device, so the dialog names that payment and lists only the share's repaid status, not an edited total and share",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
           }
         ]
       }
@@ -1339,19 +1322,12 @@
       "id": "iphone-sign-in",
       "view": "password sign-in",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-68",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "With the keyboard up, \"Take a look around with sample data\" overlaps the Sign in button",
-            "kind": "follow-up",
-            "ref": "MAZ-179"
-          }
         ]
       },
       "web": {
@@ -1416,19 +1392,12 @@
       "id": "iphone-server-connect",
       "view": "server URL entry (environment API URL)",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-69",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "Captured while the address is typed, before verification; the Cards plan should capture the Server verified state the card shows",
-            "kind": "follow-up",
-            "ref": "MAZ-179"
-          }
         ]
       },
       "web": {
@@ -1894,11 +1863,6 @@
         ],
         "deviations": [
           {
-            "summary": "The household header has no Record payment action, and a balance you owe is drawn in the label color",
-            "kind": "follow-up",
-            "ref": "MAZ-176"
-          },
-          {
             "summary": "Members are shown by email and initials from the email",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
@@ -2194,9 +2158,9 @@
         ],
         "deviations": [
           {
-            "summary": "The household header has no Record payment action, and a balance you owe is drawn in the label color",
-            "kind": "follow-up",
-            "ref": "MAZ-176"
+            "summary": "The header adds Record payment next to Shared expense, as on iPhone and iPad",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
           },
           {
             "summary": "Members are shown by email and initials from the email",
