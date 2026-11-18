@@ -147,8 +147,13 @@
   letter-spacing: -0.03em;
 }
 
+/* Meaning colors (design baseline `colors.meaning`): owed to you is income, owing keeps the label color, settled is muted. */
 .household-head__balance .pk-money--income {
   color: var(--pk-income);
+}
+
+.household-head__balance .pk-money--muted {
+  color: var(--pk-label-2);
 }
 
 .month-nav {

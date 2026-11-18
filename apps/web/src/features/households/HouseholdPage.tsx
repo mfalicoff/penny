@@ -1,7 +1,7 @@
 import { AddEntryDialog } from "../entries/AddEntryDialog";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { householdDetailQuery, householdsQuery, monthRecapQuery } from "../../api/households";
 import { useAccountEmail } from "../../auth/account";
 import { usePageTitle } from "../../app/shell/pageTitle";
@@ -25,7 +25,8 @@ const TAB_LABEL: Record<Exclude<HouseholdTab, "history">, string> = { expenses: 
 
 /**
  * A household (cards `web-household`, `iphone-shared`, `ipad-shared`): members and your balance
- * for the month, then Expenses, Balances and People. `expenseId` opens that expense in the detail
+ * for the month, Record payment (opens Balances, where suggested payments are recorded) and
+ * Shared expense, then Expenses, Balances and People. `expenseId` opens that expense in the detail
  * panel (`/households/$id/expenses/$expenseId`).
  */
 export function HouseholdPage({ householdId, expenseId, search }: { householdId: string; expenseId?: string; search: HouseholdSearch }) {
@@ -37,6 +38,7 @@ export function HouseholdPage({ householdId, expenseId, search }: { householdId:
   const list = useQuery(householdsQuery(email));
   const recap = useQuery({ ...monthRecapQuery(email, householdId, month), enabled: detail.isSuccess });
   const [form, setForm] = useState<FormTarget | null>(null);
+  const recordHintId = useId();
   usePageTitle(detail.data?.household.name);
 
   if (detail.isPending) return <LoadingState label="Loading the household…" />;
@@ -88,6 +90,18 @@ export function HouseholdPage({ householdId, expenseId, search }: { householdId:
         </div>
         <div className="shared-actions">
           {view.canWrite ? (
+            <Link
+              to="/households/$id"
+              params={{ id: householdId }}
+              search={linkSearch({ tab: "balances" })}
+              className="wbtn wbtn--secondary"
+              aria-describedby={recordHintId}
+            >
+              <Icon name="checkmark-circle" size={18} />
+              Record payment
+            </Link>
+          ) : null}
+          {view.canWrite ? (
             <Button variant="primary" icon="add" onClick={() => { setForm({ kind: "new" }); }}>
               Shared expense
             </Button>
@@ -107,6 +121,11 @@ export function HouseholdPage({ householdId, expenseId, search }: { householdId:
             History
           </Link>
         </div>
+        {view.canWrite ? (
+          <span id={recordHintId} className="visually-hidden">
+            Shows balances and suggested payments to record
+          </span>
+        ) : null}
       </section>
 
       {archived ? (
@@ -178,7 +197,12 @@ export function HouseholdPage({ householdId, expenseId, search }: { householdId:
   );
 }
 
-/** The viewer's balance for the month, in words and color. Also used by shared trips (MAZ-93). */
+/**
+ * The viewer's balance for the month, in words and its meaning color (design baseline
+ * `colors.meaning`): owed to you is income green, owing is an expense in the label color (never
+ * red), settled is muted. The words say the same, so color is never the only signal. Also used by
+ * shared trips (MAZ-93).
+ */
 export function MonthBalance({ month, balance, loading, view }: { month: string; balance: number | undefined; loading: boolean; view: HouseholdView }) {
   const name = monthLabel(month).split(" ")[0] ?? month;
   if (loading) return <>{name} · loading your balance…</>;
@@ -193,13 +217,13 @@ export function MonthBalance({ month, balance, loading, view }: { month: string;
   if (balance < 0) {
     return (
       <>
-        {name} · you owe <Money cents={-balance} currency={view.currency} />
+        {name} · you owe <Money cents={-balance} currency={view.currency} tone="expense" />
       </>
     );
   }
   return (
     <>
-      {name} · you're settled <Money cents={0} currency={view.currency} />
+      {name} · you're settled <Money cents={0} currency={view.currency} tone="muted" />
     </>
   );
 }
