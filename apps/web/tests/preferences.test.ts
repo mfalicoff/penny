@@ -1,10 +1,13 @@
+import { renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { applyPreferences, reloadPreferences, setPreferences, STORAGE_KEY } from "../src/app/preferences";
+import { applyPreferences, reloadPreferences, setPreferences, STORAGE_KEY, usePreferences } from "../src/app/preferences";
 
 afterEach(() => {
   localStorage.clear();
   reloadPreferences();
 });
+
+const current = () => renderHook(() => usePreferences()).result.current;
 
 const stored = (value: unknown) => {
   localStorage.setItem(STORAGE_KEY, typeof value === "string" ? value : JSON.stringify(value));
@@ -20,6 +23,15 @@ describe("appearance preferences", () => {
     expect(document.documentElement).not.toHaveAttribute("data-theme");
   });
 
+  it("reads values saved before Show cents and Week starts on existed, with their defaults", () => {
+    stored({ theme: "dark", reduceTransparency: true });
+    expect(current()).toEqual({ theme: "dark", reduceTransparency: true, showCents: true, weekStartsOn: "monday" });
+    stored({ theme: "dark", reduceTransparency: true, showCents: "no", weekStartsOn: "friday" });
+    expect(current()).toEqual({ theme: "dark", reduceTransparency: true, showCents: true, weekStartsOn: "monday" });
+    stored({ showCents: false, weekStartsOn: "sunday" });
+    expect(current()).toMatchObject({ showCents: false, weekStartsOn: "sunday" });
+  });
+
   it("keeps working when storage is unavailable", () => {
     vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
       throw new DOMException("quota", "QuotaExceededError");
@@ -29,9 +41,9 @@ describe("appearance preferences", () => {
   });
 
   it("reflects reduce transparency on the root element", () => {
-    applyPreferences({ theme: "system", reduceTransparency: true });
+    applyPreferences({ theme: "system", reduceTransparency: true, showCents: true, weekStartsOn: "monday" });
     expect(document.documentElement).toHaveAttribute("data-transparency", "reduced");
-    applyPreferences({ theme: "system", reduceTransparency: false });
+    applyPreferences({ theme: "system", reduceTransparency: false, showCents: true, weekStartsOn: "monday" });
     expect(document.documentElement).not.toHaveAttribute("data-transparency");
   });
 });

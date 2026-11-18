@@ -1,6 +1,7 @@
 import type { Kind, Ledger, Transaction } from "@domain/ledger.ts";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useId, useMemo, useRef, useState, type SyntheticEvent } from "react";
+import { usePreferences } from "../../app/preferences";
 import { Badge, Button, ChoiceGroup } from "../../design/controls";
 import { Icon } from "../../design/Icon";
 import { formatCents, Money } from "../../design/Money";
@@ -120,8 +121,14 @@ function FirstEntry({ currency }: { currency: string }) {
   );
 }
 
+/** Left to spend in whole units ($1,117 for $1,116.65), when Show cents is off (MAZ-140). Display only. */
+function formatWholeUnits(cents: number, currency: string): string {
+  return new Intl.NumberFormat("en-CA", { style: "currency", currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(cents / 100);
+}
+
 function Hero({ report, currency, shared }: { report: MonthReport; currency: string; shared: SharedState & { retry: () => void } }) {
   const id = useId();
+  const { showCents } = usePreferences();
   const overspent = report.recordedNet < 0;
   const scheduledOut = report.projected.expense - report.recorded.expense + (report.projected.investment - report.recorded.investment);
   return (
@@ -131,7 +138,7 @@ function Hero({ report, currency, shared }: { report: MonthReport; currency: str
       </h2>
       <p className="hero__amount pk-num">
         <span className="visually-hidden">Recorded remaining: </span>
-        {formatCents(report.recordedNet, currency)}
+        {showCents ? formatCents(report.recordedNet, currency) : formatWholeUnits(report.recordedNet, currency)}
       </p>
       {overspent ? (
         <p className="hero__over">
