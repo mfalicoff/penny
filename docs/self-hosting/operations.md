@@ -185,7 +185,7 @@ penny exec api dotnet Penny.Backend.Api.dll search-verify
 penny exec api dotnet Penny.Backend.Api.dll search-rebuild
 ```
 
-**Receipts.** `receipts-verify` decrypts every receipt and reports `{Receipts, Verified, Missing, Corrupt, Unreferenced, Bytes}` (exit 2 on missing or corrupt files). `receipts-sweep [--dry-run]` removes unreferenced files older than an hour, including orphaned raw emailed receipts under `inbound/` ([receipts](../reference/receipts.md#commands))./
+**Receipts.** `receipts-verify` decrypts every receipt and reports `{Receipts, Verified, Missing, Corrupt, Unreferenced, Bytes}` (exit 2 on missing or corrupt files). `receipts-sweep [--dry-run]` deletes receipts nothing links to once they are older than `Receipts__UnlinkedRetentionDays` (the API also does this every six hours), then removes unreferenced files older than an hour, including orphaned raw emailed receipts under `inbound/` ([receipts](../reference/receipts.md#commands)).
 
 **Password resets.** `penny exec api dotnet Penny.Backend.Api.dll reset-password user@example.com` issues a one-time code ([password reset](../reference/authentication.md#password-reset-maz-123)).
 

@@ -2,7 +2,9 @@ using System.Net;
 using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
 using Penny.Backend.Application.InboundMail;
+using Penny.Backend.Application.Receipts;
 using Penny.Backend.IntegrationTests.Infrastructure;
 using Shouldly;
 using Xunit;
@@ -70,6 +72,24 @@ public sealed class ReceiptInboxTests(ApiFixture fixture) : InboundMailTestBase(
 
     private async Task<Item> OnlyItemAsync(string token, string query = "") =>
         (await ListAsync(token, query)).Single();
+
+    // Unlinked receipt cleanup (MAZ-165) leaves inbox files to the inbox's own expiry.
+    [Fact]
+    public async Task whenInboxFilesAreNotAttached_ReceiptCleanup_ShouldLeaveThem()
+    {
+        await InboxAsync("inbox@example.test");
+        var receipts = await CountAsync("SELECT count(*) FROM penny.receipts");
+        receipts.ShouldBe(2);
+
+        At(Noon.AddDays(400));
+        (
+            await Fixture
+                .Factory.Services.GetRequiredService<ReceiptCleanupService>()
+                .RunOnceAsync(Ct)
+        ).ShouldBe(0);
+
+        (await CountAsync("SELECT count(*) FROM penny.receipts")).ShouldBe(receipts);
+    }
 
     [Fact]
     public async Task whenMailProcessed_List_ShouldShowTheOwnersItemsNewestFirst()

@@ -62,7 +62,7 @@ Add entry › Receipt, repeat, trip (More details) has a **Receipt** group (card
 - **Ended session:** a 401 ends the session the usual way (sign-in with "Your session ended"). The unsaved entry is on the draft shelf (stored per account, [native entries](entries.md#failures-and-drafts)), so after signing in again Add entry says "Your unsaved entry is back" with every value as typed.
 - **Offline:** the buttons are disabled and the footer says to connect (`LedgerSyncModel.canUseOnlineOnlyActions`: online, signed in, not signing out, session not expired). The rest of the entry still saves offline, and a receipt uploaded earlier stays linked in the draft and syncs with the entry.
 - **The demo** has no server: the footer says receipts need an account.
-- **Removing** (× or the viewer's trash) unlinks the receipt when the entry is saved. The encrypted file stays on the server: there is no receipt delete endpoint, as in the browser. The same applies to a file uploaded into a draft that is then discarded.
+- **Removing** (× or the viewer's trash) unlinks the receipt when the entry is saved. As in the browser, the server deletes a receipt nothing links to once it is older than `Receipts__UnlinkedRetentionDays` (default 30 days), so the file of a removed receipt, or of one uploaded into a draft that is then discarded, goes then; there is no receipt delete endpoint ([unlinked receipts](../reference/receipts.md#unlinked-receipts)).
 - **Closing the form** (Discard, Keep as draft, or a deep link replacing it) cancels an upload in flight; nothing is attached.
 - **Ownership:** an upload belongs to the signed-in account. A personal entry can link only its owner's receipts; the server refuses anything else on save.
 

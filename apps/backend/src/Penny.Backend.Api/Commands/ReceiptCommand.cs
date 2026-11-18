@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Penny.Backend.Api.Configuration;
 using Penny.Backend.Persistence.Configuration;
 using Penny.Backend.Persistence.Receipts;
 
@@ -7,8 +8,10 @@ namespace Penny.Backend.Api.Commands;
 // `receipts-verify` decrypts every receipt's file and name and checks its size: exit
 // 0 when every row has an intact file, 2 otherwise (after a restore, restore the
 // receipt root from a copy taken after the database dump). `receipts-sweep
-// [--dry-run]` removes files no row references once they are an hour old (uploads
-// interrupted between file and row, rolled-back imports, crashed temporary writes).
+// [--dry-run]` deletes receipts nothing links to once they are
+// `Receipts__UnlinkedRetentionDays` old (MAZ-165), then removes files no row references
+// once they are an hour old (uploads interrupted between file and row, rolled-back
+// imports, crashed temporary writes).
 // Both use the runtime connection, never start HTTP, print a JSON report of counts on
 // stdout and never print ids, names, paths or contents.
 internal static class ReceiptCommand
@@ -70,12 +73,17 @@ internal static class ReceiptCommand
                 );
                 return report.Clean ? 0 : 2;
             }
-            var swept = await maintenance.SweepAsync(DateTimeOffset.UtcNow, dryRun, stopping.Token);
+            var swept = await maintenance.SweepAsync(
+                DateTimeOffset.UtcNow,
+                ReceiptCleanupOptions.Read(configuration).Retention,
+                dryRun,
+                stopping.Token
+            );
             Console.WriteLine(JsonSerializer.Serialize(swept));
             Console.Error.WriteLine(
                 dryRun
-                    ? $"{swept.Removed} unreferenced receipt files would be removed."
-                    : $"Removed {swept.Removed} unreferenced receipt files."
+                    ? $"{swept.Unlinked} unlinked receipts and {swept.Removed} unreferenced receipt files would be removed."
+                    : $"Removed {swept.Unlinked} unlinked receipts and {swept.Removed} unreferenced receipt files."
             );
             return 0;
         }
