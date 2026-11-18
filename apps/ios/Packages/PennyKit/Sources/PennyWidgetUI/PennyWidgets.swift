@@ -68,19 +68,21 @@ public struct PennyTimelineProvider: TimelineProvider {
 }
 
 /// Monthly balance (`BalanceChartWidget`, a frozen kind so placed widgets stay): Left to
-/// spend for the month, Projected, and the recorded flow. Taps open Home.
+/// spend for the month, Projected, and the recorded flow. Taps open Home. The same kind draws
+/// Month at a glance (medium, whose + opens the add entry sheet) and the Lock Screen
+/// accessories (MAZ-135), so no placed widget changes kind.
 public struct BalanceWidget: Widget {
     public init() {}
 
     public var body: some WidgetConfiguration {
         StaticConfiguration(kind: AppIdentity.balanceWidgetKind, provider: PennyTimelineProvider()) { entry in
-            BalanceWidgetView(content: entry.content)
+            BalanceFamilyView(content: entry.content)
                 .containerBackground(PennyWidgetStyle.background, for: .widget)
                 .widgetURL(WidgetLink.balance)
         }
         .configurationDisplayName("Monthly balance")
         .description("Left to spend this month, from what you've recorded.")
-        .supportedFamilies(PennyWidgetStyle.families)
+        .supportedFamilies(PennyWidgetStyle.balanceFamilies)
     }
 }
 
@@ -97,6 +99,6 @@ public struct RecentExpensesWidget: Widget {
         }
         .configurationDisplayName("Recent expenses")
         .description("Your latest spending and a shortcut to add an expense.")
-        .supportedFamilies(PennyWidgetStyle.families)
+        .supportedFamilies(PennyWidgetStyle.recentFamilies)
     }
 }
