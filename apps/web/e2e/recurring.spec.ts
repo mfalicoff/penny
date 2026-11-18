@@ -50,7 +50,10 @@ interface Server {
   puts: number;
 }
 
-async function mockApi(context: BrowserContext, ledger: Ledger = emptyLedger()): Promise<Server> {
+/** `/api/households…` responses by path, for shared schedules (MAZ-177). */
+type Shared = Record<string, unknown>;
+
+async function mockApi(context: BrowserContext, ledger: Ledger = emptyLedger(), shared: Shared = {}): Promise<Server> {
   const server: Server = { revision: 3, ledger, down: false, puts: 0 };
   await context.route("**/api/**", async (route) => {
     const request = route.request();
@@ -58,6 +61,7 @@ async function mockApi(context: BrowserContext, ledger: Ledger = emptyLedger()):
     if (path === "/api/info") return route.fulfill({ json: { name: "penny", version: "2.0.0-e2e" } });
     if (path === "/api/auth/me") return route.fulfill({ json: { email: EMAIL } });
     if (path === "/api/auth/oidc") return route.fulfill({ json: { enabled: false } });
+    if (path in shared) return route.fulfill({ json: shared[path] });
     if (path === "/api/v1/search/transactions") return route.fulfill({ json: { version: 1, items: [], totalCount: 0, nextCursor: null } });
     if (path === "/api/ledger") {
       if (server.down) return route.abort("connectionrefused");
@@ -217,4 +221,49 @@ test("doesn't bring back a schedule deleted on another device after an offline c
   await page.reload();
   await expect(page.getByRole("heading", { name: "Rent, payday, the usuals." })).toBeVisible();
   expect(server.ledger.recurring).toEqual([]);
+});
+
+test("keeps each row's title left and amount right from 320px, with shared schedules listed (MAZ-177)", async ({ context, page }) => {
+  const ledger = emptyLedger();
+  ledger.recurring = [
+    { id: "net", title: "Internet and home phone bundle", kind: "expense", total: 6500, share: 6500, categoryId: "home", date: "2026-03-18", note: "", frequency: "monthly", nextDate: "2026-11-18", anchorDay: 18, active: true, accountId: "visa" },
+    { id: "gym", title: "Gym", kind: "expense", total: 4500, share: 4500, categoryId: "home", date: "2026-03-01", note: "", frequency: "monthly", nextDate: "2026-12-01", anchorDay: 1, active: false },
+  ];
+  const joinedAt = Date.UTC(2026, 0, 5, 12);
+  const household = { id: "h1", name: "Maison", currency: "CAD", creatorId: "u-alex", createdAt: joinedAt, memberCount: 2 };
+  await mockApi(context, ledger, {
+    "/api/households": { households: [household] },
+    "/api/households/h1": {
+      household,
+      members: [
+        { userId: "u-alex", email: EMAIL, joinedAt, joinedOn: "2026-01-05" },
+        { userId: "u-bea", email: "bea@example.test", joinedAt, joinedOn: "2026-01-05" },
+      ],
+    },
+    "/api/households/h1/recurring": {
+      rules: [
+        { id: "s1", householdId: "h1", title: "Streaming", totalCents: 1600, payerUserId: "u-bea", splitMode: "equal", category: { name: "Fun", icon: "film-outline", color: "#5E5CE6" }, note: "", nextDate: "2026-11-20", frequency: "monthly", anchorDay: 20, active: true, revision: 1 },
+      ],
+    },
+  });
+  await page.clock.setFixedTime(new Date("2026-11-10T12:00:00"));
+  for (const width of [320, 402]) {
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto("/recurring");
+    const shared = page.getByRole("link", { name: /^Streaming/ });
+    await expect(shared).toContainText(/Monthly · next Nov 20 · Maison.*\$8\.00.*your share.*Shared/);
+    for (const row of [page.getByRole("button", { name: /^Internet/ }), page.getByRole("button", { name: /^Gym/ }), shared]) {
+      const box = await row.boundingBox();
+      const title = await row.locator(".row__title").boundingBox();
+      const amount = await row.locator(".row__end .money").boundingBox();
+      if (!box || !title || !amount) throw new Error("row not laid out");
+      // The title starts at the left, next to the icon; the amount ends at the right, in its own
+      // column beside the title (not on a line of its own), and starts within the title's lines.
+      expect(title.x - box.x).toBeLessThan(64);
+      expect(box.x + box.width - (amount.x + amount.width)).toBeLessThan(16);
+      expect(amount.x).toBeGreaterThanOrEqual(title.x + title.width);
+      expect(amount.y).toBeLessThan(title.y + title.height);
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
+  }
 });

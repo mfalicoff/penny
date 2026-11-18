@@ -13,6 +13,7 @@ import {
   newRule,
   relativeDay,
   resumeDate,
+  rowAmount,
   sortSchedules,
   upcomingDates,
   type ScheduleDraft,
@@ -168,5 +169,13 @@ describe("the schedule draft", () => {
     const removed = removeSchedule("new")(recorded);
     expect(removed.recurring).toEqual([]);
     expect(removed.transactions.map((entry) => entry.id)).toEqual(["new:2026-11-01"]);
+  });
+});
+
+describe("rowAmount", () => {
+  it("signs expenses and income like the card, and leaves investments unsigned (MAZ-177)", () => {
+    expect(rowAmount("expense", 6500)).toEqual({ cents: -6500, signed: true });
+    expect(rowAmount("income", 225000)).toEqual({ cents: 225000, signed: true });
+    expect(rowAmount("investment", 20000)).toEqual({ cents: 20000 });
   });
 });

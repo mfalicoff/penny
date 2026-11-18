@@ -1,7 +1,7 @@
 {
   "version": 1,
   "description": "Visual comparison of the iOS and web apps with each redesign card (MAZ-122). Method, statuses and re-sync steps: docs/design/visual-acceptance.md. Approved deviations are in docs/reference/redesign.md; follow-ups name their issue.",
-  "reviewedAt": "2026-11-17",
+  "reviewedAt": "2026-11-18",
   "cards": [
     {
       "id": "system-foundations",
@@ -1095,9 +1095,9 @@
         ],
         "deviations": [
           {
-            "summary": "At 402px recurring rows break (the title right-aligned, the amount on its own line), and shared schedules aren't listed",
-            "kind": "follow-up",
-            "ref": "MAZ-177"
+            "summary": "Shared schedules are marked Shared, with the household's name in place of the account and the amount labelled \"your share\"; a shared row opens its household",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-recurring-notes-maz-90"
           },
           {
             "summary": "No swipe actions: a row opens the schedule detail",
