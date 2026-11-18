@@ -42,7 +42,7 @@ export function AccountSettings() {
       <div className="setting-row">
         <div className="setting-row__body">
           <span className="setting-row__title">Sign out</span>
-          <span className="setting-row__desc">Clears what Penny kept in this browser. Changes waiting to sync block sign-out until they're saved.</span>
+          <span className="setting-row__desc">Clears what Penny kept in this browser. If changes are still waiting to sync, Penny offers to sync them first.</span>
         </div>
         <SignOutButton />
       </div>

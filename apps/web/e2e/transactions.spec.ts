@@ -201,7 +201,7 @@ test("saves offline, keeps the entry through a reload, and syncs it once back on
   await context.setOffline(false);
   await page.reload();
   await expect(results(page).getByRole("listitem").filter({ hasText: "Bakery" })).toContainText("Waiting to sync");
-  await expect(page.getByText("Not synced · 1 change waiting")).toBeVisible();
+  await expect(page.getByText("Offline · 1 change waiting")).toBeVisible();
   expect(server.puts).toBe(0);
 
   server.down = false;

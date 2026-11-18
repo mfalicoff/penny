@@ -48,7 +48,7 @@ interface Card {
 
 async function home(page: Page, path = "/") {
   await page.goto(path);
-  await expect(page.getByRole("heading", { level: 1, name: "Home" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Home", exact: true })).toBeVisible();
   await expect(page.getByRole("region", { name: "Left to spend" })).toBeVisible();
 }
 
@@ -138,7 +138,7 @@ async function signInScreen(p: Page) {
 /**
  * Edits p-coffee-2 (the scenario's pending edit: Coffee → Espresso) with a 503 armed on the next
  * ledger sync, then returns to Home (the cards' page) by keyboard, so the pointer keeps holding the
- * "Changes saved" toast (a hovered toast stays up to 30 s).
+ * "Changes saved" toast and its Undo (a hovered toast stays up to 30 s).
  */
 async function editWithFailingSync(run: Run) {
   const detail = await entryDetail(run.page, "2026-10", /^Coffee Personal · Groceries & dining · Fri, Oct 9/, "Coffee");
@@ -154,7 +154,7 @@ async function editWithFailingSync(run: Run) {
   const toast = run.page.getByText("Changes saved", { exact: true });
   await toast.hover();
   await run.page.getByRole("navigation", { name: "Tabs" }).getByRole("link", { name: "Home", exact: true }).press("Enter");
-  await expect(run.page.getByRole("heading", { level: 1, name: "Home" })).toBeVisible();
+  await expect(run.page.getByRole("heading", { level: 1, name: "Home", exact: true })).toBeVisible();
   await expect(run.page.getByRole("region", { name: "Recent" })).toContainText("Espresso");
   return { banner, toast };
 }
@@ -409,7 +409,7 @@ const cards: Record<string, Card> = {
   "iphone-empty-home": {
     open: async ({ page: p }) => {
       await p.goto("/");
-      await expect(p.getByRole("heading", { level: 1, name: "Home" })).toBeVisible();
+      await expect(p.getByRole("heading", { level: 1, name: "Home", exact: true })).toBeVisible();
       await expect(p.getByRole("link", { name: "Add your first entry" })).toBeVisible();
     },
   },
@@ -429,7 +429,7 @@ const cards: Record<string, Card> = {
       await expect(p.getByRole("status").filter({ hasText: "1 change waiting" })).toBeVisible();
       await dismissToast(p);
     },
-    note: "The web learns the server is unreachable when its sync fails: Coffee to go (the scenario's pending create) waits to sync. The banner names a busy server, not Offline, because the browser itself is online.",
+    note: "The web learns the server is unreachable when its sync fails: Coffee to go (the scenario's pending create) waits to sync, and the banner reads Offline · 1 change waiting with Retry.",
   },
   "iphone-save-error": {
     fresh: true,
@@ -450,7 +450,7 @@ const cards: Record<string, Card> = {
       await expect(banner).toBeHidden();
       await expect(toast).toBeVisible();
     },
-    note: "The toast is the edit's 'Changes saved' (no Undo), still shown on Home after Retry in the sync banner synced it.",
+    note: "The toast is the edit's 'Changes saved' with Undo, still shown on Home after Retry in the sync banner synced it.",
   },
   "iphone-sign-out": {
     open: async ({ page: p }) => {

@@ -98,7 +98,7 @@ function AccountLedger({ email, children }: { email: string; children: ReactNode
       cancelSignOut: (account) => {
         if (account === email) engine.cancelSignOut();
       },
-      finishSignOut: (account) => (account === email ? engine.finishSignOut() : Promise.resolve()),
+      finishSignOut: (account, discardUpTo) => (account === email ? engine.finishSignOut(discardUpTo) : Promise.resolve()),
     });
     // A newer server ledger reached Query (for example, Currency settings saved one): sync, so the
     // durable copy's base catches up and pending work is merged onto it.

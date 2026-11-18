@@ -99,7 +99,8 @@ Recurrence refinements (MAZ-90, the same four as the native `LedgerMerge`; in th
 - Saves from any tab are atomic and never lost; each tab re-reads on the channel message and shows the same pending count.
 - Only one tab syncs an account at a time; the others wait for the lock and then find nothing to send.
 - An answer older than what another tab recorded is ignored, so `base` never goes backwards.
-- Sign-out holds saves (and parks a scheduled retry) in the tab that signs out, counts pending work from IndexedDB (including other tabs' saves), and removes the record only if it is still clean in the same transaction; a save from another tab in between keeps the record, and its work waits for the next sign-in. With the record it removes the account's `aside` records. An unreadable record counts as pending and stays. Cancelling sign-out lifts the hold, syncs if anything is pending, and otherwise restores the parked retry.
+- Sign-out holds saves (and parks a scheduled retry) in the tab that signs out, counts pending work from IndexedDB (including other tabs' saves), and removes the record only if it is still clean in the same transaction, or, after **Sign out anyway**, holds no more changes than the person was warned about; a save from another tab in between keeps the record, and its work waits for the next sign-in. With the record it removes the account's `aside` records. An unreadable record counts as pending and stays. Cancelling sign-out lifts the hold, syncs if anything is pending, and otherwise restores the parked retry.
+- The sign-out dialog (`features/auth/SignOut.tsx`, card `iphone-sign-out`, MAZ-178) warns when changes are waiting: **Sync, then sign out** runs a sync first and stops with "Couldn't sync your changes. Nothing was removed." if any are still pending; **Sign out anyway** passes the count it showed as `finishSignOut(discardUpTo)`, and asks again if more became pending.
 - Other tabs learn about the sign-out from their next `/me` or a 401, as before.
 
 ## Failure handling
@@ -124,7 +125,8 @@ Recurrence refinements (MAZ-90, the same four as the native `LedgerMerge`; in th
 | State | Banner |
 | --- | --- |
 | Offline (browser) or `offline` | "Offline · N changes waiting", "saved in this browser and sync when you're back online", Retry; with nothing pending, the plain offline banner |
-| `serverUnreachable`, `serverUnavailable` with pending work | "Not synced · N changes waiting" and Retry (the shell's server banner says the rest) |
+| `serverUnreachable` with pending work (the request got no answer, or the same-origin proxy answered 502 or 504) | "Offline · N changes waiting", "Penny can't reach the server", Retry (MAZ-178) |
+| `serverUnavailable` with pending work (429 or another 5xx) | "Not synced · N changes waiting", "The server is busy or restarting", Retry (the shell's server banner says the rest) |
 | Other failures | "Couldn't sync · N changes waiting", the reason, Retry (an alert) |
 | `storageUnavailable`, `storageUnreadable`, `storageNewerFormat` | The messages and actions above |
 | Session expired | Sign-in with the expiry notice |

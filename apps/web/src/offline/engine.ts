@@ -675,10 +675,11 @@ export class LedgerSyncEngine {
 
   /**
    * The server session is gone: removes this account's copies from the browser (the record and
-   * records set aside), but only if nothing became pending meanwhile (another tab may have saved).
-   * Pending work is never removed here: like `pendingCount`, a record that can't be read stays.
+   * records set aside), but only if nothing is pending, or no more than `discardUpTo` changes: the
+   * number the person agreed to lose ("Sign out anyway"). If more became pending meanwhile (another
+   * tab may have saved), nothing is removed. Like `pendingCount`, a record that can't be read stays.
    */
-  async finishSignOut(): Promise<void> {
+  async finishSignOut(discardUpTo = 0): Promise<void> {
     const db = await this.db();
     const removed = await db.update(this.key, (raw): { next?: null; result: boolean } => {
       let current: LedgerRecord | null;
@@ -687,7 +688,10 @@ export class LedgerSyncEngine {
       } catch {
         return { result: false };
       }
-      if (current && !sameLedger(current.base, current.local)) return { result: false };
+      if (current && !sameLedger(current.base, current.local)) {
+        const consented = discardUpTo > 0 && pendingChanges(current.base, current.local).count <= discardUpTo;
+        if (!consented) return { result: false };
+      }
       return { ...(current ? { next: null } : {}), result: true };
     });
     if (removed) {
@@ -741,7 +745,9 @@ function describeIssue(error: unknown, online: boolean): SyncIssue {
   if (error instanceof IncompatibleLedgerError)
     return { kind: "incompatibleServerData", retries: false, message: "The server sent a ledger this version of Penny can't read. Reload the page to update Penny." };
   if (error instanceof ApiError) {
-    if (error.status === 0)
+    // 502 and 504 come from the same-origin proxy (nginx in production, Vite in preview) when the
+    // API itself can't be reached, so they mean the same as a request that never got an answer.
+    if (error.status === 0 || error.status === 502 || error.status === 504)
       return online
         ? { kind: "serverUnreachable", retries: true, message: "Penny can't reach the server. Changes stay in this browser and sync when it's back." }
         : { kind: "offline", retries: true, message: "Changes are saved in this browser and sync when you're back online." };

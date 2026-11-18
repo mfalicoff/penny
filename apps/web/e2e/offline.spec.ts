@@ -80,10 +80,10 @@ test("keeps a pending change through reloads and tabs while offline, then syncs 
   server.down = true;
 
   await page.goto("/");
-  await expect(page.getByText("Not synced · 1 change waiting")).toBeVisible();
+  await expect(page.getByText("Offline · 1 change waiting")).toBeVisible();
   // Reload: the change is read back from IndexedDB.
   await page.reload();
-  await expect(page.getByText("Not synced · 1 change waiting")).toBeVisible();
+  await expect(page.getByText("Offline · 1 change waiting")).toBeVisible();
 
   // A second tab sees the same durable work.
   const second = await context.newPage();
@@ -109,21 +109,21 @@ test("keeps a pending change through reloads and tabs while offline, then syncs 
   expect(server.puts).toHaveLength(1);
 });
 
-test("refuses to sign out while a change is waiting, and allows it once synced", async ({ context, page }) => {
+test("warns about a change waiting at sign-out, and signs out once Sync, then sign out sent it", async ({ context, page }) => {
   const server = await mockApi(context);
   await context.route("**/api/auth/logout", (route) => route.fulfill({ json: { ok: true } }));
   await seedPendingChange(page);
   server.down = true;
   await page.goto("/settings");
-  await expect(page.getByText("Not synced · 1 change waiting")).toBeVisible();
+  await expect(page.getByText("Offline · 1 change waiting")).toBeVisible();
   await page.getByRole("button", { name: "Sign out" }).click();
-  const dialog = page.getByRole("dialog", { name: "Sign out of Penny?" });
-  await dialog.getByRole("button", { name: "Sign out" }).click();
-  await expect(dialog.getByRole("alert")).toContainText("Your changes are still waiting to sync");
-  await dialog.getByRole("button", { name: "Cancel" }).click();
+  const dialog = page.getByRole("dialog", { name: "1 change hasn’t synced" });
+  await expect(dialog).toContainText("this one would be lost");
+  await dialog.getByRole("button", { name: "Sync, then sign out" }).click();
+  await expect(dialog.getByRole("alert")).toContainText("Couldn't sync your changes. Nothing was removed.");
 
   server.down = false;
-  await page.getByRole("button", { name: "Retry" }).click();
-  await expect(page.getByText(/change waiting/)).toHaveCount(0);
+  await dialog.getByRole("button", { name: "Sync, then sign out" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Welcome back" })).toBeVisible();
   expect(server.puts).toHaveLength(1);
 });

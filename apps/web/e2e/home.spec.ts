@@ -25,7 +25,7 @@ async function startDemo(page: Page) {
   await page.route("/api/auth/me", (route) => route.fulfill({ status: 401, json: { error: "Please sign in to continue." } }));
   await page.route("/api/auth/oidc", (route) => route.fulfill({ json: { enabled: false } }));
   await page.goto("/");
-  await page.getByRole("button", { name: "Explore a demo" }).click();
+  await page.getByRole("button", { name: "Take a look around with sample data" }).click();
   await expect(page.getByText("You're exploring a demo")).toBeVisible();
 }
 
