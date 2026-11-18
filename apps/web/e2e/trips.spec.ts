@@ -187,7 +187,7 @@ test("the demo shows its sample trip, says shared trips need a server and fits 3
   await page.route("/api/auth/oidc", (route) => route.fulfill({ json: { enabled: false } }));
   await page.setViewportSize({ width: 320, height: 800 });
   await page.goto("/trips");
-  await page.getByRole("button", { name: "Explore a demo" }).click();
+  await page.getByRole("button", { name: "Take a look around with sample data" }).click();
   await expect(page.getByText("You're exploring a demo")).toBeVisible();
   await expect(page.getByRole("heading", { level: 2, name: "Weekend in Québec City" })).toBeVisible();
   await expect(page.getByText("The demo has no shared trips.", { exact: false })).toBeVisible();

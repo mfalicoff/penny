@@ -166,7 +166,7 @@ test("keeps a schedule saved offline through a reload and syncs it once, without
 
   await page.reload();
   await expect(page.getByRole("button", { name: /^Internet/ })).toContainText("Waiting to sync");
-  await expect(page.getByText("Not synced · 2 changes waiting")).toBeVisible();
+  await expect(page.getByText("Offline · 2 changes waiting")).toBeVisible();
 
   server.down = false;
   await page.getByRole("button", { name: "Retry" }).click();
@@ -200,7 +200,7 @@ test("doesn't bring back a schedule deleted on another device after an offline c
   await page.clock.setFixedTime(new Date("2026-11-10T12:00:00"));
   await page.reload();
   await expect(page.getByRole("button", { name: /^Transit pass/ })).toContainText("next Dec 1");
-  await expect(page.getByText("Not synced · 2 changes waiting")).toBeVisible();
+  await expect(page.getByText("Offline · 2 changes waiting")).toBeVisible();
 
   // Meanwhile the phone deletes the schedule.
   server.ledger = { ...server.ledger, recurring: [] };

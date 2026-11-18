@@ -93,6 +93,13 @@ describe("adding entries", () => {
       note: "Birthday",
     });
     expect((await stored())?.local.transactions).toHaveLength(1);
+
+    // The saved toast offers Undo (redesign card `saved-toast`), which removes the new entry again.
+    expect(screen.getByText("Dinner at Bar Isabel · $84.20")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Undo" }));
+    await waitFor(() => {
+      expect(serverEntries(server)).toEqual([]);
+    });
   });
 
   it("adds income at its full amount and offers income categories, without trips or splits", async () => {
@@ -317,6 +324,12 @@ describe("editing and deleting", () => {
       expect(serverEntries(server)).toEqual([expect.objectContaining({ id: "c1", title: "Coffee beans, decaf", total: 2100, share: 2100, note: "Morning" })]);
     });
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+    // Undo puts the previous version back.
+    await user.click(screen.getByRole("button", { name: "Undo" }));
+    await waitFor(() => {
+      expect(serverEntries(server)).toEqual([expect.objectContaining({ id: "c1", title: "Coffee beans", total: 1800, share: 1800, note: "Morning" })]);
+    });
   });
 
   it("shows a change from another device next to the kept draft, then keeps mine on request", async () => {
@@ -382,7 +395,7 @@ describe("where saving isn't possible", () => {
     stubServer((url) => (url === "/api/auth/me" ? json({ error: "Please sign in to continue." }, 401) : undefined));
     const user = userEvent.setup();
     renderApp("/");
-    await user.click(await screen.findByRole("button", { name: "Explore a demo" }));
+    await user.click(await screen.findByRole("button", { name: "Take a look around with sample data" }));
     await screen.findByText("You're exploring a demo");
     await user.keyboard("n");
     expect(screen.getByRole("dialog", { name: "Add entry" })).toHaveAccessibleDescription(/The demo doesn't save entries/);

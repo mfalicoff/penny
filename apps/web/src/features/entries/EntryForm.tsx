@@ -13,6 +13,7 @@ import {
   buildEntry,
   draftFromEntry,
   entryChange,
+  undoEntryChange,
   FIELD_ORDER,
   frequentCategories,
   futureIncomeNote,
@@ -208,19 +209,33 @@ function EntryForm({
       return;
     }
     const built = result.built;
+    const save = writer.save;
+    const original = base;
+    const ruleWasNew = Boolean(built.rule && !ledger.recurring.some((item) => item.id === built.rule?.id));
     savingRef.current = true;
     setSaving(true);
     setFailure(null);
     setConflict(null);
     try {
-      const receipt = await writer.save(entryChange(built, base));
+      const receipt = await save(entryChange(built, original));
       if (keepsDraft) draftStore.clear(email);
       const offline = receipt.savedOffline ? "Saved on this device. It syncs when you're back online." : undefined;
-      toast.show(
-        target.kind === "new"
-          ? { title: `${kindLabels[built.transaction.kind]} added`, ...(offline ? { detail: offline } : built.rule ? { detail: `Repeats ${built.rule.frequency}, starting ${built.rule.nextDate}.` } : {}) }
-          : { title: "Changes saved", ...(offline ? { detail: offline } : {}) },
-      );
+      // Card `iphone-saved-toast`: "Expense added · Groceries · $48.90", with Undo.
+      const summary = `${built.transaction.title} · ${money(built.transaction.total)}`;
+      const detail = offline ?? (target.kind === "new" && built.rule ? `Repeats ${built.rule.frequency}, starting ${built.rule.nextDate}.` : summary);
+      toast.show({
+        title: target.kind === "new" ? `${kindLabels[built.transaction.kind]} added` : "Changes saved",
+        detail,
+        onUndo: () => {
+          save(undoEntryChange(built, original, ruleWasNew)).catch((error: unknown) => {
+            toast.show({
+              title: "Couldn't undo",
+              detail: error instanceof LedgerSaveError && error.kind === "rule" ? error.message : target.kind === "new" ? "The entry stays added." : "The edit stays saved.",
+              tone: "error",
+            });
+          });
+        },
+      });
       onSaved?.(built.transaction);
       onClose();
     } catch (error) {
