@@ -521,6 +521,8 @@ launch_on() {
   sleep 2
   xcrun simctl io "$id" screenshot "$RESULTS/launch-$name-deeplink.png" >/dev/null
   echo "Launched on $name; screenshot $RESULTS/launch-$name.png"
+  # One simulator at a time, as in ui-test: a booted iPhone slows the iPad's boot on CI runners.
+  xcrun simctl shutdown "$id" >/dev/null 2>&1 || true
 }
 
 cmd_launch() {
@@ -609,19 +611,20 @@ seed_receipt_fixtures() {
 }
 
 ui_test_run() {
-  local plan="$1" out="$RESULTS/ui/$1" failed=0 name id testplan only=()
+  local plan="$1" out="$RESULTS/ui/$1" failed=0 name id testplan only=() started
   testplan="$(tr '[:lower:]' '[:upper:]' <<< "${plan:0:1}")${plan:1}"
   # PENNY_UI_ONLY: tests or classes, space-separated, e.g. PennyUITests/AuthJourneyTests (debugging).
   local selected
   for selected in ${PENNY_UI_ONLY:-}; do only+=("-only-testing:$selected"); done
   devices
-  rm -rf "$out"/*.xcresult "$out"/*-attachments
+  rm -rf "$out"/*.xcresult "$out"/*-attachments "$out/device-seconds.tsv" "$out/timings.json"
   mkdir -p "$out"
   XCB_SCHEME=PennyUITests xcb -configuration Debug -destination "id=$IPHONE_ID" build-for-testing
   for name in $(ui_devices); do
     if [[ $name == iphone ]]; then id="$IPHONE_ID"; else id="$IPAD_ID"; fi
     prepare_ui_device "$id"
     echo "==> UI tests ($testplan) on $name"
+    started=$SECONDS
     # xcodebuild hands TEST_RUNNER_* variables to the test runner without the prefix.
     if ! TEST_RUNNER_PENNY_API_URL="$PENNY_API_URL" TEST_RUNNER_PENNY_TEST_TOKEN="$PENNY_TEST_TOKEN" \
       TEST_RUNNER_PENNY_TEST_RUN="${PENNY_TEST_RUN:-local}" TEST_RUNNER_PENNY_OIDC_ISSUER="${PENNY_OIDC_ISSUER:-}" \
@@ -631,6 +634,7 @@ ui_test_run() {
       ${only[@]+"${only[@]}"} test-without-building -resultBundlePath "$out/$name.xcresult"; then
       failed=1
     fi
+    printf '%s\t%s\n' "$name" "$((SECONDS - started))" >> "$out/device-seconds.tsv"
     # Screenshots, failure recordings and the accessibility trees, browsable without Xcode.
     xcrun xcresulttool export attachments --path "$out/$name.xcresult" --output-path "$out/$name-attachments" \
       >/dev/null 2>&1 || mkdir -p "$out/$name-attachments"
@@ -638,6 +642,8 @@ ui_test_run() {
     # (XCTest's accessibility queries then time out). The device itself is deleted at exit.
     xcrun simctl shutdown "$id" >/dev/null 2>&1 || true
   done
+  # How long each test and device took (MAZ-163): timings.json and the CI job summary.
+  node "$IOS_DIR/scripts/ui-timings.mjs" "$out" "$plan" || true
   echo "UI test results: $out"
   # Redesign cards (MAZ-122): the captures as <id>.<appearance>.png and report.json, for review
   # next to docs/design/penny-ios/previews.

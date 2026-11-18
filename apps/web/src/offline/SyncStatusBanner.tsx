@@ -89,16 +89,21 @@ export function SyncStatusBanner() {
         Private browsing or a site setting is blocking storage. You can look at your ledger, but changes can't be saved in this browser.
       </Banner>
     );
-  } else if (!online || state.phase === "offline") {
+  } else if (!online || state.phase === "offline" || (pending > 0 && state.issue?.kind === "serverUnreachable")) {
+    // A request that never reached the server is offline too, even when the browser reports a
+    // network (redesign card `offline`: "Offline · 2 changes waiting", Retry).
     main = (
       <Banner tone="offline" title={pending > 0 ? `Offline · ${changes(pending)}` : "You're offline"} action={pending > 0 ? retry : undefined}>
         {pending > 0
-          ? "Your changes are saved in this browser and sync when you're back online."
+          ? online && state.issue?.kind === "serverUnreachable"
+            ? state.issue.message
+            : "Your changes are saved in this browser and sync when you're back online."
           : "Penny shows what it already loaded. Changes you can't save yet stay in their form until you're back online."}
       </Banner>
     );
   } else if (state.issue && (state.issue.kind === "serverUnreachable" || state.issue.kind === "serverUnavailable")) {
-    // The shell already says the server can't be reached; only add what is waiting.
+    // The server answered but is busy, or nothing is waiting: the shell already says the server
+    // can't be reached, so only add what is waiting.
     if (pending > 0)
       main = (
         <Banner tone="offline" title={`Not synced · ${changes(pending)}`} action={retry}>

@@ -42,7 +42,7 @@ concurrency:
 
 jobs:
   ios:
-    name: Swift format, build, iPhone/iPad tests and Release check
+    name: Swift format, build and iPhone/iPad tests
     # Apple Silicon image with Xcode 27; scripts/ios.sh selects the exact version pinned in
     # apps/ios/.xcode-version and fails if the image does not have it.
     runs-on: xcode-27
@@ -57,17 +57,35 @@ jobs:
         run: apps/ios/scripts/ios.sh package-test
       - name: App and PennyKit tests on clean iPhone and iPad simulators
         run: apps/ios/scripts/ios.sh test
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ios-test-results
+          path: test-results/ios/
+          if-no-files-found: warn
+
+  release:
+    # Split from the job above (MAZ-163), which ran into its 60-minute limit with these steps:
+    # each builds on its own, and launching boots two more clean simulators.
+    name: Release check, TestFlight archive checks and launch
+    runs-on: xcode-27
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Release configuration excludes test controls
         run: apps/ios/scripts/ios.sh release-check
       - name: TestFlight archive and IPA checks refuse bad builds
         run: apps/ios/scripts/ios.sh distribution-test
       - name: Launch on clean iPhone and iPad simulators
         run: apps/ios/scripts/ios.sh launch
-      - name: Upload test results and launch screenshots
+      - name: Upload launch screenshots
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: ios-test-results
+          name: ios-launch-screenshots
           path: test-results/ios/
           if-no-files-found: warn
 

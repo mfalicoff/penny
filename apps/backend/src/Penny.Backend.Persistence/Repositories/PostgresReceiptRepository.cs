@@ -107,6 +107,18 @@ public sealed class PostgresReceiptRepository(NpgsqlDataSource source, ReceiptFi
         );
     }
 
+    public Task<long> DeleteUnlinkedAsync(
+        DateTimeOffset createdBefore,
+        CancellationToken cancellationToken
+    ) =>
+        UnlinkedReceipts.RemoveAsync(
+            source,
+            files,
+            createdBefore,
+            dryRun: false,
+            cancellationToken
+        );
+
     private async Task<StoredReceipt?> OpenAsync(
         Receipt? row,
         CancellationToken cancellationToken

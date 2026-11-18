@@ -35,4 +35,12 @@ public interface IReceiptRepository
         IReadOnlyCollection<string> receiptIds,
         CancellationToken cancellationToken
     );
+
+    // Deletes the receipts created before `createdBefore` that no personal entry,
+    // shared expense (live or deleted), shared rule, search document or inbox email
+    // links, with their text, rows and files (MAZ-165). Returns how many were deleted.
+    Task<long> DeleteUnlinkedAsync(
+        DateTimeOffset createdBefore,
+        CancellationToken cancellationToken
+    );
 }

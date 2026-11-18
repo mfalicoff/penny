@@ -53,6 +53,8 @@ public sealed class TestApiFactory(
         builder.UseSetting("Ocr:Worker", "false");
         // Tests run the inbound mail processor explicitly with a fake renderer (MAZ-184).
         builder.UseSetting("InboundMail:Worker", "false");
+        // Tests run the unlinked receipt cleanup explicitly (MAZ-165).
+        builder.UseSetting("Receipts:CleanupWorker", "false");
         builder.UseSetting("Backend:RequestTimeoutSeconds", "2");
         builder.UseSetting("Backend:ShutdownTimeoutSeconds", "5");
         builder.UseSetting("Logging:LogLevel:Default", "None");

@@ -171,7 +171,7 @@ test("changes made offline wait in this browser, survive a reload and sync once 
   await context.setOffline(false);
   await page.reload();
   await expect(row.getByText("Waiting to sync")).toBeVisible();
-  const banner = page.locator(".pk-banner").filter({ hasText: "Not synced · 1 change waiting" });
+  const banner = page.locator(".pk-banner").filter({ hasText: "Offline · 1 change waiting" });
   await expect(banner).toBeVisible();
   expect(server.puts).toBe(0);
 

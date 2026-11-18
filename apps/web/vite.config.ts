@@ -17,7 +17,19 @@ const sharedDomain = fileURLToPath(new URL("./src/domain", import.meta.url));
 // PENNY_PUBLIC_* variables are exposed to client code (envPrefix below).
 const apiTarget = process.env.PENNY_API_URL ?? "http://127.0.0.1:8080";
 const apiProxy: Record<string, ProxyOptions> = {
-  "/api": { target: apiTarget, changeOrigin: false, xfwd: true },
+  "/api": {
+    target: apiTarget,
+    changeOrigin: false,
+    xfwd: true,
+    // An API that can't be reached answers 502 Bad Gateway, as nginx does in production, rather
+    // than Vite's 500: the app shows it as offline, not as a server error. Runs before Vite's own
+    // error handler, which then leaves the answered response alone.
+    configure: (proxy) => {
+      proxy.on("error", (_error, _request, response) => {
+        if ("writeHead" in response && !response.headersSent) response.writeHead(502, { "Content-Type": "text/plain" }).end("Bad Gateway");
+      });
+    },
+  },
 };
 
 // Opt-in browser telemetry (MAZ-129) in development and preview, the way the production front

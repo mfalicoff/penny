@@ -39,7 +39,8 @@ interface ReceiptFieldProps {
  * web `add-entry` drop zone). Choose a photo or a file, or drop one: it is checked against the
  * server's rules, uploaded with progress and a Cancel, and on success linked to the form's draft,
  * which keeps it until Save, Discard or sign-out. A failed upload keeps the file for Try again.
- * Removing only unlinks: the file stays on the server, which has no receipt delete.
+ * Removing only unlinks; there is no receipt delete. The server deletes a receipt
+ * nothing links to once it is past its retention (MAZ-165).
  */
 export function ReceiptField({ value, onChange, onBusyChange, hint }: ReceiptFieldProps) {
   const queryClient = useQueryClient();

@@ -64,6 +64,29 @@ describe("appearance", () => {
     expect(document.documentElement).toHaveAttribute("data-transparency", "reduced");
   });
 
+  it("shows cents on Home by default and saves the choice on this browser", async () => {
+    stubServer();
+    const user = userEvent.setup();
+    renderApp("/settings/appearance");
+    const toggle = await screen.findByRole("switch", { name: "Show cents on Home" });
+    expect(toggle).toHaveAccessibleDescription(/\$1,116\.65 instead of \$1,117/);
+    expect(toggle).toBeChecked();
+    await user.click(toggle);
+    expect(toggle).not.toBeChecked();
+    expect(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}")).toMatchObject({ showCents: false });
+  });
+
+  it("starts the week on Monday by default and saves Sunday on this browser", async () => {
+    stubServer();
+    const user = userEvent.setup();
+    renderApp("/settings/appearance");
+    const week = await screen.findByRole("group", { name: "Week starts on" });
+    expect(within(week).getByRole("radio", { name: "Monday" })).toBeChecked();
+    await user.click(within(week).getByRole("radio", { name: "Sunday" }));
+    expect(within(week).getByRole("radio", { name: "Sunday" })).toBeChecked();
+    expect(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}")).toMatchObject({ weekStartsOn: "sunday" });
+  });
+
   it("picks up a change made in another tab", async () => {
     stubServer();
     renderApp("/settings/appearance");

@@ -22,6 +22,13 @@ export type SplitMode = "full" | "equal" | "amount" | "percent";
 /** Money tone per kind: expenses in the label color, income and investments with their color and word. */
 export const TONE = { expense: "expense", income: "income", investment: "investment" } as const satisfies Record<Kind, string>;
 
+/** A list row's amount as the card shows it: expenses with a minus, income with a plus, investments unsigned. */
+export function rowAmount(kind: Kind, cents: number): { cents: number; signed?: true } {
+  if (kind === "expense") return { cents: -cents, signed: true };
+  if (kind === "income") return { cents, signed: true };
+  return { cents };
+}
+
 /** Which recurring dialog is open. One at a time, so focus returns to the row (or New schedule) when it closes. */
 export type ScheduleView = { kind: "new" } | { kind: "detail"; id: string } | { kind: "edit"; rule: Recurring } | { kind: "remove"; rule: Recurring };
 
@@ -88,7 +95,7 @@ export function datesDueBy(first: string, frequency: Frequency, anchorDay: numbe
 }
 
 /** The rules of one kind, active ones by next date, then paused ones by title. */
-export function sortSchedules(rules: readonly Recurring[]): Recurring[] {
+export function sortSchedules<T extends Pick<Recurring, "active" | "nextDate" | "title">>(rules: readonly T[]): T[] {
   return [...rules].sort((a, b) => {
     if (a.active !== b.active) return a.active ? -1 : 1;
     if (a.active) return a.nextDate.localeCompare(b.nextDate) || a.title.localeCompare(b.title);

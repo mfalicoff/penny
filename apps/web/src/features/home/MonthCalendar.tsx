@@ -1,11 +1,12 @@
 import type { OverviewEntry } from "@domain/selectors/overview.ts";
 import { useId, useMemo, useRef, type KeyboardEvent } from "react";
+import { usePreferences } from "../../app/preferences";
 import { useToday } from "../../app/useToday";
 import { Button, cx } from "../../design/controls";
 import { formatCents } from "../../design/Money";
 import { calendarDays, type CalendarDay } from "./model";
 
-const WEEKDAYS = [
+const MONDAY_FIRST = [
   ["M", "Monday"],
   ["T", "Tuesday"],
   ["W", "Wednesday"],
@@ -14,6 +15,7 @@ const WEEKDAYS = [
   ["S", "Saturday"],
   ["S", "Sunday"],
 ] as const;
+const SUNDAY_FIRST = [MONDAY_FIRST[6], ...MONDAY_FIRST.slice(0, 6)];
 
 function longDay(date: string) {
   const [year = 2000, month = 1, day = 1] = date.split("-").map(Number);
@@ -45,13 +47,16 @@ interface MonthCalendarProps {
  * occurrences and income dated after today, MAZ-136), which is never drawn like a recorded entry.
  * The legend and each day's accessible name say "expected or scheduled" for the ring. Selecting a
  * day filters the list below (`?day=`), selecting it again clears it.
- * Arrow keys move by day and week, Home and End to the ends of the week.
+ * Arrow keys move by day and week, Home and End to the ends of the week. The week starts on Monday
+ * or Sunday, as chosen in Settings › Appearance (MAZ-140).
  */
 export function MonthCalendar({ month, monthLabel, entries, selected, currency, onSelect }: MonthCalendarProps) {
   const headingId = useId();
   const grid = useRef<HTMLTableElement>(null);
   const today = useToday();
-  const { offset, days } = useMemo(() => calendarDays(month, entries, today), [month, entries, today]);
+  const { weekStartsOn } = usePreferences();
+  const { offset, days } = useMemo(() => calendarDays(month, entries, today, weekStartsOn), [month, entries, today, weekStartsOn]);
+  const weekdays = weekStartsOn === "sunday" ? SUNDAY_FIRST : MONDAY_FIRST;
   const focusable = selected?.startsWith(`${month}-`) ? selected : today.startsWith(`${month}-`) ? today : days[0]?.date;
   const weeks: (CalendarDay | null)[][] = [];
   const cells: (CalendarDay | null)[] = [...Array.from({ length: offset }, () => null), ...days];
@@ -90,7 +95,7 @@ export function MonthCalendar({ month, monthLabel, entries, selected, currency, 
         <caption className="visually-hidden">{monthLabel}. Choose a day to list its entries.</caption>
         <thead>
           <tr>
-            {WEEKDAYS.map(([short, long]) => (
+            {weekdays.map(([short, long]) => (
               <th key={long} scope="col" abbr={long}>
                 {short}
               </th>

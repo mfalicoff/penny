@@ -8,19 +8,26 @@ import { z } from "zod";
  * - `theme`: Light, Dark or System (default). Light and dark only, per MAZ-132.
  * - `reduceTransparency`: solid surfaces instead of glass. The system setting
  *   (`prefers-reduced-transparency`) applies too, in CSS, whatever this says.
+ * - `showCents`: the Home hero's Left to spend shows cents (default) or whole units (MAZ-140).
+ * - `weekStartsOn`: the first column of the Home calendar, Monday (default) or Sunday (MAZ-140).
  */
 export const THEMES = ["light", "dark", "system"] as const;
 export type Theme = (typeof THEMES)[number];
+export const WEEK_STARTS = ["monday", "sunday"] as const;
+export type WeekStart = (typeof WEEK_STARTS)[number];
 
 const preferencesSchema = z.object({
   theme: z.enum(THEMES).catch("system"),
   reduceTransparency: z.boolean().catch(false),
+  // Added later: a value saved before these fields existed still parses, with their defaults.
+  showCents: z.boolean().catch(true),
+  weekStartsOn: z.enum(WEEK_STARTS).catch("monday"),
 });
 
 export type Preferences = z.infer<typeof preferencesSchema>;
 
 export const STORAGE_KEY = "penny.preferences";
-const DEFAULTS: Preferences = { theme: "system", reduceTransparency: false };
+const DEFAULTS: Preferences = { theme: "system", reduceTransparency: false, showCents: true, weekStartsOn: "monday" };
 
 function read(): Preferences {
   try {

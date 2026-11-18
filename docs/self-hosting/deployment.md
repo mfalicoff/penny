@@ -147,6 +147,8 @@ Copy `deploy/api.env.example` to `deploy/api.env` (mode 0600, git-ignored). It i
 | `Backend__MaxRequestBodyBytes` | 20 MiB | Keep `PENNY_MAX_BODY` slightly above it |
 | `Backend__RequestTimeoutSeconds` | 30 | Requests past it get 503 with `Retry-After` |
 | `Receipts__MinFreeMegabytes` | 100 | Readiness fails (`disk-space`) below this much free space on the receipt volume |
+| `Receipts__UnlinkedRetentionDays` | 30 | Receipts nothing links to (discarded drafts, removed or replaced receipts) are deleted once this old, 1–3650; keep it longer than devices stay offline ([unlinked receipts](../reference/receipts.md#unlinked-receipts)) |
+| `Receipts__CleanupWorker` | true | `false` stops this process from deleting unlinked receipts (every six hours); `receipts-sweep` still does |
 | `Search__RateLimitPermits` | 30 | Searches per session per minute |
 | `Logging__LogLevel__Default` | `Information` | `Warning` drops the per-request access line |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` and the other standard `OTEL_*` variables | off | Traces, metrics and logs over OTLP to an OpenTelemetry Collector or Grafana Alloy ([telemetry](operations.md#telemetry-opentelemetry)); a ready-made Grafana stack: [observability](observability.md) |

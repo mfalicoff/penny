@@ -24,7 +24,7 @@ Add entry › More details, and the shared expense form, have a **Receipt** grou
 - **Ended session:** a 401 during upload or preview ends the session the usual way (sign-in with "Your session ended"). An unsaved new-entry draft, with its receipt link, survives that, like offline work.
 - **Offline:** the buttons are disabled and the hint says to connect; the rest of the entry still saves offline. A receipt uploaded earlier stays linked in the draft and syncs with the entry.
 - **The draft:** the receipt is part of the in-memory new-entry draft (`features/entries/drafts.ts`), so Keep draft, Escape and a page change keep it; Save links it; Discard and sign-out drop the link.
-- **Removing** unlinks the receipt from the entry when you save. The encrypted file stays on the server: there is no receipt delete endpoint. The same applies to a file uploaded into a draft that is then discarded.
+- **Removing** unlinks the receipt from the entry when you save. The server deletes a receipt nothing links to once it is older than `Receipts__UnlinkedRetentionDays` (default 30 days), so the file of a removed receipt, or of one uploaded into a draft that is then discarded, goes then; there is no receipt delete endpoint ([unlinked receipts](../reference/receipts.md#unlinked-receipts)).
 - **Ownership:** an upload belongs to the signed-in account. A personal entry can link only its owner's receipts; a shared expense can link the actor's own upload or one already linked in that household. The server enforces both on save.
 
 ## Emailed receipts (MAZ-184)

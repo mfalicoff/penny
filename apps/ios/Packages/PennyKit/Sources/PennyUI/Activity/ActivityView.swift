@@ -159,6 +159,15 @@ private struct ActivityList: View {
                 }
             }
             .listSectionSeparator(.hidden)
+            if rows.isEmpty, filters.hasQuery || filters.isNarrowed {
+                Section {
+                    searchEmptyState(search: search, filters: filters)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 24)
+                        .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
+                }
+                .listSectionSeparator(.hidden)
+            }
             ForEach(days, id: \.date) { day in
                 Section {
                     ForEach(day.entries) { entry in
@@ -171,7 +180,7 @@ private struct ActivityList: View {
             footer(rows: rows, shown: shown, search: search, server: server != nil)
         }
         .insetGroupedList()
-        .overlay { emptyState(rows: rows, search: search, filters: filters) }
+        .overlay { emptyState(rows: rows, filters: filters) }
         .refreshable {
             await shell.workspace.reload()
             search.retry()
@@ -260,20 +269,27 @@ private struct ActivityList: View {
         }
     }
 
+    /// Searching and No results sit in the list under the totals and the search scope, as on the
+    /// `search-empty` card. Centered over the list they rose with the keyboard and covered both
+    /// (MAZ-179).
     @ViewBuilder
-    private func emptyState(rows: [ReportEntry], search: ActivitySearchModel, filters: ActivityFilters) -> some View {
-        if rows.isEmpty {
-            if filters.hasQuery, search.status == .searching {
-                PennyStateView(.loading, title: "Searching your server…")
-                    .accessibilityIdentifier("activity.searching")
-            } else if filters.hasQuery || filters.isNarrowed {
-                ActivitySearchEmpty(filters: filters)
-            } else {
-                PennyStateView(
-                    .empty, title: "No entries in \(ActivityPeriodText.title(filters.period))",
-                    message: "Entries you add show up here, grouped by day.", actionTitle: "Add entry"
-                ) { shell.route.openAddEntry() }
-            }
+    private func searchEmptyState(search: ActivitySearchModel, filters: ActivityFilters) -> some View {
+        if filters.hasQuery, search.status == .searching {
+            PennyStateView(.loading, title: "Searching your server…")
+                .accessibilityIdentifier("activity.searching")
+        } else {
+            ActivitySearchEmpty(filters: filters)
+        }
+    }
+
+    /// An empty period with no query or filters, centered over the list.
+    @ViewBuilder
+    private func emptyState(rows: [ReportEntry], filters: ActivityFilters) -> some View {
+        if rows.isEmpty, !filters.hasQuery, !filters.isNarrowed {
+            PennyStateView(
+                .empty, title: "No entries in \(ActivityPeriodText.title(filters.period))",
+                message: "Entries you add show up here, grouped by day.", actionTitle: "Add entry"
+            ) { shell.route.openAddEntry() }
         }
     }
 }

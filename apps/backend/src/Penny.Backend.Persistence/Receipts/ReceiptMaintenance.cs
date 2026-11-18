@@ -66,14 +66,23 @@ public sealed class ReceiptMaintenance(
         return new(receipts, receipts - missing - corrupt, missing, corrupt, unreferenced, bytes);
     }
 
-    // Deletes files no row references (and leftover temporary files) once they are
-    // older than SweepGrace. A dry run only counts them.
+    // Deletes receipts nothing links to once they are older than `unlinkedRetention`
+    // (rows and files, MAZ-165), then files no row references (and leftover temporary
+    // files) once they are older than SweepGrace. A dry run only counts them.
     public async Task<ReceiptSweepReport> SweepAsync(
         DateTimeOffset now,
+        TimeSpan unlinkedRetention,
         bool dryRun,
         CancellationToken cancellationToken
     )
     {
+        var unlinked = await UnlinkedReceipts.RemoveAsync(
+            source,
+            files,
+            now - unlinkedRetention,
+            dryRun,
+            cancellationToken
+        );
         // Listing files before reading the rows means a file that gains its row in
         // between is still protected: it was written within the grace period.
         var candidates = files
@@ -109,7 +118,7 @@ public sealed class ReceiptMaintenance(
             dryRun,
             cancellationToken
         );
-        return new(candidates.Count + inboundExamined, removed + inboundRemoved, dryRun);
+        return new(candidates.Count + inboundExamined, removed + inboundRemoved, dryRun, unlinked);
     }
 
     // Raw emailed receipts (MAZ-184) under `inbound/`: files no inbound message

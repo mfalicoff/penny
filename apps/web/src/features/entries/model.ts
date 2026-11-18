@@ -231,6 +231,26 @@ export function entryChange({ transaction, rule }: BuiltEntry, original?: Transa
   };
 }
 
+/**
+ * Undo for the saved toast (redesign card `iphone-saved-toast`): takes back what `entryChange`
+ * did. An edit puts `original` back. A new entry is removed, and so is its schedule when this save
+ * created it (`ruleWasNew`), with any entries the schedule filled in.
+ */
+export function undoEntryChange({ transaction, rule }: BuiltEntry, original: Transaction | undefined, ruleWasNew: boolean): LedgerChange {
+  return (ledger) => {
+    if (original) {
+      if (!ledger.transactions.some((entry) => entry.id === original.id)) throw new Error("This entry was deleted, so the edit can't be undone.");
+      return saveEntry(original)(ledger);
+    }
+    const ruleId = rule && ruleWasNew ? rule.id : undefined;
+    return {
+      ...ledger,
+      transactions: ledger.transactions.filter((entry) => entry.id !== transaction.id && (ruleId === undefined || entry.recurringId !== ruleId)),
+      recurring: ruleId === undefined ? ledger.recurring : ledger.recurring.filter((item) => item.id !== ruleId),
+    };
+  };
+}
+
 /** Ledger icons are Ionicons names ("basket-outline"); the web's set has the outline glyphs without the suffix. */
 export function categoryIcon(icon: string | undefined): IconName {
   const name = (icon ?? "").replace(/-outline$/, "");

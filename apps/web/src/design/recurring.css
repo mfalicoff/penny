@@ -17,7 +17,16 @@
   margin: 0;
 }
 
-/* A schedule row is a button that opens the detail: full width, the row look, a visible focus ring. */
+/*
+ * A schedule row is a button that opens the detail (or a link to a shared schedule's household):
+ * full width, the row look, a visible focus ring. It keeps the icon, the title on the left and
+ * the amount on the right at every width, including under the 480px rule that drops `.row` to two
+ * columns (MAZ-177).
+ */
+.row.schedule-row {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
 .schedule-row {
   width: 100%;
   min-height: 56px;
@@ -121,4 +130,9 @@
   background: var(--pk-surface-2);
   color: var(--pk-label-2);
   font-size: 0.875rem;
+}
+
+/* The amount never breaks across lines; the title column gives way instead. */
+.schedule-row .row__end .money {
+  white-space: nowrap;
 }

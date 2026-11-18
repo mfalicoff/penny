@@ -73,7 +73,7 @@
   padding: 32px var(--pk-gutter);
 }
 
-/* Sign-in and create-account: brand panel above the form on phones, beside it on wide windows. */
+/* Sign-in and create-account: the form alone on phones (iphone-sign-in), with the brand panel beside it on wide windows (web-sign-in). */
 .auth {
   display: grid;
   grid-template-columns: 1fr;
@@ -81,11 +81,74 @@
 }
 
 .auth__brand {
-  display: grid;
-  gap: 8px;
-  align-content: start;
-  padding: 24px var(--pk-gutter);
-  background: var(--pk-surface-2);
+  display: none;
+}
+
+.auth__glow {
+  position: absolute;
+  inset: -80px;
+  z-index: -1;
+  background: var(--pk-glow-copper);
+  filter: blur(40px);
+  pointer-events: none;
+}
+
+.auth__preview {
+  width: min(100%, 380px);
+  margin-top: 28px;
+  padding: 18px;
+  border-radius: 22px;
+}
+
+.auth__preview p {
+  margin: 0;
+}
+
+.auth__preview-label {
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.auth__preview-amount {
+  margin-top: 4px;
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+}
+
+.auth__preview-amount span {
+  font-size: 1.375rem;
+  opacity: 0.55;
+}
+
+.auth__preview-flow {
+  display: flex;
+  gap: 3px;
+  height: 10px;
+  margin-top: 12px;
+}
+
+.auth__preview-flow i {
+  border-radius: 5px;
+}
+
+.auth__preview-spent {
+  width: 58.8%;
+  background: var(--pk-label);
+  opacity: 0.82;
+}
+
+.auth__preview-invested {
+  width: 6.3%;
+  background: var(--pk-invest);
+}
+
+.auth__preview-left {
+  width: 34.9%;
+  background: var(--pk-income);
 }
 
 .auth__logo {
@@ -212,6 +275,12 @@
   justify-content: flex-end;
 }
 
+/* Three choices, stacked full width with the safe one first (iphone-sign-out). */
+.dialog__actions--stack {
+  flex-direction: column;
+  align-items: stretch;
+}
+
 /* Search results. */
 .results {
   display: grid;
@@ -248,8 +317,13 @@
   }
 
   .auth__brand {
-    padding: 56px;
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    display: grid;
+    gap: 8px;
     align-content: end;
+    padding: 56px;
   }
 
   .auth__tagline {
@@ -264,5 +338,17 @@
 
 .auth__demo {
   display: grid;
-  gap: 4px;
+  gap: 2px;
+  justify-items: center;
+  text-align: center;
+}
+
+.auth__demo-link {
+  color: var(--pk-label-2);
+  font-weight: 500;
+}
+
+.auth__demo .field__hint {
+  margin: 0;
+  color: var(--pk-label-2);
 }
