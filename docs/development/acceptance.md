@@ -112,7 +112,6 @@ The redesign's web cards (`contracts/design-baseline.json`, `acceptance.web: "MA
 | --- | --- | --- |
 | `color-contrast` (1.4.3) | Every page, both themes | White on the accent button: 3.68:1 light, 2.76:1 dark (sign-in, Add entry, primary actions). Income green 3.69–4.17:1, pending amber 3.16–3.64:1, keyboard-shortcut chips 4.41:1, quiet links 4.43:1, banner text 4.13:1. Needs a design-kit token change, not a hand edit of `tokens.css` |
 | `label-content-name-mismatch` (2.5.3) | Home and Insights money-flow nodes and chart segments; Categories rows | The accessible name doesn't contain the visible text (for example `Edit Groceries` on a row showing usage text), so speech-input users must say a name they can't see |
-| `scrollable-region-focusable` (2.1.1) | Insights category table, phone | The horizontally scrolling table can't take keyboard focus |
 
 **Keyboard (automated).** Skip link and main focus, every route by keyboard, shortcuts with focus restoration (`shell.spec.ts`); keyboard-only Add entry with the category radio group and ⌘↵ (`transactions.spec.ts`); keyboard CRUD for accounts and categories (`organize.spec.ts`); Escape returns focus to the Add entry opener (`a11y.spec.ts`); the Sankey and stacked flow by keyboard (`home.spec.ts`).
 

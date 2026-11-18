@@ -71,7 +71,12 @@
         ],
         "deviations": [
           {
-            "summary": "Home leads with the hero plus Came in, Spent and Invested tiles, Coming up comes before Follow your money, and the month switcher sits under the title",
+            "summary": "Coming up and Explore your month follow Recent, and the month switcher leads the page under the compact top bar (MAZ-174)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+          },
+          {
+            "summary": "Expenses in Recent have no minus sign (the card shows −$48.90)",
             "kind": "follow-up",
             "ref": "MAZ-174"
           },
@@ -120,7 +125,12 @@
         ],
         "deviations": [
           {
-            "summary": "Home leads with the hero plus Came in, Spent and Invested tiles, Coming up comes before Follow your money, and the month switcher sits under the title",
+            "summary": "Coming up and Explore your month follow Recent, and the month switcher leads the page under the compact top bar (MAZ-174)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+          },
+          {
+            "summary": "Expenses in Recent have no minus sign (the card shows −$48.90)",
             "kind": "follow-up",
             "ref": "MAZ-174"
           },
@@ -197,9 +207,9 @@
         ],
         "deviations": [
           {
-            "summary": "No category donut or month-over-month sentence; Insights opens with four totals",
-            "kind": "follow-up",
-            "ref": "MAZ-174"
+            "summary": "Follow your money (the stacked phone flow) follows the categories, since the money flow is a section of Insights on the web",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           }
         ]
       }
@@ -1454,9 +1464,14 @@
         ],
         "deviations": [
           {
-            "summary": "The empty month shows one Add your first entry action instead of Income, Expense and Invest shortcuts and sample data",
+            "summary": "No Try with sample data card: the web demo only starts from sign-in, so it never mixes with an account",
             "kind": "follow-up",
             "ref": "MAZ-174"
+          },
+          {
+            "summary": "Add your first entry carries a Currency link, since the currency can only be chosen before the first entry",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           }
         ]
       }
@@ -1495,7 +1510,12 @@
         ],
         "deviations": [
           {
-            "summary": "Home leads with the hero plus Came in, Spent and Invested tiles, Coming up comes before Follow your money, and the month switcher sits under the title",
+            "summary": "Coming up and Explore your month follow Recent, and the month switcher leads the page under the compact top bar (MAZ-174)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+          },
+          {
+            "summary": "Expenses in Recent have no minus sign (the card shows −$48.90)",
             "kind": "follow-up",
             "ref": "MAZ-174"
           }
@@ -1735,7 +1755,12 @@
         ],
         "deviations": [
           {
-            "summary": "Home leads with the hero plus Came in, Spent and Invested tiles, Coming up comes before Follow your money, and the month switcher sits under the title",
+            "summary": "The money flow is the stacked flow, not the Sankey, because its panel is narrower than the Sankey needs at 1194px; Recent and Explore your month follow the dashboard",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+          },
+          {
+            "summary": "Expenses in Recent have no minus sign (the card shows −$48.90)",
             "kind": "follow-up",
             "ref": "MAZ-174"
           },
@@ -2078,14 +2103,14 @@
         ],
         "deviations": [
           {
-            "summary": "Home leads with the hero plus Came in, Spent and Invested tiles, Coming up comes before Follow your money, and the month switcher sits under the title",
-            "kind": "follow-up",
-            "ref": "MAZ-174"
+            "summary": "Recent and Explore your month (calendar and entries) follow the dashboard, and the Sankey card says Select instead of Hover",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           },
           {
-            "summary": "The Sankey and By category are below the fold, and the sidebar doesn't list households and trips",
+            "summary": "The sidebar doesn't list households and trips",
             "kind": "follow-up",
-            "ref": "MAZ-174"
+            "ref": "MAZ-173"
           }
         ]
       }
@@ -2133,9 +2158,14 @@
         ],
         "deviations": [
           {
-            "summary": "No category comparison table or six-month chart",
+            "summary": "The flow card keeps its focus line and Show as a table, so the category table and the six-month chart start lower; the chart has a table of its values",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+          },
+          {
+            "summary": "The sidebar doesn't list households and trips",
             "kind": "follow-up",
-            "ref": "MAZ-174"
+            "ref": "MAZ-173"
           }
         ]
       }

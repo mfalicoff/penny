@@ -47,11 +47,41 @@ test("Home leads with recorded and projected remaining, then recent activity, wi
   expect(errors).toEqual([]);
 });
 
+/** The page's region headings in document order (MAZ-174: what leads). */
+const regionOrder = (page: Page) => page.locator("main section[aria-labelledby]").evaluateAll((sections) => sections.map((section) => document.getElementById(section.getAttribute("aria-labelledby") ?? "")?.textContent ?? ""));
+
+test("Home leads with one number, then Follow your money, then Recent (MAZ-174)", async ({ page, isMobile }) => {
+  await startDemo(page);
+  const order = await regionOrder(page);
+  if (isMobile) {
+    // iphone-home: the hero alone (no tiles), the flow card, Recent; Coming up after them.
+    expect(order.slice(0, 4)).toEqual(["Left to spend", "Follow your money", "Recent", "Coming up"]);
+    await expect(hero(page).getByText("Came in")).toHaveCount(0);
+  } else {
+    // web-home: the hero and its tiles beside Coming up, then the Sankey beside By category.
+    expect(order.slice(0, 5)).toEqual(["Left to spend", "Coming up", "Follow your money", "By category", "Recent"]);
+    await expect(page.getByRole("banner").getByRole("button", { name: "Previous month" })).toBeVisible();
+  }
+});
+
+test("the desktop dashboard shows the Sankey and By category without scrolling at 1440×900 (MAZ-174)", async ({ page, isMobile }) => {
+  test.skip(isMobile, "desktop layout");
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await startDemo(page);
+  // The demo's banner isn't there for a signed-in person; leave it out of the measurement.
+  const banner = (await page.locator(".app__column > .pk-banner").first().boundingBox())?.height ?? 0;
+  const sankey = await page.getByRole("group", { name: "Money flow diagram" }).boundingBox();
+  const categories = await page.getByRole("region", { name: "By category" }).getByRole("listitem").last().boundingBox();
+  expect(sankey && sankey.y + sankey.height - banner).toBeLessThanOrEqual(900);
+  expect(categories && categories.y + categories.height - banner).toBeLessThanOrEqual(900);
+});
+
 test("the money flow is chosen with the keyboard and announced", async ({ page, isMobile }) => {
   await startDemo(page);
   // Watched from here: the 401 that shows the sign-in screen before the demo is expected.
   const errors = watchForErrors(page);
-  const flow = explore(page).getByRole("region", { name: "Follow your money" });
+  // The full flow is in Explore your month on phones and leads the desktop dashboard (MAZ-174).
+  const flow = (isMobile ? explore(page) : page).getByRole("region", { name: "Follow your money" });
   // Phones get the stacked flow; wider cards the Sankey. Only one of them is ever shown.
   const view = flow.getByRole("group", { name: isMobile ? "Money flow" : "Money flow diagram" });
   await expect(view).toBeVisible();
@@ -139,9 +169,28 @@ test("Insights compares the month and fits a 320px window", async ({ page }) => 
   expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
   await page.getByRole("link", { name: "Insights" }).first().click();
   await expect(page.getByRole("heading", { level: 1, name: "Insights" })).toBeVisible();
+  // iphone-insights (MAZ-174): the donut and one month-over-month sentence, then the categories.
+  const spending = page.getByRole("region", { name: "Spending" });
+  await expect(spending).toContainText("$1,883.35Spent");
+  await expect(spending).toContainText(/more than October|less than October|Same as October/);
+  await expect(page.getByRole("region", { name: "Categories" }).getByRole("listitem").first()).toContainText("$1,450.00");
+  await expect(page.getByRole("group", { name: "Money flow", exact: true })).toBeVisible();
+  expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
+  expect(errors).toEqual([]);
+});
+
+test("desktop Insights compares categories with last month and charts six months (MAZ-174)", async ({ page, isMobile }) => {
+  test.skip(isMobile, "desktop layout");
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await startDemo(page);
+  const errors = watchForErrors(page);
+  await page.getByRole("link", { name: "Insights" }).first().click();
   const table = page.getByRole("table", { name: /^Spending by category/ });
   await expect(table.getByRole("row", { name: /^Home/ })).toContainText("$1,450.00");
-  await expect(page.getByRole("group", { name: "Money flow", exact: true })).toBeVisible();
+  const months = page.getByRole("region", { name: "Last 6 months" });
+  await months.getByText("Show as a table").click();
+  await expect(months.getByRole("row", { name: /^November 2026/ })).toContainText("$1,883.35");
+  await expect(months.getByRole("row")).toHaveCount(7);
   expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
   expect(errors).toEqual([]);
 });

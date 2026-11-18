@@ -16,3 +16,13 @@ export function usePageTitle(title: string | null | undefined) {
     };
   }, [set, title]);
 }
+
+/**
+ * The top bar's tools slot, beside the title (cards `web-home` and `web-insights` put the month
+ * switcher there). Null until the shell has mounted it, so a page falls back to rendering inline.
+ */
+export const TopbarSlotContext = createContext<HTMLElement | null>(null);
+
+export function useTopbarSlot(): HTMLElement | null {
+  return use(TopbarSlotContext);
+}

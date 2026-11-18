@@ -2,12 +2,14 @@ import type { Kind, Ledger, Transaction } from "@domain/ledger.ts";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useId, useMemo, useRef, useState, type SyntheticEvent } from "react";
 import { usePreferences } from "../../app/preferences";
-import { Badge, Button, ChoiceGroup } from "../../design/controls";
+import { useMediaQuery, WIDE } from "../../app/useMediaQuery";
+import { Badge, Button, ChoiceGroup, cx } from "../../design/controls";
 import { Icon } from "../../design/Icon";
 import { formatCents, Money } from "../../design/Money";
-import { EmptyState, LoadingState } from "../../design/states";
+import { LoadingState } from "../../design/states";
 import { KIND_FILTERS } from "../activity/filters";
 import type { SharedState } from "../activity/data";
+import { AddEntryDialog } from "../entries/AddEntryDialog";
 import { EntryDetailDialog } from "../entries/EntryDetail";
 import { currentMonth, dayLabel, monthLabel } from "../households/model";
 import { monthEntries, type HomeSearch, type MonthReport } from "./model";
@@ -23,12 +25,19 @@ const RECENT = 5;
 const PAGE = 50;
 
 /**
- * Home (MAZ-92; specimens `home`, `home-dark`, `desktop`, `empty-home`, `calendar`; web card
- * `web-home`). It leads with what is left: the recorded remaining ("Left to spend") and, separately, the projected remaining with the expected income
- * named (scheduled income and income dated after today, MAZ-136), then Came in / Spent / Invested, what's coming up, the compact flow
- * summary and recent Activity. "Explore your month" holds the calendar, categories, the full
- * money flow and the month's entries, whose filters (`day`, `q`, `kind`, `category`) live in the
- * URL and never change a total.
+ * Home (MAZ-92, MAZ-174; cards `iphone-home`, `iphone-empty-home`, `ipad-home`, `web-home`). One
+ * number leads at every width: the recorded remaining ("Left to spend") with the projected
+ * remaining under it, the expected income named (scheduled income and income dated after today,
+ * MAZ-136). Then Follow your money, then Recent:
+ *
+ * - below 1100px (`iphone-home`): the compact flow card (spent, invested, left) that opens
+ *   Insights, Recent, and Coming up after them;
+ * - from 1100px (`web-home`): Came in / Spent / Invested under the hero with Coming up beside it,
+ *   then the Sankey beside By category, both above the fold at 1440×900, then Recent.
+ *
+ * "Explore your month" holds the calendar and the month's entries (and, below 1100px, categories
+ * and the full money flow), whose filters (`day`, `q`, `kind`, `category`) live in the URL and
+ * never change a total.
  */
 export function HomePage({ search }: { search: HomeSearch }) {
   const navigateTo = useNavigate({ from: "/" });
@@ -38,6 +47,10 @@ export function HomePage({ search }: { search: HomeSearch }) {
   const month = search.month ?? currentMonth();
   const { ledger, view, report, shared } = useMonthReport(month);
   const [open, setOpen] = useState<Opened>(null);
+  const wide = useMediaQuery(WIDE);
+  const selectCategory = (category: string | undefined) => {
+    navigate((previous) => ({ ...previous, category }));
+  };
   const onOpen = (entry: Transaction, opener: HTMLElement) => {
     setOpen({ entry, opener });
   };
@@ -57,10 +70,29 @@ export function HomePage({ search }: { search: HomeSearch }) {
         <FirstEntry currency={ledger.currency} />
       ) : (
         <>
-          <div className="home-top">
-            <Hero report={report} currency={ledger.currency} shared={shared} />
-            <ComingUp report={report} ledger={view} currency={ledger.currency} />
-            <FlowSummary report={report} currency={ledger.currency} month={month} />
+          <div className={cx("home-top", wide && "home-top--wide")}>
+            <Hero report={report} currency={ledger.currency} shared={shared} tiles={wide} />
+            {wide ? (
+              <>
+                <ComingUp report={report} ledger={view} currency={ledger.currency} />
+                <div className="home-sankey">
+                  <MoneyFlowChart
+                    flow={report.flow}
+                    currency={ledger.currency}
+                    monthLabel={monthLabel(month)}
+                    compact
+                    action={
+                      <Link to="/insights" search={{ month }} className="text-link">
+                        Open full view
+                      </Link>
+                    }
+                  />
+                </div>
+                <CategoryBreakdown level={2} spending={report.spending} currency={ledger.currency} selected={search.category} onSelect={selectCategory} />
+              </>
+            ) : (
+              <FlowSummary report={report} currency={ledger.currency} month={month} />
+            )}
             <Panel
               title="Recent"
               className="home-recent"
@@ -76,8 +108,9 @@ export function HomePage({ search }: { search: HomeSearch }) {
                 <p className="muted">Nothing recorded in {monthLabel(month)} yet.</p>
               )}
             </Panel>
+            {wide ? null : <ComingUp report={report} ledger={view} currency={ledger.currency} />}
           </div>
-          <Explore month={month} search={search} navigate={navigate} report={report} view={view} currency={ledger.currency} onOpen={onOpen} />
+          <Explore wide={wide} month={month} search={search} navigate={navigate} report={report} view={view} currency={ledger.currency} onOpen={onOpen} />
         </>
       )}
       {open ? (
@@ -98,26 +131,73 @@ export function HomePage({ search }: { search: HomeSearch }) {
 
 const isEmptyLedger = (ledger: Ledger) => ledger.transactions.length === 0 && ledger.recurring.length === 0;
 
-/** Specimen `empty-home`: no zero-value charts, one next step, and the currency can still be chosen. */
+const FIRST_KINDS = [
+  { kind: "income", label: "Income", hint: "Pay, refunds", icon: "arrow-down" },
+  { kind: "expense", label: "Expense", hint: "Spending", icon: "arrow-up" },
+  { kind: "investment", label: "Invest", hint: "Contributions", icon: "trending-up" },
+] as const;
+
+/**
+ * The empty Home (card `iphone-empty-home`, MAZ-174): Left to spend at $0, then how to start, one
+ * shortcut per kind that opens Add entry on it, and an empty Recent. No zero-value charts, and the
+ * currency can still be chosen. The cards' "Try with sample data" isn't offered: the web demo
+ * only starts from sign-in, so it never mixes with an account (`demo/demo.ts`).
+ */
 function FirstEntry({ currency }: { currency: string }) {
+  const heroId = useId();
+  const { showCents } = usePreferences();
+  const [adding, setAdding] = useState<Kind | null>(null);
   return (
-    <EmptyState
-      icon="leaf"
-      title="Your month starts with one entry"
-      action={
-        <div className="empty-actions">
-          <Link to="/entries/new" className="wbtn wbtn--secondary">
-            <Icon name="add" size={18} />
-            Add your first entry
-          </Link>
-          <Link to="/settings/currency" className="wbtn wbtn--quiet">
+    <div className="home-top">
+      <section className="hero" aria-labelledby={heroId}>
+        <h2 id={heroId} className="hero__label">
+          Left to spend
+        </h2>
+        <p className="hero__amount pk-num">{showCents ? formatCents(0, currency) : formatWholeUnits(0, currency)}</p>
+        <p className="hero__projected">Your month fills in as you add entries.</p>
+      </section>
+      <Panel
+        title="Add your first entry"
+        className="first-entry"
+        action={
+          <Link to="/settings/currency" className="text-link">
             Currency: {currency}
           </Link>
-        </div>
-      }
-    >
-      Add income, an expense or an investment and Penny shows what's left, where it went and what's coming up. Nothing here is an account balance.
-    </EmptyState>
+        }
+      >
+        <p className="muted">Start with what came in this month, then what went out.</p>
+        <ul className="first-entry__kinds">
+          {FIRST_KINDS.map((item) => (
+            <li key={item.kind}>
+              <button
+                type="button"
+                className={`first-entry__kind first-entry__kind--${item.kind}`}
+                onClick={() => {
+                  setAdding(item.kind);
+                }}
+              >
+                <span className="first-entry__icon" aria-hidden="true">
+                  <Icon name={item.icon} size={18} />
+                </span>
+                <span className="first-entry__label">{item.label}</span>
+                <span className="first-entry__hint">{item.hint}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </Panel>
+      <Panel title="Recent" className="home-recent">
+        <p className="muted">Nothing yet. New entries show up here.</p>
+      </Panel>
+      {adding ? (
+        <AddEntryDialog
+          kind={adding}
+          onClose={() => {
+            setAdding(null);
+          }}
+        />
+      ) : null}
+    </div>
   );
 }
 
@@ -126,7 +206,8 @@ function formatWholeUnits(cents: number, currency: string): string {
   return new Intl.NumberFormat("en-CA", { style: "currency", currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(cents / 100);
 }
 
-function Hero({ report, currency, shared }: { report: MonthReport; currency: string; shared: SharedState & { retry: () => void } }) {
+/** Left to spend with Projected under it; `tiles` adds Came in / Spent / Invested (the desktop card `web-home`). */
+function Hero({ report, currency, shared, tiles }: { report: MonthReport; currency: string; shared: SharedState & { retry: () => void }; tiles: boolean }) {
   const id = useId();
   const { showCents } = usePreferences();
   const overspent = report.recordedNet < 0;
@@ -171,35 +252,37 @@ function Hero({ report, currency, shared }: { report: MonthReport; currency: str
           ) : null}
         </span>
       </p>
-      <dl className="hero__tiles">
-        <div className="tile">
-          <dt>
-            <span className="tile__dot tile__dot--income" aria-hidden="true" />
-            Came in
-          </dt>
-          <dd>
-            <Money cents={report.recorded.income} currency={currency} tone="income" />
-          </dd>
-        </div>
-        <div className="tile">
-          <dt>
-            <span className="tile__dot tile__dot--expense" aria-hidden="true" />
-            Spent · your share
-          </dt>
-          <dd>
-            <Money cents={report.recorded.expense} currency={currency} />
-          </dd>
-        </div>
-        <div className="tile">
-          <dt>
-            <span className="tile__dot tile__dot--investment" aria-hidden="true" />
-            Invested
-          </dt>
-          <dd>
-            <Money cents={report.recorded.investment} currency={currency} tone="investment" />
-          </dd>
-        </div>
-      </dl>
+      {tiles ? (
+        <dl className="hero__tiles">
+          <div className="tile">
+            <dt>
+              <span className="tile__dot tile__dot--income" aria-hidden="true" />
+              Came in
+            </dt>
+            <dd>
+              <Money cents={report.recorded.income} currency={currency} tone="income" />
+            </dd>
+          </div>
+          <div className="tile">
+            <dt>
+              <span className="tile__dot tile__dot--expense" aria-hidden="true" />
+              Spent · your share
+            </dt>
+            <dd>
+              <Money cents={report.recorded.expense} currency={currency} />
+            </dd>
+          </div>
+          <div className="tile">
+            <dt>
+              <span className="tile__dot tile__dot--investment" aria-hidden="true" />
+              Invested
+            </dt>
+            <dd>
+              <Money cents={report.recorded.investment} currency={currency} tone="investment" />
+            </dd>
+          </div>
+        </dl>
+      ) : null}
       <p className="note">
         Recorded so far; income and spending aren't an account balance, and investments are contributions.
         {report.sharedCount > 0 ? ` Spent includes your share of ${String(report.sharedCount)} shared expense${report.sharedCount === 1 ? "" : "s"}${shared.status === "ready" && shared.cached ? ", as Penny last loaded them" : ""}.` : ""}
@@ -307,6 +390,7 @@ function FlowSummary({ report, currency, month }: { report: MonthReport; currenc
 }
 
 function Explore({
+  wide,
   month,
   search,
   navigate,
@@ -315,6 +399,7 @@ function Explore({
   currency,
   onOpen,
 }: {
+  wide: boolean;
   month: string;
   search: HomeSearch;
   navigate: Navigate;
@@ -326,7 +411,7 @@ function Explore({
   const id = useId();
   const label = monthLabel(month);
   return (
-    <section className="explore" aria-labelledby={id}>
+    <section className={cx("explore", wide && "explore--wide")} aria-labelledby={id}>
       <h2 id={id} className="section-title">
         Explore your month
       </h2>
@@ -341,18 +426,22 @@ function Explore({
             navigate((previous) => ({ ...previous, day }));
           }}
         />
-        <CategoryBreakdown
-          spending={report.spending}
-          currency={currency}
-          selected={search.category}
-          onSelect={(category) => {
-            navigate((previous) => ({ ...previous, category }));
-          }}
-        />
-        <div className="explore__wide">
-          <MoneyFlowChart flow={report.flow} currency={currency} monthLabel={label} level={3} />
-        </div>
-        <div className="explore__wide">
+        {wide ? null : (
+          <>
+            <CategoryBreakdown
+              spending={report.spending}
+              currency={currency}
+              selected={search.category}
+              onSelect={(category) => {
+                navigate((previous) => ({ ...previous, category }));
+              }}
+            />
+            <div className="explore__wide">
+              <MoneyFlowChart flow={report.flow} currency={currency} monthLabel={label} level={3} />
+            </div>
+          </>
+        )}
+        <div className="explore__wide explore__list">
           <MonthList key={`${month}|${search.day ?? ""}|${search.q ?? ""}|${search.kind ?? ""}|${search.category ?? ""}`} month={month} search={search} navigate={navigate} view={view} currency={currency} onOpen={onOpen} />
         </div>
       </div>

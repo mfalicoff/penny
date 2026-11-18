@@ -3,6 +3,9 @@ import type { OverviewEntry } from "@domain/selectors/overview.ts";
 import { isExpectedIncome } from "@domain/summary.ts";
 import { Link } from "@tanstack/react-router";
 import { useId, type ReactNode } from "react";
+import { createPortal } from "react-dom";
+import { useTopbarSlot } from "../../app/shell/pageTitle";
+import { useMediaQuery, WIDE } from "../../app/useMediaQuery";
 import { useToday } from "../../app/useToday";
 import { Badge, Button, cx } from "../../design/controls";
 import { Icon } from "../../design/Icon";
@@ -28,8 +31,19 @@ export function Panel({ title, level = 2, action, className, children }: { title
   );
 }
 
-/** Previous, the month, Next, and This month when another month is shown. */
+/**
+ * Previous, the month, Next, and This month when another month is shown. From 1100px it sits in the
+ * top bar beside the page title (cards `web-home`, `web-insights`); narrower, it leads the page,
+ * where the iPhone cards put the month capsule.
+ */
 export function MonthBar({ month, onChange }: { month: string; onChange: (month: string | undefined) => void }) {
+  const slot = useTopbarSlot();
+  const beside = useMediaQuery(WIDE);
+  const bar = <MonthBarControls month={month} onChange={onChange} />;
+  return beside && slot ? createPortal(bar, slot) : bar;
+}
+
+function MonthBarControls({ month, onChange }: { month: string; onChange: (month: string | undefined) => void }) {
   const now = currentMonth();
   return (
     <div className="month-bar">
@@ -160,11 +174,14 @@ export function EntryRows({ entries, ledger, currency, onOpen }: { entries: read
  * Choosing a category filters the list below.
  */
 export function CategoryBreakdown({
+  level = 3,
   spending,
   currency,
   selected,
   onSelect,
 }: {
+  /** 2 when it leads a region of the page (the desktop Home), 3 inside Explore your month. */
+  level?: 2 | 3;
   spending: Parameters<typeof groupSmall>[0];
   currency: string | undefined;
   selected: string | undefined;
@@ -172,7 +189,7 @@ export function CategoryBreakdown({
 }) {
   const { rows, total } = groupSmall(spending);
   return (
-    <Panel title="By category" level={3} className="breakdown" action={<span className="muted">Your share</span>}>
+    <Panel title="By category" level={level} className="breakdown" action={<span className="muted">Your share</span>}>
       {rows.length ? (
         <>
           <ol className="breakdown__list">

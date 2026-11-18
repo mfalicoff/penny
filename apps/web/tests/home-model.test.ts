@@ -2,7 +2,7 @@ import { emptyLedger, type Ledger, type Recurring, type Transaction } from "@dom
 import { describe, expect, it } from "vitest";
 import type { SharedRow } from "../src/api/projection";
 import { danaOctober, totalsOf } from "./fakes/futureIncome";
-import { calendarDays, categoryComparison, flowNodeSummary, groupSmall, homeSearchSchema, ledgerWithShared, monthEntries, monthReport, shortLabel } from "../src/features/home/model";
+import { calendarDays, categoryComparison, flowNodeSummary, groupSmall, homeSearchSchema, ledgerWithShared, monthEntries, monthReport, monthsEnding, shortLabel, spendingChange } from "../src/features/home/model";
 
 /**
  * Home and Insights reporting (MAZ-92) against fixtures: the shared domain's month breakdown over
@@ -331,5 +331,25 @@ describe("income dated after today (MAZ-136)", () => {
     expect(result.flow.remaining).toBe(result.recordedNet);
     // On its date the income joins the flow; the scheduled retainer stays out until it's recorded.
     expect(monthReport(view, MONTH, "2026-11-11").flow.income).toBe(100000);
+  });
+});
+
+describe("spendingChange (MAZ-174)", () => {
+  const row = (key: string, change: number) => ({ key, name: key, icon: "", color: "", current: 0, previous: 0, change, share: 0 });
+
+  it("names the two categories that moved most in the direction of the change", () => {
+    const comparison = [row("Home", 0), row("Groceries", -14363), row("Transport", 3200), row("Food", -9000), row("Shopping", -2000), row("more", -50000)];
+    expect(spendingChange(188335, 229535, comparison)).toEqual({ delta: -41200, drivers: ["Groceries", "Food"] });
+    expect(spendingChange(229535, 188335, comparison)).toEqual({ delta: 41200, drivers: ["Transport"] });
+  });
+
+  it("names nothing when spending didn't change", () => {
+    expect(spendingChange(1000, 1000, [row("Home", 500), row("Food", -500)])).toEqual({ delta: 0, drivers: [] });
+  });
+});
+
+describe("monthsEnding (MAZ-174)", () => {
+  it("lists the months up to the shown one, oldest first, across a year", () => {
+    expect(monthsEnding("2026-02", 6)).toEqual(["2025-09", "2025-10", "2025-11", "2025-12", "2026-01", "2026-02"]);
   });
 });

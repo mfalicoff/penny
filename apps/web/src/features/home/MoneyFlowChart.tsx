@@ -1,5 +1,5 @@
 import { layoutMoneyFlow, type FlowNode, type MoneyFlow } from "@domain/selectors/moneyFlow.ts";
-import { useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { cx } from "../../design/controls";
 import { formatCents, Money } from "../../design/Money";
 import { flowColor, flowNodeSummary, percentOf, shortLabel } from "./model";
@@ -25,6 +25,13 @@ interface MoneyFlowChartProps {
   monthLabel: string;
   /** Heading level of the card title (2 on Insights, 3 inside Home's Explore your month). */
   level?: 2 | 3;
+  /**
+   * Desktop Home and Insights (`web-home`, `web-insights`, MAZ-174): the totals are already on the
+   * page, so they and the long note are left out and the diagram is kept short enough for the fold.
+   */
+  compact?: boolean;
+  /** A link beside the hint, such as Home's "Open full view". */
+  action?: ReactNode;
 }
 
 /**
@@ -39,7 +46,7 @@ interface MoneyFlowChartProps {
  * a button: click, Enter or Space focuses it (and again clears), arrow keys move between nodes,
  * Escape clears. The focus card announces the selection, and "Show as a table" lists every value.
  */
-export function MoneyFlowChart({ flow, currency, monthLabel, level = 2 }: MoneyFlowChartProps) {
+export function MoneyFlowChart({ flow, currency, monthLabel, level = 2, compact = false, action }: MoneyFlowChartProps) {
   const headingId = useId();
   const hintId = useId();
   const [selected, setSelected] = useState<string | null>(null);
@@ -67,7 +74,7 @@ export function MoneyFlowChart({ flow, currency, monthLabel, level = 2 }: MoneyF
   };
 
   return (
-    <section className="card flow" aria-labelledby={headingId}>
+    <section className={cx("card flow", compact && "flow--compact")} aria-labelledby={headingId}>
       <div className="card__head">
         <Heading id={headingId} className="panel__title">
           Follow your money
@@ -75,37 +82,42 @@ export function MoneyFlowChart({ flow, currency, monthLabel, level = 2 }: MoneyF
         <span className="muted flow__hint" id={hintId}>
           Select a band or label to focus it, again to clear
         </span>
+        {action}
       </div>
       {!flow.total ? (
         <p className="muted">Nothing came in or went out in {monthLabel} yet. Add income, an expense or an investment to see where your money goes.</p>
       ) : (
         <>
-          <dl className="flow__totals">
-            <div>
-              <dt>Came in</dt>
-              <dd>
-                <Money cents={flow.income} currency={currency} tone="income" />
-              </dd>
-            </div>
-            <div>
-              <dt>Went out</dt>
-              <dd>
-                <Money cents={flow.expense + flow.investment} currency={currency} />
-              </dd>
-            </div>
-            <div>
-              <dt>{flow.gap ? "Beyond income" : "Left over"}</dt>
-              <dd>
-                <Money cents={flow.gap || flow.remaining} currency={currency} tone={flow.gap ? "expense" : "income"} />
-              </dd>
-            </div>
-          </dl>
+          {compact ? null : (
+            <dl className="flow__totals">
+              <div>
+                <dt>Came in</dt>
+                <dd>
+                  <Money cents={flow.income} currency={currency} tone="income" />
+                </dd>
+              </div>
+              <div>
+                <dt>Went out</dt>
+                <dd>
+                  <Money cents={flow.expense + flow.investment} currency={currency} />
+                </dd>
+              </div>
+              <div>
+                <dt>{flow.gap ? "Beyond income" : "Left over"}</dt>
+                <dd>
+                  <Money cents={flow.gap || flow.remaining} currency={currency} tone={flow.gap ? "expense" : "income"} />
+                </dd>
+              </div>
+            </dl>
+          )}
           <FocusCard active={active} flow={flow} currency={currency} />
           <Sankey flow={flow} nodes={nodes} selected={selected} describe={describe} toggle={toggle} onKeyDown={onKeyDown} hintId={hintId} />
           <Stacked flow={flow} nodes={nodes} selected={selected} describe={describe} toggle={toggle} onKeyDown={onKeyDown} hintId={hintId} />
-          <p className="note">
-            Recorded entries only, so Left over matches Left to spend; expected income joins on its date or once it's recorded. Your share of split and shared expenses only. Investments are contributions, not spending, and come out of what's left.
-          </p>
+          {compact ? null : (
+            <p className="note">
+              Recorded entries only, so Left over matches Left to spend; expected income joins on its date or once it's recorded. Your share of split and shared expenses only. Investments are contributions, not spending, and come out of what's left.
+            </p>
+          )}
           <FlowTable flow={flow} nodes={nodes} currency={currency} monthLabel={monthLabel} />
         </>
       )}

@@ -15,10 +15,10 @@ type Scope = { householdId: string | null; kind?: Kind; seed?: EntrySeed; genera
  * (MAZ-88); a household or shared trip shows the shared form in the same dialog and layout, online
  * only. Switching keeps what was typed.
  */
-export function AddEntryDialog({ onClose, householdId, seed }: { onClose: () => void; householdId?: string; seed?: EntrySeed }) {
+export function AddEntryDialog({ onClose, householdId, seed, kind }: { onClose: () => void; householdId?: string; seed?: EntrySeed; kind?: Kind }) {
   const households = useHouseholdChoices();
   // `seed` starts a new expense from something else (an emailed receipt, MAZ-184), apart from any kept draft.
-  const [scope, setScope] = useState<Scope>({ householdId: householdId ?? null, generation: 0, ...(seed ? { seed, kind: "expense" as const } : {}) });
+  const [scope, setScope] = useState<Scope>({ householdId: householdId ?? null, generation: 0, ...(seed ? { seed, kind: "expense" as const } : kind ? { kind } : {}) });
   const choice: HouseholdScope = {
     households,
     current: scope.householdId,
