@@ -344,6 +344,17 @@ final class CardCaptureTests: CardTestCase {
             let solo = try card.seeded().user(card.state.alias ?? "solo")
             try card.penny.type(solo.email, into: AccessibilityID.Auth.email)
             card.penny.hideKeyboard()
+            // The sign-in form has no tap-to-dismiss and its keyboard sits lower than the generic
+            // drag reaches: drag the form down into the keyboard (interactive dismiss), so the card
+            // shows Sign in with the demo link below it, as on the card.
+            if card.app.keyboards.firstMatch.exists {
+                card.app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.3))
+                    .press(
+                        forDuration: 0.05,
+                        thenDragTo: card.app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.95)))
+                _ = card.app.keyboards.firstMatch.waitForNonExistence(timeout: 3)
+            }
+            try card.penny.wait(for: AccessibilityID.Auth.tryDemo)
         }
     }
 
@@ -360,6 +371,10 @@ final class CardCaptureTests: CardTestCase {
         try await card("iphone-server-connect") { card in
             try card.penny.tap(AccessibilityID.Auth.changeServer)
             try card.penny.wait(for: AccessibilityID.Server.url)
+            // The card shows the Server verified state: check the test server (no credential).
+            try card.penny.tap(AccessibilityID.Server.check)
+            try card.penny.wait(for: AccessibilityID.Server.verified, timeout: 30)
+            card.penny.hideKeyboard()
         }
     }
 

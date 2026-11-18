@@ -187,11 +187,11 @@ struct SignedOutFlow: View {
 
     @State private var path: [Route] = []
     @State private var keyboardShown = false
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
-    /// At accessibility text sizes the demo link, which rides above the keyboard, covered Sign in
-    /// while typing (MAZ-82 audit, AX-XXXL); it steps aside until the keyboard goes away.
-    private var showsTryDemo: Bool { !(keyboardShown && dynamicTypeSize.isAccessibilitySize) }
+    /// The demo link rides above the keyboard, where it covered Sign in while typing at every
+    /// text size (MAZ-82 audit at AX-XXXL, MAZ-179 at the default size); it steps aside until the
+    /// keyboard goes away.
+    private var showsTryDemo: Bool { !keyboardShown }
 
     var body: some View {
         NavigationStack(path: $path) {
