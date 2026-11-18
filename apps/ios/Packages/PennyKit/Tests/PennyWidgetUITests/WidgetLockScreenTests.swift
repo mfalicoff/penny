@@ -42,6 +42,11 @@ struct WidgetLockScreenTests {
         #expect(LockText.whole(Self.snapshot(), locale: Self.locale) == "$1,116")
         #expect(LockText.whole(Self.snapshot(left: -4250), locale: Self.locale) == "\u{2212}$42")
         #expect(LockText.whole(Self.snapshot(left: 0), locale: Self.locale) == "$0")
+        // The symbol follows the amount in fr_CA; it must survive dropping the cents.
+        let french = LockText.whole(Self.snapshot(), locale: Locale(identifier: "fr_CA"))
+        #expect(french.contains("$"))
+        #expect(french.filter(\.isNumber) == "1116")
+        #expect(LockText.whole(Self.snapshot(left: 99), locale: Self.locale) == "$0")
     }
 
     @Test("whenReadByVoiceOver_LockText_ShouldSpeakEveryStateWithoutSymbols")

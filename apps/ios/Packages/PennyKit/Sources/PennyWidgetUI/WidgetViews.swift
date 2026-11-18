@@ -495,9 +495,12 @@ struct LockCircularView: View {
 enum LockText {
     /// Left to spend without cents ("$1,116"): the rectangular accessory has room for one line.
     static func whole(_ snapshot: WidgetSnapshot, locale: Locale = .current) -> String {
-        let text = MoneyFormat.signed(
-            snapshot.leftToSpend, meaning: .neutral, currency: snapshot.currency, locale: locale)
-        return MoneyFormat.heroParts(text, locale: locale).whole
+        // Formatted without fraction digits rather than cut from the full amount, so locales
+        // that put the symbol after the amount ("1 116 $" in fr_CA) keep it. The cents are dropped
+        // (toward zero), as on the hero amount.
+        let whole = (Decimal(snapshot.leftToSpend.magnitude) / 100).formatted(
+            .currency(code: snapshot.currency).locale(locale).precision(.fractionLength(0)).rounded(rule: .down))
+        return snapshot.leftToSpend < 0 ? MoneyFormat.minus + whole : whole
     }
 
     static func spoken(_ content: WidgetContent, locale: Locale = .current) -> String {
