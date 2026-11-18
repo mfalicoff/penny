@@ -114,11 +114,41 @@
   flex: 1;
 }
 
+/* Page tools beside the title (the month switcher on Home and Insights), from 1100px. */
+.topbar__tools {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  margin-inline-end: 8px;
+}
+
+.topbar__tools:empty {
+  display: none;
+}
+
+/* In the top bar the switcher stays on one line, and the title keeps its full width. */
+.topbar__tools .month-bar {
+  flex-wrap: nowrap;
+  gap: 4px;
+}
+
+.topbar__tools .month-nav__label {
+  min-width: 0;
+  padding-inline: 4px;
+  white-space: nowrap;
+}
+
+.topbar:has(.topbar__tools:not(:empty)) .topbar__title {
+  flex: none;
+}
+
 .topsearch {
   display: none;
   align-items: center;
   gap: 8px;
   width: min(280px, 32vw);
+  min-width: 150px;
+  flex: 0 1 auto;
   height: 36px;
   padding: 0 8px 0 12px;
   border-radius: 10px;

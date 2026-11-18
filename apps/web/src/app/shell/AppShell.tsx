@@ -14,7 +14,7 @@ import { leaveDemo, useIsDemo } from "../../demo/demo";
 import { serverInfoQuery } from "../../api/info";
 import { ServerStatus } from "../ServerStatus";
 import { goShortcut, NAV_SECTIONS, TAB_ITEMS, type NavItem } from "./navigation";
-import { PageTitleContext } from "./pageTitle";
+import { PageTitleContext, TopbarSlotContext } from "./pageTitle";
 import { useShortcuts } from "./shortcuts";
 
 /** Title of the deepest matched route (`staticData.title`), for the top bar and the document title. */
@@ -45,6 +45,8 @@ export function AppShell() {
   const navigate = useNavigate();
   const meta = usePageMeta();
   const [titleOverride, setTitleOverride] = useState<string | null>(null);
+  // Where a page may place tools beside the title (the month switcher on Home and Insights).
+  const [toolSlot, setToolSlot] = useState<HTMLDivElement | null>(null);
   const title = titleOverride ?? meta.title;
   const search = meta.search;
   const searchRef = useRef<HTMLInputElement>(null);
@@ -98,6 +100,7 @@ export function AppShell() {
             </span>
           </Link>
           <h1 className="topbar__title">{title}</h1>
+          <div className="topbar__tools" ref={setToolSlot} />
           <div className="topbar__spacer" />
           {search ? <TopSearch inputRef={searchRef} /> : null}
           <Button
@@ -118,7 +121,9 @@ export function AppShell() {
         <ServerUnreachableBanner unreachable={serverDown} />
         <main id="main" className="app__main" tabIndex={-1}>
           <PageTitleContext value={setTitleOverride}>
-            <Outlet />
+            <TopbarSlotContext value={toolSlot}>
+              <Outlet />
+            </TopbarSlotContext>
           </PageTitleContext>
         </main>
       </div>

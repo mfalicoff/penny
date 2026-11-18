@@ -62,15 +62,6 @@
       "reason": "Buttons whose aria-label omits their visible text (Explore your month flow nodes and chart segments, Categories Edit <name> rows). Speech-input users must say the label, not what they see (WCAG 2.5.3)."
     },
     {
-      "scan": "Insights light",
-      "rule": "scrollable-region-focusable",
-      "impact": "serious",
-      "projects": [
-        "chromium-phone"
-      ],
-      "reason": "The phone Insights category table scrolls horizontally but its scroll container cannot take keyboard focus (WCAG 2.1.1)."
-    },
-    {
       "scan": "Trips light",
       "rule": "color-contrast",
       "impact": "serious",
@@ -207,15 +198,6 @@
         "chromium-desktop"
       ],
       "reason": "Design-kit colors below 4.5:1 for normal text: white on the accent button (3.68 light, 2.76 dark), income green (3.69-4.17), pending amber (3.16-3.64), keyboard-shortcut chips and quiet links (4.41-4.43), banner text (4.13). Needs a design-kit token change (MAZ-122 visual handoff), not a hand edit of tokens.css."
-    },
-    {
-      "scan": "Insights dark",
-      "rule": "scrollable-region-focusable",
-      "impact": "serious",
-      "projects": [
-        "chromium-phone"
-      ],
-      "reason": "The phone Insights category table scrolls horizontally but its scroll container cannot take keyboard focus (WCAG 2.1.1)."
     },
     {
       "scan": "Accounts dark",
