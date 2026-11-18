@@ -245,6 +245,14 @@ describe("calendar", () => {
     expect(days[5]).toMatchObject({ date: "2026-11-06", count: 2, expense: 1000, investment: 200, scheduled: 0 });
     expect(days[24]).toMatchObject({ date: "2026-11-25", count: 1, income: 0, scheduled: 1 });
   });
+
+  it("offsets the first day for a week starting on Monday or Sunday (MAZ-140)", () => {
+    expect(calendarDays(MONTH, [], END, "monday").offset).toBe(6);
+    expect(calendarDays(MONTH, [], END, "sunday").offset).toBe(0); // 2026-11-01 is a Sunday
+    expect(calendarDays("2026-12", [], END, "monday").offset).toBe(1); // 2026-12-01 is a Tuesday
+    expect(calendarDays("2026-12", [], END, "sunday").offset).toBe(2);
+    expect(calendarDays("2026-02", [], END, "sunday").offset).toBe(0); // 2026-02-01 is a Sunday
+  });
 });
 
 describe("URL", () => {
