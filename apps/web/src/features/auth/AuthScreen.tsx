@@ -32,17 +32,20 @@ export function AuthScreen() {
 
   return (
     <div className="auth">
+      {/* Wide windows only (card web-sign-in); phones open straight on the form, as on iphone-sign-in. */}
       <section className="auth__brand" aria-label="About Penny">
+        <div className="auth__glow" aria-hidden="true" />
         <p className="auth__logo">
           <Icon name="leaf" size={28} weight={40} />
           <span>Penny</span>
         </p>
         <p className="auth__tagline">A little more clarity about your money.</p>
         <p className="auth__sub">Personal and shared expenses on your own server. Penny never connects to your bank.</p>
+        <BrandPreview />
       </section>
       <main className="auth__form" id="main" tabIndex={-1}>
-        <h1>{creating ? "Create your account" : "Welcome back"}</h1>
-        <p className="auth__lede">{creating ? "Start tracking on this server." : "Sign in to see your month."}</p>
+        <h1>{creating ? "Make yourself at home" : "Welcome back"}</h1>
+        <p className="auth__lede">{creating ? "Your account lives on this server. Penny never connects to your bank." : "Sign in to see your month."}</p>
         {notice === "expired" ? (
           <p className="notice" role="status">
             Your session ended. Sign in again to continue. Changes waiting to sync are kept on this device.
@@ -50,7 +53,6 @@ export function AuthScreen() {
         ) : null}
         <CredentialsForm key={mode} mode={mode} />
         <SsoButton />
-        {creating ? null : <DemoButton />}
         <p className="auth__switch">
           {creating ? "Already have an account? " : "New here? "}
           <button
@@ -63,6 +65,7 @@ export function AuthScreen() {
             {creating ? "Sign in" : "Create an account"}
           </button>
         </p>
+        {creating ? null : <DemoButton />}
       </main>
     </div>
   );
@@ -274,7 +277,7 @@ function SsoButton() {
   );
 }
 
-/** Temporary demo (MAZ-85): sample data in this tab only, without an account. */
+/** Temporary demo (MAZ-85): sample data in this tab only, without an account. A quiet link under the form, as on iphone-sign-in. */
 function DemoButton() {
   const queryClient = useQueryClient();
   const hintId = useId();
@@ -282,18 +285,34 @@ function DemoButton() {
     <div className="auth__demo">
       <button
         type="button"
-        className="button button--secondary button--block"
+        className="link-button auth__demo-link"
         aria-describedby={hintId}
         onClick={() => {
           void startDemo(queryClient);
         }}
       >
-        <Icon name="play" size={18} />
-        Explore a demo
+        Take a look around with sample data
       </button>
       <p id={hintId} className="field__hint">
         Sample data in this tab only. Nothing is saved or sent to your server.
       </p>
+    </div>
+  );
+}
+
+/** The brand panel's Left to spend sample (card web-sign-in). Decorative, so hidden from assistive technology. */
+function BrandPreview() {
+  return (
+    <div className="auth__preview glass" aria-hidden="true">
+      <p className="auth__preview-label">Left to spend</p>
+      <p className="auth__preview-amount pk-num">
+        $1,116<span>.65</span>
+      </p>
+      <div className="auth__preview-flow">
+        <i className="auth__preview-spent" />
+        <i className="auth__preview-invested" />
+        <i className="auth__preview-left" />
+      </div>
     </div>
   );
 }

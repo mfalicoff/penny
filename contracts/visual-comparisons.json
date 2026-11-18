@@ -1,7 +1,7 @@
 {
   "version": 1,
   "description": "Visual comparison of the iOS and web apps with each redesign card (MAZ-122). Method, statuses and re-sync steps: docs/design/visual-acceptance.md. Approved deviations are in docs/reference/redesign.md; follow-ups name their issue.",
-  "reviewedAt": "2026-11-12",
+  "reviewedAt": "2026-11-17",
   "cards": [
     {
       "id": "system-foundations",
@@ -285,19 +285,12 @@
       "id": "iphone-search-empty",
       "view": "search with no results",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-73",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "With the keyboard up, the centered No results view overlaps the totals line and the server-results row",
-            "kind": "follow-up",
-            "ref": "MAZ-179"
-          }
         ]
       },
       "web": {
@@ -1329,19 +1322,12 @@
       "id": "iphone-sign-in",
       "view": "password sign-in",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-68",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "With the keyboard up, \"Take a look around with sample data\" overlaps the Sign in button",
-            "kind": "follow-up",
-            "ref": "MAZ-179"
-          }
         ]
       },
       "web": {
@@ -1354,9 +1340,14 @@
         ],
         "deviations": [
           {
-            "summary": "A brand block sits above the form, \"Explore a demo\" is added, and SSO reads \"Single sign-on\"",
-            "kind": "follow-up",
-            "ref": "MAZ-178"
+            "summary": "The single sign-on button reads \"Continue with Single sign-on\", the server's configured provider label, not \"SSO\"",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+          },
+          {
+            "summary": "Under \"Take a look around with sample data\", a one-line note says the demo saves nothing; the web has no server chip with Change",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           }
         ]
       }
@@ -1390,9 +1381,9 @@
         ],
         "deviations": [
           {
-            "summary": "A brand block sits above the form, and SSO reads \"Single sign-on\"",
-            "kind": "follow-up",
-            "ref": "MAZ-178"
+            "summary": "The single sign-on button reads \"Continue with Single sign-on\", the server's configured provider label, not \"SSO\"",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           }
         ]
       }
@@ -1401,19 +1392,12 @@
       "id": "iphone-server-connect",
       "view": "server URL entry (environment API URL)",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-69",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "Captured while the address is typed, before verification; the Cards plan should capture the Server verified state the card shows",
-            "kind": "follow-up",
-            "ref": "MAZ-179"
-          }
         ]
       },
       "web": {
@@ -1511,11 +1495,6 @@
         ],
         "deviations": [
           {
-            "summary": "The banner reads \"Not synced · The server is busy or restarting\" instead of Offline when requests fail while the browser is online",
-            "kind": "follow-up",
-            "ref": "MAZ-178"
-          },
-          {
             "summary": "Home leads with the hero plus Came in, Spent and Invested tiles, Coming up comes before Follow your money, and the month switcher sits under the title",
             "kind": "follow-up",
             "ref": "MAZ-174"
@@ -1579,19 +1558,12 @@
         ]
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-85",
         "capture": "402x874",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "The toast says \"Changes saved\" with no Undo",
-            "kind": "follow-up",
-            "ref": "MAZ-178"
-          }
         ]
       }
     },
@@ -1624,9 +1596,9 @@
         ],
         "deviations": [
           {
-            "summary": "Sign out shows a generic confirmation, with no warning about unsynced changes and no Sync, then sign out",
-            "kind": "follow-up",
-            "ref": "MAZ-178"
+            "summary": "The confirmation is a dialog over Settings naming the host it was opened from; the captured state has nothing waiting, so it is the plain confirmation (the card's unsynced warning with Sync, then sign out is covered by offline.spec.ts)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           }
         ]
       }
@@ -2296,9 +2268,14 @@
         ],
         "deviations": [
           {
-            "summary": "The left panel has no hero glow or Left to spend preview, and \"Explore a demo\" is added",
-            "kind": "follow-up",
-            "ref": "MAZ-178"
+            "summary": "The single sign-on button reads \"Continue with Single sign-on\", the server's configured provider label, not \"SSO\"",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+          },
+          {
+            "summary": "The form keeps the iPhone card's \"Take a look around with sample data\" link with its note, and has no server chip with Change",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           }
         ]
       }

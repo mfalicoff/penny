@@ -83,8 +83,8 @@ describe("durable offline ledger in the app", () => {
     server.state.down = true;
     const user = userEvent.setup();
     renderApp("/");
-    // Online but the server can't be reached: the banner adds what is waiting to the shell's own.
-    await screen.findByText("Not synced · 1 change waiting");
+    // Online but the server can't be reached: that is offline too (redesign card `offline`).
+    await screen.findByText("Offline · 1 change waiting");
     setOnline(false);
     const banner = await screen.findByText("Offline · 1 change waiting");
     expect(banner.closest(".pk-banner")).toHaveTextContent("saved in this browser");
@@ -104,7 +104,7 @@ describe("durable offline ledger in the app", () => {
     act(() => {
       document.dispatchEvent(new Event("visibilitychange"));
     });
-    const retry = within((await screen.findByText("Not synced · 1 change waiting")).closest(".pk-banner") as HTMLElement).getByRole("button", { name: "Retry" });
+    const retry = within((await screen.findByText("Offline · 1 change waiting")).closest(".pk-banner") as HTMLElement).getByRole("button", { name: "Retry" });
     server.state.down = false;
     await user.click(retry);
     await waitFor(() => {
@@ -112,30 +112,82 @@ describe("durable offline ledger in the app", () => {
     });
   });
 
-  it("refuses sign-out while the browser holds unsynced changes, and removes the copy once they synced", async () => {
+  it("says Not synced, not Offline, when the server answers but is busy", async () => {
+    const base = emptyWireLedger();
+    await seed({ base: base as never, local: { ...base, transactions: [entry("b", "Bakery")] } as never });
+    const server = ledgerServer();
+    server.state.status = 503;
+    renderApp("/");
+    const banner = (await screen.findByText("Not synced · 1 change waiting")).closest(".pk-banner") as HTMLElement;
+    expect(banner).toHaveTextContent("The server is busy or restarting.");
+    expect(screen.queryByText(/^Offline/)).not.toBeInTheDocument();
+  });
+
+  it("warns about unsynced changes at sign-out, and signs out once Sync, then sign out sent them", async () => {
     const base = emptyWireLedger();
     await seed({ base: base as never, local: { ...base, transactions: [entry("b", "Bakery")] } as never });
     const server = ledgerServer();
     server.state.down = true;
     const user = userEvent.setup();
     renderApp("/settings");
-    await screen.findByText("Not synced · 1 change waiting");
+    await screen.findByText("Offline · 1 change waiting");
     await openSignOut(user);
-    await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Sign out" }));
-    expect(await within(screen.getByRole("dialog")).findByRole("alert")).toHaveTextContent("Your changes are still waiting to sync");
+    const dialog = screen.getByRole("dialog", { name: "1 change hasn’t synced" });
+    expect(dialog).toHaveAccessibleDescription(/Synced entries stay safe on .+; this one would be lost\./);
+    expect(within(dialog).getByRole("button", { name: "Cancel" })).toHaveFocus();
+    // The server can't be reached: nothing syncs, so nothing is signed out or removed.
+    await user.click(within(dialog).getByRole("button", { name: "Sync, then sign out" }));
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent("Couldn't sync your changes. Nothing was removed.");
     expect(wasCalled(server.fetchMock, "/api/auth/logout")).toBe(false);
+    expect((await stored())?.local.transactions).toHaveLength(1);
 
     server.state.down = false;
-    await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Cancel" }));
-    await user.click(within(screen.getByText("Not synced · 1 change waiting").closest(".pk-banner") as HTMLElement).getByRole("button", { name: "Retry" }));
-    await waitFor(() => {
-      expect(screen.queryByText(/change waiting/)).not.toBeInTheDocument();
+    await user.click(within(dialog).getByRole("button", { name: "Sync, then sign out" }));
+    expect(await screen.findByRole("heading", { level: 1, name: "Welcome back" })).toBeInTheDocument();
+    expect((server.state.ledger.transactions as { title: string }[]).map((item) => item.title)).toEqual(["Bakery"]);
+    expect(wasCalled(server.fetchMock, "/api/auth/logout")).toBe(true);
+    await waitFor(async () => {
+      expect(await stored()).toBeUndefined();
     });
+  });
+
+  it("keeps the sign-out warning in place when a background sync finishes while it is open", async () => {
+    const base = emptyWireLedger();
+    await seed({ base: base as never, local: { ...base, transactions: [entry("b", "Bakery")] } as never });
+    const server = ledgerServer();
+    server.state.down = true;
+    const user = userEvent.setup();
+    renderApp("/settings");
+    await screen.findByText("Offline · 1 change waiting");
     await openSignOut(user);
-    await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Sign out" }));
-    await waitFor(() => {
-      expect(wasCalled(server.fetchMock, "/api/auth/logout")).toBe(true);
+    server.state.down = false;
+    act(() => {
+      document.dispatchEvent(new Event("visibilitychange"));
     });
+    await waitFor(() => {
+      expect((server.state.ledger.transactions as { title: string }[]).map((item) => item.title)).toEqual(["Bakery"]);
+    });
+    // The buttons don't move under the pointer: the warning stays until the person chooses.
+    const dialog = screen.getByRole("dialog", { name: "1 change hasn’t synced" });
+    await user.click(within(dialog).getByRole("button", { name: "Sync, then sign out" }));
+    expect(await screen.findByRole("heading", { level: 1, name: "Welcome back" })).toBeInTheDocument();
+  });
+
+  it("removes unsynced changes only when the person chooses Sign out anyway", async () => {
+    const base = emptyWireLedger();
+    await seed({ base: base as never, local: { ...base, transactions: [entry("b", "Bakery"), entry("c", "Coffee")] } as never });
+    const server = ledgerServer();
+    server.state.down = true;
+    const user = userEvent.setup();
+    renderApp("/settings");
+    await screen.findByText("Offline · 2 changes waiting");
+    await openSignOut(user);
+    const dialog = screen.getByRole("dialog", { name: "2 changes haven’t synced" });
+    expect(dialog).toHaveAccessibleDescription(/these 2 would be lost\./);
+    await user.click(within(dialog).getByRole("button", { name: "Sign out anyway" }));
+    expect(await screen.findByRole("heading", { level: 1, name: "Welcome back" })).toBeInTheDocument();
+    expect(wasCalled(server.fetchMock, "/api/auth/logout")).toBe(true);
+    expect(server.state.ledger.transactions).toEqual([]);
     await waitFor(async () => {
       expect(await stored()).toBeUndefined();
     });
@@ -175,13 +227,13 @@ describe("durable offline ledger in the app", () => {
     const server = ledgerServer();
     server.state.down = true;
     const { queryClient } = renderApp("/");
-    await screen.findByText("Not synced · 1 change waiting");
+    await screen.findByText("Offline · 1 change waiting");
     act(() => {
       clearPrivateData(queryClient);
     });
     await queryClient.refetchQueries();
     expect((await stored())?.local.transactions).toHaveLength(1);
-    expect(screen.getByText("Not synced · 1 change waiting")).toBeInTheDocument();
+    expect(screen.getByText("Offline · 1 change waiting")).toBeInTheDocument();
   });
 
   it("returns to sign-in on 401 and keeps the unsynced changes for the same account", async () => {

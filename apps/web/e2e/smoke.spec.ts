@@ -28,7 +28,7 @@ test.beforeEach(async ({ page }) => {
 test("production build renders Home with the bundled font and no console errors", async ({ page }) => {
   const errors = watchForErrors(page);
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1, name: "Home" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Home", exact: true })).toBeVisible();
   await openSettings(page);
   await page.getByRole("link", { name: "Server" }).click();
   await expect(page.getByText("Version 2.0.0-e2e")).toBeVisible();
@@ -58,7 +58,7 @@ test("deep links load and keyboard navigation reaches every route", async ({ pag
 
   await page.getByRole("link", { name: "Home", exact: true }).click();
   await expect(page).toHaveURL("/");
-  await expect(page.getByRole("heading", { level: 1, name: "Home" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Home", exact: true })).toBeVisible();
   expect(errors).toEqual([]);
 });
 
@@ -74,5 +74,5 @@ test("an unavailable server is reported without breaking the page", async ({ pag
   await page.route("/api/info", (route) => route.fulfill({ status: 503, json: { error: "Service unavailable." } }));
   await page.goto("/");
   await expect(page.getByText("Can't reach your Penny server")).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByRole("heading", { level: 1, name: "Home" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Home", exact: true })).toBeVisible();
 });

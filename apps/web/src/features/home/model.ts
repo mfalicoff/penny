@@ -5,6 +5,7 @@ import { buildMoneyFlow, type FlowNode, type MoneyFlow } from "@domain/selectors
 import { selectOverview, type OverviewEntry } from "@domain/selectors/overview.ts";
 import { isExpected, net, type KindTotals } from "@domain/summary.ts";
 import type { SharedRow } from "../../api/projection";
+import type { WeekStart } from "../../app/preferences";
 
 /**
  * Home and Insights reporting (MAZ-92). Every number comes from the shared domain
@@ -219,10 +220,17 @@ export interface CalendarDay {
 /**
  * The month's days with what happened on each, built in one pass over the entries (no per-cell
  * scans). Scheduled occurrences and income dated after `today` (MAZ-136) count as `scheduled`
- * ("expected or scheduled"): an amber ring, never a recorded dot.
+ * ("expected or scheduled"): an amber ring, never a recorded dot. `offset` is the number of
+ * blank cells before the 1st, for a week starting on `weekStartsOn` (Settings › Appearance, MAZ-140).
  */
-export function calendarDays(month: string, entries: readonly OverviewEntry[], today: string): { offset: number; days: CalendarDay[] } {
-  const { daysInMonth, offset } = calendarMonth(month);
+export function calendarDays(
+  month: string,
+  entries: readonly OverviewEntry[],
+  today: string,
+  weekStartsOn: WeekStart = "monday",
+): { offset: number; days: CalendarDay[] } {
+  const { daysInMonth, offset: mondayOffset } = calendarMonth(month);
+  const offset = weekStartsOn === "sunday" ? (mondayOffset + 1) % 7 : mondayOffset;
   const days: CalendarDay[] = Array.from({ length: daysInMonth }, (_, index) => ({
     date: `${month}-${String(index + 1).padStart(2, "0")}`,
     day: index + 1,

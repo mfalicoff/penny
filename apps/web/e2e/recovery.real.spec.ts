@@ -78,7 +78,7 @@ test("an unreachable server through a reload keeps the cached ledger and a new c
   // The server stops answering while the page is open: the cached ledger stays usable.
   await setFaults([{ pathPrefix: "/api/", abort: true }]);
   await addExpense(page, "During outage", "7.25");
-  await expect(page.getByText("Not synced · 1 change waiting")).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByText("Offline · 1 change waiting")).toBeVisible({ timeout: 20_000 });
   await expect(results(page)).toContainText("Before outage");
   await expect(results(page).getByRole("listitem").filter({ hasText: "During outage" })).toContainText("Waiting to sync");
 
@@ -196,7 +196,7 @@ test("a paused database turns writes into waiting changes, and they sync once it
     // Readiness checks the database; it must report the outage rather than hang forever.
     await expect.poll(async () => (await fetch(`${api}/api/ready`, { signal: AbortSignal.timeout(15_000) }).catch(() => null))?.status ?? 0, { timeout: 45_000 }).not.toBe(200);
     await addExpense(page, "Written while the database was down", "4.20");
-    await expect(page.getByText(/Not synced · 1 change waiting|Couldn't sync · 1 change waiting/)).toBeVisible({ timeout: 60_000 });
+    await expect(page.getByText(/(Not synced|Offline|Couldn't sync) · 1 change waiting/)).toBeVisible({ timeout: 60_000 });
   } finally {
     spawnSync(database.cli, ["unpause", database.name]);
   }

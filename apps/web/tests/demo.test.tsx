@@ -7,7 +7,7 @@ import { json, renderApp, stubServer, wasCalled } from "./render";
 const signedOut = () => stubServer((url) => (url === "/api/auth/me" ? json({ error: "Please sign in to continue." }, 401) : undefined));
 
 async function enterDemo(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(await screen.findByRole("button", { name: "Explore a demo" }));
+  await user.click(await screen.findByRole("button", { name: "Take a look around with sample data" }));
   return screen.findByText("You're exploring a demo");
 }
 
@@ -16,7 +16,7 @@ describe("temporary demo", () => {
     const fetchMock = signedOut();
     const user = userEvent.setup();
     renderApp("/transactions");
-    expect(await screen.findByRole("button", { name: "Explore a demo" })).toHaveAccessibleDescription(/Nothing is saved or sent to your server/);
+    expect(await screen.findByRole("button", { name: "Take a look around with sample data" })).toHaveAccessibleDescription(/Nothing is saved or sent to your server/);
     const calls = fetchMock.mock.calls.length;
 
     await enterDemo(user);
@@ -68,7 +68,7 @@ describe("temporary demo", () => {
     const user = userEvent.setup();
     renderApp("/");
     await user.click(await screen.findByRole("button", { name: "Create an account" }));
-    expect(screen.queryByRole("button", { name: "Explore a demo" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Take a look around with sample data" })).not.toBeInTheDocument();
   });
 });
 

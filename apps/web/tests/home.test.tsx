@@ -1,8 +1,9 @@
 import { onlineManager } from "@tanstack/react-query";
-import { configure, screen, waitFor, within } from "@testing-library/react";
+import { act, configure, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { entry, ledgerServer, sharedRow } from "./fakes/ledgerServer";
+import { reloadPreferences, setPreferences } from "../src/app/preferences";
 import { renderApp } from "./render";
 
 /**
@@ -26,6 +27,7 @@ beforeEach(() => {
 afterEach(() => {
   vi.useRealTimers();
   localStorage.clear();
+  reloadPreferences();
   onlineManager.setOnline(true);
 });
 
@@ -145,6 +147,29 @@ describe("Home", () => {
     await waitFor(() => {
       expect(router.state.location.search).toEqual({ month: "2026-11" });
     });
+  });
+
+  it("follows Show cents and Week starts on from Settings › Appearance", async () => {
+    server();
+    setPreferences({ showCents: false, weekStartsOn: "sunday" });
+    renderApp("/?month=2026-11");
+    await waitFor(() => {
+      expect(within(hero()).getByText(/^Recorded remaining:/).parentElement).toHaveTextContent("$3,114");
+    });
+    // Only the hero's Left to spend is rounded; the projected line keeps its cents.
+    expect(within(hero()).getByText(/^Recorded remaining:/).parentElement).not.toHaveTextContent("$3,113.80");
+    expect(within(hero()).getByText(/^Projected remaining:/).parentElement).toHaveTextContent("$3,505.80");
+    const calendar = within(explore()).getByRole("region", { name: "Calendar" });
+    expect(within(calendar).getAllByRole("columnheader").map((header) => header.getAttribute("abbr"))).toEqual(["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]);
+    // 2026-11-01 is a Sunday: the 1st opens the first row when the week starts on Sunday.
+    const firstRow = within(calendar).getAllByRole("row")[1];
+    expect(firstRow && within(firstRow).getAllByRole("cell")[0]).toHaveTextContent("1");
+
+    act(() => {
+      setPreferences({ showCents: true, weekStartsOn: "monday" });
+    });
+    expect(within(hero()).getByText(/^Recorded remaining:/).parentElement).toHaveTextContent("$3,113.80");
+    expect(within(calendar).getAllByRole("columnheader")[0]).toHaveAttribute("abbr", "Monday");
   });
 
   it("lists categories with amounts in text and filters the list by one", async () => {
