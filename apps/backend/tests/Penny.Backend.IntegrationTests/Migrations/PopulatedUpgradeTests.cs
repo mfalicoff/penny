@@ -14,7 +14,7 @@ namespace Penny.Backend.IntegrationTests.Migrations;
 
 // MAZ-64 schema upgrades on populated databases. For every earlier migration, a
 // database holding real product data at that schema is upgraded the way a release
-// does it: `DatabaseMigrator` (the `migrate` command), runtime grants, then
+// does it: `DatabaseMigrator` (API startup and the `migrate` command), then
 // `search-rebuild` where the documented upgrade needs it. A new API host must then
 // read and write everything written before the upgrade.
 //
@@ -84,13 +84,12 @@ public sealed class PopulatedUpgradeTests(ApiFixture fixture) : SharedRecurrence
             await context.GetService<IMigrator>().MigrateAsync(target, Ct);
         await using (var context = PennyDbContext.Create(Fixture.Admin))
             (await context.Database.GetAppliedMigrationsAsync(Ct)).Last().ShouldBe(target);
-        await DatabaseMigrator.ApplyAsync(Fixture.Admin, Ct);
-        await Fixture.GrantRuntimeAsync(Ct);
+        await DatabaseMigrator.ApplyAsync(Fixture.App, Ct);
         await RebuildSearchAsync();
 
         // A new host (the upgraded release) over the upgraded database.
         await using var upgraded = new TestApiFactory(
-            Fixture.RuntimeConnection,
+            Fixture.Connection,
             new Dictionary<string, string>
             {
                 ["Receipts:Root"] = Fixture.ReceiptRoot,
@@ -170,7 +169,7 @@ public sealed class PopulatedUpgradeTests(ApiFixture fixture) : SharedRecurrence
             Ct,
             new Dictionary<string, string>
             {
-                ["ConnectionStrings__Postgres"] = Fixture.RuntimeConnection,
+                ["ConnectionStrings__Postgres"] = Fixture.Connection,
                 ["Receipts__Root"] = Fixture.ReceiptRoot,
                 ["Receipts__MasterKey"] = Fixture.ReceiptKey,
                 ["Search__ModelDirectory"] = SearchModel.Directory,

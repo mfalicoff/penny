@@ -2,14 +2,14 @@
 
 [Documentation](../README.md) · [Self-hosting](deployment.md)
 
-Running a v2 deployment from [`deploy/compose.yaml`](deployment.md): monitoring, logs, PostgreSQL operations, backup and restore, maintenance, and what to do when something fails. The shorthand `penny` below stands for `docker compose -f deploy/compose.yaml`. Maintenance commands run inside the `api` container (`penny exec api dotnet Penny.Backend.Api.dll <command>`) with the runtime role and the receipt settings already configured. Nothing here puts a password on a command line.
+Running a v2 deployment from [`deploy/compose.yaml`](deployment.md): monitoring, logs, PostgreSQL operations, backup and restore, maintenance, and what to do when something fails. The shorthand `penny` below stands for `docker compose -f deploy/compose.yaml`. Maintenance commands run inside the `api` container (`penny exec api dotnet Penny.Backend.Api.dll <command>`) with the API's database login and the receipt settings already configured. PostgreSQL commands run in the bundled `postgres` container as its `POSTGRES_USER` (your `PENNY_DB_USER`), over the container's local socket. Nothing here puts a password on a command line.
 
 ## Monitoring
 
 | Endpoint | Meaning | Use |
 | --- | --- | --- |
 | `GET /api/health` | The API process is serving (no dependency checks) | Liveness: restart only if this fails |
-| `GET /api/ready` | Ready for traffic: PostgreSQL, schema, grants, extensions and receipt storage all pass | Readiness, uptime alerting, load balancers |
+| `GET /api/ready` | Ready for traffic: PostgreSQL, schema, extensions and receipt storage all pass | Readiness, uptime alerting, load balancers |
 | `GET /nginx-health` | nginx in `web` is up | `web` container health |
 
 The `api` container's health check runs `dotnet Penny.Backend.Api.dll health-probe` (it calls its own `/api/ready`), so `docker compose ps` shows `unhealthy` whenever readiness fails. `/api/ready` returns 503 with `Retry-After: 5` and one of these messages. It never changes the database or leaks connection details:
@@ -18,10 +18,9 @@ The `api` container's health check runs `dotnet Penny.Backend.Api.dll health-pro
 | --- | --- | --- |
 | `unavailable` | "Database is unavailable." | PostgreSQL down, unreachable, wrong credentials or TLS: see [database loss](#postgresql-is-down-or-unreachable) |
 | `postgres-version` | "The backend requires PostgreSQL 18." | Point at a PostgreSQL 18 server |
-| `runtime-role` | "Use a restricted runtime database role…" | The API is using a role that can create schemas or databases: use `penny_runtime` |
-| `permissions` | "Runtime database role cannot read compatibility metadata…" | Grants missing: `penny run --rm migrate` |
+| `permissions` | "Database user cannot read compatibility metadata…" | The API's login cannot read schema `penny`: [database privileges](#database-privileges-missing) |
 | `search-extensions` | "Database is missing the pg_trgm or vector extension…" | [Extension missing](#extension-missing) |
-| `schema` | "Database schema is missing or incompatible…" | Run `migrate` with this release, or you are running an older build against a newer schema ([rollback](deployment.md#roll-back)) |
+| `schema` | "Database schema is missing or incompatible…" | Restart the API so it migrates, and check its startup log ([migration failed](#migration-failed)); with `Database__MigrateOnStartup=false`, run `migrate`. Or you are running an older build against a newer schema ([rollback](deployment.md#roll-back)) |
 | `receipt-storage` | "Receipt storage is not writable…" | [Receipt volume](#receipt-volume-not-writable-or-full) |
 | `disk-space` | "Receipt storage is low on free disk space…" | [Receipt volume](#receipt-volume-not-writable-or-full) |
 
@@ -97,7 +96,7 @@ The [log rules](#logs) apply to every signal. Spans and metrics carry ids, route
 
 ## Connections and pool sizing
 
-Each API process opens at most `Database__MaxPoolSize` (default 20) runtime connections. Pools start empty, idle connections close, and connect and command timeouts are 5 seconds. `migrate` uses one connection; `search-rebuild`/`search-verify` use two; receipt commands use the runtime pool. Keep `processes × MaxPoolSize + 5` below PostgreSQL's `max_connections` minus the connections reserved for the administrator. Diagnose as an administrator (`penny exec postgres psql -U postgres -d penny`):
+Each API process opens at most `Database__MaxPoolSize` (default 20) connections. Pools start empty, idle connections close, and connect and command timeouts are 5 seconds. The startup migration and `migrate` use one connection; `search-rebuild`/`search-verify` use two; receipt commands use the API's pool settings. Keep `processes × MaxPoolSize + 5` below PostgreSQL's `max_connections` minus the connections reserved for the administrator. Diagnose with `penny exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'`:
 
 ```sql
 -- Connections per role and state
@@ -129,7 +128,7 @@ A complete backup is three things: the database dump, the receipt files, and the
 
 ```sh
 stamp=$(date -u +%Y%m%dT%H%M%SZ); umask 077
-penny exec -T postgres pg_dump -U postgres -d penny --schema=penny --format=custom > "penny-$stamp.dump"
+penny exec -T postgres sh -c 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" --schema=penny --format=custom' > "penny-$stamp.dump"
 penny exec -T api tar -C /var/lib/penny/receipts -cf - . > "penny-receipts-$stamp.tar"
 ```
 
@@ -144,17 +143,17 @@ Restore into a **clean** environment, with the same release that took the backup
 ```sh
 penny down                                   # keep volumes until the restore is verified elsewhere
 # New project or new volumes: e.g. a fresh checkout, or `penny down -v` once copies are safe
-penny up -d --wait postgres                  # an empty server
-penny run --rm --no-deps migrate bootstrap   # roles, schema and extensions, without migrating
-penny exec -T postgres pg_restore -U postgres -d penny --clean --if-exists --exit-on-error < penny-$stamp.dump
+penny up -d --wait postgres                  # an empty server; PENNY_DB_USER owns the database
+penny exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" --set=ON_ERROR_STOP=1 -c "CREATE EXTENSION IF NOT EXISTS pg_trgm SCHEMA public; CREATE EXTENSION IF NOT EXISTS vector SCHEMA public;"'
+penny exec -T postgres sh -c 'pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" --no-owner --no-privileges --exit-on-error' < penny-$stamp.dump
 penny run --rm --no-deps -T --entrypoint tar api -C /var/lib/penny/receipts -xf - < penny-receipts-$stamp.tar
-penny up -d --wait                           # migrate (no-op or forward) + grants, then api and web
+penny up -d --wait                           # the API migrates (no-op or forward), then api and web
 penny exec api dotnet Penny.Backend.Api.dll receipts-verify   # exit 0: every receipt decrypts
 penny exec api dotnet Penny.Backend.Api.dll receipts-sweep    # drop files newer than the dump
 penny exec api dotnet Penny.Backend.Api.dll search-verify     # exit 2 means rebuild (below)
 ```
 
-The dump keeps object owners and grants, which the target's bootstrapped roles satisfy. `migrate --grant-runtime` re-applies grants anyway. For a target without those roles, restore with `--no-owner --no-privileges`, then `ALTER SCHEMA penny OWNER TO penny_migrator`, reassign the tables (`REASSIGN OWNED`), and run `migrate`. Sessions survive a restore, so signed-in devices keep working; edits made after the backup are gone ([reconciliation](#write-reconciliation-after-a-rollback)).
+The dump holds schema `penny` only, so the extensions are created first. With `--no-owner --no-privileges`, everything restored belongs to the restoring user, which here is the API's login; the target's `PENNY_DB_USER` therefore need not match the source's (a dump from an install that used `penny_migrator` restores into `penny`). For an external PostgreSQL, restore into an empty database as the API's login (it needs `CREATE` on the database, and an administrator creates the extensions first), or as an administrator followed by `ALTER SCHEMA penny OWNER TO <login>` and `REASSIGN OWNED BY <administrator> TO <login>` in that database; then start the API. Sessions survive a restore, so signed-in devices keep working; edits made after the backup are gone ([reconciliation](#write-reconciliation-after-a-rollback)).
 
 **Restore drill.** At least monthly and before each upgrade that contains a migration, restore the latest backup into a separate Compose project (`docker compose -p penny-drill -f deploy/compose.yaml --env-file drill.env …` on a different `PENNY_PORT` and `PENNY_SUBNET`, with the production receipt key). Sign in, download a receipt, run the three verify commands, then `down -v` the drill.
 
@@ -163,10 +162,10 @@ The dump keeps object owners and grants, which the target's bootstrapped roles s
 **Vacuum and statistics.** Autovacuum is on by default and sufficient. After a restore, run `ANALYZE` so the planner has statistics:
 
 ```sh
-penny exec postgres psql -U postgres -d penny -c 'ANALYZE;'
+penny exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c ANALYZE'
 ```
 
-**Index health.** The search indexes are the ones that grow with churn: `ix_search_documents_owner_trgm` and `ix_search_documents_document_trgm` (GIN, `pg_trgm`) and `ix_search_documents_embedding` (HNSW, pgvector). To rebuild one without blocking reads or writes, as the schema owner or administrator:
+**Index health.** The search indexes are the ones that grow with churn: `ix_search_documents_owner_trgm` and `ix_search_documents_document_trgm` (GIN, `pg_trgm`) and `ix_search_documents_embedding` (HNSW, pgvector). To rebuild one without blocking reads or writes, as the API's login (the schema owner) or an administrator:
 
 ```sql
 REINDEX INDEX CONCURRENTLY penny.ix_search_documents_embedding;
@@ -176,7 +175,7 @@ WHERE indrelid = 'penny.search_documents'::regclass;
 SELECT indexrelid::regclass FROM pg_index WHERE NOT indisvalid;
 ```
 
-Never create, drop or alter Penny's tables or indexes by hand; schema changes ship only as EF migrations applied by `migrate` ([changing the schema](../reference/postgresql.md#changing-the-schema)).
+Never create, drop or alter Penny's tables or indexes by hand; schema changes ship only as EF migrations, which the API applies on startup ([changing the schema](../reference/postgresql.md#changing-the-schema)).
 
 **Search reconciliation.** Search documents and embeddings are derived data. `search-verify` is read-only and prints `{Documents, Missing, Orphaned, StaleText, PendingEmbeddings, StaleModel, ReceiptTexts, MissingReceiptText, StaleReceiptText, PendingReceiptText}`, exiting 0 when all but the two totals are zero and 2 otherwise (pending embeddings and pending receipt text are normal for a short while after writes and uploads). `search-rebuild [--user USER_ID]` recomputes documents and the normalized text and chunks of stored receipt text (it never re-runs OCR), and embeds what is missing. `MissingReceiptText` means a linked receipt has no text yet: run [`receipts-ocr`](#receipt-text-ocr). Run it after a restore that `search-verify` flags and after an upgrade whose release notes say the search model or normalization changed. The embedding model is pinned in the image, so it changes only with a release.
 
@@ -266,19 +265,22 @@ Unknown or revoked addresses, and senders over a limit, are refused during the S
 
 ## PostgreSQL
 
-### Roles, connections and TLS
+### Database user, connections and TLS
 
-| Role | Used by | Privileges |
+| Login | Used by | Privileges |
 | --- | --- | --- |
-| `postgres` (administrator) | First initialization, extensions, backups, diagnostics | Superuser in the bundled container; never given to the API |
-| `penny_migrator` | `migrate` only (`ConnectionStrings__Migration`) | Owns schema `penny`; creates and alters its objects; applies the runtime grants |
-| `penny_runtime` | The API and maintenance commands (`ConnectionStrings__Postgres`) | DML on `penny` tables and sequences; read-only migration history; no DDL. Readiness refuses a role that could change schema |
+| `PENNY_DB_USER` (default `penny`) | The API: startup migration, serving and maintenance commands (`ConnectionStrings__Postgres`) | Owns schema `penny` and its objects; creates and alters them. In the bundled container it is the image's `POSTGRES_USER`, so also the superuser of that dedicated server |
+| An administrator (for example `postgres`) | External servers, and installs from before the [single database user](deployment.md#single-database-user): extensions, role administration | Superuser or the provider's admin role; never given to the API |
+
+Installs upgraded from separate roles keep `penny_migrator` as the API's login. It owns the schema but is not a superuser; the bundled container's `postgres` superuser keeps the old administrator password.
+
+**Trade-off.** The API's login owns the schema, so a compromised API process can alter or drop Penny's tables, not just change rows. Releases before this one split a schema-owning migration role from a runtime role limited to DML, which readiness enforced. That split was removed by design: one login, no grants to re-apply after each migration and no one-shot migration container are simpler to run and upgrade. On an external server, a non-superuser login limits the damage to Penny's own database; keep backups and point-in-time recovery either way.
 
 Connection strings are Npgsql key/value strings (`Host=…;Port=…;Database=…;Username=…;Password=…;SSL Mode=…`). Compose assembles them from `deploy/.env`. Use `SSL Mode=VerifyFull` (plus `Root Certificate=` for a private CA) for every server outside the Compose network. The bundled container is reachable only on the internal network and uses no TLS. Penny forces pooling bounds, connect, command and cancellation timeouts, disables parameter logging and error detail, and disables Kerberos/GSS negotiation unless `GSS Encryption Mode` is set explicitly.
 
 ### Migrations and locks
 
-`migrate` checks PostgreSQL 18 and the extensions, takes the session advisory lock `0x50454E4E59`, refuses a database with migrations unknown to the build, applies pending migrations (each in its own transaction), then runs `grant-runtime.sql`. If a migration seems stuck:
+On startup the API (or `migrate`, with `Database__MigrateOnStartup=false`) takes the session advisory lock `0x50454E4E59`, checks PostgreSQL 18, creates missing extensions when its login may, refuses a database with migrations unknown to the build and applies pending migrations (each in its own transaction). Workers and the HTTP listener start only afterwards. An API that finds the lock held, or the database unreachable, logs `Waiting to migrate the database (migration-lock)` (or `(database)`) and retries every 2 seconds for up to 5 minutes, then exits. If a migration seems stuck:
 
 ```sql
 -- The advisory lock shows as classid 80, objid 1162760793
@@ -290,7 +292,7 @@ The lock belongs to that session and is released when it ends. Terminate it (`SE
 
 ### Extensions
 
-`pg_trgm` (keyword and typo matching) and `vector` (pgvector 0.8 or later, meaning search) must exist in `public` before `migrate`. The bundled image ships both (pgvector 0.8.7), and `migrate --bootstrap` creates them. For an existing database: `CREATE EXTENSION IF NOT EXISTS pg_trgm; CREATE EXTENSION IF NOT EXISTS vector;` as administrator. Check:
+`pg_trgm` (keyword and typo matching) and `vector` (pgvector 0.8 or later, meaning search) must exist in `public`. The bundled image ships both (pgvector 0.8.7), and the API creates them on its first start as the container's superuser. When the API's login may not create them (`vector` needs a superuser), run `CREATE EXTENSION IF NOT EXISTS pg_trgm SCHEMA public; CREATE EXTENSION IF NOT EXISTS vector SCHEMA public;` as an administrator once. Check:
 
 ```sql
 SELECT extname, extversion FROM pg_extension WHERE extname IN ('pg_trgm', 'vector');
@@ -301,19 +303,19 @@ To upgrade pgvector within a release: `ALTER EXTENSION vector UPDATE;` after the
 
 ### Managed PostgreSQL hosts
 
-Penny needs PostgreSQL 18, `pg_trgm`, pgvector 0.8+, the ability to create two login roles and a schema owned by one of them, and session-level advisory locks (no transaction-mode pooler in front of `migrate`). Major cloud providers advertise both extensions on their PostgreSQL services, but support for PostgreSQL 18 and the exact pgvector version varies by provider, region and date. **This has not been verified against any specific managed host.** Before choosing one, create a test database there and check `pg_available_extensions` (above), then run a [restore drill](#restore) against it. Record what you find in your own runbook. On services where the administrator isn't a superuser, extensions are created through the provider's mechanism (often an allow-list parameter followed by `CREATE EXTENSION` as the provided admin role).
+Penny needs PostgreSQL 18, `pg_trgm`, pgvector 0.8+, one login that can create (or owns) the `penny` schema, an administrator that can create both extensions, and session-level advisory locks (no transaction-mode pooler in front of the API). Major cloud providers advertise both extensions on their PostgreSQL services, but support for PostgreSQL 18 and the exact pgvector version varies by provider, region and date. **This has not been verified against any specific managed host.** Before choosing one, create a test database there and check `pg_available_extensions` (above), then run a [restore drill](#restore) against it. Record what you find in your own runbook. On services where the administrator isn't a superuser, extensions are created through the provider's mechanism (often an allow-list parameter followed by `CREATE EXTENSION` as the provided admin role).
 
 ### Version and upgrade policy
 
-- **PostgreSQL major:** 18 only. Readiness and `migrate` reject other majors. A Penny release will announce support for a new major; until then, don't upgrade the server's major version.
+- **PostgreSQL major:** 18 only. The startup migration, `migrate` and readiness reject other majors. A Penny release will announce support for a new major; until then, don't upgrade the server's major version.
 - **PostgreSQL minor:** the bundled image is pinned by digest and moves only in a Penny release (the release notes say so). On an external server, apply minor releases as your provider recommends; they need no Penny change.
-- **Major upgrade (when supported):** take a backup, run a [restore drill](#restore) on the new major, then either `pg_dump`/`pg_restore` into a new cluster or `pg_upgrade` it. Update `PENNY_DB_*`, run `migrate`, and verify readiness. Keep the old cluster read-only until verified.
+- **Major upgrade (when supported):** take a backup, run a [restore drill](#restore) on the new major, then either `pg_dump`/`pg_restore` into a new cluster or `pg_upgrade` it. Update `PENNY_DB_*`, start the API (it migrates), and verify readiness. Keep the old cluster read-only until verified.
 - **Penny releases:** forward-only. Any v2 release migrates any earlier v2 database, and no release downgrades. Deploy exact image tags and keep the previous tags and the pre-upgrade backup until the new release is verified ([upgrade](deployment.md#upgrade)).
 
 ### Secret rotation
 
-- **Runtime or migration password:** change it in `deploy/.env`, then `penny up -d --wait`: `migrate` sets the new password, and the services that use it are recreated. Existing pooled connections keep working until they close.
-- **Administrator password:** `ALTER ROLE postgres PASSWORD '…';` and update `.env` (the image reads it only on first initialization).
+- **Database password:** change it in PostgreSQL first: `penny exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'`, then `\password <PENNY_DB_USER>` (it prompts, so the password stays off the command line and out of the server log; on an external server, connect as that login or an administrator). Then set `PENNY_DB_PASSWORD` in `deploy/.env` and run `penny up -d --wait`, which recreates `api`. The image reads `PENNY_DB_PASSWORD` only on first initialization, so changing `.env` alone locks the API out. Existing pooled connections keep working until they close.
+- **Administrator password** (external servers, or the `postgres` superuser of an upgraded install): `\password postgres` as that administrator.
 - **Receipt master key:** not rotatable by design. Every receipt's key is derived from it. Protect and back it up.
 - **APNs key or OIDC client secret:** replace the value in `api.env` and recreate `api`.
 
@@ -331,20 +333,20 @@ Restoring a backup discards everything written after it. Rolling forward is pref
 
 ### PostgreSQL is down or unreachable
 
-`/api/ready` returns 503 "Database is unavailable", `/api/health` stays 200, requests that need the database fail with 503, and the workers retry on their next poll. Check `penny ps`, `penny logs postgres`, disk space on the PostgreSQL volume, credentials (an administrator password in `.env` that no longer matches), and TLS settings for an external server. When the database returns, readiness recovers on its own without a restart (tested by the smoke suite).
+`/api/ready` returns 503 "Database is unavailable", `/api/health` stays 200, requests that need the database fail with 503, and the workers retry on their next poll. Check `penny ps`, `penny logs postgres`, disk space on the PostgreSQL volume, credentials (a `PENNY_DB_PASSWORD` in `.env` that no longer matches the database), and TLS settings for an external server. An API that starts while the database is unreachable waits up to 5 minutes to migrate, then exits, and Compose restarts it. When the database returns, readiness recovers on its own without a restart (tested by the smoke suite).
 
 ### Receipt volume not writable or full
 
 Readiness reports `receipt-storage` or `disk-space`, and uploads fail. The volume must be owned by uid 1654 with mode 0700. Repair it with a one-off root container that gets back only the ownership capabilities: `penny run --rm --no-deps --user 0 --cap-add CHOWN --cap-add FOWNER --cap-add DAC_OVERRIDE --entrypoint sh api -c 'chown -R 1654:1654 /var/lib/penny/receipts && chmod 0700 /var/lib/penny/receipts'`. For a bind mount instead of the named volume, `chown 1654:1654` the host directory. Free or grow space, then readiness recovers without a restart.
 
-### Runtime grants missing
+### Database privileges missing
 
-Readiness reports `permissions` after a manual restore or a migration applied without grants. Run `penny run --rm migrate`, which re-applies `grant-runtime.sql` idempotently.
+Readiness reports `permissions`, or the API exits on startup with a SQLSTATE such as `42501` (insufficient privilege): the API's login does not own schema `penny` or its objects, typically after a restore as another user. As an administrator, in Penny's database: `ALTER SCHEMA penny OWNER TO <login>;` and `REASSIGN OWNED BY <previous owner> TO <login>;`, then `penny up -d --wait`.
 
 ### Extension missing
 
-Readiness reports `search-extensions` and `migrate` refuses to run. Create the extension as administrator ([extensions](#extensions)). If an extension was dropped with `CASCADE`, the search indexes that depend on it were dropped too and are not recreated by `migrate`: [restore](#restore) the last backup. Never `DROP EXTENSION … CASCADE` on a live database.
+The API exits on startup with "…extensions are missing and the database user cannot create them. Create them as an administrator…" (with `Database__MigrateOnStartup=false`, `migrate` refuses and readiness reports `search-extensions`). Create the extensions as an administrator ([extensions](#extensions)) and start the API again. If an extension was dropped with `CASCADE`, the search indexes that depend on it were dropped too and are not recreated by the migration: [restore](#restore) the last backup. Never `DROP EXTENSION … CASCADE` on a live database.
 
 ### Migration failed
 
-The `migrate` container exits non-zero and Compose does not start or recreate the API. `penny logs migrate` shows a redacted reason: PostgreSQL version, missing extensions, the lock held by another run, a newer schema than this build, or connectivity. Fix the cause and `penny up -d --wait` again; completed migrations are recorded and not repeated.
+The API exits non-zero before it serves, Compose restarts it, and `penny up -d --wait` reports `api` unhealthy. `penny logs api` shows `Database migration failed on startup:` with a redacted reason: a PostgreSQL error code (SQLSTATE), the PostgreSQL version, missing extensions or a newer schema than this build. The database being unreachable or the lock held by another run is logged as `Waiting to migrate the database` and fails only after 5 minutes. Fix the cause and `penny up -d --wait` again; completed migrations are recorded and not repeated. A failed migration's own transaction is rolled back, so the previous schema stays in place.

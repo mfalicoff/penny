@@ -62,9 +62,9 @@ Every schema change is an EF Core migration. The model (`Schema/Entities`, `Sche
    Rename with `migrationBuilder.RenameColumn/RenameTable` rather than drop and add. Backfills that EF cannot express go in `migrationBuilder.Sql(...)` with a comment, and are added to the [Raw SQL inventory](#raw-sql-inventory).
 4. **Keep it forward-only and immutable.** Never edit a migration that has been released to any shared database. Fix forward with a new migration. Production is never downgraded (`Down` exists but isn't part of operations). Each migration runs in its own transaction, so avoid statements PostgreSQL forbids in transactions (`CREATE INDEX CONCURRENTLY`). Large-table rewrites need a separate expand/backfill/contract plan.
 5. **Test.** `MigrationModelTests.whenModelComparedToSnapshot_PendingModelChanges_ShouldBeNone` fails if the model changed without a migration. Integration tests apply all migrations to real PostgreSQL. Add tests for new constraints and for data migrations against real rows.
-6. **Apply and grant.** Operators run `migrate` with migration credentials, then re-run `apps/backend/development/grant-runtime.sql`. It grants DML on *all* tables in `penny`, so new tables need no edits there, but it must be re-run after each migration. Readiness returns 503 (`schema`) until the database's applied migrations exactly match the build.
+6. **Apply.** The API applies pending migrations on startup with its own database user (or operators run `migrate` when `Database__MigrateOnStartup=false`). There are no grants to maintain: the same user owns the schema and every table. Readiness returns 503 (`schema`) until the database's applied migrations exactly match the build.
 
-`migrate` takes an advisory lock, checks PostgreSQL 18, refuses a database whose history contains migrations unknown to this build, and calls `MigrateAsync` (EF also locks the history table). EF refuses to migrate when the model has changes without a migration. The runtime role can't migrate: it has no DDL privileges and can't lock the history table.
+The migration (`DatabaseMigrator`, on startup and in `migrate`) takes an advisory lock, checks PostgreSQL 18, refuses a database whose history contains migrations unknown to this build, creates missing search extensions when the user may, and calls `MigrateAsync` (EF also locks the history table). EF refuses to migrate when the model has changes without a migration.
 
 ### Raw SQL inventory
 
@@ -72,12 +72,11 @@ Everything else is EF-generated or a LINQ query. Check-constraint and partial-in
 
 | Where | Why EF can't do it |
 | --- | --- |
-| `DatabaseMigrator`: `pg_try_advisory_lock` / `pg_advisory_unlock` | One session lock, so two `migrate` runs never overlap |
+| `DatabaseMigrator`: `pg_try_advisory_lock` / `pg_advisory_unlock` | One session lock, so two migrations (API replicas or `migrate`) never overlap |
 | `PreSquashUpgrade` (run by `DatabaseMigrator`): history check, then `DELETE` of the retired push provider's rows, `DROP`/`ALTER` of its columns, `sqlite_import` and `users.salt`, and the history rewrite to `20261113183852_InitialSchema` | Moves a database migrated by the seven pre-squash migrations onto the squashed history in one transaction; EF cannot apply a migration to a history it doesn't know ([upgrading from before the squash](../../apps/backend/README.md#upgrading-a-database-from-before-the-squash)) |
-| `PostgresReadiness`: role/privilege check (`pg_roles`, `has_*_privilege`) | Proves the runtime role cannot change schema |
-| `development/grant-runtime.sql`, `bootstrap.sql` | Role and grant administration and `CREATE EXTENSION pg_trgm/vector` (administrator). `RuntimeGrants` (MAZ-63) executes the embedded `grant-runtime.sql` for `migrate --grant-runtime`; `DatabaseBootstrap` executes the embedded `bootstrap.sql` and sets the role passwords (`format('ALTER ROLE %I PASSWORD %L')` with a SCRAM verifier) for `migrate --bootstrap` and `bootstrap` |
-| `TestDataReset` (MAZ-62, test environments only): `DELETE FROM penny."<table>"` per EF table, children first | Clears a disposable `penny_test*` database between full-stack runs with the runtime role (which has DELETE, not TRUNCATE); table names come from the EF model and the database name is checked first ([test environment](test-environment.md#test-controls)) |
+| `TestDataReset` (MAZ-62, test environments only): `DELETE FROM penny."<table>"` per EF table, children first | Clears a disposable `penny_test*` database between full-stack runs with DELETE rather than TRUNCATE; table names come from the EF model and the database name is checked first ([test environment](test-environment.md#test-controls)) |
 | `SearchExtensions` (used by `DatabaseMigrator` and `PostgresReadiness`): `SELECT extname, extversion FROM pg_extension` | Search requires pgvector 0.8+ and pg_trgm before migrating; readiness reports `search-extensions` (MAZ-121) |
+| `SearchExtensions.EnsureAsync` (used by `DatabaseMigrator`, under its lock): `CREATE EXTENSION IF NOT EXISTS pg_trgm SCHEMA public; CREATE EXTENSION IF NOT EXISTS vector SCHEMA public` in one transaction | Extensions live outside the `penny` schema and EF's model; created only when missing and when the database user may, otherwise the migration stops and asks for an administrator |
 | `PostgresSearchRepository`: `SELECT set_config('statement_timeout', ...), set_config('hnsw.iterative_scan', ...), set_config('hnsw.ef_search', ...), set_config('pg_trgm.word_similarity_threshold', ...)` | Transaction-local search settings (2-second statement timeout, filtering inside HNSW scans); the search queries themselves are LINQ (`EF.Functions.Like`, `TrigramsAreWordSimilar`, `TrigramsWordSimilarity`, pgvector `CosineDistance`) |
 | `BulkInsert` (MAZ-137, used by `PostgresLedgerRepository.TrySaveAsync`): `COPY penny.ledger_entries (...) FROM STDIN (FORMAT BINARY)` and the same for `penny.search_documents` | EF inserts tracked rows one statement each, too slow for a first sync of a full ledger. New entries and their search documents are copied in the save's transaction, after `SaveChanges`; the table, columns and types come from the EF model and database-generated identity columns are left out. Updates and deletes stay with EF |
 
@@ -107,19 +106,24 @@ Receipt files are encrypted on the filesystem; PostgreSQL stores only metadata (
 
 ## Commands
 
-Run from the repository root. Local `dotnet.sh run` loads the ignored development `.env`; remote operators supply `ConnectionStrings__Migration` and the `Receipts__*` settings through their secret manager. Use verified TLS for remote connections.
+Run from the repository root. Local `dotnet.sh run` loads the ignored development `.env`; remote operators supply `ConnectionStrings__Postgres` and the `Receipts__*` settings through their secret manager. Use verified TLS for remote connections.
 
 ```sh
 bash apps/backend/dotnet.sh run --project src/Penny.Backend.Api -- migrate
 ```
 
-The migrations were squashed into a single `InitialSchema` migration. `migrate` moves a database created before that onto the squashed history automatically, before applying anything else ([backend README](../../apps/backend/README.md#upgrading-a-database-from-before-the-squash)).
+The API runs the same migration on startup, so `migrate` is needed only with `Database__MigrateOnStartup=false`. The migrations were squashed into a single `InitialSchema` migration. The migration moves a database created before that onto the squashed history automatically, before applying anything else ([backend README](../../apps/backend/README.md#upgrading-a-database-from-before-the-squash)).
 
-### Runtime grants
+### Database user and privileges
 
-After every `migrate`, apply `apps/backend/development/grant-runtime.sql` as the schema owner or admin. `migrate --grant-runtime` (MAZ-63, used by the production Compose `migrate` service) does this in the same command, as the migration role that owns the schema, in one transaction; the file is embedded verbatim. To run it by hand instead, use psql. For local Compose: `psql --username="$POSTGRES_USER" --dbname="$POSTGRES_DB" --set=ON_ERROR_STOP=1` inside the database container, with the file on stdin. It grants DML on every `penny` table and revokes writes on `__EFMigrationsHistory`. Initialization scripts don't re-run for existing volumes. The script assumes the role is named `penny_runtime`.
+The API uses one PostgreSQL login (`ConnectionStrings__Postgres`) for everything: the startup migration, serving and the commands. It owns the `penny` schema and its tables, so there are no grants to apply after a migration. It needs:
 
-Readiness fails (503) on PostgreSQL other than 18, a runtime role that can create schemas or databases or administer roles, applied migrations that don't exactly match the build, missing grants or extensions, or (MAZ-63) a receipt root that is not writable or has less than `Receipts__MinFreeMegabytes` free. It never changes the database; the receipt check writes and deletes one empty probe file. Codes and actions: [operations](../self-hosting/operations.md#monitoring).
+- `CREATE` on the database, so EF can create the `penny` schema; or a `penny` schema an administrator created and made it the owner of;
+- `pg_trgm` and `vector` (pgvector 0.8+) in `public`. The migration creates them when missing if the login may: a superuser can create both; `pg_trgm` is a trusted extension that a user with `CREATE` on the database may also create, but `vector` is not. Otherwise an administrator runs `CREATE EXTENSION IF NOT EXISTS pg_trgm SCHEMA public; CREATE EXTENSION IF NOT EXISTS vector SCHEMA public;` once.
+
+The bundled Compose PostgreSQL makes this login the container's superuser, so nothing is created by hand; external servers: [deployment](../self-hosting/deployment.md#external-postgresql). Compose installs set up before the single login keep `penny_migrator` as the schema owner and use it as the login ([upgrade](../self-hosting/deployment.md#single-database-user)); the NixOS module reassigns its objects to the new user ([NixOS](../self-hosting/nixos.md#upgrades)). The login can change the schema; the earlier split into a migration role and a restricted runtime role was removed for simpler operation ([operations](../self-hosting/operations.md#database-user-connections-and-tls)).
+
+Readiness fails (503) on PostgreSQL other than 18, applied migrations that don't exactly match the build, missing extensions, a user that cannot read the migration history (`permissions`), or (MAZ-63) a receipt root that is not writable or has less than `Receipts__MinFreeMegabytes` free. It never changes the database; the receipt check writes and deletes one empty probe file. Codes and actions: [operations](../self-hosting/operations.md#monitoring).
 
 ## Forward-only recovery
 
@@ -135,4 +139,4 @@ createdb penny_restore
 pg_restore --exit-on-error --no-owner --no-privileges --dbname=penny_restore /restricted/penny.dump
 ```
 
-Receipt metadata is in the dump; receipt bytes are not. Back up `Receipts__Root` **together** with the database: take both under the same write freeze, or take the file backup after the database backup and before any orphan sweep, so every row's file exists. Keep the master key in the secret manager's own backup. The production Compose commands, a tested clean-environment restore and the restore drill are in the [operations runbook](../self-hosting/operations.md#back-up). After a restore with `--no-owner --no-privileges`, restore schema ownership, re-run `grant-runtime.sql` and check readiness before routing traffic. Recovering writes accepted after a dump requires WAL/PITR.
+Receipt metadata is in the dump; receipt bytes are not. Back up `Receipts__Root` **together** with the database: take both under the same write freeze, or take the file backup after the database backup and before any orphan sweep, so every row's file exists. Keep the master key in the secret manager's own backup. The production Compose commands, a tested clean-environment restore and the restore drill are in the [operations runbook](../self-hosting/operations.md#back-up). Restore as the API's login (or, after a restore with `--no-owner --no-privileges` as another user, give that login ownership of the `penny` schema and its objects), then start the API and check readiness before routing traffic. Recovering writes accepted after a dump requires WAL/PITR.

@@ -1,5 +1,5 @@
 # The Penny ASP.NET Core API (apps/backend). Produces `bin/penny-api`, which runs the HTTP
-# host and the maintenance commands (`penny-api migrate --grant-runtime`, `reset-password`, …).
+# host (it migrates the database on startup) and the maintenance commands (`penny-api migrate`, `reset-password`, …).
 # Regenerate deps.json after a NuGet change: `nix build .#penny-api.fetch-deps && ./result nix/packages/api-deps.json`.
 { lib
 , buildDotnetModule
@@ -34,7 +34,6 @@ buildDotnetModule {
       ../../apps/backend/Directory.Packages.props
       ../../apps/backend/NuGet.Config
       ../../apps/backend/.editorconfig
-      ../../apps/backend/development/grant-runtime.sql
       (lib.fileset.difference ../../apps/backend/src
         (lib.fileset.fileFilter (f: f.name == "bin" || f.name == "obj") ../../apps/backend/src))
     ];

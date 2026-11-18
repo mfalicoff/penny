@@ -108,7 +108,7 @@ public abstract class SharedRecurrenceTestBase(ApiFixture fixture) : SharedExpen
     )
     {
         var source = DatabaseSettings
-            .Create(Fixture.RuntimeConnection, 10, 5, commandTimeoutSeconds)
+            .Create(Fixture.Connection, 10, 5, commandTimeoutSeconds)
             .CreateDataSource();
         return (
             new SharedRecurrenceRunner(
@@ -182,7 +182,7 @@ public abstract class SharedRecurrenceTestBase(ApiFixture fixture) : SharedExpen
         {
             if (
                 await CountAsync(
-                    "SELECT count(*) FROM pg_stat_activity WHERE usename = 'penny_runtime' AND wait_event_type = 'Lock'"
+                    "SELECT count(*) FROM pg_stat_activity WHERE usename = 'penny_app' AND wait_event_type = 'Lock'"
                 ) >= count
             )
                 return;

@@ -1,6 +1,6 @@
 # Full-stack test environment and shared fixtures (MAZ-62)
 
-One command starts a disposable environment: a pinned PostgreSQL 18 container (pg_trgm and pgvector), its own migrated database and restricted roles, and the real .NET API built from this checkout. Browser (MAZ-95) and simulator (MAZ-81) runners point at it, seed deterministic data, move the server clock, inject failures and tear it down. The same seeds and language-neutral fixtures are consumed by the TypeScript, C# and Swift suites.
+One command starts a disposable environment: a pinned PostgreSQL 18 container (pg_trgm and pgvector), its own database, and the real .NET API built from this checkout, which migrates that database on startup. Browser (MAZ-95) and simulator (MAZ-81) runners point at it, seed deterministic data, move the server clock, inject failures and tear it down. The same seeds and language-neutral fixtures are consumed by the TypeScript, C# and Swift suites.
 
 Code: `scripts/test-env/` (runner, seeder, local OIDC provider), `apps/web/scripts/fixtures/generate-golden.ts`, `apps/backend/src/Penny.Backend.Api/Testing/` (test controls) and `Persistence/Testing/TestDataReset.cs`, `contracts/fixtures/`, `contracts/swift/`. Tests: `apps/web/tests/domain/golden-fixtures.test.ts`, `scripts/tests/test-env.test.ts`, `scripts/tests/fullstack/environment.test.mjs`, `UnitTests/Contracts/GoldenFixtureTests`, `UnitTests/Configuration/TestControlOptionsTests` and `FaultRegistryTests`, `IntegrationTests/Http/TestControlsTests`, `IntegrationTests/Contracts/FullStackSeedTests`, `contracts/swift/Tests`.
 
@@ -26,7 +26,7 @@ export PENNY_POSTGRES=native PENNY_POSTGRES_BIN="$PWD/.cache/test-postgres/bin"
 node scripts/test-env/penny-env.mjs up
 ```
 
-Each run `initdb`s a cluster in `.cache/test-env/<id>/pgdata` (random admin password, scram authentication, loopback TCP only, no Unix socket, durability off like the container's tmpfs), creates the database (roles and extensions come from `migrate --bootstrap`, as in Compose), and `down` stops it with `pg_ctl` and deletes it. It still never connects to a server it did not create. Any PostgreSQL 18 with pgvector 0.8 or later works through `PENNY_POSTGRES_BIN` (or `pg_config` on `PATH`). The flake's `test-postgres` pins pgvector to the reference image's version (0.8.7) rather than taking nixpkgs', which can trail it; change `flake.nix`, `apps/backend/compose.yaml` and `DatabaseSchema.cs` together. The container stays the reference for backend CI.
+Each run `initdb`s a cluster in `.cache/test-env/<id>/pgdata` (random admin password, scram authentication, loopback TCP only, no Unix socket, durability off like the container's tmpfs), creates the database (the API creates the schema and extensions on startup, as in Compose), and `down` stops it with `pg_ctl` and deletes it. It still never connects to a server it did not create. Any PostgreSQL 18 with pgvector 0.8 or later works through `PENNY_POSTGRES_BIN` (or `pg_config` on `PATH`). The flake's `test-postgres` pins pgvector to the reference image's version (0.8.7) rather than taking nixpkgs', which can trail it; change `flake.nix`, `apps/backend/compose.yaml` and `DatabaseSchema.cs` together. The container stays the reference for backend CI.
 
 ## One command
 
@@ -49,7 +49,7 @@ The API serves HTTPS on `https://127.0.0.1:<port>` with a certificate made per r
 
 The run also picks a free web port (`PENNY_WEB_PORT`, or `--web-port`): it allows `http://localhost:<port>` and `http://127.0.0.1:<port>` as origins (next to the dev server's default 4173) and registers `/auth/callback` on both as OIDC redirect URIs. Vite and Playwright serve there strictly, so a web run never reuses another session's server.
 
-Startup: create the container, wait for TCP readiness, run `migrate --bootstrap --grant-runtime` (roles, schema and extensions as administrator, then migrations and grants as the migration role), start the API (`ASPNETCORE_ENVIRONMENT=Testing`, runtime role, generous rate limits, recurrence and embedding workers on) and wait for `/api/ready`. If any step fails, everything created so far is removed before the error is reported (with the last API log lines), and an API that exits during startup is detected immediately.
+Startup: create the container, wait for TCP readiness, start the API (`ASPNETCORE_ENVIRONMENT=Testing`, connected as the disposable cluster's administrator, so it creates the schema and extensions and applies migrations on startup; generous rate limits, recurrence and embedding workers on) and wait for `/api/ready`. If any step fails, everything created so far is removed before the error is reported (with the last API log lines), and an API that exits during startup is detected immediately.
 
 ## Simulators and devices
 

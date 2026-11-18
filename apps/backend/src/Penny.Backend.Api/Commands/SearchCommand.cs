@@ -122,7 +122,7 @@ internal static class SearchCommand
             Console.Error.WriteLine(
                 error is InvalidOperationException
                     ? error.Message
-                    : "Search maintenance failed. Check ConnectionStrings__Postgres, connectivity, that `migrate` has been applied with runtime grants and Search__ModelDirectory. No credentials or row values are logged."
+                    : "Search maintenance failed. Check ConnectionStrings__Postgres, connectivity, that the database has been migrated and Search__ModelDirectory. No credentials or row values are logged."
             );
             return 1;
         }

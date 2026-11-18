@@ -12,7 +12,7 @@
     <RestorePackagesWithLockFile>false</RestorePackagesWithLockFile>
   </PropertyGroup>
   <ItemGroup>
-    <!-- Orchestrated as the `api` and `migrate` resources. -->
+    <!-- Orchestrated as the `api` resource (it migrates on startup). -->
     <ProjectReference Include="../Penny.Backend.Api/Penny.Backend.Api.csproj" />
     <!-- A plain library reference: the PostgreSQL image pin lives in DatabaseSchema.Image. -->
     <ProjectReference

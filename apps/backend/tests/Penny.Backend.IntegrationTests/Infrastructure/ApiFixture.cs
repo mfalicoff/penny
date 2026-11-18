@@ -50,7 +50,11 @@ public sealed class ApiFixture : IAsyncLifetime
     // wait for a previous test's statement to finish rather than fail every following test.
     private NpgsqlDataSource resetSource = null!;
     public TestApiFactory Factory { get; private set; } = null!;
-    public string RuntimeConnection { get; private set; } = "";
+
+    // The application user (`penny_app`), as in production: it owns the penny schema and
+    // migrates it; the administrator only created it and the search extensions.
+    public string Connection { get; private set; } = "";
+    public NpgsqlDataSource App { get; private set; } = null!;
 
     // Superuser connection to the test database (benchmark diagnostics only).
     public string AdminConnection => postgres.GetConnectionString();
@@ -58,7 +62,6 @@ public sealed class ApiFixture : IAsyncLifetime
     // The PostgreSQL server log (benchmark auto_explain plans).
     public async Task<string> ServerLogAsync() => (await postgres.GetLogsAsync()).Stderr;
 
-    public string MigrationConnection { get; private set; } = "";
     public string ReceiptRoot { get; } =
         System.IO.Path.Combine(
             System.IO.Path.GetTempPath(),
@@ -82,38 +85,26 @@ public sealed class ApiFixture : IAsyncLifetime
         resetSource = DatabaseSettings
             .Create(postgres.GetConnectionString(), commandTimeoutSeconds: 30)
             .CreateDataSource();
-        // The administrator creates the search extensions once (development/bootstrap.sql, run by migrate --bootstrap).
+        // Like an external PostgreSQL: the administrator creates the search extensions
+        // and a non-superuser that may create schemas; the application does the rest.
         await SqlAsync(CreateExtensions, ct);
-        await DatabaseMigrator.ApplyAsync(Admin, ct);
         var password = Guid.NewGuid().ToString("N");
-        var migrationPassword = Guid.NewGuid().ToString("N");
-        await SqlAsync(
-            $"CREATE ROLE penny_migrator LOGIN PASSWORD '{migrationPassword}' NOSUPERUSER NOCREATEDB NOCREATEROLE",
-            ct
-        );
-        await SqlAsync(
-            "GRANT CONNECT, CREATE ON DATABASE penny_tests TO penny_migrator; GRANT CREATE ON SCHEMA public TO penny_migrator",
-            ct
-        );
-        MigrationConnection = new NpgsqlConnectionStringBuilder(postgres.GetConnectionString())
-        {
-            Username = "penny_migrator",
-            Password = migrationPassword,
-        }.ConnectionString;
         // Only a generated hexadecimal test password is interpolated; no user input.
         await SqlAsync(
-            $"CREATE ROLE penny_runtime LOGIN PASSWORD '{password}' NOSUPERUSER NOCREATEDB NOCREATEROLE",
+            $"CREATE ROLE penny_app LOGIN PASSWORD '{password}' NOSUPERUSER NOCREATEDB NOCREATEROLE",
             ct
         );
-        await GrantRuntimeAsync(ct);
-        RuntimeConnection = new NpgsqlConnectionStringBuilder(postgres.GetConnectionString())
+        await SqlAsync("GRANT CONNECT, CREATE ON DATABASE penny_tests TO penny_app", ct);
+        Connection = new NpgsqlConnectionStringBuilder(postgres.GetConnectionString())
         {
-            Username = "penny_runtime",
+            Username = "penny_app",
             Password = password,
         }.ConnectionString;
+        App = DatabaseSettings.Create(Connection).CreateDataSource();
+        await DatabaseMigrator.ApplyAsync(App, ct);
         // The shared host opens receipts written through `Receipts`.
         Factory = new TestApiFactory(
-            RuntimeConnection,
+            Connection,
             new Dictionary<string, string>
             {
                 ["Receipts:Root"] = ReceiptRoot,
@@ -131,19 +122,6 @@ public sealed class ApiFixture : IAsyncLifetime
         Factory.UseKestrel(0);
         Factory.StartServer();
     }
-
-    // Mirrors development/grant-runtime.sql.
-    public Task GrantRuntimeAsync(CancellationToken ct) =>
-        SqlAsync(
-            """
-            GRANT CONNECT ON DATABASE penny_tests TO penny_runtime;
-            GRANT USAGE ON SCHEMA penny TO penny_runtime;
-            GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA penny TO penny_runtime;
-            REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON penny."__EFMigrationsHistory" FROM penny_runtime;
-            GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA penny TO penny_runtime;
-            """,
-            ct
-        );
 
     public async Task SqlAsync(string sql, CancellationToken ct)
     {
@@ -234,16 +212,19 @@ public sealed class ApiFixture : IAsyncLifetime
 
     public async Task ResetAsync(CancellationToken ct)
     {
-        // Migration tests deliberately destroy schema or history. Only those
-        // cases rebuild; ordinary tests retain migration history and use Respawn.
+        // Migration tests deliberately destroy schema or history, or rebuild it as another
+        // owner. Only those cases rebuild; ordinary tests retain migration history and use
+        // Respawn.
         try
         {
-            await DatabaseMigrator.ApplyAsync(Admin, ct);
+            if (!await OwnedByAppAsync(ct))
+                throw new InvalidOperationException("The penny schema has another owner.");
+            await DatabaseMigrator.ApplyAsync(App, ct);
         }
         catch (Exception error) when (error is InvalidOperationException or PostgresException)
         {
             await SqlAsync("DROP SCHEMA IF EXISTS penny CASCADE", ct);
-            await DatabaseMigrator.ApplyAsync(Admin, ct);
+            await DatabaseMigrator.ApplyAsync(App, ct);
         }
         await using var connection = await resetSource.OpenConnectionAsync(ct);
         var reset = await Respawner.CreateAsync(
@@ -256,21 +237,28 @@ public sealed class ApiFixture : IAsyncLifetime
             }
         );
         await reset.ResetAsync(connection);
-        await SqlAsync(
-            "REVOKE CREATE ON SCHEMA penny, public FROM penny_runtime; REVOKE CREATE ON DATABASE penny_tests FROM penny_runtime",
-            ct
-        );
-        await GrantRuntimeAsync(ct);
+        // Tests may revoke the owner's own table privileges; give them back.
+        await SqlAsync("GRANT ALL ON ALL TABLES IN SCHEMA penny TO penny_app", ct);
         if (Directory.Exists(ReceiptRoot))
             Directory.Delete(ReceiptRoot, recursive: true);
         Factory.Services.GetRequiredService<ProbeSignals>().Reset();
         Factory.Clock.Reset();
     }
 
+    private async Task<bool> OwnedByAppAsync(CancellationToken ct)
+    {
+        await using var command = Admin.CreateCommand(
+            "SELECT COALESCE((SELECT nspowner::regrole::text = 'penny_app' FROM pg_namespace WHERE nspname = 'penny'), true)"
+        );
+        return await command.ExecuteScalarAsync(ct) is true;
+    }
+
     public async ValueTask DisposeAsync()
     {
         if (Factory is not null)
             await Factory.DisposeAsync();
+        if (App is not null)
+            await App.DisposeAsync();
         if (Admin is not null)
             await Admin.DisposeAsync();
         if (resetSource is not null)

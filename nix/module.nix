@@ -1,5 +1,5 @@
-# NixOS module for self-hosting Penny v2: PostgreSQL 18 (with pg_trgm and pgvector), a
-# one-shot migration, the .NET API and nginx serving the web app with a same-origin
+# NixOS module for self-hosting Penny v2: PostgreSQL 18 (with pg_trgm and pgvector), the
+# .NET API (it migrates the database on startup) and nginx serving the web app with a same-origin
 # /api/ proxy. The same topology as deploy/compose.yaml, as native systemd services.
 #
 #   services.penny = {            # `programs.penny` is an alias
@@ -74,12 +74,6 @@ let
     InboundMail__RendererUrl = "http://127.0.0.1:${toString mail.renderer.port}";
   } // lib.mapAttrs (_: render) (flatten "" cfg.settings);
 
-  migrationEnvironment = {
-    DOTNET_EnableDiagnostics = "0";
-    DOTNET_CLI_TELEMETRY_OPTOUT = "1";
-    Logging__Console__FormatterName = "systemd";
-  };
-
   # Secrets never enter the Nix store: they are read at start from systemd credentials
   # ($CREDENTIALS_DIRECTORY) in the services and from their source files in penny-manage.
   exportConnection = var: user: passwordFile:
@@ -98,22 +92,15 @@ let
     set -euo pipefail
     ${exportReceiptKey (credential "receipt-key")}
     ${exportWebhookSecret (credential "inbound-mail-secret")}
-    ${exportConnection "ConnectionStrings__Postgres" db.runtimeUser (optionalCredential "runtime-password" db.runtimePasswordFile)}
+    ${exportConnection "ConnectionStrings__Postgres" db.user (optionalCredential "db-password" db.passwordFile)}
     exec ${lib.getExe cfg.package}
-  '';
-
-  migrateStart = pkgs.writeShellScript "penny-migrate-start" ''
-    set -euo pipefail
-    ${exportConnection "ConnectionStrings__Migration" db.migrationUser (optionalCredential "migration-password" db.migrationPasswordFile)}
-    exec ${lib.getExe cfg.package} migrate --grant-runtime
   '';
 
   optionalFile = file: if file == null then null else lib.escapeShellArg file;
 
   credentials =
     [ "receipt-key:${receiptKeyPath}" ]
-    ++ lib.optional (db.runtimePasswordFile != null) "runtime-password:${db.runtimePasswordFile}"
-    ++ lib.optional (db.migrationPasswordFile != null) "migration-password:${db.migrationPasswordFile}"
+    ++ lib.optional (db.passwordFile != null) "db-password:${db.passwordFile}"
     ++ lib.optional mail.enable "inbound-mail-secret:${mail.webhookSecretFile}";
 
   # Generates the receipt master key on first start when none is supplied. It is never
@@ -144,31 +131,30 @@ let
       ${exportReceiptKey (lib.escapeShellArg receiptKeyPath)}
     fi
     ${lib.optionalString mail.enable (exportWebhookSecret (lib.escapeShellArg mail.webhookSecretFile))}
-    ${exportConnection "ConnectionStrings__Postgres" db.runtimeUser (optionalFile db.runtimePasswordFile)}
-    ${exportConnection "ConnectionStrings__Migration" db.migrationUser (optionalFile db.migrationPasswordFile)}
+    ${exportConnection "ConnectionStrings__Postgres" db.user (optionalFile db.passwordFile)}
     cd ${lib.escapeShellArg cfg.stateDir}
     exec ${pkgs.util-linux}/bin/setpriv --reuid=${cfg.user} --regid=${cfg.group} --init-groups \
       ${lib.getExe cfg.package} "$@"
   '';
 
-  # Idempotent equivalent of apps/backend/development/bootstrap.sql for a local server:
-  # roles without passwords (peer authentication over the Unix socket), the schema owned
-  # by the migration role, and the extensions created by the administrator.
+  # Idempotent setup of a local server, as the administrator: the database user without a
+  # password (peer authentication over the Unix socket), the schema it owns and the search
+  # extensions (vector is not a trusted extension). The API migrates the rest on startup.
+  # Installs from before the single user (penny_migrator owned the schema, penny_runtime
+  # served) are moved onto it: their objects are reassigned to the new user.
   databaseSetup = pkgs.writeText "penny-db-setup.sql" ''
     \set ON_ERROR_STOP 1
-    SELECT format('CREATE ROLE %I LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE', :'migrator')
-      WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = :'migrator') \gexec
-    SELECT format('CREATE ROLE %I LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE', :'runtime')
-      WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = :'runtime') \gexec
+    SELECT format('CREATE ROLE %I LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE', :'user')
+      WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = :'user') \gexec
     SELECT format('CREATE DATABASE %I', :'database')
       WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = :'database') \gexec
     \connect :"database"
     REVOKE CREATE ON SCHEMA public FROM PUBLIC;
-    GRANT CONNECT, CREATE ON DATABASE :"database" TO :"migrator";
-    GRANT CREATE ON SCHEMA public TO :"migrator";
-    GRANT CONNECT ON DATABASE :"database" TO :"runtime";
-    CREATE SCHEMA IF NOT EXISTS penny AUTHORIZATION :"migrator";
-    GRANT USAGE ON SCHEMA penny TO :"runtime";
+    GRANT CONNECT, CREATE ON DATABASE :"database" TO :"user";
+    SELECT format('REASSIGN OWNED BY %I TO %I', 'penny_migrator', :'user')
+      WHERE :'user' <> 'penny_migrator'
+        AND EXISTS (SELECT FROM pg_roles WHERE rolname = 'penny_migrator') \gexec
+    CREATE SCHEMA IF NOT EXISTS penny AUTHORIZATION :"user";
     CREATE EXTENSION IF NOT EXISTS pg_trgm SCHEMA public;
     CREATE EXTENSION IF NOT EXISTS vector SCHEMA public;
   '';
@@ -208,6 +194,11 @@ in
 {
   imports = [
     (lib.mkAliasOptionModule [ "programs" "penny" ] [ "services" "penny" ])
+    # One database user since the API migrates on startup.
+    (lib.mkRenamedOptionModule [ "services" "penny" "database" "migrationUser" ] [ "services" "penny" "database" "user" ])
+    (lib.mkRenamedOptionModule [ "services" "penny" "database" "migrationPasswordFile" ] [ "services" "penny" "database" "passwordFile" ])
+    (lib.mkRemovedOptionModule [ "services" "penny" "database" "runtimeUser" ] "The API now uses services.penny.database.user only.")
+    (lib.mkRemovedOptionModule [ "services" "penny" "database" "runtimePasswordFile" ] "The API now uses services.penny.database.passwordFile only.")
   ];
 
   options.services.penny = {
@@ -469,7 +460,7 @@ in
     user = mkOption {
       type = types.str;
       default = "penny";
-      description = "System user the API and migrations run as.";
+      description = "System user the API runs as.";
     };
 
     group = mkOption {
@@ -484,7 +475,7 @@ in
         default = true;
         description = ''
           Run PostgreSQL 18 on this host (`services.postgresql`) with pg_trgm and pgvector,
-          and create the database, roles, schema and extensions. The service user connects
+          and create the database, its user, schema and extensions. The service user connects
           over the Unix socket with peer authentication, so no passwords are involved.
         '';
       };
@@ -507,31 +498,19 @@ in
         description = "Database port.";
       };
 
-      migrationUser = mkOption {
+      user = mkOption {
         type = types.str;
-        default = "penny_migrator";
-        description = "Schema-owning role used by `migrate`.";
-      };
-
-      runtimeUser = mkOption {
-        type = types.str;
-        default = "penny_runtime";
+        default = "penny";
         description = ''
-          DML-only role used by the API. The runtime grants are applied to `penny_runtime`,
-          so change this only together with the grant script.
+          The one database user: it owns the `penny` schema, and the API migrates it on
+          startup and serves with it.
         '';
       };
 
-      migrationPasswordFile = mkOption {
+      passwordFile = mkOption {
         type = types.nullOr types.path;
         default = null;
-        description = "Password file for the migration role (external databases). Must not contain `;`.";
-      };
-
-      runtimePasswordFile = mkOption {
-        type = types.nullOr types.path;
-        default = null;
-        description = "Password file for the runtime role (external databases). Must not contain `;`.";
+        description = "Password file for the database user (external databases). Must not contain `;`.";
       };
 
       sslMode = mkOption {
@@ -588,7 +567,7 @@ in
         message = "services.penny.database.host must be a Unix socket directory when createLocally is true.";
       }
       {
-        assertion = localDatabase -> (db.migrationPasswordFile == null && db.runtimePasswordFile == null);
+        assertion = localDatabase -> (db.passwordFile == null);
         message = "services.penny.database password files are only used with an external database (createLocally = false).";
       }
       {
@@ -623,21 +602,20 @@ in
       # Stronger than the stateVersion default, weaker than a plain definition.
       package = lib.mkOverride 900 pkgs.postgresql_18;
       extensions = ps: [ ps.pgvector ];
-      # The OS user `penny` may log in as both Penny roles over the local socket.
+      # The OS user `penny` may log in as the database user over the local socket.
       identMap = ''
-        penny ${cfg.user} ${db.migrationUser}
-        penny ${cfg.user} ${db.runtimeUser}
+        penny ${cfg.user} ${db.user}
       '';
       authentication = lib.mkBefore ''
-        local ${db.name} ${db.migrationUser},${db.runtimeUser} peer map=penny
+        local ${db.name} ${db.user} peer map=penny
       '';
     };
 
     systemd.services.penny-db-setup = mkIf localDatabase {
-      description = "Penny database roles, schema and extensions";
+      description = "Penny database user, schema and extensions";
       requires = [ "postgresql.service" ];
       after = [ "postgresql.service" "postgresql-setup.service" ];
-      before = [ "penny-migrate.service" ];
+      before = [ "penny.service" ];
       path = [ config.services.postgresql.package ];
       serviceConfig = {
         Type = "oneshot";
@@ -649,28 +627,9 @@ in
         until pg_isready -q -h /run/postgresql -p ${toString config.services.postgresql.settings.port}; do sleep 1; done
         psql -h /run/postgresql -p ${toString config.services.postgresql.settings.port} -d postgres -X \
           --set=database=${lib.escapeShellArg db.name} \
-          --set=migrator=${lib.escapeShellArg db.migrationUser} \
-          --set=runtime=${lib.escapeShellArg db.runtimeUser} \
+          --set=user=${lib.escapeShellArg db.user} \
           -f ${databaseSetup}
       '';
-    };
-
-    # Applies EF migrations under the migration advisory lock, then the runtime grants.
-    # Reruns whenever the package changes (nixos-rebuild restarts the unit).
-    systemd.services.penny-migrate = {
-      description = "Penny database migrations";
-      requires = databaseUnits;
-      after = databaseUnits ++ [ "network-online.target" ];
-      wants = [ "network-online.target" ];
-      before = [ "penny.service" ];
-      environment = migrationEnvironment;
-      serviceConfig = hardening // {
-        Type = "oneshot";
-        RemainAfterExit = true;
-        ExecStartPre = lib.optional (cfg.receiptKeyFile == null) "+${generateReceiptKey}";
-        ExecStart = migrateStart;
-        LoadCredential = lib.filter (c: !(lib.hasPrefix "receipt-key:" c)) credentials;
-      };
     };
 
     # penny-render (MAZ-184): HTML-to-PDF for emailed receipts, Chromium with JavaScript off.
@@ -745,12 +704,14 @@ in
     systemd.services.penny = {
       description = "Penny API";
       wantedBy = [ "multi-user.target" ];
-      requires = [ "penny-migrate.service" ];
+      # Migrates the database on startup (under its advisory lock), then serves.
+      requires = databaseUnits;
       wants = [ "network-online.target" ] ++ lib.optional mail.enable "penny-render.service";
-      after = [ "penny-migrate.service" "network-online.target" ] ++ lib.optional mail.enable "penny-render.service";
+      after = databaseUnits ++ [ "network-online.target" ] ++ lib.optional mail.enable "penny-render.service";
       environment = apiEnvironment;
       serviceConfig = hardening // {
         Type = "exec";
+        ExecStartPre = lib.optional (cfg.receiptKeyFile == null) "+${generateReceiptKey}";
         ExecStart = apiStart;
         Restart = "on-failure";
         RestartSec = 5;

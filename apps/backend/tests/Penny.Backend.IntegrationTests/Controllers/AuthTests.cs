@@ -340,7 +340,7 @@ public sealed class AuthTests(ApiFixture fixture) : IntegrationTestBase(fixture)
     {
         await RegisterAsync(Email);
         await using var factory = new TestApiFactory(
-            Fixture.RuntimeConnection,
+            Fixture.Connection,
             new Dictionary<string, string> { ["Auth:AllowRegistration"] = "false" }
         );
         using var client = CreateClient(factory);

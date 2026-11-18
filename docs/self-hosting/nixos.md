@@ -7,12 +7,11 @@ The repository's flake ships Penny as Nix packages and a NixOS module. One optio
 | Unit | Role |
 | --- | --- |
 | `postgresql.service` | PostgreSQL 18 with `pg_trgm` and pgvector (skipped with an [external database](#external-postgresql)) |
-| `penny-db-setup.service` | One-shot, as `postgres`: creates the database, the `penny_migrator` and `penny_runtime` roles, the `penny` schema and the extensions. Idempotent; the Nix equivalent of `apps/backend/development/bootstrap.sql` (`migrate --bootstrap`) |
-| `penny-migrate.service` | One-shot, as `penny`: `migrate --grant-runtime`. Generates the receipt master key on first start if you don't supply one |
-| `penny.service` | The .NET API and its background workers, on `127.0.0.1:5080` |
+| `penny-db-setup.service` | One-shot, as `postgres`: creates the database, the database user `penny`, the `penny` schema owned by it and the extensions. Idempotent |
+| `penny.service` | The .NET API and its background workers, on `127.0.0.1:5080`. It applies pending migrations on startup, before it serves, and generates the receipt master key on first start if you don't supply one |
 | `nginx.service` | A virtual host that serves the web app, falls back to `index.html`, and proxies `/api/` to the API on the same origin |
 
-The API connects to the local PostgreSQL over its Unix socket with peer authentication: the `penny` system user may log in as the two Penny roles, and no database passwords exist. Receipts and ASP.NET data-protection keys live in `/var/lib/penny`.
+The API connects to the local PostgreSQL over its Unix socket with peer authentication: the `penny` system user may log in as the database user `penny`, and no database passwords exist. Receipts and ASP.NET data-protection keys live in `/var/lib/penny`.
 
 ## Quick start
 
@@ -97,10 +96,10 @@ All options live under `services.penny` (or `programs.penny`).
 | `memoryMax` / `tasksMax` | `"3G"` / `1024` | systemd `MemoryMax=` / `TasksMax=` of `penny.service` (API, search model and OCR engines); `null` removes the limit. Raise `memoryMax` by about `ocr.engineMemoryMegabytes` per extra `Ocr__Concurrency` ([receipt OCR](operations.md#receipt-text-ocr)) |
 | `database.createLocally` | `true` | Run and configure PostgreSQL 18 on this host |
 | `database.name` / `host` / `port` | `penny` / `/run/postgresql` / `5432` | Database location; `host` may be a socket directory |
-| `database.migrationUser` / `runtimeUser` | `penny_migrator` / `penny_runtime` | Role names |
-| `database.migrationPasswordFile` / `runtimePasswordFile` | `null` | External databases only |
+| `database.user` | `penny` | The one database user: it owns the `penny` schema, and the API migrates and serves with it. `database.migrationUser` is a renamed alias; `runtimeUser` was removed |
+| `database.passwordFile` | `null` | External databases only. `database.migrationPasswordFile` is a renamed alias; `runtimePasswordFile` was removed |
 | `database.sslMode` | `VerifyFull` | Npgsql `SSL Mode` for an external database |
-| `database.extraConnectionOptions` | `""` | Appended to both connection strings, starting with `;` |
+| `database.extraConnectionOptions` | `""` | Appended to the connection string, starting with `;` |
 | `nginx.enable` | `true` | Create the nginx virtual host. Turn it off to use another front end (see below) |
 | `nginx.maxBodySize` | `21m` | `client_max_body_size`, just above the API's 20 MiB limit |
 | `nginx.realIpFrom` | `[ ]` | CIDRs of outer proxies (a CDN or load balancer) whose `X-Forwarded-For` nginx trusts |
@@ -144,28 +143,32 @@ sudo penny-manage receipts-verify
 
 ## Upgrades
 
-Update the flake input (`nix flake update penny`) and run `nixos-rebuild switch`. A new package restarts `penny-migrate.service`, which applies any new migrations under the migration lock, and then `penny.service`. Read the release notes and take a backup first, as described in [Upgrade](deployment.md#upgrade). The [roll-back rules](deployment.md#roll-back) apply unchanged: after a migration, the previous build refuses the newer schema.
+Update the flake input (`nix flake update penny`) and run `nixos-rebuild switch`. A new package restarts `penny.service`, which applies any new migrations under the migration lock before it serves. Read the release notes and take a backup first, as described in [Upgrade](deployment.md#upgrade). The [roll-back rules](deployment.md#roll-back) apply unchanged: after a migration, the previous build refuses the newer schema and `penny.service` fails to start.
+
+Upgrading from a release with separate roles needs no manual step on a local database: `penny-db-setup.service` creates the user `penny` and reassigns everything `penny_migrator` owned to it (`REASSIGN OWNED`), and `penny-migrate.service` is gone. The unused `penny_migrator` and `penny_runtime` roles stay; unless `database.user` names one of them, drop them once the upgrade is verified, as `postgres` in Penny's database: `DROP OWNED BY penny_runtime, penny_migrator; DROP ROLE penny_runtime, penny_migrator;`. For an external database, see [External PostgreSQL](#external-postgresql).
 
 ## PostgreSQL version
 
-Penny needs PostgreSQL 18, and its readiness check rejects other majors. The module sets `services.postgresql.package` to `postgresql_18`. That's stronger than the `system.stateVersion` default but weaker than a plain definition, and evaluation fails if the result isn't version 18. If this host already runs an older PostgreSQL cluster for other services, upgrade that cluster first (see the NixOS manual, "Upgrading PostgreSQL"), or run Penny against an [external PostgreSQL](#external-postgresql).
+Penny needs PostgreSQL 18; its startup migration and readiness check reject other majors. The module sets `services.postgresql.package` to `postgresql_18`. That's stronger than the `system.stateVersion` default but weaker than a plain definition, and evaluation fails if the result isn't version 18. If this host already runs an older PostgreSQL cluster for other services, upgrade that cluster first (see the NixOS manual, "Upgrading PostgreSQL"), or run Penny against an [external PostgreSQL](#external-postgresql).
 
 ## External PostgreSQL
 
-Prepare the database as in [External PostgreSQL](deployment.md#external-postgresql): the two roles with passwords, the `penny` schema owned by `penny_migrator`, and `pg_trgm` and `vector` created by an administrator. Then:
+Prepare the database as in [External PostgreSQL](deployment.md#external-postgresql): a login with a password and `CREATE` on the database (or a `penny` schema it owns), and `pg_trgm` and `vector` created by an administrator. Then:
 
 ```nix
 programs.penny.database = {
   createLocally = false;
   host = "db.internal.example.com";
   sslMode = "VerifyFull";
-  migrationPasswordFile = "/run/secrets/penny-migrator-password";
-  runtimePasswordFile = "/run/secrets/penny-runtime-password";
+  user = "penny";
+  passwordFile = "/run/secrets/penny-db-password";
   # extraConnectionOptions = ";Root Certificate=/run/secrets/db-ca.pem";
 };
 ```
 
-The password files are read through systemd credentials, so they may be owned by root. Passwords must not contain `;`. A connection pooler must run in session mode.
+The password file is read through systemd credentials, so it may be owned by root. The password must not contain `;`. A connection pooler must run in session mode: the startup migration holds a session advisory lock.
+
+An external database set up for a release with separate roles already has `penny_migrator` as the schema owner: set `user = "penny_migrator"` and `passwordFile` to its password file, and remove `runtimeUser` and `runtimePasswordFile` (evaluation fails while they are set). The [Compose upgrade notes](deployment.md#single-database-user) describe the same change.
 
 ## Another front end
 

@@ -183,7 +183,7 @@ public sealed class LargeLedgerTests(ApiFixture fixture) : IntegrationTestBase(f
     // to measure instead of time out.
     private TestApiFactory LargeHost() =>
         new(
-            Fixture.RuntimeConnection,
+            Fixture.Connection,
             new Dictionary<string, string>
             {
                 ["Backend:MaxRequestBodyBytes"] = (20 * 1024 * 1024).ToString(

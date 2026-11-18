@@ -123,7 +123,7 @@ public sealed class SearchBenchmarkTests(ApiFixture fixture) : SearchTestBase(fi
         // Maintenance runs with the command's 30-second statement bound, as search-rebuild does.
         await using var maintenance = Penny
             .Backend.Persistence.Configuration.DatabaseSettings.Create(
-                Fixture.RuntimeConnection,
+                Fixture.Connection,
                 maxPoolSize: 2,
                 commandTimeoutSeconds: 30
             )
@@ -160,7 +160,7 @@ public sealed class SearchBenchmarkTests(ApiFixture fixture) : SearchTestBase(fi
         );
 
         await using var factory = new TestApiFactory(
-            Fixture.RuntimeConnection,
+            Fixture.Connection,
             new Dictionary<string, string>
             {
                 ["Database:CommandTimeoutSeconds"] = "10",

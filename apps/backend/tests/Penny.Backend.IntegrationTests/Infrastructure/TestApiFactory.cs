@@ -24,6 +24,8 @@ public sealed class TestApiFactory(
         builder.UseSetting("ConnectionStrings:Postgres", connectionString);
         builder.UseSetting("Database:ConnectTimeoutSeconds", "1");
         builder.UseSetting("Database:CommandTimeoutSeconds", "1");
+        // The fixture migrates once; hosts never migrate on startup unless a test asks.
+        builder.UseSetting("Database:MigrateOnStartup", "false");
         // Small enough for chunked/known-length 413 tests, large enough for ledgers.
         builder.UseSetting(
             "Backend:MaxRequestBodyBytes",

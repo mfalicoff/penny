@@ -116,7 +116,7 @@ public sealed class ReceiptSearchBenchmarkTests(ApiFixture fixture) : SearchTest
             )
         );
         await using var maintenance = DatabaseSettings
-            .Create(Fixture.RuntimeConnection, maxPoolSize: 2, commandTimeoutSeconds: 30)
+            .Create(Fixture.Connection, maxPoolSize: 2, commandTimeoutSeconds: 30)
             .CreateDataSource();
         await new PostgresSearchRepository(maintenance, Fixture.Receipts).RebuildAsync(
             viewer,
@@ -158,7 +158,7 @@ public sealed class ReceiptSearchBenchmarkTests(ApiFixture fixture) : SearchTest
         );
 
         await using var runtime = DatabaseSettings
-            .Create(Fixture.RuntimeConnection, maxPoolSize: 4, commandTimeoutSeconds: 30)
+            .Create(Fixture.Connection, maxPoolSize: 4, commandTimeoutSeconds: 30)
             .CreateDataSource();
         var repository = new PostgresSearchRepository(runtime, Fixture.Receipts);
         var cases = new (string Name, string Query, bool Meaning)[]
