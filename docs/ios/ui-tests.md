@@ -47,6 +47,7 @@ Everything lands in `test-results/ios/ui/<plan>/` (ignored by Git; CI uploads it
 | `iphone.xcresult`, `ipad.xcresult` | Result bundles: logs, failures, attachments, and what XCTest collects on a failure (UI snapshot, the app's accessibility hierarchy, the element debug descriptions; screen recordings when the runtime provides them) |
 | `iphone-attachments/`, `ipad-attachments/` | The same attachments exported as files (`xcresulttool export attachments`) with a `manifest.json` |
 | `server/` | `api.log`, `postgres.log` and `environment.json` of the run (no token or passwords) |
+| `timings.json` | How long each test took and how long each device's run took (`apps/ios/scripts/ui-timings.mjs`, MAZ-163). CI also shows the table in the job summary, so a slowdown is visible before it turns into timeouts |
 
 Named screenshots (`<device>-<appearance>-<step>`) are kept on success; XCTest's failure diagnostics (the "App UI hierarchy" text and the UI snapshot) only on failure.
 
@@ -146,6 +147,7 @@ Tests find elements only by identifier, never by visible text (except system-pro
 
 - The Smoke plan has no retries: a smoke failure blocks the PR. If a smoke test fails without a product cause, fix it or move it out of Smoke the same day with a linked issue; never add sleeps.
 - The Full plan retries a failed test once. A test that passes only on retry is flaky: open an issue with the xcresult, and fix or quarantine it (`throw XCTSkip("Flaky: MAZ-…")`) within a week.
+- Keep element lookups cheap (MAZ-163). `Penny.element(_:)` looks an identifier up among elements of its type (`Penny.elementType(of:)`); an identifier that is not in that table falls back to a query over every element, which reads the identifier of everything on screen, one accessibility round trip each. On a slow runner a large iPad screen made that time out ("Timed out while evaluating UI query"), while the app itself was idle. Add an identifier to the table only after reading its type in an "App UI hierarchy" attachment on both devices: with the wrong type, `wait(for:)` times out and `waitForAbsence(of:)` passes at once. Reuse a resolved `XCUIElement` instead of building the query again, as `tap(_:)` and `popSettingsPages` do.
 - Wait on conditions, never on time: `Penny.wait(for:)`, `waitForSelection`, `waitForEntry` (pulls to refresh) and `Stack.waitForLedger` (polls the server).
 - Failures stop the test: helpers throw `UIExpectationFailed` rather than `XCTFail`, because XCTest cannot stop async test code after a soft failure. Do not snapshot the app from `record(_:)`: it deadlocks async UI tests.
 
@@ -160,6 +162,8 @@ Tests find elements only by identifier, never by visible text (except system-pro
 - **Fixed** (MAZ-82): `PENNY_TEST_TODAY` pinned the screens' day but not the offline store's, which kept recording due recurrence with the real date. A test that relaunched on a later pinned day never saw the next occurrence (and a run on a real date past the pinned one could record occurrences early). `RootView` now hands `AppServices.today` to `OfflineLedgerStore.standard(today:)`; production still uses the device's day.
 - **Driver note** (MAZ-82): on iOS 27 a confirmation dialog opened from a toolbar button on iPhone is a popover with no Cancel button, so `deleteEntry.cancel` never appears; `Penny.cancelDialog` dismisses through the system's `PopoverDismissRegion` instead.
 
+- **Fixed** (MAZ-163): the required Smoke plan failed now and then on GitHub-hosted runners with "Timed out while evaluating UI query" (iPad sign-in, iPhone Add expense), while it always passed locally. A spindump showed XCTest waiting on accessibility IPC, one round trip per element, for `Penny.element(_:)`'s query over every element (`descendants(matching: .any)`). Lookups are now typed, which halved their time on the iPad simulator locally (sign-in 0.52 s → 0.26 s, the tab bar's Add 0.71 s → 0.38 s per lookup), and `tap(_:)` no longer resolves its element twice. Limits: identifiers outside `Penny.elementType(of:)` still use the slow query, and a query still walks the screen's tree, so an iPad screen with a long list stays the slowest case; tests run 2–4 times slower on the runner than locally, which the timings in the job summary track.
+
 ## Debugging
 
 1. Open `test-results/ios/ui/<plan>/<device>.xcresult` in Xcode: the failing step, its UI snapshot and the "App UI hierarchy" attachment (search it for the identifier that was not found).
@@ -169,7 +173,7 @@ Tests find elements only by identifier, never by visible text (except system-pro
 
 ## CI
 
-`ios.yml` job `ui-smoke` (every PR touching the app, the contracts, the backend or the test environment) and `ios-ui-matrix.yml` (nightly at 07:17 UTC, on published releases, and on demand with a choice of plans) run on the `xcode-27` runner and upload `test-results/ios/ui/`. GitHub-hosted Apple Silicon macOS runners cannot run Linux containers, so both jobs install Nix, build `.#test-postgres` (PostgreSQL 18 with pgvector, locked by `flake.lock`) and run the stack with `PENNY_POSTGRES=native` ([without a container runtime](../reference/test-environment.md#without-a-container-runtime)). Locally, `ios.sh ui-test` uses Docker or Podman as before, or the same native mode when those two variables are set.
+`ios.yml` job `ui-smoke` (every PR touching the app, the contracts, the backend or the test environment) and `ios-ui-matrix.yml` (nightly at 07:17 UTC, on published releases, and on demand with a choice of plans) run on the `xcode-27` runner and upload `test-results/ios/ui/`; each job summary shows the plan's timings table. GitHub-hosted Apple Silicon macOS runners cannot run Linux containers, so both jobs install Nix, build `.#test-postgres` (PostgreSQL 18 with pgvector, locked by `flake.lock`) and run the stack with `PENNY_POSTGRES=native` ([without a container runtime](../reference/test-environment.md#without-a-container-runtime)). Locally, `ios.sh ui-test` uses Docker or Podman as before, or the same native mode when those two variables are set.
 
 ## Privacy
 
