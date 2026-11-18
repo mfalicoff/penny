@@ -164,8 +164,9 @@ test("keeps the draft through a closed dialog and an inline category, and valida
   await expect(add.getByText("Your unsaved draft is back.")).toBeVisible();
   await expect(add.getByLabel("Title")).toHaveValue("Vet visit");
   await add.getByRole("button", { name: "All categories" }).click();
-  const picker = page.getByRole("dialog", { name: "Choose a category" });
-  await picker.getByLabel("New category").fill("Pets");
+  const picker = page.getByRole("dialog", { name: "Expense category" });
+  await picker.getByRole("button", { name: "New category" }).click();
+  await picker.getByLabel("New category name").fill("Pets");
   await picker.getByRole("button", { name: "Add category" }).click();
   await expect(picker).toHaveCount(0);
   await expect(add.getByRole("radio", { name: "Pets" })).toBeChecked();

@@ -108,6 +108,44 @@ export type ActivityRow =
 
 export const byDateThenKey = (a: ActivityRow, b: ActivityRow) => b.date.localeCompare(a.date) || a.key.localeCompare(b.key);
 
+export interface DayGroup {
+  date: string;
+  rows: ActivityRow[];
+}
+
+/**
+ * Rows in date order, as runs of one day each (`iphone-activity`'s day sections). Consecutive rows
+ * only: a list that isn't in date order (a search ranked by relevance) isn't grouped.
+ */
+export function groupByDay(rows: ActivityRow[]): DayGroup[] {
+  const groups: DayGroup[] = [];
+  for (const row of rows) {
+    const last = groups.at(-1);
+    if (last?.date === row.date) last.rows.push(row);
+    else groups.push({ date: row.date, rows: [row] });
+  }
+  return groups;
+}
+
+/**
+ * What a day's rows add up to, as the day header shows it: income in, expenses (your share) and
+ * investments out. Income dated after today is expected, not counted (MAZ-136). `null` when the
+ * rows are in more than one currency, or when there is no currency to count personal rows in.
+ */
+export function dayTotal(rows: ActivityRow[], currency: string | undefined, today: string): { cents: number; currency: string } | null {
+  let cents = 0;
+  let unit: string | undefined;
+  for (const row of rows) {
+    const rowCurrency = row.source === "personal" ? currency : row.entry.householdCurrency;
+    if (!rowCurrency || (unit !== undefined && unit !== rowCurrency)) return null;
+    unit = rowCurrency;
+    if (row.source === "shared") cents -= row.entry.shareCents;
+    else if (row.entry.kind === "income") cents += isExpectedIncome(row.entry, today) ? 0 : row.entry.share;
+    else cents -= row.entry.share;
+  }
+  return unit === undefined ? null : { cents, currency: unit };
+}
+
 export interface RowFilters {
   query: string;
   period: Period;

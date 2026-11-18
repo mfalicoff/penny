@@ -9,7 +9,7 @@ import { Avatar, Button, ChoiceGroup, cx, Kbd, SwitchRow } from "../../design/co
 import { Icon } from "../../design/Icon";
 import { Dialog } from "../../design/ModalDialog";
 import { Banner, SaveErrorBanner, useToast } from "../../design/states";
-import { categoryIcon, frequentCategories, kindLabels } from "../entries/model";
+import { categoryIcon, frequentCategories, kindLabels, mostUsedCategories } from "../entries/model";
 import { CategoryPickerDialog } from "../entries/pickers";
 import { HouseholdField, type EntrySeed, type HouseholdScope } from "../entries/scope";
 import { ReceiptField } from "../receipts/ReceiptField";
@@ -670,6 +670,7 @@ export function ExpenseFormDialog({
         <CategoryPickerDialog
           kind="expense"
           categories={ledgerCategories}
+          mostUsed={mostUsedCategories(workspace.ledger, "expense")}
           selected={chosenChip?.id}
           save={workspace.save}
           onSelect={(_id, category) => {

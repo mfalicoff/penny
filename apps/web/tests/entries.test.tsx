@@ -122,6 +122,33 @@ describe("adding entries", () => {
     expect(serverEntries(server)[0]?.tripId).toBeUndefined();
   });
 
+  it("explains future-dated income on the Income form before a date is picked (MAZ-136, MAZ-175)", async () => {
+    ledgerServer();
+    const user = userEvent.setup();
+    renderApp("/");
+    const form = await openAdd(user);
+    await user.click(within(form).getByRole("radio", { name: "Income" }));
+    expect(within(form).getByText(/Pay dated after today shows as expected: it counts toward Projected until its day, not toward Left to spend\./)).toBeInTheDocument();
+  });
+
+  it("shows the category picker as Most used and all categories in a grid, the chosen one pressed (MAZ-175)", async () => {
+    ledgerServer({ transactions: [entry("a", "Lunch", { categoryId: "food" })] });
+    const user = userEvent.setup();
+    renderApp("/");
+    const form = await openAdd(user);
+    await user.click(within(form).getByRole("button", { name: "All categories" }));
+    const picker = screen.getByRole("dialog", { name: "Expense category" });
+    const most = within(picker).getByRole("region", { name: "Most used" });
+    expect(within(most).getAllByRole("button").map((tile) => tile.textContent)).toEqual(["Food & drinks"]);
+    expect(within(most).getByRole("button", { name: "Food & drinks" })).toHaveAttribute("aria-pressed", "true");
+    const all = within(picker).getByRole("region", { name: "All categories" });
+    expect(within(all).getAllByRole("button").map((tile) => tile.getAttribute("aria-label") ?? tile.textContent)).toEqual(["Groceries", "New category"]);
+    // Typing searches every category; Most used steps aside.
+    await user.type(within(picker).getByLabelText("Search categories"), "foo");
+    expect(within(picker).queryByRole("region", { name: "Most used" })).not.toBeInTheDocument();
+    expect(within(within(picker).getByRole("region", { name: "Matches" })).getAllByRole("button").map((tile) => tile.textContent)).toEqual(["Food & drinks"]);
+  });
+
   it("adds a repeating investment: the entry is the first occurrence of a new rule", async () => {
     const server = ledgerServer();
     const user = userEvent.setup();
@@ -213,18 +240,18 @@ describe("adding entries", () => {
     await fill(user, form, { amount: "30", title: "Vet visit" });
     const all = within(form).getByRole("button", { name: "All categories" });
     await user.click(all);
-    const picker = screen.getByRole("dialog", { name: "Choose a category" });
-    expect(within(picker).getByLabelText("Find a category")).toHaveFocus();
-    await user.type(within(picker).getByLabelText("Find a category"), "gro");
+    const picker = screen.getByRole("dialog", { name: "Expense category" });
+    expect(within(picker).getByLabelText("Search categories")).toHaveFocus();
+    await user.type(within(picker).getByLabelText("Search categories"), "gro");
     expect(within(picker).getByRole("button", { name: /Groceries/ })).toBeInTheDocument();
     expect(within(picker).queryByRole("button", { name: /Food/ })).not.toBeInTheDocument();
     // The salary category is income, so it isn't offered for an expense.
     expect(within(picker).queryByRole("button", { name: /Salary/ })).not.toBeInTheDocument();
-    await user.type(within(picker).getByLabelText("New category"), "Pets");
+    await user.type(within(picker).getByLabelText("New category name"), "Pets");
     await user.click(within(picker).getByRole("button", { name: "Add category" }));
 
     await waitFor(() => {
-      expect(screen.queryByRole("dialog", { name: "Choose a category" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("dialog", { name: "Expense category" })).not.toBeInTheDocument();
     });
     expect(all).toHaveFocus();
     expect(within(form).getByRole("radio", { name: "Pets" })).toBeChecked();
@@ -245,11 +272,13 @@ describe("adding entries", () => {
     const form = await openAdd(user);
     await fill(user, form, { amount: "3" });
     await user.click(within(form).getByRole("button", { name: "All categories" }));
-    const picker = screen.getByRole("dialog", { name: "Choose a category" });
-    await user.type(within(picker).getByLabelText("New category"), "groceries");
+    const picker = screen.getByRole("dialog", { name: "Expense category" });
+    await user.click(within(picker).getByRole("button", { name: "New category" }));
+    expect(within(picker).getByLabelText("New category name")).toHaveFocus();
+    await user.type(within(picker).getByLabelText("New category name"), "groceries");
     await user.click(within(picker).getByRole("button", { name: "Add category" }));
     expect(await within(picker).findByRole("alert")).toHaveTextContent("You already have a category with this name.");
-    expect(within(picker).getByLabelText("New category")).toHaveFocus();
+    expect(within(picker).getByLabelText("New category name")).toHaveFocus();
     await user.keyboard("{Escape}");
     expect(screen.getByRole("form", { name: "Add entry" })).toBeInTheDocument();
     expect(within(form).getByLabelText("Amount (CAD)")).toHaveValue("3");

@@ -2,7 +2,8 @@
  * Activity, entry forms, pickers and entry detail (MAZ-88): specimens `activity`,
  * `activity-expenses`, `filters`, `add-expense`, `add-income`, `add-investment`, `entry-extras`,
  * `split`, `entry-detail`, `edit-entry`, `category-picker`, `account-picker`, `date-picker`,
- * `trip-picker`, `repeat-picker`, `search-empty`, `delete-entry`, `saved`. Values come from the
+ * `trip-picker`, `repeat-picker`, `search-empty`, `delete-entry`, `saved`. MAZ-175 adds the phone
+ * order, day groups, the centered empty state and the category grid. Values come from the
  * --pk-* tokens. Money stays on solid surfaces.
  */
 
@@ -143,6 +144,88 @@
 .category-dot--expected {
   box-shadow: 0 0 0 2px var(--pk-pending);
 }
+
+/* ---------- phones (iphone-activity, MAZ-175) ---------- */
+/* Type and period, then the day-grouped list; search, totals and the other filters follow it. */
+.activity-tools {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  padding-top: 16px;
+  border-top: 0.5px solid var(--pk-separator);
+}
+
+/* ---------- day groups (iphone-activity, web-activity) ---------- */
+.day-groups {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+
+.day-group {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.day-group__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 12px;
+  padding: 0 4px;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.day-group__title {
+  margin: 0;
+  font: inherit;
+}
+
+.day-group__total .money {
+  font-weight: 600;
+}
+
+.day-group__rows {
+  margin: 0;
+  padding: 4px 8px;
+  border-radius: var(--pk-r-row);
+  background: var(--pk-surface);
+  box-shadow: 0 0 0 0.5px var(--pk-separator);
+}
+
+.day-group__rows .results__row {
+  border-bottom: 0;
+}
+
+.day-group__rows .results__row + .results__row {
+  border-top: 0.5px solid var(--pk-separator);
+}
+
+/* ---------- nothing matches (iphone-search-empty) ---------- */
+/* The empty state sits in the middle of the results area, not under the status line. */
+.activity-results:has(> .state--empty) {
+  display: flex;
+  flex-direction: column;
+  min-height: min(60dvh, 520px);
+}
+
+.activity-results > .state--empty {
+  margin: auto;
+}
+
+.state__actions {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+
 
 /* ---------- chips (frequent categories) ---------- */
 .chip-row {
@@ -314,6 +397,154 @@
 .inline-create .form-field {
   flex: 1 1 200px;
 }
+
+/* ---------- category picker (iphone-category-picker, MAZ-175) ---------- */
+.category-picker {
+  gap: 18px;
+}
+
+.category-picker__search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-inline-start: 12px;
+  border-radius: var(--pk-r-field);
+  background: var(--pk-fill);
+  color: var(--pk-label-2);
+}
+
+.category-picker__search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.category-picker__search:focus-within {
+  outline: 2px solid var(--pk-tint);
+  outline-offset: 2px;
+}
+
+.category-picker__search input:focus-visible {
+  outline: none;
+}
+
+.category-picker__section {
+  display: grid;
+  gap: 8px;
+}
+
+.category-picker__heading {
+  margin: 0;
+  padding: 0 4px;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  gap: 14px 6px;
+  max-height: min(42dvh, 340px);
+  margin: 0;
+  padding: 14px 8px;
+  overflow: auto;
+  border-radius: var(--pk-r-row);
+  background: var(--pk-surface);
+  box-shadow: 0 0 0 0.5px var(--pk-separator);
+  list-style: none;
+}
+
+.category-tile {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 44px;
+  padding: 4px 2px;
+  border: 0;
+  border-radius: 14px;
+  background: none;
+  color: var(--pk-label);
+  font: inherit;
+  font-size: 0.8125rem;
+  text-align: center;
+  cursor: pointer;
+}
+
+/* The category's color fills the tile; the glyph is white on it, as on the card. */
+.category-tile__icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: currentColor;
+}
+
+.category-tile__icon .icon {
+  color: #fff;
+}
+
+.category-tile__name {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.category-tile:hover .category-tile__icon {
+  filter: brightness(1.06);
+}
+
+.category-tile--on .category-tile__icon {
+  box-shadow: 0 0 0 3px var(--pk-surface), 0 0 0 5px var(--pk-tint);
+}
+
+.category-tile--on .category-tile__name {
+  font-weight: 700;
+}
+
+.category-tile--new .category-tile__icon {
+  border: 1.5px dashed var(--pk-separator);
+  background: none;
+  color: var(--pk-label-2);
+}
+
+.category-tile--new .category-tile__icon .icon {
+  color: var(--pk-label-2);
+}
+
+@media (forced-colors: active) {
+  .category-tile--on .category-tile__icon {
+    outline: 3px solid Highlight;
+  }
+}
+
+/* ---------- callouts ---------- */
+/* Expected income (MAZ-136, iphone-add-income): the clock and the words say it, amber backs them. */
+.callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 4px 0 0;
+  padding: 12px 14px;
+  border-radius: var(--pk-r-row);
+  color: var(--pk-label);
+  font-size: 0.875rem;
+}
+
+.callout--pending {
+  background: var(--pk-pending-soft);
+}
+
+.callout--pending > .icon {
+  flex: none;
+  color: var(--pk-pending);
+}
+
 
 /* ---------- entry detail ---------- */
 .entry-detail {

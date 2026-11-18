@@ -18,6 +18,7 @@ import {
   frequentCategories,
   futureIncomeNote,
   inlineCategories,
+  mostUsedCategories,
   kindLabels,
   newDraft,
   withKind,
@@ -37,7 +38,8 @@ export type EntryTarget = { kind: "new"; entryKind?: Kind; tripId?: string } | {
 
 const KIND_HINT: Record<Kind, string> = {
   expense: "Money you spent. Split it to count only your share.",
-  income: "Money you received.",
+  // MAZ-136, `iphone-add-income`: said before a date is picked, so the rule is known up front.
+  income: "Money you received. Pay dated after today shows as expected: it counts toward Projected until its day, not toward Left to spend.",
   investment: "Money you set aside. It isn't spending, but it comes out of what's left this month.",
 };
 
@@ -433,8 +435,9 @@ function EntryForm({
             <input id={ids.date} type="date" min="2000-01-01" max="2100-12-31" value={draft.date} onChange={(event) => { set("date", event.currentTarget.value); }} {...invalid("date")} />
             {errorText("date")}
             {futureNote ? (
-              <p className="note" role="status">
-                <Icon name="time" size={16} /> {futureNote}
+              <p className="callout callout--pending" role="status">
+                <Icon name="time" size={18} />
+                <span>{futureNote}</span>
               </p>
             ) : null}
           </div>
@@ -543,6 +546,7 @@ function EntryForm({
         <CategoryPickerDialog
           kind={draft.kind}
           categories={categories}
+          mostUsed={mostUsedCategories(ledger, draft.kind)}
           selected={draft.categoryId}
           save={writer.save}
           onSelect={(id) => {
