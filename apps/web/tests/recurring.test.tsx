@@ -31,14 +31,14 @@ const rule = (id: string, title: string, extra: Record<string, unknown> = {}) =>
   ...extra,
 });
 
-function ledgerServer(initial: Partial<Wire> = {}) {
+function ledgerServer(initial: Partial<Wire> = {}, other?: (url: string) => Response | undefined) {
   const state = {
     revision: 3,
     ledger: { ...emptyWireLedger(), categories, accounts: [{ id: "visa", name: "Visa", type: "credit" }], ...initial } as Wire,
     down: false,
   };
   const fetchMock = stubServer((url, init) => {
-    if (url !== "/api/ledger") return undefined;
+    if (url !== "/api/ledger") return other?.(url);
     if (state.down) throw new TypeError("Failed to fetch");
     if (init?.method === "PUT") {
       const body = bodyOf(init) as { revision: number; ledger: Wire };
@@ -86,12 +86,57 @@ describe("recurring schedules", () => {
     renderApp("/recurring");
     expect(await screen.findByRole("heading", { level: 1, name: "Recurring" })).toBeInTheDocument();
     const income = await screen.findByRole("list", { name: "Income schedules" });
-    expect(within(income).getByRole("button")).toHaveTextContent(/Payday.*Monthly · next Nov 15.*\$2,250\.00 income/);
+    expect(within(income).getByRole("button")).toHaveTextContent(/Payday.*Monthly · next Nov 15.*\+\$2,250\.00 income/);
     const expenses = screen.getByRole("list", { name: "Expense schedules" });
     const rows = within(expenses).getAllByRole("button");
-    expect(rows.map((row) => row.textContent)).toEqual([expect.stringMatching(/^Internet.*next Nov 18 · Visa/), expect.stringMatching(/^Gym.*Paused · monthly.*Paused/)]);
+    expect(rows.map((row) => row.textContent)).toEqual([expect.stringMatching(/^Internet.*next Nov 18 · Visa-\$65\.00/), expect.stringMatching(/^Gym.*Paused · monthly.*Paused/)]);
     expect(screen.getByRole("list", { name: "Investment schedules" })).toHaveTextContent("TFSA contribution");
     expect(screen.getByText(/3 active, 1 paused/)).toBeInTheDocument();
+  });
+
+  it("lists shared schedules the account is part of with the expenses, marked Shared, with its share", async () => {
+    const JOINED = Date.UTC(2026, 0, 5, 12);
+    const household = { id: "h1", name: "Maison", currency: "CAD", creatorId: "u-alex", createdAt: JOINED, memberCount: 2 };
+    const members = [
+      { userId: "u-alex", email: "alex@example.test", joinedAt: JOINED, joinedOn: "2026-01-05" },
+      { userId: "u-bea", email: "bea@example.test", joinedAt: JOINED, joinedOn: "2026-01-05" },
+    ];
+    const sharedRule = (id: string, title: string, extra: Record<string, unknown> = {}) => ({
+      id,
+      householdId: "h1",
+      title,
+      totalCents: 1600,
+      payerUserId: "u-bea",
+      splitMode: "equal",
+      category: { name: "Fun", icon: "film-outline", color: "#5E5CE6" },
+      note: "",
+      nextDate: "2026-11-20",
+      frequency: "monthly",
+      anchorDay: 20,
+      active: true,
+      revision: 1,
+      ...extra,
+    });
+    ledgerServer({ recurring: [rule("net", "Internet", { accountId: "visa" })] }, (url) => {
+      if (url === "/api/households") return json({ households: [household] });
+      if (url === "/api/households/h1") return json({ household, members });
+      if (url === "/api/households/h1/recurring") return json({ rules: [sharedRule("s1", "Streaming"), sharedRule("s2", "Cleaner", { active: false, totalCents: 6000 })] });
+      return undefined;
+    });
+    renderApp("/recurring");
+    const expenses = await screen.findByRole("list", { name: "Expense schedules" });
+    await waitFor(() => {
+      expect(within(expenses).getAllByRole("listitem")).toHaveLength(3);
+    });
+    expect(within(expenses).getAllByRole("listitem").map((row) => row.textContent)).toEqual([
+      expect.stringMatching(/^Internet.*next Nov 18/),
+      expect.stringMatching(/^Streaming.*Monthly · next Nov 20 · Maison-\$8\.00your share.*Shared/),
+      expect.stringMatching(/^Cleaner.*Paused · monthly · Maison-\$30\.00your share.*Shared.*Paused/),
+    ]);
+    // A shared schedule opens its household, where it's edited.
+    expect(within(expenses).getByRole("link", { name: /^Streaming/ })).toHaveAttribute("href", "/households/h1");
+    expect(screen.getByText(/2 active, 1 paused/)).toBeInTheDocument();
+    expect(screen.getByText(/Shared schedules open their household and count only your share/)).toBeInTheDocument();
   });
 
   it("shows an empty state and adds a backdated monthly schedule, recording missed dates once", async () => {
