@@ -44,22 +44,7 @@ public abstract class ReceiptTextTestBase(ApiFixture fixture) : SearchTestBase(f
         string name,
         string mime,
         byte[] content
-    )
-    {
-        using var request = Authorized(HttpMethod.Post, "/api/receipts", bearer: token);
-        request.Content = JsonContent.Create(
-            new
-            {
-                name,
-                mime,
-                base64 = Convert.ToBase64String(content),
-            }
-        );
-        using var response = await Client.SendAsync(request, Ct);
-        var text = await response.Content.ReadAsStringAsync(Ct);
-        response.StatusCode.ShouldBe(HttpStatusCode.Created, text);
-        return JsonDocument.Parse(text).RootElement.GetProperty("id").GetString()!;
-    }
+    ) => (await UploadReceiptFileAsync(token, name, mime, content)).GetProperty("id").GetString()!;
 
     // The upload's storage path (encrypted file, receipt row, queued text) without HTTP,
     // for synthetic photos larger than the shared host's small body limit.

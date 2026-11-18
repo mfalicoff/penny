@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Penny API",
-    "version": "1.5.0",
+    "version": "2.0.0",
     "description": "The HTTP API that the .NET backend serves and the iOS and web apps call. See docs/reference/.",
     "license": {
       "name": "MIT",
@@ -856,6 +856,21 @@
       "post": {
         "summary": "Upload receipt",
         "operationId": "postApiReceipts",
+        "description": "The request body is the file itself, 1 byte to 10 MiB (contract 2.0.0, MAZ-131). Content-Type is the file's type (case-insensitive, parameters ignored); Content-Disposition carries its name. A base64 JSON body from an older app is refused with 400 \"Update Penny to upload receipts.\".",
+        "parameters": [
+          {
+            "name": "Content-Disposition",
+            "in": "header",
+            "required": true,
+            "description": "The file's name as an RFC 8187 filename* parameter: attachment; filename*=UTF-8''<percent-encoded UTF-8>. The decoded name is 1-255 UTF-16 units of storable text.",
+            "schema": {
+              "type": "string",
+              "examples": [
+                "attachment; filename*=UTF-8''Re%C3%A7u%20mars.pdf"
+              ]
+            }
+          }
+        ],
         "responses": {
           "201": {
             "description": "Success",
@@ -868,7 +883,7 @@
             }
           },
           "400": {
-            "description": "Invalid request.",
+            "description": "Missing or invalid name or type (\"Choose a photo or PDF smaller than 10 MB.\"), a file that is empty, over 10 MiB or does not match its type's signature (\"This file is not a supported photo or PDF, or exceeds 10 MB.\"), or a JSON body from an app older than contract 2.0.0 (\"Update Penny to upload receipts.\").",
             "content": {
               "application/json": {
                 "schema": {
@@ -898,7 +913,7 @@
             }
           },
           "413": {
-            "description": "JSON request body too large.",
+            "description": "Request body over the API-wide limit (Backend__MaxRequestBodyBytes, 20 MB).",
             "content": {
               "application/json": {
                 "schema": {
@@ -931,9 +946,46 @@
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": {
+            "application/pdf": {
               "schema": {
-                "$ref": "#/components/schemas/ReceiptUpload"
+                "type": "string",
+                "contentMediaType": "application/pdf"
+              }
+            },
+            "image/jpeg": {
+              "schema": {
+                "type": "string",
+                "contentMediaType": "image/jpeg"
+              }
+            },
+            "image/png": {
+              "schema": {
+                "type": "string",
+                "contentMediaType": "image/png"
+              }
+            },
+            "image/webp": {
+              "schema": {
+                "type": "string",
+                "contentMediaType": "image/webp"
+              }
+            },
+            "image/gif": {
+              "schema": {
+                "type": "string",
+                "contentMediaType": "image/gif"
+              }
+            },
+            "image/heic": {
+              "schema": {
+                "type": "string",
+                "contentMediaType": "image/heic"
+              }
+            },
+            "image/heif": {
+              "schema": {
+                "type": "string",
+                "contentMediaType": "image/heif"
               }
             }
           }
@@ -5485,38 +5537,6 @@
         "required": [
           "revision",
           "ledger"
-        ]
-      },
-      "ReceiptUpload": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 255
-          },
-          "mime": {
-            "type": "string",
-            "enum": [
-              "application/pdf",
-              "image/jpeg",
-              "image/png",
-              "image/webp",
-              "image/gif",
-              "image/heic",
-              "image/heif"
-            ]
-          },
-          "base64": {
-            "type": "string",
-            "maxLength": 14680064,
-            "contentEncoding": "base64"
-          }
-        },
-        "required": [
-          "name",
-          "mime",
-          "base64"
         ]
       },
       "HouseholdInput": {

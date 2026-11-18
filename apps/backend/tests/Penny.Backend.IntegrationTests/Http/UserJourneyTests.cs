@@ -240,17 +240,11 @@ public sealed class UserJourneyTests(ApiFixture fixture, FakeOidcProvider provid
 
     private async Task<string> UploadReceiptAsync(string token, byte[] content)
     {
-        var receipt = await ExpectAsync(
-            HttpMethod.Post,
-            "/api/receipts",
+        var receipt = await UploadReceiptFileAsync(
             token,
-            HttpStatusCode.Created,
-            new
-            {
-                name = "Groceries.pdf",
-                mime = "application/pdf",
-                base64 = Convert.ToBase64String(content),
-            }
+            "Groceries.pdf",
+            "application/pdf",
+            content
         );
         return Id(receipt);
     }

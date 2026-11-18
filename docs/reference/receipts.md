@@ -6,7 +6,7 @@ Receipt upload and download (MAZ-60) run on the encrypted file store ([receipt s
 
 | Operation | Request | Success |
 | --- | --- | --- |
-| `postApiReceipts` | `POST /api/receipts` with JSON `{name, mime, base64}` | `201 {id, name, mime, uri}`; `id` is 32 lowercase hex characters, `uri` is `/api/receipts/<id>` |
+| `postApiReceipts` | `POST /api/receipts` with the file as the body, `Content-Type: <mime>` and `Content-Disposition: attachment; filename*=UTF-8''<name>` | `201 {id, name, mime, uri}`; `id` is 32 lowercase hex characters, `uri` is `/api/receipts/<id>` |
 | `getApiReceiptsId` | `GET /api/receipts/{id}` | `200` with the original bytes |
 
 Both require a session (cookie or bearer); `POST` also passes the origin check for non-GET requests. The `uri` is the same path a ledger entry or shared expense returns for the receipt, so existing receipt URLs keep working.
@@ -17,18 +17,18 @@ Both require a session (cookie or bearer); `POST` also passes the origin check f
 | --- | --- |
 | Request body at most `Backend__MaxRequestBodyBytes` (20 MB); a declared `Content-Length` is checked first, a chunked body while it is read | `413 The upload is too large.` |
 | Origin, then session | `403`, `401 Please sign in to continue.` |
-| JSON syntax; a top-level scalar is malformed too | `400 Invalid JSON.` |
-| Schema (zod `receiptUploadSchema`): a JSON object whose `name` is a string of 1–255 UTF-16 units, `mime` is one of `application/pdf`, `image/jpeg`, `image/png`, `image/webp`, `image/gif`, `image/heic`, `image/heif` (exact, case-sensitive), and `base64` is at most 14,680,064 characters of `[A-Za-z0-9+/]` followed by at most two `=`. Unknown keys are ignored and the last duplicate key wins. A non-JSON content type or an empty body fails here | `400 Choose a photo or PDF smaller than 10 MB.` |
-| Decoded size 1 byte to 10 MiB (10,485,760 bytes) and the signature of the declared type: `%PDF-`; JPEG `FF D8 FF`; PNG's 8-byte signature; `GIF87a`/`GIF89a`; WebP `RIFF`…`WEBP` in the first 12 bytes; HEIC/HEIF `ftyp` at offset 4 | `400 This file is not a supported photo or PDF, or exceeds 10 MB.` |
+| A JSON body (`Content-Type: application/json`): the base64 upload of apps from before contract 2.0.0 | `400 Update Penny to upload receipts.` |
+| Headers: `Content-Disposition` carries exactly one `filename*=UTF-8''…` parameter whose percent-decoded bytes are valid UTF-8 and give a storable name of 1–255 UTF-16 units; `Content-Type` is one of `application/pdf`, `image/jpeg`, `image/png`, `image/webp`, `image/gif`, `image/heic`, `image/heif` (case-insensitive, parameters ignored, stored lowercase). The disposition type and a plain `filename` parameter are ignored | `400 Choose a photo or PDF smaller than 10 MB.` |
+| Body size 1 byte to 10 MiB (10,485,760 bytes) and the signature of the declared type: `%PDF-`; JPEG `FF D8 FF`; PNG's 8-byte signature; `GIF87a`/`GIF89a`; WebP `RIFF`…`WEBP` in the first 12 bytes; HEIC/HEIF `ftyp` at offset 4 | `400 This file is not a supported photo or PDF, or exceeds 10 MB.` |
 
-Base64 decoding is lenient for text that passes the pattern: padding is optional, a final lone character is ignored and unused low bits are dropped. The pattern rejects whitespace, line breaks and the URL-safe alphabet.
+The body is the file itself, read once into a buffer (MAZ-131). The buffer starts at the declared `Content-Length` but at most 1 MiB and grows as bytes arrive, so a slow client that declares 10 MiB cannot hold 10 MiB of server memory before sending it; this endpoint has no request timeout. A body over 10 MiB but within the request limit is read to the end and discarded before the 400, so clients that send the whole body before reading the response see the message rather than a reset. The name accepts the characters JavaScript `encodeURIComponent` leaves literal (`' ( ) * !`) as well as their RFC 8187 escapes. There is no multipart or resumable upload.
 
-A base64 string of 14 MiB characters decodes to about 10.5 MB, so the 10 MiB decoded check is the effective limit; the JSON envelope keeps the request under 20 MB. Clients send the whole file in one JSON request: there is no multipart or resumable upload.
+Before contract 2.0.0 the body was JSON `{name, mime, base64}` with Node-style lenient base64; [legacy compatibility](legacy-compatibility.md) records why it changed and what it measured.
 
 ### Download
 
 - `Content-Type` is the stored MIME type; `Content-Length` is the plaintext size.
-- `Content-Disposition: inline; filename*=UTF-8''<name>` where `<name>` is JavaScript `encodeURIComponent` of the uploaded name (unreserved `A–Z a–z 0–9 - _ . ! ~ * ' ( )` kept, every other UTF-8 byte as uppercase `%XX`).
+- `Content-Disposition: inline; filename*=UTF-8''<name>` where `<name>` is the RFC 8187 encoding of the uploaded name: RFC 3986 unreserved characters (`A–Z a–z 0–9 - . _ ~`) kept, every other UTF-8 byte as uppercase `%XX`.
 - `Content-Security-Policy: default-src 'none'; sandbox`, plus the API-wide `Cache-Control: no-store` and `X-Content-Type-Options: nosniff`.
 - A receipt that does not exist or that the caller may not read is `404 Receipt not found.`, with no difference between the two. A URL path containing an encoded NUL is refused by Kestrel with `400` before routing.
 
@@ -79,11 +79,11 @@ Receipt metadata lives in PostgreSQL and the bytes on the filesystem, so a backu
 ## Proxies and timeouts
 
 - Allow request bodies of at least 20 MB on the reverse proxy for `/api/receipts` (nginx `client_max_body_size 20m`; Caddy and Traefik do not limit bodies by default). A proxy limit below that turns large uploads into the proxy's own 413 page instead of the JSON error.
-- The receipt operations are exempt from the 30-second `Backend__RequestTimeoutSeconds` deadline, because a 20 MB body on a slow mobile link takes longer. Kestrel's minimum request and response data rates (240 bytes/s after a 5-second grace) still end stalled transfers, and database commands keep their own timeout. Proxy read/send timeouts should be at least as generous as the slowest expected upload.
+- The receipt operations are exempt from the 30-second `Backend__RequestTimeoutSeconds` deadline, because a 10 MiB file on a slow mobile link takes longer. Kestrel's minimum request and response data rates (240 bytes/s after a 5-second grace) still end stalled transfers, and database commands keep their own timeout. Proxy read/send timeouts should be at least as generous as the slowest expected upload.
 
 ## Clients
 
-Clients fetch `/api/receipts/<id>` with their session and display the bytes locally; they do not depend on `Content-Disposition`, CSP or HTTP caching. HEIC/HEIF previews depend on the platform: iOS renders them, most desktop browsers do not and show the download fallback. The browser app (MAZ-94) uses its session cookie: it checks the file against the rules above before uploading, sends the JSON body over `XMLHttpRequest` for upload progress, and previews photos from a blob URL and PDFs with pdf.js; see [browser receipts](../web/receipts.md). The native app (MAZ-78) applies the same checks, uploads with progress over its bearer session and previews from a protected temporary file; see [native receipts](../ios/receipts.md).
+Clients fetch `/api/receipts/<id>` with their session and display the bytes locally; they do not depend on `Content-Disposition`, CSP or HTTP caching. HEIC/HEIF previews depend on the platform: iOS renders them, most desktop browsers do not and show the download fallback. The browser app (MAZ-94) uses its session cookie: it checks the file against the rules above before uploading, sends the file as the body over `XMLHttpRequest` for upload progress, and previews photos from a blob URL and PDFs with pdf.js; see [browser receipts](../web/receipts.md). The native app (MAZ-78) applies the same checks, uploads with progress over its bearer session and previews from a protected temporary file; see [native receipts](../ios/receipts.md).
 
 ## Behavior notes
 
@@ -93,14 +93,14 @@ Clients fetch `/api/receipts/<id>` with their session and display the bytes loca
 
 ## Tests
 
-- `ReceiptFormatTests` (unit): the base64 pattern, lenient decoding, every signature and size boundary, and `encodeURIComponent` parity.
+- `ReceiptFormatTests` (unit): every signature and size boundary, the upload name header (RFC 8187 decoding, strict UTF-8, repeated or malformed parameters) and the download encoding.
 - `ReceiptFileStoreTests` (unit, MAZ-94): AES-GCM round trip, fresh salts, nonces and paths per file, tampered ciphertext, a row claiming another owner or id (associated data), files swapped between rows, a different master key and an unknown `encryption_version` all fail to open.
 - `ReceiptTests` (real HTTP and PostgreSQL):
   - every format round-trips with SHA-256 checksums and ciphertext at rest;
   - exact download headers;
-  - unpadded and dangling base64;
-  - every schema/signature failure with its message and nothing stored;
-  - the 10 MiB decoded, 14 MiB text and 20 MB request limits on a production-sized host;
+  - `encodeURIComponent`-style names, media type case and parameters;
+  - every header/signature failure with its message and nothing stored, and the outdated-app JSON body;
+  - the 10 MiB file limit (declared and chunked) and the 20 MB request limit on a production-sized host;
   - unauthorized reads;
   - shared access across membership changes and expense deletion;
   - cross-account attachment;

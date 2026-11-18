@@ -68,11 +68,13 @@ public sealed partial class ReceiptTests(ApiFixture fixture) : ReceiptTestBase(f
 
         using var response = await DownloadAsync(token, id);
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        // encodeURIComponent keeps ! * ' ( ) ~ and escapes spaces and UTF-8 bytes.
+        // RFC 8187: only unreserved characters stay literal, UTF-8 bytes as %XX.
         response
             .Content.Headers.GetValues("Content-Disposition")
             .Single()
-            .ShouldBe("inline; filename*=UTF-8''Caf%C3%A9%20%E6%9D%B1%E4%BA%AC%20(1)!*'~.pdf");
+            .ShouldBe(
+                "inline; filename*=UTF-8''Caf%C3%A9%20%E6%9D%B1%E4%BA%AC%20%281%29%21%2A%27~.pdf"
+            );
         response
             .Headers.GetValues("Content-Security-Policy")
             .Single()
@@ -84,160 +86,89 @@ public sealed partial class ReceiptTests(ApiFixture fixture) : ReceiptTestBase(f
     }
 
     [Fact]
-    public async Task whenBase64IsUnpaddedOrHasDanglingBits_Upload_ShouldDecodeLikeNode()
+    public async Task whenHeadersUseOtherValidForms_Upload_ShouldStoreTheNameAndType()
     {
         var token = await RegisterAsync("owner@example.test");
-        // 1024 bytes encode to 1368 characters ending in "=": drop the padding.
-        var content = Pdf(1024);
-        var unpadded = Convert.ToBase64String(content).TrimEnd('=');
-        unpadded.Length.ShouldBe(1366);
+        // encodeURIComponent leaves ' ( ) * ! literal; media types are case-insensitive
+        // and their parameters are ignored.
         using var response = await UploadAsync(
             token,
-            new
-            {
-                name = "a.pdf",
-                mime = "application/pdf",
-                base64 = unpadded,
-            }
+            "attachment; filename*=UTF-8''Re%C3%A7u%20(1)!*'.pdf",
+            "Application/PDF; charset=binary",
+            Pdf()
         );
-        response.StatusCode.ShouldBe(HttpStatusCode.Created);
-        var id = JsonDocument
-            .Parse(await response.Content.ReadAsStringAsync(Ct))
-            .RootElement.GetProperty("id")
-            .GetString()!;
-        (await DownloadedAsync(token, id)).ShouldBe(content);
-
-        // A dangling sixth-bit character is ignored, as Buffer.from does.
-        var exact = Pdf(1026);
-        var dangling = Convert.ToBase64String(exact) + "Q";
-        using var withDangling = await UploadAsync(
-            token,
-            new
-            {
-                name = "b.pdf",
-                mime = "application/pdf",
-                base64 = dangling,
-            }
-        );
-        withDangling.StatusCode.ShouldBe(HttpStatusCode.Created);
-        var danglingId = JsonDocument
-            .Parse(await withDangling.Content.ReadAsStringAsync(Ct))
-            .RootElement.GetProperty("id")
-            .GetString()!;
-        (await DownloadedAsync(token, danglingId)).ShouldBe(exact);
+        var text = await response.Content.ReadAsStringAsync(Ct);
+        response.StatusCode.ShouldBe(HttpStatusCode.Created, text);
+        var uploaded = JsonDocument.Parse(text).RootElement;
+        uploaded.GetProperty("name").GetString().ShouldBe("Reçu (1)!*'.pdf");
+        uploaded.GetProperty("mime").GetString().ShouldBe("application/pdf");
+        (await DownloadedAsync(token, uploaded.GetProperty("id").GetString()!)).ShouldBe(Pdf());
     }
 
     [Fact]
     public async Task whenUploadIsInvalid_Upload_ShouldRejectWithContractMessagesAndStoreNothing()
     {
         var token = await RegisterAsync("owner@example.test");
-        var pdf = Convert.ToBase64String(Pdf());
-        object Body(
-            string name = "a.pdf",
-            string mime = "application/pdf",
-            string? base64 = null
-        ) =>
-            new
-            {
-                name,
-                mime,
-                base64 = base64 ?? pdf,
-            };
+        var pdf = Pdf();
 
-        // Schema failures: missing, mistyped or out-of-range fields.
+        // Header failures: a missing, malformed or out-of-range name, or a type that is
+        // not an accepted receipt type.
         foreach (
-            var body in new object[]
+            var (disposition, mime) in new (string?, string?)[]
             {
-                new { },
-                new { mime = "application/pdf", base64 = pdf },
-                new { name = "a.pdf", base64 = pdf },
-                new { name = "a.pdf", mime = "application/pdf" },
-                new
-                {
-                    name = 1,
-                    mime = "application/pdf",
-                    base64 = pdf,
-                },
-                new
-                {
-                    name = "a.pdf",
-                    mime = "application/pdf",
-                    base64 = 1,
-                },
-                Body(name: ""),
-                Body(name: new string('n', 256)),
-                Body(mime: "image/svg+xml"),
-                Body(mime: "APPLICATION/PDF"),
-                Body(base64: ""),
-                Body(base64: "===="),
-                Body(base64: pdf + "="),
-                Body(base64: "JVBE Ri0x"),
-                Body(base64: "JVBERi0x\n"),
-                Body(base64: "JVBERi0x-_"),
-                Body(base64: "JV=BERi0x"),
+                (null, "application/pdf"),
+                ("attachment", "application/pdf"),
+                ("attachment; filename=a.pdf", "application/pdf"),
+                ("attachment; filename*=UTF-8''a b.pdf", "application/pdf"),
+                ("attachment; filename*=ISO-8859-1''a.pdf", "application/pdf"),
+                (Disposition(""), "application/pdf"),
+                (Disposition(new string('n', 256)), "application/pdf"),
+                // NUL is not storable; an encoded lone surrogate is not UTF-8.
+                ("attachment; filename*=UTF-8''%00.pdf", "application/pdf"),
+                ("attachment; filename*=UTF-8''%ED%A0%80.pdf", "application/pdf"),
+                (Disposition("a.pdf"), null),
+                (Disposition("a.pdf"), "image/svg+xml"),
+                (Disposition("a.pdf"), "application/octet-stream"),
+                (Disposition("a.pdf"), "not a type"),
             }
         )
             await ShouldFailAsync(
-                UploadAsync(token, body),
+                UploadAsync(token, disposition, mime, pdf),
                 HttpStatusCode.BadRequest,
                 ReceiptService.InvalidUpload
             );
-        // A name of 255 UTF-16 units is accepted; a lone surrogate is not storable.
-        (await UploadedAsync(token, new string('n', 255), "application/pdf", Pdf()))
+        // A name of 255 UTF-16 units is accepted.
+        (await UploadedAsync(token, new string('n', 255), "application/pdf", pdf))
             .GetProperty("name")
             .GetString()!
             .Length.ShouldBe(255);
+        // An app from before MAZ-131 sending the base64 JSON body is told to update.
         await ShouldFailAsync(
             UploadRawAsync(
                 token,
-                $$"""{"name":"\ud800.pdf","mime":"application/pdf","base64":"{{pdf}}"}"""
+                $$"""{"name":"a.pdf","mime":"application/pdf","base64":"{{Convert.ToBase64String(pdf)}}"}"""
             ),
             HttpStatusCode.BadRequest,
-            ReceiptService.InvalidUpload
-        );
-        // Non-JSON bodies are "no body"; malformed JSON is the parser's 400.
-        await ShouldFailAsync(
-            UploadRawAsync(token, "name=a.pdf", "application/x-www-form-urlencoded"),
-            HttpStatusCode.BadRequest,
-            ReceiptService.InvalidUpload
-        );
-        await ShouldFailAsync(
-            UploadRawAsync(token, "[]"),
-            HttpStatusCode.BadRequest,
-            ReceiptService.InvalidUpload
-        );
-        await ShouldFailAsync(
-            UploadRawAsync(token, "{\"name\":"),
-            HttpStatusCode.BadRequest,
-            "Invalid JSON."
-        );
-        await ShouldFailAsync(
-            UploadRawAsync(token, "\"a.pdf\""),
-            HttpStatusCode.BadRequest,
-            "Invalid JSON."
+            ReceiptService.OutdatedClient
         );
 
-        // Decoded content: signatures must match the declared type and size must be
-        // 1 byte to 10 MB.
+        // Content: signatures must match the declared type and size must be 1 byte to
+        // 10 MiB.
         var png = EveryFormat().Single(format => format.Mime == "image/png").Content;
         foreach (
-            var body in new[]
+            var (mime, content) in new (string, byte[])[]
             {
-                Body(base64: Convert.ToBase64String("not a pdf"u8.ToArray())),
-                Body(mime: "image/jpeg", base64: Convert.ToBase64String(png)),
-                Body(mime: "image/gif", base64: Convert.ToBase64String("GIF88a----"u8.ToArray())),
-                Body(mime: "image/webp", base64: Convert.ToBase64String("RIFF0000WEB"u8.ToArray())),
-                Body(
-                    mime: "image/heic",
-                    base64: Convert.ToBase64String("0000ftyx0000"u8.ToArray())
-                ),
-                Body(mime: "image/png", base64: Convert.ToBase64String(png.AsSpan(0, 7).ToArray())),
-                Body(base64: "Q"),
-                Body(base64: "JQ=="),
+                ("application/pdf", "not a pdf"u8.ToArray()),
+                ("image/jpeg", png),
+                ("image/gif", "GIF88a----"u8.ToArray()),
+                ("image/webp", "RIFF0000WEB"u8.ToArray()),
+                ("image/heic", "0000ftyx0000"u8.ToArray()),
+                ("image/png", png.AsSpan(0, 7).ToArray()),
+                ("application/pdf", []),
             }
         )
             await ShouldFailAsync(
-                UploadAsync(token, body),
+                UploadAsync(token, Disposition("a.bin"), mime, content),
                 HttpStatusCode.BadRequest,
                 ReceiptService.UnsupportedFile
             );
@@ -245,14 +176,14 @@ public sealed partial class ReceiptTests(ApiFixture fixture) : ReceiptTestBase(f
         (await CountAsync("SELECT count(*) FROM penny.receipts")).ShouldBe(1L);
         StoredFiles().Count.ShouldBe(1);
         await ShouldFailAsync(
-            UploadAsync(null, Body()),
+            UploadAsync(null, Disposition("a.pdf"), "application/pdf", pdf),
             HttpStatusCode.Unauthorized,
             AuthService.SignInRequired
         );
     }
 
     [Fact]
-    public async Task whenUploadsApproachTheLimits_Upload_ShouldEnforceDecodedAndRequestSizes()
+    public async Task whenUploadsApproachTheLimits_Upload_ShouldEnforceFileAndRequestSizes()
     {
         // The production request limit (20 MB); the shared host uses 64 KB.
         await using var factory = new TestApiFactory(
@@ -279,45 +210,36 @@ public sealed partial class ReceiptTests(ApiFixture fixture) : ReceiptTestBase(f
             Sha256(await download.Content.ReadAsByteArrayAsync(Ct)).ShouldBe(Sha256(largest));
         }
 
+        // One byte over the file limit, with a declared length and chunked: the body is
+        // read to the end and refused with the file message.
+        var larger = Pdf(ReceiptFormat.MaxBytes + 1);
         await ShouldFailAsync(
-            UploadAsync(
-                token,
-                new
-                {
-                    name = "too-large.pdf",
-                    mime = "application/pdf",
-                    base64 = Convert.ToBase64String(Pdf(ReceiptFormat.MaxBytes + 1)),
-                },
-                client
-            ),
+            UploadAsync(token, Disposition("too-large.pdf"), "application/pdf", larger, client),
             HttpStatusCode.BadRequest,
             ReceiptService.UnsupportedFile
         );
-        // Base64 text beyond 14 MiB characters fails the schema before decoding.
-        await ShouldFailAsync(
-            UploadAsync(
-                token,
-                new
-                {
-                    name = "too-long.pdf",
-                    mime = "application/pdf",
-                    base64 = "JVBE" + new string('A', ReceiptFormat.MaxBase64Length - 3),
-                },
-                client
-            ),
-            HttpStatusCode.BadRequest,
-            ReceiptService.InvalidUpload
-        );
+        using (var chunked = Authorized(HttpMethod.Post, "/api/receipts", bearer: token))
+        {
+            chunked.Headers.TransferEncodingChunked = true;
+            chunked.Content = new StreamContent(new MemoryStream(larger));
+            chunked.Content.Headers.ContentType = new("application/pdf");
+            chunked.Content.Headers.TryAddWithoutValidation(
+                "Content-Disposition",
+                Disposition("chunked.pdf")
+            );
+            await ShouldFailAsync(
+                client.SendAsync(chunked, Ct),
+                HttpStatusCode.BadRequest,
+                ReceiptService.UnsupportedFile
+            );
+        }
         // A body over the request limit is refused before it is read.
         await ShouldFailAsync(
             UploadAsync(
                 token,
-                new
-                {
-                    name = "huge.pdf",
-                    mime = "application/pdf",
-                    base64 = new string('A', 20 * 1024 * 1024),
-                },
+                Disposition("huge.pdf"),
+                "application/pdf",
+                Pdf(20 * 1024 * 1024 + 1),
                 client
             ),
             HttpStatusCode.RequestEntityTooLarge,
@@ -491,15 +413,7 @@ public sealed partial class ReceiptTests(ApiFixture fixture) : ReceiptTestBase(f
         var token = await RegisterAsync("owner@example.test");
         await Fixture.SqlAsync("REVOKE INSERT ON penny.receipts FROM penny_runtime", Ct);
         await ShouldFailAsync(
-            UploadAsync(
-                token,
-                new
-                {
-                    name = "a.pdf",
-                    mime = "application/pdf",
-                    base64 = Convert.ToBase64String(Pdf()),
-                }
-            ),
+            UploadAsync(token, Disposition("a.pdf"), "application/pdf", Pdf()),
             HttpStatusCode.InternalServerError,
             GenericFailure
         );
@@ -516,15 +430,7 @@ public sealed partial class ReceiptTests(ApiFixture fixture) : ReceiptTestBase(f
         try
         {
             await ShouldFailAsync(
-                UploadAsync(
-                    token,
-                    new
-                    {
-                        name = "a.pdf",
-                        mime = "application/pdf",
-                        base64 = Convert.ToBase64String(Pdf()),
-                    }
-                ),
+                UploadAsync(token, Disposition("a.pdf"), "application/pdf", Pdf()),
                 HttpStatusCode.InternalServerError,
                 GenericFailure
             );

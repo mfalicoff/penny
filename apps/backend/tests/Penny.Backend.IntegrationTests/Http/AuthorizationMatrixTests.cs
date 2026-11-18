@@ -250,17 +250,11 @@ public sealed class AuthorizationMatrixTests(ApiFixture fixture) : SharedRecurre
             dee.Token,
             HttpStatusCode.OK
         );
-        var receipt = await ExpectAsync(
-            HttpMethod.Post,
-            "/api/receipts",
+        var receipt = await UploadReceiptFileAsync(
             alex.Token,
-            HttpStatusCode.Created,
-            new
-            {
-                name = "Private.pdf",
-                mime = "application/pdf",
-                base64 = Convert.ToBase64String("%PDF-1.7\n"u8.ToArray()),
-            }
+            "Private.pdf",
+            "application/pdf",
+            "%PDF-1.7\n"u8.ToArray()
         );
         return new(home, Id(expense), Id(rule), sam.UserId, Id(receipt), dee.Token);
     }

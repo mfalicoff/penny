@@ -38,7 +38,7 @@ Each folder holds one kind of document:
 ## Architecture and API reference
 
 - [Architecture decisions](reference/architecture.md): SwiftUI/TanStack/.NET boundaries, calculation and conflict ownership, and redesign scope.
-- [API reference](reference/api-reference.md): the wire contract in `contracts/openapi.json`, transport, identity, errors and revision rules. The other files in [`reference/`](reference/) document each area of the .NET API: authentication, ledger, households, shared expenses, recurrence, settlement, receipts, push, search, PostgreSQL storage, the shared TypeScript domain rules, the redesign baseline and the full-stack test environment.
+- [API reference](reference/api-reference.md): the wire contract in `contracts/openapi.json`, transport, identity, errors and revision rules. The other files in [`reference/`](reference/) document each area of the .NET API: authentication, ledger, households, shared expenses, recurrence, settlement, receipts, push, search, PostgreSQL storage, the shared TypeScript domain rules, the redesign baseline and the full-stack test environment. [Legacy compatibility](reference/legacy-compatibility.md) records what was kept, simplified or replaced from the Node-era API after the cutover (MAZ-131).
 - [ASP.NET Core backend foundation](../apps/backend/README.md): pinned .NET/PostgreSQL setup, explicit migrations, readiness, real database tests and backend CI.
 
 ## iOS app

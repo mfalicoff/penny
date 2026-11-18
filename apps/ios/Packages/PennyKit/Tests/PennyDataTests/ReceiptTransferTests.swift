@@ -465,10 +465,10 @@ struct ReceiptUploadProgressTests {
     func limits() async throws {
         let transport = StubTransport(json: "{}")
         let client = try APIFixtures.client(transport: transport)
-        await #expect(throws: APIError.invalidRequest(.invalidField("base64"))) {
+        await #expect(throws: APIError.invalidRequest(.invalidField("data"))) {
             try await client.uploadReceipt(name: "a.png", mime: "image/png", data: Data())
         }
-        await #expect(throws: APIError.invalidRequest(.invalidField("base64"))) {
+        await #expect(throws: APIError.invalidRequest(.invalidField("data"))) {
             try await client.uploadReceipt(
                 name: "a.png", mime: "image/png", data: Data(count: ReceiptRules.maxBytes + 1))
         }

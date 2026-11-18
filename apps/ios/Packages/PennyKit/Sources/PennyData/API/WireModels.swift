@@ -1,4 +1,4 @@
-// Wire models for the Penny HTTP API (contracts/openapi.json, contract 1.5.0).
+// Wire models for the Penny HTTP API (contracts/openapi.json, contract 2.0.0).
 //
 // These types mirror the JSON exactly and carry no presentation state. Money is integer
 // minor units (cents, Int64), calendar dates stay "YYYY-MM-DD" strings (never Date, so a

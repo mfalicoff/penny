@@ -222,7 +222,7 @@ struct APIClientTests {
 
     // MARK: Receipts
 
-    @Test("whenUploadingReceipt_APIClient_ShouldSendBase64JSONAndReturnReceipt")
+    @Test("whenUploadingReceipt_APIClient_ShouldSendTheBytesWithTypeAndNameHeaders")
     func uploadReceipt() async throws {
         let transport = StubTransport(
             status: 201, json: #"{"id":"r1","name":"a.png","mime":"image/png","uri":"/api/receipts/r1"}"#)
@@ -231,9 +231,19 @@ struct APIClientTests {
         #expect(receipt.id == "r1")
         let request = try #require(transport.sent.first)
         #expect(request.timeoutInterval == 120)
-        let body = try APIFixtures.object(request.httpBody)
-        #expect(body["base64"] as? String == "AQID")
-        #expect(body["mime"] as? String == "image/png")
+        #expect(request.httpBody == Data([1, 2, 3]))
+        #expect(request.value(forHTTPHeaderField: "Content-Type") == "image/png")
+        #expect(request.value(forHTTPHeaderField: "Content-Disposition") == "attachment; filename*=UTF-8''a.png")
+    }
+
+    @Test("whenReceiptNameHasReservedOrNonASCIICharacters_ReceiptDisposition_ShouldPercentEncodeThem")
+    func receiptDisposition() {
+        #expect(
+            APIClient.receiptDisposition("Reçu (1)!*'~.pdf")
+                == "attachment; filename*=UTF-8''Re%C3%A7u%20%281%29%21%2A%27~.pdf")
+        #expect(
+            APIClient.receiptDisposition("東京 a+b.png")
+                == "attachment; filename*=UTF-8''%E6%9D%B1%E4%BA%AC%20a%2Bb.png")
     }
 
     @Test(

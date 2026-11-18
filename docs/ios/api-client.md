@@ -1,6 +1,6 @@
 # Native API client (MAZ-67)
 
-The Swift API client lives in `apps/ios/Packages/PennyKit/Sources/PennyData/API`. It speaks the contract in `contracts/openapi.json` (1.5.0) and is independent of any view or storage. It imports only Foundation, so its tests run on the Mac host (`ios.sh package-test`).
+The Swift API client lives in `apps/ios/Packages/PennyKit/Sources/PennyData/API`. It speaks the contract in `contracts/openapi.json` (2.0.0) and is independent of any view or storage. It imports only Foundation, so its tests run on the Mac host (`ios.sh package-test`).
 
 ## Layout
 
@@ -69,7 +69,7 @@ The client never retries by itself. `isRetryable` tells a caller whether repeati
 
 ## Ledger and receipts
 
-`ledger()` returns `LedgerSnapshot(revision, ledger)`; `putLedger` sends the snapshot with the revision it was based on and returns the stored snapshot. Receipts upload as JSON `{name, mime, base64}` (1 byte to 10 MiB, mime from the contract list) and download as bytes with their mime type and filename; ids are percent-encoded into a single path segment. `uploadReceipt` takes an optional `progress` closure that receives the fraction of the request body sent, from `HTTPTransport.send(_:progress:)` (`URLSessionTransport` reports it from its task delegate; other transports report nothing). The receipt screens are in [native receipts](receipts.md).
+`ledger()` returns `LedgerSnapshot(revision, ledger)`; `putLedger` sends the snapshot with the revision it was based on and returns the stored snapshot. Receipts upload as the raw bytes with `Content-Type` set to the mime and the name in an RFC 8187 `Content-Disposition` (1 byte to 10 MiB, mime from the contract list; contract 2.0.0, MAZ-131) and download as bytes with their mime type and filename; ids are percent-encoded into a single path segment. `uploadReceipt` takes an optional `progress` closure that receives the fraction of the request body sent, from `HTTPTransport.send(_:progress:)` (`URLSessionTransport` reports it from its task delegate; other transports report nothing). The receipt screens are in [native receipts](receipts.md).
 
 ## Search
 
