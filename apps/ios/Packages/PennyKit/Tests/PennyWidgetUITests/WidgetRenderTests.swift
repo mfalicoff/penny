@@ -11,15 +11,19 @@ import Testing
     import AppKit
 #endif
 
-/// Renders every widget state at the small family's size, light and dark, so layout problems
+/// Renders every widget state in every family (small, medium, Lock Screen rectangular and
+/// circular), light and dark, so layout problems
 /// (a long amount, three long titles, the stale notes) surface as a failed render rather than
 /// on a device. With `PENNY_WIDGET_RENDER_DIR` set, the images are saved there for review
 /// (docs/ios/widgets.md#verification).
 @Suite("Widgets: rendering every state")
 @MainActor
 struct WidgetRenderTests {
-    /// The small family on a 6.3-inch iPhone, in points.
-    static let size = CGSize(width: 170, height: 170)
+    /// The families on a 6.3-inch iPhone, in points.
+    static let small = CGSize(width: 170, height: 170)
+    static let medium = CGSize(width: 364, height: 170)
+    static let rectangular = CGSize(width: 172, height: 76)
+    static let circular = CGSize(width: 76, height: 76)
 
     static func snapshot(left: Int64, projected: Int64, recent: [WidgetSnapshot.Expense], waiting: Bool = false)
         -> WidgetSnapshot
@@ -51,9 +55,11 @@ struct WidgetRenderTests {
         ]
     }
 
-    static func widget(_ view: some View, scheme: ColorScheme) -> some View {
-        view
-            .padding(16)
+    static func widget(_ view: some View, size: CGSize, scheme: ColorScheme) -> some View {
+        let padding: CGFloat = size.height > 100 ? 16 : 0
+        return
+            view
+            .padding(padding)
             .frame(width: size.width, height: size.height)
             .background(PennyWidgetStyle.background)
             .clipShape(.rect(cornerRadius: 22))
@@ -67,15 +73,18 @@ struct WidgetRenderTests {
         if let directory { try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true) }
         for (name, content) in Self.states {
             for scheme in [ColorScheme.light, .dark] {
-                let views: [(String, AnyView)] = [
-                    ("balance", AnyView(BalanceWidgetView(content: content))),
-                    ("recent", AnyView(RecentExpensesWidgetView(content: content))),
+                let views: [(String, CGSize, AnyView)] = [
+                    ("balance", Self.small, AnyView(BalanceWidgetView(content: content))),
+                    ("recent", Self.small, AnyView(RecentExpensesWidgetView(content: content))),
+                    ("glance", Self.medium, AnyView(MonthGlanceWidgetView(content: content))),
+                    ("lock-rectangular", Self.rectangular, AnyView(LockRectangularView(content: content))),
+                    ("lock-circular", Self.circular, AnyView(LockCircularView(content: content))),
                 ]
-                for (kind, view) in views {
-                    let renderer = ImageRenderer(content: Self.widget(view, scheme: scheme))
+                for (kind, size, view) in views {
+                    let renderer = ImageRenderer(content: Self.widget(view, size: size, scheme: scheme))
                     renderer.scale = 2
                     let image = try #require(renderer.cgImage, "\(kind) \(name) renders")
-                    #expect(image.width == Int(Self.size.width * 2))
+                    #expect(image.width == Int(size.width * 2))
                     if let directory {
                         try Self.save(image, to: directory.appending(path: "\(kind)-\(name)-\(scheme).png"))
                     }

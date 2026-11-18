@@ -2,7 +2,7 @@
 
 [Documentation](../README.md) · [Native iOS app](../../apps/ios/README.md) · [Native Home and overview](overview.md)
 
-MAZ-80 builds two widgets with WidgetKit: **Monthly balance** and **Recent expenses**, small family. The app computes a small snapshot of the month, writes it to the App Group, and the widget extension only draws it. Medium and Lock Screen widgets are MAZ-135.
+MAZ-80 builds two widgets with WidgetKit: **Monthly balance** and **Recent expenses**, small family; MAZ-135 adds **Month at a glance** (medium) and two Lock Screen accessories to Monthly balance. The app computes a small snapshot of the month, writes it to the App Group, and the widget extension only draws it.
 
 | Code | Contents |
 | --- | --- |
@@ -83,7 +83,7 @@ The widgets' own timeline is one entry, reloaded a minute after the next local m
 | Old | Built more than 12 hours ago | numbers, **Updated … ago** (live relative time) | same |
 | Past month | The device's month is after the snapshot's | that month's numbers and name, **Open Penny to update** | rows, **Open Penny to update** |
 
-Taps: Monthly balance opens Home (`penny:///`); Recent expenses opens the add entry sheet (`penny://entries/new`). A small widget has a single tap target, so the + is a picture of the widget's action. Links go through the app's deep-link inbox, so they wait for sign-in and the app lock like any other link ([native shell](shell.md)).
+Taps: Monthly balance opens Home (`penny:///`) in every family; Recent expenses opens the add entry sheet (`penny://entries/new`). A small widget has a single tap target, so its + is a picture of the widget's action. Month at a glance (medium) has two: its + is a `Link` to the add entry sheet, the rest opens Home. The medium and Lock Screen families show the same states as Monthly balance: **Sign in to Penny** and **Open Penny to update** instead of numbers, with no + on the medium. Links go through the app's deep-link inbox, so they wait for sign-in and the app lock like any other link ([native shell](shell.md)).
 
 ## Privacy
 
@@ -92,19 +92,25 @@ Widgets show money outside the app, so:
 - **Account changes clear them first.** `AuthGate` tells `WidgetPublisher` who owns the widgets on every auth change: signing out (or an expired session) deletes the file and reloads; signing in to another account deletes another account's file before anything is shown; the new shell publishes only for its own account. A late update from a shell that is going away is ignored. While the app is restoring or waiting for the Keychain, the file is left as it is.
 - **Redacted when the device is locked.** Amounts, the projected line, the flow bar and expense titles are `privacySensitive`, so iOS redacts them wherever it shows widgets on a locked device (StandBy, the iPad Lock Screen) if the person hides sensitive widget data there.
 - **File protection.** The file is written with `completeUntilFirstUserAuthentication`: unreadable after a restart until the first unlock, readable by the widget afterwards (WidgetKit requires this for widgets to render).
+- **Lock Screen accessories show Left to spend.** The snapshot has no "private" flag (there is no in-app switch to hide widget amounts), so the accessories aren't blanked by Penny itself. Their amount and percentage are `privacySensitive`, like the Home Screen widgets', so iOS redacts them whenever it renders the Lock Screen in its redacted state on a locked device. Otherwise they are shown, deliberately: a person adds a Lock Screen accessory themselves, it holds less than the Home Screen widget (one rounded-down amount, or a percentage that isn't money), and it never shows expense titles. To keep it off the Lock Screen, remove it. A per-widget "hide amounts" option would be a new feature.
 - **Independent of the app lock.** The in-app Face ID lock protects the app's UI, not widgets; turning it on doesn't change or clear them, and the Settings lock row says so ([app lock](shell.md#app-lock)). To keep amounts off the Home Screen, remove the widgets.
 - **Minimal data.** Only the fields above; expense titles are the only free text. The extension's privacy manifest declares App Group `UserDefaults` (reason `1C8F.1`); it collects nothing.
 
 ## Design
 
-The 79 screen specimens include one widget card (`system-widgets`, [widgets.html](../design/penny-ios/system/widgets.html)) that shows the restyled small widgets alongside the new medium and Lock Screen ones; it is not a complete widget-family design. This implementation adapts it to WidgetKit for the small family:
+The 79 screen specimens include one widget card (`system-widgets`, [widgets.html](../design/penny-ios/system/widgets.html)) that shows the restyled small widgets alongside the new medium and Lock Screen ones; it is not a complete widget-family design. This implementation adapts it to WidgetKit:
 
 - **Monthly balance**: the leaf header and **LEFT TO SPEND**, the hero amount with smaller cents (the redesign's `HeroAmount`), the month, **Projected** on its own line only when it differs, then an 8 pt bar of recorded spending (label color), contributions (indigo) and what's left (green) as shares of the larger of income and outflow. It shows Left to spend, as the redesign proposes.
 - **Recent expenses**: **RECENT**, up to three rows (title, `−$48.90` in the label color; a people glyph for shared rows), and the copper + in the corner.
 - Solid `PennyColor.surface` background in light and dark (no glass on widgets), SF text styles with `minimumScaleFactor` for long amounts, copper as the only tint. The leaf, hero amount and + are `widgetAccentable` for tinted and clear Home Screen appearances.
 - VoiceOver reads Monthly balance as one sentence ("Left to spend in November, $1,116.65. Projected, $966.65") and each expense row with its amount spoken as spent.
 
-Supported families: `systemSmall` only. Medium, the Lock Screen accessories and their configuration are MAZ-135.
+- **Month at a glance** (Monthly balance, medium; MAZ-135): the leaf header with the month, the hero Left to spend over **Left to spend** (and Projected when it differs), beside the same bar with a **Spent / Invested / Left** legend, and the copper + in the corner. The legend steps down to a smaller size, then a column, rather than truncating next to a long amount.
+- **Lock Screen, rectangular** (MAZ-135): leaf and **Left to spend**, then the amount without cents (`$1,116`, sign kept); a past month also names the month.
+- **Lock Screen, circular** (MAZ-135): a capacity ring of the share of recorded income still left to spend (`max(0, leftToSpend) / income`, clamped to 0–100 %, rounded for the label: 35 % for the sample), the leaf as the gauge label. With no recorded income the ring is empty and shows **–**. VoiceOver reads "35 percent of income left to spend in November".
+- Lock Screen accessories are monochrome: primary and secondary styles only, no meaning colors or surface, tinted by iOS (`widgetAccentable` on the leaf and ring).
+
+Supported families: Monthly balance `systemSmall`, `systemMedium`, `accessoryRectangular`, `accessoryCircular` (the medium and accessories share its frozen `BalanceChartWidget` kind, so no placed widget changes kind and no new kind is added); Recent expenses `systemSmall`. The accessory families exist on iOS only, so the macOS host tests see small and medium.
 
 ## Verification
 
@@ -114,13 +120,13 @@ Automated (Swift Testing):
 - `PennyDataTests/WidgetSnapshotStoreTests`: round trip; the file holds only the envelope and no email or server; owner per account and case-insensitive; newer, damaged and incomplete files read as unreadable; another account's file is cleared; clearing removes the snapshot; a failed write throws and leaves nothing.
 - `PennyUIModuleTests/WidgetPublisherTests`: stamped writes and reloads, no rewrite of unchanged content, restamping; sign-out clears and ignores late publishes; account switch in either order; another account's file at launch; relaunch keeps the same account's file; the shell snapshot uses today's month whatever month is on screen, follows the sync state, is nil while loading and in the demo, and waits for shared rows.
 - `PennyWidgetUITests/WidgetContentTests`: every state and its month and 12-hour boundaries in a non-UTC time zone; links parse to Home and Add entry; the flow bar; the spoken label; the provider's midnight reload and missing App Group.
-- `PennyWidgetUITests/WidgetRenderTests`: renders both widgets in every state, light and dark, including 99,999,999,999-cent amounts and long titles. Set `PENNY_WIDGET_RENDER_DIR` to keep the PNGs for review.
+- `PennyWidgetUITests/WidgetRenderTests`: renders every family (small Monthly balance and Recent expenses, Month at a glance, Lock Screen rectangular and circular) in every state, light and dark, including 99,999,999,999-cent amounts and long titles. Set `PENNY_WIDGET_RENDER_DIR` to keep the PNGs for review. `ImageRenderer` can't draw a `Link`, so the medium's + appears as a placeholder in those PNGs only.
+- `PennyWidgetUITests/WidgetLockScreenTests`: the ring's share (sample, overspent, no income), the whole-amount text and its sign, the spoken labels in every state, and the supported families.
 - `PennyTests/BuiltAppTests`: the built app embeds `PennyWidgets.appex` with the frozen bundle id, the WidgetKit extension point, iOS 26 and its privacy manifest.
 
-Manual, on a simulator and then a device: sign in, add the two widgets from the gallery (check the sample), add and undo an expense and watch both update, go offline and save (**As of last sync**), tap each widget (Home, Add entry, through the lock when it's on), switch appearance (light, dark, tinted), sign out (both show **Sign in to Penny**), sign in to another account (the first account's numbers never appear). The physical-device smoke check and an upgrade over a placed widget belong to MAZ-98's TestFlight pass and are not recorded yet.
+Manual, on a simulator and then a device: sign in, add both widgets in every family from the gallery, including Month at a glance and the two Lock Screen accessories (check the sample), add and undo an expense and watch both update, go offline and save (**As of last sync**), tap each widget (Home, Add entry, the medium + to Add entry and the rest of it to Home, through the lock when it's on), lock the device with the accessories placed, switch appearance (light, dark, tinted), sign out (both show **Sign in to Penny**), sign in to another account (the first account's numbers never appear). The physical-device smoke check and an upgrade over a placed widget belong to MAZ-98's TestFlight pass and MAZ-82's device evidence, and are not recorded yet.
 
 ## Limitations
 
-- Small family only (MAZ-135 adds medium and Lock Screen).
 - The widgets show what this device last synced; changes from other devices appear after the app syncs.
 - There is no in-app switch to hide amounts in widgets; iOS's locked-device redaction and removing the widget are the controls.
