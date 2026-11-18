@@ -12,6 +12,14 @@ const EMAIL = "alex@example.test";
 const NOV_10 = Date.parse("2026-11-10T15:00:00Z");
 const MIMES = ["application/pdf", "image/jpeg", "image/png", "image/webp", "image/gif", "image/heic", "image/heif"];
 
+/**
+ * The bytes each context last gave the file chooser. Playwright's WebKit can't read a File or
+ * Blob request body in `route` (`postDataBuffer()` is null), and since MAZ-131 the upload body is
+ * the file itself. In WebKit only, the mock falls back to these bytes; Chromium and Firefox still
+ * check what the browser sent, and receipts.real.spec.ts checks WebKit's real upload end to end.
+ */
+const chosenBytes = new WeakMap<BrowserContext, Buffer>();
+
 interface Receipt {
   id: string;
   name: string;
@@ -103,7 +111,8 @@ async function mockApi(context: BrowserContext, transactions: Entry[] = []): Pro
       const headers = request.headers();
       const disposition = /^attachment; filename\*=UTF-8''(.*)$/.exec(headers["content-disposition"] ?? "");
       const body = { name: disposition ? decodeURIComponent(disposition[1] ?? "") : "", mime: headers["content-type"] ?? "" };
-      const bytes = request.postDataBuffer() ?? Buffer.alloc(0);
+      const sent = request.postDataBuffer();
+      const bytes = sent ?? (context.browser()?.browserType().name() === "webkit" ? chosenBytes.get(context) : undefined) ?? Buffer.alloc(0);
       const signature = body.mime === "application/pdf" ? bytes.subarray(0, 5).toString("latin1") === "%PDF-" : body.mime === "image/png" ? bytes[0] === 0x89 : true;
       if (!MIMES.includes(body.mime) || !body.name) return route.fulfill({ status: 400, json: { error: "Choose a photo or PDF smaller than 10 MB." } });
       if (!bytes.length || bytes.length > 10 * 1024 * 1024 || !signature) return route.fulfill({ status: 400, json: { error: "This file is not a supported photo or PDF, or exceeds 10 MB." } });
@@ -164,6 +173,7 @@ async function startExpense(page: Page, title: string) {
 async function choose(page: Page, button: string, file: { name: string; mimeType: string; buffer: Buffer }) {
   const chooser = page.waitForEvent("filechooser");
   await addDialog(page).getByRole("button", { name: button }).click();
+  chosenBytes.set(page.context(), file.buffer);
   await (await chooser).setFiles(file);
 }
 
