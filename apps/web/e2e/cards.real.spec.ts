@@ -273,6 +273,16 @@ const cards: Record<string, Card> = {
     note: "p-coffee-2 is a personal entry, so there is no shared 'delete for everyone' wording.",
   },
 
+  // Emailed receipts (MAZ-184): blocked by their state until the full-stack seed has a receipt
+  // address and inbox items; they need an `open` here once it does.
+  "iphone-receipt-inbox": {},
+  "iphone-receipt-inbox-item": {},
+  "iphone-receipt-attach-file": {},
+  "iphone-receipt-attach-entry": {},
+  "iphone-receipt-attach-confirm": {},
+  "iphone-receipt-attached-toast": {},
+  "iphone-receipt-email-settings": {},
+
   // Shared
   "iphone-shared-list": {
     open: async ({ page: p }) => {
@@ -479,6 +489,16 @@ const cards: Record<string, Card> = {
   "ipad-trip": { open: (run) => lisbon(run) },
   "ipad-settings": { open: ({ page: p }) => page(p, "/settings", "Settings") },
 
+  // Emailed receipts (MAZ-184): blocked by their state until the full-stack seed has a receipt
+  // address and inbox items; they need an `open` here once it does.
+  "ipad-receipt-inbox": {},
+  "ipad-receipt-inbox-item": {},
+  "ipad-receipt-attach-file": {},
+  "ipad-receipt-attach-entry": {},
+  "ipad-receipt-attach-confirm": {},
+  "ipad-receipt-attached-toast": {},
+  "ipad-receipt-email-settings": {},
+
   // Web
   "web-home": {
     open: async ({ page: p }) => {
@@ -501,6 +521,16 @@ const cards: Record<string, Card> = {
   "web-settings": { open: ({ page: p }) => page(p, "/settings", "Settings") },
   "web-add-entry": { open: ({ page: p }) => addEntry(p) },
   "web-sign-in": { open: ({ page: p }) => signInScreen(p) },
+
+  // Emailed receipts (MAZ-184): blocked by their state until the full-stack seed has a receipt
+  // address and inbox items; they need an `open` here once it does.
+  "web-receipt-inbox": {},
+  "web-receipt-inbox-item": {},
+  "web-receipt-attach-file": {},
+  "web-receipt-attach-entry": {},
+  "web-receipt-attach-confirm": {},
+  "web-receipt-attached-toast": {},
+  "web-receipt-email-settings": {},
 };
 
 async function dismissToast(p: Page) {
