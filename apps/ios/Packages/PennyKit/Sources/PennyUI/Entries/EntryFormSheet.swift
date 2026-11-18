@@ -271,7 +271,14 @@ private struct EntryForm: View {
                 EntryAccountPicker(selection: $model.editor.draft.accountId, ledger: ledger)
             case .details:
                 if let upload {
-                    EntryExtrasView(model: model, upload: upload, ledger: ledger, save: { save(model) })
+                    EntryExtrasView(
+                        model: model, upload: upload, ledger: ledger,
+                        sharedTrips: sharedTrips(model),
+                        chooseSharedTrip: { id in
+                            pendingHousehold = .some(id)
+                            applyHousehold(model)
+                        },
+                        save: { save(model) })
                 }
             }
         }
@@ -459,6 +466,13 @@ private struct EntryForm: View {
         return model.draft.kind == .expense && model.draft.tripId == nil
     }
 
+    /// The shared trips More details › Trip offers a new expense (MAZ-180), newest first. Like
+    /// the Household row, only while adding, with the households read.
+    private func sharedTrips(_ model: EntryFormModel) -> [WireHousehold] {
+        guard let scope, model.editor.isNew, model.draft.kind == .expense else { return [] }
+        return scope.sharedTrips
+    }
+
     /// After the Household sheet: a household hands what was typed to the shared form. Nothing
     /// is kept here, so the draft can't come back as a second copy.
     private func applyHousehold(_ model: EntryFormModel) {
@@ -570,8 +584,8 @@ struct AmountDisplay: View {
     let currency: String
 
     var body: some View {
-        let separator = Locale.current.decimalSeparator ?? "."
-        let typed = text.isEmpty ? "0" : text.replacingOccurrences(of: ".", with: separator)
+        // Grouped as it is typed (MAZ-180): "+$3,200.00", never "+$3200.00".
+        let typed = text.isEmpty ? "0" : MoneyFormat.typed(text)
         let sign = kind == .income ? "+" : ""
         HStack(alignment: .firstTextBaseline, spacing: 0) {
             Text(sign + Self.symbol(currency)).foregroundStyle(PennyColor.secondaryLabel)
