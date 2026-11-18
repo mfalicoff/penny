@@ -96,3 +96,17 @@ public struct WidgetFlowBar: Hashable, Sendable {
 
     public var isEmpty: Bool { spent == 0 && invested == 0 && left == 0 }
 }
+
+/// The Lock Screen ring: the share of recorded income that is still left to spend, from 0 to 1.
+/// Nil when no income was recorded, so the ring never claims a share of nothing.
+public struct WidgetLeftShare: Hashable, Sendable {
+    public let fraction: Double
+
+    public init?(_ snapshot: WidgetSnapshot) {
+        guard snapshot.income > 0 else { return nil }
+        fraction = min(1, max(0, Double(snapshot.leftToSpend) / Double(snapshot.income)))
+    }
+
+    /// Whole percent, rounded: "35%" for 34.9 %.
+    public var percent: Int { Int((fraction * 100).rounded()) }
+}

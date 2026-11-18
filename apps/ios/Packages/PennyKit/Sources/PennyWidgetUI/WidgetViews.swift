@@ -8,8 +8,18 @@ import WidgetKit
 /// Home Screen widgets sit on the solid surface (no glass), with SF text styles and the
 /// meaning colors; copper is the only tint.
 enum PennyWidgetStyle {
-    /// Small only. Medium and Lock Screen families are MAZ-135.
-    static let families: [WidgetFamily] = [.systemSmall]
+    /// Monthly balance: small, Month at a glance (medium) and the two Lock Screen accessories
+    /// (MAZ-135). They share the frozen `BalanceChartWidget` kind, so a placed widget keeps working.
+    /// The accessories exist on iOS only; the macOS host tests see small and medium.
+    #if os(iOS)
+        static let balanceFamilies: [WidgetFamily] = [
+            .systemSmall, .systemMedium, .accessoryRectangular, .accessoryCircular,
+        ]
+    #else
+        static let balanceFamilies: [WidgetFamily] = [.systemSmall, .systemMedium]
+    #endif
+    /// Recent expenses: small only.
+    static let recentFamilies: [WidgetFamily] = [.systemSmall]
     @MainActor static var background: Color { PennyColor.surface }
 }
 
@@ -298,6 +308,227 @@ struct AddButton: View {
     }
 }
 
+/// Monthly balance in whichever family the person placed: small, Month at a glance (medium)
+/// or a Lock Screen accessory.
+struct BalanceFamilyView: View {
+    let content: WidgetContent
+    @Environment(\.widgetFamily) private var family
+
+    var body: some View {
+        switch family {
+        case .systemMedium: MonthGlanceWidgetView(content: content)
+        #if os(iOS)
+            case .accessoryRectangular: LockRectangularView(content: content)
+            case .accessoryCircular: LockCircularView(content: content)
+        #endif
+        default: BalanceWidgetView(content: content)
+        }
+    }
+}
+
+/// Month at a glance, medium (`system-widgets`, "Month at a glance · medium"): Left to spend
+/// beside the spent / invested / left bar and its legend, with the + shortcut. A medium widget
+/// has several tap targets: the + opens the add entry sheet, the rest opens Home.
+struct MonthGlanceWidgetView: View {
+    let content: WidgetContent
+
+    var body: some View {
+        ZStack(alignment: .bottomTrailing) {
+            Group {
+                switch content {
+                case .signedOut: WidgetMessage.signedOut("Left to spend")
+                case .openApp: WidgetMessage.openApp("Left to spend")
+                case .ready(let snapshot, let freshness): ready(snapshot, freshness)
+                }
+            }
+            if case .ready = content {
+                Link(destination: WidgetLink.addEntry) { AddButton() }
+            }
+        }
+    }
+
+    private func ready(_ snapshot: WidgetSnapshot, _ freshness: WidgetContent.Freshness) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            WidgetHeader(title: BalanceText.monthName(snapshot.month))
+            Spacer(minLength: 0)
+            HStack(alignment: .top, spacing: 16) {
+                VStack(alignment: .leading, spacing: 4) {
+                    WidgetAmount(cents: snapshot.leftToSpend, currency: snapshot.currency)
+                    Text("Left to spend")
+                        .font(.caption)
+                        .foregroundStyle(PennyColor.secondaryLabel)
+                        .lineLimit(1)
+                    if let projected = BalanceText.projected(snapshot) {
+                        Text(projected)
+                            .font(.caption)
+                            .foregroundStyle(PennyColor.secondaryLabel)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                            .privacySensitive()
+                    }
+                }
+                .layoutPriority(1)
+                VStack(alignment: .leading, spacing: 8) {
+                    if snapshot.isEmptyMonth {
+                        Text("Nothing recorded yet")
+                            .font(.caption)
+                            .foregroundStyle(PennyColor.secondaryLabel)
+                    } else {
+                        FlowBar(bar: WidgetFlowBar(snapshot))
+                        FlowLegend()
+                    }
+                }
+                .padding(.top, 10)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            Spacer(minLength: 0)
+            FreshnessNote(snapshot: snapshot, freshness: freshness)
+                .padding(.trailing, 40)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(BalanceText.spoken(snapshot, freshness: freshness))
+    }
+}
+
+/// The legend under the medium bar: Spent, Invested, Left in the bar's colors.
+struct FlowLegend: View {
+    var body: some View {
+        // The amount beside it takes the room it needs; the legend steps down rather than
+        // truncating a label.
+        ViewThatFits(in: .horizontal) {
+            items(spacing: 9).font(.caption)
+            items(spacing: 6).font(.caption2)
+            VStack(alignment: .leading, spacing: 2) { items(spacing: 0, stacked: true) }.font(.caption2)
+        }
+        .foregroundStyle(PennyColor.secondaryLabel)
+        .lineLimit(1)
+        .accessibilityHidden(true)
+    }
+
+    @ViewBuilder
+    private func items(spacing: CGFloat, stacked: Bool = false) -> some View {
+        if stacked {
+            item("Spent", PennyColor.label)
+            item("Invested", PennyColor.invest)
+            item("Left", PennyColor.income)
+        } else {
+            HStack(spacing: spacing) {
+                item("Spent", PennyColor.label)
+                item("Invested", PennyColor.invest)
+                item("Left", PennyColor.income)
+            }
+        }
+    }
+
+    private func item(_ title: String, _ color: Color) -> some View {
+        HStack(spacing: 4) {
+            Circle().fill(color).frame(width: 7, height: 7)
+            Text(title)
+        }
+    }
+}
+
+/// Lock Screen, rectangular: the leaf, **Left to spend** and the whole amount. Monochrome: iOS
+/// tints it, so it uses only the primary style and no meaning colors.
+struct LockRectangularView: View {
+    let content: WidgetContent
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 1) {
+            Label("Left to spend", systemImage: "leaf.fill")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .widgetAccentable()
+                .lineLimit(1)
+            switch content {
+            case .signedOut: message("Sign in to Penny")
+            case .openApp: message("Open Penny to update")
+            case .ready(let snapshot, let freshness):
+                Text(LockText.whole(snapshot))
+                    .font(.title2.weight(.bold))
+                    .monospacedDigit()
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                    .privacySensitive()
+                if case .pastMonth = freshness {
+                    Text(BalanceText.monthName(snapshot.month))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(LockText.spoken(content))
+    }
+
+    private func message(_ text: String) -> some View {
+        Text(text).font(.headline).lineLimit(2).minimumScaleFactor(0.7)
+    }
+}
+
+/// Lock Screen, circular: a ring of the share of recorded income still left to spend, and that
+/// share in the middle. Without recorded income (or a snapshot) the ring is empty.
+struct LockCircularView: View {
+    let content: WidgetContent
+
+    var body: some View {
+        let share: WidgetLeftShare? =
+            if case .ready(let snapshot, _) = content { WidgetLeftShare(snapshot) } else { nil }
+        Gauge(value: share?.fraction ?? 0) {
+            Image(systemName: "leaf.fill")
+        } currentValueLabel: {
+            Text(share.map { "\($0.percent)%" } ?? "–")
+                .monospacedDigit()
+                .privacySensitive()
+        }
+        .gaugeStyle(.accessoryCircularCapacity)
+        .widgetAccentable()
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(LockText.spokenShare(content))
+    }
+}
+
+/// The strings of the Lock Screen accessories, pure so tests read them.
+enum LockText {
+    /// Left to spend without cents ("$1,116"): the rectangular accessory has room for one line.
+    static func whole(_ snapshot: WidgetSnapshot, locale: Locale = .current) -> String {
+        // Formatted without fraction digits rather than cut from the full amount, so locales
+        // that put the symbol after the amount ("1 116 $" in fr_CA) keep it. The cents are dropped
+        // (toward zero), as on the hero amount.
+        let whole = (Decimal(snapshot.leftToSpend.magnitude) / 100).formatted(
+            .currency(code: snapshot.currency).locale(locale).precision(.fractionLength(0)).rounded(rule: .down))
+        return snapshot.leftToSpend < 0 ? MoneyFormat.minus + whole : whole
+    }
+
+    static func spoken(_ content: WidgetContent, locale: Locale = .current) -> String {
+        switch content {
+        case .signedOut: "Sign in to Penny"
+        case .openApp: "Open Penny to update"
+        case .ready(let snapshot, let freshness): BalanceText.spoken(snapshot, freshness: freshness, locale: locale)
+        }
+    }
+
+    static func spokenShare(_ content: WidgetContent, locale: Locale = .current) -> String {
+        switch content {
+        case .signedOut: return "Sign in to Penny"
+        case .openApp: return "Open Penny to update"
+        case .ready(let snapshot, let freshness):
+            var text: String
+            if let share = WidgetLeftShare(snapshot) {
+                text =
+                    "\(share.percent) percent of income left to spend in \(BalanceText.monthName(snapshot.month, locale: locale))"
+            } else {
+                text = "No income recorded in \(BalanceText.monthName(snapshot.month, locale: locale))"
+            }
+            if case .pastMonth = freshness { text += ". Open Penny to update" }
+            return text
+        }
+    }
+}
+
 #if DEBUG
     #Preview("Balance", as: .systemSmall) {
         BalanceWidget()
@@ -313,4 +544,28 @@ struct AddButton: View {
         PennyWidgetEntry(date: .now, content: .sample)
         PennyWidgetEntry(date: .now, content: .signedOut)
     }
+
+    #Preview("Month at a glance", as: .systemMedium) {
+        BalanceWidget()
+    } timeline: {
+        PennyWidgetEntry(date: .now, content: .sample)
+        PennyWidgetEntry(date: .now, content: .signedOut)
+        PennyWidgetEntry(date: .now, content: .openApp)
+    }
+
+    #if os(iOS)
+        #Preview("Lock Screen rectangular", as: .accessoryRectangular) {
+            BalanceWidget()
+        } timeline: {
+            PennyWidgetEntry(date: .now, content: .sample)
+            PennyWidgetEntry(date: .now, content: .signedOut)
+        }
+
+        #Preview("Lock Screen circular", as: .accessoryCircular) {
+            BalanceWidget()
+        } timeline: {
+            PennyWidgetEntry(date: .now, content: .sample)
+            PennyWidgetEntry(date: .now, content: .signedOut)
+        }
+    #endif
 #endif
