@@ -17,13 +17,23 @@ struct Penny {
 
     static let timeout: TimeInterval = 15
 
+    /// The element with an identifier. Known identifiers are looked up among elements of their
+    /// type only (`Penny.elementType(of:)`): a query over every element (`.any`) reads the
+    /// identifier of everything on screen, one accessibility round trip each, and on a slow CI
+    /// runner a large iPad screen made that time out (MAZ-163).
     func element(_ id: String) -> XCUIElement {
-        app.descendants(matching: .any).matching(identifier: id).firstMatch
+        app.descendants(matching: Penny.elementType(of: id)).matching(identifier: id).firstMatch
     }
 
     @discardableResult
     func wait(for id: String, timeout: TimeInterval = Penny.timeout) throws -> XCUIElement {
-        let element = element(id)
+        try wait(for: element(id), id: id, timeout: timeout)
+    }
+
+    /// Waits for an element already resolved from `id`, so callers that looked for it first do
+    /// not build and evaluate the query again.
+    @discardableResult
+    private func wait(for element: XCUIElement, id: String, timeout: TimeInterval) throws -> XCUIElement {
         guard element.waitForExistence(timeout: timeout) else {
             throw UIExpectationFailed(description: "\(id) did not appear within \(Int(timeout))s")
         }
@@ -41,13 +51,19 @@ struct Penny {
     func tap(_ id: String, timeout: TimeInterval = Penny.timeout) throws {
         let target = element(id)
         if !target.waitForExistence(timeout: min(timeout, 5)) {
-            let list =
-                app.collectionViews.firstMatch.exists ? app.collectionViews.firstMatch : app.scrollViews.firstMatch
+            let list = scrollableList()
             for _ in 0..<4 where !target.exists && list.exists {
                 list.swipeUp()
             }
+            try wait(for: target, id: id, timeout: timeout)
         }
-        try wait(for: id, timeout: timeout).tap()
+        target.tap()
+    }
+
+    /// The screen's list: a collection view (SwiftUI `List`), else a scroll view.
+    private func scrollableList() -> XCUIElement {
+        let collection = app.collectionViews.firstMatch
+        return collection.exists ? collection : app.scrollViews.firstMatch
     }
 
     func type(_ text: String, into id: String) throws {
@@ -158,14 +174,15 @@ struct Penny {
 
     /// Goes back from a page pushed inside Settings to the Settings list.
     private func popSettingsPages() {
-        // One query for all pages: each element query costs about a second.
-        let page = app.descendants(matching: .any)
-            .matching(NSPredicate(format: "identifier IN %@", Self.settingsPages)).firstMatch
+        // One query for all pages (each element query costs about a second); every Settings page
+        // root is a collection view (`Penny.elementType(of:)`).
+        let page = app.collectionViews.matching(NSPredicate(format: "identifier IN %@", Self.settingsPages)).firstMatch
         // The navigation bar's back button by its system identifier: on iPad the first button in
         // a navigation bar can be the sidebar's Add entry, not Back.
         let back = app.navigationBars.buttons.matching(identifier: "BackButton").firstMatch
+        let settings = element(AccessibilityID.Screen.settings)
         for _ in 0..<3 {
-            guard page.exists, !element(AccessibilityID.Screen.settings).exists, back.exists else { return }
+            guard page.exists, !settings.exists, back.exists else { return }
             back.tap()
         }
     }
@@ -257,7 +274,7 @@ struct Penny {
     }
 
     func pullToRefresh() {
-        let list = app.collectionViews.firstMatch.exists ? app.collectionViews.firstMatch : app.scrollViews.firstMatch
+        let list = scrollableList()
         guard list.exists else { return }
         let top = list.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2))
         top.press(forDuration: 0.05, thenDragTo: list.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.8)))
@@ -306,4 +323,60 @@ struct Penny {
         }
         return false
     }
+
+    // MARK: Element types
+
+    /// The element type an identifier is exposed as, or `.any` when it is not known. Each entry
+    /// was read from the app's accessibility hierarchy on iPhone and iPad (MAZ-163); SwiftUI
+    /// copies an identifier onto the children of a container, so only types that hold on both
+    /// devices are listed. Add an identifier here only after checking its type in a failing test's
+    /// "App UI hierarchy" attachment: with the wrong type, `wait(for:)` times out and
+    /// `waitForAbsence(of:)` passes at once. Anything not listed keeps the slower `.any` query.
+    static func elementType(of id: String) -> XCUIElement.ElementType {
+        if let type = exactTypes[id] { return type }
+        if let (_, type) = prefixTypes.first(where: { id.hasPrefix($0.prefix) }) { return type }
+        return .any
+    }
+
+    private static let exactTypes: [String: XCUIElement.ElementType] = [
+        AccessibilityID.Root.launch: .other,
+        AccessibilityID.Screen.home: .scrollView,
+        AccessibilityID.Screen.addEntry: .other,
+        AccessibilityID.Screen.activity: .collectionView,
+        AccessibilityID.Screen.settings: .collectionView,
+        AccessibilityID.Screen.appearance: .collectionView,
+        AccessibilityID.Screen.currency: .collectionView,
+        AccessibilityID.Screen.appLock: .collectionView,
+        AccessibilityID.Screen.recurring: .collectionView,
+        AccessibilityID.Screen.accounts: .collectionView,
+        AccessibilityID.Screen.categories: .collectionView,
+        AccessibilityID.Auth.email: .textField,
+        AccessibilityID.Auth.password: .secureTextField,
+        AccessibilityID.Auth.signIn: .button,
+        AccessibilityID.Home.settings: .button,
+        AccessibilityID.Home.empty: .button,
+        AccessibilityID.Sidebar.add: .button,
+        AccessibilityID.Sidebar.settings: .button,
+        AccessibilityID.Tab.add: .button,
+        AccessibilityID.EntryForm.title: .textField,
+        AccessibilityID.EntryForm.save: .button,
+        AccessibilityID.EntryForm.close: .button,
+        AccessibilityID.Settings.done: .button,
+        AccessibilityID.Settings.row("currency"): .button,
+        AccessibilityID.Settings.row("appearance"): .button,
+        AccessibilityID.Settings.row("appLock"): .button,
+        AccessibilityID.Settings.row("notifications"): .button,
+        AccessibilityID.Settings.row("recurring"): .button,
+        AccessibilityID.Settings.row("accounts"): .button,
+        AccessibilityID.Settings.row("categories"): .button,
+        AccessibilityID.Settings.appLockToggle: .switch,
+    ]
+
+    private static let prefixTypes: [(prefix: String, type: XCUIElement.ElementType)] = [
+        ("tab.", .button), ("keypad.", .button), ("currency.", .button), ("appearance.", .button),
+        // Each sidebar item exposes its identifier on its icon and title, not on the row.
+        ("sidebar.", .image),
+        // A transaction row is a button in Activity and Home's Recent.
+        ("entry.", .button),
+    ]
 }

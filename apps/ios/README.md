@@ -53,7 +53,7 @@ apps/ios/scripts/ios.sh distribution-test  # the archive/IPA checks refuse bad b
 
 In Xcode, open `Penny.xcodeproj`, choose the **Penny** scheme and an iPhone or iPad simulator, and run (⌘R) or test (⌘U); its test action runs the app-hosted `PennyTests`. To run the PennyKit tests in Xcode, open `Packages/PennyKit` and test the **PennyKit-Package** scheme. `ios.sh test` runs both on each simulator; results are `test-results/ios/app-<device>.xcresult` and `pennykit-<device>.xcresult`.
 
-CI runs the same steps on the GitHub `xcode-27` (Apple Silicon) image in [`.github/workflows/ios.yml`](../../.github/workflows/ios.yml) and uploads `test-results/ios/` as `ios-test-results`.
+CI runs the same steps on the GitHub `xcode-27` (Apple Silicon) image in [`.github/workflows/ios.yml`](../../.github/workflows/ios.yml) and uploads `test-results/ios/` as `ios-test-results`. The Release check, the TestFlight archive checks and the launch run in a parallel `release` job, which uploads its screenshots as `ios-launch-screenshots`.
 
 ## Layout and ownership
 
