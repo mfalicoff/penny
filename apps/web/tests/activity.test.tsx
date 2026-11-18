@@ -187,10 +187,43 @@ describe("Activity", () => {
     expect(await within(await screen.findByRole("region", { name: "Search results" })).findByText("Monthly salary")).toBeInTheDocument();
   });
 
+  it("lists the month by day on phones, with each day's total, before search and the totals (MAZ-175)", async () => {
+    server();
+    renderApp("/transactions?month=2026-11");
+    const list = await screen.findByRole("region", { name: "Search results" });
+    await within(list).findByText("Rent");
+    const days = within(list).getAllByRole("heading", { level: 2 });
+    expect(days.map((day) => day.textContent)).toEqual([expect.stringMatching(/^Saturday, Nov\.? 7$/), expect.stringMatching(/^Friday, Nov\.? 6$/), expect.stringMatching(/^Thursday, Nov\.? 5$/), expect.stringMatching(/^Tuesday, Nov\.? 3$/), expect.stringMatching(/^Sunday, Nov\.? 1$/)]);
+    const totalOf = (day: HTMLElement) => day.closest(".day-group__head")?.querySelector(".day-group__total")?.textContent;
+    expect(days.map(totalOf)).toEqual(["Day total -$200.00", "Day total -$72.35", "Day total +$4,800.00 income", "Day total -$30.00", "Day total -$1,450.00"]);
+    // jsdom has no matchMedia, so this is the phone layout: the list comes before search and the totals.
+    const search = screen.getByRole("searchbox", { name: "Search transactions" });
+    expect(list.compareDocumentPosition(search) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(list.compareDocumentPosition(await screen.findByRole("region", { name: "November 2026" })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByRole("group", { name: "Type" }).compareDocumentPosition(list) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("offers to search every period or drop the filters when nothing matches (MAZ-175)", async () => {
+    server(() => []);
+    const user = userEvent.setup();
+    const { router } = renderApp("/transactions?month=2026-11&kind=expense&q=sushi");
+    expect(await screen.findByRole("heading", { name: "No results for “sushi”" })).toBeInTheDocument();
+    const empty = within(results());
+    expect(empty.getByText(/Nothing matches in November 2026 expenses\. Try another word, or search everything\./)).toBeInTheDocument();
+    await user.click(empty.getByRole("button", { name: "Search all time" }));
+    await waitFor(() => {
+      expect(router.state.location.search).toEqual({ kind: "expense", q: "sushi" });
+    });
+    await user.click(within(await screen.findByRole("region", { name: "Search results" })).getByRole("button", { name: "Clear filters" }));
+    await waitFor(() => {
+      expect(router.state.location.search).toEqual({ q: "sushi" });
+    });
+  });
+
   it("says when nothing matches a search", async () => {
     server(() => []);
     renderApp("/transactions?q=zzz");
-    expect(await screen.findByRole("heading", { name: "Nothing matches “zzz”" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "No results for “zzz”" })).toBeInTheDocument();
     expect(screen.getByText("No matching transactions.")).toBeInTheDocument();
   });
 });

@@ -23,7 +23,7 @@ async function addEntry(page: Page, values: { kind?: "Income" | "Investment"; am
   if (values.category) {
     // A new category isn't among the frequent chips yet: pick it from All categories.
     await add.getByRole("button", { name: "All categories" }).click();
-    await page.getByRole("dialog", { name: "Choose a category" }).getByRole("button", { name: values.category }).click();
+    await page.getByRole("dialog", { name: / category$/ }).getByRole("button", { name: values.category }).click();
     await expect(add.getByRole("radio", { name: values.category, exact: true })).toBeChecked();
   }
   await add.getByLabel("Date").fill(values.date);

@@ -89,6 +89,18 @@ export function frequentCategories(ledger: Pick<Ledger, "categories" | "transact
     .sort((a, b) => (uses.get(b.id) ?? 0) - (uses.get(a.id) ?? 0) || (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
 }
 
+/**
+ * The category picker's Most used (`iphone-category-picker`): up to `limit` categories of `kind`
+ * that entries use, most used first. Empty for a ledger that hasn't used any yet, so the picker
+ * never calls an unused category "most used".
+ */
+export function mostUsedCategories(ledger: Pick<Ledger, "categories" | "transactions">, kind?: Kind, limit = 4): Category[] {
+  const used = new Set(ledger.transactions.map((entry) => entry.categoryId));
+  return frequentCategories(ledger, kind)
+    .filter((category) => used.has(category.id))
+    .slice(0, limit);
+}
+
 /** The first `limit` frequent categories, plus `selected` when it isn't among them, so the choice stays visible. */
 export function inlineCategories(categories: Category[], selected: string | undefined, limit = 5): Category[] {
   const shown = categories.slice(0, limit);

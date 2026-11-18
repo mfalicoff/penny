@@ -15,9 +15,9 @@ import { EmptyState, useOnline } from "../../design/states";
 import { useLedgerSync } from "../../offline/OfflineLedgerProvider";
 import { dayLabel } from "../households/model";
 import { categoryIcon } from "../entries/model";
-import { categoryName, localRows, type ActivityRow, type RowFilters, type SharedState } from "./data";
+import { categoryName, dayTotal, groupByDay, localRows, type ActivityRow, type RowFilters, type SharedState } from "./data";
 import type { ActivitySearch } from "./filters";
-import { searchRange } from "./filters";
+import { activeDay, KIND_FILTERS, periodLabel, periodOf, searchRange } from "./filters";
 
 const PAGE = 50;
 
@@ -40,6 +40,8 @@ interface ResultsProps {
   ledger: Ledger | null;
   shared: SharedState;
   onOpen: (entry: Transaction, opener: HTMLElement) => void;
+  /** Drops these search parameters (the empty state's "Search all time" and "Clear filters"). */
+  onClear: (...keys: (keyof ActivitySearch)[]) => void;
 }
 
 /**
@@ -51,7 +53,7 @@ interface ResultsProps {
  * accepted entry isn't listed twice. Personal rows open their detail; shared rows open the expense
  * in its household.
  */
-export function ActivityResults({ search, filters, ledger, shared, onOpen }: ResultsProps) {
+export function ActivityResults({ search, filters, ledger, shared, onOpen, onClear }: ResultsProps) {
   const email = useAccountEmail();
   const range = searchRange(search);
   const serverSearch = useInfiniteQuery(
@@ -79,8 +81,8 @@ export function ActivityResults({ search, filters, ledger, shared, onOpen }: Res
             Showing what this browser has, including changes waiting to sync.{" "}
             {shared.status === "ready" ? "Shared expenses are as Penny last loaded them; smarter matching needs a connection." : "Shared expenses and smarter matching need a connection."}
           </p>
-          {rows.length === 0 ? <NoResults query={filters.query} /> : null}
-          <RowList rows={rows.slice(0, limit)} ledger={localLedger} currency={localLedger.currency} onOpen={onOpen} />
+          {rows.length === 0 ? <NoResults search={search} onClear={onClear} /> : null}
+          <RowList rows={rows.slice(0, limit)} grouped={!filters.query} complete={rows.length <= limit} ledger={localLedger} currency={localLedger.currency} onOpen={onOpen} />
           {rows.length > limit ? (
             <Button variant="secondary" onClick={() => { setLimit((value) => value + PAGE); }}>
               Show more
@@ -136,8 +138,9 @@ export function ActivityResults({ search, filters, ledger, shared, onOpen }: Res
       <p role="status" aria-live="polite">
         {total === 0 && !serverSearch.hasNextPage ? "No matching transactions." : `${plural(total)}${filters.category && serverSearch.hasNextPage ? " so far" : ""}`}
       </p>
-      {total === 0 && !serverSearch.hasNextPage ? <NoResults query={filters.query} /> : null}
-      <RowList rows={rows} ledger={localLedger ?? ledger} currency={currency.data} onOpen={onOpen} />
+      {total === 0 && !serverSearch.hasNextPage ? <NoResults search={search} onClear={onClear} /> : null}
+      {/* A search with words is ranked by relevance, not date, so only browsing is grouped by day. */}
+      <RowList rows={rows} grouped={!filters.query} complete={!serverSearch.hasNextPage} ledger={localLedger ?? ledger} currency={currency.data} onOpen={onOpen} />
       {pageFailed || refreshFailed ? (
         <div role="alert">
           <p>{describeSearchError(serverSearch.error)}</p>
@@ -167,13 +170,38 @@ export function ActivityResults({ search, filters, ledger, shared, onOpen }: Res
   );
 }
 
-function NoResults({ query }: { query: string }) {
-  return query ? (
-    <EmptyState icon="search" title={`Nothing matches “${query}”`}>
-      Try fewer or different words, another period, or All categories.
+/**
+ * Nothing matches (`iphone-search-empty`): centered in the results area, it names the search and
+ * where it looked, and offers to look in every period or to drop the filters.
+ */
+function NoResults({ search, onClear }: { search: ActivitySearch; onClear: ResultsProps["onClear"] }) {
+  const period = periodOf(search);
+  const day = activeDay(search);
+  const kind = KIND_FILTERS.find((option) => option.value === search.kind)?.label.toLowerCase();
+  const scope = [day ? dayLabel(day, true) : period.type === "all" ? "" : periodLabel(period), kind ?? ""].filter(Boolean).join(" ");
+  const limited = period.type !== "all" || search.day !== undefined;
+  const filtered = Boolean(search.kind || search.category || search.day);
+  const actions =
+    limited || filtered ? (
+      <div className="state__actions">
+        {limited ? (
+          <Button variant="primary" icon="search" onClick={() => { onClear("month", "year", "day"); }}>
+            Search all time
+          </Button>
+        ) : null}
+        {filtered ? (
+          <Button variant="secondary" onClick={() => { onClear("kind", "category", "day"); }}>
+            Clear filters
+          </Button>
+        ) : null}
+      </div>
+    ) : null;
+  return search.q ? (
+    <EmptyState icon="search" title={`No results for “${search.q}”`} action={actions}>
+      {scope ? `Nothing matches in ${scope}.` : "Nothing matches."} Try another word{limited || filtered ? ", or search everything" : ""}.
     </EmptyState>
   ) : (
-    <EmptyState icon="list" title="Nothing here yet">
+    <EmptyState icon="list" title="Nothing here yet" action={actions}>
       Entries for this period and filter show up here. Add one with Add entry.
     </EmptyState>
   );
@@ -181,67 +209,140 @@ function NoResults({ query }: { query: string }) {
 
 const TONE = { expense: "expense", income: "income", investment: "investment" } as const;
 
-/** One keyboard-reachable row per entry: a button for personal entries, a link for shared ones. */
-function RowList({ rows, ledger, currency, onOpen }: { rows: ActivityRow[]; ledger: Ledger | null; currency: string | undefined; onOpen: ResultsProps["onOpen"] }) {
+/** The day header: Today, Yesterday, or the weekday and date (with the year when it isn't this year's). */
+function dayHeading(date: string, today: string): string {
+  if (date === today) return "Today";
+  const [year = 2000, month = 1, day = 1] = date.split("-").map(Number);
+  const value = new Date(Date.UTC(year, month - 1, day));
+  const [todayYear = 2000, todayMonth = 1, todayDay = 1] = today.split("-").map(Number);
+  if (Date.UTC(todayYear, todayMonth - 1, todayDay) - value.getTime() === 86_400_000) return "Yesterday";
+  return value.toLocaleDateString("en-CA", { weekday: "long", month: "short", day: "numeric", ...(date.startsWith(today.slice(0, 4)) ? {} : { year: "numeric" }), timeZone: "UTC" });
+}
+
+interface RowListProps {
+  rows: ActivityRow[];
+  /** Rows are in date order: show them in day sections with each day's total. */
+  grouped: boolean;
+  /** Every matching row is listed; otherwise the last day may continue on the next page and gets no total. */
+  complete: boolean;
+  ledger: Ledger | null;
+  currency: string | undefined;
+  onOpen: ResultsProps["onOpen"];
+}
+
+/**
+ * One keyboard-reachable row per entry: a button for personal entries, a link for shared ones.
+ * Browsing lists them by day (`iphone-activity`, `web-activity`): a heading with the day's total,
+ * then that day's rows on one surface.
+ */
+function RowList({ rows, grouped, complete, ledger, currency, onOpen }: RowListProps) {
   const today = useToday();
   if (rows.length === 0) return null;
   const categories = new Map(ledger?.categories.map((category) => [category.id, category]));
   const accounts = new Map(ledger?.accounts.map((account) => [account.id, account.name]));
+  const row = (item: ActivityRow) => <Row key={item.key} row={item} grouped={grouped} categories={categories} accounts={accounts} currency={currency} today={today} onOpen={onOpen} />;
+  if (!grouped) return <ul className="results">{rows.map(row)}</ul>;
+  const groups = groupByDay(rows);
   return (
-    <ul className="results">
-      {rows.map((row) => {
-        if (row.source === "personal") {
-          const { entry } = row;
-          const category = categories.get(entry.categoryId);
-          const account = entry.accountId ? accounts.get(entry.accountId) : undefined;
-          // MAZ-136: income dated after today is expected; it counts toward Projected, not Left to spend.
-          const expected = isExpectedIncome(entry, today);
-          return (
-            <li key={row.key} className="results__row activity-row">
-              <button
-                type="button"
-                className="activity-row__main"
-                data-row-key={row.key}
-                onClick={(event) => {
-                  onOpen(entry, event.currentTarget);
-                }}
-              >
-                <span className={expected ? "category-dot category-dot--expected" : "category-dot"} style={{ color: category?.color }}>
-                  <Icon name={categoryIcon(category?.icon)} size={18} />
-                </span>
-                <span className="results__title">{entry.title}</span>
-                <span className="results__meta">
-                  {row.pending ? "Waiting to sync" : "Personal"}
-                  {expected ? " · Expected" : ""}
-                  {category ? ` · ${category.name}` : ""}
-                  {account ? ` · ${account}` : ""} · <time dateTime={entry.date}>{dayLabel(entry.date, true)}</time>
-                </span>
-                <span className="results__amount">
-                  <Money cents={entry.share} currency={currency} tone={expected ? "pending" : TONE[entry.kind]} />
-                </span>
-              </button>
-            </li>
-          );
-        }
-        const { entry } = row;
+    <div className="day-groups">
+      {groups.map((group, index) => {
+        const total = complete || index < groups.length - 1 ? dayTotal(group.rows, currency, today) : null;
         return (
-          <li key={row.key} className="results__row activity-row">
-            <Link to="/households/$id/expenses/$expenseId" params={{ id: entry.householdId, expenseId: entry.id }} className="activity-row__main">
-              <span className="category-dot" style={{ color: entry.category.color }}>
-                <Icon name={categoryIcon(entry.category.icon)} size={18} />
-              </span>
-              <span className="results__title">{entry.title}</span>
-              <span className="results__meta">
-                {entry.householdName ? `Shared · ${entry.householdName}` : "Shared"} · {entry.category.name} · <time dateTime={entry.date}>{dayLabel(entry.date, true)}</time>
-              </span>
-              <span className="results__amount">
-                <Money cents={entry.shareCents} currency={entry.householdCurrency} />
-                <span className="results__sub">your share</span>
-              </span>
-            </Link>
-          </li>
+          <div key={group.date} className="day-group">
+            <div className="day-group__head">
+              <h2 className="day-group__title">
+                <time dateTime={group.date}>{dayHeading(group.date, today)}</time>
+              </h2>
+              {total ? (
+                <span className="day-group__total">
+                  <span className="visually-hidden">Day total </span>
+                  <Money cents={total.cents} currency={total.currency} tone={total.cents > 0 ? "income" : "expense"} signed />
+                </span>
+              ) : null}
+            </div>
+            <ul className="results day-group__rows">{group.rows.map(row)}</ul>
+          </div>
         );
       })}
-    </ul>
+    </div>
+  );
+}
+
+function Row({
+  row,
+  grouped,
+  categories,
+  accounts,
+  currency,
+  today,
+  onOpen,
+}: {
+  row: ActivityRow;
+  /** Under a day heading the date is only read out, not shown again. */
+  grouped: boolean;
+  categories: Map<string, Ledger["categories"][number]>;
+  accounts: Map<string, string>;
+  currency: string | undefined;
+  today: string;
+  onOpen: ResultsProps["onOpen"];
+}) {
+  if (row.source === "personal") {
+    const { entry } = row;
+    const category = categories.get(entry.categoryId);
+    const account = entry.accountId ? accounts.get(entry.accountId) : undefined;
+    // MAZ-136: income dated after today is expected; it counts toward Projected, not Left to spend.
+    const expected = isExpectedIncome(entry, today);
+    return (
+      <li className="results__row activity-row">
+        <button
+          type="button"
+          className="activity-row__main"
+          data-row-key={row.key}
+          onClick={(event) => {
+            onOpen(entry, event.currentTarget);
+          }}
+        >
+          <span className={expected ? "category-dot category-dot--expected" : "category-dot"} style={{ color: category?.color }}>
+            <Icon name={categoryIcon(category?.icon)} size={18} />
+          </span>
+          <span className="results__title">{entry.title}</span>
+          <span className="results__meta">
+            {row.pending ? "Waiting to sync" : "Personal"}
+            {expected ? " · Expected" : ""}
+            {category ? ` · ${category.name}` : ""}
+            {account ? ` · ${account}` : ""}
+            <span className={grouped ? "visually-hidden" : undefined}>
+              {" · "}
+              <time dateTime={entry.date}>{dayLabel(entry.date, true)}</time>
+            </span>
+          </span>
+          <span className="results__amount">
+            <Money cents={entry.share} currency={currency} tone={expected ? "pending" : TONE[entry.kind]} />
+          </span>
+        </button>
+      </li>
+    );
+  }
+  const { entry } = row;
+  return (
+    <li className="results__row activity-row">
+      <Link to="/households/$id/expenses/$expenseId" params={{ id: entry.householdId, expenseId: entry.id }} className="activity-row__main">
+        <span className="category-dot" style={{ color: entry.category.color }}>
+          <Icon name={categoryIcon(entry.category.icon)} size={18} />
+        </span>
+        <span className="results__title">{entry.title}</span>
+        <span className="results__meta">
+          {entry.householdName ? `Shared · ${entry.householdName}` : "Shared"} · {entry.category.name}
+          <span className={grouped ? "visually-hidden" : undefined}>
+            {" · "}
+            <time dateTime={entry.date}>{dayLabel(entry.date, true)}</time>
+          </span>
+        </span>
+        <span className="results__amount">
+          <Money cents={entry.shareCents} currency={entry.householdCurrency} />
+          <span className="results__sub">your share</span>
+        </span>
+      </Link>
+    </li>
   );
 }

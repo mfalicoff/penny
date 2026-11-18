@@ -269,14 +269,19 @@
         ],
         "deviations": [
           {
-            "summary": "Search, period and totals come before the day-grouped list, and search is at the top, not the bottom",
-            "kind": "follow-up",
-            "ref": "MAZ-175"
+            "summary": "Type and the period lead the day-grouped list as segmented controls, and search, the period totals and the category and day filters follow the list on the page, not a bottom search field and a filter sheet",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           },
           {
             "summary": "Row actions open the entry dialog instead of swipe actions",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#interaction-baseline"
+          },
+          {
+            "summary": "Row amounts are unsigned ($5.25, not −$5.25); the day totals are signed. Follow-up recorded on MAZ-175",
+            "kind": "follow-up",
+            "ref": "MAZ-175"
           }
         ]
       }
@@ -303,9 +308,9 @@
         ],
         "deviations": [
           {
-            "summary": "The empty state sits below the filters instead of centered",
-            "kind": "follow-up",
-            "ref": "MAZ-175"
+            "summary": "Active filters are the page's segmented controls, not removable chips, and the period action reads Search all time after Activity's All time period",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           }
         ]
       }
@@ -368,9 +373,9 @@
             "ref": "docs/reference/redesign.md#interaction-baseline"
           },
           {
-            "summary": "The Income form doesn't explain that income dated after today counts toward Projected",
-            "kind": "follow-up",
-            "ref": "MAZ-175"
+            "summary": "The form explains future-dated income under the Income type before a date is picked; the dated callout appears once the date is after today",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           }
         ]
       }
@@ -470,9 +475,9 @@
         ],
         "deviations": [
           {
-            "summary": "A searchable list with New category, not the icon grid with Most used",
-            "kind": "follow-up",
-            "ref": "MAZ-175"
+            "summary": "A dialog over Add entry with no Edit categories link, so the draft stays in place; categories are managed from Manage › Categories",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           }
         ]
       }
