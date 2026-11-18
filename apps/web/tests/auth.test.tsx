@@ -148,7 +148,7 @@ describe("password sign-in", () => {
     const user = userEvent.setup();
     renderApp("/");
     await user.click(await screen.findByRole("button", { name: "Create an account" }));
-    expect(screen.getByRole("heading", { level: 1, name: "Create your account" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Make yourself at home" })).toBeInTheDocument();
     await user.type(screen.getByLabelText("Email"), "alex@example.test");
     await user.type(screen.getByLabelText("Password"), PASSWORD);
     await user.click(screen.getByRole("button", { name: "Create account" }));
@@ -236,7 +236,7 @@ describe("session expiry and sign-out", () => {
     expect(screen.getByRole("button", { name: "Sign out" })).toHaveFocus();
   });
 
-  it("refuses to sign out while changes are waiting to sync", async () => {
+  it("refuses to sign out when changes became pending after the confirmation opened", async () => {
     const { fetchMock } = fakeApi(ALEX);
     const user = userEvent.setup();
     renderApp("/");
@@ -244,7 +244,7 @@ describe("session expiry and sign-out", () => {
     // Registered after the app's own offline store, so this stand-in answers (offline.test.tsx uses the real store).
     const unregister = registerPendingChanges((email) => email === ALEX);
     await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Sign out" }));
-    expect(await screen.findByRole("alert")).toHaveTextContent("Your changes are still waiting to sync");
+    expect(await screen.findByRole("alert")).toHaveTextContent("More changes are waiting to sync now. Nothing was removed.");
     expect(wasCalled(fetchMock, "/api/auth/logout")).toBe(false);
     expect(screen.getByRole("heading", { level: 1, name: "Settings" })).toBeInTheDocument();
     unregister();

@@ -269,6 +269,13 @@ describe("failures", () => {
     await tab.engine.syncNow();
     expect(tab.engine.getState().issue).toMatchObject({ kind: "serverUnavailable", retries: true });
 
+    // The same-origin proxy's gateway errors mean the API itself can't be reached.
+    for (const status of [502, 504]) {
+      server.failures = [status];
+      await tab.engine.syncNow();
+      expect(tab.engine.getState().issue).toMatchObject({ kind: "serverUnreachable", retries: true });
+    }
+
     server.failures = [400];
     await tab.engine.syncNow();
     expect(tab.engine.getState().issue).toMatchObject({ kind: "rejected", retries: false });
@@ -531,6 +538,26 @@ describe("sign-out", () => {
     await two.engine.syncNow();
     expect(await two.engine.beginSignOut()).toBe(0);
     await two.engine.finishSignOut();
+    expect(db.values.has(key())).toBe(false);
+  });
+
+  it("removes unsynced work only up to the count the person agreed to lose (Sign out anyway)", async () => {
+    const server = new FakeServer(ledger());
+    const db = new MemoryLedgerDatabase();
+    const tab = openTab({ server, db });
+    await settled(tab);
+    server.reachable = false;
+    await tab.engine.save(add(entry("c", "Bakery")));
+    await tab.engine.save(add(entry("d", "Lunch")));
+    expect(await tab.engine.beginSignOut()).toBe(2);
+    // Agreed to lose one, but two are pending (another tab saved meanwhile): nothing is removed.
+    await tab.engine.finishSignOut(1);
+    expect(db.values.has(key())).toBe(true);
+
+    const again = openTab({ server, db });
+    await settled(again);
+    expect(await again.engine.beginSignOut()).toBe(2);
+    await again.engine.finishSignOut(2);
     expect(db.values.has(key())).toBe(false);
   });
 

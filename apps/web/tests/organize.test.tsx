@@ -417,7 +417,7 @@ describe("in the demo", { timeout: 20_000 }, () => {
     const fetchMock = stubServer((url) => (url === "/api/auth/me" ? json({ error: "Please sign in to continue." }, 401) : undefined));
     const user = userEvent.setup();
     renderApp("/accounts");
-    await user.click(await screen.findByRole("button", { name: "Explore a demo" }));
+    await user.click(await screen.findByRole("button", { name: "Take a look around with sample data" }));
     expect(await screen.findByRole("heading", { name: "Where your money lives" })).toBeInTheDocument();
     const calls = fetchMock.mock.calls.length;
     await addAccount(user, "Demo card", "Credit card");

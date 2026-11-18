@@ -195,7 +195,7 @@ test("the demo stays in the tab: no private API calls, and a reload ends it", as
   });
 
   await page.goto("/transactions");
-  await page.getByRole("button", { name: "Explore a demo" }).click();
+  await page.getByRole("button", { name: "Take a look around with sample data" }).click();
   await expect(page.getByText("You're exploring a demo")).toBeVisible();
   await expect(page.getByText("Weekly groceries")).toBeVisible();
   const before = requests.length;
