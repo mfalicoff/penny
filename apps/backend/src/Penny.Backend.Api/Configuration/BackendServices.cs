@@ -321,6 +321,15 @@ public static class BackendServices
         );
         services.AddSingleton<IReceiptRepository, PostgresReceiptRepository>();
         services.AddSingleton<ReceiptService>();
+        // Unlinked receipt cleanup (MAZ-165).
+        var cleanup = ReceiptCleanupOptions.Read(configuration);
+        services.AddSingleton(provider => new ReceiptCleanupService(
+            provider.GetRequiredService<IReceiptRepository>(),
+            provider.GetRequiredService<TimeProvider>(),
+            cleanup.Retention
+        ));
+        if (cleanup.Worker)
+            services.AddHostedService<ReceiptCleanupWorker>();
         services.AddSingleton<ILedgerRepository, PostgresLedgerRepository>();
         services.AddSingleton<LedgerService>();
     }

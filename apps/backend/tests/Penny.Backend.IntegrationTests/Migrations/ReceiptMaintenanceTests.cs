@@ -201,6 +201,41 @@ public sealed class ReceiptMaintenanceTests(ApiFixture fixture) : ReceiptTestBas
             .ShouldBe(new[] { referenced, recent }.Order(StringComparer.Ordinal));
     }
 
+    // Unlinked receipts (MAZ-165): past `Receipts__UnlinkedRetentionDays` (default 30)
+    // the row, its text and its file go; a younger one stays.
+    [Fact]
+    public async Task whenReceiptsAreUnlinkedPastRetention_ReceiptsSweep_ShouldDeleteThem()
+    {
+        var token = await RegisterAsync("owner@example.test");
+        var old = (await UploadedAsync(token, "old.pdf", "application/pdf", Pdf()))
+            .GetProperty("id")
+            .GetString()!;
+        var recent = (await UploadedAsync(token, "recent.pdf", "application/pdf", Pdf()))
+            .GetProperty("id")
+            .GetString()!;
+        var recentPath = await StoragePathAsync(recent);
+        await Fixture.SqlAsync(
+            $"UPDATE penny.receipts SET created_at = now() - interval '31 days' WHERE id = '{old}'",
+            Ct
+        );
+
+        var (exit, report) = await RunAsync("receipts-sweep", "--dry-run");
+        exit.ShouldBe(0);
+        report.GetProperty("Unlinked").GetInt64().ShouldBe(1);
+        (await CountAsync("SELECT count(*) FROM penny.receipts")).ShouldBe(2);
+        StoredFiles().Count.ShouldBe(2);
+
+        (exit, report) = await RunAsync("receipts-sweep");
+        exit.ShouldBe(0);
+        report.GetProperty("Unlinked").GetInt64().ShouldBe(1);
+        (await CountAsync($"SELECT count(*) FROM penny.receipts WHERE id = '{old}'")).ShouldBe(0);
+        (
+            await CountAsync($"SELECT count(*) FROM penny.receipt_texts WHERE receipt_id = '{old}'")
+        ).ShouldBe(0);
+        StoredFiles().Select(path => path.Replace('\\', '/')).ShouldBe([recentPath]);
+        (await DownloadedAsync(token, recent)).ShouldBe(Pdf());
+    }
+
     [Fact]
     public async Task whenArgumentsAreUnknown_ReceiptCommand_ShouldPrintUsage()
     {

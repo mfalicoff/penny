@@ -66,13 +66,27 @@ bash apps/backend/dotnet.sh run --project src/Penny.Backend.Api -- receipts-swee
 ```
 
 - `receipts-verify` decrypts every receipt's file and name and checks the stored size. It reports `{Receipts, Verified, Missing, Corrupt, Unreferenced, Bytes}` and exits 0 when no file is missing or corrupt, 2 otherwise. Unreferenced files are reported but are not an error.
-- `receipts-sweep [--dry-run]` deletes files in the store layout that no row references (including leftover `*.tmp-*` writes) once they are more than an hour old. Younger files may belong to an upload that has not committed yet. Files outside the layout are never touched. It reports `{Examined, Removed, DryRun}`.
+- `receipts-sweep [--dry-run]` first deletes [unlinked receipts](#unlinked-receipts) older than `Receipts__UnlinkedRetentionDays`, then files in the store layout that no row references (including leftover `*.tmp-*` writes) once they are more than an hour old. Younger files may belong to an upload that has not committed yet. Files outside the layout are never touched. It reports `{Examined, Removed, DryRun, Unlinked}`: `Unlinked` counts receipts (rows and files), the others files.
+
+### Unlinked receipts
+
+Clients upload a receipt as soon as it is picked, and an entry or shared expense links it only on Save. A discarded draft, a removed or replaced receipt and a cancelled form therefore leave receipts nothing links to (MAZ-165). The API deletes them once they are older than `Receipts__UnlinkedRetentionDays` (default 30, 1–3650): text, row, then file. A receipt is linked while any of these refers to it, whoever owns it, and is then never deleted:
+
+- a personal entry (`ledger_entries`);
+- a shared expense, live or deleted (`household_expenses`);
+- a shared recurring rule (`household_recurring`);
+- a search document (`search_documents`);
+- an inbox email (`receipt_inbox_receipts`); the inbox's own expiry handles those.
+
+The retention is what protects links the server can't see yet: a kept draft or an offline save that syncs later. A save that arrives after its receipt was deleted is refused with `400` like any other unknown receipt, so keep the retention longer than devices stay offline. Each owner's receipts are deleted in one transaction that first locks the owner's ledger row, as personal saves do, and checks the links again; a shared save that links one at the same moment makes the delete fail its foreign key, and the receipt is kept until the next pass.
+
+The `ReceiptCleanupWorker` runs a pass at startup and every six hours, unless `Receipts__CleanupWorker=false`; any number of API processes may run it. `receipts-sweep` runs the same pass. Logs and reports hold counts only.
 
 ### Backup and restore
 
 Receipt metadata lives in PostgreSQL and the bytes on the filesystem, so a backup needs both, plus the master key kept separately in the secret manager.
 
-1. Dump the database first, then copy `Receipts__Root`. Files are written before their rows and never modified or deleted by the API, so every row in the dump has its file in the later copy. The copy may hold extra files from uploads after the dump.
+1. Dump the database first, then copy `Receipts__Root`. Files are written before their rows and never modified, so every row in the dump has its file in the later copy. The copy may hold extra files from uploads after the dump. The API does delete files of [unlinked receipts](#unlinked-receipts) and discarded inbox emails; one deleted between the dump and the copy shows up as `Missing` in `receipts-verify` after a restore. Nothing links it, and the next cleanup pass removes its row. To avoid that, take both under the same write freeze.
 2. To restore, restore the database and the receipt root together with the service stopped, keeping the same master key, then run `receipts-verify` (expect exit 0). Run `receipts-sweep` afterwards to drop files for receipts the restored database no longer knows about.
 3. Do not run `receipts-sweep` against a root while a different, newer database is restoring: it would delete files that database still references.
 
@@ -105,4 +119,5 @@ Clients fetch `/api/receipts/<id>` with their session and display the bytes loca
   - shared access across membership changes and expense deletion;
   - cross-account attachment;
   - failed metadata writes (file removed), failed file writes (no row), and missing/tampered files.
-- `ReceiptMaintenanceTests`: PostgreSQL dump/restore with the receipt root, and `receipts-verify`/`receipts-sweep` as separate processes.
+- `ReceiptMaintenanceTests`: PostgreSQL dump/restore with the receipt root, and `receipts-verify`/`receipts-sweep` as separate processes, including unlinked receipts past the retention.
+- `ReceiptCleanupTests` (MAZ-165): only old unlinked receipts go (text, row and file); links from a personal entry, a live or deleted shared expense and a shared rule keep a receipt, and so does another owner's expense; each owner's own unlinked receipts go. `ReceiptInboxTests` checks the cleanup leaves inbox files alone, and `ReceiptCleanupOptionsTests` (unit) the settings.
