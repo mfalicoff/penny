@@ -38,7 +38,7 @@ public sealed class TelemetryTests(ApiFixture fixture) : IntegrationTestBase(fix
         var settings = TelemetryCapture.Settings(collector.Endpoint);
         settings["Search:RateLimitPermits"] = "2";
         await using var factory = new TestApiFactory(
-            Fixture.RuntimeConnection,
+            Fixture.Connection,
             settings,
             capture.Configure
         );
@@ -282,7 +282,7 @@ public sealed class TelemetryTests(ApiFixture fixture) : IntegrationTestBase(fix
         // The host names its pool; the connection string never becomes the name. (The
         // Npgsql meter is process-wide, so other tests' data sources may appear too.)
         pool.ShouldContain(Penny.Backend.Persistence.Configuration.DatabaseSettings.DataSourceName);
-        var runtime = new Npgsql.NpgsqlConnectionStringBuilder(Fixture.RuntimeConnection);
+        var runtime = new Npgsql.NpgsqlConnectionStringBuilder(Fixture.Connection);
         pool.ShouldAllBe(name =>
             !string.Concat(name).Contains(runtime.Username!, StringComparison.Ordinal)
             && !string.Concat(name).Contains("Password", StringComparison.OrdinalIgnoreCase)
@@ -310,7 +310,7 @@ public sealed class TelemetryTests(ApiFixture fixture) : IntegrationTestBase(fix
         settings["OTEL_BSP_SCHEDULE_DELAY"] = "10";
         settings["OTEL_BLRP_SCHEDULE_DELAY"] = "10";
         settings["OTEL_METRIC_EXPORT_INTERVAL"] = "50";
-        await using var factory = new TestApiFactory(Fixture.RuntimeConnection, settings);
+        await using var factory = new TestApiFactory(Fixture.Connection, settings);
         using var client = CreateClient(factory);
         factory.Services.GetRequiredService<TelemetryOptions>().Enabled.ShouldBeTrue();
         var token = await RegisterAsync("telemetry-silent@example.test", client);
@@ -346,7 +346,7 @@ public sealed class TelemetryTests(ApiFixture fixture) : IntegrationTestBase(fix
     {
         const string header = "secret-collector-token";
         await using var factory = new TestApiFactory(
-            Fixture.RuntimeConnection,
+            Fixture.Connection,
             new Dictionary<string, string>
             {
                 ["OTEL_EXPORTER_OTLP_ENDPOINT"] = "https://collector.example.test",

@@ -3,11 +3,48 @@ using Npgsql;
 namespace Penny.Backend.Persistence.Schema;
 
 // Presence and version of the extensions search needs (raw SQL inventory: a read of
-// pg_extension). Used by `migrate` (refuses to run) and readiness (503).
+// pg_extension, and CREATE EXTENSION when they are missing). Used by the migration
+// (creates them, or refuses to run) and readiness (503).
 public static class SearchExtensions
 {
     public const string Missing =
-        "PostgreSQL extensions vector (pgvector 0.8 or later) and pg_trgm must be created by an administrator before migrating. See docs/reference/search.md. No migration was applied.";
+        "PostgreSQL extensions vector (pgvector 0.8 or later) and pg_trgm are missing and the database user cannot create them. Create them as an administrator (docs/reference/search.md). No migration was applied.";
+
+    // Creates missing extensions in `public`, in one transaction, so a user that may
+    // create pg_trgm (a trusted extension) but not vector leaves nothing behind. Throws
+    // Missing when the user lacks the privilege or the server's versions are too old.
+    public static async Task EnsureAsync(
+        NpgsqlConnection connection,
+        CancellationToken cancellationToken
+    )
+    {
+        if (await AvailableAsync(connection, cancellationToken))
+            return;
+        try
+        {
+            await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+            await using (
+                var command = new NpgsqlCommand(
+                    $"CREATE EXTENSION IF NOT EXISTS {SearchSchema.Trigrams} SCHEMA public; CREATE EXTENSION IF NOT EXISTS {SearchSchema.Vector} SCHEMA public",
+                    connection,
+                    transaction
+                )
+            )
+                await command.ExecuteNonQueryAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch (PostgresException error)
+            when (error.SqlState
+                    is PostgresErrorCodes.InsufficientPrivilege
+                        or PostgresErrorCodes.UndefinedFile
+                        or PostgresErrorCodes.FeatureNotSupported
+            )
+        {
+            throw new InvalidOperationException(Missing);
+        }
+        if (!await AvailableAsync(connection, cancellationToken))
+            throw new InvalidOperationException(Missing);
+    }
 
     public static async Task<bool> AvailableAsync(
         NpgsqlConnection connection,

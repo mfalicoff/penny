@@ -155,7 +155,7 @@ public sealed class BoundaryTests(ApiFixture fixture) : IntegrationTestBase(fixt
     public async Task whenShutdownRequested_HostLifetimeFlow_ShouldDrainInFlightRequests()
     {
         // Stopping the host requires a dedicated lifetime; it shares the suite's real database.
-        await using var factory = new TestApiFactory(Fixture.RuntimeConnection);
+        await using var factory = new TestApiFactory(Fixture.Connection);
         factory.UseKestrel(0);
         using var client = factory.CreateClient();
         var signals = factory.Services.GetRequiredService<ProbeSignals>();

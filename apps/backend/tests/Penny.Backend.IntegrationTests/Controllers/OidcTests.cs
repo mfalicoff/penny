@@ -52,7 +52,7 @@ public sealed class OidcTests(ApiFixture fixture, FakeOidcProvider provider)
     [Fact]
     public async Task whenOidcConfigured_Start_ShouldReturnPkceAuthorizationUrlAndStoreHashedAttempt()
     {
-        await using var api = Provider.CreateApi(Fixture.RuntimeConnection);
+        await using var api = Provider.CreateApi(Fixture.Connection);
         using var client = CreateClient(api);
         (await client.GetFromJsonAsync<JsonElement>("/api/auth/oidc", Ct))
             .GetRawText()
@@ -115,7 +115,7 @@ public sealed class OidcTests(ApiFixture fixture, FakeOidcProvider provider)
     [InlineData("[]")]
     public async Task whenRedirectUriNotConfigured_Start_ShouldReturnBadRequest(string body)
     {
-        await using var api = Provider.CreateApi(Fixture.RuntimeConnection);
+        await using var api = Provider.CreateApi(Fixture.Connection);
         using var client = CreateClient(api);
         using var response = await client.PostAsync(
             "/api/auth/oidc/start",
@@ -133,7 +133,7 @@ public sealed class OidcTests(ApiFixture fixture, FakeOidcProvider provider)
     [Fact]
     public async Task whenNewIdentityAndRegistrationAllowed_Complete_ShouldCreateAccountWithLedgerAndSession()
     {
-        await using var api = Provider.CreateApi(Fixture.RuntimeConnection);
+        await using var api = Provider.CreateApi(Fixture.Connection);
         using var client = CreateClient(api);
         var (transaction, callbackUrl) = await BeginAsync(client);
 
@@ -190,7 +190,7 @@ public sealed class OidcTests(ApiFixture fixture, FakeOidcProvider provider)
     [Fact]
     public async Task whenProviderEmailChanges_Complete_ShouldSignInToSameAccountByIssuerAndSubject()
     {
-        await using var api = Provider.CreateApi(Fixture.RuntimeConnection);
+        await using var api = Provider.CreateApi(Fixture.Connection);
         using var client = CreateClient(api);
         using (var first = await SignInAsync(client))
             first.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -216,14 +216,14 @@ public sealed class OidcTests(ApiFixture fixture, FakeOidcProvider provider)
     [Fact]
     public async Task whenRegistrationDisabled_Complete_ShouldRejectNewIdentitiesButSignInExisting()
     {
-        await using (var open = Provider.CreateApi(Fixture.RuntimeConnection))
+        await using (var open = Provider.CreateApi(Fixture.Connection))
         {
             using var client = CreateClient(open);
             using var created = await SignInAsync(client);
             created.StatusCode.ShouldBe(HttpStatusCode.OK);
         }
         await using var closed = Provider.CreateApi(
-            Fixture.RuntimeConnection,
+            Fixture.Connection,
             FakeOidcProvider.Settings(allowRegistration: false)
         );
         using var closedClient = CreateClient(closed);
@@ -244,7 +244,7 @@ public sealed class OidcTests(ApiFixture fixture, FakeOidcProvider provider)
     [Fact]
     public async Task whenEmailBelongsToPasswordAccount_Complete_ShouldConflictWithoutLinking()
     {
-        await using var api = Provider.CreateApi(Fixture.RuntimeConnection);
+        await using var api = Provider.CreateApi(Fixture.Connection);
         using var client = CreateClient(api);
         var password = await RegisterAsync(Email, client);
         using var conflict = await SignInAsync(client);
@@ -261,7 +261,7 @@ public sealed class OidcTests(ApiFixture fixture, FakeOidcProvider provider)
     [Fact]
     public async Task whenFirstSignInsRace_Complete_ShouldCreateOneAccount()
     {
-        await using var api = Provider.CreateApi(Fixture.RuntimeConnection);
+        await using var api = Provider.CreateApi(Fixture.Connection);
         using var client = CreateClient(api);
         var attempts = new[] { await BeginAsync(client), await BeginAsync(client) };
         var responses = await Task.WhenAll(
@@ -293,7 +293,7 @@ public sealed class OidcTests(ApiFixture fixture, FakeOidcProvider provider)
     [Fact]
     public async Task whenSameAttemptRedeemedConcurrently_Complete_ShouldExchangeOnce()
     {
-        await using var api = Provider.CreateApi(Fixture.RuntimeConnection);
+        await using var api = Provider.CreateApi(Fixture.Connection);
         using var client = CreateClient(api);
         var (transaction, callbackUrl) = await BeginAsync(client);
         var responses = await Task.WhenAll(
@@ -318,7 +318,7 @@ public sealed class OidcTests(ApiFixture fixture, FakeOidcProvider provider)
     [Fact]
     public async Task whenAttemptExpiredOrUnknown_Complete_ShouldRejectWithoutExchange()
     {
-        await using var api = Provider.CreateApi(Fixture.RuntimeConnection);
+        await using var api = Provider.CreateApi(Fixture.Connection);
         using var client = CreateClient(api);
         var start = DateTimeOffset.FromUnixTimeMilliseconds(1_900_000_000_000);
         api.Clock.Set(start);
@@ -373,7 +373,7 @@ public sealed class OidcTests(ApiFixture fixture, FakeOidcProvider provider)
     [InlineData("{}")]
     public async Task whenBodyInvalid_Complete_ShouldReturnBadRequest(string body)
     {
-        await using var api = Provider.CreateApi(Fixture.RuntimeConnection);
+        await using var api = Provider.CreateApi(Fixture.Connection);
         using var client = CreateClient(api);
         using var response = await client.PostAsync(
             "/api/auth/oidc/complete",
@@ -390,7 +390,7 @@ public sealed class OidcTests(ApiFixture fixture, FakeOidcProvider provider)
     [Fact]
     public async Task whenCallbackTooLong_Complete_ShouldRejectBeforeConsumingAttempt()
     {
-        await using var api = Provider.CreateApi(Fixture.RuntimeConnection);
+        await using var api = Provider.CreateApi(Fixture.Connection);
         using var client = CreateClient(api);
         var (transaction, callbackUrl) = await BeginAsync(client);
         using (
@@ -412,7 +412,7 @@ public sealed class OidcTests(ApiFixture fixture, FakeOidcProvider provider)
     [Fact]
     public async Task whenCallbackDoesNotMatchAttempt_Complete_ShouldRejectWithoutExchange()
     {
-        await using var api = Provider.CreateApi(Fixture.RuntimeConnection);
+        await using var api = Provider.CreateApi(Fixture.Connection);
         using var client = CreateClient(api);
         var tampered = new Func<string, string>[]
         {
@@ -468,7 +468,7 @@ public sealed class OidcTests(ApiFixture fixture, FakeOidcProvider provider)
     public async Task whenProviderAdvertisesIssuerParameter_Complete_ShouldRequireMatchingIssuer()
     {
         Provider.SendsIssuer = true;
-        await using var api = Provider.CreateApi(Fixture.RuntimeConnection);
+        await using var api = Provider.CreateApi(Fixture.Connection);
         using var client = CreateClient(api);
         var (transaction, callbackUrl) = await BeginAsync(client);
         var withoutIssuer = callbackUrl[..callbackUrl.IndexOf("&iss=", StringComparison.Ordinal)];
@@ -485,7 +485,7 @@ public sealed class OidcTests(ApiFixture fixture, FakeOidcProvider provider)
     [Fact]
     public async Task whenIdTokenOrEmailInvalid_Complete_ShouldReturnUnauthorized()
     {
-        await using var api = Provider.CreateApi(Fixture.RuntimeConnection);
+        await using var api = Provider.CreateApi(Fixture.Connection);
         using var client = CreateClient(api);
         var expired = DateTimeOffset.UtcNow.AddMinutes(-5).ToUnixTimeSeconds();
         var grants = new[]
@@ -533,7 +533,7 @@ public sealed class OidcTests(ApiFixture fixture, FakeOidcProvider provider)
     [Fact]
     public async Task whenEmailOnlyInUserInfo_Complete_ShouldUseVerifiedUserInfoEmail()
     {
-        await using var api = Provider.CreateApi(Fixture.RuntimeConnection);
+        await using var api = Provider.CreateApi(Fixture.Connection);
         using var client = CreateClient(api);
         using var response = await SignInAsync(
             client,
@@ -558,7 +558,7 @@ public sealed class OidcTests(ApiFixture fixture, FakeOidcProvider provider)
     public async Task whenProviderUnavailableOrMisadvertised_Start_ShouldReturnBadRequestAndDiscardAttempt()
     {
         Provider.Available = false;
-        await using (var down = Provider.CreateApi(Fixture.RuntimeConnection))
+        await using (var down = Provider.CreateApi(Fixture.Connection))
         {
             using var client = CreateClient(down);
             using var response = await client.PostAsJsonAsync(
@@ -574,7 +574,7 @@ public sealed class OidcTests(ApiFixture fixture, FakeOidcProvider provider)
         }
         Provider.Available = true;
         Provider.DiscoveryIssuer = FakeOidcProvider.Issuer + "/";
-        await using (var mismatched = Provider.CreateApi(Fixture.RuntimeConnection))
+        await using (var mismatched = Provider.CreateApi(Fixture.Connection))
         {
             using var client = CreateClient(mismatched);
             using var response = await client.PostAsJsonAsync(
@@ -595,12 +595,12 @@ public sealed class OidcTests(ApiFixture fixture, FakeOidcProvider provider)
     public async Task whenServerRestartsDuringSignIn_Complete_ShouldFinishOnNewHost()
     {
         (string Transaction, string CallbackUrl) attempt;
-        await using (var before = Provider.CreateApi(Fixture.RuntimeConnection))
+        await using (var before = Provider.CreateApi(Fixture.Connection))
         {
             using var client = CreateClient(before);
             attempt = await BeginAsync(client);
         }
-        await using var after = Provider.CreateApi(Fixture.RuntimeConnection);
+        await using var after = Provider.CreateApi(Fixture.Connection);
         using var restarted = CreateClient(after);
         using var completed = await CompleteAsync(
             restarted,
@@ -613,7 +613,7 @@ public sealed class OidcTests(ApiFixture fixture, FakeOidcProvider provider)
     [Fact]
     public async Task whenTooManyAttemptsPending_Start_ShouldReturnForbiddenUntilTheyExpire()
     {
-        await using var api = Provider.CreateApi(Fixture.RuntimeConnection);
+        await using var api = Provider.CreateApi(Fixture.Connection);
         using var client = CreateClient(api);
         var now = DateTimeOffset.UtcNow;
         api.Clock.Set(now);
@@ -646,7 +646,7 @@ public sealed class OidcTests(ApiFixture fixture, FakeOidcProvider provider)
     [Fact]
     public async Task whenInitialLedgerCannotBeSaved_Complete_ShouldRollBackAccountAndIdentity()
     {
-        await using var api = Provider.CreateApi(Fixture.RuntimeConnection);
+        await using var api = Provider.CreateApi(Fixture.Connection);
         using var client = CreateClient(api);
         await Fixture.SqlAsync(
             """
@@ -686,7 +686,7 @@ public sealed class OidcTests(ApiFixture fixture, FakeOidcProvider provider)
     {
         var settings = FakeOidcProvider.Settings();
         settings["Oidc:RedirectUris"] = "https://penny.example.test/auth/callback?next=/";
-        await using var api = Provider.CreateApi(Fixture.RuntimeConnection, settings);
+        await using var api = Provider.CreateApi(Fixture.Connection, settings);
         var error = Should.Throw<InvalidOperationException>(() => api.StartServer());
         error.Message.ShouldContain("Oidc:RedirectUris");
         error.Message.ShouldNotContain(FakeOidcProvider.ClientSecret);

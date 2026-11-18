@@ -72,7 +72,7 @@ Lock order matches [PostgreSQL concurrency](postgresql.md#concurrency-and-transa
 
 ## Operational diagnostics
 
-Logs carry counts and exception types only, never ids, amounts, titles or SQL: `Recorded {Occurrences} shared recurring occurrences from {Rules} rules` (Information), `A shared recurring rule failed ({ExceptionType}); it is retried after its lease expires` and `Shared recurrence pass failed ({ExceptionType}); it will be retried` (Warning). Read-only checks with the runtime role:
+Logs carry counts and exception types only, never ids, amounts, titles or SQL: `Recorded {Occurrences} shared recurring occurrences from {Rules} rules` (Information), `A shared recurring rule failed ({ExceptionType}); it is retried after its lease expires` and `Shared recurrence pass failed ({ExceptionType}); it will be retried` (Warning). Read-only checks as the API's database login:
 
 ```sql
 -- Overdue rules (should be empty a few minutes after a worker is running).

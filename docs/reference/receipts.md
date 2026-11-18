@@ -57,7 +57,7 @@ So a row never exists without its file. If PostgreSQL rejects the insert, the fi
 
 ### Commands
 
-Both use the runtime connection (`ConnectionStrings__Postgres`) and `Receipts__Root`/`Receipts__MasterKey`, never start HTTP and print a JSON report of counts only on stdout.
+Both use the API's connection (`ConnectionStrings__Postgres`) and `Receipts__Root`/`Receipts__MasterKey`, never start HTTP and print a JSON report of counts only on stdout.
 
 ```sh
 bash apps/backend/dotnet.sh run --project src/Penny.Backend.Api -- receipts-verify

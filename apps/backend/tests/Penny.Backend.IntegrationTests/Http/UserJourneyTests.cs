@@ -39,7 +39,7 @@ public sealed class UserJourneyTests(ApiFixture fixture, FakeOidcProvider provid
 
         // 1. Registration: alex through OIDC on a provider-trusting host, sam by password.
         string alexToken;
-        await using (var oidcHost = provider.CreateApi(Fixture.RuntimeConnection))
+        await using (var oidcHost = provider.CreateApi(Fixture.Connection))
         {
             oidcHost.Clock.Set(Noon);
             using var oidcClient = CreateClient(oidcHost);
@@ -127,7 +127,7 @@ public sealed class UserJourneyTests(ApiFixture fixture, FakeOidcProvider provid
 
         // 8. Restart: a new host over the same database must reproduce all of it.
         await using var restarted = new TestApiFactory(
-            Fixture.RuntimeConnection,
+            Fixture.Connection,
             new Dictionary<string, string>
             {
                 ["Receipts:Root"] = Fixture.ReceiptRoot,

@@ -21,12 +21,8 @@ public sealed class PushConcurrencyTests(ApiFixture fixture) : PushTestBase(fixt
         await RegisterApnsAsync(sam.Token, ApnsToken(2), "sandbox");
         for (var index = 0; index < 30; index++)
             await CreateExpenseAsync(householdId, alex.Token, Expense(1000 + index, alex.UserId));
-        await using var first = DatabaseSettings
-            .Create(Fixture.RuntimeConnection)
-            .CreateDataSource();
-        await using var second = DatabaseSettings
-            .Create(Fixture.RuntimeConnection)
-            .CreateDataSource();
+        await using var first = DatabaseSettings.Create(Fixture.Connection).CreateDataSource();
+        await using var second = DatabaseSettings.Create(Fixture.Connection).CreateDataSource();
 
         await Task.WhenAll(
             Enumerable

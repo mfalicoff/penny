@@ -100,7 +100,7 @@ public sealed class PointInTimeRecoveryTests(ApiFixture fixture) : SharedExpense
         await WaitForPromotionAsync();
 
         await using var recovered = new TestApiFactory(
-            Fixture.RecoveredConnection(Fixture.RuntimeConnection),
+            Fixture.RecoveredConnection(Fixture.Connection),
             new Dictionary<string, string>
             {
                 ["Receipts:Root"] = Fixture.ReceiptRoot,

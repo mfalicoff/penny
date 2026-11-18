@@ -91,7 +91,7 @@ internal static class PasswordResetCommand
             )
         {
             Console.Error.WriteLine(
-                "Password reset failed. Check ConnectionStrings__Postgres, connectivity, that `migrate` has been applied with runtime grants, and retry if another reset for this account ran at the same time. No credentials, emails or codes are logged."
+                "Password reset failed. Check ConnectionStrings__Postgres, connectivity, that the database has been migrated, and retry if another reset for this account ran at the same time. No credentials, emails or codes are logged."
             );
             return 1;
         }

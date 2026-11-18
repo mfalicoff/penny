@@ -7,9 +7,8 @@ export function deployEnv(origin, extra = {}) {
     PENNY_PUBLIC_ORIGIN: origin,
     PENNY_SECURE_COOKIES: String(origin.startsWith("https://")),
     COMPOSE_PROFILES: "bundled-postgres",
-    PENNY_ADMIN_PASSWORD: randomBytes(24).toString("hex"),
-    PENNY_MIGRATION_PASSWORD: randomBytes(24).toString("hex"),
-    PENNY_RUNTIME_PASSWORD: randomBytes(24).toString("hex"),
+    PENNY_DB_USER: "penny",
+    PENNY_DB_PASSWORD: randomBytes(24).toString("hex"),
     PENNY_RECEIPT_KEY: randomBytes(32).toString("base64"),
     ...extra,
   };
