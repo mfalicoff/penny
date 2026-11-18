@@ -22,7 +22,7 @@
     },
     {
       "path": "assets/penny.css",
-      "sha256": "a70d13ea4dfbd42e2ba57ef4d4003c8c6fce960c245504ab1d582e0a0800f7da"
+      "sha256": "958bd18415c576fa5c6e4ff05fcafaf8ddbbfa660a3cce19267614d227bb8879"
     },
     {
       "path": "assets/sankey.js",
@@ -50,7 +50,7 @@
         {
           "appearance": "light",
           "file": "previews/system-foundations.light.png",
-          "sha256": "776cd9ac23e57f4870b9b9823a9ea991e4da2307243131605e6bc72acffd9981"
+          "sha256": "edfd039bd5a47f8a93516793ea4db88f300bf63e828d21bfdd4902d0eed00659"
         },
         {
           "appearance": "dark",
@@ -71,7 +71,7 @@
         {
           "appearance": "light",
           "file": "previews/system-widgets.light.png",
-          "sha256": "cf12c7d3f3aed548dca3077dfa1bb4836b1b329ed3fd32db458baf821a74ed57"
+          "sha256": "66899f161db5a6c8ab0bf0ab7f3916453c25539197ef78b1c0338997d4c350fe"
         },
         {
           "appearance": "dark",
@@ -92,7 +92,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-account-form.light.png",
-          "sha256": "f8d73b831592c6b53b967daf5e93c1ffa2b2635ecc1de55634a1cbb887da1358"
+          "sha256": "aa0736eea52f64490673f9091892324fa291b26dd5b682f544333d441403ab71"
         },
         {
           "appearance": "dark",
@@ -113,7 +113,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-accounts.light.png",
-          "sha256": "c04bed23d8a9116d4c9dca32e06dfcba5708f288bc70f9638b1fba4b8c5b7a47"
+          "sha256": "6a3c84df32c95875465c469253b688791cbfbc99dd425ffa8ffb929cafade93a"
         },
         {
           "appearance": "dark",
@@ -134,7 +134,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-activity.light.png",
-          "sha256": "dc76584f72f66f7384a1a5dbc2adeb3bef9fbf62ee1bd3e4fd64f10892308857"
+          "sha256": "9fcb899b1e52de86d4aa42448595866f78c611fe93eb4cfac2360b2ecf320e5d"
         },
         {
           "appearance": "dark",
@@ -155,7 +155,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-add-expense.light.png",
-          "sha256": "b4cd4492a7ab251c392e41b05ba5e1869908bc1942b4409ef111f3e7e5d961a2"
+          "sha256": "14b741c199c35e5e4e4b02fbf230ed8d25cbef6257efd73f8490516abe6033d9"
         },
         {
           "appearance": "dark",
@@ -176,7 +176,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-add-income.light.png",
-          "sha256": "76a61c3fecac2a860e4bfdd4f074fac31dbbbb901a1cae4a3bc123d8691678f2"
+          "sha256": "f62bbb61a1badaa38d275d9e6b19e743f762f963f14194a0d767ac79a2b25e52"
         },
         {
           "appearance": "dark",
@@ -197,7 +197,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-app-lock.light.png",
-          "sha256": "7f2f46ac1a9c9c887a530ab87c4fe5fdb2cb63823fdbab55d5a2f7db7850e6aa"
+          "sha256": "903d8d92eda869adc8321d2974f6c31a5128cfa3f56b30bacd0507d5e70d0048"
         },
         {
           "appearance": "dark",
@@ -218,7 +218,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-appearance.light.png",
-          "sha256": "83495f88fb72f5cf4abb29db6c6dfaca22704d329e8278d98ec8b8d771b14e20"
+          "sha256": "ad90b28fbd55f6abc3a66725337aea1952987bd642957e3542da3f01be097a6b"
         },
         {
           "appearance": "dark",
@@ -239,7 +239,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-calendar.light.png",
-          "sha256": "015e72808c95f46b81034f8185e08f5f1a142141c2d2ae5d5bdb195df78c4750"
+          "sha256": "751f27b16e99274cdf6de33f6df354a44e67075d77911cfce1c84f673e3198b0"
         },
         {
           "appearance": "dark",
@@ -260,7 +260,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-categories.light.png",
-          "sha256": "3e44df3d177a32493a6e2522c85c4a62a85b4d1f82ba783c16d1a313731b9838"
+          "sha256": "a6262f3e3abbec63b62294edc58b44f6e5bc5f4c829da42534f1c934eca5cacf"
         },
         {
           "appearance": "dark",
@@ -281,7 +281,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-category-form.light.png",
-          "sha256": "27182847e3f0f97840c871e1ffb144ffd147999ccb68889ff822f4dc2b36ef13"
+          "sha256": "821d979885b006e3ce39a2a67b018f4c921cb56c0e21bb7686905c5944e836c1"
         },
         {
           "appearance": "dark",
@@ -302,7 +302,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-category-picker.light.png",
-          "sha256": "73e431f0418d5b6d562852150d7f715005230b65c0f336cec50dbcd9d6f1824f"
+          "sha256": "d2078b357683b8a27b9414e38133795f25114daff5a3ba3a726bf239a4696e1e"
         },
         {
           "appearance": "dark",
@@ -323,7 +323,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-create-account.light.png",
-          "sha256": "459402f2c1ee647604cf11cd1413295570fc39887f03ea4c9d80d2a4e51f0ffd"
+          "sha256": "3352fe342597974569c6a406d4dd19d6a39c549bd9aa8ecddca07db1605b3212"
         },
         {
           "appearance": "dark",
@@ -344,7 +344,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-delete-confirm.light.png",
-          "sha256": "71e70c5b6bedc08690ce9993e0b6f93eda4ca6897fe251f9a2ccd9144932dc13"
+          "sha256": "578425d949e07525733e7409c6a8678ae7040e4f420c783b58bd584b6bd70189"
         },
         {
           "appearance": "dark",
@@ -356,7 +356,7 @@
     {
       "id": "iphone-empty-home",
       "source": "docs/design/penny-ios/iphone/empty-home.html",
-      "sourceSha256": "879c4441648a86660b7dd959bb751898d06e2f3bc3e55cfca1cd8276b02a9e93",
+      "sourceSha256": "dc53af35eaee83ab50ee26da4f1896006079b816bc0cd1dd7e335f122ba05733",
       "viewport": {
         "w": 482,
         "h": 954
@@ -365,12 +365,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-empty-home.light.png",
-          "sha256": "8dae6cb6c889a06bd0af28144c702f0a6a77a438027b60da72103218cf588e34"
+          "sha256": "262c472e3758edb0f826ff4a48320098e8c027533796477c3e05e6829119387f"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-empty-home.dark.png",
-          "sha256": "c5e918fa1135c910e1cdfddac9a5ab9dfc56ed5df87f94e6ba3497ba876e2463"
+          "sha256": "b835f5fab16b1da445f3254dfe221b97baf2e86b123be04eb02f20bc91fb6a19"
         }
       ]
     },
@@ -386,7 +386,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-entry-detail.light.png",
-          "sha256": "06a06e17e764296c931af5af91216a2e92c1e3c123370fad53c01f4e68d57626"
+          "sha256": "54d29ea746bdb309659f8c14c427e120acc32b560fd396b945f1828a36c610fc"
         },
         {
           "appearance": "dark",
@@ -407,7 +407,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-entry-extras.light.png",
-          "sha256": "c3e8e25ecaae57fef926081f5fd70c64c8adf2d044a304d56dc05cdd2d2b0034"
+          "sha256": "393b92173aacf7c0bede5701c51fd17b8059173beeea0b9261bd84df32ada8bf"
         },
         {
           "appearance": "dark",
@@ -428,7 +428,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-history.light.png",
-          "sha256": "0559e0eec7db9bc7cdb32d28dd79e5fe86578452235be1b13a1af2712774a312"
+          "sha256": "cdd31eef0ebe574740aae99bbec800330977d0cbe0c69173ff572029dd2a4866"
         },
         {
           "appearance": "dark",
@@ -465,7 +465,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-home.light.png",
-          "sha256": "82e7510cf666b8d7ac84e332f6be05afec20071a73e2a1b53e6958533e7eddd8"
+          "sha256": "021d6e3896304553f411306b21ff94b3b110f05ab2b6173f4feb21efede29011"
         },
         {
           "appearance": "dark",
@@ -486,7 +486,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-household-create.light.png",
-          "sha256": "13e920b185f34de73f1fbe7b1e398003e4da1f0f9f29378b03db20bdaeabbed0"
+          "sha256": "1ed9fb56ff646c4055643d07ac49ed09f7e794a63c30a925b0b49b3eea692a00"
         },
         {
           "appearance": "dark",
@@ -507,7 +507,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-insights.light.png",
-          "sha256": "c603172e476114a962f47d78bb57a0784b70db4ea4f9eca90c2d9ac6d72d5f60"
+          "sha256": "592906a6fc8ad908e204b99b0e664627147269198744251f35b5ad569a709a0c"
         },
         {
           "appearance": "dark",
@@ -528,7 +528,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-lock.light.png",
-          "sha256": "647cc814830307ca1907e4cd049ef7c0a4ae6ca3e769484591f7236e89e15b72"
+          "sha256": "4ee7c3580498689d43534189053bea49c6dedd724963d1f3eaa0576a4c688300"
         },
         {
           "appearance": "dark",
@@ -549,7 +549,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-money-flow.light.png",
-          "sha256": "c2042c1f6f727cc3cd9a1f841a0ce8ed32f050dcaed40aa8668ec54099209d31"
+          "sha256": "f06594eef775db1aa74cd7325d13d3cc2f892cfa07e58fcd14cc23fd1ddcedcb"
         },
         {
           "appearance": "dark",
@@ -570,7 +570,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-offline.light.png",
-          "sha256": "7774b40d28bf8353cc5bef59e78134e151acd2bcf7b53154c316092e2bd66711"
+          "sha256": "ecb717e3d0e8a1ee5be6b8386080e2e93fd2cfecac34c41a9901d9ede98a8673"
         },
         {
           "appearance": "dark",
@@ -591,7 +591,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-payment-stale.light.png",
-          "sha256": "d4d38f99e617e7a0ec9afc2c4955fc1e142e3f278c606e96068c7df1176115e9"
+          "sha256": "060476e3d8db2d320c55980e790331398b4d4c4f5cc51f500ade941cd303a3ef"
         },
         {
           "appearance": "dark",
@@ -612,7 +612,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-receipt-attach-confirm.light.png",
-          "sha256": "dcce44784114e238ba592486cf069c63a4469f00a08c7032698ce3e2e2dbf83f"
+          "sha256": "6e886bdeb54292444524a7c9d9183ef44a78d0375911cdb61b6e59d3fd2a6596"
         },
         {
           "appearance": "dark",
@@ -633,7 +633,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-receipt-attach-entry.light.png",
-          "sha256": "9f1d6be5c0cd5d1555af9cafab665557f499302179044fc8acf73d60b3a73dfd"
+          "sha256": "8d9cf6a2402ca8731896c70e215054e7946a9f6a69b0a98dca7f892672b81f6b"
         },
         {
           "appearance": "dark",
@@ -654,7 +654,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-receipt-attach-file.light.png",
-          "sha256": "3aa562c0396c7b91939cc82687b60e2db19f1bfa3388e455a897ff99578e5c2b"
+          "sha256": "504446da03298ca13fddaf782a64f1733753eb29a73ddd9b9ce648f3aedb7516"
         },
         {
           "appearance": "dark",
@@ -675,7 +675,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-receipt-attached-toast.light.png",
-          "sha256": "a0468fb406cc2d605eccb0f998101c58da6d59f830b5774df9581747b1a02c44"
+          "sha256": "a4b343eb573d880cf7f54a5b3b944565a9a67d2af083c0097503f1514bff0ee2"
         },
         {
           "appearance": "dark",
@@ -696,7 +696,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-receipt-email-settings.light.png",
-          "sha256": "28df59ecd3c3e6efb396e53ba578f9da6f4bfa0b51947c157a2def303a05d8d4"
+          "sha256": "be181e1c801af15e856b441297daf899d08efbd1fe61c81187da123221a3cc02"
         },
         {
           "appearance": "dark",
@@ -717,7 +717,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-receipt-inbox-item.light.png",
-          "sha256": "591c0201543bc2bce5b6ea62dabc0664b85578afa2f40f384de872dbb7f29bf0"
+          "sha256": "4c2b41ba8ea10e375d9ea54e131218c86ff557c079e8673ccfbd5c94be3f1a02"
         },
         {
           "appearance": "dark",
@@ -738,7 +738,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-receipt-inbox.light.png",
-          "sha256": "b38c19ec4c906dba072a94bfe372ec8746b68ae0f859a5719147ad89a33087d6"
+          "sha256": "12356048f8fa113d4042121c714f8b0059674400e1321c1ecfa078f14ebcd68b"
         },
         {
           "appearance": "dark",
@@ -775,7 +775,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-record-payment.light.png",
-          "sha256": "a6e97de138edbe48e484e9188a831ee4fe139b6ca8a26be921d06e64747564bb"
+          "sha256": "329afcf4bbf078af89e4c510d5a2313c0ec56363d23e86ff717934b9073e9b62"
         },
         {
           "appearance": "dark",
@@ -796,7 +796,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-recurring.light.png",
-          "sha256": "9a41f9da439d735b956ca4d183fa21f82395d3bd27fab838b9180cab43efdd13"
+          "sha256": "3d4eb0a6d2059d6a2c971158f53cc46f9ceddd5b505f47b727ef6c9d6456f3e5"
         },
         {
           "appearance": "dark",
@@ -817,7 +817,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-save-error.light.png",
-          "sha256": "36e50a700d4ffb99f0d286b35463b4b922f4d2463fbbacd12b8c1cdf74c27599"
+          "sha256": "27692a97b244eeb6646dc85130653de81462752ec8b5bd74fb0c4b85da795eeb"
         },
         {
           "appearance": "dark",
@@ -838,7 +838,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-saved-toast.light.png",
-          "sha256": "c544438e6c59f31efadbb3b64a293a2b11b47d9a5711f7d5580bd9ca74f325f4"
+          "sha256": "f1147c6ec15facdde4c7c7441d4440f145334677f9003596f15371bcf9d5ef71"
         },
         {
           "appearance": "dark",
@@ -859,7 +859,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-schedule-detail.light.png",
-          "sha256": "882084e00a8917398b430d0fd3cbe040a7a772dbf54099a02b70fc6a1891aa9c"
+          "sha256": "43725d6ee6cb46bd98e8a466ed7081ea818df3d89d2e4df234cde550070dee30"
         },
         {
           "appearance": "dark",
@@ -880,7 +880,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-search-empty.light.png",
-          "sha256": "5ddf6fca539c28333f10539d79911cddde2c95353b9e0f74f0a98caecaa9f456"
+          "sha256": "eaa9c28f253c8075c02133af7aa6c6697e02c29020a892f25cd2941946eea813"
         },
         {
           "appearance": "dark",
@@ -901,7 +901,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-server-connect.light.png",
-          "sha256": "7e06bab6ff9edfaa3a26b9fa47ee8bd99953b4d9eb61e86a226a853b1b4a5982"
+          "sha256": "b52929a82d6bf76ba27f1601d72b2bad1f5a77b05f81b9e47fc35c2a17da4c56"
         },
         {
           "appearance": "dark",
@@ -922,7 +922,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-settings.light.png",
-          "sha256": "9d21ed2b33d2141f546edc083ea3520a2e5f145b7e32f8727451f4bef3e2978d"
+          "sha256": "69949fca827ff23b17fedb56711430ee8ce931e18566032832da930a88f40a9c"
         },
         {
           "appearance": "dark",
@@ -943,7 +943,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-shared-balances.light.png",
-          "sha256": "340024e3f4bc73a356876f97d86e59ee9d9e8615fbc29efd92f44b161b9fcaaa"
+          "sha256": "dd7f5d92192e8eb4b1955958bc048be3e328e7f6e2656b8c7632d89989b4bb86"
         },
         {
           "appearance": "dark",
@@ -964,7 +964,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-shared-expense-add.light.png",
-          "sha256": "5a92503039c5bf2740f2e8df35e69391dd9da5554db047268e0bf8b89c0eeede"
+          "sha256": "d41983689d8c000af2e104eb7014324b498ab4c8652f16a5916bb42bf2a7a3cd"
         },
         {
           "appearance": "dark",
@@ -985,7 +985,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-shared-list.light.png",
-          "sha256": "88f88f0226c6983fda93500b953ab267a9cee9bec43b16d712812c0dfbaaa186"
+          "sha256": "d0ffaf5ddd9847ca4c29c2e54acb92346548cc32d38ba9ffd39b8f33a23ba18d"
         },
         {
           "appearance": "dark",
@@ -1006,7 +1006,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-shared-people.light.png",
-          "sha256": "40d43250919a4f7e0d7bed1f1951d00316c2d7e46552783af1f48b0b694c7fa7"
+          "sha256": "59c33e82389b079026427cc056c11a53d87186cbd832494f408685eb704b4baf"
         },
         {
           "appearance": "dark",
@@ -1027,7 +1027,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-shared.light.png",
-          "sha256": "6b801a74ee4e274b183d3bacb2307d194d352f6b2e2a5470dc38ac9cfdeda114"
+          "sha256": "684288e45843cab014fe8edb7e2fce42cbb67b9084349dbd21b30decb4a38dd8"
         },
         {
           "appearance": "dark",
@@ -1048,7 +1048,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-sign-in.light.png",
-          "sha256": "203f1ebec6db895cf4a766758cb080fef0f996de5c98054f0d57abffcae28788"
+          "sha256": "4d2896907db9854321d2fc153986eb129a96ac28d1baaec220177a255ee2164e"
         },
         {
           "appearance": "dark",
@@ -1069,7 +1069,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-sign-out.light.png",
-          "sha256": "40ea85dd28acefa8400237926f1dba08668f4d3588aff01bd2a5a88b36ab5dfe"
+          "sha256": "bed37d642cf2da4c985cb00a3ef5e22bd005ae363d1da0cdbdc34db7e13bc562"
         },
         {
           "appearance": "dark",
@@ -1090,7 +1090,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-split.light.png",
-          "sha256": "7b8f3beabac3a1f2ad26acf50b086f91347e4930088633fdcdaf9e4e17a3f26c"
+          "sha256": "7e9cb82d5347a78030fe1d09f17c8123a6336256f265942179b5a7e1d5778463"
         },
         {
           "appearance": "dark",
@@ -1111,7 +1111,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-trip-detail.light.png",
-          "sha256": "27f5e14ce144436de483323bf2b0f070e22e0fc84979d577cdb8fd201826d0a9"
+          "sha256": "52a9cdb23320bd39cd78d5d0ef291940c7ea710c4ce29da4e19b1cacaad991cd"
         },
         {
           "appearance": "dark",
@@ -1132,7 +1132,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-trip-form.light.png",
-          "sha256": "84db467421931cbee76a6be7ae990a9719b45185d085c61ab4df099b0d7e9236"
+          "sha256": "10fcca16c4827e813bb8f0db4f0c9a551b1ec5e57551f8b5223aaad08b8ba776"
         },
         {
           "appearance": "dark",
@@ -1153,7 +1153,7 @@
         {
           "appearance": "light",
           "file": "previews/iphone-trips.light.png",
-          "sha256": "83aca425fd05d990e62f789db96618e58489dad0f0100b77ac184a755d8f0d3a"
+          "sha256": "2369211b4a0f460d0663c98831ad5028ef1878784a648903a72cd867d72501a1"
         },
         {
           "appearance": "dark",
@@ -1174,7 +1174,7 @@
         {
           "appearance": "light",
           "file": "previews/ipad-activity.light.png",
-          "sha256": "f862b198cb9f22d36ab56445e9b7ea8a7530c170bf3261bd9d2033c78e7bf694"
+          "sha256": "372dc5b99c7966d6b2fd0efdc810e5adf0b0ecbcc5c48691a97afd6787564ac2"
         },
         {
           "appearance": "dark",
@@ -1195,7 +1195,7 @@
         {
           "appearance": "light",
           "file": "previews/ipad-add-entry.light.png",
-          "sha256": "b6df183c5fa85c771473d1de2fc89c228333fd77b9d16e5cc25f5146cf214723"
+          "sha256": "c4c27c708d25ca66370a802717be691e23e478b63a5e46c07b31f1af82df35a0"
         },
         {
           "appearance": "dark",
@@ -1216,7 +1216,7 @@
         {
           "appearance": "light",
           "file": "previews/ipad-home.light.png",
-          "sha256": "d691b7efdce6c7edcb35423b80879edcf698b0caca6aebe738d791e09770fda9"
+          "sha256": "cd94d2cb3cd9fdbb525772e3012c1e89091899df1214eba446a2aae77dc26dbb"
         },
         {
           "appearance": "dark",
@@ -1237,7 +1237,7 @@
         {
           "appearance": "light",
           "file": "previews/ipad-receipt-attach-confirm.light.png",
-          "sha256": "9a72daa412e7a1092341ee3b33fe5ce04e53245bc121296015113ea6e5750644"
+          "sha256": "ea876000fad63ba53582de9563b4a978364282ca81bd5ffde8365b1b45274cec"
         },
         {
           "appearance": "dark",
@@ -1258,7 +1258,7 @@
         {
           "appearance": "light",
           "file": "previews/ipad-receipt-attach-entry.light.png",
-          "sha256": "164b7260effe9d6151e3c7dc3f947a1599d730028405a82087f198940f610c09"
+          "sha256": "dcbcf96b9465bc731d47feb73b85abe3718638e3782457835dd54d330be6ec94"
         },
         {
           "appearance": "dark",
@@ -1279,7 +1279,7 @@
         {
           "appearance": "light",
           "file": "previews/ipad-receipt-attach-file.light.png",
-          "sha256": "32ad3c3cae30875f4f0e77e769d9c73962eca84a863785f3905cc5ba74af00d2"
+          "sha256": "72c92f7649aa962865bcc8403eecedfaf88ffaa45a83ada03b32c6a119d45957"
         },
         {
           "appearance": "dark",
@@ -1300,7 +1300,7 @@
         {
           "appearance": "light",
           "file": "previews/ipad-receipt-attached-toast.light.png",
-          "sha256": "3f371ef92f02dea88c618aadf8b2135f64d72bd6ef78f6818ee68f13d5baac79"
+          "sha256": "894843ab4b9348fed6fe52dd59cf7a3f2a614f04c6e04c0e9398756e961fe0b9"
         },
         {
           "appearance": "dark",
@@ -1321,7 +1321,7 @@
         {
           "appearance": "light",
           "file": "previews/ipad-receipt-email-settings.light.png",
-          "sha256": "13e8414f181dcc15f178856de1f02f0543c023055048e60c48deea70da06ac82"
+          "sha256": "e5254bde0d9f58a17b2ddd2d502f57c5e71ec5c66047a86b0e6e9874d3338682"
         },
         {
           "appearance": "dark",
@@ -1342,7 +1342,7 @@
         {
           "appearance": "light",
           "file": "previews/ipad-receipt-inbox-item.light.png",
-          "sha256": "8499d6087f7597688ff1a16155f4a201469874e2a354f88ab3e23619de39e8a2"
+          "sha256": "ee95b5a05ef12f7b6e2e8f37140f037106f9b0d054edba708525439c73e6c894"
         },
         {
           "appearance": "dark",
@@ -1363,7 +1363,7 @@
         {
           "appearance": "light",
           "file": "previews/ipad-receipt-inbox.light.png",
-          "sha256": "ddb9bc8dcad4a65d747c7d8e804f2a10e1a5f1349c5b0b5e10fcb4cef48023e6"
+          "sha256": "584fde8a3aa956bbfbc430ff1a29874dc413dbfe062df9f34a15fb313a7e3b43"
         },
         {
           "appearance": "dark",
@@ -1384,7 +1384,7 @@
         {
           "appearance": "light",
           "file": "previews/ipad-settings.light.png",
-          "sha256": "1ae67adc410c3eafe88244256800c8c93e9e470005a7cf1bc24eae445d68fde8"
+          "sha256": "b98c0dee2dd1e9dfd53bb6e17a7caf3529c412d9e10d80260d61efabcae8c743"
         },
         {
           "appearance": "dark",
@@ -1405,7 +1405,7 @@
         {
           "appearance": "light",
           "file": "previews/ipad-shared.light.png",
-          "sha256": "1a454aa5cef99918b7a78d15407e39aa21ab750672a834e2d01b7882b4e3e0e7"
+          "sha256": "1774706c6073f63132e8e2f9798029d5c6d2e1ffa21032fffbeb9f3bb552241f"
         },
         {
           "appearance": "dark",
@@ -1417,7 +1417,7 @@
     {
       "id": "ipad-trip",
       "source": "docs/design/penny-ios/ipad/trip.html",
-      "sourceSha256": "5a0f9cfeb5f9a5b2a1ac297c15283f556beea58e1bf4b0a870b9e020f2c86372",
+      "sourceSha256": "e59d0cf967dee21d61ae0fd85b40dd583dd61b2fae84109e11d41b77e0e35a0e",
       "viewport": {
         "w": 1290,
         "h": 914
@@ -1426,12 +1426,12 @@
         {
           "appearance": "light",
           "file": "previews/ipad-trip.light.png",
-          "sha256": "497eb8bb07ad2922e65e61a9e953862f46b79018740dadb8c9c7b34fa2fdc55c"
+          "sha256": "144d9e3440fde656436cfce037547b78b614215e760fcbea6060818de9012c2b"
         },
         {
           "appearance": "dark",
           "file": "previews/ipad-trip.dark.png",
-          "sha256": "38742386f900244723c517c6cc8ed96b2d548127e59df0ed05ca0552dc2b3ed7"
+          "sha256": "6dbf8e2ff280eea19516ee03135fd83029f2d5b817b5f91d9575aeadd3b9fe53"
         }
       ]
     },
@@ -1447,7 +1447,7 @@
         {
           "appearance": "light",
           "file": "previews/web-activity.light.png",
-          "sha256": "9143bfce9668af0dfd4504db4af61ae66fc38e222366ead5cd1a4b6ecfe1fc80"
+          "sha256": "c8a161812e220af7f6ce98b8d4c6d4b6f594b6d7848100e2c7632f1f9de39552"
         },
         {
           "appearance": "dark",
@@ -1468,7 +1468,7 @@
         {
           "appearance": "light",
           "file": "previews/web-add-entry.light.png",
-          "sha256": "ca070dd3bb1721d1fe51809d99e325eb253cfbfb8910ff2bfbc430da61fcd7e7"
+          "sha256": "2326ead0ee92981a944fd99cb37e2cd4ab7038b1d11cc0a56df29a6cd83fe77e"
         },
         {
           "appearance": "dark",
@@ -1489,7 +1489,7 @@
         {
           "appearance": "light",
           "file": "previews/web-home.light.png",
-          "sha256": "c81601e912b7eab0570ae98008d984a5f87c2c869f15f58451316c538fb0d987"
+          "sha256": "71721756800e9cfbc4b1ec415cf818c63ad0eef4c4bee75fcc928fec56a9cbf6"
         },
         {
           "appearance": "dark",
@@ -1510,7 +1510,7 @@
         {
           "appearance": "light",
           "file": "previews/web-household.light.png",
-          "sha256": "c48f509004d952e93cbf982f211c3879a12e626296beb2f32ad68ac7f17202f6"
+          "sha256": "389c25c2cd58ea14afc7ad99aa8e9db3121beec964a2e6effa8efd30124d469d"
         },
         {
           "appearance": "dark",
@@ -1531,7 +1531,7 @@
         {
           "appearance": "light",
           "file": "previews/web-insights.light.png",
-          "sha256": "28437acf47f82381fe6ce1628b38ca73c48311ba50aa001afc4d9196d35c5812"
+          "sha256": "f227e8899cf93b9b5dd71c0da7250234ac5dee0fc6155bea8da0bcfe6d0c771f"
         },
         {
           "appearance": "dark",
@@ -1552,7 +1552,7 @@
         {
           "appearance": "light",
           "file": "previews/web-receipt-attach-confirm.light.png",
-          "sha256": "81027ebc921171ae5103d452f0383fee05ded40b62b8141cff3ed1a1cbf161f6"
+          "sha256": "b89c5b6d198eb7f90d16f3eab786df396e4a5873fe5058a7726c4d133a18694b"
         },
         {
           "appearance": "dark",
@@ -1573,7 +1573,7 @@
         {
           "appearance": "light",
           "file": "previews/web-receipt-attach-entry.light.png",
-          "sha256": "586faf1b4a29639fbdc1b7f8797a7323eb1e91df4f652ae79d8eac280229a822"
+          "sha256": "0d51e86d8ce8d9b70cc5963e6abc203f6c15935a1962982379156aec93aad376"
         },
         {
           "appearance": "dark",
@@ -1594,7 +1594,7 @@
         {
           "appearance": "light",
           "file": "previews/web-receipt-attach-file.light.png",
-          "sha256": "74e36593b72d4af7c9f42efc471814ffec9093fae696ae6c3cc160867b268a14"
+          "sha256": "4a74ff42821ff7c0348d40b969998325f84e6f3223b3693107662b99093a921f"
         },
         {
           "appearance": "dark",
@@ -1615,7 +1615,7 @@
         {
           "appearance": "light",
           "file": "previews/web-receipt-attached-toast.light.png",
-          "sha256": "3d233f3f619b954bce3c1c9ad98fe26b4d8c05cedcfd9dc1eec09e13acc0e1fe"
+          "sha256": "40bd9d77296bfbe9cb28725ca384a489133a142e068d1546cf79183cf9f9ebc3"
         },
         {
           "appearance": "dark",
@@ -1636,7 +1636,7 @@
         {
           "appearance": "light",
           "file": "previews/web-receipt-email-settings.light.png",
-          "sha256": "23be9d154928f0b6167068377bacceadad52c8f069e49068c944419d4ef39117"
+          "sha256": "53559506212012788103273c52ff285c3c06568214382f85a49efc7e0af27151"
         },
         {
           "appearance": "dark",
@@ -1657,7 +1657,7 @@
         {
           "appearance": "light",
           "file": "previews/web-receipt-inbox-item.light.png",
-          "sha256": "633f8617827c470fe0e5078b3a09e498a2cd31bd836ff2aa104e92c903b96555"
+          "sha256": "42ae5e34a3201ec7b97c8657bb936bbb1005e5ba0e7ff1b4a995756f3df088d3"
         },
         {
           "appearance": "dark",
@@ -1678,7 +1678,7 @@
         {
           "appearance": "light",
           "file": "previews/web-receipt-inbox.light.png",
-          "sha256": "28b62d12a218f13e252cfe284109c9eee7b92d90fcc9af94e331489f4bed9519"
+          "sha256": "682fe5740a29e061300c634f54c144a55d38c56a7b2a693248e73cb99bcf1796"
         },
         {
           "appearance": "dark",
@@ -1699,7 +1699,7 @@
         {
           "appearance": "light",
           "file": "previews/web-settings.light.png",
-          "sha256": "84a1301893dcc61cce951fab4eab662dc445c3f39021d27986fc484da0f14384"
+          "sha256": "b5eeec1b7a14c8c6e776c0289edf77e5001970f11a88341522b2a25ef1ede2b8"
         },
         {
           "appearance": "dark",
@@ -1720,7 +1720,7 @@
         {
           "appearance": "light",
           "file": "previews/web-sign-in.light.png",
-          "sha256": "6ca3edb7e5ce8d9353abf2ea8be42721236102f6ecf4677a8a79920d5e548403"
+          "sha256": "5a490861d6d1d763c89d069d08abfe5ccb80ce765449b075bdc2e2f7fdf5f419"
         },
         {
           "appearance": "dark",
@@ -1741,7 +1741,7 @@
         {
           "appearance": "light",
           "file": "previews/web-trips.light.png",
-          "sha256": "b2c901cf7c35c1ca5a5dddd7ef0df7456d744b72eed19753599563aae72c3651"
+          "sha256": "d9f6dae6ee23eb94d733397635815a0a843fbb280fe157647de78aa58ec91cfa"
         },
         {
           "appearance": "dark",

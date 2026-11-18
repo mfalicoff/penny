@@ -83,7 +83,7 @@
     },
     {
       "path": "docs/design/penny-ios/assets/penny.css",
-      "sha256": "a70d13ea4dfbd42e2ba57ef4d4003c8c6fce960c245504ab1d582e0a0800f7da"
+      "sha256": "958bd18415c576fa5c6e4ff05fcafaf8ddbbfa660a3cce19267614d227bb8879"
     },
     {
       "path": "docs/design/penny-ios/assets/ipad.css",
@@ -111,7 +111,7 @@
     },
     {
       "path": "design-kit/src/styles.css",
-      "sha256": "cac10489d98cc7a179cbf9d74c4bc1e34a194936d53b9812224b5d29e38d50ad"
+      "sha256": "b8b083a3605a42de10e805b49dd3d43e537c673cb6c702d08c9485c7563e0a41"
     },
     {
       "path": "design-kit/src/icons.ts",
@@ -131,11 +131,11 @@
     },
     {
       "path": ".design-sync/NOTES.md",
-      "sha256": "c61c82ea0807e989c6765f64720219151827f4de4267dd1a35d9fe1ffdee0385"
+      "sha256": "8ece7a900060233e4b0150bcf8ad8ee48411e07b52c98b1b7b7d04fbd89105d1"
     },
     {
       "path": "docs/design/penny-ios/compare.mjs",
-      "sha256": "37f4ef380b04178ba77d4ef4aee2bf694100592ae15d8163d66ec3b52013898e"
+      "sha256": "8ea31c347cf015dda1911315f59c4f0a38186a3cadf44a0dfc6c3af176b3298d"
     },
     {
       "path": "docs/design/penny-ios/glow-contrast.mjs",
@@ -143,7 +143,7 @@
     },
     {
       "path": "docs/design/visual-acceptance.md",
-      "sha256": "942525bcd8c63d6006269621215199cede92e58fb6785583d49b9a415dddc0ef"
+      "sha256": "aba37da33283984feae4c86f028885f9a660fc47a112ed18611fc3a10e5a9927"
     }
   ],
   "tokens": {
@@ -217,7 +217,7 @@
         "fill": "rgba(120, 116, 110, 0.12)",
         "separator": "rgba(60, 56, 50, 0.13)",
         "label": "#16120F",
-        "label-2": "#6F6A64",
+        "label-2": "#57524D",
         "label-3": "#A9A49D",
         "tint": "#E4572E",
         "tint-text": "#C2461F",
@@ -1383,7 +1383,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/iphone/empty-home.html",
-      "sha256": "879c4441648a86660b7dd959bb751898d06e2f3bc3e55cfca1cd8276b02a9e93",
+      "sha256": "dc53af35eaee83ab50ee26da4f1896006079b816bc0cd1dd7e335f122ba05733",
       "nativeIssue": "MAZ-77",
       "webIssue": "MAZ-92",
       "route": "/",
@@ -1754,7 +1754,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/ipad/trip.html",
-      "sha256": "5a0f9cfeb5f9a5b2a1ac297c15283f556beea58e1bf4b0a870b9e020f2c86372",
+      "sha256": "e59d0cf967dee21d61ae0fd85b40dd583dd61b2fae84109e11d41b77e0e35a0e",
       "nativeIssue": "MAZ-76",
       "webIssue": "MAZ-93",
       "route": "/trips",
@@ -2890,7 +2890,6 @@
   ],
   "knownGaps": [
     "Cards are static HTML; CSS blur only approximates Liquid Glass, and Inter and Ionicons stand in for SF Pro and SF Symbols (also in the baselines).",
-    "Light-mode secondary text over the hero glow is below 4.5:1 on 15 cards (docs/design/penny-ios/glow-contrast-known.json, MAZ-183).",
     "Larger text, keyboard and focus, native pickers, app lock and server-search loading states follow platform rules recorded in docs/design/visual-acceptance.md#design-gaps rather than per-state cards."
   ]
 }
