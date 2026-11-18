@@ -4,7 +4,7 @@ Claude Code works through Linear issues on its own, one issue per machine at a t
 
 ```
 Linear Todo + agent-ready
-  → orchestrator (cloud scheduled task, hourly and after every merge)
+  → orchestrator (a long-lived session on worker, woken hourly and after every merge)
   → dev session on fearful (Mac) or worker (Linux)
   → pull request
   → Claude review workflow (sets the claude-review status)
@@ -15,7 +15,7 @@ Linear Todo + agent-ready
 
 | Part | Where it lives |
 | --- | --- |
-| Orchestrator | A Claude Code cloud scheduled task named "Penny orchestrator". Its prompt is copied in [orchestrator.md](orchestrator.md). |
+| Orchestrator | A long-lived Claude Code session named "Penny orchestrator" on worker (Linux), woken by a scheduled task bound to it. See [orchestrator.md](orchestrator.md). |
 | Dev worker | A Claude Code session on a bridge machine, following [dev-worker.md](dev-worker.md) |
 | Reviewer | [`.github/workflows/claude-review.yml`](../../../.github/workflows/claude-review.yml), following [reviewer.md](reviewer.md) |
 
@@ -61,4 +61,4 @@ To retry, fix whatever stopped it, remove `needs-human` and the `worker:*` label
 
 - The `CLAUDE_CODE_OAUTH_TOKEN` repository secret for the review workflow. Create it with `claude setup-token`, then run `gh secret set CLAUDE_CODE_OAUTH_TOKEN`.
 - The GitHub `agent` label, which the dev worker puts on its pull requests. Only pull requests with this label are reviewed.
-- Both bridge machines online, with Remote Control running in their `penny` checkouts.
+- Both bridge machines online, with Remote Control running in their `penny` checkouts. The orchestrator runs on worker, so nothing new is assigned while worker is offline.
