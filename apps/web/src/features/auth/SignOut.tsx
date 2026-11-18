@@ -16,7 +16,15 @@ type Request =
   | { kind: "sign-out"; discardUpTo: number };
 
 /** Expected refusals, shown as they are (not as a server error). */
-class SignOutRefused extends Error {}
+class SignOutRefused extends Error {
+  constructor(
+    message: string,
+    /** What is pending now, so the dialog can show it. */
+    readonly pending: number,
+  ) {
+    super(message);
+  }
+}
 
 /** iOS wording (`SignOutButton.title`): "1 change hasn’t synced", "2 changes haven’t synced". */
 const unsyncedTitle = (count: number) => (count === 1 ? "1 change hasn’t synced" : `${String(count)} changes haven’t synced`);
@@ -30,8 +38,12 @@ export function SignOutButton() {
   const email = useAccountEmail();
   const queryClient = useQueryClient();
   const engine = useLedgerEngine();
-  const pending = useLedgerSync()?.pending.count ?? 0;
+  const livePending = useLedgerSync()?.pending.count ?? 0;
   const [open, setOpen] = useState(false);
+  // The count the dialog shows, taken when it opens. It changes only when a sign-out attempt finds
+  // more waiting, never under the pointer (a background sync finishing would otherwise reshape the
+  // dialog between aiming at a button and clicking it).
+  const [pending, setPending] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const titleId = useId();
   const messageId = useId();
@@ -52,6 +64,7 @@ export function SignOutButton() {
           request.kind === "sync"
             ? "Couldn't sync your changes. Nothing was removed. Check your connection and try again."
             : "More changes are waiting to sync now. Nothing was removed. Choose again.",
+          hold.pending,
         );
       }
       try {
@@ -65,6 +78,7 @@ export function SignOutButton() {
     },
     onSuccess: () => endSession(queryClient),
     onError: (failure) => {
+      if (failure instanceof SignOutRefused) setPending(failure.pending);
       setError(failure instanceof SignOutRefused ? failure.message : describeAuthError(failure));
     },
   });
@@ -95,6 +109,7 @@ export function SignOutButton() {
         type="button"
         className="wbtn wbtn--danger-quiet"
         onClick={() => {
+          setPending(livePending);
           setOpen(true);
         }}
       >

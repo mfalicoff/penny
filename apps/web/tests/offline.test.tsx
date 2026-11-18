@@ -151,6 +151,28 @@ describe("durable offline ledger in the app", () => {
     });
   });
 
+  it("keeps the sign-out warning in place when a background sync finishes while it is open", async () => {
+    const base = emptyWireLedger();
+    await seed({ base: base as never, local: { ...base, transactions: [entry("b", "Bakery")] } as never });
+    const server = ledgerServer();
+    server.state.down = true;
+    const user = userEvent.setup();
+    renderApp("/settings");
+    await screen.findByText("Offline · 1 change waiting");
+    await openSignOut(user);
+    server.state.down = false;
+    act(() => {
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    await waitFor(() => {
+      expect((server.state.ledger.transactions as { title: string }[]).map((item) => item.title)).toEqual(["Bakery"]);
+    });
+    // The buttons don't move under the pointer: the warning stays until the person chooses.
+    const dialog = screen.getByRole("dialog", { name: "1 change hasn’t synced" });
+    await user.click(within(dialog).getByRole("button", { name: "Sync, then sign out" }));
+    expect(await screen.findByRole("heading", { level: 1, name: "Welcome back" })).toBeInTheDocument();
+  });
+
   it("removes unsynced changes only when the person chooses Sign out anyway", async () => {
     const base = emptyWireLedger();
     await seed({ base: base as never, local: { ...base, transactions: [entry("b", "Bakery"), entry("c", "Coffee")] } as never });
