@@ -383,18 +383,46 @@
   color: var(--pk-tint-text);
 }
 
-/* Toasts sit above the tab bar on phones. */
+/*
+ * Phones: a toast takes the tab bar's place (MAZ-166). It sits on the tab bar's slot (same
+ * inset and bottom, at least its 60px height) and the tab bar hides while it shows, so the page's
+ * layout never changes when it opens or closes. It grows upward to 84px at most (a one-line
+ * title and a two-line detail), which stays inside the bottom padding the main area always
+ * keeps (96px), so the last rows still scroll clear of it. Longer text is cut with an ellipsis;
+ * the live region still announces all of it.
+ */
 .toast-region {
-  bottom: calc(92px + env(safe-area-inset-bottom));
+  inset-inline: 12px;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  padding: 0;
 }
 
-/*
- * While a toast shows, reserve its height below the content too, so the last rows can scroll
- * clear of it and stay tappable (MAZ-162). Only the toast itself takes pointer events; the
- * region around it lets taps through.
- */
-body:has(.pk-toast) .app__main {
-  padding-bottom: calc(172px + env(safe-area-inset-bottom));
+.toast-region .pk-toast {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 60px;
+  max-height: 84px;
+  padding-block: 6px;
+  overflow: hidden;
+  border-radius: 30px;
+}
+
+.toast-region .pk-toast__title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toast-region .pk-toast__sub {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-height: 1.3;
+}
+
+body:has(.pk-toast) .tabbar {
+  visibility: hidden;
 }
 
 /* ---------- navigation drawer (phones) ---------- */
@@ -532,7 +560,7 @@ body:has(.pk-toast) .app__main {
   }
 
   .app__main {
-    padding: 8px 28px 48px;
+    padding: 8px 28px calc(100px + env(safe-area-inset-bottom));
   }
 
   .topbar {
@@ -544,12 +572,30 @@ body:has(.pk-toast) .app__main {
     display: none;
   }
 
+  /*
+   * No tab bar from here: the toast floats centered at the bottom, and the main area always
+   * keeps room below its content (the 100px bottom padding above), so the last rows scroll
+   * clear of it without the layout changing when it opens or closes (MAZ-166).
+   */
   .toast-region {
+    inset-inline: 0;
     bottom: calc(20px + env(safe-area-inset-bottom));
+    padding: 0 var(--pk-gutter);
   }
 
-  body:has(.pk-toast) .app__main {
-    padding-bottom: calc(100px + env(safe-area-inset-bottom));
+  .toast-region .pk-toast {
+    width: min(100%, 440px);
+    min-height: 0;
+    max-height: none;
+    padding-block: 8px;
+    border-radius: 22px;
+  }
+
+  .toast-region .pk-toast__title,
+  .toast-region .pk-toast__sub {
+    display: block;
+    overflow: visible;
+    white-space: normal;
   }
 
   .topbar__title {
@@ -650,7 +696,7 @@ body:has(.pk-toast) .app__main {
   }
 
   .app__main {
-    padding: 8px 32px 48px;
+    padding: 8px 32px calc(100px + env(safe-area-inset-bottom));
   }
 
   .topbar {
