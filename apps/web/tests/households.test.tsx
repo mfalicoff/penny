@@ -133,6 +133,39 @@ describe("shared list, create and join", () => {
     });
     expect(within(row).getByText("Overdue")).toBeInTheDocument();
   });
+
+  it("offers Record payment and Shared expense in the household header, with the balance's meaning in words and color", async () => {
+    const id = seed();
+    addExpense(BEA, id, { title: "Hydro", totalCents: 9000, payerUserId: ids().bea });
+    serve();
+    const user = userEvent.setup();
+    renderApp(`/households/${id}`);
+    const head = await screen.findByRole("region", { name: "Household summary" });
+    await waitFor(() => {
+      expect(head).toHaveTextContent("October · you owe $30.00");
+    });
+    const owe = within(head).getByText("$30.00");
+    expect(owe).toHaveClass("money");
+    expect(owe).not.toHaveClass("pk-money--income");
+    expect(within(head).getByRole("button", { name: "Shared expense" })).toBeInTheDocument();
+    const record = within(head).getByRole("link", { name: "Record payment" });
+    expect(record).toHaveAccessibleDescription("Shows balances and suggested payments to record");
+    await user.click(record);
+    expect(await screen.findByRole("region", { name: "October 2026" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Balances" })).toHaveAttribute("aria-current", "page");
+  });
+
+  it("shows a balance owed to you in the income color, named in words for screen readers too", async () => {
+    const id = seed();
+    addExpense(ALEX, id, { title: "Hydro", totalCents: 9000, payerUserId: ids().alex });
+    serve();
+    renderApp(`/households/${id}`);
+    const head = await screen.findByRole("region", { name: "Household summary" });
+    await waitFor(() => {
+      expect(head).toHaveTextContent("October · you're owed $60.00");
+    });
+    expect(head.querySelector(".household-head__balance .money")).toHaveClass("pk-money--income");
+  });
 });
 
 describe("shared expense form", () => {
@@ -463,6 +496,30 @@ describe("payments and settlement", () => {
 
     await user.click(within(stale).getByRole("button", { name: "Review expense" }));
     expect(within(detail).getByText("Your share · in your spending").parentElement).toHaveTextContent("$34.70");
+  });
+
+  it("says another payment caused a stale share payment, and shows only what changed", async () => {
+    const id = seed();
+    const expense = addExpense(BEA, id, { title: "Internet", totalCents: 8000, payerUserId: ids().bea, splitMode: "equal" });
+    serve();
+    const user = userEvent.setup();
+    renderApp(`/households/${id}/expenses/${expense.id}`);
+    const detail = await dialog("Internet");
+    await user.click(within(detail).getByRole("button", { name: "Mark your share as paid" }));
+    // The same person records the share from another device first.
+    server.handle(ALEX, "POST", `/api/households/${id}/expenses/${expense.id}/payments`, { fromUserId: ids().alex, revision: 0 });
+    await user.click(within(detail).getByRole("button", { name: /^Mark \$.+ as paid$/ }));
+    const stale = await within(detail).findByRole("alert");
+    expect(stale).toHaveTextContent("Internet payment changed");
+    expect(stale).toHaveTextContent("You already recorded your share as paid after you opened this payment, maybe on another device.");
+    expect(stale).not.toHaveTextContent("edited this expense");
+    expect(stale).not.toHaveTextContent("Edited by");
+    expect(stale).toHaveTextContent("Recorded by You");
+    expect(within(stale).queryByRole("row", { name: /^Total/ })).not.toBeInTheDocument();
+    expect(within(stale).queryByRole("row", { name: /^Your share \$/ })).not.toBeInTheDocument();
+    expect(within(stale).getByRole("row", { name: /Your share status/ })).toHaveTextContent("Not repaid yetRepaid");
+    expect(stale).toHaveTextContent("Nothing was recorded.");
+    expect(server.state.reimbursements).toHaveLength(1);
   });
 
   it("opens monthly payments on the last day and handles a repeated payment as stale", async () => {

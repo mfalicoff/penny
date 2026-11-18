@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import type { AuditEvent } from "../src/api/schemas";
+import type { AuditEvent, SharedExpense } from "../src/api/schemas";
 import {
   describeAudit,
   eligibleMembers,
@@ -12,6 +12,7 @@ import {
   parsePercent,
   percentSplit,
   shiftMonth,
+  staleChange,
 } from "../src/features/households/model";
 import { normalizeInviteCode } from "../src/api/households";
 
@@ -117,5 +118,73 @@ describe("audit sentences", () => {
       summary: "Rent was added automatically",
       changes: ["$2900.00 · split by amount"],
     });
+  });
+});
+
+describe("staleChange names why a share payment went stale", () => {
+  const before = {
+    id: "e1",
+    householdId: "h1",
+    title: "Internet",
+    date: "2026-10-05",
+    totalCents: 8000,
+    payerUserId: "bea",
+    splitMode: "equal",
+    category: { name: "Home", icon: "home", color: "#C27C4E" },
+    splits: [
+      { userId: "alex", amountCents: 4000 },
+      { userId: "bea", amountCents: 4000 },
+    ],
+    revision: 1,
+    createdBy: "bea",
+    createdAt: 1,
+    updatedBy: "alex",
+    updatedAt: 2,
+    payments: [],
+    paymentsClosed: false,
+  } as unknown as SharedExpense;
+  const money = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+  const name = (userId: string) => (userId === "alex" ? "You" : userId);
+
+  it("reads another payment as the cause and lists only the status that changed", () => {
+    const now = { ...before, revision: 2, payments: [{ fromUserId: "alex", amountCents: 4000, createdAt: 5, createdBy: "alex" }] };
+    expect(staleChange(before, now, "alex", money, name)).toEqual({
+      cause: { kind: "payment", recordedBy: "alex", fromUserId: "alex", at: 5 },
+      rows: [{ label: "Your share status", before: "Not repaid yet", now: "Repaid" }],
+    });
+  });
+
+  it("reads a closed month as a monthly payment", () => {
+    const now = { ...before, revision: 2, paymentsClosed: true };
+    expect(staleChange(before, now, "alex", money, name)).toEqual({
+      cause: { kind: "monthly" },
+      rows: [{ label: "Your share status", before: "Not repaid yet", now: "Settles with the month" }],
+    });
+  });
+
+  it("reads changed content as an edit and lists only amounts that changed", () => {
+    const now = {
+      ...before,
+      revision: 2,
+      totalCents: 9000,
+      splits: [
+        { userId: "alex", amountCents: 4500 },
+        { userId: "bea", amountCents: 4500 },
+      ],
+      updatedBy: "bea",
+      updatedAt: 9,
+    };
+    expect(staleChange(before, now, "alex", money, name)).toEqual({
+      cause: { kind: "edit", editedBy: "bea", at: 9 },
+      rows: [
+        { label: "Total", before: "$80.00", now: "$90.00" },
+        { label: "Your share", before: "$40.00", now: "$45.00" },
+      ],
+    });
+  });
+
+  it("lists nothing when an edit changed no amount", () => {
+    const now = { ...before, revision: 2, title: "Fibre", updatedBy: "bea", updatedAt: 9 };
+    expect(staleChange(before, now, "alex", money, name).rows).toEqual([]);
   });
 });
