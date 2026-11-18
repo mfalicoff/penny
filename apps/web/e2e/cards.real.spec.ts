@@ -214,7 +214,6 @@ const cards: Record<string, Card> = {
       await page(p, `/transactions?q=${encodeURIComponent(state.search?.query ?? "zzzz")}`, "Activity");
       const results = p.getByRole("region", { name: "Search results" });
       await expect(results.getByRole("status")).toHaveText(/No matching/);
-      await scrollTo(p, results);
     },
   },
 

@@ -1,13 +1,14 @@
 import type { Kind, Transaction } from "@domain/ledger.ts";
 import { useNavigate } from "@tanstack/react-router";
 import { useId, useRef, useState, type SyntheticEvent } from "react";
+import { TABLET, useMediaQuery } from "../../app/useMediaQuery";
 import { useToday } from "../../app/useToday";
 import { Button, Card, ChoiceGroup, cx } from "../../design/controls";
 import { Icon } from "../../design/Icon";
 import { formatCents, Money } from "../../design/Money";
 import { useOnline } from "../../design/states";
 import { EntryDetailDialog } from "../entries/EntryDetail";
-import { categoryIcon, frequentCategories, inlineCategories } from "../entries/model";
+import { categoryIcon, frequentCategories, inlineCategories, mostUsedCategories } from "../entries/model";
 import { CategoryPickerDialog } from "../entries/pickers";
 import { useLedgerWriter } from "../entries/writer";
 import { ActivityResults } from "./ActivityResults";
@@ -20,7 +21,8 @@ type Navigate = (update: (previous: ActivitySearch) => ActivitySearch) => void;
  * Activity (`/transactions`, MAZ-88): search, the period (all time, a month or a year) with its
  * totals, quick type, category and day filters, and the list of personal and shared entries.
  * Every filter is a search parameter, so Back and Forward step through them and a filtered view
- * can be bookmarked.
+ * can be bookmarked. Below 768px the list comes first, after the type and period (`iphone-activity`,
+ * MAZ-175); each region is rendered once, in the order of the current layout.
  */
 export function ActivityPage({ search, from }: { search: ActivitySearch; from: "/transactions" }) {
   const navigateTo = useNavigate({ from });
@@ -35,6 +37,8 @@ export function ActivityPage({ search, from }: { search: ActivitySearch; from: "
   const filters = rowFilters(search);
   const [open, setOpen] = useState<{ entry: Transaction; opener: HTMLElement } | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+  const wide = useMediaQuery(TABLET);
+  const toolsId = useId();
 
   function onSubmit(event: SyntheticEvent<HTMLFormElement, SubmitEvent>) {
     event.preventDefault();
@@ -43,32 +47,62 @@ export function ActivityPage({ search, from }: { search: ActivitySearch; from: "
     navigate((previous) => ({ ...previous, q: query }));
   }
 
+  const searchForm = (
+    <form role="search" className="search-form" onSubmit={onSubmit}>
+      <div className="field">
+        <label htmlFor="activity-search">Search transactions</label>
+        <input id="activity-search" ref={searchRef} name="q" type="search" defaultValue={search.q ?? ""} key={search.q ?? ""} autoComplete="off" />
+      </div>
+      <button type="submit" className="button">
+        Search
+      </button>
+    </form>
+  );
+  const totals = ledger ? <Totals period={period} ledger={ledger} shared={shared} /> : null;
+  const results = (
+    <ActivityResults
+      key={JSON.stringify(search)}
+      search={search}
+      filters={filters}
+      ledger={ledger ?? writer.ledger}
+      shared={shared}
+      onClear={(...keys) => {
+        navigate((previous) => without(previous, ...keys));
+      }}
+      onOpen={(entry, opener) => {
+        setOpen({ entry, opener });
+      }}
+    />
+  );
+
   return (
-    <div className="page activity">
-      <form role="search" className="search-form" onSubmit={onSubmit}>
-        <div className="field">
-          <label htmlFor="activity-search">Search transactions</label>
-          <input id="activity-search" ref={searchRef} name="q" type="search" defaultValue={search.q ?? ""} key={search.q ?? ""} autoComplete="off" />
-        </div>
-        <button type="submit" className="button">
-          Search
-        </button>
-      </form>
-
-      <PeriodBar search={search} period={period} navigate={navigate} />
-      {ledger ? <Totals period={period} ledger={ledger} shared={shared} /> : null}
-      <Filters search={search} navigate={navigate} />
-
-      <ActivityResults
-        key={JSON.stringify(search)}
-        search={search}
-        filters={filters}
-        ledger={ledger ?? writer.ledger}
-        shared={shared}
-        onOpen={(entry, opener) => {
-          setOpen({ entry, opener });
-        }}
-      />
+    <div className={cx("page activity", !wide && "activity--phone")}>
+      {wide ? (
+        <>
+          {searchForm}
+          <PeriodBar search={search} period={period} navigate={navigate} />
+          {totals}
+          <KindFilter search={search} navigate={navigate} />
+          <Filters search={search} navigate={navigate} />
+          {results}
+        </>
+      ) : (
+        // Phones (`iphone-activity`, MAZ-175): the type and period, then the day-grouped list; search,
+        // the period's totals and the other filters follow it, as on the card.
+        <>
+          <KindFilter search={search} navigate={navigate} />
+          <PeriodBar search={search} period={period} navigate={navigate} />
+          {results}
+          <section className="activity-tools" aria-labelledby={toolsId}>
+            <h2 id={toolsId} className="visually-hidden">
+              Search and filters
+            </h2>
+            {searchForm}
+            {totals}
+            <Filters search={search} navigate={navigate} />
+          </section>
+        </>
+      )}
 
       {open ? (
         <EntryDetailDialog
@@ -183,6 +217,22 @@ function Totals({ period, ledger, shared }: { period: Period; ledger: NonNullabl
   );
 }
 
+function KindFilter({ search, navigate }: { search: ActivitySearch; navigate: Navigate }) {
+  return (
+    <div className="activity-filters">
+      <ChoiceGroup<"all" | Kind>
+        legend="Type"
+        name="activity-kind"
+        value={search.kind ?? "all"}
+        onChange={(value) => {
+          navigate((previous) => ({ ...previous, kind: value === "all" ? undefined : value }));
+        }}
+        options={KIND_FILTERS}
+      />
+    </div>
+  );
+}
+
 function Filters({ search, navigate }: { search: ActivitySearch; navigate: Navigate }) {
   const { ledger } = useActivityLedger();
   const [picking, setPicking] = useState(false);
@@ -195,15 +245,6 @@ function Filters({ search, navigate }: { search: ActivitySearch; navigate: Navig
   const selectedMissing = search.category && !categories.some((category) => category.id === search.category);
   return (
     <div className="activity-filters">
-      <ChoiceGroup<"all" | Kind>
-        legend="Type"
-        name="activity-kind"
-        value={search.kind ?? "all"}
-        onChange={(value) => {
-          navigate((previous) => ({ ...previous, kind: value === "all" ? undefined : value }));
-        }}
-        options={KIND_FILTERS}
-      />
       {categories.length || search.category ? (
         <fieldset className="choices category-chips">
           <legend className="choices__legend">Category</legend>
@@ -258,6 +299,7 @@ function Filters({ search, navigate }: { search: ActivitySearch; navigate: Navig
         <CategoryPickerDialog
           title="Filter by category"
           categories={categories}
+          mostUsed={ledger ? mostUsedCategories(ledger, search.kind) : []}
           selected={search.category}
           allLabel="All categories"
           onSelect={(id) => {

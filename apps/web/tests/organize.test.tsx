@@ -375,19 +375,20 @@ describe("inline creation from an entry form", { timeout: 20_000 }, () => {
     const opener = within(form).getByRole("button", { name: "All categories" });
     opener.focus();
     await user.keyboard("{Enter}");
-    const inner = await dialog("Choose a category");
-    expect(within(inner).getByLabelText("Find a category")).toHaveFocus();
+    const inner = await dialog("Expense category");
+    expect(within(inner).getByLabelText("Search categories")).toHaveFocus();
     // Escape closes only the inner dialog; the draft is untouched.
     await user.keyboard("{Escape}");
     await waitFor(() => {
-      expect(screen.queryByRole("dialog", { name: "Choose a category" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("dialog", { name: "Expense category" })).not.toBeInTheDocument();
     });
     expect(screen.getByRole("dialog", { name: "Add entry" })).toBeInTheDocument();
     expect(opener).toHaveFocus();
 
     await user.keyboard("{Enter}");
-    const again = await dialog("Choose a category");
-    await user.type(within(again).getByLabelText("New category"), "Pets");
+    const again = await dialog("Expense category");
+    await user.click(within(again).getByRole("button", { name: "New category" }));
+    await user.type(within(again).getByLabelText("New category name"), "Pets");
     // Tab stays inside the inner dialog.
     for (let step = 0; step < 40; step += 1) {
       await user.tab();
@@ -395,7 +396,7 @@ describe("inline creation from an entry form", { timeout: 20_000 }, () => {
     }
     await user.click(within(again).getByRole("button", { name: "Add category" }));
     await waitFor(() => {
-      expect(screen.queryByRole("dialog", { name: "Choose a category" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("dialog", { name: "Expense category" })).not.toBeInTheDocument();
     });
     expect(within(form).getByRole("radio", { name: "Pets" })).toBeChecked();
     expect(within(form).getByLabelText("Title")).toHaveValue("Vet visit");

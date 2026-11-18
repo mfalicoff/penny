@@ -288,7 +288,7 @@ describe("shared expense form", () => {
     const form = await dialog("Add entry");
     // Categories are sent by value, so one made offline can be used right away.
     await user.click(await within(form).findByRole("button", { name: "All categories" }));
-    const picker = screen.getByRole("dialog", { name: "Choose a category" });
+    const picker = screen.getByRole("dialog", { name: "Expense category" });
     expect(await within(picker).findByRole("button", { name: /Pets/ })).toBeInTheDocument();
     await user.keyboard("{Escape}");
     // The server checks the account against its copy of the ledger, so an unsynced one waits.
@@ -298,7 +298,7 @@ describe("shared expense form", () => {
 
     await fillExpense(user, form, "Vet", "60");
     await user.click(within(form).getByRole("button", { name: "All categories" }));
-    await user.click(within(screen.getByRole("dialog", { name: "Choose a category" })).getByRole("button", { name: /Pets/ }));
+    await user.click(within(screen.getByRole("dialog", { name: "Expense category" })).getByRole("button", { name: /Pets/ }));
     expect(within(form).getByRole("radio", { name: "Pets" })).toBeChecked();
     await user.selectOptions(within(form).getByLabelText("Your account"), "acct-visa");
     await user.click(within(form).getByRole("button", { name: "Save" }));

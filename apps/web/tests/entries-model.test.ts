@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { Ledger, Transaction } from "@domain/ledger.ts";
-import { localRows, periodTotals, rowFilters } from "../src/features/activity/data";
+import { dayTotal, groupByDay, localRows, periodTotals, rowFilters } from "../src/features/activity/data";
 import { ledgerWithShared, monthReport } from "../src/features/home/model";
 import { danaOctober, totalsOf } from "./fakes/futureIncome";
 import { activeDay, activitySearchSchema, periodOf, searchRange, shiftPeriod, without, withPeriod } from "../src/features/activity/filters";
-import { buildEntry, categoryIcon, draftFromEntry, entryChange, frequentCategories, futureIncomeNote, inlineCategories, newDraft, withKind, type EntryDraft } from "../src/features/entries/model";
+import { buildEntry, categoryIcon, draftFromEntry, entryChange, frequentCategories, futureIncomeNote, inlineCategories, mostUsedCategories, newDraft, withKind, type EntryDraft } from "../src/features/entries/model";
 
 /** Synthetic data only. */
 const ledger = (extra: Partial<Ledger> = {}): Ledger => ({
@@ -204,5 +204,42 @@ describe("future-dated income (MAZ-136)", () => {
     const period = { type: "month", month: "2026-11" } as const;
     expect(periodTotals(data, period, [], "2026-11-10")).toMatchObject({ income: 50000, expense: 9000, net: 41000, expectedIncome: 50000 });
     expect(periodTotals(data, period, [], "2026-11-11")).toMatchObject({ income: 100000, expense: 9000, net: 91000, expectedIncome: 0 });
+  });
+});
+
+describe("Activity's day groups (MAZ-175)", () => {
+  const personal = (value: Transaction) => ({ key: `personal:${value.id}`, source: "personal" as const, date: value.date, entry: value, pending: false });
+
+  it("groups consecutive rows by day and totals each day: income in, expenses and investments out", () => {
+    const rows = [
+      personal(entry("fund", { kind: "investment", share: 20000, total: 20000, date: "2026-11-06" })),
+      personal(entry("bus", { share: 6200, total: 6200, date: "2026-11-06" })),
+      personal(entry("pay", { kind: "income", share: 320000, total: 320000, date: "2026-11-01" })),
+      personal(entry("rent", { share: 145000, total: 290000, date: "2026-11-01" })),
+    ];
+    const groups = groupByDay(rows);
+    expect(groups.map((group) => [group.date, group.rows.length])).toEqual([
+      ["2026-11-06", 2],
+      ["2026-11-01", 2],
+    ]);
+    expect(groups.map((group) => dayTotal(group.rows, "CAD", "2026-11-09"))).toEqual([
+      { cents: -26200, currency: "CAD" },
+      { cents: 175000, currency: "CAD" },
+    ]);
+  });
+
+  it("leaves expected income out of a day's total, and gives no total across currencies", () => {
+    const bonus = personal(entry("bonus", { kind: "income", share: 50000, total: 50000, date: "2026-11-12" }));
+    expect(dayTotal([bonus], "CAD", "2026-11-11")).toEqual({ cents: 0, currency: "CAD" });
+    expect(dayTotal([bonus], undefined, "2026-11-11")).toBeNull();
+  });
+});
+
+describe("Most used categories (MAZ-175)", () => {
+  it("lists only categories entries use, most used first, up to the limit", () => {
+    const data = ledger({ transactions: [entry("a", { categoryId: "food" }), entry("b", { categoryId: "food" }), entry("c", { categoryId: "groceries" }), entry("d", { kind: "income", categoryId: "salary" })] });
+    expect(mostUsedCategories(data, "expense").map((category) => category.id)).toEqual(["food", "groceries"]);
+    expect(mostUsedCategories(data, "expense", 1).map((category) => category.id)).toEqual(["food"]);
+    expect(mostUsedCategories(ledger(), "expense")).toEqual([]);
   });
 });
