@@ -50,7 +50,7 @@ Every card in [design-baseline.json](../../contracts/design-baseline.json) whose
 | `iphone-insights` | `OverviewJourneyTests`, `AccessibilityAuditTests` | Category drill-down; audited in every variant | Covered |
 | `iphone-calendar` | `OverviewJourneyTests`, `ScreenshotTests` | Day selection keeps month totals | Covered |
 | `iphone-activity` | `EntryJourneyTests`, `SearchJourneyTests`, `AccessibilityAuditTests` | Day rows, kind filters keep totals, server totals after each write | Covered |
-| `iphone-search-empty` | `SearchJourneyTests` | No-match query shows the empty state | Covered |
+| `iphone-search-empty` | `SearchJourneyTests`, `KeyboardLayoutTests` | No-match query shows the empty state; with the keyboard up it stays clear of the totals and the server-results line | Covered |
 | `iphone-add-expense` | `SmokeJourneyTests`, `EntryJourneyTests`, `AccessibilityAuditTests` | Keypad entry, server write, keyboard-safe Save at XXXL | Covered; duplicate-submit tapping is unit-tested only (EntryFlowTests) |
 | `iphone-add-income` | `EntryJourneyTests` | Income via the kind segment, server share and totals | Covered |
 | `iphone-entry-extras` | `ReceiptJourneyTests` | Receipt group of More details | Partly: repeat and trip rows have no UI journey here (unit-tested) |
@@ -80,7 +80,7 @@ Every card in [design-baseline.json](../../contracts/design-baseline.json) whose
 | `iphone-category-form` | `OrganizeJourneyTests` | Create and rename; entries show the new name | Covered; in-use removal guard is unit-tested only |
 | `iphone-appearance` | `SettingsJourneyTests`, `LifecycleTests` | Light, Dark, System kept across relaunch | Covered |
 | `iphone-app-lock` | `SettingsJourneyTests`, `AppLockDelayTests` | Unavailable biometrics explained, lock stays off; Lock after: Immediately, After 1 minute and After 5 minutes, drafts kept, cold launch always locks (MAZ-133, with the Face ID stand-in) | Partly: real Face ID enabling, unlocking and the passcode fallback are device checks |
-| `iphone-sign-in` | `AuthJourneyTests`, `NetworkFailureTests`, `AccessibilityAuditTests` | Password, SSO, wrong password, dropped request, audit | Covered |
+| `iphone-sign-in` | `AuthJourneyTests`, `NetworkFailureTests`, `AccessibilityAuditTests`, `KeyboardLayoutTests` | Password, SSO, wrong password, dropped request, audit, demo link clear of Sign in while typing | Covered |
 | `iphone-create-account` | `AuthJourneyTests` | — | Covered |
 | `iphone-server-connect` | `SmokeJourneyTests` | Clean install shows the test server | Partly: credential-free verification of another server is unit-tested only |
 | `iphone-lock` | — | — | Device-only (checklist): needs enrolled Face ID |
@@ -145,7 +145,7 @@ Justified native adaptations are recorded in [redesign](../reference/redesign.md
 
 No individual finding is accepted yet (`accepted` is empty).
 
-**Recorded debt.** The final audit run (iPhone 18 Pro, iOS 27.0, 2026-11-12) found 257 issues of five types across the 25 main-screen audits and the 4 sign-in audits; the counts below are from that run. They are real and need design or code fixes, so the test records them (`AccessibilityAuditTests.recordedDebt`) instead of failing on them; the remaining types (element descriptions, traits) found nothing and fail on any new finding. The audits also found one layout bug that is fixed here: at AX-XXXL with the keyboard up, the sign-in screen's "Take a look around with sample data" link rode above the keyboard and covered Sign in, so a tap meant for Sign in opened the demo; the link now steps aside while the keyboard is up at accessibility sizes (`SignedOutFlow`). Each type comes out of `recordedDebt` once its follow-up is fixed.
+**Recorded debt.** The final audit run (iPhone 18 Pro, iOS 27.0, 2026-11-12) found 257 issues of five types across the 25 main-screen audits and the 4 sign-in audits; the counts below are from that run. They are real and need design or code fixes, so the test records them (`AccessibilityAuditTests.recordedDebt`) instead of failing on them; the remaining types (element descriptions, traits) found nothing and fail on any new finding. The audits also found one layout bug that is fixed here: at AX-XXXL with the keyboard up, the sign-in screen's "Take a look around with sample data" link rode above the keyboard and covered Sign in, so a tap meant for Sign in opened the demo; the link now steps aside whenever the keyboard is up, at every text size, since the MAZ-122 card captures showed the same overlap at the default size (`SignedOutFlow`, MAZ-179; `KeyboardLayoutTests`). Each type comes out of `recordedDebt` once its follow-up is fixed.
 
 | Type | Findings | Typical elements | Likely fix |
 | --- | --- | --- | --- |
