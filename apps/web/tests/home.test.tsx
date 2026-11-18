@@ -26,6 +26,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.unstubAllGlobals();
   localStorage.clear();
   reloadPreferences();
   onlineManager.setOnline(true);
@@ -44,11 +45,29 @@ function server(transactions = [pay, rent, coffee, fund, october]) {
   return ledgerServer({ transactions, recurring: [retainer] }, { shared: [hydro], scheduled: [streaming] });
 }
 
+/**
+ * A window this wide (MAZ-174): `min-width` queries answer for it, so the desktop layouts render.
+ * Without it jsdom has no `matchMedia` and the app lays out for a phone.
+ */
+function stubWidth(width: number) {
+  vi.stubGlobal(
+    "matchMedia",
+    vi.fn((query: string) => {
+      const min = /min-width:\s*(\d+)px/.exec(query);
+      return { matches: min ? width >= Number(min[1]) : query.includes("hover"), media: query, addEventListener: vi.fn(), removeEventListener: vi.fn() };
+    }),
+  );
+}
+
+/** The headings of the page's regions in document order, for checking what leads. */
+const regionOrder = () => screen.getAllByRole("region").map((region) => region.getAttribute("aria-labelledby") && document.getElementById(region.getAttribute("aria-labelledby") ?? "")?.textContent);
+
 const hero = () => screen.getByRole("region", { name: "Left to spend" });
 const explore = () => screen.getByRole("region", { name: "Explore your month" });
 
 describe("Home", () => {
   it("leads with recorded and projected remaining, naming the expected income", async () => {
+    stubWidth(1440);
     const api = server();
     renderApp("/?month=2026-11");
     await waitFor(() => {
@@ -70,6 +89,40 @@ describe("Home", () => {
     expect(within(recent).getByRole("link", { name: /Hydro/ })).toHaveAttribute("href", "/households/h1/expenses/e1");
     expect(within(recent).getByRole("link", { name: "See all" })).toHaveAttribute("href", "/transactions?month=2026-11");
     expect(within(recent).queryByText("October groceries")).not.toBeInTheDocument();
+  });
+
+  it("on a phone, leads with the hero, then Follow your money, then Recent, as iphone-home (MAZ-174)", async () => {
+    server();
+    renderApp("/?month=2026-11");
+    await waitFor(() => {
+      expect(hero()).toHaveTextContent("shared expense");
+    });
+    // One number leads: the tiles are the desktop card's; the flow card carries the split instead.
+    expect(within(hero()).queryByText("Came in")).not.toBeInTheDocument();
+    expect(regionOrder().slice(0, 4)).toEqual(["Left to spend", "Follow your money", "Recent", "Coming up"]);
+    const flow = screen.getAllByRole("region", { name: "Follow your money" })[0] as HTMLElement;
+    expect(within(flow).getByText("Spent").parentElement).toHaveTextContent("$1,486.20");
+    expect(within(flow).getByRole("link", { name: "Insights" })).toHaveAttribute("href", "/insights?month=2026-11");
+    // The month switcher leads the page on a phone.
+    expect(within(screen.getByRole("main")).getByRole("button", { name: "Previous month" })).toBeInTheDocument();
+  });
+
+  it("on desktop, puts the Sankey and By category under the hero and the month in the top bar, as web-home (MAZ-174)", async () => {
+    stubWidth(1440);
+    server();
+    renderApp("/?month=2026-11");
+    await waitFor(() => {
+      expect(hero()).toHaveTextContent("shared expense");
+    });
+    expect(regionOrder().slice(0, 5)).toEqual(["Left to spend", "Coming up", "Follow your money", "By category", "Recent"]);
+    // Each appears once: Explore your month keeps only the calendar and the list.
+    expect(within(explore()).queryByRole("region", { name: "Follow your money" })).not.toBeInTheDocument();
+    expect(within(explore()).queryByRole("region", { name: "By category" })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: "By category" })).toBeInTheDocument();
+    const topbar = screen.getByRole("banner");
+    expect(within(topbar).getByRole("button", { name: "Previous month" })).toBeInTheDocument();
+    expect(within(topbar).getByText("November 2026")).toBeInTheDocument();
+    expect(within(screen.getByRole("main")).queryByRole("button", { name: "Previous month" })).not.toBeInTheDocument();
   });
 
   it("says when the month is overspent, in words", async () => {
@@ -226,13 +279,27 @@ describe("Home", () => {
   it("shows the first-entry state instead of zero-value charts", async () => {
     ledgerServer();
     renderApp("/");
-    expect(await screen.findByRole("heading", { name: "Your month starts with one entry" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Add your first entry/ })).toHaveAttribute("href", "/entries/new");
-    expect(screen.getByRole("link", { name: "Currency: CAD" })).toHaveAttribute("href", "/settings/currency");
+    const start = await screen.findByRole("region", { name: "Add your first entry" });
+    expect(hero()).toHaveTextContent("$0");
+    expect(hero()).toHaveTextContent("Your month fills in as you add entries.");
+    expect(within(start).getByRole("link", { name: "Currency: CAD" })).toHaveAttribute("href", "/settings/currency");
+    expect(within(start).getAllByRole("button").map((button) => button.textContent)).toEqual(["IncomePay, refunds", "ExpenseSpending", "InvestContributions"]);
+    expect(screen.getByRole("region", { name: "Recent" })).toHaveTextContent("Nothing yet. New entries show up here.");
     expect(screen.queryByRole("region", { name: "Follow your money" })).not.toBeInTheDocument();
   });
 
+  it("opens Add entry on the kind chosen from the empty month (MAZ-174)", async () => {
+    ledgerServer();
+    const user = userEvent.setup();
+    renderApp("/");
+    const start = await screen.findByRole("region", { name: "Add your first entry" });
+    await user.click(within(start).getByRole("button", { name: /^Income/ }));
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByRole("radio", { name: "Income" })).toBeChecked();
+  });
+
   it("changes month with Previous and Next, kept in the URL", async () => {
+    stubWidth(1440);
     const api = server();
     const user = userEvent.setup();
     const { router } = renderApp("/?month=2026-11");
@@ -252,7 +319,8 @@ describe("Home", () => {
 
 describe("Insights", () => {
   it("shows the month's totals, the change from last month and categories side by side", async () => {
-    server();
+    stubWidth(1440);
+    const api = server();
     renderApp("/insights?month=2026-11");
     const table = await screen.findByRole("table", { name: /^Spending by category/ });
     await waitFor(() => {
@@ -264,5 +332,33 @@ describe("Insights", () => {
     expect(totals.getByText("vs October").nextElementSibling).toHaveTextContent("$986.20 more spent");
     expect(totals.getByText("Left over").nextElementSibling).toHaveTextContent("$3,113.80");
     expect(screen.getByRole("region", { name: "Follow your money" })).toBeInTheDocument();
+
+    // Last 6 months (web-insights, MAZ-174): recorded income and your share of spending.
+    const months = screen.getByRole("region", { name: "Last 6 months" });
+    const sixTable = await within(months).findByRole("table", { hidden: true });
+    expect(within(sixTable).getAllByRole("row", { hidden: true }).slice(1).map((row) => row.textContent)).toEqual([
+      "June 2026$0.00 income$0.00",
+      "July 2026$0.00 income$0.00",
+      "August 2026$0.00 income$0.00",
+      "September 2026$0.00 income$0.00",
+      "October 2026$0.00 income$500.00",
+      "November 2026$4,800.00 income$1,486.20",
+    ]);
+    expect(api.state.projections).toContain("/api/households/projection?month=2026-06");
+  });
+
+  it("on a phone, leads with the category donut and one month-over-month sentence, as iphone-insights (MAZ-174)", async () => {
+    server();
+    renderApp("/insights?month=2026-11");
+    const spending = await screen.findByRole("region", { name: "Spending" });
+    await waitFor(() => {
+      expect(spending).toHaveTextContent("$986.20 more than October");
+    });
+    expect(spending).toHaveTextContent("$1,486.20Spent");
+    expect(spending).toHaveTextContent("Mostly Food & drinks and Utilities.");
+    expect(regionOrder().slice(0, 3)).toEqual(["Spending", "Categories", "Follow your money"]);
+    const categories = screen.getByRole("region", { name: "Categories" });
+    expect(within(categories).getAllByRole("listitem").map((item) => item.textContent)).toEqual(["Food & drinks$1,456.20 · 98%", "Utilities$30.00 · 2%"]);
+    expect(screen.queryByRole("region", { name: "Last 6 months" })).not.toBeInTheDocument();
   });
 });

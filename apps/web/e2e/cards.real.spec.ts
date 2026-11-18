@@ -52,13 +52,17 @@ async function home(page: Page, path = "/") {
   await expect(page.getByRole("region", { name: "Left to spend" })).toBeVisible();
 }
 
-/** The recorded and projected totals of `alex-2026-10` on Home. */
+/**
+ * The recorded and projected totals of `alex-2026-10` on Home. The other two amounts are in the
+ * hero's tiles on desktop and in the Follow your money card on phones (MAZ-174).
+ */
 async function expectAlexOctober(page: Page) {
   const totals = page.getByRole("region", { name: "Left to spend" });
   await expect(totals).toContainText("Recorded remaining: -$1,759.50");
   await expect(totals).toContainText("Projected remaining: -$1,807.50");
-  await expect(totals).toContainText("$1,259.50");
-  await expect(totals).toContainText("$500.00");
+  const main = page.getByRole("main");
+  await expect(main).toContainText("$1,259.50");
+  await expect(main).toContainText("$500.00");
 }
 
 async function page(pageRef: Page, path: string, heading: string | RegExp) {
@@ -410,7 +414,7 @@ const cards: Record<string, Card> = {
     open: async ({ page: p }) => {
       await p.goto("/");
       await expect(p.getByRole("heading", { level: 1, name: "Home", exact: true })).toBeVisible();
-      await expect(p.getByRole("link", { name: "Add your first entry" })).toBeVisible();
+      await expect(p.getByRole("region", { name: "Add your first entry" })).toBeVisible();
     },
   },
 

@@ -77,38 +77,47 @@
   min-width: 0;
 }
 
+/*
+ * Below 1100px Home is one column in the iPhone card's order (hero, Follow your money, Recent,
+ * then Coming up); from 768px Explore's calendar and categories sit side by side.
+ */
 @media (min-width: 768px) {
-  .home-top,
   .explore__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .hero,
   .explore__wide {
     grid-column: 1 / -1;
   }
 }
 
+/*
+ * From 1100px the desktop dashboard (card `web-home`): the hero with its tiles beside Coming up,
+ * then the Sankey beside By category, then Recent; Explore puts the calendar beside the list.
+ */
 @media (min-width: 1100px) {
-  .home-top,
+  .home-top--wide,
   .explore__grid {
     grid-template-columns: repeat(12, minmax(0, 1fr));
   }
 
-  .hero {
+  .home-top--wide > .hero,
+  .home-top--wide > .home-sankey {
     grid-column: 1 / span 8;
   }
 
-  .home-coming {
+  .home-top--wide > .home-coming,
+  .home-top--wide > .breakdown {
     grid-column: 9 / span 4;
   }
 
-  .home-flow {
-    grid-column: 1 / span 5;
+  .home-top--wide > .home-recent {
+    grid-column: 1 / -1;
   }
 
-  .home-recent {
-    grid-column: 6 / span 7;
+  .home-sankey {
+    display: grid;
+    min-width: 0;
   }
 
   .calendar {
@@ -119,9 +128,77 @@
     grid-column: 8 / span 5;
   }
 
-  .explore__wide {
-    grid-column: 1 / -1;
+  .explore--wide .calendar {
+    grid-column: 1 / span 5;
   }
+
+  .explore--wide .explore__list {
+    grid-column: 6 / span 7;
+  }
+}
+
+/* ---------- empty month (card `iphone-empty-home`) ---------- */
+.first-entry .card__head {
+  flex-wrap: wrap;
+}
+
+.first-entry__kinds {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.first-entry__kind {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  width: 100%;
+  min-height: 44px;
+  padding: 12px 6px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--pk-fill);
+  color: var(--pk-label);
+  font: inherit;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+}
+
+.first-entry__kind:hover {
+  box-shadow: inset 0 0 0 1px var(--pk-separator);
+}
+
+.first-entry__icon {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  color: #fff;
+}
+
+.first-entry__kind--income .first-entry__icon {
+  background: var(--pk-income);
+}
+
+.first-entry__kind--expense .first-entry__icon {
+  background: var(--pk-label);
+  color: var(--pk-surface);
+}
+
+.first-entry__kind--investment .first-entry__icon {
+  background: var(--pk-invest);
+}
+
+.first-entry__hint {
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  overflow-wrap: anywhere;
 }
 
 /* ---------- hero ---------- */
@@ -451,9 +528,10 @@
   list-style: none;
 }
 
+/* A name keeps at least 6em; in a narrow column the amount wraps under its percentage instead (iPad dashboard). */
 .breakdown__row {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(min(6em, 100%), 1fr) auto;
   align-items: center;
   gap: 4px 12px;
   width: 100%;
@@ -559,6 +637,11 @@ button.breakdown__row:hover {
   width: 100%;
   max-width: 920px;
   margin-inline: auto;
+}
+
+/* The desktop Home and Insights cards keep the diagram short: above the fold on Home at 1440×900 (MAZ-174). */
+.flow--compact .flow__svg {
+  max-height: 340px;
 }
 
 .flow__svg {
@@ -765,6 +848,173 @@ button.breakdown__row:hover {
   overflow-wrap: anywhere;
 }
 
+/* Card `iphone-insights`: the category donut and the month-over-month sentence. */
+.spending__body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 20px;
+}
+
+.donut {
+  position: relative;
+  flex: none;
+  width: 148px;
+  height: 148px;
+}
+
+.donut__ring {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.donut__track,
+.donut__arc {
+  fill: none;
+  stroke-width: 14;
+}
+
+.donut__track {
+  stroke: var(--pk-fill);
+}
+
+.donut__label {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  margin: 0;
+  text-align: center;
+}
+
+.donut__label strong {
+  max-width: 104px;
+  font-size: 1rem;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.donut__label span {
+  color: var(--pk-label-2);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.spending__compare {
+  display: grid;
+  flex: 1 1 160px;
+  gap: 6px;
+  min-width: 0;
+}
+
+.spending__sentence {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.spending__drivers {
+  margin: 0;
+}
+
+.spending__bars {
+  display: grid;
+  gap: 6px;
+  margin-top: 4px;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+}
+
+.spending__bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.spending__bar i {
+  display: block;
+  max-width: calc(100% - 3em);
+  min-width: 2px;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--pk-label);
+  opacity: 0.82;
+}
+
+.spending__bar--previous i {
+  opacity: 0.3;
+}
+
+/* Card `web-insights`: the category table beside the last six months. */
+.insights__low {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+@media (min-width: 1100px) {
+  .insights__low {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    align-items: start;
+  }
+}
+
+.six-months__legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8125rem;
+}
+
+.six-months__legend .tile__dot:not(:first-child) {
+  margin-inline-start: 8px;
+}
+
+.six-months__chart {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+  align-items: end;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  text-align: center;
+}
+
+.six-months__month {
+  display: grid;
+  gap: 6px;
+}
+
+.six-months__bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  height: 140px;
+}
+
+.six-months__bar {
+  display: block;
+  width: 12px;
+  min-height: 2px;
+  border-radius: 4px 4px 0 0;
+}
+
+.six-months__bar--income {
+  background: var(--pk-income);
+}
+
+.six-months__bar--spent {
+  background: var(--pk-label);
+  opacity: 0.8;
+}
+
 .month-list__filters {
   display: flex;
   flex-wrap: wrap;
@@ -783,7 +1033,9 @@ button.breakdown__row:hover {
   .summary-bar__part,
   .breakdown__fill,
   .tile__dot,
-  .hero__dot {
+  .hero__dot,
+  .spending__bar i,
+  .six-months__bar {
     forced-color-adjust: none;
     border: 1px solid CanvasText;
   }

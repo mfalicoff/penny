@@ -6,6 +6,7 @@ import { selectOverview, type OverviewEntry } from "@domain/selectors/overview.t
 import { isExpected, net, type KindTotals } from "@domain/summary.ts";
 import type { SharedRow } from "../../api/projection";
 import type { WeekStart } from "../../app/preferences";
+import { shiftMonth } from "../households/model";
 
 /**
  * Home and Insights reporting (MAZ-92). Every number comes from the shared domain
@@ -320,4 +321,25 @@ export function flowNodeSummary(node: FlowNode, flow: MoneyFlow, side: "in" | "o
 export function shortLabel(label: string, max = 18): string {
   const chars = Array.from(new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(label), (part) => part.segment);
   return chars.length <= max ? label : `${chars.slice(0, max - 1).join("").trimEnd()}…`;
+}
+
+/**
+ * Insights' month-over-month sentence (card `iphone-insights`): the change in recorded spending
+ * from last month, and the (at most two) categories that moved most in that direction ("Mostly
+ * Food & drinks and Shopping."). The grouped "N more" row is never named.
+ */
+export function spendingChange(current: number, previous: number, comparison: readonly CategoryChange[]): { delta: number; drivers: string[] } {
+  const delta = current - previous;
+  if (delta === 0) return { delta, drivers: [] };
+  const drivers = comparison
+    .filter((row) => row.key !== "more" && Math.sign(row.change) === Math.sign(delta))
+    .sort((a, b) => Math.abs(b.change) - Math.abs(a.change))
+    .slice(0, 2)
+    .map((row) => row.name);
+  return { delta, drivers };
+}
+
+/** The months ending with `month`, oldest first (Insights' six-month chart). */
+export function monthsEnding(month: string, count: number): string[] {
+  return Array.from({ length: count }, (_, index) => shiftMonth(month, index - count + 1));
 }
