@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { expect, test, type BrowserContext, type Page } from "@playwright/test";
+import { expect, test, type BrowserContext, type Page, type Request } from "@playwright/test";
 import { damagedPdf, oversizedPng, sha256, syntheticPdf, syntheticPng } from "./fixtures/receipts";
 
 // Receipt upload, preview and download (MAZ-94) on the production build, under the production
@@ -177,6 +177,22 @@ async function choose(page: Page, button: string, file: { name: string; mimeType
   await (await chooser).setFiles(file);
 }
 
+/**
+ * How many search requests the page has sent and not yet finished. After a save, the offline
+ * ledger sync refetches search (invalidateSearch). A reload while that request is in flight
+ * cancels it, and WebKit reports a cancelled fetch as a page error ("… due to access control checks").
+ */
+function pendingSearches(page: Page) {
+  const pending = new Set<Request>();
+  const isSearch = (request: Request) => new URL(request.url()).pathname === "/api/v1/search/transactions";
+  page.on("request", (request) => {
+    if (isSearch(request)) pending.add(request);
+  });
+  page.on("requestfinished", (request) => pending.delete(request));
+  page.on("requestfailed", (request) => pending.delete(request));
+  return () => pending.size;
+}
+
 async function downloadedHash(page: Page, dialog: ReturnType<Page["getByRole"]>) {
   const download = page.waitForEvent("download");
   await dialog.getByRole("button", { name: "Download" }).click();
@@ -186,6 +202,7 @@ async function downloadedHash(page: Page, dialog: ReturnType<Page["getByRole"]>)
 
 test("attaches a two-page PDF, saves, and after a reload previews every page and downloads the same bytes", async ({ context, page }) => {
   const errors = watchForErrors(page);
+  const searches = pendingSearches(page);
   const server = await mockApi(context);
   const pdf = syntheticPdf(2);
   await open(page);
@@ -199,6 +216,9 @@ test("attaches a two-page PDF, saves, and after a reload previews every page and
   await expect.poll(() => server.ledger.transactions.find((item) => item.title === "Café receipt")?.receipt?.name).toBe("café-receipt.pdf");
   const stored = [...server.files.values()][0];
   expect(stored && sha256(stored.bytes)).toBe(sha256(pdf));
+  // Let the save's search refetch finish before reloading, so the reload doesn't cancel it.
+  await expect(page.getByRole("region", { name: "Search results" }).getByRole("button", { name: /Café receipt/ })).toBeVisible();
+  await expect.poll(searches).toBe(0);
 
   await page.reload();
   await page.getByRole("region", { name: "Search results" }).getByRole("button", { name: /Café receipt/ }).click();
