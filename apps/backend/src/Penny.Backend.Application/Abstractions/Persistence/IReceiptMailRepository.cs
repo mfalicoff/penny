@@ -12,21 +12,19 @@ public interface IReceiptMailRepository
         CancellationToken cancellationToken
     );
 
-    // Addresses created by the user since `since` (revoked ones included).
-    Task<int> CountCreatedSinceAsync(
-        string userId,
-        DateTimeOffset since,
-        CancellationToken cancellationToken
-    );
-
     // Revokes the user's current address (if any) and stores a new one in one
-    // transaction. The allowed senders carry over from the replaced address.
-    Task<StoredMailAddress> ReplaceAsync(
+    // transaction. The allowed senders carry over from the replaced address. Null, with
+    // nothing changed, when the user already created `maxCreated` addresses (revoked
+    // ones included) since `since`; the count is taken under the lock that serializes
+    // rotations, so concurrent requests cannot overshoot it.
+    Task<StoredMailAddress?> ReplaceAsync(
         string userId,
         string address,
         string localPartHash,
         DateTimeOffset createdAt,
         DateTimeOffset expiresAt,
+        DateTimeOffset since,
+        int maxCreated,
         CancellationToken cancellationToken
     );
 

@@ -248,6 +248,35 @@ public sealed class ReceiptEmailTests(ApiFixture fixture) : InboundMailTestBase(
     }
 
     [Fact]
+    public async Task whenOverTheCapConcurrently_Create_ShouldNotCreateMoreThanTheDailyCap()
+    {
+        At(Noon);
+        var (token, userId) = await AccountAsync("burst@example.test");
+        for (var index = 0; index < 8; index++)
+            await CreateAddressAsync(token);
+        // Six at once with two left today: the cap is counted under the rotation lock, so
+        // exactly two get through and the rest are refused (MAZ-207).
+        var responses = await Task.WhenAll(
+            Enumerable.Range(0, 6).Select(_ => SendAsync(HttpMethod.Post, AddressPath, token))
+        );
+        var statuses = responses.Select(response => response.StatusCode).ToList();
+        foreach (var response in responses)
+            response.Dispose();
+        statuses.Count(status => status == HttpStatusCode.Created).ShouldBe(2);
+        statuses.Count(status => status == HttpStatusCode.TooManyRequests).ShouldBe(4);
+        (
+            await CountAsync(
+                $"SELECT count(*) FROM penny.receipt_mail_addresses WHERE user_id = '{userId}'"
+            )
+        ).ShouldBe(10);
+        (
+            await CountAsync(
+                $"SELECT count(*) FROM penny.receipt_mail_addresses WHERE user_id = '{userId}' AND revoked_at IS NULL"
+            )
+        ).ShouldBe(1);
+    }
+
+    [Fact]
     public async Task whenOtherUserHasAnAddress_Read_ShouldOnlyShowTheirOwn()
     {
         var (alice, _) = await AccountAsync("alice@example.test");

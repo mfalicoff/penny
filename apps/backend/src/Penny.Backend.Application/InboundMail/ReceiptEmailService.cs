@@ -36,11 +36,6 @@ public sealed class ReceiptEmailService(
     {
         RequireEnabled();
         var now = clock.GetUtcNow();
-        if (
-            await addresses.CountCreatedSinceAsync(userId, now.AddDays(-1), cancellationToken)
-            >= settings.MaxAddressesPerDay
-        )
-            throw new BackendFailure(FailureKind.RateLimited, TooManyAddresses);
         var local = ReceiptMailAddresses.NewLocalPart();
         return await addresses.ReplaceAsync(
             userId,
@@ -48,8 +43,10 @@ public sealed class ReceiptEmailService(
             ReceiptMailAddresses.Hash(local),
             now,
             now + settings.AddressLifetime,
+            now.AddDays(-1),
+            settings.MaxAddressesPerDay,
             cancellationToken
-        );
+        ) ?? throw new BackendFailure(FailureKind.RateLimited, TooManyAddresses);
     }
 
     // `{ "extend": true, "allowedSenders": ["…"] }`: either or both. Extending restarts
