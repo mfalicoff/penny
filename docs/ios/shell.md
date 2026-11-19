@@ -88,7 +88,7 @@ PennyDesign keeps the tokens of the baseline (`Tokens.swift`, checked by `TokenB
 
 | Setting | Where it's stored | Behavior |
 | --- | --- | --- |
-| Appearance: System (default), Light, Dark | `UserDefaults` (`penny.appearance`), this device only | Applied at the root with `preferredColorScheme`. An unknown stored value falls back to System. Text size follows the device. |
+| Appearance: System (default), Light, Dark | `UserDefaults` (`penny.appearance`), this device only | Applied at the root with `preferredColorScheme`. An unknown stored value falls back to System. Settings › Appearance shows Light, Dark and System as three small previews (MAZ-180); at accessibility text sizes they stack. Text size follows the device. |
 | Currency: CAD, USD, EUR or GBP | The ledger (through the workspace) | The four currencies `contracts/openapi.json` allows. Locked, with the ledger rule's message, once the ledger has entries or recurring rules, as the ledger rule does; locked while in an active household ("Currency is locked while you're in a household."), which the server enforces (`Your ledger currency must match your active households.`). The household count comes from MAZ-75; until then only the ledger rule applies on the device. A change shows the save toast; a failure shows the save error and keeps the choice to retry. |
 | Face ID lock | Keychain, this device only, not synced | See [App lock](#app-lock). |
 | Lock after: Immediately (default), After 1 minute or After 5 minutes | App preferences (`penny.lockDelay`), this device only, not synced | Shown while the lock is on. See [App lock](#app-lock). |

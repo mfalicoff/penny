@@ -48,7 +48,7 @@ struct SharedTripSummary: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
                 Text(context.range.phaseLabel(today: shell.today))
-                    .font(.footnote.weight(.semibold)).foregroundStyle(PennyColor.pending)
+                    .font(.footnote.weight(.semibold)).foregroundStyle(PennyColor.secondaryLabel)
                     .accessibilityIdentifier("tripPage.phase")
                 Label("Shared", systemImage: "person.2")
                     .font(.footnote.weight(.semibold)).foregroundStyle(PennyColor.secondaryLabel)

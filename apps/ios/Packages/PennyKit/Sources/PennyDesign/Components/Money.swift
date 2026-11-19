@@ -47,6 +47,21 @@ nonisolated public enum MoneyFormat {
         }
     }
 
+    /// What the keypad has typed so far ("3200.5", always a dot), grouped and with the decimal
+    /// separator of `locale`: "3,200.5" in English, "3 200,5" in French. The fraction stays as
+    /// typed, so a trailing separator or one cent digit shows while typing. Anything that isn't
+    /// digits with at most one dot (an empty draft included) comes back unchanged.
+    public static func typed(_ text: String, locale: Locale = .current) -> String {
+        let parts = text.split(separator: ".", maxSplits: 1, omittingEmptySubsequences: false)
+        let isDigits = { (part: Substring) in part.allSatisfy { $0.isASCII && $0.isNumber } }
+        guard let whole = parts.first, !whole.isEmpty, isDigits(whole), parts.count == 1 || isDigits(parts[1]),
+            let value = Decimal(string: String(whole), locale: Locale(identifier: "en_US_POSIX"))
+        else { return text }
+        let grouped = value.formatted(.number.locale(locale).grouping(.automatic).precision(.fractionLength(0)))
+        guard parts.count == 2 else { return grouped }
+        return grouped + (locale.decimalSeparator ?? ".") + parts[1]
+    }
+
     /// Splits "$1,116.65" into "$1,116" and ".65" so the hero can draw the cents smaller.
     public static func heroParts(_ text: String, locale: Locale = .current) -> (whole: String, fraction: String) {
         let separator = locale.decimalSeparator ?? "."
