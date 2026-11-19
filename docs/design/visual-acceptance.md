@@ -112,6 +112,36 @@ Both capture suites passed against a fresh environment: iOS on the iPhone 18 Pro
 - **MAZ-181 (2026-11-19).** The nine shared and trip cards were captured again on the iPhone 18 Pro and iPad Pro 11-inch (M5) simulators (iOS 27). The household leads with members, its name and the meaning-colored balance, with the month in the section headers; People has the invite card; the shared expense form shows Paid by and the split above the keypad; Payment changed names its cause and strikes through only what changed; New household has its header and a pinned Create household; the Trips list shows Your share so far; and a shared trip leads with the trip total and your share, with Your share by category on iPad. `iphone-household-create` and `iphone-trips` now match; the others keep only approved deviations, and the iPad layouts remain MAZ-182. The seeded Lisbon trip has no shared expenses yet, so its totals read $0.00 and the iPad category section is empty.
 - **Emailed receipts (MAZ-184).** The 21 receipt cards (`iphone-receipt-*`, `ipad-receipt-*`, `web-receipt-*`) were added after this review. Their states are `blockedBy` in `redesign-states.json`: the full-stack seed has no receipt address or inbox items yet, so neither capture suite can open them, and their verdicts are recorded as `blocked` (`not-applicable` for the `web-*` cards on iOS). The counts above cover the 61 cards reviewed on 2026-11-12.
 
+## Web audit (MAZ-215, 2026-11-19)
+
+MAZ-215 captured every web card again against a fresh test environment (`npm run test:e2e:cards`, Chromium, 402×874, 1194×834 and 1440×900) and compared each one with its card, light and dark. It was the first review after parity became the goal ([dev worker, design cards](../development/agents/dev-worker.md#design-cards)), so it approves nothing.
+
+| | Matches | Deviates | Not built | Blocked | Not applicable |
+| --- | --- | --- | --- | --- | --- |
+| Web | 0 | 55 | 0 | 22 (`iphone-receipt` and the 21 receipt cards) | 5 |
+
+- **No web deviation is `approved` any more.** Each difference the agents had recorded as approved (the web lists in [redesign.md](../reference/redesign.md#approved-deviations-maz-122): Interaction baseline, the MAZ-90 and MAZ-91 notes, and Web adaptations) is now a `follow-up` linked to a decision issue, where a person decides whether the card changes, the deviation is approved, or the web changes. None of them is platform chrome. By the end of the audit a person had already decided three of them: MAZ-224 (add the flow card's accessibility copy to the cards; the web matches the cards on the rest), MAZ-227 (the web form and detail patterns are approved) and MAZ-229 (the household tab links and invite are approved; the web matches the cards on the rest). Members shown by email moved to MAZ-171. Those issues record their approvals in redesign.md and the verdicts; MAZ-234 is still open. The redesign.md entries stay until each decision is recorded.
+- **`iphone-saved-toast` no longer matches.** Since MAZ-166 the toast hides the tab bar, and the capture shows its Undo and wording differ from the card.
+- **Follow-ups by area.** Each verdict names the issue for each difference:
+
+| Area | Fix | Decision |
+| --- | --- | --- |
+| Shell: phone header and tab bar, sidebar households and trips | MAZ-221 | |
+| Lists and amounts: category tiles, headers above lists, hero cents, minus sign, dark segmented controls | MAZ-222 | |
+| Home, Insights and money flow | MAZ-223 | MAZ-224 |
+| Activity and entry detail | MAZ-225 | MAZ-227 |
+| Add entry | MAZ-226 | MAZ-227 |
+| Shared households | MAZ-228 | MAZ-229 |
+| Trips | MAZ-230 (expenses: MAZ-213) | MAZ-229 |
+| Settings and Appearance | MAZ-231 | MAZ-234 |
+| Recurring, Accounts and Categories | MAZ-232 | MAZ-227 |
+| Sign-in, sign-out, sync failure and the saved toast | MAZ-233 | MAZ-234 |
+| Capture states that differ from the card's drawn state | MAZ-235 | |
+| `iphone-save-error` and `iphone-saved-toast` captures, which time out on the hidden tab bar | MAZ-220 | |
+
+  "Try with sample data" on the empty Home is MAZ-204.
+- **Web screens and states with no card.** The design doesn't draw these yet: the More menu at phone width; the household list (`/households`) and a shared expense's detail (`/households/$id/expenses/$expenseId`) at desktop width; a trip at desktop width (`/trips/$id`, only `ipad-trip`); Recurring, Accounts and Categories at tablet and desktop widths; the Currency and Server settings panes; New schedule and Edit entry dialogs; Join a household or trip with a code; the demo banner; the server-unreachable banner; Activity's Searching… state; and the 768–1099px layouts between the phone and desktop cards.
+
 ## Review scenarios
 
 A capture shows one state at one size. The scenarios below are covered by these suites, so a card review doesn't need to repeat them:
