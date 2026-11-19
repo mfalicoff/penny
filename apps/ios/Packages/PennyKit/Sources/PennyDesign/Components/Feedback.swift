@@ -219,8 +219,10 @@ public struct PennyStateView: View {
     }
 }
 
-/// A category's icon on a tinted circle. Categories store Ionicons names; they map to SF
-/// Symbols here, and colors come from the category palette, never a meaning color.
+/// A category's icon: the design kit's `CategoryIcon` and the cards' `.ic`, a rounded tile in the
+/// category's color with a white glyph (corner radius 31% of the side). Categories store
+/// Ionicons names; they map to SF Symbols here, and colors come from the category palette,
+/// never a meaning color.
 public struct CategoryIcon: View {
     @ScaledMetric private var size: Double
     private let symbol: String
@@ -234,10 +236,10 @@ public struct CategoryIcon: View {
 
     public var body: some View {
         Image(systemName: symbol)
-            .font(.system(size: size * 0.45, weight: .semibold))
-            .foregroundStyle(color)
+            .font(.system(size: size * 0.5, weight: .medium))
+            .foregroundStyle(.white)
             .frame(width: size, height: size)
-            .background(color.opacity(0.14), in: Circle())
+            .background(color, in: RoundedRectangle(cornerRadius: size * 0.31, style: .continuous))
             .accessibilityHidden(true)
     }
 }
