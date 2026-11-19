@@ -216,6 +216,46 @@ test("at 320px the attached toast shows its whole title, with its buttons on a r
   expect(errors).toEqual([]);
 });
 
+test("from 768px the attached toast is 560px wide, with its title beside its buttons (MAZ-208)", async ({ context, page }) => {
+  const errors = watchForErrors(page);
+  await mockApi(context);
+  await page.setViewportSize({ width: 768, height: 900 });
+  await page.clock.setFixedTime(NOV_14);
+  await page.goto("/receipts");
+  await page.getByRole("list", { name: "Receipts to attach" }).getByRole("button", { name: /Mill St\. Café/ }).click();
+  await page.getByRole("dialog", { name: "Mill St. Café" }).getByRole("button", { name: "Attach to…" }).click();
+  await page.getByRole("dialog", { name: "Which file?" }).getByRole("button", { name: "Next" }).click();
+  await page.getByRole("list", { name: "Suggested expenses" }).getByRole("button", { name: /Lunch at Mill St\./ }).click();
+  await page.getByRole("dialog", { name: "Attach receipt?" }).getByRole("button", { name: /^Attach invoice-4012\.pdf/ }).click();
+
+  const toast = page.locator(".pk-toast", { hasText: "Receipt attached to Lunch at Mill St." });
+  await expect(toast).toBeVisible();
+  await toast.evaluate((element) => Promise.all(element.getAnimations().map((animation) => animation.finished)));
+  const layout = await toast.evaluate((element) => {
+    const title = element.querySelector(".pk-toast__title");
+    if (!title) throw new Error("No toast title");
+    const box = title.getBoundingClientRect();
+    return {
+      toast: element.getBoundingClientRect(),
+      title: box,
+      lines: Math.round(box.height / parseFloat(getComputedStyle(title).lineHeight)),
+      buttons: [...element.querySelectorAll("button")].map((button) => button.getBoundingClientRect()),
+    };
+  });
+  // The toast is as wide as on the web card, and the title wraps to two lines at most.
+  expect(Math.round(layout.toast.width)).toBe(560);
+  expect(layout.title.width).toBeGreaterThan(200);
+  expect(layout.lines).toBeLessThanOrEqual(2);
+  // View entry, Undo and Dismiss stay on the title's row, to its right, inside the toast.
+  expect(layout.buttons).toHaveLength(3);
+  for (const button of layout.buttons) {
+    expect(button.left).toBeGreaterThanOrEqual(layout.title.right - 1);
+    expect(button.top).toBeLessThan(layout.title.bottom);
+    expect(button.right).toBeLessThanOrEqual(layout.toast.right);
+  }
+  expect(errors).toEqual([]);
+});
+
 test("the inbox fits a 320px screen and opens rows from the keyboard", async ({ context, page }) => {
   const errors = watchForErrors(page);
   await mockApi(context);
