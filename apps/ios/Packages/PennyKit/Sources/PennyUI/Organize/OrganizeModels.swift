@@ -346,6 +346,32 @@ enum ScheduleText {
         return parts.joined(separator: " · ")
     }
 
+    /// A shared row's detail, with the household's name where a personal row has the account:
+    /// "Monthly · next Nov 22 · Apartment", or "Paused · monthly · Apartment".
+    static func sharedRow(_ schedule: SharedSchedule, today: CalendarDate) -> String {
+        "\(sharedTiming(schedule, today: today)) · \(schedule.household.name)"
+    }
+
+    /// The part of a shared row's detail before the household's name: "Monthly · next Nov 22",
+    /// or "Paused · monthly". The row puts the name on its own line when both don't fit.
+    static func sharedTiming(_ schedule: SharedSchedule, today: CalendarDate) -> String {
+        let rule = schedule.rule
+        let cadence = RecurrenceFrequency(rawValue: rule.frequency).map(frequency) ?? rule.frequency
+        guard rule.active else { return "Paused · \(cadence.lowercased())" }
+        guard let next = schedule.nextDate else { return cadence }
+        return "\(cadence) · next \(DayText.short(next, today: today))"
+    }
+
+    /// How a schedule's amount is signed on Recurring, paused or not: expenses with a minus,
+    /// income with a plus, investments unsigned.
+    static func sign(_ kind: EntryKind) -> MoneyMeaning {
+        switch kind {
+        case .expense: .expense
+        case .income: .income
+        case .investment: .investment
+        }
+    }
+
     /// "Today", "Tomorrow", "in 9 days".
     static func relative(_ date: CalendarDate, today: CalendarDate) -> String {
         switch date.days(since: today) {
@@ -357,12 +383,7 @@ enum ScheduleText {
     }
 
     static func meaning(_ rule: RecurringRule) -> MoneyMeaning {
-        guard rule.active else { return .neutral }
-        switch rule.kind {
-        case .expense: return .expense
-        case .income: return .income
-        case .investment: return .investment
-        }
+        rule.active ? sign(rule.kind) : .neutral
     }
 
     static func ordinal(_ day: Int) -> String {

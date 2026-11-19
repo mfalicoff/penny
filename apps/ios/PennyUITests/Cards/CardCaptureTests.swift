@@ -258,6 +258,13 @@ final class CardCaptureTests: CardTestCase {
         try await card("iphone-recurring") { card in
             try card.penny.openSettingsPage("recurring", screen: AccessibilityID.Screen.recurring)
             try card.penny.wait(for: AccessibilityID.Organize.schedule("r-gym"))
+            // The household's shared Streaming (MAZ-198); its id is the server's.
+            let shared = card.penny.app.buttons
+                .matching(NSPredicate(format: "identifier BEGINSWITH %@", AccessibilityID.Organize.sharedSchedule("")))
+                .firstMatch
+            guard shared.waitForExistence(timeout: Penny.timeout) else {
+                throw UIExpectationFailed(description: "the shared Streaming schedule did not appear")
+            }
         }
     }
 
