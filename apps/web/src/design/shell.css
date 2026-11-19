@@ -631,7 +631,15 @@ body:has(.pk-toast) .tabbar {
     white-space: normal;
   }
 
-  /* 440px wide is room for the title beside all the buttons: they stay on its row. */
+  /*
+   * A toast with a text action besides Undo keeps its buttons on the title's row from here, so
+   * it is 560px wide as on the web card (MAZ-208): at 440px the title got about 136px and
+   * "Receipt attached to Coffee at Mill St." wrapped to four lines.
+   */
+  .toast-region .pk-toast--stacked {
+    width: min(100%, 560px);
+  }
+
   .toast-region .pk-toast--stacked .pk-toast__actions {
     flex-basis: auto;
   }
