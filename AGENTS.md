@@ -23,6 +23,7 @@ npm --prefix scripts run test:fullstack      # opt-in: real .NET API + PostgreSQ
 node scripts/test-env/penny-env.mjs up --oidc # a disposable full-stack environment
 node scripts/grafana-dashboards.mjs --check  # Grafana dashboard JSON matches its generator
 node scripts/check-version.mjs               # apps/ios/Configuration/Version.xcconfig holds a valid release version
+node scripts/design-deviations.mjs           # no new approved design deviations against origin/master
 ```
 
 Run lint, typecheck and tests before declaring a change to `scripts/` done. The shared ledger rules are checked with the web app: `npm run check` in `apps/web` includes `fixtures:check` and the reference tests.

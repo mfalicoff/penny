@@ -1,0 +1,35 @@
+name: Design deviations
+
+# Only a human approves a deviation from a design card (docs/design/visual-acceptance.md#recording-verdicts).
+# Fails when a pull request adds an approved deviation, unless a person applied the `design-approved`
+# label. `labeled` and `unlabeled` re-run the check when the label changes.
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, labeled, unlabeled]
+
+permissions:
+  contents: read
+
+jobs:
+  approvals:
+    name: No new approved design deviations
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # The pull request's merge commit and its first parent, the base branch it merges into.
+      - name: Check out source
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+
+      # Node built-ins only: no install. The labels go through the environment, never the shell.
+      - name: Check approved deviations
+        env:
+          PR_LABELS: ${{ toJSON(github.event.pull_request.labels) }}
+        run: node scripts/design-deviations.mjs --base HEAD^1

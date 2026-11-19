@@ -92,6 +92,8 @@ Parity is the goal: every card should reach `matches`. **Only a human approves a
 
 Each deviation has a `summary`, a `kind` and a `ref`. An `approved` deviation's `ref` is its anchor in `docs/reference/redesign.md`. A `follow-up` deviation (a defect, or a design change still to make) names its `MAZ-` issue. `apps/web/tests/domain/contracts.test.ts` enforces these rules, the owners, the views and the full set of cards. No card may be left unreviewed.
 
+Only a human approves a deviation. The **Design deviations** workflow (`scripts/design-deviations.mjs`) fails a pull request that adds an `approved` deviation to `contracts/visual-comparisons.json` (a new one, a follow-up turned `approved`, or a changed summary or ref), or adds or changes a line under "Approved deviations" in `docs/reference/redesign.md`. Removing approved deviations and their entries passes, so they can become follow-ups. A person overrides the check by applying the `design-approved` label to the pull request; agents never apply it. Run it locally against `origin/master` with `npm --prefix scripts run design-deviations:check`.
+
 To review: run both capture suites, build the sheets, walk through every card, update its entry, and set `reviewedAt`. Commit the record with the change it reviews. Captures aren't committed, because they depend on the simulator, browser and OS. Attach representative sheets to the pull request or the issue.
 
 ## Results (2026-11-12)
