@@ -148,14 +148,16 @@ function ItemLink({
   );
 }
 
-/** Whole units, as on the cards ("$142"); the spoken label keeps the cents. */
+/** Whole units, as on the cards ("$142", with a typographic minus, MAZ-222); the spoken label keeps the cents. */
 const short = (cents: number, currency: string) =>
   new Intl.NumberFormat("en-CA", {
     style: "currency",
     currency,
     maximumFractionDigits: 0,
     minimumFractionDigits: 0,
-  }).format(Math.trunc(cents / 100));
+  })
+    .format(Math.trunc(cents / 100))
+    .replace("-", "\u2212");
 
 function Together() {
   const email = useAccountEmail();
@@ -219,7 +221,7 @@ function HouseholdItem({ household }: { household: Household }) {
   let shown: string | undefined;
   let spoken: string | undefined;
   if (balance !== undefined && balance !== 0) {
-    shown = balance > 0 ? short(balance, household.currency) : `-${short(-balance, household.currency)}`;
+    shown = short(balance, household.currency);
     spoken = balance > 0 ? `you're owed ${formatCents(balance, household.currency)}` : `you owe ${formatCents(-balance, household.currency)}`;
   } else if (balance === 0) spoken = "settled";
   return <ItemLink to="/households/$id" params={{ id: household.id }} icon="people" name={household.name} detail={shown} spoken={spoken} />;

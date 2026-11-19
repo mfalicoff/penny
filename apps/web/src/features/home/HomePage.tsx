@@ -5,7 +5,8 @@ import { usePreferences } from "../../app/preferences";
 import { useMediaQuery, WIDE } from "../../app/useMediaQuery";
 import { Badge, Button, ChoiceGroup, cx } from "../../design/controls";
 import { Icon } from "../../design/Icon";
-import { formatCents, Money } from "../../design/Money";
+import { tileStyle } from "../../design/categoryTint";
+import { formatCents, HeroMoney, Money } from "../../design/Money";
 import { LoadingState } from "../../design/states";
 import { KIND_FILTERS } from "../activity/filters";
 import type { SharedState } from "../activity/data";
@@ -95,6 +96,7 @@ export function HomePage({ search }: { search: HomeSearch }) {
               <FlowSummary report={report} currency={ledger.currency} month={month} />
             )}
             <Panel
+              list
               title="Recent"
               className="home-recent"
               action={
@@ -154,7 +156,7 @@ function FirstEntry({ currency }: { currency: string }) {
         <h2 id={heroId} className="hero__label">
           Left to spend
         </h2>
-        <p className="hero__amount pk-num">{showCents ? formatCents(0, currency) : formatWholeUnits(0, currency)}</p>
+        <p className="hero__amount pk-num"><HeroMoney cents={0} currency={currency} showCents={showCents} /></p>
         <p className="hero__projected">Your month fills in as you add entries.</p>
       </section>
       <Panel
@@ -187,7 +189,7 @@ function FirstEntry({ currency }: { currency: string }) {
           ))}
         </ul>
       </Panel>
-      <Panel title="Recent" className="home-recent">
+      <Panel list title="Recent" className="home-recent">
         <p className="muted">Nothing yet. New entries show up here.</p>
       </Panel>
       {adding ? (
@@ -200,11 +202,6 @@ function FirstEntry({ currency }: { currency: string }) {
       ) : null}
     </div>
   );
-}
-
-/** Left to spend in whole units ($1,117 for $1,116.65), when Show cents is off (MAZ-140). Display only. */
-function formatWholeUnits(cents: number, currency: string): string {
-  return new Intl.NumberFormat("en-CA", { style: "currency", currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(cents / 100);
 }
 
 /** Left to spend with Projected under it; `tiles` adds Came in / Spent / Invested (the desktop card `web-home`). */
@@ -220,7 +217,7 @@ function Hero({ report, currency, shared, tiles }: { report: MonthReport; curren
       </h2>
       <p className="hero__amount pk-num">
         <span className="visually-hidden">Recorded remaining: </span>
-        {showCents ? formatCents(report.recordedNet, currency) : formatWholeUnits(report.recordedNet, currency)}
+        <HeroMoney cents={report.recordedNet} currency={currency} showCents={showCents} />
       </p>
       {overspent ? (
         <p className="hero__over">
@@ -319,7 +316,7 @@ function ComingUp({ report, ledger, currency }: { report: MonthReport; ledger: L
             const category = categories.get(entry.categoryId);
             return (
               <li key={entry.id} className="coming__row">
-                <span className="category-dot" style={{ color: category?.color }}>
+                <span className="category-dot" style={tileStyle({ ...category, entryKind: entry.kind })}>
                   <Icon name={entry.kind === "income" ? "arrow-down" : entry.kind === "investment" ? "trending-up" : "repeat"} size={18} />
                 </span>
                 <span className="coming__title">{entry.title}</span>

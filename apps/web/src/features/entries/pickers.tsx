@@ -3,6 +3,7 @@ import { accountTypeLabels, accountTypes, kindLabels, palette, uid, type Account
 import { useId, useRef, useState, type SyntheticEvent } from "react";
 import { Button, ChoiceGroup, cx } from "../../design/controls";
 import { Icon } from "../../design/Icon";
+import { tileStyle } from "../../design/categoryTint";
 import { Dialog } from "../../design/ModalDialog";
 import type { SaveReceipt } from "../../offline/engine";
 import { RECORD_LIMIT } from "../organize/model";
@@ -95,7 +96,7 @@ export function CategoryPickerDialog({
   const tile = (category: Category) => (
     <li key={category.id}>
       <button type="button" className={cx("category-tile", category.id === selected && "category-tile--on")} aria-pressed={category.id === selected} onClick={() => { choose(category); }}>
-        <span className="category-tile__icon" style={{ color: category.color }}>
+        <span className="category-tile__icon" style={tileStyle(category)}>
           <Icon name={categoryIcon(category.icon)} size={24} />
         </span>
         <span className="category-tile__name">{category.name}</span>

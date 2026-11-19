@@ -3,6 +3,7 @@ import { useId, useRef, useState, type KeyboardEvent, type SyntheticEvent } from
 import { useAccountEmail } from "../../auth/account";
 import { Button, ChoiceGroup, cx, Kbd } from "../../design/controls";
 import { Icon } from "../../design/Icon";
+import { tileStyle } from "../../design/categoryTint";
 import { Dialog } from "../../design/ModalDialog";
 import { formatCents } from "../../design/Money";
 import { Banner, LoadingState, SaveErrorBanner, useOnline, useToast } from "../../design/states";
@@ -415,7 +416,7 @@ function EntryForm({
             {inline.map((category) => (
               <label key={category.id} className={cx("chip", category.id === draft.categoryId && "chip--on")}>
                 <input type="radio" name="entry-category" value={category.id} checked={category.id === draft.categoryId} onChange={() => { set("categoryId", category.id); }} />
-                <span className="category-dot" style={{ color: category.color }}>
+                <span className="category-dot" style={tileStyle(category)}>
                   <Icon name={categoryIcon(category.icon)} size={16} />
                 </span>
                 <span>{category.name}</span>

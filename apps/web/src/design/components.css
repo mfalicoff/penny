@@ -372,8 +372,23 @@
   border-radius: 17px;
 }
 
+/* MAZ-222: the selected segment is a clearly lighter pill in dark (design kit `.pk-seg__opt--on`). */
+:root {
+  --seg-on: var(--pk-surface);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --seg-on: #4a4744;
+  }
+}
+
+:root[data-theme="dark"] {
+  --seg-on: #4a4744;
+}
+
 .choices--segmented .choice--on {
-  background: var(--pk-surface);
+  background: var(--seg-on);
   box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
 }
 

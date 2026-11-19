@@ -5,6 +5,7 @@ import { TABLET, useMediaQuery } from "../../app/useMediaQuery";
 import { useToday } from "../../app/useToday";
 import { Button, Card, ChoiceGroup, cx } from "../../design/controls";
 import { Icon } from "../../design/Icon";
+import { tileStyle } from "../../design/categoryTint";
 import { formatCents, Money } from "../../design/Money";
 import { useOnline } from "../../design/states";
 import { EntryDetailDialog } from "../entries/EntryDetail";
@@ -256,7 +257,7 @@ function Filters({ search, navigate }: { search: ActivitySearch; navigate: Navig
             {inline.map((category) => (
               <label key={category.id} className={cx("chip", category.id === search.category && "chip--on")}>
                 <input type="radio" name="activity-category" checked={category.id === search.category} onChange={() => { navigate((previous) => ({ ...previous, category: category.id })); }} />
-                <span className="category-dot" style={{ color: category.color }}>
+                <span className="category-dot" style={tileStyle(category)}>
                   <Icon name={categoryIcon(category.icon)} size={16} />
                 </span>
                 <span>{category.name}</span>

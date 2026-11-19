@@ -7,6 +7,7 @@ import type { Allocation, ExpenseInput, Frequency, HouseholdMember, SharedCatego
 import { useAccountEmail } from "../../auth/account";
 import { Avatar, Button, ChoiceGroup, cx, Kbd, SwitchRow } from "../../design/controls";
 import { Icon } from "../../design/Icon";
+import { tileStyle } from "../../design/categoryTint";
 import { Dialog } from "../../design/ModalDialog";
 import { Banner, SaveErrorBanner, useToast } from "../../design/states";
 import { categoryIcon, frequentCategories, kindLabels, mostUsedCategories } from "../entries/model";
@@ -483,7 +484,7 @@ export function ExpenseFormDialog({
             {chips.map((category) => (
               <label key={category.name} className={cx("chip", category.name === draft.category && "chip--on")}>
                 <input type="radio" name="shared-category" value={category.name} checked={category.name === draft.category} onChange={() => { set("category", category.name); }} />
-                <span className="category-dot" style={{ color: category.color }}>
+                <span className="category-dot" style={tileStyle(category)}>
                   <Icon name={categoryIcon(category.icon)} size={16} />
                 </span>
                 <span>{category.name}</span>

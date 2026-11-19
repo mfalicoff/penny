@@ -6,6 +6,7 @@ import { selectOverview, type OverviewEntry } from "@domain/selectors/overview.t
 import { isExpected, net, type KindTotals } from "@domain/summary.ts";
 import type { SharedRow } from "../../api/projection";
 import type { WeekStart } from "../../app/preferences";
+import { categoryTint } from "../../design/categoryTint";
 import { shiftMonth } from "../households/model";
 
 /**
@@ -305,6 +306,8 @@ export function flowColor(node: FlowNode): string {
   if (node.id === "balance:remaining") return "var(--pk-income)";
   if (node.id === "balance:gap") return "var(--pk-danger)";
   if (node.id.endsWith(":overflow")) return "var(--pk-c-other)";
+  // MAZ-222: expense categories draw in the redesign palette, never copper; income sources keep their stored color (MAZ-223).
+  if (node.id.startsWith("expense:")) return categoryTint({ id: node.id.slice("expense:".length), color: node.color });
   return node.color;
 }
 

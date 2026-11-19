@@ -64,7 +64,7 @@ describe("search results", () => {
     expect(await screen.findByText("Coffee beans")).toBeInTheDocument();
     expect(screen.getByText("2 matching transactions")).toBeInTheDocument();
     expect(screen.getByText(/Shared · Maison/)).toBeInTheDocument();
-    expect(screen.getByText("-€30.00")).toBeInTheDocument();
+    expect(screen.getByText("−€30.00")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Show more" })).not.toBeInTheDocument();
   });
 

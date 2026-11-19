@@ -10,6 +10,7 @@ import { useAccountEmail } from "../../auth/account";
 import { useIsDemo } from "../../demo/demo";
 import { Avatar, Badge, Button, Card } from "../../design/controls";
 import { Icon } from "../../design/Icon";
+import { tileStyle } from "../../design/categoryTint";
 import { formatCents, Money } from "../../design/Money";
 import { Banner, EmptyState, ErrorState, LoadingState } from "../../design/states";
 import { EntryDetailDialog } from "../entries/EntryDetail";
@@ -159,7 +160,7 @@ function PersonalTripPage({ trip, ledger }: { trip: Trip; ledger: Ledger }) {
               {overview.categories.map((category) => (
                 <li key={category.id} className="row row--plain">
                   <span className="trip-category">
-                    <span className="category-dot" style={{ color: category.color }}>
+                    <span className="category-dot" style={tileStyle(category)}>
                       <Icon name={categoryIcon(category.icon)} size={16} />
                     </span>
                     {category.name}
@@ -189,7 +190,7 @@ function ExpenseRow({ entry, ledger, trip, pending, onOpen }: { entry: Transacti
   const outside = entry.date < trip.startDate || entry.date > trip.endDate;
   return (
     <button type="button" className="row trip-row" onClick={onOpen}>
-      <span className="category-dot" style={{ color: category?.color }} aria-hidden="true">
+      <span className="category-dot" style={tileStyle(category)} aria-hidden="true">
         <Icon name={categoryIcon(category?.icon)} size={18} />
       </span>
       <span>

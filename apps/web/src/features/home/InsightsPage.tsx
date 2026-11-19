@@ -2,6 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { useMediaQuery, WIDE } from "../../app/useMediaQuery";
 import { Icon } from "../../design/Icon";
+import { categoryTint, tileStyle } from "../../design/categoryTint";
 import { formatCents, Money } from "../../design/Money";
 import { LoadingState } from "../../design/states";
 import { categoryIcon } from "../entries/model";
@@ -118,7 +119,7 @@ function SpendingSummary({ report, previous, comparison, previousMonth, currency
   const name = monthName(previousMonth);
   // The donut's rings: each category's share of the circle, drawn from 12 o'clock clockwise.
   const shares = rows.map((row) => (total > 0 ? row.amount / total : 0));
-  const arcs = rows.map((row, index) => ({ id: row.id, color: row.color || "var(--pk-c-other)", share: shares[index] ?? 0, start: shares.slice(0, index).reduce((sum, share) => sum + share, 0) }));
+  const arcs = rows.map((row, index) => ({ id: row.id, color: categoryTint(row), share: shares[index] ?? 0, start: shares.slice(0, index).reduce((sum, share) => sum + share, 0) }));
   const longest = Math.max(spent, before ?? 0, 1);
   return (
     <Panel title="Spending" className="spending" action={<span className="muted">Your share</span>}>
@@ -160,20 +161,22 @@ function SpendingSummary({ report, previous, comparison, previousMonth, currency
 function CategoryList({ report, currency }: { report: MonthReport; currency: string | undefined }) {
   const { rows, total } = groupSmall(report.spending);
   return (
-    <Panel title="Categories" className="insights__list">
+    <Panel list title="Categories" className="insights__list">
       {rows.length ? (
         <ol className="breakdown__list">
           {rows.map((row) => (
             <li key={row.id} className="breakdown__row">
-              <span className="category-dot" style={row.color ? { color: row.color } : undefined}>
+              <span className="category-dot" style={tileStyle(row)}>
                 <Icon name={categoryIcon(row.icon)} size={18} />
               </span>
               <span className="breakdown__name">{row.name}</span>
               <span className="breakdown__amount">
-                <Money cents={row.amount} currency={currency} /> <span className="muted">· {percentOf(row.amount, total)}%</span>
+                <Money cents={row.amount} currency={currency} />
+                <span className="visually-hidden">, </span>
+                <span className="breakdown__percent">{percentOf(row.amount, total)}%</span>
               </span>
               <span className="breakdown__track" aria-hidden="true">
-                <span className="breakdown__fill" style={{ width: `${String((row.amount / Math.max(1, total)) * 100)}%`, background: row.color || "var(--pk-c-other)" }} />
+                <span className="breakdown__fill" style={{ width: `${String((row.amount / Math.max(1, total)) * 100)}%`, background: categoryTint(row) }} />
               </span>
             </li>
           ))}
@@ -217,7 +220,7 @@ function CategoryTable({ comparison, month, previousMonth, currency }: { compari
                 <tr key={row.key}>
                   <th scope="row">
                     <span className="category-compare__name">
-                      <span className="category-dot" style={row.color ? { color: row.color } : undefined}>
+                      <span className="category-dot" style={tileStyle(row)}>
                         <Icon name={categoryIcon(row.icon)} size={16} />
                       </span>
                       {row.name}

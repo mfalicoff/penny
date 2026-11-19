@@ -89,7 +89,7 @@ describe("recurring schedules", () => {
     expect(within(income).getByRole("button")).toHaveTextContent(/Payday.*Monthly · next Nov 15.*\+\$2,250\.00 income/);
     const expenses = screen.getByRole("list", { name: "Expense schedules" });
     const rows = within(expenses).getAllByRole("button");
-    expect(rows.map((row) => row.textContent)).toEqual([expect.stringMatching(/^Internet.*next Nov 18 · Visa-\$65\.00/), expect.stringMatching(/^Gym.*Paused · monthly.*Paused/)]);
+    expect(rows.map((row) => row.textContent)).toEqual([expect.stringMatching(/^Internet.*next Nov 18 · Visa−\$65\.00/), expect.stringMatching(/^Gym.*Paused · monthly.*Paused/)]);
     expect(screen.getByRole("list", { name: "Investment schedules" })).toHaveTextContent("TFSA contribution");
     expect(screen.getByText(/3 active, 1 paused/)).toBeInTheDocument();
     // The sidebar counts the active schedules beside Recurring, and so does Manage in Settings on phones (MAZ-221).
@@ -132,8 +132,8 @@ describe("recurring schedules", () => {
     });
     expect(within(expenses).getAllByRole("listitem").map((row) => row.textContent)).toEqual([
       expect.stringMatching(/^Internet.*next Nov 18/),
-      expect.stringMatching(/^Streaming.*Monthly · next Nov 20 · Maison-\$8\.00your share.*Shared/),
-      expect.stringMatching(/^Cleaner.*Paused · monthly · Maison-\$30\.00your share.*Shared.*Paused/),
+      expect.stringMatching(/^Streaming.*Monthly · next Nov 20 · Maison−\$8\.00your share.*Shared/),
+      expect.stringMatching(/^Cleaner.*Paused · monthly · Maison−\$30\.00your share.*Shared.*Paused/),
     ]);
     // A shared schedule opens its household, where it's edited.
     expect(within(expenses).getByRole("link", { name: /^Streaming/ })).toHaveAttribute("href", "/households/h1");

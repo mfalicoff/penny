@@ -8,25 +8,32 @@ import { useTopbarSlot } from "../../app/shell/pageTitle";
 import { useToday } from "../../app/useToday";
 import { Badge, Button, cx } from "../../design/controls";
 import { Icon } from "../../design/Icon";
+import { categoryTint, tileStyle } from "../../design/categoryTint";
 import { Money } from "../../design/Money";
 import { categoryIcon } from "../entries/model";
 import { rowAmount } from "../recurring/model";
 import { currentMonth, dayLabel, monthLabel, shiftMonth } from "../households/model";
 import { groupSmall, isSharedEntry, percentOf } from "./model";
 
-/** A card with its own heading level: `h2` at the top of a page, `h3` inside a section. */
-export function Panel({ title, level = 2, action, className, children }: { title: string; level?: 2 | 3; action?: ReactNode; className?: string; children: ReactNode }) {
+/**
+ * A card with its own heading level: `h2` at the top of a page, `h3` inside a section.
+ *
+ * `list` panels (MAZ-222) hold a list: on phones and narrow windows the cards put the heading
+ * above a solid list card ("Recent", "Categories"); from 1100px, as on the iPad and desktop
+ * cards, the heading sits inside the panel.
+ */
+export function Panel({ title, level = 2, action, className, list, children }: { title: string; level?: 2 | 3; action?: ReactNode; className?: string; list?: boolean; children: ReactNode }) {
   const id = useId();
   const Heading = level === 2 ? "h2" : "h3";
   return (
-    <section className={cx("card", className)} aria-labelledby={id}>
+    <section className={cx("card", list && "panel--list", className)} aria-labelledby={id}>
       <div className="card__head">
         <Heading id={id} className="panel__title">
           {title}
         </Heading>
         {action}
       </div>
-      {children}
+      {list ? <div className="panel__body">{children}</div> : children}
     </section>
   );
 }
@@ -163,7 +170,7 @@ export function EntryRows({ entries, ledger, currency, onOpen }: { entries: read
         ].filter(Boolean);
         const body = (
           <>
-            <span className={expected ? "category-dot category-dot--expected" : "category-dot"} style={{ color: category?.color }}>
+            <span className={expected ? "category-dot category-dot--expected" : "category-dot"} style={tileStyle({ ...category, entryKind: entry.kind })}>
               <Icon name={categoryIcon(category?.icon)} size={18} />
             </span>
             <span className="results__title">{entry.title}</span>
@@ -251,15 +258,17 @@ export function CategoryBreakdown({
               const percent = percentOf(row.amount, total);
               const content = (
                 <>
-                  <span className="category-dot" style={row.color ? { color: row.color } : undefined}>
+                  <span className="category-dot" style={tileStyle(row)}>
                     <Icon name={categoryIcon(row.icon)} size={18} />
                   </span>
                   <span className="breakdown__name">{row.name}</span>
                   <span className="breakdown__amount">
-                    <Money cents={row.amount} currency={currency} /> <span className="muted">· {percent}%</span>
+                    {/* MAZ-222: web-home shows the amount alone; the share stays for screen readers. */}
+                    <Money cents={row.amount} currency={currency} />
+                    <span className="visually-hidden">, {percent}% of spending</span>
                   </span>
                   <span className="breakdown__track" aria-hidden="true">
-                    <span className="breakdown__fill" style={{ width: `${String((row.amount / Math.max(1, total)) * 100)}%`, background: row.color || "var(--pk-c-other)" }} />
+                    <span className="breakdown__fill" style={{ width: `${String((row.amount / Math.max(1, total)) * 100)}%`, background: categoryTint(row) }} />
                   </span>
                 </>
               );
