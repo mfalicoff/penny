@@ -71,11 +71,6 @@
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           },
           {
-            "summary": "Expenses in Recent have no minus sign (the card shows −$48.90)",
-            "kind": "follow-up",
-            "ref": "MAZ-174"
-          },
-          {
             "summary": "At phone width the tab bar adds More (Settings, Recurring, Accounts, Categories) instead of the Settings sheet from Home",
             "kind": "follow-up",
             "ref": "MAZ-173"
@@ -118,11 +113,6 @@
             "summary": "Coming up and Explore your month follow Recent, and the month switcher leads the page under the compact top bar (MAZ-174)",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
-          },
-          {
-            "summary": "Expenses in Recent have no minus sign (the card shows −$48.90)",
-            "kind": "follow-up",
-            "ref": "MAZ-174"
           },
           {
             "summary": "At phone width the tab bar adds More (Settings, Recurring, Accounts, Categories) instead of the Settings sheet from Home",
@@ -277,11 +267,6 @@
             "summary": "Row actions open the entry dialog instead of swipe actions",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#interaction-baseline"
-          },
-          {
-            "summary": "Row amounts are unsigned ($5.25, not −$5.25); the day totals are signed. Follow-up recorded on MAZ-175",
-            "kind": "follow-up",
-            "ref": "MAZ-175"
           }
         ]
       }
@@ -1474,11 +1459,6 @@
             "summary": "Coming up and Explore your month follow Recent, and the month switcher leads the page under the compact top bar (MAZ-174)",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
-          },
-          {
-            "summary": "Expenses in Recent have no minus sign (the card shows −$48.90)",
-            "kind": "follow-up",
-            "ref": "MAZ-174"
           }
         ]
       }
@@ -1719,11 +1699,6 @@
             "summary": "The money flow is the stacked flow, not the Sankey, because its panel is narrower than the Sankey needs at 1194px; Recent and Explore your month follow the dashboard",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
-          },
-          {
-            "summary": "Expenses in Recent have no minus sign (the card shows −$48.90)",
-            "kind": "follow-up",
-            "ref": "MAZ-174"
           },
           {
             "summary": "The sidebar doesn't list households and trips",
