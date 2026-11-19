@@ -3,31 +3,26 @@ import PennyDesign
 import PennyDomain
 import SwiftUI
 
-/// Appearance (`appearance` card): Light, Dark or System; text size follows the device.
+/// Appearance (`appearance` card): Light, Dark and System as three previews (MAZ-180); text
+/// size follows the device.
 struct AppearanceSettingsView: View {
     @Environment(AppearanceModel.self) private var appearance
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    /// The card's order: Light, Dark, System.
+    static let options: [AppearancePreference] = [.light, .dark, .system]
 
     var body: some View {
         List {
             Section {
-                ForEach(AppearancePreference.allCases, id: \.self) { option in
-                    Button {
-                        appearance.set(option)
-                    } label: {
-                        HStack {
-                            Text(option.title).foregroundStyle(PennyColor.label)
-                            Spacer()
-                            if appearance.preference == option {
-                                Image(systemName: "checkmark").foregroundStyle(PennyColor.tint)
-                            }
-                        }
-                        .frame(minHeight: Metrics.minTouchTarget)
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityAddTraits(appearance.preference == option ? .isSelected : [])
-                    .accessibilityIdentifier("appearance.\(option.rawValue)")
+                // Side by side, as on the card; one under another at accessibility text sizes.
+                let layout =
+                    typeSize.isAccessibilitySize
+                    ? AnyLayout(VStackLayout(spacing: 16)) : AnyLayout(HStackLayout(alignment: .top, spacing: 12))
+                layout {
+                    ForEach(Self.options, id: \.self) { option in choice(option) }
                 }
+                .padding(.vertical, 8)
             } header: {
                 Text("Theme")
             } footer: {
@@ -47,6 +42,83 @@ struct AppearanceSettingsView: View {
         .background(PennyColor.background)
         .navigationTitle("Appearance")
         .accessibilityIdentifier("screen.appearance")
+    }
+
+    private func choice(_ option: AppearancePreference) -> some View {
+        let selected = appearance.preference == option
+        return Button {
+            appearance.set(option)
+        } label: {
+            VStack(spacing: 8) {
+                ThemePreview(option: option)
+                    .frame(maxWidth: typeSize.isAccessibilitySize ? 120 : .infinity)
+                Text(option.title)
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(PennyColor.label)
+                Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+                    .font(.title2)
+                    .foregroundStyle(selected ? PennyColor.tint : PennyColor.tertiaryLabel)
+                    .accessibilityHidden(true)
+            }
+            .frame(maxWidth: .infinity, minHeight: Metrics.minTouchTarget)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(option.title)
+        .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
+        .accessibilityIdentifier("appearance.\(option.rawValue)")
+    }
+}
+
+/// A small phone drawn in one appearance: the glow, a title bar and three cards. System shows
+/// light and dark halves.
+private struct ThemePreview: View {
+    let option: AppearancePreference
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
+        Group {
+            switch option {
+            case .light: screen.environment(\.colorScheme, .light)
+            case .dark: screen.environment(\.colorScheme, .dark)
+            case .system:
+                screen.environment(\.colorScheme, .light)
+                    .overlay {
+                        screen.environment(\.colorScheme, .dark)
+                            .mask(alignment: .trailing) {
+                                GeometryReader { proxy in
+                                    Rectangle().frame(width: proxy.size.width / 2)
+                                        .frame(maxWidth: .infinity, alignment: .trailing)
+                                }
+                            }
+                    }
+            }
+        }
+        .aspectRatio(0.54, contentMode: .fit)
+        .clipShape(shape)
+        .overlay(shape.strokeBorder(PennyColor.separator, lineWidth: 1))
+        .accessibilityHidden(true)
+    }
+
+    private var screen: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Capsule().fill(PennyColor.label).frame(width: 44, height: 10)
+            Capsule().fill(PennyColor.tertiaryLabel).frame(width: 30, height: 4)
+            Spacer().frame(height: 10)
+            ForEach(0..<2, id: \.self) { _ in
+                RoundedRectangle(cornerRadius: 7, style: .continuous).fill(PennyColor.surface).frame(height: 30)
+            }
+            Spacer(minLength: 0)
+            Capsule().fill(PennyColor.surface.opacity(0.7)).frame(height: 12)
+        }
+        .padding(10)
+        .padding(.top, 14)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(alignment: .top) {
+            HeroGlow(blur: 10).frame(height: 70).padding(.horizontal, -20).offset(y: -20)
+        }
+        .background(PennyColor.background)
     }
 }
 

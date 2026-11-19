@@ -75,6 +75,13 @@ struct EntryScope {
     let current: String?
     let choose: (_ householdId: String?, _ handoff: EntryHandoff) -> Void
 
+    /// The shared trips among `households`, the latest start first (More details › Trip).
+    var sharedTrips: [WireHousehold] {
+        households.filter { $0.trip != nil }.sorted {
+            ($0.trip?.startDate ?? "", $1.name) > ($1.trip?.startDate ?? "", $0.name)
+        }
+    }
+
     func name(of id: String?) -> String {
         guard let id else { return "Personal" }
         return households.first { $0.id == id }?.name ?? "Shared"

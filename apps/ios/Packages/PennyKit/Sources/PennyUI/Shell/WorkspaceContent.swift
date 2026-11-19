@@ -149,6 +149,16 @@ extension View {
         #endif
     }
 
+    /// A search field at the top of the page, always shown (on iOS a sheet would otherwise put
+    /// it at the bottom).
+    func searchableAtTop(text: Binding<String>, prompt: String) -> some View {
+        #if os(iOS)
+            searchable(text: text, placement: .navigationBarDrawer(displayMode: .always), prompt: Text(prompt))
+        #else
+            searchable(text: text, prompt: Text(prompt))
+        #endif
+    }
+
     func toolbarTitleDisplayModeLarge() -> some View {
         #if os(iOS)
             navigationBarTitleDisplayMode(.large)

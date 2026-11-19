@@ -94,6 +94,9 @@ struct SignInView: View {
             .padding(Metrics.gutter)
             .frame(maxWidth: 440)
             .frame(maxWidth: .infinity)
+            // Create account has the tinted glow behind its header (`create-account` card, MAZ-180);
+            // sign-in has none.
+            .heroGlow(opacity: mode == .signIn ? 0 : 1, top: -60)
         }
         .scrollDismissesKeyboard(.interactively)
         .background(PennyColor.background)

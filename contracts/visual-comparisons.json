@@ -45,11 +45,6 @@
         ],
         "deviations": [
           {
-            "summary": "No tinted hero glow behind the header (Home, empty Home, offline, create account), and Home has no calendar button in the toolbar",
-            "kind": "follow-up",
-            "ref": "MAZ-180"
-          },
-          {
             "summary": "Add entry is a tab with the search role inside the system tab bar, not a separate copper button",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#native-implementation-notes-maz-69"
@@ -99,11 +94,6 @@
           "dark"
         ],
         "deviations": [
-          {
-            "summary": "No tinted hero glow behind the header (Home, empty Home, offline, create account), and Home has no calendar button in the toolbar",
-            "kind": "follow-up",
-            "ref": "MAZ-180"
-          },
           {
             "summary": "Add entry is a tab with the search role inside the system tab bar, not a separate copper button",
             "kind": "approved",
@@ -359,20 +349,14 @@
       "id": "iphone-add-income",
       "view": "new income draft",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-73",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
         ],
-        "deviations": [
-          {
-            "summary": "The draft amount has no thousands separator (+$3200.00)",
-            "kind": "follow-up",
-            "ref": "MAZ-180"
-          }
-        ]
+        "deviations": []
       },
       "web": {
         "status": "deviates",
@@ -409,9 +393,9 @@
         ],
         "deviations": [
           {
-            "summary": "The trip picker lists only personal trips; shared trips are missing",
-            "kind": "follow-up",
-            "ref": "MAZ-180"
+            "summary": "Shared trips are listed below personal trips with \"Shared · N people\", and picking one opens the shared expense form",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
           }
         ]
       },
@@ -472,20 +456,14 @@
       "id": "iphone-category-picker",
       "view": "category picker with renamed Groceries & dining",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-73",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
         ],
-        "deviations": [
-          {
-            "summary": "A medium-detent list with search at the bottom and no Most used section, instead of the icon grid",
-            "kind": "follow-up",
-            "ref": "MAZ-180"
-          }
-        ]
+        "deviations": []
       },
       "web": {
         "status": "deviates",
@@ -1276,20 +1254,14 @@
       "id": "iphone-appearance",
       "view": "appearance: light, dark and system",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-69",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
         ],
-        "deviations": [
-          {
-            "summary": "Theme is a plain list (System, Light, Dark) instead of the three previews",
-            "kind": "follow-up",
-            "ref": "MAZ-180"
-          }
-        ]
+        "deviations": []
       },
       "web": {
         "status": "deviates",
@@ -1371,20 +1343,14 @@
       "id": "iphone-create-account",
       "view": "registration (unique test user)",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-68",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
         ],
-        "deviations": [
-          {
-            "summary": "No tinted hero glow behind the header (Home, empty Home, offline, create account), and Home has no calendar button in the toolbar",
-            "kind": "follow-up",
-            "ref": "MAZ-180"
-          }
-        ]
+        "deviations": []
       },
       "web": {
         "status": "deviates",
@@ -1448,11 +1414,6 @@
         ],
         "deviations": [
           {
-            "summary": "No tinted hero glow behind the header (Home, empty Home, offline, create account), and Home has no calendar button in the toolbar",
-            "kind": "follow-up",
-            "ref": "MAZ-180"
-          },
-          {
             "summary": "Add entry is a tab with the search role inside the system tab bar, not a separate copper button",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#native-implementation-notes-maz-69"
@@ -1497,11 +1458,6 @@
             "summary": "Offline adds a \"Shared expenses may be missing\" banner when shared data couldn't load",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
-          },
-          {
-            "summary": "No tinted hero glow behind the header (Home, empty Home, offline, create account), and Home has no calendar button in the toolbar",
-            "kind": "follow-up",
-            "ref": "MAZ-180"
           }
         ]
       },

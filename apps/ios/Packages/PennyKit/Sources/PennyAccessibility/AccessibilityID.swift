@@ -153,6 +153,8 @@ public enum AccessibilityID {
         public static let exploreCalendar = "home.exploreCalendar"
         public static let exploreInsights = "home.exploreInsights"
         public static let exploreMoneyFlow = "home.exploreMoneyFlow"
+        /// The toolbar calendar button (MAZ-180), next to Settings as on the `home` card.
+        public static let calendar = "home.calendar"
         public static let totals = "home.totals"
         public static let comingUp = "home.comingUp"
         public static let dailySpending = "home.dailySpending"
@@ -161,7 +163,7 @@ public enum AccessibilityID {
         static let all = [
             settings, hero, month, flow, recent, empty, emptyAdd, emptyDemo,
             projected, expectedIncome, explore, exploreCalendar, exploreInsights, exploreMoneyFlow, totals, comingUp,
-            dailySpending, sharedNotice,
+            dailySpending, sharedNotice, calendar,
         ]
     }
 

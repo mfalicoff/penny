@@ -63,7 +63,7 @@ nonisolated public enum PaletteToken: String, CaseIterable, Sendable {
                 light: RGBA(red: 60, green: 56, blue: 50, alpha: 0.13),
                 dark: RGBA(red: 255, green: 250, blue: 240, alpha: 0.12))
         case .label: AdaptiveColor(light: RGBA(0x16120F), dark: RGBA(0xF6F4F1))
-        case .label2: AdaptiveColor(light: RGBA(0x6F6A64), dark: RGBA(0xA39E97))
+        case .label2: AdaptiveColor(light: RGBA(0x57524D), dark: RGBA(0xA39E97))
         case .label3: AdaptiveColor(light: RGBA(0xA9A49D), dark: RGBA(0x6D6863))
         case .tint: AdaptiveColor(light: RGBA(0xE4572E), dark: RGBA(0xFF6F3F))
         case .tintText: AdaptiveColor(light: RGBA(0xC2461F), dark: RGBA(0xFF8A5E))

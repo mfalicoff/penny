@@ -64,7 +64,7 @@ struct PersonalTripPage: View {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack(spacing: 8) {
                         Text(range.phaseLabel(today: shell.today))
-                            .font(.footnote.weight(.semibold)).foregroundStyle(PennyColor.pending)
+                            .font(.footnote.weight(.semibold)).foregroundStyle(PennyColor.secondaryLabel)
                             .accessibilityIdentifier("tripPage.phase")
                         Label(
                             trip.sharedHouseholdId != nil && sharedAs == nil ? "Personal · was shared" : "Personal",

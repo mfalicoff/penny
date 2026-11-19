@@ -25,10 +25,15 @@ struct EntryCategoryPickerSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    if needle.isEmpty, all.count > 4 {
-                        section("Most used", Array(all.prefix(4)), showNew: false)
+                    // As on the card: the four most used, then the rest (MAZ-180); search lists every
+                    // match in one grid.
+                    if needle.isEmpty {
+                        let split = Self.sections(all)
+                        if !split.mostUsed.isEmpty { section("Most used", split.mostUsed, showNew: false) }
+                        section("All categories", split.rest, showNew: true)
+                    } else {
+                        section("Matching", matches, showNew: true)
                     }
-                    section(needle.isEmpty ? "All categories" : "Matching", matches, showNew: true)
                     Button("Edit categories", action: editCategories)
                         .font(.body.weight(.semibold))
                         .foregroundStyle(PennyColor.tintText)
@@ -38,7 +43,8 @@ struct EntryCategoryPickerSheet: View {
                 .padding(Metrics.gutter)
             }
             .background(PennyColor.background)
-            .searchable(text: $query, prompt: "Search categories")
+            // At the top, under the title, as on the card (a sheet would put it at the bottom).
+            .searchableAtTop(text: $query, prompt: "Search categories")
             .navigationTitle(Self.title(kind))
             .toolbarTitleDisplayModeInline()
             .toolbar {
@@ -55,8 +61,13 @@ struct EntryCategoryPickerSheet: View {
                 .environment(shell)
             }
         }
-        .presentationDetents([.medium, .large])
+        .presentationDetents([.large])
         .accessibilityIdentifier("screen.categoryPicker")
+    }
+
+    /// Most used (the first four, already ordered by use) and every other category.
+    static func sections(_ byUse: [LedgerCategory]) -> (mostUsed: [LedgerCategory], rest: [LedgerCategory]) {
+        (Array(byUse.prefix(4)), Array(byUse.dropFirst(4)))
     }
 
     static func title(_ kind: EntryKind) -> String {
@@ -406,6 +417,10 @@ struct EntryExtrasView: View {
     /// The form's receipt upload (MAZ-78): it outlives this page, so going back keeps it running.
     let upload: ReceiptUploadModel
     let ledger: Ledger
+    /// Shared trips a new expense can go to (MAZ-180). Picking one hands what was typed to the
+    /// shared expense form, as the Household row does; empty for an edit or without households.
+    var sharedTrips: [WireHousehold] = []
+    var chooseSharedTrip: (String) -> Void = { _ in }
     let save: () -> Void
 
     var body: some View {
@@ -438,10 +453,18 @@ struct EntryExtrasView: View {
                         : "Editing changes this entry only. Change future dates in Recurring.")
             }
             if draft.kind == .expense {
-                Section("Trip") {
+                Section {
                     tripRow(nil, name: "No trip")
                     ForEach(ledger.trips.sorted { $0.startDate > $1.startDate }, id: \.id) { trip in
                         tripRow(trip.id, name: trip.name)
+                    }
+                    ForEach(sharedTrips) { household in sharedTripRow(household) }
+                } header: {
+                    Text("Trip")
+                } footer: {
+                    if !sharedTrips.isEmpty {
+                        Text(
+                            "A shared trip splits this expense with everyone on it. Shared expenses need a connection.")
                     }
                 }
             }
@@ -493,5 +516,33 @@ struct EntryExtrasView: View {
         .buttonStyle(.plain)
         .accessibilityAddTraits(selected ? .isSelected : [])
         .accessibilityIdentifier("entryExtras.trip.\(key)")
+    }
+
+    /// A shared trip: never selected here, because picking it moves the draft to the shared form.
+    private func sharedTripRow(_ household: WireHousehold) -> some View {
+        Button {
+            chooseSharedTrip(household.id)
+        } label: {
+            HStack {
+                // A Label, like the personal rows, so the names line up.
+                Label {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(household.name).foregroundStyle(PennyColor.label)
+                        Text("Shared · \(household.memberCount) people")
+                            .font(.footnote)
+                            .foregroundStyle(PennyColor.secondaryLabel)
+                    }
+                } icon: {
+                    Image(systemName: "airplane").foregroundStyle(PennyColor.label)
+                }
+                Spacer(minLength: 8)
+            }
+            .frame(minHeight: Metrics.minTouchTarget)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityHint("Splits this expense with everyone on the trip")
+        .accessibilityIdentifier("entryExtras.trip.\(household.id)")
     }
 }
