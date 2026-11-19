@@ -20,10 +20,10 @@ Previews of every card this issue owns are in `PennyUI/Entries/EntrySpecimens.sw
 
 - **Open:** the tab bar +, the iPad sidebar's Add entry, `penny://entries/new`, or the empty Activity's Add entry. Edit opens the same sheet from Activity (swipe or context menu) or from the entry detail.
 - **Type:** Expense, Income or Invest. Switching type keeps the amount, name, date, account and note; the category becomes the one last chosen for that type, or its most used one. Split, trip and receipt stay in the draft but only expenses save them.
-- **Amount:** on iPhone a keypad under the form (the system keyboard appears only for the name); on iPad the decimal keyboard. Up to nine whole digits and two decimals, as `Money.cents` accepts.
+- **Amount:** on iPhone a keypad under the form (the system keyboard appears only for the name); on iPad the decimal keyboard. Up to nine whole digits and two decimals, as `Money.cents` accepts. The amount shows grouped as you type, with the device's separators ("+\$3,200.00", MAZ-180; `MoneyFormat.typed`).
 - **Category:** the three most used categories of the type (by their use in the latest 500 entries and the schedules) as chips, the selected one always visible, and a More chip for every category with search, New (inline) and Edit categories (opens Settings › Categories; the draft is kept).
 - **Date, Account, Split:** labeled rows. Accounts are labels, never balances; None is allowed. New account creates one inline and selects it.
-- **More details:** receipt (expenses only: photo or file picker, upload with progress, preview; see [native receipts](receipts.md)), repeat (new entries only), trip (expenses only) and note. Repeating creates a schedule whose first occurrence is this entry.
+- **More details:** receipt (expenses only: photo or file picker, upload with progress, preview; see [native receipts](receipts.md)), repeat (new entries only), trip (expenses only) and note. Trip lists your personal trips, then, for a new expense, the shared trips you're on ("Shared · N people"): picking a shared trip hands what was typed to that trip's shared expense form, as the Household row does (MAZ-180). Repeating creates a schedule whose first occurrence is this entry.
 - **Save:** the toolbar check, so the keyboard never covers it. It shows a spinner and can't be tapped twice; a save that succeeded never runs again. The sheet closes on success and the shell shows the toast with Undo and a success haptic.
 
 ### Splits and investments

@@ -122,6 +122,7 @@ Expected differences that need no entry: SF Pro and SF Symbols on iOS, Inter and
 - **Local-first saving.** A save is kept on the device first. A failed upload shows **Couldn't sync** with Retry, not **Couldn't save** in the form (`iphone-save-error`). The saved toast appears on the local save, before the upload (`iphone-saved-toast`). Offline adds a **Shared expenses may be missing** banner when shared data couldn't load.
 - **Names are emails.** Members carry only an email, so households show emails and initials from the email, as on the web.
 - **Settings** has no Notifications row: notifications follow the system permission, and the shared list asks for it once (**Hear about household changes**).
+- **Shared trips in More details.** The Trip list adds the shared trips you're on below your personal trips (MAZ-180), each with "Shared · N people", because picking one moves the expense to that trip's shared form; the card shows only trip names.
 
 ### Web adaptations (MAZ-122)
 

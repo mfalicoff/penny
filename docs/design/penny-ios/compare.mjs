@@ -60,12 +60,12 @@ function sheet(card) {
   const verdict = (side) => side ? `${side.status}${side.deviations?.length ? ` · ${side.deviations.length} deviation(s)` : ""}` : "no record";
   return `<!doctype html><meta charset="utf-8"><style>
     body { margin: 0; padding: 24px; font: 14px/1.4 system-ui, sans-serif; background: #F2F1EE; color: #16120F; }
-    h1 { font-size: 20px; margin: 0 0 4px; } p { margin: 0 0 16px; color: #6F6A64; }
+    h1 { font-size: 20px; margin: 0 0 4px; } p { margin: 0 0 16px; color: #57524D; }
     .row { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 16px; }
     figure { margin: 0; } figcaption { font-weight: 600; margin-bottom: 6px; }
     img { height: 720px; width: auto; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.15); display: block; }
     .none { height: 720px; width: 330px; display: grid; place-items: center; padding: 24px; box-sizing: border-box; text-align: center;
-      border: 2px dashed #A9A49D; border-radius: 8px; color: #6F6A64; }
+      border: 2px dashed #A9A49D; border-radius: 8px; color: #57524D; }
   </style><h1>${escape(card.id)}</h1><p>${escape(entry?.view ?? "")} · native: ${escape(verdict(entry?.native))} · web: ${escape(verdict(entry?.web))}</p>${rows.join("")}`;
 }
 

@@ -19,6 +19,8 @@ struct HomeView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var width: Double = 0
+    /// The toolbar calendar is for a month with something in it; the empty Home has none.
+    @State private var hasEntries = false
 
     var body: some View {
         WorkspaceContent { ledger in
@@ -45,10 +47,15 @@ struct HomeView: View {
                         ExploreSection(report: report, summary: summary, currency: currency)
                     }
                 }
+                // The tinted glow behind the hero (MAZ-180), dimmed on the empty Home as on its card.
+                .heroGlow(opacity: Self.isEmpty(ledger: ledger, report: report) ? 0.6 : 1)
                 .padding(.horizontal, Metrics.gutter)
                 .padding(.bottom, 24)
                 .frame(maxWidth: dashboard ? 1200 : 720)
                 .frame(maxWidth: .infinity)
+            }
+            .onChange(of: Self.isEmpty(ledger: ledger, report: report), initial: true) { _, empty in
+                hasEntries = !empty
             }
             .onGeometryChange(for: Double.self) {
                 $0.size.width
@@ -65,6 +72,14 @@ struct HomeView: View {
         .toolbarTitleDisplayModeInline()
         .toolbar {
             ToolbarItem(placement: .navigation) { MonthPicker() }
+            if hasEntries {
+                ToolbarItem(placement: .primaryAction) {
+                    NavigationLink(value: DetailRoute.calendar) {
+                        Label("Calendar", systemImage: "calendar")
+                    }
+                    .accessibilityIdentifier("home.calendar")
+                }
+            }
             ToolbarItem(placement: .primaryAction) {
                 Button {
                     shell.route.openSettings()

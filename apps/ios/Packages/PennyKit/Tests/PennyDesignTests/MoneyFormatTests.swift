@@ -23,6 +23,27 @@ struct MoneyFormatTests {
         #expect(MoneyFormat.spoken(-100, meaning: .neutral, currency: "CAD", locale: locale) == "minus $1.00")
     }
 
+    @Test("whenTheKeypadDraftIsShown_MoneyFormat_ShouldGroupItByLocaleAndKeepTheFractionAsTyped")
+    func typed() {
+        #expect(MoneyFormat.typed("3200.00", locale: locale) == "3,200.00")
+        #expect(MoneyFormat.typed("1234567", locale: locale) == "1,234,567")
+        #expect(MoneyFormat.typed("3200.", locale: locale) == "3,200.")
+        #expect(MoneyFormat.typed("3200.5", locale: locale) == "3,200.5")
+        #expect(MoneyFormat.typed("999", locale: locale) == "999")
+        #expect(MoneyFormat.typed("0.5", locale: locale) == "0.5")
+        let french = MoneyFormat.typed("3200.5", locale: Locale(identifier: "fr_CA"))
+        #expect(french.hasSuffix(",5") && french.hasPrefix("3") && french.count == 7, "\(french)")
+        #expect(MoneyFormat.typed("100000", locale: Locale(identifier: "en_IN")) == "1,00,000")
+    }
+
+    @Test("whenTheDraftIsNotANumber_MoneyFormat_ShouldLeaveItUnchanged")
+    func typedUnchanged() {
+        #expect(MoneyFormat.typed("", locale: locale) == "")
+        #expect(MoneyFormat.typed(".5", locale: locale) == ".5")
+        #expect(MoneyFormat.typed("12a", locale: locale) == "12a")
+        #expect(MoneyFormat.typed("1.2.3", locale: locale) == "1.2.3")
+    }
+
     @Test("whenShownAsTheHero_MoneyFormat_ShouldSplitOffTheCents")
     func hero() {
         let text = MoneyFormat.signed(111_665, meaning: .neutral, currency: "CAD", locale: locale)

@@ -102,4 +102,26 @@ struct EntryHandoffTests {
         #expect(editor.draft.categoryId == defaultCategory)
         #expect(editor.draft.accountId == nil)
     }
+
+    @Test("whenMoreDetailsListsTrips_EntryScope_ShouldOfferOnlySharedTripsLatestFirst")
+    func sharedTrips() {
+        func household(_ id: String, _ name: String, start: String?) -> WireHousehold {
+            WireHousehold(
+                id: id, name: name, currency: "CAD", creatorId: "u-me", createdAt: 0, memberCount: 2,
+                trip: start.map { WireHouseholdTrip(startDate: $0, endDate: $0) })
+        }
+        let scope = EntryScope(
+            households: [
+                household("h-flat", "Flat", start: nil),
+                household("t-lisbon", "Lisbon", start: "2026-10-01"),
+                household("t-montreal", "Montréal", start: "2026-12-04"),
+                household("t-austin", "Austin", start: "2026-10-01"),
+            ],
+            current: nil, choose: { _, _ in })
+
+        #expect(scope.sharedTrips.map(\.id) == ["t-montreal", "t-austin", "t-lisbon"])
+        #expect(
+            EntryScope(households: [household("h-flat", "Flat", start: nil)], current: nil) { _, _ in }
+                .sharedTrips.isEmpty)
+    }
 }
