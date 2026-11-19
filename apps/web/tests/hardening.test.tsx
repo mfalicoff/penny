@@ -102,7 +102,10 @@ describe("personal amounts use the ledger currency", () => {
       return undefined;
     });
     renderApp("/transactions");
-    expect(await screen.findByText("€5.00")).toBeInTheDocument();
+    const row = (await screen.findByText("Bread")).closest("li");
+    if (!row) throw new Error("no Bread row");
+    // MAZ-202: the row reads as the cards do, with the expense's minus sign.
+    expect(within(row).getByText("-€5.00")).toBeInTheDocument();
   });
 
   it("shows a plain number rather than a wrong currency when the ledger can't be read", async () => {
@@ -114,7 +117,7 @@ describe("personal amounts use the ledger currency", () => {
     renderApp("/transactions");
     expect(await screen.findByText("Bread")).toBeInTheDocument();
     await waitFor(() => {
-      expect(screen.getByText("5.00")).toBeInTheDocument();
+      expect(screen.getByText("-5.00")).toBeInTheDocument();
     });
     expect(screen.queryByText(/[$€£]/)).not.toBeInTheDocument();
   });

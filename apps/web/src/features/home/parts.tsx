@@ -11,6 +11,7 @@ import { Badge, Button, cx } from "../../design/controls";
 import { Icon } from "../../design/Icon";
 import { Money } from "../../design/Money";
 import { categoryIcon } from "../entries/model";
+import { rowAmount } from "../recurring/model";
 import { currentMonth, dayLabel, monthLabel, shiftMonth } from "../households/model";
 import { groupSmall, isSharedEntry, percentOf } from "./model";
 
@@ -128,7 +129,12 @@ export function EntryRows({ entries, ledger, currency, onOpen }: { entries: read
               <time dateTime={entry.date}>{dayLabel(entry.date)}</time>
             </span>
             <span className="results__amount">
-              <Money cents={entry.share} currency={currency} tone={entry.scheduled || expected ? "pending" : TONE[entry.kind]} signed={entry.kind === "income" && !entry.scheduled && !expected} />
+              {/* MAZ-202: recorded rows read as the cards do (expenses −, income +); expected and scheduled stay unsigned. */}
+              {entry.scheduled || expected ? (
+                <Money cents={entry.share} currency={currency} tone="pending" />
+              ) : (
+                <Money {...rowAmount(entry.kind, entry.share)} currency={currency} tone={TONE[entry.kind]} />
+              )}
               {shared || entry.share !== entry.total ? <span className="results__sub">your share</span> : null}
             </span>
           </>
