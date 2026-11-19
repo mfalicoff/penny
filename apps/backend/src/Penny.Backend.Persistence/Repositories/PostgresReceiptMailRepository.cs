@@ -34,29 +34,19 @@ public sealed class PostgresReceiptMailRepository(NpgsqlDataSource source, Inbou
         return row is null ? null : Open(row);
     }
 
-    public async Task<int> CountCreatedSinceAsync(
-        string userId,
-        DateTimeOffset since,
-        CancellationToken cancellationToken
-    )
-    {
-        await using var context = PennyDbContext.Create(source);
-        return await context.ReceiptMailAddresses.CountAsync(
-            address => address.UserId == userId && address.CreatedAt > since,
-            cancellationToken
-        );
-    }
-
     // Rotations of one user's address are serialized on the user's row lock, taken first
     // (the shared lock order: users, then their entities). A concurrent rotation waits,
     // then sees the winner's committed address and revokes it, so neither collides on
-    // the one-live-address index and every caller gets 201 (MAZ-193).
-    public async Task<StoredMailAddress> ReplaceAsync(
+    // the one-live-address index and every caller gets 201 (MAZ-193). The daily cap is
+    // counted under the same lock, so concurrent rotations cannot all pass it (MAZ-207).
+    public async Task<StoredMailAddress?> ReplaceAsync(
         string userId,
         string address,
         string localPartHash,
         DateTimeOffset createdAt,
         DateTimeOffset expiresAt,
+        DateTimeOffset since,
+        int maxCreated,
         CancellationToken cancellationToken
     )
     {
@@ -70,6 +60,13 @@ public sealed class PostgresReceiptMailRepository(NpgsqlDataSource source, Inbou
                 set => set.SetProperty(user => user.Email, user => user.Email),
                 cancellationToken
             );
+        if (
+            await context.ReceiptMailAddresses.CountAsync(
+                row => row.UserId == userId && row.CreatedAt > since,
+                cancellationToken
+            ) >= maxCreated
+        )
+            return null;
         var current = await context
             .ReceiptMailAddresses.AsNoTracking()
             .Where(row => row.UserId == userId && row.RevokedAt == null)
