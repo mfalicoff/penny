@@ -294,11 +294,13 @@ public enum AccessibilityID {
         public static func account(_ id: String) -> String { "account.\(id)" }
         public static func category(_ id: String) -> String { "category.\(id)" }
         public static func schedule(_ id: String) -> String { "schedule.\(id)" }
+        /// A household's shared schedule on Recurring (MAZ-198), by its rule id.
+        public static func sharedSchedule(_ id: String) -> String { "sharedSchedule.\(id)" }
 
         static let all = [
             addAccount, addCategory, addSchedule, accountName, accountSave, categoryName, categorySave, scheduleSave,
         ]
-        static let prefixes = ["account.", "category.", "schedule."]
+        static let prefixes = ["account.", "category.", "schedule.", "sharedSchedule."]
     }
 
     /// Banners, toasts and named states.
