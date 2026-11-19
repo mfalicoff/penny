@@ -135,7 +135,8 @@ test("two people: share a personal trip, join after an expense, split, repay and
   await expect(bea.page).not.toHaveURL(/expense=/);
 
   // Back to the list and forward again keep the trip context.
-  await bea.page.getByRole("link", { name: /All trips/ }).click();
+  // The sidebar has an All trips link too (MAZ-221); this is the trip page's own.
+  await bea.page.getByRole("main").getByRole("link", { name: /All trips/ }).click();
   await expect(bea.page.getByRole("heading", { level: 1, name: "Trips" })).toBeVisible();
   await bea.page.goBack();
   await expect(bea.page.getByRole("heading", { level: 1, name: "Lisbon" })).toBeVisible();
