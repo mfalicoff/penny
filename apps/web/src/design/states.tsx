@@ -249,7 +249,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {toast ? (
           <div
             key={toast.id}
-            className={cx("pk-toast", "glass", toast.tone === "error" && "pk-toast--error")}
+            className={cx("pk-toast", "glass", toast.tone === "error" && "pk-toast--error", Boolean(toast.action) && "pk-toast--stacked")}
             onPointerEnter={(event) => {
               if (pointerCanPause(event.pointerType)) setHovered(true);
             }}
@@ -269,29 +269,31 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               <div className="pk-toast__title">{toast.title}</div>
               {toast.detail ? <div className="pk-toast__sub">{toast.detail}</div> : null}
             </div>
-            {toast.action ? (
-              <Button
-                variant="quiet"
-                onClick={() => {
-                  toast.action?.onClick();
-                  dismiss();
-                }}
-              >
-                {toast.action.label}
-              </Button>
-            ) : null}
-            {toast.onUndo ? (
-              <Button
-                variant="quiet"
-                onClick={() => {
-                  toast.onUndo?.();
-                  dismiss();
-                }}
-              >
-                Undo
-              </Button>
-            ) : null}
-            <Button variant="quiet" iconOnly icon="close" aria-label="Dismiss" onClick={dismiss} />
+            <div className="pk-toast__actions">
+              {toast.action ? (
+                <Button
+                  variant="quiet"
+                  onClick={() => {
+                    toast.action?.onClick();
+                    dismiss();
+                  }}
+                >
+                  {toast.action.label}
+                </Button>
+              ) : null}
+              {toast.onUndo ? (
+                <Button
+                  variant="quiet"
+                  onClick={() => {
+                    toast.onUndo?.();
+                    dismiss();
+                  }}
+                >
+                  Undo
+                </Button>
+              ) : null}
+              <Button variant="quiet" iconOnly icon="close" aria-label="Dismiss" onClick={dismiss} />
+            </div>
           </div>
         ) : null}
       </div>
