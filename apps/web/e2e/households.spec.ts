@@ -264,7 +264,7 @@ test("monthly payment at month end, a repeated payment, private accounts and arc
   await bea.context.close();
 });
 
-test("on phones a tapped toast still closes and the rows under it stay reachable (MAZ-162)", async ({ browser, baseURL, isMobile }) => {
+test("on phones a toast takes the tab bar's place: no layout shift, rows stay tappable, a tap still closes it (MAZ-162, MAZ-166)", async ({ browser, baseURL, isMobile }) => {
   test.skip(!isMobile, "touch layout only");
   const alex = await person(browser, ALEX, baseURL);
   const bea = await person(browser, BEA, baseURL);
@@ -273,31 +273,59 @@ test("on phones a tapped toast still closes and the rows under it stay reachable
   await addExpense(alex.page, "Hydro", "90");
   await addExpense(alex.page, "Internet", "40");
 
-  await bea.page.goto(url);
-  const list = bea.page.getByRole("list", { name: "Expenses" });
+  const page = bea.page;
+  // A short phone screen, so the page scrolls and a change in its height would show.
+  const size = page.viewportSize();
+  if (size) await page.setViewportSize({ width: size.width, height: 480 });
+  await page.goto(url);
+  const list = page.getByRole("list", { name: "Expenses" });
+  const tabbar = page.getByRole("navigation", { name: "Tabs" });
+  const toast = page.locator(".pk-toast", { hasText: "Share marked as paid" });
+  // The page's height and scroll position at the bottom of the list (MAZ-166).
+  const layout = () => page.evaluate(() => {
+    window.scrollTo(0, document.documentElement.scrollHeight);
+    return { height: document.documentElement.scrollHeight, y: Math.round(window.scrollY) };
+  });
   await list.getByRole("link", { name: /Hydro/ }).click();
-  const hydro = bea.page.getByRole("dialog", { name: "Hydro" });
+  const hydro = page.getByRole("dialog", { name: "Hydro" });
   await hydro.getByRole("button", { name: "Mark your share as paid" }).click();
   await hydro.getByRole("button", { name: "Mark $45.00 as paid" }).click();
-  await bea.page.keyboard.press("Escape");
-  const toast = bea.page.locator(".pk-toast", { hasText: "Share marked as paid" });
+  await page.keyboard.press("Escape");
   await expect(toast).toBeVisible();
 
-  // While it shows, the page reserves its height: the last row scrolls clear of the toast.
-  await bea.page.evaluate(() => {
-    window.scrollTo(0, document.documentElement.scrollHeight);
+  // The toast takes the tab bar's slot (MAZ-166): the tab bar hides behind it, and it stays inside
+  // the room the page always keeps at the bottom, so the last row is clear of it.
+  const shown = await layout();
+  // The page scrolls, so a change in its height when the toast closes would move the list.
+  expect(shown.y).toBeGreaterThan(0);
+  await expect(tabbar).toBeHidden();
+  await toast.evaluate((element) => Promise.all(element.getAnimations().map((animation) => animation.finished)));
+  const boxes = await page.evaluate(() => {
+    const box = (selector: string) => document.querySelector(selector)?.getBoundingClientRect();
+    const rows = document.querySelectorAll("[aria-label='Expenses'] > li");
+    return { slot: box(".tabbar"), toast: box(".pk-toast"), last: rows[rows.length - 1]?.getBoundingClientRect() };
   });
-  const last = await list.getByRole("listitem").last().boundingBox();
-  const over = await toast.boundingBox();
-  expect(last && over && last.y + last.height <= over.y).toBe(true);
+  const { slot, toast: over, last } = boxes;
+  expect(slot && over && Math.abs(over.bottom - slot.bottom)).toBeLessThanOrEqual(1);
+  expect(over && over.height).toBeLessThanOrEqual(84);
+  expect(last && over && last.bottom <= over.top).toBe(true);
+
+  // The row right above the toast can be tapped while it shows.
+  await list.getByRole("listitem").last().getByRole("link").tap();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(toast).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toBeHidden();
 
   // A tap on the toast's text (a touch, then the mouse events browsers emulate after it)
-  // leaves the pointer resting there. It closes on its own anyway.
+  // leaves the pointer resting there. It closes on its own anyway, and the page doesn't move.
   await toast.getByText("Share marked as paid").tap();
   await toast.getByText("Share marked as paid").click();
   await expect(toast).toBeHidden({ timeout: 10_000 });
-  await list.getByRole("link", { name: /Internet/ }).click();
-  await expect(bea.page.getByRole("dialog", { name: "Internet" })).toBeVisible();
+  await expect(tabbar).toBeVisible();
+  expect(await layout()).toEqual(shown);
+  await list.getByRole("link", { name: /Internet/ }).tap();
+  await expect(page.getByRole("dialog", { name: "Internet" })).toBeVisible();
   await alex.context.close();
   await bea.context.close();
 });
