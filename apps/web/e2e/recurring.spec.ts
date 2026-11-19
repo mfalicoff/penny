@@ -60,6 +60,7 @@ async function mockApi(context: BrowserContext, ledger: Ledger = emptyLedger(), 
     const path = new URL(request.url()).pathname;
     if (path === "/api/info") return route.fulfill({ json: { name: "penny", version: "2.0.0-e2e" } });
     if (path === "/api/auth/me") return route.fulfill({ json: { email: EMAIL } });
+    if (path === "/api/receipt-email") return route.fulfill({ json: { enabled: false, domain: null, address: null } });
     if (path === "/api/auth/oidc") return route.fulfill({ json: { enabled: false } });
     if (path in shared) return route.fulfill({ json: shared[path] });
     if (path === "/api/v1/search/transactions") return route.fulfill({ json: { version: 1, items: [], totalCount: 0, nextCursor: null } });

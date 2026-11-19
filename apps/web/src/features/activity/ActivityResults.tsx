@@ -15,6 +15,7 @@ import { EmptyState, useOnline } from "../../design/states";
 import { useLedgerSync } from "../../offline/OfflineLedgerProvider";
 import { dayLabel } from "../households/model";
 import { categoryIcon } from "../entries/model";
+import { rowAmount } from "../recurring/model";
 import { categoryName, dayTotal, groupByDay, localRows, type ActivityRow, type RowFilters, type SharedState } from "./data";
 import type { ActivitySearch } from "./filters";
 import { activeDay, KIND_FILTERS, periodLabel, periodOf, searchRange } from "./filters";
@@ -317,7 +318,8 @@ function Row({
             </span>
           </span>
           <span className="results__amount">
-            <Money cents={entry.share} currency={currency} tone={expected ? "pending" : TONE[entry.kind]} />
+            {/* MAZ-202: recorded rows read as the cards do (expenses −, income +); expected income stays unsigned. */}
+            {expected ? <Money cents={entry.share} currency={currency} tone="pending" /> : <Money {...rowAmount(entry.kind, entry.share)} currency={currency} tone={TONE[entry.kind]} />}
           </span>
         </button>
       </li>
@@ -339,7 +341,7 @@ function Row({
           </span>
         </span>
         <span className="results__amount">
-          <Money cents={entry.shareCents} currency={entry.householdCurrency} />
+          <Money {...rowAmount("expense", entry.shareCents)} currency={entry.householdCurrency} />
           <span className="results__sub">your share</span>
         </span>
       </Link>

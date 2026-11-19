@@ -171,6 +171,51 @@ test("attaches an emailed invoice to the suggested expense, then undoes it", asy
   expect(errors).toEqual([]);
 });
 
+test("at 320px the attached toast shows its whole title, with its buttons on a row below it (MAZ-205)", async ({ context, page }) => {
+  const errors = watchForErrors(page);
+  await mockApi(context);
+  await page.setViewportSize({ width: 320, height: 640 });
+  await page.clock.setFixedTime(NOV_14);
+  await page.goto("/receipts");
+  await page.getByRole("list", { name: "Receipts to attach" }).getByRole("button", { name: /Mill St\. Café/ }).click();
+  await page.getByRole("dialog", { name: "Mill St. Café" }).getByRole("button", { name: "Attach to…" }).click();
+  await page.getByRole("dialog", { name: "Which file?" }).getByRole("button", { name: "Next" }).click();
+  await page.getByRole("list", { name: "Suggested expenses" }).getByRole("button", { name: /Lunch at Mill St\./ }).click();
+  await page.getByRole("dialog", { name: "Attach receipt?" }).getByRole("button", { name: /^Attach invoice-4012\.pdf/ }).click();
+
+  const toast = page.locator(".pk-toast", { hasText: "Receipt attached to Lunch at Mill St." });
+  await expect(toast).toBeVisible();
+  await toast.evaluate((element) => Promise.all(element.getAnimations().map((animation) => animation.finished)));
+  const layout = await toast.evaluate((element) => {
+    const title = element.querySelector(".pk-toast__title");
+    const main = document.querySelector("main");
+    if (!title || !main) throw new Error("No toast title or main area");
+    return {
+      toast: element.getBoundingClientRect(),
+      title: title.getBoundingClientRect(),
+      cut: title.scrollWidth > title.clientWidth || title.scrollHeight > title.clientHeight,
+      buttons: [...element.querySelectorAll("button")].map((button) => button.getBoundingClientRect()),
+      room: parseFloat(getComputedStyle(main).paddingBottom),
+      viewport: window.innerHeight,
+    };
+  });
+  // Most of the toast's width goes to the title, which isn't cut short.
+  expect(layout.title.width).toBeGreaterThan(200);
+  expect(layout.cut).toBe(false);
+  // View entry, Undo and Dismiss share one row below the title, inside the toast.
+  expect(layout.buttons).toHaveLength(3);
+  const [first] = layout.buttons;
+  for (const button of layout.buttons) {
+    expect(button.top).toBeGreaterThanOrEqual(layout.title.bottom - 1);
+    expect(Math.abs(button.top - (first?.top ?? 0))).toBeLessThanOrEqual(1);
+    expect(button.right).toBeLessThanOrEqual(layout.toast.right);
+  }
+  // It stays inside the room the main area always keeps at the bottom, so the last rows scroll clear of it.
+  expect(layout.viewport - layout.toast.top).toBeLessThanOrEqual(layout.room);
+  await expect(toast.getByRole("button", { name: "View entry" })).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
 test("the inbox fits a 320px screen and opens rows from the keyboard", async ({ context, page }) => {
   const errors = watchForErrors(page);
   await mockApi(context);

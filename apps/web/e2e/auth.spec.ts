@@ -65,6 +65,9 @@ async function mockApi(context: BrowserContext, options: { sso?: boolean } = {})
       case "/api/v1/search/transactions":
         if (!api.signedIn) return reply(401, { error: "Please sign in to continue." });
         return reply(200, { version: 1, items: [], totalCount: 0, nextCursor: null });
+      case "/api/receipt-email":
+        if (!api.signedIn) return reply(401, { error: "Please sign in to continue." });
+        return reply(200, { enabled: false, domain: null, address: null });
       default:
         return reply(404, { error: "API route not found." });
     }

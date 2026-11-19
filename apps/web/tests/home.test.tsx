@@ -91,6 +91,18 @@ describe("Home", () => {
     expect(within(recent).queryByText("October groceries")).not.toBeInTheDocument();
   });
 
+  it("signs Recent amounts as the cards do: expenses minus, income plus, investments unsigned (MAZ-202)", async () => {
+    server();
+    renderApp("/?month=2026-11");
+    const recent = await screen.findByRole("region", { name: "Recent" });
+    const amountOf = async (title: string) => (await within(recent).findByText(title)).closest("li")?.querySelector(".results__amount .money")?.textContent;
+    expect(await amountOf("Rent")).toBe("-$1,450.00");
+    expect(await amountOf("Morning coffee")).toBe("-$6.20");
+    expect(await amountOf("Hydro")).toBe("-$30.00");
+    expect(await amountOf("Monthly salary")).toBe("+$4,800.00 income");
+    expect(await amountOf("Index fund")).toBe("$200.00 invested");
+  });
+
   it("on a phone, leads with the hero, then Follow your money, then Recent, as iphone-home (MAZ-174)", async () => {
     server();
     renderApp("/?month=2026-11");

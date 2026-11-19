@@ -76,6 +76,7 @@ async function mockApi(context: BrowserContext): Promise<Server> {
     if (url.pathname === "/api/info") return route.fulfill({ json: { name: "penny", version: "2.0.0-e2e" } });
     if (url.pathname === "/api/auth/me") return route.fulfill({ json: { email: EMAIL } });
     if (url.pathname === "/api/auth/oidc") return route.fulfill({ json: { enabled: false } });
+    if (url.pathname === "/api/receipt-email") return route.fulfill({ json: { enabled: false, domain: null, address: null } });
     if (server.down) return route.abort("connectionrefused");
     if (url.pathname === "/api/ledger") {
       if (request.method() === "PUT") {
