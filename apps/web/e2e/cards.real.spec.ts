@@ -14,8 +14,8 @@ import { clearFaults, control, pinClock, realStack, seedScenario, skipReason } f
 // Captures go to <repository>/test-results/cards/web/<id>.<appearance>.png (the viewport only, at
 // device scale 2 like the previews, animations disabled, caret hidden) with report.json: one row
 // per card and appearance, `captured`, `not-built`, `blocked` or `not-applicable` with a note.
-// Viewports: web 1440×900, iPad 1194×834, iPhone 402×874 (the app picks its phone layout by
-// width, so no touch emulation). The browser runs in UTC with its clock pinned to the scenario's.
+// Viewports: web 1440×900, iPad 1194×834 with touch, iPhone 402×874 (the app picks its phone
+// layout by width). The browser runs in UTC with its clock pinned to the scenario's.
 //
 // It runs only with PENNY_CARDS=1 (set by `test:e2e:cards`), once, on chromium-desktop: it opens
 // its own contexts per card, so other projects would only repeat it.
@@ -563,6 +563,9 @@ async function openContext(browser: Browser, baseURL: string | undefined, id: st
   const context = await browser.newContext({
     ...(baseURL ? { baseURL } : {}),
     viewport,
+    // The iPad cards show a touch tablet: the shell picks its iPad look (copper selection, glass
+    // month buttons) from a coarse pointer without hover (MAZ-221).
+    ...(id.startsWith("ipad-") ? { hasTouch: true } : {}),
     deviceScaleFactor: 2,
     timezoneId: "UTC",
     locale: "en-CA",

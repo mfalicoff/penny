@@ -100,9 +100,13 @@ describe("personal trips", { timeout: 20_000 }, () => {
     expect(screen.getByText("Tue, Nov 10 – Thu, Nov 19, 2026")).toBeInTheDocument();
 
     // Back on the list the trip is featured as the next one.
-    await user.click(screen.getByRole("link", { name: /All trips/ }));
+    await user.click(within(screen.getByRole("main")).getByRole("link", { name: /All trips/ }));
     expect(await screen.findByRole("heading", { level: 2, name: "Lisbon" })).toBeInTheDocument();
     expect(screen.getByText("In 21 days")).toBeInTheDocument();
+    // The sidebar lists the coming trip with its start date, then All trips (MAZ-221).
+    const sidebar = screen.getByRole("complementary", { name: "Penny" });
+    expect(within(sidebar).getByRole("link", { name: /^Lisbon\s*Nov 10$/ })).toHaveTextContent("LisbonNov 10");
+    expect(within(sidebar).getByRole("link", { name: "All trips" })).toHaveAttribute("href", "/trips");
   });
 
   it("adds a trip expense, counts expenses outside the dates, and only deletes an empty trip", async () => {
@@ -170,7 +174,7 @@ describe("personal trips", { timeout: 20_000 }, () => {
     serve();
     renderApp("/trips/nowhere");
     expect(await screen.findByRole("heading", { name: "This trip isn't here" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /All trips/ })).toHaveAttribute("href", "/trips");
+    expect(within(screen.getByRole("main")).getByRole("link", { name: /All trips/ })).toHaveAttribute("href", "/trips");
   });
 });
 
@@ -200,7 +204,7 @@ describe("shared trips", { timeout: 20_000 }, () => {
     expect(within(onlyYou).getByText("Paid train")).toBeInTheDocument();
     expect(screen.getByText(/includes \$24\.00 only you can see/)).toBeInTheDocument();
 
-    await user.click(screen.getByRole("link", { name: /All trips/ }));
+    await user.click(within(screen.getByRole("main")).getByRole("link", { name: /All trips/ }));
     await screen.findByRole("heading", { level: 1, name: "Trips" });
     expect(screen.getAllByRole("heading", { level: 2, name: "Lisbon" })).toHaveLength(1);
     expect(screen.queryByText("Personal")).not.toBeInTheDocument();

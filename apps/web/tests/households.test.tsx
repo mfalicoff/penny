@@ -127,11 +127,16 @@ describe("shared list, create and join", () => {
     addExpense(BEA, id, { title: "Old rent", totalCents: 3000, payerUserId: ids().bea, date: "2026-09-10" });
     serve();
     renderApp("/households");
-    const row = await screen.findByRole("link", { name: /Maison/ });
+    const row = await within(await screen.findByRole("main")).findByRole("link", { name: /Maison/ });
     await waitFor(() => {
       expect(row).toHaveTextContent("October · you're owed $60.00");
     });
     expect(within(row).getByText("Overdue")).toBeInTheDocument();
+    // The sidebar lists the household with its balance in whole units, as on the cards (MAZ-221).
+    const sidebar = screen.getByRole("complementary", { name: "Penny" });
+    const item = within(sidebar).getByRole("link", { name: /^Maison.*\$60, you're owed \$60\.00$/ });
+    expect(item).toHaveTextContent("Maison$60");
+    expect(within(sidebar).getByRole("link", { name: "All households" })).toHaveAttribute("href", "/households");
   });
 
   it("offers Record payment and Shared expense in the household header, with the balance's meaning in words and color", async () => {

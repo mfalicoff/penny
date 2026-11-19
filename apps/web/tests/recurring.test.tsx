@@ -92,6 +92,8 @@ describe("recurring schedules", () => {
     expect(rows.map((row) => row.textContent)).toEqual([expect.stringMatching(/^Internet.*next Nov 18 · Visa-\$65\.00/), expect.stringMatching(/^Gym.*Paused · monthly.*Paused/)]);
     expect(screen.getByRole("list", { name: "Investment schedules" })).toHaveTextContent("TFSA contribution");
     expect(screen.getByText(/3 active, 1 paused/)).toBeInTheDocument();
+    // The sidebar counts the active schedules beside Recurring, and so does Manage in Settings on phones (MAZ-221).
+    expect(within(screen.getByRole("complementary", { name: "Penny" })).getByRole("link", { name: /^Recurring\s*3\s*active$/ })).toHaveTextContent("Recurring3");
   });
 
   it("lists shared schedules the account is part of with the expenses, marked Shared, with its share", async () => {

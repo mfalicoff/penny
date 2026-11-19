@@ -64,7 +64,7 @@ apps/web/
   src/
     main.tsx             applies saved appearance, creates the QueryClient and router, renders <App>
     app/                 App providers, router factory, query client, appearance preferences
-    app/shell/           the signed-in shell: sidebar, top bar, tab bar, drawer, shortcuts, page titles
+    app/shell/           the signed-in shell: sidebar, top bar, tab bar, shortcuts, page titles
     api/                 apiFetch (and its swappable transport), ApiError, DTO schemas, query keys, one module per resource
     auth/                session lifecycle, SSO popup flow, pending-change registry, AuthGate
     demo/                the temporary demo: in-memory API stand-in and its start/leave lifecycle
@@ -115,14 +115,14 @@ Conventions:
 
 ## Shell, navigation and keyboard
 
-`src/app/shell/AppShell.tsx` renders the signed-in app. Navigation is defined once in `navigation.ts`: Home, Activity, Insights; Together (Shared, Trips); Manage (Recurring, Accounts, Categories); Settings in the account footer.
+`src/app/shell/AppShell.tsx` renders the signed-in app. Navigation is defined in `navigation.ts`: Home, Activity, Insights; Together; Manage (Recurring, with the number of active schedules, Accounts, Categories); Settings in the account footer. Together (`Sidebar.tsx`, MAZ-221) lists each household with this month's balance in whole units ("Maison $142", read as "you're owed $142.50"), All households, the trips happening now or coming next (up to three) with their start date, and All trips. The footer shows the account and its sync state ("Synced just now", "2 changes waiting", "Offline"); the server version is in Settings › Server.
 
 | Shortcut | Action |
 | --- | --- |
 | ⌘K or Ctrl+K, `/` | Focus search (on Activity, its own field) |
 | N | Add entry |
 | G then H, A, I, S, T, R | Home, Activity, Insights, Shared, Trips, Recurring |
-| Esc | Close the dialog or drawer |
+| Esc | Close the dialog |
 
 Shortcuts never fire while typing in a field, while a dialog is open, or with Alt/Ctrl/⌘ held (except ⌘K). Each has a visible control and `aria-keyshortcuts`.
 
@@ -132,9 +132,11 @@ Add entry opens a dialog over the current page (the web card `web-add-entry`); `
 
 | Width | Layout |
 | --- | --- |
-| < 768px | Compact top bar (logo, title, round +), bottom glass tab bar with Home, Activity, Shared, Trips and More. More opens the full navigation as a modal drawer. Settings sections are separate pages with an "All settings" link. |
-| 768–1099px | Icon rail (labels stay in the accessibility tree), top bar with search and Add entry, two-pane Settings. |
-| ≥ 1100px | Full 248px sidebar with section headings and shortcut hints. |
+| < 768px | The iPhone cards' shell (MAZ-221): a row of glass controls (Back on pages pushed from Home such as Insights, the month pill, Home's calendar and settings buttons) over a large title, and a floating glass tab bar with Home, Activity, Shared and Trips beside the round copper Add entry button. Home has no visible title (the month pill leads it); a pushed page keeps its tab selected (`aria-current="true"`). Home's settings button opens Settings, whose list starts with Manage (Recurring, Accounts, Categories, Receipts to attach). Settings sections are separate pages with an "All settings" link. |
+| 768–1099px | Icon rail (labels stay in the accessibility tree; Together keeps one Shared and one Trips icon), top bar with search and Add entry, two-pane Settings. |
+| ≥ 1100px | Full 248px sidebar with section headings and shortcut hints, and the month control as a bordered segmented control (cards `web-*`). |
+
+On a touch tablet (from 768px, `(hover: none) and (pointer: coarse)`, cards `ipad-*`) the selected sidebar item is filled copper with white text, the sidebar has no shortcut hints, Home shows no title, and the month control is a glass pill between glass Previous and Next buttons. The card captures emulate touch for `ipad-*`.
 
 768 and 1100 come from the design proposal. They were checked against real content rather than taken as fixed: the top bar's search and Add entry need about 700px beside a title, and the sidebar's labels and shortcut chips need the full 248px, which leaves under 850px for content below 1100. Playwright (`e2e/shell.spec.ts`) loads every page at 320, 390, 768, 1024, 1100 and 1440px, at 640px (a 1280px window at 200% zoom) and with doubled root text, with a very long account email, and fails on any horizontal scrolling. Move a breakpoint only with those checks.
 
@@ -222,7 +224,7 @@ Each filter is a history entry, so Back and Forward step through them; bad value
 
 ## Accounts and categories (MAZ-89)
 
-Code: `src/features/organize/` (screens, `model.ts` for usage counts, the palette, icons and link moves, `workspace.ts` for reading and saving the ledger), `src/routes/accounts.tsx`, `src/routes/categories.tsx` and `src/design/organize.css`. Cards: `iphone-accounts`, `iphone-account-form` (also the `account-edit` specimen), `iphone-categories`, `iphone-category-form`; the phone's More drawer already lists both (`more`).
+Code: `src/features/organize/` (screens, `model.ts` for usage counts, the palette, icons and link moves, `workspace.ts` for reading and saving the ledger), `src/routes/accounts.tsx`, `src/routes/categories.tsx` and `src/design/organize.css`. Cards: `iphone-accounts`, `iphone-account-form` (also the `account-edit` specimen), `iphone-categories`, `iphone-category-form`; phones reach both from Home's settings button (Settings › Manage).
 
 | URL | Screen |
 | --- | --- |
@@ -453,7 +455,7 @@ On NixOS, where Playwright's downloaded browsers can't run, give `test-env run` 
 
 `e2e/auth.spec.ts` has the password and SSO sign-in journeys (including a real popup, cancellation, a blocked popup and a failed callback), expiry and sign-out, with `/api` and the provider mocked. `e2e/auth.real.spec.ts` runs the same journeys against the real stack.
 
-`e2e/shell.spec.ts` covers the shell: layouts and overflow at each breakpoint, 200% zoom and doubled text, long names, pinned and system themes, reduced transparency and motion, shortcuts with focus restoration, Back and Forward, the phone drawer, and the demo's isolation.
+`e2e/shell.spec.ts` covers the shell: layouts and overflow at each breakpoint, 200% zoom and doubled text, long names, pinned and system themes, reduced transparency and motion, shortcuts with focus restoration, Back and Forward, the phone tabs with Settings › Manage, and the demo's isolation.
 
 `e2e/recurring.spec.ts` covers recurring schedules ([above](#recurring-schedules-maz-90)).
 

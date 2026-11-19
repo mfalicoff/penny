@@ -45,6 +45,124 @@
   gap: 8px 16px;
 }
 
+/*
+ * The month control (MAZ-221). Phones (cards `iphone-home`, `iphone-insights`): the glass month
+ * pill, whose transparent native select opens the system month list. Desktop (`web-home`): a
+ * bordered segmented control with the chevrons inside. Touch tablets (`ipad-home`): glass
+ * Previous and Next buttons around the pill.
+ */
+.month-bar .month-nav__step,
+.month-bar .month-nav__label,
+.month-pill__text--long,
+.month-bar__now {
+  display: none;
+}
+
+.month-pill {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 14px 0 18px;
+  border-radius: 22px;
+  color: var(--pk-label);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.month-pill:has(select:focus-visible) {
+  outline: 2px solid var(--pk-tint);
+  outline-offset: 2px;
+}
+
+.month-pill__select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border: 0;
+  opacity: 0;
+  font-size: 1rem;
+  cursor: pointer;
+  appearance: none;
+}
+
+@media (min-width: 768px) {
+  .month-pill {
+    display: none;
+  }
+
+  .month-bar .month-nav__label,
+  .month-bar__now {
+    display: inline-flex;
+  }
+
+  .month-bar .month-nav__step {
+    display: inline-grid;
+  }
+
+  .month-bar .month-nav {
+    gap: 0;
+    height: 36px;
+    padding: 0 2px;
+    border: 1px solid var(--pk-separator);
+    border-radius: 10px;
+    background: var(--pk-surface);
+  }
+
+  .month-bar .month-nav__step {
+    width: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    height: 32px;
+    border-radius: 8px;
+    color: var(--pk-label);
+  }
+
+  .month-bar .month-nav__label {
+    justify-content: center;
+    min-width: 9.5em;
+    padding-inline: 6px;
+    white-space: nowrap;
+  }
+}
+
+@media (min-width: 768px) and (hover: none) and (pointer: coarse) {
+  .month-bar .month-nav {
+    gap: 12px;
+    height: auto;
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+
+  .month-bar .month-nav__label,
+  .month-pill__text--short {
+    display: none;
+  }
+
+  .month-pill,
+  .month-pill__text--long {
+    display: inline-flex;
+  }
+
+  .month-bar .month-nav__step {
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    border: 0.5px solid var(--pk-glass-edge);
+    border-radius: 22px;
+    background: var(--pk-glass);
+    box-shadow: inset 0 1px 0 var(--pk-glass-edge), var(--pk-glass-shadow);
+    backdrop-filter: blur(22px) saturate(190%);
+  }
+}
+
 .empty-actions {
   display: flex;
   flex-wrap: wrap;

@@ -63,6 +63,7 @@ export function HomePage({ search }: { search: HomeSearch }) {
         onChange={(next) => {
           navigate(() => (next ? { month: next } : {}));
         }}
+        actions={<PhoneHomeActions calendar={Boolean(ledger && report && !(isEmptyLedger(ledger) && report.empty))} />}
       />
       {!ledger || !view || !report ? (
         <LoadingState label="Loading your month…" />
@@ -386,6 +387,36 @@ function FlowSummary({ report, currency, month }: { report: MonthReport; currenc
         ) : null}
       </dl>
     </Panel>
+  );
+}
+
+/**
+ * Home's glass buttons on phones (cards `iphone-home`, `iphone-empty-home`): the month calendar,
+ * which opens Explore your month, and Settings, where Recurring, Accounts and Categories live too.
+ */
+function PhoneHomeActions({ calendar }: { calendar: boolean }) {
+  return (
+    <>
+      {calendar ? (
+        <button
+          type="button"
+          className="glass glass-button"
+          aria-label="Calendar"
+          onClick={() => {
+            const target = document.getElementById("month-calendar");
+            if (!target) return;
+            const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            target.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+            target.focus({ preventScroll: true });
+          }}
+        >
+          <Icon name="calendar" size={20} />
+        </button>
+      ) : null}
+      <Link to="/settings" className="glass glass-button" aria-label="Settings">
+        <Icon name="settings" size={20} />
+      </Link>
+    </>
   );
 }
 

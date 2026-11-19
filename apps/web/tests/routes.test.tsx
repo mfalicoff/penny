@@ -6,7 +6,7 @@ import { bodyOf, callsTo, renderApp, stubServer } from "./render";
 const info = () => stubServer();
 
 describe("app shell", () => {
-  it("renders Home with landmarks, a skip link and the server version", async () => {
+  it("renders Home with landmarks, a skip link and the account's sync state", async () => {
     const fetchMock = info();
     renderApp("/");
     expect(await screen.findByRole("heading", { level: 1, name: "Home" })).toBeInTheDocument();
@@ -15,14 +15,15 @@ describe("app shell", () => {
     const nav = screen.getByRole("navigation", { name: "Main" });
     expect(within(nav).getByRole("link", { name: "Home" })).toHaveAttribute("aria-current", "page");
     expect(within(nav).getByRole("link", { name: "Activity" })).not.toHaveAttribute("aria-current");
-    expect(await screen.findByText("2.0.0-test")).toBeInTheDocument();
+    // The footer shows the sync state; the server version moved to Settings › Server (MAZ-221).
+    expect(await within(screen.getByRole("complementary", { name: "Penny" })).findByText("Synced just now")).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith("/api/info", expect.objectContaining({ credentials: "same-origin" }));
   });
 
   it("keeps rendering when the server is unavailable", async () => {
     stubServer((url) => (url === "/api/info" ? new Response("bad gateway", { status: 502 }) : undefined));
     renderApp("/");
-    expect(await screen.findByText("Server unavailable")).toBeInTheDocument();
+    expect(await screen.findByText("Can't reach your Penny server")).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 1, name: "Home" })).toBeInTheDocument();
   });
 

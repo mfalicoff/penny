@@ -5,7 +5,6 @@ import { Link } from "@tanstack/react-router";
 import { useId, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useTopbarSlot } from "../../app/shell/pageTitle";
-import { useMediaQuery, WIDE } from "../../app/useMediaQuery";
 import { useToday } from "../../app/useToday";
 import { Badge, Button, cx } from "../../design/controls";
 import { Icon } from "../../design/Icon";
@@ -33,19 +32,40 @@ export function Panel({ title, level = 2, action, className, children }: { title
 }
 
 /**
- * Previous, the month, Next, and This month when another month is shown. From 1100px it sits in the
- * top bar beside the page title (cards `web-home`, `web-insights`); narrower, it leads the page,
- * where the iPhone cards put the month capsule.
+ * The month control, in the top bar beside the title (MAZ-221). Its look follows the cards:
+ *
+ * - phones (`iphone-home`, `iphone-insights`): a glass month pill that opens the system month list;
+ * - touch tablets (`ipad-home`): Previous and Next glass buttons around that pill;
+ * - desktop (`web-home`, `web-insights`): a bordered segmented control with the chevrons inside,
+ *   and This month beside it when another month is shown.
+ *
+ * `actions` go at the end of the phone row (Home's calendar and settings buttons).
  */
-export function MonthBar({ month, onChange }: { month: string; onChange: (month: string | undefined) => void }) {
+export function MonthBar({ month, onChange, actions }: { month: string; onChange: (month: string | undefined) => void; actions?: ReactNode }) {
   const slot = useTopbarSlot();
-  const beside = useMediaQuery(WIDE);
-  const bar = <MonthBarControls month={month} onChange={onChange} />;
-  return beside && slot ? createPortal(bar, slot) : bar;
+  const bar = (
+    <>
+      <MonthBarControls month={month} onChange={onChange} />
+      {actions ? <div className="topbar__actions">{actions}</div> : null}
+    </>
+  );
+  return slot ? createPortal(bar, slot) : <div className="month-bar__inline">{bar}</div>;
+}
+
+/** Months the pill offers: two years back to a year ahead, plus the one shown if it's outside. */
+function pickableMonths(month: string, now: string): string[] {
+  const months: string[] = [];
+  for (let delta = 12; delta >= -24; delta -= 1) months.push(shiftMonth(now, delta));
+  if (!months.includes(month)) months.push(month);
+  return months.sort().reverse();
 }
 
 function MonthBarControls({ month, onChange }: { month: string; onChange: (month: string | undefined) => void }) {
   const now = currentMonth();
+  const id = useId();
+  const label = monthLabel(month);
+  // The pill names the month alone in the current year, as on the iPhone cards ("November").
+  const short = month.slice(0, 4) === now.slice(0, 4) ? label.split(" ")[0] : label;
   return (
     <div className="month-bar">
       <div className="month-nav">
@@ -53,6 +73,7 @@ function MonthBarControls({ month, onChange }: { month: string; onChange: (month
           iconOnly
           icon="chevron-back"
           variant="quiet"
+          className="month-nav__step"
           aria-label="Previous month"
           disabled={month <= "2000-01"}
           onClick={() => {
@@ -60,12 +81,38 @@ function MonthBarControls({ month, onChange }: { month: string; onChange: (month
           }}
         />
         <span className="month-nav__label" aria-live="polite">
-          {monthLabel(month)}
+          {label}
         </span>
+        <label className="month-pill glass" htmlFor={id}>
+          <span className="month-pill__text month-pill__text--short" aria-hidden="true">
+            {short}
+          </span>
+          <span className="month-pill__text month-pill__text--long" aria-hidden="true">
+            {label}
+          </span>
+          <Icon name="chevron-down" size={16} />
+          <select
+            id={id}
+            className="month-pill__select"
+            aria-label="Month"
+            value={month}
+            onChange={(event) => {
+              const next = event.currentTarget.value;
+              onChange(next === now ? undefined : next);
+            }}
+          >
+            {pickableMonths(month, now).map((value) => (
+              <option key={value} value={value}>
+                {monthLabel(value)}
+              </option>
+            ))}
+          </select>
+        </label>
         <Button
           iconOnly
           icon="chevron-forward"
           variant="quiet"
+          className="month-nav__step"
           aria-label="Next month"
           disabled={month >= "2100-12"}
           onClick={() => {
@@ -77,6 +124,7 @@ function MonthBarControls({ month, onChange }: { month: string; onChange: (month
         <Button
           variant="quiet"
           icon="calendar"
+          className="month-bar__now"
           onClick={() => {
             onChange(undefined);
           }}

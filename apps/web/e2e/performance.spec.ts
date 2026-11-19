@@ -97,8 +97,16 @@ test("a 20,000-entry ledger opens Home, changes month, lists Activity and search
   record("first Home with the full ledger", performance.now() - started, BUDGET.firstHome);
 
   started = performance.now();
-  await page.getByRole("button", { name: "Previous month" }).first().click();
-  await expect(page.getByText("October 2026").first()).toBeVisible();
+  // Phones pick the month from the month pill; wider screens step with Previous (MAZ-221).
+  const previous = page.getByRole("button", { name: "Previous month" }).first();
+  if (await previous.isVisible()) {
+    await previous.click();
+    await expect(page.getByText("October 2026").first()).toBeVisible();
+  } else {
+    await page.getByRole("combobox", { name: "Month" }).selectOption("2026-10");
+    await expect(page.getByRole("combobox", { name: "Month" })).toHaveValue("2026-10");
+  }
+  await expect(page.getByRole("region", { name: "Left to spend" })).toBeVisible();
   record("Home month change", performance.now() - started, BUDGET.monthChange);
 
   started = performance.now();

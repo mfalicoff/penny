@@ -74,7 +74,7 @@ export function MonthCalendar({ month, monthLabel, entries, selected, currency, 
   };
 
   return (
-    <section className="card calendar" aria-labelledby={headingId}>
+    <section id="month-calendar" className="card calendar" aria-labelledby={headingId} tabIndex={-1}>
       <div className="card__head">
         <h3 id={headingId} className="panel__title">
           Calendar

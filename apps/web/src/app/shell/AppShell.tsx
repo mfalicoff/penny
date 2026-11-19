@@ -1,42 +1,46 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Outlet, useMatches, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useId, useRef, useState, type RefObject, type SyntheticEvent } from "react";
-import { useAccountEmail } from "../../auth/account";
 import { AddEntryDialog } from "../../features/entries/AddEntryDialog";
-import { Avatar, Button, Kbd } from "../../design/controls";
+import { Button, cx, Kbd } from "../../design/controls";
 import { Icon } from "../../design/Icon";
-import { ModalDialog } from "../../design/ModalDialog";
-import { Banner, ServerUnreachableBanner, useOnline } from "../../design/states";
-import { countLabel, OFFLINE_HINT } from "../../features/receiptInbox/model";
-import { useInboxStatus } from "../../features/receiptInbox/useInbox";
+import { Banner, ServerUnreachableBanner } from "../../design/states";
 import { SyncStatusBanner } from "../../offline/SyncStatusBanner";
 import { leaveDemo, useIsDemo } from "../../demo/demo";
 import { serverInfoQuery } from "../../api/info";
-import { ServerStatus } from "../ServerStatus";
-import { goShortcut, NAV_SECTIONS, TAB_ITEMS, type NavItem } from "./navigation";
+import { TAB_ITEMS, tabFor } from "./navigation";
 import { PageTitleContext, TopbarSlotContext } from "./pageTitle";
 import { useShortcuts } from "./shortcuts";
+import { Sidebar } from "./Sidebar";
 
-/** Title of the deepest matched route (`staticData.title`), for the top bar and the document title. */
+/** Title of the deepest matched route (`staticData`), for the top bar and the document title. */
 function usePageMeta() {
   const matches = useMatches();
   for (let index = matches.length - 1; index >= 0; index -= 1) {
     const data = matches[index]?.staticData;
-    if (data?.title) return { title: data.title, search: data.search !== false };
+    if (data?.title)
+      return {
+        title: data.title,
+        search: data.search !== false,
+        back: data.back,
+      };
   }
-  return { title: "Penny", search: true };
+  return { title: "Penny", search: true, back: undefined };
 }
 
 const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
 export const SEARCH_SHORTCUT = isMac ? "⌘K" : "Ctrl K";
 
 /**
- * The signed-in web shell (MAZ-85, web cards and MAZ-132 navigation). Three layouts from one DOM:
+ * The signed-in web shell (MAZ-85, web cards, MAZ-132 navigation and MAZ-221). Three layouts from
+ * one DOM:
  *
- * - wide (≥ 1100px): sidebar with labels and shortcuts, top bar with title, search and Add entry;
+ * - wide (≥ 1100px): sidebar with labels, households and trips, top bar with title, page tools
+ *   (the month control), search and Add entry;
  * - medium (768–1099px): the same sidebar as an icon rail;
- * - narrow (< 768px): a compact top bar and a bottom tab bar (Home, Activity, Shared, Trips,
- *   More). More opens the full navigation in a modal drawer.
+ * - narrow (< 768px): the card's glass row (page tools, and Back on pushed pages) over a large
+ *   title, and a floating bar with the four tabs (Home, Activity, Shared, Trips) beside the
+ *   copper add button. Manage and Settings open from Home's settings button.
  *
  * The breakpoints live in `shell.css`. Keyboard: Skip to content, ⌘K or / for search, N for
  * Add entry, G then H/A/I/S/T/R to go to a page.
@@ -45,20 +49,19 @@ export function AppShell() {
   const navigate = useNavigate();
   const meta = usePageMeta();
   const [titleOverride, setTitleOverride] = useState<string | null>(null);
-  // Where a page may place tools beside the title (the month switcher on Home and Insights).
+  // Where a page may place tools beside the title (the month control on Home and Insights).
   const [toolSlot, setToolSlot] = useState<HTMLDivElement | null>(null);
   const title = titleOverride ?? meta.title;
   const search = meta.search;
   const searchRef = useRef<HTMLInputElement>(null);
   const [addingNow, setAdding] = useState(false);
-  // The drawer belongs to the page it was opened on, so any navigation (a link in it, Back) closes it.
-  const [drawerAt, setDrawerAt] = useState<string | null>(null);
-  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
+  });
   const serverDown = useQuery(serverInfoQuery).isError;
   const demo = useIsDemo();
   // A deep link to /entries/new opens Add entry over Home.
   const adding = addingNow || pathname === "/entries/new";
-  const drawer = drawerAt === pathname;
 
   useEffect(() => {
     document.title = title === "Penny" ? "Penny" : `${title} · Penny`;
@@ -91,14 +94,14 @@ export function AppShell() {
       <a className="skip-link" href="#main">
         Skip to content
       </a>
-      <Sidebar variant="rail" />
+      <Sidebar />
       <div className="app__column">
-        <header className="topbar">
-          <Link to="/" className="topbar__brand" aria-label="Penny home">
-            <span className="logo">
-              <Icon name="leaf" size={16} weight={40} />
-            </span>
-          </Link>
+        <header className={cx("topbar", pathname === "/" && "topbar--home", meta.back && "topbar--back")}>
+          {meta.back ? (
+            <Link to={meta.back} className="glass glass-button topbar__back" aria-label="Back to Home">
+              <Icon name="chevron-back" size={20} />
+            </Link>
+          ) : null}
           <h1 className="topbar__title">{title}</h1>
           <div className="topbar__tools" ref={setToolSlot} />
           <div className="topbar__spacer" />
@@ -127,18 +130,7 @@ export function AppShell() {
           </PageTitleContext>
         </main>
       </div>
-      <TabBar
-        onMore={() => {
-          setDrawerAt(pathname);
-        }}
-      />
-      {drawer ? (
-        <NavDrawer
-          onClose={() => {
-            setDrawerAt(null);
-          }}
-        />
-      ) : null}
+      <TabBar pathname={pathname} />
       {adding ? <AddEntryDialog onClose={closeAdd} /> : null}
     </div>
   );
@@ -168,146 +160,29 @@ function TopSearch({ inputRef }: { inputRef: RefObject<HTMLInputElement | null> 
   );
 }
 
-function NavLink({ item, showShortcut }: { item: NavItem; showShortcut: boolean }) {
-  const shortcut = goShortcut(item);
-  return (
-    <Link
-      to={item.to}
-      className="navlink"
-      activeOptions={{ exact: item.to === "/", includeSearch: false }}
-      aria-keyshortcuts={shortcut ? `g ${item.key ?? ""}` : undefined}
-    >
-      <Icon name={item.icon} size={18} />
-      <span className="navlink__label">{item.label}</span>
-      {showShortcut && shortcut ? <Kbd>{shortcut}</Kbd> : null}
-    </Link>
-  );
-}
-
 /**
- * Receipts to attach (MAZ-184), with its count. Shown only when the server accepts emailed
- * receipts and an address exists (or items are still waiting). Offline it can't open: the inbox
- * needs a connection, as uploads do.
+ * Phone tab bar: the four iPhone tabs (cards `iphone-*`). A page pushed from a tab keeps that tab
+ * selected (Insights keeps Home), marked `aria-current="true"` since it isn't the page itself.
  */
-function InboxNavItem() {
-  const status = useInboxStatus();
-  const online = useOnline();
-  if (!status.visible) return null;
-  // The visible label stays in the name (label in name); the count is read as "3 receipts to attach".
-  const spoken = status.count > 0 ? `Receipts to attach, ${countLabel(status.count, status.more)}` : "Receipts to attach";
-  const badge = status.count > 0 ? (
-    <span className="navlink__count" aria-hidden="true">
-      {status.more ? `${String(status.count)}+` : status.count}
-    </span>
-  ) : null;
-  if (!online) {
-    return (
-      <li>
-        <span className="navlink navlink--off" role="link" aria-disabled="true" aria-label={`${spoken}. ${OFFLINE_HINT}`} title={OFFLINE_HINT}>
-          <Icon name="receipt" size={18} />
-          <span className="navlink__label">Receipts to attach</span>
-          {badge}
-        </span>
-      </li>
-    );
-  }
-  return (
-    <li>
-      <Link to="/receipts" search={{ status: "to_attach" }} className="navlink" activeOptions={{ includeSearch: false }} aria-label={spoken}>
-        <Icon name="receipt" size={18} />
-        <span className="navlink__label">Receipts to attach</span>
-        {badge}
-      </Link>
-    </li>
-  );
-}
-
-/** Brand, the three navigation sections and the account footer (kit `WebSidebar`). */
-function Sidebar({ variant }: { variant: "rail" | "drawer" }) {
-  const email = useAccountEmail();
-  return (
-    <aside className={`sidebar sidebar--${variant}`} aria-label="Penny">
-      <Link to="/" className="brand" aria-label="Penny home">
-        <span className="logo">
-          <Icon name="leaf" size={18} weight={40} />
-        </span>
-        <span className="brand__name">penny.</span>
-      </Link>
-      <nav aria-label="Main" className="sidebar__nav">
-        {NAV_SECTIONS.map((section) => (
-          <div key={section.heading ?? "main"} className="sidebar__section">
-            {section.heading ? <h2 className="sidebar__heading">{section.heading}</h2> : null}
-            <ul className="sidebar__list">
-              {section.items.map((item) => (
-                <li key={item.to}>
-                  <NavLink item={item} showShortcut={variant === "rail"} />
-                </li>
-              ))}
-              {section.heading ? null : <InboxNavItem />}
-            </ul>
-          </div>
-        ))}
-      </nav>
-      <div className="sidebar__foot">
-        <Avatar name={email} size={32} />
-        <div className="sidebar__account">
-          <span className="sidebar__email" title={email}>
-            {email}
-          </span>
-          <ServerStatus />
-        </div>
-        <Link to="/settings" className="iconlink" aria-label="Settings" activeOptions={{ includeSearch: false }}>
-          <Icon name="settings" size={18} />
-        </Link>
-      </div>
-    </aside>
-  );
-}
-
-/** Phone tab bar: the four iPhone tabs plus More (MAZ-132 navigation adapted for the browser). */
-function TabBar({ onMore }: { onMore: () => void }) {
+function TabBar({ pathname }: { pathname: string }) {
+  const tab = tabFor(pathname);
   return (
     <nav className="tabbar glass" aria-label="Tabs">
       <ul>
-        {TAB_ITEMS.map((item) => (
-          <li key={item.to}>
-            <Link to={item.to} className="tab" activeOptions={{ exact: item.to === "/", includeSearch: false }}>
-              <Icon name={item.icon} size={22} />
-              <span>{item.label}</span>
-            </Link>
-          </li>
-        ))}
-        <li>
-          <button type="button" className="tab" aria-haspopup="dialog" onClick={onMore}>
-            <Icon name="ellipsis-horizontal" size={22} />
-            <span>More</span>
-          </button>
-        </li>
+        {TAB_ITEMS.map((item) => {
+          const exact = item.to === "/";
+          const within = tab === item.to && exact && pathname !== "/";
+          return (
+            <li key={item.to}>
+              <Link to={item.to} className="tab" activeOptions={{ exact, includeSearch: false }} aria-current={within ? "true" : undefined}>
+                <Icon name={item.icon} size={22} />
+                <span>{item.label}</span>
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </nav>
-  );
-}
-
-function NavDrawer({ onClose }: { onClose: () => void }) {
-  const titleId = useId();
-  return (
-    <ModalDialog labelledBy={titleId} onClose={onClose} panelClassName="drawer">
-      <div className="drawer__head">
-        <h2 id={titleId} className="visually-hidden">
-          Menu
-        </h2>
-        <Button variant="quiet" iconOnly icon="close" aria-label="Close menu" onClick={onClose} />
-      </div>
-      {/* Any link closes the drawer, including the one for the page already open. */}
-      <div
-        className="drawer__body"
-        onClick={(event) => {
-          if (event.target instanceof Element && event.target.closest("a")) onClose();
-        }}
-      >
-        <Sidebar variant="drawer" />
-      </div>
-    </ModalDialog>
   );
 }
 

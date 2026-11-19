@@ -1,5 +1,5 @@
 import { createMemoryHistory } from "@tanstack/react-router";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import type { UserEvent } from "@testing-library/user-event";
 import { vi } from "vitest";
 import { App } from "../src/app/App";
@@ -77,6 +77,6 @@ export function renderApp(path: string) {
 
 /** Sign-out lives in Settings › Account: open Settings from the sidebar, then press Sign out. */
 export async function openSignOut(user: UserEvent) {
-  await user.click(await screen.findByRole("link", { name: "Settings" }));
+  await user.click(within(await screen.findByRole("complementary", { name: "Penny" })).getByRole("link", { name: "Settings" }));
   await user.click(await screen.findByRole("button", { name: "Sign out" }));
 }

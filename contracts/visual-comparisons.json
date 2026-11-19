@@ -66,11 +66,6 @@
         ],
         "deviations": [
           {
-            "summary": "The top row is the logo, the page title and a text month control with the add button at top right, not the glass month pill with calendar and settings buttons; the tab bar adds More instead of the add button beside four tabs",
-            "kind": "follow-up",
-            "ref": "MAZ-221"
-          },
-          {
             "summary": "Recent rows use gray tiles with tinted glyphs (a category in copper), the Recent heading sits inside its card, and the hero cents are full size",
             "kind": "follow-up",
             "ref": "MAZ-222"
@@ -119,11 +114,6 @@
           "dark"
         ],
         "deviations": [
-          {
-            "summary": "The top row is the logo, the page title and a text month control with the add button at top right, and the tab bar adds More",
-            "kind": "follow-up",
-            "ref": "MAZ-221"
-          },
           {
             "summary": "Recent rows use gray tiles with tinted glyphs, the Recent heading sits inside its card, and the hero cents are full size",
             "kind": "follow-up",
@@ -184,11 +174,6 @@
             "summary": "The capture focuses no band; the card shows Home focused with its focus card",
             "kind": "follow-up",
             "ref": "MAZ-235"
-          },
-          {
-            "summary": "No tab is selected; the card keeps Home selected",
-            "kind": "follow-up",
-            "ref": "MAZ-221"
           }
         ]
       }
@@ -221,11 +206,6 @@
           "dark"
         ],
         "deviations": [
-          {
-            "summary": "The logo, page title and text month control replace the back button and month pill, and no tab is selected",
-            "kind": "follow-up",
-            "ref": "MAZ-221"
-          },
           {
             "summary": "Categories use gray tiles (Groceries in copper), the heading sits inside the card, and amount and percent share one line",
             "kind": "follow-up",
@@ -689,11 +669,6 @@
             "summary": "No overall subtitle; rows have no icon tiles, avatars or trailing balance and chevron; an Overdue badge replaces the balance; trips read SHARED TRIPS without balances; Join and New household are separate cards",
             "kind": "follow-up",
             "ref": "MAZ-228"
-          },
-          {
-            "summary": "The logo, page title and copper add at top right, and a fifth More tab",
-            "kind": "follow-up",
-            "ref": "MAZ-221"
           }
         ]
       }
@@ -1084,11 +1059,6 @@
             "summary": "Adds a subtitle with New trip and Join a trip; other trips are a grid of tiles, not UPCOMING and PAST lists",
             "kind": "follow-up",
             "ref": "MAZ-229"
-          },
-          {
-            "summary": "The logo, page title and copper add at top right, and a fifth More tab",
-            "kind": "follow-up",
-            "ref": "MAZ-221"
           }
         ]
       }
@@ -1213,7 +1183,7 @@
             "ref": "MAZ-231"
           },
           {
-            "summary": "Settings is a page in More, not a sheet from Home",
+            "summary": "Settings is a page opened from Home's settings button, with the tab bar below it, not a sheet over Home",
             "kind": "follow-up",
             "ref": "MAZ-221"
           }
@@ -1649,11 +1619,6 @@
             "summary": "Add your first entry carries a Currency link",
             "kind": "follow-up",
             "ref": "MAZ-224"
-          },
-          {
-            "summary": "The logo, page title and text month control replace the month pill and settings button, and the tab bar adds More",
-            "kind": "follow-up",
-            "ref": "MAZ-221"
           }
         ]
       }
@@ -1687,7 +1652,7 @@
         ],
         "deviations": [
           {
-            "summary": "Pending rows have no amber clock and Waiting to sync; the projected line has no as of last sync; the banner sits above the month control",
+            "summary": "Pending rows have no amber clock and Waiting to sync; the projected line has no as of last sync",
             "kind": "follow-up",
             "ref": "MAZ-223"
           },
@@ -1695,11 +1660,6 @@
             "summary": "The banner adds an explanation and a bordered Retry",
             "kind": "follow-up",
             "ref": "MAZ-234"
-          },
-          {
-            "summary": "The logo, page title and text month control replace the month pill and buttons",
-            "kind": "follow-up",
-            "ref": "MAZ-221"
           },
           {
             "summary": "Rows use gray tiles, the Recent heading sits inside the card, and the hero cents are full size",
@@ -1959,7 +1919,17 @@
         ],
         "deviations": [
           {
-            "summary": "The sidebar lists Shared and Trips, not each household and trip; the selected item isn't copper-filled; the footer shows the server version; the header is a title and text month control",
+            "summary": "The sidebar adds All households and All trips links, and a trip shows its start date (as on the web cards) instead of its expense count. Waiting for a design decision",
+            "kind": "follow-up",
+            "ref": "MAZ-221"
+          },
+          {
+            "summary": "The sidebar footer names the account by its email, not the person's name",
+            "kind": "follow-up",
+            "ref": "MAZ-171"
+          },
+          {
+            "summary": "Search is the top bar's search field, not a round glass search button",
             "kind": "follow-up",
             "ref": "MAZ-221"
           },
@@ -2023,11 +1993,6 @@
             "summary": "Gray tiles instead of category-colored tiles",
             "kind": "follow-up",
             "ref": "MAZ-222"
-          },
-          {
-            "summary": "The selected sidebar item isn't copper-filled",
-            "kind": "follow-up",
-            "ref": "MAZ-221"
           }
         ]
       }
@@ -2122,7 +2087,7 @@
             "ref": "MAZ-171"
           },
           {
-            "summary": "The sidebar lists Shared and Trips, not each household and trip, and the footer shows the server version",
+            "summary": "The sidebar adds All households and All trips links, and a trip shows its start date (as on the web cards) instead of its expense count. Waiting for a design decision",
             "kind": "follow-up",
             "ref": "MAZ-221"
           }
@@ -2178,9 +2143,14 @@
             "ref": "MAZ-229"
           },
           {
-            "summary": "The sidebar lists Shared and Trips, not each household and trip",
+            "summary": "The sidebar adds All households and All trips links, and a trip shows its start date (as on the web cards) instead of its expense count. Waiting for a design decision",
             "kind": "follow-up",
             "ref": "MAZ-221"
+          },
+          {
+            "summary": "The sidebar footer names the account by its email, not the person's name",
+            "kind": "follow-up",
+            "ref": "MAZ-171"
           },
           {
             "summary": "The seeded Lisbon trip has no expenses, so its list can't be compared",
@@ -2234,9 +2204,14 @@
             "ref": "MAZ-231"
           },
           {
-            "summary": "The sidebar footer shows the server version, not Synced just now",
+            "summary": "The sidebar adds All households and All trips links, and a trip shows its start date (as on the web cards) instead of its expense count. Waiting for a design decision",
             "kind": "follow-up",
             "ref": "MAZ-221"
+          },
+          {
+            "summary": "The sidebar footer names the account by its email, not the person's name",
+            "kind": "follow-up",
+            "ref": "MAZ-171"
           }
         ]
       }
@@ -2357,9 +2332,14 @@
         ],
         "deviations": [
           {
-            "summary": "The sidebar lists Shared and Trips, not each household and trip, with no Recurring count and a server-version footer; the month control isn't segmented",
+            "summary": "The sidebar adds an All households link after the households, because the Shared list (join and create) has no other way in from the sidebar. Waiting for a design decision",
             "kind": "follow-up",
             "ref": "MAZ-221"
+          },
+          {
+            "summary": "The sidebar footer names the account by its email, not the person's name",
+            "kind": "follow-up",
+            "ref": "MAZ-171"
           },
           {
             "summary": "Totals are green and indigo, not the label color; Sankey labels have no currency symbol; Coming up amounts are unsigned",
@@ -2432,9 +2412,14 @@
         ],
         "deviations": [
           {
-            "summary": "The sidebar lists Shared and Trips, not each household and trip, with a server-version footer",
+            "summary": "The sidebar adds an All households link after the households, because the Shared list (join and create) has no other way in from the sidebar. Waiting for a design decision",
             "kind": "follow-up",
             "ref": "MAZ-221"
+          },
+          {
+            "summary": "The sidebar footer names the account by its email, not the person's name",
+            "kind": "follow-up",
+            "ref": "MAZ-171"
           },
           {
             "summary": "Came in is green; Sankey labels have no currency symbol; the Change column reads Up $150.00, not arrows",
@@ -2487,7 +2472,7 @@
             "ref": "MAZ-171"
           },
           {
-            "summary": "The sidebar lists Shared and Trips, not each household and trip",
+            "summary": "The sidebar adds an All households link after the households, because the Shared list (join and create) has no other way in from the sidebar. Waiting for a design decision",
             "kind": "follow-up",
             "ref": "MAZ-221"
           }
@@ -2522,9 +2507,14 @@
             "ref": "MAZ-229"
           },
           {
-            "summary": "The sidebar lists Shared and Trips, not each household and trip",
+            "summary": "The sidebar adds an All households link after the households, because the Shared list (join and create) has no other way in from the sidebar. Waiting for a design decision",
             "kind": "follow-up",
             "ref": "MAZ-221"
+          },
+          {
+            "summary": "The sidebar footer names the account by its email, not the person's name",
+            "kind": "follow-up",
+            "ref": "MAZ-171"
           }
         ]
       }
@@ -2552,9 +2542,14 @@
             "ref": "MAZ-231"
           },
           {
-            "summary": "The sidebar lists Shared and Trips, not each household and trip, with a server-version footer",
+            "summary": "The sidebar adds an All households link after the households, because the Shared list (join and create) has no other way in from the sidebar. Waiting for a design decision",
             "kind": "follow-up",
             "ref": "MAZ-221"
+          },
+          {
+            "summary": "The sidebar footer names the account by its email, not the person's name",
+            "kind": "follow-up",
+            "ref": "MAZ-171"
           }
         ]
       }
