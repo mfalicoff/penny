@@ -165,13 +165,21 @@ private struct FeaturedTrip: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(card.range.phaseLabel(today: today).uppercased())
-                .font(.footnote.weight(.semibold))
-                .foregroundStyle(PennyColor.pending)
-            Text(card.name).font(.title2.weight(.bold))
-                .fixedSize(horizontal: false, vertical: true)
-            Text(TripRow.detail(card))
-                .font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(card.range.phaseLabel(today: today).uppercased())
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(PennyColor.pending)
+                    Text(card.name).font(.title2.weight(.bold))
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text(TripRow.detail(card))
+                        .font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
+                }
+                Spacer(minLength: 8)
+                if case .shared(let household, _) = card.kind {
+                    MonogramStack(initials: shell.households.memberInitials[household.id] ?? [])
+                }
+            }
             HStack(alignment: .lastTextBaseline) {
                 switch card.kind {
                 case .personal(_, let total, _, _):
@@ -180,7 +188,18 @@ private struct FeaturedTrip: View {
                         MoneyText(total, meaning: .neutral, currency: currency, style: .title3.weight(.bold))
                     }
                 case .shared(let household, _):
-                    MonogramStack(initials: shell.households.memberInitials[household.id] ?? [])
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Your share so far").font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
+                        if let share = sharedShare(household) {
+                            MoneyText(
+                                share, meaning: .neutral, currency: household.currency, style: .title3.weight(.bold))
+                        } else {
+                            Text("…").font(.title3.weight(.bold)).foregroundStyle(PennyColor.secondaryLabel)
+                                .accessibilityLabel("Loading")
+                        }
+                    }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityIdentifier("trips.featuredShare")
                 }
                 Spacer()
                 TripKindBadge(card: card)
@@ -189,6 +208,25 @@ private struct FeaturedTrip: View {
         }
         .padding(.vertical, 6)
         .accessibilityElement(children: .combine)
+        .task(id: card.id) {
+            // The shared trip's expenses, for your share; the trip page reads the same list.
+            guard case .shared(let household, _) = card.kind,
+                let expenses = shell.trips.expenses(for: household.id), !expenses.hasLoaded
+            else { return }
+            await expenses.refresh()
+        }
+    }
+
+    /// Your shares of the trip's shared expenses plus your private expenses on it (in its
+    /// currency), as the trip page's your share: nil until the list has been read.
+    private func sharedShare(_ household: WireHousehold) -> Int64? {
+        guard let loaded = shell.trips.expenses(for: household.id)?.loadedExpenses, let meId = shell.households.meId
+        else { return nil }
+        let ledger = shell.workspace.load.ledger
+        let personal =
+            ledger.map { $0.currency.rawValue == household.currency ? $0.privateExpenses(linkedTo: household.id) : [] }
+            ?? []
+        return SharedTripTotals(expenses: loaded, meId: meId, personal: personal, range: card.range).yourSpending
     }
 }
 

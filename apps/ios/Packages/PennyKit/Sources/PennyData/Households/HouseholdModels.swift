@@ -29,6 +29,8 @@ public final class HouseholdDirectory {
     /// The viewer's balance in each household's current month, when it could be read.
     public private(set) var balances: [String: Int64] = [:]
     public private(set) var memberInitials: [String: [String]] = [:]
+    /// The viewer's user id, from the first household whose members could be read.
+    public private(set) var meId: String?
     public private(set) var load: HouseholdLoad = .idle
     /// Unsaved shared expense and rule drafts, by `SharedExpenseDraft.Key`.
     public var drafts: [SharedExpenseDraft.Key: SharedExpenseDraft] = [:]
@@ -66,7 +68,8 @@ public final class HouseholdDirectory {
             let email = email
             var balances: [String: Int64] = [:]
             var initials: [String: [String]] = [:]
-            await withTaskGroup(of: (String, Int64?, [String]).self) { group in
+            var meId: String?
+            await withTaskGroup(of: (String, Int64?, [String], String?).self) { group in
                 for household in list {
                     group.addTask {
                         async let detail = try? service.household(id: household.id)
@@ -74,16 +77,18 @@ public final class HouseholdDirectory {
                         let people = await detail.map { HouseholdPeople(members: $0.members, email: email) }
                         let balance = await recap.map { $0.balance(of: people?.meId) }
                         let letters = people.map { people in people.current.map { people.initials($0.userId) } } ?? []
-                        return (household.id, balance, letters)
+                        return (household.id, balance, letters, people?.meId)
                     }
                 }
-                for await (id, balance, letters) in group {
+                for await (id, balance, letters, viewer) in group {
+                    if meId == nil { meId = viewer }
                     if let balance { balances[id] = balance }
                     initials[id] = letters
                 }
             }
             self.balances = balances
             memberInitials = initials
+            if let meId { self.meId = meId }
             load = .loaded
         } catch is CancellationError {
             load = households.isEmpty ? .idle : .loaded

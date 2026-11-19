@@ -81,12 +81,14 @@ struct InviteSheet: View {
     }
 }
 
-private struct InviteCard: View {
+struct InviteCard: View {
     let expiresAt: Date
     let code: InviteCode
     let link: InviteLink
     let renew: () -> Void
     let copy: () -> Void
+    /// The QR code; the inline card under People leaves it to Show QR code.
+    var showsQR = true
 
     var body: some View {
         VStack(spacing: 16) {
@@ -97,7 +99,7 @@ private struct InviteCard: View {
                 .textSelection(.enabled)
                 .accessibilityLabel("Invite code \(code.spoken)")
                 .accessibilityIdentifier("invite.code")
-            if let image = InviteQRCode.image(for: link.url) {
+            if showsQR, let image = InviteQRCode.image(for: link.url) {
                 Image(image, scale: 1, label: Text("Invite QR code"))
                     .interpolation(.none)
                     .resizable()

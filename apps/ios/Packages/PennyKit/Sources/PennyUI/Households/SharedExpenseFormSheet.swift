@@ -16,9 +16,10 @@ enum SharedFormText {
 
 /// Add or edit a shared expense or a repeating one (`iphone-shared-expense-add`, the redesign's
 /// `shared-expense`, `shared-split` and `shared-payer`). It is laid out like Add entry: a large
-/// amount with the keypad on iPhone, a name, the most used categories as chips, then labeled
-/// rows for Household, Date, Paid by, Split and Account, with repeat and note behind one
-/// disclosure row and Save as the toolbar check. Opened from Add entry (`scope`), it also has
+/// amount with the keypad on iPhone, a name, Paid by as chips and the split with each share (as
+/// the card, so the split shows above the keypad), your share, the most used categories, then
+/// labeled rows for Household, Date and Account, with repeat and note behind one disclosure row
+/// and Save as the toolbar check. Opened from Add entry (`scope`), it also has
 /// the type and Household, so it can go back to being a personal entry with what was typed.
 ///
 /// Payer privacy: the account row appears only when the viewer pays, lists only the viewer's
@@ -96,7 +97,7 @@ private enum SharedFormPage: Hashable {
 
 /// Sheets stacked over the shared expense form.
 private enum SharedFormOverlay: String, Identifiable {
-    case date, payer, split, category, household
+    case date, split, category, household
     var id: String { rawValue }
 }
 
@@ -139,9 +140,10 @@ private struct SharedExpenseForm: View {
                         )
                         .accessibilityLabel("Name")
                         .accessibilityIdentifier("sharedForm.title")
+                    payerAndSplit
+                    yourShare
                     categories
                     rows
-                    yourShare
                     notes
                 }
                 .padding(.horizontal, Metrics.gutter)
@@ -191,8 +193,6 @@ private struct SharedExpenseForm: View {
                 switch overlay {
                 case .date:
                     EntryDatePickerSheet(date: dateText, today: shell.today)
-                case .payer:
-                    SharedPayerSheet(form: form, model: model)
                 case .split:
                     SharedSplitSheet(form: form, model: model)
                 case .category:
@@ -436,25 +436,6 @@ private struct SharedExpenseForm: View {
             }
             .buttonStyle(.plain)
             .accessibilityIdentifier("sharedForm.date")
-            divider
-            Button {
-                overlay = .payer
-            } label: {
-                EntryFieldRow(
-                    "Paid by", systemImage: "person.crop.circle",
-                    value: form.draft.payerId == viewerId ? "You" : model.people.name(form.draft.payerId))
-            }
-            .buttonStyle(.plain)
-            .disabled(locked)
-            .accessibilityIdentifier("sharedForm.paidBy")
-            divider
-            Button {
-                overlay = .split
-            } label: {
-                EntryFieldRow("Split", systemImage: "person.2", value: splitValue)
-            }
-            .buttonStyle(.plain)
-            .accessibilityIdentifier("sharedForm.splitRow")
             if form.draft.payerId == viewerId, let ledger {
                 divider
                 NavigationLink(value: SharedFormPage.account) {
@@ -475,6 +456,97 @@ private struct SharedExpenseForm: View {
             .accessibilityIdentifier("sharedForm.details")
         }
         .background(PennyColor.surface, in: RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous))
+    }
+
+    /// Paid by and Split in the form, as on the card, so the split shows above the keypad: the
+    /// members on the expense's date as chips, then the split mode and each member's share.
+    /// Amounts and percentages are typed in the Split sheet (Edit shares).
+    @ViewBuilder private var payerAndSplit: some View {
+        let preview = form.draft.preview(participants: participants)
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Paid by").font(.footnote.weight(.semibold)).foregroundStyle(PennyColor.secondaryLabel)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(participants) { member in
+                        payerChip(member)
+                    }
+                }
+            }
+            .scrollClipDisabled()
+            .accessibilityIdentifier("sharedForm.paidBy")
+            if participants.isEmpty {
+                Text("Nobody was a member on that date. Choose another date.")
+                    .font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
+            }
+            Text("Split").font(.footnote.weight(.semibold)).foregroundStyle(PennyColor.secondaryLabel)
+                .padding(.top, 4)
+            Picker(
+                "Split",
+                selection: Binding(
+                    get: { form.draft.mode }, set: { form.draft.switchMode($0, participants: participants) })
+            ) {
+                Text("Equally").tag(SharedSplitMode.equal)
+                Text("Amounts").tag(SharedSplitMode.exact)
+                Text("Percent").tag(SharedSplitMode.percent)
+            }
+            .pickerStyle(.segmented)
+            .disabled(locked)
+            .accessibilityIdentifier("sharedForm.mode")
+            VStack(spacing: 0) {
+                ForEach(participants) { member in
+                    let share = (try? preview.get())?.first { $0.userId == member.userId }?.amountCents
+                    HStack(spacing: 12) {
+                        Monogram(initials: model.people.initials(member.userId))
+                        Text(model.people.name(member.userId)).lineLimit(1)
+                        Spacer(minLength: 8)
+                        Text(share.map { MoneyFormat.amount($0, currency: model.currency) } ?? "—")
+                            .monospacedDigit()
+                            .fontWeight(member.userId == viewerId ? .semibold : .regular)
+                            .foregroundStyle(member.userId == viewerId ? PennyColor.label : PennyColor.secondaryLabel)
+                    }
+                    .padding(.horizontal, 16)
+                    .frame(minHeight: Metrics.minTouchTarget)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityIdentifier("sharedForm.split.\(member.userId)")
+                    divider
+                }
+                if form.draft.mode != .equal {
+                    Button {
+                        overlay = .split
+                    } label: {
+                        EntryFieldRow("Edit shares", systemImage: "slider.horizontal.3", value: splitValue)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(locked)
+                    .accessibilityIdentifier("sharedForm.splitRow")
+                }
+            }
+            .background(PennyColor.surface, in: RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous))
+        }
+    }
+
+    private func payerChip(_ member: WireHouseholdMember) -> some View {
+        let chosen = form.draft.payerId == member.userId
+        return Button {
+            form.draft.choosePayer(member.userId, viewerId: viewerId)
+        } label: {
+            HStack(spacing: 6) {
+                Monogram(initials: model.people.initials(member.userId))
+                Text(member.userId == viewerId ? "You" : model.people.name(member.userId)).lineLimit(1)
+            }
+            .font(.subheadline.weight(.semibold))
+            .padding(.leading, 4)
+            .padding(.trailing, 12)
+            .frame(minHeight: Metrics.minTouchTarget)
+            .foregroundStyle(chosen ? PennyColor.tintText : PennyColor.label)
+            .background(chosen ? PennyColor.tint.opacity(0.16) : PennyColor.surface, in: Capsule())
+            .overlay(Capsule().stroke(chosen ? PennyColor.tint : .clear, lineWidth: 1.5))
+        }
+        .buttonStyle(.plain)
+        .disabled(locked)
+        .accessibilityAddTraits(chosen ? .isSelected : [])
+        .accessibilityLabel("Paid by \(model.people.name(member.userId))")
+        .accessibilityIdentifier("sharedForm.payer.\(member.userId)")
     }
 
     private var divider: some View { Divider().padding(.leading, 52) }
@@ -537,58 +609,6 @@ private struct SharedExpenseForm: View {
         discarded = true
         form.discardDraft()
         scope.choose(choice, EntryHandoff(form.draft, viewerId: viewerId))
-    }
-}
-
-/// Paid by: the members on the expense's date. Only the viewer's own account goes with them.
-private struct SharedPayerSheet: View {
-    @Environment(\.dismiss) private var dismiss
-    @Bindable var form: SharedExpenseFormModel
-    let model: HouseholdModel
-
-    var body: some View {
-        NavigationStack {
-            List {
-                Section {
-                    ForEach(form.participants) { member in
-                        Button {
-                            form.draft.choosePayer(member.userId, viewerId: form.viewerId)
-                            dismiss()
-                        } label: {
-                            HStack(spacing: 12) {
-                                Monogram(initials: model.people.initials(member.userId))
-                                Text(model.people.name(member.userId)).foregroundStyle(PennyColor.label)
-                                Spacer()
-                                if form.draft.payerId == member.userId {
-                                    Image(systemName: "checkmark").foregroundStyle(PennyColor.tint)
-                                }
-                            }
-                            .frame(minHeight: Metrics.minTouchTarget)
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityAddTraits(form.draft.payerId == member.userId ? .isSelected : [])
-                        .accessibilityIdentifier("sharedForm.payer.\(member.userId)")
-                    }
-                    if form.participants.isEmpty {
-                        Text("Nobody was a member on that date. Choose another date.")
-                            .font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
-                    }
-                } footer: {
-                    Text("Only the person who paid chooses which of their accounts it came from.")
-                }
-            }
-            .insetGroupedList()
-            .background(PennyColor.background)
-            .navigationTitle("Paid by")
-            .toolbarTitleDisplayModeInline()
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done", systemImage: "checkmark") { dismiss() }
-                }
-            }
-        }
-        .presentationDetents([.medium, .large])
     }
 }
 

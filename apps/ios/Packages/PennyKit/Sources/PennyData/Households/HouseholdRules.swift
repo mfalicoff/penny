@@ -282,3 +282,68 @@ public struct AuditDescription: Equatable, Sendable {
         }
     }
 }
+
+/// Why a share payment was refused as stale, and what changed (`iphone-payment-stale`, as on the
+/// web since MAZ-176): another payment, a monthly settlement or an edit, with only the values that
+/// differ between the copy the sheet opened and the latest one.
+public struct StaleShareChange: Equatable, Sendable {
+    public enum Cause: Equatable, Sendable {
+        /// Someone recorded a payment; `fromUserId` is the share it settled.
+        case payment(recordedBy: String, fromUserId: String, at: Int64)
+        /// The month was settled with a monthly payment.
+        case monthly
+        case edit(editedBy: String, at: Int64)
+    }
+
+    public enum Value: Equatable, Sendable {
+        case total, share, status
+    }
+
+    public struct Row: Equatable, Sendable {
+        public var value: Value
+        public var before: String
+        public var now: String
+
+        public init(value: Value, before: String, now: String) {
+            self.value = value
+            self.before = before
+            self.now = now
+        }
+    }
+
+    public var cause: Cause
+    public var rows: [Row]
+
+    /// `fromUserId` is the share the sheet was recording; `money` formats cents.
+    public init(
+        before: WireSharedExpense, now: WireSharedExpense, fromUserId: String, money: (Int64) -> String
+    ) {
+        let added = now.payments.filter { !before.payments.contains($0) }
+        let latest = added.max { $0.createdAt < $1.createdAt }
+        let sameContent =
+            before.title == now.title && before.date == now.date && before.totalCents == now.totalCents
+            && before.payerUserId == now.payerUserId && before.splitMode == now.splitMode
+            && before.splits.sorted { $0.userId < $1.userId } == now.splits.sorted { $0.userId < $1.userId }
+        if sameContent, let latest {
+            let settled = added.first { $0.fromUserId == fromUserId } ?? latest
+            cause = .payment(recordedBy: latest.createdBy, fromUserId: settled.fromUserId, at: latest.createdAt)
+        } else if sameContent, now.paymentsClosed, !before.paymentsClosed {
+            cause = .monthly
+        } else {
+            cause = .edit(editedBy: now.updatedBy, at: now.updatedAt)
+        }
+        var rows: [Row] = []
+        if before.totalCents != now.totalCents {
+            rows.append(Row(value: .total, before: money(before.totalCents), now: money(now.totalCents)))
+        }
+        let oldShare = before.share(of: fromUserId)
+        let newShare = now.share(of: fromUserId)
+        if oldShare != newShare { rows.append(Row(value: .share, before: money(oldShare), now: money(newShare))) }
+        let oldStatus = before.status(of: fromUserId)
+        let newStatus = now.status(of: fromUserId)
+        if oldStatus != newStatus {
+            rows.append(Row(value: .status, before: oldStatus.label, now: newStatus.label))
+        }
+        self.rows = rows
+    }
+}

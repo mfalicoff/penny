@@ -38,39 +38,65 @@ struct SharedTripContext {
     }
 }
 
-/// The trip's dates, people and numbers, above the month balance.
-struct SharedTripSummary: View {
+/// A shared trip's hero (`iphone-trip-detail`, `ipad-trip`): when it is, its name, dates and
+/// people, then the trip total with your share, instead of a household's month balance (the
+/// trip's balances still settle by month, under Balances). Your share counts your shares of the
+/// shared expenses and your private expenses on it, as the Trips list's Your share so far.
+struct SharedTripHero: View {
     @Environment(ShellModel.self) private var shell
+    @Environment(\.horizontalSizeClass) private var sizeClass
     let context: SharedTripContext
     let model: HouseholdModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        let regular = sizeClass == .regular
+        VStack(alignment: regular ? .leading : .center, spacing: 6) {
             HStack(spacing: 8) {
                 Text(context.range.phaseLabel(today: shell.today))
-                    .font(.footnote.weight(.semibold)).foregroundStyle(PennyColor.secondaryLabel)
                     .accessibilityIdentifier("tripPage.phase")
-                Label("Shared", systemImage: "person.2")
-                    .font(.footnote.weight(.semibold)).foregroundStyle(PennyColor.secondaryLabel)
-                if model.isArchived {
-                    Text("Archived").font(.footnote.weight(.semibold)).foregroundStyle(PennyColor.secondaryLabel)
-                }
+                if model.isArchived { Text("· Archived") }
             }
+            .font(.footnote.weight(.semibold)).foregroundStyle(PennyColor.secondaryLabel)
+            Text(context.household.name).font(.title2.weight(.bold))
+                .multilineTextAlignment(regular ? .leading : .center)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
             Text(dateLine).font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
+                .multilineTextAlignment(regular ? .leading : .center)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityIdentifier("tripPage.dates")
-            HStack(alignment: .top, spacing: 24) {
-                stat("Trip total", context.totals?.tripTotal)
+            if regular {
+                HStack(alignment: .top, spacing: 32) {
+                    stat("Trip total", context.totals?.tripTotal).accessibilityIdentifier("tripPage.total")
+                    stat("Your share", context.totals?.yourSpending).accessibilityIdentifier("tripPage.yourSpending")
+                }
+                .padding(.top, 8)
+            } else {
+                amount(context.totals?.tripTotal)
+                    .padding(.top, 8)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel(
+                        "Trip total, \(context.totals.map { MoneyFormat.amount($0.tripTotal, currency: model.currency) } ?? "loading")"
+                    )
                     .accessibilityIdentifier("tripPage.total")
-                stat("Your spending", context.totals?.yourSpending)
-                    .accessibilityIdentifier("tripPage.yourSpending")
+                HStack(spacing: 4) {
+                    Text("trip total · your share").foregroundStyle(PennyColor.secondaryLabel)
+                    Text(context.totals.map { MoneyFormat.amount($0.yourSpending, currency: model.currency) } ?? "…")
+                        .fontWeight(.semibold).monospacedDigit()
+                }
+                .font(.subheadline)
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("tripPage.yourSpending")
             }
             if let note {
                 Text(note).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
+                    .multilineTextAlignment(regular ? .leading : .center)
                     .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 4)
                     .accessibilityIdentifier("tripPage.privateNote")
             }
         }
+        .frame(maxWidth: .infinity, alignment: regular ? .leading : .center)
     }
 
     private var dateLine: String {
@@ -84,20 +110,29 @@ struct SharedTripSummary: View {
         var parts: [String] = []
         if totals.privateShare > 0 {
             parts.append(
-                "Your spending includes \(MoneyFormat.amount(totals.privateShare, currency: model.currency)) only "
-                    + "you can see.")
+                "Your share includes \(MoneyFormat.amount(totals.privateShare, currency: model.currency)) only you "
+                    + "can see.")
         }
         if totals.outside > 0 { parts.append(TripText.outside(totals.outside)) }
         return parts.isEmpty ? nil : parts.joined(separator: " ")
+    }
+
+    @ViewBuilder
+    private func amount(_ cents: Int64?) -> some View {
+        Text(cents.map { MoneyFormat.amount($0, currency: model.currency) } ?? "…")
+            .modifier(HeroAmountFont())
+            .foregroundStyle(cents == nil ? PennyColor.secondaryLabel : PennyColor.label)
+            .lineLimit(1)
+            .minimumScaleFactor(0.4)
     }
 
     private func stat(_ label: String, _ cents: Int64?) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(label).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
             if let cents {
-                MoneyText(cents, meaning: .neutral, currency: model.currency, style: .title3.weight(.bold))
+                MoneyText(cents, meaning: .neutral, currency: model.currency, style: .title.weight(.bold))
             } else {
-                Text("…").font(.title3.weight(.bold)).foregroundStyle(PennyColor.secondaryLabel)
+                Text("…").font(.title.weight(.bold)).foregroundStyle(PennyColor.secondaryLabel)
             }
         }
         .accessibilityElement(children: .combine)
@@ -109,6 +144,7 @@ struct SharedTripSummary: View {
 struct SharedTripExpenseSections: View {
     let context: SharedTripContext
     let model: HouseholdModel
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
         let shared = context.expenses?.expenses ?? []
@@ -163,5 +199,44 @@ struct SharedTripExpenseSections: View {
                 Text("Only you see these. They count in your spending, not in the trip's total or anyone's balance.")
             }
         }
+        if sizeClass == .regular, !shareByCategory.isEmpty {
+            // `ipad-trip`'s Your share by category: your shares and private expenses on the trip.
+            Section {
+                ForEach(shareByCategory, id: \.name) { item in
+                    HStack(spacing: 12) {
+                        CategoryIcon(symbol: item.category.symbol, color: item.category.tint)
+                        Text(item.name)
+                        Spacer()
+                        MoneyText(item.cents, meaning: .neutral, currency: model.currency)
+                    }
+                    .frame(minHeight: Metrics.minTouchTarget)
+                    .accessibilityElement(children: .combine)
+                }
+            } header: {
+                Text("Your share by category")
+            } footer: {
+                Text("Balances settle per month, so bookings and spending in different months are repaid separately.")
+            }
+        }
+    }
+
+    /// Your share of each category, largest first: shared expenses by their category, private
+    /// expenses by the ledger's.
+    private var shareByCategory: [(name: String, category: WireSharedCategory, cents: Int64)] {
+        var totals: [String: (category: WireSharedCategory, cents: Int64)] = [:]
+        let meId = model.people.meId
+        for expense in context.expenses?.loadedExpenses ?? [] {
+            let share = expense.share(of: meId)
+            guard share > 0 else { continue }
+            totals[expense.category.name, default: (expense.category, 0)].cents += share
+        }
+        if let ledger = context.ledger {
+            for entry in context.privateEntries where entry.share > 0 {
+                guard let category = ledger.category(id: entry.categoryId) else { continue }
+                totals[category.name, default: (WireSharedCategory(category), 0)].cents += entry.share
+            }
+        }
+        return totals.map { (name: $0.key, category: $0.value.category, cents: $0.value.cents) }
+            .sorted { $0.cents != $1.cents ? $0.cents > $1.cents : $0.name < $1.name }
     }
 }
