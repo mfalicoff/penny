@@ -383,6 +383,54 @@ struct OrganizeFormTests {
         #expect(ScheduleText.meaning(paused) == .neutral)
     }
 
+    @Test("whenSharedSchedulesAreListed_RecurringList_ShouldSortThemWithTheExpensesAndNameTheHousehold")
+    func sharedRows() {
+        let household = WireHousehold(
+            id: "house-1", name: "Apartment", currency: "CAD", creatorId: "user-alex", createdAt: 1_788_000_000_000,
+            memberCount: 2)
+        func shared(_ id: String, next: String, active: Bool = true) -> SharedSchedule {
+            SharedSchedule(
+                rule: WireSharedRule(
+                    id: id, householdId: household.id, title: "Streaming", totalCents: 3_798, payerUserId: "user-alex",
+                    splitMode: "equal",
+                    category: WireSharedCategory(name: "Fun", icon: "play-outline", color: "#F97316"),
+                    frequency: "monthly", nextDate: next, active: active),
+                household: household, shareCents: 1_899)
+        }
+        var pay = Self.rule()
+        pay.id = "pay"
+        pay.kind = .income
+        let items = RecurringListView.items(
+            [Self.rule(), pay],
+            shared: [shared("stream", next: "2026-11-12"), shared("old", next: "2026-11-01", active: false)])
+        let expenses = RecurringListView.sorted(items.filter { $0.kind == .expense })
+        #expect(expenses.map(\.id) == ["shared:stream", "internet", "shared:old"])
+        #expect(items.filter { $0.kind == .income }.map(\.id) == ["pay"])
+
+        #expect(
+            ScheduleText.sharedRow(shared("stream", next: "2026-11-12"), today: Self.today).hasSuffix("· Apartment"))
+        #expect(
+            ScheduleText.sharedRow(shared("old", next: "2026-11-01", active: false), today: Self.today)
+                == "Paused · monthly · Apartment")
+        #expect(RecurringListView.footer(hasShared: true).hasSuffix("open their household and count only your share."))
+        #expect(!RecurringListView.footer(hasShared: false).contains("Shared"))
+    }
+
+    @Test("whenASchedulesAmountIsShown_ScheduleText_ShouldSignItByKindEvenWhenPaused")
+    func signs() {
+        #expect(ScheduleText.sign(.expense) == .expense)
+        #expect(ScheduleText.sign(.income) == .income)
+        #expect(ScheduleText.sign(.investment) == .investment)
+        #expect(
+            MoneyFormat.signed(
+                4_500, meaning: ScheduleText.sign(.expense), currency: "CAD", locale: Locale(identifier: "en_CA"))
+                == "−$45.00")
+        #expect(
+            MoneyFormat.signed(
+                4_500, meaning: ScheduleText.sign(.income), currency: "CAD", locale: Locale(identifier: "en_CA"))
+                == "+$45.00")
+    }
+
     @Test("whenAccountsAreListed_OrganizeText_ShouldShowTypeAndUseButNeverABalance")
     func accountRows() {
         #expect(

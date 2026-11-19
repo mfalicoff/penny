@@ -1043,9 +1043,9 @@
         ],
         "deviations": [
           {
-            "summary": "Shared schedules aren't listed, and a paused expense shows no minus sign",
-            "kind": "follow-up",
-            "ref": "MAZ-181"
+            "summary": "Shared schedules are marked Shared, with the household's name in place of the account and the amount labelled \"your share\"; a shared row opens its household instead of swiping",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
           }
         ]
       },

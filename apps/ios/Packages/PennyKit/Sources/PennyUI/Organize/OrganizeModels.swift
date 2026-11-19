@@ -346,6 +346,32 @@ enum ScheduleText {
         return parts.joined(separator: " · ")
     }
 
+    /// A shared row's detail, with the household's name where a personal row has the account:
+    /// "Monthly · next Nov 22 · Apartment", or "Paused · monthly · Apartment".
+    static func sharedRow(_ schedule: SharedSchedule, today: CalendarDate) -> String {
+        let rule = schedule.rule
+        let cadence = RecurrenceFrequency(rawValue: rule.frequency).map(frequency) ?? rule.frequency
+        var parts: [String]
+        if rule.active {
+            parts = [cadence]
+            if let next = schedule.nextDate { parts.append("next \(DayText.short(next, today: today))") }
+        } else {
+            parts = ["Paused", cadence.lowercased()]
+        }
+        parts.append(schedule.household.name)
+        return parts.joined(separator: " · ")
+    }
+
+    /// How a schedule's amount is signed on Recurring, paused or not: expenses with a minus,
+    /// income with a plus, investments unsigned.
+    static func sign(_ kind: EntryKind) -> MoneyMeaning {
+        switch kind {
+        case .expense: .expense
+        case .income: .income
+        case .investment: .investment
+        }
+    }
+
     /// "Today", "Tomorrow", "in 9 days".
     static func relative(_ date: CalendarDate, today: CalendarDate) -> String {
         switch date.days(since: today) {
@@ -357,12 +383,7 @@ enum ScheduleText {
     }
 
     static func meaning(_ rule: RecurringRule) -> MoneyMeaning {
-        guard rule.active else { return .neutral }
-        switch rule.kind {
-        case .expense: return .expense
-        case .income: return .income
-        case .investment: return .investment
-        }
+        rule.active ? sign(rule.kind) : .neutral
     }
 
     static func ordinal(_ day: Int) -> String {
