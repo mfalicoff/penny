@@ -47,35 +47,11 @@ public sealed class PostgresReceiptMailRepository(NpgsqlDataSource source, Inbou
         );
     }
 
-    // Two rotations at once: the later insert collides with the earlier one's new row on
-    // the one-live-address index, and a fresh attempt revokes that row instead.
+    // Rotations of one user's address are serialized on the user's row lock, taken first
+    // (the shared lock order: users, then their entities). A concurrent rotation waits,
+    // then sees the winner's committed address and revokes it, so neither collides on
+    // the one-live-address index and every caller gets 201 (MAZ-193).
     public async Task<StoredMailAddress> ReplaceAsync(
-        string userId,
-        string address,
-        string localPartHash,
-        DateTimeOffset createdAt,
-        DateTimeOffset expiresAt,
-        CancellationToken cancellationToken
-    )
-    {
-        for (var attempt = 1; ; attempt++)
-        {
-            try
-            {
-                return await TryReplaceAsync(
-                    userId,
-                    address,
-                    localPartHash,
-                    createdAt,
-                    expiresAt,
-                    cancellationToken
-                );
-            }
-            catch (DbUpdateException error) when (attempt < 3 && IsUniqueViolation(error)) { }
-        }
-    }
-
-    private async Task<StoredMailAddress> TryReplaceAsync(
         string userId,
         string address,
         string localPartHash,
@@ -88,6 +64,12 @@ public sealed class PostgresReceiptMailRepository(NpgsqlDataSource source, Inbou
         await using var transaction = await context.Database.BeginTransactionAsync(
             cancellationToken
         );
+        await context
+            .Users.Where(user => user.Id == userId)
+            .ExecuteUpdateAsync(
+                set => set.SetProperty(user => user.Email, user => user.Email),
+                cancellationToken
+            );
         var current = await context
             .ReceiptMailAddresses.AsNoTracking()
             .Where(row => row.UserId == userId && row.RevokedAt == null)

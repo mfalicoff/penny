@@ -99,8 +99,10 @@ public sealed class ReceiptEmailTests(ApiFixture fixture) : InboundMailTestBase(
     public async Task whenRotatedConcurrently_Create_ShouldLeaveExactlyOneLiveAddress()
     {
         var (token, userId) = await AccountAsync("race@example.test");
+        // Eight at once (under the default ten a day): every rotation must wait its turn on
+        // the user's row lock rather than collide and run out of retries (MAZ-193).
         var responses = await Task.WhenAll(
-            Enumerable.Range(0, 4).Select(_ => SendAsync(HttpMethod.Post, AddressPath, token))
+            Enumerable.Range(0, 8).Select(_ => SendAsync(HttpMethod.Post, AddressPath, token))
         );
         foreach (var response in responses)
         {
