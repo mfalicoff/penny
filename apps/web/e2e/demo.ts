@@ -30,11 +30,20 @@ export async function navigate(page: Page, label: string, heading = label) {
     const tab = tabs.getByRole("link", { name: label, exact: true });
     if (await tab.count()) await tab.click();
     else {
-      await tabs.getByRole("button", { name: "More" }).click();
-      await page.getByRole("dialog", { name: "Menu" }).getByRole("link", { name: label, exact: true }).click();
+      // Phones reach Insights from Home's flow card, and the rest from Home's settings button.
+      await tabs.getByRole("link", { name: "Home", exact: true }).click();
+      await expect(page.getByRole("heading", { level: 1, name: "Home", exact: true })).toBeVisible();
+      if (label === "Insights") await page.getByRole("main").getByRole("link", { name: "Insights", exact: true }).click();
+      else {
+        await page.getByRole("link", { name: "Settings", exact: true }).click();
+        if (label !== "Settings") await page.getByRole("navigation", { name: "Manage" }).getByRole("link", { name: new RegExp(`^${label}\\b`) }).click();
+      }
     }
   } else {
-    await page.getByRole("complementary", { name: "Penny" }).getByRole("link", { name: label, exact: true }).click();
+    // Together's links read All households and All trips once there are households or trips, and
+    // Recurring adds its count (MAZ-221).
+    const all = label === "Trips" ? "All trips" : label === "Shared" ? "All households" : label;
+    await page.getByRole("complementary", { name: "Penny" }).getByRole("link", { name: new RegExp(`^(${label}|${all})(\\s|$)`) }).click();
   }
   await expect(page.getByRole("heading", { level: 1, name: heading })).toBeVisible();
 }

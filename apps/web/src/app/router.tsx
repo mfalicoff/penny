@@ -30,5 +30,7 @@ declare module "@tanstack/react-router" {
     title?: string;
     /** Show the top bar's search field. Default true; Activity has its own. */
     search?: boolean;
+    /** On phones, a back button to this page in the top bar (pages pushed from Home, MAZ-221). */
+    back?: "/";
   }
 }

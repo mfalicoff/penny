@@ -1,7 +1,7 @@
 /*
  * The signed-in shell (MAZ-85). One DOM, three layouts:
  *
- *   < 768px      compact top bar + bottom tab bar; navigation in a "More" drawer
+ *   < 768px      glass row over a large title + floating tab bar beside the add button
  *   768–1099px   icon rail + top bar
  *   ≥ 1100px     full sidebar (labels, sections, shortcuts) + top bar
  *
@@ -84,62 +84,101 @@
 }
 
 /* ---------- top bar ---------- */
+/*
+ * Phones (cards `iphone-*`): a row of glass controls (Back on pushed pages, the page's tools such
+ * as the month pill, Home's calendar and settings buttons) over the large page title. Home shows
+ * no title: the month pill leads it, and the title stays for screen readers.
+ */
 .topbar {
   position: relative;
   z-index: 3;
-  display: flex;
+  display: grid;
+  grid-template-areas:
+    "back tools"
+    "title title";
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 10px;
-  min-height: 60px;
-  padding: 10px var(--pk-gutter) 0;
+  row-gap: 14px;
+  padding: 14px var(--pk-gutter) 0;
 }
 
-.topbar__brand {
-  display: inline-flex;
-  border-radius: 9px;
+.topbar:not(.topbar--back):has(.topbar__tools:empty) {
+  row-gap: 0;
+}
+
+.topbar__back {
+  grid-area: back;
+  margin-inline-end: 10px;
 }
 
 .topbar__title {
+  grid-area: title;
   min-width: 0;
   margin: 0;
   overflow: hidden;
-  font-size: 1.5rem;
+  font-size: 2.125rem;
   font-weight: 700;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.topbar__spacer {
-  flex: 1;
+.topbar--home .topbar__title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
 }
 
-/* Page tools beside the title (the month switcher on Home and Insights), from 1100px. */
+.topbar__spacer {
+  display: none;
+}
+
+/* Page tools (the month control on Home and Insights), with Home's buttons at the end. */
 .topbar__tools {
   display: flex;
+  grid-area: tools;
   min-width: 0;
   align-items: center;
-  margin-inline-end: 8px;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.topbar--back .topbar__tools {
+  justify-content: flex-end;
 }
 
 .topbar__tools:empty {
   display: none;
 }
 
-/* In the top bar the switcher stays on one line, and the title keeps its full width. */
+.topbar__actions {
+  display: flex;
+  gap: 10px;
+}
+
 .topbar__tools .month-bar {
   flex-wrap: nowrap;
   gap: 4px;
 }
 
-.topbar__tools .month-nav__label {
-  min-width: 0;
-  padding-inline: 4px;
-  white-space: nowrap;
+/* A round glass control (Back, calendar, settings): 44px, the card's size and the touch minimum. */
+.glass-button {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 22px;
+  color: var(--pk-label);
+  cursor: pointer;
 }
 
-.topbar:has(.topbar__tools:not(:empty)) .topbar__title {
-  flex: none;
+.glass-button:hover {
+  color: var(--pk-tint-text);
 }
 
 .topsearch {
@@ -181,7 +220,10 @@
   background: var(--pk-surface);
 }
 
-/* Narrow: the + keeps its accessible name but shows only the icon. */
+/*
+ * Phones: Add entry is the round copper button beside the tab bar (card `iphone-home`). It keeps
+ * its accessible name and shows only the icon.
+ */
 .topbar__add .topbar__add-label {
   position: absolute;
   width: 1px;
@@ -192,10 +234,21 @@
 }
 
 .topbar__add {
-  width: 44px;
-  min-height: 44px;
+  position: fixed;
+  z-index: 11;
+  inset-inline-end: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  width: 60px;
+  min-height: 60px;
   padding: 0;
-  border-radius: 22px;
+  border-radius: 30px;
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--pk-tint) 38%, transparent);
+}
+
+/* The icon's size is inline (the Button's), so the round button scales it to the card's glyph. */
+.topbar__add .icon {
+  transform: scale(1.45);
+  --sw: 40px;
 }
 
 .topbar__add .pk-kbd {
@@ -270,8 +323,18 @@
   color: var(--pk-tint);
 }
 
-.navlink .pk-kbd {
+.navlink .pk-kbd,
+.navlink__detail {
   margin-inline-start: auto;
+}
+
+/* A household's balance, a trip's start date, the number of schedules. */
+.navlink__detail {
+  flex: none;
+  color: var(--pk-label-2);
+  font-size: 0.844rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
 }
 
 .navlink__label {
@@ -303,16 +366,27 @@
   white-space: nowrap;
 }
 
-.server-status {
+.sync-line {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 4px;
   margin: 0;
-  overflow: hidden;
   color: var(--pk-label-2);
   font-size: 0.75rem;
+}
+
+.sync-line span {
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.server-status--error {
+.sync-line .icon {
+  flex: none;
+}
+
+.sync-line--error {
   color: var(--pk-danger);
 }
 
@@ -336,8 +410,8 @@
 .tabbar {
   position: fixed;
   z-index: 10;
-  inset-inline: 12px;
-  bottom: calc(12px + env(safe-area-inset-bottom));
+  inset-inline: 16px calc(16px + 60px + 12px);
+  bottom: calc(16px + env(safe-area-inset-bottom));
   border-radius: 31px;
 }
 
@@ -360,7 +434,7 @@
   justify-content: center;
   gap: 2px;
   width: 100%;
-  min-height: 52px;
+  min-height: 54px;
   padding: 0 2px;
   border: 0;
   border-radius: 26px;
@@ -378,22 +452,22 @@
   white-space: nowrap;
 }
 
-.tab[aria-current="page"] {
+.tab[aria-current] {
   background: var(--pk-fill);
   color: var(--pk-tint-text);
 }
 
 /*
  * Phones: a toast takes the tab bar's place (MAZ-166). It sits on the tab bar's slot (same
- * inset and bottom, at least its 60px height) and the tab bar hides while it shows, so the page's
+ * bottom, at least its 60px height, across the add button too, which hides with it) and the tab bar hides while it shows, so the page's
  * layout never changes when it opens or closes. It grows upward to 84px at most (a one-line
  * title and a two-line detail), which stays inside the bottom padding the main area always
  * keeps (128px), so the last rows still scroll clear of it. Longer text is cut with an ellipsis;
  * the live region still announces all of it.
  */
 .toast-region {
-  inset-inline: 12px;
-  bottom: calc(12px + env(safe-area-inset-bottom));
+  inset-inline: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
   padding: 0;
 }
 
@@ -450,50 +524,9 @@
   justify-content: flex-end;
 }
 
-body:has(.pk-toast) .tabbar {
+body:has(.pk-toast) .tabbar,
+body:has(.pk-toast) .topbar__add {
   visibility: hidden;
-}
-
-/* ---------- navigation drawer (phones) ---------- */
-.dialog:has(> .drawer) {
-  place-items: stretch start;
-  padding: 0;
-}
-
-.dialog__panel.drawer {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  width: min(320px, 88vw);
-  height: 100%;
-  padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
-  overflow-y: auto;
-  border-radius: 0 22px 22px 0;
-  animation: drawer-in 0.2s ease-out;
-}
-
-.drawer__head {
-  display: flex;
-  justify-content: flex-end;
-  padding: 8px 8px 0;
-}
-
-.drawer__body {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-}
-
-.drawer .sidebar {
-  flex: 1;
-  padding-top: 0;
-}
-
-@keyframes drawer-in {
-  from {
-    transform: translateX(-24px);
-    opacity: 0;
-  }
 }
 
 /* ---------- hero glow (Home) ---------- */
@@ -577,6 +610,40 @@ body:has(.pk-toast) .tabbar {
   text-decoration: none;
 }
 
+/* Phones: Manage leads the settings list (card `iphone-settings`); the sidebar has it wider. */
+.settings__group {
+  margin: 0;
+  padding: 0 16px 8px;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.settings__value {
+  margin-inline-start: auto;
+  color: var(--pk-label-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.settings__value + .icon:last-child {
+  margin-inline-start: 0;
+}
+
+.settings__link .navlink__count {
+  margin-inline-start: auto;
+}
+
+.settings__link .navlink__count + .icon:last-child {
+  margin-inline-start: 0;
+}
+
+.settings__link--off {
+  color: var(--pk-label-2);
+  cursor: not-allowed;
+}
+
 /* Phones: the list is its own page; a section replaces it, with a back link. */
 .settings--section .settings__nav {
   display: none;
@@ -592,11 +659,37 @@ body:has(.pk-toast) .tabbar {
     padding: 8px 28px calc(100px + env(safe-area-inset-bottom));
   }
 
+  /* From here the top bar is one row: title, page tools, search and Add entry. */
   .topbar {
+    display: flex;
+    gap: 10px;
+    min-height: 60px;
     padding: 18px 28px 0;
   }
 
-  .topbar__brand,
+  .topbar--home .topbar__title {
+    position: static;
+    width: auto;
+    height: auto;
+    clip-path: none;
+  }
+
+  .topbar__spacer {
+    display: block;
+    flex: 1;
+  }
+
+  .topbar__tools {
+    justify-content: flex-start;
+    margin-inline-end: 8px;
+  }
+
+  .topbar:has(.topbar__tools:not(:empty)) .topbar__title {
+    flex: none;
+  }
+
+  .topbar__back,
+  .topbar__actions,
   .tabbar {
     display: none;
   }
@@ -646,6 +739,7 @@ body:has(.pk-toast) .tabbar {
 
   .topbar__title {
     font-size: 1.75rem;
+    letter-spacing: -0.025em;
   }
 
   .topsearch {
@@ -653,10 +747,16 @@ body:has(.pk-toast) .tabbar {
   }
 
   .topbar__add {
+    position: static;
     width: auto;
     min-height: 36px;
     padding: 0 14px;
     border-radius: 10px;
+    box-shadow: none;
+  }
+
+  .topbar__add .icon {
+    transform: none;
   }
 
   .topbar__add .topbar__add-label {
@@ -720,6 +820,25 @@ body:has(.pk-toast) .tabbar {
   .sidebar--rail .sidebar__foot {
     flex-direction: column;
     padding: 12px 0 0;
+  }
+
+  /* The rail can't tell households or trips apart by icon: it keeps Shared and Trips only. */
+  .sidebar--rail .sidebar__item,
+  .sidebar--rail .navlink__detail {
+    display: none;
+  }
+
+  .sidebar--rail .sidebar__all .navlink[data-section] {
+    background: var(--pk-surface);
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.08);
+  }
+
+  .sidebar--rail .sidebar__all .navlink[data-section] .icon {
+    color: var(--pk-tint);
+  }
+
+  .settings__manage {
+    display: none;
   }
 
   .settings {
@@ -789,6 +908,54 @@ body:has(.pk-toast) .tabbar {
   .sidebar--rail .sidebar__foot {
     flex-direction: row;
     padding: 16px 6px 0;
+  }
+
+  .sidebar--rail .sidebar__item {
+    display: list-item;
+  }
+
+  .sidebar--rail .navlink__detail {
+    display: inline;
+  }
+
+  .sidebar--rail .sidebar__all .navlink[data-section]:not([aria-current]) {
+    background: none;
+    box-shadow: none;
+  }
+
+  .sidebar--rail .sidebar__all .navlink[data-section]:not([aria-current]) .icon {
+    color: var(--pk-label-2);
+  }
+}
+
+/*
+ * Touch tablets (cards `ipad-*`): the selected sidebar item is filled copper with white text, and
+ * the sidebar shows no keyboard shortcuts. A mouse keeps the web cards' raised neutral item.
+ */
+@media (min-width: 768px) and (hover: none) and (pointer: coarse) {
+  .navlink[aria-current="page"],
+  .navlink[aria-current="page"]:hover {
+    background: var(--pk-tint);
+    box-shadow: none;
+    color: #fff;
+  }
+
+  .navlink[aria-current="page"] .icon,
+  .navlink[aria-current="page"] .navlink__detail {
+    color: #fff;
+  }
+
+  .sidebar--rail .navlink .pk-kbd {
+    display: none;
+  }
+
+  /* The iPad cards lead Home with the month controls; the title stays for screen readers. */
+  .topbar--home .topbar__title {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
   }
 }
 

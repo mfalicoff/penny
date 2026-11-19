@@ -120,8 +120,9 @@ function watchForErrors(page: Page) {
 async function openInbox(page: Page, isMobile: boolean) {
   await page.getByRole("heading", { level: 1 }).waitFor();
   if (isMobile) {
-    await page.getByRole("navigation", { name: "Tabs" }).getByRole("button", { name: "More" }).click();
-    await page.getByRole("dialog", { name: "Menu" }).getByRole("link", { name: "Receipts to attach, 1 receipt to attach" }).click();
+    // Phones: Home's settings button, then Manage.
+    await page.getByRole("link", { name: "Settings", exact: true }).click();
+    await page.getByRole("navigation", { name: "Manage" }).getByRole("link", { name: "Receipts to attach, 1 receipt to attach" }).click();
   } else {
     await page.getByRole("complementary", { name: "Penny" }).getByRole("link", { name: "Receipts to attach, 1 receipt to attach" }).click();
   }

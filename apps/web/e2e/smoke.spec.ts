@@ -19,6 +19,8 @@ test.beforeEach(async ({ page }) => {
     route.fulfill({ json: { revision: 0, ledger: { version: 4, currency: "CAD", accounts: [], trips: [], categories: [], transactions: [], recurring: [] } } }),
   );
   await page.route("/api/v1/search/transactions", (route) => route.fulfill({ json: { version: 1, items: [], totalCount: 0, nextCursor: null } }));
+  // The sidebar lists households and shared trips (MAZ-221); this account has none.
+  await page.route("/api/households", (route) => route.fulfill({ json: { households: [] } }));
   // Activity adds your share of shared expenses (MAZ-88).
   await page.route("/api/households/projection**", (route) => route.fulfill({ json: { transactions: [], scheduled: [] } }));
   // Emailed receipts (MAZ-184) are off on this server; the route still answers 200.

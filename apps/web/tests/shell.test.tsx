@@ -170,33 +170,30 @@ describe("keyboard shortcuts", () => {
 });
 
 describe("phone navigation", () => {
-  it("offers the four tabs and a More drawer that traps focus and restores it", async () => {
+  it("offers the four tabs beside the add button, keeps Home selected on Insights, and reaches Manage from Settings", async () => {
     stubServer();
     const user = userEvent.setup();
-    const { container } = renderApp("/");
+    const { router } = renderApp("/");
     await screen.findByRole("heading", { level: 1, name: "Home" });
     const tabs = screen.getByRole("navigation", { name: "Tabs" });
     expect(within(tabs).getAllByRole("link").map((link) => link.textContent)).toEqual(["Home", "Activity", "Shared", "Trips"]);
+    // No More tab (MAZ-221): Add entry is its own button, and Settings opens from Home.
+    expect(within(tabs).queryByRole("button")).not.toBeInTheDocument();
     expect(within(tabs).getByRole("link", { name: "Home" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("button", { name: "Add entry" })).toBeInTheDocument();
 
-    const more = within(tabs).getByRole("button", { name: "More" });
-    await user.click(more);
-    const drawer = screen.getByRole("dialog", { name: "Menu" });
-    expect(container).toHaveAttribute("inert");
-    expect(within(drawer).getByRole("button", { name: "Close menu" })).toHaveFocus();
-    await user.keyboard("{Escape}");
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(more).toHaveFocus();
+    // Insights is pushed from Home: Home stays selected and Back returns to it.
+    await act(() => router.navigate({ to: "/insights" }));
+    await screen.findByRole("heading", { level: 1, name: "Insights" });
+    expect(within(tabs).getByRole("link", { name: "Home" })).toHaveAttribute("aria-current", "true");
+    await user.click(screen.getByRole("link", { name: "Back to Home" }));
+    await screen.findByRole("heading", { level: 1, name: "Home" });
 
-    await user.click(more);
-    // The link for the page already open still closes the drawer.
-    await user.click(within(screen.getByRole("dialog", { name: "Menu" })).getByRole("link", { name: "Home" }));
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-
-    await user.click(more);
-    await user.click(within(screen.getByRole("dialog", { name: "Menu" })).getByRole("link", { name: "Categories" }));
+    await user.click(within(screen.getByRole("banner")).getByRole("link", { name: "Settings" }));
+    const manage = await screen.findByRole("navigation", { name: "Manage" });
+    await user.click(within(manage).getByRole("link", { name: "Categories" }));
     expect(await screen.findByRole("heading", { level: 1, name: "Categories" })).toBeInTheDocument();
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(within(tabs).getByRole("link", { name: "Home" })).toHaveAttribute("aria-current", "true");
   });
 });
 

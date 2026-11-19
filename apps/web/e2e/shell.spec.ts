@@ -171,9 +171,25 @@ test.describe("keyboard and history", () => {
   });
 });
 
-test("the More drawer reaches every page on a phone", async ({ page, isMobile }) => {
+test("phones have four tabs, and Home's settings button reaches Manage and Settings", async ({ page, isMobile }) => {
   test.skip(!isMobile, "phone navigation");
   await mockApi(page);
+  await page.goto("/");
+  const tabs = page.getByRole("navigation", { name: "Tabs" });
+  await expect(tabs.getByRole("link")).toHaveText(["Home", "Activity", "Shared", "Trips"]);
+  await expect(tabs.getByRole("button")).toHaveCount(0);
+  // Insights is pushed from Home: Home stays selected, and Back returns to it.
+  await page.goto("/insights");
+  await expect(tabs.getByRole("link", { name: "Home" })).toHaveAttribute("aria-current", "true");
+  await page.getByRole("link", { name: "Back to Home" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Home", exact: true })).toBeVisible();
+  await page.getByRole("link", { name: "Settings", exact: true }).click();
+  const manage = page.getByRole("navigation", { name: "Manage" });
+  for (const [label, title] of [["Recurring", "Recurring"], ["Accounts", "Accounts"], ["Categories", "Categories"]]) {
+    await manage.getByRole("link", { name: label }).click();
+    await expect(page.getByRole("heading", { level: 1, name: title })).toBeVisible();
+    await page.goBack();
+  }
   await page.goto("/");
   await openSettings(page);
   await expect(page).toHaveURL("/settings");

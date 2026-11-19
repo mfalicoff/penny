@@ -4,7 +4,7 @@ import { insightsSearchSchema } from "../features/home/model";
 
 /** Insights (web card `web-insights`, MAZ-92): the month's money flow and category comparison. `?month=YYYY-MM`. */
 export const Route = createFileRoute("/insights")({
-  staticData: { title: "Insights" },
+  staticData: { title: "Insights", back: "/" },
   validateSearch: insightsSearchSchema,
   component: Insights,
 });

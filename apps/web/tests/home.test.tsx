@@ -115,8 +115,11 @@ describe("Home", () => {
     const flow = screen.getAllByRole("region", { name: "Follow your money" })[0] as HTMLElement;
     expect(within(flow).getByText("Spent").parentElement).toHaveTextContent("$1,486.20");
     expect(within(flow).getByRole("link", { name: "Insights" })).toHaveAttribute("href", "/insights?month=2026-11");
-    // The month switcher leads the page on a phone.
-    expect(within(screen.getByRole("main")).getByRole("button", { name: "Previous month" })).toBeInTheDocument();
+    // The top row is the card's glass month pill, calendar and settings buttons (MAZ-221).
+    const topbar = screen.getByRole("banner");
+    expect(within(topbar).getByRole("combobox", { name: "Month" })).toHaveValue("2026-11");
+    expect(within(topbar).getByRole("button", { name: "Calendar" })).toBeInTheDocument();
+    expect(within(topbar).getByRole("link", { name: "Settings" })).toHaveAttribute("href", "/settings");
   });
 
   it("on desktop, puts the Sankey and By category under the hero and the month in the top bar, as web-home (MAZ-174)", async () => {
@@ -133,7 +136,7 @@ describe("Home", () => {
     expect(screen.getByRole("heading", { level: 2, name: "By category" })).toBeInTheDocument();
     const topbar = screen.getByRole("banner");
     expect(within(topbar).getByRole("button", { name: "Previous month" })).toBeInTheDocument();
-    expect(within(topbar).getByText("November 2026")).toBeInTheDocument();
+    expect(within(topbar).getByText("November 2026", { selector: ".month-nav__label" })).toBeInTheDocument();
     expect(within(screen.getByRole("main")).queryByRole("button", { name: "Previous month" })).not.toBeInTheDocument();
   });
 
