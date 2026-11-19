@@ -17,6 +17,7 @@ async function mockApi(page: Page, email = "alex@example.test") {
   // Household screens (MAZ-91) have their own journeys in households.spec.ts; here they find nothing.
   await page.route("/api/households", (route) => route.fulfill({ json: { households: [] } }));
   await page.route("/api/households/**", (route) => route.fulfill({ status: 404, json: { error: "Household not found." } }));
+  await page.route("/api/receipt-email", (route) => route.fulfill({ json: { enabled: false, domain: null, address: null } }));
 }
 
 const ROUTES: [string, string][] = [

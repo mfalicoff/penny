@@ -26,6 +26,7 @@ async function person(browser: Browser, email: string, baseURL: string | undefin
     if (url.pathname === "/api/info") return route.fulfill({ json: { name: "penny", version: "2.0.0-e2e" } });
     if (url.pathname === "/api/auth/me") return route.fulfill({ json: { email } });
     if (url.pathname === "/api/auth/oidc") return route.fulfill({ json: { enabled: false } });
+    if (url.pathname === "/api/receipt-email") return route.fulfill({ json: { enabled: false, domain: null, address: null } });
     if (url.pathname === "/api/v1/search/transactions") return route.fulfill({ json: { version: 1, items: [], totalCount: 0, nextCursor: null } });
     const body = request.postData() ? (JSON.parse(request.postData() ?? "{}") as Record<string, unknown>) : {};
     const result = server.handle(email, request.method(), `${url.pathname}${url.search}`, body);
