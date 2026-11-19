@@ -265,15 +265,32 @@ private struct SharedScheduleRow: View {
                 CategoryIcon(symbol: CategoryStyle.symbol(forIonicon: rule.category.icon), color: rule.category.tint)
                     .opacity(rule.active ? 1 : 0.55)
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(rule.title).font(.body.weight(.semibold))
-                        .foregroundStyle(rule.active ? PennyColor.label : PennyColor.secondaryLabel)
-                        .lineLimit(3)
+                    // The badge rides on the title's line, so the row stays two lines like a
+                    // personal one; it drops below only when the title leaves no room.
+                    ViewThatFits(in: .horizontal) {
+                        HStack(alignment: .firstTextBaseline, spacing: 6) {
+                            title(rule).lineLimit(1)
+                            SharedBadge()
+                        }
+                        VStack(alignment: .leading, spacing: 3) {
+                            title(rule).lineLimit(3)
+                            SharedBadge()
+                        }
+                    }
                     if rule.active {
-                        Text(detail).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
+                        // One line when it fits; otherwise the household's name on its own line,
+                        // never a wrap that strands "· Maison".
+                        ViewThatFits(in: .horizontal) {
+                            Text(detail).lineLimit(1)
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(ScheduleText.sharedTiming(schedule, today: today))
+                                Text(schedule.household.name)
+                            }
+                        }
+                        .font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
                     } else {
                         ScheduleTag(detail, systemImage: "pause.fill", font: .footnote.weight(.semibold))
                     }
-                    ScheduleTag("Shared", systemImage: "person.2", font: .caption.weight(.semibold))
                 }
             }
             if !typeSize.isAccessibilitySize { Spacer(minLength: 8) }
@@ -294,9 +311,30 @@ private struct SharedScheduleRow: View {
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
     }
+
+    private func title(_ rule: WireSharedRule) -> some View {
+        Text(rule.title).font(.body.weight(.semibold))
+            .foregroundStyle(rule.active ? PennyColor.label : PennyColor.secondaryLabel)
+    }
 }
 
-/// A muted capsule under a schedule's title: Paused, or Shared.
+/// "Shared" with people, in words and never color alone: a small capsule beside the title.
+private struct SharedBadge: View {
+    var body: some View {
+        HStack(spacing: 3) {
+            Image(systemName: "person.2.fill").imageScale(.small).accessibilityHidden(true)
+            Text("Shared")
+        }
+        .font(.caption2.weight(.semibold))
+        .foregroundStyle(PennyColor.secondaryLabel)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 2)
+        .background(PennyColor.fill, in: Capsule())
+        .fixedSize()
+    }
+}
+
+/// A muted capsule under a schedule's title: Paused.
 private struct ScheduleTag: View {
     let text: String
     let systemImage: String

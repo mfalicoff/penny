@@ -349,17 +349,17 @@ enum ScheduleText {
     /// A shared row's detail, with the household's name where a personal row has the account:
     /// "Monthly · next Nov 22 · Apartment", or "Paused · monthly · Apartment".
     static func sharedRow(_ schedule: SharedSchedule, today: CalendarDate) -> String {
+        "\(sharedTiming(schedule, today: today)) · \(schedule.household.name)"
+    }
+
+    /// The part of a shared row's detail before the household's name: "Monthly · next Nov 22",
+    /// or "Paused · monthly". The row puts the name on its own line when both don't fit.
+    static func sharedTiming(_ schedule: SharedSchedule, today: CalendarDate) -> String {
         let rule = schedule.rule
         let cadence = RecurrenceFrequency(rawValue: rule.frequency).map(frequency) ?? rule.frequency
-        var parts: [String]
-        if rule.active {
-            parts = [cadence]
-            if let next = schedule.nextDate { parts.append("next \(DayText.short(next, today: today))") }
-        } else {
-            parts = ["Paused", cadence.lowercased()]
-        }
-        parts.append(schedule.household.name)
-        return parts.joined(separator: " · ")
+        guard rule.active else { return "Paused · \(cadence.lowercased())" }
+        guard let next = schedule.nextDate else { return cadence }
+        return "\(cadence) · next \(DayText.short(next, today: today))"
     }
 
     /// How a schedule's amount is signed on Recurring, paused or not: expenses with a minus,

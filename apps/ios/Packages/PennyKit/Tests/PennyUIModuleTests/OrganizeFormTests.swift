@@ -412,6 +412,10 @@ struct OrganizeFormTests {
         #expect(
             ScheduleText.sharedRow(shared("old", next: "2026-11-01", active: false), today: Self.today)
                 == "Paused · monthly · Apartment")
+        let timing = ScheduleText.sharedTiming(shared("stream", next: "2026-11-12"), today: Self.today)
+        #expect(timing.hasPrefix("Monthly · next ") && !timing.contains("Apartment"))
+        #expect(
+            ScheduleText.sharedRow(shared("stream", next: "2026-11-12"), today: Self.today) == "\(timing) · Apartment")
         #expect(RecurringListView.footer(hasShared: true).hasSuffix("open their household and count only your share."))
         #expect(!RecurringListView.footer(hasShared: false).contains("Shared"))
     }
