@@ -27,8 +27,8 @@ struct PaymentSheet: View {
                 VStack(alignment: .leading, spacing: 20) {
                     if let staleExpense {
                         StaleExpenseView(
-                            old: staleExpense.old, latest: staleExpense.latest, people: model.people,
-                            currency: model.currency
+                            old: staleExpense.old, latest: staleExpense.latest, from: transfer.from,
+                            people: model.people, currency: model.currency
                         ) { dismiss() }
                     } else if let staleSuggestions {
                         StaleMonthlyView(
@@ -161,34 +161,38 @@ enum HouseholdPageCalendar {
     }
 }
 
-/// The expense changed after the sheet opened: old and new total and share, who edited it and
-/// when, and only Review expense. Nothing was recorded.
+/// The expense changed after the sheet opened. It names the real cause (another payment, often the
+/// same person on another device; a monthly settlement; or an edit), lists only the values that
+/// changed with the old one struck through, and offers only Review expense. Nothing was recorded.
 private struct StaleExpenseView: View {
     let old: WireSharedExpense
     let latest: WireSharedExpense?
+    /// The share the sheet was recording.
+    let from: String
     let people: HouseholdPeople
     let currency: String
     let review: () -> Void
 
     var body: some View {
+        let change = latest.map { now in
+            StaleShareChange(before: old, now: now, fromUserId: from) { MoneyFormat.amount($0, currency: currency) }
+        }
         VStack(alignment: .leading, spacing: 16) {
-            StatusBanner(
-                tone: .error, title: latest == nil ? "\(old.title) was deleted" : "\(old.title) changed",
-                message: latest.map {
-                    "\(people.name($0.updatedBy)) edited this expense after you opened it. Review it before "
-                        + "recording a payment."
-                } ?? "Someone deleted this expense after you opened it."
-            )
-            .accessibilityIdentifier("screen.paymentStale")
-            if let latest {
+            StatusBanner(tone: .error, title: title(change), message: message(change))
+                .accessibilityIdentifier("screen.paymentStale")
+            if let change {
                 VStack(spacing: 10) {
-                    compare("Total", old.totalCents, latest.totalCents)
-                    compare("Your share", old.share(of: people.meId), latest.share(of: people.meId))
-                    LabeledContent(
-                        "Edited",
-                        value:
-                            "\(people.name(latest.updatedBy)) · \(HouseholdText.instant(latest.updatedAt).formatted(.relative(presentation: .named)))"
-                    )
+                    ForEach(change.rows, id: \.value) { row in
+                        compare(label(row.value), row)
+                    }
+                    if let by = by(change.cause) {
+                        LabeledContent(
+                            by.edited ? "Edited" : "Recorded",
+                            value:
+                                "\(people.name(by.userId)) · \(HouseholdText.instant(by.at).formatted(.relative(presentation: .named)))"
+                        )
+                        .accessibilityIdentifier("paymentStale.by")
+                    }
                 }
                 .pennyCard()
             }
@@ -200,17 +204,63 @@ private struct StaleExpenseView: View {
         }
     }
 
-    private func compare(_ label: String, _ before: Int64, _ after: Int64) -> some View {
+    private func title(_ change: StaleShareChange?) -> String {
+        guard let change else { return "\(old.title) was deleted" }
+        if case .edit = change.cause { return "\(old.title) changed" }
+        return "\(old.title) payment changed"
+    }
+
+    private func message(_ change: StaleShareChange?) -> String {
+        guard let change, let latest else { return "Someone deleted this expense after you opened it." }
+        switch change.cause {
+        case .payment(let recordedBy, let settled, _):
+            let actor = people.name(recordedBy)
+            guard settled == from else {
+                return "\(actor) recorded a payment on this expense after you opened it. Review it before "
+                    + "recording a payment."
+            }
+            let device = recordedBy == people.meId ? ", maybe on another device" : ""
+            return "\(actor) already recorded \(people.possessive(from)) share as paid after you opened this "
+                + "payment\(device). There's nothing left to record for it."
+        case .monthly:
+            let month = latest.calendarDate.map { HouseholdText.month(MonthKey($0)) } ?? "its month"
+            return "A monthly payment was recorded for \(month) after you opened this payment, so this share now "
+                + "settles with the month."
+        case .edit(let editedBy, _):
+            return "\(people.name(editedBy)) edited this expense after you opened it. Review it before recording "
+                + "a payment."
+        }
+    }
+
+    private func label(_ value: StaleShareChange.Value) -> String {
+        let share = from == people.meId ? "Your share" : "\(people.name(from))'s share"
+        switch value {
+        case .total: return "Total"
+        case .share: return share
+        case .status: return "\(share) status"
+        }
+    }
+
+    /// Who made the change and when (a monthly settlement names nobody).
+    private func by(_ cause: StaleShareChange.Cause) -> (userId: String, at: Int64, edited: Bool)? {
+        switch cause {
+        case .payment(let recordedBy, _, let at): (recordedBy, at, false)
+        case .edit(let editedBy, let at): (editedBy, at, true)
+        case .monthly: nil
+        }
+    }
+
+    private func compare(_ label: String, _ row: StaleShareChange.Row) -> some View {
         HStack {
             Text(label)
             Spacer()
-            Text(MoneyFormat.amount(before, currency: currency))
+            Text(row.before)
                 .strikethrough()
                 .foregroundStyle(PennyColor.secondaryLabel)
-                .accessibilityLabel("was \(MoneyFormat.amount(before, currency: currency))")
+                .accessibilityLabel("was \(row.before)")
                 .accessibilityIdentifier("paymentStale.old")
-            Text(MoneyFormat.amount(after, currency: currency)).font(.body.weight(.semibold).monospacedDigit())
-                .accessibilityLabel("now \(MoneyFormat.amount(after, currency: currency))")
+            Text(row.now).font(.body.weight(.semibold).monospacedDigit())
+                .accessibilityLabel("now \(row.now)")
                 .accessibilityIdentifier("paymentStale.new")
         }
         .accessibilityElement(children: .combine)

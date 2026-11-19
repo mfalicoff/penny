@@ -3,6 +3,10 @@ import PennyDesign
 import PennyDomain
 import SwiftUI
 
+#if os(iOS)
+    import UIKit
+#endif
+
 /// A household (`iphone-shared`, `iphone-shared-balances`, `iphone-shared-people`, `ipad-shared`):
 /// members and the viewer's balance for the month, Record payment and Expense, then Expenses,
 /// Balances and People. History is in the toolbar.
@@ -167,6 +171,12 @@ struct HouseholdPage: View {
             }
         }
         .toolbar {
+            if canInvite {
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Invite someone", systemImage: "person.badge.plus") { inviting = true }
+                        .accessibilityIdentifier("household.invite")
+                }
+            }
             ToolbarItem(placement: .primaryAction) {
                 NavigationLink(value: DetailRoute.householdHistory(householdID: model.id)) {
                     Label("History", systemImage: "clock.arrow.circlepath")
@@ -219,23 +229,23 @@ struct HouseholdPage: View {
     @ViewBuilder
     private func header(_ household: WireHousehold, trip: SharedTripContext?) -> some View {
         Section {
-            VStack(alignment: .leading, spacing: 12) {
-                MonogramStack(initials: model.people.current.map { model.people.initials($0.userId) })
-                if let trip { SharedTripSummary(context: trip, model: model) }
-                HeroAmount(
-                    "\(HouseholdText.shortMonth(model.month)) · \(Self.balanceLabel(model.viewerBalance))",
-                    cents: abs(model.viewerBalance), currency: model.currency,
-                    tone: model.viewerBalance > 0 ? .income : .neutral
-                )
-                .accessibilityIdentifier("household.balance")
-                monthPicker
+            VStack(spacing: 16) {
+                if let trip {
+                    SharedTripHero(context: trip, model: model)
+                } else {
+                    householdHero(household)
+                }
                 if !model.isReadOnly {
                     HStack(spacing: 12) {
-                        PennyButton("Record payment", systemImage: "checkmark.circle", role: .secondary) {
-                            section = .balances
+                        // A trip's balances settle by month under Balances, so its page leads with
+                        // the trip, as on the card, and only adds an expense from here.
+                        if trip == nil {
+                            PennyButton("Record payment", systemImage: "checkmark.circle", role: .secondary) {
+                                section = .balances
+                            }
+                            .accessibilityHint("Shows balances and suggested payments to record")
+                            .accessibilityIdentifier("household.recordPayment")
                         }
-                        .accessibilityHint("Shows balances and suggested payments to record")
-                        .accessibilityIdentifier("household.recordPayment")
                         PennyButton(isTrip ? "Trip expense" : "Expense", systemImage: "plus") { addExpense() }
                             .accessibilityIdentifier("household.addExpense")
                     }
@@ -243,6 +253,7 @@ struct HouseholdPage: View {
             }
             .listRowBackground(Color.clear)
             .listRowInsets(EdgeInsets(top: 8, leading: 4, bottom: 8, trailing: 4))
+            .listRowSeparator(.hidden)
             if let reason = model.readOnlyReason {
                 StatusBanner(tone: .info, title: model.isArchived ? "Archived" : "Read only", message: reason)
                     .listRowBackground(Color.clear).listRowInsets(EdgeInsets())
@@ -262,30 +273,68 @@ struct HouseholdPage: View {
         .listSectionSeparator(.hidden)
     }
 
-    private var monthPicker: some View {
-        HStack {
+    /// Members, the household's name, then the viewer's balance for the month in its meaning
+    /// color (`iphone-shared`): owed to you is income green, owing is an expense in the label
+    /// color (never red), settled is muted. The month is chosen in the section headers below.
+    private func householdHero(_ household: WireHousehold) -> some View {
+        let balance = model.viewerBalance
+        return VStack(spacing: 6) {
+            MonogramStack(initials: model.people.current.map { model.people.initials($0.userId) })
+                .padding(.bottom, 4)
+            Text(household.name).font(.title2.weight(.bold))
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
+            VStack(spacing: 2) {
+                Text("\(HouseholdText.shortMonth(model.month)) · \(Self.balanceLabel(balance))")
+                    .font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
+                Text(MoneyFormat.amount(abs(balance), currency: model.currency))
+                    .modifier(HeroAmountFont())
+                    .foregroundStyle(
+                        balance > 0 ? PennyColor.income : balance < 0 ? PennyColor.label : PennyColor.secondaryLabel
+                    )
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.4)
+            }
+            .padding(.top, 8)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(
+                "\(HouseholdText.month(model.month)), \(HouseholdText.balance(balance, currency: model.currency))"
+            )
+            .accessibilityIdentifier("household.balance")
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    /// The month a section shows, with the previous and next month: the header of Expenses and
+    /// Balances, as the card's "November … total" header.
+    private func monthHeader(trailing: String) -> some View {
+        HStack(spacing: 4) {
             Button("Previous month", systemImage: "chevron.left") {
                 if let previous = model.month.shifted(by: -1) {
                     Task { await model.show(month: previous, current: MonthKey(shell.today)) }
                 }
             }
             .labelStyle(.iconOnly)
+            .frame(minWidth: Metrics.minTouchTarget, minHeight: Metrics.minTouchTarget)
             .accessibilityIdentifier("household.previousMonth")
-            Spacer()
-            Text(HouseholdText.month(model.month)).font(.subheadline.weight(.semibold))
+            Text(HouseholdText.shortMonth(model.month))
+                .accessibilityLabel(HouseholdText.month(model.month))
                 .accessibilityIdentifier("household.month")
-            Spacer()
             Button("Next month", systemImage: "chevron.right") {
                 if let next = model.month.shifted(by: 1) {
                     Task { await model.show(month: next, current: MonthKey(shell.today)) }
                 }
             }
             .labelStyle(.iconOnly)
+            .frame(minWidth: Metrics.minTouchTarget, minHeight: Metrics.minTouchTarget)
             .disabled(model.month >= MonthKey(shell.today))
             .accessibilityIdentifier("household.nextMonth")
+            Spacer()
+            Text(trailing)
         }
         .buttonStyle(.borderless)
-        .frame(minHeight: Metrics.minTouchTarget)
+        .padding(.leading, -14)
     }
 
     static func balanceLabel(_ cents: Int64) -> String {
@@ -330,11 +379,7 @@ struct HouseholdPage: View {
                 .accessibilityIdentifier("household.expense.\(expense.id)")
             }
         } header: {
-            HStack {
-                Text(HouseholdText.shortMonth(model.month))
-                Spacer()
-                Text("\(MoneyFormat.amount(total, currency: model.currency)) total")
-            }
+            monthHeader(trailing: "\(MoneyFormat.amount(total, currency: model.currency)) total")
         }
     }
 
@@ -386,11 +431,7 @@ struct HouseholdPage: View {
                     .foregroundStyle(PennyColor.secondaryLabel)
             }
         } header: {
-            HStack {
-                Text(HouseholdText.shortMonth(model.month))
-                Spacer()
-                Text(HouseholdText.settles(model.month))
-            }
+            monthHeader(trailing: HouseholdText.settles(model.month))
         }
         if let recap, !recap.suggestions.isEmpty {
             Section {
@@ -460,6 +501,17 @@ struct HouseholdPage: View {
 
     // MARK: People
 
+    /// Only the creator invites, and not once the household is read only.
+    private var canInvite: Bool { model.household != nil && model.isCreator && !model.isReadOnly }
+
+    private func joiningNote(_ household: WireHousehold) -> String {
+        isTrip
+            ? "Everyone uses \(household.currency). People who join are in the trip's expenses added from then on; "
+                + "earlier expenses keep the people they were split with."
+            : "Everyone uses \(household.currency). New members are included in equal splits from the day they "
+                + "join; earlier expenses don't change."
+    }
+
     @ViewBuilder
     private func peopleSection(_ household: WireHousehold) -> some View {
         let people = model.people
@@ -484,12 +536,16 @@ struct HouseholdPage: View {
         } header: {
             Text(people.current.count == 1 ? "1 member" : "\(people.current.count) members")
         } footer: {
-            Text(
-                isTrip
-                    ? "Everyone uses \(household.currency). People who join are in the trip's expenses added from "
-                        + "then on; earlier expenses keep the people they were split with."
-                    : "Everyone uses \(household.currency). New members are included in equal splits from the day "
-                        + "they join; earlier expenses don't change.")
+            if !canInvite { Text(joiningNote(household)) }
+        }
+        if canInvite {
+            Section {
+                InlineInvite(model: model) { inviting = true }
+            } header: {
+                Text("Invite someone")
+            } footer: {
+                Text(joiningNote(household))
+            }
         }
         if !people.former.isEmpty {
             Section("Former members") {
@@ -502,8 +558,6 @@ struct HouseholdPage: View {
         if !model.isReadOnly {
             Section {
                 if model.isCreator {
-                    Button("Invite someone", systemImage: "person.badge.plus") { inviting = true }
-                        .accessibilityIdentifier("household.invite")
                     if isTrip {
                         Button("Edit trip", systemImage: "pencil") { editingTrip = true }
                             .accessibilityIdentifier("tripPage.edit")
@@ -761,5 +815,60 @@ private struct MemberRow: View {
             return "Left \(HouseholdText.instant(left).formatted(.dateTime.month(.abbreviated).day()))"
         }
         return isCreator ? "Created \(joined)" : "Joined \(joined)"
+    }
+}
+
+/// The invite under People (`iphone-shared-people`): the code with its countdown, Copy and Share,
+/// once the creator asks for one. A new code replaces the one already shared, so opening People
+/// never makes one by itself; an unexpired code from this session shows again. The QR code is in
+/// the invite sheet (Show QR code, or Invite someone in the toolbar).
+private struct InlineInvite: View {
+    @Environment(ShellModel.self) private var shell
+    @Bindable var model: HouseholdModel
+    let showQR: () -> Void
+    @State private var working = false
+    @State private var failure: HouseholdFailure?
+
+    var body: some View {
+        VStack(spacing: 12) {
+            if let failure {
+                HouseholdFailureBanner(failure: failure) { Task { await create() } }
+            }
+            if let invite = model.invite, let code = InviteCode(typed: invite.code) {
+                InviteCard(
+                    expiresAt: model.inviteExpiresAt ?? Date(milliseconds: invite.expiresAt), code: code,
+                    link: InviteLink(code: code, server: shell.account?.server),
+                    renew: { Task { await create() } },
+                    copy: {
+                        #if os(iOS)
+                            UIPasteboard.general.string = code.value
+                        #endif
+                    },
+                    showsQR: false)
+                Button("Show QR code", systemImage: "qrcode", action: showQR)
+                    .font(.subheadline.weight(.semibold))
+                    .frame(minHeight: Metrics.minTouchTarget)
+                    .accessibilityIdentifier("household.inviteQR")
+            } else {
+                Text("Make a code to share. It works for 10 minutes, for everyone you send it to.")
+                    .font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                PennyButton(working ? "Creating a code…" : "Create invite code", systemImage: "person.badge.plus") {
+                    Task { await create() }
+                }
+                .disabled(working)
+                .accessibilityIdentifier("household.inviteCreate")
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .listRowBackground(Color.clear)
+        .listRowInsets(EdgeInsets())
+    }
+
+    private func create() async {
+        working = true
+        defer { working = false }
+        failure = await model.newInvite()
     }
 }

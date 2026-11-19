@@ -51,19 +51,6 @@ struct HouseholdStartSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                if !joinsTrip {
-                    Section {
-                        Picker("Create or join", selection: $mode) {
-                            Text("Create").tag(Mode.create)
-                            Text("Join").tag(Mode.join)
-                        }
-                        .pickerStyle(.segmented)
-                        .accessibilityIdentifier("householdStart.mode")
-                    }
-                    .listRowBackground(Color.clear)
-                    .listRowInsets(EdgeInsets())
-                }
-
                 if let failure {
                     Section {
                         StatusBanner(
@@ -82,12 +69,27 @@ struct HouseholdStartSheet: View {
             }
             .scrollContentBackground(.hidden)
             .background(PennyColor.background)
+            .safeAreaInset(edge: .bottom) {
+                if mode == .create { createButton }
+            }
             .navigationTitle(joinsTrip ? "Join a trip" : mode == .create ? "New household" : "Join a household")
             .inlineNavigationTitle()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close", systemImage: "xmark") { dismiss() }
                         .accessibilityIdentifier("householdStart.close")
+                }
+                if !joinsTrip {
+                    // Create or Join in the bar, as on the card; the header below names the mode.
+                    ToolbarItem(placement: .principal) {
+                        Picker("Create or join", selection: $mode) {
+                            Text("Create").tag(Mode.create)
+                            Text("Join").tag(Mode.join)
+                        }
+                        .pickerStyle(.segmented)
+                        .frame(maxWidth: 220)
+                        .accessibilityIdentifier("householdStart.mode")
+                    }
                 }
             }
             .sheet(isPresented: $scanning) {
@@ -119,14 +121,48 @@ struct HouseholdStartSheet: View {
     // MARK: Create
 
     @ViewBuilder private var createSection: some View {
+        Section {
+            VStack(spacing: 10) {
+                Image(systemName: "house.fill")
+                    .font(.title.weight(.semibold))
+                    .foregroundStyle(PennyColor.tintText)
+                    .frame(width: 64, height: 64)
+                    .background(
+                        PennyColor.tint.opacity(0.14), in: RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    )
+                    .accessibilityHidden(true)
+                Text("New household").font(.title2.weight(.bold))
+                    .accessibilityAddTraits(.isHeader)
+                Text(
+                    "Share rent, bills and groceries. Everyone sees the full expense; your reports count only your "
+                        + "share."
+                )
+                .font(.subheadline)
+                .foregroundStyle(PennyColor.secondaryLabel)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity)
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("householdStart.intro")
+        }
+        .listRowBackground(Color.clear)
+        .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 0, trailing: 0))
         Section("Name") {
             TextField("Apartment", text: $name)
                 .submitLabel(.done)
                 .accessibilityIdentifier("householdStart.name")
         }
         Section {
-            LabeledContent("Currency", value: ledgerCurrency.rawValue)
-                .accessibilityIdentifier("householdStart.currency")
+            LabeledContent("Currency") {
+                HStack(spacing: 4) {
+                    Text(ledgerCurrency.rawValue)
+                    Image(systemName: "lock.fill").font(.footnote).accessibilityHidden(true)
+                }
+                .foregroundStyle(PennyColor.secondaryLabel)
+            }
+            .accessibilityValue("\(ledgerCurrency.rawValue), fixed")
+            .accessibilityIdentifier("householdStart.currency")
             LabeledContent("Invite people", value: "After creating")
         } header: {
             Text("Details")
@@ -135,16 +171,33 @@ struct HouseholdStartSheet: View {
                 "Uses your ledger currency. Everyone who joins must use \(ledgerCurrency.rawValue) too. "
                     + HouseholdText.onlineRequirement)
         }
-        Section {
-            Button {
-                Task { await create() }
-            } label: {
-                ProgressLabel(title: "Create household", working: working)
-            }
-            .disabled(working || SharedText.required(name, maxLength: 80) == nil)
-            .accessibilityIdentifier("householdStart.create")
-        }
     }
+
+    /// Create household, pinned to the bottom of the sheet as on the card.
+    private var createButton: some View {
+        Button {
+            Task { await create() }
+        } label: {
+            HStack(spacing: 8) {
+                Text(working ? "Creating…" : "Create household")
+                if working { ProgressView().tint(.white) }
+            }
+            .font(.body.weight(.semibold))
+            .frame(maxWidth: .infinity, minHeight: ControlSize.button)
+            .foregroundStyle(.white)
+            .background(PennyColor.tint, in: Capsule())
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .disabled(!canCreate)
+        .opacity(canCreate ? 1 : 0.45)
+        .padding(.horizontal, Metrics.gutter)
+        .padding(.vertical, 8)
+        .background(PennyColor.background)
+        .accessibilityIdentifier("householdStart.create")
+    }
+
+    private var canCreate: Bool { !working && SharedText.required(name, maxLength: 80) != nil }
 
     private func create() async {
         working = true

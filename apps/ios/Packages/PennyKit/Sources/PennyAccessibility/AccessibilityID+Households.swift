@@ -26,6 +26,7 @@ extension AccessibilityID {
 
         // Create or join.
         public static let startMode = "householdStart.mode"
+        public static let startIntro = "householdStart.intro"
         public static let name = "householdStart.name"
         public static let currency = "householdStart.currency"
         public static let createButton = "householdStart.create"
@@ -49,6 +50,8 @@ extension AccessibilityID {
         public static let readOnly = "household.readOnly"
         public static let notice = "household.notice"
         public static let invite = "household.invite"
+        public static let inviteCreate = "household.inviteCreate"
+        public static let inviteInlineQR = "household.inviteQR"
         public static let leave = "household.leave"
         public static let archive = "household.archive"
         public static let rename = "household.rename"
@@ -121,6 +124,7 @@ extension AccessibilityID {
         public static let staleOld = "paymentStale.old"
         public static let staleNew = "paymentStale.new"
         public static let staleReview = "paymentStale.review"
+        public static let staleBy = "paymentStale.by"
 
         // History.
         public static let historyEmpty = "history.empty"
@@ -129,9 +133,11 @@ extension AccessibilityID {
 
         static let all =
             Screen.all + [
-                create, join, overall, listNotice, startMode, name, currency, createButton, code, joinButton, scan,
+                create, join, overall, listNotice, startMode, startIntro, name, currency, createButton, code,
+                joinButton, scan,
                 startError, otherServer, useOtherServer, startClose, balance, recordPayment, addExpense, section,
-                history, month, previousMonth, nextMonth, readOnly, notice, invite, leave, archive, rename,
+                history, month, previousMonth, nextMonth, readOnly, notice, invite, inviteCreate, inviteInlineQR, leave,
+                archive, rename,
                 monthlyNote, inviteCode, inviteQR, inviteExpires, inviteShare, inviteCopy, inviteNew, scannerPreview,
                 scannerDenied, scannerTypeCode, scannerClose, expenseTotal, expenseShare, expenseEdit, expenseDelete,
                 expenseHistory, formAmount, formTitle, formDate, formMode, formYourShare, formAccount, formNote,
@@ -139,7 +145,7 @@ extension AccessibilityID {
                 formRestoredDraft,
                 formKeepDraft, formDiscard, formKind, formHousehold, formPaidBy, formSplit, formDetails,
                 recordShareConfirm, recordShareExplanation, recordMonthlyConfirm,
-                recordMonthlyExplanation, paymentError, staleOld, staleNew, staleReview, historyEmpty,
+                recordMonthlyExplanation, paymentError, staleOld, staleNew, staleReview, staleBy, historyEmpty,
             ]
         static let prefixes = [
             "shared.household.", "household.expense.", "household.member.", "household.balanceRow.",
