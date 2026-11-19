@@ -141,8 +141,10 @@ async function signInScreen(p: Page) {
 
 /**
  * Edits p-coffee-2 (the scenario's pending edit: Coffee → Espresso) with a 503 armed on the next
- * ledger sync, then returns to Home (the cards' page) by keyboard, so the pointer keeps holding the
- * "Changes saved" toast and its Undo (a hovered toast stays up to 30 s).
+ * ledger sync, then returns to Home (the cards' page) without moving the pointer, so it keeps
+ * holding the "Changes saved" toast and its Undo (a hovered toast stays up to 30 s). On phones the
+ * tab bar is hidden while a toast shows (MAZ-166), so its Home link takes neither a real click nor
+ * focus: the link is clicked inside the page, which runs the router's own navigation (MAZ-220).
  */
 async function editWithFailingSync(run: Run) {
   const detail = await entryDetail(run.page, "2026-10", /^Coffee Personal · Groceries & dining · Fri, Oct 9/, "Coffee");
@@ -157,7 +159,10 @@ async function editWithFailingSync(run: Run) {
   await expect(banner).toBeVisible();
   const toast = run.page.getByText("Changes saved", { exact: true });
   await toast.hover();
-  await run.page.getByRole("navigation", { name: "Tabs" }).getByRole("link", { name: "Home", exact: true }).press("Enter");
+  const tabs = run.page.getByRole("navigation", { name: "Tabs", includeHidden: true });
+  await tabs.getByRole("link", { name: "Home", exact: true, includeHidden: true }).evaluate((link: HTMLElement) => {
+    link.click();
+  });
   await expect(run.page.getByRole("heading", { level: 1, name: "Home", exact: true })).toBeVisible();
   await expect(run.page.getByRole("region", { name: "Recent" })).toContainText("Espresso");
   return { banner, toast };
