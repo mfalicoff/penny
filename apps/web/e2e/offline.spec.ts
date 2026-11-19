@@ -31,6 +31,7 @@ async function mockApi(context: BrowserContext): Promise<Server> {
     const path = new URL(request.url()).pathname;
     if (path === "/api/info") return route.fulfill({ json: { name: "penny", version: "2.0.0-e2e" } });
     if (path === "/api/auth/me") return route.fulfill({ json: { email: EMAIL } });
+    if (path === "/api/receipt-email") return route.fulfill({ json: { enabled: false, domain: null, address: null } });
     if (path === "/api/v1/search/transactions") return route.fulfill({ json: { version: 1, items: [], totalCount: 0, nextCursor: null } });
     if (path === "/api/ledger") {
       if (server.down) return route.abort("connectionrefused");
