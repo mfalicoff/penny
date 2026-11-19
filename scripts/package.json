@@ -20,6 +20,7 @@
     "dashboards:generate": "node grafana-dashboards.mjs",
     "dashboards:check": "node grafana-dashboards.mjs --check",
     "version:check": "node check-version.mjs",
-    "pr-title:check": "node pr-title.mjs"
+    "pr-title:check": "node pr-title.mjs",
+    "design-deviations:check": "node design-deviations.mjs"
   }
 }
