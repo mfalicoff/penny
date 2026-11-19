@@ -14,6 +14,13 @@ Read the pull request title and body, its linked Linear issue (`Fixes MAZ-…` i
    - no secrets or real personal financial data anywhere.
 4. **Human-only paths:** any change to signing, the bundle id, App Group, URL scheme, widget identifiers, release workflows, `.github/workflows/claude-review.yml` or `docs/development/agents/` is an automatic **request-changes**. Say that a human has to make it.
 5. **Tests:** new behaviour has tests at the level that app's guide asks for.
+6. **Design parity:** when the pull request touches a screen with a redesign card (`docs/design/penny-ios`), the target is the card, not "close enough" ([dev worker, design cards](dev-worker.md#design-cards)). Request changes when the pull request:
+   - adds, widens or rewords an entry under "Approved deviations" in `docs/reference/redesign.md`, or adds an `approved` deviation to `contracts/visual-comparisons.json`, unless its Linear issue carries the `design-approved` label;
+   - turns a card's verdict from `matches` to `deviates`;
+   - claims `matches` for an appearance it didn't capture, or has no captures for the cards it changed;
+   - describes a difference from the card that the code could have closed, instead of closing it.
+
+   A difference the dev worker couldn't close is acceptable only as a `follow-up` deviation with a `Design decision:` follow-up.
 
 Don't comment on style that a linter or formatter already enforces, and don't nitpick. Request changes only for something that should block the merge. Put smaller suggestions in the summary as optional.
 

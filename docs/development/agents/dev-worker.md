@@ -34,8 +34,27 @@ Hand the issue over instead of changing any of these:
 - `.github/workflows/ios-testflight.yml`, `release-please.yml` or any release step;
 - `.github/workflows/claude-review.yml` or anything in `docs/development/agents/`;
 - `apps/web/src/domain` or `contracts/fixtures`, unless the same pull request regenerates the fixtures and updates the matching Swift, web and C# rules;
+- the approved deviations from the design cards (see [Design cards](#design-cards));
 - repository secrets, settings or branch protection;
 - secrets or real personal financial data in any file.
+
+### Design cards
+
+The redesign cards in `docs/design/penny-ios` are the target for every screen they cover, on iOS and on the web. When your issue touches a screen with a card, the goal is **parity**: the card's verdict is `matches`. "Close enough" is not done.
+
+1. Before you start, capture the card's screen as it is today and list every difference from the card in every appearance it has: light and dark, each device (iPhone, iPad) and, on the web, each width. Use everything in the "must match" column of [visual acceptance](../../design/visual-acceptance.md#what-must-match-and-what-may-differ): layout and hierarchy, spacing, type, color, icons, copy, states and actions.
+2. Fix each difference in the code. Don't describe it instead.
+3. Capture the card again, compare side by side with the card in every appearance, and repeat until nothing in the "must match" column differs. Attach representative before and after captures to the pull request.
+4. Record the verdict in `contracts/visual-comparisons.json` from what you captured. Claim `matches` only for appearances you captured.
+
+Only a human approves a deviation from a card. You never add, widen or reword an entry under "Approved deviations" in `docs/reference/redesign.md`, and you never add an `approved` deviation to `contracts/visual-comparisons.json`. That holds even when the issue's text offers "or approved" as an option. The one exception is a deviation the issue itself records as approved and that carries the `design-approved` label, which only a human applies.
+
+When you believe a difference can't be closed, for example because the operating system or the browser doesn't allow it, or because closing it needs a product decision:
+
+- record it in `contracts/visual-comparisons.json` as a `follow-up` deviation, and leave the card's verdict at `deviates`;
+- post a follow-up whose title starts with `Design decision:`. Its Why says what the card shows, what the app shows, and why you couldn't match it. A human decides whether the card changes, the deviation is approved, or the fix goes ahead.
+
+Platform chrome is never a deviation: the status bar, home indicator, keyboard, system sheets and pickers, the browser window and the device frame. The "may differ" column of [visual acceptance](../../design/visual-acceptance.md#what-must-match-and-what-may-differ) lists everything that may differ.
 
 ### Follow-ups
 
@@ -51,6 +70,8 @@ Context: <files, functions, the pull request link, how you found it>
 ```
 
 Only record something a person would want tracked. Skip style nits and anything you fixed in this pull request. Also list the follow-ups under **Follow-ups** in the pull request body.
+
+A follow-up that asks a human to decide about a difference from a design card starts its title with `Design decision:` (see [Design cards](#design-cards)). The orchestrator files it for a human, not for an agent.
 
 If something you left out means the issue isn't actually done (the pull request would ship a half-finished feature), don't merge. Hand the issue over instead.
 

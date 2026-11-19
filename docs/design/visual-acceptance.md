@@ -76,6 +76,8 @@ Compare each capture with its baseline in the same appearance. Judge by what the
 
 A difference in a "must match" column is either an **approved deviation**, recorded in [redesign.md](../reference/redesign.md#approved-deviations-maz-122) with its reason, or a **defect**, filed against the card's feature issue.
 
+Parity is the goal: every card should reach `matches`. **Only a human approves a deviation.** An agent never adds, widens or rewords an approved deviation. When it can't close a difference, it records a `follow-up` deviation and asks for a design decision ([dev worker, design cards](../development/agents/dev-worker.md#design-cards)). A human approves a deviation by applying the `design-approved` label to its issue and recording the reason in redesign.md.
+
 ## Recording verdicts
 
 `contracts/visual-comparisons.json` holds one entry per card, in contract order, with a `native` and a `web` side. Each side has its `owner` (the card's feature issue in the contract) and one of these statuses:
