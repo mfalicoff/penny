@@ -9,6 +9,7 @@ import { searchTransactionsQuery } from "../../api/search";
 import { useAccountEmail } from "../../auth/account";
 import { Button, cx } from "../../design/controls";
 import { Icon } from "../../design/Icon";
+import { tileStyle } from "../../design/categoryTint";
 import { Dialog } from "../../design/ModalDialog";
 import { formatCents, Money } from "../../design/Money";
 import { Banner, LoadingState, useOnline, useToast } from "../../design/states";
@@ -287,7 +288,7 @@ function CandidateList({ candidates, onChoose, label }: { candidates: AttachCand
               onChoose(candidate);
             }}
           >
-            <span className="category-dot" style={{ color: candidate.category?.color }}>
+            <span className="category-dot" style={tileStyle(candidate.category ?? undefined)}>
               <Icon name={categoryIcon(candidate.category?.icon)} size={18} />
             </span>
             <span className="results__title">{candidate.title}</span>
@@ -305,7 +306,7 @@ function CandidateList({ candidates, onChoose, label }: { candidates: AttachCand
 function EntryCard({ candidate }: { candidate: AttachCandidate }) {
   return (
     <div className="inbox-entry-card">
-      <span className="category-dot" style={{ color: candidate.category?.color }}>
+      <span className="category-dot" style={tileStyle(candidate.category ?? undefined)}>
         <Icon name={categoryIcon(candidate.category?.icon)} size={18} />
       </span>
       <span className="inbox-entry-card__text">

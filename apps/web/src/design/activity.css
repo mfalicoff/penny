@@ -130,14 +130,23 @@
   font-weight: 400;
 }
 
+/* MAZ-222: the cards' row tile, filled with the category's color (`tileStyle` sets --tile) and a white glyph. */
 .category-dot {
   display: inline-grid;
+  flex: none;
   place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
-  background: var(--pk-fill);
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  background: var(--tile, var(--pk-c-other));
+  color: #fff;
   vertical-align: middle;
+}
+
+@media (forced-colors: active) {
+  .category-dot {
+    border: 1px solid CanvasText;
+  }
 }
 
 /* Expected (MAZ-136): income dated after today. The row also says "Expected" in text. */
@@ -194,7 +203,7 @@
 .day-group__rows {
   margin: 0;
   padding: 4px 8px;
-  border-radius: var(--pk-r-row);
+  border-radius: var(--pk-r-card);
   background: var(--pk-surface);
   box-shadow: 0 0 0 0.5px var(--pk-separator);
 }
@@ -203,8 +212,24 @@
   border-bottom: 0;
 }
 
-.day-group__rows .results__row + .results__row {
+/* MAZ-222: one solid card per day, its rows divided by a line inset past the tile, as on the cards. */
+.panel--list .breakdown__list > li + li,
+.day-group__rows .results__row + .results__row,
+.panel--list .results__row + .results__row {
+  position: relative;
+}
+
+.panel--list .breakdown__list > li + li::before,
+.day-group__rows .results__row + .results__row::before,
+.panel--list .results__row + .results__row::before {
+  position: absolute;
+  inset: 0 0 auto 52px;
   border-top: 0.5px solid var(--pk-separator);
+  content: "";
+}
+
+.panel--list .results__row {
+  border-bottom: 0;
 }
 
 /* ---------- nothing matches (iphone-search-empty) ---------- */
@@ -483,7 +508,7 @@
   width: 52px;
   height: 52px;
   border-radius: 16px;
-  background: currentColor;
+  background: var(--tile, var(--pk-c-other));
 }
 
 .category-tile__icon .icon {

@@ -1162,3 +1162,67 @@ button.breakdown__row:hover {
     stroke: Highlight;
   }
 }
+
+/* ---------- MAZ-222: hero cents ---------- */
+/* The cards draw the hero's cents at about half the size and dimmed ("$1,116" + ".65"). */
+.hero-money__cents {
+  font-size: 0.53em;
+  letter-spacing: -0.03em;
+  opacity: 0.55;
+}
+
+/* ---------- MAZ-222: list panels ---------- */
+/*
+ * Below 1100px the phone cards put a list's heading ("Recent", "Categories") above a solid list
+ * card, in the section-heading style. From 1100px (iPad and desktop cards) it stays a panel title.
+ */
+.panel__body {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+@media (max-width: 1099px) {
+  .card.panel--list {
+    gap: 10px;
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  .panel--list > .card__head {
+    padding-inline: 4px;
+  }
+
+  .panel--list > .card__head .panel__title {
+    font-size: 1.375rem;
+    letter-spacing: -0.02em;
+  }
+
+  .panel--list > .panel__body {
+    padding: 4px 16px;
+    border-radius: var(--pk-r-card);
+    background: var(--pk-surface);
+    box-shadow: 0 0 0 0.5px var(--pk-separator);
+  }
+}
+
+/* MAZ-222 (iphone-insights, web-home): the amount sits at the end, beside the name and its bar (over its percent on Insights). */
+.breakdown__row .breakdown__amount {
+  display: grid;
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  justify-items: end;
+  font-weight: 600;
+}
+
+.breakdown__row .breakdown__track {
+  grid-column: 2;
+}
+
+.breakdown__percent {
+  color: var(--pk-label-2);
+  font-size: 0.75rem;
+  font-weight: 500;
+}

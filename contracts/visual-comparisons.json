@@ -66,11 +66,6 @@
         ],
         "deviations": [
           {
-            "summary": "Recent rows use gray tiles with tinted glyphs (a category in copper), the Recent heading sits inside its card, and the hero cents are full size",
-            "kind": "follow-up",
-            "ref": "MAZ-222"
-          },
-          {
             "summary": "The flow card title has no chevron and Insights is a bare copper link, not a pill; Recent rows read category · date, not date · account",
             "kind": "follow-up",
             "ref": "MAZ-223"
@@ -114,11 +109,6 @@
           "dark"
         ],
         "deviations": [
-          {
-            "summary": "Recent rows use gray tiles with tinted glyphs, the Recent heading sits inside its card, and the hero cents are full size",
-            "kind": "follow-up",
-            "ref": "MAZ-222"
-          },
           {
             "summary": "The flow card title has no chevron and Insights is a bare copper link; Recent rows read category · date",
             "kind": "follow-up",
@@ -206,11 +196,6 @@
           "dark"
         ],
         "deviations": [
-          {
-            "summary": "Categories use gray tiles (Groceries in copper), the heading sits inside the card, and amount and percent share one line",
-            "kind": "follow-up",
-            "ref": "MAZ-222"
-          },
           {
             "summary": "Spending · your share is a card header instead of the screen subtitle",
             "kind": "follow-up",
@@ -302,11 +287,6 @@
             "summary": "Filters are a labelled Type control, an All time / Month / Year control and a month stepper, not one row of chips",
             "kind": "follow-up",
             "ref": "MAZ-225"
-          },
-          {
-            "summary": "Each row is its own card with a gray tile (copper for a category), not one solid card per day with category-colored tiles; amounts use a hyphen and a gap",
-            "kind": "follow-up",
-            "ref": "MAZ-222"
           },
           {
             "summary": "No swipe actions and no bottom search field: rows open the entry dialog, and search follows the list",
@@ -538,11 +518,6 @@
             "summary": "No Edit categories link at the end of the picker",
             "kind": "follow-up",
             "ref": "MAZ-226"
-          },
-          {
-            "summary": "The selected tile is drawn near copper; categories never take the action tint",
-            "kind": "follow-up",
-            "ref": "MAZ-222"
           }
         ]
       }
@@ -720,11 +695,6 @@
             "summary": "Members are shown by email, with initials from the email",
             "kind": "follow-up",
             "ref": "MAZ-171"
-          },
-          {
-            "summary": "In dark the selected Expenses segment barely differs from the track",
-            "kind": "follow-up",
-            "ref": "MAZ-222"
           }
         ]
       }
@@ -1660,11 +1630,6 @@
             "summary": "The banner adds an explanation and a bordered Retry",
             "kind": "follow-up",
             "ref": "MAZ-234"
-          },
-          {
-            "summary": "Rows use gray tiles, the Recent heading sits inside the card, and the hero cents are full size",
-            "kind": "follow-up",
-            "ref": "MAZ-222"
           }
         ]
       }
@@ -1942,11 +1907,6 @@
             "summary": "The money flow is the stacked flow, and Recent and Explore your month follow the dashboard",
             "kind": "follow-up",
             "ref": "MAZ-224"
-          },
-          {
-            "summary": "Gray tiles and full-size hero cents",
-            "kind": "follow-up",
-            "ref": "MAZ-222"
           }
         ]
       }
@@ -1988,11 +1948,6 @@
             "summary": "The entry opens in a dialog over a one-column page, not a detail pane beside the list; the detail lacks the split and receipt groups",
             "kind": "follow-up",
             "ref": "MAZ-225"
-          },
-          {
-            "summary": "Gray tiles instead of category-colored tiles",
-            "kind": "follow-up",
-            "ref": "MAZ-222"
           }
         ]
       }
@@ -2352,11 +2307,6 @@
             "ref": "MAZ-224"
           },
           {
-            "summary": "By category uses gray tiles and adds percents; hero cents are full size",
-            "kind": "follow-up",
-            "ref": "MAZ-222"
-          },
-          {
             "summary": "The capture focuses no band; the card shows Groceries hovered",
             "kind": "follow-up",
             "ref": "MAZ-235"
@@ -2385,11 +2335,6 @@
             "summary": "A card list with a dialog, not a table with checkboxes, badges, hover actions, a key-hint bar and a detail panel; the detail lacks the split and receipt",
             "kind": "follow-up",
             "ref": "MAZ-225"
-          },
-          {
-            "summary": "Gray tiles instead of category-colored tiles",
-            "kind": "follow-up",
-            "ref": "MAZ-222"
           }
         ]
       }

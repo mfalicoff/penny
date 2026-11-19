@@ -88,7 +88,7 @@ describe("Activity", () => {
       expect(within(card).getByText("Spent").nextElementSibling).toHaveTextContent("$90.00");
     });
     expect(within(card).getByText("Earned").nextElementSibling).toHaveTextContent("$0.00");
-    expect(within(card).getByText("Left").nextElementSibling).toHaveTextContent("-$90.00");
+    expect(within(card).getByText("Left").nextElementSibling).toHaveTextContent("−$90.00");
     expect(card).toHaveTextContent("Earned leaves out $500.00 of income dated after today, listed as Expected until its date.");
   });
 
@@ -195,7 +195,7 @@ describe("Activity", () => {
     const days = within(list).getAllByRole("heading", { level: 2 });
     expect(days.map((day) => day.textContent)).toEqual([expect.stringMatching(/^Saturday, Nov\.? 7$/), expect.stringMatching(/^Friday, Nov\.? 6$/), expect.stringMatching(/^Thursday, Nov\.? 5$/), expect.stringMatching(/^Tuesday, Nov\.? 3$/), expect.stringMatching(/^Sunday, Nov\.? 1$/)]);
     const totalOf = (day: HTMLElement) => day.closest(".day-group__head")?.querySelector(".day-group__total")?.textContent;
-    expect(days.map(totalOf)).toEqual(["Day total -$200.00", "Day total -$72.35", "Day total +$4,800.00 income", "Day total -$30.00", "Day total -$1,450.00"]);
+    expect(days.map(totalOf)).toEqual(["Day total −$200.00", "Day total −$72.35", "Day total +$4,800.00 income", "Day total −$30.00", "Day total −$1,450.00"]);
     // jsdom has no matchMedia, so this is the phone layout: the list comes before search and the totals.
     const search = screen.getByRole("searchbox", { name: "Search transactions" });
     expect(list.compareDocumentPosition(search) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();

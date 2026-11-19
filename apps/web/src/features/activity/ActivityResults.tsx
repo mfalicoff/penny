@@ -10,6 +10,7 @@ import { searchTransactionsQuery } from "../../api/search";
 import { useAccountEmail } from "../../auth/account";
 import { Button } from "../../design/controls";
 import { Icon } from "../../design/Icon";
+import { tileStyle } from "../../design/categoryTint";
 import { Money } from "../../design/Money";
 import { EmptyState, useOnline } from "../../design/states";
 import { useLedgerSync } from "../../offline/OfflineLedgerProvider";
@@ -303,7 +304,7 @@ function Row({
             onOpen(entry, event.currentTarget);
           }}
         >
-          <span className={expected ? "category-dot category-dot--expected" : "category-dot"} style={{ color: category?.color }}>
+          <span className={expected ? "category-dot category-dot--expected" : "category-dot"} style={tileStyle({ ...category, entryKind: entry.kind })}>
             <Icon name={categoryIcon(category?.icon)} size={18} />
           </span>
           <span className="results__title">{entry.title}</span>
@@ -329,7 +330,7 @@ function Row({
   return (
     <li className="results__row activity-row">
       <Link to="/households/$id/expenses/$expenseId" params={{ id: entry.householdId, expenseId: entry.id }} className="activity-row__main">
-        <span className="category-dot" style={{ color: entry.category.color }}>
+        <span className="category-dot" style={tileStyle(entry.category)}>
           <Icon name={categoryIcon(entry.category.icon)} size={18} />
         </span>
         <span className="results__title">{entry.title}</span>

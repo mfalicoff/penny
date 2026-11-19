@@ -96,9 +96,9 @@ describe("Home", () => {
     renderApp("/?month=2026-11");
     const recent = await screen.findByRole("region", { name: "Recent" });
     const amountOf = async (title: string) => (await within(recent).findByText(title)).closest("li")?.querySelector(".results__amount .money")?.textContent;
-    expect(await amountOf("Rent")).toBe("-$1,450.00");
-    expect(await amountOf("Morning coffee")).toBe("-$6.20");
-    expect(await amountOf("Hydro")).toBe("-$30.00");
+    expect(await amountOf("Rent")).toBe("−$1,450.00");
+    expect(await amountOf("Morning coffee")).toBe("−$6.20");
+    expect(await amountOf("Hydro")).toBe("−$30.00");
     expect(await amountOf("Monthly salary")).toBe("+$4,800.00 income");
     expect(await amountOf("Index fund")).toBe("$200.00 invested");
   });
@@ -248,7 +248,7 @@ describe("Home", () => {
     await waitFor(() => {
       expect(within(breakdown).getAllByRole("listitem")).toHaveLength(2);
     });
-    expect(within(breakdown).getAllByRole("listitem").map((item) => item.textContent)).toEqual(["Food & drinks$1,456.20 · 98%", "Utilities$30.00 · 2%"]);
+    expect(within(breakdown).getAllByRole("listitem").map((item) => item.textContent)).toEqual(["Food & drinks$1,456.20, 98% of spending", "Utilities$30.00, 2% of spending"]);
     await user.click(within(breakdown).getByRole("button", { name: /Utilities/ }));
     await waitFor(() => {
       expect(router.state.location.search).toMatchObject({ month: "2026-11", category: expect.stringContaining("household-category:Utilities") as unknown });
@@ -373,7 +373,7 @@ describe("Insights", () => {
     expect(spending).toHaveTextContent("Mostly Food & drinks and Utilities.");
     expect(regionOrder().slice(0, 3)).toEqual(["Spending", "Categories", "Follow your money"]);
     const categories = screen.getByRole("region", { name: "Categories" });
-    expect(within(categories).getAllByRole("listitem").map((item) => item.textContent)).toEqual(["Food & drinks$1,456.20 · 98%", "Utilities$30.00 · 2%"]);
+    expect(within(categories).getAllByRole("listitem").map((item) => item.textContent)).toEqual(["Food & drinks$1,456.20, 98%", "Utilities$30.00, 2%"]);
     expect(screen.queryByRole("region", { name: "Last 6 months" })).not.toBeInTheDocument();
   });
 });

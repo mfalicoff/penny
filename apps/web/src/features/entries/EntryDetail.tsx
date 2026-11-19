@@ -3,6 +3,7 @@ import { accountTypeLabels, kindLabels, type Transaction } from "@domain/ledger.
 import { useRef, useState } from "react";
 import { Badge, Button } from "../../design/controls";
 import { Icon } from "../../design/Icon";
+import { tileStyle } from "../../design/categoryTint";
 import { Dialog } from "../../design/ModalDialog";
 import { formatCents, Money } from "../../design/Money";
 import { Banner, SaveErrorBanner, useToast } from "../../design/states";
@@ -82,7 +83,7 @@ export function EntryDetailDialog({ entry: shown, onClose }: { entry: Transactio
           </dd>
           <dt>Category</dt>
           <dd>
-            <span className="category-dot" style={{ color: category?.color }}>
+            <span className="category-dot" style={tileStyle({ ...category, entryKind: entry.kind })}>
               <Icon name={categoryIcon(category?.icon)} size={16} />
             </span>{" "}
             {category?.name ?? "Unknown category"}
