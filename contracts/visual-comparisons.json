@@ -66,14 +66,24 @@
         ],
         "deviations": [
           {
-            "summary": "Coming up and Explore your month follow Recent, and the month switcher leads the page under the compact top bar (MAZ-174)",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+            "summary": "The top row is the logo, the page title and a text month control with the add button at top right, not the glass month pill with calendar and settings buttons; the tab bar adds More instead of the add button beside four tabs",
+            "kind": "follow-up",
+            "ref": "MAZ-221"
           },
           {
-            "summary": "At phone width the tab bar adds More (Settings, Recurring, Accounts, Categories) instead of the Settings sheet from Home",
+            "summary": "Recent rows use gray tiles with tinted glyphs (a category in copper), the Recent heading sits inside its card, and the hero cents are full size",
             "kind": "follow-up",
-            "ref": "MAZ-173"
+            "ref": "MAZ-222"
+          },
+          {
+            "summary": "The flow card title has no chevron and Insights is a bare copper link, not a pill; Recent rows read category · date, not date · account",
+            "kind": "follow-up",
+            "ref": "MAZ-223"
+          },
+          {
+            "summary": "Adds the Recorded so far note and a longer projected line, and lists Coming up and Explore your month after Recent",
+            "kind": "follow-up",
+            "ref": "MAZ-224"
           }
         ]
       }
@@ -110,14 +120,24 @@
         ],
         "deviations": [
           {
-            "summary": "Coming up and Explore your month follow Recent, and the month switcher leads the page under the compact top bar (MAZ-174)",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+            "summary": "The top row is the logo, the page title and a text month control with the add button at top right, and the tab bar adds More",
+            "kind": "follow-up",
+            "ref": "MAZ-221"
           },
           {
-            "summary": "At phone width the tab bar adds More (Settings, Recurring, Accounts, Categories) instead of the Settings sheet from Home",
+            "summary": "Recent rows use gray tiles with tinted glyphs, the Recent heading sits inside its card, and the hero cents are full size",
             "kind": "follow-up",
-            "ref": "MAZ-173"
+            "ref": "MAZ-222"
+          },
+          {
+            "summary": "The flow card title has no chevron and Insights is a bare copper link; Recent rows read category · date",
+            "kind": "follow-up",
+            "ref": "MAZ-223"
+          },
+          {
+            "summary": "Adds the Recorded so far note and a longer projected line, and lists Coming up and Explore your month after Recent",
+            "kind": "follow-up",
+            "ref": "MAZ-224"
           }
         ]
       }
@@ -151,9 +171,24 @@
         ],
         "deviations": [
           {
-            "summary": "On phones the flow is two stacked bars with a value list, not the Sankey; Follow your money is a section of Insights",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+            "summary": "At phone width the flow is two stacked bars with a value list at the end of Insights, not the pushed Money flow screen with a Sankey; adds a focus line and Show as a table",
+            "kind": "follow-up",
+            "ref": "MAZ-224"
+          },
+          {
+            "summary": "Legend amounts have no currency symbol, and Came in and Left over are green instead of the label color",
+            "kind": "follow-up",
+            "ref": "MAZ-223"
+          },
+          {
+            "summary": "The capture focuses no band; the card shows Home focused with its focus card",
+            "kind": "follow-up",
+            "ref": "MAZ-235"
+          },
+          {
+            "summary": "No tab is selected; the card keeps Home selected",
+            "kind": "follow-up",
+            "ref": "MAZ-221"
           }
         ]
       }
@@ -187,9 +222,24 @@
         ],
         "deviations": [
           {
-            "summary": "Follow your money (the stacked phone flow) follows the categories, since the money flow is a section of Insights on the web",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+            "summary": "The logo, page title and text month control replace the back button and month pill, and no tab is selected",
+            "kind": "follow-up",
+            "ref": "MAZ-221"
+          },
+          {
+            "summary": "Categories use gray tiles (Groceries in copper), the heading sits inside the card, and amount and percent share one line",
+            "kind": "follow-up",
+            "ref": "MAZ-222"
+          },
+          {
+            "summary": "Spending · your share is a card header instead of the screen subtitle",
+            "kind": "follow-up",
+            "ref": "MAZ-223"
+          },
+          {
+            "summary": "Follow your money (the stacked phone flow) follows the categories",
+            "kind": "follow-up",
+            "ref": "MAZ-224"
           }
         ]
       }
@@ -223,9 +273,19 @@
         ],
         "deviations": [
           {
-            "summary": "The calendar is a section of Home, not a sheet",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+            "summary": "The calendar is a section of Home followed by By category and Follow your money, not a sheet with close, month navigation and Today",
+            "kind": "follow-up",
+            "ref": "MAZ-224"
+          },
+          {
+            "summary": "The legend reads Expected or scheduled, not Scheduled, and there is no Today button or day detail",
+            "kind": "follow-up",
+            "ref": "MAZ-223"
+          },
+          {
+            "summary": "The capture selects no day; the card shows a selected day with its entries",
+            "kind": "follow-up",
+            "ref": "MAZ-235"
           }
         ]
       }
@@ -259,14 +319,19 @@
         ],
         "deviations": [
           {
-            "summary": "Type and the period lead the day-grouped list as segmented controls, and search, the period totals and the category and day filters follow the list on the page, not a bottom search field and a filter sheet",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+            "summary": "Filters are a labelled Type control, an All time / Month / Year control and a month stepper, not one row of chips",
+            "kind": "follow-up",
+            "ref": "MAZ-225"
           },
           {
-            "summary": "Row actions open the entry dialog instead of swipe actions",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#interaction-baseline"
+            "summary": "Each row is its own card with a gray tile (copper for a category), not one solid card per day with category-colored tiles; amounts use a hyphen and a gap",
+            "kind": "follow-up",
+            "ref": "MAZ-222"
+          },
+          {
+            "summary": "No swipe actions and no bottom search field: rows open the entry dialog, and search follows the list",
+            "kind": "follow-up",
+            "ref": "MAZ-227"
           }
         ]
       }
@@ -293,9 +358,14 @@
         ],
         "deviations": [
           {
-            "summary": "Active filters are the page's segmented controls, not removable chips, and the period action reads Search all time after Activity's All time period",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+            "summary": "The tab bar covers the search field; the empty state reads Nothing matches. Try another word. with no Search all months or Clear filters buttons, under a redundant No matching transactions line",
+            "kind": "follow-up",
+            "ref": "MAZ-225"
+          },
+          {
+            "summary": "Active filters are the page's segmented controls, not removable chips, which pushes the empty state down",
+            "kind": "follow-up",
+            "ref": "MAZ-225"
           }
         ]
       }
@@ -323,9 +393,14 @@
         ],
         "deviations": [
           {
-            "summary": "Add entry and other forms are keyboard dialogs over the page, with no hero amount or keypad",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#interaction-baseline"
+            "summary": "Add entry is a dialog with labelled fields and a Cancel/Save footer, with no hero amount or keypad",
+            "kind": "follow-up",
+            "ref": "MAZ-227"
+          },
+          {
+            "summary": "The amount is an ordinary input; the type reads Investment; there is no Split row (a Household select instead); the selected chip is copper, not the category color",
+            "kind": "follow-up",
+            "ref": "MAZ-226"
           }
         ]
       }
@@ -353,14 +428,19 @@
         ],
         "deviations": [
           {
-            "summary": "Add entry and other forms are keyboard dialogs over the page, with no hero amount or keypad",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#interaction-baseline"
+            "summary": "Add entry is a dialog with labelled fields and a Cancel/Save footer, with no hero amount or keypad",
+            "kind": "follow-up",
+            "ref": "MAZ-227"
           },
           {
-            "summary": "The form explains future-dated income under the Income type before a date is picked; the dated callout appears once the date is after today",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+            "summary": "No large green +amount; the Salary chip is copper; Repeat and Note sit under More details",
+            "kind": "follow-up",
+            "ref": "MAZ-226"
+          },
+          {
+            "summary": "No amber expected callout in the capture; the card's pay is dated after today",
+            "kind": "follow-up",
+            "ref": "MAZ-235"
           }
         ]
       }
@@ -394,9 +474,19 @@
         ],
         "deviations": [
           {
-            "summary": "More details expands inside the form instead of a stacked sheet",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#interaction-baseline"
+            "summary": "More details expands inside the form instead of a pushed sheet",
+            "kind": "follow-up",
+            "ref": "MAZ-227"
+          },
+          {
+            "summary": "Sections are ordered Your share, Repeat, Trip, Note, Receipt; Repeat is a select with no helper, Trip a select, and Note has no placeholder",
+            "kind": "follow-up",
+            "ref": "MAZ-226"
+          },
+          {
+            "summary": "The capture has no receipt attached; the card shows receipt.jpg",
+            "kind": "follow-up",
+            "ref": "MAZ-235"
           }
         ]
       }
@@ -430,9 +520,14 @@
         ],
         "deviations": [
           {
-            "summary": "Your share is a section of the form (All mine, Split equally, Amount, Percent) instead of a stacked sheet",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#interaction-baseline"
+            "summary": "Your share is a section of the form with Discard and Keep draft, not a stacked Split sheet",
+            "kind": "follow-up",
+            "ref": "MAZ-227"
+          },
+          {
+            "summary": "The share is a small pink-tinted banner, not a solid YOUR SHARE card with a large amount; the segment reads Split equally and the explanation differs",
+            "kind": "follow-up",
+            "ref": "MAZ-226"
           }
         ]
       }
@@ -460,9 +555,14 @@
         ],
         "deviations": [
           {
-            "summary": "A dialog over Add entry with no Edit categories link, so the draft stays in place; categories are managed from Manage › Categories",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+            "summary": "No Edit categories link at the end of the picker",
+            "kind": "follow-up",
+            "ref": "MAZ-226"
+          },
+          {
+            "summary": "The selected tile is drawn near copper; categories never take the action tint",
+            "kind": "follow-up",
+            "ref": "MAZ-222"
           }
         ]
       }
@@ -490,9 +590,14 @@
         ],
         "deviations": [
           {
-            "summary": "The entry detail is a dialog over Activity",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#interaction-baseline"
+            "summary": "The entry detail is a dialog over Activity, not a pushed screen",
+            "kind": "follow-up",
+            "ref": "MAZ-227"
+          },
+          {
+            "summary": "Leads with the unsigned total and an Expense badge, not a category tile and a signed your-share amount; one flat list with no Repeats, split or receipt groups",
+            "kind": "follow-up",
+            "ref": "MAZ-225"
           }
         ]
       }
@@ -540,9 +645,14 @@
         ],
         "deviations": [
           {
-            "summary": "Delete confirms in a dialog; the card's shared-expense wording applies only to shared expenses",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#interaction-baseline"
+            "summary": "Delete confirms in a centered dialog over the entry dialog, not a bottom sheet",
+            "kind": "follow-up",
+            "ref": "MAZ-227"
+          },
+          {
+            "summary": "Titles Delete Coffee? without quotes or a category icon, with a sentence instead of the amount · date · category line, and inline buttons",
+            "kind": "follow-up",
+            "ref": "MAZ-225"
           }
         ]
       }
@@ -576,9 +686,14 @@
         ],
         "deviations": [
           {
-            "summary": "At phone width the tab bar adds More (Settings, Recurring, Accounts, Categories) instead of the Settings sheet from Home",
+            "summary": "No overall subtitle; rows have no icon tiles, avatars or trailing balance and chevron; an Overdue badge replaces the balance; trips read SHARED TRIPS without balances; Join and New household are separate cards",
             "kind": "follow-up",
-            "ref": "MAZ-173"
+            "ref": "MAZ-228"
+          },
+          {
+            "summary": "The logo, page title and copper add at top right, and a fifth More tab",
+            "kind": "follow-up",
+            "ref": "MAZ-221"
           }
         ]
       }
@@ -617,14 +732,24 @@
         ],
         "deviations": [
           {
-            "summary": "Members are shown by email and initials from the email",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
+            "summary": "The hero is left-aligned; Shared expense is the primary action instead of Record payment; rows have no payer avatar and add the date; the section header sits inside the card",
+            "kind": "follow-up",
+            "ref": "MAZ-228"
           },
           {
-            "summary": "Expenses, Balances, People and History are links (?tab=) styled as the segmented control",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
+            "summary": "Invite and History are buttons under the actions; a month switcher and a REPEATING card are added",
+            "kind": "follow-up",
+            "ref": "MAZ-229"
+          },
+          {
+            "summary": "Members are shown by email, with initials from the email",
+            "kind": "follow-up",
+            "ref": "MAZ-171"
+          },
+          {
+            "summary": "In dark the selected Expenses segment barely differs from the track",
+            "kind": "follow-up",
+            "ref": "MAZ-222"
           }
         ]
       }
@@ -658,14 +783,19 @@
         ],
         "deviations": [
           {
-            "summary": "Members are shown by email and initials from the email",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
+            "summary": "Rows have no avatars; suggested payments have no Record paid pill and sit inside the balances card; the Settles pill and footnote have no clock icon",
+            "kind": "follow-up",
+            "ref": "MAZ-228"
           },
           {
-            "summary": "Expenses, Balances, People and History are links (?tab=) styled as the segmented control",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
+            "summary": "The full hero, actions and month switcher stay above the tabs instead of a navigation bar",
+            "kind": "follow-up",
+            "ref": "MAZ-229"
+          },
+          {
+            "summary": "Members are shown by email, with initials from the email",
+            "kind": "follow-up",
+            "ref": "MAZ-171"
           }
         ]
       }
@@ -704,14 +834,19 @@
         ],
         "deviations": [
           {
-            "summary": "Members are shown by email and initials from the email",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
+            "summary": "Rows have no avatars and show the role as a pill; Former members come before the invite card; join dates are long",
+            "kind": "follow-up",
+            "ref": "MAZ-228"
           },
           {
-            "summary": "The invite code is shown with a live countdown and Copy; the web has no share sheet",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
+            "summary": "The full hero stays above the tabs, an inline Remove is on member rows, and the invite has no share sheet",
+            "kind": "follow-up",
+            "ref": "MAZ-229"
+          },
+          {
+            "summary": "Members are shown by email, with initials from the email",
+            "kind": "follow-up",
+            "ref": "MAZ-171"
           }
         ]
       }
@@ -745,14 +880,19 @@
         ],
         "deviations": [
           {
-            "summary": "Add entry and other forms are keyboard dialogs over the page, with no hero amount or keypad",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#interaction-baseline"
+            "summary": "The shared expense form is the Add entry dialog with labelled fields, no hero amount or keypad",
+            "kind": "follow-up",
+            "ref": "MAZ-227"
           },
           {
-            "summary": "Members are shown by email and initials from the email",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
+            "summary": "Titled Add entry, not New expense with the household as subtitle",
+            "kind": "follow-up",
+            "ref": "MAZ-226"
+          },
+          {
+            "summary": "Members are shown by email, with initials from the email",
+            "kind": "follow-up",
+            "ref": "MAZ-171"
           }
         ]
       }
@@ -786,14 +926,19 @@
         ],
         "deviations": [
           {
-            "summary": "Record payment is a dialog over the household",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
+            "summary": "Titled with the expense name; no payer and receiver avatars with an arrow, no Full share pill; Cancel beside a right-aligned Mark as paid",
+            "kind": "follow-up",
+            "ref": "MAZ-228"
           },
           {
-            "summary": "Members are shown by email and initials from the email",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
+            "summary": "Record payment is a dialog over the household",
+            "kind": "follow-up",
+            "ref": "MAZ-227"
+          },
+          {
+            "summary": "Members are shown by email, with initials from the email",
+            "kind": "follow-up",
+            "ref": "MAZ-171"
           }
         ]
       }
@@ -827,9 +972,9 @@
         ],
         "deviations": [
           {
-            "summary": "The seeded state is a payment recorded on another device, so the dialog names that payment and lists only the share's repaid status, not an edited total and share",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
+            "summary": "No red error banner with an alert icon; a Before/Now table instead of struck-through rows with an Edited row; Review expense isn't full width; titled with the expense name",
+            "kind": "follow-up",
+            "ref": "MAZ-228"
           }
         ]
       }
@@ -856,9 +1001,14 @@
         ],
         "deviations": [
           {
-            "summary": "Add entry and other forms are keyboard dialogs over the page, with no hero amount or keypad",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#interaction-baseline"
+            "summary": "A dialog with Create/Join below the title and Cancel beside Create household, not a sheet with a house tile",
+            "kind": "follow-up",
+            "ref": "MAZ-227"
+          },
+          {
+            "summary": "Details are a plain list with no icons or Currency lock",
+            "kind": "follow-up",
+            "ref": "MAZ-228"
           }
         ]
       }
@@ -892,9 +1042,14 @@
         ],
         "deviations": [
           {
-            "summary": "Expenses, Balances, People and History are links (?tab=) styled as the segmented control",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
+            "summary": "History is a panel under the household's hero and tabs, not its own screen",
+            "kind": "follow-up",
+            "ref": "MAZ-229"
+          },
+          {
+            "summary": "Filters are a segmented control; rows have no actor avatar or action badge and no bold names; day headers are long dates in one card",
+            "kind": "follow-up",
+            "ref": "MAZ-228"
           }
         ]
       }
@@ -921,9 +1076,19 @@
         ],
         "deviations": [
           {
-            "summary": "At phone width the tab bar adds More (Settings, Recurring, Accounts, Categories) instead of the Settings sheet from Home",
+            "summary": "The countdown is a gray pill; the featured trip shows Trip total and Your spending without avatars instead of Your share so far",
             "kind": "follow-up",
-            "ref": "MAZ-173"
+            "ref": "MAZ-230"
+          },
+          {
+            "summary": "Adds a subtitle with New trip and Join a trip; other trips are a grid of tiles, not UPCOMING and PAST lists",
+            "kind": "follow-up",
+            "ref": "MAZ-229"
+          },
+          {
+            "summary": "The logo, page title and copper add at top right, and a fifth More tab",
+            "kind": "follow-up",
+            "ref": "MAZ-221"
           }
         ]
       }
@@ -957,9 +1122,19 @@
         ],
         "deviations": [
           {
-            "summary": "Expenses, Balances, People and History are links (?tab=) styled as the segmented control",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
+            "summary": "The hero isn't centered with the trip total leading; the second number reads Your spending, not your share",
+            "kind": "follow-up",
+            "ref": "MAZ-230"
+          },
+          {
+            "summary": "Trip expense, Invite, Edit trip and History buttons with an All trips link replace the navigation-bar icons",
+            "kind": "follow-up",
+            "ref": "MAZ-229"
+          },
+          {
+            "summary": "The seeded Lisbon trip has no expenses, so the shared and Only you rows can't be compared",
+            "kind": "follow-up",
+            "ref": "MAZ-213"
           }
         ]
       }
@@ -987,9 +1162,19 @@
         ],
         "deviations": [
           {
-            "summary": "Add entry and other forms are keyboard dialogs over the page, with no hero amount or keypad",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#interaction-baseline"
+            "summary": "A dialog with labelled fields and Cancel / Create trip, not a sheet",
+            "kind": "follow-up",
+            "ref": "MAZ-227"
+          },
+          {
+            "summary": "No WHEN group with a Currency lock row or PEOPLE group; the date note's wording differs",
+            "kind": "follow-up",
+            "ref": "MAZ-230"
+          },
+          {
+            "summary": "The capture leaves Share with others off; the card has it on",
+            "kind": "follow-up",
+            "ref": "MAZ-235"
           }
         ]
       }
@@ -1023,9 +1208,14 @@
         ],
         "deviations": [
           {
-            "summary": "Settings at phone width lists only Account, Appearance, Currency and Server; Recurring, Accounts, Categories, Face ID and Notifications aren't in it",
+            "summary": "No profile card; one list of Account, Appearance, Currency and Server with no MANAGE, PREFERENCES or SERVER groups, values or full-width Sign out row; the first row is copper-selected",
             "kind": "follow-up",
-            "ref": "MAZ-173"
+            "ref": "MAZ-231"
+          },
+          {
+            "summary": "Settings is a page in More, not a sheet from Home",
+            "kind": "follow-up",
+            "ref": "MAZ-221"
           }
         ]
       }
@@ -1059,14 +1249,19 @@
         ],
         "deviations": [
           {
-            "summary": "Shared schedules are marked Shared, with the household's name in place of the account and the amount labelled \"your share\"; a shared row opens its household",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-recurring-notes-maz-90"
+            "summary": "The subtitle adds sync wording; rows use gray tiles, have no chevron, and a paused row isn't dimmed; the header sits inside the card",
+            "kind": "follow-up",
+            "ref": "MAZ-232"
           },
           {
-            "summary": "No swipe actions: a row opens the schedule detail",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-recurring-notes-maz-90"
+            "summary": "Shared schedules are listed with a Shared badge, the household's name and your share",
+            "kind": "follow-up",
+            "ref": "MAZ-229"
+          },
+          {
+            "summary": "No swipe actions: a row opens the schedule dialog, and the footer says so",
+            "kind": "follow-up",
+            "ref": "MAZ-227"
           }
         ]
       }
@@ -1094,9 +1289,14 @@
         ],
         "deviations": [
           {
-            "summary": "The schedule detail is a dialog with Pause/Resume and Remove buttons",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-recurring-notes-maz-90"
+            "summary": "The schedule detail is a dialog, and Remove is a small tinted button",
+            "kind": "follow-up",
+            "ref": "MAZ-227"
+          },
+          {
+            "summary": "The amount is unsigned; a green Active pill; Edit isn't the copper primary; NEXT and DETAILS aren't grouped cards",
+            "kind": "follow-up",
+            "ref": "MAZ-232"
           }
         ]
       }
@@ -1124,9 +1324,9 @@
         ],
         "deviations": [
           {
-            "summary": "Add entry and other forms are keyboard dialogs over the page, with no hero amount or keypad",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#interaction-baseline"
+            "summary": "The subtitle and footer wording differ, names are bold, and an Add account button is added",
+            "kind": "follow-up",
+            "ref": "MAZ-232"
           }
         ]
       }
@@ -1154,9 +1354,19 @@
         ],
         "deviations": [
           {
-            "summary": "Add entry and other forms are keyboard dialogs over the page, with no hero amount or keypad",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#interaction-baseline"
+            "summary": "A dialog with a Cancel / Add account footer, not a sheet",
+            "kind": "follow-up",
+            "ref": "MAZ-227"
+          },
+          {
+            "summary": "Sentence-case labels instead of NAME and TYPE headers; the selected type has no check badge; the helper adds a sentence",
+            "kind": "follow-up",
+            "ref": "MAZ-232"
+          },
+          {
+            "summary": "The state is a new account; the card edits an account in use with a locked Remove",
+            "kind": "follow-up",
+            "ref": "MAZ-235"
           }
         ]
       }
@@ -1184,9 +1394,9 @@
         ],
         "deviations": [
           {
-            "summary": "Add entry and other forms are keyboard dialogs over the page, with no hero amount or keypad",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#interaction-baseline"
+            "summary": "The header reads N EXPENSE CATEGORIES, the footer differs, names are bold, and there is no reordering; in dark the kind control's selection is hard to see",
+            "kind": "follow-up",
+            "ref": "MAZ-232"
           }
         ]
       }
@@ -1214,9 +1424,14 @@
         ],
         "deviations": [
           {
-            "summary": "Add entry and other forms are keyboard dialogs over the page, with no hero amount or keypad",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#interaction-baseline"
+            "summary": "A dialog with a Cancel / Add category footer, not a sheet",
+            "kind": "follow-up",
+            "ref": "MAZ-227"
+          },
+          {
+            "summary": "Labelled Name and Kind fields, swatches and icons not in grouped cards, eight colors and about 26 icons instead of five and 18; in dark the selected kind reads as a hole",
+            "kind": "follow-up",
+            "ref": "MAZ-232"
           }
         ]
       }
@@ -1244,9 +1459,19 @@
         ],
         "deviations": [
           {
-            "summary": "Appearance is a Settings pane with Reduce transparency; text size follows the browser",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+            "summary": "Theme is a tile grid with a copper border, not side-by-side choices with radios and a check; the System footnote is missing",
+            "kind": "follow-up",
+            "ref": "MAZ-231"
+          },
+          {
+            "summary": "No Text size row, and a Display section is added",
+            "kind": "follow-up",
+            "ref": "MAZ-234"
+          },
+          {
+            "summary": "Appearance is a Settings pane with All settings, not a pushed page",
+            "kind": "follow-up",
+            "ref": "MAZ-227"
           }
         ]
       }
@@ -1298,14 +1523,14 @@
         ],
         "deviations": [
           {
-            "summary": "The single sign-on button reads \"Continue with Single sign-on\", the server's configured provider label, not \"SSO\"",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+            "summary": "No brand tile, a left-aligned title without the period, separate inputs with labels above, a gray SSO button, and no glow in dark",
+            "kind": "follow-up",
+            "ref": "MAZ-233"
           },
           {
-            "summary": "Under \"Take a look around with sample data\", a one-line note says the demo saves nothing; the web has no server chip with Change",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+            "summary": "No server chip; the SSO button names the configured provider; the demo link is under the form with a note",
+            "kind": "follow-up",
+            "ref": "MAZ-234"
           }
         ]
       }
@@ -1333,9 +1558,14 @@
         ],
         "deviations": [
           {
-            "summary": "The single sign-on button reads \"Continue with Single sign-on\", the server's configured provider label, not \"SSO\"",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+            "summary": "The title has no period; separate inputs with no strength meter or requirement check; no glow in dark",
+            "kind": "follow-up",
+            "ref": "MAZ-233"
+          },
+          {
+            "summary": "No back button or server chip, and an or divider with SSO is added",
+            "kind": "follow-up",
+            "ref": "MAZ-234"
           }
         ]
       }
@@ -1401,14 +1631,24 @@
         ],
         "deviations": [
           {
-            "summary": "No Try with sample data card: the web demo only starts from sign-in, so it never mixes with an account",
+            "summary": "No Try with sample data card",
             "kind": "follow-up",
-            "ref": "MAZ-174"
+            "ref": "MAZ-204"
           },
           {
-            "summary": "Add your first entry carries a Currency link, since the currency can only be chosen before the first entry",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+            "summary": "The empty hero is $0.00 in the label color, not a muted $0; empty Recent is text inside a card with no icon",
+            "kind": "follow-up",
+            "ref": "MAZ-223"
+          },
+          {
+            "summary": "Add your first entry carries a Currency link",
+            "kind": "follow-up",
+            "ref": "MAZ-224"
+          },
+          {
+            "summary": "The logo, page title and text month control replace the month pill and settings button, and the tab bar adds More",
+            "kind": "follow-up",
+            "ref": "MAZ-221"
           }
         ]
       }
@@ -1442,9 +1682,24 @@
         ],
         "deviations": [
           {
-            "summary": "Coming up and Explore your month follow Recent, and the month switcher leads the page under the compact top bar (MAZ-174)",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+            "summary": "Pending rows have no amber clock and Waiting to sync; the projected line has no as of last sync; the banner sits above the month control",
+            "kind": "follow-up",
+            "ref": "MAZ-223"
+          },
+          {
+            "summary": "The banner adds an explanation and a bordered Retry",
+            "kind": "follow-up",
+            "ref": "MAZ-234"
+          },
+          {
+            "summary": "The logo, page title and text month control replace the month pill and buttons",
+            "kind": "follow-up",
+            "ref": "MAZ-221"
+          },
+          {
+            "summary": "Rows use gray tiles, the Recent heading sits inside the card, and the hero cents are full size",
+            "kind": "follow-up",
+            "ref": "MAZ-222"
           }
         ]
       }
@@ -1478,9 +1733,9 @@
         ],
         "deviations": [
           {
-            "summary": "A failed save is a failed sync on the web: the entry is saved in the browser, and Home shows the not-synced banner with Retry",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+            "summary": "A failed save is a failed sync: the editor closes and Home shows an amber Not synced banner with Retry, not a red Couldn't save in the form",
+            "kind": "follow-up",
+            "ref": "MAZ-234"
           }
         ]
       }
@@ -1505,12 +1760,24 @@
         ]
       },
       "web": {
-        "status": "matches",
+        "status": "deviates",
         "owner": "MAZ-85",
         "capture": "402x874",
         "appearances": [
           "light",
           "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Reads Changes saved with a green check, not Expense added with the category tile, and hides the tab bar",
+            "kind": "follow-up",
+            "ref": "MAZ-234"
+          },
+          {
+            "summary": "Undo is copper text with a close button, not a pill; the saved row isn't highlighted; in dark the toast is see-through",
+            "kind": "follow-up",
+            "ref": "MAZ-233"
+          }
         ]
       }
     },
@@ -1543,9 +1810,14 @@
         ],
         "deviations": [
           {
-            "summary": "The confirmation is a dialog over Settings naming the host it was opened from; the captured state has nothing waiting, so it is the plain confirmation (the card's unsynced warning with Sync, then sign out is covered by offline.spec.ts)",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+            "summary": "A left-aligned dialog with no icon and inline buttons, with different body copy",
+            "kind": "follow-up",
+            "ref": "MAZ-233"
+          },
+          {
+            "summary": "The state has nothing waiting; the card shows the unsynced variant",
+            "kind": "follow-up",
+            "ref": "MAZ-235"
           }
         ]
       }
@@ -1682,14 +1954,24 @@
         ],
         "deviations": [
           {
-            "summary": "The money flow is the stacked flow, not the Sankey, because its panel is narrower than the Sankey needs at 1194px; Recent and Explore your month follow the dashboard",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+            "summary": "The sidebar lists Shared and Trips, not each household and trip; the selected item isn't copper-filled; the footer shows the server version; the header is a title and text month control",
+            "kind": "follow-up",
+            "ref": "MAZ-221"
           },
           {
-            "summary": "The sidebar doesn't list households and trips",
+            "summary": "Three Came in / Went out tiles instead of an inline legend; Coming up amounts are unsigned; no Daily spending chart",
             "kind": "follow-up",
-            "ref": "MAZ-173"
+            "ref": "MAZ-223"
+          },
+          {
+            "summary": "The money flow is the stacked flow, and Recent and Explore your month follow the dashboard",
+            "kind": "follow-up",
+            "ref": "MAZ-224"
+          },
+          {
+            "summary": "Gray tiles and full-size hero cents",
+            "kind": "follow-up",
+            "ref": "MAZ-222"
           }
         ]
       }
@@ -1728,9 +2010,19 @@
         ],
         "deviations": [
           {
-            "summary": "The entry detail is a dialog, not a side pane",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#interaction-baseline"
+            "summary": "The entry opens in a dialog over a one-column page, not a detail pane beside the list; the detail lacks the split and receipt groups",
+            "kind": "follow-up",
+            "ref": "MAZ-225"
+          },
+          {
+            "summary": "Gray tiles instead of category-colored tiles",
+            "kind": "follow-up",
+            "ref": "MAZ-222"
+          },
+          {
+            "summary": "The selected sidebar item isn't copper-filled",
+            "kind": "follow-up",
+            "ref": "MAZ-221"
           }
         ]
       }
@@ -1764,9 +2056,14 @@
         ],
         "deviations": [
           {
-            "summary": "Add entry and other forms are keyboard dialogs over the page, with no hero amount or keypad",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#interaction-baseline"
+            "summary": "Add entry is a one-column dialog with no hero amount",
+            "kind": "follow-up",
+            "ref": "MAZ-227"
+          },
+          {
+            "summary": "Not two panes; the amount is an input; Save is in the footer; the type reads Investment; no Split row; the selected chip is copper",
+            "kind": "follow-up",
+            "ref": "MAZ-226"
           }
         ]
       }
@@ -1810,14 +2107,19 @@
         ],
         "deviations": [
           {
-            "summary": "Members are shown by email and initials from the email",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
+            "summary": "Not two panes; Balances are their own section; Record payment, Invite and History are buttons",
+            "kind": "follow-up",
+            "ref": "MAZ-229"
           },
           {
-            "summary": "Balances are their own section, not a column beside the expenses",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
+            "summary": "Members are shown by email, with initials from the email",
+            "kind": "follow-up",
+            "ref": "MAZ-171"
+          },
+          {
+            "summary": "The sidebar lists Shared and Trips, not each household and trip, and the footer shows the server version",
+            "kind": "follow-up",
+            "ref": "MAZ-221"
           }
         ]
       }
@@ -1861,9 +2163,24 @@
         ],
         "deviations": [
           {
-            "summary": "Expenses, Balances, People and History are links (?tab=) styled as the segmented control",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
+            "summary": "No People card or Your share by category; the second number reads Your spending",
+            "kind": "follow-up",
+            "ref": "MAZ-230"
+          },
+          {
+            "summary": "Trip expense, Invite, Edit trip and History buttons with an All trips link",
+            "kind": "follow-up",
+            "ref": "MAZ-229"
+          },
+          {
+            "summary": "The sidebar lists Shared and Trips, not each household and trip",
+            "kind": "follow-up",
+            "ref": "MAZ-221"
+          },
+          {
+            "summary": "The seeded Lisbon trip has no expenses, so its list can't be compared",
+            "kind": "follow-up",
+            "ref": "MAZ-213"
           }
         ]
       }
@@ -1907,9 +2224,14 @@
         ],
         "deviations": [
           {
-            "summary": "Settings lists only Account, Appearance, Currency and Server",
+            "summary": "No profile card or groups; opens Account instead of Appearance; the selected row is a light tint, not a copper fill; the detail has no large title",
             "kind": "follow-up",
-            "ref": "MAZ-173"
+            "ref": "MAZ-231"
+          },
+          {
+            "summary": "The sidebar footer shows the server version, not Synced just now",
+            "kind": "follow-up",
+            "ref": "MAZ-221"
           }
         ]
       }
@@ -2030,14 +2352,29 @@
         ],
         "deviations": [
           {
-            "summary": "Recent and Explore your month (calendar and entries) follow the dashboard, and the Sankey card says Select instead of Hover",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+            "summary": "The sidebar lists Shared and Trips, not each household and trip, with no Recurring count and a server-version footer; the month control isn't segmented",
+            "kind": "follow-up",
+            "ref": "MAZ-221"
           },
           {
-            "summary": "The sidebar doesn't list households and trips",
+            "summary": "Totals are green and indigo, not the label color; Sankey labels have no currency symbol; Coming up amounts are unsigned",
             "kind": "follow-up",
-            "ref": "MAZ-173"
+            "ref": "MAZ-223"
+          },
+          {
+            "summary": "Adds the Recorded so far note, a focus line with Show as a table, and Recent below the dashboard",
+            "kind": "follow-up",
+            "ref": "MAZ-224"
+          },
+          {
+            "summary": "By category uses gray tiles and adds percents; hero cents are full size",
+            "kind": "follow-up",
+            "ref": "MAZ-222"
+          },
+          {
+            "summary": "The capture focuses no band; the card shows Groceries hovered",
+            "kind": "follow-up",
+            "ref": "MAZ-235"
           }
         ]
       }
@@ -2060,9 +2397,14 @@
         ],
         "deviations": [
           {
-            "summary": "The entry detail is a dialog, not a side panel",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#interaction-baseline"
+            "summary": "A card list with a dialog, not a table with checkboxes, badges, hover actions, a key-hint bar and a detail panel; the detail lacks the split and receipt",
+            "kind": "follow-up",
+            "ref": "MAZ-225"
+          },
+          {
+            "summary": "Gray tiles instead of category-colored tiles",
+            "kind": "follow-up",
+            "ref": "MAZ-222"
           }
         ]
       }
@@ -2085,14 +2427,24 @@
         ],
         "deviations": [
           {
-            "summary": "The flow card keeps its focus line and Show as a table, so the category table and the six-month chart start lower; the chart has a table of its values",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+            "summary": "The sidebar lists Shared and Trips, not each household and trip, with a server-version footer",
+            "kind": "follow-up",
+            "ref": "MAZ-221"
           },
           {
-            "summary": "The sidebar doesn't list households and trips",
+            "summary": "Came in is green; Sankey labels have no currency symbol; the Change column reads Up $150.00, not arrows",
             "kind": "follow-up",
-            "ref": "MAZ-173"
+            "ref": "MAZ-223"
+          },
+          {
+            "summary": "Adds This month, Spending by category and Show as a table",
+            "kind": "follow-up",
+            "ref": "MAZ-224"
+          },
+          {
+            "summary": "The capture focuses no band; the card shows Home selected",
+            "kind": "follow-up",
+            "ref": "MAZ-235"
           }
         ]
       }
@@ -2115,19 +2467,24 @@
         ],
         "deviations": [
           {
-            "summary": "The header adds Record payment next to Shared expense, as on iPhone and iPad",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
+            "summary": "No inline month switcher in the header; full-width tabs; a card list instead of the expense table with status pills; the side column holds Repeating instead of Balances with Record paid",
+            "kind": "follow-up",
+            "ref": "MAZ-228"
           },
           {
-            "summary": "Members are shown by email and initials from the email",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
+            "summary": "Record payment and History are added to the header",
+            "kind": "follow-up",
+            "ref": "MAZ-229"
           },
           {
-            "summary": "Balances are their own section; from 1100px the side column holds repeating expenses",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-shared-household-notes-maz-91"
+            "summary": "Members are shown by email, with initials from the email",
+            "kind": "follow-up",
+            "ref": "MAZ-171"
+          },
+          {
+            "summary": "The sidebar lists Shared and Trips, not each household and trip",
+            "kind": "follow-up",
+            "ref": "MAZ-221"
           }
         ]
       }
@@ -2150,9 +2507,19 @@
         ],
         "deviations": [
           {
-            "summary": "The next trip is a feature card without its expense list; other trips are a grid",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+            "summary": "The featured trip shows Trip total and Your spending without Your share, You owe or its expense table; two pills; tiles add a count and an ALL TRIPS label",
+            "kind": "follow-up",
+            "ref": "MAZ-230"
+          },
+          {
+            "summary": "Adds a subtitle with New trip and Join a trip",
+            "kind": "follow-up",
+            "ref": "MAZ-229"
+          },
+          {
+            "summary": "The sidebar lists Shared and Trips, not each household and trip",
+            "kind": "follow-up",
+            "ref": "MAZ-221"
           }
         ]
       }
@@ -2175,9 +2542,14 @@
         ],
         "deviations": [
           {
-            "summary": "Settings lists only Account, Appearance, Currency and Server",
+            "summary": "The nav lists only Account, Appearance, Currency and Server with copper selection, and opens Account instead of Appearance with Display and Server & sync",
             "kind": "follow-up",
-            "ref": "MAZ-173"
+            "ref": "MAZ-231"
+          },
+          {
+            "summary": "The sidebar lists Shared and Trips, not each household and trip, with a server-version footer",
+            "kind": "follow-up",
+            "ref": "MAZ-221"
           }
         ]
       }
@@ -2200,9 +2572,19 @@
         ],
         "deviations": [
           {
-            "summary": "Add entry and other forms are keyboard dialogs over the page, with no hero amount or keypad",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#interaction-baseline"
+            "summary": "Add entry is a one-column dialog with no hero amount",
+            "kind": "follow-up",
+            "ref": "MAZ-227"
+          },
+          {
+            "summary": "Not two panes; titled Add entry, not New entry; Save, not Add expense; Investment, not Invest; Split, Repeat, Trip and the receipt under More details; the selected chip is copper",
+            "kind": "follow-up",
+            "ref": "MAZ-226"
+          },
+          {
+            "summary": "The capture opens the dialog over Home; the card opens it over Activity",
+            "kind": "follow-up",
+            "ref": "MAZ-235"
           }
         ]
       }
@@ -2225,14 +2607,14 @@
         ],
         "deviations": [
           {
-            "summary": "The single sign-on button reads \"Continue with Single sign-on\", the server's configured provider label, not \"SSO\"",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+            "summary": "The form isn't on a solid panel; a bare leaf glyph instead of the copper-tile lockup; labels above the inputs; a gray SSO button",
+            "kind": "follow-up",
+            "ref": "MAZ-233"
           },
           {
-            "summary": "The form keeps the iPhone card's \"Take a look around with sample data\" link with its note, and has no server chip with Change",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+            "summary": "No server chip; the SSO button names the configured provider; adds the demo link with its note",
+            "kind": "follow-up",
+            "ref": "MAZ-234"
           }
         ]
       }
