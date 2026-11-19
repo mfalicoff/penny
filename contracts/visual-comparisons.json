@@ -1043,9 +1043,14 @@
         ],
         "deviations": [
           {
-            "summary": "Shared schedules are marked Shared, with the household's name in place of the account and the amount labelled \"your share\"; a shared row opens its household instead of swiping",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
+            "summary": "The card has no shared schedule: the shared Streaming row adds a Shared tag beside the title, the household's name in place of the account (on its own line at this width) and \"your share\" under the amount, and opens its household instead of swiping. Waiting for a design decision",
+            "kind": "follow-up",
+            "ref": "MAZ-198"
+          },
+          {
+            "summary": "The subtitle sits about 20 points further below the large title than on the card: the list starts below the system's large-title area, and a navigation subtitle folds the large title into an inline one. Waiting for a design decision",
+            "kind": "follow-up",
+            "ref": "MAZ-198"
           }
         ]
       },

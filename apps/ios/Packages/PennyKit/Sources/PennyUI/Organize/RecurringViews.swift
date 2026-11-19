@@ -19,13 +19,22 @@ struct RecurringListView: View {
     var body: some View {
         WorkspaceContent { ledger in
             List {
+                let items = Self.items(ledger.recurring, shared: shared)
+                if !items.isEmpty {
+                    // The card's subtitle, right under the large title (`.lsub`). A navigation
+                    // subtitle would fold the large title into an inline one.
+                    Section {
+                        Text(Self.subtitle).font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
+                            .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
+                    }
+                    .compactSectionSpacing()
+                }
                 if let failure {
                     Section {
                         SaveErrorBanner(failure: failure, retry: nil)
                             .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
                     }
                 }
-                let items = Self.items(ledger.recurring, shared: shared)
                 let kinds = EntryKind.allCases.filter { kind in items.contains { $0.kind == kind } }
                 ForEach(kinds, id: \.self) { kind in
                     Section {
@@ -36,7 +45,11 @@ struct RecurringListView: View {
                             }
                         }
                     } header: {
+                        // The card's group heading (`.gh`): small, semibold, upper case.
                         Text(Self.sectionTitle(kind))
+                            .font(.footnote.weight(.semibold))
+                            .textCase(.uppercase)
+                            .foregroundStyle(PennyColor.secondaryLabel)
                     } footer: {
                         if kind == kinds.last { Text(Self.footer(hasShared: !shared.isEmpty)) }
                     }
@@ -134,12 +147,27 @@ struct RecurringListView: View {
         }
     }
 
+    static let subtitle = "Penny records these on their date."
+
     static func footer(hasShared: Bool) -> String {
         let personal = "Swipe a schedule to pause or remove it. Removing keeps past entries."
         return hasShared ? personal + " Shared schedules open their household and count only your share." : personal
     }
 
     static func sectionTitle(_ kind: EntryKind) -> String { OrganizeText.kindPlural(kind) }
+}
+
+extension View {
+    /// No gap after this section, so the subtitle stays with the title (iOS only; the macOS
+    /// host build used for package tests has no section spacing).
+    @ViewBuilder
+    fileprivate func compactSectionSpacing() -> some View {
+        #if os(iOS)
+            listSectionSpacing(0)
+        #else
+            self
+        #endif
+    }
 }
 
 /// The schedule a row opened.
@@ -212,7 +240,7 @@ private struct ScheduleRow: View {
                     symbol: CategoryStyle.symbol(forIonicon: category?.icon ?? "repeat"),
                     color: PennyColor.category(category?.paletteColor ?? .other)
                 )
-                .opacity(rule.active ? 1 : 0.55)
+                .opacity(rule.active ? 1 : 0.5)
                 VStack(alignment: .leading, spacing: 3) {
                     Text(rule.title).font(.body.weight(.semibold))
                         .foregroundStyle(rule.active ? PennyColor.label : PennyColor.secondaryLabel)
@@ -221,12 +249,7 @@ private struct ScheduleRow: View {
                         Text(ScheduleText.row(rule, account: account, today: today))
                             .font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
                     } else {
-                        Label(ScheduleText.row(rule, account: account, today: today), systemImage: "pause.fill")
-                            .font(.footnote.weight(.semibold))
-                            .foregroundStyle(PennyColor.secondaryLabel)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 3)
-                            .background(PennyColor.fill, in: Capsule())
+                        ScheduleTag(ScheduleText.row(rule, account: account, today: today), systemImage: "pause.fill")
                     }
                 }
             }
@@ -263,18 +286,18 @@ private struct SharedScheduleRow: View {
         layout {
             HStack(spacing: 12) {
                 CategoryIcon(symbol: CategoryStyle.symbol(forIonicon: rule.category.icon), color: rule.category.tint)
-                    .opacity(rule.active ? 1 : 0.55)
+                    .opacity(rule.active ? 1 : 0.5)
                 VStack(alignment: .leading, spacing: 3) {
                     // The badge rides on the title's line, so the row stays two lines like a
                     // personal one; it drops below only when the title leaves no room.
                     ViewThatFits(in: .horizontal) {
                         HStack(alignment: .firstTextBaseline, spacing: 6) {
                             title(rule).lineLimit(1)
-                            SharedBadge()
+                            ScheduleTag("Shared", systemImage: "person.2.fill").fixedSize()
                         }
                         VStack(alignment: .leading, spacing: 3) {
                             title(rule).lineLimit(3)
-                            SharedBadge()
+                            ScheduleTag("Shared", systemImage: "person.2.fill")
                         }
                     }
                     if rule.active {
@@ -289,7 +312,7 @@ private struct SharedScheduleRow: View {
                         }
                         .font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
                     } else {
-                        ScheduleTag(detail, systemImage: "pause.fill", font: .footnote.weight(.semibold))
+                        ScheduleTag(detail, systemImage: "pause.fill")
                     }
                 }
             }
@@ -299,7 +322,8 @@ private struct SharedScheduleRow: View {
                     ScheduleAmount(
                         cents: schedule.shareCents, meaning: .expense, active: rule.active,
                         currency: schedule.household.currency)
-                    Text("your share").font(.caption).foregroundStyle(PennyColor.secondaryLabel)
+                    // The card's caption under an amount (`.row .amt span`).
+                    Text("your share").font(.caption.weight(.medium)).foregroundStyle(PennyColor.secondaryLabel)
                 }
                 Image(systemName: "chevron.right").font(.footnote.weight(.semibold))
                     .foregroundStyle(PennyColor.tertiaryLabel)
@@ -318,41 +342,29 @@ private struct SharedScheduleRow: View {
     }
 }
 
-/// "Shared" with people, in words and never color alone: a small capsule beside the title.
-private struct SharedBadge: View {
-    var body: some View {
-        HStack(spacing: 3) {
-            Image(systemName: "person.2.fill").imageScale(.small).accessibilityHidden(true)
-            Text("Shared")
-        }
-        .font(.caption2.weight(.semibold))
-        .foregroundStyle(PennyColor.secondaryLabel)
-        .padding(.horizontal, 6)
-        .padding(.vertical, 2)
-        .background(PennyColor.fill, in: Capsule())
-        .fixedSize()
-    }
-}
-
-/// A muted capsule under a schedule's title: Paused.
+/// The card's `.tag`: a small glyph and 12-point semibold words on the fill, in a rounded
+/// rectangle. "Paused · monthly" under a paused schedule's title, and "Shared" beside a
+/// shared one's, in words and never color alone.
 private struct ScheduleTag: View {
+    @ScaledMetric(relativeTo: .caption) private var glyph = 9.0
     let text: String
     let systemImage: String
-    let font: Font
 
-    init(_ text: String, systemImage: String, font: Font) {
+    init(_ text: String, systemImage: String) {
         self.text = text
         self.systemImage = systemImage
-        self.font = font
     }
 
     var body: some View {
-        Label(text, systemImage: systemImage)
-            .font(font)
-            .foregroundStyle(PennyColor.secondaryLabel)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 3)
-            .background(PennyColor.fill, in: Capsule())
+        HStack(spacing: 4) {
+            Image(systemName: systemImage).font(.system(size: glyph, weight: .bold)).accessibilityHidden(true)
+            Text(text)
+        }
+        .font(.caption.weight(.semibold))
+        .foregroundStyle(PennyColor.secondaryLabel)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 2)
+        .background(PennyColor.fill, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 }
 
