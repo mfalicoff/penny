@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Npgsql;
 
 namespace Penny.Backend.Persistence.Migrations;
@@ -46,6 +47,14 @@ public static class PreSquashUpgrade
             upgrade.CommandTimeout = 300;
             await upgrade.ExecuteNonQueryAsync(ct);
         }
+        await using (var history = new NpgsqlCommand(ReplaceHistory, connection, transaction))
+        {
+            history.Parameters.Add(new NpgsqlParameter<string> { TypedValue = SquashedMigration });
+            history.Parameters.Add(
+                new NpgsqlParameter<string> { TypedValue = ProductInfo.GetVersion() }
+            );
+            await history.ExecuteNonQueryAsync(ct);
+        }
         await transaction.CommitAsync(ct);
     }
 
@@ -89,9 +98,13 @@ public static class PreSquashUpgrade
         -- users: the unused salt column.
         ALTER TABLE penny.users DROP COLUMN salt;
 
-        -- One squashed migration replaces the seven.
-        DELETE FROM penny."__EFMigrationsHistory";
+        """;
+
+    // One squashed migration replaces the seven, recorded with the EF Core version that runs
+    // it, as EF does for the migrations it applies.
+    private const string ReplaceHistory = """
+        WITH removed AS (DELETE FROM penny."__EFMigrationsHistory")
         INSERT INTO penny."__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-        VALUES ('20261113183852_InitialSchema', '10.0.14');
+        VALUES ($1, $2)
         """;
 }

@@ -27,9 +27,14 @@ public sealed class ApiFixture : IAsyncLifetime
         .WithDatabase("penny_tests")
         .WithUsername("foundation_admin")
         .WithPassword(Guid.NewGuid().ToString("N"))
+        // A statement whose client gave up (a command timeout whose cancellation was not
+        // acknowledged closes the socket) stops within a second instead of running on and
+        // holding its locks into the next tests.
         .WithCommand(
             "-c",
             "archive_mode=on",
+            "-c",
+            "client_connection_check_interval=1000",
             "-c",
             $"archive_command=if [ -d {WalArchive} ]; then test ! -f {WalArchive}/%f && cp %p {WalArchive}/%f; fi"
         )
@@ -40,6 +45,10 @@ public sealed class ApiFixture : IAsyncLifetime
         "CREATE EXTENSION IF NOT EXISTS pg_trgm SCHEMA public; CREATE EXTENSION IF NOT EXISTS vector SCHEMA public";
 
     public NpgsqlDataSource Admin { get; private set; } = null!;
+
+    // Admin with a longer command timeout for the per-test reset: on a loaded runner it may
+    // wait for a previous test's statement to finish rather than fail every following test.
+    private NpgsqlDataSource resetSource = null!;
     public TestApiFactory Factory { get; private set; } = null!;
     public string RuntimeConnection { get; private set; } = "";
 
@@ -70,6 +79,9 @@ public sealed class ApiFixture : IAsyncLifetime
         var ct = TestContext.Current.CancellationToken;
         await postgres.StartAsync(ct);
         Admin = DatabaseSettings.Create(postgres.GetConnectionString()).CreateDataSource();
+        resetSource = DatabaseSettings
+            .Create(postgres.GetConnectionString(), commandTimeoutSeconds: 30)
+            .CreateDataSource();
         // The administrator creates the search extensions once (development/bootstrap.sql, run by migrate --bootstrap).
         await SqlAsync(CreateExtensions, ct);
         await DatabaseMigrator.ApplyAsync(Admin, ct);
@@ -233,7 +245,7 @@ public sealed class ApiFixture : IAsyncLifetime
             await SqlAsync("DROP SCHEMA IF EXISTS penny CASCADE", ct);
             await DatabaseMigrator.ApplyAsync(Admin, ct);
         }
-        await using var connection = await Admin.OpenConnectionAsync(ct);
+        await using var connection = await resetSource.OpenConnectionAsync(ct);
         var reset = await Respawner.CreateAsync(
             connection,
             new RespawnerOptions
@@ -261,6 +273,8 @@ public sealed class ApiFixture : IAsyncLifetime
             await Factory.DisposeAsync();
         if (Admin is not null)
             await Admin.DisposeAsync();
+        if (resetSource is not null)
+            await resetSource.DisposeAsync();
         await postgres.DisposeAsync();
         if (Directory.Exists(ReceiptRoot))
             Directory.Delete(ReceiptRoot, recursive: true);
