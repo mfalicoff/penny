@@ -118,6 +118,14 @@ export async function seed(definition, options) {
       for (const [kind, names] of Object.entries(step.rename))
         for (const item of ledger[kind]) if (item.id in names) item.name = names[item.id];
       await request("PUT", "/api/ledger", { token, body: { revision: current.body.revision, ledger } });
+    } else if (step.linkTrip) {
+      // Links a personal trip to a shared trip (sharedHouseholdId), as sharing it does.
+      const current = await request("GET", "/api/ledger", { token });
+      const ledger = structuredClone(current.body.ledger);
+      const trip = ledger.trips.find((item) => item.id === step.linkTrip.trip);
+      if (!trip) throw new Error(`Seed trip ${step.linkTrip.trip} is not in the ledger.`);
+      trip.sharedHouseholdId = context.households[step.linkTrip.household];
+      await request("PUT", "/api/ledger", { token, body: { revision: current.body.revision, ledger } });
     } else if (step.createHousehold) {
       const { ref, ...body } = step.createHousehold;
       const created = await request("POST", "/api/households", { token, body, expect: [201] });

@@ -112,6 +112,17 @@ public sealed partial class FullStackSeedTests(ApiFixture fixture) : SearchTestB
                         if (names![item!["id"]!.GetValue<string>()] is { } renamed)
                             item["name"] = renamed.GetValue<string>();
                 });
+            else if (step["linkTrip"] is JsonObject link)
+                // Links a personal trip to a shared trip (sharedHouseholdId), as sharing it does.
+                await SaveLedgerAsync(token!, document =>
+                    document["trips"]!
+                        .AsArray()
+                        .Single(item =>
+                            item!["id"]!.GetValue<string>() == link["trip"]!.GetValue<string>()
+                        )!["sharedHouseholdId"] = context.Households[
+                        link["household"]!.GetValue<string>()
+                    ]
+                );
             else if ((step["createHousehold"] ?? step["createTrip"]) is { } create)
             {
                 var body = create.DeepClone().AsObject();
