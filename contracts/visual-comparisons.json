@@ -2374,7 +2374,7 @@
         ],
         "deviations": [
           {
-            "summary": "The sidebar adds All households and All trips, and a trip shows its start date instead of its expense count, as decided in MAZ-240; the card isn't updated yet",
+            "summary": "Not captured since MAZ-240 changed the cards: the app draws the new sidebar (each household, All households, the trips with their start date, All trips, with the people and airplane icons), but the iPad captures could not run on the capture machine",
             "kind": "follow-up",
             "ref": "MAZ-240"
           },
@@ -2420,11 +2420,6 @@
         ],
         "deviations": [
           {
-            "summary": "The sidebar adds All households and All trips links, and a trip shows its start date (as on the web cards) instead of its expense count. Waiting for a design decision",
-            "kind": "follow-up",
-            "ref": "MAZ-221"
-          },
-          {
             "summary": "The sidebar footer names the account by its email, not the person's name",
             "kind": "follow-up",
             "ref": "MAZ-171"
@@ -2450,7 +2445,7 @@
         ],
         "deviations": [
           {
-            "summary": "The sidebar adds All households and All trips, and a trip shows its start date instead of its expense count, as decided in MAZ-240; the card isn't updated yet",
+            "summary": "Not captured since MAZ-240 changed the cards: the app draws the new sidebar (each household, All households, the trips with their start date, All trips, with the people and airplane icons), but the iPad captures could not run on the capture machine",
             "kind": "follow-up",
             "ref": "MAZ-240"
           },
@@ -2557,7 +2552,7 @@
         ],
         "deviations": [
           {
-            "summary": "The sidebar adds All households and All trips, and a trip shows its start date instead of its expense count, as decided in MAZ-240; the card isn't updated yet",
+            "summary": "Not captured since MAZ-240 changed the cards: the app draws the new sidebar (each household, All households, the trips with their start date, All trips, with the people and airplane icons), but the iPad captures could not run on the capture machine",
             "kind": "follow-up",
             "ref": "MAZ-240"
           },
@@ -2613,11 +2608,6 @@
             "ref": "MAZ-171"
           },
           {
-            "summary": "The sidebar adds All households and All trips links, and a trip shows its start date (as on the web cards) instead of its expense count. Waiting for a design decision",
-            "kind": "follow-up",
-            "ref": "MAZ-221"
-          },
-          {
             "summary": "Expenses, Balances and People are links styled as the segmented control, each with its own URL (decided in MAZ-229)",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
@@ -2643,7 +2633,7 @@
         ],
         "deviations": [
           {
-            "summary": "The sidebar adds All households and All trips, and a trip shows its start date instead of its expense count, as decided in MAZ-240; the card isn't updated yet",
+            "summary": "Not captured since MAZ-240 changed the cards: the app draws the new sidebar (each household, All households, the trips with their start date, All trips, with the people and airplane icons), but the iPad captures could not run on the capture machine",
             "kind": "follow-up",
             "ref": "MAZ-240"
           },
@@ -2694,11 +2684,6 @@
             "ref": "MAZ-230"
           },
           {
-            "summary": "The sidebar adds All households and All trips links, and a trip shows its start date (as on the web cards) instead of its expense count. Waiting for a design decision",
-            "kind": "follow-up",
-            "ref": "MAZ-221"
-          },
-          {
             "summary": "The sidebar footer names the account by its email, not the person's name",
             "kind": "follow-up",
             "ref": "MAZ-171"
@@ -2729,7 +2714,7 @@
         ],
         "deviations": [
           {
-            "summary": "The sidebar adds All households and All trips, and a trip shows its start date instead of its expense count, as decided in MAZ-240; the card isn't updated yet",
+            "summary": "Not captured since MAZ-240 changed the cards: the app draws the new sidebar (each household, All households, the trips with their start date, All trips, with the people and airplane icons), but the iPad captures could not run on the capture machine",
             "kind": "follow-up",
             "ref": "MAZ-240"
           },
@@ -2773,11 +2758,6 @@
             "summary": "No profile card or groups; opens Account instead of Appearance; the selected row is a light tint, not a copper fill; the detail has no large title",
             "kind": "follow-up",
             "ref": "MAZ-231"
-          },
-          {
-            "summary": "The sidebar adds All households and All trips links, and a trip shows its start date (as on the web cards) instead of its expense count. Waiting for a design decision",
-            "kind": "follow-up",
-            "ref": "MAZ-221"
           },
           {
             "summary": "The sidebar footer names the account by its email, not the person's name",
@@ -2903,11 +2883,6 @@
         ],
         "deviations": [
           {
-            "summary": "The sidebar adds an All households link after the households, because the Shared list (join and create) has no other way in from the sidebar. Waiting for a design decision",
-            "kind": "follow-up",
-            "ref": "MAZ-221"
-          },
-          {
             "summary": "The sidebar footer names the account by its email, not the person's name",
             "kind": "follow-up",
             "ref": "MAZ-171"
@@ -2958,11 +2933,6 @@
         ],
         "deviations": [
           {
-            "summary": "The sidebar adds an All households link after the households, because the Shared list (join and create) has no other way in from the sidebar. Waiting for a design decision",
-            "kind": "follow-up",
-            "ref": "MAZ-221"
-          },
-          {
             "summary": "The sidebar footer names the account by its email, not the person's name",
             "kind": "follow-up",
             "ref": "MAZ-171"
@@ -2998,11 +2968,6 @@
             "ref": "MAZ-171"
           },
           {
-            "summary": "The sidebar adds an All households link after the households, because the Shared list (join and create) has no other way in from the sidebar. Waiting for a design decision",
-            "kind": "follow-up",
-            "ref": "MAZ-221"
-          },
-          {
             "summary": "Expenses, Balances and People are links styled as the segmented control, each with its own URL (decided in MAZ-229)",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
@@ -3031,11 +2996,6 @@
             "summary": "The featured trip shows Trip total and Your spending without Your share, You owe; two pills; tiles add a count and an ALL TRIPS label",
             "kind": "follow-up",
             "ref": "MAZ-230"
-          },
-          {
-            "summary": "The sidebar adds an All households link after the households, because the Shared list (join and create) has no other way in from the sidebar. Waiting for a design decision",
-            "kind": "follow-up",
-            "ref": "MAZ-221"
           },
           {
             "summary": "The sidebar footer names the account by its email, not the person's name",
@@ -3071,11 +3031,6 @@
             "summary": "The nav lists only Account, Appearance, Currency and Server with copper selection, and opens Account instead of Appearance with Display and Server & sync",
             "kind": "follow-up",
             "ref": "MAZ-231"
-          },
-          {
-            "summary": "The sidebar adds an All households link after the households, because the Shared list (join and create) has no other way in from the sidebar. Waiting for a design decision",
-            "kind": "follow-up",
-            "ref": "MAZ-221"
           },
           {
             "summary": "The sidebar footer names the account by its email, not the person's name",

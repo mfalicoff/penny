@@ -1,7 +1,7 @@
 // Shared desktop chrome for the web cards: <div class="browser" data-url="..." data-active="home">…<main class="wmain">…</main></div>
 const WEB_NAV = [
   { items: [["home", "home", "Home", "G H"], ["activity", "list", "Activity", "G A"], ["insights", "pie-chart", "Insights", "G I"]] },
-  { h: "Together", items: [["apartment", "people", "Apartment", "", "$142"], ["lisbon", "airplane", "Lisbon", "", "Nov 12"], ["trips", "airplane", "All trips", ""]] },
+  { h: "Together", items: [["apartment", "people", "Apartment", "", "$142"], ["households", "people", "All households", ""], ["lisbon", "airplane", "Lisbon", "", "Nov 12"], ["trips", "airplane", "All trips", ""]] },
   { h: "Manage", items: [["recurring", "repeat", "Recurring", "", "6"], ["accounts", "wallet", "Accounts", ""], ["categories", "pricetag", "Categories", ""]] },
 ];
 function webChrome() {

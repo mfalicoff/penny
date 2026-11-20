@@ -61,6 +61,25 @@ struct IPadLayoutTests {
         #expect(together.trips[1].detail == "Nov 12")
     }
 
+    @Test("whenThereAreHouseholdsAndTrips_SidebarTogether_ShouldEndEachWithItsAllRow")
+    func allRows() {
+        // MAZ-240: as on the cards, All households follows the households and All trips the trips.
+        let listed = SidebarTogether(
+            households: [
+                household("h-flat", "Apartment"), household("t-lisbon", "Lisbon", trip: ("2026-11-12", "2026-11-19")),
+            ],
+            balances: [:], ledgerTrips: [], today: today, locale: english)
+        #expect(listed.sharedTitle == "All households")
+        #expect(listed.tripsTitle == "All trips")
+        // With nothing listed, the rows name the lists themselves.
+        let empty = SidebarTogether(households: [], balances: [:], ledgerTrips: [], today: today, locale: english)
+        #expect(empty.sharedTitle == "Shared")
+        #expect(empty.tripsTitle == "Trips")
+        // The same glyph as the rows above them.
+        #expect(SidebarTogether.householdSymbol == "person.2")
+        #expect(SidebarTogether.tripSymbol == "airplane")
+    }
+
     @Test("whenTheColumnIsNarrow_ActivitySplit_ShouldPushTheEntryInsteadOfCollapsingTheDetail")
     func activitySplit() {
         // Portrait with the sidebar beside it: too narrow for both, so the list pushes the entry.
