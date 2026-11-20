@@ -57,8 +57,6 @@ public sealed partial class ApiBoundaryMiddleware(
         }
         catch (Exception error) when (!context.Response.HasStarted)
         {
-            if (ApiErrors.Map(error).Status == 500)
-                Console.WriteLine("MAZ262DIAG " + error);
             var (status, message) = ApiErrors.Map(error);
             // Deliberately do not log exception text, request paths/bodies, credentials or SQL.
             // The W3C trace id (MAZ-127) finds the request trace; "-" when not traced.

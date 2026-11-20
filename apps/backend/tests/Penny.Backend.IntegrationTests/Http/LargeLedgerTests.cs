@@ -93,6 +93,35 @@ public sealed class LargeLedgerTests(ApiFixture fixture) : IntegrationTestBase(f
         read.Elapsed.ShouldBeLessThan(FullReadBudget);
     }
 
+    // Every CI run. The bulk copy is exempt from the statement timeout (MAZ-262), so the
+    // request deadline is what stops a full-ledger write that runs too long: the
+    // request gets the deadline's 503 well before the write would finish, and nothing
+    // is stored.
+    [Fact]
+    public async Task whenFullLedgerWriteOutlastsRequestDeadline_PutLedger_ShouldStopWithoutWriting()
+    {
+        await using var host = LargeHost(requestTimeoutSeconds: 2);
+        using var client = CreateClient(host);
+        var token = await RegisterAsync("deadline@example.test", client);
+        var snapshot = await GetAsync(client, token);
+        var entries = snapshot["ledger"]!["transactions"]!.AsArray();
+        for (var index = 0; index < LedgerLimits.MaxTransactions; index++)
+            entries.Add(Entry(index));
+
+        var write = Stopwatch.StartNew();
+        using (var stopped = await PutAsync(client, token, snapshot))
+            stopped.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
+        write.Stop();
+
+        Report(
+            $"full-ledger write stopped by a 2 s request deadline after {write.Elapsed.TotalSeconds:F2} s"
+        );
+        write.Elapsed.ShouldBeLessThan(TimeSpan.FromSeconds(5));
+        var stored = await GetAsync(client, token);
+        stored["revision"]!.GetValue<long>().ShouldBe(0);
+        stored["ledger"]!["transactions"]!.AsArray().ShouldBeEmpty();
+    }
+
     [Fact]
     public async Task whenUsersSyncConcurrently_LedgerFlow_ShouldStayIsolatedWithinBudget()
     {
@@ -176,7 +205,7 @@ public sealed class LargeLedgerTests(ApiFixture fixture) : IntegrationTestBase(f
 
     // Production body limit and statement timeout, and a request deadline long enough
     // to measure instead of time out.
-    private TestApiFactory LargeHost() =>
+    private TestApiFactory LargeHost(int requestTimeoutSeconds = 120) =>
         new(
             Fixture.RuntimeConnection,
             new Dictionary<string, string>
@@ -184,7 +213,9 @@ public sealed class LargeLedgerTests(ApiFixture fixture) : IntegrationTestBase(f
                 ["Backend:MaxRequestBodyBytes"] = (20 * 1024 * 1024).ToString(
                     CultureInfo.InvariantCulture
                 ),
-                ["Backend:RequestTimeoutSeconds"] = "120",
+                ["Backend:RequestTimeoutSeconds"] = requestTimeoutSeconds.ToString(
+                    CultureInfo.InvariantCulture
+                ),
                 // The production default (appsettings.json); the shared test host uses 1 s.
                 ["Database:CommandTimeoutSeconds"] = "5",
             }
