@@ -13,6 +13,9 @@ test.skip(process.env.PENNY_REAL_STACK !== "1", "needs the full-stack test envir
 test.describe.configure({ mode: "serial", timeout: 180_000 });
 
 const PASSWORD = "correct horse battery";
+
+/** An expense's detail: a dialog below 1100px, the pane beside the expenses from there (MAZ-229). */
+const expenseDetail = (page: Page, name: string) => page.getByRole("dialog", { name }).or(page.getByRole("region", { name, exact: true }));
 const OCT_30 = "2026-10-30T15:00:00Z";
 const OCT_31 = "2026-10-31T15:00:00Z";
 
@@ -117,7 +120,7 @@ test("two people: invite, splits, private account, stale payment, monthly settle
   await expect(list.getByRole("link", { name: /Hydro/ })).toContainText("$45.00 your share");
   await expect(list.getByRole("link", { name: /Internet/ })).toContainText("$20.00 your share");
   await list.getByRole("link", { name: /Hydro/ }).click();
-  const hydro = bea.page.getByRole("dialog", { name: "Hydro" });
+  const hydro = expenseDetail(bea.page, "Hydro");
   await expect(hydro.getByText("The payer's account stays private to them.")).toBeVisible();
   await hydro.getByRole("button", { name: "Mark your share as paid" }).click();
   await hydro.getByRole("button", { name: "Mark $45.00 as paid" }).click();
@@ -126,10 +129,10 @@ test("two people: invite, splits, private account, stale payment, monthly settle
 
   // Bea opens Internet's payment; Alex changes the shares first. The server refuses (409).
   await list.getByRole("link", { name: /Internet/ }).click();
-  const internet = bea.page.getByRole("dialog", { name: "Internet" });
+  const internet = expenseDetail(bea.page, "Internet");
   await internet.getByRole("button", { name: "Mark your share as paid" }).click();
   await alex.page.getByRole("link", { name: /Internet/ }).click();
-  await alex.page.getByRole("dialog", { name: "Internet" }).getByRole("button", { name: "Edit" }).click();
+  await expenseDetail(alex.page, "Internet").getByRole("button", { name: "Edit" }).click();
   const edit = alex.page.getByRole("dialog", { name: "Edit expense" });
   await edit.getByLabel("Your share in CAD").fill("30");
   await edit.getByLabel(`${bea.email}'s share in CAD`).fill("30");
