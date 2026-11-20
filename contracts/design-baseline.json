@@ -75,7 +75,7 @@
   "sources": [
     {
       "path": "docs/design/penny-ios/README.md",
-      "sha256": "5eac14411184caff1c6089fb2922b8db5d8930b599103e9589c88086c078576b"
+      "sha256": "379fa9d137afe491134cff3692b7b6423c68c463a9784ecfaab945cadd7a0dc7"
     },
     {
       "path": "docs/design/penny-ios/render.mjs",
@@ -143,7 +143,7 @@
     },
     {
       "path": "docs/design/visual-acceptance.md",
-      "sha256": "d8e563656f23efafedc897f0c2a360df7f19e3620f4c8b0f367cb4ade96712c6"
+      "sha256": "65bcdfc0ff36d14976f7b8f51099f0529f3b65af6d68089530c5262080be3c0a"
     }
   ],
   "tokens": {
@@ -499,7 +499,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/iphone/money-flow.html",
-      "sha256": "295bfbec37b62fb2a83030bfb3c75745973c978dfa226c024a07c57c0f3b9d3f",
+      "sha256": "0c09c8b0effe47bdc6a8f55949c8e48069efaa21d0acaab27cfdc68119b54a30",
       "nativeIssue": "MAZ-77",
       "webIssue": "MAZ-92",
       "route": "/",
@@ -1659,7 +1659,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/ipad/home.html",
-      "sha256": "66502f73418007473c6932c677b29ab03501366a303a7b3ef985d69ab2b0afde",
+      "sha256": "93d8157dbab1f431210ad827e99bd6db69e882976f3fed324990aa57a134f09a",
       "nativeIssue": "MAZ-77",
       "webIssue": "MAZ-92",
       "route": "/",
@@ -1961,7 +1961,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/web/home.html",
-      "sha256": "cf067ffbd70d4a2edfae86340d346e09ff7d964d1b158533b044a0204ced3f48",
+      "sha256": "0bbf9ae00e4d47845622373f9234eefaefcecea11a0f2e931ed909fc954b6208",
       "nativeIssue": "MAZ-77",
       "webIssue": "MAZ-92",
       "route": "/",
@@ -2007,7 +2007,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/web/insights.html",
-      "sha256": "c39a37d5ed78a9e901b26901ed7de075008f1e62b20369dac2bd2c074c95d94c",
+      "sha256": "41bb84105bcabac5181e6d29639ca46230bdb4289b213861272c0610627f0f40",
       "nativeIssue": "MAZ-77",
       "webIssue": "MAZ-92",
       "route": "/",

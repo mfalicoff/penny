@@ -2,7 +2,7 @@ import { emptyLedger, type Ledger, type Recurring, type Transaction } from "@dom
 import { describe, expect, it } from "vitest";
 import type { SharedRow } from "../src/api/projection";
 import { danaOctober, totalsOf } from "./fakes/futureIncome";
-import { calendarDays, categoryComparison, flowNodeSummary, groupSmall, homeSearchSchema, ledgerWithShared, monthEntries, monthReport, monthsEnding, shortLabel, spendingChange } from "../src/features/home/model";
+import { calendarDays, categoryComparison, flowNodeSummary, groupSmall, homeSearchSchema, ledgerWithShared, monthReport, monthsEnding, shortLabel, spendingChange } from "../src/features/home/model";
 
 /**
  * Home and Insights reporting (MAZ-92) against fixtures: the shared domain's month breakdown over
@@ -174,21 +174,6 @@ describe("shared shares", () => {
   });
 });
 
-describe("filters never change totals", () => {
-  it("filters the month's list by keyword, kind, day and category while the report stays the same", () => {
-    const view = ledgerWithShared(ledger([entry("coffee", { title: "Morning coffee", categoryId: "food", date: "2026-11-03" }), entry("rent", { categoryId: "home", total: 90000, share: 90000 }), entry("pay", { kind: "income", categoryId: "salary" })], [rule("salary")]), [shared("h")], []);
-    const before = monthReport(view, MONTH, END);
-    expect(monthEntries(view, MONTH, { day: undefined, q: "coffee", kind: undefined, category: undefined }).map((item) => item.id)).toEqual(["coffee"]);
-    expect(monthEntries(view, MONTH, { day: "2026-11-03", q: undefined, kind: undefined, category: undefined }).map((item) => item.id)).toEqual(["coffee"]);
-    expect(monthEntries(view, MONTH, { day: undefined, q: undefined, kind: "income", category: undefined }).map((item) => item.id)).toEqual(["salary:2026-11-25", "pay"]);
-    expect(monthEntries(view, MONTH, { day: undefined, q: "maison", kind: undefined, category: undefined })).toEqual([]);
-    expect(monthEntries(view, MONTH, { day: undefined, q: "shared", kind: undefined, category: undefined }).map((item) => item.id)).toEqual(["household:h1:h"]);
-    // A day outside the month is ignored.
-    expect(monthEntries(view, MONTH, { day: "2026-10-03", q: undefined, kind: undefined, category: undefined })).toHaveLength(5);
-    expect(monthReport(view, MONTH, END)).toEqual(before);
-  });
-});
-
 describe("grouping and labels", () => {
   const category = (id: string, amount: number) => ({ id, name: id, icon: "basket-outline", color: "#0FA3A3", kind: "expense" as const, amount });
 
@@ -257,7 +242,7 @@ describe("calendar", () => {
 
 describe("URL", () => {
   it("falls back on bad values", () => {
-    expect(homeSearchSchema.parse({ month: "2026-13", day: "nope", kind: "gift", q: "  coffee " })).toEqual({ month: undefined, day: undefined, kind: undefined, q: "coffee", category: undefined });
+    expect(homeSearchSchema.parse({ month: "2026-13", day: "nope", kind: "gift", q: "  coffee " })).toEqual({ month: undefined, day: undefined });
     expect(homeSearchSchema.parse({ month: "1999-12" }).month).toBeUndefined();
   });
 });
@@ -275,7 +260,6 @@ describe("performance baseline", () => {
     const view = ledgerWithShared(big, rows, []);
     const result = monthReport(view, MONTH, END);
     calendarDays(MONTH, result.calendarEntries, END);
-    monthEntries(view, MONTH, { day: undefined, q: "e1", kind: undefined, category: undefined });
     const elapsed = performance.now() - started;
     expect(result.recordedEntries.length).toBeGreaterThan(1600);
     // Baseline: about 200 ms cold in Vitest and jsdom on a 2026 laptop (docs: README "Home and Insights").

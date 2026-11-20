@@ -53,8 +53,7 @@
  */
 .month-bar .month-nav__step,
 .month-bar .month-nav__label,
-.month-pill__text--long,
-.month-bar__now {
+.month-pill__text--long {
   display: none;
 }
 
@@ -97,8 +96,7 @@
     display: none;
   }
 
-  .month-bar .month-nav__label,
-  .month-bar__now {
+  .month-bar .month-nav__label {
     display: inline-flex;
   }
 
@@ -171,8 +169,7 @@
 }
 
 /* ---------- layout ---------- */
-.home-top,
-.explore__grid {
+.home-top {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 16px;
@@ -180,8 +177,7 @@
 }
 
 /* Panels keep their content at the top when a grid row makes them taller. */
-.home-top > .card,
-.explore__grid > .card {
+.home-top > .card {
   align-content: start;
 }
 
@@ -189,33 +185,13 @@
   flex-wrap: wrap;
 }
 
-.explore {
-  display: grid;
-  gap: 12px;
-  min-width: 0;
-}
-
 /*
- * Below 1100px Home is one column in the iPhone card's order (hero, Follow your money, Recent,
- * then Coming up); from 768px Explore's calendar and categories sit side by side.
- */
-@media (min-width: 768px) {
-  .explore__grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .explore__wide {
-    grid-column: 1 / -1;
-  }
-}
-
-/*
+ * Below 1100px Home is one column in the iPhone card's order (hero, Follow your money, Recent).
  * From 1100px the desktop dashboard (card `web-home`): the hero with its tiles beside Coming up,
- * then the Sankey beside By category, then Recent; Explore puts the calendar beside the list.
+ * then the Sankey beside By category.
  */
 @media (min-width: 1100px) {
-  .home-top--wide,
-  .explore__grid {
+  .home-top--wide {
     grid-template-columns: repeat(12, minmax(0, 1fr));
   }
 
@@ -229,29 +205,9 @@
     grid-column: 9 / span 4;
   }
 
-  .home-top--wide > .home-recent {
-    grid-column: 1 / -1;
-  }
-
   .home-sankey {
     display: grid;
     min-width: 0;
-  }
-
-  .calendar {
-    grid-column: 1 / span 7;
-  }
-
-  .breakdown {
-    grid-column: 8 / span 5;
-  }
-
-  .explore--wide .calendar {
-    grid-column: 1 / span 5;
-  }
-
-  .explore--wide .explore__list {
-    grid-column: 6 / span 7;
   }
 }
 
@@ -663,18 +619,6 @@
   text-align: start;
 }
 
-button.breakdown__row {
-  cursor: pointer;
-}
-
-button.breakdown__row:hover {
-  background: var(--pk-surface-2);
-}
-
-.breakdown__row--on {
-  background: var(--pk-tint-soft);
-}
-
 .breakdown__row .category-dot {
   grid-row: 1 / span 2;
 }
@@ -731,16 +675,264 @@ button.breakdown__row:hover {
   font-weight: 700;
 }
 
+/* ---------- the Money flow screen (card `iphone-money-flow`, MAZ-224) ---------- */
+.page__subtitle {
+  margin: -4px 0 0;
+  color: var(--pk-label-2);
+  font-size: 0.9375rem;
+}
+
+.flow--page {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.flow--page .flow__totals {
+  padding-inline: 4px;
+}
+
+.flow__chart {
+  gap: 4px;
+  padding: 12px 6px 10px;
+}
+
+.flow__columns {
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+  padding: 0 10px;
+  color: var(--pk-label-2);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
 .flow__focus {
   display: flex;
-  flex-wrap: wrap;
+  grid-auto-flow: column;
   align-items: center;
-  gap: 6px;
-  min-height: 44px;
+  gap: 12px;
+  padding: 12px 14px;
+}
+
+.flow__focus .flow__swatch {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+}
+
+.flow__focus-text {
+  display: grid;
+  flex: 1;
+  min-width: 0;
   margin: 0;
-  padding: 8px 12px;
-  border-radius: var(--pk-r-row);
-  background: var(--pk-surface-2);
+}
+
+.flow__focus-text strong {
+  overflow-wrap: anywhere;
+}
+
+.flow__focus-text span {
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+}
+
+.flow__clear {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin: -8px -8px -8px 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--pk-label-2);
+  cursor: pointer;
+}
+
+.flow__clear::before {
+  content: "";
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--pk-fill);
+}
+
+.flow__clear svg {
+  position: relative;
+}
+
+.flow__clear:focus-visible {
+  outline: 2px solid var(--pk-tint);
+  outline-offset: -4px;
+}
+
+.flow--page > .flow__hint {
+  margin: 0;
+  padding-inline: 4px;
+}
+
+.flow--page > .flow__table {
+  padding-inline: 4px;
+}
+
+/* The narrow Sankey (phones) draws its labels a little smaller, as the card does. */
+.flow__sankey--narrow .flow-node__label {
+  font-size: 13px;
+}
+
+.flow__sankey--narrow .flow-node__amount {
+  font-size: 12px;
+}
+
+/* The phone flow card's title opens Money flow (MAZ-224). */
+.home-flow__open {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  margin-block: -10px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.home-flow__open:hover {
+  text-decoration: underline;
+}
+
+/* ---------- the calendar sheet over Home (card `iphone-calendar`, MAZ-224) ---------- */
+.dialog__panel.calendar-sheet {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  width: min(100%, 520px);
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  padding: 7px 12px 20px;
+  border-radius: 28px;
+  background: var(--pk-bg);
+  box-shadow: 0 30px 80px rgb(0 0 0 / 0.28), 0 0 0 0.5px var(--pk-separator);
+}
+
+/* Phones: a sheet from the bottom, as on the card, with the screen behind it dimmed. */
+@media (max-width: 767px) {
+  .dialog:has(> .calendar-sheet) {
+    place-items: end stretch;
+    padding: 56px 6px 6px;
+  }
+
+  .dialog__panel.calendar-sheet {
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    border-radius: 38px;
+  }
+}
+
+.calendar-sheet__grabber {
+  width: 36px;
+  height: 5px;
+  margin: 0 auto;
+  border-radius: 3px;
+  background: var(--pk-label-3);
+  opacity: 0.5;
+}
+
+.calendar-sheet__bar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.calendar-sheet__close,
+.calendar-sheet__step {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: var(--pk-label);
+  cursor: pointer;
+}
+
+.calendar-sheet__close {
+  background: var(--pk-fill);
+}
+
+.calendar-sheet__step {
+  background: none;
+  color: var(--pk-tint);
+}
+
+.calendar-sheet__month {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.calendar-sheet__month h2 {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.calendar-sheet__today {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 22px;
+  color: var(--pk-label);
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.calendar-sheet__close:focus-visible,
+.calendar-sheet__step:focus-visible,
+.calendar-sheet__today:focus-visible {
+  outline: 2px solid var(--pk-tint);
+  outline-offset: 2px;
+}
+
+.calendar-sheet__day {
+  display: grid;
+  gap: 8px;
+}
+
+.calendar-sheet__day-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 8px 10px 0;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.calendar-sheet__day .home-rows {
+  padding: 4px 16px;
+  border-radius: var(--pk-r-card);
+  background: var(--pk-surface);
+  box-shadow: 0 0 0 0.5px var(--pk-separator);
+}
+
+.calendar-sheet__none {
+  margin: 8px 10px 0;
 }
 
 .flow__swatch {
@@ -758,7 +950,7 @@ button.breakdown__row:hover {
 }
 
 /* The desktop Home and Insights cards keep the diagram short: above the fold on Home at 1440×900 (MAZ-174). */
-.flow--compact .flow__svg {
+.flow--panel .flow__svg {
   max-height: 340px;
 }
 
@@ -812,93 +1004,34 @@ button.breakdown__row:hover {
   font-variant-numeric: tabular-nums;
 }
 
-.flow__stacked {
-  display: none;
-  gap: 6px;
-}
-
-.flow__bar-label {
-  margin: 0;
-  color: var(--pk-label-2);
-  font-size: 0.8125rem;
-}
-
-.flow__bar {
-  display: flex;
-  gap: 2px;
-  height: 18px;
-  overflow: hidden;
-  border-radius: 6px;
-}
-
-.flow__segment {
-  min-width: 3px;
-  transition: opacity 0.15s;
-}
-
-.flow__segment--dim {
-  opacity: 0.2;
-}
-
-.flow__legend {
-  display: grid;
-  gap: 2px;
-  margin: 6px 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.flow__item {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  min-height: 44px;
-  padding: 6px 8px;
-  border: 0;
-  border-radius: var(--pk-r-row);
-  background: none;
-  color: inherit;
-  font: inherit;
-  text-align: start;
-  cursor: pointer;
-}
-
-.flow__item:hover {
-  background: var(--pk-surface-2);
-}
-
-.flow__item--on {
-  background: var(--pk-fill);
-}
-
-.flow__item-label {
-  font-weight: 600;
-  overflow-wrap: anywhere;
-}
-
-.flow__item-amount {
-  font-variant-numeric: tabular-nums;
-  text-align: end;
-}
-
-/* Phones and narrow cards: the stacked flow, which fits 320px without horizontal scrolling. */
-@container (max-width: 559px) {
-  .flow__sankey {
-    display: none;
-  }
-
-  .flow__stacked {
-    display: grid;
-  }
-}
-
+/* As on the cards (MAZ-224): "Show as a table" with a chevron that turns when open, no disclosure triangle. */
 .flow__table summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   min-height: 36px;
   color: var(--pk-tint-text);
   font-weight: 600;
+  list-style: none;
   cursor: pointer;
+}
+
+.flow__table summary::-webkit-details-marker {
+  display: none;
+}
+
+.flow__table summary svg {
+  transition: transform 0.15s;
+}
+
+.flow__table[open] summary svg {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flow__table summary svg {
+    transition: none;
+  }
 }
 
 /* ---------- tables ---------- */
@@ -1133,21 +1266,8 @@ button.breakdown__row:hover {
   opacity: 0.8;
 }
 
-.month-list__filters {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 12px;
-}
-
-.month-list__filters .choices--segmented {
-  flex: 1 1 320px;
-  min-width: 0;
-}
-
 @media (forced-colors: active) {
   .calendar__dot,
-  .flow__segment,
   .summary-bar__part,
   .breakdown__fill,
   .tile__dot,

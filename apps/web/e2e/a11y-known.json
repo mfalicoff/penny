@@ -26,10 +26,9 @@
       "rule": "label-content-name-mismatch",
       "impact": "serious",
       "projects": [
-        "chromium-desktop",
-        "chromium-phone"
+        "chromium-desktop"
       ],
-      "reason": "Buttons whose aria-label omits their visible text (Explore your month flow nodes and chart segments, Categories Edit <name> rows). Speech-input users must say the label, not what they see (WCAG 2.5.3)."
+      "reason": "Buttons whose aria-label omits their visible text (money flow nodes on the desktop Home and Insights cards, Categories Edit <name> rows). Speech-input users must say the label, not what they see (WCAG 2.5.3)."
     },
     {
       "scan": "Activity light",
@@ -61,10 +60,9 @@
       "rule": "label-content-name-mismatch",
       "impact": "serious",
       "projects": [
-        "chromium-desktop",
-        "chromium-phone"
+        "chromium-desktop"
       ],
-      "reason": "Buttons whose aria-label omits their visible text (Explore your month flow nodes and chart segments, Categories Edit <name> rows). Speech-input users must say the label, not what they see (WCAG 2.5.3)."
+      "reason": "Buttons whose aria-label omits their visible text (money flow nodes on the desktop Home and Insights cards, Categories Edit <name> rows). Speech-input users must say the label, not what they see (WCAG 2.5.3)."
     },
     {
       "scan": "Trips light",
@@ -114,7 +112,7 @@
         "chromium-desktop",
         "chromium-phone"
       ],
-      "reason": "Buttons whose aria-label omits their visible text (Explore your month flow nodes and chart segments, Categories Edit <name> rows). Speech-input users must say the label, not what they see (WCAG 2.5.3)."
+      "reason": "Buttons whose aria-label omits their visible text (money flow nodes on the desktop Home and Insights cards, Categories Edit <name> rows). Speech-input users must say the label, not what they see (WCAG 2.5.3)."
     },
     {
       "scan": "Settings light",
@@ -141,8 +139,7 @@
       "rule": "color-contrast",
       "impact": "serious",
       "projects": [
-        "chromium-desktop",
-        "chromium-phone"
+        "chromium-desktop"
       ],
       "reason": "Design-kit colors below 4.5:1 for normal text: white on the accent button (3.68 light, 2.76 dark), income green (3.69-4.17), pending amber (3.16-3.64), keyboard-shortcut chips and quiet links (4.41-4.43), banner text (4.13). Needs a design-kit token change (MAZ-122 visual handoff), not a hand edit of tokens.css."
     },
@@ -151,10 +148,9 @@
       "rule": "label-content-name-mismatch",
       "impact": "serious",
       "projects": [
-        "chromium-desktop",
-        "chromium-phone"
+        "chromium-desktop"
       ],
-      "reason": "Buttons whose aria-label omits their visible text (Explore your month flow nodes and chart segments, Categories Edit <name> rows). Speech-input users must say the label, not what they see (WCAG 2.5.3)."
+      "reason": "Buttons whose aria-label omits their visible text (money flow nodes on the desktop Home and Insights cards, Categories Edit <name> rows). Speech-input users must say the label, not what they see (WCAG 2.5.3)."
     },
     {
       "scan": "Activity dark",
@@ -180,10 +176,9 @@
       "rule": "label-content-name-mismatch",
       "impact": "serious",
       "projects": [
-        "chromium-desktop",
-        "chromium-phone"
+        "chromium-desktop"
       ],
-      "reason": "Buttons whose aria-label omits their visible text (Explore your month flow nodes and chart segments, Categories Edit <name> rows). Speech-input users must say the label, not what they see (WCAG 2.5.3)."
+      "reason": "Buttons whose aria-label omits their visible text (money flow nodes on the desktop Home and Insights cards, Categories Edit <name> rows). Speech-input users must say the label, not what they see (WCAG 2.5.3)."
     },
     {
       "scan": "Trips dark",
@@ -232,7 +227,7 @@
         "chromium-desktop",
         "chromium-phone"
       ],
-      "reason": "Buttons whose aria-label omits their visible text (Explore your month flow nodes and chart segments, Categories Edit <name> rows). Speech-input users must say the label, not what they see (WCAG 2.5.3)."
+      "reason": "Buttons whose aria-label omits their visible text (money flow nodes on the desktop Home and Insights cards, Categories Edit <name> rows). Speech-input users must say the label, not what they see (WCAG 2.5.3)."
     },
     {
       "scan": "Settings dark",
@@ -248,8 +243,7 @@
       "rule": "color-contrast",
       "impact": "serious",
       "projects": [
-        "chromium-desktop",
-        "chromium-phone"
+        "chromium-desktop"
       ],
       "reason": "Design-kit colors below 4.5:1 for normal text: white on the accent button (3.68 light, 2.76 dark), income green (3.69-4.17), pending amber (3.16-3.64), keyboard-shortcut chips and quiet links (4.41-4.43), banner text (4.13). Needs a design-kit token change (MAZ-122 visual handoff), not a hand edit of tokens.css.",
       "except": [
@@ -262,10 +256,9 @@
       "rule": "label-content-name-mismatch",
       "impact": "serious",
       "projects": [
-        "chromium-desktop",
-        "chromium-phone"
+        "chromium-desktop"
       ],
-      "reason": "Buttons whose aria-label omits their visible text (Explore your month flow nodes and chart segments, Categories Edit <name> rows). Speech-input users must say the label, not what they see (WCAG 2.5.3)."
+      "reason": "Buttons whose aria-label omits their visible text (money flow nodes on the desktop Home and Insights cards, Categories Edit <name> rows). Speech-input users must say the label, not what they see (WCAG 2.5.3)."
     },
     {
       "scan": "Activity forced-colors",

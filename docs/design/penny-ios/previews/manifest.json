@@ -540,7 +540,7 @@
     {
       "id": "iphone-money-flow",
       "source": "docs/design/penny-ios/iphone/money-flow.html",
-      "sourceSha256": "295bfbec37b62fb2a83030bfb3c75745973c978dfa226c024a07c57c0f3b9d3f",
+      "sourceSha256": "0c09c8b0effe47bdc6a8f55949c8e48069efaa21d0acaab27cfdc68119b54a30",
       "viewport": {
         "w": 482,
         "h": 954
@@ -549,12 +549,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-money-flow.light.png",
-          "sha256": "f06594eef775db1aa74cd7325d13d3cc2f892cfa07e58fcd14cc23fd1ddcedcb"
+          "sha256": "25624e5513669d002a94535cc4a1387484058ab4c4e4f6f2df6c0c9ab44e4ce0"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-money-flow.dark.png",
-          "sha256": "070e182b1904202a3e914cf340dfafef454528941f680c109b1cb900ab7426df"
+          "sha256": "134da3bb2fa3a24c48de2d53cec18d2931bf20c23a967f7281bd41d80ba1749a"
         }
       ]
     },
@@ -1195,19 +1195,19 @@
         {
           "appearance": "light",
           "file": "previews/ipad-add-entry.light.png",
-          "sha256": "c4c27c708d25ca66370a802717be691e23e478b63a5e46c07b31f1af82df35a0"
+          "sha256": "51b4c68f2d1f1ddb68d57ccd8fb5f87a7660be269af46742bfa8f6b0f061ef84"
         },
         {
           "appearance": "dark",
           "file": "previews/ipad-add-entry.dark.png",
-          "sha256": "348ec9550e36fb8c6b29b8fdaed69eaafe2a03d9c4b3eaffb1db32685c5ef80f"
+          "sha256": "e57bb7c082aafa24d56c4e0a7925c49412bb906cec7c1a9f359662b1d1177bbe"
         }
       ]
     },
     {
       "id": "ipad-home",
       "source": "docs/design/penny-ios/ipad/home.html",
-      "sourceSha256": "66502f73418007473c6932c677b29ab03501366a303a7b3ef985d69ab2b0afde",
+      "sourceSha256": "93d8157dbab1f431210ad827e99bd6db69e882976f3fed324990aa57a134f09a",
       "viewport": {
         "w": 1290,
         "h": 914
@@ -1216,12 +1216,12 @@
         {
           "appearance": "light",
           "file": "previews/ipad-home.light.png",
-          "sha256": "cd94d2cb3cd9fdbb525772e3012c1e89091899df1214eba446a2aae77dc26dbb"
+          "sha256": "12cb20930060757d6126976c761f719210c31b1bf2be4fbb7f517dac48030438"
         },
         {
           "appearance": "dark",
           "file": "previews/ipad-home.dark.png",
-          "sha256": "1e5e004dbdab54f0728895b774deba779e5b1bdf34cc67c1193f0a2b56bbc04b"
+          "sha256": "1fa658e9acbdac46d6af3c3044bdac4de2d96a471839106bac6a13d4bea67e74"
         }
       ]
     },
@@ -1480,7 +1480,7 @@
     {
       "id": "web-home",
       "source": "docs/design/penny-ios/web/home.html",
-      "sourceSha256": "cf067ffbd70d4a2edfae86340d346e09ff7d964d1b158533b044a0204ced3f48",
+      "sourceSha256": "0bbf9ae00e4d47845622373f9234eefaefcecea11a0f2e931ed909fc954b6208",
       "viewport": {
         "w": 1520,
         "h": 980
@@ -1489,12 +1489,12 @@
         {
           "appearance": "light",
           "file": "previews/web-home.light.png",
-          "sha256": "71721756800e9cfbc4b1ec415cf818c63ad0eef4c4bee75fcc928fec56a9cbf6"
+          "sha256": "405db08b91e3128af8639b718878bdf0820e0dd0f385342c847ef5e3d335d309"
         },
         {
           "appearance": "dark",
           "file": "previews/web-home.dark.png",
-          "sha256": "d86177576788faa5c272e8a65e0c86e03ba664cf5d544e7e083ba3671341a234"
+          "sha256": "7045cb9575f42697dfe881d6847c0456fcd94f0d49fea532c14c5ed3fc759b7f"
         }
       ]
     },
@@ -1522,7 +1522,7 @@
     {
       "id": "web-insights",
       "source": "docs/design/penny-ios/web/insights.html",
-      "sourceSha256": "c39a37d5ed78a9e901b26901ed7de075008f1e62b20369dac2bd2c074c95d94c",
+      "sourceSha256": "41bb84105bcabac5181e6d29639ca46230bdb4289b213861272c0610627f0f40",
       "viewport": {
         "w": 1520,
         "h": 980
@@ -1531,12 +1531,12 @@
         {
           "appearance": "light",
           "file": "previews/web-insights.light.png",
-          "sha256": "f227e8899cf93b9b5dd71c0da7250234ac5dee0fc6155bea8da0bcfe6d0c771f"
+          "sha256": "8d5e7812124db123f9ba8c1a8b5e1c9c2c3862e7aaca0874937b4819df744519"
         },
         {
           "appearance": "dark",
           "file": "previews/web-insights.dark.png",
-          "sha256": "4a3e9b20bad33b561a65c4bc200b14d3c0a909b49f502efa14a61420dc4da9d3"
+          "sha256": "7ac358df7cd02ace710b99b4d2f7c7d402ff44b031786e6a609e48e0a2ca1a61"
         }
       ]
     },

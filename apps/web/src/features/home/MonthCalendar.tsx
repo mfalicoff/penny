@@ -1,8 +1,8 @@
 import type { OverviewEntry } from "@domain/selectors/overview.ts";
-import { useId, useMemo, useRef, type KeyboardEvent } from "react";
+import { useMemo, useRef, type KeyboardEvent } from "react";
 import { usePreferences } from "../../app/preferences";
 import { useToday } from "../../app/useToday";
-import { Button, cx } from "../../design/controls";
+import { cx } from "../../design/controls";
 import { formatCents } from "../../design/Money";
 import { calendarDays, type CalendarDay } from "./model";
 
@@ -46,12 +46,11 @@ interface MonthCalendarProps {
  * income, indigo invested, and an amber ring for what is expected or scheduled (scheduled
  * occurrences and income dated after today, MAZ-136), which is never drawn like a recorded entry.
  * The legend and each day's accessible name say "expected or scheduled" for the ring. Selecting a
- * day filters the list below (`?day=`), selecting it again clears it.
+ * day lists its entries under the grid in the calendar sheet (`?day=`), selecting it again clears it.
  * Arrow keys move by day and week, Home and End to the ends of the week. The week starts on Monday
  * or Sunday, as chosen in Settings › Appearance (MAZ-140).
  */
 export function MonthCalendar({ month, monthLabel, entries, selected, currency, onSelect }: MonthCalendarProps) {
-  const headingId = useId();
   const grid = useRef<HTMLTableElement>(null);
   const today = useToday();
   const { weekStartsOn } = usePreferences();
@@ -74,23 +73,7 @@ export function MonthCalendar({ month, monthLabel, entries, selected, currency, 
   };
 
   return (
-    <section id="month-calendar" className="card calendar" aria-labelledby={headingId} tabIndex={-1}>
-      <div className="card__head">
-        <h3 id={headingId} className="panel__title">
-          Calendar
-        </h3>
-        {selected ? (
-          <Button
-            variant="quiet"
-            icon="close"
-            onClick={() => {
-              onSelect(undefined);
-            }}
-          >
-            Whole month
-          </Button>
-        ) : null}
-      </div>
+    <div className="card calendar">
       <table className="calendar__grid" ref={grid}>
         <caption className="visually-hidden">{monthLabel}. Choose a day to list its entries.</caption>
         <thead>
@@ -154,6 +137,6 @@ export function MonthCalendar({ month, monthLabel, entries, selected, currency, 
           <span className="calendar__dot calendar__dot--scheduled" aria-hidden="true" /> Expected or scheduled
         </li>
       </ul>
-    </section>
+    </div>
   );
 }

@@ -14,6 +14,9 @@
   .focus .t { flex: 1; } .focus b { font-size: 16px; display: block; } .focus span { font-size: 13px; color: var(--label-2); }
   .focus .x { width: 28px; height: 28px; border-radius: 50%; background: var(--fill); display: grid; place-items: center; color: var(--label-2); }
   .focus .x [data-i] { width: 15px; height: 15px; --sw: 48px; }
+  .hint { padding: 10px 20px 0; font-size: 13px; color: var(--label-2); }
+  .astable { display: inline-flex; align-items: center; gap: 4px; margin: 8px 20px 0; font-size: 15px; font-weight: 600; color: var(--tint-text); }
+  .astable [data-i] { width: 14px; height: 14px; --sw: 52px; }
 </style></head>
 <body class="canvas">
 <div class="iphone">
@@ -39,6 +42,8 @@
       <div class="t"><b>Home · <span class="num" style="font-size:16px;color:var(--label)">$1,450.00</span></b><span>45% of income · 77% of spending</span></div>
       <div class="x"><i data-i="close"></i></div>
     </div>
+    <p class="hint">Select a band or label to focus it, again to clear</p>
+    <div class="astable">Show as a table <i data-i="chevron-down"></i></div>
   </div>
   <div class="tabbar">
     <div class="tabs glass">
@@ -51,5 +56,5 @@
   </div>
   <div class="home-ind"></div>
 </div>
-<script>drawSankey(document.getElementById("sankey"), { width: 358, height: 388, band: 230, slot: 36, gap: 6, leftLabel: 74, rightLabel: 104, highlight: "home" });</script>
+<script>drawSankey(document.getElementById("sankey"), { width: 358, height: 362, band: 214, slot: 33, gap: 5, leftLabel: 74, rightLabel: 104, highlight: "home" });</script>
 </body></html>
