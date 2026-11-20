@@ -20,6 +20,7 @@
 ## Pending sync
 - **Hero glow contrast (MAZ-183, decided in MAZ-180):** the light `--label-2` is now #57524D (was #6F6A64) in `penny.css` and `design-kit/src/styles.css`; the `empty-home` card's "$0" and the `ipad/trip` card's phase use `--label-2`. Push the kit and those two cards to the Claude Design project at the next re-sync.
 - **Emailed receipts (MAZ-184):** the 21 `receipt-*` cards in `docs/design/penny-ios/{iphone,ipad,web}` were added without a kit change (they reuse `penny.css`, `ipad.css`, `web.css` and existing icons) and are not yet in the Claude Design project. Import them at the next re-sync. The web cards add the sidebar's "Receipts to attach" item in their own script, so `assets/web.js` and the other web cards are unchanged.
+- **Shared schedule on Recurring (MAZ-219):** `iphone/recurring.html` shows Streaming as a shared schedule (Shared tag beside the title, the household's name on its own line, "your share" under the amount) and its footer adds a sentence about shared schedules. No kit change. Push the card at the next re-sync.
 
 ## Re-sync risks
 - **Do the whole re-sync in one change:** after a card or kit change, re-render the baselines (`node docs/design/penny-ios/render.mjs 2`), update the hashes in `contracts/design-baseline.json`, re-sync this project, and update the affected verdicts in `contracts/visual-comparisons.json`. The steps are in [visual acceptance](../docs/design/visual-acceptance.md#re-sync-after-a-design-change); `npm run test:core` and the web workflow fail on a stale baseline or hash.

@@ -787,7 +787,7 @@
     {
       "id": "iphone-recurring",
       "source": "docs/design/penny-ios/iphone/recurring.html",
-      "sourceSha256": "794190bb4152c1aab16abff386aba46e7cb335bb58e2ad0c29cea6d282e90291",
+      "sourceSha256": "37dcbdfb5eac7fc14fffa25a43baf0d514126fbda764a6aa94b36713e434782f",
       "viewport": {
         "w": 482,
         "h": 954
@@ -796,12 +796,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-recurring.light.png",
-          "sha256": "3d4eb0a6d2059d6a2c971158f53cc46f9ceddd5b505f47b727ef6c9d6456f3e5"
+          "sha256": "7782ccc8e526400edff108a8f92b49b27a75ffcc73dfdb74e9c5ab8cd46c46c2"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-recurring.dark.png",
-          "sha256": "d2cfe6b6f2c51dd467eaf7eb8db99c6d0afff0f77cb20bd85c7d49db431d14e3"
+          "sha256": "49a3a1e387dcabaadcbef66fc975dcbd7aa7392005807d8eb6cf8279079ff6be"
         }
       ]
     },
