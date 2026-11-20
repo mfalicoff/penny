@@ -1,11 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState, type RefObject } from "react";
+import { useEffect, useId, useRef, useState, type RefObject } from "react";
 import { ApiError } from "../../api/client";
 import { deleteExpense, expenseQuery, refreshHousehold } from "../../api/households";
 import type { SharedExpense } from "../../api/schemas";
 import { useAccountEmail } from "../../auth/account";
 import { Badge, Button } from "../../design/controls";
 import { Dialog } from "../../design/ModalDialog";
+import { Icon } from "../../design/Icon";
 import { Money } from "../../design/Money";
 import { EmptyState, ErrorState, LoadingState, SaveErrorBanner, useToast } from "../../design/states";
 import type { HouseholdView } from "./context";
@@ -18,18 +19,40 @@ import { RecordShareView } from "./PaymentDialogs";
 
 type Pane = { kind: "detail" } | { kind: "record"; expense: SharedExpense; fromUserId: string } | { kind: "delete" } | { kind: "history" };
 
+interface DetailProps {
+  view: HouseholdView;
+  expenseId: string;
+  onEdit: (expense: SharedExpense) => void;
+  onClose: () => void;
+  /** Opens the repeating expense that added this one (MAZ-229: the household has no Repeating card). */
+  onRule?: (ruleId: string) => void;
+  /**
+   * `panel`: the selected expense in the household's side pane from 1100px (cards `ipad-shared`,
+   * `web-household`), instead of a dialog over the page.
+   */
+  variant?: "dialog" | "panel";
+}
+
 /**
- * One shared expense (specimen `shared-expense-detail`), in a panel over the household: the
- * original total, who paid, the viewer's share, every member's share and repayment, and its
- * change history. Recording a share payment and deleting happen in the same panel.
+ * One shared expense (specimen `shared-expense-detail`), in a dialog over the household or in the
+ * pane beside its expenses: the original total, who paid, the viewer's share, every member's share
+ * and repayment, and its change history. Recording a share payment and deleting happen in the
+ * same place.
  */
-export function ExpenseDetailDialog({ view, expenseId, onEdit, onClose }: { view: HouseholdView; expenseId: string; onEdit: (expense: SharedExpense) => void; onClose: () => void }) {
+export function ExpenseDetailDialog({ view, expenseId, onEdit, onClose, onRule, variant = "dialog" }: DetailProps) {
   const email = useAccountEmail();
   const expense = useQuery(expenseQuery(email, view.householdId, expenseId));
   const [pane, setPane] = useState<Pane>({ kind: "detail" });
   const headingRef = useRef<HTMLHeadingElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
   const opened = useRef(false);
+  const panelTitleId = useId();
+  const panelHeading = useRef<HTMLHeadingElement>(null);
+
+  // In the side pane, opening an expense moves focus to it, as opening the dialog does.
+  useEffect(() => {
+    if (variant === "panel") panelHeading.current?.focus();
+  }, [variant, expenseId]);
 
   // Switching panes replaces the focused control, so move focus to the new pane's heading (or its
   // first control): focus never falls back to the page behind the dialog, and Escape keeps working.
@@ -93,9 +116,28 @@ export function ExpenseDetailDialog({ view, expenseId, onEdit, onClose }: { view
           onEdit={() => {
             onEdit(data);
           }}
+          {...(onRule && data.recurringId ? { onRule: () => { onRule(data.recurringId ?? ""); } } : {})}
         />
       );
     }
+  }
+
+  if (variant === "panel") {
+    return (
+      <section className="card expense-panel" aria-labelledby={panelTitleId}>
+        <div className="expense-panel__head">
+          <h2 id={panelTitleId} ref={panelHeading} tabIndex={-1} className="card__title">
+            {title}
+          </h2>
+          <button type="button" className="wbtn wbtn--icon" aria-label={`Close ${title}`} onClick={onClose}>
+            <Icon name="close" size={16} weight={44} />
+          </button>
+        </div>
+        <div ref={bodyRef} className="form">
+          {body}
+        </div>
+      </section>
+    );
   }
 
   return (
@@ -115,6 +157,7 @@ function DetailPane({
   onDelete,
   onHistory,
   onEdit,
+  onRule,
 }: {
   view: HouseholdView;
   expense: SharedExpense;
@@ -123,6 +166,7 @@ function DetailPane({
   onDelete: () => void;
   onHistory: () => void;
   onEdit: () => void;
+  onRule?: () => void;
 }) {
   const choices = useLedgerChoices(expense.accountId !== undefined);
   const me = view.who.meId;
@@ -225,6 +269,11 @@ function DetailPane({
         <Button variant="quiet" icon="time" onClick={onHistory}>
           Change history
         </Button>
+        {onRule ? (
+          <Button variant="quiet" icon="repeat" onClick={onRule}>
+            Repeating expense
+          </Button>
+        ) : null}
         {view.canWrite && !isPaid(expense) ? (
           <Button variant="danger-quiet" icon="trash" onClick={onDelete}>
             Delete

@@ -5,33 +5,41 @@ import { useId, useState } from "react";
 import { householdDetailQuery, householdsQuery, monthRecapQuery } from "../../api/households";
 import { useAccountEmail } from "../../auth/account";
 import { usePageTitle } from "../../app/shell/pageTitle";
+import { useMediaQuery, WIDE } from "../../app/useMediaQuery";
 import { Avatar, Badge, Button } from "../../design/controls";
 import { Money } from "../../design/Money";
 import { Icon } from "../../design/Icon";
 import { Banner, ErrorState, LoadingState } from "../../design/states";
+import { MonthBarControls } from "../home/parts";
 import { BalancesTab } from "./BalancesTab";
 import { householdView, type HouseholdView } from "./context";
 import { describeLoadError } from "./errors";
 import { ExpenseDetailDialog } from "./ExpenseDetail";
 import { ExpenseFormDialog, type FormTarget } from "./ExpenseForm";
 import { ExpensesTab } from "./ExpensesTab";
+import { GroupToolbar, ToolButton, ToolContent, toolClass } from "./GroupTools";
 import { HistoryPanel } from "./HistoryPanel";
-import { currentMonth, dayLabel, isCurrent, monthLabel, people, shiftMonth } from "./model";
+import { currentMonth, dayLabel, isCurrent, monthLabel, people } from "./model";
 import { OnlineNotice } from "./OnlineNotice";
 import { PeopleTab } from "./PeopleTab";
+import { RuleDialog } from "./RuleDialog";
 import type { HouseholdSearch, HouseholdTab } from "./search";
 
 const TAB_LABEL: Record<Exclude<HouseholdTab, "history">, string> = { expenses: "Expenses", balances: "Balances", people: "People" };
 
 /**
- * A household (cards `web-household`, `iphone-shared`, `ipad-shared`): members and your balance
- * for the month, Record payment (opens Balances, where suggested payments are recorded) and
- * Shared expense, then Expenses, Balances and People. `expenseId` opens that expense in the detail
- * panel (`/households/$id/expenses/$expenseId`).
+ * A household (cards `web-household`, `iphone-shared`, `ipad-shared`, `iphone-shared-balances`,
+ * `iphone-shared-people`). The navigation bar holds the month, then History and Invite as icons
+ * and, from 1100px, Shared expense (MAZ-229). Expenses opens with the members, your balance for
+ * the month, Record payment and Shared expense; Balances, People and History drop that hero, as
+ * the cards collapse to a navigation bar. From 1100px Expenses is two panes: the expenses, and the
+ * selected expense with Balances beside them. `expenseId` opens that expense
+ * (`/households/$id/expenses/$expenseId`); `?rule=` opens a repeating expense.
  */
 export function HouseholdPage({ householdId, expenseId, search }: { householdId: string; expenseId?: string; search: HouseholdSearch }) {
   const email = useAccountEmail();
   const navigate = useNavigate();
+  const wide = useMediaQuery(WIDE);
   const month = search.month ?? currentMonth();
   const tab: HouseholdTab = search.tab ?? "expenses";
   const detail = useQuery(householdDetailQuery(email, householdId));
@@ -62,71 +70,75 @@ export function HouseholdPage({ householdId, expenseId, search }: { householdId:
   const { household } = detail.data;
   const current = detail.data.members.filter(isCurrent);
   const balance = who.meId ? recap.data?.balances.find((row) => row.userId === who.meId)?.balanceCents : undefined;
-  const linkSearch = (next: Partial<HouseholdSearch>) => ({ ...search, add: undefined, ...next });
+  // `rule` is one-off: links to a section or month leave it out.
+  const linkSearch = (next: Partial<HouseholdSearch>): HouseholdSearch => ({ month: search.month, tab: search.tab, ...next });
+  const go = (next: Partial<HouseholdSearch>) => void navigate({ to: "/households/$id", params: { id: householdId }, search: linkSearch(next) });
+  const closeRule = () => void navigate({ to: ".", search: linkSearch({}), replace: true });
+  // From 1100px the selected expense sits beside the expenses instead of over them.
+  const inlineExpense = wide && tab === "expenses";
+  const expenseDetail = expenseId ? (
+    <ExpenseDetailDialog
+      view={view}
+      expenseId={expenseId}
+      variant={inlineExpense ? "panel" : "dialog"}
+      onEdit={(expense) => { setForm({ kind: "edit", expense }); }}
+      onRule={(rule) => { go({ rule }); }}
+      onClose={() => { go({}); }}
+    />
+  ) : null;
 
   return (
     <div className="page">
-      <OnlineNotice />
-      <section className="household-head" aria-label="Household summary">
-        <span className="avatars" aria-hidden="true">
-          {current.slice(0, 5).map((member) => (
-            <Avatar key={member.userId} name={member.email} size={40} />
-          ))}
-        </span>
-        <div className="household-head__summary">
-          <span className="muted">
-            {household.trip ? `${dayLabel(household.trip.startDate)} – ${dayLabel(household.trip.endDate, true)} · ` : ""}
-            {current.length} {current.length === 1 ? "member" : "members"} · {household.currency}
-            {archived ? (
-              <>
-                {" "}
-                <Badge>Archived</Badge>
-              </>
-            ) : null}
-          </span>
-          <p className="household-head__balance" aria-live="polite">
-            <MonthBalance month={month} balance={balance} loading={recap.isPending} view={view} />
-          </p>
-        </div>
-        <div className="shared-actions">
-          {view.canWrite ? (
-            <Link
-              to="/households/$id"
-              params={{ id: householdId }}
-              search={linkSearch({ tab: "balances" })}
-              className="wbtn wbtn--secondary"
-              aria-describedby={recordHintId}
-            >
-              <Icon name="checkmark-circle" size={18} />
-              Record payment
-            </Link>
-          ) : null}
-          {view.canWrite ? (
-            <Button variant="primary" icon="add" onClick={() => { setForm({ kind: "new" }); }}>
-              Shared expense
-            </Button>
-          ) : null}
-          {view.canWrite && view.creator ? (
-            <Link to="/households/$id" params={{ id: householdId }} search={linkSearch({ tab: "people" })} className="wbtn wbtn--secondary">
-              Invite
-            </Link>
-          ) : null}
-          <Link
-            to="/households/$id"
-            params={{ id: householdId }}
-            search={linkSearch({ tab: "history" })}
-            className="wbtn wbtn--quiet"
-            aria-current={tab === "history" ? "page" : undefined}
-          >
-            History
+      <GroupToolbar ownAdd lead={tab === "expenses" || tab === "balances" ? <MonthBarControls month={month} onChange={(next) => { go({ month: next }); }} /> : null}>
+        <Link to="/households/$id" params={{ id: householdId }} search={linkSearch({ tab: "history" })} className={toolClass()} aria-current={tab === "history" ? "page" : undefined}>
+          <ToolContent icon="time" label="History" />
+        </Link>
+        {view.canWrite && view.creator ? (
+          <Link to="/households/$id" params={{ id: householdId }} search={linkSearch({ tab: "people" })} className={toolClass({ labelled: true })}>
+            <ToolContent icon="person-add" label="Invite" labelled />
           </Link>
-        </div>
-        {view.canWrite ? (
-          <span id={recordHintId} className="visually-hidden">
-            Shows balances and suggested payments to record
-          </span>
         ) : null}
-      </section>
+        {view.canWrite && wide ? <ToolButton primary icon="add" label="Shared expense" onClick={() => { setForm({ kind: "new" }); }} /> : null}
+      </GroupToolbar>
+      <OnlineNotice />
+      {tab === "expenses" ? (
+        <section className="household-head" aria-label="Household summary">
+          <span className="avatars" aria-hidden="true">
+            {current.slice(0, 5).map((member) => (
+              <Avatar key={member.userId} name={member.email} size={40} />
+            ))}
+          </span>
+          <div className="household-head__summary">
+            <span className="muted">
+              {household.trip ? `${dayLabel(household.trip.startDate)} – ${dayLabel(household.trip.endDate, true)} · ` : ""}
+              {current.length} {current.length === 1 ? "member" : "members"} · {household.currency}
+              {archived ? (
+                <>
+                  {" "}
+                  <Badge>Archived</Badge>
+                </>
+              ) : null}
+            </span>
+            <p className="household-head__balance" aria-live="polite">
+              <MonthBalance month={month} balance={balance} loading={recap.isPending} view={view} />
+            </p>
+          </div>
+          {view.canWrite && !wide ? (
+            <div className="household-head__actions">
+              <Link to="/households/$id" params={{ id: householdId }} search={linkSearch({ tab: "balances" })} className="wbtn wbtn--secondary" aria-describedby={recordHintId}>
+                <Icon name="checkmark-circle" size={18} />
+                Record payment
+              </Link>
+              <Button variant="primary" icon="add" onClick={() => { setForm({ kind: "new" }); }}>
+                Shared expense
+              </Button>
+              <span id={recordHintId} className="visually-hidden">
+                Shows balances and suggested payments to record
+              </span>
+            </div>
+          ) : null}
+        </section>
+      ) : null}
 
       {archived ? (
         <Banner tone="info" title="This household is archived">
@@ -137,23 +149,6 @@ export function HouseholdPage({ householdId, expenseId, search }: { householdId:
           You can still see your own history here, but you can't add or change anything.
         </Banner>
       ) : null}
-
-      <nav className="month-nav" aria-label="Month">
-        <Link to="/households/$id" params={{ id: householdId }} search={linkSearch({ month: shiftMonth(month, -1) })} className="wbtn wbtn--quiet wbtn--icon" aria-label="Previous month">
-          <Icon name="chevron-back" size={16} />
-        </Link>
-        <span className="month-nav__label" aria-live="polite">
-          {monthLabel(month)}
-        </span>
-        <Link to="/households/$id" params={{ id: householdId }} search={linkSearch({ month: shiftMonth(month, 1) })} className="wbtn wbtn--quiet wbtn--icon" aria-label="Next month">
-          <Icon name="chevron-forward" size={16} />
-        </Link>
-        {month !== currentMonth() ? (
-          <Link to="/households/$id" params={{ id: householdId }} search={linkSearch({ month: undefined })} className="wbtn wbtn--quiet">
-            This month
-          </Link>
-        ) : null}
-      </nav>
 
       <nav className="section-tabs" aria-label="Household sections">
         {(Object.keys(TAB_LABEL) as (keyof typeof TAB_LABEL)[]).map((key) => (
@@ -171,7 +166,19 @@ export function HouseholdPage({ householdId, expenseId, search }: { householdId:
       </nav>
 
       {tab === "expenses" ? (
-        <ExpensesTab view={view} recap={recap} search={linkSearch({})} onEditRule={(rule) => { setForm({ kind: "rule", rule }); }} />
+        <ExpensesTab
+          view={view}
+          recap={recap}
+          search={linkSearch({})}
+          side={
+            wide ? (
+              <>
+                {expenseDetail}
+                <BalancesTab view={view} recap={recap} />
+              </>
+            ) : undefined
+          }
+        />
       ) : tab === "balances" ? (
         <BalancesTab view={view} recap={recap} />
       ) : tab === "people" ? (
@@ -180,18 +187,19 @@ export function HouseholdPage({ householdId, expenseId, search }: { householdId:
         <HistoryPanel view={view} />
       )}
 
-      {expenseId ? (
-        <ExpenseDetailDialog
-          view={view}
-          expenseId={expenseId}
-          onEdit={(expense) => { setForm({ kind: "edit", expense }); }}
-          onClose={() => void navigate({ to: "/households/$id", params: { id: householdId }, search: linkSearch({}) })}
-        />
-      ) : null}
+      {inlineExpense ? null : expenseDetail}
+      {search.rule && !form ? <RuleDialog view={view} ruleId={search.rule} onEdit={(rule) => { setForm({ kind: "rule", rule }); }} onClose={closeRule} /> : null}
       {form?.kind === "new" ? (
         <AddEntryDialog householdId={view.householdId} onClose={() => { setForm(null); }} />
       ) : form ? (
-        <ExpenseFormDialog view={view} target={form} onClose={() => { setForm(null); }} />
+        <ExpenseFormDialog
+          view={view}
+          target={form}
+          onClose={() => {
+            if (form.kind === "rule") closeRule();
+            setForm(null);
+          }}
+        />
       ) : null}
     </div>
   );

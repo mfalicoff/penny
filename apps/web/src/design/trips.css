@@ -5,18 +5,6 @@
  * (shared.css). Values come from the --pk-* tokens. Money stays on solid surfaces.
  */
 
-.trips__intro {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px 18px;
-}
-
-.trip-back {
-  justify-self: start;
-}
-
 /* ---------- the featured trip ---------- */
 .trip-hero {
   position: relative;
@@ -245,6 +233,96 @@ button.row:focus-visible {
 
 .trip-tile--new:focus-visible {
   outline: 2px solid var(--pk-tint);
+}
+
+/* ---------- UPCOMING and PAST on phones and tablets (card `iphone-trips`, MAZ-229) ---------- */
+a.trip-list-row {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  padding: 10px 16px;
+  color: inherit;
+  text-decoration: none;
+}
+
+a.trip-list-row:hover {
+  background: var(--pk-surface-2);
+}
+
+.trip-list-row + .trip-list-row,
+.group-list > li + li .trip-list-row {
+  border-top: 0.5px solid var(--pk-separator);
+}
+
+.trip-list-row__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+
+.trip-list-row__end {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+}
+
+.trip-list-row__end > .icon {
+  color: var(--pk-label-3);
+}
+
+/* ---------- the featured trip's expenses from 1100px (card `web-trips`) ---------- */
+.trip-hero--with-expenses {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 24px;
+}
+
+.trip-hero__expenses {
+  position: relative;
+  margin: 0;
+}
+
+.trip-expense-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+.trip-expense-table th,
+.trip-expense-table td {
+  padding: 12px 8px;
+  border-bottom: 0.5px solid var(--pk-separator);
+  text-align: start;
+}
+
+.trip-expense-table thead th {
+  padding-top: 0;
+  color: var(--pk-label-2);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.trip-expense-table tbody th {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.trip-expense-table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.trip-expense-table td:last-child,
+.trip-expense-table th:last-child {
+  text-align: end;
+}
+
+.trip-expense-table td:nth-child(2) {
+  color: var(--pk-label-2);
+  overflow-wrap: anywhere;
 }
 
 @media (forced-colors: active) {

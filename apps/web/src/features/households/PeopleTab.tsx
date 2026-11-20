@@ -12,12 +12,13 @@ import { describeSharedError } from "./errors";
 import { groupListPath } from "./links";
 import { dayLabel, isCurrent, localDate, monthLabel } from "./model";
 
-type Pending = { kind: "remove"; member: HouseholdMember } | { kind: "leave" } | { kind: "archive" } | { kind: "rename" } | null;
+type Pending = { kind: "remove"; member: HouseholdMember } | { kind: "pick" } | { kind: "leave" } | { kind: "archive" } | { kind: "rename" } | null;
 
 /**
  * People (card `iphone-shared-people`): members, invitations and the creator's controls. The
  * server enforces who may do what; the page offers only what the viewer may do and explains the
- * settlement rule for leaving, removal and archiving.
+ * settlement rule for leaving, removal and archiving. Removing someone is under Manage: the card
+ * draws the member rows without actions (MAZ-229).
  */
 export function PeopleTab({ view, recap, onEditTrip }: { view: HouseholdView; recap: MonthRecap | undefined; onEditTrip?: () => void }) {
   const [pending, setPending] = useState<Pending>(null);
@@ -26,6 +27,7 @@ export function PeopleTab({ view, recap, onEditTrip }: { view: HouseholdView; re
   const former = members.filter((member) => !isCurrent(member));
   const trip = Boolean(household.trip);
   const alone = current.length === 1;
+  const removable = view.canWrite && view.creator ? current.filter((member) => member.userId !== view.who.meId) : [];
 
   return (
     <div className="household-columns">
@@ -43,11 +45,6 @@ export function PeopleTab({ view, recap, onEditTrip }: { view: HouseholdView; re
                 </span>
                 <span className="row__end">
                   <Badge>{member.userId === household.creatorId ? "Creator" : "Member"}</Badge>
-                  {view.canWrite && view.creator && member.userId !== view.who.meId ? (
-                    <Button variant="danger-quiet" onClick={() => { setPending({ kind: "remove", member }); }} aria-label={`Remove ${member.email}`}>
-                      Remove
-                    </Button>
-                  ) : null}
                 </span>
               </li>
             ))}
@@ -81,6 +78,11 @@ export function PeopleTab({ view, recap, onEditTrip }: { view: HouseholdView; re
               {view.creator ? (
                 <>
                   {onEditTrip ? <Button onClick={onEditTrip}>Edit trip</Button> : <Button onClick={() => { setPending({ kind: "rename" }); }}>Rename</Button>}
+                  {removable[0] ? (
+                    <Button variant="danger-quiet" onClick={() => { setPending(removable.length === 1 && removable[0] ? { kind: "remove", member: removable[0] } : { kind: "pick" }); }}>
+                      Remove someone
+                    </Button>
+                  ) : null}
                   <Button variant="danger-quiet" onClick={() => { setPending({ kind: "archive" }); }}>
                     Archive {trip ? "trip" : "household"}
                   </Button>
@@ -100,6 +102,7 @@ export function PeopleTab({ view, recap, onEditTrip }: { view: HouseholdView; re
           </Card>
         ) : null}
       </div>
+      {pending?.kind === "pick" ? <PickMemberDialog members={removable} onPick={(member) => { setPending({ kind: "remove", member }); }} onClose={() => { setPending(null); }} /> : null}
       {pending?.kind === "remove" ? <RemoveDialog view={view} member={pending.member} onClose={() => { setPending(null); }} /> : null}
       {pending?.kind === "leave" ? <LeaveDialog view={view} onClose={() => { setPending(null); }} /> : null}
       {pending?.kind === "archive" ? <ArchiveDialog view={view} recap={recap} onClose={() => { setPending(null); }} /> : null}
@@ -377,6 +380,24 @@ function RenameDialog({ view, onClose }: { view: HouseholdView; onClose: () => v
           </Button>
         </div>
       </form>
+    </Dialog>
+  );
+}
+
+/** Which member to remove, when there's more than one; the usual confirmation follows. */
+function PickMemberDialog({ members, onPick, onClose }: { members: HouseholdMember[]; onPick: (member: HouseholdMember) => void; onClose: () => void }) {
+  return (
+    <Dialog title="Remove someone" description="Choose who to remove. You'll confirm next, and their past expenses stay." onClose={onClose}>
+      <ul className="row-list" aria-label="Members you can remove">
+        {members.map((member) => (
+          <li key={member.userId}>
+            <button type="button" className="row" onClick={() => { onPick(member); }}>
+              <Avatar name={member.email} size={32} />
+              <span className="row__title">{member.email}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
     </Dialog>
   );
 }

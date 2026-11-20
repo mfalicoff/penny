@@ -7,7 +7,7 @@ import { TripPage } from "../../features/trips/TripPage";
  * `?tab=`, `?expense=` and `?add=1` (MAZ-93).
  */
 export const Route = createFileRoute("/trips/$id")({
-  staticData: { title: "Trip" },
+  staticData: { title: "Trip", back: "/trips", backLabel: "Back to Trips" },
   validateSearch: tripSearchSchema,
   component: Trip,
 });

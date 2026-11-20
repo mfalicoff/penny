@@ -4,7 +4,7 @@ import { householdSearchSchema } from "../../../../features/households/search";
 
 /** The household with this expense in the detail panel (MAZ-91). */
 export const Route = createFileRoute("/households/$id/expenses/$expenseId")({
-  staticData: { title: "Household" },
+  staticData: { title: "Household", search: false, back: "/households", backLabel: "Back to Shared", backWide: true },
   validateSearch: householdSearchSchema,
   component: HouseholdExpense,
 });

@@ -44,6 +44,9 @@ async function setNow(instant: number, ...pages: Page[]) {
   for (const page of pages) await page.clock.setFixedTime(instant);
 }
 
+/** An expense's detail: a dialog below 1100px, the pane beside the expenses from there (MAZ-229). */
+const expenseDetail = (page: Page, name: string) => page.getByRole("dialog", { name }).or(page.getByRole("region", { name, exact: true }));
+
 const horizontalOverflow = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
 
 test.beforeEach(() => {
@@ -136,7 +139,7 @@ test("invite expiry, joining, equal/exact/percent splits and a share payment acr
   await expect(bea.page.getByText(/October · you owe/)).toContainText("$865.00");
 
   await list.getByRole("link", { name: /Groceries/ }).click();
-  const detail = bea.page.getByRole("dialog", { name: "Groceries" });
+  const detail = expenseDetail(bea.page, "Groceries");
   await detail.getByRole("button", { name: "Mark your share as paid" }).click();
   await expect(detail.getByText(/it doesn't send money/)).toBeVisible();
   await detail.getByRole("button", { name: "Mark $45.00 as paid" }).click();
@@ -160,9 +163,9 @@ test("concurrent edits keep the loser's draft and a stale payment records nothin
 
   // Both open the same expense; Alex saves first.
   await alex.page.getByRole("link", { name: /Hydro/ }).click();
-  await alex.page.getByRole("dialog", { name: "Hydro" }).getByRole("button", { name: "Edit" }).click();
+  await expenseDetail(alex.page, "Hydro").getByRole("button", { name: "Edit" }).click();
   await bea.page.getByRole("link", { name: /Hydro/ }).click();
-  await bea.page.getByRole("dialog", { name: "Hydro" }).getByRole("button", { name: "Edit" }).click();
+  await expenseDetail(bea.page, "Hydro").getByRole("button", { name: "Edit" }).click();
   const beaForm = bea.page.getByRole("dialog", { name: "Edit expense" });
   // Note sits under More details, as in Add entry.
   await beaForm.getByRole("button", { name: /More details/ }).click();
@@ -182,11 +185,11 @@ test("concurrent edits keep the loser's draft and a stale payment records nothin
   await expect(beaForm).toBeHidden();
 
   // Bea starts recording her share; Alex changes the total before she confirms.
-  const detail = bea.page.getByRole("dialog", { name: "Hydro" });
+  const detail = expenseDetail(bea.page, "Hydro");
   await detail.getByRole("button", { name: "Mark your share as paid" }).click();
   const confirm = detail.getByRole("button", { name: "Mark $52.05 as paid" });
   await expect(confirm).toBeVisible();
-  await alex.page.getByRole("dialog", { name: "Hydro" }).getByRole("button", { name: "Edit" }).click();
+  await expenseDetail(alex.page, "Hydro").getByRole("button", { name: "Edit" }).click();
   await alexForm.getByLabel(/^Amount \(/).fill("110.00");
   await alexForm.getByRole("button", { name: "Save" }).click();
   // Alex's panel still held the version from before Bea's note: his draft survives the conflict.
@@ -289,7 +292,7 @@ test("on phones a toast takes the tab bar's place: no layout shift, rows stay ta
     return { height: document.documentElement.scrollHeight, y: Math.round(window.scrollY) };
   });
   await list.getByRole("link", { name: /Hydro/ }).click();
-  const hydro = page.getByRole("dialog", { name: "Hydro" });
+  const hydro = expenseDetail(page, "Hydro");
   await hydro.getByRole("button", { name: "Mark your share as paid" }).click();
   await hydro.getByRole("button", { name: "Mark $45.00 as paid" }).click();
   await page.keyboard.press("Escape");

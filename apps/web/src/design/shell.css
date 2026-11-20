@@ -964,3 +964,18 @@ body:has(.pk-toast) .topbar__add {
     min-height: 44px;
   }
 }
+
+/* A back button kept from 768px, before the title (card `web-household`, MAZ-229). */
+@media (min-width: 768px) {
+  .topbar--back-wide .topbar__back {
+    display: grid;
+    width: 40px;
+    height: 40px;
+    margin-inline-end: 4px;
+    border: 0;
+    border-radius: 12px;
+    background: var(--pk-surface);
+    backdrop-filter: none;
+    box-shadow: 0 0 0 0.5px var(--pk-separator), 0 1px 2px rgb(0 0 0 / 0.05);
+  }
+}

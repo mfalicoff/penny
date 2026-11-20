@@ -5,7 +5,7 @@ export type HouseholdTab = (typeof HOUSEHOLD_TABS)[number];
 
 /**
  * Search parameters of `/households/$id` and its expense URL. `month` and `tab` make a view
- * bookmarkable. Bad values fall back, so old or hand-edited links still open.
+ * bookmarkable; `rule` opens a repeating expense. Bad values fall back, so old or hand-edited links still open.
  */
 export const householdSearchSchema = z.object({
   month: z
@@ -14,6 +14,8 @@ export const householdSearchSchema = z.object({
     .optional()
     .catch(undefined),
   tab: z.enum(HOUSEHOLD_TABS).optional().catch(undefined),
+  /** A repeating expense to open (MAZ-229): Recurring links a shared schedule here. */
+  rule: z.string().min(1).max(200).optional().catch(undefined),
 });
 
 export type HouseholdSearch = z.infer<typeof householdSearchSchema>;

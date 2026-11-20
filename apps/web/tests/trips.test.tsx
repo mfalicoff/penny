@@ -26,6 +26,12 @@ function serve(email = ALEX, options: { offline?: () => boolean } = {}) {
 
 const dialog = (name: string | RegExp) => screen.findByRole("dialog", { name });
 
+/** A trip's … menu (MAZ-229): Trip expense below 1100px, Edit trip and, on a shared trip, History. */
+async function tripAction(user: UserEvent, name: string) {
+  await user.click(await screen.findByRole("button", { name: "Trip actions" }));
+  await user.click(within(screen.getByRole("list", { name: "Trip actions" })).getByRole("button", { name }));
+}
+
 async function setDate(user: UserEvent, field: HTMLElement, value: string) {
   await user.clear(field);
   await user.type(field, value);
@@ -59,7 +65,61 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.unstubAllGlobals();
   configure({ asyncUtilTimeout: 1000 });
+});
+
+/** A window this wide: `min-width` queries answer for it (jsdom alone lays out for a phone). */
+function stubWidth(width: number) {
+  vi.stubGlobal(
+    "matchMedia",
+    vi.fn((query: string) => {
+      const min = /min-width:\s*(\d+)px/.exec(query);
+      return { matches: min ? width >= Number(min[1]) : false, media: query, addEventListener: vi.fn(), removeEventListener: vi.fn() };
+    }),
+  );
+}
+
+/** Lisbon is next (featured); Ski week is later; Montréal is over. */
+function seedThree() {
+  server.writeLedger(ALEX, (ledger) => ({
+    ...ledger,
+    trips: [
+      { id: "lis", name: "Lisbon", startDate: "2026-11-12", endDate: "2026-11-19" },
+      { id: "ski", name: "Ski week", startDate: "2027-02-14", endDate: "2027-02-21" },
+      { id: "mtl", name: "Montréal", startDate: "2026-10-03", endDate: "2026-10-05" },
+    ],
+    transactions: [{ id: "t1", title: "Train", kind: "expense", total: 2400, share: 2400, categoryId: "c-groceries", date: "2026-11-12", note: "", tripId: "lis" }],
+  }));
+}
+
+describe("trip list (MAZ-229)", { timeout: 20_000 }, () => {
+  it("lists the other trips under Upcoming and Past on phones, with Join and New trip in the navigation bar", async () => {
+    seedThree();
+    serve();
+    renderApp("/trips");
+    expect(await screen.findByRole("heading", { level: 2, name: "Lisbon" })).toBeInTheDocument();
+    const upcoming = screen.getByRole("list", { name: "Upcoming" });
+    expect(within(upcoming).getByRole("link", { name: /Ski week/ })).toHaveAttribute("href", "/trips/ski");
+    expect(within(screen.getByRole("list", { name: "Past" })).getByRole("link", { name: /Montréal/ })).toBeInTheDocument();
+    const bar = screen.getByRole("banner");
+    expect(within(bar).getByRole("button", { name: "Join a trip" })).toBeInTheDocument();
+    expect(within(bar).getByRole("button", { name: "New trip" })).toBeInTheDocument();
+    expect(screen.queryByText(/Keep travel spending together/)).not.toBeInTheDocument();
+  });
+
+  it("keeps the tiles from 1100px and shows the next trip's expenses", async () => {
+    stubWidth(1440);
+    seedThree();
+    serve();
+    renderApp("/trips");
+    const featured = await screen.findByRole("region", { name: "Lisbon" });
+    const table = await within(featured).findByRole("table", { name: "Trip expenses" });
+    expect(within(table).getByRole("rowheader", { name: "Train" })).toBeInTheDocument();
+    expect(within(table).getByRole("row", { name: /Train You \$24\.00/ })).toBeInTheDocument();
+    expect(screen.queryByRole("list", { name: "Upcoming" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "New trip" })).toHaveClass("trip-tile--new");
+  });
 });
 
 describe("personal trips", { timeout: 20_000 }, () => {
@@ -90,7 +150,7 @@ describe("personal trips", { timeout: 20_000 }, () => {
       expect(ledgerTrips()).toEqual([expect.objectContaining({ name: "Lisbon", startDate: "2026-11-12", endDate: "2026-11-19" })]);
     });
 
-    await user.click(screen.getByRole("button", { name: "Edit trip" }));
+    await tripAction(user, "Edit trip");
     const edit = await dialog("Edit trip");
     await setDate(user, within(edit).getByLabelText("Starts"), "2026-11-10");
     await user.click(within(edit).getByRole("button", { name: "Save changes" }));
@@ -100,7 +160,7 @@ describe("personal trips", { timeout: 20_000 }, () => {
     expect(screen.getByText("Tue, Nov 10 – Thu, Nov 19, 2026")).toBeInTheDocument();
 
     // Back on the list the trip is featured as the next one.
-    await user.click(within(screen.getByRole("main")).getByRole("link", { name: /All trips/ }));
+    await user.click(screen.getByRole("link", { name: "Back to Trips" }));
     expect(await screen.findByRole("heading", { level: 2, name: "Lisbon" })).toBeInTheDocument();
     expect(screen.getByText("In 21 days")).toBeInTheDocument();
     // The sidebar lists the coming trip with its start date, then All trips (MAZ-221).
@@ -118,7 +178,7 @@ describe("personal trips", { timeout: 20_000 }, () => {
     expect(screen.getByText("1 outside the trip dates")).toBeInTheDocument();
     expect(screen.getByText(/Only your share of a split expense counts/)).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Trip expense" }));
+    await tripAction(user, "Trip expense");
     const add = await dialog("Add entry");
     expect(within(add).getByLabelText("Trip")).toHaveValue("lis");
     await user.type(within(add).getByLabelText("Amount (CAD)"), "30");
@@ -135,7 +195,7 @@ describe("personal trips", { timeout: 20_000 }, () => {
     });
 
     // A trip with expenses can't be deleted: the button says why.
-    await user.click(screen.getByRole("button", { name: "Edit trip" }));
+    await tripAction(user, "Edit trip");
     const edit = await dialog("Edit trip");
     expect(within(edit).getByRole("button", { name: "Delete trip" })).toBeDisabled();
     expect(within(edit).getByText(/2 expenses are assigned to this trip/)).toBeInTheDocument();
@@ -153,7 +213,7 @@ describe("personal trips", { timeout: 20_000 }, () => {
     serve();
     const user = userEvent.setup();
     renderApp("/trips/lis");
-    await user.click(await screen.findByRole("button", { name: "Edit trip" }));
+    await tripAction(user, "Edit trip");
     const edit = await dialog("Edit trip");
     await user.clear(within(edit).getByLabelText("Trip name"));
     await user.type(within(edit).getByLabelText("Trip name"), "ski WEEK");
@@ -204,7 +264,7 @@ describe("shared trips", { timeout: 20_000 }, () => {
     expect(within(onlyYou).getByText("Paid train")).toBeInTheDocument();
     expect(screen.getByText(/includes \$24\.00 only you can see/)).toBeInTheDocument();
 
-    await user.click(within(screen.getByRole("main")).getByRole("link", { name: /All trips/ }));
+    await user.click(screen.getByRole("link", { name: "Back to Trips" }));
     await screen.findByRole("heading", { level: 1, name: "Trips" });
     expect(screen.getAllByRole("heading", { level: 2, name: "Lisbon" })).toHaveLength(1);
     expect(screen.queryByText("Personal")).not.toBeInTheDocument();
@@ -271,7 +331,7 @@ describe("shared trips", { timeout: 20_000 }, () => {
     expect(await screen.findByRole("heading", { level: 1, name: "Coast" })).toBeInTheDocument();
     expect(await screen.findByText(/1 expense is dated outside the trip and still belongs to it/)).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Edit trip" }));
+    await tripAction(user, "Edit trip");
     const edit = await dialog("Edit shared trip");
     await setDate(user, within(edit).getByLabelText("Ends"), "2026-11-05");
     await user.click(within(edit).getByRole("button", { name: "Save changes" }));
@@ -284,8 +344,12 @@ describe("shared trips", { timeout: 20_000 }, () => {
     // Balances settle month by month: October has the ferry, the URL keeps the month.
     await user.click(screen.getByRole("link", { name: "Balances" }));
     expect(await screen.findByText(/A trip settles month by month/)).toBeInTheDocument();
-    await user.click(screen.getByRole("link", { name: "Next month" }));
-    expect(await within(screen.getByRole("navigation", { name: "Month" })).findByText("November 2026")).toBeInTheDocument();
+    // The month is the navigation bar's month control (MAZ-229).
+    expect(screen.getByLabelText("Month")).toHaveValue("2026-10");
+    await user.click(screen.getByRole("button", { name: "Next month" }));
+    await waitFor(() => {
+      expect(screen.getByLabelText("Month")).toHaveValue("2026-11");
+    });
   });
 
   it("opens a shared expense with ?expense= and sends a household id under /trips to the household", async () => {

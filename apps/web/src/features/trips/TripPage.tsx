@@ -8,7 +8,7 @@ import { householdDetailQuery, householdExpensesQuery, householdsQuery, monthRec
 import { usePageTitle } from "../../app/shell/pageTitle";
 import { useAccountEmail } from "../../auth/account";
 import { useIsDemo } from "../../demo/demo";
-import { Avatar, Badge, Button, Card } from "../../design/controls";
+import { Avatar, Badge, Card } from "../../design/controls";
 import { Icon } from "../../design/Icon";
 import { tileStyle } from "../../design/categoryTint";
 import { formatCents, Money } from "../../design/Money";
@@ -25,10 +25,14 @@ import { ExpenseFormDialog, type FormTarget } from "../households/ExpenseForm";
 import { ExpensesTab } from "../households/ExpensesTab";
 import { HistoryPanel } from "../households/HistoryPanel";
 import { MonthBalance } from "../households/HouseholdPage";
+import { GroupToolbar, MoreMenu, ToolButton, ToolContent, toolClass, type MoreItem } from "../households/GroupTools";
 import { GroupLink, type GroupSearch } from "../households/links";
-import { currentMonth, dayLabel, isCurrent, monthLabel, people, shiftMonth } from "../households/model";
+import { currentMonth, dayLabel, isCurrent, monthLabel, people } from "../households/model";
 import { OnlineNotice } from "../households/OnlineNotice";
 import { PeopleTab } from "../households/PeopleTab";
+import { RuleDialog } from "../households/RuleDialog";
+import { MonthBarControls } from "../home/parts";
+import { useMediaQuery, WIDE } from "../../app/useMediaQuery";
 import type { HouseholdTab } from "../households/search";
 import { useLedgerWorkspace } from "../organize/workspace";
 import { isSharedTrip, outsideRange, phaseLabel, privateExpenses, rangeLabel, sharedTripTotals, tripOverview } from "./model";
@@ -47,10 +51,10 @@ export function TripPage({ id, search }: { id: string; search: TripSearch }) {
   return <SharedTripPage householdId={id} search={search} />;
 }
 
+/** The way out of a trip that can't open; otherwise the top bar's Back (phones) or the sidebar's All trips. */
 function AllTripsLink() {
   return (
-    <Link to="/trips" className="wbtn wbtn--quiet trip-back">
-      <Icon name="chevron-back" size={16} />
+    <Link to="/trips" className="wbtn wbtn--secondary" style={{ justifySelf: "center" }}>
       All trips
     </Link>
   );
@@ -60,8 +64,10 @@ function AllTripsLink() {
 
 /**
  * A personal trip (specimen `personal-trip`): travel dates, your spending, by category and every
- * assigned expense, including ones dated before or after the trip. Trip expense adds a personal
- * expense already on this trip; Share trip turns it into a shared trip.
+ * assigned expense, including ones dated before or after the trip. The navigation bar (MAZ-229, as
+ * on `iphone-trip-detail` and `ipad-trip`) has Share trip, which turns it into a shared trip, and
+ * a … menu with Edit trip. Trip expense, which adds a personal expense already on this trip, is
+ * the copper button from 1100px and the menu's first item below that.
  */
 function PersonalTripPage({ trip, ledger }: { trip: Trip; ledger: Ledger }) {
   const email = useAccountEmail();
@@ -75,10 +81,19 @@ function PersonalTripPage({ trip, ledger }: { trip: Trip; ledger: Ledger }) {
   const money = (cents: number) => formatCents(cents, ledger.currency);
   const outside = outsideRange(overview.expenses, trip);
   const sharedAs = trip.sharedHouseholdId ? households.data?.find((household) => household.id === trip.sharedHouseholdId && household.trip) : undefined;
+  const wide = useMediaQuery(WIDE);
+  const more: MoreItem[] = [
+    ...(wide ? [] : [{ label: "Trip expense", icon: "add" as const, onSelect: () => { setDialog("add"); } }]),
+    { label: "Edit trip", icon: "create", onSelect: () => { setDialog("edit"); } },
+  ];
 
   return (
     <div className="page trips">
-      <AllTripsLink />
+      <GroupToolbar ownAdd>
+        {!demo && !trip.sharedHouseholdId ? <ToolButton icon="person-add" label="Share trip" onClick={() => { setDialog("share"); }} /> : null}
+        <MoreMenu items={more} label="Trip actions" />
+        {wide ? <ToolButton primary icon="add" label="Trip expense" onClick={() => { setDialog("add"); }} /> : null}
+      </GroupToolbar>
       <section className="trip-head" aria-label="Trip summary">
         <div className="trip-head__summary">
           <span className="trip-hero__badges">
@@ -86,19 +101,6 @@ function PersonalTripPage({ trip, ledger }: { trip: Trip; ledger: Ledger }) {
             <Badge icon="lock-closed">{trip.sharedHouseholdId && !sharedAs ? "Personal · was shared" : "Personal"}</Badge>
           </span>
           <p className="trip-head__dates">{rangeLabel(trip.startDate, trip.endDate)}</p>
-        </div>
-        <div className="shared-actions">
-          <Button variant="primary" icon="add" onClick={() => { setDialog("add"); }}>
-            Trip expense
-          </Button>
-          {!demo && !trip.sharedHouseholdId ? (
-            <Button icon="person-add" onClick={() => { setDialog("share"); }}>
-              Share trip
-            </Button>
-          ) : null}
-          <Button variant="quiet" icon="create" onClick={() => { setDialog("edit"); }}>
-            Edit trip
-          </Button>
         </div>
       </section>
 
@@ -219,9 +221,12 @@ const TAB_LABEL: Record<Exclude<HouseholdTab, "history">, string> = { expenses: 
 
 /**
  * A shared trip (specimens `shared-trip`, `trip-people`, `trip-balances`; card
- * `iphone-trip-detail`): the household page's Expenses, Balances and People for a trip, under
- * `/trips/$id`. Expenses lists the whole trip whatever the month, plus your private expenses from
- * before sharing ("Only you"); Balances still settle month by month; People invites and manages.
+ * `iphone-trip-detail`, `ipad-trip`): the household page's Expenses, Balances and People for a
+ * trip, under `/trips/$id`. Expenses lists the whole trip whatever the month, plus your private
+ * expenses from before sharing ("Only you"); Balances still settle month by month; People invites
+ * and manages. The navigation bar (MAZ-229) has Invite and a … menu with Edit trip and History;
+ * Trip expense is the copper button from 1100px and the menu's first item below that. Balances,
+ * People and History drop the trip's hero, as the household does.
  */
 function SharedTripPage({ householdId, search }: { householdId: string; search: TripSearch }) {
   const email = useAccountEmail();
@@ -237,6 +242,7 @@ function SharedTripPage({ householdId, search }: { householdId: string; search: 
   const [form, setForm] = useState<FormTarget | null>(search.add ? { kind: "new" } : null);
   const [editing, setEditing] = useState(false);
   const [openPrivate, setOpenPrivate] = useState<Transaction | null>(null);
+  const wide = useMediaQuery(WIDE);
   usePageTitle(detail.data?.household.name);
 
   // A `?add=1` link (Trip expense from the list) opens the form once; drop it so Back and reload don't reopen it.
@@ -279,70 +285,69 @@ function SharedTripPage({ householdId, search }: { householdId: string; search: 
   const mine = sameCurrency ? privateExpenses(workspace.ledger, householdId) : [];
   const totals = expenses.data ? sharedTripTotals(expenses.data, who.meId, mine, household.trip) : null;
   const linkSearch = (next: Partial<GroupSearch>): GroupSearch => ({ month: search.month, tab: search.tab, ...next });
+  const go = (next: Partial<GroupSearch>) => void navigate({ to: "/trips/$id", params: { id: householdId }, search: linkSearch(next) });
+  const closeRule = () => void navigate({ to: ".", search: linkSearch({}), replace: true });
+  const more: MoreItem[] = [
+    ...(view.canWrite && !wide ? [{ label: "Trip expense", icon: "add" as const, onSelect: () => { setForm({ kind: "new" }); } }] : []),
+    ...(view.canWrite && view.creator ? [{ label: "Edit trip", icon: "create" as const, onSelect: () => { setEditing(true); } }] : []),
+    { label: "History", icon: "time", onSelect: () => { go({ tab: "history" }); } },
+  ];
 
   return (
     <div className="page trips">
-      <OnlineNotice />
-      <AllTripsLink />
-      <section className="trip-head" aria-label="Trip summary">
-        <span className="avatars" aria-hidden="true">
-          {current.slice(0, 5).map((member) => (
-            <Avatar key={member.userId} name={member.email} size={40} />
-          ))}
-        </span>
-        <div className="trip-head__summary">
-          <span className="trip-hero__badges">
-            <Badge>{phaseLabel(household.trip)}</Badge>
-            <Badge icon="people">Shared</Badge>
-            {archived ? <Badge>Archived</Badge> : null}
-          </span>
-          <p className="trip-head__dates">
-            {rangeLabel(household.trip.startDate, household.trip.endDate)} · {current.length} {current.length === 1 ? "person" : "people"} · {household.currency}
-          </p>
-        </div>
-        <div className="shared-actions">
-          {view.canWrite ? (
-            <Button variant="primary" icon="add" onClick={() => { setForm({ kind: "new" }); }}>
-              Trip expense
-            </Button>
-          ) : null}
-          {view.canWrite && view.creator ? (
-            <>
-              <GroupLink route="trips" householdId={householdId} search={linkSearch({ tab: "people" })} className="wbtn wbtn--secondary">
-                Invite
-              </GroupLink>
-              <Button variant="quiet" icon="create" onClick={() => { setEditing(true); }}>
-                Edit trip
-              </Button>
-            </>
-          ) : null}
-          <GroupLink route="trips" householdId={householdId} search={linkSearch({ tab: "history" })} className="wbtn wbtn--quiet" aria-current={tab === "history" ? "page" : undefined}>
-            History
+      <GroupToolbar ownAdd lead={tab === "balances" ? <MonthBarControls month={month} onChange={(next) => { go({ month: next }); }} /> : null}>
+        {view.canWrite && view.creator ? (
+          <GroupLink route="trips" householdId={householdId} search={linkSearch({ tab: "people" })} className={toolClass()}>
+            <ToolContent icon="person-add" label="Invite" />
           </GroupLink>
-        </div>
-      </section>
+        ) : null}
+        <MoreMenu items={more} label="Trip actions" />
+        {view.canWrite && wide ? <ToolButton primary icon="add" label="Trip expense" onClick={() => { setForm({ kind: "new" }); }} /> : null}
+      </GroupToolbar>
+      <OnlineNotice />
+      {tab === "expenses" ? (
+        <>
+          <section className="trip-head" aria-label="Trip summary">
+            <span className="avatars" aria-hidden="true">
+              {current.slice(0, 5).map((member) => (
+                <Avatar key={member.userId} name={member.email} size={40} />
+              ))}
+            </span>
+            <div className="trip-head__summary">
+              <span className="trip-hero__badges">
+                <Badge>{phaseLabel(household.trip)}</Badge>
+                <Badge icon="people">Shared</Badge>
+                {archived ? <Badge>Archived</Badge> : null}
+              </span>
+              <p className="trip-head__dates">
+                {rangeLabel(household.trip.startDate, household.trip.endDate)} · {current.length} {current.length === 1 ? "person" : "people"} · {household.currency}
+              </p>
+            </div>
+          </section>
 
-      <dl className="trip-stats trip-stats--card" aria-live="polite">
-        <div>
-          <dt>Trip total</dt>
-          <dd className="pk-num">{totals ? view.money(totals.tripTotal) : "…"}</dd>
-        </div>
-        <div>
-          <dt>Your spending</dt>
-          <dd className="pk-num">{totals ? view.money(totals.yourSpending) : "…"}</dd>
-        </div>
-        <div>
-          <dt>{monthLabel(month).split(" ")[0]} balance</dt>
-          <dd className="trip-stats__sentence">
-            <MonthBalance month={month} balance={balance} loading={recap.isPending} view={view} />
-          </dd>
-        </div>
-      </dl>
-      {totals && (totals.privateShare > 0 || totals.outside > 0) ? (
-        <p className="note">
-          {totals.privateShare > 0 ? `Your spending includes ${view.money(totals.privateShare)} only you can see. ` : ""}
-          {totals.outside > 0 ? `${String(totals.outside)} ${totals.outside === 1 ? "expense is" : "expenses are"} dated outside the trip and still ${totals.outside === 1 ? "belongs" : "belong"} to it.` : ""}
-        </p>
+          <dl className="trip-stats trip-stats--card" aria-live="polite">
+            <div>
+              <dt>Trip total</dt>
+              <dd className="pk-num">{totals ? view.money(totals.tripTotal) : "…"}</dd>
+            </div>
+            <div>
+              <dt>Your spending</dt>
+              <dd className="pk-num">{totals ? view.money(totals.yourSpending) : "…"}</dd>
+            </div>
+            <div>
+              <dt>{monthLabel(month).split(" ")[0]} balance</dt>
+              <dd className="trip-stats__sentence">
+                <MonthBalance month={month} balance={balance} loading={recap.isPending} view={view} />
+              </dd>
+            </div>
+          </dl>
+          {totals && (totals.privateShare > 0 || totals.outside > 0) ? (
+            <p className="note">
+              {totals.privateShare > 0 ? `Your spending includes ${view.money(totals.privateShare)} only you can see. ` : ""}
+              {totals.outside > 0 ? `${String(totals.outside)} ${totals.outside === 1 ? "expense is" : "expenses are"} dated outside the trip and still ${totals.outside === 1 ? "belongs" : "belong"} to it.` : ""}
+            </p>
+          ) : null}
+        </>
       ) : null}
 
       {archived ? (
@@ -363,27 +368,8 @@ function SharedTripPage({ householdId, search }: { householdId: string; search: 
         ))}
       </nav>
 
-      {tab === "balances" ? (
-        <nav className="month-nav" aria-label="Month">
-          <GroupLink route="trips" householdId={householdId} search={linkSearch({ month: shiftMonth(month, -1) })} className="wbtn wbtn--quiet wbtn--icon" aria-label="Previous month">
-            <Icon name="chevron-back" size={16} />
-          </GroupLink>
-          <span className="month-nav__label" aria-live="polite">
-            {monthLabel(month)}
-          </span>
-          <GroupLink route="trips" householdId={householdId} search={linkSearch({ month: shiftMonth(month, 1) })} className="wbtn wbtn--quiet wbtn--icon" aria-label="Next month">
-            <Icon name="chevron-forward" size={16} />
-          </GroupLink>
-          {month !== currentMonth() ? (
-            <GroupLink route="trips" householdId={householdId} search={linkSearch({ month: undefined })} className="wbtn wbtn--quiet">
-              This month
-            </GroupLink>
-          ) : null}
-        </nav>
-      ) : null}
-
       {tab === "expenses" ? (
-        <ExpensesTab view={view} recap={recap} search={linkSearch({})} onEditRule={(rule) => { setForm({ kind: "rule", rule }); }}>
+        <ExpensesTab view={view} recap={recap} search={linkSearch({})}>
           <OnlyYouCard entries={mine} ledger={workspace.ledger} onOpen={setOpenPrivate} />
         </ExpensesTab>
       ) : tab === "balances" ? (
@@ -402,13 +388,22 @@ function SharedTripPage({ householdId, search }: { householdId: string; search: 
           view={view}
           expenseId={search.expense}
           onEdit={(expense) => { setForm({ kind: "edit", expense }); }}
-          onClose={() => void navigate({ to: "/trips/$id", params: { id: householdId }, search: linkSearch({}) })}
+          onRule={(rule) => { go({ rule }); }}
+          onClose={() => { go({}); }}
         />
       ) : null}
+      {search.rule && !form ? <RuleDialog view={view} ruleId={search.rule} onEdit={(rule) => { setForm({ kind: "rule", rule }); }} onClose={closeRule} /> : null}
       {form?.kind === "new" ? (
         <AddEntryDialog householdId={view.householdId} onClose={() => { setForm(null); }} />
       ) : form ? (
-        <ExpenseFormDialog view={view} target={form} onClose={() => { setForm(null); }} />
+        <ExpenseFormDialog
+          view={view}
+          target={form}
+          onClose={() => {
+            if (form.kind === "rule") closeRule();
+            setForm(null);
+          }}
+        />
       ) : null}
       {editing ? <TripFormDialog target={{ kind: "shared", household }} onClose={() => { setEditing(false); }} /> : null}
       {openPrivate ? <EntryDetailDialog entry={openPrivate} onClose={() => { setOpenPrivate(null); }} /> : null}

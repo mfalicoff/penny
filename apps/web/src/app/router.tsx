@@ -30,7 +30,11 @@ declare module "@tanstack/react-router" {
     title?: string;
     /** Show the top bar's search field. Default true; Activity has its own. */
     search?: boolean;
-    /** On phones, a back button to this page in the top bar (pages pushed from Home, MAZ-221). */
-    back?: "/";
+    /** On phones, a back button to this page in the top bar (pages pushed from a tab, MAZ-221, MAZ-229). */
+    back?: "/" | "/households" | "/trips";
+    /** The back button's accessible name. Default "Back to Home". */
+    backLabel?: string;
+    /** Keep the back button from 768px too, before the title (card `web-household`). */
+    backWide?: boolean;
   }
 }
