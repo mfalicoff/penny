@@ -100,6 +100,7 @@ struct RecurringListView: View {
             SharedScheduleRow(schedule: schedule, today: shell.today)
         }
         .buttonStyle(.plain)
+        .cardRow()
         .accessibilityHint(household.trip == nil ? "Opens the household" : "Opens the trip")
         .accessibilityIdentifier("sharedSchedule.\(schedule.rule.id)")
     }
@@ -120,6 +121,7 @@ struct RecurringListView: View {
             .tint(PennyColor.pending)
             .accessibilityIdentifier("schedule.\(rule.id).toggle")
         }
+        .cardRow()
         .accessibilityHint("Opens the schedule")
         .accessibilityIdentifier("schedule.\(rule.id)")
     }
@@ -241,8 +243,8 @@ private struct ScheduleRow: View {
             HStack(spacing: 12) {
                 CategoryIcon(symbol: ScheduleText.tileSymbol(rule.kind, category: category), color: tint(category))
                     .opacity(rule.active ? 1 : 0.5)
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(rule.title).font(.body.weight(.semibold))
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(rule.title).font(.callout.weight(.semibold))
                         .foregroundStyle(rule.active ? PennyColor.label : PennyColor.secondaryLabel)
                         .lineLimit(3)
                     if rule.active {
@@ -271,8 +273,6 @@ private struct ScheduleRow: View {
                     .accessibilityHidden(true)
             }
         }
-        .padding(.vertical, 4)
-        .frame(minHeight: ControlSize.row)
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
     }
@@ -304,7 +304,7 @@ private struct SharedScheduleRow: View {
             HStack(spacing: 12) {
                 CategoryIcon(symbol: CategoryStyle.symbol(forIonicon: rule.category.icon), color: rule.category.tint)
                     .opacity(rule.active ? 1 : 0.5)
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: 1) {
                     // The badge rides on the title's line, so the row stays two lines like a
                     // personal one; it drops below only when the title leaves no room.
                     ViewThatFits(in: .horizontal) {
@@ -347,14 +347,12 @@ private struct SharedScheduleRow: View {
                     .accessibilityHidden(true)
             }
         }
-        .padding(.vertical, 4)
-        .frame(minHeight: ControlSize.row)
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
     }
 
     private func title(_ rule: WireSharedRule) -> some View {
-        Text(rule.title).font(.body.weight(.semibold))
+        Text(rule.title).font(.callout.weight(.semibold))
             .foregroundStyle(rule.active ? PennyColor.label : PennyColor.secondaryLabel)
     }
 }
@@ -395,7 +393,7 @@ private struct ScheduleAmount: View {
 
     var body: some View {
         Text(MoneyFormat.signed(cents, meaning: meaning, currency: currency))
-            .font(.body.weight(.semibold).monospacedDigit())
+            .font(.callout.weight(.semibold).monospacedDigit())
             .foregroundStyle(active ? meaning.color : PennyColor.secondaryLabel)
             .lineLimit(1)
             .minimumScaleFactor(0.7)
