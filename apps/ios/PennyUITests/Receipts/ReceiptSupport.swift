@@ -54,10 +54,11 @@ struct ReceiptFixtures {
 
 /// Receipt calls a second device would make, against the real API.
 extension Stack {
-    /// `POST /api/receipts` as `token`; returns `{id, name, mime, uri}`.
+    /// `POST /api/receipts` as `token`, with the file as the raw body (contract 2.0.0, MAZ-131):
+    /// the type in `Content-Type` and the name in `Content-Disposition`. Returns `{id, name, mime, uri}`.
     func uploadReceipt(token: String, name: String, mime: String, data: Data) async throws -> [String: Any] {
-        let body: [String: Any] = ["name": name, "mime": mime, "base64": data.base64EncodedString()]
-        let (status, answer) = try await receiptRequest("POST", path: "api/receipts", token: token, body: body)
+        let (status, answer) = try await receiptRequest(
+            "POST", path: "api/receipts", token: token, file: (data, mime, Stack.receiptDisposition(name)))
         guard status == 201, let receipt = try JSONSerialization.jsonObject(with: answer) as? [String: Any] else {
             throw StackError.status("POST /api/receipts", status, String(decoding: answer, as: UTF8.self))
         }
@@ -100,8 +101,17 @@ extension Stack {
         return receipt
     }
 
+    /// An RFC 8187 `filename*` with every UTF-8 byte outside the unreserved set percent-encoded,
+    /// as the app's `APIClient.receiptDisposition` sends it.
+    static func receiptDisposition(_ name: String) -> String {
+        let unreserved = CharacterSet(
+            charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
+        return "attachment; filename*=UTF-8''" + (name.addingPercentEncoding(withAllowedCharacters: unreserved) ?? "")
+    }
+
     private func receiptRequest(
-        _ method: String, path: String, token: String, body: [String: Any]? = nil
+        _ method: String, path: String, token: String, body: [String: Any]? = nil,
+        file: (data: Data, mime: String, disposition: String)? = nil
     ) async throws -> (Int, Data) {
         var request = URLRequest(url: configuration.apiURL.appending(path: path), timeoutInterval: 60)
         request.httpMethod = method
@@ -109,6 +119,11 @@ extension Stack {
         if let body {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        }
+        if let file {
+            request.setValue(file.mime, forHTTPHeaderField: "Content-Type")
+            request.setValue(file.disposition, forHTTPHeaderField: "Content-Disposition")
+            request.httpBody = file.data
         }
         let (data, response) = try await URLSession(configuration: .ephemeral).data(for: request)
         return ((response as? HTTPURLResponse)?.statusCode ?? 0, data)
