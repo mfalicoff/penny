@@ -3,6 +3,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { ApiError } from "../../api/client";
 import { householdDetailQuery, householdExpensesQuery, householdsQuery } from "../../api/households";
+import { useMediaQuery, WIDE } from "../../app/useMediaQuery";
 import { useAccountEmail } from "../../auth/account";
 import { useIsDemo } from "../../demo/demo";
 import { Badge, Button } from "../../design/controls";
@@ -10,17 +11,20 @@ import { Icon } from "../../design/Icon";
 import { formatCents, Money } from "../../design/Money";
 import { Banner, EmptyState, ErrorState, LoadingState } from "../../design/states";
 import { EntryFormDialog } from "../entries/EntryForm";
+import { GroupToolbar, ToolButton } from "../households/GroupTools";
 import { findMe } from "../households/model";
 import { JoinTripDialog } from "../households/StartDialogs";
 import { useLedgerWorkspace } from "../organize/workspace";
-import { featuredTrip, phaseLabel, privateExpenses, rangeLabel, sharedTripTotals, tripCards, type TripCard } from "./model";
+import { featuredTrip, phaseLabel, privateExpenses, rangeLabel, sharedTripTotals, tripCards, tripOverview, tripSections, type TripCard } from "./model";
 import { TripFormDialog } from "./TripForm";
 
 /**
- * Trips (specimen `trips`, card `web-trips`): the trip happening now or coming next, then every
- * trip, personal and shared, newest first. Personal trips come from this browser's ledger (offline
- * first); shared trips from the server. A personal trip that was shared shows once, as the shared
- * trip. New trip and Join a trip are the two ways in.
+ * Trips (cards `iphone-trips`, `web-trips`): the trip happening now or coming next, then the
+ * others. Phones and tablets list them under UPCOMING and PAST; from 1100px they're a grid of
+ * tiles ending with a New trip tile, and the featured trip shows its expenses. Personal trips come
+ * from this browser's ledger (offline first); shared trips from the server. A personal trip that
+ * was shared shows once, as the shared trip. Join a trip (key) and New trip (+) are the
+ * navigation bar's icons (MAZ-229); from 1100px New trip is the tile.
  */
 export function TripsPage() {
   const email = useAccountEmail();
@@ -29,6 +33,7 @@ export function TripsPage() {
   const households = useQuery({ ...householdsQuery(email), enabled: !demo });
   const [dialog, setDialog] = useState<"new" | "join" | null>(null);
   const [tripExpense, setTripExpense] = useState<string | null>(null);
+  const wide = useMediaQuery(WIDE);
   const cards = useMemo(() => tripCards(workspace.ledger, households.data), [workspace.ledger, households.data]);
   const featured = featuredTrip(cards);
   const currency = workspace.ledger?.currency;
@@ -50,22 +55,14 @@ export function TripsPage() {
         : "Penny couldn't load your shared trips. Your personal trips are all here."
       : null;
   const rest = cards.filter((card) => card !== featured);
+  const sections = tripSections(rest);
 
   return (
     <div className="page trips">
-      <div className="trips__intro">
-        <p className="organize__lede">Keep travel spending together, even what you pay before or after the trip.</p>
-        <div className="shared-actions">
-          <Button variant="primary" icon="add" onClick={() => { setDialog("new"); }}>
-            New trip
-          </Button>
-          {demo ? null : (
-            <Button icon="key" onClick={() => { setDialog("join"); }}>
-              Join a trip
-            </Button>
-          )}
-        </div>
-      </div>
+      <GroupToolbar>
+        {demo ? null : <ToolButton icon="key" label="Join a trip" onClick={() => { setDialog("join"); }} />}
+        {wide ? null : <ToolButton icon="add" label="New trip" onClick={() => { setDialog("new"); }} />}
+      </GroupToolbar>
 
       {sharedUnavailable ? (
         <Banner tone="info" title="Shared trips aren't available" action={households.isError && !demo ? <Button variant="quiet" onClick={() => void households.refetch()}>Try again</Button> : undefined}>
@@ -75,7 +72,7 @@ export function TripsPage() {
 
       {cards.length === 0 && !households.isLoading ? (
         <EmptyState icon="airplane" title="Your next trip starts here">
-          <p>Create a trip, then assign expenses to see its total. Share it to split costs with the people you travel with.</p>
+          <p>Create a trip with New trip, then assign expenses to see its total. Share it to split costs with the people you travel with.</p>
         </EmptyState>
       ) : null}
 
@@ -83,13 +80,19 @@ export function TripsPage() {
         <FeaturedTrip
           card={featured}
           currency={currency}
+          expenses={wide}
           onTripExpense={() => {
             setTripExpense(featured.id);
           }}
         />
       ) : null}
 
-      {rest.length || cards.length ? (
+      {!wide ? (
+        <>
+          {sections.upcoming.length ? <TripList id="trips-upcoming" title="Upcoming" cards={sections.upcoming} currency={currency} /> : null}
+          {sections.past.length ? <TripList id="trips-past" title="Past" cards={sections.past} currency={currency} /> : null}
+        </>
+      ) : (
         <section className="shared-section" aria-labelledby="trips-all">
           <h2 id="trips-all">{featured ? "All trips" : "Trips"}</h2>
           <ul className="trip-grid">
@@ -106,7 +109,7 @@ export function TripsPage() {
             </li>
           </ul>
         </section>
-      ) : null}
+      )}
 
       {dialog === "new" ? <TripFormDialog target={{ kind: "new" }} onClose={() => { setDialog(null); }} /> : null}
       {dialog === "join" ? <JoinTripDialog onClose={() => { setDialog(null); }} /> : null}
@@ -153,11 +156,41 @@ function TripTile({ card, currency }: { card: TripCard; currency: string | undef
   );
 }
 
-/** The trip happening now or next, with its numbers and the contextual add action. */
-function FeaturedTrip({ card, currency, onTripExpense }: { card: TripCard; currency: string | undefined; onTripExpense: () => void }) {
+/** UPCOMING or PAST on phones and tablets (card `iphone-trips`): a row per trip that opens it. */
+function TripList({ id, title, cards, currency }: { id: string; title: string; cards: TripCard[]; currency: string | undefined }) {
+  return (
+    <section className="shared-section" aria-labelledby={id}>
+      <h2 id={id}>{title}</h2>
+      <ul className="group-list" aria-labelledby={id}>
+        {cards.map((card) => (
+          <li key={`${card.kind}-${card.id}`}>
+            <Link to="/trips/$id" params={{ id: card.id }} className="row trip-list-row">
+              <span className="trip-tile__icon" aria-hidden="true">
+                <Icon name="airplane" />
+              </span>
+              <span>
+                <span className="row__title">{card.name}</span>
+                <span className="row__meta trip-list-row__meta">
+                  {rangeLabel(card.startDate, card.endDate)} {card.kind === "shared" ? <Badge icon="people">Shared</Badge> : <Badge icon="lock-closed">Personal</Badge>}
+                </span>
+              </span>
+              <span className="row__end trip-list-row__end">
+                {card.kind === "personal" ? <Money cents={card.total} currency={currency} /> : null}
+                <Icon name="chevron-forward" size={16} />
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+/** The trip happening now or next, with its numbers, the contextual add action and, from 1100px, its expenses. */
+function FeaturedTrip({ card, currency, expenses, onTripExpense }: { card: TripCard; currency: string | undefined; expenses: boolean; onTripExpense: () => void }) {
   const navigate = useNavigate();
   return (
-    <section className="trip-hero" aria-labelledby="trip-hero-name">
+    <section className={expenses ? "trip-hero trip-hero--with-expenses" : "trip-hero"} aria-labelledby="trip-hero-name">
       <div className="trip-hero__main">
         <span className="trip-hero__badges">
           <Badge>{phaseLabel(card)}</Badge>
@@ -199,8 +232,84 @@ function FeaturedTrip({ card, currency, onTripExpense }: { card: TripCard; curre
           </Link>
         </div>
       </div>
+      {expenses ? card.kind === "personal" ? <PersonalTripExpenses card={card} /> : <SharedTripExpenses card={card} /> : null}
     </section>
   );
+}
+
+interface PreviewRow {
+  id: string;
+  title: string;
+  paidBy: string;
+  yours: number;
+  only?: boolean;
+}
+
+const PREVIEW_ROWS = 5;
+
+/** The featured trip's expenses on desktop (card `web-trips`): what each was, who paid and your part. */
+function TripExpenseTable({ rows, currency, more }: { rows: PreviewRow[]; currency: string | undefined; more: number }) {
+  if (!rows.length) return <p className="muted trip-hero__expenses">No expenses on this trip yet.</p>;
+  return (
+    <div className="trip-hero__expenses">
+      <table className="trip-expense-table">
+        <caption className="visually-hidden">Trip expenses</caption>
+        <thead>
+          <tr>
+            <th scope="col">Expense</th>
+            <th scope="col">Paid by</th>
+            <th scope="col">Yours</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.id}>
+              <th scope="row">
+                {row.title}
+                {row.only ? (
+                  <>
+                    {" "}
+                    <Badge icon="lock-closed">Only you</Badge>
+                  </>
+                ) : null}
+              </th>
+              <td>{row.paidBy}</td>
+              <td>
+                <Money cents={row.yours} currency={currency} />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {more > 0 ? <p className="note">{more} more in the trip.</p> : null}
+    </div>
+  );
+}
+
+function PersonalTripExpenses({ card }: { card: Extract<TripCard, { kind: "personal" }> }) {
+  const workspace = useLedgerWorkspace();
+  const ledger = workspace.ledger;
+  if (!ledger) return null;
+  const all = tripOverview(ledger, card.trip).expenses;
+  const rows = all.slice(0, PREVIEW_ROWS).map((entry) => ({ id: entry.id, title: entry.title, paidBy: "You", yours: entry.share }));
+  return <TripExpenseTable rows={rows} currency={ledger.currency} more={all.length - rows.length} />;
+}
+
+function SharedTripExpenses({ card }: { card: Extract<TripCard, { kind: "shared" }> }) {
+  const email = useAccountEmail();
+  const workspace = useLedgerWorkspace();
+  const detail = useQuery(householdDetailQuery(email, card.id));
+  const expenses = useQuery(householdExpensesQuery(email, card.id));
+  if (!detail.data || !expenses.data) return <p className="muted trip-hero__expenses">{expenses.isError || detail.isError ? "Open the trip to see its expenses." : "Loading the trip's expenses…"}</p>;
+  const me = findMe(detail.data.members, email)?.userId;
+  const name = (userId: string) => (userId === me ? "You" : (detail.data.members.find((member) => member.userId === userId)?.email ?? "Former member"));
+  const mine = workspace.ledger?.currency === card.household.currency ? privateExpenses(workspace.ledger, card.id) : [];
+  const all: PreviewRow[] = [
+    ...expenses.data.map((expense) => ({ id: expense.id, title: expense.title, paidBy: name(expense.payerUserId), yours: me ? (expense.splits.find((split) => split.userId === me)?.amountCents ?? 0) : 0 })),
+    ...mine.map((entry) => ({ id: entry.id, title: entry.title, paidBy: "You", yours: entry.share, only: true })),
+  ];
+  const rows = all.slice(0, PREVIEW_ROWS);
+  return <TripExpenseTable rows={rows} currency={card.household.currency} more={all.length - rows.length} />;
 }
 
 function SharedHeroStats({ card }: { card: Extract<TripCard, { kind: "shared" }> }) {

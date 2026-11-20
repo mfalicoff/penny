@@ -38,9 +38,25 @@ async function person(browser: Browser, email: string, baseURL: string | undefin
 
 const horizontalOverflow = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
 
+/**
+ * A trip action (MAZ-229): Trip expense is the navigation bar's copper button from 1100px and the …
+ * menu's first item below; Edit trip and History are always in the menu.
+ */
+async function tripAction(page: Page, name: "Trip expense" | "Edit trip") {
+  const menu = page.getByRole("button", { name: "Trip actions" });
+  await expect(menu).toBeVisible();
+  const direct = page.getByRole("banner").getByRole("button", { name, exact: true });
+  if (name === "Trip expense" && (await direct.isVisible())) {
+    await direct.click();
+    return;
+  }
+  await menu.click();
+  await page.getByRole("list", { name: "Trip actions" }).getByRole("button", { name }).click();
+}
+
 /** A shared expense through the trip's own form (Trip expense). */
 async function addTripExpense(page: Page, title: string, amount: string, date: string) {
-  await page.getByRole("button", { name: "Trip expense" }).click();
+  await tripAction(page, "Trip expense");
   const form = page.getByRole("dialog", { name: "Add entry" });
   await form.getByLabel(/^Amount \(/).fill(amount);
   await form.getByLabel("Title").fill(title);
@@ -109,10 +125,13 @@ test("a shared personal trip keeps its earlier expense private, and a later memb
   // Balances settle by month: October (flights, Alex only) is settled, November isn't.
   await bea.page.getByRole("link", { name: "Balances" }).click();
   await expect(bea.page.getByText(/A trip settles month by month/)).toBeVisible();
-  await bea.page.getByRole("link", { name: "Next month" }).click();
+  // The month control: Previous and Next from 768px, the month pill's list on phones (MAZ-229).
+  const next = bea.page.getByRole("button", { name: "Next month" });
+  if (await next.isVisible()) await next.click();
+  else await bea.page.getByLabel("Month", { exact: true }).selectOption("2026-11");
   await expect(bea.page).toHaveURL(/month=2026-11/);
   await bea.page.reload();
-  await expect(bea.page.getByRole("navigation", { name: "Month" }).getByText("November 2026")).toBeVisible();
+  await expect(bea.page.getByLabel("Month", { exact: true })).toHaveValue("2026-11");
 
   // Alex's list shows Lisbon once, as the shared trip; the totals never add the private train to the group.
   await alex.page.goto("/trips");
@@ -142,7 +161,7 @@ test("personal trips by keyboard: assignment, deletion restrictions and a refres
   await expect(page.getByRole("heading", { level: 1, name: "Ski week" })).toBeVisible();
   const tripUrl = page.url();
 
-  await page.getByRole("button", { name: "Trip expense" }).click();
+  await tripAction(page, "Trip expense");
   const add = page.getByRole("dialog", { name: "Add entry" });
   await expect(add.getByLabel("Trip")).toHaveValue(new URL(tripUrl).pathname.split("/").pop() ?? "");
   await add.getByLabel("Amount (CAD)").fill("640");
@@ -158,7 +177,7 @@ test("personal trips by keyboard: assignment, deletion restrictions and a refres
   await expect(page.getByRole("list", { name: "Trip expenses" }).getByText("Lift pass")).toBeVisible();
 
   // A trip with expenses can't be deleted; moving the expense off the trip allows it.
-  await page.getByRole("button", { name: "Edit trip" }).click();
+  await tripAction(page, "Edit trip");
   const edit = page.getByRole("dialog", { name: "Edit trip" });
   await expect(edit.getByRole("button", { name: "Delete trip" })).toBeDisabled();
   await expect(edit.getByText(/1 expense is assigned to this trip/)).toBeVisible();
@@ -173,7 +192,7 @@ test("personal trips by keyboard: assignment, deletion restrictions and a refres
   await expect(entry).toBeHidden();
   await expect(page.getByRole("heading", { name: "No expenses on this trip yet" })).toBeVisible();
 
-  await page.getByRole("button", { name: "Edit trip" }).click();
+  await tripAction(page, "Edit trip");
   await edit.getByRole("button", { name: "Delete trip" }).click();
   await page.getByRole("dialog", { name: "Delete Ski week?" }).getByRole("button", { name: "Delete trip" }).click();
   await expect(page).toHaveURL(/\/trips$/);

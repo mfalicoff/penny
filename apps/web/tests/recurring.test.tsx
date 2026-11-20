@@ -136,7 +136,7 @@ describe("recurring schedules", () => {
       expect.stringMatching(/^Cleaner.*Paused · monthly · Maison−\$30\.00your share.*Shared.*Paused/),
     ]);
     // A shared schedule opens its household, where it's edited.
-    expect(within(expenses).getByRole("link", { name: /^Streaming/ })).toHaveAttribute("href", "/households/h1");
+    expect(within(expenses).getByRole("link", { name: /^Streaming/ })).toHaveAttribute("href", "/households/h1?rule=s1");
     expect(screen.getByText(/2 active, 1 paused/)).toBeInTheDocument();
     expect(screen.getByText(/Shared schedules open their household and count only your share/)).toBeInTheDocument();
   });

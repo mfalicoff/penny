@@ -12,6 +12,19 @@ test.skip(process.env.PENNY_REAL_STACK !== "1", "needs the full-stack test envir
 test.describe.configure({ mode: "serial", timeout: 180_000 });
 
 const PASSWORD = "correct horse battery";
+
+/** Trip expense: the copper navigation-bar button from 1100px, the … menu's first item below (MAZ-229). */
+async function tripExpense(page: Page) {
+  const menu = page.getByRole("button", { name: "Trip actions" });
+  await expect(menu).toBeVisible();
+  const direct = page.getByRole("banner").getByRole("button", { name: "Trip expense", exact: true });
+  if (await direct.isVisible()) {
+    await direct.click();
+    return;
+  }
+  await menu.click();
+  await page.getByRole("list", { name: "Trip actions" }).getByRole("button", { name: "Trip expense" }).click();
+}
 const OCT_20 = "2026-10-20T15:00:00Z";
 
 async function pinClock(iso: string | null) {
@@ -95,7 +108,7 @@ test("two people: share a personal trip, join after an expense, split, repay and
   // Flights before Bea joins: Alex's alone.
   await alex.page.goto(url);
   for (const [title, amount, date] of [["Flights", "824", "2026-10-02"]] as const) {
-    await alex.page.getByRole("button", { name: "Trip expense" }).click();
+    await tripExpense(alex.page);
     const form = alex.page.getByRole("dialog", { name: "Add entry" });
     await form.getByLabel(/^Amount \(/).fill(amount);
     await form.getByLabel("Title").fill(title);
@@ -115,7 +128,7 @@ test("two people: share a personal trip, join after an expense, split, repay and
   await expect(list.getByRole("link", { name: /Flights/ })).toContainText("Not part of your share");
 
   // After Bea joined: split with her. She refreshes and repays her share.
-  await alex.page.getByRole("button", { name: "Trip expense" }).click();
+  await tripExpense(alex.page);
   const form = alex.page.getByRole("dialog", { name: "Add entry" });
   await form.getByLabel(/^Amount \(/).fill("368");
   await form.getByLabel("Title").fill("Apartment");
@@ -135,8 +148,10 @@ test("two people: share a personal trip, join after an expense, split, repay and
   await expect(bea.page).not.toHaveURL(/expense=/);
 
   // Back to the list and forward again keep the trip context.
-  // The sidebar has an All trips link too (MAZ-221); this is the trip page's own.
-  await bea.page.getByRole("main").getByRole("link", { name: /All trips/ }).click();
+  // Phones go back with the top bar's Back; wider windows with the sidebar's All trips (MAZ-221, MAZ-229).
+  const back = bea.page.getByRole("link", { name: "Back to Trips" });
+  if (await back.isVisible()) await back.click();
+  else await bea.page.getByRole("complementary", { name: "Penny" }).getByRole("link", { name: "All trips" }).click();
   await expect(bea.page.getByRole("heading", { level: 1, name: "Trips" })).toBeVisible();
   await bea.page.goBack();
   await expect(bea.page.getByRole("heading", { level: 1, name: "Lisbon" })).toBeVisible();

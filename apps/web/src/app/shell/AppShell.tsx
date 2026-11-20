@@ -23,9 +23,11 @@ function usePageMeta() {
         title: data.title,
         search: data.search !== false,
         back: data.back,
+        backLabel: data.backLabel ?? "Back to Home",
+        backWide: data.backWide === true,
       };
   }
-  return { title: "Penny", search: true, back: undefined };
+  return { title: "Penny", search: true, back: undefined, backLabel: "Back to Home", backWide: false };
 }
 
 const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
@@ -96,9 +98,9 @@ export function AppShell() {
       </a>
       <Sidebar />
       <div className="app__column">
-        <header className={cx("topbar", pathname === "/" && "topbar--home", meta.back && "topbar--back")}>
+        <header className={cx("topbar", pathname === "/" && "topbar--home", meta.back && "topbar--back", meta.back && meta.backWide && "topbar--back-wide")}>
           {meta.back ? (
-            <Link to={meta.back} className="glass glass-button topbar__back" aria-label="Back to Home">
+            <Link to={meta.back} className="glass glass-button topbar__back" aria-label={meta.backLabel}>
               <Icon name="chevron-back" size={20} />
             </Link>
           ) : null}

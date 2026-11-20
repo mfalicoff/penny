@@ -12,6 +12,7 @@ import {
   sharedTripTotals,
   tripCards,
   tripPhase,
+  tripSections,
   validateTrip,
 } from "../src/features/trips/model";
 
@@ -123,6 +124,16 @@ describe("the trip list", () => {
     expect(featuredTrip(cards, "2026-11-11")?.name).toBe("Soon");
     expect(featuredTrip(cards, "2026-12-03")?.name).toBe("Soon");
     expect(featuredTrip(cards, "2027-03-01")).toBeUndefined();
+  });
+
+  it("lists the other trips as UPCOMING, soonest first, and PAST, most recent first (MAZ-229)", () => {
+    const cards = tripCards(
+      ledger([trip("a", "Old", "2025-06-01", "2025-06-05"), trip("b", "Later", "2027-02-01", "2027-02-05"), trip("c", "Now", "2026-11-10", "2026-11-14"), trip("d", "Recent", "2026-10-01", "2026-10-03")], []),
+      [],
+    );
+    const { upcoming, past } = tripSections(cards, "2026-11-11");
+    expect(upcoming.map((card) => card.name)).toEqual(["Now", "Later"]);
+    expect(past.map((card) => card.name)).toEqual(["Recent", "Old"]);
   });
 });
 

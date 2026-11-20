@@ -17,6 +17,7 @@ Read the pull request title and body, its linked Linear issue (`Fixes MAZ-…` i
 6. **Design parity:** when the pull request touches a screen with a redesign card (`docs/design/penny-ios`), the target is the card, not "close enough" ([dev worker, design cards](dev-worker.md#design-cards)). Request changes when the pull request:
    - adds, widens or rewords an entry under "Approved deviations" in `docs/reference/redesign.md`, or adds an `approved` deviation to `contracts/visual-comparisons.json`, unless its Linear issue carries the `design-approved` label;
    - turns a card's verdict from `matches` to `deviates`;
+   - adds a new screen, sheet, dialog or flow that no card covers, unless the issue's job is to draft cards ([screens with no card](dev-worker.md#screens-with-no-card));
    - claims `matches` for an appearance it didn't capture, or has no captures for the cards it changed;
    - describes a difference from the card that the code could have closed, instead of closing it.
 

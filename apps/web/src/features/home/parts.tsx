@@ -67,7 +67,7 @@ function pickableMonths(month: string, now: string): string[] {
   return months.sort().reverse();
 }
 
-function MonthBarControls({ month, onChange }: { month: string; onChange: (month: string | undefined) => void }) {
+export function MonthBarControls({ month, onChange }: { month: string; onChange: (month: string | undefined) => void }) {
   const now = currentMonth();
   const id = useId();
   const label = monthLabel(month);
