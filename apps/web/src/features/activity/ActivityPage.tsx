@@ -121,7 +121,8 @@ export function ActivityPage({ search, from }: { search: ActivitySearch; from: "
   return (
     <div className={cx("page activity", !tablet && "activity--phone", beside && open && "activity--beside")}>
       {desktop ? <PeriodStepper search={search} navigate={navigate} slot /> : null}
-      {tablet ? null : <PhoneFiltersButton search={search} onClick={() => { setFiltering(true); }} />}
+      {/* While searching, the phone's top row is empty (`iphone-search-empty`): the active filters are the chips. */}
+      {tablet || search.q ? null : <PhoneFiltersButton search={search} onClick={() => { setFiltering(true); }} />}
       <div className="activity__main">
         {tablet && !desktop ? searchField : null}
         <div className="activity-toolbar">
