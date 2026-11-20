@@ -4,7 +4,7 @@
   "fixtures": [
     {
       "file": "full-stack-seeds.json",
-      "sha256": "820c144b6fe8b3af2e258437ea1e3fa2456b24e55bce716207ae5c714edf4d8d",
+      "sha256": "05f79d754dcb066474a4053ea27a137954d03fc80b4abe1106f58dae6e42b647",
       "generatedBy": null,
       "consumers": {
         "typescript": [
