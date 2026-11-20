@@ -1,4 +1,5 @@
-import { expect, test, type BrowserContext, type Page } from "@playwright/test";
+import type { BrowserContext, Page } from "@playwright/test";
+import { expect, test } from "./test";
 import { signOut } from "./shell";
 
 // Real browser journeys for sign-in, SSO popups, expiry and sign-out against the production

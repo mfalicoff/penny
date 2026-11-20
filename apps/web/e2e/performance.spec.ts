@@ -1,4 +1,5 @@
-import { expect, test, type BrowserContext, type Page } from "@playwright/test";
+import type { BrowserContext, Page } from "@playwright/test";
+import { expect, test } from "./test";
 
 // MAZ-96 large-ledger performance budgets in a real browser over the production build: a
 // synthetic ledger of 20,000 entries across 24 months (made-up titles and amounts), served by a
