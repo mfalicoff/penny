@@ -14,14 +14,6 @@ namespace Penny.Backend.Persistence.Repositories;
 // reference, and before commit.
 internal static class BulkInsert
 {
-    // A COPY is exempt from `Database:CommandTimeoutSeconds` (5 s in production). Its
-    // time is mostly index maintenance on the search documents, and on CI a single
-    // stretch of it took longer than 5 s, even when a full ledger was copied in batches
-    // of 5,000 rows that otherwise took 0.2 s each (MAZ-262). The caller's token
-    // carries the request deadline (`Backend:RequestTimeoutSeconds`, at most 300 s),
-    // which bounds the COPY instead; this timeout only stops a COPY without a deadline.
-    internal static readonly TimeSpan CopyTimeout = TimeSpan.FromSeconds(300);
-
     public static async Task CopyAsync<T>(
         PennyDbContext context,
         IReadOnlyCollection<T> rows,
@@ -56,7 +48,6 @@ internal static class BulkInsert
         // Disposing an importer that was not completed cancels the COPY; the caller's
         // transaction then rolls back.
         await using var importer = await connection.BeginBinaryImportAsync(copy, cancellationToken);
-        importer.Timeout = CopyTimeout;
         foreach (var row in rows)
         {
             await importer.StartRowAsync(cancellationToken);
