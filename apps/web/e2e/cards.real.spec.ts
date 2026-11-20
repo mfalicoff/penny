@@ -153,6 +153,14 @@ async function focusFlow(p: Page, label: string) {
   await node.blur();
 }
 
+/** A pointer over a band, as `web-home` draws Groceries hovered: the band is emphasised, not selected (MAZ-223). */
+async function hoverFlow(p: Page, label: string) {
+  const node = p.getByRole("group", { name: "Money flow diagram" }).getByRole("button", { name: new RegExp(`^Went out: ${label},`) });
+  await node.locator(".flow-node__label").hover();
+  await expect(node).toHaveClass(/flow-node--lit/);
+  await expect(node).toHaveAttribute("aria-pressed", "false");
+}
+
 /**
  * Two changes the server hasn't taken, as on the sign-out card (and the iOS capture): every ledger
  * sync is dropped while Coffee to go and Groceries are added on this device.
@@ -538,6 +546,9 @@ const cards: Record<string, Card> = {
       await dialog.getByRole("button", { name: "Save" }).click();
       await expect(p.getByRole("status").filter({ hasText: "1 change waiting" })).toBeVisible();
       await dismissToast(p);
+      // The pending row waits to sync, and Projected is what the last sync knew (MAZ-223).
+      await expect(p.getByRole("region", { name: "Recent" }).getByRole("listitem").filter({ hasText: "Coffee to go" })).toContainText("Waiting to sync");
+      await expect(p.locator(".hero__projected")).toContainText("projected · as of last sync");
     },
     note: "The web learns the server is unreachable when its sync fails: Coffee to go (the scenario's pending create) waits to sync, and the banner reads Offline · 1 change waiting with Retry.",
   },
@@ -606,8 +617,8 @@ const cards: Record<string, Card> = {
     open: async ({ page: p }) => {
       await home(p);
       await expectAlexOctober(p);
-      // The card focuses Groceries (the scenario's Groceries & dining) in Follow your money.
-      await focusFlow(p, "Groceries & dining");
+      // The card shows Groceries (the scenario's Groceries & dining) hovered in Follow your money.
+      await hoverFlow(p, "Groceries & dining");
     },
   },
   "web-activity": {

@@ -45,8 +45,8 @@ interface MonthCalendarProps {
  * The month calendar (specimen `calendar`). Dots use the meaning colors only: gray spent, green
  * income, indigo invested, and an amber ring for what is expected or scheduled (scheduled
  * occurrences and income dated after today, MAZ-136), which is never drawn like a recorded entry.
- * The legend and each day's accessible name say "expected or scheduled" for the ring. Selecting a
- * day lists its entries under the grid in the calendar sheet (`?day=`), selecting it again clears it.
+ * The legend reads "Scheduled", as on the card (MAZ-223); each day's accessible name says
+ * "expected or scheduled". Selecting a day lists its entries under the grid in the calendar sheet (`?day=`), selecting it again clears it.
  * Arrow keys move by day and week, Home and End to the ends of the week. The week starts on Monday
  * or Sunday, as chosen in Settings › Appearance (MAZ-140).
  */
@@ -134,7 +134,7 @@ export function MonthCalendar({ month, monthLabel, entries, selected, currency, 
           <span className="calendar__dot calendar__dot--investment" aria-hidden="true" /> Invested
         </li>
         <li>
-          <span className="calendar__dot calendar__dot--scheduled" aria-hidden="true" /> Expected or scheduled
+          <span className="calendar__dot calendar__dot--scheduled" aria-hidden="true" /> Scheduled
         </li>
       </ul>
     </div>

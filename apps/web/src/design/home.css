@@ -201,7 +201,8 @@
   }
 
   .home-top--wide > .home-coming,
-  .home-top--wide > .breakdown {
+  .home-top--wide > .breakdown,
+  .home-top--wide > .daily {
     grid-column: 9 / span 4;
   }
 
@@ -225,25 +226,27 @@
   list-style: none;
 }
 
+/* iphone-empty-home: left-aligned tiles on the surface, each with a hairline and a soft shadow (MAZ-223). */
 .first-entry__kind {
   display: grid;
-  justify-items: center;
+  justify-items: start;
   gap: 4px;
   width: 100%;
   min-height: 44px;
-  padding: 12px 6px;
+  padding: 12px 10px;
   border: 0;
   border-radius: 14px;
-  background: var(--pk-fill);
+  background: var(--pk-surface);
+  box-shadow: 0 0 0 0.5px var(--pk-separator), 0 2px 8px rgb(0 0 0 / 0.04);
   color: var(--pk-label);
   font: inherit;
   font-weight: 600;
-  text-align: center;
+  text-align: start;
   cursor: pointer;
 }
 
 .first-entry__kind:hover {
-  box-shadow: inset 0 0 0 1px var(--pk-separator);
+  box-shadow: 0 0 0 1px var(--pk-separator), 0 2px 8px rgb(0 0 0 / 0.06);
 }
 
 .first-entry__icon {
@@ -301,6 +304,11 @@
   overflow-wrap: anywhere;
 }
 
+/* iphone-empty-home: the empty hero is a muted "$0". */
+.hero__amount--empty {
+  color: var(--pk-label-2);
+}
+
 .hero__over,
 .hero__projected {
   margin: 0;
@@ -347,6 +355,31 @@
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
   gap: 10px;
   margin: 8px 0 0;
+}
+
+/* ipad-home: Income, Spent · your share and Invested on one line under the hero. */
+.hero__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  margin: 10px 0 0;
+}
+
+.hero__legend > div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hero__legend dt {
+  display: flex;
+  align-items: center;
+  color: var(--pk-label-2);
+}
+
+.hero__legend dd {
+  margin: 0;
+  font-weight: 700;
 }
 
 .tile {
@@ -424,6 +457,105 @@
 
 .activity-row__main--static:hover {
   background: none;
+}
+
+/* iphone-offline: an entry this browser hasn't synced reads "Waiting to sync" in amber. */
+.results__waiting {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--pk-pending);
+}
+
+/* iphone-empty-home: the Recent heading over a centered empty state, not a card. */
+.home-recent--empty {
+  display: grid;
+  gap: 12px;
+}
+
+.home-recent--empty .panel__title {
+  padding-inline: 4px;
+}
+
+.home-recent__none {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 28px 16px;
+  color: var(--pk-label-2);
+  text-align: center;
+}
+
+/* iphone-home: Insights is a filled pill beside the flow card's title. */
+.home-flow__insights {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  margin-block: -10px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--pk-fill);
+  color: var(--pk-label);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.home-flow__insights svg {
+  color: var(--pk-tint);
+}
+
+.home-flow__insights:hover {
+  text-decoration: underline;
+}
+
+.home-flow__insights:focus-visible {
+  outline: 2px solid var(--pk-tint);
+  outline-offset: 2px;
+}
+
+/* ---------- daily spending (card `ipad-home`, MAZ-223) ---------- */
+.daily__chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 260px;
+  margin-top: 8px;
+}
+
+.daily__bar {
+  flex: 1;
+  min-width: 0;
+  border-radius: 4px 4px 2px 2px;
+  background: color-mix(in srgb, var(--pk-tint) 30%, transparent);
+}
+
+.daily__bar--high {
+  background: var(--pk-tint);
+}
+
+.daily__bar--future {
+  height: 4px;
+  background: var(--pk-fill);
+}
+
+.daily__axis {
+  display: flex;
+  justify-content: space-between;
+  margin: 8px 0 0;
+  color: var(--pk-label-2);
+  font-size: 0.75rem;
+}
+
+@media (forced-colors: active) {
+  .daily__bar {
+    background: CanvasText;
+  }
+
+  .daily__bar--future {
+    background: GrayText;
+  }
 }
 
 /* ---------- compact flow summary ---------- */
@@ -527,17 +659,23 @@
   font-weight: 700;
 }
 
-.calendar__day--on,
 .calendar__day--on:hover {
-  background: var(--pk-tint);
+  background: none;
 }
 
+/* iphone-calendar: the selected day is a filled copper circle on its number, its dots below it (MAZ-223). */
 .calendar__day--on .calendar__number {
+  background: var(--pk-tint);
   color: #fff;
   font-weight: 700;
 }
 
 .calendar__number {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   font-size: 0.9375rem;
   font-variant-numeric: tabular-nums;
 }
@@ -569,10 +707,6 @@
 
 .calendar__dot--scheduled {
   box-shadow: inset 0 0 0 1.5px var(--pk-pending);
-}
-
-.calendar__day--on .calendar__dot {
-  outline: 1px solid #fff;
 }
 
 .calendar__legend {
@@ -717,7 +851,8 @@
   padding: 12px 14px;
 }
 
-.flow__focus .flow__swatch {
+.flow__focus .flow__tile {
+  flex: none;
   width: 36px;
   height: 36px;
   border-radius: 10px;
@@ -732,6 +867,12 @@
 
 .flow__focus-text strong {
   overflow-wrap: anywhere;
+}
+
+/* The card writes "Home · $1,450.00" in one weight and color. */
+.flow__focus-text strong .money {
+  color: inherit;
+  font-weight: inherit;
 }
 
 .flow__focus-text span {
@@ -789,6 +930,22 @@
 
 .flow__sankey--narrow .flow-node__amount {
   font-size: 12px;
+}
+
+/* ipad-home: the chevron after the flow card's hint opens the full view (MAZ-223). */
+.flow__open {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin: -12px -14px -12px -10px;
+  border-radius: 50%;
+  color: var(--pk-label-2);
+}
+
+.flow__open:focus-visible {
+  outline: 2px solid var(--pk-tint);
+  outline-offset: -4px;
 }
 
 /* The phone flow card's title opens Money flow (MAZ-224). */
@@ -931,16 +1088,17 @@
   box-shadow: 0 0 0 0.5px var(--pk-separator);
 }
 
-.calendar-sheet__none {
-  margin: 8px 10px 0;
+/* iphone-calendar: one card for the day, its rows divided by an inset line, none after the last. */
+.calendar-sheet__day .results__row {
+  border-bottom: 0;
 }
 
-.flow__swatch {
-  display: inline-block;
-  flex: none;
-  width: 10px;
-  height: 10px;
-  border-radius: 3px;
+.calendar-sheet__day .results__row + .results__row {
+  border-top: 0.5px solid var(--pk-separator);
+}
+
+.calendar-sheet__none {
+  margin: 8px 10px 0;
 }
 
 .flow__sankey {
@@ -980,8 +1138,9 @@
   stroke-width: 2;
 }
 
-.flow-node--on .flow-node__ring {
-  fill: var(--pk-fill);
+/* The emphasised node (selected, or under the pointer) only turns its label bold, as on the cards (MAZ-223). */
+.flow-node--lit .flow-node__label {
+  font-weight: 700;
 }
 
 .flow-node:focus-visible .flow-node__ring {
@@ -1345,4 +1504,19 @@
   color: var(--pk-label-2);
   font-size: 0.75rem;
   font-weight: 500;
+}
+
+/* ipad-home: on a touch tablet, Coming up's Recurring link is secondary text, not copper (MAZ-223). */
+@media (min-width: 768px) and (hover: none) and (pointer: coarse) {
+  .home-coming .card__head .text-link {
+    color: var(--pk-label-2);
+  }
+}
+
+@media (forced-colors: active) {
+  .calendar__day--on .calendar__number {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+  }
 }

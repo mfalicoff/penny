@@ -26,3 +26,6 @@ export function useMediaQuery(query: string): boolean {
   const read = () => typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia(query).matches;
   return useSyncExternalStore(subscribe, read, () => false);
 }
+
+/** A touch tablet (the iPad cards): a tablet width with a coarse pointer and no hover (`home.css`, `shell.css`). */
+export const TOUCH_TABLET = "(min-width: 768px) and (hover: none) and (pointer: coarse)";
