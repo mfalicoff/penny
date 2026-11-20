@@ -280,7 +280,9 @@ extension Penny {
         // The iPad keyboard's own key (a tap outside the form sheet could close the sheet).
         let hide = app.keyboards.buttons["Hide keyboard"]
         if hide.exists {
-            hide.tap()
+            // By coordinate: XCTest can fail to scroll the key "to visible" under a sheet (MAZ-182).
+            hide.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+            _ = app.keyboards.firstMatch.waitForNonExistence(timeout: 3)
             return
         }
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.12)).tap()

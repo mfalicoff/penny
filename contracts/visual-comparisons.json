@@ -2410,14 +2410,19 @@
         ],
         "deviations": [
           {
-            "summary": "The sidebar lists generic Shared and Trips rows instead of each household and trip, and no Insights row",
+            "summary": "The sidebar adds All households and All trips, and a trip shows its start date instead of its expense count, as decided in MAZ-240; the card isn't updated yet",
+            "kind": "follow-up",
+            "ref": "MAZ-240"
+          },
+          {
+            "summary": "The sidebar's toolbar keeps the + (Add entry) and the sidebar button above the penny. mark (follow-up recorded on MAZ-182: Add entry moves to the toolbar capsule)",
             "kind": "follow-up",
             "ref": "MAZ-182"
           },
           {
-            "summary": "The sidebar shows the system Penny title, title-case headers, the email with no avatar and a grey selection; the card has the penny. brand mark, upper-case headers, an avatar and a copper selection with badges",
+            "summary": "The sidebar footer names the account by its email, with initials from the email, not the person's name",
             "kind": "follow-up",
-            "ref": "MAZ-182"
+            "ref": "MAZ-171"
           },
           {
             "summary": "Insights and the calendar are reached from Explore your month under Recent instead of the flow card's Insights pill; the calendar is a page, not a sheet",
@@ -2425,9 +2430,9 @@
             "ref": "MAZ-254"
           },
           {
-            "summary": "No search or Add entry in the toolbar, and the month is copper with no year or chevrons",
+            "summary": "No search button or + Add entry capsule in the toolbar (follow-up recorded on MAZ-182), and the month is copper with no year or chevrons",
             "kind": "follow-up",
-            "ref": "MAZ-182"
+            "ref": "MAZ-254"
           },
           {
             "summary": "Income, Spent and Invested are stacked, not on one line; Coming up has no icons and unsigned amber amounts",
@@ -2486,19 +2491,19 @@
         ],
         "deviations": [
           {
-            "summary": "The sidebar lists generic Shared and Trips rows instead of each household and trip, and no Insights row",
+            "summary": "The sidebar adds All households and All trips, and a trip shows its start date instead of its expense count, as decided in MAZ-240; the card isn't updated yet",
+            "kind": "follow-up",
+            "ref": "MAZ-240"
+          },
+          {
+            "summary": "The sidebar's toolbar keeps the + (Add entry) and the sidebar button above the penny. mark (follow-up recorded on MAZ-182: Add entry moves to the toolbar capsule)",
             "kind": "follow-up",
             "ref": "MAZ-182"
           },
           {
-            "summary": "The sidebar shows the system Penny title, title-case headers, the email with no avatar and a grey selection; the card has the penny. brand mark, upper-case headers, an avatar and a copper selection with badges",
+            "summary": "The sidebar footer names the account by its email, with initials from the email, not the person's name",
             "kind": "follow-up",
-            "ref": "MAZ-182"
-          },
-          {
-            "summary": "In portrait the detail pane collapses to a few points and wraps the title letter by letter",
-            "kind": "follow-up",
-            "ref": "MAZ-182"
+            "ref": "MAZ-171"
           },
           {
             "summary": "Search in the toolbar with a month menu and the totals line, not the card's large title, search field and chips",
@@ -2547,7 +2552,7 @@
         ],
         "deviations": [
           {
-            "summary": "Add entry is the compact one-column sheet with the keypad, not the two-column form sheet with the keyboard",
+            "summary": "Repeat, Trip, Receipt and Note are behind one Receipt, repeat, trip row instead of rows and a Note field, the details add a Household row, and All categories is an ellipsis chip (follow-up recorded on MAZ-182)",
             "kind": "follow-up",
             "ref": "MAZ-182"
           },
@@ -2593,14 +2598,19 @@
         ],
         "deviations": [
           {
-            "summary": "The sidebar lists generic Shared and Trips rows instead of each household and trip, and no Insights row",
+            "summary": "The sidebar adds All households and All trips, and a trip shows its start date instead of its expense count, as decided in MAZ-240; the card isn't updated yet",
+            "kind": "follow-up",
+            "ref": "MAZ-240"
+          },
+          {
+            "summary": "The sidebar's toolbar keeps the + (Add entry) and the sidebar button above the penny. mark (follow-up recorded on MAZ-182: Add entry moves to the toolbar capsule)",
             "kind": "follow-up",
             "ref": "MAZ-182"
           },
           {
-            "summary": "The sidebar shows the system Penny title, title-case headers, the email with no avatar and a grey selection; the card has the penny. brand mark, upper-case headers, an avatar and a copper selection with badges",
+            "summary": "The sidebar footer names the account by its email, with initials from the email, not the person's name",
             "kind": "follow-up",
-            "ref": "MAZ-182"
+            "ref": "MAZ-171"
           },
           {
             "summary": "The month is chosen in the Expenses and Balances section headers (previous and next); the card shows no month control",
@@ -2608,9 +2618,14 @@
             "ref": "MAZ-256"
           },
           {
-            "summary": "Single column, with no balances panel or selected expense beside the expenses",
+            "summary": "Tapping an expense opens its page instead of showing its shares under Balances, and the list doesn't mark it (follow-up recorded on MAZ-182)",
             "kind": "follow-up",
             "ref": "MAZ-182"
+          },
+          {
+            "summary": "The name and month total are centered over the expenses, and People, Suggested payments and Overdue follow Balances in the right column",
+            "kind": "follow-up",
+            "ref": "MAZ-248"
           },
           {
             "summary": "Record payment and Expense are buttons in the body, not the toolbar's + Expense capsule; no hero glow",
@@ -2669,14 +2684,19 @@
         ],
         "deviations": [
           {
-            "summary": "The sidebar lists generic Shared and Trips rows instead of each household and trip, and no Insights row",
+            "summary": "The sidebar adds All households and All trips, and a trip shows its start date instead of its expense count, as decided in MAZ-240; the card isn't updated yet",
+            "kind": "follow-up",
+            "ref": "MAZ-240"
+          },
+          {
+            "summary": "The sidebar's toolbar keeps the + (Add entry) and the sidebar button above the penny. mark (follow-up recorded on MAZ-182: Add entry moves to the toolbar capsule)",
             "kind": "follow-up",
             "ref": "MAZ-182"
           },
           {
-            "summary": "The sidebar shows the system Penny title, title-case headers, the email with no avatar and a grey selection; the card has the penny. brand mark, upper-case headers, an avatar and a copper selection with badges",
+            "summary": "The sidebar footer names the account by its email, with initials from the email, not the person's name",
             "kind": "follow-up",
-            "ref": "MAZ-182"
+            "ref": "MAZ-171"
           },
           {
             "summary": "Trip expense is a button under the hero, not the toolbar capsule",
@@ -2684,9 +2704,9 @@
             "ref": "MAZ-256"
           },
           {
-            "summary": "Single column: People and Your share by category are sections of the tabs, not panels beside the expenses",
+            "summary": "The right column shows the month's Balances (with its month control), then Your share by category without bars, then the members, not the card's People with the month's balance",
             "kind": "follow-up",
-            "ref": "MAZ-182"
+            "ref": "MAZ-249"
           },
           {
             "summary": "The phase is small grey text and the name and totals smaller than the card's; the meta reads \"N people · CAD\"",
@@ -2750,14 +2770,19 @@
         ],
         "deviations": [
           {
-            "summary": "The sidebar lists generic Shared and Trips rows instead of each household and trip, and no Insights row",
+            "summary": "The sidebar adds All households and All trips, and a trip shows its start date instead of its expense count, as decided in MAZ-240; the card isn't updated yet",
+            "kind": "follow-up",
+            "ref": "MAZ-240"
+          },
+          {
+            "summary": "The sidebar's toolbar keeps the + (Add entry) and the sidebar button above the penny. mark (follow-up recorded on MAZ-182: Add entry moves to the toolbar capsule)",
             "kind": "follow-up",
             "ref": "MAZ-182"
           },
           {
-            "summary": "The sidebar shows the system Penny title, title-case headers, the email with no avatar and a grey selection; the card has the penny. brand mark, upper-case headers, an avatar and a copper selection with badges",
+            "summary": "The sidebar footer names the account by its email, with initials from the email, not the person's name",
             "kind": "follow-up",
-            "ref": "MAZ-182"
+            "ref": "MAZ-171"
           },
           {
             "summary": "Settings and the Manage pages open in the detail column instead of a sheet",
@@ -2765,7 +2790,7 @@
             "ref": "MAZ-257"
           },
           {
-            "summary": "Settings is a single column; the selected page doesn't open beside the list",
+            "summary": "The page beside the list has no title: its navigation bar shows no Appearance (follow-up recorded on MAZ-182)",
             "kind": "follow-up",
             "ref": "MAZ-182"
           },

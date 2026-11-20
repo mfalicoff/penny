@@ -69,7 +69,7 @@ public sealed class OperationsTests(ApiFixture fixture) : IntegrationTestBase(fi
         using var info = await Client.GetAsync("/api/info", Ct);
         var identity = await info.Content.ReadFromJsonAsync<JsonElement>(Ct);
         identity.GetProperty("name").GetString().ShouldBe("penny");
-        identity.GetProperty("version").GetString().ShouldBe("2.0.0");
+        identity.GetProperty("version").GetString().ShouldBe(ServerInfo.CurrentVersion);
         using var ready = await Client.GetAsync("/api/ready", Ct);
         ready.StatusCode.ShouldBe(HttpStatusCode.OK);
     }

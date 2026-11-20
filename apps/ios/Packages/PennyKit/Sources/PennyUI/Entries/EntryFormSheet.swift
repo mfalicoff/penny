@@ -57,6 +57,8 @@ struct EntryFormSheet: View {
                     }
                 }
                 .id(generation)
+                // iPad: a centered sheet wide enough for the two-column form (`ipad-add-entry`).
+                .presentationSizing(EntrySheetSizing())
                 .accessibilityIdentifier(mode == .new ? "screen.addEntry" : "screen.editEntry")
             }
         }
@@ -141,6 +143,7 @@ private struct EntryForm: View {
     @State private var overlay: EntryFormOverlay?
     @State private var entryGone = false
     @FocusState private var titleFocused: Bool
+    @State private var width: Double = 0
 
     var body: some View {
         Group {
@@ -207,6 +210,67 @@ private struct EntryForm: View {
 
     private var showsKeypad: Bool { sizeClass != .regular && !titleFocused }
 
+    /// iPad (`ipad-add-entry`, MAZ-182): the amount, name and categories on the left, the
+    /// details on the right, and the type in the toolbar, when the sheet is wide enough.
+    private var isTwoColumn: Bool { sizeClass == .regular && Self.isTwoColumn(width: width) }
+
+    /// The two columns need a sheet this wide.
+    static func isTwoColumn(width: Double) -> Bool { width >= 600 }
+
+    private func kindPicker(_ model: EntryFormModel) -> some View {
+        Picker(
+            "Type", selection: Binding(get: { model.draft.kind }, set: { model.editor.setKind($0, ledger: ledger) })
+        ) {
+            ForEach(EntryKind.allCases, id: \.self) { Text(EntryText.kind($0)).tag($0) }
+        }
+        .pickerStyle(.segmented)
+        .accessibilityIdentifier("entryForm.kind")
+    }
+
+    private func titleField(_ model: EntryFormModel) -> some View {
+        @Bindable var model = model
+        return TextField("What was it for?", text: $model.editor.draft.title)
+            .nameEntry()
+            .focused($titleFocused)
+            .submitLabel(.done)
+            .font(.title3)
+            .padding(.horizontal, 16)
+            .frame(minHeight: ControlSize.button)
+            .background(
+                PennyColor.surface, in: RoundedRectangle(cornerRadius: Metrics.rowRadius, style: .continuous)
+            )
+            .accessibilityLabel("Name")
+            .accessibilityIdentifier("entryForm.title")
+    }
+
+    private func categoryChips(_ model: EntryFormModel) -> some View {
+        @Bindable var model = model
+        return EntryCategoryChips(
+            kind: model.draft.kind, selection: $model.editor.draft.categoryId, ledger: ledger, wraps: isTwoColumn,
+            more: { overlay = .category })
+    }
+
+    @ViewBuilder
+    private func futureDateNote(_ draft: EntryDraft) -> some View {
+        if let date = CalendarDate.ledgerDate(draft.date), date > shell.today {
+            let note = EntryText.futureDate(draft.kind, date: date, today: shell.today)
+            StatusBanner(tone: .info, title: note.title, message: note.message)
+                .accessibilityIdentifier("entryForm.futureDate")
+        }
+    }
+
+    /// A small upper-case label over a group of the two-column form ("CATEGORY", "DETAILS").
+    private func groupLabel(_ title: String) -> some View {
+        Text(title.uppercased())
+            .font(.footnote.weight(.semibold))
+            .tracking(0.6)
+            .foregroundStyle(PennyColor.secondaryLabel)
+            .padding(.leading, 6)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityLabel(title)
+            .accessibilityAddTraits(.isHeader)
+    }
+
     @ViewBuilder
     private func form(_ model: EntryFormModel) -> some View {
         @Bindable var model = model
@@ -214,38 +278,40 @@ private struct EntryForm: View {
         ScrollView {
             VStack(spacing: 16) {
                 banners(model)
-                Picker(
-                    "Type", selection: Binding(get: { draft.kind }, set: { model.editor.setKind($0, ledger: ledger) })
-                ) {
-                    ForEach(EntryKind.allCases, id: \.self) { Text(EntryText.kind($0)).tag($0) }
-                }
-                .pickerStyle(.segmented)
-                .accessibilityIdentifier("entryForm.kind")
-                amount(model)
-                TextField("What was it for?", text: $model.editor.draft.title)
-                    .nameEntry()
-                    .focused($titleFocused)
-                    .submitLabel(.done)
-                    .font(.title3)
-                    .padding(.horizontal, 16)
-                    .frame(minHeight: ControlSize.button)
-                    .background(
-                        PennyColor.surface, in: RoundedRectangle(cornerRadius: Metrics.rowRadius, style: .continuous)
-                    )
-                    .accessibilityLabel("Name")
-                    .accessibilityIdentifier("entryForm.title")
-                EntryCategoryChips(
-                    kind: draft.kind, selection: $model.editor.draft.categoryId, ledger: ledger,
-                    more: { overlay = .category })
-                rows(model)
-                if let date = CalendarDate.ledgerDate(draft.date), date > shell.today {
-                    let note = EntryText.futureDate(draft.kind, date: date, today: shell.today)
-                    StatusBanner(tone: .info, title: note.title, message: note.message)
-                        .accessibilityIdentifier("entryForm.futureDate")
+                if isTwoColumn {
+                    HStack(alignment: .top, spacing: 28) {
+                        VStack(spacing: 20) {
+                            amount(model).padding(.top, 24)
+                            titleField(model)
+                            VStack(spacing: 8) {
+                                groupLabel("Category")
+                                categoryChips(model)
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                        VStack(spacing: 8) {
+                            groupLabel("Details")
+                            rows(model)
+                            futureDateNote(draft)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                } else {
+                    kindPicker(model)
+                    amount(model)
+                    titleField(model)
+                    categoryChips(model)
+                    rows(model)
+                    futureDateNote(draft)
                 }
             }
-            .padding(.horizontal, Metrics.gutter)
+            .padding(.horizontal, isTwoColumn ? 28 : Metrics.gutter)
             .padding(.vertical, 12)
+        }
+        .onGeometryChange(for: Double.self) {
+            $0.size.width
+        } action: {
+            width = $0
         }
         .scrollDismissesKeyboard(.interactively)
         .background(PennyColor.background)
@@ -260,6 +326,11 @@ private struct EntryForm: View {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Close", systemImage: "xmark") { close(model) }
                     .accessibilityIdentifier("entryForm.close")
+            }
+            if isTwoColumn {
+                ToolbarItem(placement: .principal) {
+                    kindPicker(model).frame(width: 320)
+                }
             }
             ToolbarItem(placement: .confirmationAction) {
                 EntrySaveButton(saving: model.editor.isSaving) { save(model) }
@@ -374,13 +445,21 @@ private struct EntryForm: View {
         let currency = ledger.currency.rawValue
         VStack(spacing: 6) {
             if sizeClass == .regular {
-                TextField("0.00", text: $model.editor.draft.amount)
-                    .decimalEntry()
-                    .multilineTextAlignment(.center)
-                    .modifier(HeroAmountFont())
-                    .foregroundStyle(EntryText.meaning(draft.kind).color)
-                    .accessibilityLabel("Amount")
-                    .accessibilityIdentifier("entryForm.amount")
+                // The currency symbol before the typed amount, as on the keypad's display and the
+                // `ipad-add-entry` card.
+                HStack(alignment: .firstTextBaseline, spacing: 0) {
+                    Text((draft.kind == .income ? "+" : "") + AmountDisplay.symbol(currency))
+                        .foregroundStyle(PennyColor.secondaryLabel)
+                        .accessibilityHidden(true)
+                    TextField("0.00", text: $model.editor.draft.amount)
+                        .decimalEntry()
+                        .fixedSize()
+                        .foregroundStyle(EntryText.meaning(draft.kind).color)
+                        .accessibilityLabel("Amount")
+                        .accessibilityIdentifier("entryForm.amount")
+                }
+                .modifier(HeroAmountFont())
+                .frame(maxWidth: .infinity)
             } else {
                 Button {
                     titleFocused = false
@@ -702,29 +781,39 @@ struct EntryCategoryChips: View {
     let kind: EntryKind
     @Binding var selection: String
     let ledger: Ledger
+    /// Wraps the chips onto more lines instead of scrolling them (the two-column iPad form).
+    var wraps = false
     let more: () -> Void
 
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(Self.chips(kind: kind, selection: selection, ledger: ledger), id: \.id) { category in
-                    chip(category)
+        Group {
+            if wraps {
+                ChipFlow(spacing: 8) { chips }
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) { chips }
+                        .padding(.vertical, 2)
                 }
-                Button(action: more) {
-                    Image(systemName: "ellipsis")
-                        .font(.body.weight(.semibold))
-                        .foregroundStyle(PennyColor.label)
-                        .frame(minWidth: Metrics.minTouchTarget, minHeight: Metrics.minTouchTarget)
-                        .background(PennyColor.fill, in: Capsule())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("All categories")
-                .accessibilityIdentifier("entryForm.moreCategories")
             }
-            .padding(.vertical, 2)
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Category")
+    }
+
+    @ViewBuilder private var chips: some View {
+        ForEach(Self.chips(kind: kind, selection: selection, ledger: ledger), id: \.id) { category in
+            chip(category)
+        }
+        Button(action: more) {
+            Image(systemName: "ellipsis")
+                .font(.body.weight(.semibold))
+                .foregroundStyle(PennyColor.label)
+                .frame(minWidth: Metrics.minTouchTarget, minHeight: Metrics.minTouchTarget)
+                .background(PennyColor.fill, in: Capsule())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("All categories")
+        .accessibilityIdentifier("entryForm.moreCategories")
     }
 
     /// The three most used categories, with the selected one first when it isn't among them.
@@ -754,5 +843,64 @@ struct EntryCategoryChips: View {
         .buttonStyle(.plain)
         .accessibilityAddTraits(selected ? .isSelected : [])
         .accessibilityIdentifier("entryForm.category.\(category.id)")
+    }
+}
+
+/// The iPad Add entry sheet's size (`ipad-add-entry`, MAZ-182): a centered form sheet wide
+/// enough for two columns and shorter than a page. Every regular-width iPad window is at least
+/// 744 points wide and tall, so it always fits; iPhone ignores it.
+struct EntrySheetSizing: PresentationSizing {
+    static let width: Double = 700
+    static let height: Double = 620
+
+    func proposedSize(for root: PresentationSizingRoot, context: PresentationSizingContext) -> ProposedViewSize {
+        ProposedViewSize(width: Self.width, height: Self.height)
+    }
+}
+
+/// Lays chips out left to right, starting a new line when the next one doesn't fit.
+struct ChipFlow: Layout {
+    var spacing: CGFloat = 8
+
+    struct Row: Equatable {
+        var indices: [Int]
+        var width: CGFloat
+        var height: CGFloat
+    }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let rows = Self.rows(subviews.map { $0.sizeThatFits(.unspecified) }, width: proposal.width, spacing: spacing)
+        let widest = rows.map(\.width).max() ?? 0
+        let height = rows.map(\.height).reduce(0, +) + spacing * CGFloat(max(rows.count - 1, 0))
+        return CGSize(width: proposal.width ?? widest, height: height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let sizes = subviews.map { $0.sizeThatFits(.unspecified) }
+        var y = bounds.minY
+        for row in Self.rows(sizes, width: bounds.width, spacing: spacing) {
+            var x = bounds.minX
+            for index in row.indices {
+                subviews[index].place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(sizes[index]))
+                x += sizes[index].width + spacing
+            }
+            y += row.height + spacing
+        }
+    }
+
+    /// The subviews on each line, for a container `width` wide (nil: one line).
+    static func rows(_ sizes: [CGSize], width: CGFloat?, spacing: CGFloat) -> [Row] {
+        var rows: [Row] = []
+        for (index, size) in sizes.enumerated() {
+            if var last = rows.last, width.map({ last.width + spacing + size.width <= $0 }) ?? true {
+                last.indices.append(index)
+                last.width += spacing + size.width
+                last.height = max(last.height, size.height)
+                rows[rows.count - 1] = last
+            } else {
+                rows.append(Row(indices: [index], width: size.width, height: size.height))
+            }
+        }
+        return rows
     }
 }

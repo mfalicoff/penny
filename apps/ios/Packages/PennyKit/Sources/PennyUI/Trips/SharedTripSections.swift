@@ -144,6 +144,8 @@ struct SharedTripHero: View {
 struct SharedTripExpenseSections: View {
     let context: SharedTripContext
     let model: HouseholdModel
+    /// Off on a wide iPad page, where Your share by category is beside the expenses.
+    var showsShareByCategory = true
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
@@ -199,8 +201,20 @@ struct SharedTripExpenseSections: View {
                 Text("Only you see these. They count in your spending, not in the trip's total or anyone's balance.")
             }
         }
-        if sizeClass == .regular, !shareByCategory.isEmpty {
-            // `ipad-trip`'s Your share by category: your shares and private expenses on the trip.
+        if sizeClass == .regular, showsShareByCategory {
+            SharedTripShareByCategory(context: context, model: model)
+        }
+    }
+}
+
+/// `ipad-trip`'s Your share by category: your shares and private expenses on the trip, below
+/// the expenses on a narrow iPad page or beside them on a wide one (MAZ-182).
+struct SharedTripShareByCategory: View {
+    let context: SharedTripContext
+    let model: HouseholdModel
+
+    var body: some View {
+        if !shareByCategory.isEmpty {
             Section {
                 ForEach(shareByCategory, id: \.name) { item in
                     HStack(spacing: 12) {

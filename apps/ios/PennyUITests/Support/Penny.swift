@@ -117,7 +117,13 @@ struct Penny {
 
     func openActivity() throws {
         if Device.isPad {
-            try tap(AccessibilityID.Sidebar.item("activity"))
+            // A tap that lands while the shell is still settling after sign-in is ignored, so it
+            // is retried, as in `openTrips` and `openSettings`.
+            let row = try wait(for: AccessibilityID.Sidebar.item("activity"))
+            for _ in 0..<3 {
+                row.tap()
+                if element(AccessibilityID.Screen.activity).waitForExistence(timeout: 10) { return }
+            }
             try wait(for: AccessibilityID.Screen.activity, timeout: 30)
         } else {
             try selectTab("Activity", id: AccessibilityID.Tab.tab("activity"), screen: AccessibilityID.Screen.activity)
@@ -374,8 +380,8 @@ struct Penny {
 
     private static let prefixTypes: [(prefix: String, type: XCUIElement.ElementType)] = [
         ("tab.", .button), ("keypad.", .button), ("currency.", .button), ("appearance.", .button),
-        // Each sidebar item exposes its identifier on its icon and title, not on the row.
-        ("sidebar.", .image),
+        // Each sidebar row is a button carrying its identifier (MAZ-182).
+        ("sidebar.", .button),
         // A transaction row is a button in Activity and Home's Recent.
         ("entry.", .button),
     ]

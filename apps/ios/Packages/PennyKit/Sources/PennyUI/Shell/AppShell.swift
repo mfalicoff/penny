@@ -179,8 +179,9 @@ private struct SplitShell: View {
     @ViewBuilder
     private var detail: some View {
         switch shell.route.sidebarSelection {
-        case .tab(let tab):
-            TabStack(tab: tab).id(tab)
+        case .tab, .insights, .household, .trip:
+            // Insights and each household and trip are pages of their tab's stack (MAZ-182).
+            TabStack(tab: shell.route.tab).id(shell.route.tab)
         case .manage(let page):
             NavigationStack {
                 SettingsPage(route: page)
@@ -190,35 +191,64 @@ private struct SplitShell: View {
             // Its own identity, like the tab and Manage stacks: the column then never reuses
             // another stack's state (a [DetailRoute] path) for this [SettingsRoute] one
             // (MAZ-141: a crash going back from Currency, `NavigationColumnState.boundPathChange`).
-            NavigationStack(path: settingsColumnPath) {
-                SettingsView()
-                    .navigationDestination(for: SettingsRoute.self) { SettingsPage(route: $0) }
-            }
-            .id(SidebarItem.settings)
+            SettingsColumns(shell: shell, singleColumnPath: settingsColumnPath)
+                .id(SidebarItem.settings)
         }
     }
 }
 
+/// The iPad sidebar (`ipad-*` cards, MAZ-182): the penny. mark; Home, Activity and Insights;
+/// Together with each household and its balance, All households, the current and coming
+/// trips with their start date, and All trips; Manage; and the account with its sync status
+/// and Settings. The selected row is filled copper with white text.
 private struct Sidebar: View {
     @Bindable var shell: ShellModel
 
     var body: some View {
-        List(selection: selection) {
+        let selected = shell.route.sidebarSelection
+        let together = together
+        List {
             Section {
-                item(.tab(.home), "Home", "house")
-                item(.tab(.activity), "Activity", "list.bullet")
+                item(.tab(.home), "Home", "house", selected: selected)
+                item(.tab(.activity), "Activity", "list.bullet", selected: selected)
+                item(.insights, "Insights", "chart.pie", selected: selected)
+            } header: {
+                SidebarBrand()
             }
-            Section("Together") {
-                item(.tab(.shared), "Shared", "person.2")
-                item(.tab(.trips), "Trips", "airplane")
-            }
-            Section("Manage") {
-                ForEach(SettingsRoute.manage, id: \.self) { page in
-                    item(.manage(page), page.title, Self.symbol(page))
+            Section {
+                ForEach(together.households) { row in
+                    item(
+                        row.item, row.name, "person.2", detail: row.detail, spoken: row.spoken, selected: selected,
+                        id: "sidebar.household.\(householdID(row.item))")
                 }
+                // The Shared list (join with a code, create another household), MAZ-240.
+                item(
+                    .tab(.shared), together.households.isEmpty ? "Shared" : "All households",
+                    together.households.isEmpty ? "person.2" : "square.grid.2x2", selected: selected,
+                    id: "sidebar.shared")
+                ForEach(together.trips) { row in
+                    item(
+                        row.item, row.name, "airplane", detail: row.detail, spoken: row.spoken, selected: selected,
+                        id: "sidebar.trip.\(tripID(row.item))")
+                }
+                item(
+                    .tab(.trips), together.trips.isEmpty ? "Trips" : "All trips",
+                    together.trips.isEmpty ? "airplane" : "suitcase", selected: selected,
+                    id: "sidebar.trips")
+            } header: {
+                SidebarHeader("Together")
+            }
+            Section {
+                ForEach(SettingsRoute.manage, id: \.self) { page in
+                    item(.manage(page), page.title, Self.symbol(page), selected: selected)
+                }
+            } header: {
+                SidebarHeader("Manage")
             }
         }
+        .tint(PennyColor.tint)
         .navigationTitle("Penny")
+        .toolbar(removing: .title)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("Add entry", systemImage: "plus") { shell.route.openAddEntry() }
@@ -226,19 +256,73 @@ private struct Sidebar: View {
             }
         }
         .safeAreaInset(edge: .bottom) {
-            SidebarFooter(shell: shell)
+            SidebarFooter(shell: shell, isSelected: selected == .settings).background(.bar)
         }
+        .listStyle(.sidebar)
+        .environment(\.defaultMinListRowHeight, Metrics.minTouchTarget)
+        // Together lists each household with this month's balance (the Shared list may not be read yet).
+        .task(id: shell.month) { await shell.households.refresh() }
     }
 
-    private var selection: Binding<SidebarItem?> {
-        Binding(
-            get: { shell.route.sidebarSelection }, set: { if let next = $0 { shell.route.sidebarSelection = next } })
+    private var together: SidebarTogether {
+        SidebarTogether(
+            households: shell.households.households, balances: shell.households.balances,
+            ledgerTrips: shell.workspace.load.ledger?.trips ?? [], today: shell.today)
     }
 
-    private func item(_ value: SidebarItem, _ title: String, _ symbol: String) -> some View {
-        Label(title, systemImage: symbol)
-            .tag(value)
-            .accessibilityIdentifier("sidebar.\(title.lowercased())")
+    private func householdID(_ item: SidebarItem) -> String {
+        if case .household(let id) = item { return id }
+        return ""
+    }
+
+    private func tripID(_ item: SidebarItem) -> String {
+        if case .trip(let id) = item { return id }
+        return ""
+    }
+
+    /// A row: a button rather than the List's own selection, so the selected row is the card's
+    /// solid copper fill with white text (the system's sidebar selection is gray, and outlined
+    /// in the tint when focused).
+    private func item(
+        _ value: SidebarItem, _ title: String, _ symbol: String, detail: String? = nil, spoken: String? = nil,
+        selected: SidebarItem, id: String? = nil
+    ) -> some View {
+        let isSelected = value == selected
+        return Button {
+            shell.route.sidebarSelection = value
+        } label: {
+            HStack(spacing: 12) {
+                Label {
+                    Text(title).lineLimit(1)
+                } icon: {
+                    Image(systemName: symbol).foregroundStyle(isSelected ? Color.white : PennyColor.tint)
+                }
+                Spacer(minLength: 8)
+                if let detail {
+                    Text(detail)
+                        .font(.subheadline.weight(.medium))
+                        .monospacedDigit()
+                        .foregroundStyle(isSelected ? Color.white : PennyColor.secondaryLabel)
+                        .lineLimit(1)
+                        .accessibilityLabel(spoken ?? detail)
+                }
+            }
+            .font(.body.weight(isSelected ? .semibold : .regular))
+            .foregroundStyle(isSelected ? Color.white : PennyColor.label)
+            .padding(.horizontal, 12)
+            .frame(minHeight: Metrics.minTouchTarget)
+            .background(
+                isSelected ? PennyColor.tint : Color.clear,
+                in: RoundedRectangle(cornerRadius: Metrics.rowRadius, style: .continuous)
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .listRowInsets(EdgeInsets(top: 1, leading: 10, bottom: 1, trailing: 10))
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .accessibilityIdentifier(id ?? "sidebar.\(title.lowercased())")
     }
 
     static func symbol(_ page: SettingsRoute) -> String {
@@ -251,21 +335,77 @@ private struct Sidebar: View {
     }
 }
 
+/// The copper leaf and the "penny." wordmark at the top of the sidebar.
+private struct SidebarBrand: View {
+    var body: some View {
+        HStack(spacing: 10) {
+            PennyMark(size: 34)
+            Text("penny.").font(.title2.weight(.bold)).foregroundStyle(PennyColor.label)
+        }
+        .textCase(nil)
+        .padding(.bottom, 12)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Penny")
+        .accessibilityAddTraits(.isHeader)
+    }
+}
+
+/// A small upper-case section label ("TOGETHER", "MANAGE").
+private struct SidebarHeader: View {
+    let title: String
+    init(_ title: String) { self.title = title }
+
+    var body: some View {
+        Text(title.uppercased())
+            .font(.footnote.weight(.semibold))
+            .tracking(0.6)
+            .foregroundStyle(PennyColor.secondaryLabel)
+            .accessibilityLabel(title)
+            .accessibilityAddTraits(.isHeader)
+    }
+}
+
+/// The account's monogram, its name (the email until profiles, MAZ-171) and sync status, and
+/// Settings, which is selected (a tinted gear on a filled row) while Settings is shown.
 private struct SidebarFooter: View {
     @Bindable var shell: ShellModel
+    let isSelected: Bool
 
     var body: some View {
         HStack(spacing: 10) {
+            Text(shell.account.map { HouseholdPeople.initials(email: $0.email) } ?? "D")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(PennyColor.secondaryLabel)
+                .frame(width: 40, height: 40)
+                .background(PennyColor.fill, in: Circle())
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
                 Text(shell.account?.email ?? "Demo account").font(.subheadline.weight(.semibold)).lineLimit(1)
                 Text(SyncText.line(shell.workspace.sync)).font(.footnote)
                     .foregroundStyle(PennyColor.secondaryLabel)
             }
             Spacer()
-            GlassIconButton("Settings", systemImage: "gearshape") { shell.route.sidebarSelection = .settings }
-                .accessibilityIdentifier("sidebar.settings")
+            Button {
+                shell.route.sidebarSelection = .settings
+            } label: {
+                Image(systemName: "gearshape")
+                    .font(.title3)
+                    .foregroundStyle(isSelected ? PennyColor.tint : PennyColor.secondaryLabel)
+                    .frame(width: Metrics.minTouchTarget, height: Metrics.minTouchTarget)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Settings")
+            .accessibilityAddTraits(isSelected ? .isSelected : [])
+            .accessibilityIdentifier("sidebar.settings")
         }
-        .padding(Metrics.gutter)
+        .padding(10)
+        .background(
+            isSelected ? PennyColor.fill : Color.clear,
+            in: RoundedRectangle(cornerRadius: Metrics.rowRadius, style: .continuous)
+        )
+        .padding(.horizontal, Metrics.gutter - 6)
+        .padding(.bottom, 8)
         .accessibilityElement(children: .contain)
     }
 }

@@ -63,9 +63,16 @@ public enum SettingsRoute: String, CaseIterable, Hashable, Sendable {
     }
 }
 
-/// What the iPad sidebar has selected.
+/// What the iPad sidebar has selected (`ipad-*` cards): a tab, Insights, one household or trip
+/// (Together lists each of them, MAZ-182), a Manage page, or Settings.
 public enum SidebarItem: Hashable, Sendable {
     case tab(AppTab)
+    /// Insights, a page of the Home stack.
+    case insights
+    /// A household's page, from the root of Shared.
+    case household(id: String)
+    /// A trip's page (personal or shared), from the root of Trips.
+    case trip(id: String)
     case manage(SettingsRoute)
     case settings
 }
@@ -191,19 +198,38 @@ public struct ShellRoute: Equatable, Sendable {
     }
 
     /// The iPad sidebar's view of the same state. Recurring, Accounts and Categories are
-    /// sidebar rows there; every other Settings page is under the Settings row.
+    /// sidebar rows there; every other Settings page is under the Settings row. Insights and
+    /// each household and trip are rows too (MAZ-182): a page opened from one, and anything
+    /// pushed on it, keeps its row selected; the Shared and Trips roots are All households and
+    /// All trips.
     public var sidebarSelection: SidebarItem {
         get {
-            guard isSettingsPresented else { return .tab(tab) }
+            guard isSettingsPresented else {
+                switch (tab, path(for: tab).first) {
+                case (.home, .insights): return .insights
+                case (.shared, .household(let id)): return .household(id: id)
+                case (.trips, .trip(let id)): return .trip(id: id)
+                default: return .tab(tab)
+                }
+            }
             if let first = settingsPath.first, SettingsRoute.manage.contains(first) { return .manage(first) }
             return .settings
         }
         set {
             switch newValue {
+            case .tab(let next) where next == .shared || next == .trips:
+                // All households and All trips always show the list: each household and trip
+                // has its own row, so the list's row never reopens one of them.
+                show(next, [])
             case .tab(let next):
                 isSettingsPresented = false
                 settingsPath = []
+                // Home's row leaves Insights, which has a row of its own.
+                if path(for: next).first == .insights { paths[next] = [] }
                 select(next)
+            case .insights: show(.home, [.insights])
+            case .household(let id): show(.shared, [.household(id: id)])
+            case .trip(let id): show(.trips, [.trip(id: id)])
             case .manage(let page): openSettings(page)
             case .settings: openSettings()
             }

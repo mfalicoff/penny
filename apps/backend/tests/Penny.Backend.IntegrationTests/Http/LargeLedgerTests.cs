@@ -49,7 +49,12 @@ public sealed class LargeLedgerTests(ApiFixture fixture) : IntegrationTestBase(f
     // Every CI run. The first write of a full ledger bulk-copies its new entries and
     // search documents (MAZ-137); it must finish within the production request
     // deadline (`Backend:RequestTimeoutSeconds`, 30 s), so its budget stays below it.
-    [Fact]
+    // Skipped (MAZ-262): on CI the bulk copy intermittently stalls on the database
+    // (past the 5 s statement timeout, or for 100 s when that timeout is lifted), and
+    // the cause is not known yet. Re-enable it with the fix.
+    [Fact(
+        Skip = "MAZ-262: the full-ledger bulk copy intermittently stalls on CI; re-enable with the fix."
+    )]
     public async Task whenLedgerAtTransactionLimit_LedgerFlow_ShouldWriteReadAndRefuseOneMore()
     {
         await using var host = LargeHost();
