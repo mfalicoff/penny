@@ -22,7 +22,7 @@ import { groupSmall, isSharedEntry, percentOf } from "./model";
  * above a solid list card ("Recent", "Categories"); from 1100px, as on the iPad and desktop
  * cards, the heading sits inside the panel.
  */
-export function Panel({ title, level = 2, action, className, list, children }: { title: string; level?: 2 | 3; action?: ReactNode; className?: string; list?: boolean; children: ReactNode }) {
+export function Panel({ title, level = 2, action, className, list, children }: { title: ReactNode; level?: 2 | 3; action?: ReactNode; className?: string; list?: boolean; children: ReactNode }) {
   const id = useId();
   const Heading = level === 2 ? "h2" : "h3";
   return (
@@ -43,8 +43,8 @@ export function Panel({ title, level = 2, action, className, list, children }: {
  *
  * - phones (`iphone-home`, `iphone-insights`): a glass month pill that opens the system month list;
  * - touch tablets (`ipad-home`): Previous and Next glass buttons around that pill;
- * - desktop (`web-home`, `web-insights`): a bordered segmented control with the chevrons inside,
- *   and This month beside it when another month is shown.
+ * - desktop (`web-home`, `web-insights`): a bordered segmented control with the chevrons inside.
+ *   The cards have no This month link (MAZ-224): the month list and the chevrons reach it.
  *
  * `actions` go at the end of the phone row (Home's calendar and settings buttons).
  */
@@ -127,18 +127,6 @@ function MonthBarControls({ month, onChange }: { month: string; onChange: (month
           }}
         />
       </div>
-      {month !== now ? (
-        <Button
-          variant="quiet"
-          icon="calendar"
-          className="month-bar__now"
-          onClick={() => {
-            onChange(undefined);
-          }}
-        >
-          This month
-        </Button>
-      ) : null}
     </div>
   );
 }
@@ -232,25 +220,12 @@ export function EntryRows({ entries, ledger, currency, onOpen }: { entries: read
 /**
  * Recorded spending by category (your share, shared categories included): the five largest and
  * the rest grouped into "N more", each with its amount and percent in text; the bar is decoration.
- * Choosing a category filters the list below.
+ * Desktop Home's By category (`web-home`), whose rows only show the month (MAZ-224).
  */
-export function CategoryBreakdown({
-  level = 3,
-  spending,
-  currency,
-  selected,
-  onSelect,
-}: {
-  /** 2 when it leads a region of the page (the desktop Home), 3 inside Explore your month. */
-  level?: 2 | 3;
-  spending: Parameters<typeof groupSmall>[0];
-  currency: string | undefined;
-  selected: string | undefined;
-  onSelect: (id: string | undefined) => void;
-}) {
+export function CategoryBreakdown({ spending, currency }: { spending: Parameters<typeof groupSmall>[0]; currency: string | undefined }) {
   const { rows, total } = groupSmall(spending);
   return (
-    <Panel title="By category" level={level} className="breakdown" action={<span className="muted">Your share</span>}>
+    <Panel title="By category" className="breakdown" action={<span className="muted">Your share</span>}>
       {rows.length ? (
         <>
           <ol className="breakdown__list">
@@ -273,21 +248,8 @@ export function CategoryBreakdown({
                 </>
               );
               return (
-                <li key={row.id}>
-                  {row.id === "more" ? (
-                    <div className="breakdown__row">{content}</div>
-                  ) : (
-                    <button
-                      type="button"
-                      className={cx("breakdown__row", selected === row.id && "breakdown__row--on")}
-                      aria-pressed={selected === row.id}
-                      onClick={() => {
-                        onSelect(selected === row.id ? undefined : row.id);
-                      }}
-                    >
-                      {content}
-                    </button>
-                  )}
+                <li key={row.id} className="breakdown__row">
+                  {content}
                 </li>
               );
             })}

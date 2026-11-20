@@ -86,14 +86,9 @@
         ],
         "deviations": [
           {
-            "summary": "The flow card title has no chevron and Insights is a bare copper link, not a pill; Recent rows read category · date, not date · account",
+            "summary": "Insights is a bare copper link, not a pill; Recent rows read category · date, not date · account",
             "kind": "follow-up",
             "ref": "MAZ-223"
-          },
-          {
-            "summary": "Adds the Recorded so far note and a longer projected line, and lists Coming up and Explore your month after Recent",
-            "kind": "follow-up",
-            "ref": "MAZ-224"
           }
         ]
       }
@@ -150,14 +145,9 @@
         ],
         "deviations": [
           {
-            "summary": "The flow card title has no chevron and Insights is a bare copper link; Recent rows read category · date",
+            "summary": "Insights is a bare copper link; Recent rows read category · date",
             "kind": "follow-up",
             "ref": "MAZ-223"
-          },
-          {
-            "summary": "Adds the Recorded so far note and a longer projected line, and lists Coming up and Explore your month after Recent",
-            "kind": "follow-up",
-            "ref": "MAZ-224"
           }
         ]
       }
@@ -188,6 +178,11 @@
             "summary": "Capture state: no band is focused, so the focus card isn't shown",
             "kind": "follow-up",
             "ref": "MAZ-253"
+          },
+          {
+            "summary": "The card now has the flow card's focus hint (Select a band or label to focus it, again to clear) and Show as a table, which the native screen doesn't show yet (follow-up recorded on MAZ-224)",
+            "kind": "follow-up",
+            "ref": "MAZ-224"
           }
         ]
       },
@@ -200,11 +195,6 @@
           "dark"
         ],
         "deviations": [
-          {
-            "summary": "At phone width the flow is two stacked bars with a value list at the end of Insights, not the pushed Money flow screen with a Sankey; adds a focus line and Show as a table",
-            "kind": "follow-up",
-            "ref": "MAZ-224"
-          },
           {
             "summary": "Legend amounts have no currency symbol, and Came in and Left over are green instead of the label color",
             "kind": "follow-up",
@@ -265,11 +255,6 @@
             "summary": "Spending · your share is a card header instead of the screen subtitle",
             "kind": "follow-up",
             "ref": "MAZ-223"
-          },
-          {
-            "summary": "Follow your money (the stacked phone flow) follows the categories",
-            "kind": "follow-up",
-            "ref": "MAZ-224"
           }
         ]
       }
@@ -318,12 +303,7 @@
         ],
         "deviations": [
           {
-            "summary": "The calendar is a section of Home followed by By category and Follow your money, not a sheet with close, month navigation and Today",
-            "kind": "follow-up",
-            "ref": "MAZ-224"
-          },
-          {
-            "summary": "The legend reads Expected or scheduled, not Scheduled, and there is no Today button or day detail",
+            "summary": "The legend reads Expected or scheduled, not Scheduled",
             "kind": "follow-up",
             "ref": "MAZ-223"
           },
@@ -2191,11 +2171,6 @@
             "summary": "The empty hero is $0.00 in the label color, not a muted $0; empty Recent is text inside a card with no icon",
             "kind": "follow-up",
             "ref": "MAZ-223"
-          },
-          {
-            "summary": "Add your first entry carries a Currency link",
-            "kind": "follow-up",
-            "ref": "MAZ-224"
           }
         ]
       }
@@ -2548,6 +2523,11 @@
             "summary": "Income, Spent and Invested are stacked, not on one line; Coming up has no icons and unsigned amber amounts",
             "kind": "follow-up",
             "ref": "MAZ-245"
+          },
+          {
+            "summary": "The card now has the flow card's focus hint (Select a band or label to focus it, again to clear) and Show as a table, which the native screen doesn't show yet (follow-up recorded on MAZ-224)",
+            "kind": "follow-up",
+            "ref": "MAZ-224"
           }
         ]
       },
@@ -2579,11 +2559,6 @@
             "summary": "Three Came in / Went out tiles instead of an inline legend; Coming up amounts are unsigned; no Daily spending chart",
             "kind": "follow-up",
             "ref": "MAZ-223"
-          },
-          {
-            "summary": "The money flow is the stacked flow, and Recent and Explore your month follow the dashboard",
-            "kind": "follow-up",
-            "ref": "MAZ-224"
           }
         ]
       }
@@ -3049,11 +3024,6 @@
             "ref": "MAZ-223"
           },
           {
-            "summary": "Adds the Recorded so far note, a focus line with Show as a table, and Recent below the dashboard",
-            "kind": "follow-up",
-            "ref": "MAZ-224"
-          },
-          {
             "summary": "The capture focuses no band; the card shows Groceries hovered",
             "kind": "follow-up",
             "ref": "MAZ-235"
@@ -3117,11 +3087,6 @@
             "summary": "Came in is green; Sankey labels have no currency symbol; the Change column reads Up $150.00, not arrows",
             "kind": "follow-up",
             "ref": "MAZ-223"
-          },
-          {
-            "summary": "Adds This month, Spending by category and Show as a table",
-            "kind": "follow-up",
-            "ref": "MAZ-224"
           },
           {
             "summary": "The capture focuses no band; the card shows Home selected",

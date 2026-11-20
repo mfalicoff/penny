@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { calendarMonth } from "@domain/calendar.ts";
-import { type Category, type Kind, type Ledger, type Transaction } from "@domain/ledger.ts";
+import { type Category, type Ledger, type Transaction } from "@domain/ledger.ts";
 import { buildMoneyFlow, type FlowNode, type MoneyFlow } from "@domain/selectors/moneyFlow.ts";
 import { selectOverview, type OverviewEntry } from "@domain/selectors/overview.ts";
 import { isExpected, net, type KindTotals } from "@domain/summary.ts";
@@ -32,9 +32,9 @@ const monthParam = z
   .catch(undefined);
 
 /**
- * Home's search parameters. `month` (`YYYY-MM`, default this month), and the Explore your month
- * list's filters: `day` (`YYYY-MM-DD` inside the month), `q` (keyword), `kind` and `category`.
- * The month's totals never follow `day`, `q`, `kind` or `category`.
+ * Home's search parameters. `month` (`YYYY-MM`, default this month) and `day` (`YYYY-MM-DD`),
+ * which opens the calendar sheet on that day. The month's totals never follow `day`. Older links'
+ * list filters (`q`, `kind`, `category`, MAZ-224) are dropped.
  */
 export const homeSearchSchema = z.object({
   month: monthParam,
@@ -43,9 +43,6 @@ export const homeSearchSchema = z.object({
     .regex(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/)
     .optional()
     .catch(undefined),
-  q: z.string().trim().max(200).optional().catch(undefined),
-  kind: z.enum(["expense", "income", "investment"]).optional().catch(undefined),
-  category: z.string().min(1).max(200).optional().catch(undefined),
 });
 export type HomeSearch = z.infer<typeof homeSearchSchema>;
 
@@ -128,7 +125,7 @@ export interface MonthReport {
   flow: MoneyFlow;
   /** Recorded spending by category, largest first. */
   spending: (Category & { amount: number })[];
-  /** Recorded and scheduled entries of the month, for the calendar and the list. */
+  /** Recorded and scheduled entries of the month, for the calendar sheet. */
   calendarEntries: OverviewEntry[];
   empty: boolean;
 }
@@ -137,7 +134,7 @@ const byDateAscThenId = (a: Transaction, b: Transaction) => a.date.localeCompare
 const byDateDescThenId = (a: Transaction, b: Transaction) => b.date.localeCompare(a.date) || a.id.localeCompare(b.id);
 
 /**
- * The month's report from the ledger view. Every total is independent of the list's filters.
+ * The month's report from the ledger view.
  * `today` (the local date) makes income dated after it expected (MAZ-136).
  */
 export function monthReport(view: Ledger, month: string, today: string): MonthReport {
@@ -162,22 +159,6 @@ export function monthReport(view: Ledger, month: string, today: string): MonthRe
     calendarEntries: overview.calendarEntries,
     empty: overview.calendarEntries.length === 0,
   };
-}
-
-/* ---------- the Explore your month list ---------- */
-
-export interface ListFilters {
-  day: string | undefined;
-  q: string | undefined;
-  kind: Kind | undefined;
-  category: string | undefined;
-}
-
-/** The list under the calendar: the domain's filter (day, kind, category, the shared substring search), newest first. */
-export function monthEntries(view: Ledger, month: string, filters: ListFilters): OverviewEntry[] {
-  const day = filters.day?.startsWith(`${month}-`) ? filters.day : null;
-  // The list holds recorded, expected and scheduled entries alike, so any `today` gives the same rows.
-  return selectOverview(view, { month, day, filter: filters.kind ?? "all", categoryId: filters.category ?? null, search: filters.q ?? "", today: `${month}-31` }).visibleEntries;
 }
 
 /* ---------- small-category grouping ---------- */

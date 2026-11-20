@@ -55,7 +55,7 @@ Each screen is a standalone HTML file with a `@dsCard` marker, so the folder can
 The web app uses the same tokens, color rules and money semantics as the iOS app, adapted for a mouse, a keyboard and wide screens:
 
 - **Shell:** a persistent left sidebar (Home, Activity, Insights; Together lists each household and trip; Manage). A top bar holds the page title, the month switcher, a ⌘K search and a copper **Add entry** button (N). Glass is limited to small floating elements over the hero glow; panels are solid.
-- **Home:** the Left to spend hero with Came in / Spent / Invested tiles, Coming up, a large Sankey (hover a band to focus), and By category.
+- **Home:** the Left to spend hero with Came in / Spent / Invested tiles, Coming up, a large Sankey (select a band or label to focus it, again to clear; Show as a table lists every value), and By category.
 - **Activity:** a dense table grouped by day with daily totals, multi-select checkboxes, row actions on hover, and a detail panel on the right instead of a new page. Keyboard: ↑↓, ↵, E, ⌫, X.
 - **Insights:** the full-width Sankey with a click-to-focus band, a category table comparing with last month, and a six-month in/spent chart.
 - **Household:** an expenses table (paid by, split, total, your share, status) with Balances, Suggested payments and an overdue month beside it. Recording a payment still states that Penny never moves money.

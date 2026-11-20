@@ -1,18 +1,26 @@
 import { layoutMoneyFlow, type FlowNode, type MoneyFlow } from "@domain/selectors/moneyFlow.ts";
-import { useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useId, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from "react";
 import { cx } from "../../design/controls";
+import { Icon } from "../../design/Icon";
 import { formatCents, Money } from "../../design/Money";
 import { flowColor, flowNodeSummary, percentOf, shortLabel } from "./model";
 
 type Side = "in" | "out";
 type Node = FlowNode & { side: Side };
 
-/** Sankey geometry in viewBox units; the SVG scales to its card. */
-const WIDTH = 760;
+/**
+ * Sankey geometry in viewBox units; the SVG scales to its card. A narrow card (the phone Money
+ * flow screen, `iphone-money-flow`) gets a narrower viewBox, so its labels stay readable at 320px
+ * without horizontal scrolling.
+ */
 const BAR = 8;
-const LEFT_X = 168;
-const RIGHT_X = WIDTH - 186;
-const MIDDLE_X = WIDTH / 2 - BAR / 2;
+const GEOMETRY = {
+  wide: { width: 760, left: 168, right: 574, label: 18 },
+  narrow: { width: 380, left: 84, right: 262, label: 13 },
+} as const;
+type Geometry = (typeof GEOMETRY)[keyof typeof GEOMETRY];
+/** Below this card width the narrow geometry is used. */
+const NARROW_BELOW = 560;
 
 function ribbon(x: number, y: number, endX: number, endY: number, height: number) {
   const bend = (x + endX) / 2;
@@ -23,36 +31,36 @@ interface MoneyFlowChartProps {
   flow: MoneyFlow;
   currency: string | undefined;
   monthLabel: string;
-  /** Heading level of the card title (2 on Insights, 3 inside Home's Explore your month). */
-  level?: 2 | 3;
   /**
-   * Desktop Home and Insights (`web-home`, `web-insights`, MAZ-174): the totals are already on the
-   * page, so they and the long note are left out and the diagram is kept short enough for the fold.
+   * `panel` (desktop Home and Insights, `web-home`, `web-insights`): a "Follow your money" card
+   * whose header carries the focus hint, kept short enough for the fold. `page` (the Money flow
+   * screen, `iphone-money-flow`): the totals, the diagram in its own card, then the focus card.
    */
-  compact?: boolean;
-  /** A link beside the hint, such as Home's "Open full view". */
+  variant: "panel" | "page";
+  /** A link beside the hint, such as Home's "Open full view" (panel only). */
   action?: ReactNode;
 }
 
+const HINT = "Select a band or label to focus it, again to clear";
+
 /**
- * "Follow your money" (specimen `money-flow`, web cards `web-home` and `web-insights`): where the
- * month's recorded money came from and where it went (never expected or scheduled entries, so it
- * matches Left to spend, as on iOS), from the shared `buildMoneyFlow` (your share of
- * split expenses, at most five categories per side plus "Other", Invested and Left over as
+ * "Follow your money" (cards `iphone-money-flow`, `ipad-home`, `web-home`, `web-insights`): where
+ * the month's recorded money came from and where it went (never expected or scheduled entries, so
+ * it matches Left to spend, as on iOS), from the shared `buildMoneyFlow` (your share of split
+ * expenses, at most five categories per side plus "N more", Invested and Left over as
  * destinations, "Beyond income" as a source in a deficit month).
  *
- * Two renderings of the same nodes, chosen by the card's width (a container query): a Sankey on
- * wide cards and a stacked bar flow on phones, which fits 320px without scrolling. Every node is
- * a button: click, Enter or Space focuses it (and again clears), arrow keys move between nodes,
- * Escape clears. The focus card announces the selection, and "Show as a table" lists every value.
+ * Every node is a button: click, Enter or Space focuses it (and again clears), arrow keys move
+ * between nodes, Escape clears. The focus hint and "Show as a table" (which lists every value)
+ * are on the cards since MAZ-224. The selection is announced politely: on the page in the focus
+ * card, on a panel in the hint ("Home selected · …").
  */
-export function MoneyFlowChart({ flow, currency, monthLabel, level = 2, compact = false, action }: MoneyFlowChartProps) {
+export function MoneyFlowChart({ flow, currency, monthLabel, variant, action }: MoneyFlowChartProps) {
   const headingId = useId();
   const hintId = useId();
   const [selected, setSelected] = useState<string | null>(null);
   const nodes: Node[] = useMemo(() => [...flow.sources.map((node) => ({ ...node, side: "in" as const })), ...flow.destinations.map((node) => ({ ...node, side: "out" as const }))], [flow]);
   const active = nodes.find((node) => node.id === selected) ?? null;
-  const Heading = level === 2 ? "h2" : "h3";
   const money = (cents: number) => formatCents(cents, currency);
   const describe = (node: Node) => `${node.side === "in" ? "Came in" : "Went out"}: ${node.label}, ${money(node.amount)}, ${flowNodeSummary(node, flow, node.side)}`;
   const toggle = (id: string) => {
@@ -72,71 +80,106 @@ export function MoneyFlowChart({ flow, currency, monthLabel, level = 2, compact 
       scope?.querySelectorAll<HTMLElement | SVGElement>("[data-flow-node]")[next]?.focus();
     }
   };
+  const empty = <p className="muted">Nothing came in or went out in {monthLabel} yet. Add income, an expense or an investment to see where your money goes.</p>;
+  const sankey = <Sankey flow={flow} nodes={nodes} selected={selected} describe={describe} toggle={toggle} onKeyDown={onKeyDown} hintId={hintId} />;
+  const table = <FlowTable flow={flow} nodes={nodes} currency={currency} monthLabel={monthLabel} />;
+
+  if (variant === "panel") {
+    return (
+      <section className="card flow flow--panel" aria-labelledby={headingId}>
+        <div className="card__head">
+          <h2 id={headingId} className="panel__title">
+            Follow your money
+          </h2>
+          <span className="muted flow__hint" id={hintId} aria-live="polite">
+            {active ? `${active.label} selected · select a band or label to focus it, again to clear` : HINT}
+          </span>
+          {action}
+        </div>
+        {!flow.total ? (
+          empty
+        ) : (
+          <>
+            {sankey}
+            {table}
+          </>
+        )}
+      </section>
+    );
+  }
 
   return (
-    <section className={cx("card flow", compact && "flow--compact")} aria-labelledby={headingId}>
-      <div className="card__head">
-        <Heading id={headingId} className="panel__title">
-          Follow your money
-        </Heading>
-        <span className="muted flow__hint" id={hintId}>
-          Select a band or label to focus it, again to clear
-        </span>
-        {action}
-      </div>
+    <div className="flow flow--page">
       {!flow.total ? (
-        <p className="muted">Nothing came in or went out in {monthLabel} yet. Add income, an expense or an investment to see where your money goes.</p>
+        empty
       ) : (
         <>
-          {compact ? null : (
-            <dl className="flow__totals">
-              <div>
-                <dt>Came in</dt>
-                <dd>
-                  <Money cents={flow.income} currency={currency} tone="income" />
-                </dd>
-              </div>
-              <div>
-                <dt>Went out</dt>
-                <dd>
-                  <Money cents={flow.expense + flow.investment} currency={currency} />
-                </dd>
-              </div>
-              <div>
-                <dt>{flow.gap ? "Beyond income" : "Left over"}</dt>
-                <dd>
-                  <Money cents={flow.gap || flow.remaining} currency={currency} tone={flow.gap ? "expense" : "income"} />
-                </dd>
-              </div>
-            </dl>
-          )}
-          <FocusCard active={active} flow={flow} currency={currency} />
-          <Sankey flow={flow} nodes={nodes} selected={selected} describe={describe} toggle={toggle} onKeyDown={onKeyDown} hintId={hintId} />
-          <Stacked flow={flow} nodes={nodes} selected={selected} describe={describe} toggle={toggle} onKeyDown={onKeyDown} hintId={hintId} />
-          {compact ? null : (
-            <p className="note">
-              Recorded entries only, so Left over matches Left to spend; expected income joins on its date or once it's recorded. Your share of split and shared expenses only. Investments are contributions, not spending, and come out of what's left.
+          <dl className="flow__totals">
+            <div>
+              <dt>Came in</dt>
+              <dd>
+                <Money cents={flow.income} currency={currency} tone="income" />
+              </dd>
+            </div>
+            <div>
+              <dt>Went out</dt>
+              <dd>
+                <Money cents={flow.expense + flow.investment} currency={currency} />
+              </dd>
+            </div>
+            <div>
+              <dt>{flow.gap ? "Beyond income" : "Left over"}</dt>
+              <dd>
+                <Money cents={flow.gap || flow.remaining} currency={currency} tone={flow.gap ? "expense" : "income"} />
+              </dd>
+            </div>
+          </dl>
+          <div className="card flow__chart">
+            <p className="flow__columns" aria-hidden="true">
+              <span>Income</span>
+              <span>Where it goes</span>
             </p>
-          )}
-          <FlowTable flow={flow} nodes={nodes} currency={currency} monthLabel={monthLabel} />
+            {sankey}
+          </div>
+          <FocusCard
+            active={active}
+            flow={flow}
+            currency={currency}
+            onClear={() => {
+              setSelected(null);
+            }}
+          />
+          <p className="muted flow__hint" id={hintId}>
+            {HINT}
+          </p>
+          {table}
         </>
       )}
-    </section>
+    </div>
   );
 }
 
-function FocusCard({ active, flow, currency }: { active: Node | null; flow: MoneyFlow; currency: string | undefined }) {
+/** The page's focus card (`iphone-money-flow`): the focused node, its share, and a button that clears it. */
+function FocusCard({ active, flow, currency, onClear }: { active: Node | null; flow: MoneyFlow; currency: string | undefined; onClear: () => void }) {
   return (
-    <p className="flow__focus" aria-live="polite">
+    <div aria-live="polite" className={active ? "card flow__focus" : "visually-hidden"}>
       {active ? (
         <>
           <span className="flow__swatch" style={{ background: flowColor(active) }} aria-hidden="true" />
-          <strong>{active.label}</strong> <Money cents={active.amount} currency={currency} /> · {flowNodeSummary(active, flow, active.side)}
+          <p className="flow__focus-text">
+            <strong>
+              {active.label} · <Money cents={active.amount} currency={currency} />
+            </strong>
+            <span>{flowNodeSummary(active, flow, active.side)}</span>
+          </p>
+          <button type="button" className="flow__clear" aria-label={`Clear focus on ${active.label}`} onClick={onClear}>
+            <Icon name="close" size={15} />
+          </button>
         </>
       ) : (
-        <span className="muted">Nothing focused</span>
+        "Nothing focused"
       )}
-    </p>
+    </div>
   );
 }
 
@@ -150,20 +193,41 @@ interface ViewProps {
   hintId: string;
 }
 
+/** The card's width, to pick the Sankey's geometry; wide until measured (and where ResizeObserver is missing). */
+function useNarrow(ref: RefObject<HTMLElement | null>) {
+  const [narrow, setNarrow] = useState(false);
+  useLayoutEffect(() => {
+    const node = ref.current;
+    if (!node || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(([entry]) => {
+      if (entry) setNarrow(entry.contentRect.width < NARROW_BELOW);
+    });
+    observer.observe(node);
+    return () => {
+      observer.disconnect();
+    };
+  }, [ref]);
+  return narrow;
+}
+
 function Sankey({ flow, selected, describe, toggle, onKeyDown, hintId }: ViewProps) {
   const scope = useRef<HTMLDivElement>(null);
+  const narrow = useNarrow(scope);
+  const geometry: Geometry = narrow ? GEOMETRY.narrow : GEOMETRY.wide;
+  const { width, left: leftX, right: rightX } = geometry;
+  const middleX = width / 2 - BAR / 2;
   const layout = useMemo(() => layoutMoneyFlow(flow), [flow]);
   const positioned = [...layout.sources.map((node) => ({ ...node, side: "in" as const })), ...layout.destinations.map((node) => ({ ...node, side: "out" as const }))];
   const opacity = (id: string) => (!selected ? 0.34 : selected === id ? 0.72 : 0.08);
   return (
-    <div className="flow__sankey" ref={scope} role="group" aria-label="Money flow diagram" aria-describedby={hintId}>
-      <svg viewBox={`0 0 ${String(WIDTH)} ${String(layout.height)}`} className="flow__svg" focusable="false">
-        <rect x={MIDDLE_X} y={layout.middleY} width={BAR} height={layout.bandHeight} rx={3} className="flow__middle" />
+    <div className={cx("flow__sankey", narrow && "flow__sankey--narrow")} ref={scope} role="group" aria-label="Money flow diagram" aria-describedby={hintId}>
+      <svg viewBox={`0 0 ${String(width)} ${String(layout.height)}`} className="flow__svg" focusable="false">
+        <rect x={middleX} y={layout.middleY} width={BAR} height={layout.bandHeight} rx={3} className="flow__middle" />
         {positioned.map((node, index) => {
           const color = flowColor(node);
           const left = node.side === "in";
-          const path = left ? ribbon(LEFT_X + BAR, node.y, MIDDLE_X, node.middleY, node.height) : ribbon(MIDDLE_X + BAR, node.middleY, RIGHT_X, node.y, node.height);
-          const labelX = left ? LEFT_X - 10 : RIGHT_X + BAR + 10;
+          const path = left ? ribbon(leftX + BAR, node.y, middleX, node.middleY, node.height) : ribbon(middleX + BAR, node.middleY, rightX, node.y, node.height);
+          const labelX = left ? leftX - 10 : rightX + BAR + 10;
           const center = node.y + node.height / 2;
           const on = selected === node.id;
           return (
@@ -189,10 +253,10 @@ function Sankey({ flow, selected, describe, toggle, onKeyDown, hintId }: ViewPro
             >
               <title>{`${node.label}: ${formatCents(node.amount)}`}</title>
               <path d={path} fill={color} fillOpacity={opacity(node.id)} />
-              <rect x={left ? LEFT_X : RIGHT_X} y={node.y} width={BAR} height={Math.max(2, node.height)} rx={3} fill={color} />
-              <rect className="flow-node__ring" x={left ? 4 : RIGHT_X - 4} y={center - 22} width={left ? LEFT_X : WIDTH - RIGHT_X} height={44} rx={8} />
+              <rect x={left ? leftX : rightX} y={node.y} width={BAR} height={Math.max(2, node.height)} rx={3} fill={color} />
+              <rect className="flow-node__ring" x={left ? 4 : rightX - 4} y={center - 22} width={left ? leftX : width - rightX} height={44} rx={8} />
               <text x={labelX} y={center - 4} textAnchor={left ? "end" : "start"} className="flow-node__label">
-                {shortLabel(node.label)}
+                {shortLabel(node.label, geometry.label)}
               </text>
               <text x={labelX} y={center + 14} textAnchor={left ? "end" : "start"} className="flow-node__amount" fill={color}>
                 {formatCents(node.amount)}
@@ -205,60 +269,13 @@ function Sankey({ flow, selected, describe, toggle, onKeyDown, hintId }: ViewPro
   );
 }
 
-function Stacked({ flow, nodes, selected, describe, toggle, onKeyDown, hintId }: ViewProps) {
-  const scope = useRef<HTMLDivElement>(null);
-  const bar = (side: Side) => (
-    <div className="flow__bar" aria-hidden="true">
-      {nodes
-        .filter((node) => node.side === side)
-        .map((node) => (
-          <span
-            key={node.id}
-            className={cx("flow__segment", selected && selected !== node.id && "flow__segment--dim")}
-            style={{ width: `${String((node.amount / flow.total) * 100)}%`, background: flowColor(node) }}
-          />
-        ))}
-    </div>
-  );
-  return (
-    <div className="flow__stacked" ref={scope} role="group" aria-label="Money flow" aria-describedby={hintId}>
-      <p className="flow__bar-label">Came in</p>
-      {bar("in")}
-      <p className="flow__bar-label">Went out</p>
-      {bar("out")}
-      <ul className="flow__legend">
-        {nodes.map((node, index) => (
-          <li key={node.id}>
-            <button
-              type="button"
-              data-flow-node=""
-              aria-pressed={selected === node.id}
-              aria-label={describe(node)}
-              className={cx("flow__item", selected === node.id && "flow__item--on")}
-              onClick={() => {
-                toggle(node.id);
-              }}
-              onKeyDown={(event) => {
-                onKeyDown(event, index, scope.current);
-              }}
-            >
-              <span className="flow__swatch" style={{ background: flowColor(node) }} aria-hidden="true" />
-              <span className="flow__item-label">{node.label}</span>
-              <span className="flow__item-amount">
-                {formatCents(node.amount)} <span className="muted">· {String(percentOf(node.amount, flow.total))}%</span>
-              </span>
-            </button>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
 function FlowTable({ flow, nodes, currency, monthLabel }: { flow: MoneyFlow; nodes: Node[]; currency: string | undefined; monthLabel: string }) {
   return (
     <details className="flow__table">
-      <summary>Show as a table</summary>
+      <summary>
+        Show as a table
+        <Icon name="chevron-down" size={14} />
+      </summary>
       <div className="table-scroll">
         <table>
           <caption className="visually-hidden">Money flow for {monthLabel}</caption>
