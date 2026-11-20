@@ -88,13 +88,31 @@ async function timedSearch(alias: string, request: { query: string } & Record<st
 
 const results = (page: Page) => page.getByRole("region", { name: "Search results" });
 
+/** A personal entry's detail: a dialog on phones, the panel beside the list from 1100px (MAZ-225). */
+const detailOf = (page: Page, title: string) => page.getByRole("dialog", { name: title }).or(page.getByRole("complementary", { name: title }));
+
+/**
+ * Waits for this browser's durable ledger: the desktop summary line comes from it (`web-activity`);
+ * on a phone, which has no period figures (`iphone-activity`), the categories in Filters do.
+ */
+async function ledgerReady(page: Page) {
+  if ((page.viewportSize()?.width ?? 0) >= 768) {
+    await expect(page.locator(".activity-summary")).toContainText("entries");
+    return;
+  }
+  await page.getByRole("button", { name: /^Period: / }).click();
+  const filters = page.getByRole("dialog", { name: "Filters" });
+  await expect(filters.getByRole("group", { name: "Category" })).toBeVisible();
+  await filters.getByRole("button", { name: "Done" }).click();
+}
+
 /** Searches in Activity (all time) and returns the row titles in order once results have loaded. */
 async function searchInBrowser(page: Page, query: string) {
   const started = Date.now();
   await page.goto(query ? `/transactions?q=${encodeURIComponent(query)}` : "/transactions");
   await expect(results(page).getByRole("status")).toHaveText(/matching transaction|No matching/);
   const elapsed = Date.now() - started;
-  return { titles: await results(page).locator(".results__title").allInnerTexts(), elapsed };
+  return { titles: await results(page).locator(".results__title, .activity-table__title").allInnerTexts(), elapsed };
 }
 
 test.beforeAll(() => {
@@ -202,8 +220,8 @@ test("offline create, edit and delete search locally, then sync once on reconnec
   const context = page.context();
   await page.goto("/transactions?month=2026-10");
   await expect(results(page).getByRole("status")).toHaveText(/matching transaction/);
-  // Wait for the durable copy: the month's totals come from the downloaded ledger.
-  await expect(page.getByRole("region", { name: "October 2026" })).toBeVisible();
+  // Wait for the durable copy of the ledger.
+  await ledgerReady(page);
   const before = await client("alex").read();
 
   await context.setOffline(true);
@@ -218,7 +236,7 @@ test("offline create, edit and delete search locally, then sync once on reconnec
 
   // Edit (pendingEdits.edit): the Oct 9 Coffee becomes Espresso.
   await results(page).locator('[data-row-key="personal:p-coffee-2"]').click();
-  await page.getByRole("dialog", { name: "Coffee" }).getByRole("button", { name: "Edit" }).click();
+  await detailOf(page, "Coffee").getByRole("button", { name: "Edit", exact: true }).click();
   const edit = page.getByRole("form", { name: "Edit entry" });
   await edit.getByLabel("Title").fill("Espresso");
   await page.getByRole("dialog", { name: "Edit entry" }).getByRole("button", { name: "Save" }).click();
@@ -226,8 +244,8 @@ test("offline create, edit and delete search locally, then sync once on reconnec
 
   // Delete (pendingEdits.delete): Café Crème.
   await results(page).locator('[data-row-key="personal:p-cafe"]').click();
-  await page.getByRole("dialog", { name: titles.get("personal:p-cafe") }).getByRole("button", { name: "Delete" }).click();
-  await page.getByRole("dialog", { name: `Delete ${titles.get("personal:p-cafe") ?? ""}?` }).getByRole("button", { name: "Delete" }).click();
+  await detailOf(page, titles.get("personal:p-cafe") ?? "").getByRole("button", { name: "Delete", exact: true }).click();
+  await page.getByRole("dialog", { name: `Delete “${titles.get("personal:p-cafe") ?? ""}”?` }).getByRole("button", { name: "Delete", exact: true }).click();
   await expect(page.getByText(`${titles.get("personal:p-cafe") ?? ""} deleted`)).toBeVisible();
 
   // Local search over this browser's copy (pendingEdits.localSearch).
@@ -235,7 +253,7 @@ test("offline create, edit and delete search locally, then sync once on reconnec
   await search.fill("coffee");
   await search.press("Enter");
   await expect(results(page).getByRole("status")).toHaveText(/on this device/);
-  const personalCoffee = results(page).locator("[data-row-key] .results__title");
+  const personalCoffee = results(page).locator("[data-row-key] .results__title, [data-row-key] .activity-table__title");
   await expect(personalCoffee).toHaveText(["Coffee to go", "Coffee"]);
   await search.fill("espresso");
   await search.press("Enter");

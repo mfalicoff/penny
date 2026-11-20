@@ -119,11 +119,44 @@ async function open(page: Page, path: string) {
 const results = (page: Page) => page.getByRole("region", { name: "Search results" });
 const form = (page: Page, name = "Add entry") => page.getByRole("form", { name });
 
-test("adds an expense with the keyboard only and finds it in Activity", async ({ context, page }) => {
+/** A personal entry's detail: a dialog on phones, the panel beside the list from 1100px (`web-activity`, MAZ-225). */
+const detailOf = (page: Page, title: string) => page.getByRole("dialog", { name: title }).or(page.getByRole("complementary", { name: title }));
+
+/** One row of the list (phones) or the table (desktops). */
+const rowOf = (page: Page, text: string) => results(page).getByRole("listitem").or(results(page).getByRole("row")).filter({ hasText: text });
+
+/**
+ * Waits for this browser's ledger (the period's figures come from it): the desktop summary line
+ * (`web-activity`), or on a phone, which has no summary (`iphone-activity`), the categories in Filters.
+ */
+async function ledgerReady(page: Page, isMobile: boolean) {
+  if (!isMobile) {
+    await expect(page.locator(".activity-summary")).toContainText("entries");
+    return;
+  }
+  await page.getByRole("button", { name: /^Period: / }).click();
+  const filters = page.getByRole("dialog", { name: "Filters" });
+  await expect(filters.getByRole("group", { name: "Category" })).toBeVisible();
+  await filters.getByRole("button", { name: "Done" }).click();
+}
+
+/** The previous or next period: beside the title on a desktop, in Filters on a phone. */
+async function stepPeriod(page: Page, isMobile: boolean, name: "Previous month" | "Next month") {
+  if (!isMobile) {
+    await page.getByRole("button", { name }).click();
+    return;
+  }
+  await page.getByRole("button", { name: /^Period: / }).click();
+  const filters = page.getByRole("dialog", { name: "Filters" });
+  await filters.getByRole("button", { name }).click();
+  await filters.getByRole("button", { name: "Done" }).click();
+}
+
+test("adds an expense with the keyboard only and finds it in Activity", async ({ context, page, isMobile }) => {
   const server = await mockApi(context);
   await open(page, "/transactions?month=2026-11");
   await expect(results(page).getByRole("link", { name: /Hydro/ })).toBeVisible();
-  await expect(page.getByRole("region", { name: "November 2026" })).toBeVisible();
+  await ledgerReady(page, isMobile);
 
   await page.keyboard.press("n");
   const add = form(page);
@@ -142,10 +175,11 @@ test("adds an expense with the keyboard only and finds it in Activity", async ({
 
   await expect(page.getByText("Expense added")).toBeVisible();
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await expect(results(page).getByRole("button", { name: /Coffee beans/ })).toBeVisible();
+  await expect(results(page).getByRole("button", { name: /^Coffee beans/ })).toBeVisible();
   await expect.poll(() => server.ledger.transactions.map((item) => item.title)).toContain("Coffee beans");
   expect(server.ledger.transactions.find((item) => item.title === "Coffee beans")).toMatchObject({ total: 1840, share: 1840, categoryId: "groceries", date: "2026-11-06" });
-  await expect(page.getByRole("region", { name: "November 2026" }).getByText("Spent", { exact: true }).locator("..")).toContainText("$1,498.40");
+  // The desktop summary counts it (phones have none, as on iphone-activity).
+  if (!isMobile) await expect(page.locator(".activity-summary")).toContainText("spent $1,498.40");
 });
 
 test("keeps the draft through a closed dialog and an inline category, and validates before saving", async ({ context, page }) => {
@@ -179,12 +213,12 @@ test("keeps the draft through a closed dialog and an inline category, and valida
   await expect.poll(() => server.ledger.transactions.find((item) => item.title === "Vet visit")?.total).toBe(6200);
 });
 
-test("saves offline, keeps the entry through a reload, and syncs it once back online", async ({ context, page }) => {
+test("saves offline, keeps the entry through a reload, and syncs it once back online", async ({ context, page, isMobile }) => {
   const server = await mockApi(context);
   await open(page, "/transactions?month=2026-11");
-  await expect(results(page).getByRole("button", { name: /Rent/ })).toBeVisible();
-  // The ledger has downloaded once (the totals come from it), so it can be added to offline.
-  await expect(page.getByRole("region", { name: "November 2026" })).toBeVisible();
+  await expect(results(page).getByRole("button", { name: /^Rent/ })).toBeVisible();
+  // The ledger has downloaded once, so it can be added to offline.
+  await ledgerReady(page, isMobile);
 
   server.down = true;
   await context.setOffline(true);
@@ -195,7 +229,7 @@ test("saves offline, keeps the entry through a reload, and syncs it once back on
   await add.getByLabel("Date").fill("2026-11-08");
   await page.getByRole("dialog", { name: "Add entry" }).getByRole("button", { name: "Save" }).click();
   await expect(page.getByText("Saved on this device. It syncs when you're back online.")).toBeVisible();
-  await expect(results(page).getByRole("listitem").filter({ hasText: "Bakery" })).toContainText("Waiting to sync");
+  await expect(rowOf(page, "Bakery")).toContainText("Waiting to sync");
   // Shared rows stay visible from what Penny last loaded.
   await expect(results(page).getByRole("link", { name: /Hydro/ })).toBeVisible();
   await expect(results(page)).toContainText("on this device");
@@ -203,7 +237,7 @@ test("saves offline, keeps the entry through a reload, and syncs it once back on
   // Reload with the network back but the server still unreachable: the entry comes back from IndexedDB.
   await context.setOffline(false);
   await page.reload();
-  await expect(results(page).getByRole("listitem").filter({ hasText: "Bakery" })).toContainText("Waiting to sync");
+  await expect(rowOf(page, "Bakery")).toContainText("Waiting to sync");
   await expect(page.getByText("Offline · 1 change waiting")).toBeVisible();
   expect(server.puts).toBe(0);
 
@@ -213,21 +247,22 @@ test("saves offline, keeps the entry through a reload, and syncs it once back on
   await expect(page.getByText(/change waiting/)).toHaveCount(0);
 });
 
-test("keeps filters in the URL through Back, Forward and reload", async ({ context, page }) => {
+test("keeps filters in the URL through Back, Forward and reload", async ({ context, page, isMobile }) => {
   await mockApi(context);
   await open(page, "/transactions?month=2026-11");
-  await expect(results(page).getByRole("button", { name: /Monthly salary/ })).toBeVisible();
+  await expect(results(page).getByRole("button", { name: /^Monthly salary/ })).toBeVisible();
 
   await page.getByRole("radio", { name: "Income" }).check();
   await expect(page).toHaveURL(/kind=income/);
-  await expect(results(page).getByRole("button", { name: /Rent/ })).toHaveCount(0);
+  await expect(results(page).getByRole("button", { name: /^Rent/ })).toHaveCount(0);
   await expect(results(page).getByRole("link", { name: /Hydro/ })).toHaveCount(0);
-  // Totals follow the period, not the type filter.
-  await expect(page.getByRole("region", { name: "November 2026" }).getByText("Spent", { exact: true }).locator("..")).toContainText("$1,480.00");
+  // The summary follows the period, not the type filter.
+  if (!isMobile) await expect(page.locator(".activity-summary")).toContainText("spent $1,480.00");
 
-  await page.getByRole("button", { name: "Previous month" }).click();
+  await stepPeriod(page, isMobile, "Previous month");
   await expect(page).toHaveURL(/month=2026-10/);
-  await expect(page.getByRole("region", { name: "October 2026" })).toBeVisible();
+  // The desktop stepper names the month; the phone chip carries it in its name.
+  await expect(page.getByText("October 2026").or(page.getByRole("button", { name: /^Period: October 2026\./ })).first()).toBeAttached();
 
   await page.goBack();
   await expect(page).toHaveURL(/month=2026-11/);
@@ -241,16 +276,16 @@ test("keeps filters in the URL through Back, Forward and reload", async ({ conte
   await expect(page).toHaveURL(/q=salary/);
   await page.reload();
   await expect(page.getByRole("searchbox", { name: "Search transactions" })).toHaveValue("salary");
-  await expect(results(page).getByRole("button", { name: /Monthly salary/ })).toBeVisible();
+  await expect(results(page).getByRole("button", { name: /^Monthly salary/ })).toBeVisible();
   await expect(page.getByText("1 matching transaction")).toBeVisible();
 });
 
 test("edits with a stale-version check and deletes after confirming", async ({ context, page }) => {
   const server = await mockApi(context);
   await open(page, "/transactions?month=2026-11");
-  const row = results(page).getByRole("button", { name: /Rent/ });
+  const row = results(page).getByRole("button", { name: /^Rent/ });
   await row.click();
-  const detail = page.getByRole("dialog", { name: "Rent" });
+  const detail = detailOf(page, "Rent");
   await detail.getByRole("button", { name: "Edit" }).click();
   const edit = form(page, "Edit entry");
   await edit.getByLabel("Title").fill("Rent, November");
@@ -271,14 +306,14 @@ test("edits with a stale-version check and deletes after confirming", async ({ c
   await expect(page.getByText("Changes saved")).toBeVisible();
   await expect.poll(() => server.ledger.transactions.find((item) => item.id === "rent")).toMatchObject({ title: "Rent, November", total: 150000 });
 
-  await results(page).getByRole("button", { name: /Rent, November/ }).click();
-  await page.getByRole("dialog", { name: "Rent, November" }).getByRole("button", { name: "Delete" }).click();
-  const confirm = page.getByRole("dialog", { name: "Delete Rent, November?" });
+  await results(page).getByRole("button", { name: /^Rent, November/ }).click();
+  await detailOf(page, "Rent, November").getByRole("button", { name: "Delete", exact: true }).click();
+  const confirm = page.getByRole("dialog", { name: "Delete “Rent, November”?" });
   await expect(confirm.getByRole("button", { name: "Cancel" })).toBeFocused();
   await confirm.getByRole("button", { name: "Delete" }).click();
   await expect(page.getByText("Rent, November deleted")).toBeVisible();
   await expect.poll(() => server.ledger.transactions.some((item) => item.id === "rent")).toBe(false);
-  await expect(results(page).getByRole("button", { name: /Rent/ })).toHaveCount(0);
+  await expect(results(page).getByRole("button", { name: /^Rent/ })).toHaveCount(0);
 });
 
 test("fits a 320px screen without horizontal scrolling", async ({ context, page }) => {

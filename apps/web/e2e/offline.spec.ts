@@ -91,7 +91,7 @@ test("keeps a pending change through reloads and tabs while offline, then syncs 
   const second = await context.newPage();
   await second.goto("/transactions?q=bakery");
   await expect(second.getByText("1 matching transaction on this device")).toBeVisible();
-  await expect(second.getByRole("listitem").filter({ hasText: "Bakery" })).toContainText("Waiting to sync");
+  await expect(second.getByRole("listitem").or(second.getByRole("row")).filter({ hasText: "Bakery" })).toContainText("Waiting to sync");
 
   // The browser goes offline, then comes back with the server up.
   await context.setOffline(true);

@@ -4,7 +4,8 @@ import { ApiError } from "../../api/client";
 import { deleteExpense, expenseQuery, refreshHousehold } from "../../api/households";
 import type { SharedExpense } from "../../api/schemas";
 import { useAccountEmail } from "../../auth/account";
-import { Badge, Button } from "../../design/controls";
+import { Avatar, Badge, Button } from "../../design/controls";
+import { tileStyle } from "../../design/categoryTint";
 import { Dialog } from "../../design/ModalDialog";
 import { Icon } from "../../design/Icon";
 import { Money } from "../../design/Money";
@@ -15,6 +16,8 @@ import { describeLoadError, describeSharedError } from "./errors";
 import { HistoryPanel } from "./HistoryPanel";
 import { canRecordShare, dayLabel, isPaid, possessive, SHARE_STATUS_LABEL, shareOf, shareStatus, splitLabel } from "./model";
 import { ReceiptLink } from "../receipts/ReceiptLink";
+import { ConfirmDeleteDialog, shortDay } from "../entries/EntryDetail";
+import { categoryIcon } from "../entries/model";
 import { RecordShareView } from "./PaymentDialogs";
 
 type Pane = { kind: "detail" } | { kind: "record"; expense: SharedExpense; fromUserId: string } | { kind: "delete" } | { kind: "history" };
@@ -57,15 +60,34 @@ export function ExpenseDetailDialog({ view, expenseId, onEdit, onClose, onRule, 
   // Switching panes replaces the focused control, so move focus to the new pane's heading (or its
   // first control): focus never falls back to the page behind the dialog, and Escape keeps working.
   // After "Review expense" this lands on the refreshed expense.
+  const previousPane = useRef(pane.kind);
   useEffect(() => {
+    const from = previousPane.current;
+    previousPane.current = pane.kind;
     if (!opened.current) {
       opened.current = true;
       return;
     }
+    // The delete confirmation is its own dialog: it takes focus, and gives it back to Delete.
+    if (pane.kind === "delete" || from === "delete") return;
     bodyRef.current?.querySelector<HTMLElement>("h3[tabindex], button, input")?.focus();
   }, [pane]);
 
   const title = expense.data?.title ?? "Expense";
+  const detailPane = (data: SharedExpense) => (
+    <DetailPane
+      view={view}
+      expense={data}
+      headingRef={headingRef}
+      onRecord={(fromUserId) => { setPane({ kind: "record", expense: data, fromUserId }); }}
+      onDelete={() => { setPane({ kind: "delete" }); }}
+      onHistory={() => { setPane({ kind: "history" }); }}
+      onEdit={() => {
+        onEdit(data);
+      }}
+      {...(onRule && data.recurringId ? { onRule: () => { onRule(data.recurringId ?? ""); } } : {})}
+    />
+  );
   let body;
   if (expense.isPending) body = <LoadingState label="Loading the expense…" />;
   else if (expense.isError && !expense.data) {
@@ -94,7 +116,12 @@ export function ExpenseDetailDialog({ view, expenseId, onEdit, onClose, onRule, 
         />
       );
     } else if (pane.kind === "delete") {
-      body = <DeletePane view={view} expense={data} onCancel={() => { setPane({ kind: "detail" }); }} onDeleted={onClose} />;
+      body = (
+        <>
+          {detailPane(data)}
+          <DeleteSharedDialog view={view} expense={data} onCancel={() => { setPane({ kind: "detail" }); }} onDeleted={onClose} />
+        </>
+      );
     } else if (pane.kind === "history") {
       body = (
         <div className="form">
@@ -105,20 +132,7 @@ export function ExpenseDetailDialog({ view, expenseId, onEdit, onClose, onRule, 
         </div>
       );
     } else {
-      body = (
-        <DetailPane
-          view={view}
-          expense={data}
-          headingRef={headingRef}
-          onRecord={(fromUserId) => { setPane({ kind: "record", expense: data, fromUserId }); }}
-          onDelete={() => { setPane({ kind: "delete" }); }}
-          onHistory={() => { setPane({ kind: "history" }); }}
-          onEdit={() => {
-            onEdit(data);
-          }}
-          {...(onRule && data.recurringId ? { onRule: () => { onRule(data.recurringId ?? ""); } } : {})}
-        />
-      );
+      body = detailPane(data);
     }
   }
 
@@ -285,11 +299,18 @@ function DetailPane({
   );
 }
 
-/** Confirmation before deleting a shared expense for everyone (interaction baseline, Feedback). */
-function DeletePane({ view, expense, onCancel, onDeleted }: { view: HouseholdView; expense: SharedExpense; onCancel: () => void; onDeleted: () => void }) {
+/**
+ * Confirmation before deleting a shared expense for everyone (`iphone-delete-confirm`): its tile,
+ * 'Delete “Title”?' with the total, date and household, the members, what deleting does to them,
+ * then Delete for everyone over Cancel. A centered dialog over the expense (MAZ-227).
+ */
+function DeleteSharedDialog({ view, expense, onCancel, onDeleted }: { view: HouseholdView; expense: SharedExpense; onCancel: () => void; onDeleted: () => void }) {
   const email = useAccountEmail();
   const queryClient = useQueryClient();
   const toast = useToast();
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  const titleId = useId();
+  const descriptionId = useId();
   const remove = useMutation({
     mutationKey: ["households", "expense", "delete"],
     mutationFn: () => deleteExpense(view.householdId, expense.id, expense.revision),
@@ -301,21 +322,48 @@ function DeletePane({ view, expense, onCancel, onDeleted }: { view: HouseholdVie
     },
     onError: () => void queryClient.invalidateQueries({ queryKey: expenseQuery(email, view.householdId, expense.id).queryKey }),
   });
+  const members = [...new Set(expense.splits.map((split) => split.userId))];
+  const others = members.filter((userId) => userId !== view.who.meId).map((userId) => view.who.name(userId));
+  const month = new Date(`${expense.date}T12:00:00Z`).toLocaleDateString("en-CA", { month: "long", timeZone: "UTC" });
   return (
-    <div className="form" role="group" aria-labelledby={`delete-${expense.id}`}>
-      <h3 id={`delete-${expense.id}`} tabIndex={-1} style={{ margin: 0 }}>
-        Delete {expense.title} for everyone?
-      </h3>
-      <p className="muted">It disappears from every member's expenses, balances and reports. Its change history stays.</p>
-      {remove.isError ? <SaveErrorBanner message={describeSharedError(remove.error).message} /> : null}
-      <div className="form-actions">
-        <Button variant="quiet" onClick={onCancel}>
-          Keep it
-        </Button>
+    <ConfirmDeleteDialog
+      titleId={titleId}
+      descriptionId={descriptionId}
+      title={`Delete “${expense.title}”?`}
+      line={[view.money(expense.totalCents), shortDay(expense.date), view.detail.household.name].join(" · ")}
+      tile={
+        <span className="category-dot category-dot--large" style={tileStyle(expense.category)}>
+          <Icon name={categoryIcon(expense.category.icon)} size={24} />
+        </span>
+      }
+      aside={
+        <span className="confirm-sheet__people">
+          {members.map((userId) => (
+            <Avatar key={userId} name={view.who.name(userId)} size={34} />
+          ))}
+        </span>
+      }
+      onClose={onCancel}
+      cancelRef={cancelRef}
+      confirm={
         <Button variant="danger" busy={remove.isPending} onClick={() => { remove.mutate(); }}>
           {remove.isPending ? "Deleting…" : "Delete for everyone"}
         </Button>
-      </div>
-    </div>
+      }
+    >
+      <p className="confirm-sheet__note confirm-sheet__note--box">
+        <Icon name="people" size={20} />
+        <span>
+          This expense is shared. Deleting it removes it for {others.length ? listNames(others) : "every member"} too, and recalculates {month} balances.
+        </span>
+      </p>
+      {remove.isError ? <SaveErrorBanner message={describeSharedError(remove.error).message} /> : null}
+    </ConfirmDeleteDialog>
   );
+}
+
+/** "A", "A and B", "A, B and C". */
+function listNames(names: string[]): string {
+  if (names.length < 2) return names.join("");
+  return `${names.slice(0, -1).join(", ")} and ${names.at(-1) ?? ""}`;
 }

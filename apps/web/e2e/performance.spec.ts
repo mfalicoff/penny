@@ -85,7 +85,7 @@ function record(name: string, ms: number, budget: number) {
   expect(ms, `${name} took ${ms.toFixed(0)} ms`).toBeLessThan(budget);
 }
 
-test("a 20,000-entry ledger opens Home, changes month, lists Activity and searches offline inside the budgets", async ({ context, page, browserName }) => {
+test("a 20,000-entry ledger opens Home, changes month, lists Activity and searches offline inside the budgets", async ({ context, page, browserName, isMobile }) => {
   test.skip(browserName !== "chromium", "long-task timing is Chromium-only");
   const server = await mockApi(context);
   const longest = await watchLongTasks(page);
@@ -113,7 +113,8 @@ test("a 20,000-entry ledger opens Home, changes month, lists Activity and search
   started = performance.now();
   await page.goto("/transactions?month=2026-10");
   await expect(page.getByRole("region", { name: "Search results" }).getByRole("status")).toHaveText(/matching transactions/);
-  await expect(page.getByRole("region", { name: "October 2026" })).toBeVisible();
+  // The period's figures come from the ledger: the desktop summary line (phones have none).
+  if (!isMobile) await expect(page.locator(".activity-summary")).toContainText("entries");
   record("Activity month with totals", performance.now() - started, BUDGET.activity);
 
   // Offline, Activity searches this browser's copy of all 20,000 entries.

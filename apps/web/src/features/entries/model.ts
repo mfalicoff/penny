@@ -274,3 +274,37 @@ export function shareSummary(entry: Pick<Transaction, "kind" | "share" | "total"
   if (entry.kind !== "expense" || entry.share === entry.total) return null;
   return `Your share ${money(entry.share)} of ${money(entry.total)}`;
 }
+
+/**
+ * How an expense is split, as the detail's Split row and Activity's Split column read it
+ * (`iphone-entry-detail`, `web-activity`). The ledger keeps only the share and the total, so an
+ * equal split is recognised from them (`personalShare` rounds the total over the people); any other
+ * share is a custom one. `null` when the entry isn't split.
+ */
+export function splitSummary(entry: Pick<Transaction, "kind" | "share" | "total">): { method: string; people: number | null } | null {
+  if (entry.kind !== "expense" || entry.share === entry.total || entry.share <= 0) return null;
+  const people = Math.round(entry.total / entry.share);
+  if (people >= 2 && people <= 100 && Math.round(entry.total / people) === entry.share) return { method: `Equally · ${String(people)} people`, people };
+  return { method: "Custom share", people: null };
+}
+
+export const FREQUENCY_LABELS: Record<Frequency, string> = { weekly: "Weekly", monthly: "Monthly", yearly: "Yearly" };
+
+/** What an entry's repeat reads as: its schedule's frequency, "Repeating" if the schedule is gone, or "Never". */
+export function repeatLabel(entry: Pick<Transaction, "recurringId">, ledger: Pick<Ledger, "recurring"> | null): string {
+  if (!entry.recurringId) return "Never";
+  const rule = ledger?.recurring.find((item) => item.id === entry.recurringId);
+  return rule ? FREQUENCY_LABELS[rule.frequency] : "Repeating";
+}
+
+/** A ledger date as the detail's subtitle reads it, e.g. "Monday, Nov 9" (with the year when it isn't `today`'s). */
+export function longDay(date: string, today: string): string {
+  const [year = 2000, month = 1, day = 1] = date.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day)).toLocaleDateString("en-CA", {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+    ...(date.startsWith(today.slice(0, 4)) ? {} : { year: "numeric" }),
+    timeZone: "UTC",
+  });
+}

@@ -124,3 +124,9 @@ export const KIND_FILTERS: { value: "all" | Kind; label: string }[] = [
   { value: "income", label: "Income" },
   { value: "investment", label: "Investments" },
 ];
+
+/** The period as the phone's chip and the empty state name it: "November" in `today`'s year, else "November 2025"; the year; or "All time". */
+export function shortPeriodLabel(period: Period, today: string): string {
+  if (period.type === "month") return period.month.startsWith(today.slice(0, 4)) ? (monthLabel(period.month).split(" ")[0] ?? period.month) : monthLabel(period.month);
+  return periodLabel(period);
+}
