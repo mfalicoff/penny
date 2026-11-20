@@ -13,7 +13,7 @@
     },
     {
       "name": "searchable-household",
-      "summary": "Two personal ledgers with duplicate titles, Unicode and decomposed accents, a category and account rename after entries exist, a three-person household where one member settles September and leaves (revoked membership, keeps history with split rows), an October unsettled balance and a scheduled shared rule for projections.",
+      "summary": "Two personal ledgers with duplicate titles, Unicode and decomposed accents, a category and account rename after entries exist, a three-person household where one member settles September and leaves (revoked membership, keeps history with split rows), an October unsettled balance, a scheduled shared rule for projections, and a shared Lisbon trip (alex and bea) with three split November expenses plus alex's private one on the personal trip linked to it (MAZ-213).",
       "clock": "2026-10-15T12:00:00Z",
       "users": [
         "alex",
@@ -64,6 +64,13 @@
                 "icon": "trending-up-outline",
                 "color": "#678DB1",
                 "kind": "investment"
+              },
+              {
+                "id": "transport",
+                "name": "Transport",
+                "icon": "bus-outline",
+                "color": "#6C8EAD",
+                "kind": "expense"
               }
             ],
             "accounts": [
@@ -84,6 +91,12 @@
                 "name": "Qu\u00e9bec weekend",
                 "startDate": "2026-09-25",
                 "endDate": "2026-09-27"
+              },
+              {
+                "id": "t-lisbon",
+                "name": "Lisbon trip",
+                "startDate": "2026-11-02",
+                "endDate": "2026-11-08"
               }
             ],
             "transactions": [
@@ -191,6 +204,18 @@
                 "categoryId": "invest",
                 "date": "2026-10-03",
                 "note": ""
+              },
+              {
+                "id": "p-airport-train",
+                "title": "Airport train",
+                "kind": "expense",
+                "total": 2400,
+                "share": 2400,
+                "categoryId": "transport",
+                "date": "2026-11-02",
+                "note": "",
+                "accountId": "card",
+                "tripId": "t-lisbon"
               }
             ],
             "recurring": [
@@ -467,6 +492,80 @@
           }
         },
         {
+          "as": "alex",
+          "linkTrip": {
+            "trip": "t-lisbon",
+            "household": "lisbon"
+          }
+        },
+        {
+          "as": "bea",
+          "expense": {
+            "household": "lisbon",
+            "ref": "flights",
+            "body": {
+              "title": "Flights",
+              "totalCents": 82400,
+              "date": "2026-11-03",
+              "payerUserId": "$user:bea",
+              "splitMode": "equal",
+              "category": {
+                "name": "Travel",
+                "icon": "airplane-outline",
+                "color": "#6C8EAD"
+              }
+            }
+          }
+        },
+        {
+          "as": "alex",
+          "expense": {
+            "household": "lisbon",
+            "ref": "apartment",
+            "body": {
+              "title": "Apartment in Alfama",
+              "totalCents": 36800,
+              "date": "2026-11-04",
+              "payerUserId": "$user:alex",
+              "splitMode": "equal",
+              "category": {
+                "name": "Stay",
+                "icon": "home-outline",
+                "color": "#5B7DB1"
+              }
+            }
+          }
+        },
+        {
+          "as": "bea",
+          "expense": {
+            "household": "lisbon",
+            "ref": "insurance",
+            "body": {
+              "title": "Travel insurance",
+              "totalCents": 2230,
+              "date": "2026-11-06",
+              "payerUserId": "$user:bea",
+              "splitMode": "exact",
+              "allocations": [
+                {
+                  "userId": "$user:alex",
+                  "amountCents": 1115
+                },
+                {
+                  "userId": "$user:bea",
+                  "amountCents": 1115
+                }
+              ],
+              "category": {
+                "name": "Insurance",
+                "icon": "heart-outline",
+                "color": "#B15B7D"
+              }
+            }
+          }
+        },
+        {
           "clock": "2026-10-15T12:00:00Z"
         }
       ],
@@ -606,6 +705,10 @@
             "query": ""
           },
           "keys": [
+            "shared:$expense:insurance",
+            "shared:$expense:apartment",
+            "shared:$expense:flights",
+            "personal:p-airport-train",
             "shared:$expense:internet",
             "personal:p-coffee-2",
             "personal:p-lait",
@@ -622,6 +725,10 @@
             "shared:$expense:groceries"
           ],
           "matches": [
+            null,
+            null,
+            null,
+            null,
             null,
             null,
             null,
@@ -669,6 +776,9 @@
             "query": ""
           },
           "keys": [
+            "shared:$expense:insurance",
+            "shared:$expense:apartment",
+            "shared:$expense:flights",
             "shared:$expense:internet",
             "personal:b-coffee",
             "shared:$expense:coffee",
@@ -676,6 +786,9 @@
             "shared:$expense:groceries"
           ],
           "matches": [
+            null,
+            null,
+            null,
             null,
             null,
             null,
@@ -703,9 +816,10 @@
           ],
           "meaningAllowedAfter": false,
           "excludes": [
-            "shared:$expense:internet"
+            "shared:$expense:internet",
+            "shared:$expense:flights"
           ],
-          "why": "a former member keeps expenses with a split row (even a zero share) and loses later ones"
+          "why": "a former member keeps expenses with a split row (even a zero share) and loses later ones, and never sees a trip they are not on"
         },
         {
           "as": "cam",

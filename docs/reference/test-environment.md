@@ -57,7 +57,7 @@ The environment serves plain HTTP. The native app reaches `http://127.0.0.1:<por
 
 ## Seeding, users and reset
 
-`contracts/fixtures/full-stack-seeds.json` holds the scenarios. Steps are HTTP actions (`ledger`, `rename`, `createHousehold`, `createTrip`, `invite`, `join`, `expense`, `reimburse`, `leave`, `sharedRecurring`, `clock`) with references such as `$user:alex`, `$household:maison` and `$expense:hydro`. `scripts/test-env/seed.mjs` runs them over HTTP against the environment and pins its clock; `FullStackSeedTests` runs the same file through the C# host. Users are registered per run as `<alias>.<run id>@penny.test` with random passwords; sessions are refreshed after each clock move, because sessions last 30 days of server time. `seed` writes the resulting aliases, ids and sessions to `.cache/test-env/<id>/seed-<scenario>.json` (0600) for runners.
+`contracts/fixtures/full-stack-seeds.json` holds the scenarios. Steps are HTTP actions (`ledger`, `rename`, `linkTrip` (sets a personal trip's `sharedHouseholdId` to a shared trip), `createHousehold`, `createTrip`, `invite`, `join`, `expense`, `reimburse`, `leave`, `sharedRecurring`, `clock`) with references such as `$user:alex`, `$household:maison` and `$expense:hydro`. `scripts/test-env/seed.mjs` runs them over HTTP against the environment and pins its clock; `FullStackSeedTests` runs the same file through the C# host. Users are registered per run as `<alias>.<run id>@penny.test` with random passwords; sessions are refreshed after each clock move, because sessions last 30 days of server time. `seed` writes the resulting aliases, ids and sessions to `.cache/test-env/<id>/seed-<scenario>.json` (0600) for runners.
 
 | Scenario | Contents |
 | --- | --- |

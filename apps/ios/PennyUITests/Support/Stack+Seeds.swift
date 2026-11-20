@@ -147,6 +147,19 @@ extension Stack {
                 }
                 _ = try await api(
                     "PUT", "/api/ledger", body: ["revision": current.revision, "ledger": ledger], token: token)
+            } else if let link = step["linkTrip"] as? [String: String] {
+                // Links a personal trip to a shared trip (sharedHouseholdId), as sharing it does.
+                let household = try context.household(link["household"] ?? "")
+                let current = try await self.ledger(token: token ?? "")
+                var ledger = current.ledger
+                var trips = ledger["trips"] as? [[String: Any]] ?? []
+                guard let index = trips.firstIndex(where: { $0["id"] as? String == link["trip"] }) else {
+                    throw StackError.malformed("seed linkTrip \(link["trip"] ?? "")")
+                }
+                trips[index]["sharedHouseholdId"] = household
+                ledger["trips"] = trips
+                _ = try await api(
+                    "PUT", "/api/ledger", body: ["revision": current.revision, "ledger": ledger], token: token)
             } else if var create = step["createHousehold"] as? [String: Any] ?? step["createTrip"] as? [String: Any] {
                 let ref = create.removeValue(forKey: "ref") as? String ?? ""
                 let path = step["createTrip"] != nil ? "/api/households/trips" : "/api/households"

@@ -95,6 +95,7 @@ const Step = z.union([
   z.strictObject({ clock: z.iso.datetime() }),
   z.strictObject({ as: z.string(), ledger: SeedLedger }),
   z.strictObject({ as: z.string(), rename: z.partialRecord(z.enum(["categories", "accounts", "trips"]), z.record(z.string(), z.string().min(1))) }),
+  z.strictObject({ as: z.string(), linkTrip: z.strictObject({ trip: z.string(), household: z.string() }) }),
   z.strictObject({ as: z.string(), createHousehold: z.strictObject({ ref: z.string(), name: z.string(), currency: z.string(), timezoneOffsetMinutes: z.number().int() }) }),
   z.strictObject({ as: z.string(), createTrip: z.strictObject({ ref: z.string(), name: z.string(), currency: z.string(), startDate: date, endDate: date, timezoneOffsetMinutes: z.number().int() }) }),
   z.strictObject({ as: z.string(), invite: z.strictObject({ household: z.string(), ref: z.string() }) }),
@@ -280,6 +281,7 @@ test("full-stack seeds are well formed, sanitized and internally consistent", ()
         defined.invite.add(step.invite.ref);
       }
       if ("join" in step) assert.ok(defined.invite.has(step.join.invite));
+      if ("linkTrip" in step) assert.ok(defined.household.has(step.linkTrip.household), `${scenario.name}: trip ${step.linkTrip.household} is created first`);
       if ("expense" in step) defined.expense.add(step.expense.ref);
     }
     for (const item of scenario.searchExpectations ?? []) {
