@@ -338,12 +338,28 @@ enum ScheduleText {
 
     /// A row's detail: "Monthly · next Nov 15 · Visa", or "Paused · monthly · Visa".
     static func row(_ rule: RecurringRule, account: PaymentAccount?, today: CalendarDate) -> String {
-        var parts =
+        guard let account else { return timing(rule, today: today) }
+        return "\(timing(rule, today: today)) · \(account.name)"
+    }
+
+    /// The part of a row's detail before the account: "Monthly · next Nov 15", or "Paused ·
+    /// monthly". The row puts the account on its own line when both don't fit.
+    static func timing(_ rule: RecurringRule, today: CalendarDate) -> String {
+        let parts =
             rule.active
             ? [frequency(rule.frequency), "next \(DayText.short(rule.nextDate, today: today))"]
             : ["Paused", frequency(rule.frequency).lowercased()]
-        if let account { parts.append(account.name) }
         return parts.joined(separator: " · ")
+    }
+
+    /// A row's tile symbol, as on the cards (`.ic`): income and investments draw their kind (an
+    /// arrow down, the trend line) in its meaning color; expenses draw their category's icon.
+    static func tileSymbol(_ kind: EntryKind, category: LedgerCategory?) -> String {
+        switch kind {
+        case .income: "arrow.down"
+        case .investment: "chart.line.uptrend.xyaxis"
+        case .expense: CategoryStyle.symbol(forIonicon: category?.icon ?? "repeat")
+        }
     }
 
     /// A shared row's detail, with the household's name where a personal row has the account:

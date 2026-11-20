@@ -1518,7 +1518,7 @@
     },
     {
       "id": "iphone-recurring",
-      "view": "recurring: Gym and paused Magazine, shared Streaming",
+      "view": "recurring: Payday, Gym and paused Magazine, shared Streaming, TFSA contribution",
       "native": {
         "status": "deviates",
         "owner": "MAZ-74",
@@ -1555,7 +1555,7 @@
             "ref": "MAZ-232"
           },
           {
-            "summary": "The shared Streaming row puts the Shared badge under the amount instead of beside the title, keeps the household's name on the timing line, and uses a gray people glyph instead of the category tile",
+            "summary": "The shared Streaming row puts the Shared badge under the amount instead of beside the title, keeps the household's name on the timing line, and uses a gray people glyph instead of the category tile; Payday's account wraps after a stranded \"·\" instead of taking its own line",
             "kind": "follow-up",
             "ref": "MAZ-232"
           },

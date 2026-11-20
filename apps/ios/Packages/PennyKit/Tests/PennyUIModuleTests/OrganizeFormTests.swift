@@ -421,6 +421,26 @@ struct OrganizeFormTests {
         #expect(RecurringListView.subtitle == "Penny records these on their date.", "the card's subtitle")
     }
 
+    @Test("whenSchedulesOfEveryKindAreListed_RecurringList_ShouldFollowTheCardsSectionsTilesAndDetail")
+    func cardLayout() {
+        #expect(RecurringListView.sectionOrder == [.income, .expense, .investment], "Income, Expenses, Investments")
+        #expect(Set(RecurringListView.sectionOrder) == Set(EntryKind.allCases), "every kind has a section")
+
+        let rule = Self.rule()
+        let timing = ScheduleText.timing(rule, today: Self.today)
+        #expect(timing.hasPrefix("Monthly · next ") && !timing.contains("Visa"))
+        #expect(ScheduleText.row(rule, account: Self.visa, today: Self.today) == "\(timing) · Visa")
+        #expect(ScheduleText.row(rule, account: nil, today: Self.today) == timing)
+        #expect(ScheduleText.timing(Self.rule(active: false), today: Self.today) == "Paused · monthly")
+
+        let salary = LedgerCategory(
+            id: "salary", name: "Salary", icon: "briefcase-outline", color: "#6C9C79", kind: .income)
+        #expect(ScheduleText.tileSymbol(.income, category: salary) == "arrow.down", "the kind, not the category")
+        #expect(ScheduleText.tileSymbol(.investment, category: nil) == "chart.line.uptrend.xyaxis")
+        let fun = LedgerCategory(id: "fun", name: "Fun", icon: "tv-outline", color: "#B15B7D", kind: .expense)
+        #expect(ScheduleText.tileSymbol(.expense, category: fun) == "tv")
+    }
+
     @Test("whenASchedulesAmountIsShown_ScheduleText_ShouldSignItByKindEvenWhenPaused")
     func signs() {
         #expect(ScheduleText.sign(.expense) == .expense)
