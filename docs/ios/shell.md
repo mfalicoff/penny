@@ -31,11 +31,12 @@ This page describes the SwiftUI shell that MAZ-69 adds to `apps/ios`: the naviga
 
 ### iPad (regular width)
 
-- `NavigationSplitView`. The sidebar lists Home and Activity; **Together**: Shared and Trips; **Manage**: Recurring, Accounts and Categories. Its footer shows the account with its sync status and a glass Settings button. An Add entry button sits in the sidebar toolbar.
-- Settings and the Manage pages open in the detail column, not as a sheet. Add entry is a sheet.
+- `NavigationSplitView` (cards `ipad-*`, MAZ-182). The sidebar starts with the copper leaf and **penny.**, then Home, Activity and Insights; **Together**: each household with your balance this month in whole units, All households (the Shared list, where you join or create one, MAZ-240), the trips happening now or coming next (at most three, by start date) with their start date, and All trips; **Manage**: Recurring, Accounts and Categories. Section labels are small upper-case. The selected row is filled copper with white text. Its footer shows the account's monogram, its name (the email until MAZ-171) with the sync status, and Settings, whose row is highlighted while Settings is shown. An Add entry button sits in the sidebar toolbar. Choosing a household, trip or Insights opens it from its tab's root (`SidebarItem`), and a page pushed on it keeps its row selected.
+- Activity shows the chosen entry beside the list when both fit (at least 660 points); in a narrower column, such as portrait with the sidebar showing, the list pushes the entry instead, so the detail never collapses.
+- A household or shared trip shows two columns when the page is at least 700 points wide: the expenses on the left, and the balance, Balances and People on the right (a trip: Balances, Your share by category and People). Narrower, it is one list with Expenses, Balances and People as sections.
+- Settings and the Manage pages open in the detail column, not as a sheet. When the column is at least 700 points wide, the chosen Settings page (Appearance until another is chosen) shows beside the list.
+- Add entry is a centered page sheet. On iPad it is two columns: the amount, name and categories on the left, the details on the right, with the type in the toolbar; the amount uses the keyboard, not the keypad.
 - iPad in Slide Over or a narrow Split View is compact and uses the iPhone layout. Both layouts read and write one `ShellRoute`, so resizing keeps the place.
-
-The households and trips listed directly in the sidebar, the Insights item and the dashboard Home arrive with their features (MAZ-75–77).
 
 ### Rules (`ShellRoute`)
 

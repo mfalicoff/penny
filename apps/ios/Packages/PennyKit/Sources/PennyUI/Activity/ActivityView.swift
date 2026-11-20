@@ -17,24 +17,43 @@ struct ActivityView: View {
     @Environment(ShellModel.self) private var shell
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var filtersPresented = false
+    @State private var width: Double = 0
 
     /// The list column's width on iPad (`ipad/activity` card).
     static let listWidth: Double = 400
+    /// The narrowest the entry's detail beside the list may be: below it (an iPad in portrait
+    /// with the sidebar showing, a narrow split) the list pushes the entry instead, so the
+    /// detail never collapses to a few points (MAZ-182).
+    static let minDetailWidth: Double = 360
+    /// The narrowest the list column may be beside the detail.
+    static let minListWidth: Double = 300
+
+    /// The list column's width beside the detail at `width`, or nil when the two don't fit and
+    /// the list pushes the entry.
+    static func splitListWidth(for width: Double) -> Double? {
+        guard width >= minListWidth + minDetailWidth else { return nil }
+        return min(listWidth, max(minListWidth, (width * 0.45).rounded()))
+    }
 
     var body: some View {
         @Bindable var shell = shell
         Group {
             // iPad (regular width): the list with the chosen entry beside it, as the redesign's
-            // iPad card shows; iPhone and narrow splits push the entry instead.
-            if sizeClass == .regular {
+            // iPad card shows, when both fit; iPhone and narrow columns push the entry instead.
+            if sizeClass == .regular, let listWidth = Self.splitListWidth(for: width) {
                 HStack(spacing: 0) {
-                    list(selects: true).frame(width: Self.listWidth)
+                    list(selects: true).frame(width: listWidth)
                     Divider()
                     ActivitySelectionDetail().frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             } else {
                 list(selects: false)
             }
+        }
+        .onGeometryChange(for: Double.self) {
+            $0.size.width
+        } action: {
+            width = $0
         }
         .background(PennyColor.background)
         .navigationTitle("Activity")

@@ -43,6 +43,11 @@ public struct HouseholdPeople: Equatable, Sendable {
     /// Up to two letters for a monogram, from the email's local part ("bea.kim@…" is "BK").
     public func initials(_ userId: String) -> String {
         guard let email = member(userId)?.email else { return "?" }
+        return Self.initials(email: email)
+    }
+
+    /// The monogram letters for an email address (also the iPad sidebar's account, MAZ-182).
+    public static func initials(email: String) -> String {
         let local = email.split(separator: "@").first.map(String.init) ?? email
         let parts = local.split(whereSeparator: { ".-_+".contains($0) }).filter { !$0.isEmpty }
         let letters = parts.count >= 2 ? [parts[0], parts[1]].compactMap(\.first) : Array(local.prefix(2))

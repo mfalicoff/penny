@@ -131,6 +131,9 @@ public enum AccessibilityID {
         public static func item(_ lowercasedTitle: String) -> String { "sidebar.\(lowercasedTitle)" }
         public static let add = "sidebar.add"
         public static let settings = "sidebar.settings"
+        /// Together's rows (MAZ-182): each household and trip by its id.
+        public static func household(_ id: String) -> String { "sidebar.household.\(id)" }
+        public static func trip(_ id: String) -> String { "sidebar.trip.\(id)" }
 
         static let all = [add, settings]
         static let prefixes = ["sidebar."]
