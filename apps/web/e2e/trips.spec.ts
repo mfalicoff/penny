@@ -43,12 +43,14 @@ const horizontalOverflow = (page: Page) => page.evaluate(() => document.document
  * menu's first item below; Edit trip and History are always in the menu.
  */
 async function tripAction(page: Page, name: "Trip expense" | "Edit trip") {
+  const menu = page.getByRole("button", { name: "Trip actions" });
+  await expect(menu).toBeVisible();
   const direct = page.getByRole("banner").getByRole("button", { name, exact: true });
   if (name === "Trip expense" && (await direct.isVisible())) {
     await direct.click();
     return;
   }
-  await page.getByRole("button", { name: "Trip actions" }).click();
+  await menu.click();
   await page.getByRole("list", { name: "Trip actions" }).getByRole("button", { name }).click();
 }
 
