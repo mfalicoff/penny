@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AccountsRouteImport } from './routes/accounts'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as InsightsRouteImport } from './routes/insights'
+import { Route as MoneyFlowRouteImport } from './routes/money-flow'
 import { Route as ReceiptsRouteImport } from './routes/receipts'
 import { Route as RecurringRouteImport } from './routes/recurring'
 import { Route as SettingsRouteRouteImport } from './routes/settings/route'
@@ -48,6 +49,11 @@ const CategoriesRoute = CategoriesRouteImport.update({
 const InsightsRoute = InsightsRouteImport.update({
   id: '/insights',
   path: '/insights',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MoneyFlowRoute = MoneyFlowRouteImport.update({
+  id: '/money-flow',
+  path: '/money-flow',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReceiptsRoute = ReceiptsRouteImport.update({
@@ -138,6 +144,7 @@ export interface FileRoutesByFullPath {
   '/accounts': typeof AccountsRoute
   '/categories': typeof CategoriesRoute
   '/insights': typeof InsightsRoute
+  '/money-flow': typeof MoneyFlowRoute
   '/receipts': typeof ReceiptsRoute
   '/recurring': typeof RecurringRoute
   '/transactions': typeof TransactionsRoute
@@ -159,6 +166,7 @@ export interface FileRoutesByTo {
   '/accounts': typeof AccountsRoute
   '/categories': typeof CategoriesRoute
   '/insights': typeof InsightsRoute
+  '/money-flow': typeof MoneyFlowRoute
   '/receipts': typeof ReceiptsRoute
   '/recurring': typeof RecurringRoute
   '/transactions': typeof TransactionsRoute
@@ -182,6 +190,7 @@ export interface FileRoutesById {
   '/accounts': typeof AccountsRoute
   '/categories': typeof CategoriesRoute
   '/insights': typeof InsightsRoute
+  '/money-flow': typeof MoneyFlowRoute
   '/receipts': typeof ReceiptsRoute
   '/recurring': typeof RecurringRoute
   '/transactions': typeof TransactionsRoute
@@ -206,6 +215,7 @@ export interface FileRouteTypes {
     | '/accounts'
     | '/categories'
     | '/insights'
+    | '/money-flow'
     | '/receipts'
     | '/recurring'
     | '/transactions'
@@ -227,6 +237,7 @@ export interface FileRouteTypes {
     | '/accounts'
     | '/categories'
     | '/insights'
+    | '/money-flow'
     | '/receipts'
     | '/recurring'
     | '/transactions'
@@ -249,6 +260,7 @@ export interface FileRouteTypes {
     | '/accounts'
     | '/categories'
     | '/insights'
+    | '/money-flow'
     | '/receipts'
     | '/recurring'
     | '/transactions'
@@ -272,6 +284,7 @@ export interface RootRouteChildren {
   AccountsRoute: typeof AccountsRoute
   CategoriesRoute: typeof CategoriesRoute
   InsightsRoute: typeof InsightsRoute
+  MoneyFlowRoute: typeof MoneyFlowRoute
   ReceiptsRoute: typeof ReceiptsRoute
   RecurringRoute: typeof RecurringRoute
   TransactionsRoute: typeof TransactionsRoute
@@ -312,6 +325,13 @@ declare module '@tanstack/react-router' {
       path: '/insights'
       fullPath: '/insights'
       preLoaderRoute: typeof InsightsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/money-flow': {
+      id: '/money-flow'
+      path: '/money-flow'
+      fullPath: '/money-flow'
+      preLoaderRoute: typeof MoneyFlowRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/receipts': {
@@ -455,6 +475,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountsRoute: AccountsRoute,
   CategoriesRoute: CategoriesRoute,
   InsightsRoute: InsightsRoute,
+  MoneyFlowRoute: MoneyFlowRoute,
   ReceiptsRoute: ReceiptsRoute,
   RecurringRoute: RecurringRoute,
   TransactionsRoute: TransactionsRoute,

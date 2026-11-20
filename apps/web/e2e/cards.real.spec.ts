@@ -195,23 +195,22 @@ const cards: Record<string, Card> = {
   },
   "iphone-money-flow": {
     open: async ({ page: p }) => {
-      await page(p, "/insights?month=2026-09", "Insights");
-      await scrollTo(p, p.getByRole("region", { name: "Follow your money" }));
+      await page(p, "/money-flow?month=2026-09", "Money flow");
+      await expect(p.getByRole("group", { name: "Money flow diagram" })).toBeVisible();
     },
-    note: "The money flow is part of Insights (scrolled to it); on phones it is the stacked bar flow, not a Sankey.",
   },
   "iphone-insights": {
     open: async ({ page: p }) => {
       await page(p, "/insights?month=2026-10", "Insights");
-      await expect(p.getByRole("heading", { name: "Follow your money" })).toBeVisible();
+      await expect(p.getByRole("region", { name: "Categories" })).toBeVisible();
     },
   },
   "iphone-calendar": {
     open: async ({ page: p }) => {
       await home(p);
-      await scrollTo(p, p.getByRole("region", { name: "Calendar" }));
+      await p.getByRole("banner").getByRole("button", { name: "Calendar" }).click();
+      await expect(p.getByRole("dialog").getByRole("table")).toBeVisible();
     },
-    note: "The calendar is a section of Home's Explore your month (scrolled to it), not a sheet.",
   },
   "iphone-activity": { open: ({ page: p }) => activity(p, "2026-10") },
   "iphone-search-empty": {

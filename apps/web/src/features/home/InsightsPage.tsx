@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useId, useMemo } from "react";
 import { useMediaQuery, WIDE } from "../../app/useMediaQuery";
 import { Icon } from "../../design/Icon";
 import { categoryTint, tileStyle } from "../../design/categoryTint";
@@ -19,11 +19,12 @@ const SIX = 6;
 const monthName = (month: string) => monthLabel(month).split(" ")[0] ?? month;
 
 /**
- * Insights (`/insights`, MAZ-92, MAZ-174; cards `iphone-insights`, `money-flow`, `web-insights`).
+ * Insights (`/insights`, MAZ-92, MAZ-174, MAZ-224; cards `iphone-insights`, `web-insights`).
  * Both months come from the same reporting as Home, shared shares included.
  *
  * - Below 1100px (`iphone-insights`): spending leads, as a category donut with one
- *   month-over-month sentence, then the categories and the money flow.
+ *   month-over-month sentence, then the categories. The money flow is its own screen
+ *   (`/money-flow`), opened from Home.
  * - From 1100px (`web-insights`): Came in / Went out / Left over and the change from last month,
  *   the full-width money flow, then the category table compared with last month beside the last
  *   six months of income and spending.
@@ -76,7 +77,7 @@ export function InsightsPage({ search }: { search: InsightsSearch }) {
             </div>
           </dl>
           {/* The totals are just above, so the card shows only the diagram (web-insights). */}
-          <MoneyFlowChart flow={report.flow} currency={currency} monthLabel={label} compact />
+          <MoneyFlowChart variant="panel" flow={report.flow} currency={currency} monthLabel={label} />
           <div className="insights__low">
             <CategoryTable comparison={comparison} month={month} previousMonth={previousMonth} currency={currency} />
             <SixMonths month={month} currency={currency} />
@@ -86,7 +87,6 @@ export function InsightsPage({ search }: { search: InsightsSearch }) {
         <>
           <SpendingSummary report={report} previous={previous} comparison={comparison} previousMonth={previousMonth} currency={currency} />
           <CategoryList report={report} currency={currency} />
-          <MoneyFlowChart flow={report.flow} currency={currency} monthLabel={label} />
         </>
       )}
     </div>
@@ -190,8 +190,13 @@ function CategoryList({ report, currency }: { report: MonthReport; currency: str
 
 function CategoryTable({ comparison, month, previousMonth, currency }: { comparison: readonly CategoryChange[]; month: string; previousMonth: string; currency: string | undefined }) {
   const label = monthLabel(month);
+  const headingId = useId();
+  // web-insights draws the table without a title; the heading stays for screen readers.
   return (
-    <Panel title="Spending by category" className="insights__categories">
+    <section className="card insights__categories" aria-labelledby={headingId}>
+      <h2 id={headingId} className="visually-hidden">
+        Spending by category
+      </h2>
       {comparison.length ? (
         <div className="table-scroll">
           <table className="category-compare">
@@ -244,7 +249,7 @@ function CategoryTable({ comparison, month, previousMonth, currency }: { compari
           No spending in {label} or {monthLabel(previousMonth)}.
         </p>
       )}
-    </Panel>
+    </section>
   );
 }
 
@@ -282,7 +287,10 @@ function SixMonths({ month, currency }: { month: string; currency: string | unde
             ))}
           </div>
           <details className="flow__table">
-            <summary>Show as a table</summary>
+            <summary>
+        Show as a table
+        <Icon name="chevron-down" size={14} />
+      </summary>
             <div className="table-scroll">
               <table>
                 <caption className="visually-hidden">Came in and spent, your share, the six months to {monthLabel(month)}</caption>
