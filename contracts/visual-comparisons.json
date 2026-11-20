@@ -1508,9 +1508,9 @@
         ],
         "deviations": [
           {
-            "summary": "The subtitle sits about 20 points further below the large title than on the card: the list starts below the system's large-title area, and a navigation subtitle folds the large title into an inline one",
-            "kind": "follow-up",
-            "ref": "MAZ-236"
+            "summary": "The subtitle sits about 20 points further below the large title than on the card: iOS keeps the system large title, and the list starts below its area (MAZ-236)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
           },
           {
             "summary": "The close (×) and toolbar + glyphs are copper; the card draws them neutral",
