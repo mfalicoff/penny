@@ -55,7 +55,13 @@ internal static class BulkInsert
         );
         var connection = (NpgsqlConnection)context.Database.GetDbConnection();
         foreach (var batch in rows.Chunk(BatchRows))
+        {
+            var bw = System.Diagnostics.Stopwatch.StartNew();
             await CopyBatchAsync(connection, copy, columns, batch, cancellationToken);
+            Console.WriteLine(
+                "MAZ262DIAG " + "batch " + typeof(T).Name + " " + bw.Elapsed.TotalSeconds + "\n"
+            );
+        }
     }
 
     private static async Task CopyBatchAsync<T>(
