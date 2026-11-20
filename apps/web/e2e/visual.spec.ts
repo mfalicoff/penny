@@ -1,4 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "./test";
 import { enterDemo, horizontalOverflow, navigate, startDemo } from "./demo";
 
 // MAZ-96 responsive and theme visual regression over the demo (fixed clock, in-memory sample

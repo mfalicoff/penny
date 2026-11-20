@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
-import { expect, test, type BrowserContext, type Page, type Request } from "@playwright/test";
+import type { BrowserContext, Page, Request } from "@playwright/test";
+import { expect, test } from "./test";
 import { damagedPdf, oversizedPng, sha256, syntheticPdf, syntheticPng } from "./fixtures/receipts";
 
 // Receipt upload, preview and download (MAZ-94) on the production build, under the production

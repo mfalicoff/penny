@@ -1,4 +1,5 @@
-import { expect, test, type BrowserContext, type Page } from "@playwright/test";
+import type { BrowserContext, Page } from "@playwright/test";
+import { expect, test } from "./test";
 import { syntheticPdf } from "./fixtures/receipts";
 
 // Emailed receipts (MAZ-184) on the production build under the production CSP: from the sidebar's

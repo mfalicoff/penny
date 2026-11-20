@@ -1,4 +1,5 @@
-import { expect, test, type BrowserContext, type Page } from "@playwright/test";
+import type { BrowserContext, Page } from "@playwright/test";
+import { expect, test } from "./test";
 
 // The durable offline store (MAZ-87) in real Chromium: IndexedDB, BroadcastChannel, Web Locks and
 // the browser's own offline switch. /api is mocked (a revision-checked ledger); the real

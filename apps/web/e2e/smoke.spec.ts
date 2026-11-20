@@ -1,4 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "./test";
 import { openSettings } from "./shell";
 
 /** Collects console errors, page errors and failed requests for the whole test. */

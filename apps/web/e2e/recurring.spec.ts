@@ -1,4 +1,5 @@
-import { expect, test, type BrowserContext, type Page } from "@playwright/test";
+import type { BrowserContext, Page } from "@playwright/test";
+import { expect, test } from "./test";
 
 // Recurring schedules (MAZ-90) in real Chromium over the durable offline store (IndexedDB): every
 // frequency, anchor days in short months, detail actions with focus recovery, offline saves with a

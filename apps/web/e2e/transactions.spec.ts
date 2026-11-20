@@ -1,4 +1,5 @@
-import { expect, test, type BrowserContext, type Page } from "@playwright/test";
+import type { BrowserContext, Page } from "@playwright/test";
+import { expect, test } from "./test";
 
 // Transaction forms, search and filtered Activity (MAZ-88) in real Chromium on desktop and phone:
 // the durable offline store (IndexedDB), the browser's offline switch, history and keyboard use.

@@ -1,4 +1,5 @@
-import { expect, test, type Browser, type BrowserContext, type Page } from "@playwright/test";
+import type { Browser, BrowserContext, Page } from "@playwright/test";
+import { expect, test } from "./test";
 import { createHouseholdServer, type HouseholdServer } from "../tests/fakes/householdServer.ts";
 
 // Two people in two browser contexts sharing one household (MAZ-91). /api is the in-memory
