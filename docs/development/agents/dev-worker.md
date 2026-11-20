@@ -54,6 +54,10 @@ When you believe a difference can't be closed, for example because the operating
 - record it in `contracts/visual-comparisons.json` as a `follow-up` deviation, and leave the card's verdict at `deviates`;
 - post a follow-up whose title starts with `Design decision:`. Its Why says what the card shows, what the app shows, and why you couldn't match it. A human decides whether the card changes, the deviation is approved, or the fix goes ahead.
 
+#### Screens with no card
+
+Don't design a new screen yourself. If your issue needs a screen, sheet, dialog or state that no card covers, and it doesn't clearly follow an existing card, hand the issue over (see [Hand over to a human](#hand-over-to-a-human)) and say which screens need cards. A new flow, a new settings page and a new prompt each count. Small changes inside a screen that has a card don't count: an extra row in the card's style, or a message in an existing banner. The exception is an issue whose job is to draft cards. Those pull requests are handed over before merging, so the owner can review the designs.
+
 Platform chrome is never a deviation: the status bar, home indicator, keyboard, system sheets and pickers, the browser window and the device frame. The "may differ" column of [visual acceptance](../../design/visual-acceptance.md#what-must-match-and-what-may-differ) lists everything that may differ.
 
 ### Follow-ups
