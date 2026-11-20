@@ -13,6 +13,10 @@ struct SettingsView: View {
     @Environment(PushNotifications.self) private var push: PushNotifications?
     /// Shown on iPhone, where Settings is a sheet.
     var onDone: (() -> Void)?
+    /// The page shown beside the list on iPad (`SettingsColumns`); nil when rows push pages.
+    var selection: SettingsRoute?
+    /// Set when the page shows beside the list: a row selects its page instead of pushing it.
+    var select: ((SettingsRoute) -> Void)?
 
     var body: some View {
         let ledger = shell.workspace.load.ledger
@@ -47,14 +51,14 @@ struct SettingsView: View {
                             value: shell.receiptInbox.address == nil ? "Off" : "On")
                         if shell.receiptInbox.address != nil || shell.receiptInbox.toAttachCount > 0 {
                             let count = shell.receiptInbox.toAttachCount
-                            NavigationLink(value: SettingsRoute.receiptInbox) {
+                            pageLink(.receiptInbox) { selected in
                                 HStack {
                                     Label(SettingsRoute.receiptInbox.title, systemImage: "tray.and.arrow.down")
                                     Spacer()
                                     if count > 0 {
                                         Text(shell.receiptInbox.hasMoreToAttach ? "\(count)+" : "\(count)")
                                             .monospacedDigit()
-                                            .foregroundStyle(PennyColor.secondaryLabel)
+                                            .foregroundStyle(Self.valueStyle(selected))
                                     }
                                 }
                                 .frame(minHeight: Metrics.minTouchTarget)
@@ -80,7 +84,7 @@ struct SettingsView: View {
                     }
                 }
                 Section {
-                    NavigationLink(value: SettingsRoute.server) {
+                    pageLink(.server) { _ in
                         Label {
                             Text(ServerText.host(account.server))
                         } icon: {
@@ -152,19 +156,50 @@ struct SettingsView: View {
     private func row(
         _ route: SettingsRoute, symbol: String, value: String?, locked: Bool = false, title: String? = nil
     ) -> some View {
-        NavigationLink(value: route) {
+        pageLink(route) { selected in
             HStack {
                 Label(title ?? route.title, systemImage: symbol)
                 Spacer()
-                if let value { Text(value).foregroundStyle(PennyColor.secondaryLabel) }
+                if let value { Text(value).foregroundStyle(Self.valueStyle(selected)) }
                 if locked {
-                    Image(systemName: "lock.fill").font(.footnote).foregroundStyle(PennyColor.tertiaryLabel)
+                    Image(systemName: "lock.fill").font(.footnote).foregroundStyle(Self.valueStyle(selected))
                         .accessibilityLabel("Locked")
                 }
             }
             .frame(minHeight: Metrics.minTouchTarget)
         }
         .accessibilityIdentifier("settings.\(route.rawValue)")
+    }
+
+    static func valueStyle(_ selected: Bool) -> Color {
+        selected ? Color.white.opacity(0.85) : PennyColor.secondaryLabel
+    }
+
+    /// A row that opens a Settings page: pushed onto the stack, or, on iPad with the page beside
+    /// the list (`ipad-settings`, MAZ-182), selected there (a copper row with white text).
+    @ViewBuilder
+    private func pageLink<Content: View>(_ route: SettingsRoute, @ViewBuilder label: (Bool) -> Content) -> some View {
+        if let select {
+            let selected = selection == route
+            Button {
+                select(route)
+            } label: {
+                HStack {
+                    label(selected)
+                    Image(systemName: "chevron.right").font(.footnote.weight(.semibold))
+                        .foregroundStyle(selected ? Color.white.opacity(0.85) : PennyColor.tertiaryLabel)
+                        .accessibilityHidden(true)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(selected ? Color.white : PennyColor.label)
+            .tint(selected ? Color.white : PennyColor.tint)
+            .listRowBackground(selected ? PennyColor.tint : PennyColor.surface)
+            .accessibilityAddTraits(selected ? .isSelected : [])
+        } else {
+            NavigationLink(value: route) { label(false) }
+        }
     }
 }
 

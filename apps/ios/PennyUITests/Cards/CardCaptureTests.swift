@@ -550,6 +550,8 @@ final class CardCaptureTests: CardTestCase {
             card in
             try card.penny.turnOnAppLock()
             try card.penny.openSettings()
+            // The page beside the list (MAZ-182) is the card's Appearance, not the lock just set.
+            try card.penny.tap(AccessibilityID.Settings.row("appearance"), opening: AccessibilityID.Screen.appearance)
         }
     }
 }
