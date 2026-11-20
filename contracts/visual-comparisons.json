@@ -175,11 +175,6 @@
             "ref": "MAZ-245"
           },
           {
-            "summary": "Capture state: no band is focused, so the focus card isn't shown",
-            "kind": "follow-up",
-            "ref": "MAZ-253"
-          },
-          {
             "summary": "The card now has the flow card's focus hint (Select a band or label to focus it, again to clear) and Show as a table, which the native screen doesn't show yet (follow-up recorded on MAZ-224)",
             "kind": "follow-up",
             "ref": "MAZ-224"
@@ -285,11 +280,6 @@
             "summary": "Adds a month totals line, a disabled next chevron at the current month and a copper Today",
             "kind": "follow-up",
             "ref": "MAZ-254"
-          },
-          {
-            "summary": "Capture state: today is selected with nothing on it; the card selects a past day with its entries",
-            "kind": "follow-up",
-            "ref": "MAZ-253"
           }
         ]
       },
@@ -407,11 +397,6 @@
             "summary": "The empty icon is a bare magnifier, not a filled tile, and Search all months is a small button, not the card's capsule",
             "kind": "follow-up",
             "ref": "MAZ-246"
-          },
-          {
-            "summary": "Capture state: no Expenses or November filter, so there's no Clear filters",
-            "kind": "follow-up",
-            "ref": "MAZ-253"
           }
         ]
       },
@@ -468,11 +453,6 @@
             "summary": "The close (×) and toolbar + glyphs are copper; the card draws them neutral",
             "kind": "follow-up",
             "ref": "MAZ-244"
-          },
-          {
-            "summary": "Capture state: Account is None and the split isn't shown",
-            "kind": "follow-up",
-            "ref": "MAZ-253"
           }
         ]
       },
@@ -524,11 +504,6 @@
             "summary": "The keypad stays up and covers the rows",
             "kind": "follow-up",
             "ref": "MAZ-255"
-          },
-          {
-            "summary": "Capture state: the date is today, so the expected callout isn't shown",
-            "kind": "follow-up",
-            "ref": "MAZ-253"
           }
         ]
       },
@@ -585,11 +560,6 @@
             "summary": "Section headers are larger title-case headings, not the card's small upper-case labels",
             "kind": "follow-up",
             "ref": "MAZ-244"
-          },
-          {
-            "summary": "Capture state: no receipt attached",
-            "kind": "follow-up",
-            "ref": "MAZ-253"
           }
         ]
       },
@@ -646,11 +616,6 @@
             "summary": "The close (×) and toolbar + glyphs are copper; the card draws them neutral",
             "kind": "follow-up",
             "ref": "MAZ-244"
-          },
-          {
-            "summary": "Capture state: Percent at 50 %; the card is Equally with 3 people",
-            "kind": "follow-up",
-            "ref": "MAZ-253"
           }
         ]
       },
@@ -743,11 +708,6 @@
             "summary": "Add entry is a fifth tab with the search role inside the system tab bar, not a separate copper button beside four tabs",
             "kind": "follow-up",
             "ref": "MAZ-254"
-          },
-          {
-            "summary": "Capture state: no receipt attached",
-            "kind": "follow-up",
-            "ref": "MAZ-253"
           }
         ]
       },
@@ -810,7 +770,7 @@
             "ref": "MAZ-255"
           },
           {
-            "summary": "Capture state: deletes a personal entry from its detail; the card deletes a shared one from Activity",
+            "summary": "Delete for everyone is confirmed over the shared expense's detail: Activity offers delete only on personal rows (follow-up from MAZ-253)",
             "kind": "follow-up",
             "ref": "MAZ-253"
           }
@@ -983,7 +943,7 @@
             "ref": "MAZ-248"
           },
           {
-            "summary": "Capture state: the month's payments are already open",
+            "summary": "Capture state: the app opens the month's payments on the real date, not the pinned today, so Record paid shows (follow-up from MAZ-253)",
             "kind": "follow-up",
             "ref": "MAZ-253"
           }
@@ -1103,11 +1063,6 @@
             "summary": "The selected Paid by chip is copper, not the card's inverted fill",
             "kind": "follow-up",
             "ref": "MAZ-244"
-          },
-          {
-            "summary": "Capture state: an empty draft",
-            "kind": "follow-up",
-            "ref": "MAZ-253"
           }
         ]
       },
@@ -1256,11 +1211,6 @@
             "summary": "Details rows have no icons, the footer adds two sentences, and the header icon is copper, not the card's neutral tile",
             "kind": "follow-up",
             "ref": "MAZ-248"
-          },
-          {
-            "summary": "Capture state: the name is empty",
-            "kind": "follow-up",
-            "ref": "MAZ-253"
           }
         ]
       },
@@ -1480,11 +1430,6 @@
             "summary": "The close (×) and toolbar + glyphs are copper; the card draws them neutral",
             "kind": "follow-up",
             "ref": "MAZ-244"
-          },
-          {
-            "summary": "Capture state: the name is empty and the keyboard covers People",
-            "kind": "follow-up",
-            "ref": "MAZ-253"
           }
         ]
       },
@@ -1548,7 +1493,7 @@
             "ref": "MAZ-257"
           },
           {
-            "summary": "Capture state: Appearance and Face ID lock aren't on System and On, and Server and Sign out are below the fold",
+            "summary": "Notifications, Server and Sign out are below the fold; the card fits the sheet on one screen (follow-up from MAZ-253)",
             "kind": "follow-up",
             "ref": "MAZ-253"
           }
@@ -1755,11 +1700,6 @@
             "summary": "Bank account uses a bank building icon where the card uses a wallet",
             "kind": "follow-up",
             "ref": "MAZ-257"
-          },
-          {
-            "summary": "Capture state: a new account form; the card is Edit account for an account in use",
-            "kind": "follow-up",
-            "ref": "MAZ-253"
           }
         ]
       },
@@ -1859,7 +1799,7 @@
             "ref": "MAZ-244"
           },
           {
-            "summary": "Capture state: the name is empty and the keyboard covers Color and Icon",
+            "summary": "Capture state: the name keeps the keyboard up over part of Icon; Return would save the category (follow-up from MAZ-253)",
             "kind": "follow-up",
             "ref": "MAZ-253"
           }
@@ -1913,11 +1853,6 @@
             "summary": "Copy says \"this device\" where the card says \"this iPhone\"",
             "kind": "follow-up",
             "ref": "MAZ-255"
-          },
-          {
-            "summary": "Capture state: Light or Dark is selected, not System",
-            "kind": "follow-up",
-            "ref": "MAZ-253"
           }
         ]
       },
@@ -1969,11 +1904,6 @@
             "summary": "Copy says \"this device\" where the card says \"this iPhone\"",
             "kind": "follow-up",
             "ref": "MAZ-255"
-          },
-          {
-            "summary": "Capture state: the lock is off, so Lock after isn't shown",
-            "kind": "follow-up",
-            "ref": "MAZ-253"
           }
         ]
       },
@@ -2047,7 +1977,7 @@
             "ref": "MAZ-252"
           },
           {
-            "summary": "Capture state: empty fields, so no strength meter",
+            "summary": "The native form has no password strength meter, and screenshots leave out the typed password (follow-up from MAZ-253)",
             "kind": "follow-up",
             "ref": "MAZ-253"
           }
@@ -2103,7 +2033,7 @@
             "ref": "MAZ-255"
           },
           {
-            "summary": "Capture state: the test server is HTTP, not verified HTTPS",
+            "summary": "Capture state: the test server is plain HTTP, so Server verified shows without HTTPS (follow-up from MAZ-253)",
             "kind": "follow-up",
             "ref": "MAZ-253"
           }
@@ -2216,11 +2146,6 @@
             "summary": "Follow your money shows Spent, Invested and Over as three stacked columns with headline amounts, not the card's one-line dot legend; the projected amount isn't bold",
             "kind": "follow-up",
             "ref": "MAZ-245"
-          },
-          {
-            "summary": "Capture state: no changes waiting",
-            "kind": "follow-up",
-            "ref": "MAZ-253"
           }
         ]
       },
@@ -2308,11 +2233,6 @@
             "summary": "The toast leads with a copper kind tile, not the category's round tile, and Undo has no capsule",
             "kind": "follow-up",
             "ref": "MAZ-252"
-          },
-          {
-            "summary": "Capture state: an edit on entry detail; the card shows a new expense over Home",
-            "kind": "follow-up",
-            "ref": "MAZ-253"
           }
         ]
       },
@@ -2369,11 +2289,6 @@
             "summary": "Copy says \"this device\" where the card says \"this iPhone\"",
             "kind": "follow-up",
             "ref": "MAZ-255"
-          },
-          {
-            "summary": "Capture state: nothing waiting to sync",
-            "kind": "follow-up",
-            "ref": "MAZ-253"
           }
         ]
       },
@@ -2868,11 +2783,6 @@
             "summary": "Repeats the Manage section, and the account row and Currency differ as on iPhone",
             "kind": "follow-up",
             "ref": "MAZ-250"
-          },
-          {
-            "summary": "Capture state: Appearance and Face ID lock aren't on System and On",
-            "kind": "follow-up",
-            "ref": "MAZ-253"
           }
         ]
       },

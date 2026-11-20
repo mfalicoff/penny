@@ -122,10 +122,13 @@ class CardTestCase: PennyUITestCase {
     /// Opens and captures one card. `open` starts at the signed-in shell (Home) or, for
     /// signed-out cards, at the sign-in screen, and leaves the app showing the card's state.
     /// `freshSeedPerAppearance` reseeds and signs in again before each appearance, for cards whose
-    /// steps change the seeded data (a payment, an edit).
+    /// steps change the seeded data (a payment, an edit). `followsSystem` keeps Appearance on
+    /// System (the device's appearance still picks light or dark), for cards that show the
+    /// setting; `standInFaceID` answers Face ID with the Debug stand-in, so the lock can be on.
     @MainActor
     func card(
-        _ id: String, freshSeedPerAppearance: Bool = false, note: String? = nil,
+        _ id: String, freshSeedPerAppearance: Bool = false, followsSystem: Bool = false,
+        standInFaceID: Bool = false, note: String? = nil,
         open: (CardContext) async throws -> Void
     ) async throws {
         let state = try CardState.load(id)
@@ -146,7 +149,8 @@ class CardTestCase: PennyUITestCase {
             // The iPad cards are drawn in landscape (1290×914 in contracts/design-baseline.json).
             if state.platform == "iPad" { XCUIDevice.shared.orientation = .landscapeLeft }
             var options = LaunchOptions()
-            options.seed = ContainerSeed(standardDefaults: ["penny.appearance": appearance])
+            options.seed = ContainerSeed(standardDefaults: ["penny.appearance": followsSystem ? "system" : appearance])
+            options.standInFaceID = standInFaceID
             options.resetsState = state.signedOut || signsIn
             let penny = try await launch(options)
             if signsIn, let alias = state.alias, let user = seed?.users[alias] {
