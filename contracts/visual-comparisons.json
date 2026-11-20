@@ -374,9 +374,14 @@
             "ref": "MAZ-225"
           },
           {
-            "summary": "No swipe actions and no bottom search field: rows open the entry dialog, and search follows the list",
+            "summary": "No swipe actions: rows open the entry dialog",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-conventions-maz-227"
+          },
+          {
+            "summary": "No bottom search field: search follows the list",
             "kind": "follow-up",
-            "ref": "MAZ-227"
+            "ref": "MAZ-225"
           }
         ]
       }
@@ -481,9 +486,9 @@
         ],
         "deviations": [
           {
-            "summary": "Add entry is a dialog with labelled fields and a Cancel/Save footer, with no hero amount or keypad",
-            "kind": "follow-up",
-            "ref": "MAZ-227"
+            "summary": "Add entry is a dialog with labelled fields and a Cancel/Save footer, with keyboard entry and no keypad",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-conventions-maz-227"
           },
           {
             "summary": "The amount is an ordinary input; the type reads Investment; there is no Split row (a Household select instead); the selected chip is copper, not the category color",
@@ -537,9 +542,9 @@
         ],
         "deviations": [
           {
-            "summary": "Add entry is a dialog with labelled fields and a Cancel/Save footer, with no hero amount or keypad",
-            "kind": "follow-up",
-            "ref": "MAZ-227"
+            "summary": "Add entry is a dialog with labelled fields and a Cancel/Save footer, with keyboard entry and no keypad",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-conventions-maz-227"
           },
           {
             "summary": "No large green +amount; the Salary chip is copper; Repeat and Note sit under More details",
@@ -599,8 +604,8 @@
         "deviations": [
           {
             "summary": "More details expands inside the form instead of a pushed sheet",
-            "kind": "follow-up",
-            "ref": "MAZ-227"
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-conventions-maz-227"
           },
           {
             "summary": "Sections are ordered Your share, Repeat, Trip, Note, Receipt; Repeat is a select with no helper, Trip a select, and Note has no placeholder",
@@ -660,8 +665,8 @@
         "deviations": [
           {
             "summary": "Your share is a section of the form with Discard and Keep draft, not a stacked Split sheet",
-            "kind": "follow-up",
-            "ref": "MAZ-227"
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-conventions-maz-227"
           },
           {
             "summary": "The share is a small pink-tinted banner, not a solid YOUR SHARE card with a large amount; the segment reads Split equally and the explanation differs",
@@ -757,8 +762,8 @@
         "deviations": [
           {
             "summary": "The entry detail is a dialog over Activity, not a pushed screen",
-            "kind": "follow-up",
-            "ref": "MAZ-227"
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-conventions-maz-227"
           },
           {
             "summary": "Leads with the unsigned total and an Expense badge, not a category tile and a signed your-share amount; one flat list with no Repeats, split or receipt groups",
@@ -822,8 +827,8 @@
         "deviations": [
           {
             "summary": "Delete confirms in a centered dialog over the entry dialog, not a bottom sheet",
-            "kind": "follow-up",
-            "ref": "MAZ-227"
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-conventions-maz-227"
           },
           {
             "summary": "Titles Delete Coffee? without quotes or a category icon, with a sentence instead of the amount · date · category line, and inline buttons",
@@ -1116,12 +1121,12 @@
         ],
         "deviations": [
           {
-            "summary": "The shared expense form is the Add entry dialog with labelled fields, no hero amount or keypad",
-            "kind": "follow-up",
-            "ref": "MAZ-227"
+            "summary": "The shared expense form is the Add entry dialog with labelled fields, keyboard entry and no keypad",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-conventions-maz-227"
           },
           {
-            "summary": "Titled Add entry, not New expense with the household as subtitle",
+            "summary": "Titled Add entry, not New expense with the household as subtitle; no hero amount",
             "kind": "follow-up",
             "ref": "MAZ-226"
           },
@@ -1178,8 +1183,8 @@
           },
           {
             "summary": "Record payment is a dialog over the household",
-            "kind": "follow-up",
-            "ref": "MAZ-227"
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-conventions-maz-227"
           },
           {
             "summary": "Members are shown by email, with initials from the email",
@@ -1269,9 +1274,14 @@
         ],
         "deviations": [
           {
-            "summary": "A dialog with Create/Join below the title and Cancel beside Create household, not a sheet with a house tile",
+            "summary": "A dialog with Create/Join below the title and Cancel beside Create household, not a sheet",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-conventions-maz-227"
+          },
+          {
+            "summary": "No house tile above the form",
             "kind": "follow-up",
-            "ref": "MAZ-227"
+            "ref": "MAZ-228"
           },
           {
             "summary": "Details are a plain list with no icons or Currency lock",
@@ -1489,8 +1499,8 @@
         "deviations": [
           {
             "summary": "A dialog with labelled fields and Cancel / Create trip, not a sheet",
-            "kind": "follow-up",
-            "ref": "MAZ-227"
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-conventions-maz-227"
           },
           {
             "summary": "No WHEN group with a Currency lock row or PEOPLE group; the date note's wording differs",
@@ -1616,8 +1626,8 @@
           },
           {
             "summary": "No swipe actions: a row opens the schedule dialog, and the footer says so",
-            "kind": "follow-up",
-            "ref": "MAZ-227"
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-conventions-maz-227"
           }
         ]
       }
@@ -1657,8 +1667,8 @@
         "deviations": [
           {
             "summary": "The schedule detail is a dialog, and Remove is a small tinted button",
-            "kind": "follow-up",
-            "ref": "MAZ-227"
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-conventions-maz-227"
           },
           {
             "summary": "The amount is unsigned; a green Active pill; Edit isn't the copper primary; NEXT and DETAILS aren't grouped cards",
@@ -1764,8 +1774,8 @@
         "deviations": [
           {
             "summary": "A dialog with a Cancel / Add account footer, not a sheet",
-            "kind": "follow-up",
-            "ref": "MAZ-227"
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-conventions-maz-227"
           },
           {
             "summary": "Sentence-case labels instead of NAME and TYPE headers; the selected type has no check badge; the helper adds a sentence",
@@ -1866,8 +1876,8 @@
         "deviations": [
           {
             "summary": "A dialog with a Cancel / Add category footer, not a sheet",
-            "kind": "follow-up",
-            "ref": "MAZ-227"
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-conventions-maz-227"
           },
           {
             "summary": "Labelled Name and Kind fields, swatches and icons not in grouped cards, eight colors and about 26 icons instead of five and 18; in dark the selected kind reads as a hole",
@@ -1932,8 +1942,8 @@
           },
           {
             "summary": "Appearance is a Settings pane with All settings, not a pushed page",
-            "kind": "follow-up",
-            "ref": "MAZ-227"
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-conventions-maz-227"
           }
         ]
       }
@@ -2658,9 +2668,9 @@
         ],
         "deviations": [
           {
-            "summary": "Add entry is a one-column dialog with no hero amount",
-            "kind": "follow-up",
-            "ref": "MAZ-227"
+            "summary": "Add entry is a dialog with keyboard entry",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-conventions-maz-227"
           },
           {
             "summary": "Not two panes; the amount is an input; Save is in the footer; the type reads Investment; no Split row; the selected chip is copper",
@@ -3229,12 +3239,12 @@
         ],
         "deviations": [
           {
-            "summary": "Add entry is a one-column dialog with no hero amount",
-            "kind": "follow-up",
-            "ref": "MAZ-227"
+            "summary": "Add entry is a dialog with keyboard entry",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-conventions-maz-227"
           },
           {
-            "summary": "Not two panes; titled Add entry, not New entry; Save, not Add expense; Investment, not Invest; Split, Repeat, Trip and the receipt under More details; the selected chip is copper",
+            "summary": "No hero amount; not two panes; titled Add entry, not New entry; Save, not Add expense; Investment, not Invest; Split, Repeat, Trip and the receipt under More details; the selected chip is copper",
             "kind": "follow-up",
             "ref": "MAZ-226"
           },
