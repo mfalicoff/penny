@@ -144,6 +144,34 @@ MAZ-215 captured every web card again against a fresh test environment (`npm run
 - **MAZ-222 (2026-11-19).** Lists and amounts were captured again at 402×874, 1194×834 and 1440×900, light and dark, on the eleven cards that named it. Row and category icons are the cards' tiles: a filled tile in the category's color with a white glyph, green for income entries and indigo for investments. A stored category color is drawn in the redesign palette (`apps/web/src/design/categoryTint.ts`, the same mapping as iOS), so the default Food & drinks color (#E47850, near copper) draws pink and no category takes the action tint, in the tiles, bars, the Insights donut and the money flow's expense bands. Below 1100px, Recent and Insights' Categories put their heading above one solid list card, and Activity's days are solid cards with inset dividers. Left to spend shows its cents smaller and dimmed. Negative amounts use the typographic minus directly before the number (−$48.90), also in the sidebar. Insights shows each category's amount over its percent, and By category on Home shows the amount alone. In dark, the selected segment of segmented controls is the kit's lighter pill (#4A4744). The other differences on these cards stay with their own issues.
 - **Web screens and states with no card.** The design doesn't draw these yet: the household list (`/households`) and a shared expense's detail (`/households/$id/expenses/$expenseId`) at desktop width; a trip at desktop width (`/trips/$id`, only `ipad-trip`); Recurring, Accounts and Categories at tablet and desktop widths; the Currency and Server settings panes; New schedule and Edit entry dialogs; Join a household or trip with a code; the demo banner; the server-unreachable banner; Activity's Searching… state; and the 768–1099px layouts between the phone and desktop cards.
 
+## iOS audit (MAZ-216, 2026-11-19)
+
+MAZ-216 captured every iOS card again against a fresh test environment (`apps/ios/scripts/ios.sh ui-test cards`: `iphone-*` on the iPhone 18 Pro simulator and `ipad-*` on the iPad Pro 11-inch (M5) simulator in landscape, iOS 27) and compared each one with its card, light and dark. Like the web audit, it approves nothing.
+
+| | Matches | Deviates | Not built | Blocked | Not applicable |
+| --- | --- | --- | --- | --- | --- |
+| iOS | 0 | 49 | 1 (`system-widgets`: device check) | 16 (`iphone-receipt`, `iphone-lock` and the 14 iPhone and iPad receipt cards) | 16 (the `web-*` cards and `system-foundations`) |
+
+- **Every captured iOS card now deviates.** The 17 cards recorded as `matches` (among them `iphone-add-expense`, `iphone-trips`, `iphone-sign-in` and the Manage pages) differ from their cards in the fresh captures, mostly in section headers, toolbar actions, copy and the state the capture opens.
+- **Only the confirmation popover stays `approved`.** iOS 27 presents a system confirmation dialog as a popover anchored to its button, which is a system sheet (platform chrome), so that entry stays on `iphone-delete-confirm` and `iphone-sign-out`. What the dialog can't show (the card's icon, amount line and Sync, then sign out) is a follow-up. Every other difference the agents had recorded as approved (the MAZ-69 and MAZ-77 notes and the native list under Native adaptations in [redesign.md](../reference/redesign.md#native-adaptations-maz-122)) is now a `follow-up` linked to a decision issue. Members shown by email moved to MAZ-171; Lock after was built in MAZ-133, and the capture doesn't turn the lock on, so it's a capture-state follow-up. The redesign.md entries stay until each decision is recorded.
+- **Follow-ups by area.** Each verdict names the issue for each difference:
+
+| Area | Fix | Decision |
+| --- | --- | --- |
+| Lists and rows: section headers, day headers, row subtitles, icon tiles, neutral close and + glyphs | MAZ-244 | |
+| Home, Insights, calendar, empty month and offline | MAZ-245 | MAZ-254 |
+| Activity and entry detail | MAZ-246 | MAZ-255 |
+| Add entry, More details and Split | MAZ-247 | MAZ-255 |
+| Shared households | MAZ-248 | MAZ-256, MAZ-171 (names) |
+| Trips | MAZ-249 (expenses: MAZ-213) | MAZ-256 |
+| Settings, Appearance and Face ID lock | MAZ-250 | MAZ-254, MAZ-257 |
+| Recurring, Accounts and Categories | MAZ-251 (shared row: MAZ-219, subtitle: MAZ-236) | MAZ-257 |
+| Sign-in, create account, server connect, save banners and sign-out | MAZ-252 | MAZ-257 |
+| iPad sidebar, toolbar and two-column layouts | MAZ-182 | MAZ-240 |
+| Capture states that differ from the card's drawn state | MAZ-253 (web: MAZ-235) | |
+
+- **iOS screens and states with no card.** The design doesn't draw these yet: the Activity filters sheet; the account, household and date pickers; Spending by category; the Currency page; Edit entry; a shared expense's detail; recording a monthly payment; Join with a code and the invite scanner; the invite sheet with its QR code; sharing a personal trip; a personal trip's page (only shared trips have cards); New schedule; the Explore your month list and Coming up on iPhone; the Expected income card; the notification prompt and the Notifications row; the "Shared expenses may be missing" and server-unreachable banners; the demo banner; Activity's "Searching your server…" state; and iPad in portrait and in compact widths.
+
 ## Review scenarios
 
 A capture shows one state at one size. The scenarios below are covered by these suites, so a card review doesn't need to repeat them:

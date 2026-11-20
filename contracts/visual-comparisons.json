@@ -23,8 +23,8 @@
       "native": {
         "status": "not-built",
         "owner": "MAZ-80",
-        "note": "The widgets exist (MAZ-80), but XCUITest can't add them to the Home or Lock Screen; they're checked on a device, and the medium and Lock Screen families are MAZ-135.",
-        "followUp": "MAZ-135"
+        "note": "The widgets exist, with the medium and Lock Screen families (MAZ-80, MAZ-135), but XCUITest can't add them to the Home or Lock Screen, so they're compared on a device.",
+        "followUp": "MAZ-200"
       },
       "web": {
         "status": "not-applicable",
@@ -45,14 +45,34 @@
         ],
         "deviations": [
           {
-            "summary": "Add entry is a tab with the search role inside the system tab bar, not a separate copper button",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#native-implementation-notes-maz-69"
+            "summary": "Add entry is a fifth tab with the search role inside the system tab bar, not a separate copper button beside four tabs",
+            "kind": "follow-up",
+            "ref": "MAZ-254"
           },
           {
-            "summary": "Insights and the calendar are reached from Explore your month; the calendar is a page, not a sheet",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#native-overview-notes-maz-77"
+            "summary": "Insights and the calendar are reached from Explore your month under Recent instead of the flow card's Insights pill; the calendar is a page, not a sheet",
+            "kind": "follow-up",
+            "ref": "MAZ-254"
+          },
+          {
+            "summary": "An inline \"Home\" title, and calendar and settings grouped in one capsule; the card has no title and two separate buttons",
+            "kind": "follow-up",
+            "ref": "MAZ-254"
+          },
+          {
+            "summary": "The month pill is copper with no chevron; the card's is \"November ⌄\" in the label color",
+            "kind": "follow-up",
+            "ref": "MAZ-245"
+          },
+          {
+            "summary": "Follow your money shows Spent, Invested and Over as three stacked columns with headline amounts, not the card's one-line dot legend; the projected amount isn't bold",
+            "kind": "follow-up",
+            "ref": "MAZ-245"
+          },
+          {
+            "summary": "Entry rows read date · category; the card reads date · account (Home) or the account with split and share extras (Activity)",
+            "kind": "follow-up",
+            "ref": "MAZ-244"
           }
         ]
       },
@@ -90,14 +110,34 @@
         ],
         "deviations": [
           {
-            "summary": "Add entry is a tab with the search role inside the system tab bar, not a separate copper button",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#native-implementation-notes-maz-69"
+            "summary": "Add entry is a fifth tab with the search role inside the system tab bar, not a separate copper button beside four tabs",
+            "kind": "follow-up",
+            "ref": "MAZ-254"
           },
           {
-            "summary": "Insights and the calendar are reached from Explore your month; the calendar is a page, not a sheet",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#native-overview-notes-maz-77"
+            "summary": "Insights and the calendar are reached from Explore your month under Recent instead of the flow card's Insights pill; the calendar is a page, not a sheet",
+            "kind": "follow-up",
+            "ref": "MAZ-254"
+          },
+          {
+            "summary": "An inline \"Home\" title, and calendar and settings grouped in one capsule; the card has no title and two separate buttons",
+            "kind": "follow-up",
+            "ref": "MAZ-254"
+          },
+          {
+            "summary": "The month pill is copper with no chevron; the card's is \"November ⌄\" in the label color",
+            "kind": "follow-up",
+            "ref": "MAZ-245"
+          },
+          {
+            "summary": "Follow your money shows Spent, Invested and Over as three stacked columns with headline amounts, not the card's one-line dot legend; the projected amount isn't bold",
+            "kind": "follow-up",
+            "ref": "MAZ-245"
+          },
+          {
+            "summary": "Entry rows read date · category; the card reads date · account (Home) or the account with split and share extras (Activity)",
+            "kind": "follow-up",
+            "ref": "MAZ-244"
           }
         ]
       },
@@ -136,8 +176,18 @@
         "deviations": [
           {
             "summary": "The money flow is recorded-only, with a value list under the chart",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#native-overview-notes-maz-77"
+            "kind": "follow-up",
+            "ref": "MAZ-254"
+          },
+          {
+            "summary": "The month pill is copper with no chevron; the card's is \"November ⌄\" in the label color",
+            "kind": "follow-up",
+            "ref": "MAZ-245"
+          },
+          {
+            "summary": "Capture state: no band is focused, so the focus card isn't shown",
+            "kind": "follow-up",
+            "ref": "MAZ-253"
           }
         ]
       },
@@ -181,9 +231,24 @@
         ],
         "deviations": [
           {
-            "summary": "Insights and the calendar are reached from Explore your month; the calendar is a page, not a sheet",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#native-overview-notes-maz-77"
+            "summary": "Insights and the calendar are reached from Explore your month under Recent instead of the flow card's Insights pill; the calendar is a page, not a sheet",
+            "kind": "follow-up",
+            "ref": "MAZ-254"
+          },
+          {
+            "summary": "The month pill is copper with no chevron; the card's is \"November ⌄\" in the label color",
+            "kind": "follow-up",
+            "ref": "MAZ-245"
+          },
+          {
+            "summary": "The sentence reads \"Most went to …\" where the card reads \"Mostly … and …\"",
+            "kind": "follow-up",
+            "ref": "MAZ-245"
+          },
+          {
+            "summary": "Category rows end in a chevron",
+            "kind": "follow-up",
+            "ref": "MAZ-254"
           }
         ]
       },
@@ -222,9 +287,24 @@
         ],
         "deviations": [
           {
-            "summary": "Insights and the calendar are reached from Explore your month; the calendar is a page, not a sheet",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#native-overview-notes-maz-77"
+            "summary": "Insights and the calendar are reached from Explore your month under Recent instead of the flow card's Insights pill; the calendar is a page, not a sheet",
+            "kind": "follow-up",
+            "ref": "MAZ-254"
+          },
+          {
+            "summary": "The legend reads \"Expected or scheduled\" and falls back to a four-line list; the card's is one row ending \"Scheduled\"",
+            "kind": "follow-up",
+            "ref": "MAZ-245"
+          },
+          {
+            "summary": "Adds a month totals line, a disabled next chevron at the current month and a copper Today",
+            "kind": "follow-up",
+            "ref": "MAZ-254"
+          },
+          {
+            "summary": "Capture state: today is selected with nothing on it; the card selects a past day with its entries",
+            "kind": "follow-up",
+            "ref": "MAZ-253"
           }
         ]
       },
@@ -269,8 +349,33 @@
         "deviations": [
           {
             "summary": "Search is the system searchable field in the navigation bar, and the month is a toolbar menu",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
+            "kind": "follow-up",
+            "ref": "MAZ-255"
+          },
+          {
+            "summary": "Adds a Spent · Came in · Invested totals line and chevrons on rows",
+            "kind": "follow-up",
+            "ref": "MAZ-255"
+          },
+          {
+            "summary": "Day headers read \"Saturday, October 10\", not upper case with a short month",
+            "kind": "follow-up",
+            "ref": "MAZ-244"
+          },
+          {
+            "summary": "Entry rows read date · category; the card reads date · account (Home) or the account with split and share extras (Activity)",
+            "kind": "follow-up",
+            "ref": "MAZ-244"
+          },
+          {
+            "summary": "Split and shared rows have no second line under the amount (\"of $12.80\", \"your share\")",
+            "kind": "follow-up",
+            "ref": "MAZ-244"
+          },
+          {
+            "summary": "Add entry is a fifth tab with the search role inside the system tab bar, not a separate copper button beside four tabs",
+            "kind": "follow-up",
+            "ref": "MAZ-254"
           }
         ]
       },
@@ -300,12 +405,29 @@
       "id": "iphone-search-empty",
       "view": "search with no results",
       "native": {
-        "status": "matches",
+        "status": "deviates",
         "owner": "MAZ-73",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Search is the system searchable field at the top, and adds the totals line and a server-search note",
+            "kind": "follow-up",
+            "ref": "MAZ-255"
+          },
+          {
+            "summary": "The empty icon is a bare magnifier, not a filled tile, and Search all months is a small button, not the card's capsule",
+            "kind": "follow-up",
+            "ref": "MAZ-246"
+          },
+          {
+            "summary": "Capture state: no Expenses or November filter, so there's no Clear filters",
+            "kind": "follow-up",
+            "ref": "MAZ-253"
+          }
         ]
       },
       "web": {
@@ -334,14 +456,40 @@
       "id": "iphone-add-expense",
       "view": "new expense draft",
       "native": {
-        "status": "matches",
+        "status": "deviates",
         "owner": "MAZ-73",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
         ],
-        "deviations": []
+        "deviations": [
+          {
+            "summary": "The sheet is titled Add entry with the type control on its own row; the card puts the control in the bar with no title",
+            "kind": "follow-up",
+            "ref": "MAZ-247"
+          },
+          {
+            "summary": "A Household row leads and pushes Account, Split and Receipt under the keypad",
+            "kind": "follow-up",
+            "ref": "MAZ-255"
+          },
+          {
+            "summary": "No caret after the amount, and the . and backspace keys are filled, not ghost keys",
+            "kind": "follow-up",
+            "ref": "MAZ-247"
+          },
+          {
+            "summary": "The close (×) and toolbar + glyphs are copper; the card draws them neutral",
+            "kind": "follow-up",
+            "ref": "MAZ-244"
+          },
+          {
+            "summary": "Capture state: Account is None and the split isn't shown",
+            "kind": "follow-up",
+            "ref": "MAZ-253"
+          }
+        ]
       },
       "web": {
         "status": "deviates",
@@ -369,14 +517,35 @@
       "id": "iphone-add-income",
       "view": "new income draft",
       "native": {
-        "status": "matches",
+        "status": "deviates",
         "owner": "MAZ-73",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
         ],
-        "deviations": []
+        "deviations": [
+          {
+            "summary": "The sheet is titled Add entry with the type control on its own row; the card puts the control in the bar with no title",
+            "kind": "follow-up",
+            "ref": "MAZ-247"
+          },
+          {
+            "summary": "The +$ is grey, not faded green, and Repeat and Note are one combined row",
+            "kind": "follow-up",
+            "ref": "MAZ-247"
+          },
+          {
+            "summary": "The keypad stays up and covers the rows",
+            "kind": "follow-up",
+            "ref": "MAZ-255"
+          },
+          {
+            "summary": "Capture state: the date is today, so the expected callout isn't shown",
+            "kind": "follow-up",
+            "ref": "MAZ-253"
+          }
+        ]
       },
       "web": {
         "status": "deviates",
@@ -419,8 +588,23 @@
         "deviations": [
           {
             "summary": "Shared trips are listed below personal trips with \"Shared · N people\", and picking one opens the shared expense form",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
+            "kind": "follow-up",
+            "ref": "MAZ-255"
+          },
+          {
+            "summary": "Adds the receipt file-type note and a shared-trip footer",
+            "kind": "follow-up",
+            "ref": "MAZ-247"
+          },
+          {
+            "summary": "Section headers are larger title-case headings, not the card's small upper-case labels",
+            "kind": "follow-up",
+            "ref": "MAZ-244"
+          },
+          {
+            "summary": "Capture state: no receipt attached",
+            "kind": "follow-up",
+            "ref": "MAZ-253"
           }
         ]
       },
@@ -464,9 +648,24 @@
         ],
         "deviations": [
           {
-            "summary": "Split is a full sheet with the keypad over the form, not a stacked half sheet",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
+            "summary": "Split is a full sheet with the system number pad over the form, not a stacked half sheet",
+            "kind": "follow-up",
+            "ref": "MAZ-255"
+          },
+          {
+            "summary": "The title has no \"<entry> · <total>\" subtitle",
+            "kind": "follow-up",
+            "ref": "MAZ-247"
+          },
+          {
+            "summary": "The close (×) and toolbar + glyphs are copper; the card draws them neutral",
+            "kind": "follow-up",
+            "ref": "MAZ-244"
+          },
+          {
+            "summary": "Capture state: Percent at 50 %; the card is Equally with 3 people",
+            "kind": "follow-up",
+            "ref": "MAZ-253"
           }
         ]
       },
@@ -496,14 +695,20 @@
       "id": "iphone-category-picker",
       "view": "category picker with renamed Groceries & dining",
       "native": {
-        "status": "matches",
+        "status": "deviates",
         "owner": "MAZ-73",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
         ],
-        "deviations": []
+        "deviations": [
+          {
+            "summary": "The close (×) and toolbar + glyphs are copper; the card draws them neutral",
+            "kind": "follow-up",
+            "ref": "MAZ-244"
+          }
+        ]
       },
       "web": {
         "status": "deviates",
@@ -526,14 +731,40 @@
       "id": "iphone-entry-detail",
       "view": "entry p-party (trip and shared personal share)",
       "native": {
-        "status": "matches",
+        "status": "deviates",
         "owner": "MAZ-73",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
         ],
-        "deviations": []
+        "deviations": [
+          {
+            "summary": "Trash and Edit are icon-only (Edit in copper); the card has a labelled Edit capsule",
+            "kind": "follow-up",
+            "ref": "MAZ-246"
+          },
+          {
+            "summary": "Split and receipt shows only Your share and Total, with no split method and the receipt as a row; no category glow behind the header",
+            "kind": "follow-up",
+            "ref": "MAZ-246"
+          },
+          {
+            "summary": "Section headers are larger title-case headings, not the card's small upper-case labels",
+            "kind": "follow-up",
+            "ref": "MAZ-244"
+          },
+          {
+            "summary": "Add entry is a fifth tab with the search role inside the system tab bar, not a separate copper button beside four tabs",
+            "kind": "follow-up",
+            "ref": "MAZ-254"
+          },
+          {
+            "summary": "Capture state: no receipt attached",
+            "kind": "follow-up",
+            "ref": "MAZ-253"
+          }
+        ]
       },
       "web": {
         "status": "deviates",
@@ -587,6 +818,16 @@
             "summary": "Confirmations are iOS 27 popovers anchored to their button, not bottom action sheets",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
+          },
+          {
+            "summary": "The confirmation has no category icon, amount · date · account line or members, which a system dialog can't show",
+            "kind": "follow-up",
+            "ref": "MAZ-255"
+          },
+          {
+            "summary": "Capture state: deletes a personal entry from its detail; the card deletes a shared one from Activity",
+            "kind": "follow-up",
+            "ref": "MAZ-253"
           }
         ]
       },
@@ -626,8 +867,23 @@
         "deviations": [
           {
             "summary": "A notification prompt (Hear about household changes) sits above the list until answered",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
+            "kind": "follow-up",
+            "ref": "MAZ-256"
+          },
+          {
+            "summary": "No + in the toolbar; rows have no leading tile, the balance is one line, and Settled has no check icon",
+            "kind": "follow-up",
+            "ref": "MAZ-248"
+          },
+          {
+            "summary": "Section headers are larger title-case headings, not the card's small upper-case labels",
+            "kind": "follow-up",
+            "ref": "MAZ-244"
+          },
+          {
+            "summary": "Members are shown by email and initials from the email",
+            "kind": "follow-up",
+            "ref": "MAZ-171"
           }
         ]
       },
@@ -662,13 +918,28 @@
         "deviations": [
           {
             "summary": "Members are shown by email and initials from the email",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
+            "kind": "follow-up",
+            "ref": "MAZ-171"
           },
           {
             "summary": "The month is chosen in the Expenses and Balances section headers (previous and next); the card shows no month control",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
+            "kind": "follow-up",
+            "ref": "MAZ-256"
+          },
+          {
+            "summary": "Expense is the primary button and Record payment the secondary, the reverse of the card; the name is also the inline title; no hero glow; rows add the date",
+            "kind": "follow-up",
+            "ref": "MAZ-248"
+          },
+          {
+            "summary": "History (clock) is in the toolbar where the card has the … menu",
+            "kind": "follow-up",
+            "ref": "MAZ-256"
+          },
+          {
+            "summary": "Adds a Repeating section under the expenses",
+            "kind": "follow-up",
+            "ref": "MAZ-256"
           }
         ]
       },
@@ -713,8 +984,23 @@
         "deviations": [
           {
             "summary": "Members are shown by email and initials from the email",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
+            "kind": "follow-up",
+            "ref": "MAZ-171"
+          },
+          {
+            "summary": "Keeps the full hero above the segments, where the card collapses to a navigation bar",
+            "kind": "follow-up",
+            "ref": "MAZ-248"
+          },
+          {
+            "summary": "Settles is plain grey text, not the amber pill, and balance cells are one line",
+            "kind": "follow-up",
+            "ref": "MAZ-248"
+          },
+          {
+            "summary": "Capture state: the month's payments are already open",
+            "kind": "follow-up",
+            "ref": "MAZ-253"
           }
         ]
       },
@@ -759,13 +1045,23 @@
         "deviations": [
           {
             "summary": "Members are shown by email and initials from the email",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
+            "kind": "follow-up",
+            "ref": "MAZ-171"
           },
           {
-            "summary": "The invite card shows Create invite code until asked, because a new code replaces the one already shared; the QR code is in the invite sheet",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
+            "summary": "The invite card shows Create invite code until asked, because a new code replaces the one already shared",
+            "kind": "follow-up",
+            "ref": "MAZ-256"
+          },
+          {
+            "summary": "Keeps the full hero above the segments, which pushes the invite card under the tab bar",
+            "kind": "follow-up",
+            "ref": "MAZ-248"
+          },
+          {
+            "summary": "Section headers are larger title-case headings, not the card's small upper-case labels",
+            "kind": "follow-up",
+            "ref": "MAZ-244"
           }
         ]
       },
@@ -809,9 +1105,24 @@
         ],
         "deviations": [
           {
-            "summary": "The keypad stays visible on iPhone, so the share list continues under it; amounts and percentages are typed in the Split sheet, and an equal split includes everyone on the date (no checkboxes)",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
+            "summary": "The keypad stays visible, so the share list continues under it; amounts and percentages are typed in the Split sheet, and an equal split has no checkboxes",
+            "kind": "follow-up",
+            "ref": "MAZ-256"
+          },
+          {
+            "summary": "Titled Add entry with the type control; the card reads New expense with the household as subtitle",
+            "kind": "follow-up",
+            "ref": "MAZ-247"
+          },
+          {
+            "summary": "The selected Paid by chip is copper, not the card's inverted fill",
+            "kind": "follow-up",
+            "ref": "MAZ-244"
+          },
+          {
+            "summary": "Capture state: an empty draft",
+            "kind": "follow-up",
+            "ref": "MAZ-253"
           }
         ]
       },
@@ -856,8 +1167,18 @@
         "deviations": [
           {
             "summary": "Members are shown by email and initials from the email",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
+            "kind": "follow-up",
+            "ref": "MAZ-171"
+          },
+          {
+            "summary": "Payer and receiver are left-aligned list rows with a left-aligned amount, not the centered pair with an arrow; Full share is text, not a pill; the note has no icon and drops \"you\"",
+            "kind": "follow-up",
+            "ref": "MAZ-248"
+          },
+          {
+            "summary": "A full-height sheet, not medium",
+            "kind": "follow-up",
+            "ref": "MAZ-256"
           }
         ]
       },
@@ -902,8 +1223,18 @@
         "deviations": [
           {
             "summary": "Names the real cause (here the same share recorded on another device) and lists only the values that changed, so the seeded state shows the share's status instead of total and share",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
+            "kind": "follow-up",
+            "ref": "MAZ-256"
+          },
+          {
+            "summary": "The recorded time reads \"last month\" for a payment made seconds earlier, and Review expense has an eye icon",
+            "kind": "follow-up",
+            "ref": "MAZ-248"
+          },
+          {
+            "summary": "A full-height sheet, not medium",
+            "kind": "follow-up",
+            "ref": "MAZ-256"
           }
         ]
       },
@@ -928,12 +1259,24 @@
       "id": "iphone-household-create",
       "view": "create household form",
       "native": {
-        "status": "matches",
+        "status": "deviates",
         "owner": "MAZ-75",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Details rows have no icons, the footer adds two sentences, and the header icon is copper, not the card's neutral tile",
+            "kind": "follow-up",
+            "ref": "MAZ-248"
+          },
+          {
+            "summary": "Capture state: the name is empty",
+            "kind": "follow-up",
+            "ref": "MAZ-253"
+          }
         ]
       },
       "web": {
@@ -972,8 +1315,13 @@
         "deviations": [
           {
             "summary": "Members are shown by email and initials from the email",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
+            "kind": "follow-up",
+            "ref": "MAZ-171"
+          },
+          {
+            "summary": "Inline title with the chips before the subtitle; no action badges on avatars; payments read \"… recorded that … paid You $30.00\"; long title-case day headers; the selected chip is copper",
+            "kind": "follow-up",
+            "ref": "MAZ-248"
           }
         ]
       },
@@ -1003,12 +1351,39 @@
       "id": "iphone-trips",
       "view": "trips: Québec weekend (personal) and Lisbon trip (shared)",
       "native": {
-        "status": "matches",
+        "status": "deviates",
         "owner": "MAZ-76",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "New trip and Join a trip are a list section, not the card's toolbar buttons",
+            "kind": "follow-up",
+            "ref": "MAZ-249"
+          },
+          {
+            "summary": "The featured trip adds Trip expense",
+            "kind": "follow-up",
+            "ref": "MAZ-256"
+          },
+          {
+            "summary": "The featured meta repeats Shared and the year; rows show a long date and Personal as text, not a chip; trip tiles are category blue or copper, not neutral; no glow",
+            "kind": "follow-up",
+            "ref": "MAZ-249"
+          },
+          {
+            "summary": "Section headers are larger title-case headings, not the card's small upper-case labels",
+            "kind": "follow-up",
+            "ref": "MAZ-244"
+          },
+          {
+            "summary": "Add entry is a fifth tab with the search role inside the system tab bar, not a separate copper button beside four tabs",
+            "kind": "follow-up",
+            "ref": "MAZ-254"
+          }
         ]
       },
       "web": {
@@ -1046,9 +1421,24 @@
         ],
         "deviations": [
           {
-            "summary": "Trip expense is a button under the hero, where the card relies on Add entry (iPhone) or the toolbar (iPad)",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
+            "summary": "Trip expense is a button under the hero, where the card relies on Add entry",
+            "kind": "follow-up",
+            "ref": "MAZ-256"
+          },
+          {
+            "summary": "The trip name is also the inline title, and the hero adds the phase and currency; no glow",
+            "kind": "follow-up",
+            "ref": "MAZ-249"
+          },
+          {
+            "summary": "History (clock) is in the toolbar where the card has the … menu",
+            "kind": "follow-up",
+            "ref": "MAZ-256"
+          },
+          {
+            "summary": "Add entry is a fifth tab with the search role inside the system tab bar, not a separate copper button beside four tabs",
+            "kind": "follow-up",
+            "ref": "MAZ-254"
           }
         ]
       },
@@ -1083,14 +1473,30 @@
       "id": "iphone-trip-form",
       "view": "new trip form",
       "native": {
-        "status": "matches",
+        "status": "deviates",
         "owner": "MAZ-76",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
         ],
-        "deviations": []
+        "deviations": [
+          {
+            "summary": "Starts, Ends and Currency have no icons and Currency no lock; the name field has a Trip name header",
+            "kind": "follow-up",
+            "ref": "MAZ-249"
+          },
+          {
+            "summary": "The close (×) and toolbar + glyphs are copper; the card draws them neutral",
+            "kind": "follow-up",
+            "ref": "MAZ-244"
+          },
+          {
+            "summary": "Capture state: the name is empty and the keyboard covers People",
+            "kind": "follow-up",
+            "ref": "MAZ-253"
+          }
+        ]
       },
       "web": {
         "status": "deviates",
@@ -1132,9 +1538,29 @@
         ],
         "deviations": [
           {
-            "summary": "Settings opens as a sheet from Home; Notifications has no row because it follows the system permission",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
+            "summary": "The account row has no chevron and a grey sync icon; Currency has a chevron and the footer gives the entries reason, not \"locked while you're in a household\"",
+            "kind": "follow-up",
+            "ref": "MAZ-250"
+          },
+          {
+            "summary": "Row icons are bare copper glyphs, not neutral tiles",
+            "kind": "follow-up",
+            "ref": "MAZ-244"
+          },
+          {
+            "summary": "Settings pages use a large left-aligned title; the card uses a centered inline title",
+            "kind": "follow-up",
+            "ref": "MAZ-254"
+          },
+          {
+            "summary": "No Notifications row (notifications follow the system permission), and Categories shows its count",
+            "kind": "follow-up",
+            "ref": "MAZ-257"
+          },
+          {
+            "summary": "Capture state: Appearance and Face ID lock aren't on System and On, and Server and Sign out are below the fold",
+            "kind": "follow-up",
+            "ref": "MAZ-253"
           }
         ]
       },
@@ -1173,14 +1599,19 @@
         ],
         "deviations": [
           {
-            "summary": "The card has no shared schedule: the shared Streaming row adds a Shared tag beside the title, the household's name in place of the account (on its own line at this width) and \"your share\" under the amount, and opens its household instead of swiping. Waiting for a design decision",
+            "summary": "The card has no shared schedule: the shared Streaming row adds a Shared tag beside the title, the household's name in place of the account (on its own line at this width) and \"your share\" under the amount, opens its household instead of swiping, and the footer adds a sentence about shared schedules",
             "kind": "follow-up",
-            "ref": "MAZ-198"
+            "ref": "MAZ-219"
           },
           {
-            "summary": "The subtitle sits about 20 points further below the large title than on the card: the list starts below the system's large-title area, and a navigation subtitle folds the large title into an inline one. Waiting for a design decision",
+            "summary": "The subtitle sits about 20 points further below the large title than on the card: the list starts below the system's large-title area, and a navigation subtitle folds the large title into an inline one",
             "kind": "follow-up",
-            "ref": "MAZ-198"
+            "ref": "MAZ-236"
+          },
+          {
+            "summary": "The close (×) and toolbar + glyphs are copper; the card draws them neutral",
+            "kind": "follow-up",
+            "ref": "MAZ-244"
           }
         ]
       },
@@ -1215,14 +1646,25 @@
       "id": "iphone-schedule-detail",
       "view": "schedule Gym (anchor 31)",
       "native": {
-        "status": "matches",
+        "status": "deviates",
         "owner": "MAZ-74",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
         ],
-        "deviations": []
+        "deviations": [
+          {
+            "summary": "An inline title and no … button; upcoming dates include the year; a separator above Edit and Pause",
+            "kind": "follow-up",
+            "ref": "MAZ-251"
+          },
+          {
+            "summary": "Section headers are larger title-case headings, not the card's small upper-case labels",
+            "kind": "follow-up",
+            "ref": "MAZ-244"
+          }
+        ]
       },
       "web": {
         "status": "deviates",
@@ -1250,14 +1692,35 @@
       "id": "iphone-accounts",
       "view": "accounts: Everyday chequing and Visa",
       "native": {
-        "status": "matches",
+        "status": "deviates",
         "owner": "MAZ-74",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
         ],
-        "deviations": []
+        "deviations": [
+          {
+            "summary": "No \"Labels for how you pay and get paid.\" subtitle",
+            "kind": "follow-up",
+            "ref": "MAZ-251"
+          },
+          {
+            "summary": "Section headers are larger title-case headings, not the card's small upper-case labels",
+            "kind": "follow-up",
+            "ref": "MAZ-244"
+          },
+          {
+            "summary": "Bank account uses a bank building icon where the card uses a wallet",
+            "kind": "follow-up",
+            "ref": "MAZ-257"
+          },
+          {
+            "summary": "The close (×) and toolbar + glyphs are copper; the card draws them neutral",
+            "kind": "follow-up",
+            "ref": "MAZ-244"
+          }
+        ]
       },
       "web": {
         "status": "deviates",
@@ -1280,14 +1743,35 @@
       "id": "iphone-account-form",
       "view": "new account form",
       "native": {
-        "status": "matches",
+        "status": "deviates",
         "owner": "MAZ-74",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
         ],
-        "deviations": []
+        "deviations": [
+          {
+            "summary": "Section headers are larger title-case headings, not the card's small upper-case labels",
+            "kind": "follow-up",
+            "ref": "MAZ-244"
+          },
+          {
+            "summary": "The close (×) and toolbar + glyphs are copper; the card draws them neutral",
+            "kind": "follow-up",
+            "ref": "MAZ-244"
+          },
+          {
+            "summary": "Bank account uses a bank building icon where the card uses a wallet",
+            "kind": "follow-up",
+            "ref": "MAZ-257"
+          },
+          {
+            "summary": "Capture state: a new account form; the card is Edit account for an account in use",
+            "kind": "follow-up",
+            "ref": "MAZ-253"
+          }
+        ]
       },
       "web": {
         "status": "deviates",
@@ -1320,14 +1804,30 @@
       "id": "iphone-categories",
       "view": "categories by kind",
       "native": {
-        "status": "matches",
+        "status": "deviates",
         "owner": "MAZ-74",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
         ],
-        "deviations": []
+        "deviations": [
+          {
+            "summary": "No Edit button or drag handles to reorder, and the footer explains removal instead of the shortcuts",
+            "kind": "follow-up",
+            "ref": "MAZ-251"
+          },
+          {
+            "summary": "Section headers are larger title-case headings, not the card's small upper-case labels",
+            "kind": "follow-up",
+            "ref": "MAZ-244"
+          },
+          {
+            "summary": "The close (×) and toolbar + glyphs are copper; the card draws them neutral",
+            "kind": "follow-up",
+            "ref": "MAZ-244"
+          }
+        ]
       },
       "web": {
         "status": "deviates",
@@ -1350,14 +1850,30 @@
       "id": "iphone-category-form",
       "view": "new category form",
       "native": {
-        "status": "matches",
+        "status": "deviates",
         "owner": "MAZ-74",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
         ],
-        "deviations": []
+        "deviations": [
+          {
+            "summary": "The name field has a Name header",
+            "kind": "follow-up",
+            "ref": "MAZ-251"
+          },
+          {
+            "summary": "The close (×) and toolbar + glyphs are copper; the card draws them neutral",
+            "kind": "follow-up",
+            "ref": "MAZ-244"
+          },
+          {
+            "summary": "Capture state: the name is empty and the keyboard covers Color and Icon",
+            "kind": "follow-up",
+            "ref": "MAZ-253"
+          }
+        ]
       },
       "web": {
         "status": "deviates",
@@ -1385,14 +1901,35 @@
       "id": "iphone-appearance",
       "view": "appearance: light, dark and system",
       "native": {
-        "status": "matches",
+        "status": "deviates",
         "owner": "MAZ-69",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
         ],
-        "deviations": []
+        "deviations": [
+          {
+            "summary": "Settings pages use a large left-aligned title; the card uses a centered inline title",
+            "kind": "follow-up",
+            "ref": "MAZ-254"
+          },
+          {
+            "summary": "The Text size row has no chevron",
+            "kind": "follow-up",
+            "ref": "MAZ-250"
+          },
+          {
+            "summary": "Copy says \"this device\" where the card says \"this iPhone\"",
+            "kind": "follow-up",
+            "ref": "MAZ-255"
+          },
+          {
+            "summary": "Capture state: Light or Dark is selected, not System",
+            "kind": "follow-up",
+            "ref": "MAZ-253"
+          }
+        ]
       },
       "web": {
         "status": "deviates",
@@ -1434,9 +1971,19 @@
         ],
         "deviations": [
           {
-            "summary": "Lock after (Immediately, 1 minute, 5 minutes) is MAZ-133; without enrolled Face ID the page shows the lock unavailable",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#native-implementation-notes-maz-69"
+            "summary": "The header is a large left-aligned title with the description as a section header, not a centered lock tile and title",
+            "kind": "follow-up",
+            "ref": "MAZ-250"
+          },
+          {
+            "summary": "Copy says \"this device\" where the card says \"this iPhone\"",
+            "kind": "follow-up",
+            "ref": "MAZ-255"
+          },
+          {
+            "summary": "Capture state: the lock is off, so Lock after isn't shown",
+            "kind": "follow-up",
+            "ref": "MAZ-253"
           }
         ]
       },
@@ -1450,12 +1997,24 @@
       "id": "iphone-sign-in",
       "view": "password sign-in",
       "native": {
-        "status": "matches",
+        "status": "deviates",
         "owner": "MAZ-68",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "A penny. wordmark outranks \"Welcome back.\"; separate fields with labels above; the SSO button reads Continue with Single sign-on in copper with no icon; the whole New here? line is copper; no glow",
+            "kind": "follow-up",
+            "ref": "MAZ-252"
+          },
+          {
+            "summary": "The sample-data link sits under the other links, not pinned to the bottom",
+            "kind": "follow-up",
+            "ref": "MAZ-257"
+          }
         ]
       },
       "web": {
@@ -1484,14 +2043,25 @@
       "id": "iphone-create-account",
       "view": "registration (unique test user)",
       "native": {
-        "status": "matches",
+        "status": "deviates",
         "owner": "MAZ-68",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
         ],
-        "deviations": []
+        "deviations": [
+          {
+            "summary": "No back button; logo and wordmark over a smaller centered headline; separate fields; the whole Sign in line is copper",
+            "kind": "follow-up",
+            "ref": "MAZ-252"
+          },
+          {
+            "summary": "Capture state: empty fields, so no strength meter",
+            "kind": "follow-up",
+            "ref": "MAZ-253"
+          }
+        ]
       },
       "web": {
         "status": "deviates",
@@ -1519,12 +2089,34 @@
       "id": "iphone-server-connect",
       "view": "server URL entry (environment API URL)",
       "native": {
-        "status": "matches",
+        "status": "deviates",
         "owner": "MAZ-69",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "A pushed page with back, not a sheet",
+            "kind": "follow-up",
+            "ref": "MAZ-257"
+          },
+          {
+            "summary": "Server URL is a header, not inside the field, with no clear button; values are grey; \"Single sign-on\"; the switching note is grey, not an amber callout; Use this server and Check again are both copper rows",
+            "kind": "follow-up",
+            "ref": "MAZ-252"
+          },
+          {
+            "summary": "Copy says \"this device\" where the card says \"this iPhone\"",
+            "kind": "follow-up",
+            "ref": "MAZ-255"
+          },
+          {
+            "summary": "Capture state: the test server is HTTP, not verified HTTPS",
+            "kind": "follow-up",
+            "ref": "MAZ-253"
+          }
         ]
       },
       "web": {
@@ -1560,9 +2152,24 @@
         ],
         "deviations": [
           {
-            "summary": "Add entry is a tab with the search role inside the system tab bar, not a separate copper button",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#native-implementation-notes-maz-69"
+            "summary": "Add entry is a fifth tab with the search role inside the system tab bar, not a separate copper button beside four tabs",
+            "kind": "follow-up",
+            "ref": "MAZ-254"
+          },
+          {
+            "summary": "An inline \"Home\" title, and calendar and settings grouped in one capsule; the card has no title and two separate buttons",
+            "kind": "follow-up",
+            "ref": "MAZ-254"
+          },
+          {
+            "summary": "The month pill is copper with no chevron; the card's is \"November ⌄\" in the label color",
+            "kind": "follow-up",
+            "ref": "MAZ-245"
+          },
+          {
+            "summary": "One copper Add entry button instead of the Income, Expense and Invest tiles; \"$0.00\" in the label color, not a dimmed \"$0\"; empty Recent inside a card with no icon",
+            "kind": "follow-up",
+            "ref": "MAZ-245"
           }
         ]
       },
@@ -1607,8 +2214,28 @@
         "deviations": [
           {
             "summary": "Offline adds a \"Shared expenses may be missing\" banner when shared data couldn't load",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
+            "kind": "follow-up",
+            "ref": "MAZ-254"
+          },
+          {
+            "summary": "The offline banner is a solid multi-line card, not the card's one-line glass capsule",
+            "kind": "follow-up",
+            "ref": "MAZ-245"
+          },
+          {
+            "summary": "The month pill is copper with no chevron; the card's is \"November ⌄\" in the label color",
+            "kind": "follow-up",
+            "ref": "MAZ-245"
+          },
+          {
+            "summary": "Follow your money shows Spent, Invested and Over as three stacked columns with headline amounts, not the card's one-line dot legend; the projected amount isn't bold",
+            "kind": "follow-up",
+            "ref": "MAZ-245"
+          },
+          {
+            "summary": "Capture state: no changes waiting",
+            "kind": "follow-up",
+            "ref": "MAZ-253"
           }
         ]
       },
@@ -1648,8 +2275,13 @@
         "deviations": [
           {
             "summary": "A save is local first, so a failed upload shows Couldn't sync with Retry over the screen, not Couldn't save in the form",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
+            "kind": "follow-up",
+            "ref": "MAZ-257"
+          },
+          {
+            "summary": "The banner title wraps early, and stray separators sit under the banner and chips",
+            "kind": "follow-up",
+            "ref": "MAZ-252"
           }
         ]
       },
@@ -1684,8 +2316,18 @@
         "deviations": [
           {
             "summary": "The toast appears on the local save, before the upload",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
+            "kind": "follow-up",
+            "ref": "MAZ-257"
+          },
+          {
+            "summary": "The toast leads with a copper kind tile, not the category's round tile, and Undo has no capsule",
+            "kind": "follow-up",
+            "ref": "MAZ-252"
+          },
+          {
+            "summary": "Capture state: an edit on entry detail; the card shows a new expense over Home",
+            "kind": "follow-up",
+            "ref": "MAZ-253"
           }
         ]
       },
@@ -1727,6 +2369,26 @@
             "summary": "Confirmations are iOS 27 popovers anchored to their button, not bottom action sheets",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
+          },
+          {
+            "summary": "The confirmation has no icon tile or Sync, then sign out, which a system dialog can't show",
+            "kind": "follow-up",
+            "ref": "MAZ-255"
+          },
+          {
+            "summary": "The Sign out row has no red icon tile",
+            "kind": "follow-up",
+            "ref": "MAZ-252"
+          },
+          {
+            "summary": "Copy says \"this device\" where the card says \"this iPhone\"",
+            "kind": "follow-up",
+            "ref": "MAZ-255"
+          },
+          {
+            "summary": "Capture state: nothing waiting to sync",
+            "kind": "follow-up",
+            "ref": "MAZ-253"
           }
         ]
       },
@@ -1863,14 +2525,29 @@
         ],
         "deviations": [
           {
-            "summary": "The iPad sidebar has generic Shared and Trips rows instead of each household and trip, and no Insights row",
+            "summary": "The sidebar lists generic Shared and Trips rows instead of each household and trip, and no Insights row",
             "kind": "follow-up",
             "ref": "MAZ-182"
           },
           {
-            "summary": "Insights and the calendar are reached from Explore your month; the calendar is a page, not a sheet",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#native-overview-notes-maz-77"
+            "summary": "The sidebar shows the system Penny title, title-case headers, the email with no avatar and a grey selection; the card has the penny. brand mark, upper-case headers, an avatar and a copper selection with badges",
+            "kind": "follow-up",
+            "ref": "MAZ-182"
+          },
+          {
+            "summary": "Insights and the calendar are reached from Explore your month under Recent instead of the flow card's Insights pill; the calendar is a page, not a sheet",
+            "kind": "follow-up",
+            "ref": "MAZ-254"
+          },
+          {
+            "summary": "No search or Add entry in the toolbar, and the month is copper with no year or chevrons",
+            "kind": "follow-up",
+            "ref": "MAZ-182"
+          },
+          {
+            "summary": "Income, Spent and Invested are stacked, not on one line; Coming up has no icons and unsigned amber amounts",
+            "kind": "follow-up",
+            "ref": "MAZ-245"
           }
         ]
       },
@@ -1924,7 +2601,12 @@
         ],
         "deviations": [
           {
-            "summary": "The iPad sidebar has generic Shared and Trips rows instead of each household and trip, and no Insights row",
+            "summary": "The sidebar lists generic Shared and Trips rows instead of each household and trip, and no Insights row",
+            "kind": "follow-up",
+            "ref": "MAZ-182"
+          },
+          {
+            "summary": "The sidebar shows the system Penny title, title-case headers, the email with no avatar and a grey selection; the card has the penny. brand mark, upper-case headers, an avatar and a copper selection with badges",
             "kind": "follow-up",
             "ref": "MAZ-182"
           },
@@ -1932,6 +2614,21 @@
             "summary": "In portrait the detail pane collapses to a few points and wraps the title letter by letter",
             "kind": "follow-up",
             "ref": "MAZ-182"
+          },
+          {
+            "summary": "Search in the toolbar with a month menu and the totals line, not the card's large title, search field and chips",
+            "kind": "follow-up",
+            "ref": "MAZ-255"
+          },
+          {
+            "summary": "The detail uses the iPhone stacked layout, with icon-only Edit and no split method or other people",
+            "kind": "follow-up",
+            "ref": "MAZ-246"
+          },
+          {
+            "summary": "Entry rows read date · category; the card reads date · account (Home) or the account with split and share extras (Activity)",
+            "kind": "follow-up",
+            "ref": "MAZ-244"
           }
         ]
       },
@@ -1968,6 +2665,11 @@
             "summary": "Add entry is the compact one-column sheet with the keypad, not the two-column form sheet with the keyboard",
             "kind": "follow-up",
             "ref": "MAZ-182"
+          },
+          {
+            "summary": "A ✓ save icon and the Add entry title, not the labelled Add expense capsule; no shortcut footer",
+            "kind": "follow-up",
+            "ref": "MAZ-247"
           }
         ]
       },
@@ -2006,19 +2708,34 @@
         ],
         "deviations": [
           {
-            "summary": "The iPad sidebar has generic Shared and Trips rows instead of each household and trip, and no Insights row",
+            "summary": "The sidebar lists generic Shared and Trips rows instead of each household and trip, and no Insights row",
+            "kind": "follow-up",
+            "ref": "MAZ-182"
+          },
+          {
+            "summary": "The sidebar shows the system Penny title, title-case headers, the email with no avatar and a grey selection; the card has the penny. brand mark, upper-case headers, an avatar and a copper selection with badges",
             "kind": "follow-up",
             "ref": "MAZ-182"
           },
           {
             "summary": "The month is chosen in the Expenses and Balances section headers (previous and next); the card shows no month control",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
+            "kind": "follow-up",
+            "ref": "MAZ-256"
           },
           {
-            "summary": "Single column, with no balances panel beside the expenses",
+            "summary": "Single column, with no balances panel or selected expense beside the expenses",
             "kind": "follow-up",
             "ref": "MAZ-182"
+          },
+          {
+            "summary": "Record payment and Expense are buttons in the body, not the toolbar's + Expense capsule; no hero glow",
+            "kind": "follow-up",
+            "ref": "MAZ-248"
+          },
+          {
+            "summary": "Members are shown by email and initials from the email",
+            "kind": "follow-up",
+            "ref": "MAZ-171"
           }
         ]
       },
@@ -2062,19 +2779,34 @@
         ],
         "deviations": [
           {
-            "summary": "The iPad sidebar has generic Shared and Trips rows instead of each household and trip, and no Insights row",
+            "summary": "The sidebar lists generic Shared and Trips rows instead of each household and trip, and no Insights row",
             "kind": "follow-up",
             "ref": "MAZ-182"
           },
           {
-            "summary": "Trip expense is a button under the hero, where the card relies on Add entry (iPhone) or the toolbar (iPad)",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
+            "summary": "The sidebar shows the system Penny title, title-case headers, the email with no avatar and a grey selection; the card has the penny. brand mark, upper-case headers, an avatar and a copper selection with badges",
+            "kind": "follow-up",
+            "ref": "MAZ-182"
+          },
+          {
+            "summary": "Trip expense is a button under the hero, not the toolbar capsule",
+            "kind": "follow-up",
+            "ref": "MAZ-256"
           },
           {
             "summary": "Single column: People and Your share by category are sections of the tabs, not panels beside the expenses",
             "kind": "follow-up",
             "ref": "MAZ-182"
+          },
+          {
+            "summary": "The phase is small grey text and the name and totals smaller than the card's; the meta reads \"N people · CAD\"",
+            "kind": "follow-up",
+            "ref": "MAZ-249"
+          },
+          {
+            "summary": "History (clock) is in the toolbar where the card has the … menu",
+            "kind": "follow-up",
+            "ref": "MAZ-256"
           }
         ]
       },
@@ -2128,19 +2860,34 @@
         ],
         "deviations": [
           {
-            "summary": "The iPad sidebar has generic Shared and Trips rows instead of each household and trip, and no Insights row",
+            "summary": "The sidebar lists generic Shared and Trips rows instead of each household and trip, and no Insights row",
+            "kind": "follow-up",
+            "ref": "MAZ-182"
+          },
+          {
+            "summary": "The sidebar shows the system Penny title, title-case headers, the email with no avatar and a grey selection; the card has the penny. brand mark, upper-case headers, an avatar and a copper selection with badges",
             "kind": "follow-up",
             "ref": "MAZ-182"
           },
           {
             "summary": "Settings and the Manage pages open in the detail column instead of a sheet",
-            "kind": "approved",
-            "ref": "docs/reference/redesign.md#native-implementation-notes-maz-69"
+            "kind": "follow-up",
+            "ref": "MAZ-257"
           },
           {
             "summary": "Settings is a single column; the selected page doesn't open beside the list",
             "kind": "follow-up",
             "ref": "MAZ-182"
+          },
+          {
+            "summary": "Repeats the Manage section, and the account row and Currency differ as on iPhone",
+            "kind": "follow-up",
+            "ref": "MAZ-250"
+          },
+          {
+            "summary": "Capture state: Appearance and Face ID lock aren't on System and On",
+            "kind": "follow-up",
+            "ref": "MAZ-253"
           }
         ]
       },
