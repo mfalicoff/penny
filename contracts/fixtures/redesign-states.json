@@ -131,7 +131,7 @@
       ],
       "scenario": "searchable-household",
       "as": "alex",
-      "view": "money flow, September 2026 (salary income and spending)"
+      "view": "money flow, September 2026 (salary income and spending), the largest spending band focused with its focus card"
     },
     {
       "specimen": "iphone-insights",
@@ -154,7 +154,7 @@
       ],
       "scenario": "searchable-household",
       "as": "alex",
-      "view": "month calendar, October 2026"
+      "view": "month calendar, October 2026, Oct 3 selected with its entries"
     },
     {
       "specimen": "iphone-activity",
@@ -176,7 +176,7 @@
       ],
       "scenario": "empty",
       "as": "solo",
-      "view": "search with no results",
+      "view": "search with no results in expenses",
       "search": {
         "query": "zzzz"
       }
@@ -190,7 +190,7 @@
       ],
       "scenario": "searchable-household",
       "as": "alex",
-      "view": "new expense draft"
+      "view": "new expense draft: $74.40 Dinner with friends on Visa"
     },
     {
       "specimen": "iphone-add-income",
@@ -201,7 +201,7 @@
       ],
       "scenario": "searchable-household",
       "as": "alex",
-      "view": "new income draft"
+      "view": "new income draft: $3,200.00 Payday into Everyday chequing on Oct 30, after today, so expected"
     },
     {
       "specimen": "iphone-entry-extras",
@@ -212,7 +212,7 @@
       ],
       "scenario": "searchable-household",
       "as": "alex",
-      "view": "entry draft with receipt, repeat and trip rows open"
+      "view": "entry draft with a photo receipt attached and the receipt, repeat and trip rows open"
     },
     {
       "specimen": "iphone-split",
@@ -223,7 +223,7 @@
       ],
       "scenario": "searchable-household",
       "as": "alex",
-      "view": "entry draft with a 50% personal share"
+      "view": "entry draft split equally between 3 people"
     },
     {
       "specimen": "iphone-category-picker",
@@ -245,7 +245,7 @@
       ],
       "scenario": "searchable-household",
       "as": "alex",
-      "view": "entry p-party (trip and shared personal share)"
+      "view": "entry p-party (trip, shared personal share and a photo receipt)"
     },
     {
       "specimen": "iphone-receipt",
@@ -267,7 +267,7 @@
       ],
       "scenario": "searchable-household",
       "as": "alex",
-      "view": "delete p-coffee-2 confirmation"
+      "view": "delete the shared Internet expense for everyone confirmation"
     },
     {
       "specimen": "iphone-shared-list",
@@ -323,7 +323,7 @@
       ],
       "scenario": "searchable-household",
       "as": "alex",
-      "view": "new shared expense draft in Maison"
+      "view": "new shared expense draft in Maison: $96.30 Hydro"
     },
     {
       "specimen": "iphone-record-payment",
@@ -377,7 +377,7 @@
       ],
       "scenario": "empty",
       "as": "solo",
-      "view": "create household form"
+      "view": "create household form named Apartment"
     },
     {
       "specimen": "iphone-history",
@@ -421,7 +421,7 @@
       ],
       "scenario": "searchable-household",
       "as": "alex",
-      "view": "new trip form"
+      "view": "new trip form named Lisbon with Share with others on"
     },
     {
       "specimen": "iphone-settings",
@@ -476,7 +476,7 @@
       ],
       "scenario": "searchable-household",
       "as": "alex",
-      "view": "new account form"
+      "view": "edit Visa, used by entries and schedules, so Remove is locked"
     },
     {
       "specimen": "iphone-categories",
@@ -498,7 +498,7 @@
       ],
       "scenario": "searchable-household",
       "as": "alex",
-      "view": "new category form"
+      "view": "new category draft: Coffee"
     },
     {
       "specimen": "iphone-appearance",
@@ -587,7 +587,7 @@
       ],
       "scenario": "searchable-household",
       "as": "alex",
-      "view": "home while the network fails",
+      "view": "home while the network fails, with changes waiting to sync",
       "fault": {
         "target": "http",
         "abort": true
@@ -646,7 +646,7 @@
       ],
       "scenario": "searchable-household",
       "as": "alex",
-      "view": "sign out confirmation with no pending changes"
+      "view": "sign out confirmation with two changes waiting to sync"
     },
     {
       "specimen": "iphone-receipt-inbox",
@@ -753,7 +753,7 @@
       ],
       "scenario": "searchable-household",
       "as": "alex",
-      "view": "iPad activity list with entry p-party in the detail pane"
+      "view": "iPad activity list with entry p-party (with a photo receipt) in the detail pane"
     },
     {
       "specimen": "ipad-add-entry",
@@ -892,7 +892,7 @@
       ],
       "scenario": "searchable-household",
       "as": "alex",
-      "view": "web home dashboard, October 2026",
+      "view": "web home dashboard, October 2026, Groceries focused in Follow your money",
       "totals": "alex-2026-10"
     },
     {
@@ -915,7 +915,7 @@
       ],
       "scenario": "searchable-household",
       "as": "alex",
-      "view": "web insights and money flow, September 2026 (salary income and spending)"
+      "view": "web insights and money flow, September 2026 (salary income and spending), the largest spending band focused"
     },
     {
       "specimen": "web-household",
@@ -960,7 +960,7 @@
       ],
       "scenario": "searchable-household",
       "as": "alex",
-      "view": "web new expense dialog"
+      "view": "web new expense dialog over Activity: $74.40 Dinner with friends on Visa"
     },
     {
       "specimen": "web-sign-in",

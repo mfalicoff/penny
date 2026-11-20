@@ -1,7 +1,7 @@
 {
   "version": 1,
   "description": "Visual comparison of the iOS and web apps with each redesign card (MAZ-122). Method, statuses and re-sync steps: docs/design/visual-acceptance.md. Approved deviations are in docs/reference/redesign.md; follow-ups name their issue.",
-  "reviewedAt": "2026-11-19",
+  "reviewedAt": "2026-11-20",
   "cards": [
     {
       "id": "system-foundations",
@@ -154,7 +154,7 @@
     },
     {
       "id": "iphone-money-flow",
-      "view": "money flow, September 2026 (salary income and spending)",
+      "view": "money flow, September 2026 (salary income and spending), the largest spending band focused with its focus card",
       "native": {
         "status": "deviates",
         "owner": "MAZ-77",
@@ -191,14 +191,9 @@
         ],
         "deviations": [
           {
-            "summary": "Legend amounts have no currency symbol, and Came in and Left over are green instead of the label color",
+            "summary": "Legend amounts have no currency symbol, and Came in and Left over are green instead of the label color; the focused label sits in a grey box, and the focus card has a plain swatch, not the category's icon tile, and reads \"3% of what came in, 60% of what went out\", not \"45% of income · 77% of spending\"",
             "kind": "follow-up",
             "ref": "MAZ-223"
-          },
-          {
-            "summary": "The capture focuses no band; the card shows Home focused with its focus card",
-            "kind": "follow-up",
-            "ref": "MAZ-235"
           }
         ]
       }
@@ -256,7 +251,7 @@
     },
     {
       "id": "iphone-calendar",
-      "view": "month calendar, October 2026",
+      "view": "month calendar, October 2026, Oct 3 selected with its entries",
       "native": {
         "status": "deviates",
         "owner": "MAZ-77",
@@ -296,11 +291,6 @@
             "summary": "The legend reads Expected or scheduled, not Scheduled",
             "kind": "follow-up",
             "ref": "MAZ-223"
-          },
-          {
-            "summary": "The capture selects no day; the card shows a selected day with its entries",
-            "kind": "follow-up",
-            "ref": "MAZ-235"
           }
         ]
       }
@@ -378,7 +368,7 @@
     },
     {
       "id": "iphone-search-empty",
-      "view": "search with no results",
+      "view": "search with no results in expenses",
       "native": {
         "status": "deviates",
         "owner": "MAZ-73",
@@ -424,7 +414,7 @@
     },
     {
       "id": "iphone-add-expense",
-      "view": "new expense draft",
+      "view": "new expense draft: $74.40 Dinner with friends on Visa",
       "native": {
         "status": "deviates",
         "owner": "MAZ-73",
@@ -480,7 +470,7 @@
     },
     {
       "id": "iphone-add-income",
-      "view": "new income draft",
+      "view": "new income draft: $3,200.00 Payday into Everyday chequing on Oct 30, after today, so expected",
       "native": {
         "status": "deviates",
         "owner": "MAZ-73",
@@ -525,18 +515,13 @@
             "summary": "No large green +amount; the Salary chip is copper; Repeat and Note sit under More details",
             "kind": "follow-up",
             "ref": "MAZ-226"
-          },
-          {
-            "summary": "No amber expected callout in the capture; the card's pay is dated after today",
-            "kind": "follow-up",
-            "ref": "MAZ-235"
           }
         ]
       }
     },
     {
       "id": "iphone-entry-extras",
-      "view": "entry draft with receipt, repeat and trip rows open",
+      "view": "entry draft with a photo receipt attached and the receipt, repeat and trip rows open",
       "native": {
         "status": "deviates",
         "owner": "MAZ-73",
@@ -581,18 +566,13 @@
             "summary": "Sections are ordered Your share, Repeat, Trip, Note, Receipt; Repeat is a select with no helper, Trip a select, and Note has no placeholder",
             "kind": "follow-up",
             "ref": "MAZ-226"
-          },
-          {
-            "summary": "The capture has no receipt attached; the card shows receipt.jpg",
-            "kind": "follow-up",
-            "ref": "MAZ-235"
           }
         ]
       }
     },
     {
       "id": "iphone-split",
-      "view": "entry draft with a 50% personal share",
+      "view": "entry draft split equally between 3 people",
       "native": {
         "status": "deviates",
         "owner": "MAZ-73",
@@ -679,7 +659,7 @@
     },
     {
       "id": "iphone-entry-detail",
-      "view": "entry p-party (trip and shared personal share)",
+      "view": "entry p-party (trip, shared personal share and a photo receipt)",
       "native": {
         "status": "deviates",
         "owner": "MAZ-73",
@@ -749,7 +729,7 @@
     },
     {
       "id": "iphone-delete-confirm",
-      "view": "delete p-coffee-2 confirmation",
+      "view": "delete the shared Internet expense for everyone confirmation",
       "native": {
         "status": "deviates",
         "owner": "MAZ-73",
@@ -1064,7 +1044,7 @@
     },
     {
       "id": "iphone-shared-expense-add",
-      "view": "new shared expense draft in Maison",
+      "view": "new shared expense draft in Maison: $96.30 Hydro",
       "native": {
         "status": "deviates",
         "owner": "MAZ-75",
@@ -1222,7 +1202,7 @@
     },
     {
       "id": "iphone-household-create",
-      "view": "create household form",
+      "view": "create household form named Apartment",
       "native": {
         "status": "deviates",
         "owner": "MAZ-75",
@@ -1431,7 +1411,7 @@
     },
     {
       "id": "iphone-trip-form",
-      "view": "new trip form",
+      "view": "new trip form named Lisbon with Share with others on",
       "native": {
         "status": "deviates",
         "owner": "MAZ-76",
@@ -1471,11 +1451,6 @@
             "summary": "No WHEN group with a Currency lock row or PEOPLE group; the date note's wording differs",
             "kind": "follow-up",
             "ref": "MAZ-230"
-          },
-          {
-            "summary": "The capture leaves Share with others off; the card has it on",
-            "kind": "follow-up",
-            "ref": "MAZ-235"
           }
         ]
       }
@@ -1696,7 +1671,7 @@
     },
     {
       "id": "iphone-account-form",
-      "view": "new account form",
+      "view": "edit Visa, used by entries and schedules, so Remove is locked",
       "native": {
         "status": "deviates",
         "owner": "MAZ-74",
@@ -1741,11 +1716,6 @@
             "summary": "Sentence-case labels instead of NAME and TYPE headers; the selected type has no check badge; the helper adds a sentence",
             "kind": "follow-up",
             "ref": "MAZ-232"
-          },
-          {
-            "summary": "The state is a new account; the card edits an account in use with a locked Remove",
-            "kind": "follow-up",
-            "ref": "MAZ-235"
           }
         ]
       }
@@ -1798,7 +1768,7 @@
     },
     {
       "id": "iphone-category-form",
-      "view": "new category form",
+      "view": "new category draft: Coffee",
       "native": {
         "status": "deviates",
         "owner": "MAZ-74",
@@ -2137,7 +2107,7 @@
     },
     {
       "id": "iphone-offline",
-      "view": "home while the network fails",
+      "view": "home while the network fails, with changes waiting to sync",
       "native": {
         "status": "deviates",
         "owner": "MAZ-71",
@@ -2280,7 +2250,7 @@
     },
     {
       "id": "iphone-sign-out",
-      "view": "sign out confirmation with no pending changes",
+      "view": "sign out confirmation with two changes waiting to sync",
       "native": {
         "status": "deviates",
         "owner": "MAZ-68",
@@ -2325,11 +2295,6 @@
             "summary": "A left-aligned dialog with no icon and inline buttons, with different body copy",
             "kind": "follow-up",
             "ref": "MAZ-233"
-          },
-          {
-            "summary": "The state has nothing waiting; the card shows the unsynced variant",
-            "kind": "follow-up",
-            "ref": "MAZ-235"
           }
         ]
       }
@@ -2510,7 +2475,7 @@
     },
     {
       "id": "ipad-activity",
-      "view": "iPad activity list with entry p-party in the detail pane",
+      "view": "iPad activity list with entry p-party (with a photo receipt) in the detail pane",
       "native": {
         "status": "deviates",
         "owner": "MAZ-73",
@@ -2938,7 +2903,7 @@
     },
     {
       "id": "web-home",
-      "view": "web home dashboard, October 2026",
+      "view": "web home dashboard, October 2026, Groceries focused in Follow your money",
       "native": {
         "status": "not-applicable",
         "owner": "MAZ-77",
@@ -2964,14 +2929,9 @@
             "ref": "MAZ-171"
           },
           {
-            "summary": "Totals are green and indigo, not the label color; Sankey labels have no currency symbol; Coming up amounts are unsigned",
+            "summary": "Totals are green and indigo, not the label color; Sankey labels have no currency symbol; Coming up amounts are unsigned; the card shows Groceries hovered, but the web has no hover emphasis, so the capture selects it: the hint names the selection and pushes Open full view to its own line, and the label sits in a grey box",
             "kind": "follow-up",
             "ref": "MAZ-223"
-          },
-          {
-            "summary": "The capture focuses no band; the card shows Groceries hovered",
-            "kind": "follow-up",
-            "ref": "MAZ-235"
           }
         ]
       }
@@ -3003,7 +2963,7 @@
     },
     {
       "id": "web-insights",
-      "view": "web insights and money flow, September 2026 (salary income and spending)",
+      "view": "web insights and money flow, September 2026 (salary income and spending), the largest spending band focused",
       "native": {
         "status": "not-applicable",
         "owner": "MAZ-77",
@@ -3029,14 +2989,9 @@
             "ref": "MAZ-171"
           },
           {
-            "summary": "Came in is green; Sankey labels have no currency symbol; the Change column reads Up $150.00, not arrows",
+            "summary": "Came in is green; Sankey labels have no currency symbol; the Change column reads Up $150.00, not arrows; the focused label sits in a grey box instead of only turning bold",
             "kind": "follow-up",
             "ref": "MAZ-223"
-          },
-          {
-            "summary": "The capture focuses no band; the card shows Home selected",
-            "kind": "follow-up",
-            "ref": "MAZ-235"
           }
         ]
       }
@@ -3158,7 +3113,7 @@
     },
     {
       "id": "web-add-entry",
-      "view": "web new expense dialog",
+      "view": "web new expense dialog over Activity: $74.40 Dinner with friends on Visa",
       "native": {
         "status": "not-applicable",
         "owner": "MAZ-73",
@@ -3182,11 +3137,6 @@
             "summary": "No hero amount; not two panes; titled Add entry, not New entry; Save, not Add expense; Investment, not Invest; Split, Repeat, Trip and the receipt under More details; the selected chip is copper",
             "kind": "follow-up",
             "ref": "MAZ-226"
-          },
-          {
-            "summary": "The capture opens the dialog over Home; the card opens it over Activity",
-            "kind": "follow-up",
-            "ref": "MAZ-235"
           }
         ]
       }
