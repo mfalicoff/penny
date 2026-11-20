@@ -131,7 +131,7 @@
     },
     {
       "path": ".design-sync/NOTES.md",
-      "sha256": "8ece7a900060233e4b0150bcf8ad8ee48411e07b52c98b1b7b7d04fbd89105d1"
+      "sha256": "8fd2a18dc95c543646a933d7f0f9aa1e175c8a54cc200a4b61c6569b5bfba6ef"
     },
     {
       "path": "docs/design/penny-ios/compare.mjs",
@@ -143,7 +143,7 @@
     },
     {
       "path": "docs/design/visual-acceptance.md",
-      "sha256": "1c6fb45c4ebd1a27256db6f359b1154822ceab8398f1bf0c10487b9cf10ec38b"
+      "sha256": "340f8bc596cda0cb529d2e40a42965044f34ee4c492cf70e01d14adeef1f51bd"
     }
   ],
   "tokens": {
@@ -1104,7 +1104,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/iphone/recurring.html",
-      "sha256": "794190bb4152c1aab16abff386aba46e7cb335bb58e2ad0c29cea6d282e90291",
+      "sha256": "37dcbdfb5eac7fc14fffa25a43baf0d514126fbda764a6aa94b36713e434782f",
       "nativeIssue": "MAZ-74",
       "webIssue": "MAZ-90",
       "route": "/recurring",

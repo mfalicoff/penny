@@ -38,6 +38,7 @@
 
   .row .chev { margin-left: 2px; }
   .row .t span.tag { display: inline-flex; margin-top: 4px; }
+  .row .t b .tag { margin: 0 0 0 6px; }
   .gh { padding-top: 18px; }
 </style></head>
 <body class="canvas">
@@ -58,7 +59,7 @@
     <div class="gh"><span>Expenses</span></div>
     <div class="list">
       <div class="row"><div class="ic" style="background:var(--c-home)"><i data-i="receipt"></i></div><div class="t"><b>Internet</b><span>Monthly · next Nov 18 · Visa</span></div><div class="amt num ">−$65.00</div><i data-i="chevron-forward" class="chev"></i></div>
-      <div class="row"><div class="ic" style="background:var(--c-food)"><i data-i="play"></i></div><div class="t"><b>Streaming</b><span>Monthly · next Nov 22 · Visa</span></div><div class="amt num ">−$18.99</div><i data-i="chevron-forward" class="chev"></i></div>
+      <div class="row"><div class="ic" style="background:var(--c-food)"><i data-i="play"></i></div><div class="t"><b>Streaming<span class="tag"><i data-i="people"></i>Shared</span></b><span>Monthly · next Nov 22</span><span>Maison</span></div><div class="amt num">−$8.00<span>your share</span></div><i data-i="chevron-forward" class="chev"></i></div>
       <div class="row"><div class="ic" style="background:var(--c-transport)"><i data-i="bus"></i></div><div class="t"><b>Transit pass</b><span>Monthly · next Dec 6</span></div><div class="amt num ">−$62.00</div><i data-i="chevron-forward" class="chev"></i></div>
       <div class="row"><div class="ic" style="background:var(--c-groceries);opacity:.5"><i data-i="leaf"></i></div><div class="t"><b style="color:var(--label-2)">Gym</b><span class="tag"><i data-i="pause"></i>Paused · monthly</span></div><div class="amt num" style="color:var(--label-2)">−$45.00</div><i data-i="chevron-forward" class="chev"></i></div>
     </div>
@@ -66,7 +67,7 @@
     <div class="list">
       <div class="row"><div class="ic" style="background:var(--invest)"><i data-i="trending-up"></i></div><div class="t"><b>TFSA contribution</b><span>Monthly · next Dec 6</span></div><div class="amt num inv">$200.00</div><i data-i="chevron-forward" class="chev"></i></div>
     </div>
-    <div class="gf">Swipe a schedule to pause or remove it. Removing keeps past entries.</div>
+    <div class="gf">Swipe a schedule to pause or remove it. Removing keeps past entries. Shared schedules open their household and count only your share.</div>
   </div>
   <div class="home-ind"></div>
 </div>

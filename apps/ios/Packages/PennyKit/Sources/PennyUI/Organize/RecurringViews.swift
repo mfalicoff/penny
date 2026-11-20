@@ -35,7 +35,7 @@ struct RecurringListView: View {
                             .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
                     }
                 }
-                let kinds = EntryKind.allCases.filter { kind in items.contains { $0.kind == kind } }
+                let kinds = Self.sectionOrder.filter { kind in items.contains { $0.kind == kind } }
                 ForEach(kinds, id: \.self) { kind in
                     Section {
                         ForEach(Self.sorted(items.filter { $0.kind == kind })) { item in
@@ -100,6 +100,7 @@ struct RecurringListView: View {
             SharedScheduleRow(schedule: schedule, today: shell.today)
         }
         .buttonStyle(.plain)
+        .cardRow()
         .accessibilityHint(household.trip == nil ? "Opens the household" : "Opens the trip")
         .accessibilityIdentifier("sharedSchedule.\(schedule.rule.id)")
     }
@@ -120,6 +121,7 @@ struct RecurringListView: View {
             .tint(PennyColor.pending)
             .accessibilityIdentifier("schedule.\(rule.id).toggle")
         }
+        .cardRow()
         .accessibilityHint("Opens the schedule")
         .accessibilityIdentifier("schedule.\(rule.id)")
     }
@@ -148,6 +150,9 @@ struct RecurringListView: View {
     }
 
     static let subtitle = "Penny records these on their date."
+
+    /// The card's order: Income, then Expenses, then Investments.
+    static let sectionOrder: [EntryKind] = [.income, .expense, .investment]
 
     static func footer(hasShared: Bool) -> String {
         let personal = "Swipe a schedule to pause or remove it. Removing keeps past entries."
@@ -236,18 +241,23 @@ private struct ScheduleRow: View {
             ? AnyLayout(VStackLayout(alignment: .leading, spacing: 6)) : AnyLayout(HStackLayout(spacing: 12))
         layout {
             HStack(spacing: 12) {
-                CategoryIcon(
-                    symbol: CategoryStyle.symbol(forIonicon: category?.icon ?? "repeat"),
-                    color: PennyColor.category(category?.paletteColor ?? .other)
-                )
-                .opacity(rule.active ? 1 : 0.5)
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(rule.title).font(.body.weight(.semibold))
+                CategoryIcon(symbol: ScheduleText.tileSymbol(rule.kind, category: category), color: tint(category))
+                    .opacity(rule.active ? 1 : 0.5)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(rule.title).font(.callout.weight(.semibold))
                         .foregroundStyle(rule.active ? PennyColor.label : PennyColor.secondaryLabel)
                         .lineLimit(3)
                     if rule.active {
-                        Text(ScheduleText.row(rule, account: account, today: today))
-                            .font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
+                        // One line when it fits; otherwise the account on its own line, never a
+                        // wrap that strands "· Everyday chequing".
+                        ViewThatFits(in: .horizontal) {
+                            Text(ScheduleText.row(rule, account: account, today: today)).lineLimit(1)
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(ScheduleText.timing(rule, today: today))
+                                if let account { Text(account.name) }
+                            }
+                        }
+                        .font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
                     } else {
                         ScheduleTag(ScheduleText.row(rule, account: account, today: today), systemImage: "pause.fill")
                     }
@@ -263,10 +273,17 @@ private struct ScheduleRow: View {
                     .accessibilityHidden(true)
             }
         }
-        .padding(.vertical, 4)
-        .frame(minHeight: ControlSize.row)
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
+    }
+
+    /// Income and investments take their meaning color, as on the cards; expenses their category's.
+    private func tint(_ category: LedgerCategory?) -> Color {
+        switch rule.kind {
+        case .income: PennyColor.income
+        case .investment: PennyColor.invest
+        case .expense: PennyColor.category(category?.paletteColor ?? .other)
+        }
     }
 }
 
@@ -287,7 +304,7 @@ private struct SharedScheduleRow: View {
             HStack(spacing: 12) {
                 CategoryIcon(symbol: CategoryStyle.symbol(forIonicon: rule.category.icon), color: rule.category.tint)
                     .opacity(rule.active ? 1 : 0.5)
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: 1) {
                     // The badge rides on the title's line, so the row stays two lines like a
                     // personal one; it drops below only when the title leaves no room.
                     ViewThatFits(in: .horizontal) {
@@ -330,14 +347,12 @@ private struct SharedScheduleRow: View {
                     .accessibilityHidden(true)
             }
         }
-        .padding(.vertical, 4)
-        .frame(minHeight: ControlSize.row)
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
     }
 
     private func title(_ rule: WireSharedRule) -> some View {
-        Text(rule.title).font(.body.weight(.semibold))
+        Text(rule.title).font(.callout.weight(.semibold))
             .foregroundStyle(rule.active ? PennyColor.label : PennyColor.secondaryLabel)
     }
 }
@@ -378,7 +393,7 @@ private struct ScheduleAmount: View {
 
     var body: some View {
         Text(MoneyFormat.signed(cents, meaning: meaning, currency: currency))
-            .font(.body.weight(.semibold).monospacedDigit())
+            .font(.callout.weight(.semibold).monospacedDigit())
             .foregroundStyle(active ? meaning.color : PennyColor.secondaryLabel)
             .lineLimit(1)
             .minimumScaleFactor(0.7)

@@ -58,6 +58,9 @@ struct MoneyFormatTests {
     @Test("whenTheStoredIconAndCategoryAreMapped_CategoryStyle_ShouldUseSFSymbolsAndThePalette")
     func categories() {
         #expect(CategoryStyle.symbol(forIonicon: "basket-outline") == "basket")
+        #expect(CategoryStyle.symbol(forIonicon: "tv-outline") == "tv")
+        #expect(CategoryStyle.symbol(forIonicon: "happy-outline") == "face.smiling")
+        #expect(CategoryStyle.symbol(forIonicon: "business-outline") == "building.2")
         #expect(CategoryStyle.symbol(forIonicon: "not-an-icon") == "tag")
         #expect(CategoryStyle.color(forCategoryID: "fun") == .entertainment)
         #expect(CategoryStyle.color(forCategoryID: "salary") == .other)

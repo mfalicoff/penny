@@ -220,6 +220,21 @@
             ],
             "recurring": [
               {
+                "id": "r-payday",
+                "title": "Payday",
+                "kind": "income",
+                "total": 225000,
+                "share": 225000,
+                "categoryId": "salary",
+                "date": "2026-11-15",
+                "note": "",
+                "accountId": "chq",
+                "frequency": "monthly",
+                "nextDate": "2026-11-15",
+                "anchorDay": 15,
+                "active": true
+              },
+              {
                 "id": "r-gym",
                 "title": "Gym",
                 "kind": "expense",
@@ -246,6 +261,20 @@
                 "nextDate": "2026-10-15",
                 "anchorDay": 15,
                 "active": false
+              },
+              {
+                "id": "r-tfsa",
+                "title": "TFSA contribution",
+                "kind": "investment",
+                "total": 20000,
+                "share": 20000,
+                "categoryId": "invest",
+                "date": "2026-11-06",
+                "note": "",
+                "frequency": "monthly",
+                "nextDate": "2026-11-06",
+                "anchorDay": 6,
+                "active": true
               }
             ]
           }

@@ -9,6 +9,18 @@ nonisolated public enum ControlSize {
     public static let floatingButton: Double = 62
     public static let row: Double = 60
     public static let compactRow: Double = 46
+    /// The cards' `.row` padding: 11pt above and below, 16pt at the sides.
+    public static let rowInsets = EdgeInsets(top: 11, leading: 16, bottom: 11, trailing: 16)
+}
+
+extension View {
+    /// A list row with the cards' `.row` metrics: the card's padding in place of the system's
+    /// larger row insets, and 60pt tall in all (the card's `min-height` includes its padding).
+    /// Apply it to the row's outermost view in the `List`.
+    public func cardRow() -> some View {
+        frame(minHeight: ControlSize.row - ControlSize.rowInsets.top - ControlSize.rowInsets.bottom)
+            .listRowInsets(ControlSize.rowInsets)
+    }
 }
 
 /// A round Liquid Glass toolbar control (settings, calendar, back, sheet × and ✓). Icon-only,

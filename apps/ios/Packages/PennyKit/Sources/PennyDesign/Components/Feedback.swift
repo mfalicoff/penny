@@ -267,7 +267,9 @@ nonisolated public enum CategoryStyle {
         "fitness": "figure.run", "medkit": "cross.case", "school": "graduationcap", "paw": "pawprint",
         "wifi": "wifi", "phone-portrait": "iphone", "flash": "bolt", "water": "drop", "shirt": "tshirt",
         "book": "book", "game-controller": "gamecontroller", "pricetag": "tag", "cash": "banknote",
-        "card": "creditcard", "wallet": "wallet.bifold",
+        "card": "creditcard", "wallet": "wallet.bifold", "business": "building.2",
+        // Seeded and imported categories (MAZ-219): Fun and the shared Streaming.
+        "happy": "face.smiling", "tv": "tv",
         // The category form's icon grid (MAZ-74, `category-form` card).
         "play": "play", "leaf": "leaf", "people": "person.2", "receipt": "doc.plaintext", "image": "photo",
         "document-text": "doc.text", "sunny": "sun.max", "moon": "moon", "time": "clock", "key": "key",

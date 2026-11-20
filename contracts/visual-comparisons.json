@@ -1497,7 +1497,7 @@
     },
     {
       "id": "iphone-recurring",
-      "view": "recurring: Gym and paused Magazine, shared Streaming",
+      "view": "recurring: Payday, Gym and paused Magazine, shared Streaming, TFSA contribution",
       "native": {
         "status": "deviates",
         "owner": "MAZ-74",
@@ -1507,11 +1507,6 @@
           "dark"
         ],
         "deviations": [
-          {
-            "summary": "The card has no shared schedule: the shared Streaming row adds a Shared tag beside the title, the household's name in place of the account (on its own line at this width) and \"your share\" under the amount, opens its household instead of swiping, and the footer adds a sentence about shared schedules",
-            "kind": "follow-up",
-            "ref": "MAZ-219"
-          },
           {
             "summary": "The subtitle sits about 20 points further below the large title than on the card: the list starts below the system's large-title area, and a navigation subtitle folds the large title into an inline one",
             "kind": "follow-up",
@@ -1539,9 +1534,9 @@
             "ref": "MAZ-232"
           },
           {
-            "summary": "Shared schedules are listed with a Shared badge, the household's name and your share",
+            "summary": "The shared Streaming row puts the Shared badge under the amount instead of beside the title, keeps the household's name on the timing line, and uses a gray people glyph instead of the category tile; Payday's account wraps after a stranded \"·\" instead of taking its own line",
             "kind": "follow-up",
-            "ref": "MAZ-229"
+            "ref": "MAZ-232"
           },
           {
             "summary": "No swipe actions: a row opens the schedule dialog, and the footer says so",

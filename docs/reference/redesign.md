@@ -94,7 +94,7 @@ The web builds `iphone-recurring` and `iphone-schedule-detail` from the MAZ-85 c
 - **No swipe actions.** A row opens the schedule detail (a dialog, not a new URL); Pause/Resume and Remove are buttons there, and removal has its own confirmation. The page footer says what editing and removing do instead of "Swipe a schedule".
 - **New schedule** is a button on the page and a dialog with the whole form; the cards have no web form, so it follows the entry form's fields with a live line for the next dates and catch-up.
 - Rows add **Waiting to sync** while the change is only on this device, and the detail adds the number of recorded entries.
-- **Shared schedules (MAZ-177).** The card lists Streaming among the expenses like a personal schedule. The web lists every shared schedule you're part of there, marked with a **Shared** badge, the household's name in place of the account, and your share of the next occurrence labelled "your share", so a shared total is never read as yours. A shared row opens its household, where it's edited, and the page footer says so.
+- **Shared schedules (MAZ-177).** The web lists every shared schedule you're part of among the expenses, marked with a **Shared** badge, the household's name in place of the account, and your share of the next occurrence labelled "your share", so a shared total is never read as yours. A shared row opens its household, where it's edited, and the page footer says so. Since MAZ-219 the card shows a shared Streaming row too (the Shared tag beside the title, the household's name on its own line); the web row's badge placement and icon are a follow-up (MAZ-232).
 
 ## Web shared-household notes (MAZ-91)
 
