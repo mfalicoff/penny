@@ -61,7 +61,62 @@ public sealed class LargeLedgerTests(ApiFixture fixture) : IntegrationTestBase(f
             entries.Add(Entry(index));
 
         var write = Stopwatch.StartNew();
-        using (var saved = await PutAsync(client, token, snapshot))
+        var putTask = PutAsync(client, token, snapshot);
+        // MAZ262DIAG: temporary watchdog, to be reverted.
+        var dumps = 0;
+        while (
+            await Task.WhenAny(putTask, Task.Delay(TimeSpan.FromSeconds(10), Ct)) != putTask
+            && dumps < 4
+        )
+        {
+            dumps++;
+            await using var admin = new Npgsql.NpgsqlConnection(Fixture.AdminConnection);
+            await admin.OpenAsync(Ct);
+            await using var activity = new Npgsql.NpgsqlCommand(
+                """
+                SELECT pid, backend_type, state, wait_event_type, wait_event,
+                       pg_blocking_pids(pid)::text, now() - xact_start, left(query, 160)
+                FROM pg_stat_activity WHERE datname IS NOT NULL OR backend_type <> 'client backend'
+                """,
+                admin
+            );
+            await using (var reader = await activity.ExecuteReaderAsync(Ct))
+                while (await reader.ReadAsync(Ct))
+                {
+                    var cells = new string[reader.FieldCount];
+                    for (var i = 0; i < cells.Length; i++)
+                        cells[i] = reader.IsDBNull(i)
+                            ? "-"
+                            : Convert.ToString(reader.GetValue(i), CultureInfo.InvariantCulture)!;
+                    Console.WriteLine(
+                        $"MAZ262DIAG {write.Elapsed.TotalSeconds:F0}s activity "
+                            + string.Join(" | ", cells)
+                    );
+                }
+            await using var locks = new Npgsql.NpgsqlCommand(
+                "SELECT pid, locktype, mode, relation::regclass::text, page, transactionid::text FROM pg_locks WHERE NOT granted",
+                admin
+            );
+            await using (var reader = await locks.ExecuteReaderAsync(Ct))
+                while (await reader.ReadAsync(Ct))
+                {
+                    var cells = new string[reader.FieldCount];
+                    for (var i = 0; i < cells.Length; i++)
+                        cells[i] = reader.IsDBNull(i)
+                            ? "-"
+                            : Convert.ToString(reader.GetValue(i), CultureInfo.InvariantCulture)!;
+                    Console.WriteLine(
+                        $"MAZ262DIAG {write.Elapsed.TotalSeconds:F0}s waiting-lock "
+                            + string.Join(" | ", cells)
+                    );
+                }
+        }
+        if (dumps > 0)
+            Console.WriteLine(
+                "MAZ262DIAG server log tail "
+                    + string.Join("\n", (await Fixture.ServerLogAsync()).Split('\n').TakeLast(60))
+            );
+        using (var saved = await putTask)
             saved.StatusCode.ShouldBe(HttpStatusCode.OK, await saved.Content.ReadAsStringAsync(Ct));
         write.Stop();
 
