@@ -1,27 +1,26 @@
 using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql;
 using Penny.Backend.Persistence.Schema;
 
 namespace Penny.Backend.Persistence.Repositories;
 
-// Inserts new rows with binary COPY on the context's connection and transaction
-// (MAZ-137), one COPY per batch of `BatchRows` rows. EF inserts tracked rows one statement each, which is too slow for a first
+// Inserts new rows with one binary COPY on the context's connection and transaction
+// (MAZ-137). EF inserts tracked rows one statement each, which is too slow for a first
 // sync of a full ledger. The table, columns and types come from the EF model, so the
 // COPY follows the schema; database-generated columns (identities) are left out. Rows
 // copied here are not tracked: call after `SaveChanges` has written the rows they
 // reference, and before commit.
 internal static class BulkInsert
 {
-    // Each COPY is one statement under `Database:CommandTimeoutSeconds` (5 s in
-    // production). Index maintenance (the search documents' trigram and vector
-    // indexes) makes one COPY of a full ledger's 100,000 rows take about 5 s even on a
-    // fast machine (MAZ-262), so a full ledger is copied in batches that each finish
-    // well inside the statement timeout. The request deadline still bounds the whole
-    // write.
-    internal const int BatchRows = 5_000;
+    // A COPY is exempt from `Database:CommandTimeoutSeconds` (5 s in production). Its
+    // time is mostly index maintenance on the search documents, and on CI a single
+    // stretch of it took longer than 5 s, even when a full ledger was copied in batches
+    // of 5,000 rows that otherwise took 0.2 s each (MAZ-262). The caller's token
+    // carries the request deadline (`Backend:RequestTimeoutSeconds`, at most 300 s),
+    // which bounds the COPY instead; this timeout only stops a COPY without a deadline.
+    internal static readonly TimeSpan CopyTimeout = TimeSpan.FromSeconds(300);
 
     public static async Task CopyAsync<T>(
         PennyDbContext context,
@@ -54,33 +53,10 @@ internal static class BulkInsert
             $"COPY {Quote(table.Schema!)}.{Quote(table.Name)} ({string.Join(", ", columns.Select(column => Quote(column.Name)))}) FROM STDIN (FORMAT BINARY)"
         );
         var connection = (NpgsqlConnection)context.Database.GetDbConnection();
-        foreach (var batch in rows.Chunk(BatchRows))
-        {
-            var bw = System.Diagnostics.Stopwatch.StartNew();
-            await CopyBatchAsync(connection, copy, columns, batch, cancellationToken);
-            Console.WriteLine(
-                "MAZ262DIAG " + "batch " + typeof(T).Name + " " + bw.Elapsed.TotalSeconds + "\n"
-            );
-        }
-    }
-
-    private static async Task CopyBatchAsync<T>(
-        NpgsqlConnection connection,
-        string copy,
-        IReadOnlyList<(
-            IProperty Property,
-            string Name,
-            string Type,
-            ValueConverter? Converter
-        )> columns,
-        T[] rows,
-        CancellationToken cancellationToken
-    )
-        where T : class
-    {
         // Disposing an importer that was not completed cancels the COPY; the caller's
         // transaction then rolls back.
         await using var importer = await connection.BeginBinaryImportAsync(copy, cancellationToken);
+        importer.Timeout = CopyTimeout;
         foreach (var row in rows)
         {
             await importer.StartRowAsync(cancellationToken);
