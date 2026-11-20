@@ -15,6 +15,11 @@ export function formatCents(cents: number, currency?: string, options: { signed?
   return formatter(currency, options.signed).format(cents / 100).replace("-", MINUS);
 }
 
+/** Whole units only ("$1,883"), for compact legends such as Home's Follow your money (`iphone-home`). */
+export function formatWhole(cents: number, currency?: string): string {
+  return formatter(currency, false, 0).format(cents / 100).replace("-", MINUS);
+}
+
 function formatter(currency: string | undefined, signed: boolean | undefined, digits?: number): Intl.NumberFormat {
   const format: Intl.NumberFormatOptions = currency
     ? { style: "currency", currency }

@@ -2,19 +2,22 @@ import type { Kind, Ledger, Transaction } from "@domain/ledger.ts";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useId, useState } from "react";
 import { usePreferences } from "../../app/preferences";
-import { useMediaQuery, WIDE } from "../../app/useMediaQuery";
+import { TOUCH_TABLET, useMediaQuery, WIDE } from "../../app/useMediaQuery";
+import { useLedgerSync } from "../../offline/OfflineLedgerProvider";
+import { rowAmount } from "../recurring/model";
 import { Badge, Button, cx } from "../../design/controls";
 import { Icon } from "../../design/Icon";
 import { tileStyle } from "../../design/categoryTint";
-import { formatCents, HeroMoney, Money } from "../../design/Money";
+import { formatCents, formatWhole, HeroMoney, Money } from "../../design/Money";
 import { LoadingState } from "../../design/states";
 import type { SharedState } from "../activity/data";
 import { AddEntryDialog } from "../entries/AddEntryDialog";
 import { EntryDetailDialog } from "../entries/EntryDetail";
 import { useToday } from "../../app/useToday";
-import { currentMonth, dayLabel, monthLabel } from "../households/model";
+import { currentMonth, monthLabel } from "../households/model";
 import { CalendarSheet } from "./CalendarSheet";
-import type { HomeSearch, MonthReport } from "./model";
+import { isSharedEntry, type HomeSearch, type MonthReport } from "./model";
+import { DailySpending } from "./DailySpending";
 import { MoneyFlowChart } from "./MoneyFlowChart";
 import { CategoryBreakdown, EntryRows, MonthBar, Panel } from "./parts";
 import { useMonthReport } from "./useMonthReport";
@@ -48,6 +51,8 @@ export function HomePage({ search }: { search: HomeSearch }) {
   const [calendarOpen, setCalendarOpen] = useState(false);
   const today = useToday();
   const wide = useMediaQuery(WIDE);
+  // ipad-home: a touch tablet shows the hero's one-line legend and Daily spending; desktop (web-home) shows the tiles and By category.
+  const tablet = useMediaQuery(TOUCH_TABLET);
   const showCalendar = calendarOpen || Boolean(search.day);
   const onOpen = (entry: Transaction, opener: HTMLElement) => {
     setOpen({ entry, opener });
@@ -79,7 +84,7 @@ export function HomePage({ search }: { search: HomeSearch }) {
         <FirstEntry currency={ledger.currency} />
       ) : (
         <div className={cx("home-top", wide && "home-top--wide")}>
-          <Hero report={report} currency={ledger.currency} shared={shared} wide={wide} />
+          <Hero report={report} currency={ledger.currency} shared={shared} wide={wide} tablet={tablet} />
           {wide ? (
             <>
               <ComingUp report={report} ledger={view} currency={ledger.currency} />
@@ -90,13 +95,20 @@ export function HomePage({ search }: { search: HomeSearch }) {
                   currency={ledger.currency}
                   monthLabel={monthLabel(month)}
                   action={
-                    <Link to="/insights" search={{ month }} className="text-link">
-                      Open full view
-                    </Link>
+                    tablet ? (
+                      // ipad-home: a chevron after the hint opens the full view.
+                      <Link to="/insights" search={{ month }} className="flow__open" aria-label="Open full view">
+                        <Icon name="chevron-forward" size={16} />
+                      </Link>
+                    ) : (
+                      <Link to="/insights" search={{ month }} className="text-link">
+                        Open full view
+                      </Link>
+                    )
                   }
                 />
               </div>
-              <CategoryBreakdown spending={report.spending} currency={ledger.currency} />
+              {tablet ? <DailySpending month={month} entries={report.recordedEntries} currency={ledger.currency} /> : <CategoryBreakdown spending={report.spending} currency={ledger.currency} />}
             </>
           ) : (
             <>
@@ -112,7 +124,7 @@ export function HomePage({ search }: { search: HomeSearch }) {
                 }
               >
                 {report.recordedEntries.length ? (
-                  <EntryRows entries={report.recordedEntries.slice(0, RECENT)} ledger={view} currency={ledger.currency} onOpen={onOpen} />
+                  <EntryRows recent entries={report.recordedEntries.slice(0, RECENT)} ledger={view} currency={ledger.currency} onOpen={onOpen} />
                 ) : (
                   <p className="muted">Nothing recorded in {monthLabel(month)} yet.</p>
                 )}
@@ -176,7 +188,7 @@ const FIRST_KINDS = [
  */
 function FirstEntry({ currency }: { currency: string }) {
   const heroId = useId();
-  const { showCents } = usePreferences();
+  const recentId = useId();
   const [adding, setAdding] = useState<Kind | null>(null);
   return (
     <div className="home-top">
@@ -184,7 +196,10 @@ function FirstEntry({ currency }: { currency: string }) {
         <h2 id={heroId} className="hero__label">
           Left to spend
         </h2>
-        <p className="hero__amount pk-num"><HeroMoney cents={0} currency={currency} showCents={showCents} /></p>
+        {/* iphone-empty-home: a muted "$0", with no cents. */}
+        <p className="hero__amount hero__amount--empty pk-num">
+          <HeroMoney cents={0} currency={currency} showCents={false} />
+        </p>
         <p className="hero__projected">Your month fills in as you add entries.</p>
       </section>
       <Panel title="Add your first entry" className="first-entry">
@@ -209,9 +224,16 @@ function FirstEntry({ currency }: { currency: string }) {
           ))}
         </ul>
       </Panel>
-      <Panel list title="Recent" className="home-recent">
-        <p className="muted">Nothing yet. New entries show up here.</p>
-      </Panel>
+      {/* iphone-empty-home: the Recent heading over an empty state, not an empty card. */}
+      <section className="home-recent home-recent--empty" aria-labelledby={recentId}>
+        <h2 id={recentId} className="panel__title">
+          Recent
+        </h2>
+        <p className="home-recent__none">
+          <Icon name="list" size={30} />
+          Nothing yet. New entries show up here.
+        </p>
+      </section>
       {adding ? (
         <AddEntryDialog
           kind={adding}
@@ -236,9 +258,12 @@ function shortDay(date: string) {
  * expected pay on Nov 15" (`web-home`, `ipad-home`, the date when one income is expected) with
  * Came in / Spent / Invested under it.
  */
-function Hero({ report, currency, shared, wide }: { report: MonthReport; currency: string; shared: SharedState & { retry: () => void }; wide: boolean }) {
+function Hero({ report, currency, shared, wide, tablet }: { report: MonthReport; currency: string; shared: SharedState & { retry: () => void }; wide: boolean; tablet: boolean }) {
   const id = useId();
   const { showCents } = usePreferences();
+  // iphone-offline: while the server can't be reached, Projected is what the last sync knew.
+  const sync = useLedgerSync();
+  const stale = sync?.phase === "offline" || sync?.issue?.kind === "serverUnreachable";
   const overspent = report.recordedNet < 0;
   const expected = report.comingUp.filter((entry) => entry.kind === "income");
   const projected = (
@@ -277,9 +302,41 @@ function Hero({ report, currency, shared, wide }: { report: MonthReport; currenc
           ) : (
             " with expected pay"
           )}
+          {stale ? " · as of last sync" : ""}
         </span>
       </p>
-      {wide ? (
+      {wide && tablet ? (
+        // ipad-home: one inline legend row under the hero.
+        <dl className="hero__legend">
+          <div>
+            <dt>
+              <span className="tile__dot tile__dot--income" aria-hidden="true" />
+              Income
+            </dt>
+            <dd>
+              <Money cents={report.recorded.income} currency={currency} />
+            </dd>
+          </div>
+          <div>
+            <dt>
+              <span className="tile__dot tile__dot--expense" aria-hidden="true" />
+              Spent · your share
+            </dt>
+            <dd>
+              <Money cents={report.recorded.expense} currency={currency} />
+            </dd>
+          </div>
+          <div>
+            <dt>
+              <span className="tile__dot tile__dot--investment" aria-hidden="true" />
+              Invested
+            </dt>
+            <dd>
+              <Money cents={report.recorded.investment} currency={currency} />
+            </dd>
+          </div>
+        </dl>
+      ) : wide ? (
         <dl className="hero__tiles">
           <div className="tile">
             <dt>
@@ -287,7 +344,7 @@ function Hero({ report, currency, shared, wide }: { report: MonthReport; currenc
               Came in
             </dt>
             <dd>
-              <Money cents={report.recorded.income} currency={currency} tone="income" />
+              <Money cents={report.recorded.income} currency={currency} />
             </dd>
           </div>
           <div className="tile">
@@ -305,7 +362,7 @@ function Hero({ report, currency, shared, wide }: { report: MonthReport; currenc
               Invested
             </dt>
             <dd>
-              <Money cents={report.recorded.investment} currency={currency} tone="investment" />
+              <Money cents={report.recorded.investment} currency={currency} />
             </dd>
           </div>
         </dl>
@@ -324,6 +381,7 @@ function Hero({ report, currency, shared, wide }: { report: MonthReport; currenc
 
 function ComingUp({ report, ledger, currency }: { report: MonthReport; ledger: Ledger; currency: string }) {
   const categories = new Map(ledger.categories.map((category) => [category.id, category]));
+  const accounts = new Map(ledger.accounts.map((account) => [account.id, account.name]));
   const shown = report.comingUp.slice(0, 5);
   return (
     <Panel
@@ -345,12 +403,14 @@ function ComingUp({ report, ledger, currency }: { report: MonthReport; ledger: L
                   <Icon name={entry.kind === "income" ? "arrow-down" : entry.kind === "investment" ? "trending-up" : "repeat"} size={18} />
                 </span>
                 <span className="coming__title">{entry.title}</span>
+                {/* web-home, ipad-home: "Nov 15 · expected" for pay, "Nov 18 · Visa" for a payment (MAZ-223). */}
                 <span className="coming__meta">
-                  <time dateTime={entry.date}>{dayLabel(entry.date)}</time> · {entry.kind === "income" ? "expected" : "scheduled"}
-                  {"householdId" in entry ? " · shared" : ""}
+                  <time dateTime={entry.date}>{shortDay(entry.date)}</time>
+                  {comingMeta(entry, accounts)}
                 </span>
                 <span className="coming__amount">
-                  <Money cents={entry.share} currency={currency} tone={entry.kind === "income" ? "income" : entry.kind === "investment" ? "investment" : "expense"} signed={entry.kind === "income"} />
+                  {/* web-home, ipad-home: signed as on the cards ("+$2,250.00", "−$65.00"). */}
+                  <Money {...rowAmount(entry.kind, entry.share)} currency={currency} tone={entry.kind === "income" ? "income" : entry.kind === "investment" ? "investment" : "expense"} />
                 </span>
               </li>
             );
@@ -362,6 +422,14 @@ function ComingUp({ report, ledger, currency }: { report: MonthReport; ledger: L
       {report.comingUp.length > shown.length ? <p className="note">{`and ${String(report.comingUp.length - shown.length)} more coming up`}</p> : null}
     </Panel>
   );
+}
+
+/** What follows a Coming up row's date: "expected" for pay, else the account or the household it's shared in. */
+function comingMeta(entry: Ledger["transactions"][number], accounts: ReadonlyMap<string, string>): string {
+  if (entry.kind === "income") return " · expected";
+  if (isSharedEntry(entry)) return entry.householdName ? ` · ${entry.householdName}` : " · shared";
+  const account = entry.accountId ? accounts.get(entry.accountId) : undefined;
+  return account ? ` · ${account}` : "";
 }
 
 /**
@@ -388,7 +456,7 @@ function FlowSummary({ report, currency, month }: { report: MonthReport; currenc
       }
       className="home-flow"
       action={
-        <Link to="/insights" search={{ month }} className="text-link">
+        <Link to="/insights" search={{ month }} className="home-flow__insights">
           <Icon name="pie-chart" size={16} /> Insights
         </Link>
       }
@@ -403,7 +471,9 @@ function FlowSummary({ report, currency, month }: { report: MonthReport; currenc
               <span className={`tile__dot tile__dot--${part.key === "left" ? "income" : part.key}`} aria-hidden="true" />
               {part.label}
             </dt>
-            <dd>{formatCents(part.amount, currency)}</dd>
+            <dd>
+              <Whole cents={part.amount} currency={currency} />
+            </dd>
           </div>
         ))}
         {beyond ? (
@@ -412,11 +482,23 @@ function FlowSummary({ report, currency, month }: { report: MonthReport; currenc
               <span className="tile__dot tile__dot--danger" aria-hidden="true" />
               Beyond income
             </dt>
-            <dd>{formatCents(beyond, currency)}</dd>
+            <dd>
+              <Whole cents={beyond} currency={currency} />
+            </dd>
           </div>
         ) : null}
       </dl>
     </Panel>
+  );
+}
+
+/** Whole units on screen, as the card's compact legend draws them ("$1,883"); the exact amount for screen readers. */
+function Whole({ cents, currency }: { cents: number; currency: string }) {
+  return (
+    <>
+      <span aria-hidden="true">{formatWhole(cents, currency)}</span>
+      <span className="visually-hidden">{formatCents(cents, currency)}</span>
+    </>
   );
 }
 

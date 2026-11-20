@@ -86,7 +86,7 @@
         ],
         "deviations": [
           {
-            "summary": "Insights is a bare copper link, not a pill; Recent rows read category · date, not date · account",
+            "summary": "Split and shared Recent rows show \"your share\" under the amount; the card reads \"split 2 ways\" in the subtitle, which the ledger can't say for a personal split (follow-up recorded on MAZ-223)",
             "kind": "follow-up",
             "ref": "MAZ-223"
           }
@@ -145,7 +145,7 @@
         ],
         "deviations": [
           {
-            "summary": "Insights is a bare copper link; Recent rows read category · date",
+            "summary": "Split and shared Recent rows show \"your share\" under the amount; the card reads \"split 2 ways\" in the subtitle, which the ledger can't say for a personal split (follow-up recorded on MAZ-223)",
             "kind": "follow-up",
             "ref": "MAZ-223"
           }
@@ -182,19 +182,12 @@
         ]
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-92",
         "capture": "402x874",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "Legend amounts have no currency symbol, and Came in and Left over are green instead of the label color; the focused label sits in a grey box, and the focus card has a plain swatch, not the category's icon tile, and reads \"3% of what came in, 60% of what went out\", not \"45% of income · 77% of spending\"",
-            "kind": "follow-up",
-            "ref": "MAZ-223"
-          }
         ]
       }
     },
@@ -233,19 +226,12 @@
         ]
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-92",
         "capture": "402x874",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "Spending · your share is a card header instead of the screen subtitle",
-            "kind": "follow-up",
-            "ref": "MAZ-223"
-          }
         ]
       }
     },
@@ -279,19 +265,12 @@
         ]
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-92",
         "capture": "402x874",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "The legend reads Expected or scheduled, not Scheduled",
-            "kind": "follow-up",
-            "ref": "MAZ-223"
-          }
         ]
       }
     },
@@ -2091,11 +2070,6 @@
             "summary": "No Try with sample data card",
             "kind": "follow-up",
             "ref": "MAZ-204"
-          },
-          {
-            "summary": "The empty hero is $0.00 in the label color, not a muted $0; empty Recent is text inside a card with no icon",
-            "kind": "follow-up",
-            "ref": "MAZ-223"
           }
         ]
       }
@@ -2143,11 +2117,6 @@
           "dark"
         ],
         "deviations": [
-          {
-            "summary": "Pending rows have no amber clock and Waiting to sync; the projected line has no as of last sync",
-            "kind": "follow-up",
-            "ref": "MAZ-223"
-          },
           {
             "summary": "The banner adds an explanation and a bordered Retry",
             "kind": "follow-up",
@@ -2464,11 +2433,6 @@
             "summary": "Search is the top bar's search field, not a round glass search button",
             "kind": "follow-up",
             "ref": "MAZ-221"
-          },
-          {
-            "summary": "Three Came in / Went out tiles instead of an inline legend; Coming up amounts are unsigned; no Daily spending chart",
-            "kind": "follow-up",
-            "ref": "MAZ-223"
           }
         ]
       }
@@ -2947,11 +2911,6 @@
             "summary": "The sidebar footer names the account by its email, not the person's name",
             "kind": "follow-up",
             "ref": "MAZ-171"
-          },
-          {
-            "summary": "Totals are green and indigo, not the label color; Sankey labels have no currency symbol; Coming up amounts are unsigned; the card shows Groceries hovered, but the web has no hover emphasis, so the capture selects it: the hint names the selection and pushes Open full view to its own line, and the label sits in a grey box",
-            "kind": "follow-up",
-            "ref": "MAZ-223"
           }
         ]
       }
@@ -3007,11 +2966,6 @@
             "summary": "The sidebar footer names the account by its email, not the person's name",
             "kind": "follow-up",
             "ref": "MAZ-171"
-          },
-          {
-            "summary": "Came in is green; Sankey labels have no currency symbol; the Change column reads Up $150.00, not arrows; the focused label sits in a grey box instead of only turning bold",
-            "kind": "follow-up",
-            "ref": "MAZ-223"
           }
         ]
       }

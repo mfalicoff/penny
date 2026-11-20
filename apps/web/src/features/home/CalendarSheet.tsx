@@ -86,7 +86,7 @@ export function CalendarSheet({ month, report, view, currency, selected, onSelec
             <span>{dayTitle(day)}</span>
             {net ? <span className="pk-num">{formatCents(net, currency, { signed: true })}</span> : null}
           </h3>
-          {entries.length ? <EntryRows entries={entries} ledger={view} currency={currency} onOpen={onOpen} /> : <p className="muted calendar-sheet__none">Nothing on this day.</p>}
+          {entries.length ? <EntryRows day entries={entries} ledger={view} currency={currency} onOpen={onOpen} /> : <p className="muted calendar-sheet__none">Nothing on this day.</p>}
         </section>
       ) : (
         <p className="muted calendar-sheet__none">Choose a day to see its entries.</p>

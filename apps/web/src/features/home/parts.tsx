@@ -5,6 +5,7 @@ import { Link } from "@tanstack/react-router";
 import { useId, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useTopbarSlot } from "../../app/shell/pageTitle";
+import { useLedgerSync } from "../../offline/OfflineLedgerProvider";
 import { useToday } from "../../app/useToday";
 import { Badge, Button, cx } from "../../design/controls";
 import { Icon } from "../../design/Icon";
@@ -138,11 +139,20 @@ const TONE = { expense: "expense", income: "income", investment: "investment" } 
  * household, and scheduled occurrences are labelled "Scheduled" (amber) and open nothing, so a
  * preview never looks like a recorded entry. Income dated after today is labelled "Expected"
  * (amber, MAZ-136) and still opens: it is a ledger entry that counts toward Projected only.
+ *
+ * `recent` rows (Home's Recent, cards `iphone-home`, `iphone-offline`, MAZ-223) read "date ·
+ * account" ("Today · Main chequing", or the household of a shared expense), and an entry this
+ * browser hasn't synced reads "Waiting to sync" with an amber clock instead. `day` rows (the
+ * calendar sheet's selected day, `iphone-calendar`) sit under the day's heading, so they leave
+ * the date out: "Main chequing · monthly".
  */
-export function EntryRows({ entries, ledger, currency, onOpen }: { entries: readonly OverviewEntry[]; ledger: Ledger; currency: string | undefined; onOpen: (entry: Transaction, opener: HTMLElement) => void }) {
+export function EntryRows({ entries, ledger, currency, onOpen, recent = false, day = false }: { entries: readonly OverviewEntry[]; ledger: Ledger; currency: string | undefined; onOpen: (entry: Transaction, opener: HTMLElement) => void; recent?: boolean; day?: boolean }) {
   const categories = new Map(ledger.categories.map((category) => [category.id, category]));
   const accounts = new Map(ledger.accounts.map((account) => [account.id, account.name]));
   const today = useToday();
+  const sync = useLedgerSync();
+  const waiting = new Set(sync?.pending.entryIds ?? []);
+  const rules = new Map(ledger.recurring.map((rule) => [rule.id, rule.frequency]));
   return (
     <ul className="results home-rows">
       {entries.map((entry) => {
@@ -156,21 +166,40 @@ export function EntryRows({ entries, ledger, currency, onOpen }: { entries: read
           category?.name,
           account,
         ].filter(Boolean);
+        const pending = recent && !entry.scheduled && !shared && waiting.has(entry.id);
+        const recentMeta = [shared ? (shared.householdName ?? "Shared") : account].filter(Boolean);
+        const frequency = entry.recurringId ? rules.get(entry.recurringId) : undefined;
+        const dayMeta = [shared ? (shared.householdName ?? "Shared") : account, frequency].filter(Boolean);
+        const subtitle = pending ? (
+          <span className="results__waiting">
+            <Icon name="time" size={14} />
+            Waiting to sync
+          </span>
+        ) : day && !entry.scheduled && !expected ? (
+          dayMeta.length ? dayMeta.join(" · ") : (category?.name ?? "")
+        ) : recent && !entry.scheduled && !expected ? (
+          <>
+            <time dateTime={entry.date}>{recentDay(entry.date, today)}</time>
+            {recentMeta.length ? ` · ${recentMeta.join(" · ")}` : ""}
+          </>
+        ) : (
+          <>
+            {entry.scheduled || expected ? (
+              <Badge tone="pending" icon="time">
+                {expected ? "Expected" : "Scheduled"}
+              </Badge>
+            ) : null}{" "}
+            {meta.length ? `${meta.join(" · ")} · ` : ""}
+            <time dateTime={entry.date}>{dayLabel(entry.date)}</time>
+          </>
+        );
         const body = (
           <>
             <span className={expected ? "category-dot category-dot--expected" : "category-dot"} style={tileStyle({ ...category, entryKind: entry.kind })}>
               <Icon name={categoryIcon(category?.icon)} size={18} />
             </span>
             <span className="results__title">{entry.title}</span>
-            <span className="results__meta">
-              {entry.scheduled || expected ? (
-                <Badge tone="pending" icon="time">
-                  {expected ? "Expected" : "Scheduled"}
-                </Badge>
-              ) : null}{" "}
-              {meta.length ? `${meta.join(" · ")} · ` : ""}
-              <time dateTime={entry.date}>{dayLabel(entry.date)}</time>
-            </span>
+            <span className="results__meta">{subtitle}</span>
             <span className="results__amount">
               {/* MAZ-202: recorded rows read as the cards do (expenses −, income +); expected and scheduled stay unsigned. */}
               {entry.scheduled || expected ? (
@@ -215,6 +244,16 @@ export function EntryRows({ entries, ledger, currency, onOpen }: { entries: read
       })}
     </ul>
   );
+}
+
+/** Recent's date, as the cards write it: "Today", "Yesterday", else "Oct 9". */
+function recentDay(date: string, today: string): string {
+  if (date === today) return "Today";
+  const [year = 2000, month = 1, day = 1] = date.split("-").map(Number);
+  const value = new Date(Date.UTC(year, month - 1, day));
+  const [ty = 2000, tm = 1, td = 1] = today.split("-").map(Number);
+  if (Date.UTC(ty, tm - 1, td) - value.getTime() === 86_400_000) return "Yesterday";
+  return value.toLocaleDateString("en-CA", { month: "short", day: "numeric", timeZone: "UTC", ...(year === ty ? {} : { year: "numeric" }) });
 }
 
 /**
