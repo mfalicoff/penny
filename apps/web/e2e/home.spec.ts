@@ -1,4 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "./test";
 
 // Home, Explore your month and Insights (MAZ-92) on the temporary demo (src/demo): its sample
 // month is made up and in memory, and no request reaches the API. The clock is fixed so the sample

@@ -1,4 +1,5 @@
-import { expect, test, type BrowserContext, type Page } from "@playwright/test";
+import type { BrowserContext, Page } from "@playwright/test";
+import { expect, test } from "./test";
 
 // Accounts and categories (MAZ-89) in real Chromium over the durable offline ledger (IndexedDB),
 // with /api mocked: a revision-checked ledger that also applies the server's household-link rule

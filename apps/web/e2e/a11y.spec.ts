@@ -1,6 +1,7 @@
 import { appendFileSync } from "node:fs";
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "./test";
 import { enterDemo, navigate, startDemo } from "./demo";
 import known from "./a11y-known.json" with { type: "json" };
 
