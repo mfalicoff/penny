@@ -1,11 +1,28 @@
 import Foundation
 import PennyData
 import PennyDomain
+import Synchronization
 import Testing
+
+/// Real time plus however far a test has moved it on, so a long Retry-After can end on cue
+/// instead of racing a slow simulator.
+final class TestSyncClock: Sendable {
+    private let skipped = Mutex<Duration>(.zero)
+
+    func now() -> ContinuousClock.Instant { ContinuousClock.now + skipped.withLock { $0 } }
+
+    func sleep(for duration: Duration) async throws {
+        let deadline = now() + duration
+        while now() < deadline { try await Task.sleep(for: .milliseconds(5)) }
+    }
+
+    func advance(by duration: Duration) { skipped.withLock { $0 += duration } }
+}
 
 /// The app's wiring: a real `AuthController` and `OfflineLedgerStore` against the fake server.
 @MainActor
 final class SyncHarness {
+    let clock: TestSyncClock
     let server: FakeLedgerServer
     let directory: URL
     let calendar: TestCalendar
@@ -23,6 +40,8 @@ final class SyncHarness {
         preferences: EphemeralAuthPreferences = EphemeralAuthPreferences(
             server: SavedServer(server: APIFixtures.server))
     ) {
+        let clock = TestSyncClock()
+        self.clock = clock
         self.server = server
         self.directory = directory
         self.calendar = calendar
@@ -34,7 +53,8 @@ final class SyncHarness {
             transport: server.transport, sessions: sessions, preferences: preferences, localData: store)
         model = LedgerSyncModel(
             auth: auth, store: store, network: triggers, calendar: triggers,
-            backoff: SyncBackoff(initial: .milliseconds(10), maximum: .milliseconds(20)))
+            backoff: SyncBackoff(initial: .milliseconds(10), maximum: .milliseconds(20)),
+            sleep: { try await clock.sleep(for: $0) }, now: { clock.now() })
         model.start()
     }
 
@@ -262,9 +282,11 @@ struct LedgerSyncModelTests {
     @Test("whenTheServerAsksToWait_LedgerSyncModel_ShouldHoldTriggeredSyncsUntilTheWaitEnds")
     func retryAfterIsHonored() async throws {
         try await signedIn()
-        harness.server.fail("PUT /api/ledger", with: .status(503, retryAfter: 1))
+        // Ten minutes: on the test clock the wait only ends when the test moves it on, however
+        // slow the simulator is.
+        harness.server.fail("PUT /api/ledger", with: .status(503, retryAfter: 600))
         try await harness.model.save(.saveEntry(Offline.entry("taxi")))
-        await harness.waitFor(.failed(.serverUnavailable(retryAfter: 1)))
+        await harness.waitFor(.failed(.serverUnavailable(retryAfter: 600)))
         let puts = { harness.server.log.all.filter { $0 == "PUT /api/ledger" }.count }
         #expect(puts() == 1)
 
@@ -278,6 +300,7 @@ struct LedgerSyncModelTests {
         try await Task.sleep(for: .milliseconds(300))
         #expect(puts() == 1, "nothing sent before Retry-After")
 
+        harness.clock.advance(by: .seconds(600))
         await eventually("synced once the wait ended") {
             harness.model.state.phase == .upToDate && harness.server.ledger(Offline.alex)?.entry(id: "bus") != nil
         }
