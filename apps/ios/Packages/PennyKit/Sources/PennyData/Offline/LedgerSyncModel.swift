@@ -109,6 +109,8 @@ public final class LedgerSyncModel {
     @ObservationIgnored private var started = false
     @ObservationIgnored private let backoff: SyncBackoff
     @ObservationIgnored private let sleep: @Sendable (Duration) async throws -> Void
+    /// The clock the server's Retry-After wait is measured on (`sleep` waits on the same one).
+    @ObservationIgnored private let now: @Sendable () -> ContinuousClock.Instant
     @ObservationIgnored private var account: SignedInAccount?
     @ObservationIgnored private var engine: LedgerSyncEngine?
     @ObservationIgnored private var engineState: LedgerEngineState?
@@ -126,7 +128,8 @@ public final class LedgerSyncModel {
     public init(
         auth: AuthController, store: OfflineLedgerStore, network: any NetworkMonitoring = SystemNetworkMonitor(),
         calendar: any CalendarDayMonitoring = SystemCalendarDayMonitor(), backoff: SyncBackoff = SyncBackoff(),
-        sleep: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) }
+        sleep: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) },
+        now: @escaping @Sendable () -> ContinuousClock.Instant = { .now }
     ) {
         self.auth = auth
         self.store = store
@@ -134,6 +137,7 @@ public final class LedgerSyncModel {
         self.calendar = calendar
         self.backoff = backoff
         self.sleep = sleep
+        self.now = now
     }
 
     /// Starts following the account, the network and the calendar. Creating the model does
@@ -268,7 +272,7 @@ public final class LedgerSyncModel {
         else { return }
         guard isOnline || force else { return }
         if !force, let until = serverWaitUntil {
-            let remaining = until - ContinuousClock.now
+            let remaining = until - now()
             if remaining > .zero {
                 // The server asked to wait: sync when the wait ends, not now.
                 if retry == nil { scheduleRetry(after: remaining) }
@@ -302,7 +306,7 @@ public final class LedgerSyncModel {
             var retryAfter: TimeInterval?
             if case .serverUnavailable(let after) = issue { retryAfter = after }
             let delay = backoff.delay(afterFailures: failures, retryAfter: retryAfter)
-            if let retryAfter, retryAfter > 0 { serverWaitUntil = .now + delay }
+            if let retryAfter, retryAfter > 0 { serverWaitUntil = now() + delay }
             scheduleRetry(after: delay)
         case .notReady, .cancelled:
             break

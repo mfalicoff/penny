@@ -81,11 +81,14 @@ struct HouseholdReviewTests {
         let form = try await SharedExpenseFormTests.open(fake)
         form.draft.amountText = "30"
         form.draft.title = "Pizza"
-        // The page's refresh after the save is slow; the form must not wait for it.
-        fake.delay("household", .seconds(2))
-        let started = ContinuousClock.now
+        // The page's refresh after the save is slow; the form must not wait for it. The read
+        // answers only after a minute, so Save returning while it is still out shows the form
+        // didn't wait, however slow the simulator is.
+        let reads = { fake.answered.filter { $0 == "household" }.count }
+        let readBefore = reads()
+        fake.delay("household", .seconds(60))
         let outcome = try #require(await form.save())
-        #expect(ContinuousClock.now - started < .seconds(1), "Save returns before the page has read again")
+        #expect(reads() == readBefore, "Save returns before the page has read again")
         #expect(form.saved == outcome)
         // The sheet closing now (or a link replacing it) must not keep a draft of a created expense.
         form.keepDraft()
