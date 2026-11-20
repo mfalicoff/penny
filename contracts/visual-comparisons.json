@@ -943,14 +943,19 @@
             "ref": "MAZ-228"
           },
           {
-            "summary": "Invite and History are buttons under the actions; a month switcher and a REPEATING card are added",
-            "kind": "follow-up",
-            "ref": "MAZ-229"
-          },
-          {
             "summary": "Members are shown by email, with initials from the email",
             "kind": "follow-up",
             "ref": "MAZ-171"
+          },
+          {
+            "summary": "Expenses, Balances and People are links styled as the segmented control, each with its own URL (decided in MAZ-229)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+          },
+          {
+            "summary": "The month pill sits in the navigation bar, where the card shows no month control. Waiting for a design decision",
+            "kind": "follow-up",
+            "ref": "MAZ-229"
           }
         ]
       }
@@ -1004,14 +1009,24 @@
             "ref": "MAZ-228"
           },
           {
-            "summary": "The full hero, actions and month switcher stay above the tabs instead of a navigation bar",
+            "summary": "Members are shown by email, with initials from the email",
+            "kind": "follow-up",
+            "ref": "MAZ-171"
+          },
+          {
+            "summary": "Expenses, Balances and People are links styled as the segmented control, each with its own URL (decided in MAZ-229)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+          },
+          {
+            "summary": "The household name stays a large title under the navigation bar, where the card shows it inline in the bar",
             "kind": "follow-up",
             "ref": "MAZ-229"
           },
           {
-            "summary": "Members are shown by email, with initials from the email",
+            "summary": "The month pill sits in the navigation bar, where the card shows no month control. Waiting for a design decision",
             "kind": "follow-up",
-            "ref": "MAZ-171"
+            "ref": "MAZ-229"
           }
         ]
       }
@@ -1065,14 +1080,24 @@
             "ref": "MAZ-228"
           },
           {
-            "summary": "The full hero stays above the tabs, an inline Remove is on member rows, and the invite has no share sheet",
-            "kind": "follow-up",
-            "ref": "MAZ-229"
-          },
-          {
             "summary": "Members are shown by email, with initials from the email",
             "kind": "follow-up",
             "ref": "MAZ-171"
+          },
+          {
+            "summary": "Expenses, Balances and People are links styled as the segmented control, each with its own URL (decided in MAZ-229)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+          },
+          {
+            "summary": "Invite shows the code with a live countdown and Copy instead of a share sheet (decided in MAZ-229)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+          },
+          {
+            "summary": "The household name stays a large title under the navigation bar, where the card shows it inline in the bar",
+            "kind": "follow-up",
+            "ref": "MAZ-229"
           }
         ]
       }
@@ -1325,14 +1350,14 @@
         ],
         "deviations": [
           {
-            "summary": "History is a panel under the household's hero and tabs, not its own screen",
-            "kind": "follow-up",
-            "ref": "MAZ-229"
-          },
-          {
             "summary": "Filters are a segmented control; rows have no actor avatar or action badge and no bold names; day headers are long dates in one card",
             "kind": "follow-up",
             "ref": "MAZ-228"
+          },
+          {
+            "summary": "History is a panel of the household (?tab=history), not its own screen (decided in MAZ-229)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           }
         ]
       }
@@ -1389,11 +1414,6 @@
             "summary": "The countdown is a gray pill; the featured trip shows Trip total and Your spending without avatars instead of Your share so far",
             "kind": "follow-up",
             "ref": "MAZ-230"
-          },
-          {
-            "summary": "Adds a subtitle with New trip and Join a trip; other trips are a grid of tiles, not UPCOMING and PAST lists",
-            "kind": "follow-up",
-            "ref": "MAZ-229"
           }
         ]
       }
@@ -1447,14 +1467,14 @@
             "ref": "MAZ-230"
           },
           {
-            "summary": "Trip expense, Invite, Edit trip and History buttons with an All trips link replace the navigation-bar icons",
-            "kind": "follow-up",
-            "ref": "MAZ-229"
-          },
-          {
             "summary": "The seeded Lisbon trip has no expenses, so the shared and Only you rows can't be compared",
             "kind": "follow-up",
             "ref": "MAZ-213"
+          },
+          {
+            "summary": "Expenses, Balances and People are links styled as the segmented control, each with its own URL (decided in MAZ-229)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           }
         ]
       }
@@ -2734,11 +2754,6 @@
         ],
         "deviations": [
           {
-            "summary": "Not two panes; Balances are their own section; Record payment, Invite and History are buttons",
-            "kind": "follow-up",
-            "ref": "MAZ-229"
-          },
-          {
             "summary": "Members are shown by email, with initials from the email",
             "kind": "follow-up",
             "ref": "MAZ-171"
@@ -2747,6 +2762,16 @@
             "summary": "The sidebar adds All households and All trips links, and a trip shows its start date (as on the web cards) instead of its expense count. Waiting for a design decision",
             "kind": "follow-up",
             "ref": "MAZ-221"
+          },
+          {
+            "summary": "Expenses, Balances and People are links styled as the segmented control, each with its own URL (decided in MAZ-229)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+          },
+          {
+            "summary": "One hero spans both panes; the card puts the month's amount at the top of the right pane and the name with the month total on the left, and its button reads + Expense",
+            "kind": "follow-up",
+            "ref": "MAZ-229"
           }
         ]
       }
@@ -2810,11 +2835,6 @@
             "ref": "MAZ-230"
           },
           {
-            "summary": "Trip expense, Invite, Edit trip and History buttons with an All trips link",
-            "kind": "follow-up",
-            "ref": "MAZ-229"
-          },
-          {
             "summary": "The sidebar adds All households and All trips links, and a trip shows its start date (as on the web cards) instead of its expense count. Waiting for a design decision",
             "kind": "follow-up",
             "ref": "MAZ-221"
@@ -2828,6 +2848,11 @@
             "summary": "The seeded Lisbon trip has no expenses, so its list can't be compared",
             "kind": "follow-up",
             "ref": "MAZ-213"
+          },
+          {
+            "summary": "Expenses, Balances and People are links styled as the segmented control, each with its own URL (decided in MAZ-229)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           }
         ]
       }
@@ -3124,14 +3149,9 @@
         ],
         "deviations": [
           {
-            "summary": "No inline month switcher in the header; full-width tabs; a card list instead of the expense table with status pills; the side column holds Repeating instead of Balances with Record paid",
+            "summary": "Full-width tabs; a card list instead of the expense table with status pills; Balances rows have no Record paid pills",
             "kind": "follow-up",
             "ref": "MAZ-228"
-          },
-          {
-            "summary": "Record payment and History are added to the header",
-            "kind": "follow-up",
-            "ref": "MAZ-229"
           },
           {
             "summary": "Members are shown by email, with initials from the email",
@@ -3142,6 +3162,11 @@
             "summary": "The sidebar adds an All households link after the households, because the Shared list (join and create) has no other way in from the sidebar. Waiting for a design decision",
             "kind": "follow-up",
             "ref": "MAZ-221"
+          },
+          {
+            "summary": "Expenses, Balances and People are links styled as the segmented control, each with its own URL (decided in MAZ-229)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           }
         ]
       }
@@ -3164,14 +3189,9 @@
         ],
         "deviations": [
           {
-            "summary": "The featured trip shows Trip total and Your spending without Your share, You owe or its expense table; two pills; tiles add a count and an ALL TRIPS label",
+            "summary": "The featured trip shows Trip total and Your spending without Your share, You owe; two pills; tiles add a count and an ALL TRIPS label",
             "kind": "follow-up",
             "ref": "MAZ-230"
-          },
-          {
-            "summary": "Adds a subtitle with New trip and Join a trip",
-            "kind": "follow-up",
-            "ref": "MAZ-229"
           },
           {
             "summary": "The sidebar adds an All households link after the households, because the Shared list (join and create) has no other way in from the sidebar. Waiting for a design decision",
@@ -3182,6 +3202,11 @@
             "summary": "The sidebar footer names the account by its email, not the person's name",
             "kind": "follow-up",
             "ref": "MAZ-171"
+          },
+          {
+            "summary": "A Join a trip key icon sits beside the title; the card has no Join control. Waiting for a design decision",
+            "kind": "follow-up",
+            "ref": "MAZ-229"
           }
         ]
       }

@@ -222,7 +222,7 @@ function SharedScheduleRow({ schedule }: { schedule: SharedSchedule }) {
     <>Paused · {FREQUENCY_LABELS[rule.frequency].toLowerCase()}</>
   );
   return (
-    <GroupLink route={household.trip ? "trips" : "households"} householdId={household.id} search={{}} className="row schedule-row">
+    <GroupLink route={household.trip ? "trips" : "households"} householdId={household.id} search={{ rule: schedule.rule.id }} className="row schedule-row">
       <span className="schedule-row__icon" aria-hidden="true">
         <Icon name={rule.active ? "people" : "pause"} size={18} weight={40} />
       </span>

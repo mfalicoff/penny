@@ -156,3 +156,13 @@ export function validateTrip(draft: TripDraft): TripErrors {
   else if (!errors.startDate && draft.endDate < draft.startDate) errors.endDate = "The trip can't end before it starts.";
   return errors;
 }
+
+/**
+ * The trips under the featured one on phones (card `iphone-trips`): UPCOMING (happening now or
+ * still to come, soonest first) and PAST (most recent first).
+ */
+export function tripSections(cards: readonly TripCard[], today = localDate()) {
+  const upcoming = cards.filter((card) => tripPhase(card, today) !== "past").sort((a, b) => a.startDate.localeCompare(b.startDate) || a.name.localeCompare(b.name));
+  const past = cards.filter((card) => tripPhase(card, today) === "past").sort((a, b) => b.endDate.localeCompare(a.endDate) || a.name.localeCompare(b.name));
+  return { upcoming, past };
+}

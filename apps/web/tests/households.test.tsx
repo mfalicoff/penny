@@ -65,6 +65,80 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.unstubAllGlobals();
+});
+
+/** A window this wide: `min-width` queries answer for it (jsdom alone lays out for a phone). */
+function stubWidth(width: number) {
+  vi.stubGlobal(
+    "matchMedia",
+    vi.fn((query: string) => {
+      const min = /min-width:\s*(\d+)px/.exec(query);
+      return { matches: min ? width >= Number(min[1]) : false, media: query, addEventListener: vi.fn(), removeEventListener: vi.fn() };
+    }),
+  );
+}
+
+const topbar = () => screen.getByRole("banner");
+
+describe("household layout (MAZ-229)", () => {
+  it("puts the month, History and Invite in the navigation bar and drops the hero off Expenses", async () => {
+    const id = seed();
+    serve();
+    const user = userEvent.setup();
+    renderApp(`/households/${id}`);
+    expect(await screen.findByRole("region", { name: "Household summary" })).toHaveTextContent("October · ");
+    expect(within(topbar()).getByRole("link", { name: "Back to Shared" })).toHaveAttribute("href", "/households");
+    expect(within(topbar()).getByLabelText("Month")).toHaveValue("2026-10");
+    expect(within(topbar()).getByRole("link", { name: "History" })).toBeInTheDocument();
+    expect(within(topbar()).getByRole("link", { name: "Invite" })).toBeInTheDocument();
+    // Phones keep Record payment and Shared expense in the hero; no month switcher or Repeating card on the page.
+    const summary = screen.getByRole("region", { name: "Household summary" });
+    expect(within(summary).getByRole("link", { name: "Record payment" })).toBeInTheDocument();
+    expect(within(summary).getByRole("button", { name: "Shared expense" })).toBeInTheDocument();
+    expect(screen.queryByRole("navigation", { name: "Month" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Repeating" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("link", { name: "Balances" }));
+    await waitFor(() => {
+      expect(screen.queryByRole("region", { name: "Household summary" })).not.toBeInTheDocument();
+    });
+    expect(within(topbar()).getByLabelText("Month")).toBeInTheDocument();
+
+    await user.click(within(topbar()).getByRole("link", { name: "History" }));
+    expect(await screen.findByRole("region", { name: "History" })).toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Household summary" })).not.toBeInTheDocument();
+    expect(within(topbar()).queryByLabelText("Month")).not.toBeInTheDocument();
+  });
+
+  it("shows Balances and the selected expense beside the expenses from 1100px", async () => {
+    stubWidth(1440);
+    const id = seed();
+    const { alex } = ids();
+    addExpense(ALEX, id, { title: "Hydro", totalCents: 9000, payerUserId: alex });
+    serve();
+    const user = userEvent.setup();
+    renderApp(`/households/${id}`);
+    const summary = await screen.findByRole("region", { name: "Household summary" });
+    // The add action moves to the navigation bar, beside History and Invite; the top bar's Add entry steps aside.
+    expect(within(summary).queryByRole("button", { name: "Shared expense" })).not.toBeInTheDocument();
+    expect(within(topbar()).getByRole("button", { name: "Shared expense" })).toBeInTheDocument();
+    // Balances sit beside the expenses: the month's expenses and its balances, on one page.
+    expect(await screen.findAllByRole("region", { name: "October 2026" })).toHaveLength(2);
+    expect(screen.getByText(/Penny records payments made outside the app/)).toBeInTheDocument();
+
+    await user.click(await screen.findByRole("link", { name: /^Hydro/ }));
+    const panel = await screen.findByRole("region", { name: "Hydro" });
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(within(panel).getByRole("heading", { name: "Hydro" })).toHaveFocus();
+    });
+    expect(within(panel).getByText("Shares")).toBeInTheDocument();
+    await user.click(within(panel).getByRole("button", { name: "Close Hydro" }));
+    await waitFor(() => {
+      expect(screen.queryByRole("region", { name: "Hydro" })).not.toBeInTheDocument();
+    });
+  });
 });
 
 describe("shared list, create and join", () => {
@@ -350,11 +424,11 @@ describe("shared expense form", () => {
     expect(puts.map((init) => (bodyOf(init) as { revision: number }).revision)).toEqual([0, 1]);
   });
 
-  it("creates a repeating expense as a shared rule and pauses it", async () => {
+  it("creates a repeating expense as a shared rule and pauses it from its own dialog", async () => {
     const id = seed();
     const fetchMock = serve();
     const user = userEvent.setup();
-    renderApp(`/households/${id}`);
+    const { router } = renderApp(`/households/${id}`);
     await user.click(await screen.findByRole("button", { name: "Shared expense" }));
     const form = await dialog("Add entry");
     await fillExpense(user, form, "Streaming", "18");
@@ -364,11 +438,21 @@ describe("shared expense form", () => {
     expect(await screen.findByText("Streaming repeats monthly")).toBeInTheDocument();
     expect(bodyOf(callsTo(fetchMock, `/api/households/${id}/recurring`).find((init) => init?.method === "POST"))).toMatchObject({ nextDate: "2026-10-05", frequency: "monthly", totalCents: 1800 });
 
-    const rules = await screen.findByRole("list", { name: "Repeating expenses" });
-    expect(rules).toHaveTextContent("Monthly · next");
-    await user.click(within(rules).getByRole("button", { name: "Pause Streaming" }));
+    // The household has no Repeating card (MAZ-229): Recurring links a rule here with `?rule=`.
+    expect(screen.queryByRole("list", { name: "Repeating expenses" })).not.toBeInTheDocument();
+    const rule = server.state.rules.find((item) => item.title === "Streaming");
+    await router.navigate({ to: "/households/$id", params: { id }, search: { rule: rule?.id } });
+    const details = await dialog("Streaming");
+    expect(details).toHaveTextContent("Monthly");
+    await user.click(within(details).getByRole("button", { name: "Pause Streaming" }));
     expect(await screen.findByText("Streaming paused")).toBeInTheDocument();
-    expect(await within(rules).findByText("Paused")).toBeInTheDocument();
+    expect(await within(details).findByText("Paused")).toBeInTheDocument();
+
+    await user.click(within(details).getByRole("button", { name: "Stop repeating" }));
+    const stop = await dialog("Stop repeating Streaming?");
+    await user.click(within(stop).getByRole("button", { name: "Stop repeating" }));
+    expect(await screen.findByText("Streaming no longer repeats")).toBeInTheDocument();
+    expect(server.state.rules.some((item) => item.title === "Streaming")).toBe(false);
   });
 
   it("keeps the draft and says so when the browser is offline", async () => {
@@ -629,7 +713,11 @@ describe("people, invites and history", () => {
     expect(await screen.findByLabelText(`Invite code ${code.split("").join(" ")}`)).toBeInTheDocument();
     expect(screen.getByText(/Expires in 10:00|Expires in 9:5\d/)).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: `Remove ${CAM}` }));
+    // Member rows carry no actions (MAZ-229): removal starts under Manage.
+    expect(within(screen.getByRole("list", { name: "Members" })).queryByRole("button")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Remove someone" }));
+    const pick = await dialog("Remove someone");
+    await user.click(within(pick).getByRole("button", { name: CAM }));
     const confirm = await dialog(`Remove ${CAM}?`);
     await user.click(within(confirm).getByRole("button", { name: "Remove member" }));
     expect(await screen.findByText(`${CAM} was removed`)).toBeInTheDocument();

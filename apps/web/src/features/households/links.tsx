@@ -58,8 +58,8 @@ export function ExpenseLink({ route, householdId, expenseId, search, className, 
 }
 
 /** A household's own search: everything but the shared-trip-only `expense`. */
-function householdOnly({ month, tab }: GroupSearch): HouseholdSearch {
-  return { ...(month ? { month } : {}), ...(tab ? { tab } : {}) };
+function householdOnly({ month, tab, rule }: GroupSearch): HouseholdSearch {
+  return { ...(month ? { month } : {}), ...(tab ? { tab } : {}), ...(rule ? { rule } : {}) };
 }
 
 /** Where to go after leaving, removal of oneself or archiving. */

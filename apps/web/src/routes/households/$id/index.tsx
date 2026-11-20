@@ -4,7 +4,7 @@ import { householdSearchSchema } from "../../../features/households/search";
 
 /** One household, with `?month=` and `?tab=` (MAZ-91). */
 export const Route = createFileRoute("/households/$id/")({
-  staticData: { title: "Household" },
+  staticData: { title: "Household", search: false, back: "/households", backLabel: "Back to Shared", backWide: true },
   validateSearch: householdSearchSchema,
   component: Household,
 });
