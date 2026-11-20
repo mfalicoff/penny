@@ -19,6 +19,8 @@ final class FakeHouseholds: HouseholdService {
         /// The next call to the named method throws this, once.
         var failNext: [String: APIError] = [:]
         var calls: [String] = []
+        /// Calls whose delay has run out, in the order they answered.
+        var answered: [String] = []
         var bodies: [String: WireExpenseInput] = [:]
         var ruleBodies: [WireRuleInput] = []
         var nextId = 0
@@ -90,7 +92,10 @@ final class FakeHouseholds: HouseholdService {
             return state.delays[key ?? name]
         }
         if let delay { try await Task.sleep(for: delay) }
+        state.withLock { $0.answered.append(name) }
     }
+
+    var answered: [String] { state.withLock { $0.answered } }
 
     func delay(_ key: String, _ duration: Duration) { state.withLock { $0.delays[key] = duration } }
 
