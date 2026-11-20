@@ -229,15 +229,27 @@ public sealed class PostgresLedgerRepository(NpgsqlDataSource source) : ILedgerR
         // EF orders the inserts, updates and deletes so foreign keys hold. The copied
         // rows come after: the categories, accounts, trips and receipts they reference
         // exist by then, and nothing EF deletes can reference a new entry.
+        var sw0 = System.Diagnostics.Stopwatch.StartNew();
         await context.SaveChangesAsync(cancellationToken);
+        Console.WriteLine("MAZ262DIAG " + "step0 " + sw0.Elapsed.TotalSeconds + "\n");
+        var sw1 = System.Diagnostics.Stopwatch.StartNew();
         await BulkInsert.CopyAsync(context, newEntries, cancellationToken);
+        Console.WriteLine("MAZ262DIAG " + "step1 " + sw1.Elapsed.TotalSeconds + "\n");
+        var sw2 = System.Diagnostics.Stopwatch.StartNew();
         await BulkInsert.CopyAsync(context, newDocuments, cancellationToken);
+        Console.WriteLine("MAZ262DIAG " + "step2 " + sw2.Elapsed.TotalSeconds + "\n");
         // Receipt text (MAZ-125): a replaced or removed receipt loses its text and
         // chunks, a newly linked one without text is queued, in this transaction.
+        var sw3 = System.Diagnostics.Stopwatch.StartNew();
         await ReceiptTextIndex.ApplyAsync(context, links, cancellationToken);
+        Console.WriteLine("MAZ262DIAG " + "step3 " + sw3.Elapsed.TotalSeconds + "\n");
         // The payer sees their account name in their own shared expenses' documents.
+        var sw4 = System.Diagnostics.Stopwatch.StartNew();
         await SearchIndexer.SyncPaidExpensesAsync(context, userId, cancellationToken);
+        Console.WriteLine("MAZ262DIAG " + "step4 " + sw4.Elapsed.TotalSeconds + "\n");
+        var sw5 = System.Diagnostics.Stopwatch.StartNew();
         await transaction.CommitAsync(cancellationToken);
+        Console.WriteLine("MAZ262DIAG " + "step5 " + sw5.Elapsed.TotalSeconds + "\n");
         return true;
     }
 
