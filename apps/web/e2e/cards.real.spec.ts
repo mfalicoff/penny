@@ -1,4 +1,5 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
+import { syntheticPng } from "./fixtures/receipts";
 import { outputDirectory, redesign, resolveRefs, specimens, viewportFor, writeReport, type CardState, type ReportEntry, type Seed, type Status } from "./cards";
 import { clearFaults, control, pinClock, realStack, seedScenario, skipReason } from "./stack";
 
@@ -40,6 +41,8 @@ interface Card {
   skip?: { status: Exclude<Status, "captured" | "failed">; note: string };
   /** Needs its own seed because it changes server data. */
   fresh?: boolean;
+  /** Arms its own faults (not the state's), so they are cleared after the capture. */
+  faults?: boolean;
   /** How the web state differs from the card's, for the report. */
   note?: string;
 }
@@ -75,12 +78,21 @@ async function activity(p: Page, month: string) {
   await expect(p.getByRole("region", { name: "Search results" }).getByRole("status")).toHaveText(/transaction/);
 }
 
-async function addEntry(p: Page) {
-  await home(p);
+/** The Add entry dialog, opened from Home (or from Activity in `month`). */
+async function addEntry(p: Page, from: { activity: string } | null = null) {
+  if (from) await activity(p, from.activity);
+  else await home(p);
   await p.getByRole("button", { name: "Add entry" }).first().click();
   const dialog = p.getByRole("dialog", { name: "Add entry" });
   await expect(dialog.getByLabel("Title")).toBeVisible();
   return dialog;
+}
+
+/** The cards' expense draft: $74.40 Dinner with friends on Visa, the amount still being typed. */
+async function draftDinner(dialog: ReturnType<Page["getByRole"]>) {
+  await dialog.getByLabel("Title").fill("Dinner with friends");
+  await dialog.getByLabel("Account").selectOption({ label: "Visa" });
+  await dialog.getByLabel("Amount (CAD)").fill("74.40");
 }
 
 async function moreDetails(p: Page) {
@@ -125,6 +137,40 @@ async function recordAlexShare(run: Run) {
   const confirm = dialog.getByRole("button", { name: "Mark $40.00 as paid" });
   await expect(confirm).toBeVisible();
   return { dialog, confirm };
+}
+
+/**
+ * Focuses one band of the Money flow diagram, as the cards draw it (MAZ-235): the node's button
+ * is named "Went out: <label>, …". By keyboard: a thin band's label sits under its neighbour's
+ * hit ring, so a click there can land on the neighbour.
+ */
+async function focusFlow(p: Page, label: string) {
+  const node = p.getByRole("group", { name: "Money flow diagram" }).getByRole("button", { name: new RegExp(`^Went out: ${label},`) });
+  await node.focus();
+  await p.keyboard.press("Enter");
+  await expect(node).toHaveAttribute("aria-pressed", "true");
+  // The cards show the selection, not the keyboard focus ring.
+  await node.blur();
+}
+
+/**
+ * Two changes the server hasn't taken, as on the sign-out card (and the iOS capture): every ledger
+ * sync is dropped while Coffee to go and Groceries are added on this device.
+ */
+const DROP_LEDGER_SYNC = { target: "http", method: "PUT", pathPrefix: "/api/ledger", abort: true };
+async function makeTwoPendingChanges(p: Page) {
+  await control("PUT", "faults", { rules: [DROP_LEDGER_SYNC] });
+  await home(p);
+  for (const [amount, title] of [["3.00", "Coffee to go"], ["48.90", "Groceries"]] as const) {
+    await p.getByRole("button", { name: "Add entry" }).first().click();
+    const dialog = p.getByRole("dialog", { name: "Add entry" });
+    await dialog.getByLabel("Amount (CAD)").fill(amount);
+    await dialog.getByLabel("Title").fill(title);
+    await dialog.getByRole("button", { name: "Save" }).click();
+    await expect(dialog).toBeHidden();
+    await dismissToast(p);
+  }
+  await expect(p.getByText("2 changes waiting").first()).toBeVisible();
 }
 
 async function scrollTo(p: Page, locator: ReturnType<Page["locator"]>) {
@@ -197,6 +243,9 @@ const cards: Record<string, Card> = {
     open: async ({ page: p }) => {
       await page(p, "/money-flow?month=2026-09", "Money flow");
       await expect(p.getByRole("group", { name: "Money flow diagram" })).toBeVisible();
+      // The card focuses the largest spending band (Home; the scenario's Housing), with its focus card.
+      await focusFlow(p, "Housing");
+      await expect(p.getByRole("main").getByRole("button", { name: "Clear focus on Housing" })).toBeInViewport();
     },
   },
   "iphone-insights": {
@@ -209,13 +258,20 @@ const cards: Record<string, Card> = {
     open: async ({ page: p }) => {
       await home(p);
       await p.getByRole("banner").getByRole("button", { name: "Calendar" }).click();
-      await expect(p.getByRole("dialog").getByRole("table")).toBeVisible();
+      const sheet = p.getByRole("dialog");
+      await expect(sheet.getByRole("table")).toBeVisible();
+      // The card selects a past day with entries: Oct 3, the ETF purchase (as the iOS capture does).
+      const day = sheet.getByRole("button", { name: /October 3:/ });
+      await day.click();
+      await expect(day).toHaveAttribute("aria-pressed", "true");
+      await expect(sheet.getByRole("heading", { name: /Oct 3/ })).toBeVisible();
     },
   },
   "iphone-activity": { open: ({ page: p }) => activity(p, "2026-10") },
   "iphone-search-empty": {
     open: async ({ page: p, state }) => {
-      await page(p, `/transactions?q=${encodeURIComponent(state.search?.query ?? "zzzz")}`, "Activity");
+      // Narrowed to expenses in the month, as the card (and the iOS capture) shows it.
+      await page(p, `/transactions?kind=expense&q=${encodeURIComponent(state.search?.query ?? "zzzz")}`, "Activity");
       const results = p.getByRole("region", { name: "Search results" });
       await expect(results.getByRole("status")).toHaveText(/No matching/);
     },
@@ -224,7 +280,7 @@ const cards: Record<string, Card> = {
   // Add entry
   "iphone-add-expense": {
     open: async ({ page: p }) => {
-      await addEntry(p);
+      await draftDinner(await addEntry(p));
     },
     note: "A keyboard form in a dialog: no large amount or keypad.",
   },
@@ -233,11 +289,25 @@ const cards: Record<string, Card> = {
       const dialog = await addEntry(p);
       await dialog.getByRole("radio", { name: "Income" }).check({ force: true });
       await expect(dialog.getByRole("radio", { name: "Income" })).toBeChecked();
+      // The card's pay, dated after the scenario's today (Oct 15), so it is expected (as on iOS).
+      await dialog.getByLabel("Amount (CAD)").fill("3200.00");
+      await dialog.getByLabel("Title").fill("Payday");
+      await dialog.getByLabel("Date").fill("2026-10-30");
+      await dialog.getByLabel("Account").selectOption({ label: "Everyday chequing" });
+      await expect(dialog.getByLabel("Date")).toHaveValue("2026-10-30");
+      await dialog.getByLabel("Date").blur();
+      await scrollTo(p, dialog.getByText("Oct 30 is still ahead", { exact: false }));
     },
   },
   "iphone-entry-extras": {
     open: async ({ page: p }) => {
       const dialog = await moreDetails(p);
+      // The card has a photo receipt attached (a synthetic PNG, as the iOS capture's photo).
+      const chooser = p.waitForEvent("filechooser");
+      await dialog.getByRole("button", { name: "Attach a photo" }).click();
+      await (await chooser).setFiles({ name: "receipt.png", mimeType: "image/png", buffer: syntheticPng() });
+      const receipt = dialog.getByRole("group", { name: "Receipt" });
+      await expect(receipt.getByRole("button", { name: "Preview receipt.png" })).toBeVisible();
       await scrollTo(p, dialog.getByRole("group", { name: "Your share" }));
     },
     note: "More details expands inside the form (share, repeat, trip, note, receipt) instead of opening its own page.",
@@ -250,14 +320,15 @@ const cards: Record<string, Card> = {
       const share = dialog.getByRole("group", { name: "Your share" });
       // By keyboard: on a phone the dialog's sticky footer covers the group until it scrolls.
       await share.getByRole("radio", { name: "All mine" }).focus();
-      for (let step = 0; step < 3; step++) await p.keyboard.press("ArrowRight");
-      await expect(share.getByRole("radio", { name: "Percent" })).toBeChecked();
+      await p.keyboard.press("ArrowRight");
+      await expect(share.getByRole("radio", { name: "Split equally" })).toBeChecked();
       await scrollTo(p, share);
-      await dialog.getByRole("textbox", { name: "Your percentage" }).fill("50");
-      await expect(dialog.getByRole("status").filter({ hasText: "Your share" })).toContainText("$37.20");
+      // The card splits equally between 3 people (as the iOS capture does).
+      await dialog.getByRole("textbox", { name: "Number of people" }).fill("3");
+      await expect(dialog.getByRole("status").filter({ hasText: "Your share" })).toContainText("$24.80");
       await scrollTo(p, share);
     },
-    note: "The draft amount and title are typed to match the card ($74.40, Dinner with friends); the share is a percentage in the form, not a separate page.",
+    note: "The draft amount and title are typed to match the card ($74.40, Dinner with friends); the split is in the form, not a separate page.",
   },
   "iphone-category-picker": {
     open: async ({ page: p }) => {
@@ -269,12 +340,15 @@ const cards: Record<string, Card> = {
   "iphone-entry-detail": { open: ({ page: p }) => partyDetail(p) },
   "iphone-receipt": {},
   "iphone-delete-confirm": {
-    open: async ({ page: p }) => {
-      const detail = await entryDetail(p, "2026-10", /^Coffee Personal · Groceries & dining · Fri, Oct 9/, "Coffee");
-      await detail.getByRole("button", { name: "Delete" }).click();
-      await expect(p.getByRole("dialog", { name: "Delete Coffee?" })).toBeVisible();
+    open: async (run) => {
+      // The card deletes the shared Internet expense for everyone (as the iOS capture does).
+      await maison(run);
+      await run.page.getByRole("list", { name: "Expenses" }).getByRole("link", { name: /^Internet/ }).click();
+      const dialog = run.page.getByRole("dialog", { name: "Internet" });
+      await dialog.getByRole("button", { name: "Delete", exact: true }).click();
+      await expect(dialog.getByRole("button", { name: "Delete for everyone" })).toBeVisible();
     },
-    note: "p-coffee-2 is a personal entry, so there is no shared 'delete for everyone' wording.",
+    note: "The shared expense is opened from Maison's expenses; its delete confirmation is a pane in the expense dialog.",
   },
 
   // Emailed receipts (MAZ-184): blocked by their state until the full-stack seed has a receipt
@@ -305,7 +379,11 @@ const cards: Record<string, Card> = {
     open: async (run) => {
       await maison(run);
       await run.page.getByRole("button", { name: "Shared expense" }).click();
-      await expect(run.page.getByRole("dialog", { name: "Add entry" })).toBeVisible();
+      const dialog = run.page.getByRole("dialog", { name: "Add entry" });
+      await expect(dialog).toBeVisible();
+      // The card's draft: $96.30 Hydro (as the iOS capture types it).
+      await dialog.getByLabel("Title").fill("Hydro");
+      await dialog.getByLabel("Amount (CAD)").fill("96.30");
     },
   },
   "iphone-record-payment": { open: (run) => recordAlexShare(run) },
@@ -337,7 +415,9 @@ const cards: Record<string, Card> = {
     open: async ({ page: p }) => {
       await page(p, "/households", "Shared");
       await p.getByRole("button", { name: /^New household/ }).click();
-      await expect(p.getByRole("dialog", { name: "New household" })).toBeVisible();
+      const dialog = p.getByRole("dialog", { name: "New household" });
+      await dialog.getByLabel("Name").fill("Apartment");
+      await dialog.getByLabel("Name").blur();
     },
   },
   "iphone-history": {
@@ -359,7 +439,13 @@ const cards: Record<string, Card> = {
     open: async ({ page: p }) => {
       await page(p, "/trips", "Trips");
       await p.getByRole("button", { name: "New trip" }).first().click();
-      await expect(p.getByRole("dialog", { name: "New trip" })).toBeVisible();
+      const dialog = p.getByRole("dialog", { name: "New trip" });
+      await expect(dialog).toBeVisible();
+      // The card names the trip and turns sharing on (as the iOS capture does).
+      await dialog.getByLabel("Trip name").fill("Lisbon");
+      const share = dialog.getByRole("switch", { name: "Share with others" });
+      await share.check();
+      await expect(share).toBeChecked();
     },
   },
 
@@ -390,8 +476,10 @@ const cards: Record<string, Card> = {
   "iphone-account-form": {
     open: async ({ page: p }) => {
       await page(p, "/accounts", "Accounts");
-      await p.getByRole("button", { name: "Add account" }).click();
-      await expect(p.getByRole("dialog", { name: /account/i })).toBeVisible();
+      // The card edits Visa, which entries and schedules use, so Remove is locked.
+      await p.getByRole("button", { name: "Edit Visa" }).click();
+      const dialog = p.getByRole("dialog", { name: /account/i });
+      await expect(dialog.getByText(/^Visa is used by /)).toBeVisible();
     },
   },
   "iphone-categories": {
@@ -404,7 +492,12 @@ const cards: Record<string, Card> = {
     open: async ({ page: p }) => {
       await page(p, "/categories", "Categories");
       await p.getByRole("button", { name: "New category" }).click();
-      await expect(p.getByRole("dialog", { name: /category/i })).toBeVisible();
+      const dialog = p.getByRole("dialog", { name: /category/i });
+      // The card's draft: Coffee, pink, with the cup icon (as the iOS capture types it).
+      await dialog.getByLabel("Name").fill("Coffee");
+      await dialog.getByRole("radio", { name: "Pink" }).check({ force: true });
+      await dialog.getByRole("radio", { name: "Coffee" }).check({ force: true });
+      await expect(dialog.getByRole("radio", { name: "Coffee" })).toBeChecked();
     },
   },
   "iphone-appearance": { open: ({ page: p }) => page(p, "/settings/appearance", /Appearance|Settings/) },
@@ -470,11 +563,16 @@ const cards: Record<string, Card> = {
     note: "The toast is the edit's 'Changes saved' with Undo, still shown on Home after Retry in the sync banner synced it.",
   },
   "iphone-sign-out": {
+    fresh: true,
+    faults: true,
     open: async ({ page: p }) => {
+      await makeTwoPendingChanges(p);
       await page(p, "/settings", "Settings");
       await p.getByRole("button", { name: "Sign out" }).click();
-      await expect(p.getByRole("dialog", { name: "Sign out of Penny?" })).toBeVisible();
+      const dialog = p.getByRole("dialog", { name: "2 changes haven’t synced" });
+      await expect(dialog.getByRole("button", { name: "Sync, then sign out" })).toBeVisible();
     },
+    note: "Ledger syncs are dropped to hold the two changes, so Settings shows the Offline banner behind the dialog.",
   },
 
   // iPad
@@ -508,13 +606,21 @@ const cards: Record<string, Card> = {
     open: async ({ page: p }) => {
       await home(p);
       await expectAlexOctober(p);
+      // The card focuses Groceries (the scenario's Groceries & dining) in Follow your money.
+      await focusFlow(p, "Groceries & dining");
     },
   },
   "web-activity": {
     open: ({ page: p }) => partyDetail(p),
     note: "Activity is a list, and the entry detail a dialog, not a table with a side panel.",
   },
-  "web-insights": { open: ({ page: p }) => page(p, "/insights?month=2026-09", "Insights") },
+  "web-insights": {
+    open: async ({ page: p }) => {
+      await page(p, "/insights?month=2026-09", "Insights");
+      // The card focuses Home (the scenario's Housing), the largest band.
+      await focusFlow(p, "Housing");
+    },
+  },
   "web-household": { open: (run) => maison(run, `?month=${run.state.month ?? "2026-10"}`) },
   "web-trips": {
     open: async ({ page: p }) => {
@@ -523,7 +629,12 @@ const cards: Record<string, Card> = {
     },
   },
   "web-settings": { open: ({ page: p }) => page(p, "/settings", "Settings") },
-  "web-add-entry": { open: ({ page: p }) => addEntry(p) },
+  "web-add-entry": {
+    open: async ({ page: p }) => {
+      // The card opens the dialog over Activity, with its draft: $74.40 Dinner with friends on Visa.
+      await draftDinner(await addEntry(p, { activity: "2026-10" }));
+    },
+  },
   "web-sign-in": { open: ({ page: p }) => signInScreen(p) },
 
   // Emailed receipts (MAZ-184): blocked by their state until the full-stack seed has a receipt
@@ -636,7 +747,7 @@ for (const specimen of specimens) {
       throw error;
     } finally {
       await context.close();
-      if (state.fault) await clearFaults();
+      if (state.fault || card.faults) await clearFaults();
     }
   });
 }
