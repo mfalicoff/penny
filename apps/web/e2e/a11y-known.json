@@ -243,11 +243,14 @@
       "rule": "color-contrast",
       "impact": "serious",
       "projects": [
-        "chromium-desktop"
+        "chromium-desktop",
+        "chromium-phone"
       ],
       "reason": "Design-kit colors below 4.5:1 for normal text: white on the accent button (3.68 light, 2.76 dark), income green (3.69-4.17), pending amber (3.16-3.64), keyboard-shortcut chips and quiet links (4.41-4.43), banner text (4.13). Needs a design-kit token change (MAZ-122 visual handoff), not a hand edit of tokens.css.",
       "except": [
-        "firefox-desktop"
+        "firefox-desktop",
+        "chromium-phone",
+        "firefox-phone"
       ],
       "exceptReason": "Firefox applies forced colors to the page, so its contrast passes; Chromium emulation leaves author colors in what axe measures."
     },

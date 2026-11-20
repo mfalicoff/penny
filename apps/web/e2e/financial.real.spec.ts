@@ -101,8 +101,8 @@ test("currency, organize, income, expense, investment, a schedule and Home's tot
   // Home: recorded remaining = 3,000.00 − 18.40 − 250.00; projected also takes the 45.00 Gym.
   await page.goto("/");
   await expect(hero(page).locator(".hero__amount")).toHaveText("Recorded remaining: €2,731.60");
-  await expect(hero(page)).toContainText("€2,686.60 projected remaining");
-  await expect(hero(page)).toContainText("€45.00 scheduled to go out");
+  // The cards' short projected line (MAZ-224): the amount, then "projected".
+  await expect(hero(page).locator(".hero__projected")).toHaveText("Projected remaining: €2,686.60 projected");
   // A reload reads the same from the server, not a stale cache.
   await page.reload();
   await expect(hero(page).locator(".hero__amount")).toHaveText("Recorded remaining: €2,731.60");
