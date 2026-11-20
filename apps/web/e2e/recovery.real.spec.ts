@@ -24,8 +24,17 @@ test.afterEach(async () => {
 async function open(page: Page) {
   await page.goto("/transactions?month=2026-10");
   await expect(results(page).getByRole("status")).toBeAttached();
-  // The ledger has downloaded: the desktop summary comes from it (phones show no period figures).
-  if ((page.viewportSize()?.width ?? 0) >= 768) await expect(page.locator(".activity-summary")).toContainText("entries");
+  // The ledger has downloaded: the desktop summary comes from it; phones show no period figures
+  // (`iphone-activity`), so there the categories in Filters, which come from the ledger, say so.
+  if ((page.viewportSize()?.width ?? 0) >= 768) {
+    await expect(page.locator(".activity-summary")).toContainText("entries");
+    return;
+  }
+  await page.getByRole("button", { name: /^Period: / }).click();
+  const filters = page.getByRole("dialog", { name: "Filters" });
+  await expect(filters.getByRole("group", { name: "Category" })).toBeVisible();
+  await filters.getByRole("button", { name: "Done" }).click();
+  await expect(filters).toHaveCount(0);
 }
 
 async function addExpense(page: Page, title: string, amount: string) {
