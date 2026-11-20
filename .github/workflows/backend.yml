@@ -127,7 +127,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     # Swift 6.2 (Ubuntu 24.04), pinned by digest.
-    container: docker.io/library/swift:6.4-noble@sha256:65e886503ecbfb4c6dc40bdd7620bcfd970a562c6028a33ee403c423650dd700
+    container: docker.io/library/swift:6.4-noble@sha256:a4dbf72e959a764258da8708c4cb220bbd2f478394b4cb5fd775f6da413c8af8
     steps:
       - uses: actions/checkout@v7
         with:
