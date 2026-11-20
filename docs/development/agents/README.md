@@ -50,6 +50,8 @@ Either way the orchestrator replies under the follow-up (`Orchestrator: …`), s
 
 On a screen with a redesign card, the goal is parity: the card's verdict is `matches`. Agents never approve a deviation from a card. A dev worker that can't close a difference posts a `Design decision:` follow-up, and the orchestrator files it with the `needs-design-decision` label, never `agent-ready`. You decide: change the card, approve the deviation (apply `design-approved` to the issue and record it in [redesign.md](../../reference/redesign.md#approved-deviations-maz-122)), or ask for the fix. The reviewer requests changes on any pull request that approves its own deviation ([dev-worker.md](dev-worker.md#design-cards)).
 
+New screens are designed before they're built. A dev worker never invents a screen that no card covers. It hands the issue over instead ([dev-worker.md](dev-worker.md#screens-with-no-card)). For a planned feature, file a `Design cards:` issue first and mark the feature blocked by it. An agent drafts the cards, and you review them in the pull request before they become the target.
+
 ## When it stops
 
 The pipeline adds `needs-human`, comments on the issue and stops when:
