@@ -1,9 +1,10 @@
 import { layoutMoneyFlow, type FlowNode, type MoneyFlow } from "@domain/selectors/moneyFlow.ts";
-import { useId, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from "react";
+import { useId, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type CSSProperties, type ReactNode, type RefObject } from "react";
+import type { Category } from "@domain/ledger.ts";
 import { cx } from "../../design/controls";
 import { Icon } from "../../design/Icon";
 import { formatCents, Money } from "../../design/Money";
-import { flowColor, flowNodeSummary, percentOf, shortLabel } from "./model";
+import { flowColor, flowNodeIcon, flowNodeSummary, percentOf, shortLabel } from "./model";
 
 type Side = "in" | "out";
 type Node = FlowNode & { side: Side };
@@ -39,6 +40,8 @@ interface MoneyFlowChartProps {
   variant: "panel" | "page";
   /** A link beside the hint, such as Home's "Open full view" (panel only). */
   action?: ReactNode;
+  /** The ledger's categories, for the focus card's icon tile (page only). */
+  categories?: readonly Pick<Category, "id" | "icon">[];
 }
 
 const HINT = "Select a band or label to focus it, again to clear";
@@ -55,10 +58,12 @@ const HINT = "Select a band or label to focus it, again to clear";
  * are on the cards since MAZ-224. The selection is announced politely: on the page in the focus
  * card, on a panel in the hint ("Home selected · …").
  */
-export function MoneyFlowChart({ flow, currency, monthLabel, variant, action }: MoneyFlowChartProps) {
+export function MoneyFlowChart({ flow, currency, monthLabel, variant, action, categories = [] }: MoneyFlowChartProps) {
   const headingId = useId();
   const hintId = useId();
   const [selected, setSelected] = useState<string | null>(null);
+  // A pointer over a band emphasises it, as the cards draw a hovered band (`web-home`), without selecting it.
+  const [hovered, setHovered] = useState<string | null>(null);
   const nodes: Node[] = useMemo(() => [...flow.sources.map((node) => ({ ...node, side: "in" as const })), ...flow.destinations.map((node) => ({ ...node, side: "out" as const }))], [flow]);
   const active = nodes.find((node) => node.id === selected) ?? null;
   const money = (cents: number) => formatCents(cents, currency);
@@ -81,7 +86,7 @@ export function MoneyFlowChart({ flow, currency, monthLabel, variant, action }: 
     }
   };
   const empty = <p className="muted">Nothing came in or went out in {monthLabel} yet. Add income, an expense or an investment to see where your money goes.</p>;
-  const sankey = <Sankey flow={flow} nodes={nodes} selected={selected} describe={describe} toggle={toggle} onKeyDown={onKeyDown} hintId={hintId} />;
+  const sankey = <Sankey flow={flow} nodes={nodes} selected={selected} hovered={hovered} onHover={setHovered} currency={currency} describe={describe} toggle={toggle} onKeyDown={onKeyDown} hintId={hintId} />;
   const table = <FlowTable flow={flow} nodes={nodes} currency={currency} monthLabel={monthLabel} />;
 
   if (variant === "panel") {
@@ -118,7 +123,7 @@ export function MoneyFlowChart({ flow, currency, monthLabel, variant, action }: 
             <div>
               <dt>Came in</dt>
               <dd>
-                <Money cents={flow.income} currency={currency} tone="income" />
+                <Money cents={flow.income} currency={currency} />
               </dd>
             </div>
             <div>
@@ -130,7 +135,7 @@ export function MoneyFlowChart({ flow, currency, monthLabel, variant, action }: 
             <div>
               <dt>{flow.gap ? "Beyond income" : "Left over"}</dt>
               <dd>
-                <Money cents={flow.gap || flow.remaining} currency={currency} tone={flow.gap ? "expense" : "income"} />
+                <Money cents={flow.gap || flow.remaining} currency={currency} />
               </dd>
             </div>
           </dl>
@@ -145,6 +150,7 @@ export function MoneyFlowChart({ flow, currency, monthLabel, variant, action }: 
             active={active}
             flow={flow}
             currency={currency}
+            categories={categories}
             onClear={() => {
               setSelected(null);
             }}
@@ -160,12 +166,14 @@ export function MoneyFlowChart({ flow, currency, monthLabel, variant, action }: 
 }
 
 /** The page's focus card (`iphone-money-flow`): the focused node, its share, and a button that clears it. */
-function FocusCard({ active, flow, currency, onClear }: { active: Node | null; flow: MoneyFlow; currency: string | undefined; onClear: () => void }) {
+function FocusCard({ active, flow, currency, categories, onClear }: { active: Node | null; flow: MoneyFlow; currency: string | undefined; categories: readonly Pick<Category, "id" | "icon">[]; onClear: () => void }) {
   return (
     <div aria-live="polite" className={active ? "card flow__focus" : "visually-hidden"}>
       {active ? (
         <>
-          <span className="flow__swatch" style={{ background: flowColor(active) }} aria-hidden="true" />
+          <span className="category-dot flow__tile" style={{ "--tile": flowColor(active) } as CSSProperties} aria-hidden="true">
+            <Icon name={flowNodeIcon(active, categories)} size={18} />
+          </span>
           <p className="flow__focus-text">
             <strong>
               {active.label} · <Money cents={active.amount} currency={currency} />
@@ -187,6 +195,9 @@ interface ViewProps {
   flow: MoneyFlow;
   nodes: Node[];
   selected: string | null;
+  hovered: string | null;
+  onHover: (id: string | null) => void;
+  currency: string | undefined;
   describe: (node: Node) => string;
   toggle: (id: string) => void;
   onKeyDown: (event: KeyboardEvent, index: number, scope: HTMLElement | null) => void;
@@ -210,7 +221,7 @@ function useNarrow(ref: RefObject<HTMLElement | null>) {
   return narrow;
 }
 
-function Sankey({ flow, selected, describe, toggle, onKeyDown, hintId }: ViewProps) {
+function Sankey({ flow, selected, hovered, onHover, currency, describe, toggle, onKeyDown, hintId }: ViewProps) {
   const scope = useRef<HTMLDivElement>(null);
   const narrow = useNarrow(scope);
   const geometry: Geometry = narrow ? GEOMETRY.narrow : GEOMETRY.wide;
@@ -218,7 +229,10 @@ function Sankey({ flow, selected, describe, toggle, onKeyDown, hintId }: ViewPro
   const middleX = width / 2 - BAR / 2;
   const layout = useMemo(() => layoutMoneyFlow(flow), [flow]);
   const positioned = [...layout.sources.map((node) => ({ ...node, side: "in" as const })), ...layout.destinations.map((node) => ({ ...node, side: "out" as const }))];
-  const opacity = (id: string) => (!selected ? 0.34 : selected === id ? 0.72 : 0.08);
+  // The selection wins over the pointer; either one emphasises its band and dims the rest.
+  const emphasis = selected ?? hovered;
+  const opacity = (id: string) => (!emphasis ? 0.34 : emphasis === id ? 0.72 : 0.08);
+  const centers = positioned.map((node) => node.y + node.height / 2);
   return (
     <div className={cx("flow__sankey", narrow && "flow__sankey--narrow")} ref={scope} role="group" aria-label="Money flow diagram" aria-describedby={hintId}>
       <svg viewBox={`0 0 ${String(width)} ${String(layout.height)}`} className="flow__svg" focusable="false">
@@ -230,6 +244,13 @@ function Sankey({ flow, selected, describe, toggle, onKeyDown, hintId }: ViewPro
           const labelX = left ? leftX - 10 : rightX + BAR + 10;
           const center = node.y + node.height / 2;
           const on = selected === node.id;
+          const lit = emphasis === node.id;
+          // The 44-unit hit ring, cut at the midpoint to each neighbour on its side, so a thin band's
+          // ring never covers the next label (MAZ-235): a pointer always lands on the label it is over.
+          const before = positioned[index - 1]?.side === node.side ? centers[index - 1] : undefined;
+          const after = positioned[index + 1]?.side === node.side ? centers[index + 1] : undefined;
+          const ringTop = Math.max(center - 22, before === undefined ? -Infinity : (before + center) / 2);
+          const ringBottom = Math.min(center + 22, after === undefined ? Infinity : (center + after) / 2);
           return (
             <g
               key={node.id}
@@ -238,7 +259,13 @@ function Sankey({ flow, selected, describe, toggle, onKeyDown, hintId }: ViewPro
               tabIndex={0}
               aria-pressed={on}
               aria-label={describe(node)}
-              className={cx("flow-node", on && "flow-node--on", selected && !on && "flow-node--dim")}
+              className={cx("flow-node", on && "flow-node--on", lit && "flow-node--lit", emphasis && !lit && "flow-node--dim")}
+              onPointerEnter={(event) => {
+                if (event.pointerType === "mouse") onHover(node.id);
+              }}
+              onPointerLeave={() => {
+                onHover(null);
+              }}
               onClick={() => {
                 toggle(node.id);
               }}
@@ -251,15 +278,15 @@ function Sankey({ flow, selected, describe, toggle, onKeyDown, hintId }: ViewPro
                 onKeyDown(event, index, scope.current);
               }}
             >
-              <title>{`${node.label}: ${formatCents(node.amount)}`}</title>
+              <title>{`${node.label}: ${formatCents(node.amount, currency)}`}</title>
               <path d={path} fill={color} fillOpacity={opacity(node.id)} />
               <rect x={left ? leftX : rightX} y={node.y} width={BAR} height={Math.max(2, node.height)} rx={3} fill={color} />
-              <rect className="flow-node__ring" x={left ? 4 : rightX - 4} y={center - 22} width={left ? leftX : width - rightX} height={44} rx={8} />
+              <rect className="flow-node__ring" x={left ? 4 : rightX - 4} y={ringTop} width={left ? leftX : width - rightX} height={ringBottom - ringTop} rx={8} />
               <text x={labelX} y={center - 4} textAnchor={left ? "end" : "start"} className="flow-node__label">
                 {shortLabel(node.label, geometry.label)}
               </text>
               <text x={labelX} y={center + 14} textAnchor={left ? "end" : "start"} className="flow-node__amount" fill={color}>
-                {formatCents(node.amount)}
+                {formatCents(node.amount, currency)}
               </text>
             </g>
           );

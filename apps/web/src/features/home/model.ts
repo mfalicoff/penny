@@ -6,7 +6,9 @@ import { selectOverview, type OverviewEntry } from "@domain/selectors/overview.t
 import { isExpected, net, type KindTotals } from "@domain/summary.ts";
 import type { SharedRow } from "../../api/projection";
 import type { WeekStart } from "../../app/preferences";
+import type { IconName } from "../../design/Icon";
 import { categoryTint } from "../../design/categoryTint";
+import { categoryIcon } from "../entries/model";
 import { shiftMonth } from "../households/model";
 
 /**
@@ -292,13 +294,28 @@ export function flowColor(node: FlowNode): string {
   return node.color;
 }
 
-/** What a flow node means, in words, for its accessible name and the focus card. */
+/**
+ * What a flow node means, in words, for its accessible name and the focus card, as the card
+ * `iphone-money-flow` words it: "45% of income · 77% of spending" for a category (its share of
+ * what came in and of the month's spending), "6% of income" for the rest.
+ */
 export function flowNodeSummary(node: FlowNode, flow: MoneyFlow, side: "in" | "out"): string {
-  if (node.id === "balance:gap") return "spent beyond what came in";
-  if (node.id === "balance:remaining") return `${String(percentOf(node.amount, flow.income))}% of what came in, left over`;
-  if (side === "in") return `${String(percentOf(node.amount, flow.income))}% of what came in`;
-  const outflow = flow.expense + flow.investment;
-  return `${String(percentOf(node.amount, flow.income))}% of what came in, ${String(percentOf(node.amount, outflow))}% of what went out`;
+  if (node.id === "balance:gap") return "spent beyond income";
+  const income = `${String(percentOf(node.amount, flow.income))}% of income`;
+  if (side === "in" || !node.id.startsWith("expense:")) return income;
+  return `${income} · ${String(percentOf(node.amount, flow.expense))}% of spending`;
+}
+
+/** The focus card's icon for a flow node: the category's own icon, or one for what the node is. */
+export function flowNodeIcon(node: FlowNode, categories: readonly Pick<Category, "id" | "icon">[]): IconName {
+  if (node.id === "investment:total") return "trending-up";
+  if (node.id === "balance:remaining") return "wallet";
+  if (node.id === "balance:gap") return "alert-circle";
+  if (node.id.endsWith(":overflow")) return "ellipsis-horizontal";
+  const [kind = "", id = ""] = node.id.split(":");
+  const category = categories.find((item) => item.id === id);
+  if (category?.icon) return categoryIcon(category.icon);
+  return kind === "income" ? "arrow-down" : "pricetag";
 }
 
 /** Shortens a long label for the chart (the full text stays in its accessible name and the table). */

@@ -205,7 +205,7 @@ describe("grouping and labels", () => {
     expect(result.flow.destinations[0]?.label).toBe(long);
     const [node] = result.flow.destinations;
     if (!node) throw new Error("no destination");
-    expect(flowNodeSummary(node, result.flow, "out")).toBe("0% of what came in, 100% of what went out");
+    expect(flowNodeSummary(node, result.flow, "out")).toBe("0% of income · 100% of spending");
   });
 
   it("compares categories by name with last month and groups the long tail", () => {

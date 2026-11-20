@@ -95,7 +95,7 @@ test("the money flow is chosen with the keyboard and announced", async ({ page, 
   await salary.focus();
   await page.keyboard.press("Enter");
   await expect(salary).toHaveAttribute("aria-pressed", "true");
-  if (isMobile) await expect(scope.locator(".flow__focus")).toContainText("Salary · $4,800.0088% of what came in");
+  if (isMobile) await expect(scope.locator(".flow__focus")).toContainText("Salary · $4,800.0088% of income");
   else await expect(scope).toContainText("Salary selected · select a band or label to focus it, again to clear");
 
   await page.keyboard.press("ArrowDown");
@@ -143,7 +143,7 @@ test("the calendar is a sheet over Home that lists a day's entries (iphone-calen
   const sheet = page.getByRole("dialog", { name: "November 2026" });
   await expect(sheet).toBeVisible();
   await expect(sheet.getByRole("button", { name: /^Monday, November 30/ })).toHaveAccessibleName("Monday, November 30: 2 expected or scheduled");
-  await expect(sheet.getByRole("list", { name: "Legend" })).toContainText("Expected or scheduled");
+  await expect(sheet.getByRole("list", { name: "Legend" })).toContainText("Scheduled");
   await sheet.getByRole("button", { name: /^Monday, November 30/ }).click();
   await expect(page).toHaveURL(/day=2026-11-30/);
   const day = sheet.getByRole("region", { name: /^Monday, Nov/ });

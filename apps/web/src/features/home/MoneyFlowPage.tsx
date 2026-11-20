@@ -25,7 +25,7 @@ export function MoneyFlowPage({ search }: { search: InsightsSearch }) {
         }}
       />
       <p className="page__subtitle">From coming in to going out</p>
-      {!report ? <LoadingState label="Loading your month…" /> : <MoneyFlowChart variant="page" flow={report.flow} currency={ledger?.currency} monthLabel={monthLabel(month)} />}
+      {!report ? <LoadingState label="Loading your month…" /> : <MoneyFlowChart variant="page" flow={report.flow} currency={ledger?.currency} monthLabel={monthLabel(month)} categories={ledger?.categories ?? []} />}
     </div>
   );
 }

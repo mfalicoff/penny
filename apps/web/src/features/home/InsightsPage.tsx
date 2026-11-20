@@ -56,7 +56,7 @@ export function InsightsPage({ search }: { search: InsightsSearch }) {
             <div>
               <dt>Came in</dt>
               <dd>
-                <Money cents={report.recorded.income} currency={currency} tone="income" />
+                <Money cents={report.recorded.income} currency={currency} />
               </dd>
             </div>
             <div>
@@ -85,6 +85,8 @@ export function InsightsPage({ search }: { search: InsightsSearch }) {
         </>
       ) : (
         <>
+          {/* iphone-insights: the subtitle under the title says what the screen counts. */}
+          <p className="page__subtitle">Spending · your share</p>
           <SpendingSummary report={report} previous={previous} comparison={comparison} previousMonth={previousMonth} currency={currency} />
           <CategoryList report={report} currency={currency} />
         </>
@@ -98,9 +100,21 @@ function changeSentence(delta: number, currency: string | undefined): string {
   return `${formatCents(Math.abs(delta), currency)} ${delta < 0 ? "less" : "more"} spent`;
 }
 
-function changeLabel(delta: number, currency: string | undefined): string {
-  if (delta === 0) return "No change";
-  return `${delta < 0 ? "Down" : "Up"} ${formatCents(Math.abs(delta), currency)}`;
+/** The Change column as `web-insights` draws it: "↓ $143.63", "↑ $32.00", or "—"; the words stay for screen readers. */
+function ChangeLabel({ delta, currency }: { delta: number; currency: string | undefined }) {
+  if (delta === 0)
+    return (
+      <>
+        <span aria-hidden="true">—</span>
+        <span className="visually-hidden">No change</span>
+      </>
+    );
+  return (
+    <span className="category-compare__change">
+      <span aria-hidden="true">{delta < 0 ? "↓" : "↑"}</span>
+      <span className="visually-hidden">{delta < 0 ? "Down" : "Up"}</span> <span className="pk-num">{formatCents(Math.abs(delta), currency)}</span>
+    </span>
+  );
 }
 
 /** "Food & drinks", "Food & drinks and Shopping". */
@@ -121,8 +135,12 @@ function SpendingSummary({ report, previous, comparison, previousMonth, currency
   const shares = rows.map((row) => (total > 0 ? row.amount / total : 0));
   const arcs = rows.map((row, index) => ({ id: row.id, color: categoryTint(row), share: shares[index] ?? 0, start: shares.slice(0, index).reduce((sum, share) => sum + share, 0) }));
   const longest = Math.max(spent, before ?? 0, 1);
+  const headingId = useId();
   return (
-    <Panel title="Spending" className="spending" action={<span className="muted">Your share</span>}>
+    <section className="card spending" aria-labelledby={headingId}>
+      <h2 id={headingId} className="visually-hidden">
+        Spending
+      </h2>
       <div className="spending__body">
         <div className="donut">
           <svg viewBox="0 0 120 120" className="donut__ring" aria-hidden="true" focusable="false">
@@ -153,7 +171,7 @@ function SpendingSummary({ report, previous, comparison, previousMonth, currency
           ) : null}
         </div>
       </div>
-    </Panel>
+    </section>
   );
 }
 
@@ -237,7 +255,9 @@ function CategoryTable({ comparison, month, previousMonth, currency }: { compari
                   <td className="num muted">
                     <Money cents={row.previous} currency={currency} tone="muted" />
                   </td>
-                  <td className="num">{changeLabel(row.change, currency)}</td>
+                  <td className="num">
+                    <ChangeLabel delta={row.change} currency={currency} />
+                  </td>
                   <td className="num">{row.share}%</td>
                 </tr>
               ))}

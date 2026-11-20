@@ -1,5 +1,5 @@
 import { onlineManager } from "@tanstack/react-query";
-import { act, configure, screen, waitFor, within } from "@testing-library/react";
+import { act, configure, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { entry, ledgerServer, sharedRow } from "./fakes/ledgerServer";
@@ -49,11 +49,13 @@ function server(transactions = [pay, rent, coffee, fund, october]) {
  * A window this wide (MAZ-174): `min-width` queries answer for it, so the desktop layouts render.
  * Without it jsdom has no `matchMedia` and the app lays out for a phone.
  */
-function stubWidth(width: number) {
+function stubWidth(width: number, { touch = false }: { touch?: boolean } = {}) {
   vi.stubGlobal(
     "matchMedia",
     vi.fn((query: string) => {
       const min = /min-width:\s*(\d+)px/.exec(query);
+      // A touch tablet query (ipad-home) matches only when `touch` is set.
+      if (query.includes("pointer: coarse")) return { matches: touch && (!min || width >= Number(min[1])), media: query, addEventListener: vi.fn(), removeEventListener: vi.fn() };
       return { matches: min ? width >= Number(min[1]) : query.includes("hover"), media: query, addEventListener: vi.fn(), removeEventListener: vi.fn() };
     }),
   );
@@ -115,7 +117,8 @@ describe("Home", () => {
     expect(within(hero()).queryByText("Came in")).not.toBeInTheDocument();
     expect(regionOrder()).toEqual(["Left to spend", "Follow your money", "Recent"]);
     const flow = screen.getByRole("region", { name: "Follow your money" });
-    expect(within(flow).getByText("Spent").parentElement).toHaveTextContent("$1,486.20");
+    // The compact legend shows whole units, as on the card ("Spent $1,883").
+    expect(within(flow).getByText("Spent").parentElement).toHaveTextContent("$1,486");
     expect(within(flow).getByRole("link", { name: "Follow your money" })).toHaveAttribute("href", "/money-flow?month=2026-11");
     expect(within(flow).getByRole("link", { name: "Insights" })).toHaveAttribute("href", "/insights?month=2026-11");
     const recent = screen.getByRole("region", { name: "Recent" });
@@ -146,6 +149,67 @@ describe("Home", () => {
     expect(within(topbar).getByRole("button", { name: "Previous month" })).toBeInTheDocument();
     expect(within(topbar).getByText("November 2026", { selector: ".month-nav__label" })).toBeInTheDocument();
     expect(within(screen.getByRole("main")).queryByRole("button", { name: "Previous month" })).not.toBeInTheDocument();
+  });
+
+  it("reads Recent rows as the card does, date first, and signs Coming up (MAZ-223)", async () => {
+    server();
+    renderApp("/?month=2026-11");
+    const recent = await screen.findByRole("region", { name: "Recent" });
+    const metaOf = async (title: string) => (await within(recent).findByText(title)).closest("li")?.querySelector(".results__meta")?.textContent;
+    // iphone-home: "Today · Main chequing"; the category is the row's icon, not its subtitle.
+    expect(await metaOf("Morning coffee")).toBe("Nov 6");
+    expect(await metaOf("Hydro")).toMatch(/^Nov 3 · /);
+    expect(await metaOf("Hydro")).not.toContain("Utilities");
+    // The flow card's Insights is a pill link, not a copper text link.
+    expect(within(screen.getByRole("region", { name: "Follow your money" })).getByRole("link", { name: "Insights" })).toHaveClass("home-flow__insights");
+  });
+
+  it("signs Coming up amounts as web-home does (MAZ-223)", async () => {
+    stubWidth(1440);
+    server();
+    renderApp("/?month=2026-11");
+    const coming = await screen.findByRole("region", { name: "Coming up" });
+    const amount = (title: string) => within(coming).getByText(title).closest("li")?.querySelector(".coming__amount")?.textContent;
+    expect(amount("Streaming")).toBe("−$8.00");
+    expect(amount("Design retainer")).toBe("+$400.00 income");
+    // web-home: the totals under the hero are in the label color; only their dots carry meaning.
+    expect(within(hero()).getByText("Came in").parentElement?.querySelector(".money")).not.toHaveClass("pk-money--income");
+  });
+
+  it("on a touch tablet, shows the one-line legend and Daily spending, as ipad-home (MAZ-223)", async () => {
+    stubWidth(1194, { touch: true });
+    server();
+    renderApp("/?month=2026-11");
+    await loaded();
+    expect(regionOrder()).toEqual(["Left to spend", "Coming up", "Follow your money", "Daily spending"]);
+    expect(within(hero()).getByText("Income").parentElement).toHaveTextContent("$4,800.00");
+    expect(within(hero()).queryByText("Came in")).not.toBeInTheDocument();
+    const daily = screen.getByRole("region", { name: "Daily spending" });
+    // $1,486.20 over November's 30 days; each day with spending is listed for screen readers.
+    expect(daily).toHaveTextContent("Avg $49.54");
+    expect(within(daily).getAllByRole("listitem").map((item) => item.textContent)).toEqual(["Nov 1: $1,450.00", "Nov 3: $30.00", "Nov 6: $6.20"]);
+  });
+
+  it("emphasises the band under the pointer without selecting it, as web-home (MAZ-223)", async () => {
+    stubWidth(1440);
+    server();
+    renderApp("/?month=2026-11");
+    const flow = await screen.findByRole("region", { name: "Follow your money" });
+    const diagram = within(flow).getByRole("group", { name: "Money flow diagram" });
+    await waitFor(() => {
+      expect(within(diagram).getAllByRole("button").length).toBeGreaterThan(3);
+    });
+    const salary = within(diagram).getByRole("button", { name: /^Came in: Salary/ });
+    // Sankey labels carry the currency, as on the cards.
+    expect(salary).toHaveTextContent("$4,800.00");
+    fireEvent.pointerEnter(salary, { pointerType: "mouse" });
+    expect(salary).toHaveClass("flow-node--lit");
+    expect(salary).toHaveAttribute("aria-pressed", "false");
+    expect(within(diagram).getByRole("button", { name: /^Went out: Food & drinks/ })).toHaveClass("flow-node--dim");
+    expect(flow).toHaveTextContent("Select a band or label to focus it, again to clear");
+    expect(flow).not.toHaveTextContent("selected");
+    fireEvent.pointerLeave(salary, { pointerType: "mouse" });
+    expect(salary).not.toHaveClass("flow-node--lit");
   });
 
   it("names the focused band in the desktop flow card's hint", async () => {
@@ -180,8 +244,9 @@ describe("Home", () => {
     const sixth = within(sheet).getByRole("button", { name: /^Friday, November 6/ });
     expect(sixth).toHaveAccessibleName("Friday, November 6: spent $6.20");
     expect(within(sheet).getByRole("button", { name: /^Wednesday, November 25/ })).toHaveAccessibleName("Wednesday, November 25: 1 expected or scheduled");
-    // The amber ring covers scheduled previews and income dated after today; the legend says both.
-    expect(within(sheet).getByRole("list", { name: "Legend" })).toHaveTextContent("Expected or scheduled");
+    // The legend reads "Scheduled" as on the card (MAZ-223); each day's name says "expected or scheduled".
+    expect(within(sheet).getByRole("list", { name: "Legend" })).toHaveTextContent("Scheduled");
+    expect(within(sheet).getByRole("list", { name: "Legend" })).not.toHaveTextContent("Expected");
     expect(sheet).toHaveTextContent("Choose a day to see its entries.");
 
     await user.click(sixth);
@@ -192,6 +257,8 @@ describe("Home", () => {
     const day = within(sheet).getByRole("region", { name: /^Friday, Nov/ });
     expect(day).toHaveTextContent("−$6.20");
     expect(within(day).getByRole("button", { name: /Morning coffee/ })).toBeInTheDocument();
+    // Under the day's heading the row leaves the date out (iphone-calendar: "Visa · monthly"); with no account it names the category.
+    expect(within(day).getByRole("button", { name: /Morning coffee/ }).querySelector(".results__meta")).toHaveTextContent(/^Food & drinks$/);
 
     within(sheet).getByRole("button", { name: /^Friday, November 6/ }).focus();
     await user.keyboard("{ArrowRight}");
@@ -256,7 +323,8 @@ describe("Home", () => {
     ledgerServer();
     renderApp("/");
     const start = await screen.findByRole("region", { name: "Add your first entry" });
-    expect(hero()).toHaveTextContent("$0");
+    // iphone-empty-home: a muted "$0", with no cents.
+    expect(hero().querySelector(".hero__amount")).toHaveTextContent(/^\$0$/);
     expect(hero()).toHaveTextContent("Your month fills in as you add entries.");
     // iphone-empty-home has no Currency link (MAZ-224); Settings › Currency chooses it.
     expect(within(start).queryByRole("link")).not.toBeInTheDocument();
@@ -307,12 +375,12 @@ describe("Money flow", () => {
     });
     const main = screen.getByRole("main");
     const salary = within(diagram).getByRole("button", { name: /^Came in: Salary/ });
-    expect(salary).toHaveAccessibleName("Came in: Salary, $4,800.00, 100% of what came in");
+    expect(salary).toHaveAccessibleName("Came in: Salary, $4,800.00, 100% of income");
     expect(main).toHaveTextContent("Select a band or label to focus it, again to clear");
     await user.click(salary);
     expect(salary).toHaveAttribute("aria-pressed", "true");
     const focus = () => main.querySelector(".flow__focus");
-    expect(focus()).toHaveTextContent("Salary · $4,800.00100% of what came in");
+    expect(focus()).toHaveTextContent("Salary · $4,800.00100% of income");
 
     await user.keyboard("{ArrowDown}");
     const food = within(diagram).getByRole("button", { name: /^Went out: Food & drinks/ });
@@ -345,7 +413,8 @@ describe("Insights", () => {
       expect(within(table).getAllByRole("row")).toHaveLength(4);
     });
     const rows = within(table).getAllByRole("row").slice(1).map((row) => row.textContent);
-    expect(rows).toEqual(["Food & drinks$1,456.20$0.00Up $1,456.2098%", "Utilities$30.00$0.00Up $30.002%", "Groceries$0.00$500.00Down $500.000%"]);
+    // The Change column draws arrows, as on web-insights; the words are for screen readers.
+    expect(rows).toEqual(["Food & drinks$1,456.20$0.00↑Up $1,456.2098%", "Utilities$30.00$0.00↑Up $30.002%", "Groceries$0.00$500.00↓Down $500.000%"]);
     // web-insights draws the table without a visible title (MAZ-224).
     expect(screen.getByRole("heading", { name: "Spending by category" })).toHaveClass("visually-hidden");
     const totals = within(document.querySelector(".insights__totals") as HTMLElement);
@@ -377,6 +446,9 @@ describe("Insights", () => {
       expect(spending).toHaveTextContent("$986.20 more than October");
     });
     expect(spending).toHaveTextContent("$1,486.20Spent");
+    // "Spending · your share" is the screen's subtitle, not a card header (MAZ-223).
+    expect(screen.getByText("Spending · your share")).toHaveClass("page__subtitle");
+    expect(spending).not.toHaveTextContent("Your share");
     expect(spending).toHaveTextContent("Mostly Food & drinks and Utilities.");
     // The money flow is its own screen, opened from Home.
     expect(regionOrder()).toEqual(["Spending", "Categories"]);
