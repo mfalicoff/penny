@@ -16,7 +16,17 @@ test.describe.configure({ mode: "serial", timeout: 120_000 });
 
 const AT = "2026-10-20T15:00:00Z";
 const results = (page: Page) => page.getByRole("region", { name: "Search results" });
-const spent = (page: Page) => page.getByRole("region", { name: "October 2026" }).getByText("Spent", { exact: true }).locator("..");
+/**
+ * What Activity says was spent in the period: the desktop summary ("… · spent $161.00 · in …",
+ * `web-activity`). Phones show no period figures (`iphone-activity`), so there the server's totals stand alone.
+ */
+async function expectSpent(page: Page, amount: string) {
+  if ((page.viewportSize()?.width ?? 0) < 768) return;
+  await expect(page.locator(".activity-summary")).toContainText(`spent ${amount}`);
+}
+
+/** A personal entry's detail: a dialog on phones, the panel beside the list from 1100px (MAZ-225). */
+const detailOf = (page: Page, title: string) => page.getByRole("dialog", { name: title }).or(page.getByRole("complementary", { name: title }));
 
 const asLedger = (snapshot: LedgerSnapshot) => snapshot.ledger as unknown as Ledger;
 
@@ -59,7 +69,7 @@ test("offline native entries, a web entry, web edits and independent and same-fi
 
   // Meanwhile the web adds an entry online, so the native copy is now stale.
   await page.goto("/transactions?month=2026-10");
-  await expect(page.getByRole("region", { name: "October 2026" })).toBeVisible();
+  await expect(results(page).getByRole("status")).toBeAttached();
   await page.getByRole("button", { name: "Add entry" }).click();
   const add = page.getByRole("form", { name: "Add entry" });
   await add.getByLabel("Amount (CAD)").fill("14");
@@ -76,13 +86,13 @@ test("offline native entries, a web entry, web edits and independent and same-fi
 
   // The web reads the native entries; totals match the server's.
   await page.reload();
-  await expect(results(page).locator(".results__title")).toHaveText(["Lunch", "Market", "Bus pass"]);
-  await expect(spent(page)).toContainText(dollars(octoberSpentCents(first.snapshot)));
+  await expect(results(page).locator(".results__title, .activity-table__title")).toHaveText(["Lunch", "Market", "Bus pass"]);
+  await expectSpent(page, dollars(octoberSpentCents(first.snapshot)));
   expect(octoberSpentCents(first.snapshot)).toBe(4210 + 9500 + 1400);
 
   // The web edits a native entry; the native client reads it back.
   await results(page).locator('[data-row-key="personal:native-market"]').click();
-  await page.getByRole("dialog", { name: "Market" }).getByRole("button", { name: "Edit" }).click();
+  await detailOf(page, "Market").getByRole("button", { name: "Edit", exact: true }).click();
   let edit = page.getByRole("form", { name: "Edit entry" });
   await edit.getByLabel("Amount (CAD)").fill("45.10");
   await page.getByRole("dialog", { name: "Edit entry" }).getByRole("button", { name: "Save" }).click();
@@ -92,7 +102,7 @@ test("offline native entries, a web entry, web edits and independent and same-fi
   // Independent race: the web edits Bus pass while the native client changes Lunch. Both survive.
   const nativeBase = await native.read();
   await results(page).locator('[data-row-key="personal:native-bus"]').click();
-  await page.getByRole("dialog", { name: "Bus pass" }).getByRole("button", { name: "Edit" }).click();
+  await detailOf(page, "Bus pass").getByRole("button", { name: "Edit", exact: true }).click();
   edit = page.getByRole("form", { name: "Edit entry" });
   await edit.getByLabel("Title").fill("Monthly bus pass");
   const nativeLocal = structuredClone(asLedger(nativeBase));
@@ -113,7 +123,7 @@ test("offline native entries, a web entry, web edits and independent and same-fi
 
   // Same-field race: both change Market's amount. The web learns of the other write and asks.
   await results(page).locator('[data-row-key="personal:native-market"]').click();
-  await page.getByRole("dialog", { name: "Market" }).getByRole("button", { name: "Edit" }).click();
+  await detailOf(page, "Market").getByRole("button", { name: "Edit", exact: true }).click();
   edit = page.getByRole("form", { name: "Edit entry" });
   await edit.getByLabel("Amount (CAD)").fill("50");
   const sameBase = await native.read();
@@ -124,7 +134,7 @@ test("offline native entries, a web entry, web edits and independent and same-fi
   market.share = 4800;
   await sync(native, sameBase, sameLocal);
   await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
-  await expect(page.getByRole("dialog", { name: "Market" })).toContainText("$48.00");
+  await expect(detailOf(page, "Market")).toContainText("$48.00");
   await page.getByRole("dialog", { name: "Edit entry" }).getByRole("button", { name: "Save" }).click();
   const banner = edit.getByRole("alert");
   await expect(banner).toContainText("This entry changed on another device");
@@ -144,7 +154,7 @@ test("offline native entries, a web entry, web edits and independent and same-fi
     ["Monthly bus pass", 9500],
   ]);
   await page.reload();
-  await expect(spent(page)).toContainText(dollars(octoberSpentCents(final)));
+  await expectSpent(page, dollars(octoberSpentCents(final)));
   expect(octoberSpentCents(final)).toBe(16100);
   await web.context.close();
 });
@@ -163,7 +173,7 @@ test("a deletion on the native client closes an open web edit of that entry and 
 
   await page.goto("/transactions?month=2026-10");
   await results(page).locator('[data-row-key="personal:native-gift"]').click();
-  await page.getByRole("dialog", { name: "Gift" }).getByRole("button", { name: "Edit" }).click();
+  await detailOf(page, "Gift").getByRole("button", { name: "Edit", exact: true }).click();
   const edit = page.getByRole("form", { name: "Edit entry" });
   await edit.getByLabel("Title").fill("Birthday gift");
 
@@ -173,10 +183,10 @@ test("a deletion on the native client closes an open web edit of that entry and 
   await sync(native, created.snapshot, removed);
   await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
   // The open edit gives way to the entry's detail, which says what happened; nothing is saved.
-  const detail = page.getByRole("dialog", { name: "Gift" });
+  const detail = detailOf(page, "Gift");
   await expect(detail).toContainText("It was deleted on another device or in another tab.");
   await expect(page.getByRole("dialog", { name: "Edit entry" })).toHaveCount(0);
-  await page.keyboard.press("Escape");
+  await detail.getByRole("button", { name: "Close" }).click();
   await expect(results(page).locator('[data-row-key="personal:native-gift"]')).toHaveCount(0);
   // Nothing was written back: the server still has no Gift, under either title.
   const after = await native.read();

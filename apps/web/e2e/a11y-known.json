@@ -28,7 +28,11 @@
       "projects": [
         "chromium-desktop"
       ],
-      "reason": "Buttons whose aria-label omits their visible text (money flow nodes on the desktop Home and Insights cards, Categories Edit <name> rows). Speech-input users must say the label, not what they see (WCAG 2.5.3)."
+      "reason": "Buttons whose aria-label omits their visible text (money flow nodes on the desktop Home and Insights cards, Categories Edit <name> rows). Speech-input users must say the label, not what they see (WCAG 2.5.3).",
+      "except": [
+        "webkit-desktop"
+      ],
+      "exceptReason": "Since MAZ-223, axe on WebKit no longer reports this rule for the money flow nodes on Home and Insights; Chromium and Firefox still do (CI webkit-desktop, PRs 148 to 150)."
     },
     {
       "scan": "Activity light",
@@ -62,7 +66,11 @@
       "projects": [
         "chromium-desktop"
       ],
-      "reason": "Buttons whose aria-label omits their visible text (money flow nodes on the desktop Home and Insights cards, Categories Edit <name> rows). Speech-input users must say the label, not what they see (WCAG 2.5.3)."
+      "reason": "Buttons whose aria-label omits their visible text (money flow nodes on the desktop Home and Insights cards, Categories Edit <name> rows). Speech-input users must say the label, not what they see (WCAG 2.5.3).",
+      "except": [
+        "webkit-desktop"
+      ],
+      "exceptReason": "Since MAZ-223, axe on WebKit no longer reports this rule for the money flow nodes on Home and Insights; Chromium and Firefox still do (CI webkit-desktop, PRs 148 to 150)."
     },
     {
       "scan": "Trips light",
@@ -150,15 +158,18 @@
       "projects": [
         "chromium-desktop"
       ],
-      "reason": "Buttons whose aria-label omits their visible text (money flow nodes on the desktop Home and Insights cards, Categories Edit <name> rows). Speech-input users must say the label, not what they see (WCAG 2.5.3)."
+      "reason": "Buttons whose aria-label omits their visible text (money flow nodes on the desktop Home and Insights cards, Categories Edit <name> rows). Speech-input users must say the label, not what they see (WCAG 2.5.3).",
+      "except": [
+        "webkit-desktop"
+      ],
+      "exceptReason": "Since MAZ-223, axe on WebKit no longer reports this rule for the money flow nodes on Home and Insights; Chromium and Firefox still do (CI webkit-desktop, PRs 148 to 150)."
     },
     {
       "scan": "Activity dark",
       "rule": "color-contrast",
       "impact": "serious",
       "projects": [
-        "chromium-desktop",
-        "chromium-phone"
+        "chromium-desktop"
       ],
       "reason": "Design-kit colors below 4.5:1 for normal text: white on the accent button (3.68 light, 2.76 dark), income green (3.69-4.17), pending amber (3.16-3.64), keyboard-shortcut chips and quiet links (4.41-4.43), banner text (4.13). Needs a design-kit token change (MAZ-122 visual handoff), not a hand edit of tokens.css."
     },
@@ -178,7 +189,11 @@
       "projects": [
         "chromium-desktop"
       ],
-      "reason": "Buttons whose aria-label omits their visible text (money flow nodes on the desktop Home and Insights cards, Categories Edit <name> rows). Speech-input users must say the label, not what they see (WCAG 2.5.3)."
+      "reason": "Buttons whose aria-label omits their visible text (money flow nodes on the desktop Home and Insights cards, Categories Edit <name> rows). Speech-input users must say the label, not what they see (WCAG 2.5.3).",
+      "except": [
+        "webkit-desktop"
+      ],
+      "exceptReason": "Since MAZ-223, axe on WebKit no longer reports this rule for the money flow nodes on Home and Insights; Chromium and Firefox still do (CI webkit-desktop, PRs 148 to 150)."
     },
     {
       "scan": "Trips dark",
@@ -260,7 +275,11 @@
       "projects": [
         "chromium-desktop"
       ],
-      "reason": "Buttons whose aria-label omits their visible text (money flow nodes on the desktop Home and Insights cards, Categories Edit <name> rows). Speech-input users must say the label, not what they see (WCAG 2.5.3)."
+      "reason": "Buttons whose aria-label omits their visible text (money flow nodes on the desktop Home and Insights cards, Categories Edit <name> rows). Speech-input users must say the label, not what they see (WCAG 2.5.3).",
+      "except": [
+        "webkit-desktop"
+      ],
+      "exceptReason": "Since MAZ-223, axe on WebKit no longer reports this rule for the money flow nodes on Home and Insights; Chromium and Firefox still do (CI webkit-desktop, PRs 148 to 150)."
     },
     {
       "scan": "Activity forced-colors",

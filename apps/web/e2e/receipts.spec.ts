@@ -218,12 +218,12 @@ test("attaches a two-page PDF, saves, and after a reload previews every page and
   const stored = [...server.files.values()][0];
   expect(stored && sha256(stored.bytes)).toBe(sha256(pdf));
   // Let the save's search refetch finish before reloading, so the reload doesn't cancel it.
-  await expect(page.getByRole("region", { name: "Search results" }).getByRole("button", { name: /Café receipt/ })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Search results" }).getByRole("button", { name: /^Café receipt/ })).toBeVisible();
   await expect.poll(searches).toBe(0);
 
   await page.reload();
-  await page.getByRole("region", { name: "Search results" }).getByRole("button", { name: /Café receipt/ }).click();
-  const detail = page.getByRole("dialog", { name: "Café receipt" });
+  await page.getByRole("region", { name: "Search results" }).getByRole("button", { name: /^Café receipt/ }).click();
+  const detail = page.getByRole("dialog", { name: "Café receipt" }).or(page.getByRole("complementary", { name: "Café receipt" }));
   const opener = detail.getByRole("button", { name: "Open receipt café-receipt.pdf" });
   await opener.click();
   const preview = page.getByRole("dialog", { name: "café-receipt.pdf" });
@@ -386,15 +386,15 @@ test("a receipt you can't read says so, and an ended session returns to sign-in"
   };
   const server = await mockApi(context, [hidden]);
   await open(page);
-  await page.getByRole("region", { name: "Search results" }).getByRole("button", { name: /Shared dinner/ }).click();
-  await page.getByRole("dialog", { name: "Shared dinner" }).getByRole("button", { name: "Open receipt dinner.pdf" }).click();
+  await page.getByRole("region", { name: "Search results" }).getByRole("button", { name: /^Shared dinner/ }).click();
+  await page.getByRole("dialog", { name: "Shared dinner" }).or(page.getByRole("complementary", { name: "Shared dinner" })).getByRole("button", { name: "Open receipt dinner.pdf" }).click();
   const preview = page.getByRole("dialog", { name: "dinner.pdf" });
   await expect(preview.getByRole("alert")).toContainText("This receipt isn't available");
   await expect(preview.getByRole("button", { name: "Download" })).toHaveCount(0);
   await preview.getByRole("button", { name: "Close" }).click();
 
   server.expired = true;
-  await page.getByRole("dialog", { name: "Shared dinner" }).getByRole("button", { name: "Open receipt dinner.pdf" }).click();
+  await page.getByRole("dialog", { name: "Shared dinner" }).or(page.getByRole("complementary", { name: "Shared dinner" })).getByRole("button", { name: "Open receipt dinner.pdf" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Welcome back" })).toBeVisible();
   await expect(page.getByRole("status").filter({ hasText: "Your session ended" })).toBeVisible();
   expect(unexpected(errors)).toEqual([]);

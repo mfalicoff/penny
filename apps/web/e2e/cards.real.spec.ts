@@ -102,13 +102,13 @@ async function moreDetails(p: Page) {
   return dialog;
 }
 
-/** Opens a personal entry's detail from Activity. */
+/** Opens a personal entry's detail from Activity: a dialog on phones, the panel beside the list from 1100px (MAZ-225). */
 async function entryDetail(p: Page, month: string, row: RegExp, title: string) {
   await activity(p, month);
   await p.getByRole("button", { name: row }).click();
-  const dialog = p.getByRole("dialog", { name: title });
-  await expect(dialog.getByRole("button", { name: "Edit" })).toBeVisible();
-  return dialog;
+  const detail = p.getByRole("dialog", { name: title }).or(p.getByRole("complementary", { name: title }));
+  await expect(detail.getByRole("button", { name: "Edit" })).toBeVisible();
+  return detail;
 }
 
 const partyDetail = (p: Page) => entryDetail(p, "2026-09", /^🎉 Party supplies/, "🎉 Party supplies");
@@ -279,7 +279,7 @@ const cards: Record<string, Card> = {
   "iphone-search-empty": {
     open: async ({ page: p, state }) => {
       // Narrowed to expenses in the month, as the card (and the iOS capture) shows it.
-      await page(p, `/transactions?kind=expense&q=${encodeURIComponent(state.search?.query ?? "zzzz")}`, "Activity");
+      await page(p, `/transactions?kind=expense&month=${state.month ?? "2026-10"}&q=${encodeURIComponent(state.search?.query ?? "zzzz")}`, "Activity");
       const results = p.getByRole("region", { name: "Search results" });
       await expect(results.getByRole("status")).toHaveText(/No matching/);
     },
@@ -354,9 +354,9 @@ const cards: Record<string, Card> = {
       await run.page.getByRole("list", { name: "Expenses" }).getByRole("link", { name: /^Internet/ }).click();
       const dialog = run.page.getByRole("dialog", { name: "Internet" });
       await dialog.getByRole("button", { name: "Delete", exact: true }).click();
-      await expect(dialog.getByRole("button", { name: "Delete for everyone" })).toBeVisible();
+      await expect(run.page.getByRole("dialog", { name: "Delete “Internet”?" }).getByRole("button", { name: "Delete for everyone" })).toBeVisible();
     },
-    note: "The shared expense is opened from Maison's expenses; its delete confirmation is a pane in the expense dialog.",
+    note: "The shared expense is opened from Maison's expenses; its delete confirmation is a centered dialog over it (MAZ-227).",
   },
 
   // Emailed receipts (MAZ-184): blocked by their state until the full-stack seed has a receipt
@@ -595,7 +595,6 @@ const cards: Record<string, Card> = {
   },
   "ipad-activity": {
     open: ({ page: p }) => partyDetail(p),
-    note: "The entry detail is a dialog over Activity, not a detail pane beside it.",
   },
   "ipad-add-entry": { open: ({ page: p }) => addEntry(p) },
   "ipad-shared": { open: (run) => maison(run) },
@@ -623,7 +622,6 @@ const cards: Record<string, Card> = {
   },
   "web-activity": {
     open: ({ page: p }) => partyDetail(p),
-    note: "Activity is a list, and the entry detail a dialog, not a table with a side panel.",
   },
   "web-insights": {
     open: async ({ page: p }) => {

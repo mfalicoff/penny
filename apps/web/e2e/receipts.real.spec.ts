@@ -54,8 +54,8 @@ test("a PDF and a photo survive upload, save, reload, preview and download; anot
     .toMatch(/^\/api\/receipts\/[0-9a-f]{32}$/);
 
   await page.reload();
-  await page.getByRole("region", { name: "Search results" }).getByRole("button", { name: /Receipt round trip/ }).click();
-  await page.getByRole("dialog", { name: "Receipt round trip" }).getByRole("button", { name: "Open receipt round-trip.pdf" }).click();
+  await page.getByRole("region", { name: "Search results" }).getByRole("button", { name: /^Receipt round trip/ }).click();
+  await page.getByRole("dialog", { name: "Receipt round trip" }).or(page.getByRole("complementary", { name: "Receipt round trip" })).getByRole("button", { name: "Open receipt round-trip.pdf" }).click();
   const preview = page.getByRole("dialog", { name: "round-trip.pdf" });
   await expect(preview.getByRole("img", { name: "Page 1 of 2, round-trip.pdf" })).toHaveAttribute("data-rendered-page", "1");
   await preview.getByRole("button", { name: "Next page" }).click();

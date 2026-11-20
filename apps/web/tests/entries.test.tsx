@@ -399,7 +399,7 @@ describe("editing and deleting", () => {
     const detail = await openEntry(user, "Coffee beans");
     setOnline(false);
     await user.click(within(detail).getByRole("button", { name: "Delete" }));
-    const confirm = screen.getByRole("dialog", { name: "Delete Coffee beans?" });
+    const confirm = screen.getByRole("dialog", { name: "Delete “Coffee beans”?" });
     expect(within(confirm).getByRole("button", { name: "Cancel" })).toHaveFocus();
     await user.click(within(confirm).getByRole("button", { name: "Delete" }));
     expect(await screen.findByText("Coffee beans deleted")).toBeInTheDocument();

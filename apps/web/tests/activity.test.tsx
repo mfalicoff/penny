@@ -23,6 +23,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.unstubAllGlobals();
   localStorage.clear();
   onlineManager.setOnline(true);
 });
@@ -49,21 +50,43 @@ function server(search?: (body: Record<string, unknown>) => object[]) {
   );
 }
 
-const totals = () => screen.getByRole("region", { name: "November 2026" });
 const results = () => screen.getByRole("region", { name: "Search results" });
+
+/**
+ * A desktop window (`web-activity`, MAZ-225): `min-width` queries answer for 1440px with a fine
+ * pointer, so Activity shows the summary line and the table. Without it jsdom has no
+ * `matchMedia` and Activity lays out for a phone.
+ */
+function stubDesktop() {
+  vi.stubGlobal(
+    "matchMedia",
+    vi.fn((query: string) => {
+      const min = /min-width:\s*(\d+)px/.exec(query);
+      const matches = query.includes("pointer: coarse") ? false : min ? 1440 >= Number(min[1]) : query.includes("hover");
+      return { matches, media: query, addEventListener: vi.fn(), removeEventListener: vi.fn() };
+    }),
+  );
+}
+
+/** The desktop summary of the period: "5 entries · spent … · in …". */
+const summary = () => document.querySelector(".activity-summary") as HTMLElement;
+
+/** Filters, from the phone's period chip. */
+async function openFilters(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole("button", { name: /^Period: .* Change filters$/ }));
+  return screen.getByRole("dialog", { name: "Filters" });
+}
 
 describe("Activity", () => {
   it("totals the month from personal entries and your shared shares, whatever the search or filters", async () => {
+    stubDesktop();
     const api = server(() => [personalHit(pay)]);
     renderApp("/transactions?month=2026-11&kind=income&q=salary");
     expect(await within(await screen.findByRole("region", { name: "Search results" })).findByText("Monthly salary")).toBeInTheDocument();
     await waitFor(() => {
-      expect(within(totals()).getByText("Spent").nextElementSibling).toHaveTextContent("$1,552.35");
+      expect(summary()).toHaveTextContent("5 entries · spent $1,552.35 · in $4,800.00");
     });
-    expect(within(totals()).getByText("Earned").nextElementSibling).toHaveTextContent("$4,800.00");
-    expect(within(totals()).getByText("Invested").nextElementSibling).toHaveTextContent("$200.00");
-    expect(within(totals()).getByText("Left").nextElementSibling).toHaveTextContent("+$3,047.65");
-    expect(totals()).toHaveTextContent("Spent includes your share of 1 shared expense.");
+    expect(summary()).toHaveTextContent("Spent includes your share of 1 shared expense.");
     expect(api.state.searches).toContainEqual({ query: "salary", from: "2026-11-01", to: "2026-11-30", kind: "income", pageSize: 50 });
     expect(api.state.projections).toContain("/api/households/projection?month=2026-11");
   });
@@ -75,6 +98,7 @@ describe("Activity", () => {
     const tickets = entry("tickets", "Concert tickets", { total: 9000, share: 9000, date: tomorrow, categoryId: "food" });
     ledgerServer({ transactions: [bonus, tickets] }, { shared: [], search: () => [personalHit(bonus), personalHit(tickets)] });
     renderApp("/transactions?month=2026-11");
+    // On a phone: the list's rows.
     const row = await within(await screen.findByRole("region", { name: "Search results" })).findByRole("button", { name: /Year-end bonus/ });
     expect(row).toHaveTextContent("Expected");
     expect(row.querySelector(".category-dot--expected")).not.toBeNull();
@@ -82,14 +106,21 @@ describe("Activity", () => {
     const expense = within(results()).getByRole("button", { name: /Concert tickets/ });
     expect(expense).not.toHaveTextContent("Expected");
     expect(expense.querySelector(".category-dot--expected")).toBeNull();
-    // The totals leave the expected bonus out (as Home's recorded totals) and say so; the tickets count.
-    const card = (await screen.findByText("Earned")).closest(".activity-totals") as HTMLElement;
+  });
+
+  it("leaves expected income out of the desktop summary and says so (MAZ-136)", async () => {
+    stubDesktop();
+    const bonus = entry("bonus", "Year-end bonus", { kind: "income", categoryId: "salary", total: 50000, share: 50000, date: "2026-11-12" });
+    const tickets = entry("tickets", "Concert tickets", { total: 9000, share: 9000, date: "2026-11-12", categoryId: "food" });
+    ledgerServer({ transactions: [bonus, tickets] }, { shared: [], search: () => [personalHit(bonus), personalHit(tickets)] });
+    renderApp("/transactions?month=2026-11");
+    const table = await within(await screen.findByRole("region", { name: "Search results" })).findByRole("table");
+    expect(within(table).getByRole("button", { name: /^Year-end bonus/ })).toHaveTextContent("Expected");
+    expect(within(table).getByRole("button", { name: "Edit Year-end bonus" })).toBeInTheDocument();
     await waitFor(() => {
-      expect(within(card).getByText("Spent").nextElementSibling).toHaveTextContent("$90.00");
+      expect(summary()).toHaveTextContent("2 entries · spent $90.00 · in $0.00");
     });
-    expect(within(card).getByText("Earned").nextElementSibling).toHaveTextContent("$0.00");
-    expect(within(card).getByText("Left").nextElementSibling).toHaveTextContent("−$90.00");
-    expect(card).toHaveTextContent("Earned leaves out $500.00 of income dated after today, listed as Expected until its date.");
+    expect(summary()).toHaveTextContent("In leaves out $500.00 of income dated after today, listed as Expected until its date.");
   });
 
   it("lists shared rows beside personal ones and opens them in their household", async () => {
@@ -103,19 +134,20 @@ describe("Activity", () => {
   });
 
   it("shows this device's entries and the cached shared rows while offline", async () => {
+    stubDesktop();
     server(() => []);
     renderApp("/transactions?month=2026-11");
     // Online and up to date: the server's search (which returns nothing here).
     expect(await screen.findByText("No matching transactions.")).toBeInTheDocument();
     await waitFor(() => {
-      expect(totals()).toHaveTextContent("shared expense");
+      expect(summary()).toHaveTextContent("shared expense");
     });
     setOnline(false);
     expect(await screen.findByText("5 matching transactions on this device")).toBeInTheDocument();
     expect(within(results()).getByRole("link", { name: /Hydro/ })).toBeInTheDocument();
     expect(results()).toHaveTextContent("Shared expenses are as Penny last loaded them");
     expect(within(results()).queryByText("October groceries")).not.toBeInTheDocument();
-    expect(totals()).toHaveTextContent("as Penny last loaded them");
+    expect(summary()).toHaveTextContent("as Penny last loaded them");
   });
 
   it("keeps type, period, day and category filters in the URL, so Back restores them", async () => {
@@ -130,11 +162,13 @@ describe("Activity", () => {
     });
     expect(api.state.searches).toContainEqual({ from: "2026-11-01", to: "2026-11-30", kind: "expense", pageSize: 50 });
 
-    await user.click(screen.getByRole("button", { name: "Next month" }));
+    let filters = await openFilters(user);
+    await user.click(within(filters).getByRole("button", { name: "Next month" }));
     await waitFor(() => {
       expect(router.state.location.search).toEqual({ month: "2026-12", kind: "expense" });
     });
-    expect(screen.getByRole("region", { name: "December 2026" })).toBeInTheDocument();
+    await user.click(within(filters).getByRole("button", { name: "Done" }));
+    expect(screen.getByRole("button", { name: /^Period: December 2026\./ })).toHaveTextContent("December");
 
     history.back();
     await waitFor(() => {
@@ -142,20 +176,21 @@ describe("Activity", () => {
     });
     expect(screen.getByRole("radio", { name: "Expenses" })).toBeChecked();
 
-    await user.click(screen.getByRole("radio", { name: "Year" }));
+    filters = await openFilters(user);
+    await user.click(within(filters).getByRole("radio", { name: "Year" }));
     await waitFor(() => {
       expect(router.state.location.search).toEqual({ year: "2026", kind: "expense" });
     });
     expect(api.state.searches).toContainEqual({ from: "2026-01-01", to: "2026-12-31", kind: "expense", pageSize: 50 });
 
-    const day = screen.getByLabelText("Day");
+    const day = within(filters).getByLabelText("Day");
     await user.type(day, "2026-11-06");
     await waitFor(() => {
       expect(router.state.location.search).toMatchObject({ year: "2026", day: "2026-11-06" });
     });
     expect(api.state.searches).toContainEqual({ from: "2026-11-06", to: "2026-11-06", kind: "expense", pageSize: 50 });
 
-    await user.click(screen.getByRole("button", { name: "Clear filters" }));
+    await user.click(within(filters).getByRole("button", { name: "Clear filters" }));
     await waitFor(() => {
       expect(router.state.location.search).toEqual({ year: "2026" });
     });
@@ -166,7 +201,8 @@ describe("Activity", () => {
     const user = userEvent.setup();
     const { router } = renderApp("/transactions?month=2026-11");
     await within(await screen.findByRole("region", { name: "Search results" })).findByText("Rent");
-    const chips = await screen.findByRole("group", { name: "Category" });
+    const filters = await openFilters(user);
+    const chips = await within(filters).findByRole("group", { name: "Category" });
     expect(within(chips).getByRole("radio", { name: "All" })).toBeChecked();
 
     await user.click(within(chips).getByRole("radio", { name: "Groceries" }));
@@ -187,7 +223,7 @@ describe("Activity", () => {
     expect(await within(await screen.findByRole("region", { name: "Search results" })).findByText("Monthly salary")).toBeInTheDocument();
   });
 
-  it("lists the month by day on phones, with each day's total, before search and the totals (MAZ-175)", async () => {
+  it("lists the month by day on phones, with each day's total, after the chips and before the search field (MAZ-175, MAZ-225)", async () => {
     server();
     renderApp("/transactions?month=2026-11");
     const list = await screen.findByRole("region", { name: "Search results" });
@@ -196,10 +232,11 @@ describe("Activity", () => {
     expect(days.map((day) => day.textContent)).toEqual([expect.stringMatching(/^Saturday, Nov\.? 7$/), expect.stringMatching(/^Friday, Nov\.? 6$/), expect.stringMatching(/^Thursday, Nov\.? 5$/), expect.stringMatching(/^Tuesday, Nov\.? 3$/), expect.stringMatching(/^Sunday, Nov\.? 1$/)]);
     const totalOf = (day: HTMLElement) => day.closest(".day-group__head")?.querySelector(".day-group__total")?.textContent;
     expect(days.map(totalOf)).toEqual(["Day total −$200.00", "Day total −$72.35", "Day total +$4,800.00 income", "Day total −$30.00", "Day total −$1,450.00"]);
-    // jsdom has no matchMedia, so this is the phone layout: the list comes before search and the totals.
+    // jsdom has no matchMedia, so this is the phone layout: the chips, the list, then the search field at the bottom.
     const search = screen.getByRole("searchbox", { name: "Search transactions" });
+    expect(search).toHaveAttribute("placeholder", "Search activity");
     expect(list.compareDocumentPosition(search) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(list.compareDocumentPosition(await screen.findByRole("region", { name: "November 2026" })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByRole("button", { name: /^Period: November 2026\./ })).toHaveTextContent("November");
     expect(screen.getByRole("group", { name: "Type" }).compareDocumentPosition(list) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
@@ -209,8 +246,11 @@ describe("Activity", () => {
     const { router } = renderApp("/transactions?month=2026-11&kind=expense&q=sushi");
     expect(await screen.findByRole("heading", { name: "No results for “sushi”" })).toBeInTheDocument();
     const empty = within(results());
-    expect(empty.getByText(/Nothing matches in November 2026 expenses\. Try another word, or search everything\./)).toBeInTheDocument();
-    await user.click(empty.getByRole("button", { name: "Search all time" }));
+    expect(empty.getByText(/Nothing matches in November expenses\. Try another word, or search everything\./)).toBeInTheDocument();
+    // While searching, the active filters are removable chips (iphone-search-empty).
+    const active = screen.getByRole("list", { name: "Active filters" });
+    expect(within(active).getAllByRole("button").map((chip) => chip.getAttribute("aria-label"))).toEqual(["Remove filter: Expenses", "Remove filter: November"]);
+    await user.click(empty.getByRole("button", { name: "Search all months" }));
     await waitFor(() => {
       expect(router.state.location.search).toEqual({ kind: "expense", q: "sushi" });
     });
@@ -225,5 +265,65 @@ describe("Activity", () => {
     renderApp("/transactions?q=zzz");
     expect(await screen.findByRole("heading", { name: "No results for “zzz”" })).toBeInTheDocument();
     expect(screen.getByText("No matching transactions.")).toBeInTheDocument();
+  });
+});
+
+describe("Activity on a desktop (web-activity, MAZ-225)", () => {
+  it("lists the period as a table and opens an entry in the panel beside it, with its split", async () => {
+    stubDesktop();
+    const dinner = entry("din", "Dinner out", { total: 1280, share: 640, date: "2026-11-09", categoryId: "food", note: "Catch-up" });
+    ledgerServer({ transactions: [dinner, rent] }, { shared: [], search: () => [personalHit(dinner), personalHit(rent)] });
+    const user = userEvent.setup();
+    renderApp("/transactions?month=2026-11");
+    const table = await within(await screen.findByRole("region", { name: "Search results" })).findByRole("table");
+    expect([...table.querySelectorAll("thead th")].map((cell) => cell.textContent)).toEqual(["Entry", "Account", "Split", "Amount", "Actions"]);
+    // Day rows head their entries, with the day's total.
+    expect(within(table).getByRole("columnheader", { name: /Monday, Nov\.? 9/ })).toBeInTheDocument();
+    const row = within(table).getByRole("row", { name: /Dinner out/ });
+    expect(row).toHaveTextContent("2 people");
+    expect(row).toHaveTextContent("−$6.40");
+
+    await user.click(within(row).getByRole("button", { name: /^Dinner out/ }));
+    const panel = screen.getByRole("complementary", { name: "Dinner out" });
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(panel).toHaveTextContent("−$6.40your share of $12.80");
+    const split = within(panel).getByRole("region", { name: "Split" });
+    expect(within(split).getByText("Equally · 2 people")).toBeInTheDocument();
+    expect(within(split).getByText("Total").nextElementSibling).toHaveTextContent("$12.80");
+    const details = within(panel).getByRole("region", { name: "Details" });
+    expect(within(details).getByText("Repeats").nextElementSibling).toHaveTextContent("Never");
+    expect(within(details).getByText("Note").nextElementSibling).toHaveTextContent("Catch-up");
+    expect(within(row).getByRole("button", { name: /^Dinner out/ })).toHaveAttribute("aria-current", "true");
+
+    await user.click(within(panel).getByRole("button", { name: "Close" }));
+    expect(screen.queryByRole("complementary", { name: "Dinner out" })).not.toBeInTheDocument();
+  });
+
+  it("moves through the table with the arrow keys, edits with E and deletes with ⌫", async () => {
+    stubDesktop();
+    const dinner = entry("din", "Dinner out", { total: 1280, share: 640, date: "2026-11-09", categoryId: "food" });
+    ledgerServer({ transactions: [dinner, rent] }, { shared: [], search: () => [personalHit(dinner), personalHit(rent)] });
+    const user = userEvent.setup();
+    renderApp("/transactions?month=2026-11");
+    const table = await within(await screen.findByRole("region", { name: "Search results" })).findByRole("table");
+    expect(document.getElementById(table.getAttribute("aria-describedby") ?? "")).toHaveTextContent("Keyboard: ↑ ↓ move · ↵ open · E edit · ⌫ delete");
+    within(table).getByRole("button", { name: /^Dinner out/ }).focus();
+    await user.keyboard("{ArrowDown}");
+    expect(within(table).getByRole("button", { name: /^Rent/ })).toHaveFocus();
+    await user.keyboard("{ArrowUp}");
+    expect(within(table).getByRole("button", { name: /^Dinner out/ })).toHaveFocus();
+
+    await user.keyboard("e");
+    expect(await screen.findByRole("form", { name: "Edit entry" })).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    await waitFor(() => {
+      expect(screen.queryByRole("form", { name: "Edit entry" })).not.toBeInTheDocument();
+    });
+
+    within(table).getByRole("button", { name: /^Rent/ }).focus();
+    await user.keyboard("{Backspace}");
+    const confirm = await screen.findByRole("dialog", { name: "Delete “Rent”?" });
+    expect(confirm).toHaveTextContent("$1,450.00 · Nov 1");
+    expect(within(confirm).getByRole("button", { name: "Cancel" })).toHaveFocus();
   });
 });

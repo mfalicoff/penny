@@ -749,3 +749,24 @@ describe("people, invites and history", () => {
     expect(screen.getByRole("heading", { level: 1, name: "Household" })).toBeInTheDocument();
   });
 });
+
+describe("deleting a shared expense (iphone-delete-confirm, MAZ-225)", () => {
+  it("names the expense, its total, date and household, and who else loses it, then deletes it for everyone", async () => {
+    const id = seed();
+    const expense = addExpense(ALEX, id, { title: "Internet", totalCents: 8000, payerUserId: ids().alex, date: "2026-10-10" });
+    const fetchMock = serve();
+    const user = userEvent.setup();
+    renderApp(`/households/${id}/expenses/${expense.id}`);
+    const detail = await dialog("Internet");
+    await user.click(within(detail).getByRole("button", { name: "Delete" }));
+    const confirm = await dialog("Delete “Internet”?");
+    expect(confirm).toHaveTextContent(/\$80\.00 · Oct\.? 10 · Maison/);
+    expect(confirm).toHaveTextContent(`Deleting it removes it for ${BEA}`);
+    expect(confirm).toHaveTextContent("recalculates October balances.");
+    expect(within(confirm).getByRole("button", { name: "Cancel" })).toHaveFocus();
+    await user.click(within(confirm).getByRole("button", { name: "Delete for everyone" }));
+    expect(await screen.findByText("Internet deleted")).toBeInTheDocument();
+    const deletes = fetchMock.mock.calls.filter(([input, init]) => String(input instanceof Request ? input.url : input).includes(`/expenses/${expense.id}`) && init?.method === "DELETE");
+    expect(deletes).toHaveLength(1);
+  });
+});
