@@ -94,6 +94,8 @@ struct HouseholdPage: View {
     @State private var newName = ""
     @State private var confirm: Confirmation?
     @State private var working = false
+    @State private var width: Double = 0
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     enum Confirmation: Identifiable, Equatable {
         case leave, archive
@@ -117,96 +119,161 @@ struct HouseholdPage: View {
 
     var body: some View {
         let trip = self.trip
-        List {
-            if let household = model.household {
-                header(household, trip: trip)
-                content(household, trip: trip)
+        columns(trip: trip)
+            .onGeometryChange(for: Double.self) {
+                $0.size.width
+            } action: {
+                width = $0
             }
-        }
-        .insetGroupedList()
-        .overlay {
-            if model.household == nil {
-                switch model.load {
-                case .failed(let failure):
-                    PennyStateView(
-                        failure.kind == .offline ? .offline : .error,
-                        title: failure.kind == .membership
-                            ? (isTrip ? "Trip not available" : "Household not available")
-                            : "Couldn't open the \(noun)",
-                        message: failure.kind == .membership
-                            ? "You may have left it, been removed, or it doesn't exist on this server."
-                            : failure.message, actionTitle: failure.canRetry ? "Try again" : nil,
-                        action: { Task { await model.refresh() } })
-                default:
-                    PennyStateView(.loading, title: "Opening the \(noun)…")
+            .overlay {
+                if model.household == nil {
+                    switch model.load {
+                    case .failed(let failure):
+                        PennyStateView(
+                            failure.kind == .offline ? .offline : .error,
+                            title: failure.kind == .membership
+                                ? (isTrip ? "Trip not available" : "Household not available")
+                                : "Couldn't open the \(noun)",
+                            message: failure.kind == .membership
+                                ? "You may have left it, been removed, or it doesn't exist on this server."
+                                : failure.message, actionTitle: failure.canRetry ? "Try again" : nil,
+                            action: { Task { await model.refresh() } })
+                    default:
+                        PennyStateView(.loading, title: "Opening the \(noun)…")
+                    }
                 }
             }
-        }
-        .refreshable {
-            await model.refresh()
-            await refreshTrip()
-        }
-        .task {
-            // Trip expense from the Trips list opens the form once the page is here. Taken
-            // before the reads, so a failed or offline load (or leaving early) never leaves it
-            // to open the form later, unasked.
-            let wantsAdd = shell.trips.takePendingAdd(for: model.id)
-            model.followCurrentMonth(MonthKey(shell.today))
-            await model.refresh()
-            await refreshTrip()
-            if wantsAdd, !Task.isCancelled, model.household?.trip != nil, !model.isReadOnly {
-                addExpense()
-            }
-        }
-        .onChange(of: model.writeCount) {
-            Task {
-                await shell.refreshShared()
+            .refreshable {
+                await model.refresh()
                 await refreshTrip()
             }
-        }
-        .navigationTitle(model.household?.name ?? (isTrip ? "Trip" : "Household"))
-        .sheet(isPresented: $editingTrip) {
-            if let household = model.household {
-                TripFormSheet(target: .shared(household), expenseCount: 0) { _ in }.environment(shell)
+            .task {
+                // Trip expense from the Trips list opens the form once the page is here. Taken
+                // before the reads, so a failed or offline load (or leaving early) never leaves it
+                // to open the form later, unasked.
+                let wantsAdd = shell.trips.takePendingAdd(for: model.id)
+                model.followCurrentMonth(MonthKey(shell.today))
+                await model.refresh()
+                await refreshTrip()
+                if wantsAdd, !Task.isCancelled, model.household?.trip != nil, !model.isReadOnly {
+                    addExpense()
+                }
             }
-        }
-        .toolbar {
-            if canInvite {
+            .onChange(of: model.writeCount) {
+                Task {
+                    await shell.refreshShared()
+                    await refreshTrip()
+                }
+            }
+            .navigationTitle(model.household?.name ?? (isTrip ? "Trip" : "Household"))
+            .sheet(isPresented: $editingTrip) {
+                if let household = model.household {
+                    TripFormSheet(target: .shared(household), expenseCount: 0) { _ in }.environment(shell)
+                }
+            }
+            .toolbar {
+                if canInvite {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button("Invite someone", systemImage: "person.badge.plus") { inviting = true }
+                            .accessibilityIdentifier("household.invite")
+                    }
+                }
                 ToolbarItem(placement: .primaryAction) {
-                    Button("Invite someone", systemImage: "person.badge.plus") { inviting = true }
-                        .accessibilityIdentifier("household.invite")
+                    NavigationLink(value: DetailRoute.householdHistory(householdID: model.id)) {
+                        Label("History", systemImage: "clock.arrow.circlepath")
+                    }
+                    .accessibilityIdentifier("household.history")
                 }
             }
-            ToolbarItem(placement: .primaryAction) {
-                NavigationLink(value: DetailRoute.householdHistory(householdID: model.id)) {
-                    Label("History", systemImage: "clock.arrow.circlepath")
-                }
-                .accessibilityIdentifier("household.history")
+            .sheet(item: $form) { request in
+                SharedExpenseFormSheet(request: request, model: model).environment(shell)
             }
+            .sheet(item: $payment) { request in
+                PaymentSheet(request: request, model: model)
+            }
+            .sheet(isPresented: $inviting, onDismiss: { Task { await model.refresh() } }) {
+                InviteSheet(model: model).environment(shell)
+            }
+            .alert("Rename household", isPresented: $renaming) {
+                TextField("Name", text: $newName)
+                Button("Rename") { Task { _ = await model.rename(newName) } }
+                Button("Cancel", role: .cancel) {}
+            }
+            .confirmationDialog(
+                confirmTitle, isPresented: Binding(get: { confirm != nil }, set: { if !$0 { confirm = nil } }),
+                titleVisibility: .visible, presenting: confirm
+            ) { confirmation in
+                Button(confirmButton(confirmation), role: .destructive) { Task { await run(confirmation) } }
+                Button("Cancel", role: .cancel) {}
+            } message: { confirmation in
+                Text(confirmMessage(confirmation))
+            }
+    }
+
+    // MARK: Columns
+
+    /// iPad (`ipad-shared`, `ipad-trip`; MAZ-182): the expenses with the balances beside them
+    /// when the column is wide enough, so there is no section to switch. Otherwise one list
+    /// with Expenses, Balances and People as sections.
+    private var isTwoColumn: Bool { sizeClass == .regular && Self.isTwoColumn(width: width) }
+
+    /// Two columns need a page this wide.
+    static func isTwoColumn(width: Double) -> Bool { width >= 700 }
+
+    /// The balances column's width: the card's 420 points, or less on a narrower page.
+    static func sideWidth(for width: Double) -> Double { min(420, (width * 0.46).rounded()) }
+
+    @ViewBuilder
+    private func columns(trip: SharedTripContext?) -> some View {
+        if isTwoColumn, let household = model.household {
+            HStack(spacing: 0) {
+                List {
+                    header(household, trip: trip)
+                    mainColumn(trip: trip)
+                }
+                .insetGroupedList()
+                Divider().ignoresSafeArea()
+                List {
+                    sideColumn(household, trip: trip)
+                }
+                .insetGroupedList()
+                .frame(width: Self.sideWidth(for: width))
+            }
+        } else {
+            List {
+                if let household = model.household {
+                    header(household, trip: trip)
+                    content(household, trip: trip)
+                }
+            }
+            .insetGroupedList()
         }
-        .sheet(item: $form) { request in
-            SharedExpenseFormSheet(request: request, model: model).environment(shell)
+    }
+
+    @ViewBuilder
+    private func mainColumn(trip: SharedTripContext?) -> some View {
+        if let trip {
+            SharedTripExpenseSections(context: trip, model: model, showsShareByCategory: false)
+        } else {
+            expensesSection
         }
-        .sheet(item: $payment) { request in
-            PaymentSheet(request: request, model: model)
+        rulesSection
+    }
+
+    @ViewBuilder
+    private func sideColumn(_ household: WireHousehold, trip: SharedTripContext?) -> some View {
+        if let trip {
+            balancesSection
+            SharedTripShareByCategory(context: trip, model: model)
+        } else {
+            Section {
+                balanceHero(alignment: .leading)
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets(top: 8, leading: 4, bottom: 8, trailing: 4))
+            }
+            balancesSection
         }
-        .sheet(isPresented: $inviting, onDismiss: { Task { await model.refresh() } }) {
-            InviteSheet(model: model).environment(shell)
-        }
-        .alert("Rename household", isPresented: $renaming) {
-            TextField("Name", text: $newName)
-            Button("Rename") { Task { _ = await model.rename(newName) } }
-            Button("Cancel", role: .cancel) {}
-        }
-        .confirmationDialog(
-            confirmTitle, isPresented: Binding(get: { confirm != nil }, set: { if !$0 { confirm = nil } }),
-            titleVisibility: .visible, presenting: confirm
-        ) { confirmation in
-            Button(confirmButton(confirmation), role: .destructive) { Task { await run(confirmation) } }
-            Button("Cancel", role: .cancel) {}
-        } message: { confirmation in
-            Text(confirmMessage(confirmation))
-        }
+        peopleSection(household)
     }
 
     // MARK: Header
@@ -233,13 +300,13 @@ struct HouseholdPage: View {
                 if let trip {
                     SharedTripHero(context: trip, model: model)
                 } else {
-                    householdHero(household)
+                    householdHero(household, showsBalance: !isTwoColumn)
                 }
                 if !model.isReadOnly {
                     HStack(spacing: 12) {
                         // A trip's balances settle by month under Balances, so its page leads with
                         // the trip, as on the card, and only adds an expense from here.
-                        if trip == nil {
+                        if trip == nil, !isTwoColumn {
                             PennyButton("Record payment", systemImage: "checkmark.circle", role: .secondary) {
                                 section = .balances
                             }
@@ -263,12 +330,15 @@ struct HouseholdPage: View {
                 HouseholdFailureBanner(failure: notice) { Task { await model.refresh() } }
                     .listRowBackground(Color.clear).listRowInsets(EdgeInsets())
             }
-            Picker("Section", selection: $section) {
-                ForEach(HouseholdSection.allCases, id: \.self) { Text($0.title).tag($0) }
+            // Two columns show the balances and people beside the expenses: nothing to switch.
+            if !isTwoColumn {
+                Picker("Section", selection: $section) {
+                    ForEach(HouseholdSection.allCases, id: \.self) { Text($0.title).tag($0) }
+                }
+                .pickerStyle(.segmented)
+                .listRowBackground(Color.clear).listRowInsets(EdgeInsets())
+                .accessibilityIdentifier("household.section")
             }
-            .pickerStyle(.segmented)
-            .listRowBackground(Color.clear).listRowInsets(EdgeInsets())
-            .accessibilityIdentifier("household.section")
         }
         .listSectionSeparator(.hidden)
     }
@@ -276,34 +346,52 @@ struct HouseholdPage: View {
     /// Members, the household's name, then the viewer's balance for the month in its meaning
     /// color (`iphone-shared`): owed to you is income green, owing is an expense in the label
     /// color (never red), settled is muted. The month is chosen in the section headers below.
-    private func householdHero(_ household: WireHousehold) -> some View {
-        let balance = model.viewerBalance
-        return VStack(spacing: 6) {
+    private func householdHero(_ household: WireHousehold, showsBalance: Bool) -> some View {
+        VStack(spacing: 6) {
             MonogramStack(initials: model.people.current.map { model.people.initials($0.userId) })
                 .padding(.bottom, 4)
             Text(household.name).font(.title2.weight(.bold))
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
-            VStack(spacing: 2) {
-                Text("\(HouseholdText.shortMonth(model.month)) · \(Self.balanceLabel(balance))")
-                    .font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
-                Text(MoneyFormat.amount(abs(balance), currency: model.currency))
-                    .modifier(HeroAmountFont())
-                    .foregroundStyle(
-                        balance > 0 ? PennyColor.income : balance < 0 ? PennyColor.label : PennyColor.secondaryLabel
-                    )
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.4)
+            if showsBalance {
+                balanceHero(alignment: .center).padding(.top, 8)
+            } else {
+                // `ipad-shared`: the month's total under the name; the balance is beside it.
+                let total = model.expenses.reduce(Int64(0)) { $0 + $1.totalCents }
+                Text(
+                    "\(HouseholdText.shortMonth(model.month)) · "
+                        + "\(MoneyFormat.amount(total, currency: model.currency)) in shared expenses"
+                )
+                .font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
+                .multilineTextAlignment(.center)
+                .accessibilityIdentifier("household.monthTotal")
             }
-            .padding(.top, 8)
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel(
-                "\(HouseholdText.month(model.month)), \(HouseholdText.balance(balance, currency: model.currency))"
-            )
-            .accessibilityIdentifier("household.balance")
         }
         .frame(maxWidth: .infinity)
+    }
+
+    /// The viewer's balance for the month in its meaning color: under the name, or at the top
+    /// of the balances column on a wide iPad.
+    private func balanceHero(alignment: HorizontalAlignment) -> some View {
+        let balance = model.viewerBalance
+        return VStack(alignment: alignment, spacing: 2) {
+            Text("\(HouseholdText.shortMonth(model.month)) · \(Self.balanceLabel(balance))")
+                .font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
+            Text(MoneyFormat.amount(abs(balance), currency: model.currency))
+                .modifier(HeroAmountFont())
+                .foregroundStyle(
+                    balance > 0 ? PennyColor.income : balance < 0 ? PennyColor.label : PennyColor.secondaryLabel
+                )
+                .lineLimit(1)
+                .minimumScaleFactor(0.4)
+        }
+        .frame(maxWidth: .infinity, alignment: Alignment(horizontal: alignment, vertical: .center))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(
+            "\(HouseholdText.month(model.month)), \(HouseholdText.balance(balance, currency: model.currency))"
+        )
+        .accessibilityIdentifier("household.balance")
     }
 
     /// The month a section shows, with the previous and next month: the header of Expenses and
@@ -827,6 +915,8 @@ private struct InlineInvite: View {
     @Bindable var model: HouseholdModel
     let showQR: () -> Void
     @State private var working = false
+    @State private var width: Double = 0
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var failure: HouseholdFailure?
 
     var body: some View {

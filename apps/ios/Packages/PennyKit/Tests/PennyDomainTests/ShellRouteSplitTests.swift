@@ -40,3 +40,77 @@ struct ShellRouteSplitTests {
         #expect(route.sidebarSelection == .manage(.categories))
     }
 }
+
+/// The iPad sidebar lists Insights and each household and trip (MAZ-182, `ipad-*` cards).
+@Suite("Sidebar households, trips and Insights")
+struct ShellRouteSidebarTests {
+    @Test("whenAHouseholdRowIsChosen_SidebarSelection_ShouldOpenItFromTheSharedRoot")
+    func householdRow() {
+        var route = ShellRoute()
+        route.sidebarSelection = .household(id: "h1")
+        #expect(route.tab == .shared)
+        #expect(route.path(for: .shared) == [.household(id: "h1")])
+        #expect(route.sidebarSelection == .household(id: "h1"))
+
+        route.push(.householdExpense(householdID: "h1", expenseID: "e1"))
+        #expect(route.sidebarSelection == .household(id: "h1"), "a page pushed on it keeps its row")
+    }
+
+    @Test("whenATripRowIsChosen_SidebarSelection_ShouldOpenItFromTheTripsRoot")
+    func tripRow() {
+        var route = ShellRoute()
+        route.sidebarSelection = .trip(id: "t1")
+        #expect(route.tab == .trips)
+        #expect(route.path(for: .trips) == [.trip(id: "t1")])
+        #expect(route.sidebarSelection == .trip(id: "t1"))
+    }
+
+    @Test("whenAllHouseholdsOrAllTripsIsChosen_SidebarSelection_ShouldShowTheList")
+    func allRows() {
+        var route = ShellRoute()
+        route.sidebarSelection = .household(id: "h1")
+        route.sidebarSelection = .tab(.home)
+        route.sidebarSelection = .tab(.shared)
+        #expect(route.path(for: .shared).isEmpty, "never reopens the household the stack kept")
+        #expect(route.sidebarSelection == .tab(.shared))
+
+        route.sidebarSelection = .trip(id: "t1")
+        route.sidebarSelection = .tab(.trips)
+        #expect(route.path(for: .trips).isEmpty)
+        #expect(route.sidebarSelection == .tab(.trips))
+    }
+
+    @Test("whenInsightsIsChosen_SidebarSelection_ShouldShowItOnHomeAndHomeShouldLeaveIt")
+    func insightsRow() {
+        var route = ShellRoute(tab: .activity)
+        route.sidebarSelection = .insights
+        #expect(route.tab == .home)
+        #expect(route.path(for: .home) == [.insights])
+        #expect(route.sidebarSelection == .insights)
+
+        route.sidebarSelection = .tab(.activity)
+        route.sidebarSelection = .tab(.home)
+        #expect(route.path(for: .home).isEmpty)
+        #expect(route.sidebarSelection == .tab(.home))
+    }
+
+    @Test("whenADeepLinkOpensAHousehold_SidebarSelection_ShouldBeItsRow")
+    func deepLinkSelectsRow() {
+        var route = ShellRoute()
+        route.settingsIsColumn = true
+        route.sidebarSelection = .settings
+        route.open(.household(id: "h2"))
+        #expect(route.sidebarSelection == .household(id: "h2"))
+        route.open(.trip(id: "t2"))
+        #expect(route.sidebarSelection == .trip(id: "t2"))
+    }
+
+    @Test("whenHomeShowsAnotherPage_SidebarSelection_ShouldStayHome")
+    func otherHomePages() {
+        var route = ShellRoute()
+        route.push(.calendar)
+        #expect(route.sidebarSelection == .tab(.home))
+        route.setPath([.moneyFlow, .insights], for: .home)
+        #expect(route.sidebarSelection == .tab(.home), "only Insights opened as the first page is its row")
+    }
+}
