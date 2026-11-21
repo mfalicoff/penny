@@ -106,8 +106,7 @@ extension AccessibilityID {
         public static let formRestoredDraft = "sharedForm.restoredDraft"
         public static let formKeepDraft = "sharedForm.keepDraft"
         public static let formDiscard = "sharedForm.discard"
-        /// The rows laid out like Add entry's: type, household, who paid, the split and details.
-        public static let formKind = "sharedForm.kind"
+        /// The rows laid out like Add entry's: household, who paid, the split and details.
         public static let formHousehold = "sharedForm.household"
         public static let formPaidBy = "sharedForm.paidBy"
         public static let formSplit = "sharedForm.splitRow"
@@ -143,7 +142,7 @@ extension AccessibilityID {
                 expenseHistory, formAmount, formTitle, formDate, formMode, formYourShare, formAccount, formNote,
                 formRepeat, formSave, formClose, formCategory, formActive, formProblem, formError, formReviewLatest,
                 formRestoredDraft,
-                formKeepDraft, formDiscard, formKind, formHousehold, formPaidBy, formSplit, formDetails,
+                formKeepDraft, formDiscard, formHousehold, formPaidBy, formSplit, formDetails,
                 recordShareConfirm, recordShareExplanation, recordMonthlyConfirm,
                 recordMonthlyExplanation, paymentError, staleOld, staleNew, staleReview, staleBy, historyEmpty,
             ]

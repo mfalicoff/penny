@@ -144,6 +144,8 @@ private struct EntryForm: View {
     @State private var overlay: EntryFormOverlay?
     @State private var entryGone = false
     @FocusState private var titleFocused: Bool
+    /// The income and investment Note row (iPhone): the keypad steps aside while it's typed.
+    @FocusState private var noteFocused: Bool
     @State private var width: Double = 0
 
     var body: some View {
@@ -215,7 +217,7 @@ private struct EntryForm: View {
         }
     }
 
-    private var showsKeypad: Bool { sizeClass != .regular && !titleFocused }
+    private var showsKeypad: Bool { sizeClass != .regular && !titleFocused && !noteFocused }
 
     /// iPad (`ipad-add-entry`, MAZ-182): the amount, name and categories on the left, the
     /// details on the right, and the type in the toolbar, when the sheet is wide enough.
@@ -240,9 +242,9 @@ private struct EntryForm: View {
             .nameEntry()
             .focused($titleFocused)
             .submitLabel(.done)
-            .font(.title3)
-            .padding(.horizontal, 16)
-            .frame(minHeight: ControlSize.button)
+            .font(.body)
+            .padding(.horizontal, 14)
+            .frame(minHeight: ControlSize.compactRow)
             .background(
                 PennyColor.surface, in: RoundedRectangle(cornerRadius: Metrics.rowRadius, style: .continuous)
             )
@@ -283,7 +285,7 @@ private struct EntryForm: View {
         @Bindable var model = model
         let draft = model.draft
         ScrollView {
-            VStack(spacing: 16) {
+            VStack(spacing: 12) {
                 banners(model)
                 if isTwoColumn {
                     HStack(alignment: .top, spacing: 28) {
@@ -299,12 +301,13 @@ private struct EntryForm: View {
                         VStack(spacing: 8) {
                             groupLabel("Details")
                             rows(model)
+                            groupLabel("Note").padding(.top, 12)
+                            noteField(model)
                             futureDateNote(draft)
                         }
                         .frame(maxWidth: .infinity)
                     }
                 } else {
-                    kindPicker(model)
                     amount(model)
                     titleField(model)
                     categoryChips(model)
@@ -325,6 +328,8 @@ private struct EntryForm: View {
         .safeAreaInset(edge: .bottom) {
             if showsKeypad {
                 AmountKeypad { key in model.editor.draft.amount = AmountInput.apply(key, to: model.draft.amount) }
+            } else if isTwoColumn {
+                EntryShortcutFooter()
             }
         }
         .navigationTitle(model.editor.isNew ? "Add entry" : "Edit entry")
@@ -333,15 +338,19 @@ private struct EntryForm: View {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Close", systemImage: "xmark") { close(model) }
                     .neutralToolbarGlyph()
+                    .keyboardShortcut(.cancelAction)
                     .accessibilityIdentifier("entryForm.close")
             }
-            if isTwoColumn {
-                ToolbarItem(placement: .principal) {
-                    kindPicker(model).frame(width: 320)
-                }
+            // The type sits in the bar between × and ✓, with no title, as on the cards.
+            ToolbarItem(placement: .principal) {
+                kindPicker(model).frame(width: isTwoColumn ? 320 : 236)
             }
             ToolbarItem(placement: .confirmationAction) {
-                EntrySaveButton(saving: model.editor.isSaving) { save(model) }
+                // iPad: a labelled "Add expense" capsule; ⌘↩ saves (`ipad-add-entry`).
+                EntrySaveButton(
+                    saving: model.editor.isSaving,
+                    title: isTwoColumn ? EntryText.saveTitle(model.draft.kind, isNew: model.editor.isNew) : nil
+                ) { save(model) }
             }
         }
         .navigationDestination(for: EntryFormPage.self) { page in
@@ -457,12 +466,14 @@ private struct EntryForm: View {
                 // `ipad-add-entry` card.
                 HStack(alignment: .firstTextBaseline, spacing: 0) {
                     Text((draft.kind == .income ? "+" : "") + AmountDisplay.symbol(currency))
-                        .foregroundStyle(PennyColor.secondaryLabel)
+                        .foregroundStyle(AmountDisplay.signStyle(draft.kind))
                         .accessibilityHidden(true)
                     TextField("0.00", text: $model.editor.draft.amount)
                         .decimalEntry()
                         .fixedSize()
                         .foregroundStyle(EntryText.meaning(draft.kind).color)
+                        // The copper caret after the amount, as on the card.
+                        .tint(PennyColor.tint)
                         .accessibilityLabel("Amount")
                         .accessibilityIdentifier("entryForm.amount")
                 }
@@ -471,8 +482,9 @@ private struct EntryForm: View {
             } else {
                 Button {
                     titleFocused = false
+                    noteFocused = false
                 } label: {
-                    AmountDisplay(text: draft.amount, kind: draft.kind, currency: currency)
+                    AmountDisplay(text: draft.amount, kind: draft.kind, currency: currency, caret: showsKeypad)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Amount")
@@ -491,21 +503,28 @@ private struct EntryForm: View {
         .frame(maxWidth: .infinity)
     }
 
+    /// The labelled rows, as on the cards: Date, Account and Split, then "Receipt, repeat, trip"
+    /// for an expense on iPhone (`iphone-add-expense`), Repeat and Note rows for income and
+    /// investments (`iphone-add-income`), and every detail as its own row on iPad
+    /// (`ipad-add-entry`), where the note is a field under them.
     @ViewBuilder
     private func rows(_ model: EntryFormModel) -> some View {
         let draft = model.draft
         let currency = ledger.currency.rawValue
+        let expense = draft.kind == .expense
+        // The cards' rows are 46pt on the iPhone expense form and 48pt elsewhere.
+        let height = isTwoColumn || !expense ? 48 : ControlSize.compactRow
         VStack(spacing: 0) {
             if offersHousehold(model) {
                 Button {
                     overlay = .household
                 } label: {
-                    EntryFieldRow("Household", systemImage: "house", value: "Personal")
+                    EntryFieldRow("Household", systemImage: "house", value: "Personal", height: height)
                 }
                 .buttonStyle(.plain)
                 .accessibilityHint("Choose a household to split this expense with")
                 .accessibilityIdentifier("entryForm.household")
-                Divider().padding(.leading, 52)
+                EntryFieldRow.divider
             }
             Button {
                 overlay = .date
@@ -513,38 +532,156 @@ private struct EntryForm: View {
                 EntryFieldRow(
                     "Date", systemImage: "calendar",
                     value: CalendarDate.ledgerDate(draft.date).map { EntryText.day($0, today: shell.today) }
-                        ?? draft.date)
+                        ?? draft.date, height: height)
             }
             .buttonStyle(.plain)
             .accessibilityIdentifier("entryForm.date")
-            Divider().padding(.leading, 52)
+            EntryFieldRow.divider
             NavigationLink(value: EntryFormPage.account) {
                 EntryFieldRow(
-                    "Account", systemImage: "creditcard",
-                    value: draft.accountId.flatMap(ledger.account(id:))?.name ?? "None", chevron: true)
+                    "Account", systemImage: expense ? "creditcard" : "wallet.bifold",
+                    value: draft.accountId.flatMap(ledger.account(id:))?.name ?? "None", height: height)
             }
             .buttonStyle(.plain)
             .accessibilityIdentifier("entryForm.account")
-            if draft.kind == .expense {
-                Divider().padding(.leading, 52)
+            if expense {
+                EntryFieldRow.divider
                 Button {
                     overlay = .split
                 } label: {
-                    EntryFieldRow("Split", systemImage: "person.2", value: splitValue(draft, currency: currency))
+                    EntryFieldRow(
+                        "Split", systemImage: "person.2", value: splitValue(draft, currency: currency),
+                        emphasis: splitShare(draft, currency: currency), height: height)
                 }
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("entryForm.split")
             }
-            Divider().padding(.leading, 52)
-            NavigationLink(value: EntryFormPage.details) {
-                EntryFieldRow(
-                    draft.kind == .expense ? "Receipt, repeat, trip" : "Repeat, note", systemImage: "ellipsis",
-                    value: detailsValue(draft), chevron: true)
+            if isTwoColumn || !expense {
+                EntryFieldRow.divider
+                repeatRow(model, height: height)
             }
-            .buttonStyle(.plain)
-            .accessibilityIdentifier("entryForm.details")
+            if isTwoColumn, expense {
+                EntryFieldRow.divider
+                tripRow(model, height: height)
+                EntryFieldRow.divider
+                NavigationLink(value: EntryFormPage.details) {
+                    EntryFieldRow(
+                        "Receipt", systemImage: "receipt", value: draft.receipt == nil ? "Add" : "Attached",
+                        chevron: true, height: height)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("entryForm.details")
+            } else if expense {
+                EntryFieldRow.divider
+                NavigationLink(value: EntryFormPage.details) {
+                    EntryFieldRow(
+                        "Receipt, repeat, trip", systemImage: "ellipsis", value: detailsValue(draft), chevron: true,
+                        height: height)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("entryForm.details")
+            } else if !isTwoColumn {
+                EntryFieldRow.divider
+                noteRow(model, height: height)
+            }
         }
         .background(PennyColor.surface, in: RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous))
+    }
+
+    /// Repeat: Never, Weekly, Monthly or Yearly for a new entry ("Monthly on the 15th"). An edit
+    /// changes this entry only, so it says whether it came from a schedule.
+    @ViewBuilder
+    private func repeatRow(_ model: EntryFormModel, height: Double) -> some View {
+        @Bindable var model = model
+        if model.editor.isNew {
+            Menu {
+                Picker("Repeat", selection: $model.editor.draft.frequency) {
+                    Text("Never").tag(RecurrenceFrequency?.none)
+                    Text("Weekly").tag(RecurrenceFrequency?.some(.weekly))
+                    Text("Monthly").tag(RecurrenceFrequency?.some(.monthly))
+                    Text("Yearly").tag(RecurrenceFrequency?.some(.yearly))
+                }
+            } label: {
+                EntryFieldRow(
+                    "Repeat", systemImage: "repeat",
+                    value: EntryText.repeats(model.draft.frequency, on: CalendarDate.ledgerDate(model.draft.date)),
+                    chevron: true, height: height)
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("entryForm.repeat")
+        } else {
+            EntryFieldRow(
+                "Repeat", systemImage: "repeat",
+                value: model.editor.original?.recurringId == nil ? "Doesn't repeat" : "From a schedule",
+                height: height)
+        }
+    }
+
+    /// iPad: the trip as a row, with the shared trips a new expense can go to below your own.
+    private func tripRow(_ model: EntryFormModel, height: Double) -> some View {
+        @Bindable var model = model
+        let trips = ledger.trips.sorted { $0.startDate > $1.startDate }
+        let shared = sharedTrips(model)
+        return Menu {
+            Picker("Trip", selection: $model.editor.draft.tripId) {
+                Text("None").tag(String?.none)
+                ForEach(trips, id: \.id) { trip in Text(trip.name).tag(String?.some(trip.id)) }
+            }
+            if !shared.isEmpty {
+                Section("Shared") {
+                    ForEach(shared) { household in
+                        Button("\(household.name) · \(household.memberCount) people") {
+                            pendingHousehold = .some(household.id)
+                            applyHousehold(model)
+                        }
+                    }
+                }
+            }
+        } label: {
+            EntryFieldRow(
+                "Trip", systemImage: "airplane", value: model.draft.tripId.flatMap(ledger.trip(id:))?.name ?? "None",
+                chevron: true, height: height)
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("entryForm.trip")
+    }
+
+    /// iPhone income and investments: the note typed in its row ("Note · Optional").
+    private func noteRow(_ model: EntryFormModel, height: Double) -> some View {
+        @Bindable var model = model
+        return HStack(spacing: 10) {
+            Image(systemName: "doc.text")
+                .foregroundStyle(PennyColor.secondaryLabel)
+                .frame(width: 20)
+                .accessibilityHidden(true)
+            Text("Note").foregroundStyle(PennyColor.label)
+            TextField("Optional", text: $model.editor.draft.note)
+                .focused($noteFocused)
+                .submitLabel(.done)
+                .multilineTextAlignment(.trailing)
+                .foregroundStyle(PennyColor.secondaryLabel)
+                .accessibilityLabel("Note")
+                .accessibilityIdentifier("entryForm.note")
+        }
+        .font(.callout)
+        .padding(.horizontal, 14)
+        .frame(minHeight: height)
+    }
+
+    /// iPad: the note as a field under the details, as on `ipad-add-entry`.
+    private func noteField(_ model: EntryFormModel) -> some View {
+        @Bindable var model = model
+        return TextField("Anything you'd like to remember", text: $model.editor.draft.note, axis: .vertical)
+            .lineLimit(2...6)
+            .font(.callout)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .frame(minHeight: 70, alignment: .topLeading)
+            .background(
+                PennyColor.surface, in: RoundedRectangle(cornerRadius: Metrics.rowRadius, style: .continuous)
+            )
+            .accessibilityLabel("Note")
+            .accessibilityIdentifier("entryForm.note")
     }
 
     /// A new expense, not on a personal trip, with a household to go to.
@@ -578,6 +715,12 @@ private struct EntryForm: View {
             return "\(draft.shareInput) ways · \(MoneyFormat.amount(share, currency: currency)) yours"
         }
         return "\(MoneyFormat.amount(share, currency: currency)) yours"
+    }
+
+    /// "$24.80", drawn in copper inside the Split row's value, as on the cards.
+    private func splitShare(_ draft: EntryDraft, currency: String) -> String? {
+        guard draft.split != .full, let share = draft.previewShare else { return nil }
+        return MoneyFormat.amount(share, currency: currency)
     }
 
     private func detailsValue(_ draft: EntryDraft) -> String {
@@ -642,15 +785,20 @@ private struct EntryForm: View {
     }
 }
 
-/// The toolbar Save: a tinted check, a spinner while saving (it can't be tapped twice).
+/// The toolbar Save: a tinted check, or a labelled capsule ("Add expense") on iPad, and a
+/// spinner while saving (it can't be tapped twice). ⌘↩ saves.
 struct EntrySaveButton: View {
     let saving: Bool
+    /// The capsule's label; nil draws the check.
+    var title: String?
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             if saving {
                 ProgressView()
+            } else if let title {
+                Text(title).fontWeight(.semibold)
             } else {
                 Label("Save", systemImage: "checkmark")
             }
@@ -658,32 +806,88 @@ struct EntrySaveButton: View {
         .buttonStyle(.borderedProminent)
         .tint(PennyColor.tint)
         .disabled(saving)
-        .accessibilityLabel(saving ? "Saving" : "Save")
+        .keyboardShortcut(.return, modifiers: .command)
+        .accessibilityLabel(saving ? "Saving" : (title ?? "Save"))
         .accessibilityIdentifier("entryForm.save")
     }
 }
 
+/// The iPad form's keyboard shortcuts, under the sheet (`ipad-add-entry`): ⌘↩ Add, esc
+/// Cancel, ⇥ Next field.
+struct EntryShortcutFooter: View {
+    var body: some View {
+        VStack(spacing: 0) {
+            Divider()
+            HStack(spacing: 16) {
+                // Text presentation, so ↩ never draws as an emoji key.
+                shortcut(["⌘", "\u{21A9}\u{FE0E}"], "Add")
+                shortcut(["esc"], "Cancel")
+                shortcut(["⇥"], "Next field")
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 26)
+            .padding(.top, 12)
+            .padding(.bottom, 18)
+        }
+        .background(PennyColor.background)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Command Return adds, Escape cancels, Tab moves to the next field")
+        .accessibilityIdentifier("entryForm.shortcuts")
+    }
+
+    private func shortcut(_ keys: [String], _ title: String) -> some View {
+        HStack(spacing: 4) {
+            ForEach(keys, id: \.self) { key in
+                Text(key)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(PennyColor.label)
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 2)
+                    .background(PennyColor.fill, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+            }
+            Text(title).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
+        }
+    }
+}
+
 /// The typed amount, large, with the kind's sign and color. Shows what was typed (so "12."
-/// stays visible while typing) with the locale's decimal separator.
+/// stays visible while typing) with the locale's decimal separator, and the copper caret
+/// while the keypad types into it.
 struct AmountDisplay: View {
     let text: String
     let kind: EntryKind
     let currency: String
+    var caret = false
+    @ScaledMetric(relativeTo: .largeTitle) private var caretHeight = 50.0
 
     var body: some View {
         // Grouped as it is typed (MAZ-180): "+$3,200.00", never "+$3200.00".
         let typed = text.isEmpty ? "0" : MoneyFormat.typed(text)
         let sign = kind == .income ? "+" : ""
         HStack(alignment: .firstTextBaseline, spacing: 0) {
-            Text(sign + Self.symbol(currency)).foregroundStyle(PennyColor.secondaryLabel)
+            Text(sign + Self.symbol(currency)).foregroundStyle(Self.signStyle(kind))
             Text(typed).foregroundStyle(text.isEmpty ? PennyColor.tertiaryLabel : EntryText.meaning(kind).color)
+            if caret {
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(PennyColor.tint)
+                    .frame(width: 3, height: caretHeight)
+                    .alignmentGuide(.firstTextBaseline) { $0.height - 6 }
+                    .padding(.leading, 3)
+                    .accessibilityHidden(true)
+            }
         }
         .modifier(HeroAmountFont())
         .lineLimit(1)
         .minimumScaleFactor(0.4)
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 8)
+        .padding(.top, 8)
         .contentShape(Rectangle())
+    }
+
+    /// The sign and currency symbol: the amount's meaning color, faded, as on the cards
+    /// (`$` in faded label color for an expense, `+$` in faded green for income).
+    static func signStyle(_ kind: EntryKind) -> Color {
+        EntryText.meaning(kind).color.opacity(kind == .income ? 0.45 : 0.4)
     }
 
     static func symbol(_ code: String) -> String {
@@ -694,14 +898,16 @@ struct AmountDisplay: View {
     }
 }
 
-/// The decimal keypad under the iPhone form (design-kit `Keypad`).
+/// The decimal keypad under the iPhone form (design-kit `Keypad`): raised digit keys, and the
+/// separator and delete as ghost keys, as on the cards.
 struct AmountKeypad: View {
     let press: (AmountInput.Key) -> Void
-    @ScaledMetric(relativeTo: .title2) private var height = 48.0
+    @ScaledMetric(relativeTo: .title2) private var height = 47.0
+    @ScaledMetric(relativeTo: .title2) private var size = 25.0
 
     var body: some View {
         let separator = Locale.current.decimalSeparator ?? "."
-        Grid(horizontalSpacing: 8, verticalSpacing: 8) {
+        Grid(horizontalSpacing: 7, verticalSpacing: 7) {
             ForEach(0..<3) { row in
                 GridRow {
                     ForEach(1...3, id: \.self) { column in
@@ -711,29 +917,36 @@ struct AmountKeypad: View {
                 }
             }
             GridRow {
-                key(separator, id: "separator", label: "Decimal separator") { press(.separator) }
+                key(separator, id: "separator", label: "Decimal separator", ghost: true) { press(.separator) }
                 key("0", id: "0") { press(.digit(0)) }
-                key("", id: "delete", systemImage: "delete.left", label: "Delete") { press(.delete) }
+                key("", id: "delete", systemImage: "chevron.left", label: "Delete", ghost: true) { press(.delete) }
             }
         }
-        .padding(8)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 8)
         .background(PennyColor.secondarySurface)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Amount keypad")
     }
 
     private func key(
-        _ title: String, id: String, systemImage: String? = nil, label: String? = nil,
+        _ title: String, id: String, systemImage: String? = nil, label: String? = nil, ghost: Bool = false,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
             Group {
                 if let systemImage { Image(systemName: systemImage) } else { Text(title) }
             }
-            .font(.title2)
+            .font(.system(size: size))
             .foregroundStyle(PennyColor.label)
             .frame(maxWidth: .infinity, minHeight: max(height, Metrics.minTouchTarget))
-            .background(PennyColor.surface, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .background {
+                if !ghost {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(PennyColor.surface)
+                        .shadow(color: .black.opacity(0.12), radius: 0, y: 1)
+                }
+            }
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -742,44 +955,65 @@ struct AmountKeypad: View {
     }
 }
 
-/// A labeled row in the entry form: icon, title, the selected value, and a chevron when it
-/// opens a page.
+/// A labeled row in the entry form, with the cards' `.opt` metrics (46pt, 16pt type, a 20pt
+/// icon): icon, title, the selected value, and a chevron when it opens a page or a menu.
 struct EntryFieldRow: View {
     let title: String
     let systemImage: String
     let value: String
+    /// Part of `value` drawn in copper ("$24.80" in "3 ways · $24.80 yours").
+    let emphasis: String?
     let chevron: Bool
+    let height: Double
 
-    init(_ title: String, systemImage: String, value: String, chevron: Bool = false) {
+    init(
+        _ title: String, systemImage: String, value: String, emphasis: String? = nil, chevron: Bool = false,
+        height: Double = ControlSize.compactRow
+    ) {
         self.title = title
         self.systemImage = systemImage
         self.value = value
+        self.emphasis = emphasis
         self.chevron = chevron
+        self.height = height
     }
 
+    /// The separator between rows, inset to the title as on the cards.
+    static var divider: some View { Divider().padding(.leading, 44) }
+
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10) {
             Image(systemName: systemImage)
                 .foregroundStyle(PennyColor.secondaryLabel)
-                .frame(width: 24)
+                .frame(width: 20)
                 .accessibilityHidden(true)
             Text(title).foregroundStyle(PennyColor.label)
             Spacer(minLength: 8)
-            Text(value)
+            Text(Self.styled(value, emphasis: emphasis))
                 .foregroundStyle(PennyColor.secondaryLabel)
                 .lineLimit(1)
                 .multilineTextAlignment(.trailing)
             if chevron {
                 Image(systemName: "chevron.right")
                     .font(.footnote.weight(.semibold))
-                    .foregroundStyle(PennyColor.tertiaryLabel)
+                    .foregroundStyle(PennyColor.secondaryLabel)
                     .accessibilityHidden(true)
             }
         }
-        .padding(.horizontal, 16)
-        .frame(minHeight: ControlSize.row)
+        .font(.callout)
+        .padding(.horizontal, 14)
+        .frame(minHeight: height)
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
+    }
+
+    static func styled(_ value: String, emphasis: String?) -> AttributedString {
+        var text = AttributedString(value)
+        if let emphasis, !emphasis.isEmpty, let range = text.range(of: emphasis) {
+            text[range].foregroundColor = PennyColor.tintText
+            text[range].font = .callout.weight(.semibold)
+        }
+        return text
     }
 }
 
@@ -813,11 +1047,19 @@ struct EntryCategoryChips: View {
             chip(category)
         }
         Button(action: more) {
-            Image(systemName: "ellipsis")
-                .font(.body.weight(.semibold))
-                .foregroundStyle(PennyColor.label)
-                .frame(minWidth: Metrics.minTouchTarget, minHeight: Metrics.minTouchTarget)
-                .background(PennyColor.fill, in: Capsule())
+            Group {
+                // The wrapped iPad chips label it "All", as on `ipad-add-entry`.
+                if wraps {
+                    Label("All", systemImage: "ellipsis")
+                        .font(.subheadline.weight(.semibold))
+                        .padding(.horizontal, 14)
+                } else {
+                    Image(systemName: "ellipsis").font(.body.weight(.semibold))
+                }
+            }
+            .foregroundStyle(PennyColor.label)
+            .frame(minWidth: Metrics.minTouchTarget, minHeight: Metrics.minTouchTarget)
+            .background(PennyColor.fill, in: Capsule())
         }
         .buttonStyle(.plain)
         .accessibilityLabel("All categories")
