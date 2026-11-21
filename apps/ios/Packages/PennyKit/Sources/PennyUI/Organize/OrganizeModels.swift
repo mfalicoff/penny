@@ -352,14 +352,10 @@ enum ScheduleText {
         return parts.joined(separator: " · ")
     }
 
-    /// A row's tile symbol, as on the cards (`.ic`): income and investments draw their kind (an
-    /// arrow down, the trend line) in its meaning color; expenses draw their category's icon.
+    /// A row's tile symbol: the entry rows' (`EntryText.tileSymbol`), with the repeat icon for an
+    /// expense whose category is missing.
     static func tileSymbol(_ kind: EntryKind, category: LedgerCategory?) -> String {
-        switch kind {
-        case .income: "arrow.down"
-        case .investment: "chart.line.uptrend.xyaxis"
-        case .expense: CategoryStyle.symbol(forIonicon: category?.icon ?? "repeat")
-        }
+        EntryText.tileSymbol(kind, category: category, fallback: "repeat")
     }
 
     /// A shared row's detail, with the household's name where a personal row has the account:
