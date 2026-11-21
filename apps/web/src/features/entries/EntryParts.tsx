@@ -482,6 +482,7 @@ export function DateRowInput({
   long,
   invalid,
   inputRef,
+  text,
 }: {
   id: string;
   value: string;
@@ -490,11 +491,13 @@ export function DateRowInput({
   long: boolean;
   invalid?: Record<string, unknown>;
   inputRef?: RefObject<HTMLInputElement | null>;
+  /** Shown instead of "Today" or "Fri, Oct 30" (the trip form's "Nov 12, 2026"). */
+  text?: string;
 }) {
   return (
     <span className="entry-date">
       <span className="entry-date__text" aria-hidden="true">
-        {rowDate(value, today, long)}
+        {text ?? rowDate(value, today, long)}
       </span>
       <input
         id={id}

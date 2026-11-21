@@ -9,13 +9,15 @@ import { ledgerCurrencyQuery } from "../../api/ledger";
 import { invalidateSearch } from "../../api/search";
 import { useAccountEmail } from "../../auth/account";
 import { useIsDemo } from "../../demo/demo";
-import { Button, SwitchRow } from "../../design/controls";
+import { Avatar, Button } from "../../design/controls";
+import { Icon } from "../../design/Icon";
 import { Dialog } from "../../design/ModalDialog";
 import { SaveErrorBanner, useOnline, useToast } from "../../design/states";
 import { describeSharedError } from "../households/errors";
 import { localDate } from "../households/model";
 import { describeSaveError, detailOf, useLedgerWorkspace } from "../organize/workspace";
-import { validateTrip, type SharedTrip, type TripDraft, type TripErrors, type TripField } from "./model";
+import { DateRowInput, DetailList, DetailRow } from "../entries/EntryParts";
+import { outsideDatesNote, validateTrip, type SharedTrip, type TripDraft, type TripErrors, type TripField } from "./model";
 
 export type TripFormTarget = { kind: "new" } | { kind: "personal"; trip: Trip; expenseCount: number } | { kind: "shared"; household: SharedTrip };
 
@@ -55,7 +57,12 @@ export function TripFormDialog({ target, onClose }: { target: TripFormTarget; on
     const refs: Record<TripField, RefObject<HTMLInputElement | null>> = { name: nameRef, startDate: startRef, endDate: endRef };
     refs[field].current?.focus();
   };
-  const ids = { name: useId(), startDate: useId(), endDate: useId(), note: useId() };
+  const ids = { name: useId(), startDate: useId(), endDate: useId(), note: useId(), when: useId(), people: useId(), share: useId(), shareHint: useId() };
+  /** The field's error, or the note it's described by. */
+  const invalid = (field: TripField, describedBy?: string) =>
+    errors[field] ? { "aria-invalid": true, "aria-describedby": `${ids[field]}-error` } : describedBy ? { "aria-describedby": describedBy } : {};
+  // A trip is always in one currency: the ledger's for a new or personal trip, the household's once shared.
+  const tripCurrency = target.kind === "shared" ? target.household.currency : (currency.data ?? workspace.ledger?.currency);
 
   const shared = target.kind === "shared" || share;
   const title = target.kind === "new" ? "New trip" : target.kind === "shared" ? "Edit shared trip" : "Edit trip";
@@ -165,36 +172,113 @@ export function TripFormDialog({ target, onClose }: { target: TripFormTarget; on
 
   return (
     <Dialog title={title} onClose={onClose} initialFocus={nameRef}>
-      <form className="form" onSubmit={onSubmit} noValidate aria-label={title}>
+      <form className="form trip-form" onSubmit={onSubmit} noValidate aria-label={title}>
         {failure ? <SaveErrorBanner message={failure} onRetry={() => void savePersonal()} retrying={saving} /> : null}
         {sharedFailure ? <SaveErrorBanner message={sharedFailure} /> : null}
-        <TripInput id={ids.name} inputRef={nameRef} label="Trip name" type="text" value={draft.name} error={errors.name} onChange={(value) => { set("name", value); }} />
-        <div className="form-grid">
-          <TripInput id={ids.startDate} inputRef={startRef} label="Starts" type="date" value={draft.startDate} error={errors.startDate} onChange={(value) => { set("startDate", value); }} />
-          <TripInput id={ids.endDate} inputRef={endRef} label="Ends" type="date" value={draft.endDate} error={errors.endDate} describedBy={ids.note} onChange={(value) => { set("endDate", value); }} />
+        <div className="trip-form__name">
+          <label htmlFor={ids.name} className="visually-hidden">
+            Trip name
+          </label>
+          <input
+            id={ids.name}
+            ref={nameRef}
+            type="text"
+            className="trip-form__name-input"
+            placeholder="Trip name"
+            maxLength={80}
+            autoComplete="off"
+            value={draft.name}
+            aria-invalid={errors.name ? true : undefined}
+            aria-describedby={errors.name ? `${ids.name}-error` : undefined}
+            onChange={(event) => { set("name", event.currentTarget.value); }}
+          />
+          {errors.name ? (
+            <span id={`${ids.name}-error`} className="form-error">
+              {errors.name}
+            </span>
+          ) : null}
         </div>
-        <p id={ids.note} className="note">
-          Expenses can be dated outside the trip: flights booked a month before still count.
-        </p>
+
+        <section className="trip-form__group" aria-labelledby={ids.when}>
+          <h3 id={ids.when} className="trip-form__label">
+            When
+          </h3>
+          <DetailList>
+            <DetailRow icon="calendar" label="Starts" htmlFor={ids.startDate}>
+              <span className="trip-form__date">
+                <DateRowInput id={ids.startDate} inputRef={startRef} value={draft.startDate} text={formDate(draft.startDate)} today={localDate()} long onChange={(value) => { set("startDate", value); }} invalid={invalid("startDate")} />
+              </span>
+            </DetailRow>
+            <DetailRow icon="calendar" label="Ends" htmlFor={ids.endDate}>
+              <span className="trip-form__date">
+                <DateRowInput id={ids.endDate} inputRef={endRef} value={draft.endDate} text={formDate(draft.endDate)} today={localDate()} long onChange={(value) => { set("endDate", value); }} invalid={invalid("endDate", ids.note)} />
+              </span>
+            </DetailRow>
+            <DetailRow icon="cash" label="Currency">
+              {tripCurrency ?? "…"}
+              <Icon name="lock-closed" size={15} />
+              <span className="visually-hidden">, can't be changed</span>
+            </DetailRow>
+          </DetailList>
+          {errors.startDate ? (
+            <span id={`${ids.startDate}-error`} className="form-error">
+              {errors.startDate}
+            </span>
+          ) : null}
+          {errors.endDate ? (
+            <span id={`${ids.endDate}-error`} className="form-error">
+              {errors.endDate}
+            </span>
+          ) : null}
+          <p id={ids.note} className="trip-form__hint">
+            {outsideDatesNote(draft.startDate)}
+          </p>
+        </section>
+
         {target.kind === "new" ? (
-          <>
-            <SwitchRow
-              label="Share with others"
-              checked={share}
-              disabled={Boolean(shareBlocked)}
-              onChange={setShare}
-              description={
-                shareBlocked ??
+          <section className="trip-form__group" aria-labelledby={ids.people}>
+            <h3 id={ids.people} className="trip-form__label">
+              People
+            </h3>
+            <DetailList>
+              <DetailRow icon="people" label="Share with others" htmlFor={ids.share}>
+                <input
+                  id={ids.share}
+                  type="checkbox"
+                  role="switch"
+                  className="switch"
+                  checked={share}
+                  disabled={Boolean(shareBlocked)}
+                  aria-describedby={ids.shareHint}
+                  onChange={(event) => { setShare(event.currentTarget.checked); }}
+                />
+              </DetailRow>
+              {share ? (
+                <>
+                  <div className="entry-row trip-form__person">
+                    <Avatar name={email || "You"} size={30} />
+                    <span className="entry-row__label">You</span>
+                    <span className="entry-row__value">Organizer</span>
+                  </div>
+                  <div className="entry-row trip-form__invite">
+                    <Icon name="person-add" size={18} />
+                    <span className="entry-row__label">Invite with a code</span>
+                    <span className="entry-row__value">after saving</span>
+                  </div>
+                </>
+              ) : null}
+            </DetailList>
+            <p id={ids.shareHint} className="trip-form__hint">
+              {shareBlocked ??
                 (share
-                  ? `A shared trip in ${currency.data ?? "your ledger currency"}. You're the organizer; invite people with a code after saving. Everyone sees the trip's shared expenses and their own share.`
-                  : "Only you see a personal trip. You can share it later; what you add before sharing stays private.")
-              }
-            />
-          </>
+                  ? "Everyone in a shared trip sees its shared expenses and their own share. Anything you added before sharing stays private to you."
+                  : "Only you see a personal trip. You can share it later; what you add before sharing stays private.")}
+            </p>
+          </section>
         ) : target.kind === "shared" ? (
-          <p className="note">Only you, the organizer, can change the name and dates. Changing them never moves an expense or changes anyone's share.</p>
+          <p className="trip-form__hint">Only you, the organizer, can change the name and dates. Changing them never moves an expense or changes anyone's share.</p>
         ) : target.trip.sharedHouseholdId ? (
-          <p className="note">This trip was shared. Its expenses here stay private to you.</p>
+          <p className="trip-form__hint">This trip was shared. Its expenses here stay private to you.</p>
         ) : null}
         <div className="form-actions">
           {target.kind === "personal" ? (
@@ -226,40 +310,11 @@ export function TripFormDialog({ target, onClose }: { target: TripFormTarget; on
   );
 }
 
-interface TripInputProps {
-  id: string;
-  inputRef: RefObject<HTMLInputElement | null>;
-  label: string;
-  type: "text" | "date";
-  value: string;
-  error: string | undefined;
-  describedBy?: string;
-  onChange: (value: string) => void;
-}
-
-/** One labelled trip field; an error names the problem and is announced with the field. */
-function TripInput({ id, inputRef, label, type, value, error, describedBy, onChange }: TripInputProps) {
-  const errorId = `${id}-error`;
-  return (
-    <div className="form-field">
-      <label htmlFor={id}>{label}</label>
-      <input
-        id={id}
-        ref={inputRef}
-        type={type}
-        value={value}
-        {...(type === "text" ? { maxLength: 80, autoComplete: "off" } : { min: "2000-01-01", max: "2100-12-31" })}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={error ? errorId : describedBy}
-        onChange={(event) => { onChange(event.currentTarget.value); }}
-      />
-      {error ? (
-        <span id={errorId} className="form-error">
-          {error}
-        </span>
-      ) : null}
-    </div>
-  );
+/** "Nov 12, 2026": the trip form's dates (card `iphone-trip-form`). */
+function formDate(date: string): string {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return "Choose a date";
+  const [year = 2000, month = 1, day = 1] = date.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day)).toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
 }
 
 /**

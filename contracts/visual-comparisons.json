@@ -1239,19 +1239,12 @@
         ]
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-93",
         "capture": "402x874",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "The countdown is a gray pill; the featured trip shows Trip total and Your spending without avatars instead of Your share so far",
-            "kind": "follow-up",
-            "ref": "MAZ-230"
-          }
         ]
       }
     },
@@ -1299,14 +1292,9 @@
         ],
         "deviations": [
           {
-            "summary": "The hero isn't centered with the trip total leading; the second number reads Your spending, not your share",
+            "summary": "Expense rows show the payer's avatar, \"you owe\" and a TOTAL header, not the category tile, \"yours\" and the expense count; Only you is a card with a note (follow-up recorded on MAZ-230)",
             "kind": "follow-up",
             "ref": "MAZ-230"
-          },
-          {
-            "summary": "The seeded Lisbon trip has no expenses, so the shared and Only you rows can't be compared",
-            "kind": "follow-up",
-            "ref": "MAZ-213"
           },
           {
             "summary": "Expenses, Balances and People are links styled as the segmented control, each with its own URL (decided in MAZ-229)",
@@ -1353,11 +1341,6 @@
             "summary": "A dialog with labelled fields and Cancel / Create trip, not a sheet",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-conventions-maz-227"
-          },
-          {
-            "summary": "No WHEN group with a Currency lock row or PEOPLE group; the date note's wording differs",
-            "kind": "follow-up",
-            "ref": "MAZ-230"
           }
         ]
       }
@@ -2592,7 +2575,12 @@
         ],
         "deviations": [
           {
-            "summary": "No People card or Your share by category; the second number reads Your spending",
+            "summary": "Expense rows show the payer's avatar and \"you owe\", and Only you is its own card, not one Expenses panel with \"4 shared · 1 private\" (follow-up recorded on MAZ-230)",
+            "kind": "follow-up",
+            "ref": "MAZ-230"
+          },
+          {
+            "summary": "The seeded Lisbon categories use colors outside the category palette, so their tiles draw gray (follow-up recorded on MAZ-230)",
             "kind": "follow-up",
             "ref": "MAZ-230"
           },
@@ -2600,11 +2588,6 @@
             "summary": "The sidebar footer names the account by its email, not the person's name",
             "kind": "follow-up",
             "ref": "MAZ-171"
-          },
-          {
-            "summary": "The seeded Lisbon trip has no expenses, so its list can't be compared",
-            "kind": "follow-up",
-            "ref": "MAZ-213"
           },
           {
             "summary": "Expenses, Balances and People are links styled as the segmented control, each with its own URL (decided in MAZ-229)",
@@ -2911,7 +2894,12 @@
         ],
         "deviations": [
           {
-            "summary": "The featured trip shows Trip total and Your spending without Your share, You owe; two pills; tiles add a count and an ALL TRIPS label",
+            "summary": "Past shared tiles show Shared, not Settled, and Paid by has no split count (\"Sam · 4 ways\") (follow-up recorded on MAZ-230)",
+            "kind": "follow-up",
+            "ref": "MAZ-230"
+          },
+          {
+            "summary": "The seeded Lisbon categories use colors outside the category palette, so their tiles draw gray (follow-up recorded on MAZ-230)",
             "kind": "follow-up",
             "ref": "MAZ-230"
           },
