@@ -149,6 +149,30 @@ describe("Home", () => {
     expect(within(topbar).getByRole("button", { name: "Previous month" })).toBeInTheDocument();
     expect(within(topbar).getByText("November 2026", { selector: ".month-nav__label" })).toBeInTheDocument();
     expect(within(screen.getByRole("main")).queryByRole("button", { name: "Previous month" })).not.toBeInTheDocument();
+    // web-home (MAZ-258): the calendar button follows the month control, ahead of the phone's Settings.
+    const calendar = within(topbar).getByRole("button", { name: "Calendar" });
+    expect(calendar.previousElementSibling).toHaveClass("month-bar");
+    expect(calendar.nextElementSibling).toHaveClass("topbar__actions");
+    expect(within(topbar).getAllByRole("button", { name: "Calendar" })).toHaveLength(1);
+  });
+
+  it("opens the calendar sheet from beside the month control on desktop and returns focus to it (MAZ-258)", async () => {
+    stubWidth(1440);
+    server();
+    const user = userEvent.setup();
+    renderApp("/?month=2026-11");
+    await loaded();
+    const calendar = within(screen.getByRole("banner")).getByRole("button", { name: "Calendar" });
+    expect(calendar).toHaveAttribute("aria-haspopup", "dialog");
+    await user.click(calendar);
+    const sheet = await screen.findByRole("dialog", { name: "November 2026" });
+    await user.click(within(sheet).getByRole("button", { name: "Close" }));
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+    await waitFor(() => {
+      expect(within(screen.getByRole("banner")).getByRole("button", { name: "Calendar" })).toHaveFocus();
+    });
   });
 
   it("reads Recent rows as the card does, date first, and signs Coming up (MAZ-223)", async () => {

@@ -75,7 +75,7 @@
   "sources": [
     {
       "path": "docs/design/penny-ios/README.md",
-      "sha256": "81d3d63fe404bdde7d29e2a61cf1c4a04c94e0f08ec595b8e1cd3c875a8d7511"
+      "sha256": "ee07e49407568a99fdca1b4b4bfaba70967cdb812324362ece633b865b08d3d4"
     },
     {
       "path": "docs/design/penny-ios/render.mjs",
@@ -131,7 +131,7 @@
     },
     {
       "path": ".design-sync/NOTES.md",
-      "sha256": "6b27947e8dda220459980e89ce1f74c4d98e12613fb09db828db24d0ffcf1dac"
+      "sha256": "ee358894a459f2b0903f7e91083c5890ce9a5ed1f307ae6e1cdabd0798902398"
     },
     {
       "path": "docs/design/penny-ios/compare.mjs",
@@ -143,7 +143,7 @@
     },
     {
       "path": "docs/design/visual-acceptance.md",
-      "sha256": "6323ca851317792934a08b8171d6d94d7cccebdbe11c389c598e18c00c6d0ec5"
+      "sha256": "cfc25bb7a593f3e217adcdac841dc181c849abc9f7742b5b3b7095055cc060f1"
     }
   ],
   "tokens": {
@@ -1682,7 +1682,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/ipad/home.html",
-      "sha256": "dd4b2cfba4ab9fe09cf67b41aee9101962a908bfc193dcf1a5b70b91ca20497e",
+      "sha256": "8ab8fa0dc0356d3e7e605e36a249ed3cce806f2f29c05828e26a3c3dd0ad32a5",
       "nativeIssue": "MAZ-77",
       "webIssue": "MAZ-92",
       "route": "/",
@@ -1984,7 +1984,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/web/home.html",
-      "sha256": "0bbf9ae00e4d47845622373f9234eefaefcecea11a0f2e931ed909fc954b6208",
+      "sha256": "705e518da19aa0ce2b17d0a2eff3475c8c58c5fa3b6a0788432f3fd7f875eb8f",
       "nativeIssue": "MAZ-77",
       "webIssue": "MAZ-92",
       "route": "/",

@@ -37,8 +37,8 @@ const RECENT = 5;
  * - from 1100px (`web-home`, `ipad-home`): Came in / Spent / Invested under the hero with Coming
  *   up beside it, then the Sankey beside By category.
  *
- * The calendar is a sheet over Home, opened from the calendar button in the phone's top row;
- * `?day=` opens it on that day.
+ * The calendar is a sheet over Home, opened from the calendar button: in the phone's top row
+ * beside Settings, and beside the month control from 768px (MAZ-258). `?day=` opens it on that day.
  */
 export function HomePage({ search }: { search: HomeSearch }) {
   const navigateTo = useNavigate({ from: "/" });
@@ -66,17 +66,16 @@ export function HomePage({ search }: { search: HomeSearch }) {
         onChange={(next) => {
           navigate(() => (next ? { month: next } : {}));
         }}
-        actions={
-          <PhoneHomeActions
-            onCalendar={
-              ledger && report && !(isEmptyLedger(ledger) && report.empty)
-                ? () => {
-                    setCalendarOpen(true);
-                  }
-                : undefined
-            }
-          />
+        calendar={
+          ledger && report && !(isEmptyLedger(ledger) && report.empty) ? (
+            <CalendarButton
+              onClick={() => {
+                setCalendarOpen(true);
+              }}
+            />
+          ) : null
         }
+        actions={<PhoneHomeActions />}
       />
       {!ledger || !view || !report ? (
         <LoadingState label="Loading your month…" />
@@ -503,20 +502,23 @@ function Whole({ cents, currency }: { cents: number; currency: string }) {
 }
 
 /**
- * Home's glass buttons on phones (cards `iphone-home`, `iphone-empty-home`): the calendar, which
- * opens the calendar sheet over Home, and Settings, where Recurring, Accounts and Categories live too.
+ * The calendar button, which opens the calendar sheet over Home. A round glass button on phones
+ * (`iphone-home`) and touch tablets (`ipad-home`), and a square button beside the month control
+ * on desktop (`web-home`). An empty month has no calendar (`iphone-empty-home`).
  */
-function PhoneHomeActions({ onCalendar }: { onCalendar: (() => void) | undefined }) {
+function CalendarButton({ onClick }: { onClick: () => void }) {
   return (
-    <>
-      {onCalendar ? (
-        <button type="button" className="glass glass-button" aria-label="Calendar" aria-haspopup="dialog" onClick={onCalendar}>
-          <Icon name="calendar" size={20} />
-        </button>
-      ) : null}
-      <Link to="/settings" className="glass glass-button" aria-label="Settings">
-        <Icon name="settings" size={20} />
-      </Link>
-    </>
+    <button type="button" className="glass glass-button home-calendar" aria-label="Calendar" aria-haspopup="dialog" onClick={onClick}>
+      <Icon name="calendar" size={20} />
+    </button>
+  );
+}
+
+/** Home's Settings button on phones (`iphone-home`), where Recurring, Accounts and Categories live too. */
+function PhoneHomeActions() {
+  return (
+    <Link to="/settings" className="glass glass-button" aria-label="Settings">
+      <Icon name="settings" size={20} />
+    </Link>
   );
 }

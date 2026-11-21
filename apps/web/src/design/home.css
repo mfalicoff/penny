@@ -161,6 +161,51 @@
   }
 }
 
+/*
+ * Home's calendar button (MAZ-258). Phones (`iphone-home`): a round glass button at the end of the
+ * top row, beside Settings. Desktop (`web-home`): a square button like the month control, right
+ * beside it. Touch tablets (`ipad-home`): a round glass button beside the Next button.
+ */
+@media (max-width: 767.98px) {
+  .topbar__tools .home-calendar {
+    margin-inline-start: auto;
+  }
+}
+
+@media (min-width: 768px) {
+  .home-calendar {
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--pk-separator);
+    border-radius: 10px;
+    background: var(--pk-surface);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+    backdrop-filter: none;
+  }
+
+  .home-calendar .icon {
+    width: 17px !important;
+    height: 17px !important;
+  }
+}
+
+@media (min-width: 768px) and (hover: none) and (pointer: coarse) {
+  .home-calendar {
+    width: 44px;
+    height: 44px;
+    border: 0.5px solid var(--pk-glass-edge);
+    border-radius: 22px;
+    background: var(--pk-glass);
+    box-shadow: inset 0 1px 0 var(--pk-glass-edge), var(--pk-glass-shadow);
+    backdrop-filter: blur(22px) saturate(190%);
+  }
+
+  .home-calendar .icon {
+    width: 20px !important;
+    height: 20px !important;
+  }
+}
+
 .empty-actions {
   display: flex;
   flex-wrap: wrap;

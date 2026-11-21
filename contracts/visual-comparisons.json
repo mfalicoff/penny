@@ -2071,6 +2071,11 @@
             "summary": "The card now has the flow card's focus hint (Select a band or label to focus it, again to clear) and Show as a table, which the native screen doesn't show yet (follow-up recorded on MAZ-224)",
             "kind": "follow-up",
             "ref": "MAZ-224"
+          },
+          {
+            "summary": "The calendar button is in the toolbar trailing group before Search, not beside the month control as the card now draws it (MAZ-258)",
+            "kind": "follow-up",
+            "ref": "MAZ-258"
           }
         ]
       },
