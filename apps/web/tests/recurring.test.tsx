@@ -89,9 +89,9 @@ describe("recurring schedules", () => {
     expect(within(income).getByRole("button")).toHaveTextContent(/Payday.*Monthly · next Nov 15.*\+\$2,250\.00 income/);
     const expenses = screen.getByRole("list", { name: "Expense schedules" });
     const rows = within(expenses).getAllByRole("button");
-    expect(rows.map((row) => row.textContent)).toEqual([expect.stringMatching(/^Internet.*next Nov 18 · Visa−\$65\.00/), expect.stringMatching(/^Gym.*Paused · monthly.*Paused/)]);
+    expect(rows.map((row) => row.textContent)).toEqual([expect.stringMatching(/^Internet.*next Nov 18 · Visa−\$65\.00/), expect.stringMatching(/^GymPaused · monthly−\$45\.00/)]);
     expect(screen.getByRole("list", { name: "Investment schedules" })).toHaveTextContent("TFSA contribution");
-    expect(screen.getByText(/3 active, 1 paused/)).toBeInTheDocument();
+    expect(screen.getByText("Penny records these on their date.")).toBeInTheDocument();
     // The sidebar counts the active schedules beside Recurring, and so does Manage in Settings on phones (MAZ-221).
     expect(within(screen.getByRole("complementary", { name: "Penny" })).getByRole("link", { name: /^Recurring\s*3\s*active$/ })).toHaveTextContent("Recurring3");
   });
@@ -132,12 +132,11 @@ describe("recurring schedules", () => {
     });
     expect(within(expenses).getAllByRole("listitem").map((row) => row.textContent)).toEqual([
       expect.stringMatching(/^Internet.*next Nov 18/),
-      expect.stringMatching(/^Streaming.*Monthly · next Nov 20 · Maison−\$8\.00your share.*Shared/),
-      expect.stringMatching(/^Cleaner.*Paused · monthly · Maison−\$30\.00your share.*Shared.*Paused/),
+      expect.stringMatching(/^Streaming Shared\s*Monthly · next Nov 20Maison−\$8\.00your share/),
+      expect.stringMatching(/^Cleaner Shared\s*Paused · monthlyMaison−\$30\.00your share/),
     ]);
     // A shared schedule opens its household, where it's edited.
     expect(within(expenses).getByRole("link", { name: /^Streaming/ })).toHaveAttribute("href", "/households/h1?rule=s1");
-    expect(screen.getByText(/2 active, 1 paused/)).toBeInTheDocument();
     expect(screen.getByText(/Shared schedules open their household and count only your share/)).toBeInTheDocument();
   });
 
@@ -181,9 +180,8 @@ describe("recurring schedules", () => {
     const row = await screen.findByRole("button", { name: /^Internet/ });
     await user.click(row);
     let dialog = screen.getByRole("dialog", { name: "Internet" });
-    expect(dialog).toHaveAccessibleDescription("Every month on the 18th");
-    expect(within(dialog).getByRole("list")).toHaveTextContent(/Wed, Nov 18 · in 8 days.*Fri, Dec 18.*Mon, Jan 18, 2027/);
-    expect(dialog).toHaveTextContent("1 entry in your activity");
+    expect(dialog).toHaveTextContent("Every month on the 18th");
+    expect(within(dialog).getByRole("list")).toHaveTextContent(/Wed, Nov 18, in 8 days.*Fri, Dec 18.*Mon, Jan 18, 2027/);
     expect(dialog).toHaveTextContent("Visa");
 
     await user.click(within(dialog).getByRole("button", { name: "Pause" }));

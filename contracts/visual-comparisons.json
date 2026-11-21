@@ -1353,19 +1353,14 @@
         ],
         "deviations": [
           {
-            "summary": "The subtitle adds sync wording; rows use gray tiles, have no chevron, and a paused row isn't dimmed; the header sits inside the card",
-            "kind": "follow-up",
-            "ref": "MAZ-232"
-          },
-          {
-            "summary": "The shared Streaming row puts the Shared badge under the amount instead of beside the title, keeps the household's name on the timing line, and uses a gray people glyph instead of the category tile; Payday's account wraps after a stranded \"·\" instead of taking its own line",
-            "kind": "follow-up",
-            "ref": "MAZ-232"
-          },
-          {
             "summary": "No swipe actions: a row opens the schedule dialog, and the footer says so",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-conventions-maz-227"
+          },
+          {
+            "summary": "The seeded Streaming and Fun categories use icons the web kit doesn't have (tv, happy), so their tiles show a price tag",
+            "kind": "follow-up",
+            "ref": "MAZ-232"
           }
         ]
       }
@@ -1404,7 +1399,7 @@
             "ref": "docs/reference/redesign.md#web-conventions-maz-227"
           },
           {
-            "summary": "The amount is unsigned; a green Active pill; Edit isn't the copper primary; NEXT and DETAILS aren't grouped cards",
+            "summary": "The seeded Fun category uses an icon the web kit doesn't have (happy), so the tile shows a price tag",
             "kind": "follow-up",
             "ref": "MAZ-232"
           }
@@ -1436,19 +1431,12 @@
         ]
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-89",
         "capture": "402x874",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "The subtitle and footer wording differ, names are bold, and an Add account button is added",
-            "kind": "follow-up",
-            "ref": "MAZ-232"
-          }
         ]
       }
     },
@@ -1486,7 +1474,7 @@
             "ref": "docs/reference/redesign.md#web-conventions-maz-227"
           },
           {
-            "summary": "Sentence-case labels instead of NAME and TYPE headers; the selected type has no check badge; the helper adds a sentence",
+            "summary": "An account in use offers Move them to and Move and remove instead of the card's locked Remove account row. Waiting for a design decision",
             "kind": "follow-up",
             "ref": "MAZ-232"
           }
@@ -1522,7 +1510,7 @@
         ],
         "deviations": [
           {
-            "summary": "The header reads N EXPENSE CATEGORIES, the footer differs, names are bold, and there is no reordering; in dark the kind control's selection is hard to see",
+            "summary": "No Edit button, drag handles or Drag to reorder, and the footer explains renaming and removing instead of the first-three shortcuts, which follow use on the web. Waiting for a design decision",
             "kind": "follow-up",
             "ref": "MAZ-232"
           }
@@ -1568,7 +1556,7 @@
             "ref": "docs/reference/redesign.md#web-conventions-maz-227"
           },
           {
-            "summary": "Labelled Name and Kind fields, swatches and icons not in grouped cards, eight colors and about 26 icons instead of five and 18; in dark the selected kind reads as a hole",
+            "summary": "Eight colors (on two rows) and 26 icons instead of the card's five and 18, as iOS offers more too. Waiting for a design decision",
             "kind": "follow-up",
             "ref": "MAZ-232"
           }

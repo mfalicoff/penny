@@ -3,14 +3,15 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { kindLabels, type Kind, type Ledger, type Recurring } from "@domain/ledger.ts";
 import { ledgerQuery } from "../../api/ledger";
 import { useAccountEmail } from "../../auth/account";
-import { Badge, Button, Card } from "../../design/controls";
+import { Badge, cx } from "../../design/controls";
 import { Icon } from "../../design/Icon";
 import { Money } from "../../design/Money";
+import { GroupToolbar, ToolButton } from "../households/GroupTools";
 import { GroupLink } from "../households/links";
 import { Banner, EmptyState, ErrorState, LoadingState } from "../../design/states";
 import { useLedgerEngine, useLedgerSync } from "../../offline/OfflineLedgerProvider";
 import { parseLedger } from "../../offline/wire";
-import { accountOf, FREQUENCY_LABELS, KIND_HEADINGS, KIND_ORDER, rowAmount, shortDay, sortSchedules, TONE, type ScheduleView } from "./model";
+import { accountOf, categoryOf, FREQUENCY_LABELS, KIND_HEADINGS, KIND_ORDER, rowAmount, scheduleTile, shortDay, sortSchedules, TONE, type ScheduleView } from "./model";
 import { RemoveScheduleDialog, ScheduleDetailDialog } from "./ScheduleDetail";
 import { ScheduleFormDialog } from "./ScheduleForm";
 import { useSharedSchedules, type SharedSchedule } from "./shared";
@@ -77,17 +78,18 @@ export function RecurringPage() {
   const close = () => {
     setView(null);
   };
+  // The card's toolbar + (the navigation bar's tool slot, as on Trips).
   const create = readOnly ? null : (
-    <Button
-      ref={newButton}
-      variant="primary"
-      icon="add"
-      onClick={() => {
-        setView({ kind: "new" });
-      }}
-    >
-      New schedule
-    </Button>
+    <GroupToolbar>
+      <ToolButton
+        ref={newButton}
+        icon="add"
+        label="New schedule"
+        onClick={() => {
+          setView({ kind: "new" });
+        }}
+      />
+    </GroupToolbar>
   );
 
   const items: (Item & { kind: Kind })[] = [
@@ -102,17 +104,11 @@ export function RecurringPage() {
     })),
   ];
   const groups = KIND_ORDER.map((kind) => ({ kind, items: sortSchedules(items.filter((item) => item.kind === kind)) })).filter((group) => group.items.length);
-  const paused = items.filter((item) => !item.active).length;
 
   return (
     <div className="page recurring">
-      <div className="recurring__head">
-        <p className="muted">
-          Penny records these on their date, on this device first, and syncs them.
-          {items.length ? ` ${String(items.length - paused)} active${paused ? `, ${String(paused)} paused` : ""}.` : ""}
-        </p>
-        {create}
-      </div>
+      {create}
+      <p className="page__subtitle">Penny records these on their date.</p>
       {readOnly ? (
         <Banner tone="info" title="Sample schedules">
           The demo shows schedules but doesn't save changes. Sign in to manage your own.
@@ -125,8 +121,11 @@ export function RecurringPage() {
         </EmptyState>
       ) : (
         groups.map((group) => (
-          <Card key={group.kind} title={KIND_HEADINGS[group.kind]}>
-            <ul className="row-list" aria-label={`${kindLabels[group.kind]} schedules`}>
+          <section key={group.kind} className="recurring-group" aria-labelledby={`recurring-${group.kind}`}>
+            <h2 id={`recurring-${group.kind}`} className="group-label">
+              {KIND_HEADINGS[group.kind]}
+            </h2>
+            <ul className="group-list group-list--inset" aria-label={`${kindLabels[group.kind]} schedules`}>
               {group.items.map((item) => (
                 <li key={item.key}>
                   {"personal" in item ? (
@@ -144,10 +143,10 @@ export function RecurringPage() {
                 </li>
               ))}
             </ul>
-          </Card>
+          </section>
         ))
       )}
-      <p className="note">
+      <p className="group-note">
         Open a schedule to edit, pause or remove it. Edits change future dates only; removing a schedule keeps the entries it already recorded.
         {shared.length ? " Shared schedules open their household and count only your share." : ""}
       </p>
@@ -182,62 +181,81 @@ export function RecurringPage() {
   );
 }
 
+/** "Monthly · next Nov 18", or "Paused · monthly" as a tag while paused (the card's Gym row). */
+function Timing({ rule }: { rule: { active: boolean; frequency: keyof typeof FREQUENCY_LABELS; nextDate: string } }) {
+  if (!rule.active) {
+    return (
+      <span className="schedule-row__line">
+        <Badge icon="pause">Paused · {FREQUENCY_LABELS[rule.frequency].toLowerCase()}</Badge>
+      </span>
+    );
+  }
+  return (
+    <span>
+      {FREQUENCY_LABELS[rule.frequency]} · next <time dateTime={rule.nextDate}>{shortDay(rule.nextDate)}</time>
+    </span>
+  );
+}
+
 function ScheduleRow({ rule, ledger, waiting, onOpen }: { rule: Recurring; ledger: Ledger; waiting: boolean; onOpen: () => void }) {
   const account = accountOf(ledger, rule.accountId);
-  const meta = rule.active ? (
-    <>
-      {FREQUENCY_LABELS[rule.frequency]} · next <time dateTime={rule.nextDate}>{shortDay(rule.nextDate)}</time>
-    </>
-  ) : (
-    <>Paused · {FREQUENCY_LABELS[rule.frequency].toLowerCase()}</>
-  );
+  const tile = scheduleTile(rule.kind, categoryOf(ledger, rule.categoryId));
   return (
-    <button type="button" className="row schedule-row" onClick={onOpen} aria-haspopup="dialog">
-      <span className="schedule-row__icon" aria-hidden="true">
-        <Icon name={rule.active ? "repeat" : "pause"} size={18} weight={40} />
+    <button type="button" className={cx("schedule-row", !rule.active && "schedule-row--paused")} onClick={onOpen} aria-haspopup="dialog">
+      <span className="category-dot schedule-row__tile" style={tile.style} aria-hidden="true">
+        <Icon name={tile.icon} size={19} weight={40} />
       </span>
       <span className="schedule-row__text">
-        <span className="row__title">{rule.title}</span>
-        <span className="row__meta">
-          {meta}
-          {account ? ` · ${account.name}` : ""}
+        <span className="schedule-row__title">{rule.title}</span>
+        {/* The account follows the timing, or takes its own line when both don't fit (no stranded "·"). */}
+        <span className="schedule-row__meta inline-list">
+          <span className="inline-list__items">
+            <Timing rule={rule} />
+            {account ? (
+              <span>
+                <span className="visually-hidden"> · </span>
+                {account.name}
+              </span>
+            ) : null}
+          </span>
         </span>
       </span>
-      <span className="row__end">
+      <span className="schedule-row__end">
         <Money {...rowAmount(rule.kind, rule.share)} currency={ledger.currency} tone={TONE[rule.kind]} />
-        {!rule.active ? <Badge>Paused</Badge> : null}
         {waiting ? <Badge tone="pending">Waiting to sync</Badge> : null}
       </span>
+      <Icon name="chevron-forward" size={14} weight={56} />
     </button>
   );
 }
 
 function SharedScheduleRow({ schedule }: { schedule: SharedSchedule }) {
   const { rule, household, shareCents } = schedule;
-  const meta = rule.active ? (
-    <>
-      {FREQUENCY_LABELS[rule.frequency]} · next <time dateTime={rule.nextDate}>{shortDay(rule.nextDate)}</time>
-    </>
-  ) : (
-    <>Paused · {FREQUENCY_LABELS[rule.frequency].toLowerCase()}</>
-  );
+  const tile = scheduleTile("expense", rule.category);
   return (
-    <GroupLink route={household.trip ? "trips" : "households"} householdId={household.id} search={{ rule: schedule.rule.id }} className="row schedule-row">
-      <span className="schedule-row__icon" aria-hidden="true">
-        <Icon name={rule.active ? "people" : "pause"} size={18} weight={40} />
+    <GroupLink
+      route={household.trip ? "trips" : "households"}
+      householdId={household.id}
+      search={{ rule: schedule.rule.id }}
+      className={cx("schedule-row", !rule.active && "schedule-row--paused")}
+    >
+      <span className="category-dot schedule-row__tile" style={tile.style} aria-hidden="true">
+        <Icon name={tile.icon} size={19} weight={40} />
       </span>
       <span className="schedule-row__text">
-        <span className="row__title">{rule.title}</span>
-        <span className="row__meta">
-          {meta} · {household.name}
+        <span className="schedule-row__title">
+          {rule.title} <Badge icon="people">Shared</Badge>
         </span>
+        <span className="schedule-row__meta">
+          <Timing rule={rule} />
+        </span>
+        <span className="schedule-row__meta">{household.name}</span>
       </span>
-      <span className="row__end">
+      <span className="schedule-row__end">
         <Money {...rowAmount("expense", shareCents)} currency={household.currency} />
-        <span className="row__meta">your share</span>
-        <Badge icon="people">Shared</Badge>
-        {!rule.active ? <Badge>Paused</Badge> : null}
+        <span className="schedule-row__share">your share</span>
       </span>
+      <Icon name="chevron-forward" size={14} weight={56} />
     </GroupLink>
   );
 }

@@ -100,11 +100,13 @@ interface DialogProps {
   /** Keyboard hint on the left of the footer. */
   hint?: ReactNode;
   wide?: boolean;
+  /** `grouped`: the body is the sheet background, for solid grouped sections as in the cards. */
+  grouped?: boolean;
   children?: ReactNode;
 }
 
 /** The web dialog from the design kit: header with a close button, body, footer with actions. */
-export function Dialog({ title, description, onClose, initialFocus, actions, hint, wide, children }: DialogProps) {
+export function Dialog({ title, description, onClose, initialFocus, actions, hint, wide, grouped, children }: DialogProps) {
   const titleId = useId();
   const descriptionId = useId();
   return (
@@ -113,7 +115,7 @@ export function Dialog({ title, description, onClose, initialFocus, actions, hin
       {...(description ? { describedBy: descriptionId } : {})}
       onClose={onClose}
       {...(initialFocus ? { initialFocus } : {})}
-      panelClassName={wide ? "pk-dialog dialog__panel--wide" : "pk-dialog"}
+      panelClassName={["pk-dialog", wide && "dialog__panel--wide", grouped && "pk-dialog--grouped"].filter(Boolean).join(" ")}
     >
       <div className="pk-dialog__head">
         <h2 id={titleId}>{title}</h2>

@@ -2,9 +2,11 @@ import { removeSchedule, setScheduleActive } from "@domain/commands.ts";
 import { dateKey, type Ledger, type Recurring } from "@domain/ledger.ts";
 import { Badge, Button } from "../../design/controls";
 import { Dialog } from "../../design/ModalDialog";
+import { tileStyle } from "../../design/categoryTint";
+import { Icon } from "../../design/Icon";
 import { Money } from "../../design/Money";
 import { SaveErrorBanner, useToast } from "../../design/states";
-import { accountOf, cadenceLabel, categoryOf, dayLabel, relativeDay, resumeDate, shortDay, TONE, upcomingDates, type ScheduleView } from "./model";
+import { accountOf, cadenceLabel, categoryOf, dayLabel, relativeDay, resumeDate, rowAmount, scheduleTile, shortDay, TONE, upcomingDates, type ScheduleView } from "./model";
 import { savedDetail, useScheduleSave } from "./save";
 
 interface DetailProps {
@@ -17,9 +19,10 @@ interface DetailProps {
 }
 
 /**
- * Schedule detail (card `iphone-schedule-detail`, specimen `schedule`): amount and cadence, Edit,
- * a separate Pause or Resume, the next dates, details, and Remove schedule, which asks first. It
- * follows the live ledger, so a sync or another tab updates it while it is open.
+ * Schedule detail (card `iphone-schedule-detail`, specimen `schedule`): the category tile, the
+ * signed amount and cadence, Edit (the copper primary) beside Pause or Resume, the next dates and
+ * the details as solid groups, and Remove schedule, which asks first. It follows the live ledger,
+ * so a sync or another tab updates it while it is open.
  */
 export function ScheduleDetailDialog({ ledger, id, waiting, readOnly, onClose, onNavigate }: DetailProps) {
   const toast = useToast();
@@ -44,7 +47,7 @@ export function ScheduleDetailDialog({ ledger, id, waiting, readOnly, onClose, o
   const today = dateKey();
   const category = categoryOf(ledger, rule.categoryId);
   const account = accountOf(ledger, rule.accountId);
-  const recorded = ledger.transactions.filter((entry) => entry.recurringId === rule.id).length;
+  const tile = scheduleTile(rule.kind, category);
   const next = upcomingDates(rule, 3);
   const resumesOn = resumeDate(rule, today);
 
@@ -59,7 +62,7 @@ export function ScheduleDetailDialog({ ledger, id, waiting, readOnly, onClose, o
   }
 
   return (
-    <Dialog title={rule.title} description={cadenceLabel(rule)} onClose={onClose} wide>
+    <Dialog title={rule.title} onClose={onClose} grouped>
       <div className="schedule-detail">
         {error ? (
           <SaveErrorBanner
@@ -71,15 +74,22 @@ export function ScheduleDetailDialog({ ledger, id, waiting, readOnly, onClose, o
           />
         ) : null}
         <div className="schedule-detail__summary">
-          <Money cents={rule.share} currency={ledger.currency} tone={TONE[rule.kind]} className="schedule-detail__amount" />
-          <span className="schedule-detail__badges">
-            {rule.active ? <Badge tone="income" icon="repeat">Active</Badge> : <Badge icon="pause">Paused</Badge>}
-            {waiting ? <Badge tone="pending" icon="cloud-offline">Waiting to sync</Badge> : null}
+          <span className="category-dot schedule-detail__tile" style={tile.style} aria-hidden="true">
+            <Icon name={tile.icon} size={28} weight={40} />
           </span>
+          <Money {...rowAmount(rule.kind, rule.share)} currency={ledger.currency} tone={TONE[rule.kind]} className="schedule-detail__amount" />
+          <p className="schedule-detail__cadence">{cadenceLabel(rule)}</p>
+          {!rule.active || waiting ? (
+            <span className="schedule-detail__badges">
+              {rule.active ? null : <Badge icon="pause">Paused</Badge>}
+              {waiting ? <Badge tone="pending" icon="cloud-offline">Waiting to sync</Badge> : null}
+            </span>
+          ) : null}
         </div>
         {readOnly ? null : (
-          <div className="shared-actions">
+          <div className="schedule-detail__actions">
             <Button
+              variant="primary"
               icon="create"
               onClick={() => {
                 onNavigate({ kind: "edit", rule });
@@ -88,6 +98,7 @@ export function ScheduleDetailDialog({ ledger, id, waiting, readOnly, onClose, o
               Edit
             </Button>
             <Button
+              className="schedule-detail__solid"
               icon={rule.active ? "pause" : "play"}
               busy={saving}
               onClick={() => {
@@ -100,53 +111,69 @@ export function ScheduleDetailDialog({ ledger, id, waiting, readOnly, onClose, o
         )}
 
         <section className="schedule-detail__section" aria-labelledby={`${rule.id}-next`}>
-          <h3 id={`${rule.id}-next`}>Next</h3>
+          <h3 id={`${rule.id}-next`} className="group-label">
+            Next
+          </h3>
           {rule.active ? (
             next.length ? (
-              <ol className="schedule-dates">
+              <ol className="group-list schedule-dates">
                 {next.map((date, index) => (
                   <li key={date}>
                     <time dateTime={date}>{dayLabel(date, date.slice(0, 4) !== today.slice(0, 4))}</time>
-                    {index === 0 ? <span className="muted"> · {relativeDay(date, today)}</span> : null}
+                    {index === 0 ? (
+                      <span className="schedule-dates__when">
+                        <span className="visually-hidden">, </span>
+                        {relativeDay(date, today)}
+                      </span>
+                    ) : null}
                   </li>
                 ))}
               </ol>
             ) : (
-              <p className="note">No more dates: the ledger ends on Dec 31, 2100.</p>
+              <p className="group-note">No more dates: the ledger ends on Dec 31, 2100.</p>
             )
           ) : (
-            <p className="note">
+            <p className="group-list schedule-detail__paused">
               Paused: Penny records nothing and skips its dates. If you resume today it continues on <time dateTime={resumesOn}>{dayLabel(resumesOn, true)}</time>.
             </p>
           )}
         </section>
 
         <section className="schedule-detail__section" aria-labelledby={`${rule.id}-details`}>
-          <h3 id={`${rule.id}-details`}>Details</h3>
-          <dl className="detail-grid">
-            <dt>Category</dt>
-            <dd>{category?.name ?? "Removed category"}</dd>
-            <dt>Account</dt>
-            <dd>{account?.name ?? (rule.accountId ? "Removed account" : "None")}</dd>
+          <h3 id={`${rule.id}-details`} className="group-label">
+            Details
+          </h3>
+          <dl className="group-list schedule-facts">
+            <div>
+              <dt>Category</dt>
+              <dd>
+                {category ? <span className="schedule-facts__dot" style={tileStyle({ id: category.id, color: category.color })} aria-hidden="true" /> : null}
+                {category?.name ?? "Removed category"}
+              </dd>
+            </div>
+            <div>
+              <dt>Account</dt>
+              <dd>{account?.name ?? (rule.accountId ? "Removed account" : "None")}</dd>
+            </div>
             {rule.share !== rule.total ? (
-              <>
+              <div>
                 <dt>Total</dt>
                 <dd>
                   <Money cents={rule.total} currency={ledger.currency} tone="muted" /> (your share <Money cents={rule.share} currency={ledger.currency} tone="muted" />)
                 </dd>
-              </>
+              </div>
             ) : null}
-            <dt>Started</dt>
-            <dd>
-              <time dateTime={rule.date}>{dayLabel(rule.date, true)}</time>
-            </dd>
-            <dt>Recorded</dt>
-            <dd>{recorded === 1 ? "1 entry" : `${String(recorded)} entries`} in your activity</dd>
+            <div>
+              <dt>Started</dt>
+              <dd>
+                <time dateTime={rule.date}>{shortDay(rule.date)}, {rule.date.slice(0, 4)}</time>
+              </dd>
+            </div>
             {rule.note ? (
-              <>
+              <div>
                 <dt>Note</dt>
                 <dd>{rule.note}</dd>
-              </>
+              </div>
             ) : null}
           </dl>
         </section>
@@ -162,7 +189,7 @@ export function ScheduleDetailDialog({ ledger, id, waiting, readOnly, onClose, o
             >
               Remove schedule
             </Button>
-            <span className="note">Past entries stay in your activity.</span>
+            <span className="group-note">Past entries stay in your activity.</span>
           </div>
         )}
       </div>

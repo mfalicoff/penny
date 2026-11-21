@@ -1,6 +1,7 @@
 import { useId, useMemo, useState } from "react";
 import type { PaymentAccount } from "@domain/ledger.ts";
 import { Button } from "../../design/controls";
+import { GroupToolbar, ToolButton } from "../households/GroupTools";
 import { Banner, EmptyState, ErrorState, LoadingState, useToast } from "../../design/states";
 import { AccountFormDialog } from "./AccountFormDialog";
 import { OrganizeRow } from "./OrganizeRow";
@@ -31,33 +32,31 @@ export function AccountsPage() {
     );
   }
 
-  const add = (
-    <Button
-      variant="primary"
-      icon="add"
-      onClick={() => {
-        setForm({});
-      }}
-    >
-      Add account
-    </Button>
-  );
+  const open = () => {
+    setForm({});
+  };
 
   return (
     <div className="page organize">
+      {/* The card's toolbar + (the navigation bar's tool slot, as on Trips). */}
+      <GroupToolbar>
+        <ToolButton icon="add" label="Add account" onClick={open} />
+      </GroupToolbar>
       <RefusedRemovals workspace={workspace} />
-      <p className="organize__lede">Labels for how you pay and get paid. Choose one when you record an entry.</p>
+      <p className="page__subtitle">Labels for how you pay and get paid.</p>
       {ledger.accounts.length === 0 ? (
-        <EmptyState icon="wallet" title="Where your money lives" action={add}>
+        <EmptyState
+          icon="wallet"
+          title="Where your money lives"
+        >
           <p>Start with a bank account, a credit card or the cash in your pocket. Penny never connects to your bank and doesn't track balances.</p>
         </EmptyState>
       ) : (
         <section className="organize-section" aria-labelledby={headingId}>
-          <div className="organize-section__head">
-            <h2 id={headingId}>Your accounts</h2>
-            {add}
-          </div>
-          <ul className="group-list" aria-describedby={noteId}>
+          <h2 id={headingId} className="group-label">
+            Your accounts
+          </h2>
+          <ul className="group-list group-list--inset organize-list--accounts" aria-describedby={noteId}>
             {ledger.accounts.map((account) => (
               <OrganizeRow
                 key={account.id}
@@ -71,8 +70,8 @@ export function AccountsPage() {
               />
             ))}
           </ul>
-          <p id={noteId} className="note">
-            Penny never connects to your bank and doesn't track balances. An account linked to entries or schedules can be renamed, but not removed until those move to another account.
+          <p id={noteId} className="group-note">
+            Penny never connects to your bank and doesn't track balances. An account linked to entries or schedules can be renamed, but not removed until those are moved to another account.
           </p>
         </section>
       )}

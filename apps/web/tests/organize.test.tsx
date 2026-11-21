@@ -279,7 +279,7 @@ describe("categories", { timeout: 20_000 }, () => {
     const user = userEvent.setup();
     const { router } = renderApp("/categories");
     expect(await screen.findByRole("button", { name: "Edit Groceries" })).toHaveAccessibleDescription("2 entries, 1 schedule");
-    expect(screen.getByRole("heading", { name: "2 expense categories" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "2 categories" })).toBeInTheDocument();
 
     for (const [kind, label] of [["income", "Income"], ["investment", "Investment"], ["expense", "Expense"]] as const) {
       await user.click(screen.getByRole("radio", { name: label }));

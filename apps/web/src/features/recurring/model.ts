@@ -1,5 +1,9 @@
 import type { LedgerChange } from "@domain/commands.ts";
 import { cents, dateKey, nextOccurrence, parseDate, personalShare, uid, validDate, type Category, type Frequency, type Kind, type Ledger, type PaymentAccount, type Recurring } from "@domain/ledger.ts";
+import type { CSSProperties } from "react";
+import { tileStyle } from "../../design/categoryTint";
+import type { IconName } from "../../design/Icon";
+import { categoryIcon } from "../organize/model";
 
 /**
  * Personal recurring schedules (MAZ-90): labels, upcoming dates and the schedule form's draft.
@@ -261,3 +265,15 @@ export function addSchedule(rule: Recurring): LedgerChange {
 
 export const categoryOf = (ledger: Ledger, id: string): Category | undefined => ledger.categories.find((category) => category.id === id);
 export const accountOf = (ledger: Ledger, id: string | undefined): PaymentAccount | undefined => (id ? ledger.accounts.find((account) => account.id === id) : undefined);
+
+/**
+ * A schedule row's tile, as on the cards (`iphone-recurring`, `iphone-schedule-detail`): an
+ * expense shows its category's glyph on the category's color; income an arrow down on income
+ * green; an investment the trend line on investment indigo (iOS `ScheduleText.tileSymbol`).
+ */
+export function scheduleTile(kind: Kind, category: { id?: string; icon?: string; color?: string } | undefined): { icon: IconName; style: CSSProperties } {
+  const style = tileStyle({ id: category?.id, color: category?.color, entryKind: kind });
+  if (kind === "income") return { icon: "arrow-down", style };
+  if (kind === "investment") return { icon: "trending-up", style };
+  return { icon: categoryIcon(category?.icon ?? ""), style };
+}

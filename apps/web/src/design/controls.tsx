@@ -114,8 +114,11 @@ interface ChoiceGroupProps<T extends string> {
   value: T;
   options: ChoiceOption<T>[];
   onChange: (value: T) => void;
-  /** `segmented` is the kit's SegmentedControl; `cards` the appearance swatches. */
-  appearance?: "segmented" | "cards" | "list";
+  /**
+   * `segmented` is the kit's SegmentedControl; `cards` the appearance swatches; `tiles` the
+   * cards' type tiles (icon and label on a solid tile, a check badge on the selected one).
+   */
+  appearance?: "segmented" | "cards" | "list" | "tiles";
   describedBy?: string;
 }
 
@@ -144,6 +147,11 @@ export function ChoiceGroup<T extends string>({ legend, hideLegend, name, value,
             <span className="choice__label">{option.label}</span>
             {option.description ? <span className="choice__desc">{option.description}</span> : null}
             {appearance === "list" && option.value === value ? <Icon name="checkmark" size={18} weight={48} /> : null}
+            {appearance === "tiles" && option.value === value ? (
+              <span className="choice__check">
+                <Icon name="checkmark-circle" size={20} />
+              </span>
+            ) : null}
           </label>
         ))}
       </div>

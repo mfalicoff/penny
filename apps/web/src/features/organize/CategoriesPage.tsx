@@ -1,6 +1,7 @@
 import { useId, useMemo, useState } from "react";
 import { kinds, type Category, type Kind } from "@domain/ledger.ts";
-import { Button, ChoiceGroup } from "../../design/controls";
+import { ChoiceGroup } from "../../design/controls";
+import { GroupToolbar, ToolButton } from "../households/GroupTools";
 import { EmptyState, ErrorState, LoadingState } from "../../design/states";
 import { CategoryFormDialog } from "./CategoryFormDialog";
 import { OrganizeRow } from "./OrganizeRow";
@@ -33,20 +34,16 @@ export function CategoriesPage({ kind, onKindChange }: { kind: Kind; onKindChang
   }
 
   const list = ledger.categories.filter((category) => category.kind === kind);
-  const add = (
-    <Button
-      variant="primary"
-      icon="add"
-      onClick={() => {
-        setForm({});
-      }}
-    >
-      New category
-    </Button>
-  );
+  const open = () => {
+    setForm({});
+  };
 
   return (
     <div className="page organize">
+      {/* The card's toolbar + (the navigation bar's tool slot, as on Trips). */}
+      <GroupToolbar>
+        <ToolButton icon="add" label="New category" onClick={open} />
+      </GroupToolbar>
       <ChoiceGroup<Kind>
         legend="Kind"
         hideLegend
@@ -56,25 +53,25 @@ export function CategoriesPage({ kind, onKindChange }: { kind: Kind; onKindChang
         options={kinds.map((value) => ({ value, label: kindLabels[value] }))}
       />
       {list.length === 0 ? (
-        <EmptyState icon="pricetag" title={`No ${KIND_PLURAL[kind]}`} action={add}>
+        <EmptyState
+          icon="pricetag"
+          title={`No ${KIND_PLURAL[kind]}`}
+        >
           <p>Add one to sort your {kindLabels[kind].toLowerCase()} entries. You can rename it, recolor it or move its entries later.</p>
         </EmptyState>
       ) : (
         <section className="organize-section" aria-labelledby={headingId}>
-          <div className="organize-section__head">
-            <h2 id={headingId}>
-              {list.length} {list.length === 1 ? KIND_PLURAL[kind].replace("categories", "category") : KIND_PLURAL[kind]}
-            </h2>
-            {add}
-          </div>
-          <ul className="group-list">
+          <h2 id={headingId} className="group-label">
+            {list.length} {list.length === 1 ? "category" : "categories"}
+          </h2>
+          <ul className="group-list group-list--inset organize-list--categories">
             {list.map((category) => (
               <OrganizeRow
                 key={category.id}
                 name={category.name}
                 meta={usageText(usageOf(usage, category.id))}
                 icon={categoryIcon(category.icon)}
-                color={category.color}
+                tint={{ id: category.id, color: category.color }}
                 waiting={waiting.has(category.id)}
                 onOpen={() => {
                   setForm({ category });
@@ -82,7 +79,7 @@ export function CategoriesPage({ kind, onKindChange }: { kind: Kind; onKindChang
               />
             ))}
           </ul>
-          <p className="note">A category that entries use can be renamed or recolored at any time; to remove it, move its entries to another {kindLabels[kind].toLowerCase()} category.</p>
+          <p className="group-note">A category that entries use can be renamed or recolored at any time; to remove it, move its entries to another {kindLabels[kind].toLowerCase()} category.</p>
         </section>
       )}
       {form ? (

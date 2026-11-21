@@ -4,31 +4,18 @@
  * colors are the records' own (from the category palette).
  */
 
-.organize__lede {
-  margin: 0;
-  color: var(--pk-label-2);
-}
-
 .organize-section {
   display: grid;
-  gap: 8px;
+  gap: 7px;
 }
 
-.organize-section__head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px 12px;
+/* Separators start at the rows' text (cards `iphone-accounts` 58px, `iphone-categories` 62px). */
+.organize-list--accounts {
+  --inset: 58px;
 }
 
-.organize-section__head h2 {
-  margin: 0;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--pk-label-2);
+.organize-list--categories {
+  --inset: 62px;
 }
 
 /* A whole row opens the record's form. */
@@ -38,7 +25,7 @@
   align-items: center;
   gap: 4px 12px;
   width: 100%;
-  min-height: 56px;
+  min-height: 50px;
   padding: 8px 16px;
   border: 0;
   background: none;
@@ -66,8 +53,10 @@
   min-width: 0;
 }
 
+/* Names in regular weight, as in the cards' settings rows (`.sr`). */
 .organize-row__name {
-  font-weight: 600;
+  font-size: 1.0625rem;
+  font-weight: 400;
   overflow-wrap: anywhere;
 }
 
@@ -96,6 +85,7 @@
   width: 34px;
   height: 34px;
   border-radius: 10px;
+  background: var(--tile, var(--pk-c-other));
   color: #fff;
 }
 
@@ -104,13 +94,6 @@
   height: 30px;
   border-radius: 8px;
   background: var(--pk-fill);
-  color: var(--pk-label);
-}
-
-.organize-type-icon {
-  display: grid;
-  place-items: center;
-  height: 36px;
   color: var(--pk-label);
 }
 
@@ -249,4 +232,71 @@
 
 .inline-create {
   justify-self: start;
+}
+
+/*
+ * The account and category forms (cards `iphone-account-form`, `iphone-category-form`, MAZ-232):
+ * on the sheet background (`Dialog grouped`), NAME, TYPE, COLOR and ICON are small upper-case
+ * headers over solid fields and groups.
+ */
+.organize-form .form-field > .group-label {
+  padding-inline: 16px;
+}
+
+.organize-form .form-field input {
+  min-height: 52px;
+  padding: 0 16px;
+  border-color: transparent;
+  border-radius: 16px;
+  font-size: 1.0625rem;
+}
+
+.organize-form .group-note {
+  margin-top: -6px;
+}
+
+.organize-form .organize-swatches > .group-label,
+.organize-form .organize-icons > .group-label,
+.organize-form .choices--tiles > .choices__legend {
+  margin-bottom: 7px;
+  padding: 0 16px;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.organize-form .organize-swatches__options {
+  gap: 4px 6px;
+  padding: 10px 12px;
+  border-radius: 22px;
+  background: var(--pk-surface);
+}
+
+.organize-form .organize-swatch__dot {
+  width: 36px;
+  height: 36px;
+}
+
+.organize-form .organize-icons__options {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+  padding: 14px;
+  border-radius: 22px;
+  background: var(--pk-surface);
+}
+
+.organize-form .organize-icon {
+  min-width: 0;
+  aspect-ratio: 1;
+}
+
+.organize-form .organize-icon__glyph {
+  width: 100%;
+  height: 100%;
+}
+
+.organize-remove .form-field select {
+  background: var(--pk-surface);
 }
