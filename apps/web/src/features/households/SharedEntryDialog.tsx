@@ -38,7 +38,7 @@ export function SharedEntryDialog({ householdId, seed, scope, onClose }: { house
       : null;
   return (
     <Dialog
-      title="Add entry"
+      title="New expense"
       {...(reason ? { description: reason } : {})}
       onClose={onClose}
       initialFocus={backRef}

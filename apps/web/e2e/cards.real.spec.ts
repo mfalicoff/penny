@@ -83,22 +83,31 @@ async function addEntry(p: Page, from: { activity: string } | null = null) {
   if (from) await activity(p, from.activity);
   else await home(p);
   await p.getByRole("button", { name: "Add entry" }).first().click();
-  const dialog = p.getByRole("dialog", { name: "Add entry" });
+  const dialog = p.getByRole("dialog", { name: "New entry" });
   await expect(dialog.getByLabel("Title")).toBeVisible();
   return dialog;
 }
 
-/** The cards' expense draft: $74.40 Dinner with friends on Visa, the amount still being typed. */
+/** The cards' expense draft: $74.40 Dinner with friends on Visa, split 3 ways, the amount still being typed. */
 async function draftDinner(dialog: ReturnType<Page["getByRole"]>) {
   await dialog.getByLabel("Title").fill("Dinner with friends");
   await dialog.getByLabel("Account").selectOption({ label: "Visa" });
   await dialog.getByLabel("Amount (CAD)").fill("74.40");
+  const split = dialog.getByRole("button", { name: /^Split/ });
+  await split.click();
+  await dialog.getByRole("group", { name: "Split" }).getByRole("radio", { name: "Equally" }).check({ force: true });
+  await dialog.getByRole("button", { name: "More people" }).click();
+  await expect(split).toContainText("$24.80 yours");
+  // Split closes again, as on the cards, and the amount keeps focus.
+  await split.click();
+  await dialog.getByLabel("Amount (CAD)").focus();
 }
 
+/** The phone's "Receipt, repeat, trip" row, open (`iphone-entry-extras`). */
 async function moreDetails(p: Page) {
   const dialog = await addEntry(p);
-  await dialog.getByRole("button", { name: /^More details/ }).click();
-  await expect(dialog.getByRole("group", { name: "Your share" })).toBeVisible();
+  await dialog.getByRole("button", { name: /^Receipt, repeat, trip/ }).click();
+  await expect(dialog.getByRole("group", { name: "Receipt" })).toBeVisible();
   return dialog;
 }
 
@@ -290,7 +299,7 @@ const cards: Record<string, Card> = {
     open: async ({ page: p }) => {
       await draftDinner(await addEntry(p));
     },
-    note: "A keyboard form in a dialog: no large amount or keypad.",
+    note: "A keyboard form in a dialog: no keypad (MAZ-227).",
   },
   "iphone-add-income": {
     open: async ({ page: p }) => {
@@ -316,27 +325,27 @@ const cards: Record<string, Card> = {
       await (await chooser).setFiles({ name: "receipt.png", mimeType: "image/png", buffer: syntheticPng() });
       const receipt = dialog.getByRole("group", { name: "Receipt" });
       await expect(receipt.getByRole("button", { name: "Preview receipt.png" })).toBeVisible();
-      await scrollTo(p, dialog.getByRole("group", { name: "Your share" }));
+      await scrollTo(p, receipt);
     },
-    note: "More details expands inside the form (share, repeat, trip, note, receipt) instead of opening its own page.",
+    note: "Receipt, repeat, trip expands inside the form instead of opening its own sheet (MAZ-227).",
   },
   "iphone-split": {
     open: async ({ page: p }) => {
-      const dialog = await moreDetails(p);
+      const dialog = await addEntry(p);
       await dialog.getByLabel("Amount (CAD)").fill("74.40");
       await dialog.getByLabel("Title").fill("Dinner with friends");
-      const share = dialog.getByRole("group", { name: "Your share" });
+      await dialog.getByRole("button", { name: /^Split/ }).click();
+      const split = dialog.getByRole("group", { name: "Split" });
       // By keyboard: on a phone the dialog's sticky footer covers the group until it scrolls.
-      await share.getByRole("radio", { name: "All mine" }).focus();
+      await split.getByRole("radio", { name: "All mine" }).focus();
       await p.keyboard.press("ArrowRight");
-      await expect(share.getByRole("radio", { name: "Split equally" })).toBeChecked();
-      await scrollTo(p, share);
+      await expect(split.getByRole("radio", { name: "Equally" })).toBeChecked();
       // The card splits equally between 3 people (as the iOS capture does).
-      await dialog.getByRole("textbox", { name: "Number of people" }).fill("3");
+      await dialog.getByRole("button", { name: "More people" }).click();
       await expect(dialog.getByRole("status").filter({ hasText: "Your share" })).toContainText("$24.80");
-      await scrollTo(p, share);
+      await scrollTo(p, split);
     },
-    note: "The draft amount and title are typed to match the card ($74.40, Dinner with friends); the split is in the form, not a separate page.",
+    note: "The draft amount and title are typed to match the card ($74.40, Dinner with friends); Split expands inside the form instead of a stacked sheet (MAZ-227).",
   },
   "iphone-category-picker": {
     open: async ({ page: p }) => {
@@ -387,7 +396,7 @@ const cards: Record<string, Card> = {
     open: async (run) => {
       await maison(run);
       await run.page.getByRole("button", { name: "Shared expense" }).click();
-      const dialog = run.page.getByRole("dialog", { name: "Add entry" });
+      const dialog = run.page.getByRole("dialog", { name: "New expense" });
       await expect(dialog).toBeVisible();
       // The card's draft: $96.30 Hydro (as the iOS capture types it).
       await dialog.getByLabel("Title").fill("Hydro");
@@ -596,7 +605,11 @@ const cards: Record<string, Card> = {
   "ipad-activity": {
     open: ({ page: p }) => partyDetail(p),
   },
-  "ipad-add-entry": { open: ({ page: p }) => addEntry(p) },
+  "ipad-add-entry": {
+    open: async ({ page: p }) => {
+      await draftDinner(await addEntry(p));
+    },
+  },
   "ipad-shared": { open: (run) => maison(run) },
   "ipad-trip": { open: (run) => lisbon(run) },
   "ipad-settings": { open: ({ page: p }) => page(p, "/settings", "Settings") },

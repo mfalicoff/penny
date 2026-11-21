@@ -433,11 +433,6 @@
             "summary": "Add entry is a dialog with labelled fields and a Cancel/Save footer, with keyboard entry and no keypad",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-conventions-maz-227"
-          },
-          {
-            "summary": "The amount is an ordinary input; the type reads Investment; there is no Split row (a Household select instead); the selected chip is copper, not the category color",
-            "kind": "follow-up",
-            "ref": "MAZ-226"
           }
         ]
       }
@@ -484,11 +479,6 @@
             "summary": "Add entry is a dialog with labelled fields and a Cancel/Save footer, with keyboard entry and no keypad",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-conventions-maz-227"
-          },
-          {
-            "summary": "No large green +amount; the Salary chip is copper; Repeat and Note sit under More details",
-            "kind": "follow-up",
-            "ref": "MAZ-226"
           }
         ]
       }
@@ -537,7 +527,7 @@
             "ref": "docs/reference/redesign.md#web-conventions-maz-227"
           },
           {
-            "summary": "Sections are ordered Your share, Repeat, Trip, Note, Receipt; Repeat is a select with no helper, Trip a select, and Note has no placeholder",
+            "summary": "A Household choice follows Note (design decision)",
             "kind": "follow-up",
             "ref": "MAZ-226"
           }
@@ -586,11 +576,6 @@
             "summary": "Your share is a section of the form with Discard and Keep draft, not a stacked Split sheet",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-conventions-maz-227"
-          },
-          {
-            "summary": "The share is a small pink-tinted banner, not a solid YOUR SHARE card with a large amount; the segment reads Split equally and the explanation differs",
-            "kind": "follow-up",
-            "ref": "MAZ-226"
           }
         ]
       }
@@ -615,19 +600,12 @@
         ]
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-88",
         "capture": "402x874",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "No Edit categories link at the end of the picker",
-            "kind": "follow-up",
-            "ref": "MAZ-226"
-          }
         ]
       }
     },
@@ -1055,7 +1033,7 @@
             "ref": "docs/reference/redesign.md#web-conventions-maz-227"
           },
           {
-            "summary": "Titled Add entry, not New expense with the household as subtitle; no hero amount",
+            "summary": "Paid by is bordered choices, not filled pills; the split lists people without checkmarks and adds a status line; the category isn't in the title field; Repeat, Note and Receipt sit under More details",
             "kind": "follow-up",
             "ref": "MAZ-226"
           },
@@ -2517,7 +2495,7 @@
             "ref": "docs/reference/redesign.md#web-conventions-maz-227"
           },
           {
-            "summary": "Not two panes; the amount is an input; Save is in the footer; the type reads Investment; no Split row; the selected chip is copper",
+            "summary": "A Household choice follows Note (design decision)",
             "kind": "follow-up",
             "ref": "MAZ-226"
           }
@@ -3048,7 +3026,7 @@
             "ref": "docs/reference/redesign.md#web-conventions-maz-227"
           },
           {
-            "summary": "No hero amount; not two panes; titled Add entry, not New entry; Save, not Add expense; Investment, not Invest; Split, Repeat, Trip and the receipt under More details; the selected chip is copper",
+            "summary": "Note and a Household choice follow the receipt drop zone; the card draws neither (design decision)",
             "kind": "follow-up",
             "ref": "MAZ-226"
           }

@@ -1,17 +1,16 @@
-import { kinds, type Category, type Kind, type Receipt } from "@domain/ledger.ts";
+import type { Category, Receipt } from "@domain/ledger.ts";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useId, useMemo, useRef, useState, type KeyboardEvent, type SyntheticEvent } from "react";
 import { ApiError } from "../../api/client";
 import { createExpense, createRule, expenseQuery, recurringQuery, refreshHousehold, timezoneOffsetMinutes, updateExpense, updateRule } from "../../api/households";
 import type { Allocation, ExpenseInput, Frequency, HouseholdMember, SharedCategory, SharedExpense, SharedRecurring, SplitMode } from "../../api/schemas";
 import { useAccountEmail } from "../../auth/account";
-import { Avatar, Button, ChoiceGroup, cx, Kbd, SwitchRow } from "../../design/controls";
+import { Avatar, Button, ChoiceGroup, Kbd, SwitchRow } from "../../design/controls";
 import { Icon } from "../../design/Icon";
-import { tileStyle } from "../../design/categoryTint";
-import { Dialog } from "../../design/ModalDialog";
 import { Banner, SaveErrorBanner, useToast } from "../../design/states";
-import { categoryIcon, frequentCategories, kindLabels, mostUsedCategories } from "../entries/model";
+import { frequentCategories, mostUsedCategories } from "../entries/model";
 import { CategoryPickerDialog } from "../entries/pickers";
+import { AmountHero, CategoryChips, DateRowInput, DetailList, DetailRow, EntryDialog, isMac, useEntryLayout } from "../entries/EntryParts";
 import { HouseholdField, type EntrySeed, type HouseholdScope } from "../entries/scope";
 import { ReceiptField } from "../receipts/ReceiptField";
 import { useLedgerWorkspace } from "../organize/workspace";
@@ -181,6 +180,7 @@ export function ExpenseFormDialog({
   const dateRef = useRef<HTMLInputElement>(null);
   const payerRef = useRef<HTMLFieldSetElement>(null);
   const splitRef = useRef<HTMLDivElement>(null);
+  const layout = useEntryLayout();
   const ids = { form: useId(), title: useId(), amount: useId(), date: useId(), category: useId(), account: useId(), note: useId(), repeat: useId(), more: useId(), error: useId(), splitStatus: useId() };
 
   const paid = target.kind === "edit" && isPaid(target.expense);
@@ -372,36 +372,13 @@ export function ExpenseFormDialog({
   const failure = save.isError && !conflict ? describeSharedError(save.error) : null;
   const retryable = failure && (failure.kind === "offline" || failure.kind === "unreachable" || failure.kind === "other");
   const isNew = target.kind === "new";
-  const title = isNew ? "Add entry" : target.kind === "rule" ? "Edit repeating expense" : "Edit expense";
+  const title = isNew ? "New expense" : target.kind === "rule" ? "Edit repeating expense" : "Edit expense";
   const payerIsMe = meId !== undefined && draft.payerUserId === meId;
   const chosenChip = ledgerCategories.find((category) => category.name === draft.category);
   const newScope = isNew ? scope : undefined;
 
-  return (
-    <Dialog
-      title={title}
-      {...(newScope ? {} : { description: `${view.detail.household.name} · everyone sees the full total; reports count only each person's share.` })}
-      onClose={onClose}
-      initialFocus={paid ? titleRef : amountRef}
-      wide
-      hint={
-        <>
-          <Kbd>{isMac() ? "⌘" : "Ctrl"}</Kbd>
-          <Kbd>↵</Kbd> to save · <Kbd>Esc</Kbd> to close
-        </>
-      }
-      actions={
-        <>
-          <Button variant="quiet" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="submit" form={ids.form} variant="primary" busy={save.isPending || conflict !== null} aria-keyshortcuts="Meta+Enter Control+Enter">
-            {save.isPending ? "Saving…" : "Save"}
-          </Button>
-        </>
-      }
-    >
-      <form id={ids.form} className="form entry-form" onSubmit={onSubmit} onKeyDown={onKeyDown} noValidate aria-label={title}>
+  const notices = (
+    <>
         {conflict ? (
           <Banner
             tone="error"
@@ -438,235 +415,229 @@ export function ExpenseFormDialog({
         ) : null}
         {failure ? <SaveErrorBanner message={failure.message} {...(retryable && save.variables ? { onRetry: () => { save.mutate(save.variables); }, retrying: save.isPending } : {})} /> : null}
         {paid ? <p className="note">A share of this expense is already repaid, so its payer, total, month and shares can't change. You can still edit the title, category, note and day.</p> : null}
+    </>
+  );
+  const hasNotices = conflict !== null || failure !== null || paid;
+  const account = payerIsMe && choices.accounts.length ? (
+    <select id={ids.account} className="entry-row__select" value={draft.accountId} onChange={(event) => { set("accountId", event.currentTarget.value); }} aria-describedby={`${ids.account}-hint`}>
+      <option value="">None</option>
+      {choices.accounts.map((account) => (
+        // The server checks the account against its copy of your ledger, so one added on
+        // this device is shown but can't be chosen until it has synced.
+        <option key={account.id} value={account.id} disabled={!account.synced}>
+          {account.synced ? account.name : `${account.name} (waiting to sync)`}
+        </option>
+      ))}
+    </select>
+  ) : null;
 
-        {newScope ? (
-          <>
-            <ChoiceGroup<Kind>
-              legend="Type"
-              name="entry-kind"
-              value="expense"
-              onChange={(kind) => {
-                // Income and investments are personal only.
-                if (kind !== "expense") newScope.onChoose({ householdId: null, kind }, seedFromDraft());
-              }}
-              options={kinds.map((kind) => ({ value: kind, label: kindLabels[kind] }))}
-            />
-            <HouseholdField scope={newScope} seed={seedFromDraft} />
-          </>
-        ) : null}
-
-        <div className="form-grid">
-          <div className="form-field form-amount">
-            <label htmlFor={ids.amount}>Amount ({view.currency})</label>
-            <input
-              id={ids.amount}
-              ref={amountRef}
-              inputMode="decimal"
-              autoComplete="off"
-              placeholder="0.00"
-              value={draft.amount}
-              disabled={paid}
-              onChange={(event) => { set("amount", event.currentTarget.value); }}
-              {...describe("amount")}
-            />
-            {errorText("amount")}
-          </div>
-          <div className="form-field">
-            <label htmlFor={ids.title}>Title</label>
-            <input id={ids.title} ref={titleRef} maxLength={100} autoComplete="off" value={draft.title} onChange={(event) => { set("title", event.currentTarget.value); }} {...describe("title")} />
+  return (
+    <EntryDialog
+      layout={layout}
+      title={title}
+      subtitle={view.detail.household.name}
+      onClose={onClose}
+      initialFocus={paid ? titleRef : amountRef}
+      form={{ id: ids.form, onSubmit, "aria-label": title }}
+      onKeyDown={onKeyDown}
+      {...(hasNotices ? { notices } : {})}
+      secondary={
+        <Button variant="secondary" onClick={onClose}>
+          Cancel
+        </Button>
+      }
+      primary={
+        <Button type="submit" form={ids.form} variant="primary" busy={save.isPending || conflict !== null} aria-keyshortcuts="Meta+Enter Control+Enter">
+          {save.isPending ? "Saving…" : isNew ? "Add expense" : "Save"}
+          {layout === "desktop" ? <Kbd>{isMac() ? "⌘↵" : "Ctrl ↵"}</Kbd> : null}
+        </Button>
+      }
+      main={
+        <>
+          <AmountHero id={ids.amount} inputRef={amountRef} value={draft.amount} onChange={(value) => { set("amount", value); }} currency={view.currency} kind="expense" disabled={paid} invalid={describe("amount")} error={errorText("amount")} />
+          <div className="entry-title">
+            <label htmlFor={ids.title} className="visually-hidden">
+              Title
+            </label>
+            <input id={ids.title} ref={titleRef} maxLength={100} autoComplete="off" placeholder="Title" value={draft.title} onChange={(event) => { set("title", event.currentTarget.value); }} {...describe("title")} />
             {errorText("title")}
           </div>
-        </div>
-
-        <fieldset className="choices category-chips" id={ids.category}>
-          <legend className="choices__legend">Category</legend>
-          <div className="chip-row">
-            {chips.map((category) => (
-              <label key={category.name} className={cx("chip", category.name === draft.category && "chip--on")}>
-                <input type="radio" name="shared-category" value={category.name} checked={category.name === draft.category} onChange={() => { set("category", category.name); }} />
-                <span className="category-dot" style={tileStyle(category)}>
-                  <Icon name={categoryIcon(category.icon)} size={16} />
-                </span>
-                <span>{category.name}</span>
-              </label>
-            ))}
-            {workspace.ledger ? (
-              <Button variant="quiet" icon="list" onClick={() => { setPicking(true); }}>
-                All categories
-              </Button>
+          <CategoryChips
+            id={ids.category}
+            name="shared-category"
+            categories={chips.map((category) => ({ key: category.name, name: category.name, tint: category, icon: category.icon }))}
+            selected={draft.category}
+            onChoose={(name) => {
+              set("category", name);
+            }}
+            {...(workspace.ledger ? { onAll: () => { setPicking(true); } } : {})}
+          />
+        </>
+      }
+      details={
+        <>
+          <DetailList>
+            <DetailRow icon="calendar" label={target.kind === "rule" ? "Next date" : "Date"} htmlFor={ids.date} {...(layout === "desktop" ? { chevron: "down" as const } : {})}>
+              <DateRowInput id={ids.date} inputRef={dateRef} value={draft.date} onChange={(value) => { set("date", value); }} today={localDate()} long={layout === "desktop"} invalid={describe("date")} />
+            </DetailRow>
+            {account ? (
+              <DetailRow icon="card" label="Your account" htmlFor={ids.account} {...(layout === "desktop" ? { chevron: "down" as const } : {})}>
+                {account}
+              </DetailRow>
             ) : null}
-          </div>
-        </fieldset>
-
-        <div className="form-grid">
-          <div className="form-field">
-            <label htmlFor={ids.date}>{target.kind === "rule" ? "Next date" : "Date"}</label>
-            <input id={ids.date} ref={dateRef} type="date" min="2000-01-01" max="2100-12-31" value={draft.date} onChange={(event) => { set("date", event.currentTarget.value); }} {...describe("date")} />
-            {errorText("date")}
-          </div>
-          {payerIsMe && choices.accounts.length ? (
-            <div className="form-field">
-              <label htmlFor={ids.account}>Your account</label>
-              <select id={ids.account} value={draft.accountId} onChange={(event) => { set("accountId", event.currentTarget.value); }} aria-describedby={`${ids.account}-hint`}>
-                <option value="">No account</option>
-                {choices.accounts.map((account) => (
-                  // The server checks the account against its copy of your ledger, so one added on
-                  // this device is shown but can't be chosen until it has synced.
-                  <option key={account.id} value={account.id} disabled={!account.synced}>
-                    {account.synced ? account.name : `${account.name} (waiting to sync)`}
-                  </option>
-                ))}
-              </select>
-              <span id={`${ids.account}-hint`} className="form-hint">
-                Private: only you see which account you paid from.
-                {choices.accounts.some((account) => !account.synced) ? " Accounts added on this device can be chosen once they've synced." : null}
-              </span>
-            </div>
+          </DetailList>
+          {errorText("date")}
+          {account ? (
+            <span id={`${ids.account}-hint`} className="form-hint">
+              Private: only you see which account you paid from.
+              {choices.accounts.some((item) => !item.synced) ? " Accounts added on this device can be chosen once they've synced." : null}
+            </span>
           ) : !payerIsMe ? (
             <p className="note">{view.who.name(draft.payerUserId)} chooses their own payment account; nobody else sees it.</p>
           ) : null}
-        </div>
-
-        <fieldset className="choices" ref={payerRef} disabled={paid} {...(errors.payer ? { "aria-describedby": `${ids.error}-payer` } : {})}>
-          <legend className="choices__legend">Paid by</legend>
-          <div className="choices__options">
-            {participants.map((member) => (
-              <label key={member.userId} className={draft.payerUserId === member.userId ? "choice choice--on wbtn" : "choice wbtn"}>
-                <input
-                  type="radio"
-                  name="payer"
-                  value={member.userId}
-                  checked={draft.payerUserId === member.userId}
-                  onChange={() => {
-                    setDraft((previous) => ({ ...previous, payerUserId: member.userId, accountId: member.userId === meId ? previous.accountId : "" }));
-                  }}
-                />
-                <Avatar name={member.email} size={22} />
-                <span className="choice__label">{member.userId === meId ? "You" : member.email}</span>
-              </label>
-            ))}
-          </div>
-          {errorText("payer")}
-        </fieldset>
-
-        <div ref={splitRef} tabIndex={-1} className="shared-section">
-          <ChoiceGroup<SplitMode>
-            legend="Split"
-            name="split-mode"
-            value={draft.splitMode}
-            onChange={(mode) => {
-              if (!paid) set("splitMode", mode);
-            }}
-            options={[
-              { value: "equal", label: "Equally", disabled: paid },
-              { value: "exact", label: "Amounts", disabled: paid },
-              { value: "percent", label: "Percent", disabled: paid },
-            ]}
-          />
-          <ul className="split-rows" aria-label="Shares">
-            {participants.map((member) => {
-              const share = preview?.shares?.find((item) => item.userId === member.userId)?.amountCents;
-              const name = member.userId === meId ? "You" : member.email;
-              return (
-                <li key={member.userId} className="split-row">
-                  <Avatar name={member.email} size={28} />
-                  <span className="split-row__name">{name}</span>
-                  {draft.splitMode === "equal" ? (
-                    <span className="split-row__amount pk-num">{share === undefined ? "—" : view.money(share)}</span>
-                  ) : draft.splitMode === "exact" ? (
-                    <input
-                      aria-label={`${member.userId === meId ? "Your" : `${name}'s`} share in ${view.currency}`}
-                      inputMode="decimal"
-                      placeholder="0.00"
-                      disabled={paid}
-                      value={draft.exact[member.userId] ?? ""}
-                      aria-invalid={errors.split ? true : undefined}
-                      aria-describedby={ids.splitStatus}
-                      onChange={(event) => {
-                        const value = event.currentTarget.value;
-                        setDraft((previous) => ({ ...previous, exact: { ...previous.exact, [member.userId]: value } }));
-                      }}
-                    />
-                  ) : (
-                    <span className="shared-actions" style={{ flexWrap: "nowrap" }}>
+          <fieldset className="choices" ref={payerRef} disabled={paid} {...(errors.payer ? { "aria-describedby": `${ids.error}-payer` } : {})}>
+            <legend className="choices__legend">Paid by</legend>
+            <div className="choices__options">
+              {participants.map((member) => (
+                <label key={member.userId} className={draft.payerUserId === member.userId ? "choice choice--on wbtn" : "choice wbtn"}>
+                  <input
+                    type="radio"
+                    name="payer"
+                    value={member.userId}
+                    checked={draft.payerUserId === member.userId}
+                    onChange={() => {
+                      setDraft((previous) => ({ ...previous, payerUserId: member.userId, accountId: member.userId === meId ? previous.accountId : "" }));
+                    }}
+                  />
+                  <Avatar name={member.email} size={22} />
+                  <span className="choice__label">{member.userId === meId ? "You" : member.email}</span>
+                </label>
+              ))}
+            </div>
+            {errorText("payer")}
+          </fieldset>
+  
+          <div ref={splitRef} tabIndex={-1} className="shared-section">
+            <ChoiceGroup<SplitMode>
+              legend="Split"
+              name="split-mode"
+              value={draft.splitMode}
+              onChange={(mode) => {
+                if (!paid) set("splitMode", mode);
+              }}
+              options={[
+                { value: "equal", label: "Equally", disabled: paid },
+                { value: "exact", label: "Amounts", disabled: paid },
+                { value: "percent", label: "Percent", disabled: paid },
+              ]}
+            />
+            <ul className="split-rows" aria-label="Shares">
+              {participants.map((member) => {
+                const share = preview?.shares?.find((item) => item.userId === member.userId)?.amountCents;
+                const name = member.userId === meId ? "You" : member.email;
+                return (
+                  <li key={member.userId} className="split-row">
+                    <Avatar name={member.email} size={28} />
+                    <span className="split-row__name">{name}</span>
+                    {draft.splitMode === "equal" ? (
+                      <span className="split-row__amount pk-num">{share === undefined ? "—" : view.money(share)}</span>
+                    ) : draft.splitMode === "exact" ? (
                       <input
-                        aria-label={`${member.userId === meId ? "Your" : `${name}'s`} share in percent`}
+                        aria-label={`${member.userId === meId ? "Your" : `${name}'s`} share in ${view.currency}`}
                         inputMode="decimal"
-                        placeholder="0"
+                        placeholder="0.00"
                         disabled={paid}
-                        value={draft.percent[member.userId] ?? ""}
+                        value={draft.exact[member.userId] ?? ""}
                         aria-invalid={errors.split ? true : undefined}
                         aria-describedby={ids.splitStatus}
                         onChange={(event) => {
                           const value = event.currentTarget.value;
-                          setDraft((previous) => ({ ...previous, percent: { ...previous.percent, [member.userId]: value } }));
+                          setDraft((previous) => ({ ...previous, exact: { ...previous.exact, [member.userId]: value } }));
                         }}
                       />
-                      <span aria-hidden="true">%</span>
-                    </span>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-          <div id={ids.splitStatus} className="split-total" role="status">
-            {splitStatusText(draft.splitMode, preview, totalCents, view.money)}
-          </div>
-          {errorText("split")}
-          {target.kind !== "rule" && !view.detail.household.trip ? (
-            <p className="note">Split among the members on {draft.date ? "that date" : "the expense date"}. People who join later aren't included.</p>
-          ) : null}
-          {myShare !== null && participantIds.includes(meId ?? "") ? (
-            <div className="your-share" role="status">
-              <span>Your share · counts in your spending</span>
-              <span className="pk-num">{view.money(myShare)}</span>
+                    ) : (
+                      <span className="shared-actions" style={{ flexWrap: "nowrap" }}>
+                        <input
+                          aria-label={`${member.userId === meId ? "Your" : `${name}'s`} share in percent`}
+                          inputMode="decimal"
+                          placeholder="0"
+                          disabled={paid}
+                          value={draft.percent[member.userId] ?? ""}
+                          aria-invalid={errors.split ? true : undefined}
+                          aria-describedby={ids.splitStatus}
+                          onChange={(event) => {
+                            const value = event.currentTarget.value;
+                            setDraft((previous) => ({ ...previous, percent: { ...previous.percent, [member.userId]: value } }));
+                          }}
+                        />
+                        <span aria-hidden="true">%</span>
+                      </span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+            <div id={ids.splitStatus} className="split-total" role="status">
+              {splitStatusText(draft.splitMode, preview, totalCents, view.money)}
             </div>
-          ) : null}
-        </div>
-
-        <button type="button" className="disclosure" aria-expanded={more} aria-controls={ids.more} onClick={() => { setMore((value) => !value); }}>
-          <Icon name={more ? "chevron-down" : "chevron-forward"} size={16} weight={48} />
-          More details
-          <span className="note">{moreSummary(draft, target.kind !== "edit")}</span>
-        </button>
-        <div id={ids.more} className="more-details" hidden={!more}>
-          {target.kind !== "edit" ? (
-            <div className="form-grid">
-              <div className="form-field">
-                <label htmlFor={ids.repeat}>Repeat</label>
-                <select id={ids.repeat} value={draft.repeat} onChange={(event) => { set("repeat", event.currentTarget.value as Repeat); }}>
-                  {isNew ? <option value="none">Doesn't repeat</option> : null}
-                  <option value="weekly">Weekly</option>
-                  <option value="monthly">Monthly</option>
-                  <option value="yearly">Yearly</option>
-                </select>
+            {errorText("split")}
+            {target.kind !== "rule" && !view.detail.household.trip ? (
+              <p className="note">Split among the members on {draft.date ? "that date" : "the expense date"}. People who join later aren't included.</p>
+            ) : null}
+            {myShare !== null && participantIds.includes(meId ?? "") ? (
+              <div className="your-share" role="status">
+                <span>Your share · counts in your spending</span>
+                <span className="pk-num">{view.money(myShare)}</span>
               </div>
-            </div>
-          ) : null}
-          {draft.repeat !== "none" ? <p className="note">Penny adds each occurrence on its date, starting {draft.date || "on the date above"}, split among the members active then.</p> : null}
-          {target.kind === "rule" ? <SwitchRow label="Active" description="A paused repeating expense adds nothing until you resume it." checked={draft.active} onChange={(value) => { set("active", value); }} /> : null}
-          <div className="form-field">
-            <label htmlFor={ids.note}>Note</label>
-            <textarea id={ids.note} maxLength={1000} value={draft.note} onChange={(event) => { set("note", event.currentTarget.value); }} />
+            ) : null}
           </div>
-          <ReceiptField
-            value={draft.receipt}
-            onChange={(receipt) => {
-              set("receipt", receipt);
-            }}
-            onBusyChange={(busy) => {
-              setReceiptBusy(busy);
-              if (!busy) setReceiptWait(false);
-            }}
-            hint="Everyone in the household can open it."
-          />
-          {receiptWait ? (
-            <p className="form-error" role="alert">
-              The receipt is still uploading. Wait for it to finish, or cancel the upload.
-            </p>
-          ) : null}
-        </div>
-      </form>
+  
+          <button type="button" className="disclosure" aria-expanded={more} aria-controls={ids.more} onClick={() => { setMore((value) => !value); }}>
+            <Icon name={more ? "chevron-down" : "chevron-forward"} size={16} weight={48} />
+            More details
+            <span className="note">{moreSummary(draft, target.kind !== "edit")}</span>
+          </button>
+          <div id={ids.more} className="more-details" hidden={!more}>
+            {target.kind !== "edit" ? (
+              <div className="form-grid">
+                <div className="form-field">
+                  <label htmlFor={ids.repeat}>Repeat</label>
+                  <select id={ids.repeat} value={draft.repeat} onChange={(event) => { set("repeat", event.currentTarget.value as Repeat); }}>
+                    {isNew ? <option value="none">Doesn't repeat</option> : null}
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="yearly">Yearly</option>
+                  </select>
+                </div>
+              </div>
+            ) : null}
+            {draft.repeat !== "none" ? <p className="note">Penny adds each occurrence on its date, starting {draft.date || "on the date above"}, split among the members active then.</p> : null}
+            {target.kind === "rule" ? <SwitchRow label="Active" description="A paused repeating expense adds nothing until you resume it." checked={draft.active} onChange={(value) => { set("active", value); }} /> : null}
+            <div className="form-field">
+              <label htmlFor={ids.note}>Note</label>
+              <textarea id={ids.note} maxLength={1000} value={draft.note} onChange={(event) => { set("note", event.currentTarget.value); }} />
+            </div>
+            <ReceiptField
+              value={draft.receipt}
+              onChange={(receipt) => {
+                set("receipt", receipt);
+              }}
+              onBusyChange={(busy) => {
+                setReceiptBusy(busy);
+                if (!busy) setReceiptWait(false);
+              }}
+              hint="Everyone in the household can open it."
+            />
+            {receiptWait ? (
+              <p className="form-error" role="alert">
+                The receipt is still uploading. Wait for it to finish, or cancel the upload.
+              </p>
+            ) : null}
+          </div>
+          {newScope ? <section className="entry-section">{<HouseholdField scope={newScope} seed={seedFromDraft} />}</section> : null}
+        </>
+      }
+    >
       {picking && workspace.ledger ? (
         <CategoryPickerDialog
           kind="expense"
@@ -682,11 +653,10 @@ export function ExpenseFormDialog({
           }}
         />
       ) : null}
-    </Dialog>
+    </EntryDialog>
   );
 }
 
-const isMac = () => typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
 
 function moreSummary(draft: Draft, repeats: boolean): string {
   const parts: string[] = [];

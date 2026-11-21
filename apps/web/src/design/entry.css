@@ -1,0 +1,970 @@
+/*
+ * Add entry and the shared expense form (MAZ-226), after the cards: `web-add-entry` (desktop),
+ * `ipad-add-entry` (touch tablets and narrow windows), `iphone-add-expense`, `iphone-add-income`,
+ * `iphone-entry-extras`, `iphone-split` and `iphone-shared-expense-add` (phones). The metrics are
+ * the cards' own (docs/design/penny-ios: `.amount`, `.note`, `.pill`, `.opt`, `.drow`, `.wchip`).
+ */
+
+/* ---------- dialog ---------- */
+.dialog__panel.pk-dialog.entry-dialog {
+  width: min(100%, 760px);
+}
+
+.entry-dialog--tablet.dialog__panel {
+  border-radius: 38px;
+}
+
+.entry-dialog__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 18px;
+  border-bottom: 0.5px solid var(--pk-separator);
+}
+
+.entry-dialog__title {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.entry-dialog__title h2 {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+
+.entry-dialog__title span {
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.entry-dialog__kind {
+  display: flex;
+  justify-content: center;
+}
+
+/* The web card's header control: 260px wide, 34px tall, 10px corners. */
+.entry-dialog--desktop .entry-kind {
+  width: 260px;
+}
+
+.entry-dialog--desktop .entry-kind .choices__options {
+  border-radius: 10px;
+}
+
+.entry-dialog--desktop .entry-kind .choice {
+  min-height: 28px;
+  border-radius: 8px;
+  font-size: 0.84375rem;
+}
+
+/* The iPad card: close, the control in the middle, then the primary button; no rule under it. */
+.entry-dialog--tablet .entry-dialog__head {
+  padding: 16px 16px 0;
+  border-bottom: 0;
+}
+
+.entry-dialog--tablet .entry-dialog__kind {
+  flex: 1;
+}
+
+.entry-dialog--tablet .entry-kind {
+  width: 276px;
+}
+
+.entry-dialog--tablet .entry-dialog__close,
+.entry-dialog--phone .entry-dialog__close {
+  width: 40px;
+  min-height: 40px;
+  border-radius: 20px;
+  background: var(--pk-fill);
+  box-shadow: none;
+}
+
+.entry-dialog--phone .entry-dialog__head {
+  border-bottom: 0;
+  padding-bottom: 4px;
+}
+
+.entry-dialog__kind--phone {
+  padding: 0 18px;
+}
+
+.entry-dialog__notices {
+  display: grid;
+  gap: 10px;
+  padding: 14px 18px 0;
+}
+
+/* ---------- body ---------- */
+.entry-dialog__body {
+  display: grid;
+  gap: 0;
+}
+
+.entry-dialog__main,
+.entry-dialog__details {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
+}
+
+.entry-dialog--desktop .entry-dialog__body {
+  grid-template-columns: 1fr 1fr;
+}
+
+.entry-dialog--desktop .entry-dialog__main,
+.entry-dialog--desktop .entry-dialog__details {
+  padding: 18px;
+}
+
+.entry-dialog--desktop .entry-dialog__details {
+  border-left: 0.5px solid var(--pk-separator);
+  background: var(--pk-surface-2);
+}
+
+.entry-dialog--tablet .entry-dialog__body {
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  padding: 18px 26px 24px;
+}
+
+.entry-dialog--phone .entry-dialog__body {
+  gap: 12px;
+  padding: 0 18px 18px;
+}
+
+.entry-dialog__details [hidden] {
+  display: none;
+}
+
+/* ---------- footer ---------- */
+.entry-dialog--desktop .entry-dialog__foot {
+  padding: 14px 18px;
+}
+
+.entry-dialog--tablet .entry-dialog__foot {
+  padding: 12px 26px 18px;
+  background: none;
+}
+
+.entry-dialog--tablet .pk-dialog__hint {
+  gap: 6px;
+  font-size: 0.8125rem;
+}
+
+.entry-dialog--tablet .pk-dialog__hint .pk-kbd + .pk-kbd {
+  margin-inline-start: -2px;
+}
+
+.entry-dialog--phone .entry-dialog__foot {
+  justify-content: flex-end;
+}
+
+.entry-dialog--desktop .entry-dialog__foot {
+  flex-wrap: nowrap;
+}
+
+.entry-dialog--desktop .entry-dialog__foot .pk-dialog__hint {
+  min-width: 0;
+  white-space: nowrap;
+}
+
+/* Save stays reachable at the bottom of a long form, above the on-screen keyboard. */
+.entry-dialog .entry-dialog__foot {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+}
+
+.entry-dialog--tablet .entry-dialog__head .wbtn--primary {
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 22px;
+  font-size: 1rem;
+}
+
+/* ---------- amount ---------- */
+.amount-hero {
+  display: grid;
+  justify-items: center;
+  padding: 18px 0 4px;
+}
+
+.amount-hero__line {
+  display: flex;
+  align-items: baseline;
+  max-width: 100%;
+  font-size: 3.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.045em;
+  line-height: 1.05;
+}
+
+.amount-hero__symbol {
+  opacity: 0.4;
+}
+
+.amount-hero__input {
+  min-width: 2ch;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  caret-color: var(--pk-tint);
+  field-sizing: content;
+}
+
+/* The copper caret marks focus, as on the cards. */
+.amount-hero__input:focus,
+.amount-hero__input:focus-visible {
+  outline: 0;
+}
+
+.amount-hero__input::placeholder {
+  color: var(--pk-label-3);
+}
+
+.amount-hero__input[aria-invalid="true"] {
+  text-decoration: underline wavy var(--pk-danger) 2px;
+  text-underline-offset: 6px;
+}
+
+.amount-hero--income .amount-hero__line {
+  color: var(--pk-income);
+}
+
+.amount-hero--income .amount-hero__symbol {
+  opacity: 0.45;
+}
+
+.amount-hero--investment .amount-hero__line {
+  color: var(--pk-invest);
+}
+
+.amount-hero__currency {
+  display: inline-flex;
+  margin-top: 6px;
+  padding: 4px 10px;
+  border-radius: 10px;
+  background: var(--pk-fill);
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.amount-hero .form-error {
+  margin-top: 6px;
+}
+
+.entry-dialog--tablet .amount-hero {
+  padding: 26px 0 6px;
+}
+
+.entry-dialog--tablet .amount-hero__line {
+  font-size: 4rem;
+}
+
+/* The web card: 52px, left aligned, no currency pill. */
+.entry-dialog--desktop .amount-hero {
+  justify-items: start;
+  padding: 18px 0 0;
+}
+
+.entry-dialog--desktop .amount-hero__line {
+  font-size: 3.25rem;
+  letter-spacing: -0.04em;
+}
+
+.entry-dialog--desktop .amount-hero__symbol {
+  opacity: 0.35;
+}
+
+.entry-dialog--desktop .amount-hero__currency {
+  display: none;
+}
+
+/* ---------- title ---------- */
+.entry-title {
+  display: grid;
+  gap: 4px;
+}
+
+.entry-title input {
+  width: 100%;
+  height: 46px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--pk-surface-2);
+  color: var(--pk-label);
+  font: inherit;
+  font-size: 1.0625rem;
+}
+
+.entry-title input[aria-invalid="true"] {
+  box-shadow: 0 0 0 1px var(--pk-danger);
+}
+
+.entry-dialog--tablet .entry-title input {
+  height: 48px;
+}
+
+.entry-dialog--desktop .entry-title input {
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 0.5px var(--pk-separator);
+  font-size: 0.9375rem;
+}
+
+.entry-dialog--phone .entry-title,
+.entry-dialog--desktop .entry-title {
+  margin-top: 2px;
+}
+
+.entry-dialog--tablet .entry-title {
+  margin-top: 6px;
+}
+
+/* ---------- labels ---------- */
+.entry-label {
+  display: block;
+  padding: 0;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.entry-dialog--desktop .entry-label {
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+}
+
+/* ---------- category chips ---------- */
+.entry-chips {
+  display: grid;
+  gap: 8px;
+}
+
+.entry-chips > .entry-label {
+  margin: 4px 0 0;
+}
+
+.entry-dialog--tablet .entry-chips > .entry-label {
+  margin: 8px 4px 0;
+}
+
+/* The iPhone cards have no Category label and keep the chips on one line. */
+.entry-dialog--phone .entry-chips > .entry-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.entry-chips__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.entry-dialog--phone .entry-chips__row {
+  flex-wrap: nowrap;
+  margin: 0 -18px;
+  padding: 2px 18px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.entry-chip {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 17px;
+  background: var(--pk-fill);
+  color: var(--pk-label);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.entry-chip input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+.entry-chip--on {
+  background: var(--tile);
+  color: #fff;
+}
+
+.entry-chip:has(input:focus-visible),
+.entry-chip:focus-visible {
+  outline: 2px solid var(--pk-tint);
+  outline-offset: 2px;
+}
+
+/* The last chip: "···" on iPhone, "··· All" on iPad, "All…" on the web card. */
+.entry-chip__all {
+  display: none;
+}
+
+.entry-dialog--tablet .entry-chip__all {
+  display: inline;
+}
+
+.entry-dialog--desktop .entry-chip__dots {
+  display: none;
+}
+
+.entry-dialog--desktop .entry-chip__all {
+  display: inline;
+}
+
+.entry-dialog--desktop .entry-chip__all::after {
+  content: "…";
+}
+
+.entry-chip__dots {
+  display: inline-flex;
+}
+
+.entry-dialog--desktop .entry-chip {
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 15px;
+  font-size: 0.8125rem;
+}
+
+.entry-dialog--desktop .entry-chip .icon {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+@media (pointer: coarse) {
+  .entry-chip {
+    min-height: 44px;
+  }
+
+  .entry-dialog--phone .entry-chip,
+  .entry-dialog--tablet .entry-chip {
+    min-height: 34px;
+  }
+}
+
+/* ---------- detail rows ---------- */
+.entry-rows {
+  display: grid;
+  border-radius: 16px;
+  background: var(--pk-surface-2);
+}
+
+.entry-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  height: 46px;
+  padding: 0 14px;
+  border: 0;
+  background: none;
+  color: var(--pk-label);
+  font: inherit;
+  font-size: 1rem;
+  text-align: start;
+}
+
+.entry-dialog--tablet .entry-row {
+  height: 48px;
+}
+
+.entry-row + .entry-row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 44px;
+  border-top: 0.5px solid var(--pk-separator);
+}
+
+.entry-row > .icon {
+  flex: none;
+  width: 20px !important;
+  height: 20px !important;
+  color: var(--pk-label-2);
+}
+
+.entry-row__label {
+  flex: none;
+}
+
+.entry-row__value {
+  position: relative;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  min-width: 0;
+  color: var(--pk-label-2);
+  white-space: nowrap;
+}
+
+.entry-row__share {
+  color: var(--pk-tint-text);
+  font-weight: 600;
+}
+
+.entry-row--button {
+  cursor: pointer;
+}
+
+.entry-row--button:focus-visible {
+  border-radius: 16px;
+  outline: 2px solid var(--pk-tint);
+  outline-offset: -2px;
+}
+
+.entry-row__select,
+.entry-row__input {
+  min-width: 0;
+  max-width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--pk-label-2);
+  font: inherit;
+  text-align: end;
+  text-align-last: end;
+  appearance: none;
+  cursor: pointer;
+}
+
+.entry-row__input {
+  flex: 1;
+  cursor: text;
+}
+
+.entry-row__input::placeholder {
+  color: var(--pk-label-3);
+}
+
+.entry-row__select:focus-visible,
+.entry-row__input:focus-visible {
+  outline: 2px solid var(--pk-tint);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.entry-row .icon:last-child:not(:first-child) {
+  color: var(--pk-label-2);
+}
+
+/* The date: the card's "Today" with the browser's field over it; the field shows while focused. */
+.entry-date {
+  position: relative;
+  display: inline-grid;
+  align-items: center;
+}
+
+.entry-date__text {
+  grid-area: 1 / 1;
+}
+
+.entry-date input {
+  grid-area: 1 / 1;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--pk-label-2);
+  font: inherit;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.entry-date:focus-within .entry-date__text {
+  visibility: hidden;
+}
+
+.entry-date:focus-within input {
+  position: static;
+  opacity: 1;
+}
+
+.entry-date input[aria-invalid="true"] + *,
+.entry-date:has(input[aria-invalid="true"]) .entry-date__text {
+  color: var(--pk-danger);
+}
+
+/* The web card: plain rows with rules between them, no grouped background. */
+.entry-dialog--desktop .entry-rows {
+  border-radius: 0;
+  background: none;
+}
+
+.entry-dialog--desktop .entry-row {
+  height: 42px;
+  padding: 0;
+  font-size: 0.90625rem;
+}
+
+.entry-dialog--desktop .entry-row + .entry-row::before {
+  left: 0;
+}
+
+.entry-dialog--desktop .entry-row > .icon {
+  width: 17px !important;
+  height: 17px !important;
+}
+
+.entry-dialog--desktop .entry-dialog__details > .entry-rows {
+  margin-top: -6px;
+}
+
+/* ---------- split ---------- */
+.entry-split {
+  display: grid;
+  gap: 12px;
+}
+
+.entry-split__field {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 0 16px;
+  border-radius: 16px;
+  background: var(--pk-surface-2);
+}
+
+.entry-split__field label {
+  flex: 1;
+  min-width: 0;
+}
+
+.entry-stepper {
+  display: flex;
+  align-items: center;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--pk-fill);
+}
+
+.entry-stepper button {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 100%;
+  border: 0;
+  background: none;
+  color: var(--pk-label);
+  font: inherit;
+  font-size: 1.375rem;
+  cursor: pointer;
+}
+
+.entry-stepper button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.entry-stepper input,
+.entry-split__input input {
+  width: 3ch;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--pk-label);
+  font: inherit;
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.entry-split__input {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.entry-split__input input {
+  width: 6ch;
+  font-weight: 600;
+  text-align: end;
+}
+
+.entry-share {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 18px;
+  border-radius: var(--pk-r-card);
+  background: var(--pk-surface);
+  box-shadow: 0 0 0 0.5px var(--pk-separator);
+  text-align: center;
+}
+
+.entry-share__amount {
+  font-size: 2.75rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+}
+
+.entry-share .note {
+  max-width: 34ch;
+  margin: 2px 0 0;
+  font-size: 0.875rem;
+}
+
+/* ---------- more details (phones), note, receipt ---------- */
+.entry-extras {
+  display: grid;
+  gap: 18px;
+}
+
+.entry-section {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.entry-section > .entry-label,
+.entry-section .choices__legend,
+.entry-section .receipt-field__label {
+  margin: 0;
+  padding: 0 4px;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.entry-section .note {
+  padding: 0 4px;
+}
+
+.entry-note {
+  width: 100%;
+  min-height: 70px;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--pk-surface-2);
+  color: var(--pk-label);
+  font: inherit;
+  font-size: 1rem;
+  resize: vertical;
+}
+
+.entry-note::placeholder {
+  color: var(--pk-label-3);
+}
+
+.entry-extras .entry-note {
+  min-height: 84px;
+}
+
+.entry-trips__list {
+  display: grid;
+  border-radius: 16px;
+  background: var(--pk-surface-2);
+}
+
+.entry-trip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 48px;
+  padding: 0 16px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.entry-trip + .entry-trip::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 48px;
+  border-top: 0.5px solid var(--pk-separator);
+}
+
+.entry-trip input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+.entry-trip > .icon {
+  color: var(--pk-label-2);
+}
+
+.entry-trip > .icon:last-child {
+  margin-inline-start: auto;
+  color: var(--pk-tint);
+}
+
+.entry-trip:has(input:focus-visible) {
+  border-radius: 16px;
+  outline: 2px solid var(--pk-tint);
+  outline-offset: -2px;
+}
+
+/* Receipt as a section (`iphone-entry-extras`): the file, then copper Photo | File or PDF. */
+.receipt-field--card {
+  gap: 0;
+}
+
+.receipt-field--card .receipt-field__label {
+  padding: 0 4px 8px;
+}
+
+.receipt-field--card .receipt-att {
+  padding: 10px 14px;
+  border-radius: 16px 16px 0 0;
+}
+
+.receipt-field--card .receipt-drop {
+  display: block;
+  padding: 0;
+  border: 0;
+  border-radius: 16px;
+  background: var(--pk-surface-2);
+}
+
+.receipt-field--card .receipt-att + .receipt-drop {
+  border-top: 0.5px solid var(--pk-separator);
+  border-radius: 0 0 16px 16px;
+}
+
+.receipt-field--card .receipt-drop__hint {
+  display: none;
+}
+
+.receipt-field--card .receipt-drop__buttons {
+  display: grid;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
+  gap: 0;
+}
+
+.receipt-field--card .receipt-drop__buttons .wbtn {
+  min-height: 46px;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--pk-tint-text);
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.receipt-field--card .receipt-drop__buttons .wbtn + .wbtn {
+  border-left: 0.5px solid var(--pk-separator);
+}
+
+.receipt-field--card .receipt-drop__buttons .wbtn .icon {
+  width: 19px !important;
+  height: 19px !important;
+}
+
+/* The web card's drop zone: 74px, dashed, "Drop a receipt or browse". */
+.receipt-field--drop .receipt-drop {
+  min-height: 74px;
+  margin-top: 4px;
+}
+
+.receipt-drop__browse {
+  min-height: 0;
+  padding: 0;
+  text-decoration: none;
+}
+
+.receipt-drop__browse:hover {
+  text-decoration: underline;
+}
+
+/* ---------- category picker ---------- */
+.link-button.category-picker__edit {
+  justify-self: center;
+  font-size: 1rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+/* The attached file opens its preview; remove is a gray circle (`iphone-entry-extras`). */
+.receipt-att__open {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.receipt-att__open:focus-visible {
+  border-radius: 10px;
+  outline: 2px solid var(--pk-tint);
+  outline-offset: 2px;
+}
+
+.receipt-field--card .receipt-att .wbtn--danger-quiet {
+  width: 30px;
+  min-height: 30px;
+  border-radius: 15px;
+  background: var(--pk-fill);
+  color: var(--pk-label-2);
+}
+
+@media (pointer: coarse) {
+  .receipt-field--card .receipt-att .wbtn--danger-quiet {
+    width: 44px;
+    min-height: 44px;
+    border-radius: 22px;
+  }
+}

@@ -1,5 +1,6 @@
 import type { BrowserContext, Page } from "@playwright/test";
 import { expect, test } from "./test";
+import { openExtras, SAVE } from "./entry";
 
 // Transaction forms, search and filtered Activity (MAZ-88) in real Chromium on desktop and phone:
 // the durable offline store (IndexedDB), the browser's offline switch, history and keyboard use.
@@ -117,7 +118,7 @@ async function open(page: Page, path: string) {
 }
 
 const results = (page: Page) => page.getByRole("region", { name: "Search results" });
-const form = (page: Page, name = "Add entry") => page.getByRole("form", { name });
+const form = (page: Page, name = "New entry") => page.getByRole("form", { name });
 
 /** A personal entry's detail: a dialog on phones, the panel beside the list from 1100px (`web-activity`, MAZ-225). */
 const detailOf = (page: Page, title: string) => page.getByRole("dialog", { name: title }).or(page.getByRole("complementary", { name: title }));
@@ -188,7 +189,7 @@ test("keeps the draft through a closed dialog and an inline category, and valida
   await page.getByRole("button", { name: "Add entry" }).click();
   let add = form(page);
   await add.getByLabel("Amount (CAD)").fill("62");
-  await page.getByRole("dialog", { name: "Add entry" }).getByRole("button", { name: "Save" }).click();
+  await page.getByRole("dialog", { name: "New entry" }).getByRole("button", { name: SAVE }).click();
   await expect(add.getByLabel("Title")).toBeFocused();
   await expect(add.getByText("Add a name for this entry.")).toBeVisible();
   await add.getByLabel("Title").fill("Vet visit");
@@ -207,7 +208,7 @@ test("keeps the draft through a closed dialog and an inline category, and valida
   await expect(picker).toHaveCount(0);
   await expect(add.getByRole("radio", { name: "Pets" })).toBeChecked();
   await expect(add.getByLabel("Amount (CAD)")).toHaveValue("62");
-  await page.getByRole("dialog", { name: "Add entry" }).getByRole("button", { name: "Save" }).click();
+  await page.getByRole("dialog", { name: "New entry" }).getByRole("button", { name: SAVE }).click();
   await expect(page.getByText("Expense added")).toBeVisible();
   await expect.poll(() => server.ledger.categories.map((category) => category.name)).toContain("Pets");
   await expect.poll(() => server.ledger.transactions.find((item) => item.title === "Vet visit")?.total).toBe(6200);
@@ -227,7 +228,7 @@ test("saves offline, keeps the entry through a reload, and syncs it once back on
   await add.getByLabel("Amount (CAD)").fill("7.50");
   await add.getByLabel("Title").fill("Bakery");
   await add.getByLabel("Date").fill("2026-11-08");
-  await page.getByRole("dialog", { name: "Add entry" }).getByRole("button", { name: "Save" }).click();
+  await page.getByRole("dialog", { name: "New entry" }).getByRole("button", { name: SAVE }).click();
   await expect(page.getByText("Saved on this device. It syncs when you're back online.")).toBeVisible();
   await expect(rowOf(page, "Bakery")).toContainText("Waiting to sync");
   // Shared rows stay visible from what Penny last loaded.
@@ -295,14 +296,15 @@ test("edits with a stale-version check and deletes after confirming", async ({ c
   server.revision += 1;
   await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
   await expect(detail).toContainText("$1,500.00");
-  await page.getByRole("dialog", { name: "Edit entry" }).getByRole("button", { name: "Save" }).click();
+  await page.getByRole("dialog", { name: "Edit entry" }).getByRole("button", { name: SAVE }).click();
   const banner = edit.getByRole("alert");
   await expect(banner).toContainText("This entry changed on another device");
   await expect(edit.getByLabel("Title")).toHaveValue("Rent, November");
   await banner.getByRole("button", { name: "Use their version" }).click();
-  await expect(edit.getByLabel("Amount (CAD)")).toHaveValue("1500.00");
+  // Grouped as the cards draw it while not being typed (MAZ-226).
+  await expect(edit.getByLabel("Amount (CAD)")).toHaveValue("1,500.00");
   await edit.getByLabel("Title").fill("Rent, November");
-  await page.getByRole("dialog", { name: "Edit entry" }).getByRole("button", { name: "Save" }).click();
+  await page.getByRole("dialog", { name: "Edit entry" }).getByRole("button", { name: SAVE }).click();
   await expect(page.getByText("Changes saved")).toBeVisible();
   await expect.poll(() => server.ledger.transactions.find((item) => item.id === "rent")).toMatchObject({ title: "Rent, November", total: 150000 });
 
@@ -324,9 +326,9 @@ test("fits a 320px screen without horizontal scrolling", async ({ context, page 
   const overflow = () => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(await overflow()).toBe(0);
   await page.getByRole("button", { name: "Add entry" }).click();
-  await form(page).getByRole("button", { name: /More details/ }).click();
+  await openExtras(form(page));
   await expect(form(page).getByLabel("Note")).toBeVisible();
   expect(await overflow()).toBe(0);
   // Save stays in view at the bottom of the dialog.
-  await expect(page.getByRole("dialog", { name: "Add entry" }).getByRole("button", { name: "Save" })).toBeInViewport();
+  await expect(page.getByRole("dialog", { name: "New entry" }).getByRole("button", { name: SAVE })).toBeInViewport();
 });

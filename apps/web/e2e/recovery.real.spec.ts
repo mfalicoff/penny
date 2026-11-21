@@ -2,6 +2,7 @@ import { spawnSync } from "node:child_process";
 import { expect, test, type Page } from "@playwright/test";
 import { syntheticPdf } from "./fixtures/receipts";
 import { clearFaults, LedgerClient, pinClock, realStack, setFaults, signIn, skipReason, testUser, type TestUser } from "./stack";
+import { openExtras, SAVE } from "./entry";
 
 // MAZ-96 failure and recovery journeys against the real .NET API and PostgreSQL: injected 503s and
 // dropped connections (the environment's fault controls, applied before routing), a server that is
@@ -39,11 +40,11 @@ async function open(page: Page) {
 
 async function addExpense(page: Page, title: string, amount: string) {
   await page.getByRole("button", { name: "Add entry" }).first().click();
-  const add = page.getByRole("form", { name: "Add entry" });
+  const add = page.getByRole("form", { name: "New entry" });
   await add.getByLabel("Amount (CAD)").fill(amount);
   await add.getByLabel("Title").fill(title);
   await add.getByLabel("Date").fill("2026-10-18");
-  await page.getByRole("dialog", { name: "Add entry" }).getByRole("button", { name: "Save" }).click();
+  await page.getByRole("dialog", { name: "New entry" }).getByRole("button", { name: SAVE }).click();
 }
 
 async function serverTitles(user: TestUser) {
@@ -154,10 +155,10 @@ test("a failed receipt upload keeps the draft and succeeds on Try again", async 
   const { page, context } = await signIn(browser, baseURL, user, AT);
   await open(page);
   await page.getByRole("button", { name: "Add entry" }).first().click();
-  const dialog = page.getByRole("dialog", { name: "Add entry" });
+  const dialog = page.getByRole("dialog", { name: "New entry" });
   await dialog.getByLabel("Amount (CAD)").fill("30");
   await dialog.getByLabel("Title").fill("Hardware store");
-  await dialog.getByRole("button", { name: /More details/ }).click();
+  await openExtras(dialog);
   const field = dialog.getByRole("group", { name: "Receipt" });
 
   await setFaults([{ method: "POST", pathPrefix: "/api/receipts", status: 503, times: 1 }]);
@@ -168,7 +169,7 @@ test("a failed receipt upload keeps the draft and succeeds on Try again", async 
   await expect(dialog.getByLabel("Title")).toHaveValue("Hardware store");
   await field.getByRole("button", { name: "Try again" }).click();
   await expect(field.getByRole("button", { name: "Preview hardware.pdf" })).toBeVisible();
-  await dialog.getByRole("button", { name: "Save" }).click();
+  await dialog.getByRole("button", { name: SAVE }).click();
   await expect(page.getByText("Expense added")).toBeVisible();
   await expect
     .poll(async () => {

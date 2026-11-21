@@ -16,14 +16,14 @@ The browser checks all of these before uploading, with the same rules as `Receip
 
 ## Attaching a receipt
 
-Add entry › More details, and the shared expense form, have a **Receipt** group (specimens `entry-extras`, `receipt-upload` and the web `add-entry` drop zone):
+Add entry and the shared expense form have a **Receipt** group (specimens `entry-extras`, `receipt-upload` and the web `add-entry` drop zone). In Add entry it sits under **Receipt, repeat, trip** on phones, behind the Receipt row on the iPad layout, and is the drop zone ("Drop a receipt or browse") on desktop (MAZ-226):
 
-- **Photo** and **File or PDF** open the file picker (Photo offers images only). A file can also be dropped on the dashed area. Both buttons are labelled for screen readers ("Attach a photo", "Replace with a file or PDF") and keyboard-reachable; the hidden file inputs are not in the tab order.
+- **Photo** and **File or PDF** open the file picker (Photo offers images only); on desktop, **browse** opens it for any receipt file. A file can also be dropped on the dashed area. Both buttons are labelled for screen readers ("Attach a photo", "Replace with a file or PDF") and keyboard-reachable; the hidden file inputs are not in the tab order.
 - **Upload** sends the file itself as the request body (its type in `Content-Type`, its name in an RFC 8187 `Content-Disposition`, MAZ-131) over `XMLHttpRequest`, because `fetch` reports no upload progress. The browser streams the file; nothing is read into memory or re-encoded first. A progress bar shows the bytes sent, with **Cancel upload**. Save waits: pressing it during an upload says so and saves nothing.
 - **Failures** keep the draft and the receipt already attached. A network or server failure offers **Try again** with the same file; a refused file offers **Dismiss** only. Dismissing an error, cancelling, removing or finishing an upload returns focus to Photo, unless focus has moved elsewhere meanwhile.
 - **Ended session:** a 401 during upload or preview ends the session the usual way (sign-in with "Your session ended"). An unsaved new-entry draft, with its receipt link, survives that, like offline work.
 - **Offline:** the buttons are disabled and the hint says to connect; the rest of the entry still saves offline. A receipt uploaded earlier stays linked in the draft and syncs with the entry.
-- **The draft:** the receipt is part of the in-memory new-entry draft (`features/entries/drafts.ts`), so Keep draft, Escape and a page change keep it; Save links it; Discard and sign-out drop the link.
+- **The draft:** the receipt is part of the in-memory new-entry draft (`features/entries/drafts.ts`), so Cancel, Escape and a page change keep it; Save links it; Discard and sign-out drop the link.
 - **Removing** unlinks the receipt from the entry when you save. The server deletes a receipt nothing links to once it is older than `Receipts__UnlinkedRetentionDays` (default 30 days), so the file of a removed receipt, or of one uploaded into a draft that is then discarded, goes then; there is no receipt delete endpoint ([unlinked receipts](../reference/receipts.md#unlinked-receipts)).
 - **Ownership:** an upload belongs to the signed-in account. A personal entry can link only its owner's receipts; a shared expense can link the actor's own upload or one already linked in that household. The server enforces both on save.
 

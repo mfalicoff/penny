@@ -354,11 +354,11 @@ describe("the attach sheet", () => {
     const list = await screen.findByRole("list", { name: "Receipts to attach" });
     await user.click(within(list).getAllByRole("button")[0] as HTMLElement);
     await user.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "New expense" }));
-    const form = await screen.findByRole("form", { name: "Add entry" });
+    const form = await screen.findByRole("form", { name: "New entry" });
     expect(within(form).getByLabelText("Title")).toHaveValue("Acme Store");
     expect(within(form).getByLabelText("Amount (CAD)")).toHaveValue("");
     expect(within(form).getByLabelText("Date")).toHaveValue("2026-11-12");
-    await user.click(within(form).getByRole("button", { name: /More details/ }));
+    await user.click(within(form).getByRole("button", { name: /^Receipt, repeat, trip/ }));
     expect(within(within(form).getByRole("group", { name: "Receipt" })).getByText("invoice-1.pdf")).toBeInTheDocument();
   });
 });
@@ -371,16 +371,16 @@ describe("From inbox in the entry form", () => {
     await screen.findByRole("heading", { level: 1 });
     await within(await sidebar()).findByRole("link", { name: "Receipts to attach, 1 receipt to attach" });
     await user.keyboard("n");
-    const form = await screen.findByRole("form", { name: "Add entry" });
+    const form = await screen.findByRole("form", { name: "New entry" });
     await user.type(within(form).getByLabelText("Amount (CAD)"), "12");
     await user.type(within(form).getByLabelText("Title"), "Supplies");
-    await user.click(within(form).getByRole("button", { name: /More details/ }));
+    await user.click(within(form).getByRole("button", { name: /^Receipt, repeat, trip/ }));
     const group = within(form).getByRole("group", { name: "Receipt" });
     await user.click(within(group).getByRole("button", { name: "Attach a receipt from your inbox" }));
     const picker = await screen.findByRole("dialog", { name: "Choose a receipt from your inbox" });
     await user.click(within(picker).getByRole("button", { name: "Use invoice-1.pdf from Acme Store" }));
     expect(await within(group).findByText("invoice-1.pdf")).toBeInTheDocument();
-    await user.click(within(screen.getByRole("dialog", { name: "Add entry" })).getByRole("button", { name: "Save" }));
+    await user.click(within(screen.getByRole("dialog", { name: "New entry" })).getByRole("button", { name: /^(Save|Add expense)$/ }));
     await waitFor(() => {
       expect(server.state.ledger.transactions.find((item) => item.title === "Supplies")).toMatchObject({ receipt: { id: "inv1", name: "invoice-1.pdf" } });
     });
@@ -396,8 +396,8 @@ describe("From inbox in the entry form", () => {
     renderApp("/settings");
     await within(await sidebar()).findByRole("link", { name: "Receipts to attach, 1 receipt to attach" });
     await user.keyboard("n");
-    const form = await screen.findByRole("form", { name: "Add entry" });
-    await user.click(within(form).getByRole("button", { name: /More details/ }));
+    const form = await screen.findByRole("form", { name: "New entry" });
+    await user.click(within(form).getByRole("button", { name: /^Receipt, repeat, trip/ }));
     const group = within(form).getByRole("group", { name: "Receipt" });
     await user.click(within(group).getByRole("button", { name: "Attach a receipt from your inbox" }));
     await user.click(within(await screen.findByRole("dialog", { name: "Choose a receipt from your inbox" })).getByRole("button", { name: "Use Email PDF from Acme Store" }));
@@ -412,8 +412,8 @@ describe("From inbox in the entry form", () => {
     renderApp("/transactions");
     await within(await sidebar()).findByRole("link", { name: "Receipts to attach, 1 receipt to attach" });
     await user.keyboard("n");
-    const form = await screen.findByRole("form", { name: "Add entry" });
-    await user.click(within(form).getByRole("button", { name: /More details/ }));
+    const form = await screen.findByRole("form", { name: "New entry" });
+    await user.click(within(form).getByRole("button", { name: /^Receipt, repeat, trip/ }));
     const group = within(form).getByRole("group", { name: "Receipt" });
     setOnline(false);
     expect(within(group).getByRole("button", { name: "Attach a receipt from your inbox" })).toHaveAttribute("aria-disabled", "true");

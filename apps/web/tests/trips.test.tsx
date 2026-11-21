@@ -179,13 +179,14 @@ describe("personal trips", { timeout: 20_000 }, () => {
     expect(screen.getByText(/Only your share of a split expense counts/)).toBeInTheDocument();
 
     await tripAction(user, "Trip expense");
-    const add = await dialog("Add entry");
-    expect(within(add).getByLabelText("Trip")).toHaveValue("lis");
+    const add = await dialog("New entry");
+    // On phones the trip is chosen under "Receipt, repeat, trip", which opens with it.
+    expect(within(within(add).getByRole("group", { name: "Trip" })).getByRole("radio", { name: "Lisbon" })).toBeChecked();
     await user.type(within(add).getByLabelText("Amount (CAD)"), "30");
     await user.type(within(add).getByLabelText("Title"), "Tram pass");
-    await user.click(within(add).getByRole("button", { name: "Save" }));
+    await user.click(within(add).getByRole("button", { name: /^(Save|Add expense)$/ }));
     await waitFor(() => {
-      expect(screen.queryByRole("dialog", { name: "Add entry" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("dialog", { name: "New entry" })).not.toBeInTheDocument();
     });
     const list = await screen.findByRole("list", { name: "Trip expenses" });
     expect(within(list).getByText("Tram pass")).toBeInTheDocument();

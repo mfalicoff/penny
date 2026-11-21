@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { expect, test, type Browser } from "@playwright/test";
 import { sha256, syntheticPdf, syntheticPng } from "./fixtures/receipts";
+import { openExtras, SAVE } from "./entry";
 
 // MAZ-94 receipts against the real .NET API and PostgreSQL from the full-stack test environment:
 // the file is encrypted at rest by the API (AES-256-GCM, per-file key) and must come back
@@ -34,15 +35,15 @@ test("a PDF and a photo survive upload, save, reload, preview and download; anot
   await page.goto("/transactions");
   await expect(page.getByRole("heading", { level: 1, name: "Activity" })).toBeVisible();
   await page.getByRole("button", { name: "Add entry" }).first().click();
-  const dialog = page.getByRole("dialog", { name: "Add entry" });
+  const dialog = page.getByRole("dialog", { name: "New entry" });
   await dialog.getByLabel("Amount (CAD)").fill("12.80");
   await dialog.getByLabel("Title").fill("Receipt round trip");
-  await dialog.getByRole("button", { name: /More details/ }).click();
+  await openExtras(dialog);
   const chooser = page.waitForEvent("filechooser");
   await dialog.getByRole("button", { name: "Attach a file or PDF" }).click();
   await (await chooser).setFiles({ name: "round-trip.pdf", mimeType: "application/pdf", buffer: pdf });
   await expect(dialog.getByRole("group", { name: "Receipt" }).getByRole("button", { name: "Preview round-trip.pdf" })).toBeVisible();
-  await dialog.getByRole("button", { name: "Save" }).click();
+  await dialog.getByRole("button", { name: SAVE }).click();
   await expect(page.getByText("Expense added")).toBeVisible();
 
   // The ledger now links the receipt the API stored.

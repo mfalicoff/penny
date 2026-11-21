@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import type { BrowserContext, Page, Request } from "@playwright/test";
 import { expect, test } from "./test";
+import { openExtras, photoButton, SAVE } from "./entry";
 import { damagedPdf, oversizedPng, sha256, syntheticPdf, syntheticPng } from "./fixtures/receipts";
 
 // Receipt upload, preview and download (MAZ-94) on the production build, under the production
@@ -160,14 +161,14 @@ async function open(page: Page, path = "/transactions?month=2026-11") {
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 }
 
-const addDialog = (page: Page) => page.getByRole("dialog", { name: "Add entry" });
+const addDialog = (page: Page) => page.getByRole("dialog", { name: "New entry" });
 
 async function startExpense(page: Page, title: string) {
   await page.getByRole("button", { name: "Add entry" }).first().click();
   const dialog = addDialog(page);
   await dialog.getByLabel("Amount (CAD)").fill("12.80");
   await dialog.getByLabel("Title").fill(title);
-  await dialog.getByRole("button", { name: /More details/ }).click();
+  await openExtras(dialog);
   return dialog;
 }
 
@@ -211,8 +212,8 @@ test("attaches a two-page PDF, saves, and after a reload previews every page and
   await choose(page, "Attach a file or PDF", { name: "café-receipt.pdf", mimeType: "application/pdf", buffer: pdf });
   await expect(dialog.getByRole("group", { name: "Receipt" }).getByRole("button", { name: "Preview café-receipt.pdf" })).toBeVisible();
   await expect(dialog.getByRole("group", { name: "Receipt" })).toContainText(/PDF · \d+ (B|KB)/);
-  await expect(dialog.getByRole("button", { name: "Replace with a photo" })).toBeFocused();
-  await dialog.getByRole("button", { name: "Save" }).click();
+  await expect(dialog.getByRole("button", { name: photoButton(page, true) })).toBeFocused();
+  await dialog.getByRole("button", { name: SAVE }).click();
   await expect(page.getByText("Expense added")).toBeVisible();
   await expect.poll(() => server.ledger.transactions.find((item) => item.title === "Café receipt")?.receipt?.name).toBe("café-receipt.pdf");
   const stored = [...server.files.values()][0];
@@ -250,7 +251,7 @@ test("previews a photo decoded by the browser and downloads it unchanged", async
   const png = syntheticPng();
   await open(page);
   const dialog = await startExpense(page, "Market");
-  await choose(page, "Attach a photo", { name: "market.png", mimeType: "image/png", buffer: png });
+  await choose(page, photoButton(page), { name: "market.png", mimeType: "image/png", buffer: png });
   const field = dialog.getByRole("group", { name: "Receipt" });
   await expect(field.getByRole("button", { name: "Preview market.png" })).toBeVisible();
   const previewButton = field.getByRole("button", { name: "Preview market.png" });
@@ -264,7 +265,7 @@ test("previews a photo decoded by the browser and downloads it unchanged", async
   await preview.getByRole("button", { name: "Close" }).click();
   await expect(previewButton).toBeFocused();
   // The draft survives the preview: save it with the receipt.
-  await dialog.getByRole("button", { name: "Save" }).click();
+  await dialog.getByRole("button", { name: SAVE }).click();
   await expect.poll(() => server.ledger.transactions.find((item) => item.title === "Market")?.receipt?.mime).toBe("image/png");
   expect(errors).toEqual([]);
 });
@@ -281,9 +282,9 @@ test("refuses unsupported, empty and oversized files before uploading, and retur
   await expect(field.getByRole("button", { name: "Try again" })).toHaveCount(0);
   await field.getByRole("button", { name: "Dismiss" }).click();
   await expect(field.getByRole("alert")).toHaveCount(0);
-  await expect(field.getByRole("button", { name: "Attach a photo" })).toBeFocused();
+  await expect(field.getByRole("button", { name: photoButton(page) })).toBeFocused();
 
-  await choose(page, "Attach a photo", { name: "big.png", mimeType: "image/png", buffer: oversizedPng() });
+  await choose(page, photoButton(page), { name: "big.png", mimeType: "image/png", buffer: oversizedPng() });
   await expect(field.getByRole("alert")).toContainText("This file is larger than 10 MB.");
   await choose(page, "Attach a file or PDF", { name: "renamed.pdf", mimeType: "application/pdf", buffer: Buffer.from("GIF89a, not a PDF") });
   await expect(field.getByRole("alert")).toContainText("isn't a valid photo or PDF");
@@ -317,18 +318,18 @@ test("retries a failed upload, cancels one in flight, and keeps the draft throug
   await choose(page, "Replace with a file or PDF", { name: "second.pdf", mimeType: "application/pdf", buffer: syntheticPdf(1) });
   await expect(field.getByRole("progressbar", { name: "Uploading second.pdf" })).toBeVisible();
   // Save waits for the upload instead of saving without it.
-  await dialog.getByRole("button", { name: "Save" }).click();
+  await dialog.getByRole("button", { name: SAVE }).click();
   await expect(dialog.getByRole("alert").filter({ hasText: "The receipt is still uploading" })).toBeVisible();
   await field.getByRole("button", { name: "Cancel upload" }).click();
   await expect(field.getByRole("progressbar")).toHaveCount(0);
-  await expect(field.getByRole("button", { name: "Replace with a photo" })).toBeFocused();
+  await expect(field.getByRole("button", { name: photoButton(page, true) })).toBeFocused();
   release();
   server.hold = null;
   // The cancelled upload never replaces the receipt already attached.
   await expect(field.getByRole("button", { name: "Preview first.pdf" })).toBeVisible();
   await expect(field).not.toContainText("second.pdf");
   await expect(dialog.getByLabel("Title")).toHaveValue("Flaky upload");
-  await dialog.getByRole("button", { name: "Save" }).click();
+  await dialog.getByRole("button", { name: SAVE }).click();
   await expect.poll(() => server.ledger.transactions.find((item) => item.title === "Flaky upload")?.receipt?.name).toBe("first.pdf");
   expect(unexpected(errors)).toEqual([]);
 });
@@ -337,9 +338,10 @@ test("keeps a receipt in the unsaved draft, and removing it saves the entry with
   const server = await mockApi(context);
   await open(page);
   const dialog = await startExpense(page, "Draft with receipt");
-  await choose(page, "Attach a photo", { name: "kept.png", mimeType: "image/png", buffer: syntheticPng() });
+  await choose(page, photoButton(page), { name: "kept.png", mimeType: "image/png", buffer: syntheticPng() });
   await expect(dialog.getByRole("group", { name: "Receipt" }).getByRole("button", { name: "Preview kept.png" })).toBeVisible();
-  await dialog.getByRole("button", { name: "Keep draft" }).click();
+  // Cancel keeps the draft.
+  await dialog.getByRole("button", { name: "Cancel" }).click();
   await expect(addDialog(page)).toHaveCount(0);
 
   await page.getByRole("button", { name: "Add entry" }).first().click();
@@ -348,8 +350,8 @@ test("keeps a receipt in the unsaved draft, and removing it saves the entry with
   const field = reopened.getByRole("group", { name: "Receipt" });
   await expect(field.getByRole("button", { name: "Preview kept.png" })).toBeVisible();
   await field.getByRole("button", { name: "Remove kept.png" }).click();
-  await expect(field.getByRole("button", { name: "Attach a photo" })).toBeFocused();
-  await reopened.getByRole("button", { name: "Save" }).click();
+  await expect(field.getByRole("button", { name: photoButton(page) })).toBeFocused();
+  await reopened.getByRole("button", { name: SAVE }).click();
   await expect.poll(() => server.ledger.transactions.find((item) => item.title === "Draft with receipt")).toBeTruthy();
   expect(server.ledger.transactions.find((item) => item.title === "Draft with receipt")?.receipt).toBeUndefined();
 });

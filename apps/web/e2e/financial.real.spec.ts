@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { LedgerClient, realStack, signIn, skipReason, testUser } from "./stack";
+import { SAVE } from "./entry";
 
 // MAZ-96 personal money journey against the real .NET API and PostgreSQL, from an empty account:
 // Settings › Currency while the ledger is empty, an account and a category, income, an expense on
@@ -14,9 +15,9 @@ test.describe.configure({ timeout: 120_000 });
 const AT = "2026-10-20T15:00:00Z";
 const hero = (page: Page) => page.getByRole("region", { name: "Left to spend" });
 
-async function addEntry(page: Page, values: { kind?: "Income" | "Investment"; amount: string; title: string; date: string; category?: string; account?: string }) {
+async function addEntry(page: Page, values: { kind?: "Income" | "Invest"; amount: string; title: string; date: string; category?: string; account?: string }) {
   await page.getByRole("button", { name: "Add entry" }).first().click();
-  const add = page.getByRole("form", { name: "Add entry" });
+  const add = page.getByRole("form", { name: "New entry" });
   if (values.kind) await add.getByRole("radio", { name: values.kind, exact: true }).check({ force: true });
   await add.getByLabel("Amount (EUR)").fill(values.amount);
   await add.getByLabel("Title").fill(values.title);
@@ -27,12 +28,9 @@ async function addEntry(page: Page, values: { kind?: "Income" | "Investment"; am
     await expect(add.getByRole("radio", { name: values.category, exact: true })).toBeChecked();
   }
   await add.getByLabel("Date").fill(values.date);
-  if (values.account) {
-    await add.getByRole("button", { name: /More details/ }).click();
-    await add.getByLabel("Account").selectOption({ label: values.account });
-  }
-  await page.getByRole("dialog", { name: "Add entry" }).getByRole("button", { name: "Save" }).click();
-  await expect(page.getByRole("dialog", { name: "Add entry" })).toHaveCount(0);
+  if (values.account) await add.getByLabel("Account").selectOption({ label: values.account });
+  await page.getByRole("dialog", { name: "New entry" }).getByRole("button", { name: SAVE }).click();
+  await expect(page.getByRole("dialog", { name: "New entry" })).toHaveCount(0);
 }
 
 test("currency, organize, income, expense, investment, a schedule and Home's totals match the server", async ({ browser, baseURL }) => {
@@ -69,7 +67,7 @@ test("currency, organize, income, expense, investment, a schedule and Home's tot
   await page.goto("/transactions?month=2026-10");
   await addEntry(page, { kind: "Income", amount: "3000", title: "October pay", date: "2026-10-01" });
   await addEntry(page, { amount: "18.40", title: "Sourdough", date: "2026-10-12", category: "Bakery", account: "Daily card" });
-  await addEntry(page, { kind: "Investment", amount: "250", title: "Index fund", date: "2026-10-05" });
+  await addEntry(page, { kind: "Invest", amount: "250", title: "Index fund", date: "2026-10-05" });
 
   // A monthly schedule later this month: projected, not recorded.
   await page.goto("/recurring");

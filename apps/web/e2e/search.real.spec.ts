@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { SAVE } from "./entry";
 import { LedgerClient, pinClock, realStack, scenarioDefinition, seedScenario, signIn, skipReason, type SearchPage, type SeedContext, type Session } from "./stack";
 
 // MAZ-96: .NET/PostgreSQL search journeys in the browser over the shared `searchable-household`
@@ -227,11 +228,11 @@ test("offline create, edit and delete search locally, then sync once on reconnec
   await context.setOffline(true);
   // Create (pendingEdits.create): Coffee to go, 3.00 on Oct 14.
   await page.getByRole("button", { name: "Add entry" }).click();
-  const add = page.getByRole("form", { name: "Add entry" });
+  const add = page.getByRole("form", { name: "New entry" });
   await add.getByLabel("Amount (CAD)").fill("3");
   await add.getByLabel("Title").fill("Coffee to go");
   await add.getByLabel("Date").fill("2026-10-14");
-  await page.getByRole("dialog", { name: "Add entry" }).getByRole("button", { name: "Save" }).click();
+  await page.getByRole("dialog", { name: "New entry" }).getByRole("button", { name: SAVE }).click();
   await expect(page.getByText("Saved on this device. It syncs when you're back online.")).toBeVisible();
 
   // Edit (pendingEdits.edit): the Oct 9 Coffee becomes Espresso.

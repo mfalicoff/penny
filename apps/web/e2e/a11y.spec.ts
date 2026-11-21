@@ -65,7 +65,7 @@ test("the Add entry dialog passes axe, and Escape returns focus to its opener", 
   const opener = page.getByRole("button", { name: "Add entry" }).first();
   await opener.focus();
   await page.keyboard.press("Enter");
-  const dialog = page.getByRole("dialog", { name: "Add entry" });
+  const dialog = page.getByRole("dialog", { name: "New entry" });
   await expect(dialog).toBeVisible();
   await scan(page, "Add entry");
   await page.keyboard.press("Escape");

@@ -33,11 +33,12 @@ async function stored(): Promise<LedgerRecord | undefined> {
 async function openAdd(user: UserEvent) {
   await screen.findByRole("heading", { level: 1 });
   await user.keyboard("n");
-  return screen.findByRole("form", { name: "Add entry" });
+  return screen.findByRole("form", { name: "New entry" });
 }
 
-const dialog = () => screen.getByRole("dialog", { name: /Add entry|Edit entry/ });
-const save = (user: UserEvent) => user.click(within(dialog()).getByRole("button", { name: "Save" }));
+const dialog = () => screen.getByRole("dialog", { name: /New entry|Edit entry/ });
+/** The primary button: "Add expense" (or income, investment) for a new entry, "Save" for an edit. */
+const save = (user: UserEvent) => user.click(within(dialog()).getByRole("button", { name: /^(Save|Add (expense|income|investment))$/ }));
 
 async function fill(user: UserEvent, form: HTMLElement, values: { amount?: string; title?: string; date?: string }) {
   if (values.amount !== undefined) {
@@ -67,12 +68,16 @@ describe("adding entries", () => {
     await user.click(within(form).getByRole("radio", { name: "Food & drinks" }));
     await user.selectOptions(within(form).getByLabelText("Account"), "Chequing");
 
-    await user.click(within(form).getByRole("button", { name: /More details/ }));
+    // Split opens in the form (iphone-split); the row then shows the share (iphone-add-expense).
+    await user.click(within(form).getByRole("button", { name: /^Split/ }));
     await user.click(within(form).getByRole("radio", { name: "Percent" }));
     await user.clear(within(form).getByLabelText("Your percentage"));
     await user.type(within(form).getByLabelText("Your percentage"), "50");
-    expect(within(form).getByText("Your share · counts in your spending").parentElement).toHaveTextContent("$42.10");
-    await user.selectOptions(within(form).getByLabelText("Trip"), "Lisbon");
+    expect(within(form).getByRole("button", { name: /^Split/ })).toHaveTextContent("$42.10 yours");
+    expect(within(form).getByText("Only your share counts toward your spending. The $84.20 total stays on the entry.")).toBeInTheDocument();
+    // Receipt, repeat, trip (iphone-entry-extras): the trip is a list, the note a field.
+    await user.click(within(form).getByRole("button", { name: /^Receipt, repeat, trip/ }));
+    await user.click(within(within(form).getByRole("group", { name: "Trip" })).getByRole("radio", { name: "Lisbon" }));
     await user.type(within(form).getByLabelText("Note"), "Birthday");
     await save(user);
 
@@ -110,9 +115,11 @@ describe("adding entries", () => {
     await user.click(within(form).getByRole("radio", { name: "Income" }));
     expect(within(form).getByRole("radio", { name: "Salary" })).toBeChecked();
     expect(within(form).queryByRole("radio", { name: "Groceries" })).not.toBeInTheDocument();
-    await user.click(within(form).getByRole("button", { name: /More details/ }));
-    expect(within(form).queryByLabelText("Trip")).not.toBeInTheDocument();
-    expect(within(form).queryByRole("group", { name: "Your share" })).not.toBeInTheDocument();
+    // Income has Repeat and Note rows, and no Split, trip or receipt (iphone-add-income).
+    expect(within(form).getByLabelText("Repeat")).toBeInTheDocument();
+    expect(within(form).queryByRole("button", { name: /^Split/ })).not.toBeInTheDocument();
+    expect(within(form).queryByRole("button", { name: /^Receipt, repeat, trip/ })).not.toBeInTheDocument();
+    expect(within(form).queryByText("Trip")).not.toBeInTheDocument();
     await fill(user, form, { amount: "4800", title: "Salary" });
     await save(user);
     expect(await screen.findByText("Income added")).toBeInTheDocument();
@@ -122,13 +129,22 @@ describe("adding entries", () => {
     expect(serverEntries(server)[0]?.tripId).toBeUndefined();
   });
 
-  it("explains future-dated income on the Income form before a date is picked (MAZ-136, MAZ-175)", async () => {
+  it("leads with the amount, labels the kinds as the cards do and fills the chosen chip (MAZ-226)", async () => {
     ledgerServer();
     const user = userEvent.setup();
     renderApp("/");
     const form = await openAdd(user);
+    expect(within(within(form).getByRole("group", { name: "Type" })).getAllByRole("radio").map((radio) => radio.closest("label")?.textContent)).toEqual(["Expense", "Income", "Invest"]);
+    expect(within(form).getByRole("button", { name: "Add expense" })).toBeInTheDocument();
+    await user.type(within(form).getByLabelText("Amount (CAD)"), "3200");
+    await user.tab();
+    // Grouped as the cards draw it once typed; the stored draft keeps the plain number.
+    expect(within(form).getByLabelText("Amount (CAD)")).toHaveValue("3,200");
     await user.click(within(form).getByRole("radio", { name: "Income" }));
-    expect(within(form).getByText(/Pay dated after today shows as expected: it counts toward Projected until its day, not toward Left to spend\./)).toBeInTheDocument();
+    expect(within(form).getByRole("button", { name: "Add income" })).toBeInTheDocument();
+    expect(within(form).getByRole("radio", { name: "Salary" }).closest("label")).toHaveClass("entry-chip--on");
+    // No helper text under the type: the dated callout says it once the date is after today.
+    expect(within(form).queryByText(/Money you received/)).not.toBeInTheDocument();
   });
 
   it("shows the category picker as Most used and all categories in a grid, the chosen one pressed (MAZ-175)", async () => {
@@ -154,11 +170,10 @@ describe("adding entries", () => {
     const user = userEvent.setup();
     renderApp("/");
     const form = await openAdd(user);
-    await user.click(within(form).getByRole("radio", { name: "Investment" }));
-    expect(within(form).getByText(/isn't spending/)).toBeInTheDocument();
+    await user.click(within(form).getByRole("radio", { name: "Invest" }));
     await fill(user, form, { amount: "200", title: "Index fund", date: "2026-01-31" });
-    await user.click(within(form).getByRole("button", { name: /More details/ }));
     await user.selectOptions(within(form).getByLabelText("Repeat"), "monthly");
+    expect(within(form).getByLabelText("Repeat")).toHaveDisplayValue("Monthly on the 31st");
     await save(user);
     expect(await screen.findByText("Investment added")).toBeInTheDocument();
     await waitFor(() => {
@@ -188,12 +203,14 @@ describe("adding entries", () => {
     expect(within(form).getByLabelText("Amount (CAD)")).toHaveAccessibleDescription("Enter an amount with up to two decimal places.");
 
     await fill(user, form, { amount: "40", title: "Taxi" });
-    await user.click(within(form).getByRole("button", { name: /More details/ }));
+    await user.click(within(form).getByRole("button", { name: /^Split/ }));
     await user.click(within(form).getByRole("radio", { name: "Amount" }));
-    await user.type(within(form).getByLabelText("Your amount"), "50");
+    await user.type(within(form).getByLabelText("Your share"), "50");
+    // Closing Split doesn't hide the problem: saving opens it again on the field.
+    await user.click(within(form).getByRole("button", { name: /^Split/ }));
     await save(user);
-    expect(within(form).getByLabelText("Your amount")).toHaveFocus();
-    expect(within(form).getByLabelText("Your amount")).toHaveAccessibleDescription("Your share cannot exceed the receipt total.");
+    expect(within(form).getByLabelText("Your share")).toHaveFocus();
+    expect(within(form).getByLabelText("Your share")).toHaveAccessibleDescription("Your share cannot exceed the receipt total.");
     expect(server.state.puts).toBe(0);
     expect((await stored())?.local.transactions).toHaveLength(0);
   });
@@ -280,7 +297,7 @@ describe("adding entries", () => {
     expect(await within(picker).findByRole("alert")).toHaveTextContent("You already have a category with this name.");
     expect(within(picker).getByLabelText("New category name")).toHaveFocus();
     await user.keyboard("{Escape}");
-    expect(screen.getByRole("form", { name: "Add entry" })).toBeInTheDocument();
+    expect(screen.getByRole("form", { name: "New entry" })).toBeInTheDocument();
     expect(within(form).getByLabelText("Amount (CAD)")).toHaveValue("3");
   });
 
@@ -290,7 +307,7 @@ describe("adding entries", () => {
     renderApp("/");
     const form = await openAdd(user);
     await fill(user, form, { amount: "12", title: "Lunch" });
-    await user.click(within(form).getByRole("button", { name: "New account" }));
+    await user.selectOptions(within(form).getByLabelText("Account"), "New account…");
     const accountDialog = screen.getByRole("dialog", { name: "New account" });
     await user.type(within(accountDialog).getByLabelText("Name"), "Travel card");
     await user.click(within(accountDialog).getByRole("radio", { name: "Credit card" }));
@@ -427,6 +444,6 @@ describe("where saving isn't possible", () => {
     await user.click(await screen.findByRole("button", { name: "Take a look around with sample data" }));
     await screen.findByText("You're exploring a demo");
     await user.keyboard("n");
-    expect(screen.getByRole("dialog", { name: "Add entry" })).toHaveAccessibleDescription(/The demo doesn't save entries/);
+    expect(screen.getByRole("dialog", { name: "New entry" })).toHaveAccessibleDescription(/The demo doesn't save entries/);
   });
 });

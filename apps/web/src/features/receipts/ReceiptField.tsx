@@ -32,6 +32,11 @@ interface ReceiptFieldProps {
   onBusyChange?: (busy: boolean) => void;
   /** Shown under the controls, e.g. who can see the receipt. */
   hint?: ReactNode;
+  /**
+   * `card`: the section of More details (`iphone-entry-extras`): the attached file, then copper
+   * Photo and File or PDF. `drop`: the web card's drop zone, "Drop a receipt or browse".
+   */
+  variant?: "default" | "card" | "drop";
 }
 
 /**
@@ -42,7 +47,7 @@ interface ReceiptFieldProps {
  * Removing only unlinks; there is no receipt delete. The server deletes a receipt
  * nothing links to once it is past its retention (MAZ-165).
  */
-export function ReceiptField({ value, onChange, onBusyChange, hint }: ReceiptFieldProps) {
+export function ReceiptField({ value, onChange, onBusyChange, hint, variant = "default" }: ReceiptFieldProps) {
   const queryClient = useQueryClient();
   const online = useOnline();
   const ids = { label: useId(), hint: useId(), status: useId() };
@@ -160,25 +165,44 @@ export function ReceiptField({ value, onChange, onBusyChange, hint }: ReceiptFie
   const disabled = !online || uploading;
   const size = value ? sizes[value.id] : undefined;
   const replacing = value !== null;
+  const attachment = value ? (
+    <>
+      <span className="receipt-att__thumb" aria-hidden="true">
+        <Icon name={value.mime === "application/pdf" ? "document-text" : value.mime ? "image" : "receipt"} size={22} />
+      </span>
+      <span className="receipt-att__text">
+        <b>{value.name || "Receipt"}</b>
+        <span>
+          {value.mime ? receiptKind(value.mime) : "Attached"}
+          {size !== undefined ? ` · ${formatBytes(size)}` : ""}
+        </span>
+      </span>
+    </>
+  ) : null;
 
   return (
-    <div ref={rootRef} className="receipt-field" role="group" aria-labelledby={ids.label} aria-describedby={ids.hint}>
-      <div id={ids.label} className="receipt-field__label">
+    <div ref={rootRef} className={cx("receipt-field", `receipt-field--${variant}`)} role="group" aria-labelledby={ids.label} aria-describedby={ids.hint}>
+      <div id={ids.label} className={variant === "drop" ? "visually-hidden" : "receipt-field__label"}>
         Receipt
       </div>
       {value ? (
         <div className="receipt-att">
-          <span className="receipt-att__thumb" aria-hidden="true">
-            <Icon name={value.mime === "application/pdf" ? "document-text" : value.mime ? "image" : "receipt"} size={22} />
-          </span>
-          <span className="receipt-att__text">
-            <b>{value.name || "Receipt"}</b>
-            <span>
-              {value.mime ? receiptKind(value.mime) : "Attached"}
-              {size !== undefined ? ` · ${formatBytes(size)}` : ""}
-            </span>
-          </span>
-          {served ? (
+          {variant === "card" && served ? (
+            // The card has no Preview button: the file itself opens it.
+            <button
+              type="button"
+              className="receipt-att__open"
+              aria-label={`Preview ${value.name || "receipt"}`}
+              onClick={() => {
+                setPreview(true);
+              }}
+            >
+              {attachment}
+            </button>
+          ) : (
+            attachment
+          )}
+          {served && variant !== "card" ? (
             <Button
               variant="quiet"
               onClick={() => {
@@ -267,6 +291,30 @@ export function ReceiptField({ value, onChange, onBusyChange, hint }: ReceiptFie
         }}
         onDrop={onDrop}
       >
+        {variant === "drop" ? (
+          <span className="receipt-drop__hint">
+            <Icon name="receipt" size={16} />
+            <span aria-hidden="true">{replacing ? "Drop a file to replace it, or" : "Drop a receipt or"}</span>
+            <button
+              ref={attachRef}
+              type="button"
+              className="link-button receipt-drop__browse"
+              aria-disabled={disabled || undefined}
+              aria-label={replacing ? "Replace with a file or PDF" : "Attach a file or PDF"}
+              onClick={() => {
+                if (!disabled) fileInputRef.current?.click();
+              }}
+            >
+              browse
+            </button>
+            {fromInbox ? (
+              <Button icon="receipt" busy={disabled} aria-label={replacing ? "Replace with a receipt from your inbox" : "Attach a receipt from your inbox"} aria-haspopup="dialog" onClick={() => { setPicking(true); }}>
+                From inbox
+              </Button>
+            ) : null}
+          </span>
+        ) : (
+        <>
         <span className="receipt-drop__hint" aria-hidden="true">
           <Icon name="receipt" size={16} />
           {replacing ? "Drop a file to replace it, or" : "Drop a receipt here, or"}
@@ -295,6 +343,8 @@ export function ReceiptField({ value, onChange, onBusyChange, hint }: ReceiptFie
             </Button>
           ) : null}
         </span>
+        </>
+        )}
         <input
           ref={photoInputRef}
           type="file"
@@ -318,7 +368,7 @@ export function ReceiptField({ value, onChange, onBusyChange, hint }: ReceiptFie
           }}
         />
       </div>
-      <p id={ids.hint} className="note">
+      <p id={ids.hint} className={variant !== "default" && online && !(value && !served) && !returned && !hint ? "visually-hidden" : "note"}>
         {online ? "Photos (JPEG, PNG, WebP, GIF, HEIC) or PDFs up to 10 MB." : "Connect to the internet to attach a receipt. The rest of the entry saves offline."}
         {value && !served ? " This receipt was added in the Penny app and opens there." : null}
         {returned ? ` ${BACK_TO_INBOX}` : null}

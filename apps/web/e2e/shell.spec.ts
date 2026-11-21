@@ -159,7 +159,7 @@ test.describe("keyboard and history", () => {
     const add = page.getByRole("button", { name: "Add entry" });
     await add.focus();
     await page.keyboard.press("Enter");
-    await expect(page.getByRole("dialog", { name: "Add entry" })).toBeVisible();
+    await expect(page.getByRole("dialog", { name: "New entry" })).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(page.getByRole("dialog")).toBeHidden();
     await expect(add).toBeFocused();
