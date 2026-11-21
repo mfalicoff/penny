@@ -1,7 +1,7 @@
 import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { renderApp, stubServer } from "./render";
+import { emptyWireLedger, json, renderApp, stubServer } from "./render";
 
 const main = () => screen.getByRole("navigation", { name: "Main" });
 
@@ -95,17 +95,45 @@ describe("top bar", () => {
     expect(router.state.location.pathname).toBe("/trips");
   });
 
+  // The dialog shows "Loading your ledger…" until the ledger arrives, then the form replaces it.
+  // Each case waits for one of those states, so Close is never pressed on a button that the other
+  // state is about to replace (MAZ-260).
   it("opens Add entry from the /entries/new deep link and goes Home when it closes", async () => {
     stubServer();
     const user = userEvent.setup();
     const { router } = renderApp("/entries/new");
-    const dialog = await screen.findByRole("dialog", { name: "New entry" });
+    const form = await screen.findByRole("form", { name: "New entry" });
+    const dialog = screen.getByRole("dialog", { name: "New entry" });
+    expect(dialog).toContainElement(form);
     await user.click(within(dialog).getAllByRole("button", { name: "Close" })[0] as HTMLElement);
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/");
     });
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 1, name: "Home" })).toBeInTheDocument();
+  });
+
+  it("goes Home when the /entries/new deep link is closed before the ledger loads", async () => {
+    // The ledger is held back until Close has been pressed, so the dialog stays on its loading state.
+    let releaseLedger: () => void = () => undefined;
+    const held = new Promise<void>((resolve) => {
+      releaseLedger = resolve;
+    });
+    stubServer((url) => (url === "/api/ledger" ? held.then(() => json({ revision: 0, ledger: emptyWireLedger() })) : undefined));
+    const user = userEvent.setup();
+    const { router } = renderApp("/entries/new");
+    const dialog = await screen.findByRole("dialog", { name: "New entry" });
+    expect(await within(dialog).findByText("Loading your ledger…")).toBeInTheDocument();
+    await user.click(within(dialog).getAllByRole("button", { name: "Close" })[0] as HTMLElement);
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/");
+    });
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Home" })).toBeInTheDocument();
+    // Let the ledger arrive, and Home settle on it, before the next test starts.
+    releaseLedger();
+    expect(await screen.findByText("Left to spend")).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 });
 
