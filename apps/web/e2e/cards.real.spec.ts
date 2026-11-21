@@ -478,7 +478,7 @@ const cards: Record<string, Card> = {
   // Settings and organize
   "iphone-settings": {
     open: ({ page: p }) => page(p, "/settings", "Settings"),
-    note: "Settings is a page (Account, Appearance, Currency, Server), not a sheet; Recurring, Accounts and Categories are in More.",
+    note: "Settings is a page styled as the sheet (no tab bar, Done closes it), without Home behind it.",
   },
   "iphone-recurring": {
     open: async ({ page: p }) => {
@@ -543,7 +543,7 @@ const cards: Record<string, Card> = {
     },
   },
   "iphone-server-connect": {
-    skip: { status: "not-applicable", note: "The web always uses the server it was opened from; it has no signed-out server entry (Settings › Server shows it read-only when signed in)." },
+    skip: { status: "not-applicable", note: "The web always uses the server it was opened from; it has no signed-out server entry (Settings › Server & sync shows it read-only when signed in)." },
   },
   "iphone-lock": { skip: { status: "not-applicable", note: NO_LOCK } },
   "iphone-empty-home": {

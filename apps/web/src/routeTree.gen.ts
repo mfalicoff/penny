@@ -24,6 +24,7 @@ import { Route as HouseholdsIndexRouteImport } from './routes/households/index'
 import { Route as SettingsIndexRouteImport } from './routes/settings/index'
 import { Route as SettingsAppearanceRouteImport } from './routes/settings/appearance'
 import { Route as SettingsCurrencyRouteImport } from './routes/settings/currency'
+import { Route as SettingsProfileRouteImport } from './routes/settings/profile'
 import { Route as SettingsReceiptEmailRouteImport } from './routes/settings/receipt-email'
 import { Route as SettingsServerRouteImport } from './routes/settings/server'
 import { Route as TripsIndexRouteImport } from './routes/trips/index'
@@ -106,6 +107,11 @@ const SettingsCurrencyRoute = SettingsCurrencyRouteImport.update({
   path: '/currency',
   getParentRoute: () => SettingsRouteRoute,
 } as any)
+const SettingsProfileRoute = SettingsProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => SettingsRouteRoute,
+} as any)
 const SettingsReceiptEmailRoute = SettingsReceiptEmailRouteImport.update({
   id: '/receipt-email',
   path: '/receipt-email',
@@ -152,6 +158,7 @@ export interface FileRoutesByFullPath {
   '/entries/new': typeof EntriesNewRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/currency': typeof SettingsCurrencyRoute
+  '/settings/profile': typeof SettingsProfileRoute
   '/settings/receipt-email': typeof SettingsReceiptEmailRoute
   '/settings/server': typeof SettingsServerRoute
   '/trips/$id': typeof TripsIdRoute
@@ -174,6 +181,7 @@ export interface FileRoutesByTo {
   '/entries/new': typeof EntriesNewRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/currency': typeof SettingsCurrencyRoute
+  '/settings/profile': typeof SettingsProfileRoute
   '/settings/receipt-email': typeof SettingsReceiptEmailRoute
   '/settings/server': typeof SettingsServerRoute
   '/trips/$id': typeof TripsIdRoute
@@ -198,6 +206,7 @@ export interface FileRoutesById {
   '/entries/new': typeof EntriesNewRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/currency': typeof SettingsCurrencyRoute
+  '/settings/profile': typeof SettingsProfileRoute
   '/settings/receipt-email': typeof SettingsReceiptEmailRoute
   '/settings/server': typeof SettingsServerRoute
   '/trips/$id': typeof TripsIdRoute
@@ -223,6 +232,7 @@ export interface FileRouteTypes {
     | '/entries/new'
     | '/settings/appearance'
     | '/settings/currency'
+    | '/settings/profile'
     | '/settings/receipt-email'
     | '/settings/server'
     | '/trips/$id'
@@ -245,6 +255,7 @@ export interface FileRouteTypes {
     | '/entries/new'
     | '/settings/appearance'
     | '/settings/currency'
+    | '/settings/profile'
     | '/settings/receipt-email'
     | '/settings/server'
     | '/trips/$id'
@@ -268,6 +279,7 @@ export interface FileRouteTypes {
     | '/entries/new'
     | '/settings/appearance'
     | '/settings/currency'
+    | '/settings/profile'
     | '/settings/receipt-email'
     | '/settings/server'
     | '/trips/$id'
@@ -404,6 +416,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsCurrencyRouteImport
       parentRoute: typeof SettingsRouteRoute
     }
+    '/settings/profile': {
+      id: '/settings/profile'
+      path: '/profile'
+      fullPath: '/settings/profile'
+      preLoaderRoute: typeof SettingsProfileRouteImport
+      parentRoute: typeof SettingsRouteRoute
+    }
     '/settings/receipt-email': {
       id: '/settings/receipt-email'
       path: '/receipt-email'
@@ -452,6 +471,7 @@ declare module '@tanstack/react-router' {
 interface SettingsRouteRouteChildren {
   SettingsAppearanceRoute: typeof SettingsAppearanceRoute
   SettingsCurrencyRoute: typeof SettingsCurrencyRoute
+  SettingsProfileRoute: typeof SettingsProfileRoute
   SettingsReceiptEmailRoute: typeof SettingsReceiptEmailRoute
   SettingsServerRoute: typeof SettingsServerRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
@@ -460,6 +480,7 @@ interface SettingsRouteRouteChildren {
 const SettingsRouteRouteChildren: SettingsRouteRouteChildren = {
   SettingsAppearanceRoute: SettingsAppearanceRoute,
   SettingsCurrencyRoute: SettingsCurrencyRoute,
+  SettingsProfileRoute: SettingsProfileRoute,
   SettingsReceiptEmailRoute: SettingsReceiptEmailRoute,
   SettingsServerRoute: SettingsServerRoute,
   SettingsIndexRoute: SettingsIndexRoute,

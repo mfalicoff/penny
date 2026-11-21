@@ -20,8 +20,8 @@ describe("app URLs", () => {
     ["/accounts", "Accounts"],
     ["/categories", "Categories"],
     ["/settings", "Settings"],
-    ["/settings/appearance", "Settings"],
-    ["/settings/receipt-email", "Settings"],
+    ["/settings/appearance", "Appearance"],
+    ["/settings/receipt-email", "Receipt email"],
     ["/receipts", "Receipts to attach"],
   ])("%s opens with the title %s", async (path, title) => {
     stubServer();

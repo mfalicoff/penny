@@ -75,7 +75,7 @@ export function renderApp(path: string) {
   return { ...view, router, history, queryClient };
 }
 
-/** Sign-out lives in Settings › Account: open Settings from the sidebar, then press Sign out. */
+/** Sign-out is the last row of the Settings list: open Settings from the sidebar, then press Sign out. */
 export async function openSignOut(user: UserEvent) {
   await user.click(within(await screen.findByRole("complementary", { name: "Penny" })).getByRole("link", { name: "Settings" }));
   await user.click(await screen.findByRole("button", { name: "Sign out" }));

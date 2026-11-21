@@ -1,0 +1,751 @@
+/*
+ * Settings (MAZ-231). Three layouts, chosen in `SettingsLayout.tsx` from the width and pointer:
+ *
+ * - `.settings--phone` (card `iphone-settings`, `iphone-appearance`): a sheet-like page with the
+ *   profile card and inset groups (MANAGE, PREFERENCES, SERVER) and a full-width Sign out row;
+ * - `.settings--tablet` (card `ipad-settings`): the same groups beside the open section, which has
+ *   its own large title; the open row is filled copper;
+ * - `.settings--desktop` (card `web-settings`): a plain section list beside panels.
+ */
+
+/* The raised neutral selection of the desktop list (card `web-settings`), lighter in dark. */
+:root {
+  --settings-on: var(--pk-surface);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --settings-on: #2c2a28;
+  }
+}
+
+:root[data-theme="dark"] {
+  --settings-on: #2c2a28;
+}
+
+.settings {
+  display: grid;
+  align-items: start;
+  min-width: 0;
+}
+
+.settings__nav ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.settings__pane {
+  display: grid;
+  gap: 22px;
+  min-width: 0;
+}
+
+.settings__link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  border: 0;
+  background: none;
+  color: var(--pk-label);
+  font: inherit;
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.settings__label {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.settings__detail {
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+}
+
+.settings__value {
+  margin-inline-start: auto;
+  color: var(--pk-label-2);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.settings__link > .icon:last-child {
+  flex: none;
+  color: var(--pk-label-3);
+}
+
+.settings__link--off {
+  color: var(--pk-label-2);
+  cursor: not-allowed;
+}
+
+.settings__link .navlink__label {
+  flex: 1;
+}
+
+.settings__link .navlink__count {
+  margin-inline-start: auto;
+}
+
+/* The row icons: neutral tiles (cards `iphone-settings`, `ipad-settings`). */
+.settings__tile {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--pk-fill);
+  color: var(--pk-label);
+}
+
+.settings__group {
+  margin: 0;
+  padding: 18px 16px 7px;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.settings__footnote {
+  margin: 0;
+  padding: 7px 16px 0;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+/* ---------- phones and touch tablets: inset groups ---------- */
+.settings--phone,
+.settings--tablet {
+  gap: 0;
+}
+
+.settings--phone .settings__list,
+.settings--tablet .settings__list {
+  overflow: hidden;
+  border-radius: 22px;
+  background: var(--pk-surface);
+}
+
+.settings--phone .settings__link,
+.settings--tablet .settings__link {
+  position: relative;
+  min-height: 50px;
+  padding: 8px 16px;
+  font-size: 1.0625rem;
+}
+
+.settings--phone .settings__value,
+.settings--tablet .settings__value {
+  font-size: 1rem;
+}
+
+.settings--phone .settings__value + .icon,
+.settings--tablet .settings__value + .icon,
+.settings--phone .navlink__count + .icon,
+.settings--tablet .navlink__count + .icon {
+  margin-inline-start: -4px;
+}
+
+.settings--phone .settings__label + .icon,
+.settings--tablet .settings__label + .icon,
+.settings--phone .navlink__label + .icon,
+.settings--tablet .navlink__label + .icon {
+  margin-inline-start: auto;
+}
+
+/* Inset separators start after the icon tile. */
+.settings--phone li + li .settings__link::before,
+.settings--tablet li + li .settings__link::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 58px;
+  border-top: 0.5px solid var(--pk-separator);
+  content: "";
+}
+
+.settings--phone .settings__link:hover,
+.settings--tablet .settings__link:hover {
+  background: var(--pk-fill);
+}
+
+.settings__link:focus-visible,
+.settings__profile:focus-visible,
+.settings__signout:focus-visible {
+  outline: 2px solid var(--pk-tint);
+  outline-offset: -2px;
+}
+
+.settings__profile {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 8px;
+  padding: 14px 16px;
+  border-radius: 22px;
+  background: var(--pk-surface);
+  color: var(--pk-label);
+  text-decoration: none;
+}
+
+.settings__profile .pk-avatar {
+  flex: none;
+}
+
+.settings__profile-body {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+
+.settings__profile-name {
+  overflow: hidden;
+  font-size: 1.1875rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings__profile .sync-line {
+  gap: 5px;
+  font-size: 0.875rem;
+}
+
+.settings__profile .sync-line .icon {
+  width: 16px !important;
+  height: 16px !important;
+  color: var(--pk-income);
+}
+
+.settings__profile .sync-line--error .icon {
+  color: var(--pk-danger);
+}
+
+.settings__profile > .icon:last-child {
+  flex: none;
+  color: var(--pk-label-3);
+}
+
+.settings__signout {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: 50px;
+  margin-top: 22px;
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 22px;
+  background: var(--pk-surface);
+  color: var(--pk-danger);
+  font: inherit;
+  font-size: 1.0625rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.settings__signout:hover {
+  background: var(--pk-danger-soft);
+}
+
+/* The sheet's copper check (card `iphone-settings`). */
+.settings__done {
+  margin-inline-start: auto;
+  background: var(--pk-tint);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--pk-tint) 45%, transparent);
+  color: #fff;
+}
+
+.settings__done:hover {
+  color: #fff;
+}
+
+/* Phones: Settings is a sheet over Home on the card, so the tab bar and add button stay under it. */
+@media (max-width: 767.98px) {
+  .app:has(.settings) .tabbar,
+  .app:has(.settings) .topbar__add {
+    display: none;
+  }
+}
+
+/* ---------- touch tablets (card `ipad-settings`) ---------- */
+.settings--tablet {
+  grid-template-columns: minmax(280px, 2fr) minmax(0, 3fr);
+  column-gap: 0;
+}
+
+.settings--tablet > :not(.settings__pane) {
+  grid-column: 1;
+}
+
+.settings--tablet .settings__pane {
+  grid-row: 1 / span 4;
+  grid-column: 2;
+  align-self: stretch;
+  align-content: start;
+  min-height: 100%;
+  margin-inline-start: 28px;
+  padding-inline-start: 28px;
+  border-inline-start: 0.5px solid var(--pk-separator);
+}
+
+.settings--tablet .settings__profile {
+  margin-top: 0;
+  padding: 10px 16px;
+}
+
+.settings--tablet .settings__link[aria-current="page"] {
+  background: var(--pk-tint);
+  color: #fff;
+}
+
+.settings--tablet .settings__link[aria-current="page"] .settings__tile {
+  background: rgb(255 255 255 / 0.22);
+  color: #fff;
+}
+
+.settings--tablet .settings__link[aria-current="page"] .settings__value,
+.settings--tablet .settings__link[aria-current="page"] > .icon:last-child {
+  color: rgb(255 255 255 / 0.85);
+}
+
+.settings--tablet li:has([aria-current="page"]) + li .settings__link::before,
+.settings--tablet .settings__link[aria-current="page"]::before {
+  display: none;
+}
+
+.settings__title {
+  margin: 0 0 4px;
+  font-size: 2.125rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+/* ---------- desktop (card `web-settings`) ---------- */
+.settings--desktop {
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 28px;
+}
+
+.settings__plain {
+  display: grid;
+  gap: 2px;
+}
+
+.settings--desktop .settings__link {
+  min-height: 38px;
+  padding: 0 10px;
+  border-radius: 10px;
+  font-size: 0.906rem;
+  font-weight: 500;
+}
+
+.settings--desktop .settings__link .icon {
+  color: var(--pk-label-2);
+}
+
+.settings--desktop .settings__tile {
+  width: auto;
+  height: auto;
+  background: none;
+}
+
+.settings--desktop .settings__link > .icon:last-child:not(:first-child),
+.settings--desktop .settings__value {
+  display: none;
+}
+
+.settings--desktop .settings__link:hover {
+  background: var(--pk-fill);
+}
+
+.settings--desktop .settings__link[aria-current="page"] {
+  background: var(--settings-on);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.08);
+}
+
+.settings--desktop .settings__link--danger,
+.settings--desktop .settings__link--danger .icon {
+  color: var(--pk-danger);
+}
+
+.settings--desktop .settings__pane {
+  gap: 18px;
+}
+
+/* ---------- sections inside a pane ---------- */
+.settings-section {
+  display: grid;
+  min-width: 0;
+}
+
+.settings-section__title {
+  margin: 0;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.settings-section__footer {
+  margin: 0;
+  padding: 7px 16px 0;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.settings--phone .settings-section__title,
+.settings--tablet .settings-section__title {
+  padding: 0 16px 7px;
+}
+
+.settings--phone .settings-section__body,
+.settings--tablet .settings-section__body {
+  padding: 0 16px;
+  border-radius: 22px;
+  background: var(--pk-surface);
+}
+
+.settings--desktop .settings-section {
+  padding: 20px;
+  border-radius: 20px;
+  background: var(--pk-surface);
+  box-shadow: 0 0 0 0.5px var(--pk-separator);
+}
+
+.settings--desktop .settings-section__title {
+  margin-bottom: 8px;
+}
+
+.settings--desktop .setting-row {
+  min-height: 0;
+  padding: 12px 0;
+  font-size: 0.906rem;
+}
+
+.settings--desktop .setting-row__desc {
+  font-size: 0.78rem;
+}
+
+.settings--desktop .switch {
+  width: 42px;
+  height: 25px;
+  border-radius: 13px;
+}
+
+.settings--desktop .switch::after {
+  width: 21px;
+  height: 21px;
+}
+
+.settings--desktop .switch:checked::after {
+  left: 19px;
+}
+
+.setting-row__value {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  margin-inline-start: auto;
+  color: var(--pk-label-2);
+  text-align: end;
+}
+
+.setting-row__value--synced .icon {
+  color: var(--pk-income);
+}
+
+.setting-row__value--error {
+  color: var(--pk-danger);
+}
+
+/* Week starts on: the value and a chevron, with the native menu over it. */
+.setting-select {
+  position: relative;
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  margin-inline-start: auto;
+  color: var(--pk-label-2);
+}
+
+.setting-select select {
+  min-height: 44px;
+  padding: 0 22px 0 8px;
+  margin-inline-end: -20px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: end;
+  appearance: none;
+  cursor: pointer;
+}
+
+.setting-select select:focus-visible {
+  outline: 2px solid var(--pk-tint);
+}
+
+.settings--desktop .setting-select select {
+  margin-block: -8px;
+}
+
+.setting-select .icon {
+  pointer-events: none;
+}
+
+/* ---------- theme choices ---------- */
+.themes {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.theme {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  min-width: 0;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.theme input {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+.theme:has(input:focus-visible) {
+  outline: 2px solid var(--pk-tint);
+  outline-offset: 4px;
+  border-radius: 14px;
+}
+
+.theme-preview {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  background: #f2f1ee;
+}
+
+.theme-preview i {
+  position: absolute;
+  display: block;
+}
+
+.theme-preview--dark {
+  background: #000;
+}
+
+.theme-preview--system {
+  background: linear-gradient(90deg, #f2f1ee 50%, #000 50%);
+}
+
+/* Phones and tablets: three phones side by side with a radio under each (`iphone-appearance`). */
+.themes--phones {
+  display: flex;
+  gap: 10px;
+  padding: 18px 0 14px;
+}
+
+.themes--phones .theme {
+  flex: 1;
+  font-size: 0.9375rem;
+}
+
+.themes--phones .theme-preview {
+  width: 82px;
+  height: 150px;
+  margin-bottom: 10px;
+  border: 1.5px solid var(--pk-separator);
+  border-radius: 16px;
+}
+
+.themes--phones .theme-preview__glow {
+  top: -20px;
+  left: -10px;
+  width: 90px;
+  height: 70px;
+  border-radius: 50%;
+  background: rgb(255 138 76 / 0.45);
+  filter: blur(12px);
+}
+
+.themes--phones .theme-preview__title {
+  top: 22px;
+  left: 9px;
+  width: 44px;
+  height: 11px;
+  border-radius: 4px;
+  background: #16120f;
+}
+
+.themes--phones .theme-preview__line {
+  top: 38px;
+  left: 9px;
+  width: 30px;
+  height: 5px;
+  border-radius: 4px;
+  background: #a9a49d;
+}
+
+.themes--phones .theme-preview__card {
+  top: 54px;
+  right: 7px;
+  left: 7px;
+  height: 28px;
+  border-radius: 7px;
+  background: #fff;
+}
+
+.themes--phones .theme-preview__card--2 {
+  top: 88px;
+  height: 34px;
+}
+
+.themes--phones .theme-preview__bar {
+  right: 7px;
+  bottom: 7px;
+  left: 7px;
+  height: 14px;
+  border-radius: 7px;
+  background: rgb(255 255 255 / 0.85);
+}
+
+.themes--phones .theme-preview--dark .theme-preview__title {
+  background: #f6f4f1;
+}
+
+.themes--phones .theme-preview--dark .theme-preview__card {
+  background: #1a1918;
+}
+
+.themes--phones .theme-preview--dark .theme-preview__bar {
+  background: rgb(60 58 56 / 0.9);
+}
+
+.themes--phones .theme-preview--system .theme-preview__title {
+  width: 64px;
+  background: linear-gradient(90deg, #16120f 50%, #f6f4f1 50%);
+}
+
+.themes--phones .theme-preview--system .theme-preview__card {
+  background: linear-gradient(90deg, #fff 50%, #1a1918 50%);
+}
+
+.themes--phones .theme-preview--system .theme-preview__bar {
+  background: linear-gradient(
+    90deg,
+    rgb(255 255 255 / 0.85) 50%,
+    rgb(60 58 56 / 0.9) 50%
+  );
+}
+
+.themes--phones .theme-preview--system .theme-preview__line {
+  display: none;
+}
+
+.theme__radio {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin-top: 8px;
+  border: 1.5px solid var(--pk-label-3);
+  border-radius: 50%;
+}
+
+.theme--on .theme__radio {
+  border: 0;
+  background: var(--pk-tint);
+  color: #fff;
+}
+
+/* Desktop: window tiles with a copper ring on the chosen one (`web-settings`). */
+.themes--tiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.themes--tiles .theme {
+  width: 176px;
+  max-width: 100%;
+  font-size: 0.875rem;
+}
+
+.themes--tiles .theme-preview {
+  width: 100%;
+  height: 110px;
+  margin-bottom: 8px;
+  border-radius: 14px;
+  box-shadow: 0 0 0 0.5px var(--pk-separator);
+}
+
+.themes--tiles .theme--on .theme-preview {
+  box-shadow: 0 0 0 2.5px var(--pk-tint);
+}
+
+.themes--tiles .theme-preview__glow,
+.themes--tiles .theme-preview__line,
+.themes--tiles .theme-preview__card--2,
+.themes--tiles .theme-preview__bar,
+.themes--tiles .theme__radio {
+  display: none;
+}
+
+.themes--tiles .theme-preview__title {
+  top: 14px;
+  left: 12px;
+  width: 50%;
+  height: 14px;
+  border-radius: 4px;
+  background: #16120f;
+  opacity: 0.85;
+}
+
+.themes--tiles .theme-preview__card {
+  top: 38px;
+  right: 12px;
+  left: 12px;
+  height: 56px;
+  border-radius: 4px;
+  background: #fff;
+}
+
+.themes--tiles .theme-preview--dark .theme-preview__title {
+  background: #f6f4f1;
+}
+
+.themes--tiles .theme-preview--dark .theme-preview__card {
+  background: #1a1918;
+}
+
+.themes--tiles .theme-preview--system .theme-preview__title {
+  opacity: 0.6;
+}
+
+.themes--tiles .theme-preview--system .theme-preview__card {
+  background: linear-gradient(90deg, #fff 50%, #1a1918 50%);
+}

@@ -6,6 +6,7 @@ import { invalidateSearch } from "../../api/search";
 import { useAccountEmail } from "../../auth/account";
 import { Card, ChoiceGroup } from "../../design/controls";
 import { ErrorState, LoadingState, SaveErrorBanner, useToast } from "../../design/states";
+import { SectionTitle } from "./SectionTitle";
 
 const NAMES: Record<Currency, string> = {
   CAD: "Canadian dollar",
@@ -94,27 +95,30 @@ export function CurrencySettings() {
       : {};
 
   return (
-    <Card title="Currency">
-      {save.isError ? <SaveErrorBanner message={describeSaveError(save.error)} {...retry} /> : null}
-      <ChoiceGroup<Currency>
-        legend="Ledger currency"
-        name="currency"
-        appearance="list"
-        value={save.isPending ? save.variables.currency : current}
-        describedBy={noteId}
-        onChange={(currency) => {
-          if (currency !== current) save.mutate({ currency, previous: current });
-        }}
-        options={CURRENCIES.map((code) => ({
-          value: code,
-          label: code,
-          description: NAMES[code],
-          disabled: save.isPending || (lock !== "open" && code !== current),
-        }))}
-      />
-      <p id={noteId} className="setting-note">
-        {save.isPending ? <span role="status">Saving…</span> : null} {note} Shared households keep their own currency.
-      </p>
-    </Card>
+    <>
+      <SectionTitle>Currency</SectionTitle>
+      <Card title="Currency">
+        {save.isError ? <SaveErrorBanner message={describeSaveError(save.error)} {...retry} /> : null}
+        <ChoiceGroup<Currency>
+          legend="Ledger currency"
+          name="currency"
+          appearance="list"
+          value={save.isPending ? save.variables.currency : current}
+          describedBy={noteId}
+          onChange={(currency) => {
+            if (currency !== current) save.mutate({ currency, previous: current });
+          }}
+          options={CURRENCIES.map((code) => ({
+            value: code,
+            label: code,
+            description: NAMES[code],
+            disabled: save.isPending || (lock !== "open" && code !== current),
+          }))}
+        />
+        <p id={noteId} className="setting-note">
+          {save.isPending ? <span role="status">Saving…</span> : null} {note} Shared households keep their own currency.
+        </p>
+      </Card>
+    </>
   );
 }

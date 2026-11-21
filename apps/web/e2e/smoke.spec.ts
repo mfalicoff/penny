@@ -26,6 +26,8 @@ test.beforeEach(async ({ page }) => {
   await page.route("/api/households/projection**", (route) => route.fulfill({ json: { transactions: [], scheduled: [] } }));
   // Emailed receipts (MAZ-184) are off on this server; the route still answers 200.
   await page.route("/api/receipt-email", (route) => route.fulfill({ json: { enabled: false, domain: null, address: null } }));
+  // Settings › Server & sync names the sign-in methods.
+  await page.route("/api/auth/oidc", (route) => route.fulfill({ json: { enabled: false } }));
 });
 
 test("production build renders Home with the bundled font and no console errors", async ({ page }) => {
@@ -33,8 +35,8 @@ test("production build renders Home with the bundled font and no console errors"
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1, name: "Home", exact: true })).toBeVisible();
   await openSettings(page);
-  await page.getByRole("link", { name: "Server" }).click();
-  await expect(page.getByText("Version 2.0.0-e2e")).toBeVisible();
+  await page.getByRole("link", { name: /^(Server & sync|.+ Sign out to change servers)$/ }).click();
+  await expect(page.getByText("Version 2.0.0-e2e · Email sign-in")).toBeVisible();
 
   const inter = await page.evaluate(async () => {
     await document.fonts.ready;

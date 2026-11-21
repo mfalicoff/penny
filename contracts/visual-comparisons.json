@@ -1257,14 +1257,24 @@
         ],
         "deviations": [
           {
-            "summary": "No profile card; one list of Account, Appearance, Currency and Server with no MANAGE, PREFERENCES or SERVER groups, values or full-width Sign out row; the first row is copper-selected",
+            "summary": "Settings is drawn as the sheet (centered title, copper check to Home, no tab bar) but is its own page, so Home isn’t visible behind it (follow-up recorded on MAZ-231)",
             "kind": "follow-up",
             "ref": "MAZ-231"
           },
           {
-            "summary": "Settings is a page opened from Home's settings button, with the tab bar below it, not a sheet over Home",
+            "summary": "Settings has no Face ID lock or Notifications row: the web has no app lock or notifications (design decision recorded on MAZ-231)",
             "kind": "follow-up",
-            "ref": "MAZ-221"
+            "ref": "MAZ-231"
+          },
+          {
+            "summary": "The currency footnote gives the real reason (“locked while your ledger has entries in CAD”), not “while you’re in a household” (design decision recorded on MAZ-231)",
+            "kind": "follow-up",
+            "ref": "MAZ-231"
+          },
+          {
+            "summary": "The profile card names the account by its email, not the person’s name",
+            "kind": "follow-up",
+            "ref": "MAZ-171"
           }
         ]
       }
@@ -1547,7 +1557,7 @@
         ],
         "deviations": [
           {
-            "summary": "Theme is a tile grid with a copper border, not side-by-side choices with radios and a check; the System footnote is missing",
+            "summary": "The footnote says “your device’s”, not “your iPhone’s” (design decision recorded on MAZ-231)",
             "kind": "follow-up",
             "ref": "MAZ-231"
           },
@@ -2390,12 +2400,27 @@
         ],
         "deviations": [
           {
-            "summary": "No profile card or groups; opens Account instead of Appearance; the selected row is a light tint, not a copper fill; the detail has no large title",
+            "summary": "Settings has no Face ID lock or Notifications row: the web has no app lock or notifications (design decision recorded on MAZ-231)",
             "kind": "follow-up",
             "ref": "MAZ-231"
           },
           {
-            "summary": "The sidebar footer names the account by its email, not the person's name",
+            "summary": "The profile card names the account by its email with the sync state under it, not the person’s name over the email",
+            "kind": "follow-up",
+            "ref": "MAZ-171"
+          },
+          {
+            "summary": "Appearance has no Text size row and adds a Display section",
+            "kind": "follow-up",
+            "ref": "MAZ-234"
+          },
+          {
+            "summary": "The theme footnote says “your device’s”, not “your iPad’s” (design decision recorded on MAZ-231)",
+            "kind": "follow-up",
+            "ref": "MAZ-231"
+          },
+          {
+            "summary": "The sidebar footer names the account by its email, not the person’s name",
             "kind": "follow-up",
             "ref": "MAZ-171"
           }
@@ -2678,12 +2703,12 @@
         ],
         "deviations": [
           {
-            "summary": "The nav lists only Account, Appearance, Currency and Server with copper selection, and opens Account instead of Appearance with Display and Server & sync",
+            "summary": "The section list has no Notifications or Export data: the web has neither (design decision recorded on MAZ-231)",
             "kind": "follow-up",
             "ref": "MAZ-231"
           },
           {
-            "summary": "The sidebar footer names the account by its email, not the person's name",
+            "summary": "The sidebar footer names the account by its email, not the person’s name",
             "kind": "follow-up",
             "ref": "MAZ-171"
           }

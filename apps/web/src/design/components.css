@@ -478,55 +478,6 @@
   color: var(--pk-tint);
 }
 
-/* Theme swatches: a bar and a panel in the theme's own colors. */
-.theme-preview {
-  display: grid;
-  grid-template-rows: auto 1fr;
-  gap: 8px;
-  min-width: 0;
-  aspect-ratio: 16 / 10;
-  padding: 10px;
-  border-radius: 12px;
-  background: #f2f1ee;
-}
-
-.theme-preview i {
-  width: 55%;
-  height: 10px;
-  border-radius: 4px;
-  background: #3a3632;
-}
-
-.theme-preview b {
-  border-radius: 8px;
-  background: #fff;
-}
-
-.theme-preview--dark {
-  background: #000;
-}
-
-.theme-preview--dark i {
-  background: #d6d2cc;
-}
-
-.theme-preview--dark b {
-  background: #1a1918;
-}
-
-.theme-preview--system {
-  background: linear-gradient(90deg, #f2f1ee 50%, #000 50%);
-}
-
-.theme-preview--system i {
-  background: linear-gradient(90deg, #3a3632 50%, #d6d2cc 50%);
-  width: 100%;
-}
-
-.theme-preview--system b {
-  background: linear-gradient(90deg, #fff 50%, #1a1918 50%);
-}
-
 /* ---------- badge, avatar ---------- */
 .pk-badge {
   display: inline-flex;
