@@ -1490,9 +1490,9 @@
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           },
           {
-            "summary": "The Reduce transparency row says “your device’s”, not “your iPhone’s” (design decision recorded on MAZ-239)",
-            "kind": "follow-up",
-            "ref": "MAZ-239"
+            "summary": "The Reduce transparency row says “your device’s”, not “your iPhone’s” (decided in MAZ-239)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           },
           {
             "summary": "No Text size row: text follows the browser (decided in MAZ-239)",
@@ -2372,9 +2372,9 @@
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           },
           {
-            "summary": "The Reduce transparency row says “your device’s”, not “your iPad’s” (design decision recorded on MAZ-239)",
-            "kind": "follow-up",
-            "ref": "MAZ-239"
+            "summary": "The Reduce transparency row says “your device’s”, not “your iPad’s” (decided in MAZ-239)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           },
           {
             "summary": "The sidebar footer names the account by its email, not the person’s name",
