@@ -22,7 +22,7 @@ You own the issue until its pull request is merged or you hand it to a human. No
 
 ## 3. Implement
 
-- Keep to the issue's scope. Record anything you leave out as a follow-up (see [Follow-ups](#follow-ups)), and don't do it in this pull request.
+- Finish the job in this pull request. If you find something the issue missed on the same screens and platform (a gap next to your change, a bug in code you touched, missing tests, a reviewer's suggestion), do it here instead of filing it for later. Post a follow-up only for what you can't do here (see [Follow-ups](#follow-ups)).
 - Run the checks of every app you changed, as listed in that app's guide (for example `npm run check` in `apps/web`, the .NET tests, `apps/ios/scripts/ios.sh` for the iOS tests). Everything has to pass locally before you push.
 - If this machine can't run a check (for example no Docker on the Mac for the full-stack tests), say so in the pull request body. CI runs it instead.
 
@@ -62,7 +62,13 @@ Platform chrome is never a deviation: the status bar, home indicator, keyboard, 
 
 ### Follow-ups
 
-Sometimes you leave something out: part of the issue that turned out bigger than expected, a bug you found next to your change, missing tests, a reviewer's optional suggestion you didn't take, or a needed change on another platform. Report each one to the orchestrator as a follow-up. The orchestrator turns follow-ups into new Linear issues.
+Do related work in this pull request rather than leaving it for later. Post a follow-up only when something can't be done here:
+
+- it needs a human: a design decision (see [Design cards](#design-cards)) or a human-only change;
+- it's on another platform than this issue's, or needs a backend, contract or shared-rule change the issue doesn't cover;
+- it would make the pull request much bigger than the issue itself, or touch screens the issue doesn't.
+
+The orchestrator adds each follow-up to an open issue that already covers that area, and creates a new issue only when none does.
 
 Post one Linear comment on your issue for each follow-up, as soon as you decide to leave it out (not at the end, so it survives if the session stops). Use exactly this format:
 
