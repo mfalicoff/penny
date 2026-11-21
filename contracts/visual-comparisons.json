@@ -1514,6 +1514,11 @@
             "summary": "Copy says \"this device\" where the card says \"this iPhone\"",
             "kind": "follow-up",
             "ref": "MAZ-255"
+          },
+          {
+            "summary": "No Display section (Show cents on Home, Reduce transparency, Week starts on), which the card adds (follow-up recorded on MAZ-234)",
+            "kind": "follow-up",
+            "ref": "MAZ-234"
           }
         ]
       },
@@ -1527,12 +1532,12 @@
         ],
         "deviations": [
           {
-            "summary": "The footnote says “your device’s”, not “your iPhone’s” (design decision recorded on MAZ-231)",
+            "summary": "The footnote and the Reduce transparency row say “your device’s”, not “your iPhone’s” (design decision recorded on MAZ-231)",
             "kind": "follow-up",
             "ref": "MAZ-231"
           },
           {
-            "summary": "No Text size row, and a Display section is added",
+            "summary": "No Text size row: text follows the browser (design decision recorded on MAZ-234)",
             "kind": "follow-up",
             "ref": "MAZ-234"
           },
@@ -1608,7 +1613,12 @@
         ],
         "deviations": [
           {
-            "summary": "No server chip; the SSO button names the configured provider; the demo link is under the form with a note",
+            "summary": "No server chip; the SSO button names the configured provider",
+            "kind": "follow-up",
+            "ref": "MAZ-237"
+          },
+          {
+            "summary": "The pinned demo link carries the note “Sample data in this tab only…” under it (design decision recorded on MAZ-234)",
             "kind": "follow-up",
             "ref": "MAZ-234"
           }
@@ -1651,7 +1661,7 @@
           {
             "summary": "No back button or server chip, and an or divider with SSO is added",
             "kind": "follow-up",
-            "ref": "MAZ-234"
+            "ref": "MAZ-237"
           }
         ]
       }
@@ -1902,6 +1912,25 @@
             "ref": "MAZ-255"
           }
         ]
+      },
+      "web": {
+        "status": "matches",
+        "owner": "MAZ-84",
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      }
+    },
+    {
+      "id": "iphone-sign-out-plain",
+      "view": "sign out confirmation with nothing waiting to sync",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-68",
+        "note": "iOS shows the system sign-out confirmation, which has no icon tile; the custom confirmation is MAZ-255, and the Cards test plan has no state for this card yet.",
+        "followUp": "MAZ-255"
       },
       "web": {
         "status": "matches",
@@ -2375,7 +2404,7 @@
             "ref": "MAZ-171"
           },
           {
-            "summary": "Appearance has no Text size row and adds a Display section",
+            "summary": "Appearance has no Text size row and adds a Display section (design decision recorded on MAZ-234)",
             "kind": "follow-up",
             "ref": "MAZ-234"
           },
@@ -2728,9 +2757,9 @@
         ],
         "deviations": [
           {
-            "summary": "No server chip; the SSO button names the configured provider; adds the demo link with its note",
+            "summary": "No server chip; the SSO button names the configured provider",
             "kind": "follow-up",
-            "ref": "MAZ-234"
+            "ref": "MAZ-237"
           }
         ]
       }

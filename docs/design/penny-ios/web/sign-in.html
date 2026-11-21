@@ -11,7 +11,7 @@
   .brand h1 { font-size: 52px; font-weight: 700; letter-spacing: -0.04em; line-height: 1.05; margin-top: auto; }
   .brand p { font-size: 17px; color: var(--label-2); margin-top: 14px; max-width: 420px; }
   .mini { margin-top: 36px; width: 380px; padding: 18px; border-radius: 22px; }
-  .formside { display: grid; place-items: center; background: var(--surface); }
+  .formside { position: relative; display: grid; place-items: center; background: var(--surface); }
   .form { width: 380px; }
   .form h2 { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
   .form .sub { color: var(--label-2); font-size: 15px; margin-top: 4px; }
@@ -23,6 +23,10 @@
   .big { width: 100%; height: 46px; justify-content: center; font-size: 15.5px; margin-top: 18px; border-radius: 12px; }
   .or { display: flex; align-items: center; gap: 12px; color: var(--label-3); font-size: 12px; margin: 16px 0; }
   .or::before, .or::after { content: ""; flex: 1; border-top: .5px solid var(--separator); }
+  .demo { position: absolute; bottom: 40px; left: 0; right: 0; text-align: center; }
+  .demo span { display: inline-flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 600; color: var(--label); }
+  .demo [data-i] { width: 18px; height: 18px; color: var(--tint); }
+  .demo p { font-size: 13px; color: var(--label-2); margin-top: 6px; }
 </style></head>
 <body class="canvas">
 <div class="browser" data-noside data-url="penny.example.com/sign-in">
@@ -50,6 +54,7 @@
           <div class="btn big" style="margin-top:0"><i data-i="key"></i>Continue with SSO</div>
           <div style="text-align:center;font-size:14px;color:var(--label-2);margin-top:20px">New here? <b style="color:var(--tint-text)">Create an account</b></div>
         </div>
+        <div class="demo"><span><i data-i="play"></i>Take a look around with sample data</span><p>Sample data in this tab only. Nothing is saved or sent to your server.</p></div>
       </div>
     </div>
   </main>

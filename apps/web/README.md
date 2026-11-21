@@ -51,6 +51,7 @@ The proxy keeps the browser's `Origin` (`http://localhost:4173`), and port 4173 
 | `npm run test:e2e` | Playwright smoke against `vite preview` on port 4175, with `/api` mocked |
 | `npm run test:e2e:real` | The `*.real.spec.ts` journeys against a disposable real stack (needs Docker or Podman and .NET; [browser tests](#browser-tests)) |
 | `npm run design:sync` / `design:check` | Regenerate the design tokens, or check that they match the design kit |
+| `npm run design:hashes` | Rewrite every hash in `contracts/design-baseline.json` (cards, kit docs, `sources`) from the files on disk, after a card change or a rebase conflict on them |
 | `npm run check` | Everything above except the browser smoke |
 
 On NixOS, Playwright's downloaded browsers can't run. Use a system Chromium instead: `PLAYWRIGHT_CHROMIUM_EXECUTABLE=$(nix shell nixpkgs#chromium -c sh -c 'readlink -f $(which chromium)') npm run test:e2e`.

@@ -209,7 +209,7 @@
     {
       "id": "iphone-appearance",
       "source": "docs/design/penny-ios/iphone/appearance.html",
-      "sourceSha256": "5e8877ca50b7570badecfa7f219dce1242f033417f072fe16672e769fca11394",
+      "sourceSha256": "0119634845ed58492a4c76fb203a5edcfb02c66ffdf74a0e642bde5e3b5cb604",
       "viewport": {
         "w": 482,
         "h": 954
@@ -218,12 +218,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-appearance.light.png",
-          "sha256": "ad90b28fbd55f6abc3a66725337aea1952987bd642957e3542da3f01be097a6b"
+          "sha256": "dad96ed13a1bb8d408680be50a0bc52151c4e371a6ecab7d9553480c875d7acb"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-appearance.dark.png",
-          "sha256": "42acd76e48ac5f8f57049d4f46666e8adce9023be238bc8c4d0b7bcb0344efe1"
+          "sha256": "3385fc1c2ccdf2387588963c6cb29b5138c67c9e59dd83285a2426664f2ff778"
         }
       ]
     },
@@ -1058,6 +1058,27 @@
       ]
     },
     {
+      "id": "iphone-sign-out-plain",
+      "source": "docs/design/penny-ios/iphone/sign-out-plain.html",
+      "sourceSha256": "eff676d1d421dd008a196f6bb85273d5aba11106f7dde4385cb63f95f5d11054",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "images": [
+        {
+          "appearance": "light",
+          "file": "previews/iphone-sign-out-plain.light.png",
+          "sha256": "88f4469049a30db762a2cf5cea252f8bbd5ecdc5931cfabc4c24ded6fb425285"
+        },
+        {
+          "appearance": "dark",
+          "file": "previews/iphone-sign-out-plain.dark.png",
+          "sha256": "42b5722b40dff4b7fdd321f2a0540fc5f984d3a587ef6138d64106f60d040585"
+        }
+      ]
+    },
+    {
       "id": "iphone-sign-out",
       "source": "docs/design/penny-ios/iphone/sign-out.html",
       "sourceSha256": "a7b9d0662d99280d516d45cd02db1498d1608176678c49914af204f3eb6b3c2c",
@@ -1711,7 +1732,7 @@
     {
       "id": "web-sign-in",
       "source": "docs/design/penny-ios/web/sign-in.html",
-      "sourceSha256": "31152c36d2b961a68bf0694be509ccddcc4751db79296c60d518023365118ad0",
+      "sourceSha256": "05cfeeaaeec6bc712d640d918e20c3b9bbf5987ba9769f0b6cd132c32ca29c73",
       "viewport": {
         "w": 1520,
         "h": 980
@@ -1720,12 +1741,12 @@
         {
           "appearance": "light",
           "file": "previews/web-sign-in.light.png",
-          "sha256": "5a490861d6d1d763c89d069d08abfe5ccb80ce765449b075bdc2e2f7fdf5f419"
+          "sha256": "a172be566a04f983ff992ad0766a93ea9dc14049e473a73cd3d0d1e9c87bc3fd"
         },
         {
           "appearance": "dark",
           "file": "previews/web-sign-in.dark.png",
-          "sha256": "cdd74bb67a125b0dd8d6281c31fa6b1624bd28b71be99cf305e8a1603200e74f"
+          "sha256": "490a998e2b07d2df3b6352f1fd497e91633a5e8129b2c9f49d28acc961634867"
         }
       ]
     },

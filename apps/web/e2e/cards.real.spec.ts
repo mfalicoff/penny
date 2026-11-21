@@ -607,6 +607,15 @@ const cards: Record<string, Card> = {
     },
     note: "Ledger syncs are dropped to hold the two changes, so Settings shows the Offline banner behind the dialog.",
   },
+  "iphone-sign-out-plain": {
+    open: async ({ page: p }) => {
+      await page(p, "/settings", "Settings");
+      await p.getByRole("button", { name: "Sign out" }).click();
+      const dialog = p.getByRole("dialog", { name: "Sign out of Penny?" });
+      await expect(dialog.getByRole("button", { name: "Sign out" })).toBeVisible();
+      await expect(dialog.getByRole("button", { name: "Sync, then sign out" })).toHaveCount(0);
+    },
+  },
 
   // iPad
   "ipad-home": {

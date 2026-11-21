@@ -89,6 +89,7 @@ Every card in [design-baseline.json](../../contracts/design-baseline.json) whose
 | `iphone-save-error` | `EntryJourneyTests` | HTTP 500 on sync keeps the entry and syncs once | Partly: the form's Couldn't save banner (local write failure) is unit-tested only |
 | `iphone-saved-toast` | — | The toast is unit-tested (EntryFlowTests); it shows for 4 s during dismissal, which XCTest's idle waits outlast | Gap: not asserted in a UI journey |
 | `iphone-sign-out` | `AuthJourneyTests` | Pending change asks and syncs first | Covered |
+| `iphone-sign-out-plain` | `AuthJourneyTests` | Sign out with nothing waiting asks once and signs out | Partly: the system confirmation has no icon tile yet (MAZ-255) |
 | `iphone-receipt-inbox` | — | Filter and cursor, the expiry notice and discard are unit-tested (ReceiptInboxTests in PennyKit) | Gap: no UI journey; the full-stack seed has no receipt inbox yet |
 | `iphone-receipt-inbox-item` | — | Email-first order, the preselected attachment and the discard counts are unit-tested (ReceiptInboxTests) | Gap: no UI journey; the full-stack seed has no receipt inbox yet |
 | `iphone-receipt-attach-file` | — | The preselected first attachment is unit-tested (ReceiptInboxTests) | Gap: no UI journey; the full-stack seed has no receipt inbox yet |
