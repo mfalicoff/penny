@@ -121,16 +121,20 @@ public struct GlassIconButton: View {
     }
 }
 
-/// A glass capsule with text, such as the month picker ("November ⌄").
+/// A glass capsule with text, such as the month picker ("November ⌄"). `tinted` is the cards'
+/// `.gcap.tinted`: copper glass with white text, for the one primary action on screen (Search
+/// all months on `search-empty`).
 public struct GlassCapsuleButton: View {
     @ScaledMetric(relativeTo: .body) private var height = ControlSize.glassButton
     private let title: String
     private let systemImage: String?
+    private let tinted: Bool
     private let action: () -> Void
 
-    public init(_ title: String, systemImage: String? = nil, action: @escaping () -> Void) {
+    public init(_ title: String, systemImage: String? = nil, tinted: Bool = false, action: @escaping () -> Void) {
         self.title = title
         self.systemImage = systemImage
+        self.tinted = tinted
         self.action = action
     }
 
@@ -140,13 +144,13 @@ public struct GlassCapsuleButton: View {
                 Text(title).font(.body.weight(.semibold))
                 if let systemImage { Image(systemName: systemImage).font(.footnote.weight(.bold)) }
             }
-            .foregroundStyle(PennyColor.label)
+            .foregroundStyle(tinted ? Color.white : PennyColor.label)
             .padding(.horizontal, 14)
             .frame(minHeight: height)
             .contentShape(Capsule())
         }
         .buttonStyle(.plain)
-        .pennyGlass(in: Capsule())
+        .pennyGlass(in: Capsule(), tinted: tinted)
     }
 }
 

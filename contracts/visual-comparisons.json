@@ -296,11 +296,6 @@
             "summary": "Search is the system searchable field at the top, and adds the totals line and a server-search note",
             "kind": "follow-up",
             "ref": "MAZ-255"
-          },
-          {
-            "summary": "The empty icon is a bare magnifier, not a filled tile, and Search all months is a small button, not the card's capsule",
-            "kind": "follow-up",
-            "ref": "MAZ-246"
           }
         ]
       },
@@ -534,16 +529,6 @@
           "dark"
         ],
         "deviations": [
-          {
-            "summary": "Trash and Edit are icon-only (Edit in copper); the card has a labelled Edit capsule",
-            "kind": "follow-up",
-            "ref": "MAZ-246"
-          },
-          {
-            "summary": "Split and receipt shows only Your share and Total, with no split method and the receipt as a row; no category glow behind the header",
-            "kind": "follow-up",
-            "ref": "MAZ-246"
-          },
           {
             "summary": "Add entry is a fifth tab with the search role inside the system tab bar, not a separate copper button beside four tabs",
             "kind": "follow-up",
@@ -2130,7 +2115,7 @@
             "ref": "MAZ-255"
           },
           {
-            "summary": "The detail uses the iPhone stacked layout, with icon-only Edit and no split method or other people",
+            "summary": "The detail subtitle has the date only (Sunday, Sep 27), not the time (Today, 8:42 AM): entries store no time",
             "kind": "follow-up",
             "ref": "MAZ-246"
           }
