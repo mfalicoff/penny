@@ -336,6 +336,8 @@ struct EntrySplitSheet: View {
             }
             .background(PennyColor.background)
             .navigationTitle("Split")
+            // "Dinner with friends · $74.40", as on the card.
+            .navigationSubtitle(Self.subtitle(title: draft.title, total: total, currency: currency))
             .toolbarTitleDisplayModeInline()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -353,6 +355,13 @@ struct EntrySplitSheet: View {
         .presentationDetents([.medium, .large])
         .onAppear(perform: load)
         .accessibilityIdentifier("screen.split")
+    }
+
+    /// The entry being split, under the title: its name and total, whichever are known.
+    static func subtitle(title: String, total: Int64?, currency: String) -> String {
+        let name = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        return [name.isEmpty ? nil : name, total.map { MoneyFormat.amount($0, currency: currency) }]
+            .compactMap(\.self).joined(separator: " · ")
     }
 
     private var shareInput: String {
@@ -463,11 +472,6 @@ struct EntryExtrasView: View {
                     ForEach(sharedTrips) { household in sharedTripRow(household) }
                 } header: {
                     Text("Trip").cardSectionHeader()
-                } footer: {
-                    if !sharedTrips.isEmpty {
-                        Text(
-                            "A shared trip splits this expense with everyone on it. Shared expenses need a connection.")
-                    }
                 }
             }
             CardSection("Note") {

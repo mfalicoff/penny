@@ -146,6 +146,28 @@ enum EntryText {
         }
     }
 
+    /// The Repeat row's value: "Never", "Weekly on Sunday", "Monthly on the 15th" or "Yearly on
+    /// November 15", from the entry's date (the schedule's anchor).
+    static func repeats(_ frequency: RecurrenceFrequency?, on date: CalendarDate?) -> String {
+        guard let frequency else { return "Never" }
+        guard let date else { return self.frequency(frequency) }
+        switch frequency {
+        case .weekly: return "Weekly on \(ScheduleText.weekday(date))"
+        case .monthly: return "Monthly on the \(ScheduleText.ordinal(date.day))"
+        case .yearly: return "Yearly on \(ScheduleText.monthName(date.month)) \(date.day)"
+        }
+    }
+
+    /// The iPad save capsule: "Add expense", "Add income", "Add investment"; "Save" when editing.
+    static func saveTitle(_ kind: EntryKind, isNew: Bool) -> String {
+        guard isNew else { return "Save" }
+        switch kind {
+        case .expense: return "Add expense"
+        case .income: return "Add income"
+        case .investment: return "Add investment"
+        }
+    }
+
     static func meaning(_ kind: EntryKind) -> MoneyMeaning {
         switch kind {
         case .expense: .expense

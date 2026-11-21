@@ -33,19 +33,17 @@ struct ReceiptAttachmentSection: View {
         } header: {
             Text("Receipt").cardSectionHeader()
         } footer: {
-            Text(footer).accessibilityIdentifier("entryExtras.receiptHint")
+            if let footer { Text(footer).accessibilityIdentifier("entryExtras.receiptHint") }
         }
     }
 
-    private var footer: String {
+    /// Only when something needs saying: the card has no footer under the Receipt group.
+    private var footer: String? {
         if !upload.isSupported { return ReceiptText.demo }
         if !upload.isAvailable { return ReceiptText.offline }
-        if let receipt {
-            let text = "Removing the receipt detaches it from this entry when you save."
-            // An emailed receipt (MAZ-184) isn't lost: it returns to the receipt inbox.
-            return shell.receiptInbox.isInboxReceipt(receipt.id) ? "\(text) \(InboxText.returnsToInbox)" : text
-        }
-        return ReceiptText.supported
+        // An emailed receipt (MAZ-184) isn't lost when removed: it returns to the receipt inbox.
+        if let receipt, shell.receiptInbox.isInboxReceipt(receipt.id) { return InboxText.returnsToInbox }
+        return nil
     }
 
     /// From inbox is offered when the server takes emailed receipts and there is something to
@@ -238,7 +236,6 @@ struct ReceiptPreviewRequest: Identifiable {
 
 /// Text for receipts.
 enum ReceiptText {
-    static let supported = "A photo (JPEG, PNG, WebP, GIF or HEIC) or a PDF, up to 10 MB."
     static let offline = "Connect to the internet to attach a receipt. The rest of the entry still saves offline."
     static let demo = "Receipts are kept on your server, so the demo can't attach one. Sign in to add receipts."
 

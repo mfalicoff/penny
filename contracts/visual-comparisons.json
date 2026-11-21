@@ -329,19 +329,9 @@
         ],
         "deviations": [
           {
-            "summary": "The sheet is titled Add entry with the type control on its own row; the card puts the control in the bar with no title",
-            "kind": "follow-up",
-            "ref": "MAZ-247"
-          },
-          {
             "summary": "A Household row leads and pushes Account, Split and Receipt under the keypad",
             "kind": "follow-up",
             "ref": "MAZ-255"
-          },
-          {
-            "summary": "No caret after the amount, and the . and backspace keys are filled, not ghost keys",
-            "kind": "follow-up",
-            "ref": "MAZ-247"
           }
         ]
       },
@@ -374,16 +364,6 @@
           "dark"
         ],
         "deviations": [
-          {
-            "summary": "The sheet is titled Add entry with the type control on its own row; the card puts the control in the bar with no title",
-            "kind": "follow-up",
-            "ref": "MAZ-247"
-          },
-          {
-            "summary": "The +$ is grey, not faded green, and Repeat and Note are one combined row",
-            "kind": "follow-up",
-            "ref": "MAZ-247"
-          },
           {
             "summary": "The keypad stays up and covers the rows",
             "kind": "follow-up",
@@ -424,11 +404,6 @@
             "summary": "Shared trips are listed below personal trips with \"Shared · N people\", and picking one opens the shared expense form",
             "kind": "follow-up",
             "ref": "MAZ-255"
-          },
-          {
-            "summary": "Adds the receipt file-type note and a shared-trip footer",
-            "kind": "follow-up",
-            "ref": "MAZ-247"
           }
         ]
       },
@@ -470,11 +445,6 @@
             "summary": "Split is a full sheet with the system number pad over the form, not a stacked half sheet",
             "kind": "follow-up",
             "ref": "MAZ-255"
-          },
-          {
-            "summary": "The title has no \"<entry> · <total>\" subtitle",
-            "kind": "follow-up",
-            "ref": "MAZ-247"
           }
         ]
       },
@@ -865,9 +835,9 @@
             "ref": "MAZ-256"
           },
           {
-            "summary": "Titled Add entry with the type control; the card reads New expense with the household as subtitle",
+            "summary": "The category is a row of chips under the split, not a pill in the name field",
             "kind": "follow-up",
-            "ref": "MAZ-247"
+            "ref": "MAZ-256"
           }
         ]
       },
@@ -2195,14 +2165,9 @@
         ],
         "deviations": [
           {
-            "summary": "Repeat, Trip, Receipt and Note are behind one Receipt, repeat, trip row instead of rows and a Note field, the details add a Household row, and All categories is an ellipsis chip (follow-up recorded on MAZ-182)",
+            "summary": "The details add a Household row before Date (MAZ-255 moves it into More details)",
             "kind": "follow-up",
-            "ref": "MAZ-182"
-          },
-          {
-            "summary": "A ✓ save icon and the Add entry title, not the labelled Add expense capsule; no shortcut footer",
-            "kind": "follow-up",
-            "ref": "MAZ-247"
+            "ref": "MAZ-255"
           }
         ]
       },
