@@ -95,12 +95,15 @@ struct Penny {
     /// Taps a field until it has keyboard focus. A tap that lands while the screen is still
     /// settling after launch is dropped, and typing then fails with "Neither element nor any
     /// descendant has keyboard focus" (MAZ-212 saw it on `auth.email` on a CI runner).
+    /// Each focus check is a snapshot, which takes seconds on a loaded iPad simulator once the
+    /// keyboard is up, so wait long enough that a slow snapshot isn't taken for a dropped tap:
+    /// a second tap then only adds queries to an app that's barely answering them.
     private func focus(_ field: XCUIElement, id: String) throws {
         let focused = NSPredicate(format: "hasKeyboardFocus == true")
         for _ in 0..<3 {
             field.tap()
             let result = XCTWaiter.wait(
-                for: [XCTNSPredicateExpectation(predicate: focused, object: field)], timeout: 5)
+                for: [XCTNSPredicateExpectation(predicate: focused, object: field)], timeout: 12)
             if result == .completed { return }
         }
         throw UIExpectationFailed(description: "\(id) did not take keyboard focus after three taps")
