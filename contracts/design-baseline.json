@@ -75,7 +75,7 @@
   "sources": [
     {
       "path": "docs/design/penny-ios/README.md",
-      "sha256": "a7e40182580264e1cfd785deb8775a90825582773a577ab87238dcbae358fbba"
+      "sha256": "81d3d63fe404bdde7d29e2a61cf1c4a04c94e0f08ec595b8e1cd3c875a8d7511"
     },
     {
       "path": "docs/design/penny-ios/render.mjs",
@@ -131,7 +131,7 @@
     },
     {
       "path": ".design-sync/NOTES.md",
-      "sha256": "2c694cd68db7f0855126cca4a4dc74c34f5ef1642a4374db28985a07865a672e"
+      "sha256": "6b27947e8dda220459980e89ce1f74c4d98e12613fb09db828db24d0ffcf1dac"
     },
     {
       "path": "docs/design/penny-ios/compare.mjs",
@@ -143,7 +143,7 @@
     },
     {
       "path": "docs/design/visual-acceptance.md",
-      "sha256": "9658519a4718fa89af683000a53f602ef8368dc95b16d4cc4b9484d956f5d8db"
+      "sha256": "6323ca851317792934a08b8171d6d94d7cccebdbe11c389c598e18c00c6d0ec5"
     }
   ],
   "tokens": {
@@ -1242,7 +1242,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/iphone/appearance.html",
-      "sha256": "5e8877ca50b7570badecfa7f219dce1242f033417f072fe16672e769fca11394",
+      "sha256": "0119634845ed58492a4c76fb203a5edcfb02c66ffdf74a0e642bde5e3b5cb604",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "route": "/",
@@ -1483,6 +1483,29 @@
         "native": "MAZ-82",
         "web": "MAZ-96",
         "scenario": "password and OIDC sign-in, registration, sign-out with pending changes"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-sign-out-plain",
+      "name": "Sign out (nothing waiting)",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Access & states",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/sign-out-plain.html",
+      "sha256": "eff676d1d421dd008a196f6bb85273d5aba11106f7dde4385cb63f95f5d11054",
+      "nativeIssue": "MAZ-68",
+      "webIssue": "MAZ-84",
+      "route": "/auth/callback",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "sign-out with nothing waiting to sync"
       },
       "status": "planned"
     },
@@ -2125,7 +2148,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/web/sign-in.html",
-      "sha256": "31152c36d2b961a68bf0694be509ccddcc4751db79296c60d518023365118ad0",
+      "sha256": "05cfeeaaeec6bc712d640d918e20c3b9bbf5987ba9769f0b6cd132c32ca29c73",
       "nativeIssue": "MAZ-68",
       "webIssue": "MAZ-84",
       "route": "/auth/callback",

@@ -52,38 +52,40 @@ export function AuthScreen() {
       <main className={cx("auth__form", creating && "auth__form--create")} id="main" tabIndex={-1}>
         {/* Phones: the copper glow behind the header and, on sign-in, the brand tile (iphone-sign-in, iphone-create-account). */}
         <div className="auth__phone-glow" aria-hidden="true" />
-        {creating ? null : (
-          <span className="auth__mark" aria-hidden="true">
-            <Icon name="leaf" size={34} weight={36} />
-          </span>
-        )}
-        <h1>
-          {creating ? "Make yourself at home" : "Welcome back"}
-          {/* The phone cards end the title with a period; the wide web card doesn't. Visual only, so the heading's name stays the same. */}
-          <span className="auth__period" aria-hidden="true">
-            .
-          </span>
-        </h1>
-        <p className="auth__lede">{creating ? "Your account lives on this server. Penny never connects to your bank." : "Sign in to see your month."}</p>
-        {notice === "expired" ? (
-          <p className="notice" role="status">
-            Your session ended. Sign in again to continue. Changes waiting to sync are kept on this device.
+        <div className="auth__body">
+          {creating ? null : (
+            <span className="auth__mark" aria-hidden="true">
+              <Icon name="leaf" size={34} weight={36} />
+            </span>
+          )}
+          <h1>
+            {creating ? "Make yourself at home" : "Welcome back"}
+            {/* The phone cards end the title with a period; the wide web card doesn't. Visual only, so the heading's name stays the same. */}
+            <span className="auth__period" aria-hidden="true">
+              .
+            </span>
+          </h1>
+          <p className="auth__lede">{creating ? "Your account lives on this server. Penny never connects to your bank." : "Sign in to see your month."}</p>
+          {notice === "expired" ? (
+            <p className="notice" role="status">
+              Your session ended. Sign in again to continue. Changes waiting to sync are kept on this device.
+            </p>
+          ) : null}
+          <CredentialsForm key={mode} mode={mode} />
+          <SsoButton />
+          <p className="auth__switch">
+            {creating ? "Already have an account? " : "New here? "}
+            <button
+              type="button"
+              className="link-button"
+              onClick={() => {
+                setMode(creating ? "sign-in" : "create-account");
+              }}
+            >
+              {creating ? "Sign in" : "Create an account"}
+            </button>
           </p>
-        ) : null}
-        <CredentialsForm key={mode} mode={mode} />
-        <SsoButton />
-        <p className="auth__switch">
-          {creating ? "Already have an account? " : "New here? "}
-          <button
-            type="button"
-            className="link-button"
-            onClick={() => {
-              setMode(creating ? "sign-in" : "create-account");
-            }}
-          >
-            {creating ? "Sign in" : "Create an account"}
-          </button>
-        </p>
+        </div>
         {creating ? null : <DemoButton />}
       </main>
     </div>
@@ -344,7 +346,11 @@ function SsoButton() {
   );
 }
 
-/** Temporary demo (MAZ-85): sample data in this tab only, without an account. A quiet link under the form, as on iphone-sign-in. */
+/**
+ * Temporary demo (MAZ-85): sample data in this tab only, without an account. Pinned to the bottom
+ * of the form side with the play icon, as on iphone-sign-in and web-sign-in, with the note that
+ * the demo saves nothing (web-sign-in, MAZ-234).
+ */
 function DemoButton() {
   const queryClient = useQueryClient();
   const hintId = useId();
@@ -358,6 +364,7 @@ function DemoButton() {
           void startDemo(queryClient);
         }}
       >
+        <Icon name="play" size={18} />
         Take a look around with sample data
       </button>
       <p id={hintId} className="field__hint">

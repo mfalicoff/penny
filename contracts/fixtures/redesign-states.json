@@ -649,6 +649,17 @@
       "view": "sign out confirmation with two changes waiting to sync"
     },
     {
+      "specimen": "iphone-sign-out-plain",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "sign out confirmation with nothing waiting to sync"
+    },
+    {
       "specimen": "iphone-receipt-inbox",
       "platform": "iPhone",
       "appearances": [

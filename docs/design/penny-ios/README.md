@@ -12,12 +12,12 @@ Each screen is a standalone HTML file with a `@dsCard` marker, so the folder can
 | iPhone · shared | [shared-list](iphone/shared-list.html), [shared](iphone/shared.html), [shared-balances](iphone/shared-balances.html), [shared-people](iphone/shared-people.html), [shared-expense-add](iphone/shared-expense-add.html), [record-payment](iphone/record-payment.html), [payment-stale](iphone/payment-stale.html), [household-create](iphone/household-create.html), [history](iphone/history.html) |
 | iPhone · trips | [trips](iphone/trips.html), [trip-detail](iphone/trip-detail.html), [trip-form](iphone/trip-form.html) |
 | iPhone · organize & settings | [settings](iphone/settings.html), [recurring](iphone/recurring.html), [schedule-detail](iphone/schedule-detail.html), [accounts](iphone/accounts.html), [account-form](iphone/account-form.html), [categories](iphone/categories.html), [category-form](iphone/category-form.html), [appearance](iphone/appearance.html), [app-lock](iphone/app-lock.html) |
-| iPhone · access & states | [sign-in](iphone/sign-in.html), [create-account](iphone/create-account.html), [server-connect](iphone/server-connect.html), [lock](iphone/lock.html), [empty-home](iphone/empty-home.html), [offline](iphone/offline.html), [save-error](iphone/save-error.html), [saved-toast](iphone/saved-toast.html), [sign-out](iphone/sign-out.html) |
+| iPhone · access & states | [sign-in](iphone/sign-in.html), [create-account](iphone/create-account.html), [server-connect](iphone/server-connect.html), [lock](iphone/lock.html), [empty-home](iphone/empty-home.html), [offline](iphone/offline.html), [save-error](iphone/save-error.html), [saved-toast](iphone/saved-toast.html), [sign-out](iphone/sign-out.html), [sign-out-plain](iphone/sign-out-plain.html) |
 | iPad | [home](ipad/home.html), [activity](ipad/activity.html), [add-entry](ipad/add-entry.html), [shared](ipad/shared.html), [trip](ipad/trip.html), [settings](ipad/settings.html) |
 | Web (desktop browser) | [home](web/home.html), [activity](web/activity.html), [insights](web/insights.html), [household](web/household.html), [trips](web/trips.html), [settings](web/settings.html), [add-entry](web/add-entry.html), [sign-in](web/sign-in.html) |
 | Emailed receipts (MAZ-184) | iPhone: [inbox](iphone/receipt-inbox.html), [inbox-item](iphone/receipt-inbox-item.html), [attach-file](iphone/receipt-attach-file.html), [attach-entry](iphone/receipt-attach-entry.html), [attach-confirm](iphone/receipt-attach-confirm.html), [attached-toast](iphone/receipt-attached-toast.html), [email-settings](iphone/receipt-email-settings.html)<br>iPad: [inbox](ipad/receipt-inbox.html), [inbox-item](ipad/receipt-inbox-item.html), [attach-file](ipad/receipt-attach-file.html), [attach-entry](ipad/receipt-attach-entry.html), [attach-confirm](ipad/receipt-attach-confirm.html), [attached-toast](ipad/receipt-attached-toast.html), [email-settings](ipad/receipt-email-settings.html)<br>Web: [inbox](web/receipt-inbox.html), [inbox-item](web/receipt-inbox-item.html), [attach-file](web/receipt-attach-file.html), [attach-entry](web/receipt-attach-entry.html), [attach-confirm](web/receipt-attach-confirm.html), [attached-toast](web/receipt-attached-toast.html), [email-settings](web/receipt-email-settings.html) |
 
-82 cards in total. Sheets that open over another screen (calendar, add income, split, category picker and others) embed that screen in an iframe, so they stay in sync with it.
+83 cards in total. Sheets that open over another screen (calendar, add income, split, category picker and others) embed that screen in an iframe, so they stay in sync with it.
 
 ## Direction
 
@@ -62,7 +62,7 @@ The web app uses the same tokens, color rules and money semantics as the iOS app
 - **Trips:** the next trip as a feature card with its expenses (private "Only you" entries marked), then a grid of other trips and a New trip card.
 - **Settings:** a section list and detail panes. Includes Reduce transparency and the read-only server.
 - **Add entry:** a centered two-column dialog (amount, name and categories on the left; date, account, split, repeat, trip and a receipt drop zone on the right) with ⌘↵ to save and Esc to cancel.
-- **Sign in:** split screen with the brand and a Left to spend preview on the left, and the server chip, email, SSO and Create account on the right.
+- **Sign in:** split screen with the brand and a Left to spend preview on the left, and the server chip, email, SSO and Create account on the right, with "Take a look around with sample data" pinned to the bottom.
 
 ## Implementation notes (v2)
 

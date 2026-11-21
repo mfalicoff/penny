@@ -33,6 +33,23 @@ describe("temporary demo", () => {
     expect(wasCalled(fetchMock, "/api/ledger")).toBe(false);
   });
 
+  it("is pinned after the sign-in form with the play icon, and absent from create account (iphone-sign-in, web-sign-in)", async () => {
+    signedOut();
+    const user = userEvent.setup();
+    renderApp("/transactions");
+    const demo = await screen.findByRole("button", { name: "Take a look around with sample data" });
+    const main = screen.getByRole("main");
+    // Outside the form's body, as the last part of the form side, so the layout can pin it to the bottom.
+    const pinned = demo.closest(".auth__demo");
+    expect(pinned?.parentElement).toBe(main);
+    expect(main.lastElementChild).toBe(pinned);
+    expect(demo.closest(".auth__body")).toBeNull();
+    expect(demo.querySelector("svg")).not.toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "Create an account" }));
+    expect(screen.queryByRole("button", { name: "Take a look around with sample data" })).not.toBeInTheDocument();
+  });
+
   it("leaves back to sign-in and drops everything it cached", async () => {
     const fetchMock = signedOut();
     const user = userEvent.setup();
