@@ -40,33 +40,37 @@ export const CATEGORY_COLORS: { value: string; name: string }[] = [
   { value: "#8E8A85", name: "Gray" },
 ];
 
-/** Glyphs offered for categories (card `iphone-category-form`), with their spoken names. */
+/**
+ * Glyphs offered for categories, with their spoken names: the card's grid (`iphone-category-form`),
+ * then the other icons the native form offers that the kit draws, in its order
+ * (`CategoryStyle.pickerIcons`).
+ */
 export const CATEGORY_ICONS: { name: IconName; label: string }[] = [
   { name: "home", label: "Home" },
   { name: "basket", label: "Basket" },
   { name: "bus", label: "Bus" },
   { name: "cafe", label: "Coffee" },
-  { name: "bag-handle", label: "Shopping bag" },
-  { name: "musical-notes", label: "Music" },
-  { name: "heart", label: "Heart" },
+  { name: "pricetag", label: "Price tag" },
+  { name: "play", label: "Play" },
   { name: "airplane", label: "Airplane" },
   { name: "leaf", label: "Leaf" },
   { name: "people", label: "People" },
   { name: "receipt", label: "Receipt" },
   { name: "card", label: "Card" },
   { name: "cash", label: "Cash" },
-  { name: "gift", label: "Gift" },
-  { name: "briefcase", label: "Briefcase" },
-  { name: "laptop", label: "Laptop" },
-  { name: "trending-up", label: "Trending up" },
-  { name: "wallet", label: "Wallet" },
-  { name: "pricetag", label: "Price tag" },
+  { name: "image", label: "Picture" },
   { name: "document-text", label: "Document" },
   { name: "sunny", label: "Sun" },
   { name: "moon", label: "Moon" },
   { name: "time", label: "Clock" },
   { name: "key", label: "Key" },
-  { name: "image", label: "Picture" },
+  { name: "bag-handle", label: "Shopping bag" },
+  { name: "gift", label: "Gift" },
+  { name: "heart", label: "Heart" },
+  { name: "briefcase", label: "Briefcase" },
+  { name: "laptop", label: "Laptop" },
+  { name: "trending-up", label: "Trending up" },
+  { name: "musical-notes", label: "Music" },
   { name: "ellipsis-horizontal", label: "More" },
 ];
 

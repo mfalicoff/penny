@@ -55,6 +55,16 @@ async function tripAction(page: Page, name: "Trip expense" | "Edit trip") {
   await page.getByRole("list", { name: "Trip actions" }).getByRole("button", { name }).click();
 }
 
+/**
+ * Opens the featured trip: Open trip from 1100px (card `web-trips`); below that the featured
+ * card is itself the link (card `iphone-trips`).
+ */
+async function openFeatured(page: Page, name: string) {
+  const open = page.getByRole("link", { name: "Open trip" });
+  if (await open.isVisible()) await open.click();
+  else await page.getByRole("region", { name }).getByRole("link").first().click();
+}
+
 /** A shared expense through the trip's own form (Trip expense). */
 async function addTripExpense(page: Page, title: string, amount: string, date: string) {
   await tripAction(page, "Trip expense");
@@ -83,7 +93,7 @@ test("a shared personal trip keeps its earlier expense private, and a later memb
   await alex.page.goto("/trips");
   await expect(alex.page.getByRole("heading", { level: 2, name: "Lisbon" })).toBeVisible();
   await expect(alex.page.getByText("In 23 days")).toBeVisible();
-  await alex.page.getByRole("link", { name: "Open trip" }).click();
+  await openFeatured(alex.page, "Lisbon");
   await expect(alex.page.getByRole("heading", { level: 1, name: "Lisbon" })).toBeVisible();
   await expect(alex.page.getByText("1 outside the trip dates")).toBeVisible();
 
@@ -123,24 +133,28 @@ test("a shared personal trip keeps its earlier expense private, and a later memb
   await bea.page.reload();
   await expect(bea.page.getByRole("link", { name: /Apartment in Alfama/ }).getByText("−$184.00 you owe")).toBeVisible();
 
-  // Balances settle by month: October (flights, Alex only) is settled, November isn't.
+  // Balances settle by month: October (flights, Alex only) is settled, November isn't. Before the
+  // trip they open on its month, November (card `ipad-trip`).
   await bea.page.getByRole("link", { name: "Balances" }).click();
   await expect(bea.page.getByText(/A trip settles month by month/)).toBeVisible();
-  // The month control: Previous and Next from 768px, the month pill's list on phones (MAZ-229).
-  const next = bea.page.getByRole("button", { name: "Next month" });
-  if (await next.isVisible()) await next.click();
-  else await bea.page.getByLabel("Month", { exact: true }).selectOption("2026-11");
-  await expect(bea.page).toHaveURL(/month=2026-11/);
-  await bea.page.reload();
   await expect(bea.page.getByLabel("Month", { exact: true })).toHaveValue("2026-11");
+  // The month control: Previous and Next from 768px, the month pill's list on phones (MAZ-229).
+  const previous = bea.page.getByRole("button", { name: "Previous month" });
+  if (await previous.isVisible()) await previous.click();
+  else await bea.page.getByLabel("Month", { exact: true }).selectOption("2026-10");
+  await expect(bea.page).toHaveURL(/month=2026-10/);
+  await bea.page.reload();
+  await expect(bea.page.getByLabel("Month", { exact: true })).toHaveValue("2026-10");
 
   // Alex's list shows Lisbon once, as the shared trip; the totals never add the private train to the group.
   await alex.page.goto("/trips");
   await expect(alex.page.getByRole("heading", { level: 2, name: "Lisbon" })).toHaveCount(1);
-  await expect(alex.page.getByText("Trip total")).toBeVisible();
-  await expect(alex.page.getByText("$1,192.00")).toBeVisible();
-  // Alex's spending: all of the flights, half the apartment, and the private train.
-  await expect(alex.page.getByText("$1,032.00")).toBeVisible();
+  // Alex's share: all of the flights, half the apartment, and the private train. From 1100px the
+  // trip total sits beside it (card `web-trips`); phones show only your share so far (`iphone-trips`).
+  const hero = alex.page.getByRole("region", { name: "Lisbon" });
+  await expect(hero.getByText("$1,032.00")).toBeVisible();
+  if (await hero.getByText("Trip total").isVisible()) await expect(hero.getByText("$1,192.00")).toBeVisible();
+  else await expect(hero.getByText("Your share so far")).toBeVisible();
   expect(await horizontalOverflow(alex.page)).toBeLessThanOrEqual(0);
 
   await alex.context.close();
@@ -215,7 +229,7 @@ test("the demo shows its sample trip, says shared trips need a server and fits 3
   await expect(page.getByRole("heading", { level: 2, name: "Weekend in Québec City" })).toBeVisible();
   await expect(page.getByText("The demo has no shared trips.", { exact: false })).toBeVisible();
   expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
-  await page.getByRole("link", { name: "Open trip" }).click();
+  await openFeatured(page, "Weekend in Québec City");
   await expect(page.getByRole("heading", { level: 1, name: "Weekend in Québec City" })).toBeVisible();
   await expect(page.getByText("1 outside the trip dates")).toBeVisible();
   expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);

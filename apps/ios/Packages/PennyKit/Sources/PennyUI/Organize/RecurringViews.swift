@@ -46,10 +46,7 @@ struct RecurringListView: View {
                         }
                     } header: {
                         // The card's group heading (`.gh`): small, semibold, upper case.
-                        Text(Self.sectionTitle(kind))
-                            .font(.footnote.weight(.semibold))
-                            .textCase(.uppercase)
-                            .foregroundStyle(PennyColor.secondaryLabel)
+                        Text(Self.sectionTitle(kind)).cardSectionHeader()
                     } footer: {
                         if kind == kinds.last { Text(Self.footer(hasShared: !shared.isEmpty)) }
                     }
@@ -74,6 +71,7 @@ struct RecurringListView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("Add schedule", systemImage: "plus") { addingSchedule = true }
+                    .neutralToolbarGlyph()
                     .disabled(shell.workspace.load.ledger == nil)
                     .accessibilityIdentifier("recurring.add")
             }
@@ -490,9 +488,9 @@ struct ScheduleDetailView: View {
                     .accessibilityElement(children: .combine)
                 }
             } header: {
-                Text(rule.active ? "Next" : "If you resume today")
+                Text(rule.active ? "Next" : "If you resume today").cardSectionHeader()
             }
-            Section("Details") {
+            CardSection("Details") {
                 LabeledContent("Category") {
                     HStack(spacing: 6) {
                         Circle().fill(PennyColor.category(category?.paletteColor ?? .other)).frame(width: 8, height: 8)

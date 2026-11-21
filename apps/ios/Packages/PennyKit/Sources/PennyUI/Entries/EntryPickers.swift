@@ -50,6 +50,7 @@ struct EntryCategoryPickerSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close", systemImage: "xmark") { dismiss() }
+                        .neutralToolbarGlyph()
                         .accessibilityIdentifier("categoryPicker.close")
                 }
             }
@@ -339,6 +340,7 @@ struct EntrySplitSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel", systemImage: "xmark") { dismiss() }
+                        .neutralToolbarGlyph()
                         .accessibilityIdentifier("split.cancel")
                 }
                 ToolbarItem(placement: .confirmationAction) {
@@ -445,7 +447,7 @@ struct EntryExtrasView: View {
                         .foregroundStyle(PennyColor.secondaryLabel)
                 }
             } header: {
-                Text("Repeat")
+                Text("Repeat").cardSectionHeader()
             } footer: {
                 Text(
                     model.editor.isNew
@@ -460,7 +462,7 @@ struct EntryExtrasView: View {
                     }
                     ForEach(sharedTrips) { household in sharedTripRow(household) }
                 } header: {
-                    Text("Trip")
+                    Text("Trip").cardSectionHeader()
                 } footer: {
                     if !sharedTrips.isEmpty {
                         Text(
@@ -468,7 +470,7 @@ struct EntryExtrasView: View {
                     }
                 }
             }
-            Section("Note") {
+            CardSection("Note") {
                 TextField("Anything you'd like to remember", text: $model.editor.draft.note, axis: .vertical)
                     .lineLimit(3...8)
                     .accessibilityIdentifier("entryExtras.note")

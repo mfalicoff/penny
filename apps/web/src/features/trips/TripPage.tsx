@@ -5,7 +5,7 @@ import { Link, Navigate, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ApiError } from "../../api/client";
 import { householdDetailQuery, householdExpensesQuery, householdsQuery, monthRecapQuery } from "../../api/households";
-import { usePageTitle } from "../../app/shell/pageTitle";
+import { usePageTitle, usePageTitleStyle } from "../../app/shell/pageTitle";
 import { useAccountEmail } from "../../auth/account";
 import { useIsDemo } from "../../demo/demo";
 import { Avatar, Badge, Card } from "../../design/controls";
@@ -18,16 +18,16 @@ import { EntryFormDialog } from "../entries/EntryForm";
 import { categoryIcon } from "../entries/model";
 import { useLedgerWriter } from "../entries/writer";
 import { BalancesTab } from "../households/BalancesTab";
-import { householdView } from "../households/context";
+import { householdView, type HouseholdView } from "../households/context";
 import { describeLoadError } from "../households/errors";
 import { ExpenseDetailDialog } from "../households/ExpenseDetail";
 import { ExpenseFormDialog, type FormTarget } from "../households/ExpenseForm";
 import { ExpensesTab } from "../households/ExpensesTab";
 import { HistoryPanel } from "../households/HistoryPanel";
-import { MonthBalance } from "../households/HouseholdPage";
 import { GroupToolbar, MoreMenu, ToolButton, ToolContent, toolClass, type MoreItem } from "../households/GroupTools";
 import { GroupLink, type GroupSearch } from "../households/links";
 import { currentMonth, dayLabel, isCurrent, monthLabel, people } from "../households/model";
+import type { HouseholdMember } from "../../api/schemas";
 import { OnlineNotice } from "../households/OnlineNotice";
 import { PeopleTab } from "../households/PeopleTab";
 import { RuleDialog } from "../households/RuleDialog";
@@ -35,7 +35,7 @@ import { MonthBarControls } from "../home/parts";
 import { useMediaQuery, WIDE } from "../../app/useMediaQuery";
 import type { HouseholdTab } from "../households/search";
 import { useLedgerWorkspace } from "../organize/workspace";
-import { isSharedTrip, outsideRange, phaseLabel, privateExpenses, rangeLabel, sharedTripTotals, tripOverview } from "./model";
+import { isSharedTrip, outsideRange, peopleCount, phaseLabel, privateExpenses, shareByCategory, sharedTripTotals, tripMonth, tripOverview, tripRange, type CategoryShare } from "./model";
 import type { TripSearch } from "./search";
 import { ShareTripDialog, TripFormDialog } from "./TripForm";
 
@@ -100,7 +100,7 @@ function PersonalTripPage({ trip, ledger }: { trip: Trip; ledger: Ledger }) {
             <Badge>{phaseLabel(trip)}</Badge>
             <Badge icon="lock-closed">{trip.sharedHouseholdId && !sharedAs ? "Personal · was shared" : "Personal"}</Badge>
           </span>
-          <p className="trip-head__dates">{rangeLabel(trip.startDate, trip.endDate)}</p>
+          <p className="trip-head__dates">{tripRange(trip.startDate, trip.endDate)}</p>
         </div>
       </section>
 
@@ -114,13 +114,13 @@ function PersonalTripPage({ trip, ledger }: { trip: Trip; ledger: Ledger }) {
             </Link>
           }
         >
-          These expenses are from before sharing. They stay private to you and count in your spending only.
+          These expenses are from before sharing. They stay private to you and count in your share only.
         </Banner>
       ) : null}
 
       <dl className="trip-stats trip-stats--card">
         <div>
-          <dt>Your spending</dt>
+          <dt>Your share</dt>
           <dd>
             <Money cents={overview.total} currency={ledger.currency} />
           </dd>
@@ -222,7 +222,11 @@ const TAB_LABEL: Record<Exclude<HouseholdTab, "history">, string> = { expenses: 
 /**
  * A shared trip (specimens `shared-trip`, `trip-people`, `trip-balances`; card
  * `iphone-trip-detail`, `ipad-trip`): the household page's Expenses, Balances and People for a
- * trip, under `/trips/$id`. Expenses lists the whole trip whatever the month, plus your private
+ * trip, under `/trips/$id`. Expenses leads with a centered hero: the name (the bar's title stays
+ * for screen readers on phones), the dates and people, the trip total and your share under it.
+ * From 1100px the hero is on the left with the countdown, Trip total and Your share, People with
+ * each member's balance beside it, and Your share by category beside the expenses. Balances open
+ * on the trip's month before or after it (`tripMonth`). Expenses lists the whole trip whatever the month, plus your private
  * expenses from before sharing ("Only you"); Balances still settle month by month; People invites
  * and manages. The navigation bar (MAZ-229) has Invite and a … menu with Edit trip and History;
  * Trip expense is the copper button from 1100px and the menu's first item below that. Balances,
@@ -232,9 +236,10 @@ function SharedTripPage({ householdId, search }: { householdId: string; search: 
   const email = useAccountEmail();
   const navigate = useNavigate();
   const workspace = useLedgerWorkspace();
-  const month = search.month ?? currentMonth();
   const tab: HouseholdTab = search.tab ?? "expenses";
   const detail = useQuery(householdDetailQuery(email, householdId));
+  const range = detail.data?.household.trip;
+  const month = search.month ?? (range ? tripMonth(range) : currentMonth());
   const list = useQuery(householdsQuery(email));
   const isTrip = Boolean(detail.data?.household.trip);
   const recap = useQuery({ ...monthRecapQuery(email, householdId, month), enabled: isTrip });
@@ -244,6 +249,7 @@ function SharedTripPage({ householdId, search }: { householdId: string; search: 
   const [openPrivate, setOpenPrivate] = useState<Transaction | null>(null);
   const wide = useMediaQuery(WIDE);
   usePageTitle(detail.data?.household.name);
+  usePageTitleStyle(tab === "expenses" ? "hero" : "inline");
 
   // A `?add=1` link (Trip expense from the list) opens the form once; drop it so Back and reload don't reopen it.
   const consumedAdd = useRef(false);
@@ -279,7 +285,6 @@ function SharedTripPage({ householdId, search }: { householdId: string; search: 
   const archived = list.isSuccess && !list.data.some((item) => item.id === householdId);
   const view = householdView(householdId, detail.data, who, month, archived, "trips");
   const current = detail.data.members.filter(isCurrent);
-  const balance = who.meId ? recap.data?.balances.find((row) => row.userId === who.meId)?.balanceCents : undefined;
   // Private expenses are in the ledger currency; a trip in another currency can't add them up.
   const sameCurrency = workspace.ledger?.currency === household.currency;
   const mine = sameCurrency ? privateExpenses(workspace.ledger, householdId) : [];
@@ -293,9 +298,10 @@ function SharedTripPage({ householdId, search }: { householdId: string; search: 
     { label: "History", icon: "time", onSelect: () => { go({ tab: "history" }); } },
   ];
 
+  // The month pill reports this month as no month; a trip's default is its own month, so keep it explicit.
   return (
     <div className="page trips">
-      <GroupToolbar ownAdd lead={tab === "balances" ? <MonthBarControls month={month} onChange={(next) => { go({ month: next }); }} /> : null}>
+      <GroupToolbar ownAdd lead={tab === "balances" ? <MonthBarControls month={month} onChange={(next) => { go({ month: next ?? currentMonth() }); }} /> : null}>
         {view.canWrite && view.creator ? (
           <GroupLink route="trips" householdId={householdId} search={linkSearch({ tab: "people" })} className={toolClass()}>
             <ToolContent icon="person-add" label="Invite" />
@@ -306,48 +312,47 @@ function SharedTripPage({ householdId, search }: { householdId: string; search: 
       </GroupToolbar>
       <OnlineNotice />
       {tab === "expenses" ? (
-        <>
-          <section className="trip-head" aria-label="Trip summary">
-            <span className="avatars" aria-hidden="true">
-              {current.slice(0, 5).map((member) => (
-                <Avatar key={member.userId} name={member.email} size={40} />
-              ))}
-            </span>
-            <div className="trip-head__summary">
-              <span className="trip-hero__badges">
-                <Badge>{phaseLabel(household.trip)}</Badge>
-                <Badge icon="people">Shared</Badge>
-                {archived ? <Badge>Archived</Badge> : null}
-              </span>
-              <p className="trip-head__dates">
-                {rangeLabel(household.trip.startDate, household.trip.endDate)} · {current.length} {current.length === 1 ? "person" : "people"} · {household.currency}
-              </p>
-            </div>
-          </section>
-
-          <dl className="trip-stats trip-stats--card" aria-live="polite">
-            <div>
-              <dt>Trip total</dt>
-              <dd className="pk-num">{totals ? view.money(totals.tripTotal) : "…"}</dd>
-            </div>
-            <div>
-              <dt>Your spending</dt>
-              <dd className="pk-num">{totals ? view.money(totals.yourSpending) : "…"}</dd>
-            </div>
-            <div>
-              <dt>{monthLabel(month).split(" ")[0]} balance</dt>
-              <dd className="trip-stats__sentence">
-                <MonthBalance month={month} balance={balance} loading={recap.isPending} view={view} />
-              </dd>
-            </div>
-          </dl>
-          {totals && (totals.privateShare > 0 || totals.outside > 0) ? (
-            <p className="note">
-              {totals.privateShare > 0 ? `Your spending includes ${view.money(totals.privateShare)} only you can see. ` : ""}
-              {totals.outside > 0 ? `${String(totals.outside)} ${totals.outside === 1 ? "expense is" : "expenses are"} dated outside the trip and still ${totals.outside === 1 ? "belongs" : "belong"} to it.` : ""}
+        <section className={wide ? "trip-detail-head trip-detail-head--wide" : "trip-detail-head"} aria-label="Trip summary">
+          <div className="glow" aria-hidden="true" />
+          <div className="trip-detail-hero">
+            {wide ? <span className="trip-hero__when">{phaseLabel(household.trip)}</span> : null}
+            {/* The bar's title is the page's heading; on phones it's only for screen readers, so the hero shows the name. */}
+            <p className="trip-detail-hero__name" aria-hidden="true">
+              {household.name}
             </p>
-          ) : null}
-        </>
+            {archived ? <Badge>Archived</Badge> : null}
+            <p className="trip-detail-hero__meta">
+              {wide
+                ? `${tripRange(household.trip.startDate, household.trip.endDate)} · ${current.length > 1 ? `shared with ${peopleCount(current.length - 1)}` : "only you so far"}`
+                : `${tripRange(household.trip.startDate, household.trip.endDate, { year: "auto" })} · ${peopleCount(current.length)}`}
+            </p>
+            {wide ? (
+              <dl className="trip-stats trip-stats--hero" aria-live="polite">
+                <div>
+                  <dt>Trip total</dt>
+                  <dd className="pk-num">{totals ? view.money(totals.tripTotal) : "…"}</dd>
+                </div>
+                <div>
+                  <dt>Your share</dt>
+                  <dd className="pk-num">{totals ? view.money(totals.yourSpending) : "…"}</dd>
+                </div>
+              </dl>
+            ) : (
+              <div className="trip-detail-hero__lead" aria-live="polite">
+                <p className="trip-detail-hero__total pk-num">{totals ? view.money(totals.tripTotal) : "…"}</p>
+                <p className="trip-detail-hero__yours">
+                  trip total · your share <b className="pk-num">{totals ? view.money(totals.yourSpending) : "…"}</b>
+                </p>
+              </div>
+            )}
+            {totals && totals.outside > 0 ? (
+              <p className="note">
+                {`${String(totals.outside)} ${totals.outside === 1 ? "expense is" : "expenses are"} dated outside the trip and still ${totals.outside === 1 ? "belongs" : "belong"} to it.`}
+              </p>
+            ) : null}
+          </div>
+          {wide ? <PeopleBalances members={current} balances={recap.data?.balances} loading={recap.isPending} month={month} view={view} /> : null}
+        </section>
       ) : null}
 
       {archived ? (
@@ -369,9 +374,20 @@ function SharedTripPage({ householdId, search }: { householdId: string; search: 
       </nav>
 
       {tab === "expenses" ? (
-        <ExpensesTab view={view} recap={recap} search={linkSearch({})}>
-          <OnlyYouCard entries={mine} ledger={workspace.ledger} onOpen={setOpenPrivate} />
-        </ExpensesTab>
+        wide ? (
+          <div className="trip-detail-columns">
+            <div className="page">
+              <ExpensesTab view={view} recap={recap} search={linkSearch({})}>
+                <OnlyYouCard entries={mine} ledger={workspace.ledger} onOpen={setOpenPrivate} />
+              </ExpensesTab>
+            </div>
+            <ShareByCategory rows={expenses.data ? shareByCategory(expenses.data, who.meId, mine, workspace.ledger?.categories ?? []) : null} currency={household.currency} />
+          </div>
+        ) : (
+          <ExpensesTab view={view} recap={recap} search={linkSearch({})}>
+            <OnlyYouCard entries={mine} ledger={workspace.ledger} onOpen={setOpenPrivate} />
+          </ExpensesTab>
+        )
       ) : tab === "balances" ? (
         <>
           <p className="note">A trip settles month by month, like a household: each month's balance is separate, and months don't offset each other.</p>
@@ -423,7 +439,7 @@ function OnlyYouCard({ entries, ledger, onOpen }: { entries: Transaction[]; ledg
         </Badge>
       }
     >
-      <p className="note">Only you see these. They count in your spending, not in the trip's total or balances.</p>
+      <p className="note">Only you see these. They count in your share, not in the trip's total or balances.</p>
       <ul className="row-list" aria-label="Private expenses">
         {entries.map((entry) => (
           <li key={entry.id}>
@@ -434,3 +450,68 @@ function OnlyYouCard({ entries, ledger, onOpen }: { entries: Transaction[]; ledg
     </Card>
   );
 }
+
+/**
+ * People (card `ipad-trip`, from 1100px): each current member and their balance in the trip's
+ * month, in words as well as color: "owes", "gets back" or "settled".
+ */
+function PeopleBalances({ members, balances, loading, month, view }: { members: HouseholdMember[]; balances: readonly { userId: string; balanceCents: number }[] | undefined; loading: boolean; month: string; view: HouseholdView }) {
+  return (
+    <Card title="People" action={<span className="muted">{monthLabel(month).split(" ")[0]} balance</span>} className="trip-people">
+      <ul className="row-list" aria-label={`Balances for ${monthLabel(month)}`}>
+        {[...members].sort((a, b) => Number(b.userId === view.who.meId) - Number(a.userId === view.who.meId)).map((member) => {
+          const cents = balances?.find((row) => row.userId === member.userId)?.balanceCents ?? 0;
+          return (
+            <li key={member.userId} className="row row--plain trip-people__row">
+              <Avatar name={member.email} size={36} />
+              <span className="row__title trip-people__name">{view.who.name(member.userId)}</span>
+              <span className="row__end trip-people__balance">
+                {loading ? (
+                  "…"
+                ) : (
+                  <>
+                    <Money cents={cents} currency={view.currency} signed={cents !== 0} tone={cents > 0 ? "income" : "expense"} />
+                    <span className="row__meta">{cents > 0 ? "gets back" : cents < 0 ? "owes" : "settled"}</span>
+                  </>
+                )}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </Card>
+  );
+}
+
+/** Your share by category (card `ipad-trip`, from 1100px): a bar per category against the largest. */
+function ShareByCategory({ rows, currency }: { rows: CategoryShare[] | null; currency: string }) {
+  const largest = rows?.[0]?.amount ?? 0;
+  return (
+    <Card title="Your share by category" className="trip-categories">
+      {!rows ? (
+        <p className="note">Loading the trip's expenses…</p>
+      ) : rows.length ? (
+        <ul className="row-list" aria-label="Your share by category">
+          {rows.map((row) => (
+            <li key={row.key} className="trip-categories__row">
+              <span className="category-dot" style={tileStyle(row)} aria-hidden="true">
+                <Icon name={categoryIcon(row.icon)} size={16} />
+              </span>
+              <span className="trip-categories__name">{row.name}</span>
+              <span className="trip-categories__bar" aria-hidden="true">
+                <span style={{ width: `${String(Math.max(2, Math.round((row.amount / largest) * 100)))}%`, ...barColor(row) }} />
+              </span>
+              <Money cents={row.amount} currency={currency} className="trip-categories__amount" />
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="note">Your share shows here once the trip has expenses.</p>
+      )}
+      <p className="note">Balances settle per month, so expenses in different months are reimbursed separately.</p>
+    </Card>
+  );
+}
+
+/** The bar takes the category tile's own color. */
+const barColor = (category: { color: string; icon: string }) => tileStyle(category);

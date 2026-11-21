@@ -64,7 +64,7 @@ struct EntryDetailView: View {
                 .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
                 .accessibilityElement(children: .combine)
             }
-            Section("Details") {
+            CardSection("Details") {
                 detail("Account", entry.accountId.flatMap(ledger.account(id:))?.name)
                 detail(
                     "Repeats",
@@ -73,7 +73,7 @@ struct EntryDetailView: View {
                 detail("Note", entry.note.isEmpty ? nil : entry.note)
             }
             if entry.kind == .expense, entry.share != entry.total || entry.receipt != nil {
-                Section("Split and receipt") {
+                CardSection("Split and receipt") {
                     if entry.share != entry.total {
                         detail("Your share", MoneyFormat.amount(entry.share, currency: currency))
                         detail("Total", MoneyFormat.amount(entry.total, currency: currency))

@@ -38,8 +38,7 @@ private struct HistoryList: View {
                     HStack(spacing: 8) {
                         ForEach(AuditFilter.allCases, id: \.self) { option in
                             Button(option.title) { filter = option }
-                                .buttonStyle(.bordered)
-                                .tint(filter == option ? PennyColor.tint : PennyColor.secondaryLabel)
+                                .buttonStyle(PillButtonStyle(selected: filter == option))
                                 .accessibilityAddTraits(filter == option ? .isSelected : [])
                                 .accessibilityIdentifier("history.filter.\(option.rawValue)")
                         }
@@ -57,7 +56,7 @@ private struct HistoryList: View {
             }
             .listSectionSeparator(.hidden)
             ForEach(groups, id: \.day) { group in
-                Section(group.title) {
+                CardSection(group.title) {
                     ForEach(group.events) { event in
                         AuditRow(event: event, people: model.people, currency: model.currency)
                             .accessibilityIdentifier("history.event.\(event.id)")
@@ -107,7 +106,7 @@ private struct HistoryList: View {
             if result.last?.day == day {
                 result[result.count - 1].events.append(event)
             } else {
-                result.append(DayGroup(day: day, title: DayText.long(day, today: today), events: [event]))
+                result.append(DayGroup(day: day, title: DayText.medium(day, today: today), events: [event]))
             }
         }
         return result

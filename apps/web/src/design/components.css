@@ -412,6 +412,46 @@
   box-shadow: 0 0 0 2.5px var(--pk-tint);
 }
 
+/* Type tiles (card `iphone-account-form`): icon over the label on a solid tile; the selected
+   one has a copper outline, a copper icon and a check badge. */
+.choices--tiles .choices__options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.choices--tiles .choice {
+  align-content: space-between;
+  justify-items: start;
+  min-width: 0;
+  min-height: 78px;
+  padding: 12px 14px;
+  border: 2px solid transparent;
+  border-radius: 18px;
+  background: var(--pk-surface);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.choices--tiles .choice .icon {
+  color: var(--pk-label-2);
+}
+
+.choices--tiles .choice--on {
+  border-color: var(--pk-tint);
+}
+
+.choices--tiles .choice--on .icon {
+  color: var(--pk-tint);
+}
+
+.choices--tiles .choice__check {
+  position: absolute;
+  top: 10px;
+  inset-inline-end: 10px;
+  display: flex;
+}
+
 .choices--list .choices__options {
   display: grid;
   gap: 0;
@@ -769,4 +809,83 @@
 .link-row .icon:last-child {
   margin-inline-start: auto;
   color: var(--pk-label-3);
+}
+
+/* ---------- grouped lists (cards' `.gh`, `.glist`, `.gf`) ---------- */
+/* A section's small upper-case label, above its solid group and inset to the rows' text. */
+.group-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  padding: 0 16px;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+/* The note under a group, 7px below it as in the cards. */
+.group-note {
+  margin: 0;
+  padding: 0 16px;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+/* Directly in a page (16px apart), the note pulls up to its group. */
+.page > .group-note {
+  margin-top: -9px;
+}
+
+/*
+ * Parts of one line joined by " · ". A part that doesn't fit starts its own line without a
+ * stranded separator: each part draws its "·" in the space before it, and the space at the
+ * start of a line is clipped.
+ */
+.inline-list {
+  display: block;
+  overflow: hidden;
+}
+
+.inline-list__items {
+  display: flex;
+  flex-wrap: wrap;
+  margin-inline-start: -1em;
+}
+
+.inline-list__items > * {
+  position: relative;
+  min-width: 0;
+  max-width: calc(100% - 1em);
+  margin-inline-start: 1em;
+}
+
+.inline-list__items > * + *::before {
+  content: "·" / "";
+  position: absolute;
+  inset-inline-start: -1em;
+  width: 1em;
+  text-align: center;
+}
+
+/* Separators start at the rows' text, after the tile, as in the cards (`--inset`, default 64px). */
+.group-list.group-list--inset > li + li {
+  position: relative;
+  border-top: 0;
+}
+
+.group-list.group-list--inset > li + li::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  inset-inline: var(--inset, 64px) 0;
+  border-top: 0.5px solid var(--pk-separator);
+}
+
+/* A dialog whose body holds solid groups (cards' sheets): the sheet background behind them. */
+.pk-dialog.pk-dialog--grouped {
+  background: var(--pk-bg);
 }

@@ -58,11 +58,12 @@ struct TripsView: View {
                 ForEach([TripPhase.now, .upcoming, .past], id: \.self) { phase in
                     let rows = rest.filter { $0.range.phase(today: shell.today) == phase }
                     if !rows.isEmpty {
-                        Section(TripText.phaseTitle(phase)) {
+                        CardSection(TripText.phaseTitle(phase)) {
                             ForEach(rows) { card in
                                 NavigationLink(value: DetailRoute.trip(id: card.id)) {
                                     TripRow(card: card, currency: ledger.currency.rawValue)
                                 }
+                                .cardRow()
                                 .accessibilityIdentifier("trip.\(card.id)")
                             }
                         }
@@ -236,21 +237,19 @@ struct TripRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            CategoryIcon(
-                symbol: card.isShared ? "person.2" : "airplane",
-                color: card.isShared ? PennyColor.tint : PennyColor.category(.home))
+            // The card's neutral trip tile, shared or not: the detail line says which.
+            CategoryIcon.neutral(symbol: "airplane")
             VStack(alignment: .leading, spacing: 2) {
-                Text(card.name).font(.body.weight(.semibold))
+                Text(card.name).font(.callout.weight(.semibold))
                     .fixedSize(horizontal: false, vertical: true)
                 Text(Self.detail(card)).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 8)
             if case .personal(_, let total, _, _) = card.kind {
-                MoneyText(total, meaning: .neutral, currency: currency)
+                MoneyText(total, meaning: .neutral, currency: currency, style: .callout.weight(.semibold))
             }
         }
-        .frame(minHeight: Metrics.minTouchTarget)
         .accessibilityElement(children: .combine)
     }
 

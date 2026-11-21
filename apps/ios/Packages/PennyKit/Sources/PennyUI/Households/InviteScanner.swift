@@ -96,6 +96,7 @@ struct InviteScannerView: View {
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
                         Button("Close", systemImage: "xmark") { dismiss() }
+                            .neutralToolbarGlyph()
                             .accessibilityIdentifier("scanner.close")
                     }
                 }

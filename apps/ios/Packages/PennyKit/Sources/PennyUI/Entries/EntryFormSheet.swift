@@ -52,6 +52,7 @@ struct EntryFormSheet: View {
                         if shell.workspace.load.ledger == nil {
                             ToolbarItem(placement: .cancellationAction) {
                                 Button("Close", systemImage: "xmark") { dismiss() }
+                                    .neutralToolbarGlyph()
                             }
                         }
                     }
@@ -325,6 +326,7 @@ private struct EntryForm: View {
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Close", systemImage: "xmark") { close(model) }
+                    .neutralToolbarGlyph()
                     .accessibilityIdentifier("entryForm.close")
             }
             if isTwoColumn {

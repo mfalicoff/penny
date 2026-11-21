@@ -407,6 +407,7 @@ struct HouseholdPage: View {
             .frame(minWidth: Metrics.minTouchTarget, minHeight: Metrics.minTouchTarget)
             .accessibilityIdentifier("household.previousMonth")
             Text(HouseholdText.shortMonth(model.month))
+                .cardSectionHeader()
                 .accessibilityLabel(HouseholdText.month(model.month))
                 .accessibilityIdentifier("household.month")
             Button("Next month", systemImage: "chevron.right") {
@@ -419,7 +420,7 @@ struct HouseholdPage: View {
             .disabled(model.month >= MonthKey(shell.today))
             .accessibilityIdentifier("household.nextMonth")
             Spacer()
-            Text(trailing)
+            Text(trailing).cardSectionHeader()
         }
         .buttonStyle(.borderless)
         .padding(.leading, -14)
@@ -464,6 +465,7 @@ struct HouseholdPage: View {
                 ) {
                     SharedExpenseRow(expense: expense, people: model.people, currency: model.currency)
                 }
+                .cardRow()
                 .accessibilityIdentifier("household.expense.\(expense.id)")
             }
         } header: {
@@ -494,7 +496,7 @@ struct HouseholdPage: View {
                     .accessibilityIdentifier("household.rule.\(rule.id)")
                 }
             } header: {
-                Text("Repeating")
+                Text("Repeating").cardSectionHeader()
             } footer: {
                 Text(
                     "Repeating expenses are added on their date with the members active that day. Pausing skips "
@@ -533,7 +535,7 @@ struct HouseholdPage: View {
                     .accessibilityIdentifier("household.suggestion.\(transfer.fromUserId)-\(transfer.toUserId)")
                 }
             } header: {
-                Text("Suggested payments")
+                Text("Suggested payments").cardSectionHeader()
             } footer: {
                 Text(
                     isOpen
@@ -552,7 +554,7 @@ struct HouseholdPage: View {
         }
         let overdue = (recap?.overdueMonths ?? []).filter { $0 != "\(model.month)" }
         if !overdue.isEmpty {
-            Section("Overdue") {
+            CardSection("Overdue") {
                 ForEach(overdue, id: \.self) { month in
                     Button {
                         if let key = MonthKey(month) {
@@ -622,7 +624,7 @@ struct HouseholdPage: View {
                     .accessibilityIdentifier("household.member.\(member.userId)")
             }
         } header: {
-            Text(people.current.count == 1 ? "1 member" : "\(people.current.count) members")
+            Text(people.current.count == 1 ? "1 member" : "\(people.current.count) members").cardSectionHeader()
         } footer: {
             if !canInvite { Text(joiningNote(household)) }
         }
@@ -630,13 +632,13 @@ struct HouseholdPage: View {
             Section {
                 InlineInvite(model: model) { inviting = true }
             } header: {
-                Text("Invite someone")
+                Text("Invite someone").cardSectionHeader()
             } footer: {
                 Text(joiningNote(household))
             }
         }
         if !people.former.isEmpty {
-            Section("Former members") {
+            CardSection("Former members") {
                 ForEach(people.former) { member in
                     MemberRow(member: member, people: people, isCreator: false)
                         .accessibilityIdentifier("household.member.\(member.userId)")
@@ -744,18 +746,18 @@ struct SharedExpenseRow: View {
         HStack(spacing: 12) {
             Monogram(initials: people.initials(expense.payerUserId))
             VStack(alignment: .leading, spacing: 2) {
-                Text(expense.title).font(.body.weight(.semibold))
+                Text(expense.title).font(.callout.weight(.semibold))
                     .fixedSize(horizontal: false, vertical: true)
                 Text(subtitle).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 8)
             VStack(alignment: .trailing, spacing: 2) {
-                MoneyText(expense.totalCents, meaning: .neutral, currency: currency)
+                MoneyText(
+                    expense.totalCents, meaning: .neutral, currency: currency, style: .callout.weight(.semibold))
                 Text(viewerLine).font(.footnote).foregroundStyle(viewerColor)
             }
         }
-        .frame(minHeight: Metrics.minTouchTarget)
         .accessibilityElement(children: .combine)
     }
 

@@ -21,11 +21,12 @@ struct AccountsListView: View {
                                 AccountRow(account: account, usage: ledger.usage(ofAccount: account.id))
                             }
                             .buttonStyle(.plain)
+                            .cardSettingsRow()
                             .accessibilityHint("Edit")
                             .accessibilityIdentifier("account.\(account.id)")
                         }
                     } header: {
-                        Text("Your accounts")
+                        Text("Your accounts").cardSectionHeader()
                     } footer: {
                         Text(Self.footer)
                     }
@@ -48,6 +49,7 @@ struct AccountsListView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("Add account", systemImage: "plus") { form = AccountFormRequest(account: nil) }
+                    .neutralToolbarGlyph()
                     .disabled(shell.workspace.load.ledger == nil)
                     .accessibilityIdentifier("accounts.add")
             }
@@ -76,12 +78,12 @@ private struct AccountRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: OrganizeText.accountSymbol(account.type))
-                .font(.body.weight(.semibold))
+                .font(.callout)
                 .foregroundStyle(PennyColor.label)
-                .frame(width: 36, height: 36)
-                .background(PennyColor.fill, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .frame(width: 30, height: 30)
+                .background(PennyColor.fill, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                 .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 1) {
                 Text(account.name).font(.body).foregroundStyle(PennyColor.label)
                 Text(OrganizeText.accountDetail(account, usage: usage))
                     .font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
@@ -91,7 +93,6 @@ private struct AccountRow: View {
                 .foregroundStyle(PennyColor.tertiaryLabel)
                 .accessibilityHidden(true)
         }
-        .frame(minHeight: ControlSize.row)
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
     }
@@ -129,7 +130,7 @@ struct AccountFormSheet: View {
         NavigationStack {
             List {
                 failureSection
-                Section("Name") {
+                CardSection("Name") {
                     TextField("Main chequing, Visa, wallet", text: $model.name)
                         .focused($nameFocused)
                         .submitLabel(.done)
@@ -146,7 +147,7 @@ struct AccountFormSheet: View {
                     }
                     .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
                 } header: {
-                    Text("Type")
+                    Text("Type").cardSectionHeader()
                 } footer: {
                     Text("Labels where money comes from or how you pay. No bank connection is needed.")
                 }
@@ -162,6 +163,7 @@ struct AccountFormSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel", systemImage: "xmark") { dismiss() }
+                        .neutralToolbarGlyph()
                         .accessibilityIdentifier("accountForm.cancel")
                 }
                 ToolbarItem(placement: .confirmationAction) {
