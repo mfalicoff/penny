@@ -59,7 +59,7 @@ The web app uses the same tokens, color rules and money semantics as the iOS app
 - **Activity:** a dense table grouped by day with daily totals, multi-select checkboxes, row actions on hover, and a detail panel on the right instead of a new page. Keyboard: ↑↓, ↵, E, ⌫, X.
 - **Insights:** the full-width Sankey with a click-to-focus band, a category table comparing with last month, and a six-month in/spent chart.
 - **Household:** an expenses table (paid by, split, total, your share, status) with Balances, Suggested payments and an overdue month beside it. Recording a payment still states that Penny never moves money.
-- **Trips:** the next trip as a feature card with its expenses (private "Only you" entries marked), then a grid of other trips and a New trip card.
+- **Trips:** Join a trip (a key) beside the title, the next trip as a feature card with its expenses (private "Only you" entries marked), then a grid of other trips and a New trip card.
 - **Settings:** a section list and detail panes. Includes Reduce transparency and the read-only server.
 - **Add entry:** a centered two-column dialog (amount, name and categories on the left; date, account, split, repeat, trip and a receipt drop zone on the right) with ⌘↵ to save and Esc to cancel.
 - **Sign in:** split screen with the brand and a Left to spend preview on the left, and the server chip, email, SSO and Create account on the right, with "Take a look around with sample data" pinned to the bottom.

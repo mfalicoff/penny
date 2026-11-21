@@ -1088,9 +1088,9 @@
         ],
         "deviations": [
           {
-            "summary": "Expense rows show the payer's avatar, \"you owe\" and a TOTAL header, not the category tile, \"yours\" and the expense count; Only you is a card with a note (follow-up recorded on MAZ-230)",
+            "summary": "Payers are named by their email, not the person's name, so a row's \"paid · split N ways\" line wraps",
             "kind": "follow-up",
-            "ref": "MAZ-230"
+            "ref": "MAZ-171"
           },
           {
             "summary": "Expenses, Balances and People are links styled as the segmented control, each with its own URL (decided in MAZ-229)",
@@ -2281,12 +2281,7 @@
         ],
         "deviations": [
           {
-            "summary": "Expense rows show the payer's avatar and \"you owe\", and Only you is its own card, not one Expenses panel with \"4 shared · 1 private\" (follow-up recorded on MAZ-230)",
-            "kind": "follow-up",
-            "ref": "MAZ-230"
-          },
-          {
-            "summary": "The sidebar footer names the account by its email, not the person's name",
+            "summary": "The sidebar footer, People and the expense rows name people by their email, not their name",
             "kind": "follow-up",
             "ref": "MAZ-171"
           },
@@ -2620,19 +2615,9 @@
         ],
         "deviations": [
           {
-            "summary": "Past shared tiles show Shared, not Settled, and Paid by has no split count (\"Sam · 4 ways\") (follow-up recorded on MAZ-230)",
-            "kind": "follow-up",
-            "ref": "MAZ-230"
-          },
-          {
-            "summary": "The sidebar footer names the account by its email, not the person's name",
+            "summary": "The sidebar footer and Paid by name people by their email, not their name; the long email pushes the Only you pill under its title",
             "kind": "follow-up",
             "ref": "MAZ-171"
-          },
-          {
-            "summary": "A Join a trip key icon sits beside the title; the card has no Join control. Waiting for a design decision",
-            "kind": "follow-up",
-            "ref": "MAZ-229"
           }
         ]
       }

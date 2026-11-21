@@ -244,3 +244,40 @@ export function shareByCategory(
   }
   return [...rows.values()].sort((a, b) => b.amount - a.amount || a.name.localeCompare(b.name));
 }
+
+/* ---------- shared trip expense rows ---------- */
+
+/** How many people share an expense: the splits with an amount. */
+export const splitCount = (expense: Pick<SharedExpense, "splits">) => expense.splits.filter((split) => split.amountCents > 0).length;
+
+/**
+ * Who paid, in the trip cards' words (`iphone-trip-detail`, `ipad-trip`): "you paid", or "Sam paid ·
+ * split 4 ways" when someone else paid for more than one person.
+ */
+export function paidWords(expense: Pick<SharedExpense, "payerUserId" | "splits">, meId: string | undefined, name: string): string {
+  if (meId !== undefined && expense.payerUserId === meId) return "you paid";
+  const ways = splitCount(expense);
+  return ways > 1 ? `${name} paid · split ${String(ways)} ways` : `${name} paid`;
+}
+
+/** The `web-trips` table's Paid by: "You", or "Sam · 4 ways" when someone else paid for more than one person. */
+export function paidByCell(expense: Pick<SharedExpense, "payerUserId" | "splits">, meId: string | undefined, name: string): string {
+  if (meId !== undefined && expense.payerUserId === meId) return "You";
+  const ways = splitCount(expense);
+  return ways > 1 ? `${name} · ${String(ways)} ways` : name;
+}
+
+/** "4 expenses" or "1 expense". */
+export const expenseCount = (count: number) => `${String(count)} ${count === 1 ? "expense" : "expenses"}`;
+
+/**
+ * Whether a past shared trip is settled (card `web-trips`: the green Settled pill), from the recap
+ * of the current month: no earlier month is left unsettled (`overdueMonths`), the current month
+ * has nothing to pay back, and no trip expense is dated after it. A trip with no expenses has
+ * nothing to settle, so it isn't called settled.
+ */
+export function tripSettled(expenses: readonly Pick<SharedExpense, "date">[], recap: { month: string; suggestions: readonly unknown[]; overdueMonths: readonly string[] }): boolean {
+  if (!expenses.length) return false;
+  if (recap.overdueMonths.length || recap.suggestions.length) return false;
+  return expenses.every((expense) => expense.date.slice(0, 7) <= recap.month);
+}

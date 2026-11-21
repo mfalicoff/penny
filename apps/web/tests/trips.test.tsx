@@ -118,6 +118,9 @@ describe("trip list (MAZ-229)", { timeout: 20_000 }, () => {
     expect(within(table).getByRole("rowheader", { name: "Train" })).toBeInTheDocument();
     expect(within(table).getByRole("row", { name: /Train You \$24\.00/ })).toBeInTheDocument();
     expect(screen.queryByRole("list", { name: "Upcoming" })).not.toBeInTheDocument();
+    // The card's key sits beside the title, not at the end of the bar (MAZ-263).
+    expect(within(screen.getByRole("banner")).getByRole("button", { name: "Join a trip" }).closest(".group-tools__lead")).not.toBeNull();
+    expect(screen.queryByRole("button", { name: "New trip" })).toHaveClass("trip-tile--new");
     expect(screen.getByRole("button", { name: "New trip" })).toHaveClass("trip-tile--new");
   });
 });
@@ -263,7 +266,7 @@ describe("shared trips", { timeout: 20_000 }, () => {
     await user.click(screen.getByRole("link", { name: "Expenses" }));
     const onlyYou = await screen.findByRole("region", { name: "Only you" });
     expect(within(onlyYou).getByText("Paid train")).toBeInTheDocument();
-    expect(within(onlyYou).getByText("1 from before sharing")).toBeInTheDocument();
+    expect(within(onlyYou).getByText("from before sharing")).toBeInTheDocument();
 
     await user.click(screen.getByRole("link", { name: "Back to Trips" }));
     await screen.findByRole("heading", { level: 1, name: "Trips" });

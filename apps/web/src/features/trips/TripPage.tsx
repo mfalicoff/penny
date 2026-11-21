@@ -22,7 +22,6 @@ import { householdView, type HouseholdView } from "../households/context";
 import { describeLoadError } from "../households/errors";
 import { ExpenseDetailDialog } from "../households/ExpenseDetail";
 import { ExpenseFormDialog, type FormTarget } from "../households/ExpenseForm";
-import { ExpensesTab } from "../households/ExpensesTab";
 import { HistoryPanel } from "../households/HistoryPanel";
 import { GroupToolbar, MoreMenu, ToolButton, ToolContent, toolClass, type MoreItem } from "../households/GroupTools";
 import { GroupLink, type GroupSearch } from "../households/links";
@@ -37,6 +36,7 @@ import type { HouseholdTab } from "../households/search";
 import { useLedgerWorkspace } from "../organize/workspace";
 import { isSharedTrip, outsideRange, peopleCount, phaseLabel, privateExpenses, shareByCategory, sharedTripTotals, tripMonth, tripOverview, tripRange, type CategoryShare } from "./model";
 import type { TripSearch } from "./search";
+import { TripExpenses } from "./TripExpenses";
 import { ShareTripDialog, TripFormDialog } from "./TripForm";
 
 /**
@@ -376,17 +376,11 @@ function SharedTripPage({ householdId, search }: { householdId: string; search: 
       {tab === "expenses" ? (
         wide ? (
           <div className="trip-detail-columns">
-            <div className="page">
-              <ExpensesTab view={view} recap={recap} search={linkSearch({})}>
-                <OnlyYouCard entries={mine} ledger={workspace.ledger} onOpen={setOpenPrivate} />
-              </ExpensesTab>
-            </div>
+            <TripExpenses view={view} expenses={expenses} mine={mine} ledger={workspace.ledger} search={linkSearch({})} onOpenPrivate={setOpenPrivate} combined />
             <ShareByCategory rows={expenses.data ? shareByCategory(expenses.data, who.meId, mine, workspace.ledger?.categories ?? []) : null} currency={household.currency} />
           </div>
         ) : (
-          <ExpensesTab view={view} recap={recap} search={linkSearch({})}>
-            <OnlyYouCard entries={mine} ledger={workspace.ledger} onOpen={setOpenPrivate} />
-          </ExpensesTab>
+          <TripExpenses view={view} expenses={expenses} mine={mine} ledger={workspace.ledger} search={linkSearch({})} onOpenPrivate={setOpenPrivate} combined={false} />
         )
       ) : tab === "balances" ? (
         <>
@@ -424,30 +418,6 @@ function SharedTripPage({ householdId, search }: { householdId: string; search: 
       {editing ? <TripFormDialog target={{ kind: "shared", household }} onClose={() => { setEditing(false); }} /> : null}
       {openPrivate ? <EntryDetailDialog entry={openPrivate} onClose={() => { setOpenPrivate(null); }} /> : null}
     </div>
-  );
-}
-
-/** Only you (specimen `shared-trip`): personal expenses from before sharing. Never sent to the trip. */
-function OnlyYouCard({ entries, ledger, onOpen }: { entries: Transaction[]; ledger: Ledger | null; onOpen: (entry: Transaction) => void }) {
-  if (!entries.length || !ledger) return null;
-  return (
-    <Card
-      title="Only you"
-      action={
-        <Badge icon="lock-closed">
-          {entries.length} from before sharing
-        </Badge>
-      }
-    >
-      <p className="note">Only you see these. They count in your share, not in the trip's total or balances.</p>
-      <ul className="row-list" aria-label="Private expenses">
-        {entries.map((entry) => (
-          <li key={entry.id}>
-            <ExpenseRow entry={entry} ledger={ledger} trip={{ startDate: "0000-01-01", endDate: "9999-12-31" }} pending={false} onOpen={() => { onOpen(entry); }} />
-          </li>
-        ))}
-      </ul>
-    </Card>
   );
 }
 
