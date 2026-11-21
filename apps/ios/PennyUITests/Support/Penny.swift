@@ -68,7 +68,7 @@ struct Penny {
 
     func type(_ text: String, into id: String) throws {
         let field = try wait(for: id)
-        field.tap()
+        try focus(field, id: id)
         field.typeText(text)
         // New-password fields can drop fast input while the system's password suggestions
         // appear; a secure field shows one bullet per character, so check and retype slowly.
@@ -90,6 +90,20 @@ struct Penny {
         guard retyped == text.count else {
             throw UIExpectationFailed(description: "\(id) holds \(retyped) of \(text.count) typed characters")
         }
+    }
+
+    /// Taps a field until it has keyboard focus. A tap that lands while the screen is still
+    /// settling after launch is dropped, and typing then fails with "Neither element nor any
+    /// descendant has keyboard focus" (MAZ-212 saw it on `auth.email` on a CI runner).
+    private func focus(_ field: XCUIElement, id: String) throws {
+        let focused = NSPredicate(format: "hasKeyboardFocus == true")
+        for _ in 0..<3 {
+            field.tap()
+            let result = XCTWaiter.wait(
+                for: [XCTNSPredicateExpectation(predicate: focused, object: field)], timeout: 5)
+            if result == .completed { return }
+        }
+        throw UIExpectationFailed(description: "\(id) did not take keyboard focus after three taps")
     }
 
     /// The text a field holds.

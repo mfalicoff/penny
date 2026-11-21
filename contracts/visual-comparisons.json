@@ -1657,9 +1657,9 @@
             "ref": "MAZ-255"
           },
           {
-            "summary": "Capture state: the test server is plain HTTP, so Server verified shows without HTTPS (follow-up from MAZ-253)",
+            "summary": "Server verified's badge is a filled green seal, not a check in a circle on a tinted tile (follow-up from MAZ-212)",
             "kind": "follow-up",
-            "ref": "MAZ-253"
+            "ref": "MAZ-252"
           }
         ]
       },
