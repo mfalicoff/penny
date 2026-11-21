@@ -541,7 +541,7 @@
               "category": {
                 "name": "Travel",
                 "icon": "airplane-outline",
-                "color": "#6C8EAD"
+                "color": "#64748B"
               }
             }
           }
@@ -560,7 +560,7 @@
               "category": {
                 "name": "Stay",
                 "icon": "home-outline",
-                "color": "#5B7DB1"
+                "color": "#3B82F6"
               }
             }
           }
@@ -589,7 +589,7 @@
               "category": {
                 "name": "Insurance",
                 "icon": "heart-outline",
-                "color": "#B15B7D"
+                "color": "#0E7490"
               }
             }
           }

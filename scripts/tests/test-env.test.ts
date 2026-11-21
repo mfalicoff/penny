@@ -3,12 +3,15 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { X509Certificate } from "node:crypto";
-import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { createServer } from "node:https";
+import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { databaseName, nativePostgresBin, postgresImage, postgresMode, runnerEnvironment, validRunId } from "../../scripts/test-env/environment.mjs";
+import { databaseName, nativePostgresBin, newRunId, postgresImage, postgresMode, runnerEnvironment, validRunId, webOrigins } from "../../scripts/test-env/environment.mjs";
 import { applyPendingEdits, resolve } from "../../scripts/test-env/seed.mjs";
-import { selfSignedCertificate } from "../../scripts/test-env/oidc-provider.mjs";
+import { redirectUrisFor, selfSignedCertificate } from "../../scripts/test-env/oidc-provider.mjs";
+import { trustCertificate, writeCertificate } from "../../scripts/test-env/tls.mjs";
 
 test("run ids are restricted before they name containers and databases", () => {
   for (const id of ["r1a2b3c4d5", "ci42"]) assert.ok(validRunId(id));
@@ -61,6 +64,56 @@ test("runner environment exposes the API and control token, never database crede
   });
   assert.equal(oidc.PENNY_OIDC_ISSUER, "https://127.0.0.1:2");
   assert.equal(oidc.PENNY_OIDC_CERTIFICATE, "/tmp/certificate.pem");
+  // A run's web port and certificate reach the runner: vite serves on the port it allows, Node
+  // trusts the HTTPS API through NODE_EXTRA_CA_CERTS and simulators through PENNY_API_CERTIFICATE.
+  const run = runnerEnvironment({
+    runId: "r1", apiUrl: "https://127.0.0.1:1", controlToken: "t", webPort: 41234,
+    tls: { certificate: "/run/certificate.pem", key: "/run/key.pem", trustBundle: "/run/trust.pem" },
+  });
+  assert.equal(run.PENNY_WEB_PORT, "41234");
+  assert.equal(run.PENNY_API_CERTIFICATE, "/run/certificate.pem");
+  assert.equal(run.NODE_EXTRA_CA_CERTS, "/run/trust.pem");
+  assert.ok(!Object.values(run).includes("/run/key.pem"), "the private key never leaves the run");
+});
+
+test("each run gets its own id, and allows its own web port next to the dev server's", () => {
+  const ids = new Set(Array.from({ length: 50 }, () => newRunId()));
+  assert.equal(ids.size, 50);
+  for (const id of ids) assert.ok(validRunId(id));
+  assert.deepEqual(webOrigins([41234]), [
+    "http://localhost:4173", "http://127.0.0.1:4173", "http://localhost:41234", "http://127.0.0.1:41234",
+  ]);
+  assert.deepEqual(webOrigins([4173]), ["http://localhost:4173", "http://127.0.0.1:4173"]);
+  assert.deepEqual(redirectUrisFor([41234]), [
+    "http://localhost:4173/auth/callback", "http://127.0.0.1:4173/auth/callback",
+    "http://localhost:41234/auth/callback", "http://127.0.0.1:41234/auth/callback",
+    "penny://auth/callback",
+  ]);
+});
+
+test("a run's certificate is private to it, and trusting it lets fetch reach an HTTPS server", async () => {
+  const directory = mkdtempSync(join(tmpdir(), "penny-tls-"));
+  try {
+    const other = writeCertificate(join(directory, "other", "tls"));
+    trustCertificate(other.pem); // Trusting another run first must not hide this one.
+    const tls = writeCertificate(join(directory, "run", "tls"));
+    assert.equal(statSync(tls.keyPath).mode & 0o777, 0o600);
+    assert.equal(statSync(join(directory, "run", "tls")).mode & 0o777, 0o700);
+    assert.ok(readFileSync(tls.trustBundle, "utf8").startsWith(tls.pem));
+    const server = createServer({ cert: tls.pem, key: tls.key }, (_request, response) => response.end("ok"));
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    try {
+      const url = `https://127.0.0.1:${(server.address() as AddressInfo).port}/`;
+      await assert.rejects(fetch(url), "an untrusted certificate is refused");
+      trustCertificate(tls.pem);
+      assert.equal(await (await fetch(url)).text(), "ok");
+    } finally {
+      server.closeAllConnections();
+      await new Promise((resolve) => server.close(resolve));
+    }
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
 });
 
 test("seed references resolve whole values and embedded paths", () => {
@@ -77,10 +130,12 @@ test("pending edits apply delete, edit and create to a copy", () => {
   assert.equal(ledger.transactions.length, 2);
 });
 
-test("the local OIDC provider's certificate is a valid self-signed loopback certificate", () => {
+test("the run's certificate is a valid self-signed loopback server certificate", () => {
   const { pem } = selfSignedCertificate();
   const certificate = new X509Certificate(pem);
-  assert.equal(certificate.subject, "CN=penny-test-oidc");
+  assert.match(certificate.subject, /^CN=penny-test-[0-9a-f]{12}$/);
+  assert.notEqual(new X509Certificate(selfSignedCertificate().pem).subject, certificate.subject, "each certificate has its own name");
+  assert.deepEqual(certificate.keyUsage, ["1.3.6.1.5.5.7.3.1"], "server authentication, as Apple platforms require");
   assert.ok(certificate.checkIP("127.0.0.1"));
   assert.equal(certificate.checkHost("localhost"), "localhost");
   assert.ok(certificate.verify(certificate.publicKey));

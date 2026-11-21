@@ -210,6 +210,8 @@ export function tripMonth(range: { startDate: string; endDate: string }, today =
 
 export interface CategoryShare {
   key: string;
+  /** The ledger category id, for private entries: a default category keeps its color (categoryTint). */
+  id?: string;
   name: string;
   icon: string;
   color: string;
@@ -228,12 +230,12 @@ export function shareByCategory(
   categories: readonly { id: string; name: string; icon: string; color: string }[],
 ): CategoryShare[] {
   const rows = new Map<string, CategoryShare>();
-  const add = (category: { name: string; icon: string; color: string }, amount: number) => {
+  const add = (category: { id?: string; name: string; icon: string; color: string }, amount: number) => {
     if (amount <= 0) return;
     const key = category.name.toLocaleLowerCase();
     const row = rows.get(key);
     if (row) row.amount += amount;
-    else rows.set(key, { key, name: category.name, icon: category.icon, color: category.color, amount });
+    else rows.set(key, { key, ...(category.id ? { id: category.id } : {}), name: category.name, icon: category.icon, color: category.color, amount });
   };
   for (const expense of expenses) add(expense.category, meId ? (expense.splits.find((split) => split.userId === meId)?.amountCents ?? 0) : 0);
   for (const entry of personal) {

@@ -26,6 +26,8 @@ node scripts/check-version.mjs               # apps/ios/Configuration/Version.xc
 node scripts/design-deviations.mjs           # no new approved design deviations against origin/master
 ```
 
+Every `penny-env up` or `run` gets its own run id, container, database, free ports (API, web origin, OIDC provider) and throwaway certificate, so several sessions on one machine each start their own environment without flags; the API serves HTTPS with that certificate (`--http` for plain HTTP). Commands without `--run-id` act on this checkout's most recent run. The web app's scripts pick free ports the same way ([apps/web/AGENTS.md](apps/web/AGENTS.md)).
+
 Run lint, typecheck and tests before declaring a change to `scripts/` done. The shared ledger rules are checked with the web app: `npm run check` in `apps/web` includes `fixtures:check` and the reference tests.
 
 ## Rules

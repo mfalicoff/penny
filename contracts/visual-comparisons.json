@@ -2286,11 +2286,6 @@
             "ref": "MAZ-230"
           },
           {
-            "summary": "The seeded Lisbon categories use colors outside the category palette, so their tiles draw gray (follow-up recorded on MAZ-230)",
-            "kind": "follow-up",
-            "ref": "MAZ-230"
-          },
-          {
             "summary": "The sidebar footer names the account by its email, not the person's name",
             "kind": "follow-up",
             "ref": "MAZ-171"
@@ -2616,11 +2611,6 @@
         "deviations": [
           {
             "summary": "Past shared tiles show Shared, not Settled, and Paid by has no split count (\"Sam · 4 ways\") (follow-up recorded on MAZ-230)",
-            "kind": "follow-up",
-            "ref": "MAZ-230"
-          },
-          {
-            "summary": "The seeded Lisbon categories use colors outside the category palette, so their tiles draw gray (follow-up recorded on MAZ-230)",
             "kind": "follow-up",
             "ref": "MAZ-230"
           },
