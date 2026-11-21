@@ -1530,6 +1530,30 @@
     background: var(--pk-surface);
     box-shadow: 0 0 0 0.5px var(--pk-separator);
   }
+
+  /* iphone-saved-toast: the saved row's tint runs edge to edge across the group, and takes its corners at the ends. */
+  .panel--list > .panel__body .activity-row--saved .activity-row__main {
+    width: calc(100% + 32px);
+    margin-inline: -16px;
+    padding-inline: 20px;
+    border-radius: 0;
+  }
+
+  .panel--list > .panel__body .activity-row--saved:first-child .activity-row__main {
+    margin-top: -4px;
+    padding-top: 12px;
+    border-radius: var(--pk-r-card) var(--pk-r-card) 0 0;
+  }
+
+  .panel--list > .panel__body .activity-row--saved:last-child .activity-row__main {
+    margin-bottom: -4px;
+    padding-bottom: 12px;
+    border-radius: 0 0 var(--pk-r-card) var(--pk-r-card);
+  }
+
+  .panel--list > .panel__body .activity-row--saved:only-child .activity-row__main {
+    border-radius: var(--pk-r-card);
+  }
 }
 
 /* MAZ-222 (iphone-insights, web-home): the amount sits at the end, beside the name and its bar (over its percent on Insights). */

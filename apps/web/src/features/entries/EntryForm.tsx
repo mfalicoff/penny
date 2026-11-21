@@ -2,6 +2,7 @@ import type { Kind, Ledger, Transaction } from "@domain/ledger.ts";
 import { useNavigate } from "@tanstack/react-router";
 import { useId, useRef, useState, type KeyboardEvent, type ReactNode, type SyntheticEvent } from "react";
 import { useAccountEmail } from "../../auth/account";
+import { categoryTint } from "../../design/categoryTint";
 import { Button, ChoiceGroup, Kbd } from "../../design/controls";
 import { Icon } from "../../design/Icon";
 import { Dialog } from "../../design/ModalDialog";
@@ -12,6 +13,7 @@ import { ReceiptField } from "../receipts/ReceiptField";
 import { draftStore, hasContent } from "./drafts";
 import {
   buildEntry,
+  categoryIcon,
   draftFromEntry,
   entryChange,
   undoEntryChange,
@@ -224,13 +226,16 @@ function EntryForm({
       const receipt = await save(entryChange(built, original));
       if (keepsDraft) draftStore.clear(email);
       const offline = receipt.savedOffline ? "Saved on this device. It syncs when you're back online." : undefined;
-      // Card `iphone-saved-toast`: "Expense added · Groceries · $48.90", with Undo.
+      // Card `iphone-saved-toast`: "Expense added · Groceries · $48.90" beside the entry's category
+      // tile (income green and investment indigo by kind, as its row draws it), with Undo.
+      const category = ledger.categories.find((item) => item.id === built.transaction.categoryId);
       const summary = `${built.transaction.title} · ${money(built.transaction.total)}`;
       const detail = offline ?? (target.kind === "new" && built.rule ? `Repeats ${built.rule.frequency}, starting ${built.rule.nextDate}.` : summary);
       toast.show({
         title: target.kind === "new" ? `${kindLabels[built.transaction.kind]} added` : "Changes saved",
         detail,
         entryId: built.transaction.id,
+        tile: { icon: categoryIcon(category?.icon), color: categoryTint({ ...category, entryKind: built.transaction.kind }) },
         onUndo: () => {
           save(undoEntryChange(built, original, ruleWasNew)).catch((error: unknown) => {
             toast.show({

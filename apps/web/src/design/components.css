@@ -680,6 +680,28 @@
   color: var(--pk-income);
 }
 
+.pk-toast:has(.pk-toast__tile) {
+  gap: 12px;
+  padding-inline-start: 10px;
+}
+
+/* iphone-saved-toast: the saved entry's category tile, round, with a white glyph. */
+.pk-toast__tile {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: #fff;
+}
+
+@media (forced-colors: active) {
+  .pk-toast__tile {
+    border: 1px solid CanvasText;
+  }
+}
+
 .pk-toast--error > .icon {
   color: var(--pk-danger);
 }

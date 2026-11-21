@@ -247,6 +247,11 @@
   text-align: center;
 }
 
+/* iphone-create-account: Back sits at the top left, above the title. */
+.auth__back {
+  margin: -16px 0 12px -8px;
+}
+
 .auth__form--create h1,
 .auth__form--create .auth__lede {
   text-align: start;

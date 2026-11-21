@@ -1613,9 +1613,14 @@
         ],
         "deviations": [
           {
-            "summary": "No server chip; the SSO button names the configured provider",
-            "kind": "follow-up",
-            "ref": "MAZ-237"
+            "summary": "No server chip: the web always uses the server it was opened from (decided in MAZ-234)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+          },
+          {
+            "summary": "The SSO button names the server's configured provider (Continue with Single sign-on) instead of SSO (decided in MAZ-234)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           },
           {
             "summary": "The pinned demo link carries the note “Sample data in this tab only…” under it (design decision recorded on MAZ-234)",
@@ -1659,9 +1664,14 @@
         ],
         "deviations": [
           {
-            "summary": "No back button or server chip, and an or divider with SSO is added",
-            "kind": "follow-up",
-            "ref": "MAZ-237"
+            "summary": "No server chip: the web always uses the server it was opened from (decided in MAZ-234)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+          },
+          {
+            "summary": "Create account offers SSO under an or divider, and its button names the server's configured provider (Continue with Single sign-on) (decided in MAZ-234)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           }
         ]
       }
@@ -1831,9 +1841,9 @@
         ],
         "deviations": [
           {
-            "summary": "A failed save is a failed sync: the editor closes and Home shows an amber Not synced banner with Retry, not a red Couldn't save in the form",
-            "kind": "follow-up",
-            "ref": "MAZ-234"
+            "summary": "A failed save is a failed sync: the editor closes and Home shows the amber Not synced · 1 change waiting banner with Retry, not a red Couldn't save in the form (decided in MAZ-234)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           }
         ]
       }
@@ -1872,9 +1882,9 @@
         ],
         "deviations": [
           {
-            "summary": "Reads Changes saved with a green check, not Expense added with the category tile, and hides the tab bar",
+            "summary": "On phones the toast takes the tab bar's place (MAZ-166) instead of sitting above it (design decision recorded on MAZ-237)",
             "kind": "follow-up",
-            "ref": "MAZ-234"
+            "ref": "MAZ-237"
           }
         ]
       }
@@ -2762,9 +2772,14 @@
         ],
         "deviations": [
           {
-            "summary": "No server chip; the SSO button names the configured provider",
-            "kind": "follow-up",
-            "ref": "MAZ-237"
+            "summary": "No server chip: the web always uses the server it was opened from (decided in MAZ-234)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+          },
+          {
+            "summary": "The SSO button names the server's configured provider (Continue with Single sign-on) instead of SSO (decided in MAZ-234)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           }
         ]
       }
