@@ -19,6 +19,7 @@ import {
   tripSections,
   validateTrip,
 } from "../src/features/trips/model";
+import { categoryTint } from "../src/design/categoryTint";
 
 // Synthetic trips and amounts only.
 
@@ -193,6 +194,12 @@ describe("shared trip totals", () => {
       [{ id: "transport", name: "travel", icon: "bus", color: "#64748B" }],
     );
     expect(rows.map((row) => [row.name, row.amount])).toEqual([["Food", 20600], ["Travel", 3400], ["Other", 500]]);
+  });
+
+  it("keeps a private entry's default category id, so its tile takes that category's color", () => {
+    const rows = shareByCategory([], "u1", [expense("p1", "2026-11-02", 2400, { categoryId: "transport" })], [{ id: "transport", name: "Transport", icon: "bus", color: "#6C8EAD" }]);
+    expect(rows[0]?.id).toBe("transport");
+    expect(categoryTint(rows[0])).toBe("var(--pk-c-transport)");
   });
 
   it("counts personal trip expenses dated outside the travel range", () => {

@@ -566,16 +566,18 @@ cmd_ui_test() {
 # Device names to run on: PENNY_UI_DEVICES ("iphone ipad" by default; either alone is fine).
 ui_devices() { echo "${PENNY_UI_DEVICES:-iphone ipad}"; }
 
-# Prepares a fresh simulator for UI tests: boots it and trusts the local OIDC provider's
-# throwaway certificate (single sign-on journeys). It also seeds the synthetic receipt files
+# Prepares a fresh simulator for UI tests: boots it and trusts the run's throwaway certificate,
+# which the HTTPS test API and the local OIDC provider share (PENNY_API_CERTIFICATE; an older
+# environment's separate PENNY_OIDC_CERTIFICATE too). It also seeds the synthetic receipt files
 # (seed_receipt_fixtures). Nothing is granted: tests set up permissions themselves.
 prepare_ui_device() {
   local id="$1"
   xcrun simctl bootstatus "$id" -b >/dev/null
   seed_receipt_fixtures "$id"
-  if [[ -n "${PENNY_OIDC_CERTIFICATE:-}" && -f "$PENNY_OIDC_CERTIFICATE" ]]; then
-    xcrun simctl keychain "$id" add-root-cert "$PENNY_OIDC_CERTIFICATE"
-  fi
+  local certificate
+  for certificate in "${PENNY_API_CERTIFICATE:-}" "${PENNY_OIDC_CERTIFICATE:-}"; do
+    [[ -n "$certificate" && -f "$certificate" ]] && xcrun simctl keychain "$id" add-root-cert "$certificate"
+  done
   # Upgrade rehearsal: install and run the previous build first, so the plan's install of this
   # build is an in-place upgrade over real stored state (UpgradeTests).
   if [[ -n "${PENNY_UPGRADE_FROM_APP:-}" ]]; then

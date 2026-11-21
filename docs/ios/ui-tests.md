@@ -36,7 +36,7 @@ apps/ios/scripts/ios.sh ui-build             # compile the app and the UI tests 
 | `PENNY_STACK_BUILD=0` | Reuse the API's Release build instead of rebuilding it |
 | `PENNY_UPGRADE_FROM_APP` | A previous `Penny.app`: installed and launched first, so the plan upgrades it in place |
 
-In Xcode: start an environment with `node scripts/test-env/penny-env.mjs up --oidc`, keep it running, choose the **PennyUITests** scheme, a simulator and a test plan, and test (⌘U). The runner finds the environment through `.cache/test-env/current`. Without one, every UI test is skipped (under `ios.sh` a missing stack is a failure instead). For single sign-on, trust the provider's certificate first: `xcrun simctl keychain booted add-root-cert <oidcCertificate>` from `up`'s output.
+In Xcode: start an environment with `node scripts/test-env/penny-env.mjs up --oidc`, keep it running, choose the **PennyUITests** scheme, a simulator and a test plan, and test (⌘U). The runner finds the environment through `.cache/test-env/current`. Without one, every UI test is skipped (under `ios.sh` a missing stack is a failure instead). The API and the provider are HTTPS with the run's throwaway certificate, so trust it first: `xcrun simctl keychain booted add-root-cert <apiCertificate>` from `up`'s output (`ios.sh ui-test` does this itself).
 
 ### Results
 

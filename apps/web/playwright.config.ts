@@ -1,3 +1,4 @@
+import { createServer } from "node:net";
 import { defineConfig, devices, type Project } from "@playwright/test";
 
 // Two modes over the production build served by `vite preview` (MAZ-95):
@@ -12,10 +13,27 @@ import { defineConfig, devices, type Project } from "@playwright/test";
 // Projects are named <browser>-<device>, e.g. `--project=webkit-phone`. This is browser
 // emulation only; native simulators and devices are MAZ-81.
 const realStack = process.env.PENNY_REAL_STACK === "1";
-// Mocked: 4175 keeps clear of `npm run dev` (4173).
-// Real: 4173 is an origin the test environment allows by default and an OIDC redirect URI
-// its local provider registers.
-const port = Number(process.env.PENNY_E2E_PORT ?? (realStack ? 4173 : 4175));
+
+// Each run serves the build on its own port (MAZ-265), so several sessions on one machine never
+// share or reuse a server: PENNY_E2E_PORT when set; on the real stack PENNY_WEB_PORT, the port the
+// test environment allows as an origin and registers as an OIDC redirect URI (`penny-env run`
+// and `env` export it); otherwise a free port. The choice is stored in PENNY_E2E_PORT, because
+// Playwright loads this file again in every worker, and workers inherit the runner's environment.
+function freePort(): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const server = createServer();
+    server.on("error", reject);
+    server.listen(0, "127.0.0.1", () => {
+      const address = server.address();
+      server.close(() => {
+        if (typeof address === "object" && address) resolve(address.port);
+        else reject(new Error("no port"));
+      });
+    });
+  });
+}
+process.env.PENNY_E2E_PORT ??= realStack && process.env.PENNY_WEB_PORT ? process.env.PENNY_WEB_PORT : String(await freePort());
+const port = Number(process.env.PENNY_E2E_PORT);
 // Optional system browser, e.g. on NixOS where downloaded Playwright browsers can't run.
 const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE;
 
@@ -105,6 +123,7 @@ export default defineConfig({
     command: "npx vite preview --host 127.0.0.1",
     env: { PENNY_WEB_PORT: String(port) },
     url: `http://127.0.0.1:${port}`,
+    // Never another session's server: a taken port fails the run (strictPort) instead.
     reuseExistingServer: false,
     timeout: 30_000,
   },
