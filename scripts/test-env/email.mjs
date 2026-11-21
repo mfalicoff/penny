@@ -85,7 +85,11 @@ export async function startWorker(state, email, { root, freePort, waitFor }) {
     cwd: worker,
     detached: true,
     stdio: ["ignore", log, log],
-    env: { ...process.env, WRANGLER_SEND_METRICS: "false", CI: "true" },
+    // workerd trusts the HTTPS test API through the run's bundle, as Node runners do.
+    env: {
+      ...process.env, WRANGLER_SEND_METRICS: "false", CI: "true",
+      ...(state.tls ? { NODE_EXTRA_CA_CERTS: state.tls.trustBundle } : {}),
+    },
   });
   closeSync(log);
   let exited = false;

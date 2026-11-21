@@ -1,23 +1,26 @@
 #!/usr/bin/env node
 // One-command full-stack test environments (MAZ-62). See docs/reference/test-environment.md.
 //
-//   node scripts/test-env/penny-env.mjs up [--seed NAME] [--host 0.0.0.0] [--oidc] [--no-build]
+//   node scripts/test-env/penny-env.mjs up [--seed NAME] [--host 0.0.0.0] [--oidc] [--no-build] [--http]
 //   node scripts/test-env/penny-env.mjs run [--seed NAME] [--oidc] -- <command...>
 //   node scripts/test-env/penny-env.mjs status | env | reset | clock <ISO|reset> | user [label]
 //   node scripts/test-env/penny-env.mjs fault '<json rule>' | fault clear
 //   node scripts/test-env/penny-env.mjs seed <scenario> | artifacts [dir]
 //   node scripts/test-env/penny-env.mjs down [--all]
 //
-// Commands act on the most recent environment unless --run-id ID is given.
+// Commands act on the most recent environment unless --run-id ID is given. Every run picks its
+// own id, free ports (API, web origin, OIDC provider) and certificate, so several sessions on
+// one machine each get their own environment (MAZ-265).
 import { spawn } from "node:child_process";
 import {
-  collectArtifacts, control, down, downAll, readState, runnerEnvironment, up,
+  collectArtifacts, control, down, downAll, freePort, newRunId, readState, runnerEnvironment, statePath, up, validRunId,
 } from "./environment.mjs";
+import { writeCertificate } from "./tls.mjs";
 import { scenario, seed } from "./seed.mjs";
 import { startOidcProvider } from "./oidc-provider.mjs";
 import { emailSummary, receiptEmail, sendEmail } from "./email.mjs";
-import { readFileSync } from "node:fs";
-import { basename } from "node:path";
+import { existsSync, readFileSync, rmSync } from "node:fs";
+import { basename, join } from "node:path";
 
 function parse(argv) {
   const separator = argv.indexOf("--");
@@ -28,18 +31,28 @@ function parse(argv) {
   for (let index = 0; index < own.length; index++) {
     const item = own[index];
     if (!item.startsWith("--")) positional.push(item);
-    else if (["--no-build", "--all", "--oidc", "--keep", "--no-worker", "--email"].includes(item)) flags[item.slice(2)] = true;
+    else if (["--no-build", "--all", "--oidc", "--keep", "--no-worker", "--email", "--http"].includes(item)) flags[item.slice(2)] = true;
     else flags[item.slice(2)] = own[++index];
   }
   return { verb: positional.shift() ?? "help", positional, flags, command };
 }
 
 async function start(flags) {
+  // The run id, web port and certificate come first: the OIDC provider shares the API's
+  // certificate and registers the run's web port as a redirect URI.
+  const runId = flags["run-id"] ?? newRunId();
+  if (!validRunId(runId)) throw new Error("Run ids use 4–24 lowercase letters or digits.");
+  const webPort = flags["web-port"] ? Number(flags["web-port"]) : await freePort();
   let oidc;
-  if (flags.oidc) oidc = await startOidcProvider({ runId: flags["run-id"] });
+  let tls;
   try {
+    tls = writeCertificate(join(statePath(runId), "tls"));
+    if (flags.oidc) oidc = await startOidcProvider({ tls, webPorts: [webPort] });
     const state = await up({
-      runId: flags["run-id"],
+      runId,
+      tls,
+      webPort,
+      http: flags.http === true,
       host: flags.host,
       port: flags.port ? Number(flags.port) : undefined,
       origins: flags.origins?.split(","),
@@ -53,6 +66,8 @@ async function start(flags) {
     return { state, oidc };
   } catch (error) {
     await oidc?.close();
+    // up() removes the run on failure; this covers a failure before it started.
+    if (tls && !existsSync(join(statePath(runId), "env.json"))) rmSync(statePath(runId), { recursive: true, force: true });
     throw error;
   }
 }
@@ -65,7 +80,6 @@ async function seedInto(state, name) {
   });
   // Runners read sessions and ids from here; the file is private to the run (0600).
   const { writeFileSync } = await import("node:fs");
-  const { join } = await import("node:path");
   writeFileSync(join(state.directory, `seed-${name}.json`), `${JSON.stringify(context, null, 2)}\n`, { mode: 0o600 });
   return context;
 }
@@ -74,6 +88,8 @@ function summary(state) {
   return {
     runId: state.runId,
     apiUrl: state.apiUrl,
+    apiCertificate: state.tls?.certificate,
+    webPort: state.webPort,
     database: state.database,
     postgres: state.postgres,
     container: state.container,
@@ -181,7 +197,8 @@ async function main() {
 function help() {
   return [
     "penny-env: disposable .NET API + PostgreSQL environments for browser and simulator runs.",
-    "  up [--seed NAME] [--host 0.0.0.0] [--port N] [--origins a,b] [--oidc] [--email] [--no-build] [--no-worker] [--run-id ID]",
+    "  up [--seed NAME] [--host 0.0.0.0] [--port N] [--web-port N] [--origins a,b] [--oidc] [--email] [--http] [--no-build] [--no-worker] [--run-id ID]",
+    "     every run picks free ports and its own id; the API is HTTPS with the run's certificate (--http: plain HTTP)",
     "     --email: emailed receipts end to end: penny-render and the Email Worker (wrangler dev) (MAZ-184)",
     "  mail --to ADDRESS [--subject S] [--attach FILE] [--eml FILE]   send through the Email Worker",
     "  run [up options] [--keep] -- <command...>   start, run, collect artifacts, always tear down",

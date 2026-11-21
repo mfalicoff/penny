@@ -8,8 +8,8 @@ import { signOut } from "./shell";
 //
 //   npm run build && npm run test:e2e:real -- auth.real
 //
-// The real-stack config serves the build on port 4173, one of the redirect URIs the test
-// provider registers. The server clock must not be pinned (no --seed): OIDC attempts expire
+// The real-stack config serves the build on the run's web port (PENNY_WEB_PORT), a redirect URI
+// the test provider registers. The server clock must not be pinned (no --seed): OIDC attempts expire
 // by real time.
 test.skip(process.env.PENNY_REAL_STACK !== "1", "needs the full-stack test environment (PENNY_REAL_STACK=1)");
 

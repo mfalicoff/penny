@@ -3,11 +3,12 @@
 // (`npm --prefix scripts run test:fullstack`): needs Docker or Podman, the .NET SDK and the search model.
 import { after, before, test } from "node:test";
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { execFile, spawnSync } from "node:child_process";
+import { promisify } from "node:util";
+import { existsSync, readFileSync } from "node:fs";
 import { request as httpsRequest } from "node:https";
 import {
-  buildApi, collectArtifacts, containerCli, control, down, downAll, label, statePath, up,
+  buildApi, collectArtifacts, containerCli, control, down, downAll, label, readState, statePath, up,
 } from "../../test-env/environment.mjs";
 import { client, scenario, seed } from "../../test-env/seed.mjs";
 import { clientId, startOidcProvider } from "../../test-env/oidc-provider.mjs";
@@ -65,6 +66,44 @@ test("concurrent environments are isolated and resets stay inside their run", { 
   // One run's token cannot drive another run's controls.
   const foreign = await fetch(`${second.apiUrl}/api/test/reset`, { method: "POST", headers: { "X-Penny-Test-Token": first.controlToken } });
   assert.equal(foreign.status, 403);
+});
+
+// Two sessions on one machine (MAZ-265): `penny-env up` with no options, twice at once, gives
+// two environments that share nothing a runner sees: run id, container, database, API and web
+// ports, certificate and state, each serving HTTPS that only its own certificate verifies.
+test("two penny-env up runs side by side get their own ports, ids, containers and certificates", { timeout: 600_000 }, async () => {
+  const cli = new URL("../../test-env/penny-env.mjs", import.meta.url).pathname;
+  const upOnce = async () => {
+    const { stdout } = await promisify(execFile)(process.execPath, [cli, "up", "--no-build"], { encoding: "utf8" });
+    const summary = JSON.parse(stdout);
+    started.push(summary.runId);
+    return summary;
+  };
+  const [first, second] = await Promise.all([upOnce(), upOnce()]);
+  for (const key of ["runId", "apiUrl", "container", "database", "webPort", "apiCertificate", "stateFile"]) {
+    assert.ok(first[key], key);
+    assert.notEqual(first[key], second[key], key);
+  }
+  const states = [readState(first.runId), readState(second.runId)];
+  assert.notEqual(states[0].databasePort, states[1].databasePort);
+  for (const state of states) {
+    assert.match(state.apiUrl, /^https:\/\/127\.0\.0\.1:\d+$/);
+    assert.ok(state.origins.includes(`http://127.0.0.1:${state.webPort}`), "the run allows its own web port");
+    assert.equal(containers(state.runId).length, 1);
+    assert.equal((await fetch(`${state.apiUrl}/api/ready`)).status, 200);
+  }
+  // Each API presents its own run's certificate, not the other's.
+  const ready = (state, ca) => new Promise((resolve) => {
+    httpsRequest(`${state.apiUrl}/api/ready`, { ca, agent: false }, (response) => {
+      response.resume();
+      resolve(response.statusCode);
+    }).on("error", (error) => resolve(error.code)).end();
+  });
+  const pem = (state) => readFileSync(state.tls.certificate, "utf8");
+  assert.equal(await ready(states[0], pem(states[0])), 200);
+  assert.notEqual(await ready(states[0], pem(states[1])), 200, "one run's certificate does not verify the other's API");
+  await down(first.runId);
+  assert.equal((await fetch(`${states[1].apiUrl}/api/ready`)).status, 200, "taking one down leaves the other up");
 });
 
 test("a failed start removes everything it created", { timeout: 300_000 }, async () => {

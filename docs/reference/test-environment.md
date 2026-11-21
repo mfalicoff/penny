@@ -39,9 +39,15 @@ node scripts/test-env/penny-env.mjs status
 node scripts/test-env/penny-env.mjs down
 ```
 
-`up` prints the run id, API URL and state file; `run` exports `PENNY_TEST_RUN`, `PENNY_API_URL` and `PENNY_TEST_TOKEN` (and `PENNY_OIDC_ISSUER` with `--oidc`) to the command and exits with its status. Options: `--seed NAME`, `--host 0.0.0.0` (listen on every interface), `--port N`, `--origins a,b` (browser origins allowed by CORS), `--oidc`, `--no-build` (reuse the Release build), `--no-worker` (no shared recurrence worker), `--run-id ID`, `--keep` (`run` only: leave it up). Other commands act on the most recent environment unless `--run-id` is given: `env` (print exports), `reset`, `clock <ISO>|reset`, `fault '<json>'|clear`, `user [label]`, `seed <scenario>`, `artifacts [dir]`, `down [--all]`.
+`up` prints the run id, API URL, certificate, web port and state file; `run` exports `PENNY_TEST_RUN`, `PENNY_API_URL`, `PENNY_TEST_TOKEN`, `PENNY_WEB_PORT`, `PENNY_API_CERTIFICATE` and `NODE_EXTRA_CA_CERTS` (and `PENNY_OIDC_ISSUER` and `PENNY_OIDC_CERTIFICATE` with `--oidc`) to the command and exits with its status. Options: `--seed NAME`, `--host 0.0.0.0` (listen on every interface), `--port N` (API), `--web-port N`, `--origins a,b` (browser origins allowed by CORS), `--oidc`, `--http` (plain HTTP API), `--no-build` (reuse the Release build), `--no-worker` (no shared recurrence worker), `--run-id ID`, `--keep` (`run` only: leave it up). Other commands act on the most recent environment unless `--run-id` is given: `env` (print exports), `reset`, `clock <ISO>|reset`, `fault '<json>'|clear`, `user [label]`, `seed <scenario>`, `artifacts [dir]`, `down [--all]`.
 
-Each run gets a random id (`r` + 10 hex), container `penny-test-<id>` labeled `penny.test-run=<id>`, database `penny_test_<id>` on tmpfs (no volume), a random loopback port for PostgreSQL and the API, and `.cache/test-env/<id>/` (mode 0700; `env.json` 0600) for state and logs. Concurrent runs, including parallel CI jobs on one machine, never share a database, port, token or receipt directory.
+Each run gets a random id (`r` + 10 hex), container `penny-test-<id>` labeled `penny.test-run=<id>` (and `penny-test-<id>-render` with `--email`), database `penny_test_<id>` on tmpfs (no volume), random free loopback ports for PostgreSQL, the API, the web origin and the OIDC provider, its own throwaway certificate, and `.cache/test-env/<id>/` (mode 0700; `env.json` and `tls/` 0600) for state and logs. Concurrent runs, including several dev sessions or parallel CI jobs on one machine, never share a database, port, certificate, token or receipt directory, with no flags (MAZ-265; `scripts/tests/fullstack/environment.test.mjs` starts two `up` runs side by side). Commands without `--run-id` act on the most recent run of this checkout (`.cache/test-env/current`), so a session sharing a checkout passes `--run-id`.
+
+### Ports and HTTPS
+
+The API serves HTTPS on `https://127.0.0.1:<port>` with a certificate made per run by `scripts/test-env/tls.mjs` (Node crypto; RSA 2048, 30 days, `127.0.0.1` and `localhost`, server authentication, a unique name per run). Its key stays in `.cache/test-env/<id>/tls/` and is never exported or collected. Runners trust the certificate, not every certificate: the runner process itself through `tls.setDefaultCACertificates` (Node 24.5+), child Node processes (Playwright, `vite preview`'s proxy, seed scripts) and the Email Worker's workerd through `NODE_EXTRA_CA_CERTS` (a bundle of the run's certificate and any bundle you already set), and simulators through `PENNY_API_CERTIFICATE`, which `apps/ios/scripts/ios.sh ui-test` adds as a root certificate. `--oidc` uses the same certificate for the provider. `--http` serves plain HTTP instead, for a physical device that can't trust the certificate.
+
+The run also picks a free web port (`PENNY_WEB_PORT`, or `--web-port`): it allows `http://localhost:<port>` and `http://127.0.0.1:<port>` as origins (next to the dev server's default 4173) and registers `/auth/callback` on both as OIDC redirect URIs. Vite and Playwright serve there strictly, so a web run never reuses another session's server.
 
 Startup: create the container, wait for TCP readiness, run `migrate --bootstrap --grant-runtime` (roles, schema and extensions as administrator, then migrations and grants as the migration role), start the API (`ASPNETCORE_ENVIRONMENT=Testing`, runtime role, generous rate limits, recurrence and embedding workers on) and wait for `/api/ready`. If any step fails, everything created so far is removed before the error is reported (with the last API log lines), and an API that exits during startup is detected immediately.
 
@@ -49,11 +55,11 @@ Startup: create the container, wait for TCP readiness, run `migrate --bootstrap 
 
 | Runner | API URL |
 | --- | --- |
-| Browser on this machine | `PENNY_API_URL` (`http://127.0.0.1:<port>`); add its origin with `--origins` if it is not one of the defaults (`localhost`/`127.0.0.1` on 4173) |
+| Browser on this machine | Through Vite's proxy to `PENNY_API_URL` (`https://127.0.0.1:<port>`), served on `PENNY_WEB_PORT`; add another origin with `--origins` if it is not one of the defaults (`localhost`/`127.0.0.1` on 4173 and the run's web port) |
 | iOS Simulator | Same URL: the simulator shares the host's loopback |
-| Physical device or another machine | `--host 0.0.0.0`, then `http://<host LAN address>:<port>`. Only on a trusted network: the API has test controls |
+| Physical device or another machine | `--host 0.0.0.0 --http`, then `http://<host LAN address>:<port>` (the certificate names only loopback). Only on a trusted network: the API has test controls |
 
-The environment serves plain HTTP. The native app reaches `http://127.0.0.1:<port>` without an App Transport Security exception (loopback IP addresses are exempt); `apps/ios/scripts/ios.sh ui-test` starts this environment with `--oidc` around the XCUITest plans and trusts the provider certificate (`PENNY_OIDC_CERTIFICATE` in the runner environment) on each simulator ([native UI tests](../ios/ui-tests.md)).
+`apps/ios/scripts/ios.sh ui-test` starts this environment with `--oidc` around the XCUITest plans and trusts the run's certificate (`PENNY_API_CERTIFICATE`, which the provider shares) on each simulator ([native UI tests](../ios/ui-tests.md)), so the app sees a verified HTTPS server. Running the UI tests from Xcode against an environment you started yourself, trust it first: `xcrun simctl keychain booted add-root-cert <apiCertificate>`, using the path `up` prints.
 
 ## Seeding, users and reset
 
@@ -92,9 +98,9 @@ Tests: `TestControlOptionsTests`, `FaultRegistryTests`, `TestControlsTests` (abs
 
 ## Local OIDC provider
 
-`--oidc` starts `scripts/test-env/oidc-provider.mjs` on `https://127.0.0.1:<port>` with a throwaway self-signed certificate generated in Node, an RS256 key, discovery, JWKS, an auto-approving `/authorize` (S256 PKCE required; `login_hint` chooses the subject, email `<subject>@penny.test`) and `/token`. The API is configured with client `penny-test`, redirect URIs `http://localhost:4173/auth/callback`, `http://127.0.0.1:4173/auth/callback` and `penny://auth/callback`, and `TestControls__OidcCertificate`, which makes its provider client trust exactly that certificate (by SHA-256) in addition to normal validation. `PUT /control` on the provider (same token) sets `{"emailVerified": false}` or `{"fail": "token"|"authorize"}`.
+`--oidc` starts `scripts/test-env/oidc-provider.mjs` on `https://127.0.0.1:<port>` with the run's certificate (above), an RS256 key, discovery, JWKS, an auto-approving `/authorize` (S256 PKCE required; `login_hint` chooses the subject, email `<subject>@penny.test`) and `/token`. The API is configured with client `penny-test`, redirect URIs `/auth/callback` on `localhost` and `127.0.0.1` at 4173 and at the run's web port, and `penny://auth/callback`, and `TestControls__OidcCertificate`, which makes its provider client trust exactly that certificate (by SHA-256) in addition to normal validation. `PUT /control` on the provider (same token) sets `{"emailVerified": false}` or `{"fail": "token"|"authorize"}`.
 
-Browsers must ignore HTTPS errors for the provider origin (Playwright `ignoreHTTPSErrors`). The iOS Simulator needs the certificate trusted: `xcrun simctl keychain booted add-root-cert <certificate.pem>`, using the `oidcCertificate` path that `up --oidc` prints. ID tokens use real time because token lifetime validation does not use the pinned clock.
+Browsers must ignore HTTPS errors for the provider origin (Playwright `ignoreHTTPSErrors`). The iOS Simulator needs the certificate trusted: `xcrun simctl keychain booted add-root-cert <certificate.pem>`, using the `apiCertificate` path that `up` prints. ID tokens use real time because token lifetime validation does not use the pinned clock.
 
 ## Emailed receipts end to end
 
