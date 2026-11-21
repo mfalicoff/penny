@@ -38,8 +38,9 @@ struct SharedTripContext {
     }
 }
 
-/// A shared trip's hero (`iphone-trip-detail`, `ipad-trip`): when it is, its name, dates and
-/// people, then the trip total with your share, instead of a household's month balance (the
+/// A shared trip's hero (`iphone-trip-detail`, `ipad-trip`; MAZ-249): its name, short dates and
+/// people, then the trip total with your share (on iPad, when it is above the large name, and the
+/// two totals side by side), instead of a household's month balance (the
 /// trip's balances still settle by month, under Balances). Your share counts your shares of the
 /// shared expenses and your private expenses on it, as the Trips list's Your share so far.
 struct SharedTripHero: View {
@@ -47,33 +48,41 @@ struct SharedTripHero: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
     let context: SharedTripContext
     let model: HouseholdModel
+    /// `ipad-trip`: the name at 40 points.
+    @ScaledMetric(relativeTo: .largeTitle) private var wideNameSize = 40.0
 
     var body: some View {
         let regular = sizeClass == .regular
-        VStack(alignment: regular ? .leading : .center, spacing: 6) {
-            HStack(spacing: 8) {
-                Text(context.range.phaseLabel(today: shell.today))
-                    .accessibilityIdentifier("tripPage.phase")
-                if model.isArchived { Text("· Archived") }
+        VStack(alignment: regular ? .leading : .center, spacing: regular ? 2 : 4) {
+            // `ipad-trip` names when the trip is ("IN 3 DAYS"); `iphone-trip-detail` leads with the name.
+            if regular || model.isArchived {
+                HStack(spacing: 8) {
+                    if regular {
+                        Text(context.range.phaseLabel(today: shell.today).uppercased())
+                            .accessibilityIdentifier("tripPage.phase")
+                    }
+                    if model.isArchived { Text(regular ? "· ARCHIVED" : "ARCHIVED") }
+                }
+                .font(.footnote.weight(.semibold)).foregroundStyle(PennyColor.secondaryLabel)
             }
-            .font(.footnote.weight(.semibold)).foregroundStyle(PennyColor.secondaryLabel)
-            Text(context.household.name).font(.title2.weight(.bold))
+            Text(context.household.name)
+                .font(regular ? .system(size: wideNameSize, weight: .bold) : .title.weight(.bold))
                 .multilineTextAlignment(regular ? .leading : .center)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
-            Text(dateLine).font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
+            Text(dateLine(regular: regular)).font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
                 .multilineTextAlignment(regular ? .leading : .center)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityIdentifier("tripPage.dates")
             if regular {
-                HStack(alignment: .top, spacing: 32) {
+                HStack(alignment: .top, spacing: 34) {
                     stat("Trip total", context.totals?.tripTotal).accessibilityIdentifier("tripPage.total")
                     stat("Your share", context.totals?.yourSpending).accessibilityIdentifier("tripPage.yourSpending")
                 }
-                .padding(.top, 8)
+                .padding(.top, 14)
             } else {
                 amount(context.totals?.tripTotal)
-                    .padding(.top, 8)
+                    .padding(.top, 10)
                     .accessibilityElement(children: .combine)
                     .accessibilityLabel(
                         "Trip total, \(context.totals.map { MoneyFormat.amount($0.tripTotal, currency: model.currency) } ?? "loading")"
@@ -99,9 +108,13 @@ struct SharedTripHero: View {
         .frame(maxWidth: .infinity, alignment: regular ? .leading : .center)
     }
 
-    private var dateLine: String {
+    /// "Nov 12–19 · 4 people" on iPhone; "Nov 12–19, 2026 · shared with 3 people" on iPad.
+    private func dateLine(regular: Bool) -> String {
         let count = model.people.current.count
-        return [TripText.range(context.range), count == 1 ? "1 person" : "\(count) people", model.currency]
+        let dates = TripText.shortRange(context.range, today: shell.today, year: regular)
+        guard regular else { return [dates, TripText.people(count)].joined(separator: " · ") }
+        let others = count - 1
+        return [dates, others > 0 ? "shared with \(TripText.people(others))" : TripText.people(count)]
             .joined(separator: " · ")
     }
 
@@ -130,9 +143,9 @@ struct SharedTripHero: View {
         VStack(alignment: .leading, spacing: 2) {
             Text(label).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
             if let cents {
-                MoneyText(cents, meaning: .neutral, currency: model.currency, style: .title.weight(.bold))
+                MoneyText(cents, meaning: .neutral, currency: model.currency, style: .largeTitle.weight(.bold))
             } else {
-                Text("…").font(.title.weight(.bold)).foregroundStyle(PennyColor.secondaryLabel)
+                Text("…").font(.largeTitle.weight(.bold)).foregroundStyle(PennyColor.secondaryLabel)
             }
         }
         .accessibilityElement(children: .combine)
@@ -221,11 +234,15 @@ struct SharedTripShareByCategory: View {
     var body: some View {
         if !shareByCategory.isEmpty {
             Section {
-                ForEach(shareByCategory, id: \.name) { item in
+                let items = shareByCategory
+                let total = items.reduce(Int64(0)) { $0 + $1.cents }
+                ForEach(items, id: \.name) { item in
                     HStack(spacing: 12) {
                         CategoryIcon(symbol: item.category.symbol, color: item.category.tint)
-                        Text(item.name)
-                        Spacer()
+                        Text(item.name).frame(minWidth: 80, alignment: .leading)
+                        // `ipad-trip`: each category's part of your share as a bar in its color.
+                        ShareBar(
+                            fraction: total > 0 ? Double(item.cents) / Double(total) : 0, color: item.category.tint)
                         MoneyText(item.cents, meaning: .neutral, currency: model.currency)
                     }
                     .frame(minHeight: Metrics.minTouchTarget)
@@ -257,5 +274,23 @@ struct SharedTripShareByCategory: View {
         }
         return totals.map { (name: $0.key, category: $0.value.category, cents: $0.value.cents) }
             .sorted { $0.cents != $1.cents ? $0.cents > $1.cents : $0.name < $1.name }
+    }
+}
+
+/// A category's part of a total, as the cards draw it: a thin bar on the fill color.
+private struct ShareBar: View {
+    let fraction: Double
+    let color: Color
+
+    var body: some View {
+        Capsule().fill(PennyColor.fill)
+            .frame(height: 6)
+            .overlay(alignment: .leading) {
+                GeometryReader { proxy in
+                    Capsule().fill(color).frame(width: proxy.size.width * min(max(fraction, 0), 1))
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .accessibilityHidden(true)
     }
 }

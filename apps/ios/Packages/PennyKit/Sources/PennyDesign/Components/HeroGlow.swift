@@ -9,15 +9,20 @@ public struct HeroGlow: View {
     private let opacity: Double
     private let blur: CGFloat
     private let tint: Color?
+    private let blobs: [GlowBlob]
 
     /// `opacity` dims the whole glow (the empty Home draws it at 0.6); a small glow, such as
     /// Appearance's previews, takes a smaller `blur`. With a `tint` (an entry's category color
     /// behind the entry detail's header, `entry-detail` and `ipad-activity`), the copper glow's
-    /// blobs are drawn in that color at `GlowBlob.tintAlphas`.
-    public init(opacity: Double = 1, blur: CGFloat = GlowBlob.blur, tint: Color? = nil) {
+    /// blobs are drawn in that color at `GlowBlob.tintAlphas`. `blobs` picks another palette, such
+    /// as the trip cards' sky glow (`GlowBlob.trip`).
+    public init(
+        opacity: Double = 1, blur: CGFloat = GlowBlob.blur, tint: Color? = nil, blobs: [GlowBlob] = GlowBlob.copper
+    ) {
         self.opacity = opacity
         self.blur = blur
         self.tint = tint
+        self.blobs = blobs
     }
 
     private func color(_ index: Int, _ blob: GlowBlob) -> Color {
@@ -30,7 +35,7 @@ public struct HeroGlow: View {
             GeometryReader { proxy in
                 let size = proxy.size
                 ZStack {
-                    ForEach(Array(GlowBlob.copper.enumerated()), id: \.offset) { index, blob in
+                    ForEach(Array(blobs.enumerated()), id: \.offset) { index, blob in
                         let color = color(index, blob)
                         // CSS `radial-gradient(rx ry at x y, color, transparent 70%)`.
                         EllipticalGradient(
@@ -53,9 +58,11 @@ public struct HeroGlow: View {
 extension View {
     /// Draws `HeroGlow` behind this view's top edge, as the cards place it: wider than the
     /// screen (80 points past each side), from 120 points above to 400 below.
-    public func heroGlow(opacity: Double = 1, top: CGFloat = -120, tint: Color? = nil) -> some View {
+    public func heroGlow(
+        opacity: Double = 1, top: CGFloat = -120, tint: Color? = nil, blobs: [GlowBlob] = GlowBlob.copper
+    ) -> some View {
         background(alignment: .top) {
-            HeroGlow(opacity: opacity, tint: tint)
+            HeroGlow(opacity: opacity, tint: tint, blobs: blobs)
                 .frame(height: GlowBlob.height)
                 .padding(.horizontal, -80)
                 .offset(y: top)
@@ -93,5 +100,24 @@ nonisolated public struct GlowBlob: Equatable, Sendable {
             color: AdaptiveColor(
                 light: RGBA(red: 255, green: 120, blue: 150, alpha: 0.28),
                 dark: RGBA(red: 200, green: 70, blue: 120, alpha: 0.25))),
+    ]
+    /// The trip cards' glow (`iphone-trips`, `iphone-trip-detail`, `ipad-trip`): sky blue, amber and
+    /// rose in the copper glow's geometry, the same in light and dark. `HeroGlowTests` reads the cards.
+    public static let trip: [GlowBlob] = [
+        GlowBlob(
+            x: 0.30, y: 0.45, radiusX: 0.40, radiusY: 0.45,
+            color: AdaptiveColor(
+                light: RGBA(red: 80, green: 150, blue: 230, alpha: 0.38),
+                dark: RGBA(red: 80, green: 150, blue: 230, alpha: 0.38))),
+        GlowBlob(
+            x: 0.75, y: 0.35, radiusX: 0.35, radiusY: 0.40,
+            color: AdaptiveColor(
+                light: RGBA(red: 255, green: 190, blue: 120, alpha: 0.35),
+                dark: RGBA(red: 255, green: 190, blue: 120, alpha: 0.35))),
+        GlowBlob(
+            x: 0.60, y: 0.75, radiusX: 0.35, radiusY: 0.35,
+            color: AdaptiveColor(
+                light: RGBA(red: 255, green: 140, blue: 120, alpha: 0.22),
+                dark: RGBA(red: 255, green: 140, blue: 120, alpha: 0.22))),
     ]
 }
