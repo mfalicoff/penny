@@ -246,13 +246,10 @@ const LABELS: Record<string, string> = {
 };
 
 /**
- * One readable sentence per audit event and the fields it changed. Snapshots arrive redacted
- * (no payer account, no receipt name), and nothing here ever reads an account.
- */
-/**
  * One history row in words (card `iphone-history`): the sentence, the names in it to set in bold
  * (`emphasis`: the actor and the subject), and the detail lines, with each edited field also as
- * before and after (`edits`) so the old value can be struck through.
+ * before and after (`edits`) so the old value can be struck through. Snapshots arrive redacted
+ * (no payer account, no receipt name), and nothing here ever reads an account.
  */
 export function describeAudit(event: AuditEvent, name: (userId: string) => string, money: (cents: number) => string, group: "household" | "trip" = "household") {
   const before = record(event.before);
