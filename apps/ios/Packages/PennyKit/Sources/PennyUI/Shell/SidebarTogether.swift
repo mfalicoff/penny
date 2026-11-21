@@ -55,6 +55,17 @@ struct SidebarTogether: Equatable {
             }
     }
 
+    /// Households and All households share a glyph, as on the cards; so do trips and All trips.
+    static let householdSymbol = "person.2"
+    static let tripSymbol = "airplane"
+
+    /// The row after the households, which opens the Shared list (join with a code, create
+    /// another household): "All households", or "Shared" before you have one.
+    var sharedTitle: String { households.isEmpty ? "Shared" : "All households" }
+
+    /// The row after the trips, which opens the Trips list: "All trips", or "Trips" with none listed.
+    var tripsTitle: String { trips.isEmpty ? "Trips" : "All trips" }
+
     /// Whole units with the typographic minus, as on the cards: "$142", "−$38".
     static func short(_ cents: Int64, currency: String, locale: Locale = .current) -> String {
         let value = Decimal(cents.magnitude / 100)

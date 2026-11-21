@@ -218,22 +218,20 @@ private struct Sidebar: View {
             Section {
                 ForEach(together.households) { row in
                     item(
-                        row.item, row.name, "person.2", detail: row.detail, spoken: row.spoken, selected: selected,
-                        id: "sidebar.household.\(householdID(row.item))")
+                        row.item, row.name, SidebarTogether.householdSymbol, detail: row.detail, spoken: row.spoken,
+                        selected: selected, id: "sidebar.household.\(householdID(row.item))")
                 }
                 // The Shared list (join with a code, create another household), MAZ-240.
                 item(
-                    .tab(.shared), together.households.isEmpty ? "Shared" : "All households",
-                    together.households.isEmpty ? "person.2" : "square.grid.2x2", selected: selected,
+                    .tab(.shared), together.sharedTitle, SidebarTogether.householdSymbol, selected: selected,
                     id: "sidebar.shared")
                 ForEach(together.trips) { row in
                     item(
-                        row.item, row.name, "airplane", detail: row.detail, spoken: row.spoken, selected: selected,
-                        id: "sidebar.trip.\(tripID(row.item))")
+                        row.item, row.name, SidebarTogether.tripSymbol, detail: row.detail, spoken: row.spoken,
+                        selected: selected, id: "sidebar.trip.\(tripID(row.item))")
                 }
                 item(
-                    .tab(.trips), together.trips.isEmpty ? "Trips" : "All trips",
-                    together.trips.isEmpty ? "airplane" : "suitcase", selected: selected,
+                    .tab(.trips), together.tripsTitle, SidebarTogether.tripSymbol, selected: selected,
                     id: "sidebar.trips")
             } header: {
                 SidebarHeader("Together")

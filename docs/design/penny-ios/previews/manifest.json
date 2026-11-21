@@ -34,7 +34,7 @@
     },
     {
       "path": "assets/web.js",
-      "sha256": "83e12f1802157809e4d68648737f4fad80bb445fc45e4626b99e8885292a4d23"
+      "sha256": "853fe5872df68238ca93dfdbc82aa6994f63fe4f5fc24a16cf55b15fdd2be1a4"
     }
   ],
   "cards": [
@@ -1165,7 +1165,7 @@
     {
       "id": "ipad-activity",
       "source": "docs/design/penny-ios/ipad/activity.html",
-      "sourceSha256": "6f56b81f193f97c377f6305743e51e499369f533d000959c5eecfb77876ee993",
+      "sourceSha256": "9a87af30666314fc75ef5bca635f42da5d3f910371ffd43d72baebb84e1c7c11",
       "viewport": {
         "w": 1290,
         "h": 914
@@ -1174,12 +1174,12 @@
         {
           "appearance": "light",
           "file": "previews/ipad-activity.light.png",
-          "sha256": "372dc5b99c7966d6b2fd0efdc810e5adf0b0ecbcc5c48691a97afd6787564ac2"
+          "sha256": "f4fdf7c44dfcb879bb8faeac629523de7e2e590a575d3b35feed27ec51223701"
         },
         {
           "appearance": "dark",
           "file": "previews/ipad-activity.dark.png",
-          "sha256": "ff081dff4e67a56557d2e74eba662021d8ffe67d4daec2e299ff810d273e3282"
+          "sha256": "5b6d81c12c6ee6a3df293d0d92c129720553c1ec0c77abf07146971ed24be7ac"
         }
       ]
     },
@@ -1195,19 +1195,19 @@
         {
           "appearance": "light",
           "file": "previews/ipad-add-entry.light.png",
-          "sha256": "51b4c68f2d1f1ddb68d57ccd8fb5f87a7660be269af46742bfa8f6b0f061ef84"
+          "sha256": "d6de71ed515304c23218b573cba26b8e2c1a35ff6c2c71c0f57483f80fb81fdf"
         },
         {
           "appearance": "dark",
           "file": "previews/ipad-add-entry.dark.png",
-          "sha256": "e57bb7c082aafa24d56c4e0a7925c49412bb906cec7c1a9f359662b1d1177bbe"
+          "sha256": "51719d69a0421c9444e18b11580a8f7bd3f2ccf9781cc9c31097f81f1a5de029"
         }
       ]
     },
     {
       "id": "ipad-home",
       "source": "docs/design/penny-ios/ipad/home.html",
-      "sourceSha256": "93d8157dbab1f431210ad827e99bd6db69e882976f3fed324990aa57a134f09a",
+      "sourceSha256": "dd4b2cfba4ab9fe09cf67b41aee9101962a908bfc193dcf1a5b70b91ca20497e",
       "viewport": {
         "w": 1290,
         "h": 914
@@ -1216,12 +1216,12 @@
         {
           "appearance": "light",
           "file": "previews/ipad-home.light.png",
-          "sha256": "12cb20930060757d6126976c761f719210c31b1bf2be4fbb7f517dac48030438"
+          "sha256": "97b17ea1f03c47a08204698be04960ca3ba80dd81d96e2d7f60544c844de4cf1"
         },
         {
           "appearance": "dark",
           "file": "previews/ipad-home.dark.png",
-          "sha256": "1fa658e9acbdac46d6af3c3044bdac4de2d96a471839106bac6a13d4bea67e74"
+          "sha256": "724ed5bb679bb0b9c57953acdc42e72d2961e4acab1977362344bd06515790d7"
         }
       ]
     },
@@ -1237,12 +1237,12 @@
         {
           "appearance": "light",
           "file": "previews/ipad-receipt-attach-confirm.light.png",
-          "sha256": "ea876000fad63ba53582de9563b4a978364282ca81bd5ffde8365b1b45274cec"
+          "sha256": "9d6e6e3bd444289706051621fe470a82141a308890760204e86ded71300f6c40"
         },
         {
           "appearance": "dark",
           "file": "previews/ipad-receipt-attach-confirm.dark.png",
-          "sha256": "c26625b119b322034e67f30ecb2cb5f3307dee37611f24ca13d0ed248b7eb7ba"
+          "sha256": "0ec60b94e3ac4981d435ca397580365ca478eb8b0690fdb1427435bdf1e7bca6"
         }
       ]
     },
@@ -1258,12 +1258,12 @@
         {
           "appearance": "light",
           "file": "previews/ipad-receipt-attach-entry.light.png",
-          "sha256": "dcbcf96b9465bc731d47feb73b85abe3718638e3782457835dd54d330be6ec94"
+          "sha256": "a40d611164e27bf18a4f3d5a0d335c2188718ef2f0f6749cb45cb2492c11806a"
         },
         {
           "appearance": "dark",
           "file": "previews/ipad-receipt-attach-entry.dark.png",
-          "sha256": "bc73f307d7cc3e48ebb2c344890ad3d42aa1c6ec4bca7cdb4e05a38c01550a31"
+          "sha256": "56636da4111712972f9093b4f7e17574f546ba9b1a8eda3a8f3303783c6d93bb"
         }
       ]
     },
@@ -1279,19 +1279,19 @@
         {
           "appearance": "light",
           "file": "previews/ipad-receipt-attach-file.light.png",
-          "sha256": "72c92f7649aa962865bcc8403eecedfaf88ffaa45a83ada03b32c6a119d45957"
+          "sha256": "a92dd0bfaf4332e0dcc1612fc0120793a11ebae61cec09a5fab49f5266124701"
         },
         {
           "appearance": "dark",
           "file": "previews/ipad-receipt-attach-file.dark.png",
-          "sha256": "15121c71ccbfe7872ee1b3fb1aada2e6145393b5a71d854f2816f72e214123ff"
+          "sha256": "994af73d103145700a7caef7ab6ea5224206de2d875cf160d190c4f34667ea32"
         }
       ]
     },
     {
       "id": "ipad-receipt-attached-toast",
       "source": "docs/design/penny-ios/ipad/receipt-attached-toast.html",
-      "sourceSha256": "4f731643add4174debeb711273937ecf46aa1e2cb58cdbc5238ee982d7f15ced",
+      "sourceSha256": "6e66fb0e4c5c162e57b1d7892084deaf484a496f7b44df27f54fafd5cac84663",
       "viewport": {
         "w": 1290,
         "h": 914
@@ -1300,19 +1300,19 @@
         {
           "appearance": "light",
           "file": "previews/ipad-receipt-attached-toast.light.png",
-          "sha256": "894843ab4b9348fed6fe52dd59cf7a3f2a614f04c6e04c0e9398756e961fe0b9"
+          "sha256": "cc448e1a54462a4597b1b77a826d136336394e3d22af075b80d9fa20dd96533f"
         },
         {
           "appearance": "dark",
           "file": "previews/ipad-receipt-attached-toast.dark.png",
-          "sha256": "98b176df013319dc0244dd91d007e844811a26a0ebc19b430c626fbd544eb9fe"
+          "sha256": "ec93ab11c701d2f7c09a2fbb6b1d9a87645ffbc6243b039dd417bb6faaa79de3"
         }
       ]
     },
     {
       "id": "ipad-receipt-email-settings",
       "source": "docs/design/penny-ios/ipad/receipt-email-settings.html",
-      "sourceSha256": "a294291093181a3141802ff65ebb07c8ace68d908731c3a1029f9605572b373e",
+      "sourceSha256": "8c577d971d6a30618885b7336fe5ba67d7410be308de84489100b6bbbd5d6cc5",
       "viewport": {
         "w": 1290,
         "h": 914
@@ -1321,19 +1321,19 @@
         {
           "appearance": "light",
           "file": "previews/ipad-receipt-email-settings.light.png",
-          "sha256": "e5254bde0d9f58a17b2ddd2d502f57c5e71ec5c66047a86b0e6e9874d3338682"
+          "sha256": "72a6bc461215f173f53bfa0f3825262904aacedb5556f3431ec49d67f6421ac7"
         },
         {
           "appearance": "dark",
           "file": "previews/ipad-receipt-email-settings.dark.png",
-          "sha256": "3d8966b24c10597f81f0a401b04006808fbf9c38032c4b76b3286617238b774b"
+          "sha256": "571b7477aba39f702bc121536835e7e2e12702f2759c0a2632c57f49f1adf9e6"
         }
       ]
     },
     {
       "id": "ipad-receipt-inbox-item",
       "source": "docs/design/penny-ios/ipad/receipt-inbox-item.html",
-      "sourceSha256": "45c4e04a4e1814a3b5aec1ce58b9a50b29992d091dbf7875829f3fba791796b5",
+      "sourceSha256": "4b9c6d3e6af96f316121c206c24df53eff710b4ebee4d41a5a07c13482ebff25",
       "viewport": {
         "w": 1290,
         "h": 914
@@ -1342,19 +1342,19 @@
         {
           "appearance": "light",
           "file": "previews/ipad-receipt-inbox-item.light.png",
-          "sha256": "ee95b5a05ef12f7b6e2e8f37140f037106f9b0d054edba708525439c73e6c894"
+          "sha256": "54c399eba4e9ea6f1121f6cf20a36261ccfcce00cb8f311a72aa6a1de796ac70"
         },
         {
           "appearance": "dark",
           "file": "previews/ipad-receipt-inbox-item.dark.png",
-          "sha256": "f4a959806b18878d858051be679459b1aeef6415b682da0a8cbbd94ee2c81a2c"
+          "sha256": "4801cc2cdd88c08dae6a85824e2d5fdc4d5011ba632f282fe197f9e37315a2af"
         }
       ]
     },
     {
       "id": "ipad-receipt-inbox",
       "source": "docs/design/penny-ios/ipad/receipt-inbox.html",
-      "sourceSha256": "944cb36ccb61bb1a8548c207ef1f5843bbf3a59dfc759dbebb612f6a7eef7321",
+      "sourceSha256": "f5dc61dace14db7e12aa1f1f5103eb467458261e10e353181bb617f4c2aa1559",
       "viewport": {
         "w": 1290,
         "h": 914
@@ -1363,19 +1363,19 @@
         {
           "appearance": "light",
           "file": "previews/ipad-receipt-inbox.light.png",
-          "sha256": "584fde8a3aa956bbfbc430ff1a29874dc413dbfe062df9f34a15fb313a7e3b43"
+          "sha256": "f583cf2a5a04278a70dd0029dfd6b5959f588cda11d22772280f8dbb6c02d08d"
         },
         {
           "appearance": "dark",
           "file": "previews/ipad-receipt-inbox.dark.png",
-          "sha256": "0c26789acf1dcaa47c40c131b2490814128ac31e82ecf72103bce75c7d570346"
+          "sha256": "2dbf3a0b71b7275a96e28de25d4e3aac51941321273f8738d7797f477afbfab5"
         }
       ]
     },
     {
       "id": "ipad-settings",
       "source": "docs/design/penny-ios/ipad/settings.html",
-      "sourceSha256": "8edf0f1e534cd7637c0e5a2e7bc808bb13e9c73d8c02139433e8db560bef2283",
+      "sourceSha256": "98a213c98f0632521676f82d4f01d3e167002ddb51548fcf5f31cade1d4e7931",
       "viewport": {
         "w": 1290,
         "h": 914
@@ -1384,19 +1384,19 @@
         {
           "appearance": "light",
           "file": "previews/ipad-settings.light.png",
-          "sha256": "b98c0dee2dd1e9dfd53bb6e17a7caf3529c412d9e10d80260d61efabcae8c743"
+          "sha256": "b96b6a156f72b6018f107380301084cf83c1d85158e9f7ec856711e474403e9a"
         },
         {
           "appearance": "dark",
           "file": "previews/ipad-settings.dark.png",
-          "sha256": "f4e1ce5298b47e3ae3e06ab7d76cdf441779233d8b3b10a9de1c6f28c6d58dfb"
+          "sha256": "105e8e37571b4a8571d98c312b139103310c05b550b6228d4b27d678cdd32650"
         }
       ]
     },
     {
       "id": "ipad-shared",
       "source": "docs/design/penny-ios/ipad/shared.html",
-      "sourceSha256": "54e4c8d6742721fa12faffe9a82f6b1c5fd0eec4c898c3066c592b538b341284",
+      "sourceSha256": "18d77f7ff32afe9cc4605ada77f93ee8e49240ed699e302cb445123fa02cb050",
       "viewport": {
         "w": 1290,
         "h": 914
@@ -1405,19 +1405,19 @@
         {
           "appearance": "light",
           "file": "previews/ipad-shared.light.png",
-          "sha256": "1774706c6073f63132e8e2f9798029d5c6d2e1ffa21032fffbeb9f3bb552241f"
+          "sha256": "d02dfbb5c9763e864e135f11963152ce6c4b80dda2b228b5681713e1406243bc"
         },
         {
           "appearance": "dark",
           "file": "previews/ipad-shared.dark.png",
-          "sha256": "53b10dea24e623371882433108d1bc54ca1453a5960cc92bb1a0294b04c7c54b"
+          "sha256": "735324f602c24ab25ecf252ae4565fbe2646b14b44d90907ef4abd7bae2c9e58"
         }
       ]
     },
     {
       "id": "ipad-trip",
       "source": "docs/design/penny-ios/ipad/trip.html",
-      "sourceSha256": "e59d0cf967dee21d61ae0fd85b40dd583dd61b2fae84109e11d41b77e0e35a0e",
+      "sourceSha256": "2fff4fa916cf6a8c47dbb12f50617ae045563b97d9be11e7517354411daad01f",
       "viewport": {
         "w": 1290,
         "h": 914
@@ -1426,12 +1426,12 @@
         {
           "appearance": "light",
           "file": "previews/ipad-trip.light.png",
-          "sha256": "144d9e3440fde656436cfce037547b78b614215e760fcbea6060818de9012c2b"
+          "sha256": "9d1779f185102036a2383267b0d0f37e3ce78a333b98188cdedf4eeda04cb06d"
         },
         {
           "appearance": "dark",
           "file": "previews/ipad-trip.dark.png",
-          "sha256": "6dbf8e2ff280eea19516ee03135fd83029f2d5b817b5f91d9575aeadd3b9fe53"
+          "sha256": "5577534ca14e728bfa415ffc81558330003bee71314b8e2648268baa350cb537"
         }
       ]
     },
@@ -1447,12 +1447,12 @@
         {
           "appearance": "light",
           "file": "previews/web-activity.light.png",
-          "sha256": "c8a161812e220af7f6ce98b8d4c6d4b6f594b6d7848100e2c7632f1f9de39552"
+          "sha256": "90414d0f69d8de9cf99023bd177c561d40dab1def5e8ca3d395d7bd646cd8840"
         },
         {
           "appearance": "dark",
           "file": "previews/web-activity.dark.png",
-          "sha256": "e14d3793f0f6c8c5ebf05e2dc1fb57bf0dfc2e17b6edb8b8517f3a4788b54a7b"
+          "sha256": "3c5abc0c977cc241aeeb4f4568e067bdcfb5f46cc09ccabe4b77b65518bbeae3"
         }
       ]
     },
@@ -1468,12 +1468,12 @@
         {
           "appearance": "light",
           "file": "previews/web-add-entry.light.png",
-          "sha256": "2326ead0ee92981a944fd99cb37e2cd4ab7038b1d11cc0a56df29a6cd83fe77e"
+          "sha256": "61e98129d0e3f25c3e3a7a5ca187c73e8f0a5d96e6e12e27e6cb809431803b62"
         },
         {
           "appearance": "dark",
           "file": "previews/web-add-entry.dark.png",
-          "sha256": "4ebf7267ebee68b3a8420902fdb4bedfcbb6e123e62f4c6bb7c55a6681b7e586"
+          "sha256": "d9e2605218da89c6771de6ceb7443a349dc5ab241a2f7495aaa26aea58983ed0"
         }
       ]
     },
@@ -1489,12 +1489,12 @@
         {
           "appearance": "light",
           "file": "previews/web-home.light.png",
-          "sha256": "405db08b91e3128af8639b718878bdf0820e0dd0f385342c847ef5e3d335d309"
+          "sha256": "4f3fdf8b5a28f779a2193eb22c9acb4c6618032751120f92e0e637d85e6096b6"
         },
         {
           "appearance": "dark",
           "file": "previews/web-home.dark.png",
-          "sha256": "7045cb9575f42697dfe881d6847c0456fcd94f0d49fea532c14c5ed3fc759b7f"
+          "sha256": "8a63526ccb7955f7856cb4ec28436caa7f5a10d4c0ad5eed3edece1a28a58468"
         }
       ]
     },
@@ -1510,12 +1510,12 @@
         {
           "appearance": "light",
           "file": "previews/web-household.light.png",
-          "sha256": "389c25c2cd58ea14afc7ad99aa8e9db3121beec964a2e6effa8efd30124d469d"
+          "sha256": "51ce26eec8f960cdd1e1d4221cef78affd0c24662cfbe55df5e37223edc13dc8"
         },
         {
           "appearance": "dark",
           "file": "previews/web-household.dark.png",
-          "sha256": "aef870b199736f1b7d04daf60d4b6a76152bff4ee49a3b789c7dba411d2be919"
+          "sha256": "2caa7a976de52fcc7fa0546eb6bf605a7e1b932016da2f69ac624171bec958b1"
         }
       ]
     },
@@ -1531,12 +1531,12 @@
         {
           "appearance": "light",
           "file": "previews/web-insights.light.png",
-          "sha256": "8d5e7812124db123f9ba8c1a8b5e1c9c2c3862e7aaca0874937b4819df744519"
+          "sha256": "59295c774f110c91f7fc9c4b02c9b18aadd5605fea6204e90fa18771bee93442"
         },
         {
           "appearance": "dark",
           "file": "previews/web-insights.dark.png",
-          "sha256": "7ac358df7cd02ace710b99b4d2f7c7d402ff44b031786e6a609e48e0a2ca1a61"
+          "sha256": "744f5b572520743d45edea3c0013c915cf0e854fb7b83771fa0ceda37ac90776"
         }
       ]
     },
@@ -1552,12 +1552,12 @@
         {
           "appearance": "light",
           "file": "previews/web-receipt-attach-confirm.light.png",
-          "sha256": "b89c5b6d198eb7f90d16f3eab786df396e4a5873fe5058a7726c4d133a18694b"
+          "sha256": "f7caa26474cc4b8e1f5a046eef9bdec525175bf6a266e7e0a0b7ba4dd99feb0b"
         },
         {
           "appearance": "dark",
           "file": "previews/web-receipt-attach-confirm.dark.png",
-          "sha256": "27b81ae3a6d4238bed997f1696aa6ddd5b7aba8ecb4ea1c4eab1941070ee2edf"
+          "sha256": "c7b56da604cdfdeae66dc9438f5c3d8cf63206dc80de711192ca86d60e6463c9"
         }
       ]
     },
@@ -1573,12 +1573,12 @@
         {
           "appearance": "light",
           "file": "previews/web-receipt-attach-entry.light.png",
-          "sha256": "0d51e86d8ce8d9b70cc5963e6abc203f6c15935a1962982379156aec93aad376"
+          "sha256": "787896c2033807fcdb4e005d3d8cccbc0cd3d5f889e617d0d5478b22ef936254"
         },
         {
           "appearance": "dark",
           "file": "previews/web-receipt-attach-entry.dark.png",
-          "sha256": "fc39b1c90058ab2384710099fae9aa813075306a840f55a1479a2a9f915a6195"
+          "sha256": "323f9e4fc723698bc89a78509116e345442036dad7db9b61cb9f8dc9fdd2532d"
         }
       ]
     },
@@ -1594,12 +1594,12 @@
         {
           "appearance": "light",
           "file": "previews/web-receipt-attach-file.light.png",
-          "sha256": "4a74ff42821ff7c0348d40b969998325f84e6f3223b3693107662b99093a921f"
+          "sha256": "085acd1449d830d44d297628c177226d2d96175914ddf47cc4cb26dcbc56d631"
         },
         {
           "appearance": "dark",
           "file": "previews/web-receipt-attach-file.dark.png",
-          "sha256": "932ee4f943c42ca6c31cf17873c0e0596717b109767c8ddd32a8922016f2f222"
+          "sha256": "2476a9c53b2bdfaa9f6c0d56112faa9357b39633d096fc78afc440bbd3c9810e"
         }
       ]
     },
@@ -1615,12 +1615,12 @@
         {
           "appearance": "light",
           "file": "previews/web-receipt-attached-toast.light.png",
-          "sha256": "40bd9d77296bfbe9cb28725ca384a489133a142e068d1546cf79183cf9f9ebc3"
+          "sha256": "9be2e28877e92e7fec705d0bb9dbf04847a36ac96253d52a43a9f5cef894ff13"
         },
         {
           "appearance": "dark",
           "file": "previews/web-receipt-attached-toast.dark.png",
-          "sha256": "cf709d8b8dd44bf0e10e0ac6b90e8d64a18bb93eceae3f778935c0251649d0ba"
+          "sha256": "8edcc0f53e24b73d73869fb9100f9cadf08737ee63ff713ea2174ba30a27076f"
         }
       ]
     },
@@ -1636,12 +1636,12 @@
         {
           "appearance": "light",
           "file": "previews/web-receipt-email-settings.light.png",
-          "sha256": "53559506212012788103273c52ff285c3c06568214382f85a49efc7e0af27151"
+          "sha256": "d4d05eb59888f32ecc9f0a111ed5ce5044c1ff53e764f636f5c552fe6e59c80b"
         },
         {
           "appearance": "dark",
           "file": "previews/web-receipt-email-settings.dark.png",
-          "sha256": "f62e4de830ac08c5e3dbcca6903f10a47ba014cdae9120b66097ff48f858219d"
+          "sha256": "14faf918a1233c799b70f1225fe2021d6d751f05ffe5ae504c12cd1fbde44175"
         }
       ]
     },
@@ -1657,12 +1657,12 @@
         {
           "appearance": "light",
           "file": "previews/web-receipt-inbox-item.light.png",
-          "sha256": "42ae5e34a3201ec7b97c8657bb936bbb1005e5ba0e7ff1b4a995756f3df088d3"
+          "sha256": "d1e949af43d899d1d2c2fb1e4ef75c2da6341ab1ae19e7652caa636350df800f"
         },
         {
           "appearance": "dark",
           "file": "previews/web-receipt-inbox-item.dark.png",
-          "sha256": "2f388d190f427f10b162899a2613687e9f629982cf9057fcd2a5601b38dac06f"
+          "sha256": "c8ddd1a3db0d22f10ce371f60a8fd23abcfdaea136aedf0122828cf9d5abb481"
         }
       ]
     },
@@ -1678,12 +1678,12 @@
         {
           "appearance": "light",
           "file": "previews/web-receipt-inbox.light.png",
-          "sha256": "682fe5740a29e061300c634f54c144a55d38c56a7b2a693248e73cb99bcf1796"
+          "sha256": "b59ea3b62f8065e550332094658d1e8b75f919e9de097bf96b9294b8582cd290"
         },
         {
           "appearance": "dark",
           "file": "previews/web-receipt-inbox.dark.png",
-          "sha256": "e421dbd74fdf0cc60079d73989ed6262daff716f5b78f8c98bb14eec506bcfb8"
+          "sha256": "d981f6ed93567c0a9d5644e68f2a54fd80e9ad122cd12505e1ed60a6499e583c"
         }
       ]
     },
@@ -1699,12 +1699,12 @@
         {
           "appearance": "light",
           "file": "previews/web-settings.light.png",
-          "sha256": "b5eeec1b7a14c8c6e776c0289edf77e5001970f11a88341522b2a25ef1ede2b8"
+          "sha256": "110deca374fc1f11a83e6eb302cd446b440f2ddba13a118a947fa23056366d17"
         },
         {
           "appearance": "dark",
           "file": "previews/web-settings.dark.png",
-          "sha256": "2d555be9113b75722c8cd939de2ed78aeb56b44fcd09e07210b27c5b98548e3f"
+          "sha256": "e768258ab08a9109c65977057e15fc0f78c44bfeafd896988a3d3f419504e6c4"
         }
       ]
     },
@@ -1741,12 +1741,12 @@
         {
           "appearance": "light",
           "file": "previews/web-trips.light.png",
-          "sha256": "d9f6dae6ee23eb94d733397635815a0a843fbb280fe157647de78aa58ec91cfa"
+          "sha256": "2782abb4136c6493a8ade6705b314e332796cf65f496c02ad31acf9cf638bef5"
         },
         {
           "appearance": "dark",
           "file": "previews/web-trips.dark.png",
-          "sha256": "98808077186cb358308a631b2a3f80389f3d8736cea4d8dc2314de77e4d2a18e"
+          "sha256": "b3ac4e21730338c972cfde9f6288a375313d7d4c1e7ce098e967259a5b4c7d63"
         }
       ]
     }

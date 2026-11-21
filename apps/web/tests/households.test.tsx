@@ -211,6 +211,13 @@ describe("shared list, create and join", () => {
     const item = within(sidebar).getByRole("link", { name: /^Maison.*\$60, you're owed \$60\.00$/ });
     expect(item).toHaveTextContent("Maison$60");
     expect(within(sidebar).getByRole("link", { name: "All households" })).toHaveAttribute("href", "/households");
+    // Together follows the cards (MAZ-240): the households, All households, then the trips and All trips.
+    const together = screen.getByRole("heading", { name: "Together" }).parentElement as HTMLElement;
+    expect(within(together).getAllByRole("link").map((link) => link.textContent)).toEqual([
+      expect.stringMatching(/^Maison\$60/),
+      "All households",
+      "Trips",
+    ]);
   });
 
   it("offers Record payment and Shared expense in the household header, with the balance's meaning in words and color", async () => {
