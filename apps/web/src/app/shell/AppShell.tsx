@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Outlet, useMatches, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useEffect, useId, useRef, useState, type RefObject, type SyntheticEvent } from "react";
+import { lazy, Suspense, useEffect, useId, useRef, useState, type RefObject, type SyntheticEvent } from "react";
 import { AddEntryDialog } from "../../features/entries/AddEntryDialog";
 import { Button, cx, Kbd } from "../../design/controls";
 import { Icon } from "../../design/Icon";
@@ -8,6 +8,7 @@ import { Banner, ServerUnreachableBanner } from "../../design/states";
 import { SyncStatusBanner } from "../../offline/SyncStatusBanner";
 import { leaveDemo, useIsDemo } from "../../demo/demo";
 import { serverInfoQuery } from "../../api/info";
+import { TABLET, useMediaQuery } from "../useMediaQuery";
 import { TAB_ITEMS, tabFor } from "./navigation";
 import { PageTitleContext, PageTitleStyleContext, TopbarSlotContext, type PageTitleStyle } from "./pageTitle";
 import { useShortcuts } from "./shortcuts";
@@ -30,6 +31,30 @@ function usePageMeta() {
   return { title: "Penny", search: true, back: undefined, backLabel: "Back to Home", backWide: false };
 }
 
+const HomePage = lazy(() => import("../../features/home/HomePage").then((module) => ({ default: module.HomePage })));
+
+/**
+ * Home under the phone's Settings sheet (card `iphone-settings`): this month's Home, dimmed,
+ * hidden from assistive technology and out of the tab order. It sits outside the shell's page
+ * contexts, so its month control stays in the page instead of the sheet's top bar.
+ */
+function HomeBehind() {
+  return (
+    <div className="app__behind" aria-hidden="true" inert>
+      <div className="app__main">
+        <Suspense fallback={null}>
+          <HomePage search={{}} />
+        </Suspense>
+      </div>
+    </div>
+  );
+}
+
+/** Activity with its search field focused. */
+function openActivitySearch(navigate: ReturnType<typeof useNavigate>) {
+  void navigate({ to: "/transactions" }).then(() => document.getElementById("activity-search")?.focus());
+}
+
 const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
 export const SEARCH_SHORTCUT = isMac ? "⌘K" : "Ctrl K";
 
@@ -38,11 +63,13 @@ export const SEARCH_SHORTCUT = isMac ? "⌘K" : "Ctrl K";
  * one DOM:
  *
  * - wide (≥ 1100px): sidebar with labels, households and trips, top bar with title, page tools
- *   (the month control), search and Add entry;
+ *   (the month control), search and Add entry. On touch tablets (cards `ipad-*`) search is a round
+ *   glass button and Add entry a copper capsule, with no keyboard hints;
  * - medium (768–1099px): the same sidebar as an icon rail;
  * - narrow (< 768px): the card's glass row (page tools, and Back on pushed pages) over a large
  *   title, and a floating bar with the four tabs (Home, Activity, Shared, Trips) beside the
- *   copper add button. Manage and Settings open from Home's settings button.
+ *   copper add button. Manage and Settings open from Home's settings button; Settings is a
+ *   sheet over a dimmed Home.
  *
  * The breakpoints live in `shell.css`. Keyboard: Skip to content, ⌘K or / for search, N for
  * Add entry, G then H/A/I/S/T/R to go to a page.
@@ -63,6 +90,9 @@ export function AppShell() {
   });
   const serverDown = useQuery(serverInfoQuery).isError;
   const demo = useIsDemo();
+  // Phones draw Settings as a sheet over Home (card `iphone-settings`).
+  const phone = !useMediaQuery(TABLET);
+  const sheet = phone && /^\/settings(\/|$)/.test(pathname);
   // A deep link to /entries/new opens Add entry over Home.
   const adding = addingNow || pathname === "/entries/new";
 
@@ -71,11 +101,13 @@ export function AppShell() {
   }, [title]);
 
   function focusSearch() {
-    if (searchRef.current) {
-      searchRef.current.focus();
-      searchRef.current.select();
+    // The field is hidden on phones and touch tablets, which search on Activity instead.
+    const field = searchRef.current;
+    if (field && (!("checkVisibility" in field) || field.checkVisibility())) {
+      field.focus();
+      field.select();
     } else {
-      void navigate({ to: "/transactions" }).then(() => document.getElementById("activity-search")?.focus());
+      openActivitySearch(navigate);
     }
   }
 
@@ -98,7 +130,9 @@ export function AppShell() {
         Skip to content
       </a>
       <Sidebar />
-      <div className="app__column">
+      {sheet ? <HomeBehind /> : null}
+      <div className={cx("app__column", sheet && "app__column--sheet")}>
+        {sheet ? <span className="app__grabber" aria-hidden="true" /> : null}
         <header className={cx("topbar", pathname === "/" && "topbar--home", meta.back && "topbar--back", meta.back && meta.backWide && "topbar--back-wide", titleStyle !== "large" && `topbar--title-${titleStyle}`)}>
           {meta.back ? (
             <Link to={meta.back} className="glass glass-button topbar__back" aria-label={meta.backLabel}>
@@ -109,6 +143,7 @@ export function AppShell() {
           <div className="topbar__tools" ref={setToolSlot} />
           <div className="topbar__spacer" />
           {search ? <TopSearch inputRef={searchRef} /> : null}
+          {search ? <SearchButton /> : null}
           <Button
             variant="primary"
             icon="add"
@@ -162,6 +197,26 @@ function TopSearch({ inputRef }: { inputRef: RefObject<HTMLInputElement | null> 
       <input ref={inputRef} id={id} name="q" type="search" placeholder="Search entries" autoComplete="off" aria-keyshortcuts={isMac ? "Meta+K" : "Control+K"} />
       <Kbd>{SEARCH_SHORTCUT}</Kbd>
     </form>
+  );
+}
+
+/**
+ * Touch tablets (card `ipad-home`): a round glass search button beside Add entry, in place of the
+ * desktop field. It opens Activity with its search focused.
+ */
+function SearchButton() {
+  const navigate = useNavigate();
+  return (
+    <button
+      type="button"
+      className="glass glass-button topbar__search"
+      aria-label="Search entries"
+      onClick={() => {
+        openActivitySearch(navigate);
+      }}
+    >
+      <Icon name="search" size={20} />
+    </button>
   );
 }
 

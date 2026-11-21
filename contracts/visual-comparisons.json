@@ -1180,12 +1180,12 @@
         ],
         "deviations": [
           {
-            "summary": "Settings is drawn as the sheet (centered title, copper check to Home, no tab bar) but is its own page, so Home isn’t visible behind it (follow-up recorded on MAZ-231)",
-            "kind": "follow-up",
-            "ref": "MAZ-231"
+            "summary": "Settings has no Face ID lock row: the web has no app lock (decided in MAZ-239)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           },
           {
-            "summary": "Settings has no Face ID lock or Notifications row: the web has no app lock or notifications (design decision recorded on MAZ-231)",
+            "summary": "Settings has no Notifications row: the web has no notifications (design decision recorded on MAZ-231)",
             "kind": "follow-up",
             "ref": "MAZ-231"
           },
@@ -1485,14 +1485,19 @@
         ],
         "deviations": [
           {
-            "summary": "The footnote and the Reduce transparency row say “your device’s”, not “your iPhone’s” (design decision recorded on MAZ-231)",
-            "kind": "follow-up",
-            "ref": "MAZ-231"
+            "summary": "The theme footnote says “your device’s”, not “your iPhone’s” (decided in MAZ-239)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           },
           {
-            "summary": "No Text size row: text follows the browser (design decision recorded on MAZ-234)",
-            "kind": "follow-up",
-            "ref": "MAZ-234"
+            "summary": "The Reduce transparency row says “your device’s”, not “your iPhone’s” (decided in MAZ-239)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+          },
+          {
+            "summary": "No Text size row: text follows the browser (decided in MAZ-239)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           },
           {
             "summary": "Appearance is a Settings pane with All settings, not a pushed page",
@@ -1576,9 +1581,9 @@
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           },
           {
-            "summary": "The pinned demo link carries the note “Sample data in this tab only…” under it (design decision recorded on MAZ-234)",
-            "kind": "follow-up",
-            "ref": "MAZ-234"
+            "summary": "The pinned demo link carries the note “Sample data in this tab only…” under it (decided in MAZ-239)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           }
         ]
       }
@@ -1835,9 +1840,9 @@
         ],
         "deviations": [
           {
-            "summary": "On phones the toast takes the tab bar's place (MAZ-166) instead of sitting above it (design decision recorded on MAZ-237)",
-            "kind": "follow-up",
-            "ref": "MAZ-237"
+            "summary": "On phones the toast takes the tab bar's place (MAZ-166) instead of sitting above it (decided in MAZ-239)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           }
         ]
       }
@@ -2055,11 +2060,6 @@
             "summary": "The sidebar footer names the account by its email, not the person's name",
             "kind": "follow-up",
             "ref": "MAZ-171"
-          },
-          {
-            "summary": "Search is the top bar's search field, not a round glass search button",
-            "kind": "follow-up",
-            "ref": "MAZ-221"
           }
         ]
       }
@@ -2347,7 +2347,12 @@
         ],
         "deviations": [
           {
-            "summary": "Settings has no Face ID lock or Notifications row: the web has no app lock or notifications (design decision recorded on MAZ-231)",
+            "summary": "Settings has no Face ID lock row: the web has no app lock (decided in MAZ-239)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+          },
+          {
+            "summary": "Settings has no Notifications row: the web has no notifications (design decision recorded on MAZ-231)",
             "kind": "follow-up",
             "ref": "MAZ-231"
           },
@@ -2357,14 +2362,19 @@
             "ref": "MAZ-171"
           },
           {
-            "summary": "Appearance has no Text size row and adds a Display section (design decision recorded on MAZ-234)",
-            "kind": "follow-up",
-            "ref": "MAZ-234"
+            "summary": "Appearance has no Text size row: text follows the browser (decided in MAZ-239)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           },
           {
-            "summary": "The theme footnote says “your device’s”, not “your iPad’s” (design decision recorded on MAZ-231)",
-            "kind": "follow-up",
-            "ref": "MAZ-231"
+            "summary": "The theme footnote says “your device’s”, not “your iPad’s” (decided in MAZ-239)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+          },
+          {
+            "summary": "The Reduce transparency row says “your device’s”, not “your iPad’s” (decided in MAZ-239)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           },
           {
             "summary": "The sidebar footer names the account by its email, not the person’s name",
@@ -2645,9 +2655,9 @@
         ],
         "deviations": [
           {
-            "summary": "The section list has no Notifications or Export data: the web has neither (design decision recorded on MAZ-231)",
+            "summary": "The section list has no Export data: the web has no export yet (follow-up recorded on MAZ-239)",
             "kind": "follow-up",
-            "ref": "MAZ-231"
+            "ref": "MAZ-239"
           },
           {
             "summary": "The sidebar footer names the account by its email, not the person’s name",
