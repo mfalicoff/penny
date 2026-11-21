@@ -7,6 +7,7 @@ import { useSessionNotice } from "../../auth/account";
 import { beginSession } from "../../auth/lifecycle";
 import { OidcError, signInWithPopup, signInWithRedirect } from "../../auth/oidc";
 import { startDemo } from "../../demo/demo";
+import { cx } from "../../design/controls";
 import { Icon } from "../../design/Icon";
 
 type Mode = "sign-in" | "create-account";
@@ -35,16 +36,34 @@ export function AuthScreen() {
       {/* Wide windows only (card web-sign-in); phones open straight on the form, as on iphone-sign-in. */}
       <section className="auth__brand" aria-label="About Penny">
         <div className="auth__glow" aria-hidden="true" />
-        <p className="auth__logo">
-          <Icon name="leaf" size={28} weight={40} />
-          <span>Penny</span>
+        <p className="brand auth__logo">
+          <span className="logo">
+            <Icon name="leaf" size={18} weight={40} />
+          </span>
+          <span>penny.</span>
         </p>
-        <p className="auth__tagline">A little more clarity about your money.</p>
+        <p className="auth__tagline">
+          A little more clarity <br />
+          about your money.
+        </p>
         <p className="auth__sub">Personal and shared expenses on your own server. Penny never connects to your bank.</p>
         <BrandPreview />
       </section>
-      <main className="auth__form" id="main" tabIndex={-1}>
-        <h1>{creating ? "Make yourself at home" : "Welcome back"}</h1>
+      <main className={cx("auth__form", creating && "auth__form--create")} id="main" tabIndex={-1}>
+        {/* Phones: the copper glow behind the header and, on sign-in, the brand tile (iphone-sign-in, iphone-create-account). */}
+        <div className="auth__phone-glow" aria-hidden="true" />
+        {creating ? null : (
+          <span className="auth__mark" aria-hidden="true">
+            <Icon name="leaf" size={34} weight={36} />
+          </span>
+        )}
+        <h1>
+          {creating ? "Make yourself at home" : "Welcome back"}
+          {/* The phone cards end the title with a period; the wide web card doesn't. Visual only, so the heading's name stays the same. */}
+          <span className="auth__period" aria-hidden="true">
+            .
+          </span>
+        </h1>
         <p className="auth__lede">{creating ? "Your account lives on this server. Penny never connects to your bank." : "Sign in to see your month."}</p>
         {notice === "expired" ? (
           <p className="notice" role="status">
@@ -74,7 +93,8 @@ export function AuthScreen() {
 function CredentialsForm({ mode }: { mode: Mode }) {
   const queryClient = useQueryClient();
   const creating = mode === "create-account";
-  const ids = { email: useId(), password: useId(), emailError: useId(), passwordError: useId(), formError: useId() };
+  const ids = { email: useId(), password: useId(), emailError: useId(), passwordError: useId(), formError: useId(), requirement: useId() };
+  const [password, setPassword] = useState("");
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
@@ -88,7 +108,10 @@ function CredentialsForm({ mode }: { mode: Mode }) {
       setFormError(describeAuthError(error));
       // Recover where the user can act: a taken email is fixed in the email field, anything else by retyping the password.
       const target = error instanceof ApiError && error.status === 409 ? emailRef : passwordRef;
-      if (target === passwordRef && passwordRef.current) passwordRef.current.value = "";
+      if (target === passwordRef && passwordRef.current) {
+        passwordRef.current.value = "";
+        setPassword("");
+      }
       requestAnimationFrame(() => target.current?.focus());
     },
   });
@@ -125,51 +148,95 @@ function CredentialsForm({ mode }: { mode: Mode }) {
           {formError}
         </p>
       ) : null}
-      <div className="field">
-        <label htmlFor={ids.email}>Email</label>
-        <input
-          ref={emailRef}
-          id={ids.email}
-          name="email"
-          type="email"
-          inputMode="email"
-          autoComplete={creating ? "email" : "username"}
-          autoCapitalize="none"
-          spellCheck={false}
-          required
-          aria-invalid={fieldErrors.email ? true : undefined}
-          aria-describedby={fieldErrors.email ? ids.emailError : undefined}
-        />
-        {fieldErrors.email ? (
-          <span className="field__error" id={ids.emailError}>
-            {fieldErrors.email}
-          </span>
-        ) : null}
+      <div className="auth__group">
+        <div className="auth__field">
+          <label htmlFor={ids.email}>Email</label>
+          <input
+            ref={emailRef}
+            id={ids.email}
+            name="email"
+            type="email"
+            inputMode="email"
+            autoComplete={creating ? "email" : "username"}
+            autoCapitalize="none"
+            spellCheck={false}
+            required
+            aria-invalid={fieldErrors.email ? true : undefined}
+            aria-describedby={fieldErrors.email ? ids.emailError : undefined}
+          />
+        </div>
+        <div className="auth__field">
+          <label htmlFor={ids.password}>Password</label>
+          <input
+            ref={passwordRef}
+            id={ids.password}
+            name="password"
+            type="password"
+            autoComplete={creating ? "new-password" : "current-password"}
+            placeholder={creating ? undefined : "Your password"}
+            required
+            aria-invalid={fieldErrors.password ? true : undefined}
+            aria-describedby={cx(fieldErrors.password && ids.passwordError, creating && ids.requirement) || undefined}
+            onInput={
+              creating
+                ? (event) => {
+                    setPassword(event.currentTarget.value);
+                  }
+                : undefined
+            }
+          />
+        </div>
       </div>
-      <div className="field">
-        <label htmlFor={ids.password}>Password</label>
-        <input
-          ref={passwordRef}
-          id={ids.password}
-          name="password"
-          type="password"
-          autoComplete={creating ? "new-password" : "current-password"}
-          required
-          aria-invalid={fieldErrors.password ? true : undefined}
-          aria-describedby={fieldErrors.password ? ids.passwordError : undefined}
-        />
-        {fieldErrors.password ? (
-          <span className="field__error" id={ids.passwordError}>
-            {fieldErrors.password}
-          </span>
-        ) : creating ? (
-          <span className="field__hint">At least 10 characters.</span>
-        ) : null}
-      </div>
+      {fieldErrors.email ? (
+        <span className="field__error" id={ids.emailError}>
+          {fieldErrors.email}
+        </span>
+      ) : null}
+      {fieldErrors.password ? (
+        <span className="field__error" id={ids.passwordError}>
+          {fieldErrors.password}
+        </span>
+      ) : null}
+      {creating ? <PasswordStrength password={password} requirementId={ids.requirement} /> : null}
       <button type="submit" className="button button--block" aria-disabled={submit.isPending}>
         {submit.isPending ? (creating ? "Creating account…" : "Signing in…") : creating ? "Create account" : "Sign in"}
       </button>
     </form>
+  );
+}
+
+/**
+ * How strong a new password looks, in four steps (iphone-create-account): long enough first, then
+ * longer and more varied. A guide only: the server's rule is the 10 to 256 characters.
+ */
+export function passwordStrength(password: string): number {
+  if (password.length < 10) return password.length ? 1 : 0;
+  const kinds = [/[a-z]/, /[A-Z]/, /\d/, /[^A-Za-z0-9]/].filter((kind) => kind.test(password)).length;
+  let score = 2;
+  if (password.length >= 12 && kinds >= 2) score += 1;
+  if (password.length >= 16 && kinds >= 3) score += 1;
+  return score;
+}
+
+const STRENGTH = ["", "Too short", "Fair", "Good", "Strong"];
+
+/** The create-account strength meter and its requirement (iphone-create-account). */
+function PasswordStrength({ password, requirementId }: { password: string; requirementId: string }) {
+  const score = passwordStrength(password);
+  const met = password.length >= 10;
+  return (
+    <div className="auth__strength">
+      <div className="auth__meter" role="img" aria-label={`Strength: ${score ? (STRENGTH[score] ?? "") : "none yet"}`}>
+        {[1, 2, 3, 4].map((step) => (
+          <i key={step} className={step <= score ? "auth__meter-on" : undefined} />
+        ))}
+      </div>
+      <p className="auth__requirement" id={requirementId}>
+        {met ? <Icon name="checkmark" size={15} weight={56} /> : <span className="auth__requirement-dot" aria-hidden="true" />}
+        At least 10 characters
+        <span className="visually-hidden">{met ? ", done" : ""}</span>
+      </p>
+    </div>
   );
 }
 
@@ -241,8 +308,8 @@ function SsoButton() {
       <p className="auth__or" aria-hidden="true">
         or
       </p>
-      <button type="button" className="button button--secondary button--block" onClick={onClick} aria-disabled={state === "waiting"}>
-        <Icon name="key" size={20} />
+      <button type="button" className="button button--sso button--block" onClick={onClick} aria-disabled={state === "waiting"}>
+        <Icon name="key" size={19} />
         {state === "waiting" ? `Waiting for ${label}…` : `Continue with ${label}`}
       </button>
       {state === "waiting" && mode === "popup" ? (

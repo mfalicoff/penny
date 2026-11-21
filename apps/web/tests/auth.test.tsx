@@ -159,6 +159,21 @@ describe("password sign-in", () => {
     expect(screen.getByLabelText("Password")).toHaveValue(PASSWORD);
   });
 
+  it("shows the password's strength and the 10-character requirement while typing (iphone-create-account)", async () => {
+    fakeApi(null);
+    const user = userEvent.setup();
+    renderApp("/");
+    await user.click(await screen.findByRole("button", { name: "Create an account" }));
+    const password = screen.getByLabelText("Password");
+    expect(screen.getByRole("img", { name: "Strength: none yet" })).toBeInTheDocument();
+    expect(password).toHaveAccessibleDescription("At least 10 characters");
+    await user.type(password, "short");
+    expect(screen.getByRole("img", { name: "Strength: Too short" })).toBeInTheDocument();
+    await user.type(password, "-sample1");
+    expect(screen.getByRole("img", { name: "Strength: Good" })).toBeInTheDocument();
+    expect(password).toHaveAccessibleDescription("At least 10 characters, done");
+  });
+
   it("creates an account and lands in the app", async () => {
     fakeApi(null);
     const user = userEvent.setup();

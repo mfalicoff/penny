@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { pointerCanPause, TOAST_MAX_HOVER_MS, TOAST_MS, toastDelay, ToastProvider, useToast } from "../src/design/states";
+import { pointerCanPause, TOAST_MAX_HOVER_MS, TOAST_MS, toastDelay, ToastProvider, useToast, useToastEntry } from "../src/design/states";
 
 // MAZ-162: on touch screens a tap leaves a "hover" behind, so a toast that paused on any
 // pointer never closed and kept covering the rows under it.
@@ -159,17 +159,75 @@ describe("ToastProvider", () => {
     });
     advance(TOAST_MAX_HOVER_MS * 2);
     expect(screen.getByText("Share marked as paid")).toBeInTheDocument();
-    // Moving between the toast's own buttons keeps it open.
-    act(() => {
-      screen.getByRole("button", { name: "Dismiss" }).focus();
-    });
-    advance(TOAST_MS * 2);
-    expect(screen.getByText("Share marked as paid")).toBeInTheDocument();
     act(() => {
       screen.getByRole("button", { name: "Show" }).focus();
     });
     advance(TOAST_MS + 10);
     expect(screen.queryByText("Share marked as paid")).not.toBeInTheDocument();
     expect(undo).not.toHaveBeenCalled();
+  });
+});
+
+// MAZ-233, card iphone-saved-toast: Undo is the saved toast's only button, a filled capsule, and
+// the entry it is about is exposed so its row can be highlighted while it shows.
+describe("saved toast", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  function Saved() {
+    const toast = useToast();
+    const entry = useToastEntry();
+    return (
+      <>
+        <button
+          type="button"
+          onClick={() => {
+            toast.show({ title: "Expense added", detail: "Groceries · $48.90", entryId: "e-1", onUndo: vi.fn() });
+          }}
+        >
+          Add
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            toast.show({ title: "Receipt attached", entryId: "e-2", onUndo: vi.fn(), action: { label: "View entry", onClick: vi.fn() } });
+          }}
+        >
+          Attach
+        </button>
+        <output aria-label="Highlighted">{entry ?? "none"}</output>
+      </>
+    );
+  }
+
+  it("has Undo alone, as a capsule, and highlights its entry until it closes", () => {
+    render(
+      <ToastProvider>
+        <Saved />
+      </ToastProvider>,
+    );
+    expect(screen.getByLabelText("Highlighted")).toHaveTextContent("none");
+    fireEvent.click(screen.getByRole("button", { name: "Add" }));
+    expect(screen.getByRole("button", { name: "Undo" })).toHaveClass("pk-toast__undo");
+    expect(screen.queryByRole("button", { name: "Dismiss" })).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Highlighted")).toHaveTextContent("e-1");
+    advance(TOAST_MS + 10);
+    expect(screen.queryByText("Expense added")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Highlighted")).toHaveTextContent("none");
+  });
+
+  it("keeps the close button when the toast has another action", () => {
+    render(
+      <ToastProvider>
+        <Saved />
+      </ToastProvider>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Attach" }));
+    expect(screen.getByRole("button", { name: "Dismiss" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Undo" })).not.toHaveClass("pk-toast__undo");
   });
 });

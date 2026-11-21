@@ -11,6 +11,7 @@ import { Badge, Button, cx } from "../../design/controls";
 import { Icon } from "../../design/Icon";
 import { categoryTint, tileStyle } from "../../design/categoryTint";
 import { Money } from "../../design/Money";
+import { useToastEntry } from "../../design/states";
 import { categoryIcon } from "../entries/model";
 import { rowAmount } from "../recurring/model";
 import { currentMonth, dayLabel, monthLabel, shiftMonth } from "../households/model";
@@ -153,6 +154,8 @@ export function EntryRows({ entries, ledger, currency, onOpen, recent = false, d
   const sync = useLedgerSync();
   const waiting = new Set(sync?.pending.entryIds ?? []);
   const rules = new Map(ledger.recurring.map((rule) => [rule.id, rule.frequency]));
+  // iphone-saved-toast: the row just saved is tinted with its category while its toast shows.
+  const saved = useToastEntry();
   return (
     <ul className="results home-rows">
       {entries.map((entry) => {
@@ -227,8 +230,9 @@ export function EntryRows({ entries, ledger, currency, onOpen, recent = false, d
             </li>
           );
         }
+        const highlighted = saved === entry.id;
         return (
-          <li key={entry.id} className="results__row activity-row">
+          <li key={entry.id} className={cx("results__row activity-row", highlighted && "activity-row--saved")} style={highlighted ? tileStyle({ ...category, entryKind: entry.kind }) : undefined}>
             <button
               type="button"
               className="activity-row__main"

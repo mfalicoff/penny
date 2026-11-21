@@ -230,6 +230,7 @@ function EntryForm({
       toast.show({
         title: target.kind === "new" ? `${kindLabels[built.transaction.kind]} added` : "Changes saved",
         detail,
+        entryId: built.transaction.id,
         onUndo: () => {
           save(undoEntryChange(built, original, ruleWasNew)).catch((error: unknown) => {
             toast.show({

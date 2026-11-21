@@ -117,9 +117,13 @@ export function SignOutButton() {
         Sign out
       </button>
       {open ? (
-        <ModalDialog labelledBy={titleId} describedBy={messageId} onClose={close}>
+        <ModalDialog labelledBy={titleId} describedBy={messageId} onClose={close} panelClassName="dialog__panel--alert">
+          {/* iphone-sign-out: a centered alert with an icon tile, the title, the message and stacked capsule buttons. */}
           {pending > 0 ? (
             <>
+              <span className="dialog__icon dialog__icon--pending">
+                <Icon name="cloud-offline" size={26} />
+              </span>
               <h2 id={titleId}>{unsyncedTitle(pending)}</h2>
               <p id={messageId}>
                 Signing out removes your entries from this browser. Synced entries stay safe on {host}; {pending === 1 ? "this one" : `these ${String(pending)}`} would be lost.
@@ -127,8 +131,11 @@ export function SignOutButton() {
             </>
           ) : (
             <>
+              <span className="dialog__icon dialog__icon--danger">
+                <Icon name="log-out" size={26} />
+              </span>
               <h2 id={titleId}>Sign out of Penny?</h2>
-              <p id={messageId}>Your entries are removed from this browser and stay safe on {host}.</p>
+              <p id={messageId}>Signing out removes your entries from this browser. Synced entries stay safe on {host}.</p>
             </>
           )}
           {error ? (
@@ -136,8 +143,8 @@ export function SignOutButton() {
               {error}
             </p>
           ) : null}
-          {pending > 0 ? (
-            <div className="dialog__actions dialog__actions--stack">
+          <div className="dialog__actions dialog__actions--stack">
+            {pending > 0 ? (
               <button
                 type="button"
                 className="button"
@@ -148,37 +155,21 @@ export function SignOutButton() {
               >
                 {syncing ? "Syncing…" : "Sync, then sign out"}
               </button>
-              <button
-                type="button"
-                className="button button--danger"
-                aria-disabled={busy}
-                onClick={() => {
-                  run({ kind: "sign-out", discardUpTo: pending });
-                }}
-              >
-                {busy && !syncing ? "Signing out…" : "Sign out anyway"}
-              </button>
-              <button ref={cancelRef} type="button" className="button button--secondary" onClick={close}>
-                Cancel
-              </button>
-            </div>
-          ) : (
-            <div className="dialog__actions">
-              <button ref={cancelRef} type="button" className="button button--secondary" onClick={close}>
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="button button--danger"
-                aria-disabled={busy}
-                onClick={() => {
-                  run({ kind: "sign-out", discardUpTo: 0 });
-                }}
-              >
-                {busy ? "Signing out…" : "Sign out"}
-              </button>
-            </div>
-          )}
+            ) : null}
+            <button
+              type="button"
+              className="button button--danger-text"
+              aria-disabled={busy}
+              onClick={() => {
+                run({ kind: "sign-out", discardUpTo: pending });
+              }}
+            >
+              {busy && !syncing ? "Signing out…" : pending > 0 ? "Sign out anyway" : "Sign out"}
+            </button>
+            <button ref={cancelRef} type="button" className="button button--secondary" onClick={close}>
+              Cancel
+            </button>
+          </div>
         </ModalDialog>
       ) : null}
     </>
