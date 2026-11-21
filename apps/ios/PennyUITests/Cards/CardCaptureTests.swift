@@ -455,10 +455,9 @@ final class CardCaptureTests: CardTestCase {
 
     @MainActor
     func test_whenSignedOut_IphoneServerConnect_ShouldBeCaptured() async throws {
-        try await card(
-            "iphone-server-connect",
-            note: "The test server is plain HTTP, so Server verified shows without the card's HTTPS lock"
-        ) { card in
+        // The test API is HTTPS with the run's certificate, which ui-test trusts on the simulator
+        // (MAZ-265), so Server verified shows with the card's HTTPS lock.
+        try await card("iphone-server-connect") { card in
             try card.penny.tap(AccessibilityID.Auth.changeServer)
             try card.penny.wait(for: AccessibilityID.Server.url)
             // The card shows the Server verified state: check the test server (no credential).

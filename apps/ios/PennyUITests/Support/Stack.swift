@@ -192,7 +192,9 @@ struct Stack {
     func send(
         _ method: String, _ url: URL, body: [String: Any]? = nil, token: String? = nil, control: Bool = false
     ) async throws -> [String: Any] {
-        var request = URLRequest(url: url, timeoutInterval: 30)
+        // A slow CI runner's first requests to a just-started API took over 30 s (MAZ-212:
+        // NSURLErrorDomain -1001), so the limit is a minute and a read that times out is retried.
+        var request = URLRequest(url: url, timeoutInterval: 60)
         request.httpMethod = method
         if control { request.setValue(configuration.controlToken, forHTTPHeaderField: "X-Penny-Test-Token") }
         if let token { request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
@@ -200,7 +202,13 @@ struct Stack {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.httpBody = try JSONSerialization.data(withJSONObject: body)
         }
-        let (data, response) = try await Self.session.data(for: request)
+        let (data, response): (Data, URLResponse)
+        do {
+            (data, response) = try await Self.session.data(for: request)
+        } catch let error as URLError where method == "GET" && [.timedOut, .networkConnectionLost].contains(error.code)
+        {
+            (data, response) = try await Self.session.data(for: request)
+        }
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         let name = "\(method) \(url.path())"
         guard (200..<300).contains(status) else {

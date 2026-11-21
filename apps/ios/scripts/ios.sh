@@ -26,7 +26,8 @@
 # PENNY_IPHONE / PENNY_IPAD choose simulator device types (default: the newest iPhone
 # Pro and iPad Pro 11-inch the selected Xcode offers). PENNY_RUNTIME pins a runtime identifier.
 # ui-test: PENNY_UI_DEVICES (iphone, ipad or both), PENNY_STACK_BUILD=0 (reuse the API build),
-# PENNY_UPGRADE_FROM_APP (a previous Penny.app to upgrade from).
+# PENNY_UPGRADE_FROM_APP (a previous Penny.app to upgrade from), PENNY_UI_STALL_SECONDS (silence that
+# counts as a hang, default 720).
 # archive/export/upload: PENNY_TEAM_ID, PENNY_BUILD_NUMBER, PENNY_ASC_KEY_PATH, PENNY_ASC_KEY_ID,
 # PENNY_ASC_ISSUER_ID (docs/ios/ipa.md).
 set -euo pipefail
@@ -147,7 +148,12 @@ device_type() {
     | sed -E 's/.*\((com\.apple\.CoreSimulator\.SimDeviceType\.[^)]+)\)$/\1/'
 }
 
+# Every run gets its own simulators (MAZ-212), so two sessions on one Mac, each in its own
+# checkout, can test at once. A run's devices are named "penny-run <type> <pid> <checkout>" and
+# deleted when the run ends, Ctrl-C and SIGTERM included; the next run on the Mac deletes the
+# ones a killed run left behind (their process is gone).
 CREATED_DEVICES=()
+RUN_DEVICE_PREFIX="penny-run"
 cleanup_devices() {
   local id
   [[ ${#CREATED_DEVICES[@]} -gt 0 ]] || return 0
@@ -155,6 +161,33 @@ cleanup_devices() {
     xcrun simctl shutdown "$id" >/dev/null 2>&1 || true
     xcrun simctl delete "$id" >/dev/null 2>&1 || true
   done
+  CREATED_DEVICES=()
+}
+
+# A short tag for this checkout, so a device's name says which worktree made it.
+checkout_tag() { printf '%s' "$ROOT" | /usr/bin/shasum | cut -c1-8; }
+
+# Deletes simulators earlier runs left behind: "penny-run" devices whose process has exited, and
+# "penny-ci" devices (the name before MAZ-212, which has no process) that are shut down and
+# untouched for two hours. Each is a whole simulator data directory, gigabytes after a UI run.
+sweep_stale_devices() {
+  local line prefix name id state pid data cutoff
+  cutoff=$(($(date +%s) - 7200))
+  while IFS= read -r line; do
+    [[ "$line" =~ ^[[:space:]]*(penny-run|penny-ci)\ (.*)\ \(([0-9A-F-]{36})\)\ \(([A-Za-z]+)\) ]] || continue
+    prefix="${BASH_REMATCH[1]}" name="${BASH_REMATCH[2]}" id="${BASH_REMATCH[3]}" state="${BASH_REMATCH[4]}"
+    if [[ "$prefix" == "$RUN_DEVICE_PREFIX" ]]; then
+      pid="$(awk '{print $(NF-1)}' <<< "$name")"
+      [[ "$pid" =~ ^[0-9]+$ ]] && kill -0 "$pid" 2>/dev/null && continue
+    else
+      [[ "$state" == Shutdown ]] || continue
+      data="$HOME/Library/Developer/CoreSimulator/Devices/$id"
+      [[ -d "$data" && "$(/usr/bin/stat -f %m "$data")" -gt "$cutoff" ]] && continue
+    fi
+    echo "Deleting a simulator an earlier run left behind: $prefix $name ($id)"
+    xcrun simctl shutdown "$id" >/dev/null 2>&1 || true
+    xcrun simctl delete "$id" >/dev/null 2>&1 || true
+  done < <(xcrun simctl list devices)
 }
 
 # Creates a fresh simulator (no state from earlier runs) on the newest runtime that supports
@@ -165,7 +198,7 @@ clean_device() {
   CREATED_ID=""
   [[ -n "$type" ]] || { echo "error: no matching simulator device type." >&2; exit 1; }
   for runtime in $(runtimes); do
-    if CREATED_ID="$(xcrun simctl create "penny-ci ${type##*.}" "$type" "$runtime" 2>/dev/null)" \
+    if CREATED_ID="$(xcrun simctl create "$RUN_DEVICE_PREFIX ${type##*.} $$ $(checkout_tag)" "$type" "$runtime" 2>/dev/null)" \
       && [[ "$CREATED_ID" =~ ^[0-9A-F-]{36}$ ]]; then
       CREATED_DEVICES+=("$CREATED_ID")
       echo "Simulator ${type##*.} on ${runtime##*.}: $CREATED_ID"
@@ -180,7 +213,12 @@ devices() {
   local iphone_type ipad_type
   iphone_type="$(device_type "${PENNY_IPHONE:-}" '^iPhone [0-9]+ Pro \(com')"
   ipad_type="$(device_type "${PENNY_IPAD:-}" '^iPad Pro 11-inch \(M[0-9]+\) \(com')"
+  # A signal ends the run through exit, so the EXIT trap deletes the devices then too.
   trap cleanup_devices EXIT
+  trap 'exit 129' HUP
+  trap 'exit 130' INT
+  trap 'exit 143' TERM
+  sweep_stale_devices
   clean_device "$iphone_type"; IPHONE_ID="$CREATED_ID"
   clean_device "$ipad_type"; IPAD_ID="$CREATED_ID"
 }
@@ -566,16 +604,19 @@ cmd_ui_test() {
 # Device names to run on: PENNY_UI_DEVICES ("iphone ipad" by default; either alone is fine).
 ui_devices() { echo "${PENNY_UI_DEVICES:-iphone ipad}"; }
 
-# Prepares a fresh simulator for UI tests: boots it and trusts the local OIDC provider's
-# throwaway certificate (single sign-on journeys). It also seeds the synthetic receipt files
+# Prepares a fresh simulator for UI tests: boots it and trusts the run's throwaway certificate,
+# which the HTTPS test API and the local OIDC provider share (PENNY_API_CERTIFICATE; an older
+# environment's separate PENNY_OIDC_CERTIFICATE too). It also seeds the synthetic receipt files
 # (seed_receipt_fixtures). Nothing is granted: tests set up permissions themselves.
 prepare_ui_device() {
   local id="$1"
   xcrun simctl bootstatus "$id" -b >/dev/null
+  disable_password_autofill "$id"
   seed_receipt_fixtures "$id"
-  if [[ -n "${PENNY_OIDC_CERTIFICATE:-}" && -f "$PENNY_OIDC_CERTIFICATE" ]]; then
-    xcrun simctl keychain "$id" add-root-cert "$PENNY_OIDC_CERTIFICATE"
-  fi
+  local certificate
+  for certificate in "${PENNY_API_CERTIFICATE:-}" "${PENNY_OIDC_CERTIFICATE:-}"; do
+    [[ -n "$certificate" && -f "$certificate" ]] && xcrun simctl keychain "$id" add-root-cert "$certificate"
+  done
   # Upgrade rehearsal: install and run the previous build first, so the plan's install of this
   # build is an in-place upgrade over real stored state (UpgradeTests).
   if [[ -n "${PENNY_UPGRADE_FROM_APP:-}" ]]; then
@@ -584,6 +625,28 @@ prepare_ui_device() {
     sleep 5
     xcrun simctl terminate "$id" com.mfalicoff.penny >/dev/null 2>&1 || true
   fi
+}
+
+# Turns off password AutoFill on a booted simulator, then boots it again. With AutoFill on, the
+# keyboard of Penny's email and password fields shows the Passwords bar, and now and then XCTest
+# then never gets the app's "animations complete" signal: every action waits 60 s for an idle app
+# whose main thread is asleep (spindump), so card captures hit the 5-minute limit and sign-in in
+# the smoke journeys timed out (MAZ-212). The switch is the allowPasswordAutoFill restriction in
+# the device's configuration-profile settings, edited while the simulator is shut down.
+disable_password_autofill() {
+  local id="$1" profiles file
+  profiles="$HOME/Library/Developer/CoreSimulator/Devices/$id/data/Library/UserConfigurationProfiles"
+  xcrun simctl shutdown "$id" >/dev/null 2>&1 || true
+  for file in "$profiles/UserSettings.plist" "$profiles/EffectiveUserSettings.plist" \
+    "$profiles/PublicInfo/PublicEffectiveUserSettings.plist"; do
+    [[ -f "$file" ]] || continue
+    /usr/bin/plutil -extract restrictedBool json -o /dev/null "$file" >/dev/null 2>&1 \
+      || /usr/bin/plutil -insert restrictedBool -dictionary "$file"
+    /usr/bin/plutil -extract restrictedBool.allowPasswordAutoFill json -o /dev/null "$file" >/dev/null 2>&1 \
+      || /usr/bin/plutil -insert restrictedBool.allowPasswordAutoFill -dictionary "$file"
+    /usr/bin/plutil -replace restrictedBool.allowPasswordAutoFill.value -bool NO "$file"
+  done
+  xcrun simctl bootstatus "$id" -b >/dev/null
 }
 
 # Receipt journeys (MAZ-78, docs/ios/receipts.md): synthetic files from receipt-fixtures.mjs. The
@@ -610,8 +673,58 @@ seed_receipt_fixtures() {
   done
 }
 
+# Runs a command with its output shown, and stops it when it prints nothing for $1 seconds
+# (returns 124 then). xcodebuild prints a line as each test starts and ends and XCTest stops a
+# test after maximumTestExecutionTimeAllowance (600 s), so silence past that is a hang: an iPad
+# run on a CI runner sat after "Testing started" until the job was cancelled (MAZ-212).
+run_watched() {
+  local limit="$1" log pid tail_pid children size=-1 current last=$SECONDS stalled=0 status=0
+  shift
+  log="$(mktemp "$CACHE/watched.XXXXXX")"
+  "$@" > "$log" 2>&1 &
+  pid=$!
+  tail -n +1 -f "$log" &
+  tail_pid=$!
+  while kill -0 "$pid" 2>/dev/null; do
+    sleep 5
+    current="$(/usr/bin/stat -f %z "$log")"
+    if [[ "$current" != "$size" ]]; then
+      size="$current" last=$SECONDS
+    elif ((SECONDS - last > limit)); then
+      echo "error: no test output for ${limit}s; stopping xcodebuild." >&2
+      stalled=1
+      # The wrapper first, so it runs nothing after xcodebuild; then xcodebuild, found beforehand.
+      children="$(pgrep -P "$pid" || true)"
+      kill -TERM "$pid" $children 2>/dev/null || true
+      sleep 15
+      kill -KILL $children 2>/dev/null || true
+      break
+    fi
+  done
+  wait "$pid" || status=$?
+  sleep 1
+  kill "$tail_pid" 2>/dev/null || true
+  wait "$tail_pid" 2>/dev/null || true
+  rm -f "$log"
+  if [[ $stalled == 1 ]]; then return 124; fi
+  return "$status"
+}
+
+# One plan on one simulator: $1 device id, $2 test plan, $3 result bundle, then -only-testing flags.
+# xcodebuild hands TEST_RUNNER_* variables to the test runner without the prefix.
+ui_xcodebuild() {
+  local id="$1" testplan="$2" bundle="$3"
+  shift 3
+  TEST_RUNNER_PENNY_API_URL="$PENNY_API_URL" TEST_RUNNER_PENNY_TEST_TOKEN="$PENNY_TEST_TOKEN" \
+    TEST_RUNNER_PENNY_TEST_RUN="${PENNY_TEST_RUN:-local}" TEST_RUNNER_PENNY_OIDC_ISSUER="${PENNY_OIDC_ISSUER:-}" \
+    TEST_RUNNER_PENNY_UITEST_REQUIRE_STACK=1 TEST_RUNNER_PENNY_UITEST_UPGRADE="${PENNY_UPGRADE_FROM_APP:+1}" \
+    TEST_RUNNER_PENNY_RECEIPT_FIXTURES="$RECEIPT_FIXTURES" \
+    XCB_SCHEME=PennyUITests xcb -configuration Debug -destination "id=$id" -testPlan "$testplan" \
+    "$@" test-without-building -resultBundlePath "$bundle"
+}
+
 ui_test_run() {
-  local plan="$1" out="$RESULTS/ui/$1" failed=0 name id testplan only=() started
+  local plan="$1" out="$RESULTS/ui/$1" failed=0 name id testplan only=() started attempt status
   testplan="$(tr '[:lower:]' '[:upper:]' <<< "${plan:0:1}")${plan:1}"
   # PENNY_UI_ONLY: tests or classes, space-separated, e.g. PennyUITests/AuthJourneyTests (debugging).
   local selected
@@ -625,15 +738,19 @@ ui_test_run() {
     prepare_ui_device "$id"
     echo "==> UI tests ($testplan) on $name"
     started=$SECONDS
-    # xcodebuild hands TEST_RUNNER_* variables to the test runner without the prefix.
-    if ! TEST_RUNNER_PENNY_API_URL="$PENNY_API_URL" TEST_RUNNER_PENNY_TEST_TOKEN="$PENNY_TEST_TOKEN" \
-      TEST_RUNNER_PENNY_TEST_RUN="${PENNY_TEST_RUN:-local}" TEST_RUNNER_PENNY_OIDC_ISSUER="${PENNY_OIDC_ISSUER:-}" \
-      TEST_RUNNER_PENNY_UITEST_REQUIRE_STACK=1 TEST_RUNNER_PENNY_UITEST_UPGRADE="${PENNY_UPGRADE_FROM_APP:+1}" \
-      TEST_RUNNER_PENNY_RECEIPT_FIXTURES="$RECEIPT_FIXTURES" \
-      XCB_SCHEME=PennyUITests xcb -configuration Debug -destination "id=$id" -testPlan "$testplan" \
-      ${only[@]+"${only[@]}"} test-without-building -resultBundlePath "$out/$name.xcresult"; then
-      failed=1
-    fi
+    # A hung run (no output for PENNY_UI_STALL_SECONDS) is stopped and the device's plan run
+    # once more; a run that finished with failing tests is not repeated.
+    for attempt in 1 2; do
+      rm -rf "$out/$name.xcresult"
+      status=0
+      run_watched "${PENNY_UI_STALL_SECONDS:-720}" ui_xcodebuild "$id" "$testplan" "$out/$name.xcresult" \
+        ${only[@]+"${only[@]}"} || status=$?
+      [[ $status == 124 && $attempt == 1 ]] || break
+      echo "==> UI tests ($testplan) on $name hung; running them again"
+      xcrun simctl shutdown "$id" >/dev/null 2>&1 || true
+      xcrun simctl bootstatus "$id" -b >/dev/null
+    done
+    [[ $status == 0 ]] || failed=1
     printf '%s\t%s\n' "$name" "$((SECONDS - started))" >> "$out/device-seconds.tsv"
     # Screenshots, failure recordings and the accessibility trees, browsable without Xcode.
     xcrun xcresulttool export attachments --path "$out/$name.xcresult" --output-path "$out/$name-attachments" \
@@ -681,8 +798,10 @@ main() {
     distribution-test) cmd_distribution_test ;;
     ci) cmd_lint; cmd_package_test; cmd_test; cmd_release_check; cmd_distribution_test ;;
     push) cmd_push "${2:-}" "${3:-booted}" ;;
-    *) sed -n '2,31p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2 ;;
+    *) sed -n '2,32p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2 ;;
   esac
 }
 
-main "$@"
+# exit on the same line: bash reads a script as it runs, so an edit made during a long run
+# (ui-test) must not be read as more commands once main returns.
+main "$@"; exit

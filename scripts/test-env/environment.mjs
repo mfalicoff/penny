@@ -1,5 +1,7 @@
 // Disposable full-stack test environments (MAZ-62): one pinned PostgreSQL container and
-// one real .NET API process per run, isolated by run id. Nothing here accepts an
+// one real .NET API process per run, isolated by run id: its own container, database, free
+// ports and certificate, so several sessions on one machine run side by side (MAZ-265). The API
+// serves HTTPS with the run's throwaway certificate (tls.mjs). Nothing here accepts an
 // external connection string: every run creates, uses and destroys its own database,
 // so a test run cannot reach development or production data.
 //
@@ -9,6 +11,7 @@
 // It needs PostgreSQL 18 with pgvector 0.8+ binaries: PENNY_POSTGRES_BIN, or `pg_config`
 // on PATH. The guarantee is the same: it never connects to a server it did not create.
 import { apiEmailEnvironment, emailSettings, startRenderer, startWorker, stopWorker } from "./email.mjs";
+import { trustCertificate, writeCertificate } from "./tls.mjs";
 import { spawn, spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { closeSync, existsSync, mkdirSync, openSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -124,7 +127,15 @@ export function readState(runId) {
   if (!id) throw new Error("No test environment is running. Start one with `node scripts/test-env/penny-env.mjs up`.");
   const file = join(statePath(id), "env.json");
   if (!existsSync(file)) throw new Error(`Test environment ${id} has no state file.`);
-  return JSON.parse(readFileSync(file, "utf8"));
+  const state = JSON.parse(readFileSync(file, "utf8"));
+  // The controls are called over HTTPS: this process trusts the run's certificate.
+  if (state.tls?.certificate && existsSync(state.tls.certificate)) trustCertificate(readFileSync(state.tls.certificate, "utf8"));
+  return state;
+}
+
+/** The web origins a run allows: the dev server's default port and the run's own web port. */
+export function webOrigins(webPorts) {
+  return [...new Set([4173, ...webPorts])].flatMap((port) => [`http://localhost:${port}`, `http://127.0.0.1:${port}`]);
 }
 
 export function currentRunId() {
@@ -140,11 +151,17 @@ function writeState(state) {
 
 // The values a browser or simulator runner needs. The control token is included
 // because runners call the controls; it is random per run and dies with the run.
+// PENNY_WEB_PORT is the port this run allows as a web origin (and an OIDC redirect URI):
+// vite and Playwright serve there, so two runs never share a web server. The API is HTTPS:
+// Node runners trust its certificate through NODE_EXTRA_CA_CERTS, simulators through
+// PENNY_API_CERTIFICATE (scripts/ios.sh ui-test).
 export function runnerEnvironment(state) {
   return {
     PENNY_TEST_RUN: state.runId,
     PENNY_API_URL: state.apiUrl,
     PENNY_TEST_TOKEN: state.controlToken,
+    ...(state.webPort ? { PENNY_WEB_PORT: String(state.webPort) } : {}),
+    ...(state.tls ? { PENNY_API_CERTIFICATE: state.tls.certificate, NODE_EXTRA_CA_CERTS: state.tls.trustBundle } : {}),
     // The provider's public, throwaway certificate: simulators trust it (scripts/ios.sh ui-test).
     ...(state.oidc ? { PENNY_OIDC_ISSUER: state.oidc.issuer, PENNY_OIDC_CERTIFICATE: state.oidc.certificate } : {}),
   };
@@ -258,8 +275,10 @@ export function buildApi() {
 /**
  * Starts an isolated environment and returns its state. On any failure everything
  * created so far is removed before the error is rethrown.
- * @param {{ runId?: string, host?: string, origins?: string[], build?: boolean,
- *   worker?: boolean, oidc?: { issuer: string, clientId: string, redirectUris: string[],
+ * @param {{ runId?: string, host?: string, port?: number, webPort?: number, origins?: string[],
+ *   build?: boolean, worker?: boolean, email?: boolean, http?: boolean,
+ *   tls?: { pem: string, certificate: string, keyPath: string, trustBundle: string },
+ *   oidc?: { issuer: string, clientId: string, redirectUris: string[],
  *   certificate: string, allowRegistration?: boolean } }} options
  */
 export async function up(options = {}) {
@@ -292,6 +311,10 @@ export async function up(options = {}) {
     apiLog: join(directory, "logs/api.log"),
     controlToken: randomBytes(32).toString("hex"),
   };
+  // The run's certificate: penny-env makes it first when the OIDC provider shares it.
+  const tls = options.tls ?? writeCertificate(join(directory, "tls"));
+  state.tls = { certificate: tls.certificate, key: tls.keyPath, trustBundle: tls.trustBundle };
+  trustCertificate(tls.pem);
   writeState(state);
   try {
     if (options.build !== false) buildApi();
@@ -311,8 +334,12 @@ export async function up(options = {}) {
     });
     const receiptKey = randomBytes(32).toString("base64");
     state.apiPort = options.port ?? await freePort(host);
-    state.apiUrl = `http://${host === "0.0.0.0" ? "127.0.0.1" : host}:${state.apiPort}`;
-    state.origins = options.origins ?? ["http://localhost:4173", "http://127.0.0.1:4173"];
+    // HTTPS with the run's certificate, which names 127.0.0.1 and localhost. `http` (--http)
+    // serves plain HTTP instead, for a physical device that can't trust the certificate.
+    const scheme = options.http ? "http" : "https";
+    state.apiUrl = `${scheme}://${host === "0.0.0.0" ? "127.0.0.1" : host}:${state.apiPort}`;
+    state.webPort = options.webPort ?? await freePort();
+    state.origins = options.origins ?? webOrigins([state.webPort]);
     if (options.oidc) state.oidc = { issuer: options.oidc.issuer, clientId: options.oidc.clientId, certificate: options.oidc.certificate };
     // Emailed receipts (MAZ-184): penny-render now, the Email Worker once the API is ready.
     const email = options.email ? emailSettings() : undefined;
@@ -328,7 +355,11 @@ export async function up(options = {}) {
       env: {
         ...process.env,
         ASPNETCORE_ENVIRONMENT: "Testing",
-        ASPNETCORE_URLS: `http://${host}:${state.apiPort}`,
+        ASPNETCORE_URLS: `${scheme}://${host}:${state.apiPort}`,
+        ...(scheme === "https" ? {
+          Kestrel__Certificates__Default__Path: state.tls.certificate,
+          Kestrel__Certificates__Default__KeyPath: state.tls.key,
+        } : {}),
         ConnectionStrings__Postgres: connection("penny_runtime", secrets.runtime),
         Receipts__Root: state.receiptRoot,
         Receipts__MasterKey: receiptKey,

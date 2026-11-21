@@ -14,8 +14,17 @@ const sharedDomain = fileURLToPath(new URL("./src/domain", import.meta.url));
 // The browser always calls /api/ on its own origin (production: the nginx proxy in
 // deploy/web). In development and preview, Vite forwards /api/ to the real .NET API.
 // PENNY_API_URL is read here, on the Node side, and never reaches the bundle: only
-// PENNY_PUBLIC_* variables are exposed to client code (envPrefix below).
+// PENNY_PUBLIC_* variables are exposed to client code (envPrefix below). The test environment's
+// API is HTTPS with a throwaway certificate, which Node trusts through the NODE_EXTRA_CA_CERTS
+// that `penny-env run` and `penny-env env` export (MAZ-265).
 const apiTarget = process.env.PENNY_API_URL ?? "http://127.0.0.1:8080";
+
+// The web port (MAZ-265): PENNY_WEB_PORT when set (test-env exports the port its run allows as
+// an origin and OIDC redirect URI), held strictly, so a run never lands on another session's
+// server. Unset, 4173 (an origin the API allows by default) or, when that is taken, the next
+// free port Vite finds.
+const webPort = process.env.PENNY_WEB_PORT ? Number(process.env.PENNY_WEB_PORT) : 4173;
+const strictPort = Boolean(process.env.PENNY_WEB_PORT);
 const apiProxy: Record<string, ProxyOptions> = {
   "/api": {
     target: apiTarget,
@@ -90,15 +99,14 @@ export default defineConfig({
   tsconfig: "./tsconfig.app.json",
   envPrefix: "PENNY_PUBLIC_",
   server: {
-    // 4173 is an origin the API allows by default (Auth__AllowedOrigins, test-env).
-    port: 4173,
-    strictPort: true,
+    port: webPort,
+    strictPort,
     proxy: apiProxy,
     fs: { allow: [appRoot, designKit] },
   },
   preview: {
-    port: Number(process.env.PENNY_WEB_PORT ?? 4173),
-    strictPort: true,
+    port: webPort,
+    strictPort,
     proxy: apiProxy,
     headers: { "Content-Security-Policy": contentSecurityPolicyFor(telemetryUrl) },
   },

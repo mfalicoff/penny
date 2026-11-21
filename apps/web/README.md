@@ -27,19 +27,20 @@ Requirements: Node 24 (from the repository's Nix shell or your own install). The
 ```sh
 cd apps/web
 npm ci
-npm run dev           # http://localhost:4173
+npm run dev           # http://localhost:4173, or the next free port
 ```
 
 The dev server forwards `/api/` to `PENNY_API_URL`, which defaults to `http://127.0.0.1:8080`. Vite reads that variable on the Node side, so it never reaches the browser bundle. To work against a disposable real backend (PostgreSQL 18 plus the .NET API, see [test environment](../../docs/reference/test-environment.md)):
 
 ```sh
-# From the repository root: start the stack and note the API URL it prints.
+# From the repository root: start the stack, then export its variables in this shell.
 node scripts/test-env/penny-env.mjs up --seed searchable-household
+eval "$(node scripts/test-env/penny-env.mjs env)"
 # Then, in apps/web:
-PENNY_API_URL=http://127.0.0.1:<port> npm run dev
+npm run dev
 ```
 
-The proxy keeps the browser's `Origin` (`http://localhost:4173`), and port 4173 is one of the test environment's default allowed origins. With a hand-run API, add the origin to `Auth__AllowedOrigins`.
+`env` exports `PENNY_API_URL` (the API is HTTPS with the run's throwaway certificate), `NODE_EXTRA_CA_CERTS` (so Vite's proxy trusts that certificate) and `PENNY_WEB_PORT`, the run's own web port: Vite serves there and fails rather than move if it is taken, and the environment allows it as an origin and OIDC redirect URI. Without `PENNY_WEB_PORT`, Vite takes 4173 (also an allowed origin) or, when another session has it, the next free port. The proxy keeps the browser's `Origin`. With a hand-run API, add the origin to `Auth__AllowedOrigins`.
 
 | Command | What it does |
 | --- | --- |
@@ -48,7 +49,7 @@ The proxy keeps the browser's `Origin` (`http://localhost:4173`), and port 4173 
 | `npm run typecheck` | `tsc -b` over app, test and Node configs |
 | `npm test` | Vitest unit and component tests. Any console error or warning fails the test. |
 | `npm run build` | Production build into `dist/`, then `scripts/verify-dist.ts` |
-| `npm run test:e2e` | Playwright smoke against `vite preview` on port 4175, with `/api` mocked |
+| `npm run test:e2e` | Playwright smoke against `vite preview` on a free port, with `/api` mocked |
 | `npm run test:e2e:real` | The `*.real.spec.ts` journeys against a disposable real stack (needs Docker or Podman and .NET; [browser tests](#browser-tests)) |
 | `npm run design:sync` / `design:check` | Regenerate the design tokens, or check that they match the design kit |
 | `npm run design:hashes` | Rewrite every hash in `contracts/design-baseline.json` (cards, kit docs, `sources`) from the files on disk, after a card change or a rebase conflict on them |
@@ -374,7 +375,7 @@ Sign-in is password or optional single sign-on (OIDC), against the API in [authe
 - **Cancelled.** "Cancel sign-in" ends the attempt with "Sign-in was cancelled. Nothing changed." (also when pressed while the attempt is still starting). Once the callback has arrived, completion is no longer cancellable, so a session the server created is never reported as a failure. A closed popup is only a hint ("The sign-in window looks closed…"), because providers that send `Cross-Origin-Opener-Policy` make `popup.closed` read true while the user is still signing in. A provider-side cancel returns an `error` parameter, which the API rejects like any failed verification.
 - **Blocked.** If the browser blocks the popup, the screen says so and offers "Continue in this tab". That flow redirects the tab to the provider, keeps only the attempt's `transaction` id in `sessionStorage` across the round trip, and finishes on `/auth/callback`.
 - **Failures.** State mismatches, replays and expired attempts come back as the API's `401` messages and show on the sign-in screen. The attempt is single-use, so the user starts again from the button.
-- **Hosting the callback.** `/auth/callback` is a normal SPA route, so the static host must serve `index.html` for it (the nginx image in `deploy/web` does). Register `https://<your-origin>/auth/callback` with the provider and list the same URL in `Oidc__RedirectUris`; the browser sends `<origin>/auth/callback` exactly. Development at `http://localhost:4173` works because the test environment's provider registers it.
+- **Hosting the callback.** `/auth/callback` is a normal SPA route, so the static host must serve `index.html` for it (the nginx image in `deploy/web` does). Register `https://<your-origin>/auth/callback` with the provider and list the same URL in `Oidc__RedirectUris`; the browser sends `<origin>/auth/callback` exactly. Development at `http://localhost:4173` and at the run's own web port works because the test environment's provider registers both.
 
 ### Deployment: cookies and origins
 
@@ -425,8 +426,8 @@ Every Playwright run serves the production build (`npm run build` first) with `v
 
 | Suite | Specs | Server | Command |
 | --- | --- | --- | --- |
-| Mocked smoke | `e2e/*.spec.ts` except `*.real.spec.ts` | `/api` and the OIDC provider mocked per test with `page.route`; port 4175 | `npm run test:e2e` |
-| Real stack | `e2e/*.real.spec.ts` | The [full-stack test environment](../../docs/reference/test-environment.md): PostgreSQL 18 with pg_trgm and pgvector in a container, a migrated `penny_test_<run id>` database on tmpfs, the .NET API built from this checkout with test controls, and the local OIDC provider; port 4173, a redirect URI the provider registers | `npm run test:e2e:real` |
+| Mocked smoke | `e2e/*.spec.ts` except `*.real.spec.ts` | `/api` and the OIDC provider mocked per test with `page.route`; a free port (`PENNY_E2E_PORT` overrides) | `npm run test:e2e` |
+| Real stack | `e2e/*.real.spec.ts` | The [full-stack test environment](../../docs/reference/test-environment.md): PostgreSQL 18 with pg_trgm and pgvector in a container, a migrated `penny_test_<run id>` database on tmpfs, the .NET API built from this checkout with test controls, and the local OIDC provider; the run's web port (`PENNY_WEB_PORT`), an origin and redirect URI the environment registers | `npm run test:e2e:real` |
 
 Mocked specs import `test` and `expect` from `e2e/test.ts`, not `@playwright/test`. Its automatic `mockedApi` fixture does two things for the test's context. It answers any `/api` request no mock in the spec answered with status 599, so nothing reaches `vite preview`'s `/api` proxy (which has no API behind it in mocked runs), and then fails the test with the list of unmocked requests (MAZ-211): mock every endpoint a page calls, including new ones. It also waits after each test until the context's `/api` requests have finished and stayed quiet for 500ms (5s at most), because closing a page drops its routes first and a request sent in that moment, such as the offline store's follow-up ledger sync, would miss the spec's page mocks (MAZ-210). `e2e/mock-guard.spec.ts` checks the guard itself.
 
