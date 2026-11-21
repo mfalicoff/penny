@@ -2281,11 +2281,6 @@
         ],
         "deviations": [
           {
-            "summary": "Your share by category lists the private Airport train as a Transport row, with a gray tile: the seed's household Transport category (#6C8EAD) is outside the category palette (follow-up recorded on MAZ-230)",
-            "kind": "follow-up",
-            "ref": "MAZ-230"
-          },
-          {
             "summary": "The sidebar footer, People and the expense rows name people by their email, not their name",
             "kind": "follow-up",
             "ref": "MAZ-171"

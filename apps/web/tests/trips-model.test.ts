@@ -200,6 +200,17 @@ describe("shared trip totals", () => {
     expect(rows.map((row) => [row.name, row.amount])).toEqual([["Food", 20600], ["Travel", 3400], ["Other", 500]]);
   });
 
+  it("counts a private expense in your share, as the ipad-trip card's Travel $230.00 does (Flights $206.00 yours + Airport train $24.00)", () => {
+    const travel = { name: "Travel", icon: "airplane", color: "#64748B" };
+    const rows = shareByCategory(
+      [{ ...shared("flights", "2026-10-02", 82400, [["u1", 20600], ["u2", 20600], ["u3", 20600], ["u4", 20600]]), category: travel }],
+      "u1",
+      [expense("train", "2026-09-28", 2400, { categoryId: "travel" })],
+      [{ id: "travel", ...travel }],
+    );
+    expect(rows.map((row) => [row.name, row.amount])).toEqual([["Travel", 23000]]);
+  });
+
   it("keeps a private entry's default category id, so its tile takes that category's color", () => {
     const rows = shareByCategory([], "u1", [expense("p1", "2026-11-02", 2400, { categoryId: "transport" })], [{ id: "transport", name: "Transport", icon: "bus", color: "#6C8EAD" }]);
     expect(rows[0]?.id).toBe("transport");

@@ -69,7 +69,7 @@
                 "id": "transport",
                 "name": "Transport",
                 "icon": "bus-outline",
-                "color": "#6C8EAD",
+                "color": "#64748B",
                 "kind": "expense"
               }
             ],
