@@ -24,16 +24,6 @@ public final class TripDirectory {
         self.timezoneOffset = timezoneOffset
     }
 
-    /// A shared trip whose page should open its expense form once (Trip expense from the list).
-    public var pendingAdd: String?
-
-    /// Takes `pendingAdd` when it is for `id`.
-    public func takePendingAdd(for id: String) -> Bool {
-        guard pendingAdd == id else { return false }
-        pendingAdd = nil
-        return true
-    }
-
     /// False in the demo: no server, so no shared trips.
     public var isAvailable: Bool { households.isAvailable }
 

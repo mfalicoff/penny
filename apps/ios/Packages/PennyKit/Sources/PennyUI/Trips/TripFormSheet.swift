@@ -7,7 +7,8 @@ import SwiftUI
 /// saved to the ledger on this device, so it works offline; Share with others creates a shared
 /// trip on the server instead (you're its organizer; invite from People). The organizer of a
 /// shared trip edits its name and dates here. A personal trip with no entries can be deleted.
-/// Refusals point at the field and keep everything typed.
+/// Refusals point at the field and keep everything typed. As on the card (MAZ-249): the name with
+/// no header, Starts, Ends and Currency (locked) with their glyphs, and the people you share with.
 struct TripFormSheet: View {
     @Environment(ShellModel.self) private var shell
     @Environment(\.dismiss) private var dismiss
@@ -58,7 +59,8 @@ struct TripFormSheet: View {
                 .accessibilityIdentifier("tripForm.error")
             }
             Section {
-                TextField("Lisbon", text: $model.draft.name)
+                TextField("Trip name", text: $model.draft.name)
+                    .font(.title2.weight(.semibold))
                     .nameEntry()
                     .focused($nameFocused)
                     .submitLabel(.done)
@@ -67,32 +69,43 @@ struct TripFormSheet: View {
                     Text(problem).font(.footnote).foregroundStyle(PennyColor.danger)
                         .accessibilityIdentifier("tripForm.nameProblem")
                 }
-            } header: {
-                Text("Trip name").cardSectionHeader()
             }
             Section {
                 DatePicker(
-                    "Starts",
                     selection: Binding(
                         get: { DayText.date(model.draft.startDate) },
                         set: { model.draft.startDate = CalendarDate($0) }),
                     in: DayText.date(.earliest)...DayText.date(.latest), displayedComponents: .date
-                )
+                ) {
+                    TripFormLabel("Starts", systemImage: "calendar")
+                }
                 .accessibilityIdentifier("tripForm.start")
                 DatePicker(
-                    "Ends",
                     selection: Binding(
                         get: { DayText.date(model.draft.endDate) },
                         set: { model.draft.endDate = CalendarDate($0) }),
                     in: DayText.date(.earliest)...DayText.date(.latest), displayedComponents: .date
-                )
+                ) {
+                    TripFormLabel("Ends", systemImage: "calendar")
+                }
                 .accessibilityIdentifier("tripForm.end")
                 if let problem = model.problems[.endDate] ?? model.problems[.startDate] {
                     Text(problem).font(.footnote).foregroundStyle(PennyColor.danger)
                         .accessibilityIdentifier("tripForm.dateProblem")
                 }
                 if model.isNew {
-                    LabeledContent("Currency", value: currency.rawValue)
+                    // The ledger's currency: a trip can't choose another one.
+                    LabeledContent {
+                        HStack(spacing: 5) {
+                            Text(currency.rawValue)
+                            Image(systemName: "lock").imageScale(.small)
+                        }
+                        .foregroundStyle(PennyColor.secondaryLabel)
+                    } label: {
+                        TripFormLabel("Currency", systemImage: "banknote")
+                    }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityValue("\(currency.rawValue), can't be changed")
                 }
             } header: {
                 Text("When").cardSectionHeader()
@@ -144,12 +157,35 @@ struct TripFormSheet: View {
         switch target {
         case .new:
             Section {
-                Toggle("Share with others", isOn: $model.share)
-                    .disabled(!shell.trips.isAvailable || model.isSaving)
-                    .accessibilityIdentifier("tripForm.share")
+                Toggle(isOn: $model.share) {
+                    TripFormLabel("Share with others", systemImage: "person.2")
+                }
+                .tint(PennyColor.tint)
+                .disabled(!shell.trips.isAvailable || model.isSaving)
+                .accessibilityIdentifier("tripForm.share")
                 if model.share {
-                    LabeledContent("You", value: "Organizer")
-                    LabeledContent("Invite people", value: "After saving")
+                    LabeledContent {
+                        Text("Organizer").foregroundStyle(PennyColor.secondaryLabel)
+                    } label: {
+                        HStack(spacing: 10) {
+                            Monogram(
+                                initials: shell.account.map { HouseholdPeople.initials(email: $0.email) } ?? "",
+                                size: 30)
+                            Text("You")
+                        }
+                    }
+                    .accessibilityElement(children: .combine)
+                    // Invites need the trip on the server, so the code comes from People once it's saved.
+                    LabeledContent {
+                        Text("after saving").font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
+                    } label: {
+                        HStack(spacing: 10) {
+                            Image(systemName: "person.badge.plus").foregroundStyle(PennyColor.tint)
+                                .frame(width: 24)
+                            Text("Invite with a code").fontWeight(.semibold).foregroundStyle(PennyColor.tintText)
+                        }
+                    }
+                    .accessibilityElement(children: .combine)
                 }
             } header: {
                 Text("People").cardSectionHeader()
@@ -176,8 +212,8 @@ struct TripFormSheet: View {
     private func shareNote(_ model: TripFormModel) -> String {
         if !shell.trips.isAvailable { return "The demo can't share trips. Only you see a personal trip." }
         return model.share
-            ? "A shared trip in \(currency.rawValue). Everyone in it sees its shared expenses and their own share. "
-                + "Creating it needs a connection."
+            ? "Everyone in a shared trip sees its shared expenses and their own share. Anything you added before "
+                + "sharing stays private to you."
             : "Only you see a personal trip. You can share it later; what you add before sharing stays private."
     }
 
@@ -317,6 +353,25 @@ struct ShareTripSheet: View {
             failure =
                 "\(household.name) was created as a shared trip, but Penny couldn't link it to your trip or remove "
                 + "it again. Open it from Trips and archive it from People before sharing again."
+        }
+    }
+}
+
+/// A trip form row's label with its leading glyph in the secondary color (`iphone-trip-form`).
+private struct TripFormLabel: View {
+    let title: String
+    let systemImage: String
+
+    init(_ title: String, systemImage: String) {
+        self.title = title
+        self.systemImage = systemImage
+    }
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: systemImage).foregroundStyle(PennyColor.secondaryLabel).frame(width: 24)
+                .accessibilityHidden(true)
+            Text(title)
         }
     }
 }

@@ -154,16 +154,9 @@ struct HouseholdPage: View {
                 await refreshTrip()
             }
             .task {
-                // Trip expense from the Trips list opens the form once the page is here. Taken
-                // before the reads, so a failed or offline load (or leaving early) never leaves it
-                // to open the form later, unasked.
-                let wantsAdd = shell.trips.takePendingAdd(for: model.id)
                 model.followCurrentMonth(MonthKey(shell.today))
                 await model.refresh()
                 await refreshTrip()
-                if wantsAdd, !Task.isCancelled, model.household?.trip != nil, !model.isReadOnly {
-                    addExpense()
-                }
             }
             .onChange(of: model.writeCount) {
                 Task {
@@ -176,7 +169,8 @@ struct HouseholdPage: View {
                 // `iphone-shared`: no title over the hero, which already leads with the name. Balances
                 // and People collapse the hero, so the name is the inline title there
                 // (`iphone-shared-balances`, `iphone-shared-people`). Pushed pages still go back to it.
-                if showsHero {
+                // A shared trip always leads with its name in the hero (`iphone-trip-detail`, `ipad-trip`).
+                if showsHero || trip != nil {
                     ToolbarItem(placement: .principal) { Color.clear.frame(width: 1, height: 1) }
                 }
             }
@@ -266,6 +260,8 @@ struct HouseholdPage: View {
                     mainColumn(trip: trip)
                 }
                 .insetGroupedList()
+                // `ipad-trip`: the trip's hero leads the main column over the trips' glow.
+                .background(alignment: .top) { if trip != nil { tripGlow } }
                 Divider().ignoresSafeArea()
                 List {
                     sideColumn(household, trip: trip)
@@ -285,8 +281,15 @@ struct HouseholdPage: View {
             .insetGroupedList()
             // The hero, or the segments once it collapses, start right under the navigation bar.
             .contentMargins(.top, trip == nil ? 0 : nil, for: .scrollContent)
-            .background(alignment: .top) { if showsHero { glow } }
+            .background(alignment: .top) {
+                if showsHero { glow } else if trip != nil { tripGlow }
+            }
         }
+    }
+
+    /// A shared trip's hero glow, as on the trip cards.
+    private var tripGlow: some View {
+        Color.clear.frame(height: 1).heroGlow(blobs: GlowBlob.trip)
     }
 
     /// The household's hero shows: Expenses on iPhone, and always beside the balances on iPad.

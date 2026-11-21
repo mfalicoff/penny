@@ -1013,21 +1013,6 @@
         ],
         "deviations": [
           {
-            "summary": "New trip and Join a trip are a list section, not the card's toolbar buttons",
-            "kind": "follow-up",
-            "ref": "MAZ-249"
-          },
-          {
-            "summary": "The featured trip adds Trip expense",
-            "kind": "follow-up",
-            "ref": "MAZ-256"
-          },
-          {
-            "summary": "The featured meta repeats Shared and the year; rows show a long date and Personal as text, not a chip; no glow",
-            "kind": "follow-up",
-            "ref": "MAZ-249"
-          },
-          {
             "summary": "Add entry is a fifth tab with the search role inside the system tab bar, not a separate copper button beside four tabs",
             "kind": "follow-up",
             "ref": "MAZ-254"
@@ -1062,11 +1047,6 @@
             "ref": "MAZ-256"
           },
           {
-            "summary": "The trip name is also the inline title, and the hero adds the phase and currency; no glow",
-            "kind": "follow-up",
-            "ref": "MAZ-249"
-          },
-          {
             "summary": "History (clock) is in the toolbar where the card has the … menu",
             "kind": "follow-up",
             "ref": "MAZ-256"
@@ -1075,6 +1055,11 @@
             "summary": "Add entry is a fifth tab with the search role inside the system tab bar, not a separate copper button beside four tabs",
             "kind": "follow-up",
             "ref": "MAZ-254"
+          },
+          {
+            "summary": "Shared expense rows show the payer's monogram and email, the split and \"you owe\" / \"owed\", not the category tile and \"yours\" (follow-up recorded on MAZ-249)",
+            "kind": "follow-up",
+            "ref": "MAZ-249"
           }
         ]
       },
@@ -1104,19 +1089,12 @@
       "id": "iphone-trip-form",
       "view": "new trip form named Lisbon with Share with others on",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-76",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "Starts, Ends and Currency have no icons and Currency no lock; the name field has a Trip name header",
-            "kind": "follow-up",
-            "ref": "MAZ-249"
-          }
         ]
       },
       "web": {
@@ -2255,12 +2233,7 @@
             "ref": "MAZ-256"
           },
           {
-            "summary": "The right column shows the month's Balances (with its month control), then Your share by category without bars, then the members, not the card's People with the month's balance",
-            "kind": "follow-up",
-            "ref": "MAZ-249"
-          },
-          {
-            "summary": "The phase is small grey text and the name and totals smaller than the card's; the meta reads \"N people · CAD\"",
+            "summary": "The right column shows the month's Balances (with its month control), then Your share by category, then the members, not the card's People with each person's month balance beside the hero; expense rows show the payer and \"you owe\", not the category tile and \"yours\" (follow-up recorded on MAZ-249)",
             "kind": "follow-up",
             "ref": "MAZ-249"
           },

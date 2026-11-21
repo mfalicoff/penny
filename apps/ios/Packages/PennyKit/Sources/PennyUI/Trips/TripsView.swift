@@ -3,9 +3,9 @@ import PennyDesign
 import PennyDomain
 import SwiftUI
 
-/// The Trips tab (`trips`, card `iphone-trips`, MAZ-76): the trip happening now (or the next one)
-/// with its numbers and Trip expense, then every trip by phase: personal trips with what you
-/// spent, shared trips with their people. New trip and Join a trip.
+/// The Trips tab (`trips`, card `iphone-trips`, MAZ-76, MAZ-249): the trip happening now (or the
+/// next one) over the trips' glow, then every trip by phase with its short dates, a Personal or
+/// Shared chip and what it cost you. Join a trip (key) and New trip (+) are in the toolbar.
 ///
 /// Personal trips come from the ledger on this device, so they show offline. Shared trips are
 /// households with a travel range: they come from the server and the list keeps the last answer
@@ -42,16 +42,16 @@ struct TripsView: View {
 
                 if let featured {
                     Section {
-                        NavigationLink(value: DetailRoute.trip(id: featured.id)) {
+                        // `iphone-trips`: the featured trip is the whole card, with no chevron.
+                        Button {
+                            shell.route.push(.trip(id: featured.id))
+                        } label: {
                             FeaturedTrip(card: featured, currency: ledger.currency.rawValue, today: shell.today)
+                                .contentShape(Rectangle())
                         }
+                        .buttonStyle(.plain)
+                        .accessibilityAddTraits(.isLink)
                         .accessibilityIdentifier("trips.featured")
-                        if canAdd(featured) {
-                            Button("Trip expense", systemImage: "plus") { addExpense(featured) }
-                                .font(.body.weight(.semibold))
-                                .frame(minHeight: Metrics.minTouchTarget)
-                                .accessibilityIdentifier("trips.featuredAdd")
-                        }
                     }
                 }
                 let rest = cards.filter { $0.id != featured?.id }
@@ -61,7 +61,7 @@ struct TripsView: View {
                         CardSection(TripText.phaseTitle(phase)) {
                             ForEach(rows) { card in
                                 NavigationLink(value: DetailRoute.trip(id: card.id)) {
-                                    TripRow(card: card, currency: ledger.currency.rawValue)
+                                    TripRow(card: card, currency: ledger.currency.rawValue, today: shell.today)
                                 }
                                 .cardRow()
                                 .accessibilityIdentifier("trip.\(card.id)")
@@ -69,32 +69,11 @@ struct TripsView: View {
                         }
                     }
                 }
-                Section {
-                    Button {
-                        creating = true
-                    } label: {
-                        ActionRow(
-                            title: "New trip", detail: "Group what you spend while away, on your own or with others",
-                            symbol: "plus")
-                    }
-                    .accessibilityIdentifier("trips.new")
-                    if directory.isAvailable {
-                        Button {
-                            joining = true
-                        } label: {
-                            ActionRow(
-                                title: "Join a trip", detail: "Someone shared an invite code or QR code with you",
-                                symbol: "qrcode.viewfinder")
-                        }
-                        .accessibilityIdentifier("trips.join")
-                    }
-                } footer: {
-                    Text(
-                        "Personal trips stay on your devices and work offline. Shared trips live on your server, "
-                            + "so creating, joining and changing them needs a connection.")
-                }
             }
             .insetGroupedList()
+            .background(alignment: .top) {
+                Color.clear.frame(height: 1).heroGlow(blobs: GlowBlob.trip)
+            }
             .overlay {
                 if cards.isEmpty, directory.load != .loading {
                     PennyStateView(
@@ -112,6 +91,21 @@ struct TripsView: View {
         .task { await shell.households.refresh() }
         .background(PennyColor.background)
         .navigationTitle("Trips")
+        .toolbar {
+            // `iphone-trips`: Join (key) and New trip (+) as glass toolbar buttons.
+            if shell.households.isAvailable {
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Join a trip", systemImage: "key") { joining = true }
+                        .neutralToolbarGlyph()
+                        .accessibilityIdentifier("trips.join")
+                }
+            }
+            ToolbarItem(placement: .primaryAction) {
+                Button("New trip", systemImage: "plus") { creating = true }
+                    .neutralToolbarGlyph()
+                    .accessibilityIdentifier("trips.new")
+            }
+        }
         .sheet(isPresented: $creating, onDismiss: openCreated) {
             TripFormSheet(target: .new, expenseCount: 0) { saved in
                 switch saved {
@@ -136,28 +130,10 @@ struct TripsView: View {
         opened = nil
         shell.route.push(.trip(id: id))
     }
-
-    private func canAdd(_ card: TripCard) -> Bool {
-        switch card.kind {
-        case .personal: true
-        case .shared: shell.trips.isAvailable
-        }
-    }
-
-    /// Trip expense: a personal expense on a personal trip; on a shared trip, its page opens with
-    /// the shared expense form.
-    private func addExpense(_ card: TripCard) {
-        switch card.kind {
-        case .personal(let trip, _, _, _): shell.openTripExpense(trip.id)
-        case .shared(let household, _):
-            shell.trips.pendingAdd = household.id
-            shell.route.push(.trip(id: household.id))
-        }
-    }
 }
 
 /// The trip happening now, or the next one: when it is, its name, dates and people, and your
-/// spending so far.
+/// spending so far with a Personal or Shared chip.
 private struct FeaturedTrip: View {
     @Environment(ShellModel.self) private var shell
     let card: TripCard
@@ -171,14 +147,14 @@ private struct FeaturedTrip: View {
                     Text(card.range.phaseLabel(today: today).uppercased())
                         .font(.footnote.weight(.semibold))
                         .foregroundStyle(PennyColor.pending)
-                    Text(card.name).font(.title2.weight(.bold))
+                    Text(card.name).font(.title.weight(.bold))
                         .fixedSize(horizontal: false, vertical: true)
-                    Text(TripRow.detail(card))
+                    Text(Self.detail(card, today: today))
                         .font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
                 }
                 Spacer(minLength: 8)
                 if case .shared(let household, _) = card.kind {
-                    MonogramStack(initials: shell.households.memberInitials[household.id] ?? [])
+                    MonogramStack(initials: shell.households.memberInitials[household.id] ?? [], size: 30)
                 }
             }
             HStack(alignment: .lastTextBaseline) {
@@ -186,16 +162,16 @@ private struct FeaturedTrip: View {
                 case .personal(_, let total, _, _):
                     VStack(alignment: .leading, spacing: 2) {
                         Text("You spent").font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
-                        MoneyText(total, meaning: .neutral, currency: currency, style: .title3.weight(.bold))
+                        MoneyText(total, meaning: .neutral, currency: currency, style: .title2.weight(.bold))
                     }
                 case .shared(let household, _):
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Your share so far").font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
-                        if let share = sharedShare(household) {
+                        if let share = TripShare.yours(household, range: card.range, shell: shell) {
                             MoneyText(
-                                share, meaning: .neutral, currency: household.currency, style: .title3.weight(.bold))
+                                share, meaning: .neutral, currency: household.currency, style: .title2.weight(.bold))
                         } else {
-                            Text("…").font(.title3.weight(.bold)).foregroundStyle(PennyColor.secondaryLabel)
+                            Text("…").font(.title2.weight(.bold)).foregroundStyle(PennyColor.secondaryLabel)
                                 .accessibilityLabel("Loading")
                         }
                     }
@@ -205,80 +181,114 @@ private struct FeaturedTrip: View {
                 Spacer()
                 TripKindBadge(card: card)
             }
-            .padding(.top, 6)
+            .padding(.top, 12)
         }
-        .padding(.vertical, 6)
+        .padding(.vertical, 8)
         .accessibilityElement(children: .combine)
-        .task(id: card.id) {
-            // The shared trip's expenses, for your share; the trip page reads the same list.
-            guard case .shared(let household, _) = card.kind,
-                let expenses = shell.trips.expenses(for: household.id), !expenses.hasLoaded
-            else { return }
-            await expenses.refresh()
-        }
+        .task(id: card.id) { await TripShare.load(card, shell: shell) }
     }
 
-    /// Your shares of the trip's shared expenses plus your private expenses on it (in its
-    /// currency), as the trip page's your share: nil until the list has been read.
-    private func sharedShare(_ household: WireHousehold) -> Int64? {
+    /// "Nov 12–19 · 4 people" for a shared trip; a personal trip's dates alone. The chip says
+    /// which it is, so the line doesn't.
+    static func detail(_ card: TripCard, today: CalendarDate) -> String {
+        let dates = TripText.shortRange(card.range, today: today)
+        guard case .shared(let household, _) = card.kind else { return dates }
+        return [dates, TripText.people(household.memberCount)].joined(separator: " · ")
+    }
+}
+
+/// Your share of a shared trip, as its page counts it: your shares of its shared expenses plus
+/// your private expenses on it (in its currency).
+@MainActor
+enum TripShare {
+    /// Nil until the trip's expenses have been read.
+    static func yours(_ household: WireHousehold, range: TripRange, shell: ShellModel) -> Int64? {
         guard let loaded = shell.trips.expenses(for: household.id)?.loadedExpenses, let meId = shell.households.meId
         else { return nil }
         let ledger = shell.workspace.load.ledger
         let personal =
             ledger.map { $0.currency.rawValue == household.currency ? $0.privateExpenses(linkedTo: household.id) : [] }
             ?? []
-        return SharedTripTotals(expenses: loaded, meId: meId, personal: personal, range: card.range).yourSpending
+        return SharedTripTotals(expenses: loaded, meId: meId, personal: personal, range: range).yourSpending
+    }
+
+    /// Reads a shared trip's expenses once, for your share; the trip page reads the same list.
+    static func load(_ card: TripCard, shell: ShellModel) async {
+        guard case .shared(let household, _) = card.kind,
+            let expenses = shell.trips.expenses(for: household.id), !expenses.hasLoaded
+        else { return }
+        await expenses.refresh()
     }
 }
 
+/// A trip in the list (`iphone-trips`): its name, then its short dates with a Personal or Shared
+/// chip, and what it cost you (your share, on a shared trip, once its expenses are read).
 struct TripRow: View {
+    @Environment(ShellModel.self) private var shell
     let card: TripCard
     let currency: String
+    let today: CalendarDate
 
     var body: some View {
         HStack(spacing: 12) {
-            // The card's neutral trip tile, shared or not: the detail line says which.
+            // The card's neutral trip tile, shared or not: the chip says which.
             CategoryIcon.neutral(symbol: "airplane")
             VStack(alignment: .leading, spacing: 2) {
                 Text(card.name).font(.callout.weight(.semibold))
                     .fixedSize(horizontal: false, vertical: true)
-                Text(Self.detail(card)).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
-                    .fixedSize(horizontal: false, vertical: true)
+                HStack(spacing: 6) {
+                    Text(Self.detail(card, today: today)).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
+                        .fixedSize(horizontal: false, vertical: true)
+                    TripKindBadge(card: card, showsSymbol: false)
+                }
             }
             Spacer(minLength: 8)
-            if case .personal(_, let total, _, _) = card.kind {
+            switch card.kind {
+            case .personal(_, let total, _, _):
                 MoneyText(total, meaning: .neutral, currency: currency, style: .callout.weight(.semibold))
+            case .shared(let household, _):
+                if let share = TripShare.yours(household, range: card.range, shell: shell) {
+                    MoneyText(share, meaning: .neutral, currency: household.currency, style: .callout.weight(.semibold))
+                }
             }
         }
         .accessibilityElement(children: .combine)
+        .task(id: card.id) { await TripShare.load(card, shell: shell) }
     }
 
-    /// "Nov 12 – Nov 19, 2026 · Personal · 3 expenses" or "… · Shared · 4 people".
-    static func detail(_ card: TripCard) -> String {
-        var parts = [TripText.range(card.range)]
-        switch card.kind {
-        case .personal(_, _, let count, let wasShared):
-            parts.append(wasShared ? "Personal · was shared" : "Personal")
-            parts.append(count == 1 ? "1 expense" : "\(count) expenses")
-        case .shared(let household, _):
-            parts.append("Shared")
-            parts.append(household.memberCount == 1 ? "1 person" : "\(household.memberCount) people")
-        }
-        return parts.joined(separator: " · ")
+    /// "Oct 3–5", or "Oct 3–5 · was shared" for a personal trip whose shared trip is gone.
+    static func detail(_ card: TripCard, today: CalendarDate) -> String {
+        let dates = TripText.shortRange(card.range, today: today)
+        if case .personal(_, _, _, true) = card.kind { return "\(dates) · was shared" }
+        return dates
     }
 }
 
 /// "Personal" with a lock, or "Shared" with people: in words, never color alone.
 struct TripKindBadge: View {
     let card: TripCard
+    /// The featured trip's chip has a glyph; a row's chip is the word alone (`iphone-trips`).
+    var showsSymbol = true
 
     var body: some View {
         Label(card.isShared ? "Shared" : "Personal", systemImage: card.isShared ? "person.2" : "lock")
+            .labelStyle(BadgeLabelStyle(showsSymbol: showsSymbol))
             .font(.caption.weight(.semibold))
             .foregroundStyle(PennyColor.secondaryLabel)
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
             .background(PennyColor.fill, in: Capsule())
+    }
+}
+
+private struct BadgeLabelStyle: LabelStyle {
+    let showsSymbol: Bool
+
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: 4) {
+            if showsSymbol { configuration.icon }
+            configuration.title
+        }
     }
 }
 
@@ -302,6 +312,28 @@ enum TripText {
             : DayText.date(range.start).formatted(.dateTime.month(.abbreviated).day().year())
         return "\(start) – \(end)"
     }
+
+    /// The cards' short dates: "Nov 12–19", "Oct 30 – Nov 2" or "Nov 12", with the year only when
+    /// it isn't this one ("Feb 14–21, 2027"), or always with `year` (`ipad-trip`).
+    static func shortRange(_ range: TripRange, today: CalendarDate, year: Bool = false) -> String {
+        let start = DayText.date(range.start).formatted(.dateTime.month(.abbreviated).day())
+        let withYear = year || range.start.year != today.year || range.end.year != today.year
+        if range.start.year != range.end.year {
+            let format = Date.FormatStyle.dateTime.month(.abbreviated).day().year()
+            return "\(DayText.date(range.start).formatted(format)) – \(DayText.date(range.end).formatted(format))"
+        }
+        let dates: String
+        if range.start == range.end {
+            dates = start
+        } else if range.start.month == range.end.month {
+            dates = "\(start)–\(DayText.date(range.end).formatted(.dateTime.day()))"
+        } else {
+            dates = "\(start) – \(DayText.date(range.end).formatted(.dateTime.month(.abbreviated).day()))"
+        }
+        return withYear ? "\(dates), \(range.end.year)" : dates
+    }
+
+    static func people(_ count: Int) -> String { count == 1 ? "1 person" : "\(count) people" }
 
     static func expenses(_ count: Int) -> String { count == 1 ? "1 expense" : "\(count) expenses" }
 
