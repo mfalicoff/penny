@@ -280,7 +280,11 @@ describe("shared expense form", () => {
     const shares = within(form).getByRole("list", { name: "Shares" });
     const rows = within(shares).getAllByRole("listitem").map((row) => row.textContent);
     expect(rows).toEqual([expect.stringContaining("$33.34"), expect.stringContaining("$33.33"), expect.stringContaining("$33.33")]);
-    expect(within(form).getByText("Your share · counts in your spending").parentElement).toHaveTextContent("$33.34");
+    expect(form.querySelector(".your-share")).toHaveTextContent("$33.34");
+    // As on the card: everyone on the date is checked in, and an equal split shows no status box.
+    expect(shares).toHaveAccessibleDescription(/Everyone who was a member on the expense date is included/);
+    expect(within(form).queryByText(/Split equally/)).not.toBeInTheDocument();
+    expect(form.querySelector(".your-share")).toHaveTextContent("Your share · in your spending");
 
     await user.click(within(form).getByRole("button", { name: /^(Save|Add expense)$/ }));
     expect(await screen.findByText("Groceries run added")).toBeInTheDocument();
@@ -338,7 +342,7 @@ describe("shared expense form", () => {
     expect(within(form).getByText("16.67% left to assign.")).toBeInTheDocument();
     await user.type(within(form).getByLabelText(`${CAM}'s share in percent`), "16.67");
     expect(within(form).getByText("Adds up to 100%.")).toBeInTheDocument();
-    expect(within(form).getByText("Your share · counts in your spending").parentElement).toHaveTextContent("$500.00");
+    expect(form.querySelector(".your-share")).toHaveTextContent("$500.00");
     await user.click(within(form).getByRole("button", { name: /^(Save|Add expense)$/ }));
     expect(await screen.findByText("Rent added")).toBeInTheDocument();
     expect(bodyOf(callsTo(fetchMock, `/api/households/${id}/expenses`).find((init) => init?.method === "POST"))).toMatchObject({
@@ -387,7 +391,7 @@ describe("shared expense form", () => {
     await user.click(await screen.findByRole("button", { name: "Shared expense" }));
     const form = await dialog("New expense");
     // Categories are sent by value, so one made offline can be used right away.
-    await user.click(await within(form).findByRole("button", { name: "All categories" }));
+    await user.click(await within(form).findByRole("button", { name: /^Category: / }));
     const picker = screen.getByRole("dialog", { name: "Expense category" });
     expect(await within(picker).findByRole("button", { name: /Pets/ })).toBeInTheDocument();
     await user.keyboard("{Escape}");
@@ -397,9 +401,9 @@ describe("shared expense form", () => {
     expect(within(form).getByLabelText("Your account")).toHaveAccessibleDescription(/can be chosen once they've synced/);
 
     await fillExpense(user, form, "Vet", "60");
-    await user.click(within(form).getByRole("button", { name: "All categories" }));
+    await user.click(within(form).getByRole("button", { name: /^Category: / }));
     await user.click(within(screen.getByRole("dialog", { name: "Expense category" })).getByRole("button", { name: /Pets/ }));
-    expect(within(form).getByRole("radio", { name: "Pets" })).toBeChecked();
+    expect(within(form).getByRole("button", { name: "Category: Pets" })).toBeInTheDocument();
     await user.selectOptions(within(form).getByLabelText("Your account"), "acct-visa");
     await user.click(within(form).getByRole("button", { name: /^(Save|Add expense)$/ }));
     expect(await screen.findByText("Vet added")).toBeInTheDocument();
@@ -453,8 +457,9 @@ describe("shared expense form", () => {
     await user.click(await screen.findByRole("button", { name: "Shared expense" }));
     const form = await dialog("New expense");
     await fillExpense(user, form, "Streaming", "18");
-    await user.click(within(form).getByRole("button", { name: /More details/ }));
+    await user.click(within(form).getByRole("button", { name: /^Receipt, repeat, note/ }));
     await user.selectOptions(within(form).getByLabelText("Repeat"), "monthly");
+    expect(within(form).getByRole("button", { name: /^Receipt, repeat, note/ })).toHaveTextContent("Monthly");
     await user.click(within(form).getByRole("button", { name: /^(Save|Add expense)$/ }));
     expect(await screen.findByText("Streaming repeats monthly")).toBeInTheDocument();
     expect(bodyOf(callsTo(fetchMock, `/api/households/${id}/recurring`).find((init) => init?.method === "POST"))).toMatchObject({ nextDate: "2026-10-05", frequency: "monthly", totalCents: 1800 });
@@ -528,7 +533,7 @@ describe("Add entry with a household", () => {
     expect(within(shared).getByLabelText("Household")).toHaveAccessibleDescription(/Shared with Maison/);
     expect(within(shared).getByLabelText("Amount (CAD)")).toHaveValue("100");
     expect(within(shared).getByLabelText("Title")).toHaveValue("Groceries run");
-    expect(within(shared).getByText("Your share · counts in your spending").parentElement).toHaveTextContent("$33.34");
+    expect(shared.querySelector(".your-share")).toHaveTextContent("$33.34");
 
     await user.click(within(dialogOf(shared)).getByRole("button", { name: /^(Save|Add expense)$/ }));
     expect(await screen.findByText("Groceries run added")).toBeInTheDocument();

@@ -831,9 +831,9 @@
             "ref": "docs/reference/redesign.md#web-conventions-maz-227"
           },
           {
-            "summary": "Paid by is bordered choices, not filled pills; the split lists people without checkmarks and adds a status line; the category isn't in the title field; Repeat, Note and Receipt sit under More details",
+            "summary": "Opened from Add entry or the household's Shared expense, the form ends with Add entry's Household choice, which the card doesn't show",
             "kind": "follow-up",
-            "ref": "MAZ-226"
+            "ref": "MAZ-277"
           },
           {
             "summary": "Members are shown by email, with initials from the email",

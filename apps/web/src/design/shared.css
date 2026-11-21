@@ -1165,16 +1165,6 @@ a.row:hover {
   }
 }
 
-@media (max-width: 480px) {
-  .split-row {
-    grid-template-columns: auto minmax(0, 1fr);
-  }
-
-  .split-row > :last-child {
-    grid-column: 1 / -1;
-  }
-}
-
 /* ---------- navigation-bar tools (MAZ-229) ---------- */
 /*
  * A household's or trip's tools in the top bar: round glass icons on phones and tablets (cards
@@ -1576,4 +1566,277 @@ a.row:hover {
 .transfer__text > span:not(.transfer__arrow) {
   min-width: min(100%, 4ch);
   overflow-wrap: anywhere;
+}
+
+/* ---------- shared expense form (MAZ-278, card `iphone-shared-expense-add`) ---------- */
+
+/* `.note` with its `.pill`: the category sits in the title field, tinted with its color. */
+.entry-title__field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  height: 46px;
+  padding: 0 7px 0 0;
+  border-radius: 14px;
+  background: var(--pk-surface-2);
+}
+
+.entry-title--category .entry-title__field input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  background: none;
+  box-shadow: none;
+}
+
+.entry-title--category .entry-title__field input:focus-visible {
+  outline: none;
+}
+
+.entry-title__field:has(input:focus-visible) {
+  outline: 2px solid var(--pk-tint);
+  outline-offset: 2px;
+}
+
+.entry-title__field:has(input[aria-invalid="true"]) {
+  box-shadow: 0 0 0 1px var(--pk-danger);
+}
+
+.entry-dialog--tablet .entry-title__field {
+  height: 48px;
+}
+
+.entry-dialog--desktop .entry-title__field {
+  height: 40px;
+  padding-right: 5px;
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 0.5px var(--pk-separator);
+}
+
+.category-pill {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  max-width: 55%;
+  height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--tile) 14%, transparent);
+  color: color-mix(in srgb, var(--tile) 82%, var(--pk-label));
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.category-pill__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.category-pill select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.category-pill:has(select:focus-visible) {
+  outline: 2px solid var(--pk-tint);
+  outline-offset: 2px;
+}
+
+.entry-dialog--desktop .category-pill {
+  height: 30px;
+}
+
+/* `.payer`: filled pills, the payer in the label color. */
+.payer-pills > .entry-label {
+  margin: 0 0 8px;
+}
+
+.payer-pills__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.payer-pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+  height: 34px;
+  padding: 0 14px 0 4px;
+  border-radius: 17px;
+  background: var(--pk-fill);
+  color: var(--pk-label);
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.payer-pill input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+.payer-pill .pk-avatar {
+  flex: none;
+  border: 0;
+}
+
+.payer-pill__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.payer-pill--on {
+  background: var(--pk-label);
+  color: var(--pk-surface);
+}
+
+.payer-pill:has(input:focus-visible) {
+  outline: 2px solid var(--pk-tint);
+  outline-offset: 2px;
+}
+
+.payer-pills:disabled .payer-pill {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+@media (pointer: coarse) {
+  .payer-pill {
+    height: 44px;
+    border-radius: 22px;
+  }
+}
+
+/* The split: an uppercase label, the segmented control, then `.alloc` with checked rows. */
+.shared-split {
+  gap: 10px;
+}
+
+.shared-split .choices__legend {
+  margin: 8px 0 8px;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.entry-dialog--desktop .shared-split .choices__legend {
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+}
+
+.split-rows--card {
+  border-radius: 16px;
+  background: var(--pk-surface-2);
+}
+
+.split-rows--card .split-row {
+  position: relative;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  min-height: 52px;
+  padding: 4px 14px;
+  font-size: 1rem;
+}
+
+.split-rows--card .split-row + .split-row {
+  border-top: 0;
+}
+
+.split-rows--card .split-row + .split-row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 56px;
+  border-top: 0.5px solid var(--pk-separator);
+}
+
+.split-rows--card .split-row .pk-avatar {
+  border: 0;
+}
+
+.split-rows--card .split-row__name {
+  overflow: hidden;
+  overflow-wrap: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.split-rows--card .split-row input {
+  width: 7em;
+  text-align: end;
+}
+
+.split-row__check {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--pk-tint);
+  color: #fff;
+}
+
+.split-row__percent {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.split-rows--card .split-row__percent input {
+  width: 5em;
+}
+
+/* Typed shares leave less room: names wrap rather than lose who they are. */
+.split-rows--card .split-row:has(input) .split-row__name {
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+@media (max-width: 420px) {
+  .split-rows--card .split-row input {
+    width: 5.5em;
+  }
+
+  .split-rows--card .split-row__percent input {
+    width: 4em;
+  }
+}
+
+/* `.yours`: gray, "· in your spending" muted, the amount large. */
+.your-share--form {
+  align-items: center;
+  margin-top: 4px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--pk-fill);
+  font-size: 0.9375rem;
+  font-weight: 400;
+}
+
+.your-share__hint {
+  color: var(--pk-label-2);
+}
+
+.your-share__amount {
+  font-size: 1.25rem;
+  font-weight: 700;
 }
