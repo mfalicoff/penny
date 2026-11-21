@@ -38,10 +38,10 @@ Each machine runs one issue at a time. A machine is busy while an issue carrying
 
 ## Follow-ups
 
-When a dev worker leaves something out of scope, it posts a `Follow-up:` comment on its issue ([format](dev-worker.md#follow-ups)). On its next run the orchestrator handles each new follow-up in one of three ways:
+A dev worker does related work in its own pull request instead of leaving it for later. It posts a `Follow-up:` comment on its issue ([format](dev-worker.md#follow-ups)) only for what it can't do there: a design decision, another platform, a backend or contract change the issue doesn't cover, or work much bigger than the issue. On its next run the orchestrator handles each new follow-up in one of three ways:
 
-- **Creates an issue** in the same project, in **Backlog**, with the Platform labels, linked to the original issue as related. The new issue is never labelled `agent-ready`: you review it, then move it to Todo and add the label yourself.
-- **Links an existing issue** if one already covers it, and comments on that issue with the extra context.
+- **Adds it to an existing issue** that covers the same area, and comments on that issue with the extra context. This is the first choice.
+- **Creates an issue** only when no open issue fits: in the same project, in **Backlog**, with the Platform labels, linked to the original issue as related. The new issue is never labelled `agent-ready`: you review it, then move it to Todo and add the label yourself.
 - **Skips it** if it isn't worth tracking, and replies with the reason.
 
 Either way the orchestrator replies under the follow-up (`Orchestrator: …`), so each follow-up is handled once.
