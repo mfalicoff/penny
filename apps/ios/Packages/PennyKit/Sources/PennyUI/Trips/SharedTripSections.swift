@@ -166,7 +166,7 @@ struct SharedTripExpenseSections: View {
                 NavigationLink(
                     value: DetailRoute.householdExpense(householdID: model.id, expenseID: expense.id)
                 ) {
-                    SharedExpenseRow(expense: expense, people: model.people, currency: model.currency)
+                    SharedExpenseRow(expense: expense, people: model.people, currency: model.currency, showsDate: true)
                 }
                 .cardRow()
                 .accessibilityIdentifier("household.expense.\(expense.id)")

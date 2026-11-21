@@ -99,7 +99,30 @@ struct HouseholdViewTests {
         #expect(HouseholdText.balance(0, currency: "CAD") == "Settled")
         #expect(HouseholdText.memberBalance(-11040, currency: "CAD").hasSuffix("owes"))
         #expect(HouseholdText.memberBalance(14250, currency: "CAD").hasSuffix("gets back"))
-        #expect(HouseholdText.recordExplanation(payer: "Jo").contains("doesn't send money"))
+    }
+
+    @Test("whenRecordingAPayment_HouseholdText_ShouldSayWhoPaidWhomWithoutACapitalYouMidSentence")
+    func recordExplanation() {
+        let people = HouseholdPeople(
+            members: [
+                WireHouseholdMember(userId: "me", email: "max@example.test", joinedAt: 0),
+                WireHouseholdMember(userId: "jo", email: "jo@example.test", joinedAt: 0),
+            ], email: "max@example.test")
+        let received = HouseholdText.recordExplanation(from: "jo", to: "me", people: people)
+        #expect(received.hasPrefix("Record this once jo@example.test has paid you outside Penny."))
+        #expect(received.contains("doesn't send money"))
+        #expect(
+            HouseholdText.recordExplanation(from: "me", to: "jo", people: people)
+                .hasPrefix("Record this once you have paid jo@example.test outside Penny."))
+    }
+
+    @Test("whenAPaymentWasJustRecorded_HouseholdText_ShouldSayHowLongAgoFromTheAppsClock")
+    func ago() {
+        let now = Date(timeIntervalSince1970: 1_792_065_600)
+        let twoMinutesEarlier = Int64(now.timeIntervalSince1970 * 1000) - 120_000
+        let text = HouseholdText.ago(twoMinutesEarlier, now: now)
+        #expect(text.contains("2"), "relative to the app's clock, not the device's: \(text)")
+        #expect(!text.contains("month"))
     }
 
     @Test("whenTheMonthOnScreenIsPast_SharedExpenseForm_ShouldDateANewExpenseInThatMonth")

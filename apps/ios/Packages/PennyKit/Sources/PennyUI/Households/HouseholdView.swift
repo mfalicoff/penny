@@ -95,7 +95,13 @@ struct HouseholdPage: View {
     @State private var confirm: Confirmation?
     @State private var working = false
     @State private var width: Double = 0
+    /// The expense beside the list on a wide iPad (`ipad-shared`); the first one until another is tapped.
+    @State private var selectedExpenseID: String?
     @Environment(\.horizontalSizeClass) private var sizeClass
+
+    private var selectedExpense: WireSharedExpense? {
+        model.expenses.first { $0.id == selectedExpenseID } ?? model.expenses.first
+    }
 
     enum Confirmation: Identifiable, Equatable {
         case leave, archive
@@ -166,6 +172,14 @@ struct HouseholdPage: View {
                 }
             }
             .navigationTitle(model.household?.name ?? (isTrip ? "Trip" : "Household"))
+            .toolbar {
+                // `iphone-shared`: no title over the hero, which already leads with the name. Balances
+                // and People collapse the hero, so the name is the inline title there
+                // (`iphone-shared-balances`, `iphone-shared-people`). Pushed pages still go back to it.
+                if showsHero {
+                    ToolbarItem(placement: .principal) { Color.clear.frame(width: 1, height: 1) }
+                }
+            }
             .sheet(isPresented: $editingTrip) {
                 if let household = model.household {
                     TripFormSheet(target: .shared(household), expenseCount: 0) { _ in }.environment(shell)
@@ -175,21 +189,41 @@ struct HouseholdPage: View {
                 if canInvite {
                     ToolbarItem(placement: .primaryAction) {
                         Button("Invite someone", systemImage: "person.badge.plus") { inviting = true }
+                            .neutralToolbarGlyph()
                             .accessibilityIdentifier("household.invite")
                     }
                 }
                 ToolbarItem(placement: .primaryAction) {
                     NavigationLink(value: DetailRoute.householdHistory(householdID: model.id)) {
-                        Label("History", systemImage: "clock.arrow.circlepath")
+                        Label("History", systemImage: "clock")
                     }
+                    .neutralToolbarGlyph()
                     .accessibilityIdentifier("household.history")
+                }
+                // `ipad-shared`: + Expense is the copper action beside History and Invite.
+                if isTwoColumn, trip == nil, !model.isReadOnly, model.household != nil {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button {
+                            addExpense()
+                        } label: {
+                            // Words beside the glyph, as on the card: a toolbar Label would show the glyph only.
+                            HStack(spacing: 6) {
+                                Image(systemName: "plus")
+                                Text("Expense")
+                            }
+                            .fontWeight(.semibold)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(PennyColor.tint)
+                        .accessibilityIdentifier("household.addExpense")
+                    }
                 }
             }
             .sheet(item: $form) { request in
                 SharedExpenseFormSheet(request: request, model: model).environment(shell)
             }
             .sheet(item: $payment) { request in
-                PaymentSheet(request: request, model: model)
+                PaymentSheet(request: request, model: model, now: shell.now)
             }
             .sheet(isPresented: $inviting, onDismiss: { Task { await model.refresh() } }) {
                 InviteSheet(model: model).environment(shell)
@@ -237,6 +271,8 @@ struct HouseholdPage: View {
                     sideColumn(household, trip: trip)
                 }
                 .insetGroupedList()
+                // `ipad-shared`: the balance leads the side column, over its meaning-colored glow.
+                .background(alignment: .top) { if trip == nil { glow } }
                 .frame(width: Self.sideWidth(for: width))
             }
         } else {
@@ -247,7 +283,23 @@ struct HouseholdPage: View {
                 }
             }
             .insetGroupedList()
+            // The hero, or the segments once it collapses, start right under the navigation bar.
+            .contentMargins(.top, trip == nil ? 0 : nil, for: .scrollContent)
+            .background(alignment: .top) { if showsHero { glow } }
         }
+    }
+
+    /// The household's hero shows: Expenses on iPhone, and always beside the balances on iPad.
+    /// Balances and People collapse it to the navigation bar (`iphone-shared-balances`), so their
+    /// lists start under the segments. A shared trip keeps its own hero (`SharedTripHero`).
+    private var showsHero: Bool {
+        model.household != nil && trip == nil && (isTwoColumn || section == .expenses)
+    }
+
+    /// The hero's glow in the balance's meaning color: green when you're owed, otherwise copper.
+    private var glow: some View {
+        Color.clear.frame(height: 1)
+            .heroGlow(tint: model.viewerBalance > 0 ? PennyColor.income : nil)
     }
 
     @ViewBuilder
@@ -272,6 +324,7 @@ struct HouseholdPage: View {
                     .listRowInsets(EdgeInsets(top: 8, leading: 4, bottom: 8, trailing: 4))
             }
             balancesSection
+            if let expense = selectedExpense { SelectedExpenseSection(expense: expense, model: model) { payment = $0 } }
         }
         peopleSection(household)
     }
@@ -296,31 +349,46 @@ struct HouseholdPage: View {
     @ViewBuilder
     private func header(_ household: WireHousehold, trip: SharedTripContext?) -> some View {
         Section {
-            VStack(spacing: 16) {
-                if let trip {
+            if let trip {
+                VStack(spacing: 16) {
                     SharedTripHero(context: trip, model: model)
-                } else {
-                    householdHero(household, showsBalance: !isTwoColumn)
+                    // A trip's balances settle by month under Balances, so its page leads with the
+                    // trip, as on the card, and only adds an expense from here.
+                    if !model.isReadOnly {
+                        PennyButton("Trip expense", systemImage: "plus") { addExpense() }
+                            .accessibilityIdentifier("household.addExpense")
+                    }
                 }
-                if !model.isReadOnly {
-                    HStack(spacing: 12) {
-                        // A trip's balances settle by month under Balances, so its page leads with
-                        // the trip, as on the card, and only adds an expense from here.
-                        if trip == nil, !isTwoColumn {
-                            PennyButton("Record payment", systemImage: "checkmark.circle", role: .secondary) {
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets(top: 8, leading: 4, bottom: 8, trailing: 4))
+                .listRowSeparator(.hidden)
+            } else if isTwoColumn {
+                // `ipad-shared`: the name large and leading with the members beside it, then the
+                // month's total. The balance leads the side column; + Expense is in the toolbar.
+                wideHeader(household)
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets(top: 8, leading: 4, bottom: 8, trailing: 4))
+                    .listRowSeparator(.hidden)
+            } else if showsHero {
+                VStack(spacing: 18) {
+                    householdHero(household)
+                    if !model.isReadOnly {
+                        // `iphone-shared`: Record payment is the copper action, + Expense beside it.
+                        HStack(spacing: 12) {
+                            PennyButton("Record payment", systemImage: "checkmark.circle") {
                                 section = .balances
                             }
                             .accessibilityHint("Shows balances and suggested payments to record")
                             .accessibilityIdentifier("household.recordPayment")
+                            PennyButton("Expense", systemImage: "plus", role: .secondary) { addExpense() }
+                                .accessibilityIdentifier("household.addExpense")
                         }
-                        PennyButton(isTrip ? "Trip expense" : "Expense", systemImage: "plus") { addExpense() }
-                            .accessibilityIdentifier("household.addExpense")
                     }
                 }
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets(top: 0, leading: 4, bottom: 8, trailing: 4))
+                .listRowSeparator(.hidden)
             }
-            .listRowBackground(Color.clear)
-            .listRowInsets(EdgeInsets(top: 8, leading: 4, bottom: 8, trailing: 4))
-            .listRowSeparator(.hidden)
             if let reason = model.readOnlyReason {
                 StatusBanner(tone: .info, title: model.isArchived ? "Archived" : "Read only", message: reason)
                     .listRowBackground(Color.clear).listRowInsets(EdgeInsets())
@@ -346,29 +414,39 @@ struct HouseholdPage: View {
     /// Members, the household's name, then the viewer's balance for the month in its meaning
     /// color (`iphone-shared`): owed to you is income green, owing is an expense in the label
     /// color (never red), settled is muted. The month is chosen in the section headers below.
-    private func householdHero(_ household: WireHousehold, showsBalance: Bool) -> some View {
+    private func householdHero(_ household: WireHousehold) -> some View {
         VStack(spacing: 6) {
-            MonogramStack(initials: model.people.current.map { model.people.initials($0.userId) })
+            MonogramStack(initials: model.people.current.map { model.people.initials($0.userId) }, size: 44)
                 .padding(.bottom, 4)
             Text(household.name).font(.title2.weight(.bold))
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
-            if showsBalance {
-                balanceHero(alignment: .center).padding(.top, 8)
-            } else {
-                // `ipad-shared`: the month's total under the name; the balance is beside it.
-                let total = model.expenses.reduce(Int64(0)) { $0 + $1.totalCents }
-                Text(
-                    "\(HouseholdText.shortMonth(model.month)) · "
-                        + "\(MoneyFormat.amount(total, currency: model.currency)) in shared expenses"
-                )
-                .font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
-                .multilineTextAlignment(.center)
-                .accessibilityIdentifier("household.monthTotal")
-            }
+            balanceHero(alignment: .center).padding(.top, 8)
         }
         .frame(maxWidth: .infinity)
+    }
+
+    /// `ipad-shared`'s list header: the name as a large title with the members on the right, and
+    /// the month's shared total under it.
+    private func wideHeader(_ household: WireHousehold) -> some View {
+        let total = model.expenses.reduce(Int64(0)) { $0 + $1.totalCents }
+        return VStack(alignment: .leading, spacing: 4) {
+            HStack(alignment: .firstTextBaseline, spacing: 12) {
+                Text(household.name).font(.largeTitle.weight(.bold))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityAddTraits(.isHeader)
+                Spacer(minLength: 8)
+                MonogramStack(initials: model.people.current.map { model.people.initials($0.userId) }, size: 30)
+            }
+            Text(
+                "\(HouseholdText.shortMonth(model.month)) · "
+                    + "\(MoneyFormat.amount(total, currency: model.currency)) in shared expenses"
+            )
+            .font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
+            .accessibilityIdentifier("household.monthTotal")
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     /// The viewer's balance for the month in its meaning color: under the name, or at the top
@@ -397,6 +475,10 @@ struct HouseholdPage: View {
     /// The month a section shows, with the previous and next month: the header of Expenses and
     /// Balances, as the card's "November … total" header.
     private func monthHeader(trailing: String) -> some View {
+        monthHeader { Text(trailing).cardSectionHeader() }
+    }
+
+    private func monthHeader<Trailing: View>(@ViewBuilder trailing: () -> Trailing) -> some View {
         HStack(spacing: 4) {
             Button("Previous month", systemImage: "chevron.left") {
                 if let previous = model.month.shifted(by: -1) {
@@ -420,7 +502,7 @@ struct HouseholdPage: View {
             .disabled(model.month >= MonthKey(shell.today))
             .accessibilityIdentifier("household.nextMonth")
             Spacer()
-            Text(trailing).cardSectionHeader()
+            trailing()
         }
         .buttonStyle(.borderless)
         .padding(.leading, -14)
@@ -460,17 +542,40 @@ struct HouseholdPage: View {
                 .font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
             }
             ForEach(model.expenses) { expense in
-                NavigationLink(
-                    value: DetailRoute.householdExpense(householdID: model.id, expenseID: expense.id)
-                ) {
-                    SharedExpenseRow(expense: expense, people: model.people, currency: model.currency)
+                let row = SharedExpenseRow(
+                    expense: expense, people: model.people, currency: model.currency,
+                    compactShare: isTwoColumn, cadence: cadence(of: expense))
+                if isTwoColumn {
+                    // `ipad-shared`: the expense opens beside the list, its row tinted.
+                    let selected = selectedExpense?.id == expense.id
+                    Button {
+                        selectedExpenseID = expense.id
+                    } label: {
+                        row.contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .cardRow()
+                    .listRowBackground(selected ? PaletteToken.tintSoft.value.color : PennyColor.surface)
+                    .accessibilityAddTraits(selected ? .isSelected : [])
+                    .accessibilityHint("Shows its shares beside the list")
+                    .accessibilityIdentifier("household.expense.\(expense.id)")
+                } else {
+                    NavigationLink(
+                        value: DetailRoute.householdExpense(householdID: model.id, expenseID: expense.id)
+                    ) { row }
+                    .cardRow()
+                    .accessibilityIdentifier("household.expense.\(expense.id)")
                 }
-                .cardRow()
-                .accessibilityIdentifier("household.expense.\(expense.id)")
             }
         } header: {
             monthHeader(trailing: "\(MoneyFormat.amount(total, currency: model.currency)) total")
         }
+    }
+
+    /// "Monthly" for an expense a repeating rule added.
+    private func cadence(of expense: WireSharedExpense) -> String? {
+        guard let id = expense.recurringId, let rule = model.rules.first(where: { $0.id == id }) else { return nil }
+        return RecurrenceFrequency(rawValue: rule.frequency).map(SharedFormText.frequency)
     }
 
     @ViewBuilder private var rulesSection: some View {
@@ -521,14 +626,14 @@ struct HouseholdPage: View {
                     .foregroundStyle(PennyColor.secondaryLabel)
             }
         } header: {
-            monthHeader(trailing: HouseholdText.settles(model.month))
+            monthHeader { settlesTag(recap) }
         }
         if let recap, !recap.suggestions.isEmpty {
             Section {
                 ForEach(recap.suggestions, id: \.self) { transfer in
                     SuggestionRow(
                         transfer: transfer, people: model.people, currency: model.currency,
-                        canRecord: canRecord(transfer)
+                        canRecord: canRecord(transfer), isOpen: isOpen
                     ) {
                         payment = .monthly(transfer, month: model.month)
                     }
@@ -537,12 +642,17 @@ struct HouseholdPage: View {
             } header: {
                 Text("Suggested payments").cardSectionHeader()
             } footer: {
-                Text(
-                    isOpen
-                        ? "Record a payment once it has happened outside Penny. Penny doesn't move money."
-                        : "Monthly payments open on the last day of the month. To repay a single expense now, use "
-                            + "Mark as paid on its share."
-                )
+                Label {
+                    if isOpen {
+                        Text("Record a payment once it has happened outside Penny. Penny doesn't move money.")
+                    } else {
+                        Text(
+                            "Monthly payments open on the last day of the month. To repay a single expense now, use **Mark as paid** on its share."
+                        )
+                    }
+                } icon: {
+                    Image(systemName: isOpen ? "checkmark.circle" : "clock")
+                }
                 .accessibilityIdentifier("household.monthlyNote")
             }
         } else if recap != nil {
@@ -574,8 +684,22 @@ struct HouseholdPage: View {
         }
     }
 
+    /// The balances header's tag (`iphone-shared-balances`): amber "Settles Nov 30" while the month
+    /// waits for its payments, red Overdue once a past month still has some, green Settled when
+    /// nothing is left.
+    @ViewBuilder
+    private func settlesTag(_ recap: WireMonthRecap?) -> some View {
+        if let recap, recap.suggestions.isEmpty, !recap.balances.isEmpty {
+            HouseholdTag(text: "Settled", systemImage: "checkmark", tone: .income)
+        } else if (recap?.overdueMonths ?? []).contains("\(model.month)") {
+            HouseholdTag(text: "Overdue", systemImage: "exclamationmark.circle", tone: .danger)
+        } else {
+            HouseholdTag(text: HouseholdText.settles(model.month), systemImage: "clock", tone: .pending)
+        }
+    }
+
     private var isOpen: Bool {
-        SettlementCalendar.monthlyPaymentsOpen(model.month, todayUTC: CalendarDate(Date(), in: Self.utc))
+        SettlementCalendar.monthlyPaymentsOpen(model.month, todayUTC: CalendarDate(shell.now(), in: Self.utc))
     }
 
     static var utc: Calendar {
@@ -737,10 +861,20 @@ struct HouseholdPage: View {
 
 // MARK: Rows
 
+/// A shared expense in a household's list (`iphone-shared`): the payer's monogram, the title,
+/// "Jo paid · split equally", a green Settled tag once your share is paid and a repeat tag for a
+/// repeating expense, then the total over your part of it. A shared trip's list also gives the
+/// date, since a trip spans several days.
 struct SharedExpenseRow: View {
     let expense: WireSharedExpense
     let people: HouseholdPeople
     let currency: String
+    /// A shared trip: the date leads the detail line.
+    var showsDate = false
+    /// `ipad-shared`: your part reads "$32.10 yours".
+    var compactShare = false
+    /// The repeating rule's cadence ("Monthly"), when the page knows it.
+    var cadence: String?
 
     var body: some View {
         HStack(spacing: 12) {
@@ -750,6 +884,15 @@ struct SharedExpenseRow: View {
                     .fixedSize(horizontal: false, vertical: true)
                 Text(subtitle).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
                     .fixedSize(horizontal: false, vertical: true)
+                if !showsDate, isSettled || expense.recurringId != nil {
+                    HStack(spacing: 6) {
+                        if isSettled { HouseholdTag(text: "Settled", systemImage: "checkmark", tone: .income) }
+                        if expense.recurringId != nil {
+                            HouseholdTag(text: cadence ?? "Repeating", systemImage: "repeat")
+                        }
+                    }
+                    .padding(.top, 2)
+                }
             }
             Spacer(minLength: 8)
             VStack(alignment: .trailing, spacing: 2) {
@@ -757,12 +900,20 @@ struct SharedExpenseRow: View {
                     expense.totalCents, meaning: .neutral, currency: currency, style: .callout.weight(.semibold))
                 Text(viewerLine).font(.footnote).foregroundStyle(viewerColor)
             }
+            .fixedSize()
         }
         .accessibilityElement(children: .combine)
     }
 
+    /// Your share of someone else's expense is paid.
+    private var isSettled: Bool {
+        guard let me = people.meId, me != expense.payerUserId else { return false }
+        return expense.status(of: me) == .paid
+    }
+
     private var subtitle: String {
         let payer = expense.payerUserId == people.meId ? "You paid" : "\(people.name(expense.payerUserId)) paid"
+        guard showsDate else { return "\(payer) · split \(expense.mode.label.lowercased())" }
         var parts = [HouseholdText.day(expense.date), payer, "split \(expense.mode.label.lowercased())"]
         if expense.recurringId != nil { parts.append("repeating") }
         if let me = people.meId, expense.status(of: me) == .paid { parts.append("Repaid") }
@@ -771,6 +922,10 @@ struct SharedExpenseRow: View {
 
     private var viewerLine: String {
         guard let me = people.meId else { return "" }
+        if compactShare {
+            let share = expense.share(of: me)
+            return share > 0 ? "\(MoneyFormat.amount(share, currency: currency)) yours" : "no share"
+        }
         let share = expense.share(of: me)
         if me == expense.payerUserId {
             let owed = expense.totalCents - share
@@ -832,9 +987,7 @@ private struct BalanceRow: View {
                 Text(detail).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
             }
             Spacer(minLength: 8)
-            Text(HouseholdText.memberBalance(balance.balanceCents, currency: currency))
-                .font(.subheadline.weight(.semibold).monospacedDigit())
-                .foregroundStyle(balance.balanceCents > 0 ? PennyColor.income : PennyColor.label)
+            MemberBalance(cents: balance.balanceCents, currency: currency)
         }
         .frame(minHeight: Metrics.minTouchTarget)
         .accessibilityElement(children: .combine)
@@ -848,29 +1001,68 @@ private struct BalanceRow: View {
     }
 }
 
+/// A member's balance as on `iphone-shared-balances`: the semibold signed amount (green when
+/// they get money back) over "gets back" or "owes", or Settled.
+private struct MemberBalance: View {
+    let cents: Int64
+    let currency: String
+
+    var body: some View {
+        VStack(alignment: .trailing, spacing: 1) {
+            if cents == 0 {
+                Text("Settled").font(.subheadline.weight(.semibold)).foregroundStyle(PennyColor.secondaryLabel)
+            } else {
+                Text((cents > 0 ? "+" : MoneyFormat.minus) + MoneyFormat.amount(abs(cents), currency: currency))
+                    .font(.body.weight(.semibold).monospacedDigit())
+                    .foregroundStyle(cents > 0 ? PennyColor.income : PennyColor.label)
+                Text(cents > 0 ? "gets back" : "owes").font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
+            }
+        }
+        .fixedSize()
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(HouseholdText.memberBalance(cents, currency: currency))
+    }
+}
+
 private struct SuggestionRow: View {
     let transfer: WireTransfer
     let people: HouseholdPeople
     let currency: String
     let canRecord: Bool
+    /// The month's payments are open (its last day has come): Record paid is the copper action.
+    /// Before that it shows, dimmed, as on `iphone-shared-balances`.
+    let isOpen: Bool
     let record: () -> Void
 
     var body: some View {
         HStack(spacing: 10) {
-            Text("\(people.name(transfer.fromUserId)) → \(people.name(transfer.toUserId))")
-                .font(.subheadline)
-                .fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: 6) {
+                Text(people.name(transfer.fromUserId))
+                Image(systemName: "arrow.right").font(.footnote).foregroundStyle(PennyColor.tertiaryLabel)
+                    .accessibilityLabel("pays")
+                Text(people.name(transfer.toUserId))
+            }
+            .font(.body)
+            .lineLimit(2)
             Spacer(minLength: 8)
-            MoneyText(transfer.amountCents, meaning: .neutral, currency: currency)
+            MoneyText(transfer.amountCents, meaning: .neutral, currency: currency, style: .body.weight(.semibold))
+                .fixedSize()
             if canRecord {
                 Button("Record paid", action: record)
-                    .buttonStyle(.bordered)
-                    .font(.footnote.weight(.semibold))
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(isOpen ? Color.white : PennyColor.tertiaryLabel)
+                    .padding(.horizontal, 12)
+                    .frame(minHeight: 36)
+                    .background(isOpen ? PennyColor.tint : PennyColor.fill, in: Capsule())
+                    .frame(minHeight: Metrics.minTouchTarget)
+                    .buttonStyle(.borderless)
+                    .disabled(!isOpen)
+                    .fixedSize()
             }
         }
         .frame(minHeight: Metrics.minTouchTarget)
         .accessibilityElement(children: .combine)
-        .accessibilityAction(named: "Record paid") { if canRecord { record() } }
+        .accessibilityAction(named: "Record paid") { if canRecord, isOpen { record() } }
     }
 }
 
@@ -962,5 +1154,70 @@ private struct InlineInvite: View {
         working = true
         defer { working = false }
         failure = await model.newInvite()
+    }
+}
+
+/// The selected expense beside the list on a wide iPad (`ipad-shared`): its title with who paid
+/// and when, then each share with Paid or Mark as paid, and a way to its full page (edit,
+/// delete, history).
+private struct SelectedExpenseSection: View {
+    let expense: WireSharedExpense
+    @Bindable var model: HouseholdModel
+    let record: (PaymentRequest) -> Void
+
+    var body: some View {
+        let people = model.people
+        Section {
+            ForEach(expense.splits.filter { $0.amountCents > 0 }, id: \.userId) { split in
+                HStack(spacing: 12) {
+                    Monogram(initials: people.initials(split.userId))
+                    Text(
+                        split.userId == expense.payerUserId
+                            ? "\(people.name(split.userId)) · payer" : people.name(split.userId)
+                    )
+                    .font(.body)
+                    .lineLimit(2)
+                    Spacer(minLength: 8)
+                    MoneyText(
+                        split.amountCents, meaning: .neutral, currency: model.currency, style: .body.weight(.semibold)
+                    )
+                    .fixedSize()
+                    if expense.status(of: split.userId) == .paid {
+                        HouseholdTag(text: "Paid", systemImage: "checkmark", tone: .income)
+                    } else if expense.canRecordShare(from: split.userId, people: people, archived: model.isArchived) {
+                        Button("Mark as paid") { record(.share(expense, from: split.userId)) }
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 12)
+                            .frame(minHeight: 34)
+                            .background(PennyColor.tint, in: Capsule())
+                            .buttonStyle(.borderless)
+                            .fixedSize()
+                            .accessibilityIdentifier("sharedExpense.markPaid.\(split.userId)")
+                    }
+                }
+                .frame(minHeight: Metrics.minTouchTarget)
+                .accessibilityElement(children: .contain)
+                .accessibilityIdentifier("sharedExpense.share.\(split.userId)")
+            }
+            NavigationLink(value: DetailRoute.householdExpense(householdID: model.id, expenseID: expense.id)) {
+                Text("Edit, history and receipt").font(.subheadline)
+            }
+            .accessibilityIdentifier("household.selectedExpenseOpen")
+        } header: {
+            HStack(alignment: .firstTextBaseline) {
+                Text(expense.title).font(.title3.weight(.semibold)).foregroundStyle(PennyColor.label)
+                Spacer(minLength: 8)
+                Text(
+                    "\(people.name(expense.payerUserId)) paid "
+                        + "\(MoneyFormat.amount(expense.totalCents, currency: model.currency)) · "
+                        + HouseholdText.day(expense.date)
+                )
+                .font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
+            }
+            .textCase(nil)
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("household.selectedExpense")
+        }
     }
 }

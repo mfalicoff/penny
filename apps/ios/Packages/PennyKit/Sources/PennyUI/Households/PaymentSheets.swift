@@ -14,6 +14,8 @@ import SwiftUI
 struct PaymentSheet: View {
     let request: PaymentRequest
     @Bindable var model: HouseholdModel
+    /// The current instant (`ShellModel.now`): the month's payment window and "2 min ago".
+    var now: () -> Date = { Date() }
     @Environment(\.dismiss) private var dismiss
 
     @State private var working = false
@@ -28,7 +30,7 @@ struct PaymentSheet: View {
                     if let staleExpense {
                         StaleExpenseView(
                             old: staleExpense.old, latest: staleExpense.latest, from: transfer.from,
-                            people: model.people, currency: model.currency
+                            people: model.people, currency: model.currency, now: now()
                         ) { dismiss() }
                     } else if let staleSuggestions {
                         StaleMonthlyView(
@@ -40,7 +42,12 @@ struct PaymentSheet: View {
                 }
                 .padding(Metrics.gutter)
             }
-            .background(PennyColor.background)
+            // `iphone-record-payment` is drawn on the sheet's surface; the stale states keep their
+            // solid groups on the grouped background, as on `iphone-payment-stale`.
+            .background(isStale ? PennyColor.background : PennyColor.surface)
+            .safeAreaInset(edge: .bottom) {
+                if !isStale { confirmButton.padding(.horizontal, Metrics.gutter).padding(.bottom, 8) }
+            }
             .navigationTitle("Record payment")
             .inlineNavigationTitle()
             .toolbar {
@@ -61,17 +68,42 @@ struct PaymentSheet: View {
         }
     }
 
+    private var isStale: Bool { staleExpense != nil || staleSuggestions != nil }
+
+    /// `iphone-record-payment`: who paid whom, centered (the payer, a dashed arrow, the receiver),
+    /// the amount, what it settles with the Full share tag, then what recording means.
     @ViewBuilder private var details: some View {
         let people = model.people
         let transfer = transfer
-        VStack(alignment: .leading, spacing: 14) {
-            personLine(transfer.from, verb: "paid")
-            personLine(transfer.to, verb: transfer.to == people.meId ? "received" : "receives")
-            HeroAmount("Amount", cents: transfer.amount, currency: model.currency)
-            Text(subtitle).font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
-                .fixedSize(horizontal: false, vertical: true)
+        VStack(spacing: 18) {
+            HStack(alignment: .top, spacing: 16) {
+                personColumn(transfer.from, verb: "paid")
+                DashedArrow()
+                    .frame(width: 64, height: 12)
+                    .padding(.top, 26)
+                    .accessibilityHidden(true)
+                personColumn(transfer.to, verb: transfer.to == people.meId ? "received" : "receives")
+            }
+            .frame(maxWidth: .infinity)
+            .accessibilityElement(children: .combine)
+            VStack(spacing: 8) {
+                Text(MoneyFormat.amount(transfer.amount, currency: model.currency))
+                    .modifier(HeroAmountFont())
+                    .foregroundStyle(PennyColor.label)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                    .accessibilityIdentifier("payment.amount")
+                Text(subtitle).font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                if !isMonthly {
+                    HouseholdTag(text: "Full share", systemImage: "lock")
+                        .accessibilityHint("The whole share is recorded; part of a share can't be")
+                }
+            }
+            .frame(maxWidth: .infinity)
         }
-        .pennyCard()
+        .padding(.top, 8)
         if let failure {
             StatusBanner(
                 tone: failure.kind == .offline ? .offline : .error, title: HouseholdFailureBanner.title(failure.kind),
@@ -79,16 +111,23 @@ struct PaymentSheet: View {
             )
             .accessibilityIdentifier("payment.error")
         }
-        Text(HouseholdText.recordExplanation(payer: people.name(transfer.from)))
-            .font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
-            .fixedSize(horizontal: false, vertical: true)
-            .accessibilityIdentifier(isMonthly ? "recordMonthly.explanation" : "recordShare.explanation")
+        Label {
+            Text(HouseholdText.recordExplanation(from: transfer.from, to: transfer.to, people: people))
+                .fixedSize(horizontal: false, vertical: true)
+        } icon: {
+            Image(systemName: "checkmark.circle")
+        }
+        .font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
+        .accessibilityIdentifier(isMonthly ? "recordMonthly.explanation" : "recordShare.explanation")
         if isMonthly, !isOpen {
             StatusBanner(
                 tone: .info, title: "Opens on the last day of the month",
                 message: "Monthly payments can be recorded from \(HouseholdText.monthEnd(month)). To "
                     + "repay one expense now, use Mark as paid on its share.")
         }
+    }
+
+    private var confirmButton: some View {
         PennyButton(
             working ? "Recording…" : "Mark \(MoneyFormat.amount(transfer.amount, currency: model.currency)) as paid",
             systemImage: "checkmark"
@@ -112,24 +151,29 @@ struct PaymentSheet: View {
     }
 
     private var isOpen: Bool {
-        SettlementCalendar.monthlyPaymentsOpen(month, todayUTC: CalendarDate(Date(), in: HouseholdPageCalendar.utc))
+        SettlementCalendar.monthlyPaymentsOpen(month, todayUTC: CalendarDate(now(), in: HouseholdPageCalendar.utc))
     }
 
     private var subtitle: String {
         switch request {
         case .share(let expense, let from):
-            "\(model.people.possessive(from).capitalizedFirst) share of \(expense.title) · "
-                + "\(HouseholdText.day(expense.date)) · Full share"
+            // "Your share of …" for you; never a capitalized email ("alex@…'s share of …").
+            "\(from == model.people.meId ? "Your" : model.people.possessive(from)) share of \(expense.title) · "
+                + HouseholdText.day(expense.date)
         case .monthly(_, let month):
             "The full suggested payment for \(HouseholdText.month(month)), so this month's balance between you two is settled."
         }
     }
 
-    private func personLine(_ userId: String, verb: String) -> some View {
-        HStack(spacing: 10) {
-            Monogram(initials: model.people.initials(userId))
-            Text("\(model.people.name(userId)) \(verb)").font(.body.weight(.semibold))
+    private func personColumn(_ userId: String, verb: String) -> some View {
+        VStack(spacing: 4) {
+            Monogram(initials: model.people.initials(userId), size: 64)
+                .padding(.bottom, 6)
+            Text(model.people.name(userId)).font(.body.weight(.semibold))
+                .lineLimit(2).multilineTextAlignment(.center)
+            Text(verb).font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
         }
+        .frame(maxWidth: 140)
         .accessibilityElement(children: .combine)
     }
 
@@ -172,6 +216,8 @@ private struct StaleExpenseView: View {
     let from: String
     let people: HouseholdPeople
     let currency: String
+    /// The current instant, for "Mira · 2 min ago".
+    let now: Date
     let review: () -> Void
 
     var body: some View {
@@ -187,17 +233,20 @@ private struct StaleExpenseView: View {
                         compare(label(row.value), row)
                     }
                     if let by = by(change.cause) {
-                        LabeledContent(
-                            by.edited ? "Edited" : "Recorded",
-                            value:
-                                "\(people.name(by.userId)) · \(HouseholdText.instant(by.at).formatted(.relative(presentation: .named)))"
-                        )
+                        HStack {
+                            Text(by.edited ? "Edited" : "Recorded").foregroundStyle(PennyColor.secondaryLabel)
+                            Spacer()
+                            Text("\(people.name(by.userId)) · \(HouseholdText.ago(by.at, now: now))")
+                                .font(.body.weight(.semibold))
+                                .multilineTextAlignment(.trailing)
+                        }
+                        .accessibilityElement(children: .combine)
                         .accessibilityIdentifier("paymentStale.by")
                     }
                 }
                 .pennyCard()
             }
-            PennyButton(latest == nil ? "Back to the household" : "Review expense", systemImage: "eye", action: review)
+            PennyButton(latest == nil ? "Back to the household" : "Review expense", action: review)
                 .accessibilityIdentifier("paymentStale.review")
             Text("Nothing was recorded. Recording a payment notes money already paid. Penny doesn't transfer money.")
                 .font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
@@ -253,7 +302,7 @@ private struct StaleExpenseView: View {
 
     private func compare(_ label: String, _ row: StaleShareChange.Row) -> some View {
         HStack {
-            Text(label)
+            Text(label).foregroundStyle(PennyColor.secondaryLabel)
             Spacer()
             Text(row.before)
                 .strikethrough()
@@ -300,7 +349,7 @@ private struct StaleMonthlyView: View {
                 }
             }
             .pennyCard()
-            PennyButton("Review balances", systemImage: "eye", action: review)
+            PennyButton("Review balances", action: review)
                 .accessibilityIdentifier("paymentStale.review")
             Text("Nothing was recorded. Penny doesn't transfer money.")
                 .font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
@@ -308,6 +357,21 @@ private struct StaleMonthlyView: View {
     }
 }
 
-extension String {
-    var capitalizedFirst: String { prefix(1).uppercased() + dropFirst() }
+/// The dashed arrow from the payer to the receiver on `iphone-record-payment`.
+private struct DashedArrow: View {
+    var body: some View {
+        Canvas { context, size in
+            let mid = size.height / 2
+            var line = Path()
+            line.move(to: CGPoint(x: 0, y: mid))
+            line.addLine(to: CGPoint(x: size.width - 2, y: mid))
+            var head = Path()
+            head.move(to: CGPoint(x: size.width - 8, y: mid - 6))
+            head.addLine(to: CGPoint(x: size.width - 1, y: mid))
+            head.addLine(to: CGPoint(x: size.width - 8, y: mid + 6))
+            let shading = GraphicsContext.Shading.color(PennyColor.tertiaryLabel)
+            context.stroke(line, with: shading, style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [6, 5]))
+            context.stroke(head, with: shading, style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
+        }
+    }
 }

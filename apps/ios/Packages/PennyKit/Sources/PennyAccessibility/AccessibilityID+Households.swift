@@ -22,6 +22,8 @@ extension AccessibilityID {
         public static let join = "shared.join"
         public static let overall = "shared.overall"
         public static let listNotice = "shared.notice"
+        /// The toolbar + (New household, Join with a code).
+        public static let add = "shared.add"
         public static func row(_ id: String) -> String { "shared.household.\(id)" }
 
         // Create or join.
@@ -56,6 +58,11 @@ extension AccessibilityID {
         public static let archive = "household.archive"
         public static let rename = "household.rename"
         public static let monthlyNote = "household.monthlyNote"
+        /// The iPad header's "November · $3,180.50 in shared expenses".
+        public static let monthTotal = "household.monthTotal"
+        /// iPad: the selected expense beside the list, and its link to the full page.
+        public static let selectedExpense = "household.selectedExpense"
+        public static let selectedExpenseOpen = "household.selectedExpenseOpen"
         public static func expense(_ id: String) -> String { "household.expense.\(id)" }
         public static func member(_ userId: String) -> String { "household.member.\(userId)" }
         public static func balanceRow(_ userId: String) -> String { "household.balanceRow.\(userId)" }
@@ -120,6 +127,7 @@ extension AccessibilityID {
         public static let recordMonthlyConfirm = "recordMonthly.confirm"
         public static let recordMonthlyExplanation = "recordMonthly.explanation"
         public static let paymentError = "payment.error"
+        public static let paymentAmount = "payment.amount"
         public static let staleOld = "paymentStale.old"
         public static let staleNew = "paymentStale.new"
         public static let staleReview = "paymentStale.review"
@@ -127,12 +135,14 @@ extension AccessibilityID {
 
         // History.
         public static let historyEmpty = "history.empty"
+        public static let historySubtitle = "history.subtitle"
         public static func historyFilter(_ rawValue: String) -> String { "history.filter.\(rawValue)" }
         public static func historyEvent(_ id: String) -> String { "history.event.\(id)" }
 
         static let all =
             Screen.all + [
-                create, join, overall, listNotice, startMode, startIntro, name, currency, createButton, code,
+                create, join, overall, listNotice, add, monthTotal, selectedExpense, selectedExpenseOpen, paymentAmount,
+                historySubtitle, startMode, startIntro, name, currency, createButton, code,
                 joinButton, scan,
                 startError, otherServer, useOtherServer, startClose, balance, recordPayment, addExpense, section,
                 history, month, previousMonth, nextMonth, readOnly, notice, invite, inviteCreate, inviteInlineQR, leave,

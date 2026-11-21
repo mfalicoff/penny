@@ -25,9 +25,11 @@ struct AuthGate: View {
                     inbox: $inbox,
                     session: .demo,
                     makeModel: {
-                        ShellModel(
+                        let shell = ShellModel(
                             workspace: demo, session: .demo, today: services.today(), clock: services.today,
                             leaveDemo: { self.demo = nil })
+                        shell.now = services.now
+                        return shell
                     }
                 )
                 .id(ObjectIdentifier(demo))
@@ -78,6 +80,7 @@ struct AuthGate: View {
                                 },
                                 email: account.email)
                             shell.widgets = services.widgets
+                            shell.now = services.now
                             return shell
                         }
                     )

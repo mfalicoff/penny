@@ -40,6 +40,11 @@ public struct HouseholdPeople: Equatable, Sendable {
         userId == meId ? "your" : "\(name(userId))'s"
     }
 
+    /// The person after the start of a sentence: "you" for the viewer, never a capital "You".
+    public func object(_ userId: String) -> String {
+        userId == meId ? "you" : name(userId)
+    }
+
     /// Up to two letters for a monogram, from the email's local part ("bea.kim@…" is "BK").
     public func initials(_ userId: String) -> String {
         guard let email = member(userId)?.email else { return "?" }
@@ -192,8 +197,27 @@ public enum AuditFilter: String, CaseIterable, Sendable {
 public struct AuditDescription: Equatable, Sendable {
     public var summary: String
     public var changes: [String]
+    /// The names in `summary` drawn in bold, as on the card ("**Mira** added **Hydro**"): the
+    /// actor, or the person who joined or left, and the expense.
+    public var emphasis: [String]
+    /// Each edited field with its old and new value, so the old one can be struck through
+    /// ("Category ~~Shopping~~ → Groceries"). The same edits are in `changes` as words.
+    public var edits: [Edit]
 
-    public init(_ event: WireAuditEvent, people: HouseholdPeople, money: (Int64) -> String) {
+    public struct Edit: Equatable, Sendable {
+        public var label: String
+        public var before: String
+        public var after: String
+    }
+
+    /// `expenseTitle` names a payment's expense when the page knows it ("$61.40 for Costco run" on
+    /// `iphone-history`); `day` formats the day someone joined ("Included in new expenses from
+    /// Oct 14"). `group` is "household" or "trip".
+    public init(
+        _ event: WireAuditEvent, people: HouseholdPeople, money: (Int64) -> String,
+        expenseTitle: (String) -> String? = { _ in nil }, day: (Int64) -> String? = { _ in nil },
+        group: String = "household"
+    ) {
         let before = event.before ?? .null
         let after = event.after ?? .null
         let actor = people.name(event.actorId)
@@ -202,17 +226,17 @@ public struct AuditDescription: Equatable, Sendable {
 
         switch event.action {
         case "household.created", "trip.created":
-            summary = "\(actor) created \(after["name"]?.string ?? "the household")"
+            summary = "\(actor) created \(after["name"]?.string ?? "the \(group)")"
         case "household.renamed", "trip.edited":
-            summary = "\(actor) renamed the household"
+            summary = "\(actor) renamed the \(group)"
         case "invite.created":
             summary = "\(actor) created an invite code"
         case "member.joined":
-            summary = "\(after["userId"]?.string.map(people.name) ?? actor) joined"
+            summary = "\(after["userId"]?.string.map(people.name) ?? actor) joined the \(group)"
         case "member.left":
-            summary = "\(before["userId"]?.string.map(people.name) ?? actor) left"
+            summary = "\(before["userId"]?.string.map(people.name) ?? actor) left the \(group)"
         case "member.removed":
-            summary = "\(actor) removed \(person(before["userId"]))"
+            summary = "\(actor) removed \(before["userId"]?.string.map(people.object) ?? "someone")"
         case "household.archived":
             summary = "\(actor) archived the household"
         case "expense.created":
@@ -225,13 +249,12 @@ public struct AuditDescription: Equatable, Sendable {
         case "expense.moved":
             summary = "\(actor) moved \(subject) to another household"
         case "reimbursement.created":
-            let amount = after["amountCents"]?.int64.map(money) ?? "a payment"
+            // "You recorded Jo's payment", then what it paid on the next line.
             let from = after["fromUserId"]?.string ?? ""
-            let to = person(after["toUserId"])
             summary =
-                after["expenseId"]?.string != nil
-                ? "\(actor) recorded \(people.possessive(from)) \(amount) share payment to \(to)"
-                : "\(actor) recorded that \(people.name(from)) paid \(to) \(amount)"
+                from == event.actorId
+                ? "\(actor) recorded a payment"
+                : "\(actor) recorded \(from == people.meId ? "your" : "\(people.name(from))'s") payment"
         case "recurring.created":
             summary = "\(actor) set up \(subject) to repeat"
         case "recurring.updated":
@@ -240,6 +263,19 @@ public struct AuditDescription: Equatable, Sendable {
             summary = "\(actor) stopped repeating \(subject)"
         default:
             summary = "\(actor): \(event.action)"
+        }
+        let memberId = after["userId"]?.string ?? before["userId"]?.string
+        switch event.action {
+        case "member.joined", "member.left":
+            emphasis = [memberId.map(people.name) ?? actor]
+        case "member.removed":
+            emphasis = [actor] + (memberId.map { [people.object($0)] } ?? [])
+        case "expense.created" where after["recurringId"]?.string != nil:
+            emphasis = [subject]
+        case let action where action.hasPrefix("expense.") || action.hasPrefix("recurring."):
+            emphasis = [actor, subject]
+        default:
+            emphasis = [actor]
         }
 
         func format(_ key: String, _ value: WireJSON?) -> String {
@@ -262,6 +298,7 @@ public struct AuditDescription: Equatable, Sendable {
             }
         }
 
+        edits = []
         let labels: [(String, String)] = [
             ("name", "Name"), ("title", "Title"), ("totalCents", "Total"), ("date", "Date"),
             ("payerUserId", "Paid by"), ("splitMode", "Split"), ("category", "Category"), ("note", "Note"),
@@ -270,10 +307,11 @@ public struct AuditDescription: Equatable, Sendable {
         ]
         switch event.action {
         case "expense.updated", "recurring.updated", "household.renamed", "trip.edited":
-            changes = labels.compactMap { key, label in
+            edits = labels.compactMap { key, label in
                 guard let old = before[key], let new = after[key], old != new else { return nil }
-                return "\(label): \(format(key, old)) → \(format(key, new))"
+                return Edit(label: label, before: format(key, old), after: format(key, new))
             }
+            changes = edits.map { "\($0.label): \($0.before) → \($0.after)" }
         case "expense.created":
             if let total = after["totalCents"]?.int64 {
                 changes = ["\(money(total)) · split \(format("splitMode", after["splitMode"]))"]
@@ -281,7 +319,18 @@ public struct AuditDescription: Equatable, Sendable {
                 changes = []
             }
         case "member.joined":
-            changes = ["Included in new expenses from the day they joined"]
+            changes = [
+                day(event.createdAt).map { "Included in new expenses from \($0)" }
+                    ?? "Included in new expenses from the day they joined"
+            ]
+        case "reimbursement.created":
+            let amount = after["amountCents"]?.int64.map(money) ?? "A payment"
+            let to = after["toUserId"]?.string.map(people.object) ?? "someone"
+            if let expense = after["expenseId"]?.string {
+                changes = [expenseTitle(expense).map { "\(amount) for \($0)" } ?? "\(amount) share to \(to)"]
+            } else {
+                changes = ["\(amount) to \(to) for the month"]
+            }
         default:
             changes = []
         }
