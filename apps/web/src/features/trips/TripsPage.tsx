@@ -16,7 +16,7 @@ import { categoryIcon } from "../entries/model";
 import { GroupToolbar, ToolButton } from "../households/GroupTools";
 import { JoinTripDialog } from "../households/StartDialogs";
 import { useLedgerWorkspace } from "../organize/workspace";
-import { featuredTrip, peopleCount, phaseLabel, tileStatus, tripCards, tripOverview, tripRange, tripSections, type TripCard } from "./model";
+import { featuredTrip, paidByCell, peopleCount, phaseLabel, tileStatus, tripPhase, tripCards, tripOverview, tripRange, tripSections, type TripCard } from "./model";
 import { TripFormDialog } from "./TripForm";
 import { useSharedTripNumbers } from "./useSharedTrip";
 
@@ -30,7 +30,8 @@ type SharedCard = Extract<TripCard, { kind: "shared" }>;
  * your share and what you owe beside its expenses, then a grid of tiles ending with New trip.
  * Personal trips come from this browser's ledger (offline first); shared trips from the server. A
  * personal trip that was shared shows once, as the shared trip. Join a trip (key) and New trip (+)
- * are the navigation bar's icons (MAZ-229); from 1100px New trip is the tile.
+ * are the navigation bar's icons (MAZ-229); from 1100px the key sits beside the title and New trip
+ * is the tile (MAZ-263).
  */
 export function TripsPage() {
   const email = useAccountEmail();
@@ -62,12 +63,14 @@ export function TripsPage() {
         : "Penny couldn't load your shared trips. Your personal trips are all here."
       : null;
   const rest = cards.filter((card) => card !== featured);
+  const join = demo ? null : <ToolButton icon="key" label="Join a trip" onClick={() => { setDialog("join"); }} />;
   const sections = tripSections(rest);
 
   return (
     <div className="page trips">
-      <GroupToolbar>
-        {demo ? null : <ToolButton icon="key" label="Join a trip" onClick={() => { setDialog("join"); }} />}
+      {/* From 1100px the key sits beside the title (card `web-trips`); narrower, it's the bar's first icon (`iphone-trips`). */}
+      <GroupToolbar lead={wide && join ? join : null}>
+        {wide ? null : join}
         {wide ? null : <ToolButton icon="add" label="New trip" onClick={() => { setDialog("new"); }} />}
       </GroupToolbar>
 
@@ -153,7 +156,7 @@ function TripTile({ card, currency }: { card: TripCard; currency: string | undef
         <span className="trip-tile__icon" aria-hidden="true">
           <Icon name="airplane" />
         </span>
-        <Badge>{kindLabel(card)}</Badge>
+        {card.kind === "shared" && tripPhase(card) === "past" ? <PastSharedBadge card={card} /> : <Badge>{kindLabel(card)}</Badge>}
       </span>
       <span className="trip-tile__name">{card.name}</span>
       <span className="trip-tile__meta">
@@ -162,6 +165,18 @@ function TripTile({ card, currency }: { card: TripCard; currency: string | undef
       </span>
       <span className="trip-tile__amount">{card.kind === "personal" ? <Money cents={card.total} currency={currency} /> : <SharedShare card={card} />}</span>
     </Link>
+  );
+}
+
+/** A past shared trip's pill (card `web-trips`): the green Settled once nobody owes anything, else Shared. */
+function PastSharedBadge({ card }: { card: SharedCard }) {
+  const { settled } = useSharedTripNumbers(card.household, { settled: true });
+  return settled ? (
+    <Badge tone="income" icon="checkmark">
+      Settled
+    </Badge>
+  ) : (
+    <Badge>{kindLabel(card)}</Badge>
   );
 }
 
@@ -402,14 +417,15 @@ function SharedTripExpenses({ card }: { card: SharedCard }) {
   const me = numbers.me;
   const name = (userId: string) => (userId === me ? "You" : (detail.members.find((member) => member.userId === userId)?.email ?? "Former member"));
   const all: PreviewRow[] = [
-    ...expenses.map((expense) => ({
+    // Oldest first, as the card lists the trip's expenses; your private ones follow.
+    ...[...expenses].sort((x, y) => x.date.localeCompare(y.date) || x.id.localeCompare(y.id)).map((expense) => ({
       id: expense.id,
       title: expense.title,
       category: expense.category,
-      paidBy: name(expense.payerUserId),
+      paidBy: paidByCell(expense, me, name(expense.payerUserId)),
       yours: me ? (expense.splits.find((split) => split.userId === me)?.amountCents ?? 0) : 0,
     })),
-    ...numbers.mine.map((entry) => ({
+    ...[...numbers.mine].sort((x, y) => x.date.localeCompare(y.date) || x.id.localeCompare(y.id)).map((entry) => ({
       id: entry.id,
       title: entry.title,
       category: workspace.ledger?.categories.find((category) => category.id === entry.categoryId),

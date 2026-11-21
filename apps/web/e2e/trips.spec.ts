@@ -113,7 +113,8 @@ test("a shared personal trip keeps its earlier expense private, and a later memb
   // Flights are booked before Bea joins: split among the people on the trip then (Alex).
   await alex.page.getByRole("link", { name: "Expenses" }).click();
   await addTripExpense(alex.page, "Flights", "824.00", "2026-10-02");
-  await expect(alex.page.getByRole("region", { name: "Only you" }).getByText("Airport train")).toBeVisible();
+  // Phones list it under Only you; from 1100px it sits in the one Expenses panel, marked Only you.
+  await expect(alex.page.getByRole("list", { name: /^(Private expenses|Trip expenses)$/ }).getByRole("button", { name: /Airport train/ })).toBeVisible();
 
   await bea.page.goto("/trips");
   await bea.page.getByRole("button", { name: "Join a trip" }).click();
@@ -131,7 +132,7 @@ test("a shared personal trip keeps its earlier expense private, and a later memb
   // An expense after Bea joined is split with her; she sees it after a refresh.
   await addTripExpense(alex.page, "Apartment in Alfama", "368.00", "2026-11-12");
   await bea.page.reload();
-  await expect(bea.page.getByRole("link", { name: /Apartment in Alfama/ }).getByText("−$184.00 you owe")).toBeVisible();
+  await expect(bea.page.getByRole("link", { name: /Apartment in Alfama/ }).getByText("$184.00 yours")).toBeVisible();
 
   // Balances settle by month: October (flights, Alex only) is settled, November isn't. Before the
   // trip they open on its month, November (card `ipad-trip`).
