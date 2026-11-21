@@ -360,7 +360,7 @@ struct ReceiptInboxItemView: View {
                         .accessibilityIdentifier("receiptInboxItem.error")
                 }
             }
-            Section("Receipts") {
+            CardSection("Receipts") {
                 ForEach(ReceiptInboxRules.orderedFiles(item)) { file in
                     Button {
                         previewing = ReceiptPreviewRequest(receipt: ReceiptInboxRules.reference(file))

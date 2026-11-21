@@ -68,11 +68,6 @@
             "summary": "Follow your money shows Spent, Invested and Over as three stacked columns with headline amounts, not the card's one-line dot legend; the projected amount isn't bold",
             "kind": "follow-up",
             "ref": "MAZ-245"
-          },
-          {
-            "summary": "Entry rows read date · category; the card reads date · account (Home) or the account with split and share extras (Activity)",
-            "kind": "follow-up",
-            "ref": "MAZ-244"
           }
         ]
       },
@@ -128,11 +123,6 @@
             "summary": "Follow your money shows Spent, Invested and Over as three stacked columns with headline amounts, not the card's one-line dot legend; the projected amount isn't bold",
             "kind": "follow-up",
             "ref": "MAZ-245"
-          },
-          {
-            "summary": "Entry rows read date · category; the card reads date · account (Home) or the account with split and share extras (Activity)",
-            "kind": "follow-up",
-            "ref": "MAZ-244"
           }
         ]
       },
@@ -297,21 +287,6 @@
             "ref": "MAZ-255"
           },
           {
-            "summary": "Day headers read \"Saturday, October 10\", not upper case with a short month",
-            "kind": "follow-up",
-            "ref": "MAZ-244"
-          },
-          {
-            "summary": "Entry rows read date · category; the card reads date · account (Home) or the account with split and share extras (Activity)",
-            "kind": "follow-up",
-            "ref": "MAZ-244"
-          },
-          {
-            "summary": "Split and shared rows have no second line under the amount (\"of $12.80\", \"your share\")",
-            "kind": "follow-up",
-            "ref": "MAZ-244"
-          },
-          {
             "summary": "Add entry is a fifth tab with the search role inside the system tab bar, not a separate copper button beside four tabs",
             "kind": "follow-up",
             "ref": "MAZ-254"
@@ -412,11 +387,6 @@
             "summary": "No caret after the amount, and the . and backspace keys are filled, not ghost keys",
             "kind": "follow-up",
             "ref": "MAZ-247"
-          },
-          {
-            "summary": "The close (×) and toolbar + glyphs are copper; the card draws them neutral",
-            "kind": "follow-up",
-            "ref": "MAZ-244"
           }
         ]
       },
@@ -504,11 +474,6 @@
             "summary": "Adds the receipt file-type note and a shared-trip footer",
             "kind": "follow-up",
             "ref": "MAZ-247"
-          },
-          {
-            "summary": "Section headers are larger title-case headings, not the card's small upper-case labels",
-            "kind": "follow-up",
-            "ref": "MAZ-244"
           }
         ]
       },
@@ -555,11 +520,6 @@
             "summary": "The title has no \"<entry> · <total>\" subtitle",
             "kind": "follow-up",
             "ref": "MAZ-247"
-          },
-          {
-            "summary": "The close (×) and toolbar + glyphs are copper; the card draws them neutral",
-            "kind": "follow-up",
-            "ref": "MAZ-244"
           }
         ]
       },
@@ -584,19 +544,12 @@
       "id": "iphone-category-picker",
       "view": "category picker with renamed Groceries & dining",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-73",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "The close (×) and toolbar + glyphs are copper; the card draws them neutral",
-            "kind": "follow-up",
-            "ref": "MAZ-244"
-          }
         ]
       },
       "web": {
@@ -630,11 +583,6 @@
             "summary": "Split and receipt shows only Your share and Total, with no split method and the receipt as a row; no category glow behind the header",
             "kind": "follow-up",
             "ref": "MAZ-246"
-          },
-          {
-            "summary": "Section headers are larger title-case headings, not the card's small upper-case labels",
-            "kind": "follow-up",
-            "ref": "MAZ-244"
           },
           {
             "summary": "Add entry is a fifth tab with the search role inside the system tab bar, not a separate copper button beside four tabs",
@@ -746,11 +694,6 @@
             "summary": "No + in the toolbar; rows have no leading tile, the balance is one line, and Settled has no check icon",
             "kind": "follow-up",
             "ref": "MAZ-248"
-          },
-          {
-            "summary": "Section headers are larger title-case headings, not the card's small upper-case labels",
-            "kind": "follow-up",
-            "ref": "MAZ-244"
           },
           {
             "summary": "Members are shown by email and initials from the email",
@@ -929,11 +872,6 @@
             "summary": "Keeps the full hero above the segments, which pushes the invite card under the tab bar",
             "kind": "follow-up",
             "ref": "MAZ-248"
-          },
-          {
-            "summary": "Section headers are larger title-case headings, not the card's small upper-case labels",
-            "kind": "follow-up",
-            "ref": "MAZ-244"
           }
         ]
       },
@@ -985,11 +923,6 @@
             "summary": "Titled Add entry with the type control; the card reads New expense with the household as subtitle",
             "kind": "follow-up",
             "ref": "MAZ-247"
-          },
-          {
-            "summary": "The selected Paid by chip is copper, not the card's inverted fill",
-            "kind": "follow-up",
-            "ref": "MAZ-244"
           }
         ]
       },
@@ -1130,7 +1063,7 @@
         ],
         "deviations": [
           {
-            "summary": "Details rows have no icons, the footer adds two sentences, and the header icon is copper, not the card's neutral tile",
+            "summary": "Details rows have no icons, the footer adds two sentences",
             "kind": "follow-up",
             "ref": "MAZ-248"
           }
@@ -1171,7 +1104,7 @@
             "ref": "MAZ-171"
           },
           {
-            "summary": "Inline title with the chips before the subtitle; no action badges on avatars; payments read \"… recorded that … paid You $30.00\"; long title-case day headers; the selected chip is copper",
+            "summary": "Inline title with the chips before the subtitle; no action badges on avatars; payments read \"… recorded that … paid You $30.00\"",
             "kind": "follow-up",
             "ref": "MAZ-248"
           }
@@ -1222,14 +1155,9 @@
             "ref": "MAZ-256"
           },
           {
-            "summary": "The featured meta repeats Shared and the year; rows show a long date and Personal as text, not a chip; trip tiles are category blue or copper, not neutral; no glow",
+            "summary": "The featured meta repeats Shared and the year; rows show a long date and Personal as text, not a chip; no glow",
             "kind": "follow-up",
             "ref": "MAZ-249"
-          },
-          {
-            "summary": "Section headers are larger title-case headings, not the card's small upper-case labels",
-            "kind": "follow-up",
-            "ref": "MAZ-244"
           },
           {
             "summary": "Add entry is a fifth tab with the search role inside the system tab bar, not a separate copper button beside four tabs",
@@ -1320,11 +1248,6 @@
             "summary": "Starts, Ends and Currency have no icons and Currency no lock; the name field has a Trip name header",
             "kind": "follow-up",
             "ref": "MAZ-249"
-          },
-          {
-            "summary": "The close (×) and toolbar + glyphs are copper; the card draws them neutral",
-            "kind": "follow-up",
-            "ref": "MAZ-244"
           }
         ]
       },
@@ -1361,11 +1284,6 @@
             "summary": "The account row has no chevron and a grey sync icon; Currency has a chevron and the footer gives the entries reason, not \"locked while you're in a household\"",
             "kind": "follow-up",
             "ref": "MAZ-250"
-          },
-          {
-            "summary": "Row icons are bare copper glyphs, not neutral tiles",
-            "kind": "follow-up",
-            "ref": "MAZ-244"
           },
           {
             "summary": "Settings pages use a large left-aligned title; the card uses a centered inline title",
@@ -1422,11 +1340,6 @@
             "summary": "The subtitle sits about 20 points further below the large title than on the card: iOS keeps the system large title, and the list starts below its area (MAZ-236)",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
-          },
-          {
-            "summary": "The close (×) and toolbar + glyphs are copper; the card draws them neutral",
-            "kind": "follow-up",
-            "ref": "MAZ-244"
           }
         ]
       },
@@ -1473,11 +1386,6 @@
             "summary": "An inline title and no … button; upcoming dates include the year; a separator above Edit and Pause",
             "kind": "follow-up",
             "ref": "MAZ-251"
-          },
-          {
-            "summary": "Section headers are larger title-case headings, not the card's small upper-case labels",
-            "kind": "follow-up",
-            "ref": "MAZ-244"
           }
         ]
       },
@@ -1521,19 +1429,9 @@
             "ref": "MAZ-251"
           },
           {
-            "summary": "Section headers are larger title-case headings, not the card's small upper-case labels",
-            "kind": "follow-up",
-            "ref": "MAZ-244"
-          },
-          {
             "summary": "Bank account uses a bank building icon where the card uses a wallet",
             "kind": "follow-up",
             "ref": "MAZ-257"
-          },
-          {
-            "summary": "The close (×) and toolbar + glyphs are copper; the card draws them neutral",
-            "kind": "follow-up",
-            "ref": "MAZ-244"
           }
         ]
       },
@@ -1566,16 +1464,6 @@
           "dark"
         ],
         "deviations": [
-          {
-            "summary": "Section headers are larger title-case headings, not the card's small upper-case labels",
-            "kind": "follow-up",
-            "ref": "MAZ-244"
-          },
-          {
-            "summary": "The close (×) and toolbar + glyphs are copper; the card draws them neutral",
-            "kind": "follow-up",
-            "ref": "MAZ-244"
-          },
           {
             "summary": "Bank account uses a bank building icon where the card uses a wallet",
             "kind": "follow-up",
@@ -1621,16 +1509,6 @@
             "summary": "No Edit button or drag handles to reorder, and the footer explains removal instead of the shortcuts",
             "kind": "follow-up",
             "ref": "MAZ-251"
-          },
-          {
-            "summary": "Section headers are larger title-case headings, not the card's small upper-case labels",
-            "kind": "follow-up",
-            "ref": "MAZ-244"
-          },
-          {
-            "summary": "The close (×) and toolbar + glyphs are copper; the card draws them neutral",
-            "kind": "follow-up",
-            "ref": "MAZ-244"
           }
         ]
       },
@@ -1667,11 +1545,6 @@
             "summary": "The name field has a Name header",
             "kind": "follow-up",
             "ref": "MAZ-251"
-          },
-          {
-            "summary": "The close (×) and toolbar + glyphs are copper; the card draws them neutral",
-            "kind": "follow-up",
-            "ref": "MAZ-244"
           },
           {
             "summary": "Capture state: the name keeps the keyboard up over part of Icon; Return would save the category (follow-up from MAZ-253)",
@@ -2369,11 +2242,6 @@
             "summary": "The detail uses the iPhone stacked layout, with icon-only Edit and no split method or other people",
             "kind": "follow-up",
             "ref": "MAZ-246"
-          },
-          {
-            "summary": "Entry rows read date · category; the card reads date · account (Home) or the account with split and share extras (Activity)",
-            "kind": "follow-up",
-            "ref": "MAZ-244"
           }
         ]
       },

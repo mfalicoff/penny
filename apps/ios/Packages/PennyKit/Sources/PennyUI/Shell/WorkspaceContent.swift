@@ -32,13 +32,17 @@ struct WorkspaceContent<Content: View>: View {
     }
 }
 
-/// One entry: category icon, title, date and account (or "Waiting to sync"), and the amount
-/// with its meaning's sign and color. A shared or split entry shows the person's share.
+/// One entry, as the cards' `.row`: category icon, title, a line with the date (where the list
+/// has no day headers), the account and what's special about it ("split 2 ways", "monthly"), or
+/// "Waiting to sync", and the amount with its meaning's sign and color. A split or shared entry
+/// shows the person's share, with "of $12.80" or "your share" under it.
 struct EntryRow: View {
     @Environment(ShellModel.self) private var shell
     let entry: ReportEntry
     let report: LedgerReport
     let currency: String
+    /// Activity's rows sit under day headers, so they leave the date out.
+    var showsDate = true
 
     var body: some View {
         let category = report.categories.first { $0.id == entry.categoryId }
@@ -54,23 +58,35 @@ struct EntryRow: View {
             .overlay {
                 if expected { Circle().strokeBorder(PennyColor.pending, lineWidth: 2).accessibilityHidden(true) }
             }
-            VStack(alignment: .leading, spacing: 2) {
-                Text(entry.title).font(.body.weight(.semibold)).foregroundStyle(PennyColor.label).lineLimit(2)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(entry.title).font(.callout.weight(.semibold)).foregroundStyle(PennyColor.label).lineLimit(2)
                 if waiting {
                     // The status stays in words while the sync line replaces the meta line.
                     Label(Self.waitingText(entry, today: shell.today), systemImage: "clock")
                         .font(.footnote).foregroundStyle(PennyColor.pending)
                 } else {
-                    Text(Self.meta(entry, category: category, report: report, today: shell.today)).font(.footnote)
-                        .foregroundStyle(PennyColor.secondaryLabel)
-                        .lineLimit(1)
+                    Text(
+                        Self.meta(
+                            entry, category: category, report: report, today: shell.today, showsDate: showsDate)
+                    )
+                    .font(.footnote)
+                    .foregroundStyle(PennyColor.secondaryLabel)
+                    .lineLimit(1)
                 }
             }
             Spacer(minLength: 8)
-            MoneyText(entry.share, meaning: Self.meaning(entry, today: shell.today), currency: currency)
+            VStack(alignment: .trailing, spacing: 1) {
+                MoneyText(
+                    entry.share, meaning: Self.meaning(entry, today: shell.today), currency: currency,
+                    style: .callout.weight(.semibold))
+                if let note = Self.amountNote(entry, currency: currency) {
+                    Text(note).font(.caption.weight(.medium)).foregroundStyle(PennyColor.secondaryLabel)
+                        .lineLimit(1)
+                }
+            }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
+        .padding(.horizontal, ControlSize.rowInsets.leading)
+        .padding(.vertical, ControlSize.rowInsets.top)
         .frame(minHeight: ControlSize.row)
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("entry.\(entry.id)")
@@ -93,21 +109,47 @@ struct EntryRow: View {
         return entry.kind == .income ? "Expected" : "Scheduled"
     }
 
-    /// The line under the title: the day, the status, "Shared · <household>" for a shared
-    /// expense (MAZ-185), then the account and "your share", or the category when there is
-    /// neither.
-    static func meta(_ entry: ReportEntry, category: LedgerCategory?, report: LedgerReport, today: CalendarDate)
-        -> String
-    {
+    /// The line under the title, as the cards read it: the day (unless the list has day
+    /// headers), the status, then the household's name for a shared expense (MAZ-185) or the
+    /// account, then "split 2 ways" for an equal split and, under a day header, the schedule's
+    /// cadence ("monthly"). The category stands in when there is nothing else to say.
+    /// "Nov 6 · Visa", "Today · Visa · split 2 ways"; on Activity "Main chequing · monthly".
+    static func meta(
+        _ entry: ReportEntry, category: LedgerCategory?, report: LedgerReport, today: CalendarDate,
+        showsDate: Bool = true
+    ) -> String {
         var details: [String] = []
         if let household = entry.householdName {
-            details.append(household.isEmpty ? "Shared" : "Shared · \(household)")
+            details.append(household.isEmpty ? "Shared" : household)
         }
         if let account = entry.accountId.flatMap(report.ledger.account(id:)) { details.append(account.name) }
-        if entry.share != entry.total { details.append("your share") }
+        if entry.householdName == nil, let people = equalSplit(entry) { details.append("split \(people) ways") }
+        if !showsDate, let rule = entry.recurringId.flatMap(report.ledger.rule(id:)) {
+            details.append(ScheduleText.frequency(rule.frequency).lowercased())
+        }
         if details.isEmpty, let category { details.append(category.name) }
-        let parts = [DayText.short(entry.date, today: today)] + [status(entry, today: today)].compactMap(\.self)
-        return (parts + details).joined(separator: " · ")
+        let day = showsDate ? [DayText.short(entry.date, today: today)] : []
+        return (day + [status(entry, today: today)].compactMap(\.self) + details).joined(separator: " · ")
+    }
+
+    /// The line under the amount: "your share" for a shared expense, "of $12.80" for a personal
+    /// split, nil when the amount is the whole entry.
+    static func amountNote(_ entry: ReportEntry, currency: String) -> String? {
+        if entry.householdName != nil { return "your share" }
+        guard entry.share != entry.total else { return nil }
+        return "of \(MoneyFormat.amount(entry.total, currency: currency))"
+    }
+
+    /// The head count of an equal split, when the share is exactly what splitting the total
+    /// that many ways gives (`Money.personalShare` rounds half up). Entries keep only the total
+    /// and the share, so an amount or percentage share that isn't an equal split says nothing.
+    static func equalSplit(_ entry: ReportEntry) -> Int64? {
+        guard entry.share > 0, entry.share < entry.total else { return nil }
+        let people = Money.divideRoundingHalfUp(entry.total, by: entry.share)
+        guard (2...100).contains(people), Money.divideRoundingHalfUp(entry.total, by: people) == entry.share else {
+            return nil
+        }
+        return people
     }
 
     /// The pending-sync line, which replaces the meta line: it keeps the status in words.
@@ -131,10 +173,18 @@ enum DayText {
         return date(day).formatted(.dateTime.month(.abbreviated).day())
     }
 
+    /// "Friday, Nov 6", as the cards' day headers and detail lines read.
     static func long(_ day: CalendarDate, today: CalendarDate) -> String {
         if day == today { return "Today" }
         if day == today.adding(days: -1) { return "Yesterday" }
-        return date(day).formatted(.dateTime.weekday(.wide).month(.wide).day())
+        return date(day).formatted(.dateTime.weekday(.wide).month(.abbreviated).day())
+    }
+
+    /// "Fri, Nov 6": the day headers in narrower lists (iPad Activity, household history).
+    static func medium(_ day: CalendarDate, today: CalendarDate) -> String {
+        if day == today { return "Today" }
+        if day == today.adding(days: -1) { return "Yesterday" }
+        return date(day).formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day())
     }
 }
 

@@ -68,7 +68,7 @@ struct TripFormSheet: View {
                         .accessibilityIdentifier("tripForm.nameProblem")
                 }
             } header: {
-                Text("Trip name")
+                Text("Trip name").cardSectionHeader()
             }
             Section {
                 DatePicker(
@@ -95,7 +95,7 @@ struct TripFormSheet: View {
                     LabeledContent("Currency", value: currency.rawValue)
                 }
             } header: {
-                Text("When")
+                Text("When").cardSectionHeader()
             } footer: {
                 Text(TripText.datesNote)
             }
@@ -116,6 +116,7 @@ struct TripFormSheet: View {
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancel", systemImage: "xmark") { dismiss() }
+                    .neutralToolbarGlyph()
                     .disabled(model.isSaving)
                     .accessibilityIdentifier("tripForm.close")
             }
@@ -151,7 +152,7 @@ struct TripFormSheet: View {
                     LabeledContent("Invite people", value: "After saving")
                 }
             } header: {
-                Text("People")
+                Text("People").cardSectionHeader()
             } footer: {
                 Text(shareNote(model))
             }
@@ -261,6 +262,7 @@ struct ShareTripSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel", systemImage: "xmark") { dismiss() }
+                        .neutralToolbarGlyph()
                         .disabled(working)
                         .accessibilityIdentifier("shareTrip.close")
                 }

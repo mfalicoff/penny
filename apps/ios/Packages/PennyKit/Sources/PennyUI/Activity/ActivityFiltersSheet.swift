@@ -16,7 +16,7 @@ struct ActivityFiltersSheet: View {
         let filters = shell.activityFilters
         NavigationStack {
             Form {
-                Section("Period") {
+                CardSection("Period") {
                     Picker("Period", selection: periodKind) {
                         Text("Month").tag(PeriodKind.month)
                         Text("Year").tag(PeriodKind.year)
@@ -53,7 +53,7 @@ struct ActivityFiltersSheet: View {
                 } footer: {
                     Text("Totals always cover the whole period.")
                 }
-                Section("Type") {
+                CardSection("Type") {
                     Picker("Type", selection: $shell.activityFilters.kind) {
                         Text("All").tag(EntryKind?.none)
                         Text("Expenses").tag(EntryKind?.some(.expense))
@@ -65,7 +65,7 @@ struct ActivityFiltersSheet: View {
                     .accessibilityIdentifier("filters.kind")
                 }
                 if let kind = filters.kind, let ledger = shell.workspace.load.ledger {
-                    Section("Category") {
+                    CardSection("Category") {
                         Picker("Category", selection: $shell.activityFilters.categoryId) {
                             Text("All categories").tag(String?.none)
                             ForEach(ledger.categoriesByUse(kind), id: \.id) { category in

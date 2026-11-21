@@ -155,7 +155,8 @@ struct EntryFlowTests {
         let shared = result.entries[0]
         #expect(ActivityRoute.destination(shared) == .householdExpense(householdID: "maison", expenseID: "e1"))
         let meta = EntryRow.meta(shared, category: nil, report: cache.report, today: today)
-        #expect(meta.components(separatedBy: " · ").dropFirst() == ["Shared", "Maison", "your share"])
+        #expect(meta.components(separatedBy: " · ").dropFirst() == ["Maison"], "the household, as the cards' Rent row")
+        #expect(EntryRow.amountNote(shared, currency: "CAD") == "your share")
         #expect(cache.result(ledger, filters).entries.map(\.id) == ["a"], "rows gone from the answer go")
     }
 
@@ -228,8 +229,11 @@ struct EntryFlowTests {
         func parts(_ id: String) throws -> [String] { try meta(id).components(separatedBy: " · ") }
         func name(_ category: String) -> String { report.categories.first { $0.id == category }?.name ?? "?" }
 
-        // Recorded: no status; a split share says "your share" instead of the category.
-        #expect(try parts("lunch").dropFirst() == ["your share"])
+        // Recorded: no status; an equal split says so instead of the category, and the amount
+        // says what it's a share of.
+        #expect(try parts("lunch").dropFirst() == ["split 2 ways"])
+        #expect(EntryRow.amountNote(try row("lunch"), currency: "CAD")?.hasPrefix("of ") == true)
+        #expect(EntryRow.amountNote(try row("invoice"), currency: "CAD") == nil)
         #expect(EntryRow.status(try row("lunch"), today: today) == nil)
         // Income dated after today, scheduled income, and a scheduled expense: one status each.
         #expect(try parts("invoice").dropFirst() == ["Expected", name("salary")])
@@ -290,5 +294,45 @@ struct EntryFlowTests {
         #expect(EntryText.tileColor(.expense, category: fun, id: fun.id) == EntryText.color(fun, id: fun.id))
         #expect(EntryText.tileSymbol(.expense, category: nil) == CategoryStyle.symbol(forIonicon: "pricetag"))
         #expect(ScheduleText.tileSymbol(.expense, category: nil) == CategoryStyle.symbol(forIonicon: "repeat"))
+    }
+    @Test("whenARowHasAnAccountSplitOrSchedule_EntryRow_ShouldReadAsTheCardsRows")
+    func rowMetaAsCards() throws {
+        let visa = PaymentAccount(id: "visa", name: "Visa", type: .credit)
+        let date = CalendarDate(year: 2026, month: 11, day: 2) ?? .earliest
+        let rule = RecurringRule(
+            id: "tfsa", title: "TFSA", kind: .investment, total: 20_000, share: 20_000, categoryId: "savings",
+            date: date, frequency: .monthly, nextDate: date.adding(days: 30), anchorDay: date.day)
+        let tfsa = LedgerEntry(
+            id: "t", title: "TFSA", kind: .investment, total: 20_000, share: 20_000, categoryId: "savings",
+            accountId: "visa", date: date, recurringId: "tfsa")
+        var coffee = entry("c", title: "Coffee")
+        coffee.accountId = "visa"
+        var third = entry("p", title: "Pizza")
+        third.total = 1001
+        third.share = 334
+        var custom = entry("x", title: "Taxi")
+        custom.share = 500
+        let ledger = Ledger(accounts: [visa], transactions: [tfsa, coffee, third, custom], recurring: [rule])
+        let report = LedgerReport(ledger: ledger)
+        func row(_ id: String) throws -> ReportEntry { try #require(report.recorded.first { $0.id == id }) }
+        func meta(_ id: String, showsDate: Bool) throws -> String {
+            let entry = try row(id)
+            return EntryRow.meta(entry, category: nil, report: report, today: today, showsDate: showsDate)
+        }
+        // Home keeps the day; Activity's day header has it, so it says the cadence instead.
+        #expect(try meta("t", showsDate: true) == "\(DayText.short(date, today: today)) · Visa")
+        #expect(try meta("t", showsDate: false) == "Visa · monthly")
+        #expect(try meta("c", showsDate: false) == "Visa · split 2 ways")
+        #expect(try meta("p", showsDate: false).hasSuffix("split 3 ways"), "$10.01 three ways is $3.34")
+        #expect(EntryRow.equalSplit(try row("x")) == nil, "a share that isn't an equal split")
+        #expect(EntryRow.amountNote(try row("x"), currency: "CAD")?.hasPrefix("of ") == true)
+        #expect(EntryRow.amountNote(try row("t"), currency: "CAD") == nil)
+        // The cards' day headers: "Friday, Nov 6" and, in narrower lists, "Fri, Nov 6".
+        let friday = CalendarDate(year: 2026, month: 11, day: 6) ?? .earliest
+        let later = CalendarDate(year: 2026, month: 11, day: 20) ?? .earliest
+        #expect(DayText.long(friday, today: later).hasSuffix("Nov 6"))
+        #expect(DayText.long(friday, today: later).hasPrefix("Friday"))
+        #expect(DayText.medium(friday, today: later).hasPrefix("Fri,"))
+        #expect(DayText.medium(later, today: later) == "Today")
     }
 }

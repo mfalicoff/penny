@@ -226,7 +226,7 @@ private struct ActivityList: View {
                 Button {
                     shell.activitySelection = personal.id
                 } label: {
-                    EntryRow(entry: entry, report: report, currency: currency)
+                    EntryRow(entry: entry, report: report, currency: currency, showsDate: false)
                 }
                 .buttonStyle(.plain)
                 .accessibilityAddTraits(shell.activitySelection == personal.id ? .isSelected : [])
@@ -234,7 +234,7 @@ private struct ActivityList: View {
                     shell.activitySelection == personal.id ? PaletteToken.tintSoft.value.color : nil)
             } else {
                 NavigationLink(value: ActivityRoute.destination(entry)) {
-                    EntryRow(entry: entry, report: report, currency: currency)
+                    EntryRow(entry: entry, report: report, currency: currency, showsDate: false)
                 }
             }
         }
@@ -552,20 +552,22 @@ struct ActivityTotals: View {
 
 private struct ActivityDayHeader: View {
     @Environment(ShellModel.self) private var shell
+    @Environment(\.horizontalSizeClass) private var sizeClass
     let day: CalendarDate
     let net: Int64
     let currency: String
 
     var body: some View {
         HStack {
-            Text(DayText.long(day, today: shell.today))
+            // The cards: "Friday, Nov 6" on iPhone, "Fri, Nov 6" in the iPad's narrower list.
+            Text(
+                sizeClass == .regular ? DayText.medium(day, today: shell.today) : DayText.long(day, today: shell.today))
             Spacer()
             Text(MoneyFormat.signed(net, meaning: net > 0 ? .income : .neutral, currency: currency))
                 .foregroundStyle(net > 0 ? PennyColor.income : PennyColor.secondaryLabel)
                 .monospacedDigit()
         }
-        .font(.footnote.weight(.semibold))
-        .foregroundStyle(PennyColor.secondaryLabel)
+        .cardSectionHeader()
         .accessibilityElement(children: .combine)
     }
 }

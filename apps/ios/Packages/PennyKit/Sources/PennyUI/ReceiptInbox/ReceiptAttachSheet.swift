@@ -38,6 +38,7 @@ struct ReceiptAttachSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel", systemImage: "xmark") { dismiss() }
+                        .neutralToolbarGlyph()
                         .accessibilityIdentifier("receiptAttach.cancel")
                 }
             }
@@ -126,13 +127,13 @@ struct ReceiptAttachSheet: View {
                     }
                     ForEach(suggested) { target in targetRow(target) }
                 } header: {
-                    Text("Suggested")
+                    Text("Suggested").cardSectionHeader()
                 } footer: {
                     Text("Expenses without a receipt, up to 7 days either side of the day this email arrived.")
                 }
                 .accessibilityIdentifier("receiptAttach.suggested")
             } else {
-                Section("Results") {
+                CardSection("Results") {
                     if results.isEmpty {
                         Text("No expense matches \u{201C}\(query)\u{201D}.").foregroundStyle(PennyColor.secondaryLabel)
                     }
@@ -398,6 +399,7 @@ struct ReceiptInboxPicker: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel", systemImage: "xmark") { dismiss() }
+                        .neutralToolbarGlyph()
                 }
             }
             .receiptViewer($previewing) { request in

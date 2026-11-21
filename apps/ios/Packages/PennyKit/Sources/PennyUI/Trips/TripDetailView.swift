@@ -125,16 +125,17 @@ struct PersonalTripPage: View {
                     NavigationLink(value: DetailRoute.entry(id: entry.id)) {
                         TripEntryRow(entry: entry, ledger: ledger, range: range)
                     }
+                    .cardRow()
                     .accessibilityIdentifier("entry.\(entry.id)")
                 }
             } header: {
-                Text("Trip expenses")
+                Text("Trip expenses").cardSectionHeader()
             } footer: {
                 Text(TripText.datesNote)
             }
 
             if !summary.spending.isEmpty {
-                Section("By category") {
+                CardSection("By category") {
                     ForEach(summary.spending, id: \.category.id) { item in
                         HStack(spacing: 12) {
                             CategoryIcon(
@@ -234,21 +235,22 @@ struct TripEntryRow: View {
                 symbol: EntryText.tileSymbol(entry.kind, category: category),
                 color: EntryText.tileColor(entry.kind, category: category, id: entry.categoryId))
             VStack(alignment: .leading, spacing: 2) {
-                Text(entry.title).font(.body.weight(.semibold)).foregroundStyle(PennyColor.label)
+                Text(entry.title).font(.callout.weight(.semibold)).foregroundStyle(PennyColor.label)
                     .fixedSize(horizontal: false, vertical: true)
                 Text(meta(category)).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 8)
             VStack(alignment: .trailing, spacing: 2) {
-                MoneyText(entry.share, meaning: .expense, currency: ledger.currency.rawValue)
+                MoneyText(
+                    entry.share, meaning: .expense, currency: ledger.currency.rawValue,
+                    style: .callout.weight(.semibold))
                 if entry.share != entry.total {
                     Text("of \(MoneyFormat.amount(entry.total, currency: ledger.currency.rawValue))")
-                        .font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
+                        .font(.caption.weight(.medium)).foregroundStyle(PennyColor.secondaryLabel)
                 }
             }
         }
-        .frame(minHeight: ControlSize.row)
         .accessibilityElement(children: .combine)
     }
 

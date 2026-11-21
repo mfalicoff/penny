@@ -35,7 +35,7 @@ struct ServerConnectView: View {
                     .disabled(checking)
                     .accessibilityIdentifier("server.url")
             } header: {
-                Text("Server URL")
+                Text("Server URL").cardSectionHeader()
             } footer: {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Enter the server’s base URL, without /api. This only affects this device.")

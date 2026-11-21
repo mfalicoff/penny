@@ -77,6 +77,7 @@ struct HouseholdStartSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close", systemImage: "xmark") { dismiss() }
+                        .neutralToolbarGlyph()
                         .accessibilityIdentifier("householdStart.close")
                 }
                 if !joinsTrip {
@@ -123,13 +124,12 @@ struct HouseholdStartSheet: View {
     @ViewBuilder private var createSection: some View {
         Section {
             VStack(spacing: 10) {
-                Image(systemName: "house.fill")
-                    .font(.title.weight(.semibold))
-                    .foregroundStyle(PennyColor.tintText)
-                    .frame(width: 64, height: 64)
-                    .background(
-                        PennyColor.tint.opacity(0.14), in: RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    )
+                // The card's neutral tile: copper is for the Create household action only.
+                Image(systemName: "house")
+                    .font(.largeTitle)
+                    .foregroundStyle(PennyColor.label)
+                    .frame(width: 72, height: 72)
+                    .background(PennyColor.fill, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
                     .accessibilityHidden(true)
                 Text("New household").font(.title2.weight(.bold))
                     .accessibilityAddTraits(.isHeader)
@@ -148,7 +148,7 @@ struct HouseholdStartSheet: View {
         }
         .listRowBackground(Color.clear)
         .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 0, trailing: 0))
-        Section("Name") {
+        CardSection("Name") {
             TextField("Apartment", text: $name)
                 .submitLabel(.done)
                 .accessibilityIdentifier("householdStart.name")
@@ -165,7 +165,7 @@ struct HouseholdStartSheet: View {
             .accessibilityIdentifier("householdStart.currency")
             LabeledContent("Invite people", value: "After creating")
         } header: {
-            Text("Details")
+            Text("Details").cardSectionHeader()
         } footer: {
             Text(
                 "Uses your ledger currency. Everyone who joins must use \(ledgerCurrency.rawValue) too. "
@@ -267,7 +267,7 @@ struct HouseholdStartSheet: View {
                 }
                 .accessibilityIdentifier("householdStart.scan")
             } header: {
-                Text("Invite code")
+                Text("Invite code").cardSectionHeader()
             } footer: {
                 Text(
                     joinsTrip

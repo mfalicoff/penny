@@ -45,14 +45,14 @@ struct ScheduleFormSheet: View {
                     .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
                     .accessibilityIdentifier("scheduleForm.kind")
                 }
-                Section("Name") {
+                CardSection("Name") {
                     TextField("Rent, Payday, Streaming", text: $model.draft.title)
                         .accessibilityLabel("Name")
                         .accessibilityIdentifier("scheduleForm.title")
                 }
                 amountSection
                 detailsSection(ledger)
-                Section("Note") {
+                CardSection("Note") {
                     TextField("Optional", text: $model.draft.note, axis: .vertical)
                         .lineLimit(1...4)
                         .accessibilityLabel("Note")
@@ -67,6 +67,7 @@ struct ScheduleFormSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel", systemImage: "xmark") { dismiss() }
+                        .neutralToolbarGlyph()
                         .accessibilityIdentifier("scheduleForm.cancel")
                 }
                 ToolbarItem(placement: .confirmationAction) {
@@ -111,7 +112,7 @@ struct ScheduleFormSheet: View {
                 }
             }
         } header: {
-            Text("Amount")
+            Text("Amount").cardSectionHeader()
         } footer: {
             if model.draft.kind == .expense, model.draft.split != .full {
                 Text("Reports count only your share.")
@@ -158,7 +159,7 @@ struct ScheduleFormSheet: View {
             }
             .accessibilityIdentifier("scheduleForm.frequency")
         } header: {
-            Text("Schedule")
+            Text("Schedule").cardSectionHeader()
         } footer: {
             Text(
                 model.isNew
