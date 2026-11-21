@@ -17,8 +17,8 @@ You own the issue until its pull request is merged or you hand it to a human. No
 ## 2. Branch
 
 1. Run `git fetch origin master`.
-2. Create the issue's Linear branch (`gitBranchName` on the issue, for example `mfalicoff2001/maz-123-short-title`) from `origin/master`.
-3. Never commit to `master`.
+2. Work in your own git worktree, never in the machine's shared `penny` checkout. Other sessions run on the same machine, and switching the shared checkout's branch breaks their work and their `node_modules`. Create it from the shared checkout: `git worktree add ~/penny-worktrees/<issue id in lower case> -b <branch> origin/master`, where the branch is the issue's Linear branch (`gitBranchName` on the issue, for example `mfalicoff2001/maz-123-short-title`). An integrator uses `bundle-<bundle id in lower case>` as the folder and `bundle/<bundle id in lower case>` as the branch. Then `cd` there and install what the apps you touch need (for example `npm ci` in `apps/web`).
+3. Never commit to `master`. When you finish (merged, handed over, or `Bundle ready:` posted), remove your worktree with `git worktree remove`, after pushing everything.
 
 ## 3. Implement
 
@@ -147,7 +147,7 @@ If you get stuck, hand over as below (there's no pull request to mark as a draft
 
 Your prompt lists the ready members with their branches and commits.
 
-1. Create `bundle/<bundle id>` from `origin/master`, and merge each member's branch into it in the order given. Resolve conflicts keeping both sides' intent. For conflicts in `contracts/design-baseline.json`, take either side and run `npm run design:hashes` in `apps/web`. If a member can't be integrated cleanly or breaks the build, drop it: comment on its issue what went wrong and hand that issue over, then continue with the rest.
+1. Create `bundle/<bundle id>` from `origin/master` in your own worktree (section 2), and merge each member's branch into it in the order given. Resolve conflicts keeping both sides' intent. For conflicts in `contracts/design-baseline.json`, take either side and run `npm run design:hashes` in `apps/web`. If a member can't be integrated cleanly or breaks the build, drop it: comment on its issue what went wrong and hand that issue over, then continue with the rest.
 2. Run the checks of every app the bundle touches, as in section 3.
 3. Open one pull request as in section 4, from `bundle/<bundle id>`. Title: a Conventional Commit summarising the bundle. Body: one section per issue (what changed, tests, captures linked from the issue), the follow-ups, and one `Fixes MAZ-<n>` line per included issue. Move each included issue to **In Review** and comment the pull request link on it.
 4. Respond to review and CI as in section 5, fixing on the integration branch. A fix that belongs to one member's change is still yours to make.
