@@ -151,7 +151,7 @@ describe("Activity rows and totals", () => {
   it("totals the period from personal entries and shared shares, whatever the other filters", () => {
     const totals = periodTotals(data, { type: "month", month: "2026-11" }, rows, "2026-11-30");
     // 1450.00 personal + 30.00 + 30.00 shared; the EUR row is never added to a CAD ledger.
-    expect(totals).toEqual({ expense: 151000, income: 480000, investment: 20000, net: 309000, shared: 6000, sharedCount: 2, expectedIncome: 0 });
+    expect(totals).toEqual({ expense: 151000, income: 480000, investment: 20000, net: 309000, shared: 6000, sharedCount: 2, expectedIncome: 0, entries: 6 });
   });
 
   it("lists personal and shared rows newest first and applies type, day, category and text locally", () => {
@@ -241,5 +241,21 @@ describe("Most used categories (MAZ-175)", () => {
     expect(mostUsedCategories(data, "expense").map((category) => category.id)).toEqual(["food", "groceries"]);
     expect(mostUsedCategories(data, "expense", 1).map((category) => category.id)).toEqual(["food"]);
     expect(mostUsedCategories(ledger(), "expense")).toEqual([]);
+  });
+});
+
+describe("entry detail helpers (MAZ-225)", () => {
+  it("recognises an equal split from the share and the total, and anything else as a custom share", async () => {
+    const { splitSummary, repeatLabel, longDay } = await import("../src/features/entries/model");
+    expect(splitSummary({ kind: "expense", total: 1280, share: 640 })).toEqual({ method: "Equally · 2 people", people: 2 });
+    // personalShare rounds the total over the people: $10.00 over 3 is $3.33.
+    expect(splitSummary({ kind: "expense", total: 1000, share: 333 })).toEqual({ method: "Equally · 3 people", people: 3 });
+    expect(splitSummary({ kind: "expense", total: 1000, share: 700 })).toEqual({ method: "Custom share", people: null });
+    expect(splitSummary({ kind: "expense", total: 1000, share: 1000 })).toBeNull();
+    expect(splitSummary({ kind: "income", total: 1000, share: 500 })).toBeNull();
+    expect(repeatLabel({}, null)).toBe("Never");
+    expect(repeatLabel({ recurringId: "r1" }, { recurring: [] })).toBe("Repeating");
+    expect(longDay("2026-11-09", "2026-11-20")).toMatch(/^Monday, Nov\.? 9$/);
+    expect(longDay("2025-11-09", "2026-11-20")).toMatch(/2025/);
   });
 });

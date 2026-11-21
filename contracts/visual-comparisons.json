@@ -328,17 +328,17 @@
         ],
         "deviations": [
           {
-            "summary": "Filters are a labelled Type control, an All time / Month / Year control and a month stepper, not one row of chips",
-            "kind": "follow-up",
-            "ref": "MAZ-225"
-          },
-          {
             "summary": "No swipe actions: rows open the entry dialog",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-conventions-maz-227"
           },
           {
-            "summary": "No bottom search field: search follows the list",
+            "summary": "The search field sits above the tab bar, which stays; the card's search replaces the tab bar with a Back button",
+            "kind": "follow-up",
+            "ref": "MAZ-225"
+          },
+          {
+            "summary": "Shared rows read Shared · household and your share, not who paid (Jo paid, you paid $2,900)",
             "kind": "follow-up",
             "ref": "MAZ-225"
           }
@@ -379,12 +379,7 @@
         ],
         "deviations": [
           {
-            "summary": "The tab bar covers the search field; the empty state reads Nothing matches. Try another word. with no Search all months or Clear filters buttons, under a redundant No matching transactions line",
-            "kind": "follow-up",
-            "ref": "MAZ-225"
-          },
-          {
-            "summary": "Active filters are the page's segmented controls, not removable chips, which pushes the empty state down",
+            "summary": "The search field sits above the tab bar, which stays; the card's search replaces the tab bar with a Back button",
             "kind": "follow-up",
             "ref": "MAZ-225"
           }
@@ -683,11 +678,6 @@
             "summary": "The entry detail is a dialog over Activity, not a pushed screen",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-conventions-maz-227"
-          },
-          {
-            "summary": "Leads with the unsigned total and an Expense badge, not a category tile and a signed your-share amount; one flat list with no Repeats, split or receipt groups",
-            "kind": "follow-up",
-            "ref": "MAZ-225"
           }
         ]
       }
@@ -750,9 +740,9 @@
             "ref": "docs/reference/redesign.md#web-conventions-maz-227"
           },
           {
-            "summary": "Titles Delete Coffee? without quotes or a category icon, with a sentence instead of the amount · date · category line, and inline buttons",
+            "summary": "Members are named and initialled by email, not by name",
             "kind": "follow-up",
-            "ref": "MAZ-225"
+            "ref": "MAZ-171"
           }
         ]
       }
@@ -2374,11 +2364,6 @@
         ],
         "deviations": [
           {
-            "summary": "Not captured since MAZ-240 changed the cards: the app draws the new sidebar (each household, All households, the trips with their start date, All trips, with the people and airplane icons), but the iPad captures could not run on the capture machine",
-            "kind": "follow-up",
-            "ref": "MAZ-240"
-          },
-          {
             "summary": "The sidebar's toolbar keeps the + (Add entry) and the sidebar button above the penny. mark (follow-up recorded on MAZ-182: Add entry moves to the toolbar capsule)",
             "kind": "follow-up",
             "ref": "MAZ-182"
@@ -2445,11 +2430,6 @@
         ],
         "deviations": [
           {
-            "summary": "Not captured since MAZ-240 changed the cards: the app draws the new sidebar (each household, All households, the trips with their start date, All trips, with the people and airplane icons), but the iPad captures could not run on the capture machine",
-            "kind": "follow-up",
-            "ref": "MAZ-240"
-          },
-          {
             "summary": "The sidebar's toolbar keeps the + (Add entry) and the sidebar button above the penny. mark (follow-up recorded on MAZ-182: Add entry moves to the toolbar capsule)",
             "kind": "follow-up",
             "ref": "MAZ-182"
@@ -2486,7 +2466,12 @@
         ],
         "deviations": [
           {
-            "summary": "The entry opens in a dialog over a one-column page, not a detail pane beside the list; the detail lacks the split and receipt groups",
+            "summary": "The pane has a Close button, and its Split group lists Split, Your share and Total instead of Your share and the other people's share",
+            "kind": "follow-up",
+            "ref": "MAZ-225"
+          },
+          {
+            "summary": "The subtitle has the date only (Sunday, Sep 27), not the time (Today, 8:42 AM): entries store no time",
             "kind": "follow-up",
             "ref": "MAZ-225"
           }
@@ -2551,11 +2536,6 @@
           "dark"
         ],
         "deviations": [
-          {
-            "summary": "Not captured since MAZ-240 changed the cards: the app draws the new sidebar (each household, All households, the trips with their start date, All trips, with the people and airplane icons), but the iPad captures could not run on the capture machine",
-            "kind": "follow-up",
-            "ref": "MAZ-240"
-          },
           {
             "summary": "The sidebar's toolbar keeps the + (Add entry) and the sidebar button above the penny. mark (follow-up recorded on MAZ-182: Add entry moves to the toolbar capsule)",
             "kind": "follow-up",
@@ -2633,11 +2613,6 @@
         ],
         "deviations": [
           {
-            "summary": "Not captured since MAZ-240 changed the cards: the app draws the new sidebar (each household, All households, the trips with their start date, All trips, with the people and airplane icons), but the iPad captures could not run on the capture machine",
-            "kind": "follow-up",
-            "ref": "MAZ-240"
-          },
-          {
             "summary": "The sidebar's toolbar keeps the + (Add entry) and the sidebar button above the penny. mark (follow-up recorded on MAZ-182: Add entry moves to the toolbar capsule)",
             "kind": "follow-up",
             "ref": "MAZ-182"
@@ -2713,11 +2688,6 @@
           "dark"
         ],
         "deviations": [
-          {
-            "summary": "Not captured since MAZ-240 changed the cards: the app draws the new sidebar (each household, All households, the trips with their start date, All trips, with the people and airplane icons), but the iPad captures could not run on the capture machine",
-            "kind": "follow-up",
-            "ref": "MAZ-240"
-          },
           {
             "summary": "The sidebar's toolbar keeps the + (Add entry) and the sidebar button above the penny. mark (follow-up recorded on MAZ-182: Add entry moves to the toolbar capsule)",
             "kind": "follow-up",
@@ -2908,7 +2878,22 @@
         ],
         "deviations": [
           {
-            "summary": "A card list with a dialog, not a table with checkboxes, badges, hover actions, a key-hint bar and a detail panel; the detail lacks the split and receipt",
+            "summary": "No row checkboxes or X to select entries",
+            "kind": "follow-up",
+            "ref": "MAZ-225"
+          },
+          {
+            "summary": "No export button beside the summary",
+            "kind": "follow-up",
+            "ref": "MAZ-225"
+          },
+          {
+            "summary": "Shared rows' Split reads N ways, not who paid (Jo paid · 3 ways, You paid)",
+            "kind": "follow-up",
+            "ref": "MAZ-225"
+          },
+          {
+            "summary": "The panel's subtitle has the date only, not the time (Today, 8:42 AM): entries store no time",
             "kind": "follow-up",
             "ref": "MAZ-225"
           }

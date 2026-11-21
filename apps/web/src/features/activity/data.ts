@@ -80,6 +80,8 @@ export interface PeriodTotals {
   /** Your share of shared expenses, already in `expense`. */
   shared: number;
   sharedCount: number;
+  /** Entries in the period: personal ones (expected income included) and your shared expenses. */
+  entries: number;
   /** Income dated after today in the period (MAZ-136): listed, not in `income` or `net` yet. */
   expectedIncome: number;
 }
@@ -99,7 +101,7 @@ export function periodTotals(ledger: Ledger, period: Period, shared: SharedRow[]
   const counted = shared.filter((row) => row.householdCurrency === ledger.currency);
   const sharedTotal = counted.reduce((sum, row) => sum + row.shareCents, 0);
   const result = { ...personal, expense: personal.expense + sharedTotal };
-  return { ...result, net: net(result), shared: sharedTotal, sharedCount: counted.length, expectedIncome };
+  return { ...result, net: net(result), shared: sharedTotal, sharedCount: counted.length, expectedIncome, entries: inRange.length + shared.length };
 }
 
 export type ActivityRow =

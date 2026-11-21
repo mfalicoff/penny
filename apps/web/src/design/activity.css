@@ -154,16 +154,6 @@
   box-shadow: 0 0 0 2px var(--pk-pending);
 }
 
-/* ---------- phones (iphone-activity, MAZ-175) ---------- */
-/* Type and period, then the day-grouped list; search, totals and the other filters follow it. */
-.activity-tools {
-  display: grid;
-  gap: 16px;
-  min-width: 0;
-  padding-top: 16px;
-  border-top: 0.5px solid var(--pk-separator);
-}
-
 /* ---------- day groups (iphone-activity, web-activity) ---------- */
 .day-groups {
   display: grid;
@@ -591,4 +581,803 @@
 
 .entry-detail__note {
   white-space: pre-wrap;
+}
+
+/* ---------- Activity layout (MAZ-225) ---------- */
+.activity__main {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  align-content: start;
+}
+
+/* From 1100px the open entry sits beside the list (web-activity's panel, ipad-activity's pane). */
+@media (min-width: 1100px) {
+  .activity--beside {
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 340px);
+    align-items: start;
+    gap: 24px;
+  }
+}
+
+.activity-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  min-width: 0;
+}
+
+/* The chips: one row that scrolls sideways on a phone, as on iphone-activity; wraps from 768px. */
+.activity-chips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 2px;
+  overflow-x: auto;
+  list-style: none;
+  scrollbar-width: none;
+}
+
+.activity--phone .activity-chips {
+  margin-inline: calc(-1 * var(--pk-gutter));
+  padding-inline: var(--pk-gutter);
+}
+
+@media (min-width: 768px) {
+  .activity-chips {
+    flex-wrap: wrap;
+    overflow: visible;
+  }
+}
+
+.chip-group {
+  display: flex;
+  flex: none;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.activity-toolbar > .activity-chips {
+  flex: 0 1 auto;
+}
+
+.filter-chip {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 18px;
+  background: var(--pk-fill);
+  color: var(--pk-label);
+  font: 600 0.9375rem var(--pk-font);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.filter-chip input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+.filter-chip:hover {
+  filter: brightness(0.97);
+}
+
+/* The selected chip is filled with the label color (the cards' black "All"), its text the background. */
+.filter-chip--on {
+  background: var(--pk-label);
+  color: var(--pk-bg);
+}
+
+.filter-chip:focus-visible,
+.filter-chip:has(input:focus-visible) {
+  outline: 2px solid var(--pk-tint);
+  outline-offset: 2px;
+}
+
+.filter-chip--removable {
+  padding-inline: 14px 12px;
+}
+
+@media (pointer: coarse) {
+  .filter-chip {
+    min-height: 44px;
+    border-radius: 22px;
+  }
+}
+
+@media (forced-colors: active) {
+  .filter-chip--on {
+    border: 2px solid Highlight;
+  }
+}
+
+.activity-summary {
+  margin: 0 0 0 auto;
+  color: var(--pk-label-2);
+  font-size: 0.9375rem;
+}
+
+.activity-summary strong {
+  color: var(--pk-label);
+  font-weight: 600;
+}
+
+/* ---------- search ---------- */
+.activity-search__field {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding-inline: 12px 8px;
+  border-radius: var(--pk-r-field);
+  background: var(--pk-fill);
+  color: var(--pk-label-2);
+}
+
+.activity-search__field:focus-within {
+  outline: 2px solid var(--pk-tint);
+  outline-offset: 2px;
+}
+
+.activity-search__field input {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--pk-label);
+  font: inherit;
+  outline: none;
+}
+
+.activity-search__field input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.activity-search__field input::placeholder {
+  color: var(--pk-label-2);
+}
+
+.activity-search__clear {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  background: var(--pk-label-3);
+  color: var(--pk-surface);
+  cursor: pointer;
+}
+
+.activity-search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* Phones (iphone-activity, iphone-search-empty): a glass field fixed at the bottom, above the tab bar. */
+.activity-search--bottom {
+  position: fixed;
+  z-index: 9;
+  inset-inline: 16px;
+  bottom: calc(16px + 62px + 12px + env(safe-area-inset-bottom));
+}
+
+/* Nearly opaque, as on the card: rows passing under it stay out of the way of the text. */
+.activity-search--bottom .activity-search__field {
+  min-height: 52px;
+  background: color-mix(in srgb, var(--pk-surface) 94%, transparent);
+  box-shadow: 0 0 0 0.5px var(--pk-separator), 0 8px 24px rgb(0 0 0 / 0.12);
+  padding-inline: 18px 12px;
+  border-radius: 26px;
+  font-size: 1.0625rem;
+}
+
+.activity-search__stop {
+  width: 52px;
+  height: 52px;
+  border-radius: 26px;
+}
+
+/* The page keeps room below its last row for the field and the tab bar. */
+.app__main:has(.activity-search--bottom) {
+  padding-bottom: calc(128px + 64px + env(safe-area-inset-bottom));
+}
+
+/* Desktops (web-activity): in the top bar, at the end beside Add entry. */
+.topbar__tools:has(.activity-search--top) {
+  flex: 1;
+}
+
+.activity-search--top {
+  width: min(320px, 30vw);
+  margin-inline-start: auto;
+}
+
+.activity-search--top .activity-search__field {
+  height: 36px;
+  border-radius: 10px;
+  font-size: 0.875rem;
+}
+
+.activity-search--top .activity-search__field input {
+  height: 36px;
+}
+
+.activity-search--top .pk-kbd {
+  background: var(--pk-surface);
+}
+
+/* ---------- desktop table (web-activity) ---------- */
+.activity-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  border-radius: var(--pk-r-card);
+  background: var(--pk-surface);
+  box-shadow: 0 0 0 0.5px var(--pk-separator);
+  font-size: 0.9375rem;
+}
+
+.activity-table th,
+.activity-table td {
+  padding: 0 12px;
+  text-align: start;
+  vertical-align: middle;
+}
+
+.activity-table thead th {
+  height: 40px;
+  color: var(--pk-label-2);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.activity-table thead th:first-child {
+  padding-inline-start: 64px;
+}
+
+.activity-table__num {
+  text-align: end !important;
+  white-space: nowrap;
+}
+
+.activity-table__day th,
+.activity-table__day td {
+  height: 36px;
+  border-top: 0.5px solid var(--pk-separator);
+  border-bottom: 0.5px solid var(--pk-separator);
+  background: var(--pk-surface-2);
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.activity-table__day th {
+  padding-inline-start: 16px;
+}
+
+.activity-table__day td {
+  padding-inline-end: 16px;
+}
+
+.activity-table__row td {
+  height: 58px;
+  border-bottom: 0.5px solid var(--pk-separator);
+}
+
+.activity-table tbody:last-child .activity-table__row:last-child td {
+  border-bottom: 0;
+}
+
+.activity-table__row:hover td {
+  background: var(--pk-surface-2);
+}
+
+/* The open entry's row takes a soft wash of its category's color, as on web-activity and ipad-activity. */
+.activity-table__row--selected td,
+.activity-table__row--selected:hover td {
+  background: color-mix(in srgb, var(--tile, var(--pk-tint)) 14%, var(--pk-surface));
+}
+
+.activity-table__entry {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--pk-label);
+  font: inherit;
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.activity-table__entry:focus-visible {
+  outline: 2px solid var(--pk-tint);
+  outline-offset: 2px;
+}
+
+.activity-table__title {
+  min-width: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.activity-table__date {
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+.activity-table__none {
+  color: var(--pk-label-3);
+}
+
+.activity-table__num .money {
+  font-weight: 600;
+}
+
+.activity-table__actions {
+  width: 84px;
+  white-space: nowrap;
+}
+
+/* Edit and Delete show on the hovered, focused or open row; E and ⌫ reach them from the keyboard. */
+.activity-table__actions .wbtn {
+  width: 32px;
+  min-height: 32px;
+  color: var(--pk-label-2);
+  opacity: 0;
+}
+
+.activity-table__row:hover .activity-table__actions .wbtn,
+.activity-table__row:focus-within .activity-table__actions .wbtn,
+.activity-table__row--selected .activity-table__actions .wbtn {
+  opacity: 1;
+}
+
+.key-hints {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  margin: 0;
+  color: var(--pk-label-2);
+  font-size: 0.875rem;
+}
+
+.key-hints .pk-kbd {
+  min-width: 22px;
+  background: var(--pk-surface);
+  box-shadow: 0 0 0 0.5px var(--pk-separator);
+  text-align: center;
+}
+
+/* ---------- list rows (iphone-activity, ipad-activity) ---------- */
+.activity-row--selected .activity-row__main,
+.activity-row--selected .activity-row__main:hover {
+  background: color-mix(in srgb, var(--tile, var(--pk-tint)) 14%, var(--pk-surface));
+}
+
+.activity-row .category-dot {
+  background: var(--tile, var(--pk-c-other));
+}
+
+/* ---------- entry detail (iphone-entry-detail, web-activity, ipad-activity) ---------- */
+.entry-sheet {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.entry-sheet__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.entry-sheet__toolbar {
+  display: flex;
+  gap: 10px;
+}
+
+.entry-sheet__toolbar .wbtn {
+  min-height: 44px;
+}
+
+.entry-sheet__toolbar .wbtn--icon {
+  width: 44px;
+}
+
+.category-dot--large {
+  width: 52px;
+  height: 52px;
+  border-radius: 15px;
+}
+
+.entry-sheet__head {
+  display: grid;
+  gap: 2px;
+}
+
+.entry-sheet__title {
+  margin: 0;
+  font-size: 1.625rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.entry-sheet__sub {
+  margin: 0;
+  color: var(--pk-label-2);
+}
+
+.entry-sheet__amount {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+  margin: 0;
+}
+
+.entry-sheet__amount .money {
+  font-size: 2.75rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+}
+
+.entry-sheet__share {
+  color: var(--pk-label-2);
+  font-size: 1.0625rem;
+}
+
+.entry-sheet__group {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.entry-sheet__label {
+  margin: 0;
+  padding: 0 4px;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.entry-sheet__rows {
+  display: grid;
+  margin: 0;
+  padding: 0 16px;
+  border-radius: var(--pk-r-card);
+  background: var(--pk-surface);
+  box-shadow: 0 0 0 0.5px var(--pk-separator);
+}
+
+.entry-sheet__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 48px;
+  padding: 12px 0;
+}
+
+.entry-sheet__row + .entry-sheet__row {
+  border-top: 0.5px solid var(--pk-separator);
+}
+
+.entry-sheet__row dt {
+  flex: none;
+  color: var(--pk-label-2);
+}
+
+.entry-sheet__row dd {
+  min-width: 0;
+  margin: 0;
+  font-weight: 600;
+  text-align: end;
+  overflow-wrap: anywhere;
+}
+
+.entry-sheet__row dd.entry-sheet__none {
+  color: var(--pk-label-3);
+  font-weight: 400;
+}
+
+.entry-sheet__split {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+  gap: 12px;
+}
+
+.entry-sheet__split > .entry-sheet__rows {
+  grid-column: span 2;
+}
+
+@media (max-width: 420px) {
+  .entry-sheet__split > .entry-sheet__rows {
+    grid-column: auto;
+  }
+}
+
+/* The receipt: a paper thumbnail with its name, as on the cards. */
+.entry-sheet__receipt {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 8px;
+  min-height: 120px;
+  padding: 12px;
+  border-radius: var(--pk-r-card);
+  background: var(--pk-surface);
+  box-shadow: 0 0 0 0.5px var(--pk-separator);
+  color: var(--pk-label-2);
+  text-align: center;
+}
+
+.entry-sheet__paper {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 80px;
+  border-radius: 8px;
+  background: repeating-linear-gradient(var(--pk-surface-2) 0 6px, var(--pk-surface) 6px 12px);
+  box-shadow: 0 0 0 1px var(--pk-separator);
+}
+
+.entry-sheet__actions {
+  display: flex;
+  gap: 10px;
+}
+
+.entry-sheet__actions > .wbtn:first-child {
+  flex: 1;
+  min-height: 44px;
+}
+
+.entry-sheet__actions > .wbtn--icon {
+  width: 44px;
+  min-height: 44px;
+}
+
+/* In a dialog (phones and tablets) the sheet is the panel's whole content. */
+.dialog__panel.pk-dialog.entry-sheet-dialog {
+  max-width: min(100% - 24px, 460px);
+  padding: 20px;
+  overflow: auto;
+}
+
+/* Beside the list (web-activity's panel, ipad-activity's pane). */
+.entry-panel {
+  position: sticky;
+  top: 16px;
+  max-height: calc(100dvh - 32px);
+  padding: 20px;
+  overflow: auto;
+  border-radius: var(--pk-r-card);
+  background: var(--pk-surface);
+  box-shadow: 0 0 0 0.5px var(--pk-separator);
+}
+
+.entry-panel .entry-sheet__rows,
+.entry-panel .entry-sheet__receipt {
+  padding-inline: 0;
+  box-shadow: none;
+  background: none;
+}
+
+.entry-panel .entry-sheet__receipt {
+  border: 1px solid var(--pk-separator);
+  padding: 12px;
+}
+
+.entry-panel .entry-sheet__label {
+  padding: 0;
+}
+
+.entry-panel .entry-sheet__amount .money {
+  font-size: 2.5rem;
+}
+
+/* On a phone the share goes under the amount, as a sentence (iphone-entry-detail: "Your share of $12.80"). */
+@media (max-width: 767px) {
+  .entry-sheet__share {
+    flex-basis: 100%;
+  }
+
+  .entry-sheet__share::first-letter {
+    text-transform: uppercase;
+  }
+}
+
+/*
+ * ipad-activity: the pane takes half the space beside the list, with no card around it, Delete
+ * and Edit at its top, and Details beside Split.
+ */
+@media (min-width: 1100px) and (hover: none) and (pointer: coarse) {
+  .activity--beside {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .entry-panel {
+    padding: 8px 0 0 24px;
+    border-radius: 0;
+    background: none;
+    box-shadow: -0.5px 0 0 var(--pk-separator);
+  }
+
+  .entry-panel .entry-sheet {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 16px;
+  }
+
+  .entry-panel .entry-sheet > * {
+    grid-column: 1 / -1;
+  }
+
+  .entry-panel .entry-sheet > .entry-sheet__group {
+    grid-column: auto;
+    align-content: start;
+    padding: 16px;
+    border-radius: var(--pk-r-card);
+    background: var(--pk-surface);
+    box-shadow: 0 0 0 0.5px var(--pk-separator);
+  }
+
+  .entry-panel .entry-sheet__split {
+    grid-template-columns: 1fr;
+  }
+
+  .entry-panel .entry-sheet__split > .entry-sheet__rows {
+    grid-column: auto;
+  }
+
+}
+
+/* ---------- delete confirmation (iphone-delete-confirm) ---------- */
+.dialog__panel.pk-dialog.confirm-sheet {
+  display: grid;
+  gap: 16px;
+  max-width: min(100% - 24px, 440px);
+  padding: 20px;
+}
+
+.confirm-sheet__head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.confirm-sheet__titles {
+  flex: 1;
+  min-width: 0;
+}
+
+.confirm-sheet__titles h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.confirm-sheet__titles p {
+  margin: 2px 0 0;
+  color: var(--pk-label-2);
+}
+
+.confirm-sheet__people {
+  display: flex;
+  flex: none;
+}
+
+.confirm-sheet__people .pk-avatar + .pk-avatar {
+  margin-inline-start: -8px;
+  box-shadow: 0 0 0 2px var(--pk-surface);
+}
+
+.confirm-sheet__note {
+  margin: 0;
+  color: var(--pk-label-2);
+}
+
+.confirm-sheet__note--box {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--pk-r-row);
+  background: var(--pk-fill);
+  color: var(--pk-label);
+}
+
+.confirm-sheet__note--box > .icon {
+  flex: none;
+  color: var(--pk-label-2);
+}
+
+.confirm-sheet__actions {
+  display: grid;
+  gap: 10px;
+}
+
+.confirm-sheet__actions .wbtn {
+  width: 100%;
+  min-height: 50px;
+  border-radius: 25px;
+  font-size: 1.0625rem;
+}
+
+.activity-filters-form {
+  gap: 18px;
+}
+
+.filter-section {
+  display: grid;
+  gap: 10px;
+}
+
+.filter-section > h3 {
+  margin: 0;
+}
+
+/* ipad-activity: the chips stay one row beside the pane, scrolling sideways when they don't fit. */
+@media (min-width: 768px) and (hover: none) and (pointer: coarse) {
+  .activity-chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+}
+
+/* iphone-activity: the filter button sits alone at the end of the phone's top row. */
+.activity-topbar-actions {
+  margin-inline-start: auto;
+}
+
+.glass-button--on {
+  color: var(--pk-tint-text);
+  box-shadow: inset 0 0 0 2px var(--pk-tint);
+}
+
+/* web-activity: the desktop chips are a little smaller, so the summary keeps to their row beside the panel. */
+@media (min-width: 768px) and (hover: hover) {
+  .filter-chip {
+    min-height: 34px;
+    padding-inline: 14px;
+    font-size: 0.875rem;
+  }
 }

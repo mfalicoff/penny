@@ -23,8 +23,18 @@ test.afterEach(async () => {
 
 async function open(page: Page) {
   await page.goto("/transactions?month=2026-10");
-  await expect(page.getByRole("region", { name: "October 2026" })).toBeVisible();
-  await expect(results(page).getByRole("status")).toBeVisible();
+  await expect(results(page).getByRole("status")).toBeAttached();
+  // The ledger has downloaded: the desktop summary comes from it; phones show no period figures
+  // (`iphone-activity`), so there the categories in Filters, which come from the ledger, say so.
+  if ((page.viewportSize()?.width ?? 0) >= 768) {
+    await expect(page.locator(".activity-summary")).toContainText("entries");
+    return;
+  }
+  await page.getByRole("button", { name: /^Period: / }).click();
+  const filters = page.getByRole("dialog", { name: "Filters" });
+  await expect(filters.getByRole("group", { name: "Category" })).toBeVisible();
+  await filters.getByRole("button", { name: "Done" }).click();
+  await expect(filters).toHaveCount(0);
 }
 
 async function addExpense(page: Page, title: string, amount: string) {
@@ -80,7 +90,7 @@ test("an unreachable server through a reload keeps the cached ledger and a new c
   await addExpense(page, "During outage", "7.25");
   await expect(page.getByText("Offline · 1 change waiting")).toBeVisible({ timeout: 20_000 });
   await expect(results(page)).toContainText("Before outage");
-  await expect(results(page).getByRole("listitem").filter({ hasText: "During outage" })).toContainText("Waiting to sync");
+  await expect(results(page).getByRole("listitem").or(results(page).getByRole("row")).filter({ hasText: "During outage" })).toContainText("Waiting to sync");
 
   // A reload can't confirm the session, so start-up says so; nothing is signed out or cleared.
   await page.reload();
@@ -103,8 +113,8 @@ test("an unreachable server through a reload keeps the cached ledger and a new c
     .toEqual(["Before outage", "During outage"]);
   await expect(page.getByText(/change(s)? waiting/)).toHaveCount(0);
   // Same day: the server orders ties by key, so only the set is fixed.
-  await expect(results(page).locator(".results__title")).toHaveCount(2);
-  expect((await results(page).locator(".results__title").allInnerTexts()).sort()).toEqual(["Before outage", "During outage"]);
+  await expect(results(page).locator(".results__title, .activity-table__title")).toHaveCount(2);
+  expect((await results(page).locator(".results__title, .activity-table__title").allInnerTexts()).sort()).toEqual(["Before outage", "During outage"]);
   await context.close();
 });
 
