@@ -232,6 +232,31 @@ async function editWithFailingSync(run: Run) {
   return { banner, toast };
 }
 
+/**
+ * Adds Groceries ($48.90, the card's entry) from Home with a 503 armed on the next ledger sync,
+ * then rests the pointer on its "Expense added" toast (a hovered toast stays up to 30 s), as
+ * `iphone-saved-toast` draws it (MAZ-237).
+ */
+async function addWithFailingSync(run: Run) {
+  await home(run.page);
+  await run.page.getByRole("button", { name: "Add entry" }).first().click();
+  const form = run.page.getByRole("dialog", { name: "New entry" });
+  await form.getByLabel("Amount (CAD)").fill("48.90");
+  await form.getByLabel("Title").fill("Groceries");
+  await form.getByRole("radio", { name: /^Groceries/ }).check();
+  await armFault(run);
+  const sync = run.page.waitForResponse((response) => response.request().method() === "PUT" && new URL(response.url()).pathname === "/api/ledger");
+  await form.getByRole("button", { name: "Add expense" }).click();
+  expect((await sync).status(), "the armed fault answers the first sync").toBe(503);
+  await expect(form).toBeHidden();
+  const banner = run.page.getByRole("status").filter({ hasText: "Not synced" });
+  await expect(banner).toBeVisible();
+  const toast = run.page.getByText("Expense added", { exact: true });
+  await toast.hover();
+  await expect(run.page.getByRole("region", { name: "Recent" })).toContainText("Groceries");
+  return { banner, toast };
+}
+
 async function armFault(run: Run) {
   const fault = run.state.fault;
   if (!fault) throw new Error(`${run.state.specimen} names no fault`);
@@ -586,14 +611,14 @@ const cards: Record<string, Card> = {
   "iphone-saved-toast": {
     fresh: true,
     open: async (run) => {
-      const { banner, toast } = await editWithFailingSync(run);
+      const { banner, toast } = await addWithFailingSync(run);
       const retried = run.page.waitForResponse((response) => response.request().method() === "PUT" && new URL(response.url()).pathname === "/api/ledger");
       await banner.getByRole("button", { name: "Retry" }).press("Enter");
       expect((await retried).status(), "the retry syncs").toBe(200);
       await expect(banner).toBeHidden();
       await expect(toast).toBeVisible();
     },
-    note: "The toast is the edit's 'Changes saved' with Undo, still shown on Home after Retry in the sync banner synced it.",
+    note: "The toast is the new Groceries expense's 'Expense added' with its category tile and Undo, still shown on Home after Retry in the sync banner synced it.",
   },
   "iphone-sign-out": {
     fresh: true,
@@ -692,9 +717,18 @@ const cards: Record<string, Card> = {
   "web-receipt-email-settings": {},
 };
 
+/**
+ * Closes the toast. The saved toast has Undo as its only button (MAZ-233), so it is waited out
+ * with the pointer moved off it (a hovered toast stays up to 30 s).
+ */
 async function dismissToast(p: Page) {
   const close = p.getByRole("button", { name: "Dismiss" });
-  if (await close.count()) await close.first().click();
+  if (await close.count()) {
+    await close.first().click();
+    return;
+  }
+  await p.mouse.move(0, 0);
+  await expect(p.locator(".pk-toast")).toHaveCount(0, { timeout: 15_000 });
 }
 
 // ---- Seeds, contexts and captures ----

@@ -159,6 +159,17 @@ describe("password sign-in", () => {
     expect(screen.getByLabelText("Password")).toHaveValue(PASSWORD);
   });
 
+  it("goes back to sign in from Back above the title (iphone-create-account)", async () => {
+    fakeApi(null);
+    const user = userEvent.setup();
+    renderApp("/");
+    await user.click(await screen.findByRole("button", { name: "Create an account" }));
+    expect(screen.queryByRole("button", { name: "Back to sign in" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Back to sign in" }));
+    expect(screen.getByRole("heading", { level: 1, name: "Welcome back" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Back to sign in" })).not.toBeInTheDocument();
+  });
+
   it("shows the password's strength and the 10-character requirement while typing (iphone-create-account)", async () => {
     fakeApi(null);
     const user = userEvent.setup();

@@ -101,6 +101,8 @@ describe("adding entries", () => {
 
     // The saved toast offers Undo (redesign card `saved-toast`), which removes the new entry again.
     expect(screen.getByText("Dinner at Bar Isabel · $84.20")).toBeInTheDocument();
+    // It leads with the entry's category tile (Food, pink), not a green check (MAZ-237).
+    expect(document.querySelector<HTMLElement>(".pk-toast__tile")?.style.background).toBe("var(--pk-c-food)");
     await user.click(screen.getByRole("button", { name: "Undo" }));
     await waitFor(() => {
       expect(serverEntries(server)).toEqual([]);
@@ -123,6 +125,8 @@ describe("adding entries", () => {
     await fill(user, form, { amount: "4800", title: "Salary" });
     await save(user);
     expect(await screen.findByText("Income added")).toBeInTheDocument();
+    // Income's tile is the income green, as its row draws it (MAZ-237).
+    expect(document.querySelector<HTMLElement>(".pk-toast__tile")?.style.background).toBe("var(--pk-income)");
     await waitFor(() => {
       expect(serverEntries(server)[0]).toMatchObject({ kind: "income", total: 480000, share: 480000, categoryId: "salary" });
     });

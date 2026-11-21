@@ -53,6 +53,19 @@ export function AuthScreen() {
         {/* Phones: the copper glow behind the header and, on sign-in, the brand tile (iphone-sign-in, iphone-create-account). */}
         <div className="auth__phone-glow" aria-hidden="true" />
         <div className="auth__body">
+          {/* iphone-create-account: a round glass Back to sign in above the title. */}
+          {creating ? (
+            <button
+              type="button"
+              className="glass glass-button auth__back"
+              aria-label="Back to sign in"
+              onClick={() => {
+                setMode("sign-in");
+              }}
+            >
+              <Icon name="chevron-back" size={20} />
+            </button>
+          ) : null}
           {creating ? null : (
             <span className="auth__mark" aria-hidden="true">
               <Icon name="leaf" size={34} weight={36} />

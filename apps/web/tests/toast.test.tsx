@@ -186,7 +186,13 @@ describe("saved toast", () => {
         <button
           type="button"
           onClick={() => {
-            toast.show({ title: "Expense added", detail: "Groceries · $48.90", entryId: "e-1", onUndo: vi.fn() });
+            toast.show({
+              title: "Expense added",
+              detail: "Groceries · $48.90",
+              entryId: "e-1",
+              tile: { icon: "basket", color: "var(--pk-c-groceries)" },
+              onUndo: vi.fn(),
+            });
           }}
         >
           Add
@@ -218,6 +224,21 @@ describe("saved toast", () => {
     advance(TOAST_MS + 10);
     expect(screen.queryByText("Expense added")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Highlighted")).toHaveTextContent("none");
+  });
+
+  // MAZ-237: the saved toast leads with the entry's category tile, not a green check (green means income).
+  it("leads with the entry's category tile instead of the check", () => {
+    const { container } = render(
+      <ToastProvider>
+        <Saved />
+      </ToastProvider>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Add" }));
+    const tile = container.querySelector<HTMLElement>(".pk-toast__tile");
+    expect(tile).not.toBeNull();
+    expect(tile?.style.background).toBe("var(--pk-c-groceries)");
+    expect(container.querySelectorAll(".pk-toast .icon")).toHaveLength(1);
+    expect(tile?.querySelector(".icon")).not.toBeNull();
   });
 
   it("keeps the close button when the toast has another action", () => {

@@ -157,6 +157,11 @@ export interface ToastInput {
   durationMs?: number;
   /** The entry the toast is about: its row is highlighted while the toast shows (card `iphone-saved-toast`). */
   entryId?: string;
+  /**
+   * The entry's category tile (its glyph on its tile color, `categoryTint`) in place of the check,
+   * as `iphone-saved-toast` draws it: a green check would read as income.
+   */
+  tile?: { icon: IconName; color: string };
 }
 
 interface ToastState extends ToastInput {
@@ -273,7 +278,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               if (!(next instanceof Node && event.currentTarget.contains(next))) setFocused(false);
             }}
           >
-            <Icon name={toast.tone === "error" ? "alert-circle" : "checkmark-circle"} size={22} />
+            {toast.tile && toast.tone !== "error" ? (
+              <span className="pk-toast__tile" style={{ background: toast.tile.color }} aria-hidden="true">
+                <Icon name={toast.tile.icon} size={20} />
+              </span>
+            ) : (
+              <Icon name={toast.tone === "error" ? "alert-circle" : "checkmark-circle"} size={22} />
+            )}
             <div className="pk-toast__body">
               <div className="pk-toast__title">{toast.title}</div>
               {toast.detail ? <div className="pk-toast__sub">{toast.detail}</div> : null}
