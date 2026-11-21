@@ -348,36 +348,54 @@ enum ActivitySharedNoteText {
     }
 }
 
-/// "No results for “sushi”" (`search-empty` card), with Search all months and Clear filters.
+/// "No results for “sushi”" (`search-empty` card): the magnifier on a filled tile, the title and
+/// scope, then Search all months (copper glass) and Clear filters (glass) as capsules.
 private struct ActivitySearchEmpty: View {
     @Environment(ShellModel.self) private var shell
+    @ScaledMetric(relativeTo: .title) private var tile: Double = 64
     let filters: ActivityFilters
 
     var body: some View {
         let trimmed = filters.query.trimmingCharacters(in: .whitespacesAndNewlines)
-        ContentUnavailableView {
+        VStack(spacing: 0) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: tile * 0.44, weight: .regular))
+                .foregroundStyle(PennyColor.secondaryLabel)
+                .frame(width: tile, height: tile)
+                .background(PennyColor.fill, in: RoundedRectangle(cornerRadius: tile * 0.31, style: .continuous))
+                .accessibilityHidden(true)
             // The identifier goes on the title, inside a container element (below): without one,
             // the screen's `screen.activity` replaced every identifier in this overlay, Search all
             // months' included; a container's own identifier is replaced too (MAZ-82).
-            Label(trimmed.isEmpty ? "Nothing matches" : "No results for “\(trimmed)”", systemImage: "magnifyingglass")
+            Text(trimmed.isEmpty ? "Nothing matches" : "No results for “\(trimmed)”")
+                .font(.title2.weight(.bold))
+                .foregroundStyle(PennyColor.label)
+                .padding(.top, 18)
+                .accessibilityAddTraits(.isHeader)
                 .accessibilityIdentifier("activity.searchEmpty")
-        } description: {
             Text("Nothing matches in \(ActivityPeriodText.scope(filters)). Try another word, or search everything.")
-        } actions: {
-            if filters.period != .allTime || filters.day != nil {
-                Button("Search all months") {
-                    shell.activityFilters.period = .allTime
-                    shell.activityFilters.day = nil
+                .font(.subheadline)
+                .foregroundStyle(PennyColor.secondaryLabel)
+                .padding(.top, 6)
+            VStack(spacing: 10) {
+                if filters.period != .allTime || filters.day != nil {
+                    GlassCapsuleButton("Search all months", tinted: true) {
+                        shell.activityFilters.period = .allTime
+                        shell.activityFilters.day = nil
+                    }
+                    .accessibilityIdentifier("activity.searchAllMonths")
                 }
-                .buttonStyle(.borderedProminent)
-                .accessibilityIdentifier("activity.searchAllMonths")
+                if filters.isNarrowed {
+                    GlassCapsuleButton("Clear filters") { shell.activityFilters.clearNarrowing() }
+                        .accessibilityIdentifier("activity.clearFilters")
+                }
             }
-            if filters.isNarrowed {
-                Button("Clear filters") { shell.activityFilters.clearNarrowing() }
-                    .buttonStyle(.bordered)
-                    .accessibilityIdentifier("activity.clearFilters")
-            }
+            .padding(.top, 22)
         }
+        .multilineTextAlignment(.center)
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 36)
+        .padding(.vertical, 16)
         .accessibilityElement(children: .contain)
     }
 }

@@ -8,12 +8,21 @@ public struct HeroGlow: View {
     @Environment(\.colorSchemeContrast) private var contrast
     private let opacity: Double
     private let blur: CGFloat
+    private let tint: Color?
 
     /// `opacity` dims the whole glow (the empty Home draws it at 0.6); a small glow, such as
-    /// Appearance's previews, takes a smaller `blur`.
-    public init(opacity: Double = 1, blur: CGFloat = GlowBlob.blur) {
+    /// Appearance's previews, takes a smaller `blur`. With a `tint` (an entry's category color
+    /// behind the entry detail's header, `entry-detail` and `ipad-activity`), the copper glow's
+    /// blobs are drawn in that color at `GlowBlob.tintAlphas`.
+    public init(opacity: Double = 1, blur: CGFloat = GlowBlob.blur, tint: Color? = nil) {
         self.opacity = opacity
         self.blur = blur
+        self.tint = tint
+    }
+
+    private func color(_ index: Int, _ blob: GlowBlob) -> Color {
+        guard let tint else { return blob.color.color }
+        return tint.opacity(GlowBlob.tintAlphas[index % GlowBlob.tintAlphas.count])
     }
 
     public var body: some View {
@@ -21,10 +30,11 @@ public struct HeroGlow: View {
             GeometryReader { proxy in
                 let size = proxy.size
                 ZStack {
-                    ForEach(Array(GlowBlob.copper.enumerated()), id: \.offset) { _, blob in
+                    ForEach(Array(GlowBlob.copper.enumerated()), id: \.offset) { index, blob in
+                        let color = color(index, blob)
                         // CSS `radial-gradient(rx ry at x y, color, transparent 70%)`.
                         EllipticalGradient(
-                            colors: [blob.color.color, blob.color.color.opacity(0)], center: .center,
+                            colors: [color, color.opacity(0)], center: .center,
                             startRadiusFraction: 0, endRadiusFraction: 0.5
                         )
                         .frame(width: size.width * blob.radiusX * 1.4, height: size.height * blob.radiusY * 1.4)
@@ -43,9 +53,9 @@ public struct HeroGlow: View {
 extension View {
     /// Draws `HeroGlow` behind this view's top edge, as the cards place it: wider than the
     /// screen (80 points past each side), from 120 points above to 400 below.
-    public func heroGlow(opacity: Double = 1, top: CGFloat = -120) -> some View {
+    public func heroGlow(opacity: Double = 1, top: CGFloat = -120, tint: Color? = nil) -> some View {
         background(alignment: .top) {
-            HeroGlow(opacity: opacity)
+            HeroGlow(opacity: opacity, tint: tint)
                 .frame(height: GlowBlob.height)
                 .padding(.horizontal, -80)
                 .offset(y: top)
@@ -64,6 +74,8 @@ nonisolated public struct GlowBlob: Equatable, Sendable {
 
     public static let blur: CGFloat = 50
     public static let height: CGFloat = 520
+    /// A tinted glow's blob alphas, as the `entry-detail` card's category glow (`.35`, `.30`, `.25`).
+    public static let tintAlphas: [Double] = [0.35, 0.30, 0.25]
 
     public static let copper: [GlowBlob] = [
         GlowBlob(
