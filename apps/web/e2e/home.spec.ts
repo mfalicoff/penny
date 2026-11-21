@@ -134,12 +134,27 @@ test("the money flow is chosen with the keyboard and announced", async ({ page, 
   expect(errors).toEqual([]);
 });
 
-test("the calendar is a sheet over Home that lists a day's entries (iphone-calendar, MAZ-224)", async ({ page, isMobile }) => {
-  test.skip(!isMobile, "the calendar button is in the phone's top row");
+test("the calendar is a sheet over Home that lists a day's entries (iphone-calendar, MAZ-224, MAZ-258)", async ({ page }) => {
   await startDemo(page);
   const errors = watchForErrors(page);
   const before = await hero(page).textContent();
-  await page.getByRole("banner").getByRole("button", { name: "Calendar" }).click();
+  const calendar = page.getByRole("banner").getByRole("button", { name: "Calendar" });
+  await expect(calendar).toBeVisible();
+  const width = page.viewportSize()?.width ?? 0;
+  if (width >= 768) {
+    // ipad-home, web-home: the calendar sits right after the month control (Next on a tablet).
+    const next = await page.getByRole("banner").getByRole("button", { name: "Next month" }).boundingBox();
+    const box = await calendar.boundingBox();
+    expect(next && box && box.x - (next.x + next.width)).toBeGreaterThanOrEqual(0);
+    expect(next && box && box.x - (next.x + next.width)).toBeLessThanOrEqual(24);
+    expect(next && box && Math.abs(box.y + box.height / 2 - (next.y + next.height / 2))).toBeLessThanOrEqual(2);
+  } else {
+    // iphone-home: at the end of the top row, just before Settings.
+    const settings = await page.getByRole("banner").getByRole("link", { name: "Settings" }).boundingBox();
+    const box = await calendar.boundingBox();
+    expect(settings && box && settings.x - (box.x + box.width)).toBeLessThanOrEqual(16);
+  }
+  await calendar.click();
   const sheet = page.getByRole("dialog", { name: "November 2026" });
   await expect(sheet).toBeVisible();
   await expect(sheet.getByRole("button", { name: /^Monday, November 30/ })).toHaveAccessibleName("Monday, November 30: 2 expected or scheduled");

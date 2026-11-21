@@ -48,13 +48,16 @@ export function Panel({ title, level = 2, action, className, list, children }: {
  * - desktop (`web-home`, `web-insights`): a bordered segmented control with the chevrons inside.
  *   The cards have no This month link (MAZ-224): the month list and the chevrons reach it.
  *
- * `actions` go at the end of the phone row (Home's calendar and settings buttons).
+ * `calendar` is Home's calendar button (MAZ-258). It sits beside the month control from 768px, as
+ * on `ipad-home` and `web-home`, and at the end of the phone row, beside `actions` (Settings).
+ * It is one button at every width, so the calendar sheet always returns focus to it.
  */
-export function MonthBar({ month, onChange, actions }: { month: string; onChange: (month: string | undefined) => void; actions?: ReactNode }) {
+export function MonthBar({ month, onChange, calendar, actions }: { month: string; onChange: (month: string | undefined) => void; calendar?: ReactNode; actions?: ReactNode }) {
   const slot = useTopbarSlot();
   const bar = (
     <>
       <MonthBarControls month={month} onChange={onChange} />
+      {calendar}
       {actions ? <div className="topbar__actions">{actions}</div> : null}
     </>
   );
