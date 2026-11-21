@@ -115,7 +115,7 @@ Conventions:
 
 ## Shell, navigation and keyboard
 
-`src/app/shell/AppShell.tsx` renders the signed-in app. Navigation is defined in `navigation.ts`: Home, Activity, Insights; Together; Manage (Recurring, with the number of active schedules, Accounts, Categories); Settings in the account footer. Together (`Sidebar.tsx`, MAZ-221) lists each household with this month's balance in whole units ("Maison $142", read as "you're owed $142.50"), All households, the trips happening now or coming next (up to three) with their start date, and All trips. The footer shows the account and its sync state ("Synced just now", "2 changes waiting", "Offline"); the server version is in Settings › Server.
+`src/app/shell/AppShell.tsx` renders the signed-in app. Navigation is defined in `navigation.ts`: Home, Activity, Insights; Together; Manage (Recurring, with the number of active schedules, Accounts, Categories); Settings in the account footer. Together (`Sidebar.tsx`, MAZ-221) lists each household with this month's balance in whole units ("Maison $142", read as "you're owed $142.50"), All households, the trips happening now or coming next (up to three) with their start date, and All trips. The footer shows the account and its sync state ("Synced just now", "2 changes waiting", "Offline"); the server version is in Settings › Server & sync.
 
 | Shortcut | Action |
 | --- | --- |

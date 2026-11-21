@@ -56,10 +56,13 @@ describe("temporary demo", () => {
     const user = userEvent.setup();
     renderApp("/settings");
     await enterDemo(user);
-    const account = screen.getByRole("region", { name: "Account" });
-    expect(within(account).getByText(/exploring sample data/)).toBeInTheDocument();
+    expect(within(screen.getByRole("main")).getByRole("button", { name: "Leave demo" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Sign out" })).not.toBeInTheDocument();
-    await user.click(screen.getByRole("link", { name: "Server" }));
+    await user.click(screen.getByRole("link", { name: /^Profile, Demo/ }));
+    const account = await screen.findByRole("region", { name: "Account" });
+    expect(within(account).getByText(/exploring sample data/)).toBeInTheDocument();
+    await user.click(screen.getByRole("link", { name: "All settings" }));
+    await user.click(await screen.findByRole("link", { name: /^Demo/ }));
     expect(await screen.findByRole("heading", { name: "The demo doesn't use a server" })).toBeInTheDocument();
   });
 

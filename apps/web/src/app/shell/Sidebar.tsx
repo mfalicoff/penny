@@ -262,17 +262,22 @@ function syncedAgo(at: string, now: number): string {
   return `Synced ${sameDay ? date.toLocaleTimeString("en-CA", { hour: "numeric", minute: "2-digit" }) : date.toLocaleDateString("en-CA", { month: "short", day: "numeric" })}`;
 }
 
-/**
- * The account's sync state under its email ("Synced just now", "2 changes waiting", "Offline").
- * It isn't a live region: the sync banner above the page announces changes and offers Retry. The
- * server's version is in Settings › Server; an unreachable server has its own banner.
- */
-function SyncLine() {
+/** The ledger's sync state as the sidebar footer and Settings show it. */
+export interface SyncStatus {
+  icon: IconName;
+  text: string;
+  tone: "error" | undefined;
+  /** Everything this browser holds is on the server. */
+  synced: boolean;
+}
+
+export function useSyncStatus(): SyncStatus {
   const state = useLedgerSync();
   const now = useNow();
   let icon: IconName = "cloud-done";
   let text: string;
   let tone: "error" | undefined;
+  let synced = false;
   if (!state) {
     icon = "cloud-offline";
     text = "Not synced";
@@ -285,15 +290,24 @@ function SyncLine() {
   } else if (state.phase === "pending") {
     icon = "time";
     text = countChanges(state.pending.count);
-  } else if (state.phase === "upToDate" && state.lastSyncedAt) {
-    text = syncedAgo(state.lastSyncedAt, now);
   } else if (state.phase === "upToDate") {
-    text = "Synced";
+    text = state.lastSyncedAt ? syncedAgo(state.lastSyncedAt, now) : "Synced";
+    synced = true;
   } else {
     icon = "alert-circle";
     text = "Not synced";
     tone = "error";
   }
+  return { icon, text, tone, synced };
+}
+
+/**
+ * The account's sync state under its email ("Synced just now", "2 changes waiting", "Offline").
+ * It isn't a live region: the sync banner above the page announces changes and offers Retry. The
+ * server's version is in Settings › Server & sync; an unreachable server has its own banner.
+ */
+export function SyncLine() {
+  const { icon, text, tone } = useSyncStatus();
   return (
     <p className={cx("sync-line", tone && "sync-line--error")}>
       <Icon name={icon} size={13} />

@@ -16,7 +16,7 @@ export async function openSettings(page: Page) {
   await page.getByRole("navigation", { name: "Settings sections" }).waitFor();
 }
 
-/** Settings › Account › Sign out, confirmed. */
+/** Settings › Sign out, confirmed. */
 export async function signOut(page: Page) {
   await openSettings(page);
   await page.getByRole("button", { name: "Sign out" }).click();

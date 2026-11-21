@@ -16,19 +16,27 @@ afterEach(() => {
 });
 
 describe("settings layout", () => {
-  it("lists the sections and keeps one URL per section", async () => {
+  it("lists the profile, Manage, Preferences, Server and Sign out on phones, one URL per section", async () => {
     stubServer();
     const user = userEvent.setup();
     const { router } = renderApp("/settings");
-    const sections = await screen.findByRole("navigation", { name: "Settings sections" });
-    expect(within(sections).getAllByRole("link").map((link) => link.textContent.trim())).toEqual(["Account", "Appearance", "Currency", "Server"]);
-    expect(within(sections).getByRole("link", { name: "Account" })).toHaveAttribute("aria-current", "page");
+    expect(await screen.findByRole("link", { name: /^Profile, / })).toHaveAttribute("href", "/settings/profile");
+    const manage = screen.getByRole("navigation", { name: "Manage" });
+    expect(within(manage).getAllByRole("link").map((link) => link.textContent.trim())).toEqual(["Recurring", "Accounts", "Categories"]);
+    const sections = screen.getByRole("navigation", { name: "Settings sections" });
+    expect(within(sections).getByRole("list", { name: "Preferences" })).toBeInTheDocument();
+    expect(within(sections).getByRole("link", { name: /^Appearance/ })).toHaveTextContent("AppearanceSystem");
+    expect(within(sections).getByRole("list", { name: "Server" })).toHaveTextContent(window.location.host);
     expect(screen.getByRole("button", { name: "Sign out" })).toBeInTheDocument();
+    // The sheet closes back to Home.
+    expect(screen.getByRole("link", { name: "Done" })).toHaveAttribute("href", "/");
 
-    await user.click(within(sections).getByRole("link", { name: "Appearance" }));
+    await user.click(within(sections).getByRole("link", { name: /^Appearance/ }));
     expect(router.state.location.pathname).toBe("/settings/appearance");
     expect(await screen.findByRole("group", { name: "Theme" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Appearance" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "All settings" })).toHaveAttribute("href", "/settings");
+    expect(screen.queryByRole("navigation", { name: "Settings sections" })).not.toBeInTheDocument();
   });
 });
 
@@ -80,10 +88,10 @@ describe("appearance", () => {
     stubServer();
     const user = userEvent.setup();
     renderApp("/settings/appearance");
-    const week = await screen.findByRole("group", { name: "Week starts on" });
-    expect(within(week).getByRole("radio", { name: "Monday" })).toBeChecked();
-    await user.click(within(week).getByRole("radio", { name: "Sunday" }));
-    expect(within(week).getByRole("radio", { name: "Sunday" })).toBeChecked();
+    const week = await screen.findByRole("combobox", { name: "Week starts on" });
+    expect(week).toHaveValue("monday");
+    await user.selectOptions(week, "sunday");
+    expect(week).toHaveValue("sunday");
     expect(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}")).toMatchObject({ weekStartsOn: "sunday" });
   });
 
@@ -234,18 +242,19 @@ describe("toast", () => {
 });
 
 describe("server", () => {
-  it("shows the read-only server and its version", async () => {
+  it("shows the read-only server, its version and the last sync", async () => {
     stubServer();
     renderApp("/settings/server");
-    expect(await screen.findByText("Connected")).toBeInTheDocument();
-    expect(screen.getByText(window.location.host)).toBeInTheDocument();
-    expect(screen.getByText("Version 2.0.0-test")).toBeInTheDocument();
-    expect(screen.getByText(/always uses the server it's opened from/)).toBeInTheDocument();
+    const section = await screen.findByRole("region", { name: "Server & sync" });
+    expect(within(section).getByText(window.location.host)).toBeInTheDocument();
+    expect(await within(section).findByText(/^Version 2\.0\.0-test · Email/)).toBeInTheDocument();
+    expect(within(section).getByText("Sign out to change servers")).toBeInTheDocument();
+    expect(within(section).getByText("Last synced")).toBeInTheDocument();
   });
 
   it("says when the server can't be reached", async () => {
     stubServer((url) => (url === "/api/info" ? json({ error: "Down." }, 502) : undefined));
     renderApp("/settings/server");
-    expect(await screen.findByText("Unreachable")).toBeInTheDocument();
+    expect(await screen.findByText(/^Can't reach the server · /)).toBeInTheDocument();
   });
 });

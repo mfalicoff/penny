@@ -30,11 +30,12 @@ class SignOutRefused extends Error {
 const unsyncedTitle = (count: number) => (count === 1 ? "1 change hasn’t synced" : `${String(count)} changes haven’t synced`);
 
 /**
- * Sign out and its confirmation (redesign card `iphone-sign-out`), shown in Settings › Account. With
- * changes waiting to sync it warns that they would be lost and offers "Sync, then sign out" and
- * "Sign out anyway", as on iOS. Nothing is removed from this browser unless the person chooses to.
+ * Sign out and its confirmation (redesign card `iphone-sign-out`), shown in the Settings list: a
+ * full-width row on phones and touch tablets, the last section on desktop. With changes waiting to
+ * sync it warns that they would be lost and offers "Sync, then sign out" and "Sign out anyway", as
+ * on iOS. Nothing is removed from this browser unless the person chooses to.
  */
-export function SignOutButton() {
+export function SignOutButton({ className = "wbtn wbtn--danger-quiet", icon = true }: { className?: string; icon?: boolean } = {}) {
   const email = useAccountEmail();
   const queryClient = useQueryClient();
   const engine = useLedgerEngine();
@@ -107,13 +108,13 @@ export function SignOutButton() {
       <button
         ref={opener}
         type="button"
-        className="wbtn wbtn--danger-quiet"
+        className={className}
         onClick={() => {
           setPending(livePending);
           setOpen(true);
         }}
       >
-        <Icon name="log-out" size={20} />
+        {icon ? <Icon name="log-out" size={20} /> : null}
         Sign out
       </button>
       {open ? (

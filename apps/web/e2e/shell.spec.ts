@@ -19,9 +19,11 @@ async function mockApi(page: Page, email = "alex@example.test") {
   await page.route("/api/households", (route) => route.fulfill({ json: { households: [] } }));
   await page.route("/api/households/**", (route) => route.fulfill({ status: 404, json: { error: "Household not found." } }));
   await page.route("/api/receipt-email", (route) => route.fulfill({ json: { enabled: false, domain: null, address: null } }));
+  await page.route("/api/auth/oidc", (route) => route.fulfill({ json: { enabled: false } }));
 }
 
-const ROUTES: [string, string][] = [
+// Phones title a settings section by its name (with Back to the list); wider, the page is Settings.
+const ROUTES: [string, string | RegExp][] = [
   ["/", "Home"],
   ["/transactions?q=coffee", "Activity"],
   ["/insights", "Insights"],
@@ -32,8 +34,8 @@ const ROUTES: [string, string][] = [
   ["/accounts", "Accounts"],
   ["/categories", "Categories"],
   ["/settings", "Settings"],
-  ["/settings/appearance", "Settings"],
-  ["/settings/currency", "Settings"],
+  ["/settings/appearance", /^(Settings|Appearance)$/],
+  ["/settings/currency", /^(Settings|Currency)$/],
 ];
 
 async function horizontalOverflow(page: Page) {
@@ -194,13 +196,19 @@ test("phones have four tabs, and Home's settings button reaches Manage and Setti
   await page.goto("/");
   await openSettings(page);
   await expect(page).toHaveURL("/settings");
-  await page.getByRole("link", { name: "Currency" }).click();
+  // Settings covers Home like a sheet: no tab bar, and the copper check closes it.
+  await expect(tabs).toBeHidden();
+  await page.getByRole("link", { name: /^Currency/ }).click();
   await expect(page.getByRole("group", { name: "Ledger currency" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Currency" })).toBeVisible();
   // On phones each section is its own page with a way back to the list.
   await expect(page.getByRole("navigation", { name: "Settings sections" })).toBeHidden();
   await page.getByRole("link", { name: "All settings" }).click();
   await expect(page.getByRole("navigation", { name: "Settings sections" })).toBeVisible();
   expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
+  await page.getByRole("link", { name: "Done" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Home", exact: true })).toBeVisible();
+  await expect(tabs).toBeVisible();
 });
 
 test("the demo stays in the tab: no private API calls, and a reload ends it", async ({ page }) => {

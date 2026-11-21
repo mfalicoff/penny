@@ -588,114 +588,6 @@ body:has(.pk-toast) .topbar__add {
   pointer-events: none;
 }
 
-/* ---------- settings ---------- */
-.settings {
-  display: grid;
-  gap: 16px;
-  align-items: start;
-}
-
-.settings__nav ul {
-  display: grid;
-  gap: 2px;
-  margin: 0;
-  padding: 6px;
-  border-radius: var(--pk-r-card);
-  background: var(--pk-surface);
-  list-style: none;
-}
-
-.settings__link {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 48px;
-  padding: 0 12px;
-  border-radius: 12px;
-  color: var(--pk-label);
-  font-weight: 500;
-  text-decoration: none;
-}
-
-.settings__link .icon:first-child {
-  color: var(--pk-label-2);
-}
-
-.settings__link .icon:last-child {
-  margin-inline-start: auto;
-  color: var(--pk-label-3);
-}
-
-.settings__link:hover {
-  background: var(--pk-fill);
-}
-
-.settings__link[aria-current="page"] {
-  background: var(--pk-tint-soft);
-  color: var(--pk-tint-text);
-  font-weight: 600;
-}
-
-.settings__link[aria-current="page"] .icon:first-child {
-  color: var(--pk-tint);
-}
-
-.settings__pane {
-  display: grid;
-  gap: 16px;
-  min-width: 0;
-}
-
-.settings__back {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  justify-self: start;
-  min-height: 44px;
-  color: var(--pk-tint-text);
-  font-weight: 600;
-  text-decoration: none;
-}
-
-/* Phones: Manage leads the settings list (card `iphone-settings`); the sidebar has it wider. */
-.settings__group {
-  margin: 0;
-  padding: 0 16px 8px;
-  color: var(--pk-label-2);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.settings__value {
-  margin-inline-start: auto;
-  color: var(--pk-label-2);
-  font-variant-numeric: tabular-nums;
-}
-
-.settings__value + .icon:last-child {
-  margin-inline-start: 0;
-}
-
-.settings__link .navlink__count {
-  margin-inline-start: auto;
-}
-
-.settings__link .navlink__count + .icon:last-child {
-  margin-inline-start: 0;
-}
-
-.settings__link--off {
-  color: var(--pk-label-2);
-  cursor: not-allowed;
-}
-
-/* Phones: the list is its own page; a section replaces it, with a back link. */
-.settings--section .settings__nav {
-  display: none;
-}
-
 /* ---------- medium: icon rail ---------- */
 @media (min-width: 768px) {
   .app {
@@ -882,22 +774,6 @@ body:has(.pk-toast) .topbar__add {
 
   .sidebar--rail .sidebar__all .navlink[data-section] .icon {
     color: var(--pk-tint);
-  }
-
-  .settings__manage {
-    display: none;
-  }
-
-  .settings {
-    grid-template-columns: minmax(200px, 260px) minmax(0, 1fr);
-  }
-
-  .settings--section .settings__nav {
-    display: block;
-  }
-
-  .settings__back {
-    display: none;
   }
 }
 
