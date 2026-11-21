@@ -154,22 +154,36 @@ struct HouseholdStartSheet: View {
                 .accessibilityIdentifier("householdStart.name")
         }
         Section {
-            LabeledContent("Currency") {
+            LabeledContent {
                 HStack(spacing: 4) {
                     Text(ledgerCurrency.rawValue)
                     Image(systemName: "lock.fill").font(.footnote).accessibilityHidden(true)
                 }
                 .foregroundStyle(PennyColor.secondaryLabel)
+            } label: {
+                Label {
+                    Text("Currency")
+                } icon: {
+                    Image(systemName: "banknote").foregroundStyle(PennyColor.label)
+                }
             }
             .accessibilityValue("\(ledgerCurrency.rawValue), fixed")
             .accessibilityIdentifier("householdStart.currency")
-            LabeledContent("Invite people", value: "After creating")
+            LabeledContent {
+                Text("After creating")
+            } label: {
+                Label {
+                    Text("Invite people")
+                } icon: {
+                    Image(systemName: "person.badge.plus").foregroundStyle(PennyColor.label)
+                }
+            }
         } header: {
             Text("Details").cardSectionHeader()
         } footer: {
-            Text(
-                "Uses your ledger currency. Everyone who joins must use \(ledgerCurrency.rawValue) too. "
-                    + HouseholdText.onlineRequirement)
+            // The card says only this; the online requirement is on the Shared list, and a failed
+            // save says itself that what was typed is kept.
+            Text("Uses your ledger currency. Everyone who joins must use \(ledgerCurrency.rawValue) too.")
         }
     }
 

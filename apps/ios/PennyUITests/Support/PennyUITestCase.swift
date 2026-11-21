@@ -16,6 +16,9 @@ struct LaunchOptions {
     var demo = false
     /// The app's "today" (`yyyy-MM-dd`), matching the server clock.
     var today: String? = Stack.defaultToday
+    /// The app's "now" (ISO 8601), matching the server's pinned clock. Sent only while `today` is
+    /// that instant's day, so a test that moves `today` never gets a "now" from another day.
+    var now: String? = Stack.defaultNow
     /// State an earlier install left (upgrade rehearsals).
     var seed: ContainerSeed?
     /// A `UIContentSizeCategory` raw value, such as `UICTContentSizeCategoryAccessibilityXL`.
@@ -117,6 +120,9 @@ class PennyUITestCase: XCTestCase {
         }
         if options.demo { environment["PENNY_TEST_DEMO"] = "1" }
         if let today = options.today { environment["PENNY_TEST_TODAY"] = today }
+        if let now = options.now, let today = options.today, now.hasPrefix(today) {
+            environment["PENNY_TEST_NOW"] = now
+        }
         if options.reduceTransparency { environment["PENNY_TEST_REDUCE_TRANSPARENCY"] = "1" }
         if options.reduceMotion { environment["PENNY_TEST_REDUCE_MOTION"] = "1" }
         if let notification = options.notification { environment["PENNY_TEST_NOTIFICATION"] = notification }

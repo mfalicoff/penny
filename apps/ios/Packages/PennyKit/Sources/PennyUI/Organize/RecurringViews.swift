@@ -164,7 +164,7 @@ extension View {
     /// No gap after this section, so the subtitle stays with the title (iOS only; the macOS
     /// host build used for package tests has no section spacing).
     @ViewBuilder
-    fileprivate func compactSectionSpacing() -> some View {
+    func compactSectionSpacing() -> some View {
         #if os(iOS)
             listSectionSpacing(0)
         #else

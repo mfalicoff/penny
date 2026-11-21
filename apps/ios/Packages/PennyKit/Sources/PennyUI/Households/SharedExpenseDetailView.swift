@@ -72,7 +72,7 @@ private struct ExpensePage: View {
             SharedExpenseFormSheet(request: request, model: model).environment(shell)
         }
         .sheet(item: $payment, onDismiss: { Task { await load() } }) { request in
-            PaymentSheet(request: request, model: model)
+            PaymentSheet(request: request, model: model, now: shell.now)
         }
         .confirmationDialog(
             "Delete \(expense?.title ?? "this expense") for everyone?", isPresented: $confirmingDelete,

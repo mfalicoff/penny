@@ -255,6 +255,8 @@ struct HouseholdRulesTests {
                 ]), createdAt: 0), people: people, money: money)
         #expect(edit.summary == "bea@example.test edited Costco run")
         #expect(edit.changes == ["Category: Shopping → Groceries"])
+        #expect(edit.edits.map { [$0.label, $0.before, $0.after] } == [["Category", "Shopping", "Groceries"]])
+        #expect(edit.emphasis == ["bea@example.test", "Costco run"], "the actor and the expense in bold")
         #expect(!(edit.summary + edit.changes.joined()).contains("secret"))
         let payment = AuditDescription(
             WireAuditEvent(
@@ -263,7 +265,31 @@ struct HouseholdRulesTests {
                     "fromUserId": .string("b"), "toUserId": .string("a"), "amountCents": .number(6140),
                     "expenseId": .string("e"),
                 ]), createdAt: 0), people: people, money: money)
-        #expect(payment.summary == "You recorded bea@example.test's $61.40 share payment to You")
+        #expect(payment.summary == "You recorded bea@example.test's payment")
+        #expect(payment.changes == ["$61.40 share to you"], "never a capital You mid-sentence")
+        let named = AuditDescription(
+            WireAuditEvent(
+                id: "2", householdId: "h1", actorId: "a", action: "reimbursement.created",
+                after: .object([
+                    "fromUserId": .string("b"), "toUserId": .string("a"), "amountCents": .number(6140),
+                    "expenseId": .string("e"),
+                ]), createdAt: 0), people: people, money: money, expenseTitle: { $0 == "e" ? "Costco run" : nil })
+        #expect(named.changes == ["$61.40 for Costco run"])
+        let own = AuditDescription(
+            WireAuditEvent(
+                id: "4", householdId: "h1", actorId: "b", action: "reimbursement.created",
+                after: .object([
+                    "fromUserId": .string("b"), "toUserId": .string("a"), "amountCents": .number(1800),
+                ]), createdAt: 0), people: people, money: money)
+        #expect(own.summary == "bea@example.test recorded a payment")
+        #expect(own.changes == ["$18.00 to you for the month"])
+        let joined = AuditDescription(
+            WireAuditEvent(
+                id: "5", householdId: "h1", actorId: "b", action: "member.joined",
+                after: .object(["userId": .string("b")]), createdAt: 0), people: people, money: money,
+            day: { _ in "Oct 14" })
+        #expect(joined.summary == "bea@example.test joined the household")
+        #expect(joined.changes == ["Included in new expenses from Oct 14"])
         let automatic = AuditDescription(
             WireAuditEvent(
                 id: "3", householdId: "h1", actorId: "a", action: "expense.created",

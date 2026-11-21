@@ -16,6 +16,9 @@ public struct AppServices {
     public var accountWorkspace: (SignedInAccount, LedgerSyncModel) -> any LedgerWorkspace
     /// Today's local date (the device's calendar day).
     public var today: @Sendable () -> CalendarDate
+    /// The current instant, for "2 min ago" and the month's payment window. Debug test controls
+    /// pin it to the test server's clock, as they pin `today`.
+    public var now: @Sendable () -> Date = { Date() }
     /// Opens the temporary demo at launch. Only Debug test controls set it (UI tests and
     /// screenshots without a server).
     public var startsInDemo = false

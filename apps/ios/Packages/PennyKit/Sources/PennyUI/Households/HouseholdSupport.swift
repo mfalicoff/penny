@@ -7,11 +7,16 @@ import SwiftUI
 /// A person as a gray monogram, like iOS Contacts (people never get a meaning color).
 struct Monogram: View {
     let initials: String
-    @ScaledMetric(relativeTo: .body) private var size: Double = 34
+    @ScaledMetric private var size: Double
+
+    init(initials: String, size: Double = 34) {
+        self.initials = initials
+        _size = ScaledMetric(wrappedValue: size, relativeTo: .body)
+    }
 
     var body: some View {
         Text(initials)
-            .font(.caption.weight(.semibold))
+            .font(.system(size: size * 0.36, weight: .semibold))
             .foregroundStyle(PennyColor.secondaryLabel)
             .frame(width: size, height: size)
             .background(PennyColor.fill, in: Circle())
@@ -22,12 +27,13 @@ struct Monogram: View {
 /// Overlapping monograms for a household's members.
 struct MonogramStack: View {
     let initials: [String]
+    var size: Double = 34
 
     var body: some View {
-        HStack(spacing: -8) {
+        HStack(spacing: -size * 0.2) {
             ForEach(Array(initials.prefix(4).enumerated()), id: \.offset) { _, letters in
-                Monogram(initials: letters)
-                    .overlay(Circle().stroke(PennyColor.surface, lineWidth: 2))
+                Monogram(initials: letters, size: size)
+                    .overlay(Circle().stroke(PennyColor.surface, lineWidth: size >= 40 ? 3 : 1.5))
             }
         }
         .accessibilityHidden(true)
@@ -83,9 +89,22 @@ enum HouseholdText {
     static let onlineRequirement =
         "Shared households live on your server, so changing them needs a connection. What you type is kept if a save fails."
 
-    /// What recording a payment means, from the record-payment card.
-    static func recordExplanation(payer: String) -> String {
-        "Record this once \(payer) has paid outside Penny. Penny keeps track — it doesn't send money, and nobody's spending changes."
+    /// What recording a payment means, from the record-payment card: "Record this once Jo has paid
+    /// you outside Penny. …", or "once you have paid Jo" when you're the one paying.
+    static func recordExplanation(from: String, to: String, people: HouseholdPeople) -> String {
+        let paid =
+            from == people.meId
+            ? "you have paid \(people.name(to))" : "\(people.name(from)) has paid \(people.object(to))"
+        return "Record this once \(paid) outside Penny. Penny keeps track — it doesn't send money, and nobody's "
+            + "spending changes."
+    }
+
+    /// "2 min ago", "now", "yesterday": an instant relative to `now` (`ShellModel.now`).
+    static func ago(_ milliseconds: Int64, now: Date) -> String {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.dateTimeStyle = .named
+        formatter.unitsStyle = .short
+        return formatter.localizedString(for: instant(milliseconds), relativeTo: now)
     }
 }
 
@@ -139,4 +158,48 @@ extension WireSharedCategory {
     }
 
     static let other = WireSharedCategory(name: "Other", icon: "ellipsis-horizontal", color: "#8E8A85")
+}
+
+/// The cards' small tags on shared screens: a glyph and 12-point semibold words in a rounded
+/// rectangle, tinted by meaning (`iphone-shared`'s green Settled, `iphone-shared-balances`'
+/// amber Settles Nov 30, `iphone-record-payment`'s neutral Full share). Always words as well as
+/// color.
+struct HouseholdTag: View {
+    enum Tone { case neutral, income, pending, danger }
+
+    @ScaledMetric(relativeTo: .caption) private var glyph = 10.0
+    let text: String
+    let systemImage: String
+    var tone: Tone = .neutral
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: systemImage).font(.system(size: glyph, weight: .bold)).accessibilityHidden(true)
+            Text(text)
+        }
+        .font(.caption.weight(.semibold))
+        .foregroundStyle(foreground)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 3)
+        .background(background, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .fixedSize()
+    }
+
+    private var foreground: Color {
+        switch tone {
+        case .neutral: PennyColor.secondaryLabel
+        case .income: PennyColor.income
+        case .pending: PennyColor.pending
+        case .danger: PennyColor.danger
+        }
+    }
+
+    private var background: Color {
+        switch tone {
+        case .neutral: PennyColor.fill
+        case .income: PennyColor.income.opacity(0.14)
+        case .pending: PennyColor.pending.opacity(0.16)
+        case .danger: PennyColor.danger.opacity(0.12)
+        }
+    }
 }

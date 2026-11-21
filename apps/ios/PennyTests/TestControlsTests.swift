@@ -46,6 +46,17 @@ struct UITestLaunchControlsTests {
         #expect(TestControls.fromProcess(["PENNY_TEST_TODAY": "2026-02-30"]).today == nil)
     }
 
+    @Test("whenNowVariableSet_TestControls_ShouldPinTheAppsNowToTheServerClock")
+    @MainActor
+    func now() throws {
+        let pinned = Date(timeIntervalSince1970: 1_792_065_600)  // 2026-10-15T12:00:00Z
+        let controls = TestControls.fromProcess(["PENNY_TEST_NOW": "2026-10-15T12:00:00Z"])
+        #expect(controls.now == pinned)
+        #expect(controls.apply(AppServices.live()).now() == pinned)
+        #expect(TestControls.fromProcess(["PENNY_TEST_NOW": "2026-10-15"]).now == nil, "an instant, not a day")
+        #expect(TestControls.fromProcess([:]).now == nil)
+    }
+
     @Test("whenFlagsSet_TestControls_ShouldReadOnlyTheExactValueOne")
     func flags() {
         let on = TestControls.fromProcess([

@@ -70,6 +70,8 @@ final class ShellModel {
     /// Writes the Home Screen widgets' snapshot for the signed-in account (MAZ-80); nil in the
     /// demo, previews and tests.
     var widgets: WidgetPublisher?
+    /// The current instant ("2 min ago", a month's payment window), from `AppServices.now`.
+    @ObservationIgnored var now: () -> Date = { Date() }
 
     // MARK: Households (MAZ-75)
 

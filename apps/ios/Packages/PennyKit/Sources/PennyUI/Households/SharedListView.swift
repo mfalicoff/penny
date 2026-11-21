@@ -30,12 +30,16 @@ struct SharedView: View {
             if directory.isAvailable {
                 if !directory.households.isEmpty {
                     Section {
-                        Text(Self.overall(directory, currency: shell.currency))
+                        // The card's subtitle under the large title, the overall amount bold in its
+                        // meaning color.
+                        Text(Self.overallText(directory, currency: shell.currency))
                             .font(.subheadline)
                             .foregroundStyle(PennyColor.secondaryLabel)
-                            .listRowBackground(Color.clear)
+                            .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
+                            .accessibilityLabel(Self.overall(directory, currency: shell.currency))
                             .accessibilityIdentifier("shared.overall")
                     }
+                    .compactSectionSpacing()
                     // MAZ-79: notifications are offered here, once there is a household to hear about.
                     if let push, push.offersPrompt {
                         Section { NotificationPrompt(push: push) }
@@ -48,8 +52,8 @@ struct SharedView: View {
                         shell.route.householdStart = .join(code: nil, server: nil)
                     } label: {
                         ActionRow(
-                            title: "Join with a code", detail: "Someone shared an invite code or QR code with you",
-                            symbol: "qrcode.viewfinder")
+                            title: "Join with a code", detail: "Someone shared an invite code with you",
+                            symbol: "key")
                     }
                     .accessibilityIdentifier("shared.join")
                     Button {
@@ -57,11 +61,9 @@ struct SharedView: View {
                     } label: {
                         ActionRow(
                             title: "New household", detail: "Split rent, bills and groceries every month",
-                            symbol: "plus")
+                            symbol: "person.badge.plus")
                     }
                     .accessibilityIdentifier("shared.create")
-                } footer: {
-                    Text(HouseholdText.onlineRequirement)
                 }
             }
         }
@@ -80,6 +82,22 @@ struct SharedView: View {
         .task { await directory.refresh() }
         .background(PennyColor.background)
         .navigationTitle("Shared")
+        .toolbar {
+            if directory.isAvailable {
+                ToolbarItem(placement: .primaryAction) {
+                    Menu("Add", systemImage: "plus") {
+                        Button("New household", systemImage: "person.badge.plus") {
+                            shell.route.householdStart = .create
+                        }
+                        Button("Join with a code", systemImage: "key") {
+                            shell.route.householdStart = .join(code: nil, server: nil)
+                        }
+                    }
+                    .neutralToolbarGlyph()
+                    .accessibilityIdentifier("shared.add")
+                }
+            }
+        }
         // A join link waits until this tab is on screen and nothing else is closing.
         .onChange(of: shell.route.pendingHouseholdStart, initial: true) { shell.presentPendingHouseholdStart() }
         .task(id: shell.route.pendingHouseholdStart) {
@@ -96,20 +114,22 @@ struct SharedView: View {
 
     @ViewBuilder
     private func rows(_ title: String, _ households: [WireHousehold], _ directory: HouseholdDirectory) -> some View {
-        if !households.isEmpty {
-            CardSection(title) {
-                ForEach(households) { household in
-                    // A shared trip opens its trip page (MAZ-76).
-                    NavigationLink(
-                        value: household.trip == nil
-                            ? DetailRoute.household(id: household.id) : DetailRoute.trip(id: household.id)
-                    ) {
-                        HouseholdRow(
-                            household: household, balance: directory.balances[household.id],
-                            initials: directory.memberInitials[household.id] ?? [])
-                    }
-                    .accessibilityIdentifier("shared.household.\(household.id)")
+        // Each household is its own card under the group's heading, as on `iphone-shared-list`.
+        ForEach(Array(households.enumerated()), id: \.element.id) { index, household in
+            Section {
+                // A shared trip opens its trip page (MAZ-76).
+                NavigationLink(
+                    value: household.trip == nil
+                        ? DetailRoute.household(id: household.id) : DetailRoute.trip(id: household.id)
+                ) {
+                    HouseholdRow(
+                        household: household, balance: directory.balances[household.id],
+                        initials: directory.memberInitials[household.id] ?? [])
                 }
+                .listRowInsets(EdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16))
+                .accessibilityIdentifier("shared.household.\(household.id)")
+            } header: {
+                if index == 0 { Text(title).cardSectionHeader() }
             }
         }
     }
@@ -120,24 +140,41 @@ struct SharedView: View {
         return total == 0
             ? "\(month) · all settled" : "\(month) · \(HouseholdText.balance(total, currency: currency)) overall"
     }
+
+    /// "November · you're owed **$104.30** overall": the amount bold, green when owed to you.
+    static func overallText(_ directory: HouseholdDirectory, currency: String) -> AttributedString {
+        let total = directory.overallBalance
+        var text = AttributedString("\(HouseholdText.shortMonth(directory.currentMonth)) · ")
+        guard total != 0 else { return text + AttributedString("all settled") }
+        var amount = AttributedString(MoneyFormat.amount(abs(total), currency: currency))
+        amount.inlinePresentationIntent = .stronglyEmphasized
+        amount.foregroundColor = total > 0 ? PennyColor.income : PennyColor.label
+        text += AttributedString(total > 0 ? "you're owed " : "you owe ")
+        return text + amount + AttributedString(" overall")
+    }
 }
 
+/// An action in a list (`iphone-shared-list`'s Join with a code and New household): a soft copper
+/// tile, the title in copper and a line under it.
 struct ActionRow: View {
     let title: String
     let detail: String
     let symbol: String
+    @ScaledMetric(relativeTo: .body) private var tile: Double = 36
 
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: symbol)
-                .font(.body.weight(.semibold))
+                .font(.body.weight(.medium))
                 .foregroundStyle(PennyColor.tint)
-                .frame(width: 34, height: 34)
-                .background(PaletteToken.tintSoft.value.color, in: Circle())
+                .frame(width: tile, height: tile)
+                .background(
+                    PaletteToken.tintSoft.value.color, in: RoundedRectangle(cornerRadius: 11, style: .continuous)
+                )
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.body.weight(.semibold)).foregroundStyle(PennyColor.label)
-                Text(detail).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
+                Text(title).font(.body.weight(.semibold)).foregroundStyle(PennyColor.tintText)
+                Text(detail).font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -146,30 +183,28 @@ struct ActionRow: View {
     }
 }
 
+/// A household or shared trip on the Shared list: its neutral tile (a house, or a plane for a
+/// trip), the name with the members and a detail, then the viewer's balance this month as a
+/// caption over the amount ("you're owed" over a green $142.50), or Settled with a check.
 private struct HouseholdRow: View {
     let household: WireHousehold
     let balance: Int64?
     let initials: [String]
 
     var body: some View {
-        HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
+        HStack(spacing: 14) {
+            CategoryIcon.neutral(symbol: household.trip == nil ? "house" : "airplane", size: 48)
+            VStack(alignment: .leading, spacing: 6) {
                 Text(household.name).font(.body.weight(.semibold))
                     .fixedSize(horizontal: false, vertical: true)
                 HStack(spacing: 8) {
-                    MonogramStack(initials: initials)
+                    MonogramStack(initials: initials, size: 26)
                     Text(subtitle).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
                 }
             }
             Spacer(minLength: 8)
-            if let balance {
-                Text(HouseholdText.balance(balance, currency: household.currency))
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(balance > 0 ? PennyColor.income : PennyColor.label)
-                    .multilineTextAlignment(.trailing)
-            }
+            if let balance { BalanceLabel(cents: balance, currency: household.currency) }
         }
-        .frame(minHeight: Metrics.minTouchTarget)
         .accessibilityElement(children: .combine)
     }
 
@@ -178,5 +213,32 @@ private struct HouseholdRow: View {
             return "\(HouseholdText.day(trip.startDate)) – \(HouseholdText.day(trip.endDate))"
         }
         return household.memberCount == 1 ? "1 member" : "\(household.memberCount) members"
+    }
+}
+
+/// The viewer's balance as on `iphone-shared-list`: "you owe" or "you're owed" in small text over
+/// the semibold amount (green when owed to you), or Settled with a check in the secondary color.
+struct BalanceLabel: View {
+    let cents: Int64
+    let currency: String
+
+    var body: some View {
+        Group {
+            if cents == 0 {
+                Label("Settled", systemImage: "checkmark.circle")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(PennyColor.secondaryLabel)
+            } else {
+                VStack(alignment: .trailing, spacing: 1) {
+                    Text(cents > 0 ? "you're owed" : "you owe")
+                        .font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
+                    Text(MoneyFormat.amount(abs(cents), currency: currency))
+                        .font(.body.weight(.semibold).monospacedDigit())
+                        .foregroundStyle(cents > 0 ? PennyColor.income : PennyColor.label)
+                }
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(HouseholdText.balance(cents, currency: currency))
     }
 }

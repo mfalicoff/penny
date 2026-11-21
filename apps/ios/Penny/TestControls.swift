@@ -22,6 +22,9 @@
         /// Environment variable (`yyyy-MM-dd`) that pins the app's "today", to match the test
         /// server's pinned clock.
         static let todayVariable = "PENNY_TEST_TODAY"
+        /// Environment variable (ISO 8601 instant) that pins the app's "now" to the test server's
+        /// pinned clock, so "2 min ago" and the month's payment window read as on the server.
+        static let nowVariable = "PENNY_TEST_NOW"
         /// Environment variable with the path of a container seed (a property list written by
         /// the UI test, see ContainerSeed), applied after the reset and before launch: the
         /// state an earlier install left, for upgrade rehearsals.
@@ -48,6 +51,7 @@
         var startsInDemo = false
         var resetsState = false
         var today: CalendarDate?
+        var now: Date?
         var containerSeed: URL?
         var reduceTransparency = false
         var reduceMotion = false
@@ -62,6 +66,7 @@
                 startsInDemo: environment[demoVariable] == "1",
                 resetsState: environment[resetVariable] == "1",
                 today: environment[todayVariable].flatMap(CalendarDate.init),
+                now: environment[nowVariable].flatMap { try? Date($0, strategy: .iso8601) },
                 containerSeed: environment[containerSeedVariable].flatMap { $0.isEmpty ? nil : URL(filePath: $0) },
                 reduceTransparency: environment[reduceTransparencyVariable] == "1",
                 reduceMotion: environment[reduceMotionVariable] == "1",
@@ -90,6 +95,7 @@
             var services = services
             services.startsInDemo = startsInDemo
             if let today { services.today = { today } }
+            if let now { services.now = { now } }
             if standInAuthenticator || lockMinute != nil {
                 services.lock = AppLockController(
                     store: KeychainAppLockSettingStore(),
