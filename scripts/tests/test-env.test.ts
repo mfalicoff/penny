@@ -11,7 +11,7 @@ import { join } from "node:path";
 import { databaseName, nativePostgresBin, newRunId, postgresImage, postgresMode, runnerEnvironment, validRunId, webOrigins } from "../../scripts/test-env/environment.mjs";
 import { applyPendingEdits, resolve } from "../../scripts/test-env/seed.mjs";
 import { redirectUrisFor, selfSignedCertificate } from "../../scripts/test-env/oidc-provider.mjs";
-import { trustCertificate, writeCertificate } from "../../scripts/test-env/tls.mjs";
+import { integer, trustCertificate, writeCertificate } from "../../scripts/test-env/tls.mjs";
 
 test("run ids are restricted before they name containers and databases", () => {
   for (const id of ["r1a2b3c4d5", "ci42"]) assert.ok(validRunId(id));
@@ -140,4 +140,15 @@ test("the run's certificate is a valid self-signed loopback server certificate",
   assert.equal(certificate.checkHost("localhost"), "localhost");
   assert.ok(certificate.verify(certificate.publicKey));
   assert.ok(new Date(certificate.validTo).getTime() > Date.now());
+});
+
+test("certificate serials are minimal DER integers, whatever random bytes they start with", () => {
+  const hex = (bytes: number[]) => integer(Buffer.from(bytes)).toString("hex");
+  assert.equal(hex([0x00, 0x00, 0x12, 0x34]), "02021234");
+  assert.equal(hex([0x00, 0x7f]), "02017f");
+  assert.equal(hex([0x00, 0x80]), "02020080");
+  assert.equal(hex([0x00, 0x00, 0x80]), "02020080");
+  assert.equal(hex([0x80, 0x01]), "0203008001");
+  assert.equal(hex([0x12]), "020112");
+  assert.equal(hex([0x00]), "020100");
 });

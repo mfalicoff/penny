@@ -20,7 +20,17 @@ const tlv = (tag, ...content) => {
   return Buffer.concat([Buffer.from([tag]), length(body.length), body]);
 };
 const sequence = (...items) => tlv(0x30, ...items);
-const integer = (bytes) => tlv(0x02, bytes[0] & 0x80 ? Buffer.concat([Buffer.from([0]), bytes]) : bytes);
+/**
+ * A non-negative DER INTEGER. DER needs the shortest form: no leading 0x00 unless the next byte's
+ * top bit is set, so a random serial that starts with 0x00 has to drop it (OpenSSL rejects the
+ * padded form as "illegal padding").
+ */
+export function integer(bytes) {
+  let start = 0;
+  while (start < bytes.length - 1 && bytes[start] === 0 && !(bytes[start + 1] & 0x80)) start += 1;
+  const minimal = bytes.subarray(start);
+  return tlv(0x02, minimal[0] & 0x80 ? Buffer.concat([Buffer.from([0]), minimal]) : minimal);
+}
 function oid(text) {
   const [first, second, ...rest] = text.split(".").map(Number);
   const bytes = [40 * first + second];
