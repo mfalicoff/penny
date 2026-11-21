@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode, type Ref } from "react";
 import { createPortal } from "react-dom";
 import { useTopbarSlot } from "../../app/shell/pageTitle";
 import { cx } from "../../design/controls";
@@ -29,10 +29,10 @@ export function GroupToolbar({ lead, ownAdd, children }: { lead?: ReactNode; own
  * 1100px (the `web-household` card's Invite). `primary` is the copper add action, which pages
  * render from 1100px only: narrower, it's in the page's hero or the … menu.
  */
-export function ToolButton({ icon, label, labelled, primary, onClick }: { icon: IconName; label: string; labelled?: boolean; primary?: boolean; onClick: () => void }) {
+export function ToolButton({ ref, icon, label, labelled, primary, onClick }: { ref?: Ref<HTMLButtonElement>; icon: IconName; label: string; labelled?: boolean; primary?: boolean; onClick: () => void }) {
   const named = labelled || primary;
   return (
-    <button type="button" className={cx("group-tool", !primary && "glass", labelled && "group-tool--labelled", primary && "group-tool--primary")} aria-label={named ? undefined : label} onClick={onClick}>
+    <button ref={ref} type="button" className={cx("group-tool", !primary && "glass", labelled && "group-tool--labelled", primary && "group-tool--primary")} aria-label={named ? undefined : label} onClick={onClick}>
       <Icon name={icon} size={primary ? 18 : 20} />
       {named ? <span className="group-tool__label">{label}</span> : null}
     </button>

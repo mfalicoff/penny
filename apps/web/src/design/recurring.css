@@ -3,39 +3,31 @@
  * Values come from the --pk-* tokens. Money stays on solid surfaces.
  */
 
-.recurring__head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.recurring__head > p {
-  flex: 1;
-  min-width: min(100%, 240px);
-  margin: 0;
+.recurring-group {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
 }
 
 /*
  * A schedule row is a button that opens the detail (or a link to a shared schedule's household):
- * full width, the row look, a visible focus ring. It keeps the icon, the title on the left and
- * the amount on the right at every width, including under the 480px rule that drops `.row` to two
- * columns (MAZ-177).
+ * the cards' compact `.row` (MAZ-232): the category tile, a 16px semibold title and amount, a 13px
+ * detail and a chevron, 60px tall. The title stays left and the amount right at every width.
  */
-.row.schedule-row {
-  grid-template-columns: auto minmax(0, 1fr) auto;
-}
-
 .schedule-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 1px 12px;
   width: 100%;
-  min-height: 56px;
-  padding: 8px 6px;
+  min-height: 60px;
+  padding: 11px 16px;
   border: 0;
-  border-radius: var(--pk-r-row);
   background: transparent;
+  color: inherit;
   font: inherit;
   text-align: start;
+  text-decoration: none;
   cursor: pointer;
 }
 
@@ -43,84 +35,204 @@
   background: var(--pk-surface-2);
 }
 
-.schedule-row__icon {
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 9px;
-  background: var(--pk-fill);
-  color: var(--pk-label);
+.schedule-row:focus-visible {
+  outline-offset: -2px;
+}
+
+.schedule-row__tile {
+  align-self: center;
 }
 
 .schedule-row__text {
   display: grid;
-  gap: 2px;
+  gap: 1px;
   min-width: 0;
 }
 
-.schedule-detail {
-  display: grid;
-  gap: 16px;
-}
-
-.schedule-detail__summary {
+.schedule-row__title {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px 12px;
+  gap: 2px 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+
+.schedule-row__meta {
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+}
+
+.schedule-row__line {
+  display: block;
+  margin-top: 3px;
+}
+
+.schedule-row__end {
+  display: grid;
+  justify-items: end;
+  gap: 1px;
+  text-align: end;
+}
+
+/* The amount never breaks across lines; the title column gives way instead. */
+.schedule-row__end .money {
+  font-size: 1rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.schedule-row__share {
+  color: var(--pk-label-2);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.schedule-row > .icon:last-child {
+  color: var(--pk-label-3);
+}
+
+/* Paused (the card's Gym): the tile at half opacity, the title and amount secondary. */
+.schedule-row--paused .schedule-row__tile {
+  opacity: 0.5;
+}
+
+.schedule-row--paused .schedule-row__title,
+.schedule-row--paused .schedule-row__end .money {
+  color: var(--pk-label-2);
+}
+
+/*
+ * Schedule detail (card `iphone-schedule-detail`, MAZ-232): centered tile, signed amount and
+ * cadence; Edit (copper) beside a solid Pause; NEXT and DETAILS as solid groups on the sheet
+ * background (`Dialog grouped`).
+ */
+.schedule-detail {
+  display: grid;
+  gap: 18px;
+}
+
+.schedule-detail__summary {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.category-dot.schedule-detail__tile {
+  width: 56px;
+  height: 56px;
+  margin-bottom: 6px;
+  border-radius: 17px;
 }
 
 .schedule-detail__amount {
-  font-size: 2rem;
+  font-size: 2.75rem;
   font-weight: 700;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+}
+
+.schedule-detail__cadence {
+  margin: 0;
+  color: var(--pk-label-2);
+  font-size: 0.9375rem;
 }
 
 .schedule-detail__badges {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 6px;
+  margin-top: 4px;
+}
+
+.schedule-detail__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.schedule-detail__actions .wbtn {
+  justify-content: center;
+  min-height: 44px;
+  border-radius: 22px;
+  font-size: 1rem;
+}
+
+/* The card's solid Pause: the surface, no outline. */
+.schedule-detail__actions .wbtn.schedule-detail__solid {
+  border-color: transparent;
+  background: var(--pk-surface);
+  box-shadow: none;
+  color: var(--pk-label);
 }
 
 .schedule-detail__section {
   display: grid;
-  gap: 6px;
+  gap: 7px;
 }
 
-.schedule-detail__section > h3 {
-  margin: 0;
+.schedule-dates > li,
+.schedule-facts > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 46px;
+  padding: 8px 16px;
+}
+
+.schedule-dates__when {
   color: var(--pk-label-2);
   font-size: 0.8125rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
 }
 
-.schedule-dates {
-  display: grid;
+.schedule-facts {
   margin: 0;
-  padding: 0;
-  list-style: none;
 }
 
-.schedule-dates > li {
-  min-height: 36px;
-  padding: 6px 0;
-}
-
-.schedule-dates > li + li {
+.schedule-facts > div + div {
   border-top: 0.5px solid var(--pk-separator);
+}
+
+.schedule-facts dt {
+  color: var(--pk-label);
+}
+
+.schedule-facts dd {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--pk-label-2);
+  text-align: end;
+  overflow-wrap: anywhere;
+}
+
+.schedule-facts__dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--tile, var(--pk-c-other));
+}
+
+.schedule-detail__paused {
+  margin: 0;
+  padding: 12px 16px;
+  color: var(--pk-label-2);
+  font-size: 0.9375rem;
 }
 
 .schedule-detail__remove {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 12px;
-  padding-top: 8px;
-  border-top: 0.5px solid var(--pk-separator);
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  text-align: center;
 }
 
 .schedule-preview {
@@ -132,7 +244,3 @@
   font-size: 0.875rem;
 }
 
-/* The amount never breaks across lines; the title column gives way instead. */
-.schedule-row .row__end .money {
-  white-space: nowrap;
-}

@@ -108,6 +108,7 @@ export function AccountFormDialog({ account, workspace, onClose, onSaved }: Acco
         if (!busy) onClose();
       }}
       initialFocus={nameRef}
+      grouped
       actions={
         <>
           <Button variant="quiet" onClick={onClose} disabled={busy !== null}>
@@ -119,7 +120,7 @@ export function AccountFormDialog({ account, workspace, onClose, onSaved }: Acco
         </>
       }
     >
-      <form id={ids.form} className="form" onSubmit={onSubmit} noValidate aria-label={title}>
+      <form id={ids.form} className="form organize-form" onSubmit={onSubmit} noValidate aria-label={title}>
         {saveError ? <SaveErrorBanner message={saveError.message} onRetry={saveError.retry} retrying={busy !== null} /> : null}
         {atLimit ? (
           <p className="form-error" role="alert">
@@ -127,7 +128,9 @@ export function AccountFormDialog({ account, workspace, onClose, onSaved }: Acco
           </p>
         ) : null}
         <div className="form-field">
-          <label htmlFor={ids.name}>Name</label>
+          <label htmlFor={ids.name} className="group-label">
+            Name
+          </label>
           <input
             id={ids.name}
             ref={nameRef}
@@ -151,22 +154,18 @@ export function AccountFormDialog({ account, workspace, onClose, onSaved }: Acco
         <ChoiceGroup<AccountType>
           legend="Type"
           name={`${ids.form}-type`}
-          appearance="cards"
+          appearance="tiles"
           value={type}
           describedBy={ids.typeNote}
           onChange={setType}
           options={accountTypes.map((value) => ({
             value,
             label: accountTypeLabels[value],
-            preview: (
-              <span className="organize-type-icon">
-                <Icon name={ACCOUNT_TYPE_ICONS[value]} size={22} />
-              </span>
-            ),
+            preview: <Icon name={ACCOUNT_TYPE_ICONS[value]} size={22} />,
           }))}
         />
-        <p id={ids.typeNote} className="form-hint">
-          Labels where money comes from or how you pay. No bank connection is needed, and Penny doesn't track balances.
+        <p id={ids.typeNote} className="group-note">
+          Labels where money comes from or how you pay. No bank connection is needed.
         </p>
       </form>
 

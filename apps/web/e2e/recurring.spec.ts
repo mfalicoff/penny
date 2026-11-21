@@ -253,16 +253,18 @@ test("keeps each row's title left and amount right from 320px, with shared sched
     await page.setViewportSize({ width, height: 800 });
     await page.goto("/recurring");
     const shared = page.getByRole("link", { name: /^Streaming/ });
-    await expect(shared).toContainText(/Monthly · next Nov 20 · Maison.*\$8\.00.*your share.*Shared/);
+    // The Shared tag beside the title, the household on its own line, your share under the amount (MAZ-232).
+    await expect(shared).toContainText(/^Streaming Shared\s*Monthly · next Nov 20Maison−\$8\.00your share/);
     for (const row of [page.getByRole("button", { name: /^Internet/ }), page.getByRole("button", { name: /^Gym/ }), shared]) {
       const box = await row.boundingBox();
-      const title = await row.locator(".row__title").boundingBox();
-      const amount = await row.locator(".row__end .money").boundingBox();
+      const title = await row.locator(".schedule-row__title").boundingBox();
+      const amount = await row.locator(".schedule-row__end .money").boundingBox();
       if (!box || !title || !amount) throw new Error("row not laid out");
-      // The title starts at the left, next to the icon; the amount ends at the right, in its own
-      // column beside the title (not on a line of its own), and starts within the title's lines.
-      expect(title.x - box.x).toBeLessThan(64);
-      expect(box.x + box.width - (amount.x + amount.width)).toBeLessThan(16);
+      // The title starts at the left, next to the tile; the amount ends at the right, before the
+      // chevron, in its own column beside the title (not on a line of its own), and starts within
+      // the title's lines.
+      expect(title.x - box.x).toBeLessThanOrEqual(64);
+      expect(box.x + box.width - (amount.x + amount.width)).toBeLessThan(48);
       expect(amount.x).toBeGreaterThanOrEqual(title.x + title.width);
       expect(amount.y).toBeLessThan(title.y + title.height);
     }

@@ -3,6 +3,7 @@ import { saveCategory } from "@domain/commands.ts";
 import { kinds, uid, type Category, type Kind, type Ledger } from "@domain/ledger.ts";
 import { Button, ChoiceGroup, cx } from "../../design/controls";
 import { Icon, type IconName } from "../../design/Icon";
+import { categoryTint } from "../../design/categoryTint";
 import { Dialog } from "../../design/ModalDialog";
 import { SaveErrorBanner, useToast } from "../../design/states";
 import {
@@ -62,6 +63,8 @@ export function CategoryFormDialog({ category, workspace, initialKind = "expense
   const kindLocked = fixedKind || used;
   const others = category ? ledger.categories.filter((item) => item.id !== category.id && item.kind === category.kind) : [];
   const atLimit = !category && ledger.categories.length >= RECORD_LIMIT;
+  // An icon outside today's list (one an older version offered) stays selectable too.
+  const icons = CATEGORY_ICONS.some((option) => option.name === icon) ? CATEGORY_ICONS : [...CATEGORY_ICONS, { name: icon, label: "Current icon" }];
   // A color outside today's palette (a default category's, say) stays selectable, so editing never forces a change.
   const colors = CATEGORY_COLORS.some((option) => option.value.toLowerCase() === color.toLowerCase()) || !category
     ? CATEGORY_COLORS
@@ -134,6 +137,7 @@ export function CategoryFormDialog({ category, workspace, initialKind = "expense
         if (!busy) onClose();
       }}
       initialFocus={nameRef}
+      grouped
       actions={
         <>
           <Button variant="quiet" onClick={onClose} disabled={busy !== null}>
@@ -145,18 +149,20 @@ export function CategoryFormDialog({ category, workspace, initialKind = "expense
         </>
       }
     >
-      <form id={ids.form} className="form" onSubmit={onSubmit} noValidate aria-label={title}>
+      <form id={ids.form} className="form organize-form" onSubmit={onSubmit} noValidate aria-label={title}>
         {saveError ? <SaveErrorBanner message={saveError.message} onRetry={saveError.retry} retrying={busy !== null} /> : null}
         {atLimit ? (
           <p className="form-error" role="alert">
             You have {String(RECORD_LIMIT)} categories, the most Penny keeps. Remove one you don't use to add another.
           </p>
         ) : null}
-        <span className="organize-preview" style={{ background: color }} aria-hidden="true">
+        <span className="organize-preview" style={{ background: categoryTint({ id: category?.id, color }) }} aria-hidden="true">
           <Icon name={icon} size={32} />
         </span>
         <div className="form-field">
-          <label htmlFor={ids.name}>Name</label>
+          <label htmlFor={ids.name} className="visually-hidden">
+            Name
+          </label>
           <input
             id={ids.name}
             ref={nameRef}
@@ -181,6 +187,7 @@ export function CategoryFormDialog({ category, workspace, initialKind = "expense
           <>
             <ChoiceGroup<Kind>
               legend="Kind"
+              hideLegend
               name={`${ids.form}-kind`}
               value={kind}
               onChange={(value) => {
@@ -198,7 +205,7 @@ export function CategoryFormDialog({ category, workspace, initialKind = "expense
           </>
         )}
         <fieldset className="organize-swatches">
-          <legend className="choices__legend">Color</legend>
+          <legend className="group-label">Color</legend>
           <div className="organize-swatches__options">
             {colors.map((option) => (
               <label key={option.value} className="organize-swatch" title={option.name}>
@@ -212,7 +219,7 @@ export function CategoryFormDialog({ category, workspace, initialKind = "expense
                     setColor(option.value);
                   }}
                 />
-                <span className="organize-swatch__dot" style={{ background: option.value }} aria-hidden="true">
+                <span className="organize-swatch__dot" style={{ background: categoryTint({ color: option.value, id: category && option.value === category.color ? category.id : undefined }) }} aria-hidden="true">
                   <Icon name="checkmark" size={16} weight={56} />
                 </span>
               </label>
@@ -220,9 +227,9 @@ export function CategoryFormDialog({ category, workspace, initialKind = "expense
           </div>
         </fieldset>
         <fieldset className="organize-icons">
-          <legend className="choices__legend">Icon</legend>
+          <legend className="group-label">Icon</legend>
           <div className="organize-icons__options">
-            {CATEGORY_ICONS.map((option) => (
+            {icons.map((option) => (
               <label key={option.name} className={cx("organize-icon", option.name === icon && "organize-icon--on")} title={option.label}>
                 <input
                   type="radio"
@@ -234,7 +241,7 @@ export function CategoryFormDialog({ category, workspace, initialKind = "expense
                     setIcon(option.name);
                   }}
                 />
-                <span className="organize-icon__glyph" aria-hidden="true" style={option.name === icon ? { background: color } : undefined}>
+                <span className="organize-icon__glyph" aria-hidden="true" style={option.name === icon ? { background: categoryTint({ id: category?.id, color }) } : undefined}>
                   <Icon name={option.name} size={22} />
                 </span>
               </label>
