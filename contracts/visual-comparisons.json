@@ -1088,11 +1088,6 @@
         ],
         "deviations": [
           {
-            "summary": "The seeded Lisbon categories use colors outside the category palette, so their tiles draw gray (follow-up recorded on MAZ-230)",
-            "kind": "follow-up",
-            "ref": "MAZ-230"
-          },
-          {
             "summary": "Payers are named by their email, not the person's name, so a row's \"paid · split N ways\" line wraps",
             "kind": "follow-up",
             "ref": "MAZ-171"
@@ -2286,7 +2281,7 @@
         ],
         "deviations": [
           {
-            "summary": "The seeded Lisbon categories use colors outside the category palette, so their tiles draw gray (follow-up recorded on MAZ-230)",
+            "summary": "Your share by category lists the private Airport train as a Transport row, with a gray tile: the seed's household Transport category (#6C8EAD) is outside the category palette (follow-up recorded on MAZ-230)",
             "kind": "follow-up",
             "ref": "MAZ-230"
           },
@@ -2624,11 +2619,6 @@
           "dark"
         ],
         "deviations": [
-          {
-            "summary": "The seeded Lisbon categories use colors outside the category palette, so their tiles draw gray (follow-up recorded on MAZ-230)",
-            "kind": "follow-up",
-            "ref": "MAZ-230"
-          },
           {
             "summary": "The sidebar footer and Paid by name people by their email, not their name; the long email pushes the Only you pill under its title",
             "kind": "follow-up",
