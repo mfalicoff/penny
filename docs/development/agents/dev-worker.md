@@ -129,6 +129,30 @@ Then:
 3. Fire the orchestrator trigger with its id, so it picks the next issue straight away.
 4. Unsubscribe from the pull request and finish with a one-line summary.
 
+## Bundles
+
+The orchestrator ships work in bundles: several issues worked in parallel by member sessions, then combined by one integrator session into a single pull request. Your prompt says when you're in a bundle, and as which role.
+
+### Bundles: member
+
+Do sections 1 to 3 as usual: branch from `origin/master`, implement, run the checks and design captures. Then, instead of sections 4 to 6:
+
+1. Commit with a Conventional Commit message and push your issue's branch. Don't open a pull request.
+2. Comment on your issue: `Bundle ready: <branch> <sha>`, then what changed, how you tested it, anything you couldn't run, and the before and after captures. Post follow-ups as usual.
+3. Fire the orchestrator trigger and finish. The integrator takes it from here.
+
+If you get stuck, hand over as below (there's no pull request to mark as a draft). If master moves while you work, you don't need to rebase; the integrator does.
+
+### Bundles: integrator
+
+Your prompt lists the ready members with their branches and commits.
+
+1. Create `bundle/<bundle id>` from `origin/master`, and merge each member's branch into it in the order given. Resolve conflicts keeping both sides' intent. For conflicts in `contracts/design-baseline.json`, take either side and run `npm run design:hashes` in `apps/web`. If a member can't be integrated cleanly or breaks the build, drop it: comment on its issue what went wrong and hand that issue over, then continue with the rest.
+2. Run the checks of every app the bundle touches, as in section 3.
+3. Open one pull request as in section 4, from `bundle/<bundle id>`. Title: a Conventional Commit summarising the bundle. Body: one section per issue (what changed, tests, captures linked from the issue), the follow-ups, and one `Fixes MAZ-<n>` line per included issue. Move each included issue to **In Review** and comment the pull request link on it.
+4. Respond to review and CI as in section 5, fixing on the integration branch. A fix that belongs to one member's change is still yours to make.
+5. Merge as in section 6, then make sure every included issue is **Done**.
+
 ## Hand over to a human
 
 1. Add the `needs-human` label to the Linear issue.
