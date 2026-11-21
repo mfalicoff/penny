@@ -71,6 +71,13 @@
                 "icon": "bus-outline",
                 "color": "#64748B",
                 "kind": "expense"
+              },
+              {
+                "id": "travel",
+                "name": "Travel",
+                "icon": "bus-outline",
+                "color": "#64748B",
+                "kind": "expense"
               }
             ],
             "accounts": [
@@ -211,7 +218,7 @@
                 "kind": "expense",
                 "total": 2400,
                 "share": 2400,
-                "categoryId": "transport",
+                "categoryId": "travel",
                 "date": "2026-11-02",
                 "note": "",
                 "accountId": "card",
