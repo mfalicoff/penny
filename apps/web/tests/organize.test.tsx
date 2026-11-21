@@ -122,11 +122,11 @@ describe("payment accounts", { timeout: 20_000 }, () => {
     const name = within(form).getByLabelText("Name");
     expect(name).toHaveFocus();
     await user.clear(name);
-    await user.click(within(form).getByRole("button", { name: "Save" }));
+    await user.click(within(form).getByRole("button", { name: /^(Save|Add expense)$/ }));
     expect(await within(form).findByText("Give your account a name.")).toBeInTheDocument();
     expect(name).toHaveFocus();
     await user.type(name, "main CHEQUING ");
-    await user.click(within(form).getByRole("button", { name: "Save" }));
+    await user.click(within(form).getByRole("button", { name: /^(Save|Add expense)$/ }));
     expect(await within(form).findByText("You already have an account with this name.")).toBeInTheDocument();
     expect(name).toHaveAttribute("aria-invalid", "true");
 
@@ -136,7 +136,7 @@ describe("payment accounts", { timeout: 20_000 }, () => {
 
     await user.clear(name);
     await user.type(name, "Travel card");
-    await user.click(within(form).getByRole("button", { name: "Save" }));
+    await user.click(within(form).getByRole("button", { name: /^(Save|Add expense)$/ }));
     expect(await screen.findByText("Account saved")).toBeInTheDocument();
     await synced(server, 1);
     expect(server.state.ledger.accounts).toContainEqual({ ...visa, name: "Travel card" });
@@ -323,7 +323,7 @@ describe("categories", { timeout: 20_000 }, () => {
     expect(within(form).getByRole("radio", { name: "Current color" })).toBeChecked();
     await user.clear(within(form).getByLabelText("Name"));
     await user.type(within(form).getByLabelText("Name"), "Groceries & dining");
-    await user.click(within(form).getByRole("button", { name: "Save" }));
+    await user.click(within(form).getByRole("button", { name: /^(Save|Add expense)$/ }));
     await synced(server, 1);
     expect(server.state.ledger.categories[0]).toEqual({ ...groceries, name: "Groceries & dining" });
 
@@ -365,7 +365,7 @@ describe("inline creation from an entry form", { timeout: 20_000 }, () => {
     const user = userEvent.setup();
     renderApp(`/households/${id}`);
     await user.click(await screen.findByRole("button", { name: "Shared expense" }));
-    const form = await dialog("Add entry");
+    const form = await dialog("New expense");
     await user.type(within(form).getByLabelText("Title"), "Vet visit");
     await user.type(within(form).getByLabelText("Amount (CAD)"), "60");
     await user.clear(within(form).getByLabelText("Date"));
@@ -382,7 +382,7 @@ describe("inline creation from an entry form", { timeout: 20_000 }, () => {
     await waitFor(() => {
       expect(screen.queryByRole("dialog", { name: "Expense category" })).not.toBeInTheDocument();
     });
-    expect(screen.getByRole("dialog", { name: "Add entry" })).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "New expense" })).toBeInTheDocument();
     expect(opener).toHaveFocus();
 
     await user.keyboard("{Enter}");
@@ -404,7 +404,7 @@ describe("inline creation from an entry form", { timeout: 20_000 }, () => {
     await synced(ledger, 1);
     expect(ledger.state.ledger.categories.map((category) => category.name)).toEqual(["Groceries", "Pets"]);
 
-    await user.click(within(screen.getByRole("dialog", { name: "Add entry" })).getByRole("button", { name: "Save" }));
+    await user.click(within(screen.getByRole("dialog", { name: "New expense" })).getByRole("button", { name: /^(Save|Add expense)$/ }));
     expect(await screen.findByText("Vet visit added")).toBeInTheDocument();
     const post = callsTo(fetchMock, `/api/households/${id}/expenses`).find((init) => init?.method === "POST");
     // Sent by value: the same name, icon and color the ledger saved.

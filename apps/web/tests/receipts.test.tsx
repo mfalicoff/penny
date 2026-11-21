@@ -278,10 +278,10 @@ function receiptServer(initial: Parameters<typeof ledgerServer>[0] = {}) {
 async function openAdd(user: UserEvent) {
   await screen.findByRole("heading", { level: 1 });
   await user.keyboard("n");
-  const form = await screen.findByRole("form", { name: "Add entry" });
+  const form = await screen.findByRole("form", { name: "New entry" });
   await user.type(within(form).getByLabelText("Amount (CAD)"), "40");
   await user.type(within(form).getByLabelText("Title"), "Dinner");
-  await user.click(within(form).getByRole("button", { name: /More details/ }));
+  await user.click(within(form).getByRole("button", { name: /^Receipt, repeat, trip/ }));
   return form;
 }
 const receiptGroup = (form: HTMLElement) => within(form).getByRole("group", { name: "Receipt" });
@@ -297,16 +297,16 @@ describe("receipts in the entry form", () => {
     expect(await within(receiptGroup(form)).findByText("dinner.pdf")).toBeInTheDocument();
     expect(receiptGroup(form)).toHaveTextContent(`PDF · ${formatBytes(PDF_BYTES.length)}`);
     expect(within(receiptGroup(form)).getByText("dinner.pdf attached. It's saved with the entry when you press Save.")).toBeInTheDocument();
-    await user.click(within(screen.getByRole("dialog", { name: "Add entry" })).getByRole("button", { name: "Keep draft" }));
+    await user.click(within(screen.getByRole("dialog", { name: "New entry" })).getByRole("button", { name: "Cancel" }));
 
     form = await (async () => {
       await user.keyboard("n");
-      return screen.findByRole("form", { name: "Add entry" });
+      return screen.findByRole("form", { name: "New entry" });
     })();
     expect(within(form).getByText("Your unsaved draft is back. Save it, or discard it to start over.")).toBeInTheDocument();
     expect(within(receiptGroup(form)).getByText("dinner.pdf")).toBeInTheDocument();
-    expect(within(form).getByRole("button", { name: /More details/ })).toHaveTextContent("Receipt");
-    await user.click(within(screen.getByRole("dialog", { name: "Add entry" })).getByRole("button", { name: "Save" }));
+    expect(within(form).getByRole("button", { name: /^Receipt, repeat, trip/ })).toHaveTextContent("Receipt");
+    await user.click(within(screen.getByRole("dialog", { name: "New entry" })).getByRole("button", { name: /^(Save|Add expense)$/ }));
     await waitFor(() => {
       expect(server.state.ledger.transactions.find((item) => item.title === "Dinner")).toMatchObject({ receipt: { id: "r2", name: "dinner.pdf", mime: "application/pdf", uri: "/api/receipts/r2" } });
     });
@@ -336,7 +336,7 @@ describe("receipts in the entry form", () => {
     await attach(user, form, file(PDF_BYTES, "slow.pdf", "application/pdf"));
     const bar = await within(receiptGroup(form)).findByRole("progressbar", { name: "Uploading slow.pdf" });
     expect(bar).toHaveAttribute("value", "0.5");
-    await user.click(within(screen.getByRole("dialog", { name: "Add entry" })).getByRole("button", { name: "Save" }));
+    await user.click(within(screen.getByRole("dialog", { name: "New entry" })).getByRole("button", { name: /^(Save|Add expense)$/ }));
     expect(await within(form).findByText("The receipt is still uploading. Wait for it to finish, or cancel the upload.", { exact: false })).toBeInTheDocument();
     expect(server.state.puts).toBe(0);
     await user.click(within(receiptGroup(form)).getByRole("button", { name: "Cancel upload" }));
@@ -350,7 +350,7 @@ describe("receipts in the entry form", () => {
     await within(receiptGroup(form)).findByRole("progressbar");
     await user.keyboard("{Escape}");
     await waitFor(() => {
-      expect(screen.queryByRole("dialog", { name: "Add entry" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("dialog", { name: "New entry" })).not.toBeInTheDocument();
     });
     expect(FakeXhr.sent[1]?.aborted).toBe(true);
   });
@@ -388,7 +388,7 @@ describe("receipts in the entry form", () => {
     await user.click(within(await screen.findByRole("dialog", { name: "Dinner" })).getByRole("button", { name: "Edit" }));
     const form = await screen.findByRole("form", { name: "Edit entry" });
     await user.click(within(receiptGroup(form)).getByRole("button", { name: "Remove dinner.pdf" }));
-    await user.click(within(screen.getByRole("dialog", { name: "Edit entry" })).getByRole("button", { name: "Save" }));
+    await user.click(within(screen.getByRole("dialog", { name: "Edit entry" })).getByRole("button", { name: /^(Save|Add expense)$/ }));
     await waitFor(() => {
       expect(server.state.puts).toBe(1);
     });
@@ -516,7 +516,7 @@ describe("receipts on shared expenses", () => {
     const user = userEvent.setup({ applyAccept: false });
     renderApp(`/households/${id}`);
     await user.click(await screen.findByRole("button", { name: "Shared expense" }));
-    const form = await screen.findByRole("dialog", { name: "Add entry" });
+    const form = await screen.findByRole("dialog", { name: "New expense" });
     await user.type(within(form).getByLabelText("Title"), "Groceries run");
     await user.type(within(form).getByLabelText("Amount (CAD)"), "30");
     await user.click(within(form).getByRole("button", { name: /More details/ }));
@@ -525,7 +525,7 @@ describe("receipts on shared expenses", () => {
     await user.upload(within(form).getByLabelText("Receipt file"), file(PNG_BYTES, "groceries.png", "image/png"));
     expect(await within(group).findByText("groceries.png")).toBeInTheDocument();
     expect(uploads).toHaveLength(1);
-    await user.click(within(form).getByRole("button", { name: "Save" }));
+    await user.click(within(form).getByRole("button", { name: /^(Save|Add expense)$/ }));
     expect(await screen.findByText("Groceries run added")).toBeInTheDocument();
     const post = callsTo(fetchMock, `/api/households/${id}/expenses`).find((init) => init?.method === "POST");
     expect(bodyOf(post)).toMatchObject({ title: "Groceries run", receiptId: "rs1" });

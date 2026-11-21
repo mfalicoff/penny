@@ -30,6 +30,7 @@ export function CategoryPickerDialog({
   onClose,
   save,
   allLabel,
+  onEditCategories,
 }: {
   /** Defaults to "Expense category" (or the kind's), as on the card. */
   title?: string;
@@ -44,6 +45,8 @@ export function CategoryPickerDialog({
   save?: Save | null;
   /** Offer a "no filter" choice with this label (Activity's "All categories"). */
   allLabel?: string;
+  /** The card's "Edit categories" link at the end: opens Manage › Categories. */
+  onEditCategories?: () => void;
 }) {
   const [filter, setFilter] = useState("");
   const [creating, setCreating] = useState(false);
@@ -185,6 +188,11 @@ export function CategoryPickerDialog({
               {busy ? "Adding…" : "Add category"}
             </Button>
           </form>
+        ) : null}
+        {onEditCategories ? (
+          <button type="button" className="link-button category-picker__edit" onClick={onEditCategories}>
+            Edit categories
+          </button>
         ) : null}
       </div>
     </Dialog>

@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import type { Ledger } from "../src/domain/ledger.ts";
 import { mergeLedger } from "../src/domain/merge.ts";
 import { LedgerClient, realStack, signIn, skipReason, testUser, type LedgerSnapshot } from "./stack";
+import { SAVE } from "./entry";
 
 // MAZ-96 cross-client convergence: the browser and a second client that speaks the native app's
 // ledger protocol (docs/ios/offline-sync.md: bearer GET, revision-checked whole-ledger PUT, 409 on
@@ -71,11 +72,11 @@ test("offline native entries, a web entry, web edits and independent and same-fi
   await page.goto("/transactions?month=2026-10");
   await expect(results(page).getByRole("status")).toBeAttached();
   await page.getByRole("button", { name: "Add entry" }).click();
-  const add = page.getByRole("form", { name: "Add entry" });
+  const add = page.getByRole("form", { name: "New entry" });
   await add.getByLabel("Amount (CAD)").fill("14");
   await add.getByLabel("Title").fill("Lunch");
   await add.getByLabel("Date").fill("2026-10-15");
-  await page.getByRole("dialog", { name: "Add entry" }).getByRole("button", { name: "Save" }).click();
+  await page.getByRole("dialog", { name: "New entry" }).getByRole("button", { name: SAVE }).click();
   await expect(page.getByText("Expense added")).toBeVisible();
   await expect.poll(async () => (await native.read()).revision).toBeGreaterThan(base.revision);
 
@@ -95,7 +96,7 @@ test("offline native entries, a web entry, web edits and independent and same-fi
   await detailOf(page, "Market").getByRole("button", { name: "Edit", exact: true }).click();
   let edit = page.getByRole("form", { name: "Edit entry" });
   await edit.getByLabel("Amount (CAD)").fill("45.10");
-  await page.getByRole("dialog", { name: "Edit entry" }).getByRole("button", { name: "Save" }).click();
+  await page.getByRole("dialog", { name: "Edit entry" }).getByRole("button", { name: SAVE }).click();
   await expect(page.getByText("Changes saved")).toBeVisible();
   await expect.poll(async () => (await native.read()).ledger.transactions.find((item) => item.id === "native-market")?.total).toBe(4510);
 
@@ -112,7 +113,7 @@ test("offline native entries, a web entry, web edits and independent and same-fi
   lunch.share = 1600;
   const raced = await sync(native, nativeBase, nativeLocal);
   expect(raced.conflicts).toBe(0);
-  await page.getByRole("dialog", { name: "Edit entry" }).getByRole("button", { name: "Save" }).click();
+  await page.getByRole("dialog", { name: "Edit entry" }).getByRole("button", { name: SAVE }).click();
   await expect(page.getByText("Changes saved")).toBeVisible();
   await expect
     .poll(async () => {
@@ -135,13 +136,13 @@ test("offline native entries, a web entry, web edits and independent and same-fi
   await sync(native, sameBase, sameLocal);
   await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
   await expect(detailOf(page, "Market")).toContainText("$48.00");
-  await page.getByRole("dialog", { name: "Edit entry" }).getByRole("button", { name: "Save" }).click();
+  await page.getByRole("dialog", { name: "Edit entry" }).getByRole("button", { name: SAVE }).click();
   const banner = edit.getByRole("alert");
   await expect(banner).toContainText("This entry changed on another device");
   await expect(banner).toContainText("$48.00");
   await expect(edit.getByLabel("Amount (CAD)")).toHaveValue("50");
   await banner.getByRole("button", { name: "Keep my changes" }).click();
-  await page.getByRole("dialog", { name: "Edit entry" }).getByRole("button", { name: "Save" }).click();
+  await page.getByRole("dialog", { name: "Edit entry" }).getByRole("button", { name: SAVE }).click();
   await expect(page.getByText("Changes saved")).toBeVisible();
 
   // Converged: one copy of every entry, the same values and totals on both clients.

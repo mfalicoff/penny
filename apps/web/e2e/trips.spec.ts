@@ -1,5 +1,6 @@
 import type { Browser, BrowserContext, Page } from "@playwright/test";
 import { expect, test } from "./test";
+import { chooseTrip, expectTrip, SAVE } from "./entry";
 import { createHouseholdServer, type HouseholdServer } from "../tests/fakes/householdServer.ts";
 
 // Trips (MAZ-93) with two people in two browser contexts. /api is the in-memory household fake
@@ -57,11 +58,11 @@ async function tripAction(page: Page, name: "Trip expense" | "Edit trip") {
 /** A shared expense through the trip's own form (Trip expense). */
 async function addTripExpense(page: Page, title: string, amount: string, date: string) {
   await tripAction(page, "Trip expense");
-  const form = page.getByRole("dialog", { name: "Add entry" });
+  const form = page.getByRole("dialog", { name: "New expense" });
   await form.getByLabel(/^Amount \(/).fill(amount);
   await form.getByLabel("Title").fill(title);
   await form.getByLabel("Date").fill(date);
-  await form.getByRole("button", { name: "Save" }).click();
+  await form.getByRole("button", { name: SAVE }).click();
   await expect(form).toBeHidden();
 }
 
@@ -162,11 +163,12 @@ test("personal trips by keyboard: assignment, deletion restrictions and a refres
   const tripUrl = page.url();
 
   await tripAction(page, "Trip expense");
-  const add = page.getByRole("dialog", { name: "Add entry" });
-  await expect(add.getByLabel("Trip")).toHaveValue(new URL(tripUrl).pathname.split("/").pop() ?? "");
+  const add = page.getByRole("dialog", { name: "New entry" });
+  await expectTrip(add, "Ski week");
+  expect(tripUrl).toMatch(/\/trips\//);
   await add.getByLabel("Amount (CAD)").fill("640");
   await add.getByLabel("Title").fill("Lift pass");
-  await add.getByRole("button", { name: "Save" }).click();
+  await add.getByRole("button", { name: SAVE }).click();
   await expect(add).toBeHidden();
   await expect(page.getByRole("list", { name: "Trip expenses" }).getByText("Lift pass")).toBeVisible();
 
@@ -187,8 +189,8 @@ test("personal trips by keyboard: assignment, deletion restrictions and a refres
   await page.getByRole("list", { name: "Trip expenses" }).getByRole("button", { name: /Lift pass/ }).click();
   await page.getByRole("dialog", { name: "Lift pass" }).getByRole("button", { name: "Edit" }).click();
   const entry = page.getByRole("dialog", { name: "Edit entry" });
-  await entry.getByLabel("Trip").selectOption("");
-  await entry.getByRole("button", { name: "Save" }).click();
+  await chooseTrip(entry, null);
+  await entry.getByRole("button", { name: SAVE }).click();
   await expect(entry).toBeHidden();
   await expect(page.getByRole("heading", { name: "No expenses on this trip yet" })).toBeVisible();
 

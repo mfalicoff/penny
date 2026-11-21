@@ -1,4 +1,5 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
+import { SAVE } from "./entry";
 
 // The MAZ-91 two-person journeys against the real .NET API and PostgreSQL from the full-stack
 // test environment (docs/reference/test-environment.md). Skipped unless PENNY_REAL_STACK=1. It
@@ -97,7 +98,7 @@ test("two people: invite, splits, private account, stale payment, monthly settle
     ["Internet", "60", ["40", "20"]],
   ] as const) {
     await alex.page.getByRole("button", { name: "Shared expense" }).click();
-    const form = alex.page.getByRole("dialog", { name: "Add entry" });
+    const form = alex.page.getByRole("dialog", { name: "New expense" });
     await form.getByLabel(/^Amount \(/).fill(amount);
     await form.getByLabel("Title").fill(title);
     await form.getByLabel("Date").fill("2026-10-30");
@@ -110,7 +111,7 @@ test("two people: invite, splits, private account, stale payment, monthly settle
       await form.getByLabel("Your share in CAD").fill(shares[0]);
       await form.getByLabel(`${bea.email}'s share in CAD`).fill(shares[1]);
     }
-    await form.getByRole("button", { name: "Save" }).click();
+    await form.getByRole("button", { name: SAVE }).click();
     await expect(form).toBeHidden();
   }
 
@@ -136,7 +137,7 @@ test("two people: invite, splits, private account, stale payment, monthly settle
   const edit = alex.page.getByRole("dialog", { name: "Edit expense" });
   await edit.getByLabel("Your share in CAD").fill("30");
   await edit.getByLabel(`${bea.email}'s share in CAD`).fill("30");
-  await edit.getByRole("button", { name: "Save" }).click();
+  await edit.getByRole("button", { name: SAVE }).click();
   await expect(edit).toBeHidden();
   await internet.getByRole("button", { name: "Mark $20.00 as paid" }).click();
   const stale = internet.getByRole("alert");

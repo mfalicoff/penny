@@ -1,5 +1,6 @@
 import type { Browser, BrowserContext, Page } from "@playwright/test";
 import { expect, test } from "./test";
+import { SAVE } from "./entry";
 import { createHouseholdServer, type HouseholdServer } from "../tests/fakes/householdServer.ts";
 
 // Two people in two browser contexts sharing one household (MAZ-91). /api is the in-memory
@@ -78,7 +79,7 @@ async function createAndJoin(alex: Page, bea: Page) {
 
 async function addExpense(page: Page, title: string, amount: string, options: { split?: "Amounts" | "Percent"; shares?: [string, string][]; date?: string } = {}) {
   await page.getByRole("button", { name: "Shared expense" }).click();
-  const form = page.getByRole("dialog", { name: "Add entry" });
+  const form = page.getByRole("dialog", { name: "New expense" });
   await form.getByLabel(/^Amount \(/).fill(amount);
   await form.getByLabel("Title").fill(title);
   await form.getByLabel("Date").fill(options.date ?? "2026-10-20");
@@ -89,7 +90,7 @@ async function addExpense(page: Page, title: string, amount: string, options: { 
     await mode.check({ force: true });
     for (const [label, value] of options.shares ?? []) await form.getByLabel(label).fill(value);
   }
-  await form.getByRole("button", { name: "Save" }).click();
+  await form.getByRole("button", { name: SAVE }).click();
   await expect(form).toBeHidden();
 }
 
@@ -172,16 +173,16 @@ test("concurrent edits keep the loser's draft and a stale payment records nothin
   await beaForm.getByLabel("Note").fill("Includes the late fee");
   const alexForm = alex.page.getByRole("dialog", { name: "Edit expense" });
   await alexForm.getByLabel(/^Amount \(/).fill("104.10");
-  await alexForm.getByRole("button", { name: "Save" }).click();
+  await alexForm.getByRole("button", { name: SAVE }).click();
   await expect(alexForm).toBeHidden();
 
-  await beaForm.getByRole("button", { name: "Save" }).click();
+  await beaForm.getByRole("button", { name: SAVE }).click();
   await expect(beaForm.getByRole("alert")).toContainText("Someone else changed this while you were editing");
   await expect(beaForm.getByLabel("Note")).toHaveValue("Includes the late fee");
   await beaForm.getByRole("button", { name: "Use their version" }).click();
   await expect(beaForm.getByLabel(/^Amount \(/)).toHaveValue("104.10");
   await beaForm.getByLabel("Note").fill("Includes the late fee");
-  await beaForm.getByRole("button", { name: "Save" }).click();
+  await beaForm.getByRole("button", { name: SAVE }).click();
   await expect(beaForm).toBeHidden();
 
   // Bea starts recording her share; Alex changes the total before she confirms.
@@ -191,12 +192,12 @@ test("concurrent edits keep the loser's draft and a stale payment records nothin
   await expect(confirm).toBeVisible();
   await expenseDetail(alex.page, "Hydro").getByRole("button", { name: "Edit" }).click();
   await alexForm.getByLabel(/^Amount \(/).fill("110.00");
-  await alexForm.getByRole("button", { name: "Save" }).click();
+  await alexForm.getByRole("button", { name: SAVE }).click();
   // Alex's panel still held the version from before Bea's note: his draft survives the conflict.
   await expect(alexForm.getByRole("alert")).toContainText("Someone else changed this while you were editing");
   await expect(alexForm.getByLabel(/^Amount \(/)).toHaveValue("110.00");
   await alexForm.getByRole("button", { name: "Keep my changes" }).click();
-  await alexForm.getByRole("button", { name: "Save" }).click();
+  await alexForm.getByRole("button", { name: SAVE }).click();
   await expect(alexForm).toBeHidden();
   await confirm.click();
   const stale = detail.getByRole("alert");
@@ -217,12 +218,12 @@ test("monthly payment at month end, a repeated payment, private accounts and arc
   const url = await createAndJoin(alex.page, bea.page);
   await bea.page.goto(url);
   await bea.page.getByRole("button", { name: "Shared expense" }).click();
-  const form = bea.page.getByRole("dialog", { name: "Add entry" });
+  const form = bea.page.getByRole("dialog", { name: "New expense" });
   await form.getByLabel(/^Amount \(/).fill("80");
   await form.getByLabel("Title").fill("Cleaning");
   await form.getByLabel("Date").fill("2026-10-20");
   await form.getByLabel("Your account").selectOption({ label: "Bea private card" });
-  await form.getByRole("button", { name: "Save" }).click();
+  await form.getByRole("button", { name: SAVE }).click();
   await expect(form).toBeHidden();
 
   // Alex never receives or sees Bea's account.
@@ -344,10 +345,10 @@ test("keyboard-only expense entry and no horizontal scrolling at 320px", async (
   const page = alex.page;
   await page.getByRole("button", { name: "Shared expense" }).focus();
   await page.keyboard.press("Enter");
-  const form = page.getByRole("dialog", { name: "Add entry" });
+  const form = page.getByRole("dialog", { name: "New expense" });
   await expect(form.getByLabel(/^Amount \(/)).toBeFocused();
   // Submitting empty moves focus to the first invalid field instead of losing the draft.
-  await form.getByRole("button", { name: "Save" }).focus();
+  await form.getByRole("button", { name: SAVE }).focus();
   await page.keyboard.press("Enter");
   await expect(form.getByLabel("Title")).toBeFocused();
   await page.keyboard.type("Late-night pizza");

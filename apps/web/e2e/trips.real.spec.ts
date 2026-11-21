@@ -1,4 +1,5 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
+import { SAVE } from "./entry";
 
 // The MAZ-93 two-person trip journey against the real .NET API and PostgreSQL from the
 // full-stack test environment (docs/reference/test-environment.md). Skipped unless
@@ -109,11 +110,11 @@ test("two people: share a personal trip, join after an expense, split, repay and
   await alex.page.goto(url);
   for (const [title, amount, date] of [["Flights", "824", "2026-10-02"]] as const) {
     await tripExpense(alex.page);
-    const form = alex.page.getByRole("dialog", { name: "Add entry" });
+    const form = alex.page.getByRole("dialog", { name: "New expense" });
     await form.getByLabel(/^Amount \(/).fill(amount);
     await form.getByLabel("Title").fill(title);
     await form.getByLabel("Date").fill(date);
-    await form.getByRole("button", { name: "Save" }).click();
+    await form.getByRole("button", { name: SAVE }).click();
     await expect(form).toBeHidden();
   }
   await expect(alex.page.getByRole("region", { name: "Only you" })).toContainText("Airport train");
@@ -129,11 +130,11 @@ test("two people: share a personal trip, join after an expense, split, repay and
 
   // After Bea joined: split with her. She refreshes and repays her share.
   await tripExpense(alex.page);
-  const form = alex.page.getByRole("dialog", { name: "Add entry" });
+  const form = alex.page.getByRole("dialog", { name: "New expense" });
   await form.getByLabel(/^Amount \(/).fill("368");
   await form.getByLabel("Title").fill("Apartment");
   await form.getByLabel("Date").fill("2026-10-20");
-  await form.getByRole("button", { name: "Save" }).click();
+  await form.getByRole("button", { name: SAVE }).click();
   await expect(form).toBeHidden();
 
   await bea.page.reload();

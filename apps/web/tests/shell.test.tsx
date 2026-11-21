@@ -86,9 +86,9 @@ describe("top bar", () => {
     await screen.findByRole("heading", { level: 1, name: "Trips" });
     const add = screen.getByRole("button", { name: "Add entry" });
     await user.click(add);
-    expect(screen.getByRole("dialog", { name: "Add entry" })).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "New entry" })).toBeInTheDocument();
     // The entry form (MAZ-88) once this browser's ledger has loaded; its own tests are in entries.test.tsx.
-    expect(await within(await screen.findByRole("form", { name: "Add entry" })).findByLabelText("Amount (CAD)")).toHaveFocus();
+    expect(await within(await screen.findByRole("form", { name: "New entry" })).findByLabelText("Amount (CAD)")).toHaveFocus();
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(add).toHaveFocus();
@@ -99,7 +99,7 @@ describe("top bar", () => {
     stubServer();
     const user = userEvent.setup();
     const { router } = renderApp("/entries/new");
-    const dialog = await screen.findByRole("dialog", { name: "Add entry" });
+    const dialog = await screen.findByRole("dialog", { name: "New entry" });
     await user.click(within(dialog).getAllByRole("button", { name: "Close" })[0] as HTMLElement);
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/");
@@ -116,7 +116,7 @@ describe("keyboard shortcuts", () => {
     renderApp("/");
     await screen.findByRole("heading", { level: 1, name: "Home" });
     await user.keyboard("n");
-    expect(screen.getByRole("dialog", { name: "Add entry" })).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "New entry" })).toBeInTheDocument();
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
@@ -162,7 +162,7 @@ describe("keyboard shortcuts", () => {
 
     search.blur();
     await user.keyboard("n");
-    const dialog = screen.getByRole("dialog", { name: "Add entry" });
+    const dialog = screen.getByRole("dialog", { name: "New entry" });
     await user.keyboard("ga");
     expect(router.state.location.pathname).toBe("/");
     expect(dialog).toBeInTheDocument();
