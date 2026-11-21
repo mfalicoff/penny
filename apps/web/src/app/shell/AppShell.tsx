@@ -9,7 +9,7 @@ import { SyncStatusBanner } from "../../offline/SyncStatusBanner";
 import { leaveDemo, useIsDemo } from "../../demo/demo";
 import { serverInfoQuery } from "../../api/info";
 import { TAB_ITEMS, tabFor } from "./navigation";
-import { PageTitleContext, TopbarSlotContext } from "./pageTitle";
+import { PageTitleContext, PageTitleStyleContext, TopbarSlotContext, type PageTitleStyle } from "./pageTitle";
 import { useShortcuts } from "./shortcuts";
 import { Sidebar } from "./Sidebar";
 
@@ -51,6 +51,7 @@ export function AppShell() {
   const navigate = useNavigate();
   const meta = usePageMeta();
   const [titleOverride, setTitleOverride] = useState<string | null>(null);
+  const [titleStyle, setTitleStyle] = useState<PageTitleStyle>("large");
   // Where a page may place tools beside the title (the month control on Home and Insights).
   const [toolSlot, setToolSlot] = useState<HTMLDivElement | null>(null);
   const title = titleOverride ?? meta.title;
@@ -98,7 +99,7 @@ export function AppShell() {
       </a>
       <Sidebar />
       <div className="app__column">
-        <header className={cx("topbar", pathname === "/" && "topbar--home", meta.back && "topbar--back", meta.back && meta.backWide && "topbar--back-wide")}>
+        <header className={cx("topbar", pathname === "/" && "topbar--home", meta.back && "topbar--back", meta.back && meta.backWide && "topbar--back-wide", titleStyle !== "large" && `topbar--title-${titleStyle}`)}>
           {meta.back ? (
             <Link to={meta.back} className="glass glass-button topbar__back" aria-label={meta.backLabel}>
               <Icon name="chevron-back" size={20} />
@@ -126,9 +127,11 @@ export function AppShell() {
         <ServerUnreachableBanner unreachable={serverDown} />
         <main id="main" className="app__main" tabIndex={-1}>
           <PageTitleContext value={setTitleOverride}>
-            <TopbarSlotContext value={toolSlot}>
-              <Outlet />
-            </TopbarSlotContext>
+            <PageTitleStyleContext value={setTitleStyle}>
+              <TopbarSlotContext value={toolSlot}>
+                <Outlet />
+              </TopbarSlotContext>
+            </PageTitleStyleContext>
           </PageTitleContext>
         </main>
       </div>

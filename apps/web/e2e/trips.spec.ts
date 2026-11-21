@@ -121,7 +121,7 @@ test("a shared personal trip keeps its earlier expense private, and a later memb
   // An expense after Bea joined is split with her; she sees it after a refresh.
   await addTripExpense(alex.page, "Apartment in Alfama", "368.00", "2026-11-12");
   await bea.page.reload();
-  await expect(bea.page.getByRole("link", { name: /Apartment in Alfama/ }).getByText("$184.00 your share")).toBeVisible();
+  await expect(bea.page.getByRole("link", { name: /Apartment in Alfama/ }).getByText("−$184.00 you owe")).toBeVisible();
 
   // Balances settle by month: October (flights, Alex only) is settled, November isn't.
   await bea.page.getByRole("link", { name: "Balances" }).click();

@@ -94,6 +94,19 @@ export function dayLabel(date: string, withYear = false): string {
   });
 }
 
+/** "Sep 2": a day without its weekday or year (the cards' joined dates and short ranges). */
+export function shortDate(date: string): string {
+  const [year = 2000, month = 1, day = 1] = date.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day)).toLocaleDateString("en-CA", { month: "short", day: "numeric", timeZone: "UTC" });
+}
+
+/** "Nov 12–19" within a month, "Aug 30 – Sep 2" across months (card `iphone-shared-list`). */
+export function shortRange(start: string, end: string): string {
+  if (start === end) return shortDate(start);
+  if (start.slice(0, 7) === end.slice(0, 7)) return `${shortDate(start)}–${String(Number(end.slice(8, 10)))}`;
+  return `${shortDate(start)} – ${shortDate(end)}`;
+}
+
 /** The month's last calendar day, from which (UTC) the server accepts monthly payments. */
 export function monthEnd(month: string): string {
   const [year = 2000, number = 1] = month.split("-").map(Number);
@@ -135,6 +148,8 @@ export interface People {
   meId: string | undefined;
   /** "You", the member's email, or "Former member" for someone the caller can't see. */
   name: (userId: string) => string;
+  /** What an avatar shows initials from: the member's email, never "You". */
+  avatar: (userId: string) => string;
   isCurrentMember: (userId: string) => boolean;
 }
 
@@ -145,6 +160,7 @@ export function people(detail: HouseholdDetail | undefined, email: string): Peop
   return {
     meId,
     name: (userId) => (userId === meId ? "You" : (members.find((member) => member.userId === userId)?.email ?? "Former member")),
+    avatar: (userId) => members.find((member) => member.userId === userId)?.email ?? (userId === meId ? email : "?"),
     isCurrentMember: (userId) => members.some((member) => member.userId === userId && isCurrent(member)),
   };
 }
@@ -233,7 +249,12 @@ const LABELS: Record<string, string> = {
  * One readable sentence per audit event and the fields it changed. Snapshots arrive redacted
  * (no payer account, no receipt name), and nothing here ever reads an account.
  */
-export function describeAudit(event: AuditEvent, name: (userId: string) => string, money: (cents: number) => string) {
+/**
+ * One history row in words (card `iphone-history`): the sentence, the names in it to set in bold
+ * (`emphasis`: the actor and the subject), and the detail lines, with each edited field also as
+ * before and after (`edits`) so the old value can be struck through.
+ */
+export function describeAudit(event: AuditEvent, name: (userId: string) => string, money: (cents: number) => string, group: "household" | "trip" = "household") {
   const before = record(event.before);
   const after = record(event.after);
   const actor = name(event.actorId);
@@ -252,6 +273,8 @@ export function describeAudit(event: AuditEvent, name: (userId: string) => strin
     return typeof value === "string" || typeof value === "number" ? String(value) : JSON.stringify(value);
   };
   let summary: string;
+  let detail: string[] = [];
+  let emphasis: string[] = [actor];
   switch (event.action) {
     case "household.created":
     case "trip.created":
@@ -265,57 +288,68 @@ export function describeAudit(event: AuditEvent, name: (userId: string) => strin
       summary = `${actor} created an invite code`;
       break;
     case "member.joined":
-      summary = `${name(text(after.userId, event.actorId))} joined`;
+      emphasis = [name(text(after.userId, event.actorId))];
+      summary = `${emphasis[0] ?? ""} joined the ${group}`;
       break;
     case "member.left":
-      summary = `${name(text(before.userId, event.actorId))} left`;
+      emphasis = [name(text(before.userId, event.actorId))];
+      summary = `${emphasis[0] ?? ""} left the ${group}`;
       break;
     case "member.removed":
+      emphasis = [actor, name(text(before.userId, ""))];
       summary = `${actor} removed ${name(text(before.userId, ""))}`;
       break;
     case "household.archived":
       summary = `${actor} archived the household`;
       break;
     case "expense.created":
+      emphasis = after.recurringId ? [subject] : [actor, subject];
       summary = after.recurringId ? `${subject} was added automatically` : `${actor} added ${subject}`;
       break;
     case "expense.updated":
+      emphasis = [actor, subject];
       summary = `${actor} edited ${subject}`;
       break;
     case "expense.deleted":
+      emphasis = [actor, subject];
       summary = `${actor} deleted ${subject}`;
       break;
     case "expense.moved":
+      emphasis = [actor, subject];
       summary = `${actor} moved ${subject} to another household`;
       break;
     case "reimbursement.created": {
       const amount = typeof after.amountCents === "number" ? money(after.amountCents) : "a payment";
       const from = name(text(after.fromUserId, ""));
       const to = name(text(after.toUserId, ""));
-      summary = after.expenseId ? `${actor} recorded ${possessive(from)} ${amount} share payment to ${to}` : `${actor} recorded ${from} paid ${to} ${amount}`;
+      summary = from === actor ? `${actor} recorded a payment` : `${actor} recorded ${possessive(from)} payment`;
+      detail = [after.expenseId ? `${amount} share to ${to}` : `${amount} to ${to} for the month`];
       break;
     }
     case "recurring.created":
+      emphasis = [actor, subject];
       summary = `${actor} set up ${subject} to repeat`;
       break;
     case "recurring.updated":
+      emphasis = [actor, subject];
       summary = `${actor} changed repeating ${subject}`;
       break;
     case "recurring.deleted":
+      emphasis = [actor, subject];
       summary = `${actor} stopped repeating ${subject}`;
       break;
     default:
       summary = `${actor}: ${event.action}`;
   }
-  const changes =
+  const edits =
     event.action === "expense.updated" || event.action === "recurring.updated" || event.action === "household.renamed" || event.action === "trip.edited"
       ? Object.keys(LABELS)
           .filter((key) => key in before && key in after && JSON.stringify(before[key]) !== JSON.stringify(after[key]))
-          .map((key) => `${LABELS[key] ?? key}: ${format(key, before[key])} → ${format(key, after[key])}`)
-      : event.action === "expense.created" && typeof after.totalCents === "number"
-        ? [`${money(after.totalCents)} · split ${format("splitMode", after.splitMode)}`]
-        : [];
-  return { summary, changes };
+          .map((key) => ({ label: LABELS[key] ?? key, before: format(key, before[key]), after: format(key, after[key]) }))
+      : [];
+  if (event.action === "expense.created" && typeof after.totalCents === "number") detail = [`${money(after.totalCents)} · split ${format("splitMode", after.splitMode)}`];
+  const changes = edits.length ? edits.map((edit) => `${edit.label}: ${edit.before} → ${edit.after}`) : detail;
+  return { summary, changes, edits, emphasis: emphasis.filter(Boolean) };
 }
 
 

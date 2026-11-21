@@ -70,10 +70,13 @@ export function ExpenseDetailDialog({ view, expenseId, onEdit, onClose, onRule, 
     }
     // The delete confirmation is its own dialog: it takes focus, and gives it back to Delete.
     if (pane.kind === "delete" || from === "delete") return;
-    bodyRef.current?.querySelector<HTMLElement>("h3[tabindex], button, input")?.focus();
+    bodyRef.current?.querySelector<HTMLElement>("[data-pane-focus], h3[tabindex], button, input")?.focus();
   }, [pane]);
 
-  const title = expense.data?.title ?? "Expense";
+  // Recording a share is the card's Record payment sheet: titled so, and closing it returns to the expense.
+  const recording = pane.kind === "record";
+  const title = recording ? "Record payment" : (expense.data?.title ?? "Expense");
+  const close = recording ? () => { setPane({ kind: "detail" }); } : onClose;
   const detailPane = (data: SharedExpense) => (
     <DetailPane
       view={view}
@@ -143,7 +146,7 @@ export function ExpenseDetailDialog({ view, expenseId, onEdit, onClose, onRule, 
           <h2 id={panelTitleId} ref={panelHeading} tabIndex={-1} className="card__title">
             {title}
           </h2>
-          <button type="button" className="wbtn wbtn--icon" aria-label={`Close ${title}`} onClick={onClose}>
+          <button type="button" className="wbtn wbtn--icon" aria-label={`Close ${title}`} onClick={close}>
             <Icon name="close" size={16} weight={44} />
           </button>
         </div>
@@ -155,7 +158,7 @@ export function ExpenseDetailDialog({ view, expenseId, onEdit, onClose, onRule, 
   }
 
   return (
-    <Dialog title={title} onClose={onClose} wide>
+    <Dialog title={title} onClose={close} wide={!recording}>
       <div ref={bodyRef} className="form">
         {body}
       </div>

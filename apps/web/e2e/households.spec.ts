@@ -45,8 +45,34 @@ async function setNow(instant: number, ...pages: Page[]) {
   for (const page of pages) await page.clock.setFixedTime(instant);
 }
 
-/** An expense's detail: a dialog below 1100px, the pane beside the expenses from there (MAZ-229). */
-const expenseDetail = (page: Page, name: string) => page.getByRole("dialog", { name }).or(page.getByRole("region", { name, exact: true }));
+/** An expense's detail: a dialog below 1100px, the pane beside the expenses from there (MAZ-229). Recording a share retitles it Record payment. */
+const expenseDetail = (page: Page, name: string) => {
+  const title = new RegExp("^(" + name + "|Record payment)$");
+  return page.getByRole("dialog", { name: title }).or(page.getByRole("region", { name: title }));
+};
+
+/**
+ * Runs a Manage action: from 1100px it's a button on People; narrower it's in the navigation bar's
+ * … menu (cards `iphone-shared`, `iphone-shared-people`).
+ */
+async function manage(page: Page, action: string) {
+  const menu = page.getByRole("button", { name: "Household actions" });
+  const button = page.getByRole("button", { name: action });
+  await expect(menu.or(button).first()).toBeVisible();
+  if (await menu.isVisible()) await menu.click();
+  await button.click();
+}
+
+/**
+ * One expense in the household's list: a row link on phones and tablets, a table row from 1100px
+ * (`web-household`). Either shows the total and your share.
+ */
+const expenseRow = (page: Page, name: RegExp) =>
+  page.getByRole("list", { name: "Expenses" }).getByRole("link", { name }).or(page.getByRole("region", { name: /^Expenses in / }).getByRole("row", { name }));
+
+/** The link that opens an expense, in the list or the table. */
+const expenseLink = (page: Page, name: RegExp) =>
+  page.getByRole("list", { name: "Expenses" }).getByRole("link", { name }).or(page.getByRole("region", { name: /^Expenses in / }).getByRole("link", { name }));
 
 const horizontalOverflow = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
 
@@ -58,7 +84,7 @@ test.beforeEach(() => {
 /** Alex creates Maison and shares a code; Bea joins with it. Returns the household URL. */
 async function createAndJoin(alex: Page, bea: Page) {
   await alex.goto("/households");
-  await alex.getByRole("button", { name: /New household/ }).click();
+  await alex.getByRole("list", { name: "Start sharing" }).getByRole("button", { name: /New household/ }).click();
   const create = alex.getByRole("dialog", { name: "New household" });
   await create.getByLabel("Name").fill("Maison");
   await create.getByRole("button", { name: "Create household" }).click();
@@ -98,7 +124,7 @@ test("invite expiry, joining, equal/exact/percent splits and a share payment acr
   const alex = await person(browser, ALEX, baseURL);
   const bea = await person(browser, BEA, baseURL);
   await alex.page.goto("/households");
-  await alex.page.getByRole("button", { name: /New household/ }).click();
+  await alex.page.getByRole("list", { name: "Start sharing" }).getByRole("button", { name: /New household/ }).click();
   await alex.page.getByRole("dialog", { name: "New household" }).getByLabel("Name").fill("Maison");
   await alex.page.getByRole("button", { name: "Create household" }).click();
   await alex.page.getByRole("button", { name: "Create invite code" }).click();
@@ -132,14 +158,14 @@ test("invite expiry, joining, equal/exact/percent splits and a share payment acr
 
   // Bea sees every expense with her own share and the original total.
   await bea.page.reload();
-  const list = bea.page.getByRole("list", { name: "Expenses" });
-  await expect(list.getByRole("link", { name: /Groceries/ })).toContainText("$90.01");
-  await expect(list.getByRole("link", { name: /Groceries/ })).toContainText("$45.00 your share");
-  await expect(list.getByRole("link", { name: /Internet/ })).toContainText("$20.00 your share");
-  await expect(list.getByRole("link", { name: /Rent/ })).toContainText("$800.00 your share");
+  const list = { row: (name: RegExp) => expenseRow(bea.page, name), link: (name: RegExp) => expenseLink(bea.page, name) };
+  await expect(list.row(/Groceries/)).toContainText("$90.01");
+  await expect(list.row(/Groceries/)).toContainText("$45.00");
+  await expect(list.row(/Internet/)).toContainText("$20.00");
+  await expect(list.row(/Rent/)).toContainText("$800.00");
   await expect(bea.page.getByText(/October · you owe/)).toContainText("$865.00");
 
-  await list.getByRole("link", { name: /Groceries/ }).click();
+  await list.link(/Groceries/).click();
   const detail = expenseDetail(bea.page, "Groceries");
   await detail.getByRole("button", { name: "Mark your share as paid" }).click();
   await expect(detail.getByText(/it doesn't send money/)).toBeVisible();
@@ -202,7 +228,7 @@ test("concurrent edits keep the loser's draft and a stale payment records nothin
   await confirm.click();
   const stale = detail.getByRole("alert");
   await expect(stale).toContainText("Hydro changed");
-  await expect(stale.getByRole("row", { name: /Your share/ })).toContainText("$55.00");
+  await expect(stale.locator("dt", { hasText: /^Your share$/ }).locator("..")).toContainText("$55.00");
   await expect(stale).toBeFocused();
   expect(server.state.reimbursements).toHaveLength(0);
   await stale.getByRole("button", { name: "Review expense" }).click();
@@ -237,7 +263,7 @@ test("monthly payment at month end, a repeated payment, private accounts and arc
 
   // Archive is refused while October is unsettled.
   await alex.page.getByRole("link", { name: "People" }).click();
-  await alex.page.getByRole("button", { name: "Archive household" }).click();
+  await manage(alex.page, "Archive household");
   const archive = alex.page.getByRole("dialog", { name: "Archive Maison?" });
   await archive.getByRole("button", { name: "Archive" }).click();
   await expect(archive.getByRole("alert")).toContainText("Settle all monthly balances before archiving.");
@@ -252,7 +278,7 @@ test("monthly payment at month end, a repeated payment, private accounts and arc
   await bea.page.getByRole("dialog", { name: "Record payment" }).getByRole("button", { name: "Mark $40.00 as paid" }).click();
   await expect(bea.page.getByText("Payment recorded")).toBeVisible();
   await alex.page.getByRole("dialog", { name: "Record payment" }).getByRole("button", { name: "Mark $40.00 as paid" }).click();
-  const stale = alex.page.getByRole("dialog", { name: "Balance changed" });
+  const stale = alex.page.getByRole("alert", { name: "October 2026 changed" });
   await expect(stale).toContainText("Nothing was recorded.");
   await stale.getByRole("button", { name: "Review balances" }).click();
   await expect(alex.page.getByText("Everyone is settled for October 2026.")).toBeVisible();
@@ -260,7 +286,7 @@ test("monthly payment at month end, a repeated payment, private accounts and arc
 
   // Settled: archive works and Bea's view turns read-only.
   await alex.page.getByRole("link", { name: "People" }).click();
-  await alex.page.getByRole("button", { name: "Archive household" }).click();
+  await manage(alex.page, "Archive household");
   await alex.page.getByRole("dialog", { name: "Archive Maison?" }).getByRole("button", { name: "Archive" }).click();
   await expect(alex.page.getByRole("heading", { level: 1, name: "Shared" })).toBeVisible();
   await bea.page.goto(url);
@@ -296,6 +322,8 @@ test("on phones a toast takes the tab bar's place: no layout shift, rows stay ta
   const hydro = expenseDetail(page, "Hydro");
   await hydro.getByRole("button", { name: "Mark your share as paid" }).click();
   await hydro.getByRole("button", { name: "Mark $45.00 as paid" }).click();
+  // Back on the expense once it's recorded (Escape on Record payment returns to the expense).
+  await expect(hydro.getByText("Repaid", { exact: true })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(toast).toBeVisible();
 

@@ -6,6 +6,7 @@ import { ledgerCurrencyQuery } from "../../api/ledger";
 import { invalidateSearch } from "../../api/search";
 import { useAccountEmail } from "../../auth/account";
 import { Button, ChoiceGroup } from "../../design/controls";
+import { Icon } from "../../design/Icon";
 import { Dialog } from "../../design/ModalDialog";
 import { SaveErrorBanner, useToast } from "../../design/states";
 import { describeSharedError } from "./errors";
@@ -66,6 +67,7 @@ function CreateForm({ onClose }: { onClose: () => void }) {
   const nameId = useId();
   const errorId = useId();
   const noteId = useId();
+  const detailsId = useId();
 
   const create = useMutation({
     mutationKey: ["households", "create"],
@@ -92,8 +94,13 @@ function CreateForm({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <form className="form" onSubmit={onSubmit} noValidate>
-      <p className="note">Share rent, bills and groceries. Everyone sees the full expense; your reports count only your share.</p>
+    <form className="form start-form" onSubmit={onSubmit} noValidate>
+      <div className="start-form__intro">
+        <span className="start-form__tile" aria-hidden="true">
+          <Icon name="home" size={36} />
+        </span>
+        <p>Share rent, bills and groceries. Everyone sees the full expense; your reports count only your share.</p>
+      </div>
       {create.isError ? <SaveErrorBanner message={describeSharedError(create.error).message} /> : null}
       <div className="form-field">
         <label htmlFor={nameId}>Name</label>
@@ -113,13 +120,31 @@ function CreateForm({ onClose }: { onClose: () => void }) {
           </span>
         ) : null}
       </div>
-      <dl className="detail-grid" aria-describedby={noteId}>
-        <dt>Currency</dt>
-        <dd>{currency.data ?? (currency.isError ? "Unavailable" : "Loading…")}</dd>
-        <dt>Invite people</dt>
-        <dd>After creating</dd>
-      </dl>
-      <p id={noteId} className="note">
+      <div className="form-field">
+        <span className="form-field__label" id={detailsId}>
+          Details
+        </span>
+        <dl className="start-form__details" aria-labelledby={detailsId} aria-describedby={noteId}>
+          <div>
+            <dt>
+              <Icon name="cash" size={20} />
+              Currency
+            </dt>
+            <dd>
+              {currency.data ?? (currency.isError ? "Unavailable" : "Loading…")}
+              {currency.data ? <Icon name="lock-closed" size={14} label="Can't be changed" /> : null}
+            </dd>
+          </div>
+          <div>
+            <dt>
+              <Icon name="person-add" size={20} />
+              Invite people
+            </dt>
+            <dd>After creating</dd>
+          </div>
+        </dl>
+      </div>
+      <p id={noteId} className="form-hint">
         {currency.data
           ? `Uses your ledger currency. Everyone who joins must use ${currency.data} too.`
           : currency.isError

@@ -4,115 +4,147 @@ import { useEffect, useId, useRef, useState, type ReactNode, type SyntheticEvent
 import { archiveHousehold, createInvite, forgetHousehold, leaveHousehold, refreshHousehold, removeMember, renameHousehold } from "../../api/households";
 import type { HouseholdMember, Invite, MonthRecap } from "../../api/schemas";
 import { useAccountEmail } from "../../auth/account";
-import { Avatar, Badge, Button, Card } from "../../design/controls";
+import { Avatar, Button, Card } from "../../design/controls";
+import { Icon } from "../../design/Icon";
 import { Dialog } from "../../design/ModalDialog";
 import { SaveErrorBanner, useToast } from "../../design/states";
 import type { HouseholdView } from "./context";
 import { describeSharedError } from "./errors";
+import type { MoreItem } from "./GroupTools";
 import { groupListPath } from "./links";
-import { dayLabel, isCurrent, localDate, monthLabel } from "./model";
+import { dayLabel, isCurrent, localDate, monthLabel, shortDate } from "./model";
 
 type Pending = { kind: "remove"; member: HouseholdMember } | { kind: "pick" } | { kind: "leave" } | { kind: "archive" } | { kind: "rename" } | null;
 
 /**
- * People (card `iphone-shared-people`): members, invitations and the creator's controls. The
- * server enforces who may do what; the page offers only what the viewer may do and explains the
- * settlement rule for leaving, removal and archiving. Removing someone is under Manage: the card
- * draws the member rows without actions (MAZ-229).
+ * The creator's and members' less frequent actions: rename (or Edit trip), remove someone, archive
+ * and leave. The cards keep them in the navigation bar's … menu, so a page lists `items` there
+ * and renders `dialogs`; the server still decides who may do what.
  */
-export function PeopleTab({ view, recap, onEditTrip }: { view: HouseholdView; recap: MonthRecap | undefined; onEditTrip?: () => void }) {
+export function useManageActions(view: HouseholdView, recap: MonthRecap | undefined, onEditTrip?: () => void): { items: MoreItem[]; dialogs: ReactNode; note: string } {
   const [pending, setPending] = useState<Pending>(null);
+  const current = view.detail.members.filter(isCurrent);
+  const trip = Boolean(view.detail.household.trip);
+  const alone = current.length === 1;
+  const removable = view.canWrite && view.creator ? current.filter((member) => member.userId !== view.who.meId) : [];
+  const items: MoreItem[] = [];
+  if (view.canWrite && view.creator) {
+    items.push(onEditTrip ? { label: "Edit trip", icon: "create", onSelect: onEditTrip } : { label: "Rename", icon: "create", onSelect: () => { setPending({ kind: "rename" }); } });
+    if (removable[0]) {
+      const only = removable.length === 1 ? removable[0] : undefined;
+      items.push({ label: "Remove someone", icon: "trash", onSelect: () => { setPending(only ? { kind: "remove", member: only } : { kind: "pick" }); } });
+    }
+    items.push({ label: `Archive ${trip ? "trip" : "household"}`, icon: "trash", onSelect: () => { setPending({ kind: "archive" }); } });
+  }
+  if (view.canWrite && (!view.creator || alone)) items.push({ label: `Leave ${trip ? "trip" : "household"}`, icon: "log-out", onSelect: () => { setPending({ kind: "leave" }); } });
+  const close = () => { setPending(null); };
+  const dialogs = (
+    <>
+      {pending?.kind === "pick" ? <PickMemberDialog members={removable} onPick={(member) => { setPending({ kind: "remove", member }); }} onClose={close} /> : null}
+      {pending?.kind === "remove" ? <RemoveDialog view={view} member={pending.member} onClose={close} /> : null}
+      {pending?.kind === "leave" ? <LeaveDialog view={view} onClose={close} /> : null}
+      {pending?.kind === "archive" ? <ArchiveDialog view={view} recap={recap} onClose={close} /> : null}
+      {pending?.kind === "rename" ? <RenameDialog view={view} onClose={close} /> : null}
+    </>
+  );
+  const note =
+    view.creator && !alone
+      ? "Only the creator invites, removes members, renames and archives. The creator can leave once everyone else has left."
+      : "Leaving, removal and archiving need every month to be settled first: months don't offset each other.";
+  return { items, dialogs, note };
+}
+
+/**
+ * People (card `iphone-shared-people`): the members with their role, the invite code for the
+ * creator and how splits treat new members, then former members. On phones and tablets the
+ * page's … menu holds Manage (`useManageActions`); from 1100px, where the `web-household` header
+ * has no … menu, it's a card here (`manage`).
+ */
+export function PeopleTab({ view, recap, onEditTrip, manage = true }: { view: HouseholdView; recap: MonthRecap | undefined; onEditTrip?: () => void; manage?: boolean }) {
   const { household, members } = view.detail;
   const current = members.filter(isCurrent);
   const former = members.filter((member) => !isCurrent(member));
   const trip = Boolean(household.trip);
-  const alone = current.length === 1;
-  const removable = view.canWrite && view.creator ? current.filter((member) => member.userId !== view.who.meId) : [];
+  const actions = useManageActions(view, recap, onEditTrip);
+  const membersId = useId();
+  const inviteId = useId();
+  const formerId = useId();
 
   return (
     <div className="household-columns">
       <div className="page">
-        <Card title={`${String(current.length)} ${current.length === 1 ? "member" : "members"}`}>
-          <ul className="row-list" aria-label="Members">
+        <section className="shared-group" aria-labelledby={membersId}>
+          <div className="shared-group__head">
+            <h2 id={membersId}>{`${String(current.length)} ${current.length === 1 ? "member" : "members"}`}</h2>
+          </div>
+          <ul className="shared-group__rows" aria-label="Members">
             {current.map((member) => (
               <li key={member.userId} className="row">
-                <Avatar name={member.email} size={32} />
-                <span>
+                <Avatar name={member.email} size={36} />
+                <span className="row__main">
                   <span className="row__title">{member.userId === view.who.meId ? `${member.email} (you)` : member.email}</span>
-                  <span className="row__meta" style={{ display: "block" }}>
+                  <span className="row__meta">
                     {member.userId === household.creatorId ? "Created" : "Joined"} {joinedLabel(member)}
                   </span>
                 </span>
-                <span className="row__end">
-                  <Badge>{member.userId === household.creatorId ? "Creator" : "Member"}</Badge>
-                </span>
+                <span className="member-role">{member.userId === household.creatorId ? "Creator" : "Member"}</span>
               </li>
             ))}
           </ul>
-          <p className="note">
-            Everyone uses {household.currency}. New members are included in {trip ? "trip" : "equal"} splits from the day they join; earlier expenses don't change.
-          </p>
-        </Card>
+        </section>
+        {view.canWrite && view.creator ? (
+          <section className="shared-group" aria-labelledby={inviteId}>
+            <div className="shared-group__head">
+              <h2 id={inviteId}>Invite someone</h2>
+            </div>
+            <InviteCard view={view} />
+          </section>
+        ) : null}
+        <p className="shared-note">
+          Everyone uses {household.currency}. New members are included in {trip ? "trip" : "equal"} splits from the day they join; earlier expenses don't change.
+        </p>
         {former.length ? (
-          <Card title="Former members">
-            <ul className="row-list" aria-label="Former members">
+          <section className="shared-group" aria-labelledby={formerId}>
+            <div className="shared-group__head">
+              <h2 id={formerId}>Former members</h2>
+            </div>
+            <ul className="shared-group__rows" aria-label="Former members">
               {former.map((member) => (
-                <li key={member.userId} className="row row--plain">
-                  <span>
+                <li key={member.userId} className="row">
+                  <Avatar name={member.email} size={36} />
+                  <span className="row__main">
                     <span className="row__title">{member.email}</span>
-                    <span className="row__meta" style={{ display: "block" }}>
-                      Left {member.leftAt ? dayLabel(localDate(new Date(member.leftAt)), true) : ""}. Their past expenses stay in the household.
-                    </span>
+                    <span className="row__meta">Left {member.leftAt ? shortDate(localDate(new Date(member.leftAt))) : ""}. Their past expenses stay.</span>
                   </span>
                 </li>
               ))}
             </ul>
-          </Card>
+          </section>
         ) : null}
       </div>
-      <div className="page">
-        {view.canWrite && view.creator ? <InviteCard view={view} /> : null}
-        {view.canWrite ? (
+      {manage && actions.items.length ? (
+        <div className="page">
           <Card title="Manage">
             <div className="shared-actions">
-              {view.creator ? (
-                <>
-                  {onEditTrip ? <Button onClick={onEditTrip}>Edit trip</Button> : <Button onClick={() => { setPending({ kind: "rename" }); }}>Rename</Button>}
-                  {removable[0] ? (
-                    <Button variant="danger-quiet" onClick={() => { setPending(removable.length === 1 && removable[0] ? { kind: "remove", member: removable[0] } : { kind: "pick" }); }}>
-                      Remove someone
-                    </Button>
-                  ) : null}
-                  <Button variant="danger-quiet" onClick={() => { setPending({ kind: "archive" }); }}>
-                    Archive {trip ? "trip" : "household"}
-                  </Button>
-                </>
-              ) : null}
-              {!view.creator || alone ? (
-                <Button variant="danger-quiet" onClick={() => { setPending({ kind: "leave" }); }}>
-                  Leave {trip ? "trip" : "household"}
+              {actions.items.map((item) => (
+                <Button key={item.label} variant={item.icon === "create" ? "secondary" : "danger-quiet"} onClick={item.onSelect}>
+                  {item.label}
                 </Button>
-              ) : null}
+              ))}
             </div>
-            <p className="note">
-              {view.creator && !alone
-                ? "Only the creator invites, removes members, renames and archives. The creator can leave once everyone else has left."
-                : "Leaving, removal and archiving need every month to be settled first: months don't offset each other."}
-            </p>
+            <p className="note">{actions.note}</p>
           </Card>
-        ) : null}
-      </div>
-      {pending?.kind === "pick" ? <PickMemberDialog members={removable} onPick={(member) => { setPending({ kind: "remove", member }); }} onClose={() => { setPending(null); }} /> : null}
-      {pending?.kind === "remove" ? <RemoveDialog view={view} member={pending.member} onClose={() => { setPending(null); }} /> : null}
-      {pending?.kind === "leave" ? <LeaveDialog view={view} onClose={() => { setPending(null); }} /> : null}
-      {pending?.kind === "archive" ? <ArchiveDialog view={view} recap={recap} onClose={() => { setPending(null); }} /> : null}
-      {pending?.kind === "rename" ? <RenameDialog view={view} onClose={() => { setPending(null); }} /> : null}
+        </div>
+      ) : null}
+      {actions.dialogs}
     </div>
   );
 }
 
+/** "Sep 2", as on the card; with the year when it isn't this year's. */
 function joinedLabel(member: HouseholdMember): string {
-  return dayLabel(member.joinedOn ?? localDate(new Date(member.joinedAt)), true);
+  const day = member.joinedOn ?? localDate(new Date(member.joinedAt));
+  return day.slice(0, 4) === localDate().slice(0, 4) ? shortDate(day) : dayLabel(day, true).replace(/^\w+, /, "");
 }
 
 /** Groups the 10-character code for reading aloud and typing: "7F3A9 C01B2". */
@@ -128,7 +160,10 @@ function useNow(active: boolean) {
   return now;
 }
 
-/** Invite someone: a code that works for 10 minutes and admits anyone who has it until it expires or is replaced. */
+/**
+ * Invite someone: a code that works for 10 minutes and admits anyone who has it until it expires
+ * or is replaced. The card's code, amber countdown and Copy; the web has no share sheet (MAZ-229).
+ */
 function InviteCard({ view }: { view: HouseholdView }) {
   const [invite, setInvite] = useState<Invite | null>(null);
   const [copied, setCopied] = useState(false);
@@ -146,16 +181,19 @@ function InviteCard({ view }: { view: HouseholdView }) {
   const clock = `${String(Math.floor(remaining / 60_000))}:${String(Math.floor((remaining % 60_000) / 1000)).padStart(2, "0")}`;
 
   return (
-    <Card title="Invite someone">
+    <div className="invite-code">
       {create.isError ? <SaveErrorBanner message={describeSharedError(create.error).message} /> : null}
       {invite && !expired ? (
-        <div className="invite-code">
-          <span className="muted">They enter this code in Shared › Join with a code</span>
+        <>
+          <span className="invite-code__hint">They enter this code in Shared → Join</span>
           <span className="invite-code__value" aria-label={`Invite code ${invite.code.split("").join(" ")}`}>
             {formatInviteCode(invite.code)}
           </span>
-          <span className="muted">Expires in {clock}</span>
-          <div className="shared-actions">
+          <span className="invite-code__expires">
+            <Icon name="time" size={14} />
+            Expires in {clock}
+          </span>
+          <div className="invite-code__actions">
             <Button
               icon="copy"
               onClick={() => {
@@ -167,26 +205,28 @@ function InviteCard({ view }: { view: HouseholdView }) {
             >
               Copy
             </Button>
-            <span role="status" className="muted">
-              {copied ? "Copied" : ""}
-            </span>
           </div>
-        </div>
+          <span role="status" className="muted">
+            {copied ? "Copied" : ""}
+          </span>
+        </>
       ) : (
         <>
           {expired ? (
-            <p role="status" className="muted">
+            <p role="status" className="invite-code__hint">
               That code expired. Create a new one when the person is ready to join.
             </p>
           ) : (
-            <p className="muted">Create a code when the person is ready. It works for 10 minutes, and a new code replaces the old one.</p>
+            <p className="invite-code__hint">Create a code when the person is ready. It works for 10 minutes, and a new code replaces the old one.</p>
           )}
-          <Button icon="person-add" busy={create.isPending} onClick={() => { create.mutate(); }} style={{ justifySelf: "start" }}>
-            {expired ? "Create a new code" : "Create invite code"}
-          </Button>
+          <div className="invite-code__actions">
+            <Button variant="primary" icon="person-add" busy={create.isPending} onClick={() => { create.mutate(); }}>
+              {expired ? "Create a new code" : "Create invite code"}
+            </Button>
+          </div>
         </>
       )}
-    </Card>
+    </div>
   );
 }
 

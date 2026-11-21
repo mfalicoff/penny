@@ -1,12 +1,13 @@
 import { AddEntryDialog } from "../entries/AddEntryDialog";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useId, useState } from "react";
 import { householdDetailQuery, householdsQuery, monthRecapQuery } from "../../api/households";
+import type { HouseholdDetail, MonthRecap } from "../../api/schemas";
 import { useAccountEmail } from "../../auth/account";
-import { usePageTitle } from "../../app/shell/pageTitle";
+import { usePageTitle, usePageTitleStyle } from "../../app/shell/pageTitle";
 import { useMediaQuery, WIDE } from "../../app/useMediaQuery";
-import { Avatar, Badge, Button } from "../../design/controls";
+import { Avatar, Badge, cx } from "../../design/controls";
 import { Money } from "../../design/Money";
 import { Icon } from "../../design/Icon";
 import { Banner, ErrorState, LoadingState } from "../../design/states";
@@ -17,11 +18,11 @@ import { describeLoadError } from "./errors";
 import { ExpenseDetailDialog } from "./ExpenseDetail";
 import { ExpenseFormDialog, type FormTarget } from "./ExpenseForm";
 import { ExpensesTab } from "./ExpensesTab";
-import { GroupToolbar, ToolButton, ToolContent, toolClass } from "./GroupTools";
+import { GroupToolbar, MoreMenu, ToolButton, ToolContent, toolClass, type MoreItem } from "./GroupTools";
 import { HistoryPanel } from "./HistoryPanel";
-import { currentMonth, dayLabel, isCurrent, monthLabel, people } from "./model";
+import { currentMonth, isCurrent, monthLabel, people } from "./model";
 import { OnlineNotice } from "./OnlineNotice";
-import { PeopleTab } from "./PeopleTab";
+import { PeopleTab, useManageActions } from "./PeopleTab";
 import { RuleDialog } from "./RuleDialog";
 import type { HouseholdSearch, HouseholdTab } from "./search";
 
@@ -29,25 +30,24 @@ const TAB_LABEL: Record<Exclude<HouseholdTab, "history">, string> = { expenses: 
 
 /**
  * A household (cards `web-household`, `iphone-shared`, `ipad-shared`, `iphone-shared-balances`,
- * `iphone-shared-people`). The navigation bar holds the month, then History and Invite as icons
- * and, from 1100px, Shared expense (MAZ-229). Expenses opens with the members, your balance for
- * the month, Record payment and Shared expense; Balances, People and History drop that hero, as
- * the cards collapse to a navigation bar. From 1100px Expenses is two panes: the expenses, and the
- * selected expense with Balances beside them. `expenseId` opens that expense
- * (`/households/$id/expenses/$expenseId`); `?rule=` opens a repeating expense.
+ * `iphone-shared-people`, `iphone-history`). Expenses leads with a centered hero: the members, the
+ * name (the bar's title stays for screen readers on phones), this month's balance, Record payment
+ * and + Expense, then the sections. Balances and People collapse to a navigation bar with the name
+ * small and centered; History is titled History. The bar holds the month, Invite or History and
+ * the … menu (Manage); from 1100px it holds History, Invite and Shared expense, as on
+ * `web-household`, and Expenses is two panes: the expense table, and the selected expense with
+ * Balances beside it. `expenseId` opens that expense (`/households/$id/expenses/$expenseId`);
+ * `?rule=` opens a repeating expense.
  */
 export function HouseholdPage({ householdId, expenseId, search }: { householdId: string; expenseId?: string; search: HouseholdSearch }) {
   const email = useAccountEmail();
-  const navigate = useNavigate();
-  const wide = useMediaQuery(WIDE);
   const month = search.month ?? currentMonth();
   const tab: HouseholdTab = search.tab ?? "expenses";
   const detail = useQuery(householdDetailQuery(email, householdId));
   const list = useQuery(householdsQuery(email));
   const recap = useQuery({ ...monthRecapQuery(email, householdId, month), enabled: detail.isSuccess });
-  const [form, setForm] = useState<FormTarget | null>(null);
-  const recordHintId = useId();
-  usePageTitle(detail.data?.household.name);
+  usePageTitle(tab === "history" ? "History" : detail.data?.household.name);
+  usePageTitleStyle(tab === "expenses" ? "hero" : tab === "history" ? "large" : "inline");
 
   if (detail.isPending) return <LoadingState label="Loading the household…" />;
   if (detail.isError) {
@@ -62,13 +62,33 @@ export function HouseholdPage({ householdId, expenseId, search }: { householdId:
       </div>
     );
   }
-
-  const who = people(detail.data, email);
   // The list leaves out archived households; former members still see theirs until archived.
   const archived = list.isSuccess && !list.data.some((household) => household.id === householdId);
-  const view = householdView(householdId, detail.data, who, month, archived);
-  const { household } = detail.data;
-  const current = detail.data.members.filter(isCurrent);
+  return <HouseholdScreen householdId={householdId} expenseId={expenseId} search={search} detail={detail.data} archived={archived} recap={recap} month={month} tab={tab} />;
+}
+
+interface ScreenProps {
+  householdId: string;
+  expenseId: string | undefined;
+  search: HouseholdSearch;
+  detail: HouseholdDetail;
+  archived: boolean;
+  recap: UseQueryResult<MonthRecap>;
+  month: string;
+  tab: HouseholdTab;
+}
+
+function HouseholdScreen({ householdId, expenseId, search, detail, archived, recap, month, tab }: ScreenProps) {
+  const email = useAccountEmail();
+  const navigate = useNavigate();
+  const wide = useMediaQuery(WIDE);
+  const [form, setForm] = useState<FormTarget | null>(null);
+  const recordHintId = useId();
+  const who = people(detail, email);
+  const view = householdView(householdId, detail, who, month, archived);
+  const manage = useManageActions(view, recap.data);
+  const { household } = detail;
+  const current = detail.members.filter(isCurrent);
   const balance = who.meId ? recap.data?.balances.find((row) => row.userId === who.meId)?.balanceCents : undefined;
   // `rule` is one-off: links to a section or month leave it out.
   const linkSearch = (next: Partial<HouseholdSearch>): HouseholdSearch => ({ month: search.month, tab: search.tab, ...next });
@@ -86,57 +106,81 @@ export function HouseholdPage({ householdId, expenseId, search }: { householdId:
       onClose={() => { go({}); }}
     />
   ) : null;
+  // Phones and tablets: Expenses shows Invite, the other sections History (cards `iphone-shared`,
+  // `iphone-shared-balances`, `iphone-shared-people`); the rest is in the … menu.
+  const historyInBar = wide || tab !== "expenses";
+  const inviteInBar = view.canWrite && view.creator && (wide || tab === "expenses");
+  const more: MoreItem[] = [...(historyInBar ? [] : [{ label: "History", icon: "time" as const, onSelect: () => { go({ tab: "history" }); } }]), ...manage.items];
+
+  const sections = (
+    <nav className="section-tabs" aria-label="Household sections">
+      {(Object.keys(TAB_LABEL) as (keyof typeof TAB_LABEL)[]).map((key) => (
+        <Link
+          key={key}
+          to="/households/$id"
+          params={{ id: householdId }}
+          search={linkSearch({ tab: key === "expenses" ? undefined : key })}
+          aria-current={tab === key ? "page" : undefined}
+          activeOptions={{ exact: true, includeSearch: true }}
+        >
+          {TAB_LABEL[key]}
+        </Link>
+      ))}
+    </nav>
+  );
 
   return (
-    <div className="page">
+    <div className="page household">
       <GroupToolbar ownAdd lead={tab === "expenses" || tab === "balances" ? <MonthBarControls month={month} onChange={(next) => { go({ month: next }); }} /> : null}>
-        <Link to="/households/$id" params={{ id: householdId }} search={linkSearch({ tab: "history" })} className={toolClass()} aria-current={tab === "history" ? "page" : undefined}>
-          <ToolContent icon="time" label="History" />
-        </Link>
-        {view.canWrite && view.creator ? (
+        {historyInBar ? (
+          <Link to="/households/$id" params={{ id: householdId }} search={linkSearch({ tab: "history" })} className={toolClass()} aria-current={tab === "history" ? "page" : undefined}>
+            <ToolContent icon="time" label="History" />
+          </Link>
+        ) : null}
+        {inviteInBar ? (
           <Link to="/households/$id" params={{ id: householdId }} search={linkSearch({ tab: "people" })} className={toolClass({ labelled: true })}>
             <ToolContent icon="person-add" label="Invite" labelled />
           </Link>
         ) : null}
+        {wide ? null : <MoreMenu items={more} label="Household actions" />}
         {view.canWrite && wide ? <ToolButton primary icon="add" label="Shared expense" onClick={() => { setForm({ kind: "new" }); }} /> : null}
       </GroupToolbar>
       <OnlineNotice />
       {tab === "expenses" ? (
         <section className="household-head" aria-label="Household summary">
-          <span className="avatars" aria-hidden="true">
+          <div className={cx("glow", balance !== undefined && balance > 0 && "glow--green")} aria-hidden="true" />
+          <span className="avatars household-head__people" aria-hidden="true">
             {current.slice(0, 5).map((member) => (
-              <Avatar key={member.userId} name={member.email} size={40} />
+              <Avatar key={member.userId} name={member.email} size={44} />
             ))}
           </span>
           <div className="household-head__summary">
-            <span className="muted">
-              {household.trip ? `${dayLabel(household.trip.startDate)} – ${dayLabel(household.trip.endDate, true)} · ` : ""}
-              {current.length} {current.length === 1 ? "member" : "members"} · {household.currency}
-              {archived ? (
-                <>
-                  {" "}
-                  <Badge>Archived</Badge>
-                </>
-              ) : null}
-            </span>
+            {/* The bar's title is the page's heading; on phones it's only for screen readers, so the hero shows the name. */}
+            <p className="household-head__name" aria-hidden="true">
+              {household.name}
+            </p>
+            {archived ? <Badge>Archived</Badge> : null}
             <p className="household-head__balance" aria-live="polite">
               <MonthBalance month={month} balance={balance} loading={recap.isPending} view={view} />
             </p>
           </div>
           {view.canWrite && !wide ? (
             <div className="household-head__actions">
-              <Link to="/households/$id" params={{ id: householdId }} search={linkSearch({ tab: "balances" })} className="wbtn wbtn--secondary" aria-describedby={recordHintId}>
-                <Icon name="checkmark-circle" size={18} />
+              <Link to="/households/$id" params={{ id: householdId }} search={linkSearch({ tab: "balances" })} className="wbtn wbtn--primary household-head__action" aria-describedby={recordHintId}>
+                <Icon name="checkmark-circle" size={19} />
                 Record payment
               </Link>
-              <Button variant="primary" icon="add" onClick={() => { setForm({ kind: "new" }); }}>
-                Shared expense
-              </Button>
+              {/* The card reads "+ Expense"; its name says what it adds. */}
+              <button type="button" className="wbtn household-head__action glass" aria-label="Shared expense" onClick={() => { setForm({ kind: "new" }); }}>
+                <Icon name="add" size={18} weight={44} />
+                Expense
+              </button>
               <span id={recordHintId} className="visually-hidden">
                 Shows balances and suggested payments to record
               </span>
             </div>
           ) : null}
+          {sections}
         </section>
       ) : null}
 
@@ -150,20 +194,7 @@ export function HouseholdPage({ householdId, expenseId, search }: { householdId:
         </Banner>
       ) : null}
 
-      <nav className="section-tabs" aria-label="Household sections">
-        {(Object.keys(TAB_LABEL) as (keyof typeof TAB_LABEL)[]).map((key) => (
-          <Link
-            key={key}
-            to="/households/$id"
-            params={{ id: householdId }}
-            search={linkSearch({ tab: key === "expenses" ? undefined : key })}
-            aria-current={tab === key ? "page" : undefined}
-            activeOptions={{ exact: true, includeSearch: true }}
-          >
-            {TAB_LABEL[key]}
-          </Link>
-        ))}
-      </nav>
+      {tab === "expenses" ? null : sections}
 
       {tab === "expenses" ? (
         <ExpensesTab
@@ -174,7 +205,7 @@ export function HouseholdPage({ householdId, expenseId, search }: { householdId:
             wide ? (
               <>
                 {expenseDetail}
-                <BalancesTab view={view} recap={recap} />
+                <BalancesTab view={view} recap={recap} compact />
               </>
             ) : undefined
           }
@@ -182,11 +213,12 @@ export function HouseholdPage({ householdId, expenseId, search }: { householdId:
       ) : tab === "balances" ? (
         <BalancesTab view={view} recap={recap} />
       ) : tab === "people" ? (
-        <PeopleTab view={view} recap={recap.data} />
+        <PeopleTab view={view} recap={recap.data} manage={wide} />
       ) : (
         <HistoryPanel view={view} />
       )}
 
+      {wide ? null : manage.dialogs}
       {inlineExpense ? null : expenseDetail}
       {search.rule && !form ? <RuleDialog view={view} ruleId={search.rule} onEdit={(rule) => { setForm({ kind: "rule", rule }); }} onClose={closeRule} /> : null}
       {form?.kind === "new" ? (

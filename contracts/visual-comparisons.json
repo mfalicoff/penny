@@ -1,7 +1,7 @@
 {
   "version": 1,
   "description": "Visual comparison of the iOS and web apps with each redesign card (MAZ-122). Method, statuses and re-sync steps: docs/design/visual-acceptance.md. Approved deviations are in docs/reference/redesign.md; follow-ups name their issue.",
-  "reviewedAt": "2026-11-20",
+  "reviewedAt": "2026-11-21",
   "cards": [
     {
       "id": "system-foundations",
@@ -769,9 +769,9 @@
         ],
         "deviations": [
           {
-            "summary": "No overall subtitle; rows have no icon tiles, avatars or trailing balance and chevron; an Overdue badge replaces the balance; trips read SHARED TRIPS without balances; Join and New household are separate cards",
+            "summary": "Members are shown by email, with initials from the email",
             "kind": "follow-up",
-            "ref": "MAZ-228"
+            "ref": "MAZ-171"
           }
         ]
       }
@@ -824,11 +824,6 @@
           "dark"
         ],
         "deviations": [
-          {
-            "summary": "The hero is left-aligned; Shared expense is the primary action instead of Record payment; rows have no payer avatar and add the date; the section header sits inside the card",
-            "kind": "follow-up",
-            "ref": "MAZ-228"
-          },
           {
             "summary": "Members are shown by email, with initials from the email",
             "kind": "follow-up",
@@ -891,11 +886,6 @@
         ],
         "deviations": [
           {
-            "summary": "Rows have no avatars; suggested payments have no Record paid pill and sit inside the balances card; the Settles pill and footnote have no clock icon",
-            "kind": "follow-up",
-            "ref": "MAZ-228"
-          },
-          {
             "summary": "Members are shown by email, with initials from the email",
             "kind": "follow-up",
             "ref": "MAZ-171"
@@ -906,12 +896,7 @@
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           },
           {
-            "summary": "The household name stays a large title under the navigation bar, where the card shows it inline in the bar",
-            "kind": "follow-up",
-            "ref": "MAZ-229"
-          },
-          {
-            "summary": "The month pill sits in the navigation bar, where the card shows no month control. Waiting for a design decision",
+            "summary": "The month pill sits in the navigation bar, where the card shows no month control, so the household name takes its own small centered row under it. Waiting for a design decision",
             "kind": "follow-up",
             "ref": "MAZ-229"
           }
@@ -962,11 +947,6 @@
         ],
         "deviations": [
           {
-            "summary": "Rows have no avatars and show the role as a pill; Former members come before the invite card; join dates are long",
-            "kind": "follow-up",
-            "ref": "MAZ-228"
-          },
-          {
             "summary": "Members are shown by email, with initials from the email",
             "kind": "follow-up",
             "ref": "MAZ-171"
@@ -980,11 +960,6 @@
             "summary": "Invite shows the code with a live countdown and Copy instead of a share sheet (decided in MAZ-229)",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
-          },
-          {
-            "summary": "The household name stays a large title under the navigation bar, where the card shows it inline in the bar",
-            "kind": "follow-up",
-            "ref": "MAZ-229"
           }
         ]
       }
@@ -1084,11 +1059,6 @@
         ],
         "deviations": [
           {
-            "summary": "Titled with the expense name; no payer and receiver avatars with an arrow, no Full share pill; Cancel beside a right-aligned Mark as paid",
-            "kind": "follow-up",
-            "ref": "MAZ-228"
-          },
-          {
             "summary": "Record payment is a dialog over the household",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-conventions-maz-227"
@@ -1140,9 +1110,9 @@
         ],
         "deviations": [
           {
-            "summary": "No red error banner with an alert icon; a Before/Now table instead of struck-through rows with an Edited row; Review expense isn't full width; titled with the expense name",
+            "summary": "Members are shown by email, with initials from the email",
             "kind": "follow-up",
-            "ref": "MAZ-228"
+            "ref": "MAZ-171"
           }
         ]
       }
@@ -1179,16 +1149,6 @@
             "summary": "A dialog with Create/Join below the title and Cancel beside Create household, not a sheet",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-conventions-maz-227"
-          },
-          {
-            "summary": "No house tile above the form",
-            "kind": "follow-up",
-            "ref": "MAZ-228"
-          },
-          {
-            "summary": "Details are a plain list with no icons or Currency lock",
-            "kind": "follow-up",
-            "ref": "MAZ-228"
           }
         ]
       }
@@ -1227,14 +1187,14 @@
         ],
         "deviations": [
           {
-            "summary": "Filters are a segmented control; rows have no actor avatar or action badge and no bold names; day headers are long dates in one card",
-            "kind": "follow-up",
-            "ref": "MAZ-228"
-          },
-          {
             "summary": "History is a panel of the household (?tab=history), not its own screen (decided in MAZ-229)",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
+          },
+          {
+            "summary": "Members are shown by email, with initials from the email",
+            "kind": "follow-up",
+            "ref": "MAZ-171"
           }
         ]
       }
@@ -2571,7 +2531,7 @@
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           },
           {
-            "summary": "One hero spans both panes; the card puts the month's amount at the top of the right pane and the name with the month total on the left, and its button reads + Expense",
+            "summary": "One hero spans both panes; the card puts the month's amount at the top of the right pane and the name with the month total on the left, groups the expenses under THIS WEEK and EARLIER, and its button reads + Expense",
             "kind": "follow-up",
             "ref": "MAZ-229"
           }
@@ -2920,11 +2880,6 @@
           "dark"
         ],
         "deviations": [
-          {
-            "summary": "Full-width tabs; a card list instead of the expense table with status pills; Balances rows have no Record paid pills",
-            "kind": "follow-up",
-            "ref": "MAZ-228"
-          },
           {
             "summary": "Members are shown by email, with initials from the email",
             "kind": "follow-up",

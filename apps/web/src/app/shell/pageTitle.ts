@@ -26,3 +26,24 @@ export const TopbarSlotContext = createContext<HTMLElement | null>(null);
 export function useTopbarSlot(): HTMLElement | null {
   return use(TopbarSlotContext);
 }
+
+/**
+ * How a page shows its title on phones (below 768px): `large` (the default large title), `hero`
+ * (the page draws the name in its own hero, so the bar's title is only for screen readers: card
+ * `iphone-shared`) or `inline` (the cards' collapsed navigation bar, with the title small and
+ * centered: `iphone-shared-balances`, `iphone-shared-people`). Wider layouts always show it.
+ */
+export type PageTitleStyle = "large" | "hero" | "inline";
+
+export const PageTitleStyleContext = createContext<((style: PageTitleStyle) => void) | null>(null);
+
+export function usePageTitleStyle(style: PageTitleStyle) {
+  const set = use(PageTitleStyleContext);
+  useEffect(() => {
+    if (!set) return;
+    set(style);
+    return () => {
+      set("large");
+    };
+  }, [set, style]);
+}

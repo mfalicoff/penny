@@ -1,18 +1,132 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode, type RefObject } from "react";
 import { ApiError } from "../../api/client";
 import { expenseQuery, monthRecapQuery, recordMonthlyPayment, recordSharePayment, refreshHousehold } from "../../api/households";
 import type { MonthRecap, SharedExpense, Transfer } from "../../api/schemas";
 import { useAccountEmail } from "../../auth/account";
-import { Button } from "../../design/controls";
+import { Avatar, Button } from "../../design/controls";
+import { Icon } from "../../design/Icon";
 import { Dialog } from "../../design/ModalDialog";
 import { Money } from "../../design/Money";
 import { Banner, SaveErrorBanner, useToast } from "../../design/states";
 import type { HouseholdView } from "./context";
 import { describeLoadError, describeSharedError } from "./errors";
-import { dayLabel, monthLabel, possessive, shareOf, staleChange } from "./model";
+import { monthLabel, possessive, shareOf, shortDate, staleChange } from "./model";
 
 const NO_TRANSFER_NOTE = "Recording a payment notes money already paid. Penny doesn't transfer money.";
+
+/**
+ * Who paid whom (card `iphone-record-payment`): the payer's and receiver's avatars joined by a
+ * dashed arrow, "paid" and "received" under their names, then the amount, what it is for and a
+ * pill (Full share, or the full month's balance).
+ */
+function PaymentSummary({ view, fromUserId, toUserId, cents, detail, pill }: { view: HouseholdView; fromUserId: string; toUserId: string; cents: number; detail: string; pill: string }) {
+  const from = view.who.name(fromUserId);
+  const to = view.who.name(toUserId);
+  return (
+    // Opening the payment moves focus here, never onto Mark as paid.
+    <div className="payment-summary" tabIndex={-1} data-pane-focus>
+      <p className="payment-people">
+        <span className="payment-person">
+          <Avatar name={view.who.avatar(fromUserId)} size={64} />
+          <strong>{from}</strong>
+          <span className="muted">paid</span>
+        </span>
+        <span className="payment-people__arrow" aria-hidden="true" />
+        <span className="payment-person">
+          <Avatar name={view.who.avatar(toUserId)} size={64} />
+          <strong>{to}</strong>
+          <span className="muted">received</span>
+        </span>
+      </p>
+      <Money cents={cents} currency={view.currency} className="payment-summary__amount" />
+      <span className="payment-summary__detail">{detail}</span>
+      <span className="payment-summary__pill">
+        <Icon name="lock-closed" size={14} />
+        {pill}
+      </span>
+    </div>
+  );
+}
+
+/** The note under the summary, with the card's check icon. */
+function PaymentNote({ children }: { children: ReactNode }) {
+  return (
+    <p className="payment-note">
+      <Icon name="checkmark-circle" size={18} />
+      <span>{children}</span>
+    </p>
+  );
+}
+
+/** "2 min ago", "just now", or the time and day for older changes (card `iphone-payment-stale`). */
+function whenLabel(at: number, now = Date.now()): string {
+  const minutes = Math.floor((now - at) / 60_000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${String(minutes)} min ago`;
+  return new Date(at).toLocaleString("en-CA", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+}
+
+/**
+ * The payment-changed state (card `iphone-payment-stale`): a red banner naming what changed, the
+ * values that changed (struck-through before, then now) with who changed it and when, and one
+ * full-width action. Nothing was recorded.
+ */
+function StaleState({
+  focusRef,
+  title,
+  message,
+  rows,
+  by,
+  action,
+}: {
+  focusRef: RefObject<HTMLDivElement | null>;
+  title: string;
+  message: string;
+  rows: { label: string; before: string; now: string }[];
+  by: { label: string; value: string } | null;
+  action: ReactNode;
+}) {
+  const titleId = useId();
+  return (
+    <div ref={focusRef} tabIndex={-1} className="form payment-stale" role="alert" aria-labelledby={titleId}>
+      <div className="payment-stale__banner">
+        <Icon name="alert-circle" size={22} />
+        <span>
+          <strong id={titleId}>{title}</strong>
+          <span>{message}</span>
+        </span>
+      </div>
+      {rows.length || by ? (
+        <dl className="payment-stale__rows" aria-label="What changed since you opened this payment">
+          {rows.map((row) => (
+            <div key={row.label}>
+              <dt>{row.label}</dt>
+              <dd>
+                <del>
+                  <span className="visually-hidden">was </span>
+                  {row.before}
+                </del>{" "}
+                <span className="visually-hidden">now </span>
+                <strong>{row.now}</strong>
+              </dd>
+            </div>
+          ))}
+          {by ? (
+            <div>
+              <dt>{by.label}</dt>
+              <dd>
+                <strong>{by.value}</strong>
+              </dd>
+            </div>
+          ) : null}
+        </dl>
+      ) : null}
+      {action}
+      <p className="note payment-stale__note">Nothing was recorded. {NO_TRANSFER_NOTE}</p>
+    </div>
+  );
+}
 
 /**
  * Record a full suggested monthly payment (card `iphone-record-payment`, monthly). It documents a
@@ -61,43 +175,19 @@ export function RecordMonthlyDialog({ view, month, transfer, onClose }: { view: 
   if (stale) {
     const now = stale.suggestions.find((item) => item.fromUserId === transfer.fromUserId && item.toUserId === transfer.toUserId);
     return (
-      <Dialog
-        title="Balance changed"
-        onClose={onClose}
-        actions={
-          <Button variant="primary" onClick={onClose}>
-            Review balances
-          </Button>
-        }
-      >
-        <div ref={staleRef} tabIndex={-1} role="alert" className="form">
-          <p>
-            {monthName} changed after you opened this payment, so {view.money(transfer.amountCents)} is no longer the full amount {from === "You" ? "you owe" : `${from} owes`}. Review the
-            balances before recording a payment.
-          </p>
-          <table className="compare">
-            <caption className="visually-hidden">Suggested payment before and now</caption>
-            <thead>
-              <tr>
-                <th scope="col">
-                  {from} → {to}
-                </th>
-                <th scope="col">Before</th>
-                <th scope="col">Now</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th scope="row">Amount</th>
-                <td>
-                  <del>{view.money(transfer.amountCents)}</del>
-                </td>
-                <td>{now ? view.money(now.amountCents) : "Nothing to pay"}</td>
-              </tr>
-            </tbody>
-          </table>
-          <p className="note">Nothing was recorded. {NO_TRANSFER_NOTE}</p>
-        </div>
+      <Dialog title="Record payment" onClose={onClose}>
+        <StaleState
+          focusRef={staleRef}
+          title={`${monthName} changed`}
+          message={`${monthName} changed after you opened this payment, so ${view.money(transfer.amountCents)} is no longer the full amount ${from === "You" ? "you owe" : `${from} owes`}. Review the balances before recording a payment.`}
+          rows={[{ label: `${from} → ${to}`, before: view.money(transfer.amountCents), now: now ? view.money(now.amountCents) : "Nothing to pay" }]}
+          by={null}
+          action={
+            <Button variant="primary" className="wbtn--block" onClick={onClose}>
+              Review balances
+            </Button>
+          }
+        />
       </Dialog>
     );
   }
@@ -108,31 +198,15 @@ export function RecordMonthlyDialog({ view, month, transfer, onClose }: { view: 
       : describeSharedError(record.error)
     : null;
   return (
-    <Dialog
-      title="Record payment"
-      onClose={onClose}
-      actions={
-        <>
-          <Button variant="quiet" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button variant="primary" busy={record.isPending} onClick={() => { record.mutate(); }}>
-            {record.isPending ? "Recording…" : `Mark ${view.money(transfer.amountCents)} as paid`}
-          </Button>
-        </>
-      }
-    >
-      {failure ? <SaveErrorBanner message={failure.message} {...(failure.kind === "offline" || failure.kind === "unreachable" || failure.kind === "other" ? { onRetry: () => { record.mutate(); }, retrying: record.isPending } : {})} /> : null}
-      <div className="payment-summary">
-        <span>
-          <strong>{from}</strong> paid · <strong>{to}</strong> received
-        </span>
-        <Money cents={transfer.amountCents} currency={view.currency} />
-        <span className="muted">Full {monthName} balance</span>
+    <Dialog title="Record payment" onClose={onClose}>
+      <div className="form">
+        {failure ? <SaveErrorBanner message={failure.message} {...(failure.kind === "offline" || failure.kind === "unreachable" || failure.kind === "other" ? { onRetry: () => { record.mutate(); }, retrying: record.isPending } : {})} /> : null}
+        <PaymentSummary view={view} fromUserId={transfer.fromUserId} toUserId={transfer.toUserId} cents={transfer.amountCents} detail={`${monthName} balance`} pill="Full balance" />
+        <PaymentNote>Record this once the money has changed hands outside Penny. Penny keeps track — it doesn't send money, and nobody's spending changes.</PaymentNote>
+        <Button variant="primary" icon="checkmark" className="wbtn--block" busy={record.isPending} onClick={() => { record.mutate(); }}>
+          {record.isPending ? "Recording…" : `Mark ${view.money(transfer.amountCents)} as paid`}
+        </Button>
       </div>
-      <p className="note">
-        Record this once the money has changed hands outside Penny. Penny keeps track; it doesn't send money, and nobody's spending changes.
-      </p>
     </Dialog>
   );
 }
@@ -142,7 +216,8 @@ export function RecordMonthlyDialog({ view, month, transfer, onClose }: { view: 
  * the expense revision the person saw; if the expense changed since, the server refuses and the
  * payment-changed state (card `iphone-payment-stale`) offers only Review expense. It names the real
  * cause (another payment, often the same person on another device; a monthly payment; or an
- * edit) and lists only the values that changed. Nothing is ever recorded twice.
+ * edit) and lists only the values that changed. Nothing is ever recorded twice. The host titles
+ * it Record payment.
  */
 export function RecordShareView({
   view,
@@ -162,7 +237,6 @@ export function RecordShareView({
   const toast = useToast();
   const [stale, setStale] = useState<SharedExpense | null>(null);
   const staleRef = useRef<HTMLDivElement>(null);
-  const titleId = useId();
   const amount = shareOf(expense, fromUserId);
   const from = view.who.name(fromUserId);
   const to = view.who.name(expense.payerUserId);
@@ -205,48 +279,20 @@ export function RecordShareView({
         : cause.kind === "monthly"
           ? `A monthly payment was recorded for ${monthLabel(changed.date.slice(0, 7))} after you opened this payment, so this share now settles with the month.`
           : `${actor} edited this expense after you opened it. Review it before recording a payment.`;
-    const at = cause.kind === "monthly" ? null : cause.at;
+    const by = cause.kind === "monthly" || actor === null ? null : { label: cause.kind === "payment" ? "Recorded" : "Edited", value: `${actor} · ${whenLabel(cause.at)}` };
     return (
-      <div ref={staleRef} tabIndex={-1} className="form" role="alert" aria-labelledby={titleId}>
-        <h3 id={titleId} style={{ margin: 0 }}>
-          {cause.kind === "edit" ? `${changed.title} changed` : `${changed.title} payment changed`}
-        </h3>
-        <p>{message}</p>
-        {rows.length ? (
-          <table className="compare">
-            <caption className="visually-hidden">What changed since you opened this payment</caption>
-            <thead>
-              <tr>
-                <td />
-                <th scope="col">Before</th>
-                <th scope="col">Now</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row.label}>
-                  <th scope="row">{row.label}</th>
-                  <td>
-                    <del>{row.before}</del>
-                  </td>
-                  <td>{row.now}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : null}
-        {at !== null && actor !== null ? (
-          <p className="muted">
-            {cause.kind === "payment" ? "Recorded" : "Edited"} by {actor} · <time dateTime={new Date(at).toISOString()}>{new Date(at).toLocaleString("en-CA", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</time>
-          </p>
-        ) : null}
-        <div className="form-actions">
-          <Button variant="primary" onClick={onReview}>
+      <StaleState
+        focusRef={staleRef}
+        title={cause.kind === "edit" ? `${changed.title} changed` : `${changed.title} payment changed`}
+        message={message}
+        rows={rows}
+        by={by}
+        action={
+          <Button variant="primary" className="wbtn--block" onClick={onReview}>
             Review expense
           </Button>
-        </div>
-        <p className="note">Nothing was recorded. {NO_TRANSFER_NOTE}</p>
-      </div>
+        }
+      />
     );
   }
 
@@ -254,37 +300,26 @@ export function RecordShareView({
   const retryable = failure && (failure.kind === "offline" || failure.kind === "unreachable" || failure.kind === "other");
   return (
     <div className="form">
-      <h3 id={titleId} tabIndex={-1} style={{ margin: 0 }}>
-        Record payment
-      </h3>
       {failure ? <SaveErrorBanner message={failure.message} {...(retryable ? { onRetry: () => { record.mutate(); }, retrying: record.isPending } : {})} /> : null}
-      <div className="payment-summary">
-        <span>
-          <strong>{from}</strong> paid · <strong>{to}</strong> received
-        </span>
-        <Money cents={amount} currency={view.currency} />
-        <span className="muted">
-          {from === "You" ? "Your" : `${from}'s`} share of {expense.title} · {dayLabel(expense.date)}
-        </span>
-        <span className="muted">Full share</span>
-      </div>
-      <p className="note">
-        Record this once {from === "You" ? "you have" : `${from} has`} paid {to === "You" ? "you" : to} outside Penny. Penny keeps track; it doesn't send money, and nobody's spending
-        changes.
-      </p>
+      <PaymentSummary
+        view={view}
+        fromUserId={fromUserId}
+        toUserId={expense.payerUserId}
+        cents={amount}
+        detail={`${from === "You" ? "Your" : `${from}'s`} share of ${expense.title} · ${shortDate(expense.date)}`}
+        pill="Full share"
+      />
+      <PaymentNote>
+        Record this once {from === "You" ? "you have" : `${from} has`} paid {to === "You" ? "you" : to} outside Penny. Penny keeps track — it doesn't send money, and nobody's spending changes.
+      </PaymentNote>
       {expense.paymentsClosed ? (
         <Banner tone="info" title="This month is being settled monthly">
           A monthly payment was already recorded for this month. Settle the rest from Balances.
         </Banner>
       ) : null}
-      <div className="form-actions">
-        <Button variant="quiet" onClick={onDone}>
-          Cancel
-        </Button>
-        <Button variant="primary" busy={record.isPending} onClick={() => { record.mutate(); }}>
-          {record.isPending ? "Recording…" : `Mark ${view.money(amount)} as paid`}
-        </Button>
-      </div>
+      <Button variant="primary" icon="checkmark" className="wbtn--block" busy={record.isPending} onClick={() => { record.mutate(); }}>
+        {record.isPending ? "Recording…" : `Mark ${view.money(amount)} as paid`}
+      </Button>
     </div>
   );
 }
