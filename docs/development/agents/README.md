@@ -42,7 +42,7 @@ Each machine runs one issue at a time. A machine is busy while an issue carrying
 
 Each platform pool (iOS on fearful; web, backend and infra on worker and fear) has at most one bundle open at a time: up to 5 issues that don't clash (not the same screens or feature folder, at most one touching shared contracts). Member sessions work their issues in parallel and push branches without pull requests. When every member is ready or handed over, the orchestrator starts an integrator session that merges the branches into `bundle/<id>`, runs the checks, opens one pull request with a `Fixes` line per issue, handles the review and merges it. A member that can't be integrated is handed over on its own; the rest still ship.
 
-Several sessions can run on one machine (fearful 2, worker 2, fear 3) once each session has its own web test ports and its own iOS simulators. Until then the orchestrator runs one session per machine. Remove this sentence when that isolation has landed.
+Several sessions can run on one machine at once: fearful 2, worker 2, fear 3. Each session gets its own web test ports and test API, and its own iOS simulators, so they don't get in each other's way.
 
 ## Follow-ups
 
