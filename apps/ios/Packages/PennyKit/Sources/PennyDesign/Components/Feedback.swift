@@ -227,20 +227,30 @@ public struct CategoryIcon: View {
     @ScaledMetric private var size: Double
     private let symbol: String
     private let color: Color
+    private let glyph: Color
 
-    public init(symbol: String, color: Color, size: Double = 36) {
+    public init(symbol: String, color: Color, glyph: Color = .white, size: Double = 36) {
         self.symbol = symbol
         self.color = color
+        self.glyph = glyph
         _size = ScaledMetric(wrappedValue: size, relativeTo: .body)
     }
 
     public var body: some View {
         Image(systemName: symbol)
             .font(.system(size: size * 0.5, weight: .medium))
-            .foregroundStyle(.white)
+            .foregroundStyle(glyph)
             .frame(width: size, height: size)
             .background(color, in: RoundedRectangle(cornerRadius: size * 0.31, style: .continuous))
             .accessibilityHidden(true)
+    }
+}
+
+extension CategoryIcon {
+    /// The cards' neutral tile (`.ic` on `--fill`): a label-color glyph for things that are
+    /// neither a category nor an action, such as a trip or a new household.
+    public static func neutral(symbol: String, size: Double = 36) -> CategoryIcon {
+        CategoryIcon(symbol: symbol, color: PennyColor.fill, glyph: PennyColor.label, size: size)
     }
 }
 

@@ -24,7 +24,7 @@ struct AppearanceSettingsView: View {
                 }
                 .padding(.vertical, 8)
             } header: {
-                Text("Theme")
+                Text("Theme").cardSectionHeader()
             } footer: {
                 Text(
                     "System follows your device's Light and Dark setting, including scheduled switching. "
@@ -33,7 +33,7 @@ struct AppearanceSettingsView: View {
             Section {
                 LabeledContent("Text size", value: "Follows your device")
             } header: {
-                Text("Text")
+                Text("Text").cardSectionHeader()
             } footer: {
                 Text("Penny supports Dynamic Type. Change text size in Settings › Display & Brightness.")
             }
@@ -241,7 +241,7 @@ struct AppLockSettingsView: View {
                         .accessibilityIdentifier("appLock.delay.\(option.rawValue)")
                     }
                 } header: {
-                    Text("Lock after")
+                    Text("Lock after").cardSectionHeader()
                 } footer: {
                     footer
                 }

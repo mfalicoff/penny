@@ -64,6 +64,7 @@ struct ReceiptPreviewView: View {
     private var toolbar: some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
             Button("Close", systemImage: "xmark") { dismiss() }
+                .neutralToolbarGlyph()
                 .accessibilityIdentifier("receipt.close")
         }
         ToolbarItem(placement: .principal) {

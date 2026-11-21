@@ -97,7 +97,7 @@ struct SharedView: View {
     @ViewBuilder
     private func rows(_ title: String, _ households: [WireHousehold], _ directory: HouseholdDirectory) -> some View {
         if !households.isEmpty {
-            Section(title) {
+            CardSection(title) {
                 ForEach(households) { household in
                     // A shared trip opens its trip page (MAZ-76).
                     NavigationLink(

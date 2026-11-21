@@ -32,11 +32,12 @@ struct CategoriesListView: View {
                             CategoryRow(category: category, usage: ledger.usage(ofCategory: category.id))
                         }
                         .buttonStyle(.plain)
+                        .cardSettingsRow()
                         .accessibilityHint("Edit")
                         .accessibilityIdentifier("category.\(category.id)")
                     }
                 } header: {
-                    Text(OrganizeText.count(categories.count, "category", "categories"))
+                    Text(OrganizeText.count(categories.count, "category", "categories")).cardSectionHeader()
                 } footer: {
                     Text("A category with entries or schedules can be renamed and restyled, but not removed.")
                 }
@@ -57,6 +58,7 @@ struct CategoriesListView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("Add category", systemImage: "plus") { form = CategoryFormRequest(category: nil, kind: kind) }
+                    .neutralToolbarGlyph()
                     .disabled(shell.workspace.load.ledger == nil)
                     .accessibilityIdentifier("categories.add")
             }
@@ -82,8 +84,8 @@ private struct CategoryRow: View {
         HStack(spacing: 12) {
             CategoryIcon(
                 symbol: CategoryStyle.symbol(forIonicon: category.icon),
-                color: PennyColor.category(category.paletteColor))
-            VStack(alignment: .leading, spacing: 2) {
+                color: PennyColor.category(category.paletteColor), size: 34)
+            VStack(alignment: .leading, spacing: 1) {
                 Text(category.name).font(.body).foregroundStyle(PennyColor.label)
                 Text(OrganizeText.categoryDetail(usage)).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
             }
@@ -92,7 +94,6 @@ private struct CategoryRow: View {
                 .foregroundStyle(PennyColor.tertiaryLabel)
                 .accessibilityHidden(true)
         }
-        .frame(minHeight: ControlSize.row)
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
     }
@@ -138,7 +139,7 @@ struct CategoryFormSheet: View {
                         .listRowBackground(Color.clear)
                 }
                 failureSection
-                Section("Name") {
+                CardSection("Name") {
                     TextField("Coffee, Rent, Side gig", text: $model.name)
                         .focused($nameFocused)
                         .submitLabel(.done)
@@ -162,7 +163,7 @@ struct CategoryFormSheet: View {
                         Text(LedgerRuleError.categoryKindInUse.message)
                     }
                 }
-                Section("Color") {
+                CardSection("Color") {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 48), spacing: 10)], spacing: 10) {
                         ForEach(CategoryStyle.pickerColors, id: \.self) { color in
                             ColorSwatch(color: color, selected: model.paletteColor == color) { model.choose(color) }
@@ -170,7 +171,7 @@ struct CategoryFormSheet: View {
                     }
                     .padding(.vertical, 6)
                 }
-                Section("Icon") {
+                CardSection("Icon") {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 52), spacing: 10)], spacing: 10) {
                         ForEach(CategoryStyle.pickerIcons, id: \.self) { icon in
                             IconChoice(
@@ -192,6 +193,7 @@ struct CategoryFormSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel", systemImage: "xmark") { dismiss() }
+                        .neutralToolbarGlyph()
                         .accessibilityIdentifier("categoryForm.cancel")
                 }
                 ToolbarItem(placement: .confirmationAction) {

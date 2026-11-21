@@ -114,7 +114,7 @@ struct EntryHouseholdSheet: View {
                                 symbol: household.trip == nil ? "house" : "airplane")
                         }
                     } header: {
-                        Text("Split with")
+                        Text("Split with").cardSectionHeader()
                     } footer: {
                         Text("Everyone in the household sees the full amount. Shared expenses need a connection.")
                     }
@@ -127,6 +127,7 @@ struct EntryHouseholdSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close", systemImage: "xmark") { dismiss() }
+                        .neutralToolbarGlyph()
                 }
             }
         }

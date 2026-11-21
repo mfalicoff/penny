@@ -98,7 +98,7 @@ struct ReceiptEmailSettingsView: View {
                     .listRowInsets(EdgeInsets())
                 }
             }
-            Section("How it works") {
+            CardSection("How it works") {
                 Text(
                     "Forward a receipt email to this address, or send a photo of a paper receipt to it. It shows up in Receipts to attach within a minute."
                 )
@@ -179,7 +179,7 @@ struct ReceiptEmailSettingsView: View {
                     .accessibilityIdentifier("receiptEmail.extend")
             }
         } header: {
-            Text("Your receipt address")
+            Text("Your receipt address").cardSectionHeader()
         } footer: {
             Text("Anyone with this address can send you receipts. Nothing is attached until you choose to.")
         }
@@ -217,7 +217,7 @@ struct ReceiptEmailSettingsView: View {
                     .accessibilityIdentifier("receiptEmail.addSender")
             }
         } header: {
-            Text("Allowed senders")
+            Text("Allowed senders").cardSectionHeader()
         } footer: {
             VStack(alignment: .leading, spacing: 4) {
                 if senderInvalid { Text("Enter an email address or a domain.").foregroundStyle(PennyColor.danger) }

@@ -24,7 +24,7 @@ struct SettingsView: View {
             Section {
                 AccountHeader()
             }
-            Section("Manage") {
+            CardSection("Manage") {
                 manageRow(.recurring, symbol: "repeat", value: ledger.map { "\($0.recurring.count)" })
                 manageRow(.accounts, symbol: "wallet.bifold", value: ledger.map { "\($0.accounts.count)" })
                 manageRow(.categories, symbol: "tag", value: ledger.map { "\($0.categories.count)" })
@@ -38,7 +38,7 @@ struct SettingsView: View {
                     .appLock, symbol: "lock", value: lock.isEnabled ? "On" : "Off", title: Self.lockTitle(lock.biometry)
                 )
             } header: {
-                Text("Preferences")
+                Text("Preferences").cardSectionHeader()
             } footer: {
                 if let ledger, let reason = CurrencyPolicy.lockReason(ledger: ledger) { Text(reason) }
             }
@@ -61,7 +61,6 @@ struct SettingsView: View {
                                             .foregroundStyle(Self.valueStyle(selected))
                                     }
                                 }
-                                .frame(minHeight: Metrics.minTouchTarget)
                             }
                             .disabled(!shell.receiptInbox.isAvailable)
                             .accessibilityElement(children: .ignore)
@@ -70,7 +69,7 @@ struct SettingsView: View {
                             .accessibilityIdentifier("settings.receiptInbox")
                         }
                     } header: {
-                        Text("Emailed receipts")
+                        Text("Emailed receipts").cardSectionHeader()
                     } footer: {
                         if !shell.receiptInbox.isAvailable { Text(InboxText.offline) }
                     }
@@ -78,7 +77,7 @@ struct SettingsView: View {
                 if let push {
                     // MAZ-79: household notifications, for an account only.
                     Section {
-                        NotificationSettingsRow(push: push)
+                        NotificationSettingsRow(push: push).cardSettingsRow()
                     } footer: {
                         Text(NotificationText.footer(permission: push.permission, status: push.registrar.status))
                     }
@@ -93,7 +92,7 @@ struct SettingsView: View {
                     }
                     .accessibilityIdentifier("settings.server")
                 } header: {
-                    Text("Server")
+                    Text("Server").cardSectionHeader()
                 } footer: {
                     Text("Sign out to change servers.")
                 }
@@ -107,6 +106,7 @@ struct SettingsView: View {
                 }
             }
         }
+        .labelStyle(.settingsRow)
         .insetGroupedList()
         .background(PennyColor.background)
         .navigationTitle("Settings")
@@ -143,10 +143,10 @@ struct SettingsView: View {
                     Image(systemName: "chevron.right").font(.footnote.weight(.semibold))
                         .foregroundStyle(PennyColor.tertiaryLabel).accessibilityHidden(true)
                 }
-                .frame(minHeight: Metrics.minTouchTarget)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .cardSettingsRow()
             .accessibilityIdentifier("settings.\(route.rawValue)")
         } else {
             row(route, symbol: symbol, value: value)
@@ -166,7 +166,6 @@ struct SettingsView: View {
                         .accessibilityLabel("Locked")
                 }
             }
-            .frame(minHeight: Metrics.minTouchTarget)
         }
         .accessibilityIdentifier("settings.\(route.rawValue)")
     }
@@ -196,9 +195,11 @@ struct SettingsView: View {
             .foregroundStyle(selected ? Color.white : PennyColor.label)
             .tint(selected ? Color.white : PennyColor.tint)
             .listRowBackground(selected ? PennyColor.tint : PennyColor.surface)
+            .cardSettingsRow()
+            .environment(\.settingsRowSelected, selected)
             .accessibilityAddTraits(selected ? .isSelected : [])
         } else {
-            NavigationLink(value: route) { label(false) }
+            NavigationLink(value: route) { label(false) }.cardSettingsRow()
         }
     }
 }
@@ -222,6 +223,7 @@ private struct AccountHeader: View {
                     .foregroundStyle(
                         shell.workspace.sync.needsAttention ? PennyColor.pending : PennyColor.secondaryLabel
                     )
+                    .labelStyle(.titleAndIcon)
                     .accessibilityIdentifier("settings.syncStatus")
             }
         }
@@ -280,4 +282,42 @@ enum CurrencyPolicy {
         if activeHouseholds > 0 { return "Currency is locked while you're in a household." }
         return nil
     }
+}
+
+/// A Settings row's icon as the cards draw it (`.si`): a label-color glyph in a neutral 30pt
+/// tile, white on a translucent tile in the selected iPad row. Copper stays for actions.
+struct SettingsRowLabelStyle: LabelStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: 12) {
+            SettingsIconTile { configuration.icon }
+            configuration.title
+        }
+    }
+}
+
+private struct SettingsIconTile<Icon: View>: View {
+    @Environment(\.settingsRowSelected) private var selected
+    @ScaledMetric(relativeTo: .body) private var size = 30
+    @ViewBuilder let icon: Icon
+
+    var body: some View {
+        icon
+            .font(.callout)
+            .foregroundStyle(selected ? Color.white : PennyColor.label)
+            .frame(width: size, height: size)
+            .background(
+                selected ? Color.white.opacity(0.22) : PennyColor.fill,
+                in: RoundedRectangle(cornerRadius: 8, style: .continuous)
+            )
+            .accessibilityHidden(true)
+    }
+}
+
+extension EnvironmentValues {
+    /// Set on the selected Settings row beside the iPad's page, so its icon tile turns white.
+    @Entry var settingsRowSelected = false
+}
+
+extension LabelStyle where Self == SettingsRowLabelStyle {
+    static var settingsRow: SettingsRowLabelStyle { SettingsRowLabelStyle() }
 }

@@ -163,6 +163,7 @@ private struct SharedExpenseForm: View {
                     Button("Close", systemImage: "xmark") {
                         if form.hasChanges { confirmingClose = true } else { close() }
                     }
+                    .neutralToolbarGlyph()
                     .disabled(form.isSaving)
                     .accessibilityIdentifier("sharedForm.close")
                 }
@@ -464,7 +465,7 @@ private struct SharedExpenseForm: View {
     @ViewBuilder private var payerAndSplit: some View {
         let preview = form.draft.preview(participants: participants)
         VStack(alignment: .leading, spacing: 10) {
-            Text("Paid by").font(.footnote.weight(.semibold)).foregroundStyle(PennyColor.secondaryLabel)
+            Text("Paid by").cardSectionHeader()
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     ForEach(participants) { member in
@@ -478,7 +479,7 @@ private struct SharedExpenseForm: View {
                 Text("Nobody was a member on that date. Choose another date.")
                     .font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
             }
-            Text("Split").font(.footnote.weight(.semibold)).foregroundStyle(PennyColor.secondaryLabel)
+            Text("Split").cardSectionHeader()
                 .padding(.top, 4)
             Picker(
                 "Split",
@@ -538,9 +539,9 @@ private struct SharedExpenseForm: View {
             .padding(.leading, 4)
             .padding(.trailing, 12)
             .frame(minHeight: Metrics.minTouchTarget)
-            .foregroundStyle(chosen ? PennyColor.tintText : PennyColor.label)
-            .background(chosen ? PennyColor.tint.opacity(0.16) : PennyColor.surface, in: Capsule())
-            .overlay(Capsule().stroke(chosen ? PennyColor.tint : .clear, lineWidth: 1.5))
+            // The card's `.pill.on`: the label color, inverted, not copper.
+            .foregroundStyle(chosen ? PennyColor.surface : PennyColor.label)
+            .background(chosen ? PennyColor.label : PennyColor.surface, in: Capsule())
         }
         .buttonStyle(.plain)
         .disabled(locked)

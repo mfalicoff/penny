@@ -31,7 +31,7 @@ struct ReceiptAttachmentSection: View {
             }
             if upload.isSupported { buttons }
         } header: {
-            Text("Receipt")
+            Text("Receipt").cardSectionHeader()
         } footer: {
             Text(footer).accessibilityIdentifier("entryExtras.receiptHint")
         }

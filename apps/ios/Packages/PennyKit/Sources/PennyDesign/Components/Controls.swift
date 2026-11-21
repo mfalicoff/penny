@@ -11,6 +11,10 @@ nonisolated public enum ControlSize {
     public static let compactRow: Double = 46
     /// The cards' `.row` padding: 11pt above and below, 16pt at the sides.
     public static let rowInsets = EdgeInsets(top: 11, leading: 16, bottom: 11, trailing: 16)
+    /// The cards' settings-style row (`.sr`, Settings, Accounts, Categories): 50pt in all, with
+    /// 8pt above and below.
+    public static let settingsRow: Double = 50
+    public static let settingsRowInsets = EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
 }
 
 extension View {
@@ -20,6 +24,70 @@ extension View {
     public func cardRow() -> some View {
         frame(minHeight: ControlSize.row - ControlSize.rowInsets.top - ControlSize.rowInsets.bottom)
             .listRowInsets(ControlSize.rowInsets)
+    }
+
+    /// A list row with the cards' `.sr` metrics (`ControlSize.settingsRow`), for the settings-style
+    /// lists. Apply it to the row's outermost view in the `List`.
+    public func cardSettingsRow() -> some View {
+        frame(
+            minHeight: ControlSize.settingsRow - ControlSize.settingsRowInsets.top
+                - ControlSize.settingsRowInsets.bottom
+        )
+        .listRowInsets(ControlSize.settingsRowInsets)
+    }
+
+    /// The cards' group heading (`.gh`): small, semibold, upper case, in the secondary label
+    /// color. Apply it to a list section's header; iOS 26 otherwise draws a larger title-case
+    /// header.
+    public func cardSectionHeader() -> some View {
+        font(.footnote.weight(.semibold))
+            .textCase(.uppercase)
+            .foregroundStyle(PennyColor.secondaryLabel)
+    }
+}
+
+/// A list section with the cards' group heading (`cardSectionHeader()`), for the common
+/// `Section("Title") { … }`.
+public struct CardSection<Content: View, Footer: View>: View {
+    private let title: Text
+    private let content: Content
+    private let footer: Footer
+
+    public init(
+        _ title: LocalizedStringKey, @ViewBuilder content: () -> Content,
+        @ViewBuilder footer: () -> Footer
+    ) {
+        self.title = Text(title)
+        self.content = content()
+        self.footer = footer()
+    }
+
+    public init<S: StringProtocol>(
+        _ title: S, @ViewBuilder content: () -> Content, @ViewBuilder footer: () -> Footer
+    ) {
+        self.title = Text(title)
+        self.content = content()
+        self.footer = footer()
+    }
+
+    public var body: some View {
+        Section {
+            content
+        } header: {
+            title.cardSectionHeader()
+        } footer: {
+            footer
+        }
+    }
+}
+
+extension CardSection where Footer == EmptyView {
+    public init(_ title: LocalizedStringKey, @ViewBuilder content: () -> Content) {
+        self.init(title, content: content) { EmptyView() }
+    }
+
+    public init<S: StringProtocol>(_ title: S, @ViewBuilder content: () -> Content) {
+        self.init(title, content: content) { EmptyView() }
     }
 }
 
@@ -153,5 +221,36 @@ extension View {
         self.padding(padding)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(PennyColor.surface, in: RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous))
+    }
+}
+
+/// The cards' `.pill`: a capsule on the neutral fill, and, selected (`.pill.on`), filled with the
+/// label color and its text in the surface color. Selection isn't an action, so it isn't copper.
+/// The capsule is 34pt; the tap area is the 44pt minimum.
+public struct PillButtonStyle: ButtonStyle {
+    @ScaledMetric(relativeTo: .subheadline) private var height = 34
+    private let selected: Bool
+
+    public init(selected: Bool) { self.selected = selected }
+
+    public func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.subheadline.weight(.semibold))
+            .lineLimit(1)
+            .padding(.horizontal, 14)
+            .frame(minHeight: height)
+            .foregroundStyle(selected ? PennyColor.surface : PennyColor.label)
+            .background(selected ? PennyColor.label : PennyColor.fill, in: Capsule())
+            .opacity(configuration.isPressed ? 0.7 : 1)
+            .frame(minHeight: Metrics.minTouchTarget)
+            .contentShape(Rectangle())
+    }
+}
+
+extension View {
+    /// The cards draw a sheet's close (×) and a toolbar's + in the label color on glass; copper
+    /// is kept for the one primary action (✓, Save). Apply it to the toolbar button.
+    public func neutralToolbarGlyph() -> some View {
+        tint(PennyColor.label)
     }
 }

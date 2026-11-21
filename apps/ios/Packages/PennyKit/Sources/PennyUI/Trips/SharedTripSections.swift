@@ -168,6 +168,7 @@ struct SharedTripExpenseSections: View {
                 ) {
                     SharedExpenseRow(expense: expense, people: model.people, currency: model.currency)
                 }
+                .cardRow()
                 .accessibilityIdentifier("household.expense.\(expense.id)")
             }
         } header: {
@@ -176,6 +177,7 @@ struct SharedTripExpenseSections: View {
                 Spacer()
                 Text(TripText.expenses(shared.count))
             }
+            .cardSectionHeader()
             .accessibilityIdentifier("tripPage.sharedExpenses")
         } footer: {
             Text(
@@ -188,14 +190,17 @@ struct SharedTripExpenseSections: View {
                     NavigationLink(value: DetailRoute.entry(id: entry.id)) {
                         TripEntryRow(entry: entry, ledger: ledger, range: context.range)
                     }
+                    .cardRow()
                     .accessibilityIdentifier("entry.\(entry.id)")
                 }
             } header: {
                 HStack {
-                    Label("Only you", systemImage: "lock")
+                    // The card keeps "Only you" in its own case beside the upper-case note.
+                    Label("Only you", systemImage: "lock").textCase(nil)
                     Spacer()
                     Text("from before sharing")
                 }
+                .cardSectionHeader()
                 .accessibilityIdentifier("tripPage.onlyYou")
             } footer: {
                 Text("Only you see these. They count in your spending, not in the trip's total or anyone's balance.")
@@ -227,7 +232,7 @@ struct SharedTripShareByCategory: View {
                     .accessibilityElement(children: .combine)
                 }
             } header: {
-                Text("Your share by category")
+                Text("Your share by category").cardSectionHeader()
             } footer: {
                 Text("Balances settle per month, so bookings and spending in different months are repaid separately.")
             }

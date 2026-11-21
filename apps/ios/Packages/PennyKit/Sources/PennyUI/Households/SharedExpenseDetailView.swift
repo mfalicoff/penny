@@ -187,7 +187,7 @@ private struct ExpensePage: View {
                 .accessibilityElement(children: .contain)
             }
         } header: {
-            Text("Shares")
+            Text("Shares").cardSectionHeader()
         } footer: {
             if expense.paymentsClosed {
                 Text("This month has a monthly payment, so the remaining balance settles with the month.")
@@ -217,7 +217,7 @@ private struct ExpensePage: View {
     }
 
     @ViewBuilder private var history: some View {
-        Section("Changes") {
+        CardSection("Changes") {
             if events.isEmpty {
                 Text("No changes recorded.").font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
             }
