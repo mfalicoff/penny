@@ -1,12 +1,13 @@
 # Agent pipeline
 
-Claude Code works through Linear issues on its own, one issue per machine at a time:
+Claude Code works through Linear issues on its own, in bundles that each ship as one pull request:
 
 ```
 Linear Todo + agent-ready
   → orchestrator (a long-lived session on worker, woken hourly and after every merge)
-  → dev session on fearful (Mac) or worker (Linux)
-  → pull request
+  → a bundle of up to 5 issues per platform, one member dev session per issue, in parallel on fearful (Mac) or worker and fear (Linux)
+  → each member pushes its branch; one integrator session merges them into bundle/<id>
+  → one pull request for the bundle
   → Claude review workflow (sets the claude-review status)
   → dev session fixes review comments and CI failures
   → dev session squash-merges once every check is green
@@ -36,6 +37,12 @@ The orchestrator only picks up Todo issues labelled `agent-ready`. It skips issu
 | `worker:fear` | fear, a larger Linux desktop, not always online | everything else, alongside worker; the heavier issue when both are free |
 
 Each machine runs one issue at a time. A machine is busy while an issue carrying its `worker:*` label is In Progress or In Review. iOS work is never sent to Linux: it waits until the Mac is free and online. When fear is offline, starting its session fails, the orchestrator puts the issue back in Todo, and worker takes it. Worker and fear never work at the same time on issues that change the same screens or shared contract files.
+
+## Bundles
+
+Each platform pool (iOS on fearful; web, backend and infra on worker and fear) has at most one bundle open at a time: up to 5 issues that don't clash (not the same screens or feature folder, at most one touching shared contracts). Member sessions work their issues in parallel and push branches without pull requests. When every member is ready or handed over, the orchestrator starts an integrator session that merges the branches into `bundle/<id>`, runs the checks, opens one pull request with a `Fixes` line per issue, handles the review and merges it. A member that can't be integrated is handed over on its own; the rest still ship.
+
+Several sessions can run on one machine (fearful 2, worker 2, fear 3) once each session has its own web test ports and its own iOS simulators. Until then the orchestrator runs one session per machine. Remove this sentence when that isolation has landed.
 
 ## Follow-ups
 
