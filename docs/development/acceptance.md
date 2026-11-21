@@ -35,8 +35,8 @@ eval "$(npm run --silent test-env -- env)"
 # Native half (needs Xcode 27.2; see docs/ios/ui-tests.md).
 apps/ios/scripts/ios.sh ui-test full
 
-# Browser half, against the same API and database. Set PENNY_E2E_PORT=8081 (another allowed origin)
-# when 4173 is busy; single sign-on specs need 4173.
+# Browser half, against the same API and database. It serves on the run's own web port
+# (PENNY_WEB_PORT from `env`), an allowed origin and single sign-on redirect URI.
 cd apps/web && PENNY_E2E_REUSE_STACK=1 npm run test:e2e:real -- --trace off
 
 node scripts/test-env/penny-env.mjs down

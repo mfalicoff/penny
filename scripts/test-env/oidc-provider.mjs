@@ -1,77 +1,38 @@
 // A local OpenID Connect provider for full-stack runs (MAZ-62): discovery, an
 // auto-approving authorization endpoint, Authorization Code + S256 PKCE token exchange,
-// RS256 ID tokens and JWKS, over HTTPS with a throwaway self-signed certificate made
-// here (no openssl needed). The .NET API trusts exactly that certificate through
+// RS256 ID tokens and JWKS, over HTTPS with the run's throwaway certificate (tls.mjs; the
+// API serves HTTPS with the same one). The .NET API trusts exactly that certificate through
 // `TestControls__OidcCertificate`; browsers in test runs ignore HTTPS errors.
 //
 // Identity: `login_hint` picks the subject (default `oidc-user`); the email is
 // `<subject>@penny.test`. Controls (token-guarded like the API's):
 //   PUT /control {"emailVerified": false} | {"fail": "token"|"authorize"|null}
-import { createHash, createPublicKey, generateKeyPairSync, randomBytes, sign, X509Certificate } from "node:crypto";
+import { createHash, createPublicKey, generateKeyPairSync, randomBytes, sign } from "node:crypto";
 import { Buffer } from "node:buffer";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { createServer } from "node:https";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
+import { selfSignedCertificate } from "./tls.mjs";
 
+export { selfSignedCertificate };
 export const clientId = "penny-test";
-export const redirectUris = [
-  "http://localhost:4173/auth/callback",
-  "http://127.0.0.1:4173/auth/callback",
-  "penny://auth/callback",
-];
+export const defaultWebPort = 4173;
 
-// --- Minimal DER encoding for one self-signed certificate -------------------------
-function length(size) {
-  if (size < 0x80) return Buffer.from([size]);
-  const bytes = [];
-  for (let value = size; value > 0; value >>= 8) bytes.unshift(value & 0xff);
-  return Buffer.from([0x80 | bytes.length, ...bytes]);
+/**
+ * The callbacks the provider and the API accept: the web app on each given port (4173, the
+ * dev server's default, and the run's own web port) on localhost and 127.0.0.1, and the native app.
+ * @param {number[]} [webPorts]
+ */
+export function redirectUrisFor(webPorts = []) {
+  const ports = [...new Set([defaultWebPort, ...webPorts])];
+  return [
+    ...ports.flatMap((port) => [`http://localhost:${port}/auth/callback`, `http://127.0.0.1:${port}/auth/callback`]),
+    "penny://auth/callback",
+  ];
 }
-const tlv = (tag, ...content) => {
-  const body = Buffer.concat(content);
-  return Buffer.concat([Buffer.from([tag]), length(body.length), body]);
-};
-const sequence = (...items) => tlv(0x30, ...items);
-const integer = (bytes) => tlv(0x02, bytes[0] & 0x80 ? Buffer.concat([Buffer.from([0]), bytes]) : bytes);
-function oid(text) {
-  const [first, second, ...rest] = text.split(".").map(Number);
-  const bytes = [40 * first + second];
-  for (const arc of rest) {
-    const chunk = [arc & 0x7f];
-    for (let value = arc >> 7; value > 0; value >>= 7) chunk.unshift((value & 0x7f) | 0x80);
-    bytes.push(...chunk);
-  }
-  return tlv(0x06, Buffer.from(bytes));
-}
-const time = (date) => tlv(0x17, Buffer.from(`${date.toISOString().slice(2, 19).replace(/[-:T]/g, "")}Z`));
-const sha256WithRsa = sequence(oid("1.2.840.113549.1.1.11"), Buffer.from([0x05, 0x00]));
 
-export function selfSignedCertificate(commonName = "penny-test-oidc") {
-  const { privateKey, publicKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
-  const name = sequence(tlv(0x31, sequence(oid("2.5.4.3"), tlv(0x0c, Buffer.from(commonName)))));
-  const now = Date.now();
-  const san = sequence(tlv(0x87, Buffer.from([127, 0, 0, 1])), tlv(0x82, Buffer.from("localhost")));
-  const extensions = tlv(0xa3, sequence(
-    sequence(oid("2.5.29.17"), tlv(0x04, san)),
-    sequence(oid("2.5.29.19"), tlv(0x01, Buffer.from([0xff])), tlv(0x04, sequence())),
-  ));
-  const tbs = sequence(
-    tlv(0xa0, integer(Buffer.from([2]))),
-    integer(randomBytes(16)),
-    sha256WithRsa,
-    name,
-    sequence(time(new Date(now - 86_400_000)), time(new Date(now + 30 * 86_400_000))),
-    name,
-    publicKey.export({ type: "spki", format: "der" }),
-    extensions,
-  );
-  const signature = sign("sha256", tbs, privateKey);
-  const der = sequence(tbs, sha256WithRsa, tlv(0x03, Buffer.from([0]), signature));
-  const pem = `-----BEGIN CERTIFICATE-----\n${der.toString("base64").match(/.{1,64}/g).join("\n")}\n-----END CERTIFICATE-----\n`;
-  new X509Certificate(pem); // Throws if the encoding is wrong.
-  return { pem, key: privateKey.export({ type: "pkcs8", format: "pem" }) };
-}
+export const redirectUris = redirectUrisFor();
 
 // --- Provider ---------------------------------------------------------------------
 const base64url = (value) => Buffer.from(value).toString("base64url");
@@ -89,12 +50,21 @@ function readForm(request) {
   });
 }
 
-/** Starts the provider on 127.0.0.1 with a random port. */
-export async function startOidcProvider({ host = "127.0.0.1" } = {}) {
-  const certificate = selfSignedCertificate();
-  const directory = mkdtempSync(join(tmpdir(), "penny-oidc-"));
-  const certificatePath = join(directory, "certificate.pem");
-  writeFileSync(certificatePath, certificate.pem, { mode: 0o600 });
+/**
+ * Starts the provider on 127.0.0.1 with a random port. `tls` is the run's certificate
+ * ({ pem, key, certificate }: the PEMs and the certificate's path, from tls.mjs); without it the
+ * provider makes its own. `webPorts` adds the run's web port to the accepted redirect URIs.
+ * @param {{ host?: string, tls?: { pem: string, key: string, certificate: string }, webPorts?: number[] }} [options]
+ */
+export async function startOidcProvider({ host = "127.0.0.1", tls, webPorts = [] } = {}) {
+  let certificate = tls;
+  let certificatePath = tls?.certificate;
+  if (!certificate) {
+    certificate = selfSignedCertificate();
+    certificatePath = join(mkdtempSync(join(tmpdir(), "penny-oidc-")), "certificate.pem");
+    writeFileSync(certificatePath, certificate.pem, { mode: 0o600 });
+  }
+  const redirectUris = redirectUrisFor(webPorts);
   const { privateKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
   const keyId = randomBytes(8).toString("hex");
   const jwk = { ...createPublicKey(privateKey).export({ format: "jwk" }), kid: keyId, use: "sig", alg: "RS256" };

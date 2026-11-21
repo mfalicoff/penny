@@ -8,7 +8,8 @@
 //
 // status: captured, not-built (no such native screen or state yet), blocked (the state can't be
 // reached, e.g. a missing seeded receipt), not-applicable (web cards and system-foundations), or
-// not-run (no result from its device: the test failed or the device was not in the run).
+// not-run (no result from its device: the test failed, the device was not in the run, or the card has no
+// capture test yet; the note says which).
 // Usage: node apps/ios/scripts/card-report.mjs <results dir with *-attachments> <dest>
 import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
@@ -21,6 +22,8 @@ if (!results || !destination) {
 }
 const root = fileURLToPath(new URL("../../..", import.meta.url));
 const states = JSON.parse(readFileSync(join(root, "contracts/fixtures/redesign-states.json"), "utf8")).states;
+// A card with no test in CardCaptureTests is not-run by design, not because its test failed (MAZ-212).
+const captureTests = readFileSync(join(root, "apps/ios/PennyUITests/Cards/CardCaptureTests.swift"), "utf8");
 
 // Attachment name -> exported file, per device. XCTest suffixes names with `_<n>_<uuid>.<ext>`.
 const devices = {};
@@ -57,7 +60,13 @@ for (const state of states) {
   const recorded = result ? JSON.parse(readFileSync(result, "utf8")) : null;
   for (const appearance of state.appearances) {
     const entry = { id, appearance, status: recorded?.status ?? "not-run", file: null, ...base, note: recorded?.note ?? "" };
-    if (!recorded) entry.note = files ? "No result: the test failed or was not selected" : `The ${device} run did not take place`;
+    if (!recorded) {
+      entry.note = !files
+        ? `The ${device} run did not take place`
+        : captureTests.includes(`"${id}"`)
+          ? "No result: the test failed or was not selected"
+          : "No capture test: CardCaptureTests has no test for this card yet";
+    }
     if (entry.status === "captured") {
       const capture = files.get(`card-${id}-${appearance}`);
       if (capture && existsSync(capture)) {

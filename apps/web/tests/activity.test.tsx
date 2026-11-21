@@ -286,7 +286,10 @@ describe("Activity on a desktop (web-activity, MAZ-225)", () => {
     await user.click(within(row).getByRole("button", { name: /^Dinner out/ }));
     const panel = screen.getByRole("complementary", { name: "Dinner out" });
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(panel).toHaveTextContent("−$6.40your share of $12.80");
+    // The panel can open before the categories and the household currency load.
+    await waitFor(() => {
+      expect(panel).toHaveTextContent("−$6.40your share of $12.80");
+    });
     const split = within(panel).getByRole("region", { name: "Split" });
     expect(within(split).getByText("Equally · 2 people")).toBeInTheDocument();
     expect(within(split).getByText("Total").nextElementSibling).toHaveTextContent("$12.80");

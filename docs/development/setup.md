@@ -10,12 +10,13 @@ The browser app is `apps/web` (React, Vite, TanStack) on the .NET API. Use Node 
 
 ```sh
 node scripts/test-env/penny-env.mjs up --seed searchable-household   # prints the API URL
+eval "$(node scripts/test-env/penny-env.mjs env)"   # API URL, its certificate and this run's web port
 cd apps/web
 npm ci
-PENNY_API_URL=http://127.0.0.1:<port> npm run dev     # http://localhost:4173
+npm run dev     # http://localhost:<PENNY_WEB_PORT>
 ```
 
-Open **http://localhost:4173**. Create an account, or choose the sample-data demo, which needs no API. See the [web app's developer setup](../../apps/web/README.md#developer-setup) for the commands and the [test environment](../reference/test-environment.md) for the stack. To run the production containers locally, follow [self-hosting](../self-hosting/deployment.md#quick-start).
+Open the address Vite prints (the run's own port, so several sessions on one machine don't collide). Create an account, or choose the sample-data demo, which needs no API. See the [web app's developer setup](../../apps/web/README.md#developer-setup) for the commands and the [test environment](../reference/test-environment.md) for the stack. To run the production containers locally, follow [self-hosting](../self-hosting/deployment.md#quick-start).
 
 ## Native iOS and backend development
 
