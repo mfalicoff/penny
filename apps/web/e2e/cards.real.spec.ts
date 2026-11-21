@@ -181,10 +181,10 @@ async function makeTwoPendingChanges(p: Page) {
   await home(p);
   for (const [amount, title] of [["3.00", "Coffee to go"], ["48.90", "Groceries"]] as const) {
     await p.getByRole("button", { name: "Add entry" }).first().click();
-    const dialog = p.getByRole("dialog", { name: "Add entry" });
+    const dialog = p.getByRole("dialog", { name: "New entry" });
     await dialog.getByLabel("Amount (CAD)").fill(amount);
     await dialog.getByLabel("Title").fill(title);
-    await dialog.getByRole("button", { name: "Save" }).click();
+    await dialog.getByRole("button", { name: "Add expense" }).click();
     await expect(dialog).toBeHidden();
     await dismissToast(p);
   }
@@ -211,7 +211,7 @@ async function signInScreen(p: Page) {
  * focus: the link is clicked inside the page, which runs the router's own navigation (MAZ-220).
  */
 async function editWithFailingSync(run: Run) {
-  const detail = await entryDetail(run.page, "2026-10", /^Coffee Personal · Groceries & dining · Fri, Oct 9/, "Coffee");
+  const detail = await entryDetail(run.page, "2026-10", /^Coffee Groceries & dining · Fri, Oct 9/, "Coffee");
   await detail.getByRole("button", { name: "Edit" }).click();
   const form = run.page.getByRole("dialog", { name: "Edit entry" });
   await form.getByLabel("Title").fill("Espresso");
@@ -536,6 +536,10 @@ const cards: Record<string, Card> = {
       await signInScreen(p);
       await p.getByRole("button", { name: "Create an account" }).click();
       await expect(p.getByRole("button", { name: /Create account/ })).toBeVisible();
+      // The card's draft: an email and a 13-character password, three of four strength steps.
+      await p.getByLabel("Email").fill("max@example.com");
+      await p.getByLabel("Password", { exact: true }).fill("penny-sample1");
+      await p.getByLabel("Password", { exact: true }).blur();
     },
   },
   "iphone-server-connect": {
@@ -558,10 +562,10 @@ const cards: Record<string, Card> = {
       await armFault(run);
       // The scenario's pending create, so the banner has a change waiting (the web saves on
       // this device first and only then syncs).
-      const dialog = (await p.getByRole("button", { name: "Add entry" }).first().click(), p.getByRole("dialog", { name: "Add entry" }));
+      const dialog = (await p.getByRole("button", { name: "Add entry" }).first().click(), p.getByRole("dialog", { name: "New entry" }));
       await dialog.getByLabel("Amount (CAD)").fill("3");
       await dialog.getByLabel("Title").fill("Coffee to go");
-      await dialog.getByRole("button", { name: "Save" }).click();
+      await dialog.getByRole("button", { name: "Add expense" }).click();
       await expect(p.getByRole("status").filter({ hasText: "1 change waiting" })).toBeVisible();
       await dismissToast(p);
       // The pending row waits to sync, and Projected is what the last sync knew (MAZ-223).

@@ -984,6 +984,12 @@
 }
 
 /* ---------- list rows (iphone-activity, ipad-activity) ---------- */
+/* iphone-saved-toast: the row just saved, tinted with its category while its toast shows. */
+.activity-row--saved .activity-row__main,
+.activity-row--saved .activity-row__main:hover {
+  background: color-mix(in srgb, var(--tile, var(--pk-tint)) 10%, var(--pk-surface));
+}
+
 .activity-row--selected .activity-row__main,
 .activity-row--selected .activity-row__main:hover {
   background: color-mix(in srgb, var(--tile, var(--pk-tint)) 14%, var(--pk-surface));

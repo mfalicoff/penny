@@ -1683,11 +1683,6 @@
         ],
         "deviations": [
           {
-            "summary": "No brand tile, a left-aligned title without the period, separate inputs with labels above, a gray SSO button, and no glow in dark",
-            "kind": "follow-up",
-            "ref": "MAZ-233"
-          },
-          {
             "summary": "No server chip; the SSO button names the configured provider; the demo link is under the form with a note",
             "kind": "follow-up",
             "ref": "MAZ-234"
@@ -1728,11 +1723,6 @@
           "dark"
         ],
         "deviations": [
-          {
-            "summary": "The title has no period; separate inputs with no strength meter or requirement check; no glow in dark",
-            "kind": "follow-up",
-            "ref": "MAZ-233"
-          },
           {
             "summary": "No back button or server chip, and an or divider with SSO is added",
             "kind": "follow-up",
@@ -1975,11 +1965,6 @@
             "summary": "Reads Changes saved with a green check, not Expense added with the category tile, and hides the tab bar",
             "kind": "follow-up",
             "ref": "MAZ-234"
-          },
-          {
-            "summary": "Undo is copper text with a close button, not a pill; the saved row isn't highlighted; in dark the toast is see-through",
-            "kind": "follow-up",
-            "ref": "MAZ-233"
           }
         ]
       }
@@ -2019,19 +2004,12 @@
         ]
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-84",
         "capture": "402x874",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "A left-aligned dialog with no icon and inline buttons, with different body copy",
-            "kind": "follow-up",
-            "ref": "MAZ-233"
-          }
         ]
       }
     },
@@ -2849,11 +2827,6 @@
           "dark"
         ],
         "deviations": [
-          {
-            "summary": "The form isn't on a solid panel; a bare leaf glyph instead of the copper-tile lockup; labels above the inputs; a gray SSO button",
-            "kind": "follow-up",
-            "ref": "MAZ-233"
-          },
           {
             "summary": "No server chip; the SSO button names the configured provider; adds the demo link with its note",
             "kind": "follow-up",

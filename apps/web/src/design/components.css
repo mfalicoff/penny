@@ -754,6 +754,25 @@
   gap: 10px;
 }
 
+/*
+ * iphone-saved-toast: the toast reads as one solid piece over the rows behind it (glass is still
+ * the control layer, but nearly opaque, so row text never shows through its subtitle), and its
+ * Undo is a filled capsule.
+ */
+.pk-toast.glass {
+  background: color-mix(in srgb, var(--pk-surface) 94%, transparent);
+}
+
+.wbtn.pk-toast__undo,
+.wbtn.pk-toast__undo:hover {
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 22px;
+  background: var(--pk-fill);
+  color: var(--pk-tint-text);
+  font-size: 0.9375rem;
+}
+
 @keyframes toast-in {
   from {
     opacity: 0;

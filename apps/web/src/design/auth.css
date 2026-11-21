@@ -36,6 +36,16 @@
   text-decoration: underline;
 }
 
+/* The cards' "New here? Create an account": bold copper text inside the sentence, no underline. */
+.auth__switch .link-button {
+  padding: 0 2px;
+  text-decoration: none;
+}
+
+.auth__switch .link-button:hover {
+  text-decoration: underline;
+}
+
 .field__error,
 .form-error {
   color: var(--pk-danger);
@@ -78,6 +88,8 @@
   display: grid;
   grid-template-columns: 1fr;
   min-height: 100dvh;
+  /* The phone glow reaches past the screen's edges; never scroll sideways for it. */
+  overflow-x: clip;
 }
 
 .auth__brand {
@@ -151,62 +163,227 @@
   background: var(--pk-income);
 }
 
-.auth__logo {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+/* The copper-tile "penny." lockup at the top of the brand panel (web-sign-in), as in the sidebar. */
+.brand.auth__logo {
   margin: 0;
-  font-size: 1.125rem;
-  font-weight: 700;
-}
-
-.auth__logo .icon {
-  color: var(--pk-tint);
+  padding: 0;
 }
 
 .auth__tagline {
-  margin: 12px 0 0;
+  margin: auto 0 0;
   font-size: 1.75rem;
   font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 1.1;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
 }
 
 .auth__sub {
-  margin: 0;
+  margin: 14px 0 0;
   max-width: 420px;
   color: var(--pk-label-2);
+  font-size: 1.0625rem;
 }
 
+/*
+ * Phones (iphone-sign-in, iphone-create-account): over a copper glow, sign-in leads with the brand
+ * tile and a centered "Welcome back."; create account leads with a left-aligned title. Email and
+ * password share one solid card with their labels inside it, and the buttons are capsules.
+ */
 .auth__form {
+  position: relative;
+  isolation: isolate;
   display: grid;
   gap: 12px;
   align-content: start;
   width: 100%;
-  max-width: 420px;
+  max-width: 452px;
   margin-inline: auto;
-  padding: 24px var(--pk-gutter) 40px;
+  padding: 56px 24px 40px;
   outline: none;
+}
+
+.auth__phone-glow {
+  position: absolute;
+  inset: -60px -80px auto;
+  z-index: -1;
+  height: 520px;
+  background: var(--pk-glow-copper);
+  filter: blur(50px);
+  pointer-events: none;
+}
+
+.auth__mark {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 6px;
+  border-radius: 19px;
+  background: var(--pk-tint);
+  color: #fff;
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--pk-tint) 35%, transparent);
 }
 
 .auth__form h1 {
   margin: 0;
-  font-size: 1.75rem;
-  letter-spacing: -0.02em;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  text-align: center;
 }
 
 .auth__lede {
-  margin: 0;
+  margin: -6px 0 0;
   color: var(--pk-label-2);
+  font-size: 1rem;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.auth__form--create h1,
+.auth__form--create .auth__lede {
+  text-align: start;
+}
+
+.auth__form--create h1 {
+  max-width: 11ch;
 }
 
 .auth__fields {
   display: grid;
   gap: 14px;
+  margin-top: 16px;
 }
 
-.auth__fields .field input {
+.auth__group {
+  overflow: hidden;
+  border-radius: 18px;
+  background: var(--pk-surface);
+}
+
+.auth__field {
+  position: relative;
+  display: grid;
+  gap: 2px;
+  padding: 10px 16px;
+}
+
+.auth__field + .auth__field::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 16px;
+  border-top: 0.5px solid var(--pk-separator);
+  content: "";
+}
+
+.auth__field:focus-within {
+  outline: 2px solid var(--pk-tint);
+  outline-offset: -2px;
+}
+
+.auth__field:first-child:focus-within {
+  border-radius: 18px 18px 0 0;
+}
+
+.auth__field:last-child:focus-within {
+  border-radius: 0 0 18px 18px;
+}
+
+.auth__field label {
+  color: var(--pk-label-2);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.auth__field:has(input[aria-invalid="true"]) label {
+  color: var(--pk-danger);
+}
+
+.auth__field input {
   width: 100%;
+  min-height: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--pk-label);
+  font: inherit;
+  font-size: 1.0625rem;
+}
+
+.auth__field input:focus,
+.auth__field input:focus-visible {
+  outline: none;
+}
+
+.auth__field input::placeholder {
+  color: var(--pk-label-3);
+  opacity: 1;
+}
+
+.auth__strength {
+  display: grid;
+  gap: 8px;
+  margin: -4px 4px 0;
+}
+
+.auth__meter {
+  display: flex;
+  gap: 4px;
+}
+
+.auth__meter i {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--pk-fill);
+}
+
+.auth__meter i.auth__meter-on {
+  background: var(--pk-label);
+}
+
+.auth__requirement {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+}
+
+.auth__requirement-dot {
+  width: 11px;
+  height: 11px;
+  margin: 2px;
+  border: 1.5px solid var(--pk-label-3);
+  border-radius: 50%;
+}
+
+.auth__fields .button[type="submit"],
+.auth__sso .button {
+  min-height: 52px;
+  border-radius: 26px;
+  font-size: 1.0625rem;
+}
+
+.auth__fields .button[type="submit"] {
+  margin-top: 4px;
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--pk-tint) 40%, transparent);
+}
+
+.auth__form--create .button[type="submit"] {
+  margin-top: 12px;
+}
+
+/* "Continue with SSO" is a glass capsule (white in light, a dark outline in dark), not a gray fill. */
+.button.button--sso {
+  border: 0.5px solid var(--pk-glass-edge);
+  background: var(--pk-glass);
+  color: var(--pk-label);
+  box-shadow: inset 0 1px 0 var(--pk-glass-edge), var(--pk-glass-shadow);
+  backdrop-filter: blur(22px) saturate(190%);
 }
 
 .auth__sso {
@@ -216,16 +393,26 @@
 }
 
 .auth__or {
-  margin: 4px 0;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 6px 0;
   color: var(--pk-label-3);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
+}
+
+.auth__or::before,
+.auth__or::after {
+  flex: 1;
+  border-top: 0.5px solid var(--pk-separator);
+  content: "";
 }
 
 .auth__switch {
-  margin: 8px 0 0;
+  margin: 4px 0 0;
   text-align: center;
   color: var(--pk-label-2);
+  font-size: 0.9375rem;
 }
 
 .callback {
@@ -281,6 +468,69 @@
   align-items: stretch;
 }
 
+/* iphone-sign-out: a centered alert, an icon tile over the title and message, then capsule buttons stacked full width. */
+.dialog__panel--alert {
+  gap: 0;
+  width: min(100%, 360px);
+  padding: 24px 20px 18px;
+  border-radius: 34px;
+  background: var(--pk-surface);
+  text-align: center;
+}
+
+.dialog__panel--alert h2 {
+  font-size: 1.1875rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.dialog__panel--alert p {
+  margin-top: 8px;
+  color: var(--pk-label-2);
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.dialog__panel--alert .form-error {
+  margin-top: 12px;
+  color: var(--pk-danger);
+  text-align: start;
+}
+
+.dialog__icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 12px;
+  border-radius: 15px;
+}
+
+.dialog__icon--pending {
+  background: color-mix(in srgb, var(--pk-pending) 16%, transparent);
+  color: var(--pk-pending);
+}
+
+.dialog__icon--danger {
+  background: color-mix(in srgb, var(--pk-danger) 14%, transparent);
+  color: var(--pk-danger);
+}
+
+.dialog__panel--alert .dialog__actions {
+  margin-top: 18px;
+}
+
+.dialog__panel--alert .button {
+  min-height: 48px;
+  border-radius: 24px;
+  font-size: 1rem;
+}
+
+.button.button--danger-text {
+  background: var(--pk-fill);
+  color: var(--pk-danger);
+}
+
 /* Search results. */
 .results {
   display: grid;
@@ -311,6 +561,11 @@
   font-weight: 600;
 }
 
+/*
+ * Wide windows (web-sign-in): the brand panel on the left, with the lockup at the top and the
+ * tagline at the bottom; the form on a solid panel on the right, left-aligned, with separate
+ * fields that keep their labels inside, and rounded rectangle buttons.
+ */
 @media (min-width: 900px) {
   .auth {
     grid-template-columns: 1fr 1fr;
@@ -320,19 +575,109 @@
     position: relative;
     isolation: isolate;
     overflow: hidden;
-    display: grid;
-    gap: 8px;
-    align-content: end;
+    display: flex;
+    flex-direction: column;
     padding: 56px;
   }
 
   .auth__tagline {
-    font-size: 3rem;
+    font-size: 3.25rem;
   }
 
   .auth__form {
+    grid-template-columns: min(100%, 380px);
+    justify-content: center;
     align-content: center;
+    max-width: none;
+    margin: 0;
     padding: 56px 24px;
+    background: var(--pk-surface);
+  }
+
+  .auth__phone-glow,
+  .auth__mark,
+  .auth__period {
+    display: none;
+  }
+
+  .auth__form h1,
+  .auth__lede {
+    text-align: start;
+  }
+
+  .auth__form h1 {
+    font-size: 1.75rem;
+    letter-spacing: -0.02em;
+  }
+
+  .auth__form--create h1 {
+    max-width: none;
+  }
+
+  .auth__lede {
+    margin-top: -8px;
+    font-size: 0.9375rem;
+  }
+
+  .auth__fields {
+    gap: 12px;
+    margin-top: 0;
+  }
+
+  .auth__group {
+    display: grid;
+    gap: 12px;
+    overflow: visible;
+    border-radius: 0;
+    background: none;
+  }
+
+  .auth__field {
+    padding: 8px 14px;
+    border-radius: 12px;
+    background: var(--pk-surface-2);
+    box-shadow: inset 0 0 0 0.5px var(--pk-separator);
+  }
+
+  .auth__field + .auth__field::before {
+    content: none;
+  }
+
+  .auth__field:first-child:focus-within,
+  .auth__field:last-child:focus-within {
+    border-radius: 12px;
+  }
+
+  .auth__field label {
+    font-weight: 400;
+  }
+
+  .auth__field input {
+    font-size: 1rem;
+  }
+
+  .auth__fields .button[type="submit"],
+  .auth__sso .button {
+    min-height: 46px;
+    border-radius: 12px;
+    font-size: 0.96875rem;
+  }
+
+  .auth__fields .button[type="submit"] {
+    margin-top: 6px;
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--pk-tint) 35%, transparent);
+  }
+
+  .button.button--sso {
+    border: 0;
+    background: var(--pk-surface);
+    box-shadow: 0 0 0 0.5px var(--pk-separator), 0 1px 2px rgb(0 0 0 / 0.05);
+    backdrop-filter: none;
+  }
+
+  .auth__switch {
+    margin-top: 8px;
+    font-size: 0.875rem;
   }
 }
 
