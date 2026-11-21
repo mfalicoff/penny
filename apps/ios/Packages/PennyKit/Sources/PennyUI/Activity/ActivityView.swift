@@ -18,6 +18,8 @@ struct ActivityView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var filtersPresented = false
     @State private var width: Double = 0
+    /// Focused when iPad Home's search button opens Activity (MAZ-245).
+    @FocusState private var searchFocused: Bool
 
     /// The list column's width on iPad (`ipad/activity` card).
     static let listWidth: Double = 400
@@ -58,6 +60,12 @@ struct ActivityView: View {
         .background(PennyColor.background)
         .navigationTitle("Activity")
         .searchable(text: $shell.activityFilters.query, prompt: "Search activity")
+        .searchFocused($searchFocused)
+        .onChange(of: shell.activitySearchRequested, initial: true) {
+            guard shell.activitySearchRequested else { return }
+            shell.activitySearchRequested = false
+            searchFocused = true
+        }
         .toolbar {
             if case .month = shell.activityFilters.period {
                 ToolbarItem(placement: .navigation) { MonthPicker() }

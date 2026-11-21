@@ -16,6 +16,15 @@ struct MoneyFormatTests {
         #expect(MoneyFormat.minus == "\u{2212}", "a typographic minus, not a hyphen")
     }
 
+    @Test("whenShownInACompactLegend_MoneyFormat_ShouldRoundToWholeUnits")
+    func whole() {
+        #expect(MoneyFormat.whole(188_335, currency: "CAD", locale: locale) == "$1,883")
+        #expect(MoneyFormat.whole(111_665, currency: "CAD", locale: locale) == "$1,117")
+        #expect(MoneyFormat.whole(250, currency: "CAD", locale: locale) == "$3", "a half rounds away from zero")
+        #expect(MoneyFormat.whole(0, currency: "CAD", locale: locale) == "$0")
+        #expect(MoneyFormat.whole(-4_890, currency: "CAD", locale: locale) == "$49", "unsigned, like amount")
+    }
+
     @Test("whenReadByVoiceOver_MoneyFormat_ShouldSayTheMeaningInWords")
     func spoken() {
         #expect(MoneyFormat.spoken(4_890, meaning: .expense, currency: "CAD", locale: locale) == "$48.90 spent")

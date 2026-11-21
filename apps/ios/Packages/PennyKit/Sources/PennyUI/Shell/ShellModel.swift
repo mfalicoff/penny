@@ -81,6 +81,9 @@ final class ShellModel {
     var addEntryTripId: String?
     /// The household a page's Expense button opens Add entry on, taken once by the entry form.
     var addEntryHouseholdId: String?
+    /// The kind an empty Home's Income, Expense or Invest tile opens Add entry on, taken once by
+    /// the entry form.
+    var addEntryKind: EntryKind?
 
     // MARK: Overview (MAZ-77)
 
@@ -193,6 +196,21 @@ final class ShellModel {
     /// titled with the sender, with the receipt attached (MAZ-184).
     func openInboxExpense(_ prefill: InboxEntryPrefill) {
         addEntryInbox = prefill
+        navigate { $0.openAddEntry() }
+    }
+
+    /// Set by iPad Home's search button; Activity focuses its search field and clears it.
+    var activitySearchRequested = false
+
+    /// iPad Home's search button (`ipad-home` card): Activity, with its search field focused.
+    func openActivitySearch() {
+        activitySearchRequested = true
+        navigate { $0.select(.activity) }
+    }
+
+    /// The empty Home's Income, Expense and Invest tiles: Add entry, opened on that kind.
+    func openAddEntry(kind: EntryKind) {
+        addEntryKind = kind
         navigate { $0.openAddEntry() }
     }
 

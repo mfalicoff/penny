@@ -62,13 +62,49 @@ enum OverviewText {
         return difference < 0 ? "\(amount) less than \(name)" : "\(amount) more than \(name)"
     }
 
-    /// "Most went to Home and Groceries."
-    static func topCategories(_ breakdown: CategoryBreakdown) -> String? {
-        let names = breakdown.rows.prefix(2).map(\.category.name)
+    /// The categories behind the month-over-month change (`iphone-insights` card, and the web's
+    /// `spendingChange`): "Mostly Food & drinks and Shopping." Categories match last month's by
+    /// name, and the (at most two) that moved most in the same direction as the total are
+    /// named. Nothing when the total didn't change or no category moved that way. As on the
+    /// web, past nine categories only the eight largest are named (the rest are its "N more").
+    static func changeDrivers(current: CategoryBreakdown, previous: CategoryBreakdown?) -> String? {
+        guard let previous else { return nil }
+        let difference = current.total - previous.total
+        guard difference != 0 else { return nil }
+        struct Change {
+            let key: String
+            let name: String
+            var current: Int64 = 0
+            var previous: Int64 = 0
+            var change: Int64 { current - previous }
+        }
+        var changes: [String: Change] = [:]
+        let key = { (name: String) in name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
+        for row in current.rows {
+            changes[key(row.category.name), default: Change(key: key(row.category.name), name: row.category.name)]
+                .current += row.amount
+        }
+        for row in previous.rows {
+            changes[key(row.category.name), default: Change(key: key(row.category.name), name: row.category.name)]
+                .previous += row.amount
+        }
+        var sorted = changes.values.sorted {
+            if $0.current != $1.current { return $0.current > $1.current }
+            if $0.previous != $1.previous { return $0.previous > $1.previous }
+            return $0.key < $1.key
+        }
+        if sorted.count > 9 { sorted = Array(sorted.prefix(8)) }
+        let names = sorted.enumerated()
+            .filter { $0.element.change != 0 && ($0.element.change > 0) == (difference > 0) }
+            .sorted {
+                abs($0.element.change) != abs($1.element.change)
+                    ? abs($0.element.change) > abs($1.element.change) : $0.offset < $1.offset
+            }
+            .prefix(2).map(\.element.name)
         switch names.count {
         case 0: return nil
-        case 1: return "All of it went to \(names[0])."
-        default: return "Most went to \(names[0]) and \(names[1])."
+        case 1: return "Mostly \(names[0])."
+        default: return "Mostly \(names[0]) and \(names[1])."
         }
     }
 

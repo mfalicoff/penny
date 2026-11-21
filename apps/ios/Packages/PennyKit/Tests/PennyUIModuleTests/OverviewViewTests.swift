@@ -122,11 +122,33 @@ struct OverviewViewTests {
         let sentence = OverviewText.comparison(report.comparison(summary), currency: "CAD")
         #expect(sentence.hasSuffix("less than October"))
         let breakdown = CategoryBreakdown(summary)
-        #expect(OverviewText.topCategories(breakdown) == "All of it went to Food & drinks.")
+        let october = CategoryBreakdown(report.month(try #require(MonthKey(today).shifted(by: -1))))
+        #expect(OverviewText.changeDrivers(current: breakdown, previous: october) == "Mostly Food & drinks.")
+        #expect(OverviewText.changeDrivers(current: breakdown, previous: nil) == nil)
         let empty = LedgerReport(ledger: Ledger()).month(MonthKey(today))
         #expect(
             OverviewText.comparison(LedgerReport(ledger: Ledger()).comparison(empty), currency: "CAD")
                 == "Nothing spent in either month.")
+    }
+
+    @Test("whenSpendingChanged_InsightsDrivers_ShouldNameTheTwoCategoriesThatMovedMostThatWay")
+    func changeDrivers() throws {
+        let october = try #require(MonthKey(today).shifted(by: -1))
+        let report = LedgerReport(
+            ledger: Ledger(transactions: [
+                entry("o-food", "2026-10-03", 60_000), entry("o-shop", "2026-10-04", 30_000, category: "shopping"),
+                entry("o-home", "2026-10-05", 100_000, category: "home"),
+                entry("n-food", "2026-11-03", 20_000), entry("n-shop", "2026-11-04", 10_000, category: "shopping"),
+                entry("n-home", "2026-11-05", 110_000, category: "home"),
+            ]))
+        let november = CategoryBreakdown(report.month(MonthKey(today)))
+        let before = CategoryBreakdown(report.month(october))
+        // Down $600: food fell $400 and shopping $200; home went up, the other way, so it isn't named.
+        #expect(OverviewText.changeDrivers(current: november, previous: before) == "Mostly Food & drinks and Shopping.")
+        // The other way round spending went up $500, and home is the one that fell.
+        #expect(OverviewText.changeDrivers(current: before, previous: november) == "Mostly Food & drinks and Shopping.")
+        // No change in the total names nothing.
+        #expect(OverviewText.changeDrivers(current: november, previous: november) == nil)
     }
 
     @Test("whenPayIsExpected_Home_ShouldNameItApartFromLeftToSpend")
@@ -164,9 +186,14 @@ struct OverviewViewTests {
         #expect(rows.map(\.id) == ["rent:2026-11-01", "bonus", "invoice"], "soonest first, overdue included")
         let added = rows.reduce(Int64(0)) { $0 + ($1.kind == .income ? $1.share : -$1.share) }
         #expect(summary.recordedRemaining + added == summary.projectedRemaining, "nothing Projected adds is missing")
-        #expect(ComingUpPanel.detail(rows[1], today: today).hasSuffix(" · Expected"))
-        #expect(ComingUpPanel.detail(rows[0], today: today).hasSuffix(" · Scheduled"))
+        #expect(ComingUpPanel.detail(rows[1], today: today).hasSuffix(" · expected"))
+        #expect(
+            !ComingUpPanel.detail(rows[0], today: today).contains(" · "),
+            "a scheduled payment shows its date, under Recurring")
         #expect(ComingUpPanel.more(rows, currency: "CAD") == nil)
+        // The card signs each row in its kind's color: green income, label-color expenses.
+        #expect(ComingUpPanel.meaning(rows[1]) == .income)
+        #expect(ComingUpPanel.meaning(rows[0]) == .expense)
         let many = Ledger(
             transactions: (10...17).map { entry("pay\($0)", "2026-11-\($0)", 100, kind: .income, category: "salary") })
         let crowded = ComingUpPanel.rows(LedgerReport(ledger: many).month(MonthKey(today), today: today))
@@ -185,6 +212,14 @@ struct OverviewViewTests {
         #expect(spoken.hasSuffix("1 expected or scheduled, not in Left to spend yet"))
         #expect(!spoken.contains("received"))
         #expect(spoken.hasSuffix(OverviewText.calendarPending(1)), "the day detail shows the same words")
+    }
+
+    @Test("whenTheDashboardIsWide_HomeDashboard_ShouldGiveTheSideColumnTheCardsThirdColumn")
+    func dashboardSideWidth() {
+        // iPad Pro 11-inch landscape with the sidebar: the card's 1 of 3.15 parts.
+        #expect(HomeDashboard.sideWidth(1000) == 301)
+        #expect(HomeDashboard.sideWidth(760) == 260, "never narrower than a row needs")
+        #expect(HomeDashboard.sideWidth(2000) == ((1200 - 20) / 3.15).rounded(), "the content is at most 1200pt")
     }
 
     @Test("whenNothingIsRecorded_Home_ShouldShowTheEmptyHome")

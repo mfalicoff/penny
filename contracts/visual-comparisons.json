@@ -58,16 +58,6 @@
             "summary": "An inline \"Home\" title, and calendar and settings grouped in one capsule; the card has no title and two separate buttons",
             "kind": "follow-up",
             "ref": "MAZ-254"
-          },
-          {
-            "summary": "The month pill is copper with no chevron; the card's is \"November ⌄\" in the label color",
-            "kind": "follow-up",
-            "ref": "MAZ-245"
-          },
-          {
-            "summary": "Follow your money shows Spent, Invested and Over as three stacked columns with headline amounts, not the card's one-line dot legend; the projected amount isn't bold",
-            "kind": "follow-up",
-            "ref": "MAZ-245"
           }
         ]
       },
@@ -113,16 +103,6 @@
             "summary": "An inline \"Home\" title, and calendar and settings grouped in one capsule; the card has no title and two separate buttons",
             "kind": "follow-up",
             "ref": "MAZ-254"
-          },
-          {
-            "summary": "The month pill is copper with no chevron; the card's is \"November ⌄\" in the label color",
-            "kind": "follow-up",
-            "ref": "MAZ-245"
-          },
-          {
-            "summary": "Follow your money shows Spent, Invested and Over as three stacked columns with headline amounts, not the card's one-line dot legend; the projected amount isn't bold",
-            "kind": "follow-up",
-            "ref": "MAZ-245"
           }
         ]
       },
@@ -160,11 +140,6 @@
             "ref": "MAZ-254"
           },
           {
-            "summary": "The month pill is copper with no chevron; the card's is \"November ⌄\" in the label color",
-            "kind": "follow-up",
-            "ref": "MAZ-245"
-          },
-          {
             "summary": "The card now has the flow card's focus hint (Select a band or label to focus it, again to clear) and Show as a table, which the native screen doesn't show yet (follow-up recorded on MAZ-224)",
             "kind": "follow-up",
             "ref": "MAZ-224"
@@ -199,16 +174,6 @@
             "ref": "MAZ-254"
           },
           {
-            "summary": "The month pill is copper with no chevron; the card's is \"November ⌄\" in the label color",
-            "kind": "follow-up",
-            "ref": "MAZ-245"
-          },
-          {
-            "summary": "The sentence reads \"Most went to …\" where the card reads \"Mostly … and …\"",
-            "kind": "follow-up",
-            "ref": "MAZ-245"
-          },
-          {
             "summary": "Category rows end in a chevron",
             "kind": "follow-up",
             "ref": "MAZ-254"
@@ -241,11 +206,6 @@
             "summary": "Insights and the calendar are reached from Explore your month under Recent instead of the flow card's Insights pill; the calendar is a page, not a sheet",
             "kind": "follow-up",
             "ref": "MAZ-254"
-          },
-          {
-            "summary": "The legend reads \"Expected or scheduled\" and falls back to a four-line list; the card's is one row ending \"Scheduled\"",
-            "kind": "follow-up",
-            "ref": "MAZ-245"
           },
           {
             "summary": "Adds a month totals line, a disabled next chevron at the current month and a copper Today",
@@ -1806,16 +1766,6 @@
             "summary": "An inline \"Home\" title, and calendar and settings grouped in one capsule; the card has no title and two separate buttons",
             "kind": "follow-up",
             "ref": "MAZ-254"
-          },
-          {
-            "summary": "The month pill is copper with no chevron; the card's is \"November ⌄\" in the label color",
-            "kind": "follow-up",
-            "ref": "MAZ-245"
-          },
-          {
-            "summary": "One copper Add entry button instead of the Income, Expense and Invest tiles; \"$0.00\" in the label color, not a dimmed \"$0\"; empty Recent inside a card with no icon",
-            "kind": "follow-up",
-            "ref": "MAZ-245"
           }
         ]
       },
@@ -1852,21 +1802,6 @@
             "summary": "Offline adds a \"Shared expenses may be missing\" banner when shared data couldn't load",
             "kind": "follow-up",
             "ref": "MAZ-254"
-          },
-          {
-            "summary": "The offline banner is a solid multi-line card, not the card's one-line glass capsule",
-            "kind": "follow-up",
-            "ref": "MAZ-245"
-          },
-          {
-            "summary": "The month pill is copper with no chevron; the card's is \"November ⌄\" in the label color",
-            "kind": "follow-up",
-            "ref": "MAZ-245"
-          },
-          {
-            "summary": "Follow your money shows Spent, Invested and Over as three stacked columns with headline amounts, not the card's one-line dot legend; the projected amount isn't bold",
-            "kind": "follow-up",
-            "ref": "MAZ-245"
           }
         ]
       },
@@ -2124,7 +2059,7 @@
         ],
         "deviations": [
           {
-            "summary": "The sidebar's toolbar keeps the + (Add entry) and the sidebar button above the penny. mark (follow-up recorded on MAZ-182: Add entry moves to the toolbar capsule)",
+            "summary": "The sidebar's toolbar keeps the + (Add entry) beside Home's Add entry capsule, and the sidebar button above the penny. mark (whether Add entry leaves the sidebar is a design decision recorded on MAZ-245)",
             "kind": "follow-up",
             "ref": "MAZ-182"
           },
@@ -2137,16 +2072,6 @@
             "summary": "Insights and the calendar are reached from Explore your month under Recent instead of the flow card's Insights pill; the calendar is a page, not a sheet",
             "kind": "follow-up",
             "ref": "MAZ-254"
-          },
-          {
-            "summary": "No search button or + Add entry capsule in the toolbar (follow-up recorded on MAZ-182), and the month is copper with no year or chevrons",
-            "kind": "follow-up",
-            "ref": "MAZ-254"
-          },
-          {
-            "summary": "Income, Spent and Invested are stacked, not on one line; Coming up has no icons and unsigned amber amounts",
-            "kind": "follow-up",
-            "ref": "MAZ-245"
           },
           {
             "summary": "The card now has the flow card's focus hint (Select a band or label to focus it, again to clear) and Show as a table, which the native screen doesn't show yet (follow-up recorded on MAZ-224)",

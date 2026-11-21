@@ -242,7 +242,7 @@ struct CalendarLegend: View {
         item(.spent, "Spent")
         item(.income, "Income")
         item(.invested, "Invested")
-        item(.scheduled, "Expected or scheduled")
+        item(.scheduled, "Scheduled")
     }
 
     private func item(_ marker: CalendarMonth.Marker, _ title: String) -> some View {

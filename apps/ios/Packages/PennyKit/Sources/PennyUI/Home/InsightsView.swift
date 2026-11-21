@@ -28,7 +28,9 @@ struct InsightsView: View {
                                 : "Spending shows up here once you add an expense.")
                     } else {
                         SpendingCard(
-                            breakdown: breakdown, comparison: report.comparison(summary), currency: currency)
+                            breakdown: breakdown, comparison: report.comparison(summary),
+                            previous: summary.month.shifted(by: -1).map { CategoryBreakdown(report.month($0)) },
+                            currency: currency)
                         CategoryList(breakdown: breakdown, report: report, currency: currency)
                     }
                 }
@@ -50,6 +52,8 @@ struct InsightsView: View {
 struct SpendingCard: View {
     let breakdown: CategoryBreakdown
     let comparison: MonthComparison
+    /// Last month's spending by category, for the categories behind the change.
+    let previous: CategoryBreakdown?
     let currency: String
     @Environment(\.dynamicTypeSize) private var typeSize
 
@@ -65,7 +69,7 @@ struct SpendingCard: View {
                     .font(.headline)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityIdentifier("insights.comparison")
-                if let top = OverviewText.topCategories(breakdown) {
+                if let top = OverviewText.changeDrivers(current: breakdown, previous: previous) {
                     Text(top).font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
                         .fixedSize(horizontal: false, vertical: true)
                 }
