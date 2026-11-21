@@ -990,9 +990,31 @@
   background: color-mix(in srgb, var(--tile, var(--pk-tint)) 10%, var(--pk-surface));
 }
 
+/* ipad-activity: the row open in the pane is tinted copper from edge to edge of its day's group. */
 .activity-row--selected .activity-row__main,
 .activity-row--selected .activity-row__main:hover {
-  background: color-mix(in srgb, var(--tile, var(--pk-tint)) 14%, var(--pk-surface));
+  background: linear-gradient(var(--pk-tint-soft), var(--pk-tint-soft)) var(--pk-surface);
+}
+
+.day-group__rows .activity-row--selected .activity-row__main {
+  width: calc(100% + 16px);
+  margin-inline: -8px;
+  padding-inline: 12px;
+  border-radius: 0;
+}
+
+.day-group__rows .activity-row--selected:first-child .activity-row__main {
+  margin-top: -4px;
+  padding-top: 12px;
+  border-start-start-radius: var(--pk-r-card);
+  border-start-end-radius: var(--pk-r-card);
+}
+
+.day-group__rows .activity-row--selected:last-child .activity-row__main {
+  margin-bottom: -4px;
+  padding-bottom: 12px;
+  border-end-start-radius: var(--pk-r-card);
+  border-end-end-radius: var(--pk-r-card);
 }
 
 .activity-row .category-dot {
@@ -1233,12 +1255,12 @@
 }
 
 /*
- * ipad-activity: the pane takes half the space beside the list, with no card around it, Delete
- * and Edit at its top, and Details beside Split.
+ * ipad-activity: the list takes two fifths of the space (the card's 400 of about 990 points) and
+ * the pane the rest, with no card around it, Delete and Edit at its top, and Details beside Split.
  */
 @media (min-width: 1100px) and (hover: none) and (pointer: coarse) {
   .activity--beside {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
   }
 
   .entry-panel {
@@ -1274,6 +1296,131 @@
     grid-column: auto;
   }
 
+}
+
+/*
+ * ipad-activity's pane (EntryDetailPanel `touch`): the copper glow behind its top, the glass
+ * Delete and Edit at the end of the toolbar, the tile beside the title, a larger amount, bold
+ * panel titles ("Split" with "Equally · 2 people" at its end) and the split as your share and
+ * the other people's.
+ */
+/* The pane scrolls with the page, so its glow can bleed up behind the top bar as Home's does. */
+.entry-panel--pane {
+  max-height: none;
+  overflow: visible;
+}
+
+.entry-panel__glow {
+  position: absolute;
+  inset: -160px -40px auto;
+  z-index: -1;
+  height: 420px;
+  background: var(--pk-glow-copper);
+  filter: blur(50px);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.entry-sheet--pane .entry-sheet__top {
+  justify-content: flex-end;
+}
+
+.entry-sheet--pane .entry-sheet__toolbar .wbtn.glass {
+  border-radius: 22px;
+  background: var(--pk-glass);
+  box-shadow: inset 0 1px 0 var(--pk-glass-edge), var(--pk-glass-shadow);
+  color: var(--pk-label);
+  font-size: 1.0625rem;
+}
+
+.entry-sheet--pane .entry-sheet__toolbar .wbtn.glass:not(.wbtn--icon) {
+  padding: 0 18px;
+}
+
+:root[data-transparency="reduced"] .entry-sheet--pane .entry-sheet__toolbar .wbtn.glass {
+  background: var(--pk-surface);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .entry-sheet--pane .entry-sheet__toolbar .wbtn.glass {
+    background: var(--pk-surface);
+  }
+}
+
+.entry-sheet__identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.entry-sheet__identity .entry-sheet__head {
+  min-width: 0;
+}
+
+.entry-panel--pane .entry-sheet__amount .money {
+  font-size: 3.25rem;
+}
+
+.entry-sheet__heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 12px;
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.entry-sheet__heading-note {
+  color: var(--pk-label-2);
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.entry-shares {
+  display: grid;
+  margin: 0;
+}
+
+.entry-shares__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 0;
+}
+
+.entry-shares__row dt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.entry-shares__row dd {
+  flex: none;
+  margin: 0;
+  font-weight: 600;
+}
+
+.entry-shares__avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--pk-fill);
+  color: var(--pk-label);
+}
+
+.entry-shares__row--others .entry-shares__avatar,
+.entry-shares__row--others dd {
+  color: var(--pk-label-2);
 }
 
 /* ---------- delete confirmation (iphone-delete-confirm) ---------- */

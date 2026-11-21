@@ -2108,11 +2108,6 @@
         ],
         "deviations": [
           {
-            "summary": "The pane has a Close button, and its Split group lists Split, Your share and Total instead of Your share and the other people's share",
-            "kind": "follow-up",
-            "ref": "MAZ-225"
-          },
-          {
             "summary": "The subtitle has the date only (Sunday, Sep 27), not the time (Today, 8:42 AM): entries store no time",
             "kind": "follow-up",
             "ref": "MAZ-225"

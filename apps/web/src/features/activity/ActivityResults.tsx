@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { useId, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useId, useState, type KeyboardEvent, type ReactNode } from "react";
 import type { Ledger, Transaction } from "@domain/ledger.ts";
 import { isExpectedIncome } from "@domain/summary.ts";
 import { ApiError } from "../../api/client";
@@ -48,6 +48,12 @@ interface ResultsProps {
   layout: RowLayout;
   /** The row whose entry is open beside the list. */
   selectedKey: string | undefined;
+  /**
+   * `ipad-activity`: the pane always shows a listed entry. When the listed rows don't include the
+   * selected one, this gets the first personal row's entry and its row (or `null` when the list
+   * has none), so Activity can select it.
+   */
+  autoSelect?: ((pick: { entry: Transaction; row: HTMLElement } | null) => void) | undefined;
   /** Drops these search parameters (the empty state's "Search all time" and "Clear filters"). */
   onClear: (...keys: (keyof ActivitySearch)[]) => void;
 }
@@ -61,7 +67,7 @@ interface ResultsProps {
  * accepted entry isn't listed twice. Personal rows open their detail; shared rows open the expense
  * in its household.
  */
-export function ActivityResults({ search, filters, ledger, shared, onOpen, onClear, layout, selectedKey }: ResultsProps) {
+export function ActivityResults({ search, filters, ledger, shared, onOpen, onClear, layout, selectedKey, autoSelect }: ResultsProps) {
   const email = useAccountEmail();
   const range = searchRange(search);
   const serverSearch = useInfiniteQuery(
@@ -90,7 +96,7 @@ export function ActivityResults({ search, filters, ledger, shared, onOpen, onCle
             {shared.status === "ready" ? "Shared expenses are as Penny last loaded them; smarter matching needs a connection." : "Shared expenses and smarter matching need a connection."}
           </p>
           {rows.length === 0 ? <NoResults search={search} onClear={onClear} /> : null}
-          <RowList rows={rows.slice(0, limit)} grouped={!filters.query} complete={rows.length <= limit} ledger={localLedger} currency={localLedger.currency} layout={layout} selectedKey={selectedKey} onOpen={onOpen} />
+          <RowList rows={rows.slice(0, limit)} grouped={!filters.query} complete={rows.length <= limit} ledger={localLedger} currency={localLedger.currency} layout={layout} selectedKey={selectedKey} onOpen={onOpen} autoSelect={autoSelect} />
           {rows.length > limit ? (
             <Button variant="secondary" onClick={() => { setLimit((value) => value + PAGE); }}>
               Show more
@@ -149,7 +155,7 @@ export function ActivityResults({ search, filters, ledger, shared, onOpen, onCle
       </p>
       {total === 0 && !serverSearch.hasNextPage ? <NoResults search={search} onClear={onClear} /> : null}
       {/* A search with words is ranked by relevance, not date, so only browsing is grouped by day. */}
-      <RowList rows={rows} grouped={!filters.query} complete={!serverSearch.hasNextPage} ledger={localLedger ?? ledger} currency={currency.data} layout={layout} selectedKey={selectedKey} onOpen={onOpen} />
+      <RowList rows={rows} grouped={!filters.query} complete={!serverSearch.hasNextPage} ledger={localLedger ?? ledger} currency={currency.data} layout={layout} selectedKey={selectedKey} onOpen={onOpen} autoSelect={autoSelect} />
       {pageFailed || refreshFailed ? (
         <div role="alert">
           <p>{describeSearchError(serverSearch.error)}</p>
@@ -246,6 +252,7 @@ interface RowListProps {
   layout: RowLayout;
   selectedKey: string | undefined;
   onOpen: ResultsProps["onOpen"];
+  autoSelect: ResultsProps["autoSelect"];
 }
 
 /** What a row needs to describe a personal entry. */
@@ -265,8 +272,22 @@ interface RowContext {
  * with the day's total, then that day's rows. On a desktop the rows are a table (Entry, Account,
  * Split, Amount) with each row's Edit and Delete, and the keyboard moves through it.
  */
-function RowList({ rows, grouped, complete, ledger, currency, layout, selectedKey, onOpen }: RowListProps) {
+function RowList({ rows, grouped, complete, ledger, currency, layout, selectedKey, onOpen, autoSelect }: RowListProps) {
   const today = useToday();
+  // `ipad-activity`: when the selected entry isn't listed (nothing selected yet, it was deleted or
+  // the filters hide it), select the first personal row, or nothing when there is none.
+  const listed = selectedKey !== undefined && rows.some((row) => row.key === selectedKey);
+  const first = rows.find((row) => row.source === "personal");
+  const pickKey = autoSelect && !listed ? (first?.key ?? (selectedKey === undefined ? undefined : null)) : undefined;
+  useEffect(() => {
+    if (!autoSelect || pickKey === undefined) return;
+    if (pickKey === null || first?.source !== "personal") {
+      autoSelect(null);
+      return;
+    }
+    const row = [...document.querySelectorAll<HTMLElement>("[data-row-key]")].find((element) => element.dataset.rowKey === pickKey);
+    if (row) autoSelect({ entry: first.entry, row });
+  }, [autoSelect, pickKey, first]);
   if (rows.length === 0) return null;
   const context: RowContext = {
     categories: new Map(ledger?.categories.map((category) => [category.id, category])),
