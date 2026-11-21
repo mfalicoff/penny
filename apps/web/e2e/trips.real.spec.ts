@@ -117,7 +117,8 @@ test("two people: share a personal trip, join after an expense, split, repay and
     await form.getByRole("button", { name: SAVE }).click();
     await expect(form).toBeHidden();
   }
-  await expect(alex.page.getByRole("region", { name: "Only you" })).toContainText("Airport train");
+  // Phones list it under Only you; from 1100px it sits in the one Expenses panel, marked Only you.
+  await expect(alex.page.getByRole("list", { name: /^(Private expenses|Trip expenses)$/ })).toContainText("Airport train");
 
   await bea.page.goto("/trips");
   await bea.page.getByRole("button", { name: "Join a trip" }).click();
@@ -125,7 +126,7 @@ test("two people: share a personal trip, join after an expense, split, repay and
   await join.getByLabel("Invite code").fill(code);
   await join.getByRole("button", { name: "Join trip" }).click();
   await expect(bea.page.getByRole("heading", { level: 1, name: "Lisbon" })).toBeVisible();
-  const list = bea.page.getByRole("list", { name: "Expenses" });
+  const list = bea.page.getByRole("list", { name: /^(Shared expenses|Trip expenses)$/ });
   await expect(list.getByRole("link", { name: /Flights/ })).toContainText("Not part of your share");
 
   // After Bea joined: split with her. She refreshes and repays her share.
@@ -138,7 +139,7 @@ test("two people: share a personal trip, join after an expense, split, repay and
   await expect(form).toBeHidden();
 
   await bea.page.reload();
-  await expect(list.getByRole("link", { name: /Apartment/ })).toContainText("−$184.00 you owe");
+  await expect(list.getByRole("link", { name: /Apartment/ })).toContainText("$184.00 yours");
   await list.getByRole("link", { name: /Apartment/ }).click();
   await expect(bea.page).toHaveURL(/expense=/);
   const apartment = bea.page.getByRole("dialog", { name: /^(Apartment|Record payment)$/ });

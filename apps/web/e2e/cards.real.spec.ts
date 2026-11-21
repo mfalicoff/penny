@@ -692,9 +692,21 @@ const cards: Record<string, Card> = {
   },
   "web-household": { open: (run) => maison(run, `?month=${run.state.month ?? "2026-10"}`) },
   "web-trips": {
+    // The card's past shared trip (Cottage weekend, Settled): created here through the API so the
+    // seed every platform shares doesn't change. Alex paid and is its only member, so nobody owes.
+    fresh: true,
     open: async ({ page: p }) => {
+      await p.goto("/");
+      const created = await p.request.post("/api/households/trips", { data: { name: "Cottage weekend", currency: "CAD", startDate: "2026-08-22", endDate: "2026-08-24" } });
+      expect(created.status(), "the past shared trip").toBe(201);
+      const { household } = (await created.json()) as { household: { id: string; creatorId: string } };
+      const expense = await p.request.post(`/api/households/${household.id}/expenses`, {
+        data: { title: "Cottage rental", totalCents: 23875, payerUserId: household.creatorId, splitMode: "equal", date: "2026-08-22", category: { name: "Home", icon: "home", color: "#C27C4E" } },
+      });
+      expect(expense.status(), "the past trip's expense").toBe(201);
       await page(p, "/trips", "Trips");
       await expect(p.getByRole("heading", { name: "Lisbon trip" })).toBeVisible();
+      await expect(p.getByRole("link", { name: /Cottage weekend/ })).toContainText("Settled");
     },
   },
   "web-settings": { open: ({ page: p }) => page(p, "/settings", "Settings") },

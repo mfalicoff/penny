@@ -1753,7 +1753,7 @@
     {
       "id": "web-trips",
       "source": "docs/design/penny-ios/web/trips.html",
-      "sourceSha256": "f063311a3f09134529adcbd47cdefab207d21921acef583b8caabbf28621d65c",
+      "sourceSha256": "c8e57c3b57c583239d2ab3fb2cb6d89de874e5b0bf0d8c8371ffd9ba5428bb26",
       "viewport": {
         "w": 1520,
         "h": 980
@@ -1762,12 +1762,12 @@
         {
           "appearance": "light",
           "file": "previews/web-trips.light.png",
-          "sha256": "2782abb4136c6493a8ade6705b314e332796cf65f496c02ad31acf9cf638bef5"
+          "sha256": "1d576862e91efecc8a2ea462a2441f886bc47a0bd4c3292401c09561b0fe7565"
         },
         {
           "appearance": "dark",
           "file": "previews/web-trips.dark.png",
-          "sha256": "b3ac4e21730338c972cfde9f6288a375313d7d4c1e7ce098e967259a5b4c7d63"
+          "sha256": "facaca9b57f17f89317a99ab4c9d78533b4cc7bf6040bca7b4dc7310471233cd"
         }
       ]
     }

@@ -75,7 +75,7 @@
   "sources": [
     {
       "path": "docs/design/penny-ios/README.md",
-      "sha256": "ee07e49407568a99fdca1b4b4bfaba70967cdb812324362ece633b865b08d3d4"
+      "sha256": "ede37ba2f79366e76ea7dd232e8b743b942cf44f00d82209f78bb3db3082d1ac"
     },
     {
       "path": "docs/design/penny-ios/render.mjs",
@@ -131,7 +131,7 @@
     },
     {
       "path": ".design-sync/NOTES.md",
-      "sha256": "ee358894a459f2b0903f7e91083c5890ce9a5ed1f307ae6e1cdabd0798902398"
+      "sha256": "21418fdb44f1350600e5eefbc127bb0790beab861e0133e05ca06c0014a24ef0"
     },
     {
       "path": "docs/design/penny-ios/compare.mjs",
@@ -143,7 +143,7 @@
     },
     {
       "path": "docs/design/visual-acceptance.md",
-      "sha256": "e8abaa359a30d21dacb19cb880be7e90e2c981f217891ad78d2514e974dc2755"
+      "sha256": "ba5e1e8718d2c94127c3fd26d39385edcd0c9aa5e287cadd1d37923a84883220"
     }
   ],
   "tokens": {
@@ -2076,7 +2076,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/web/trips.html",
-      "sha256": "f063311a3f09134529adcbd47cdefab207d21921acef583b8caabbf28621d65c",
+      "sha256": "c8e57c3b57c583239d2ab3fb2cb6d89de874e5b0bf0d8c8371ffd9ba5428bb26",
       "nativeIssue": "MAZ-76",
       "webIssue": "MAZ-93",
       "route": "/trips",

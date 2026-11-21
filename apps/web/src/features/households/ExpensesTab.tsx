@@ -1,6 +1,6 @@
 import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { householdExpensesQuery, recurringQuery } from "../../api/households";
+import { recurringQuery } from "../../api/households";
 import type { MonthRecap, SharedExpense, SharedRecurring } from "../../api/schemas";
 import { useAccountEmail } from "../../auth/account";
 import { TOUCH_TABLET, useMediaQuery } from "../../app/useMediaQuery";
@@ -12,15 +12,13 @@ import { EmptyState, ErrorState, LoadingState } from "../../design/states";
 import { categoryIcon } from "../entries/model";
 import type { HouseholdView } from "./context";
 import { describeLoadError } from "./errors";
-import { dayLabel, monthEnd, monthLabel, shareOf, sharePaid, shortDate } from "./model";
+import { monthEnd, monthLabel, shareOf, sharePaid, shortDate } from "./model";
 import { ExpenseLink, type GroupSearch } from "./links";
 
 interface Props {
   view: HouseholdView;
   recap: UseQueryResult<MonthRecap>;
   search: GroupSearch;
-  /** Shown under the list: a shared trip's private expenses from before it was shared (MAZ-93). */
-  children?: ReactNode;
   /**
    * The side pane from 1100px (cards `ipad-shared`, `web-household`): the selected expense and
    * Balances. With it, the expenses are the `web-household` table. Repeating expenses open from
@@ -32,22 +30,20 @@ interface Props {
 const FREQUENCY: Record<SharedRecurring["frequency"], string> = { weekly: "Weekly", monthly: "Monthly", yearly: "Yearly" };
 
 /**
- * Expenses (cards `iphone-shared`, `web-household`, `ipad-shared`): the month's expenses, or a
- * shared trip's whole list. Phones and tablets list them under the month and its total, each with
+ * Expenses (cards `iphone-shared`, `web-household`, `ipad-shared`): the month's expenses (a
+ * shared trip's are `TripExpenses`). Phones and tablets list them under the month and its total, each with
  * the payer's avatar, "<payer> paid · split equally" and the viewer's position; from 1100px a
  * household shows them as a table with the payer, split, total, your share and status.
  */
-export function ExpensesTab({ view, recap, search, children, side }: Props) {
+export function ExpensesTab({ view, recap, search, side }: Props) {
   const email = useAccountEmail();
-  const trip = Boolean(view.detail.household.trip);
-  const tripExpenses = useQuery({ ...householdExpensesQuery(email, view.householdId), enabled: trip });
   // The table is the desktop's (`web-household`); a touch tablet keeps the card's list (`ipad-shared`).
   const tablet = useMediaQuery(TOUCH_TABLET);
   const table = Boolean(side) && !tablet;
   const rules = useQuery({ ...recurringQuery(email, view.householdId), enabled: table });
-  const source = trip ? tripExpenses : recap;
-  const expenses = trip ? tripExpenses.data : recap.data?.expenses;
-  const heading = trip ? "Shared with everyone" : (monthLabel(view.month).split(" ")[0] ?? view.month);
+  const source = recap;
+  const expenses = recap.data?.expenses;
+  const heading = monthLabel(view.month).split(" ")[0] ?? view.month;
 
   let list;
   if (source.isPending) list = <LoadingState label="Loading expenses…" />;
@@ -59,8 +55,8 @@ export function ExpensesTab({ view, recap, search, children, side }: Props) {
     );
   } else if (!expenses.length) {
     list = (
-      <EmptyState icon="receipt" title={trip ? "No trip expenses yet" : `No shared expenses in ${monthLabel(view.month)}`}>
-        <p>{view.canWrite ? `Add one with ${view.route === "trips" ? "Trip expense" : "Expense"}. Everyone sees the full total; your reports count only your share.` : "Nothing was shared with you here."}</p>
+      <EmptyState icon="receipt" title={`No shared expenses in ${monthLabel(view.month)}`}>
+        <p>{view.canWrite ? `Add one with Expense. Everyone sees the full total; your reports count only your share.` : "Nothing was shared with you here."}</p>
       </EmptyState>
     );
   } else if (table) {
@@ -82,12 +78,6 @@ export function ExpensesTab({ view, recap, search, children, side }: Props) {
                   <span className="row__title">{expense.title}</span>
                   <span className="row__meta">
                     {view.who.name(expense.payerUserId)} paid · {splitWords(expense)}
-                    {trip ? (
-                      <>
-                        {" · "}
-                        <time dateTime={expense.date}>{dayLabel(expense.date)}</time>
-                      </>
-                    ) : null}
                   </span>
                   {settledForMe(expense, view) ? (
                     <Badge tone="income" icon="checkmark">
@@ -108,16 +98,12 @@ export function ExpensesTab({ view, recap, search, children, side }: Props) {
     return (
       <div className="page">
         {list}
-        {children}
       </div>
     );
   }
   return (
     <div className="household-columns">
-      <div className="page">
-        {list}
-        {children}
-      </div>
+      <div className="page">{list}</div>
       <div className="page">{side}</div>
     </div>
   );

@@ -4,6 +4,10 @@ import { describe, expect, it } from "vitest";
 import type { Household, SharedExpense } from "../src/api/schemas";
 import {
   daysUntil,
+  expenseCount,
+  paidByCell,
+  paidWords,
+  tripSettled,
   featuredTrip,
   outsideRange,
   phaseLabel,
@@ -235,5 +239,29 @@ describe("trip rules", () => {
     expect(linked.transactions).toEqual(book.transactions);
     const renamed = saveTrip({ ...lisbon, name: "Lisboa" }, lisbon)(book);
     expect(() => saveTrip({ ...lisbon, sharedHouseholdId: "h1" }, lisbon)(renamed)).toThrow("This trip changed on another device. Reopen it before editing.");
+  });
+});
+
+describe("shared trip expense rows (MAZ-263)", () => {
+  const paidBy = (payer: string, splits: [string, number][]) => ({ ...shared("e", "2026-10-02", 82400, splits), payerUserId: payer });
+
+  it("says who paid and, when someone else paid for several people, how many ways", () => {
+    expect(paidWords(paidBy("u2", [["u1", 20600], ["u2", 20600], ["u3", 20600], ["u4", 20600]]), "u1", "Sam")).toBe("Sam paid · split 4 ways");
+    expect(paidWords(paidBy("u1", [["u1", 9200], ["u2", 9200]]), "u1", "You")).toBe("you paid");
+    expect(paidWords(paidBy("u2", [["u2", 2230], ["u3", 0]]), "u1", "Mira")).toBe("Mira paid");
+    expect(paidByCell(paidBy("u2", [["u1", 20600], ["u2", 20600], ["u3", 20600], ["u4", 20600]]), "u1", "Sam")).toBe("Sam · 4 ways");
+    expect(paidByCell(paidBy("u1", [["u1", 9200], ["u2", 9200]]), "u1", "You")).toBe("You");
+    expect(expenseCount(1)).toBe("1 expense");
+    expect(expenseCount(4)).toBe("4 expenses");
+  });
+
+  it("calls a trip settled only when no month owes anything and it has expenses", () => {
+    const august = [shared("a", "2026-08-22", 10000, [["u1", 5000], ["u2", 5000]])];
+    const clear = { month: "2026-10", suggestions: [], overdueMonths: [] };
+    expect(tripSettled(august, clear)).toBe(true);
+    expect(tripSettled([], clear)).toBe(false);
+    expect(tripSettled(august, { ...clear, overdueMonths: ["2026-08"] })).toBe(false);
+    expect(tripSettled(august, { ...clear, suggestions: [{}] })).toBe(false);
+    expect(tripSettled([...august, shared("b", "2026-11-02", 100, [["u1", 100]])], clear)).toBe(false);
   });
 });
