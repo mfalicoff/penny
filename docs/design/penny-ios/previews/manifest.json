@@ -1396,7 +1396,7 @@
     {
       "id": "ipad-settings",
       "source": "docs/design/penny-ios/ipad/settings.html",
-      "sourceSha256": "98a213c98f0632521676f82d4f01d3e167002ddb51548fcf5f31cade1d4e7931",
+      "sourceSha256": "ac15f995ae42120102d833f2d00f033c724f26e2adbc27ae0ecccd5e6a6dd663",
       "viewport": {
         "w": 1290,
         "h": 914
@@ -1405,12 +1405,12 @@
         {
           "appearance": "light",
           "file": "previews/ipad-settings.light.png",
-          "sha256": "b96b6a156f72b6018f107380301084cf83c1d85158e9f7ec856711e474403e9a"
+          "sha256": "d55d85a4692c2bf129ae899b3a5af7ef81d2dfa64d50118921b7bc38e565608d"
         },
         {
           "appearance": "dark",
           "file": "previews/ipad-settings.dark.png",
-          "sha256": "105e8e37571b4a8571d98c312b139103310c05b550b6228d4b27d678cdd32650"
+          "sha256": "827f717f666f8a7b9f8eb46aebc2e742f43c0f04193964e837f727a2e1e7dde4"
         }
       ]
     },
@@ -1711,7 +1711,7 @@
     {
       "id": "web-settings",
       "source": "docs/design/penny-ios/web/settings.html",
-      "sourceSha256": "72ca73fd5bc80c3e8e2e853932cc6d953e40d442531b1b1439d8aae15eb8eb62",
+      "sourceSha256": "037edfbb22fa43a4067b0a6a279ef351abb9aff2ef091e0c2c21509ea799af65",
       "viewport": {
         "w": 1520,
         "h": 980
@@ -1720,12 +1720,12 @@
         {
           "appearance": "light",
           "file": "previews/web-settings.light.png",
-          "sha256": "110deca374fc1f11a83e6eb302cd446b440f2ddba13a118a947fa23056366d17"
+          "sha256": "ca5468bc96e9df7404af6a67fed827bb591d0c3693396456e3c7b1f5527ee3e4"
         },
         {
           "appearance": "dark",
           "file": "previews/web-settings.dark.png",
-          "sha256": "e768258ab08a9109c65977057e15fc0f78c44bfeafd896988a3d3f419504e6c4"
+          "sha256": "ec4a05f467087b1f38b9879864b8a266505ae02aa0ae087b1b8963b7bc8aadbd"
         }
       ]
     },

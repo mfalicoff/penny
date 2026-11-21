@@ -1232,6 +1232,11 @@
   transform: rotate(180deg);
 }
 
+/* The Home panel (cards `web-home`, `ipad-home`) draws "Show as a table" as a plain link; open, the chevron shows how to close it. */
+.flow--panel .flow__table:not([open]) summary svg {
+  display: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .flow__table summary svg {
     transition: none;
