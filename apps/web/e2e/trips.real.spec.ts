@@ -138,10 +138,10 @@ test("two people: share a personal trip, join after an expense, split, repay and
   await expect(form).toBeHidden();
 
   await bea.page.reload();
-  await expect(list.getByRole("link", { name: /Apartment/ })).toContainText("$184.00 your share");
+  await expect(list.getByRole("link", { name: /Apartment/ })).toContainText("−$184.00 you owe");
   await list.getByRole("link", { name: /Apartment/ }).click();
   await expect(bea.page).toHaveURL(/expense=/);
-  const apartment = bea.page.getByRole("dialog", { name: "Apartment" });
+  const apartment = bea.page.getByRole("dialog", { name: /^(Apartment|Record payment)$/ });
   await apartment.getByRole("button", { name: "Mark your share as paid" }).click();
   await apartment.getByRole("button", { name: "Mark $184.00 as paid" }).click();
   await expect(apartment.getByText("Repaid", { exact: true })).toBeVisible();

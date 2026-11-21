@@ -140,7 +140,8 @@ async function lisbon(run: Run) {
 async function recordAlexShare(run: Run) {
   await maison(run);
   await run.page.getByRole("list", { name: "Expenses" }).getByRole("link", { name: /^Internet/ }).click();
-  const dialog = run.page.getByRole("dialog", { name: "Internet" });
+  // Recording a share retitles the dialog Record payment, as the card's sheet is titled.
+  const dialog = run.page.getByRole("dialog", { name: /^(Internet|Record payment)$/ });
   const alex = run.seed?.users.alex?.email ?? "";
   await dialog.getByRole("button", { name: `Mark ${alex}'s share as paid` }).click();
   const confirm = dialog.getByRole("button", { name: "Mark $40.00 as paid" });
@@ -391,7 +392,15 @@ const cards: Record<string, Card> = {
       await maison(run, `?tab=balances&month=${run.state.month ?? "2026-10"}`);
     },
   },
-  "iphone-shared-people": { open: (run) => maison(run, "?tab=people") },
+  "iphone-shared-people": {
+    open: async (run) => {
+      // The card shows a live invite code.
+      await maison(run, "?tab=people");
+      await run.page.getByRole("button", { name: "Create invite code" }).click();
+      await expect(run.page.getByText(/^Expires in/)).toBeVisible();
+    },
+    note: "The invite code is created for the capture; the web shows Copy and no share sheet (MAZ-229).",
+  },
   "iphone-shared-expense-add": {
     open: async (run) => {
       await maison(run);
@@ -431,7 +440,7 @@ const cards: Record<string, Card> = {
   "iphone-household-create": {
     open: async ({ page: p }) => {
       await page(p, "/households", "Shared");
-      await p.getByRole("button", { name: /^New household/ }).click();
+      await p.getByRole("list", { name: "Start sharing" }).getByRole("button", { name: /New household/ }).click();
       const dialog = p.getByRole("dialog", { name: "New household" });
       await dialog.getByLabel("Name").fill("Apartment");
       await dialog.getByLabel("Name").blur();
@@ -439,8 +448,8 @@ const cards: Record<string, Card> = {
   },
   "iphone-history": {
     open: async (run) => {
-      await maison(run, "?tab=history");
-      await expect(run.page.getByRole("heading", { name: /History/ }).first()).toBeVisible();
+      await page(run.page, `/households/${household(run, "maison")}?tab=history`, "History");
+      await expect(run.page.getByRole("region", { name: "History" })).toBeVisible();
     },
   },
 

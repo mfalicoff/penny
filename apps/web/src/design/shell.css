@@ -132,6 +132,53 @@
   clip-path: inset(50%);
 }
 
+/* Phones: a page that leads with its own hero keeps the title for screen readers only (`iphone-shared`). */
+@media (max-width: 767.98px) {
+  .topbar--title-hero .topbar__title {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .topbar--title-hero {
+    row-gap: 0;
+  }
+
+  /*
+   * The collapsed navigation bar (`iphone-shared-balances`, `iphone-shared-people`): the title is
+   * small and centered between Back and the tools. With a month pill in the bar there is no room
+   * beside it, so the small title takes its own centered row.
+   */
+  .topbar--title-inline .topbar__title {
+    font-size: 1.0625rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    text-align: center;
+  }
+
+  .topbar--title-inline:not(:has(.group-tools__lead)) {
+    grid-template-areas: "back tools";
+  }
+
+  .topbar--title-inline:not(:has(.group-tools__lead)) .topbar__title {
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    display: grid;
+    place-items: center;
+    max-width: calc(100% - 240px);
+    height: 44px;
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+
+  .topbar--title-inline:has(.group-tools__lead) {
+    row-gap: 6px;
+  }
+}
+
 .topbar__spacer {
   display: none;
 }

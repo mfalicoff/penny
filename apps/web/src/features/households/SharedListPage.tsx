@@ -5,38 +5,62 @@ import { householdDetailQuery, householdsQuery, monthRecapQuery } from "../../ap
 import type { Household } from "../../api/schemas";
 import { useAccountEmail } from "../../auth/account";
 import { useIsDemo } from "../../demo/demo";
-import { Avatar, Badge } from "../../design/controls";
+import { Avatar } from "../../design/controls";
 import { Icon } from "../../design/Icon";
 import { Money } from "../../design/Money";
 import { EmptyState, ErrorState, LoadingState } from "../../design/states";
+import { GroupToolbar, ToolButton } from "./GroupTools";
 import { CreateHouseholdDialog, JoinHouseholdDialog } from "./StartDialogs";
 import { describeLoadError } from "./errors";
-import { currentMonth, dayLabel, findMe, isCurrent, monthLabel } from "./model";
+import { currentMonth, findMe, isCurrent, monthLabel, shortRange } from "./model";
 import { OnlineNotice } from "./OnlineNotice";
 
 /**
- * Shared (card `iphone-shared-list`): households and shared trips the account belongs to, with
- * this month's balance for each, and the two ways in: join with a code or create a household.
+ * Shared (card `iphone-shared-list`): this month's position across everything shared under the
+ * title, then the households and trips the account belongs to, each with a tile, its members and
+ * this month's balance, and the two ways in (join with a code, new household) as one list.
  */
 export function SharedListPage() {
   const email = useAccountEmail();
   const demo = useIsDemo();
   const households = useQuery({ ...householdsQuery(email), enabled: !demo });
   const [dialog, setDialog] = useState<"create" | "join" | null>(null);
+  const all = households.data ?? [];
+  const month = currentMonth();
+  // Each row's balance needs the members (to find you) and this month's recap. The household page
+  // reads the same queries, so opening one is instant. A failed row just shows no balance.
+  const details = useQueries({ queries: all.map((household) => householdDetailQuery(email, household.id)) });
+  const recaps = useQueries({ queries: all.map((household) => monthRecapQuery(email, household.id, month)) });
+  const rows: GroupRow[] = all.map((household, index) => {
+    const members = details[index]?.data?.members ?? [];
+    const me = findMe(members, email);
+    const recap = recaps[index]?.data;
+    // A month with nothing shared has no row for you: you're settled there.
+    const balance = me && recap ? (recap.balances.find((row) => row.userId === me.userId)?.balanceCents ?? 0) : undefined;
+    return { household, members: members.filter(isCurrent).map((member) => member.email), balance };
+  });
 
   const start = (
-    <div className="start-actions">
-      <button type="button" className="start-action" onClick={() => { setDialog("join"); }}>
-        <Icon name="key" />
-        <span className="start-action__title">Join with a code</span>
-        <span className="muted">Someone shared an invite code with you</span>
-      </button>
-      <button type="button" className="start-action" onClick={() => { setDialog("create"); }}>
-        <Icon name="add" />
-        <span className="start-action__title">New household</span>
-        <span className="muted">Split rent, bills and groceries every month</span>
-      </button>
-    </div>
+    <ul className="start-actions" aria-label="Start sharing">
+      <li>
+        <button type="button" className="start-action" onClick={() => { setDialog("join"); }}>
+          <span className="start-action__tile">
+            <Icon name="key" />
+          </span>
+          <span className="start-action__title">Join with a code</span>
+          <span className="start-action__text">Someone shared an invite code with you</span>
+        </button>
+      </li>
+      <li>
+        <button type="button" className="start-action" onClick={() => { setDialog("create"); }}>
+          <span className="start-action__tile">
+            <Icon name="person-add" />
+          </span>
+          <span className="start-action__title">New household</span>
+          <span className="start-action__text">Split rent, bills and groceries every month</span>
+        </button>
+      </li>
+    </ul>
   );
 
   let body;
@@ -54,24 +78,29 @@ export function SharedListPage() {
       </ErrorState>
     );
   } else {
-    const all = households.data;
-    const homes = all.filter((household) => !household.trip);
-    const trips = all.filter((household) => household.trip);
+    const homes = rows.filter((row) => !row.household.trip);
+    const trips = rows.filter((row) => row.household.trip);
     body = (
       <>
+        <Overall rows={rows} month={month} />
         {all.length === 0 ? (
           <EmptyState icon="people" title="Nothing shared yet">
             <p>Create a household to split rent, bills and groceries, or join one with a code. Everyone sees the full expense; your reports count only your share.</p>
           </EmptyState>
         ) : null}
-        {homes.length ? <GroupSection title="Households" households={homes} /> : null}
-        {trips.length ? <GroupSection title="Shared trips" households={trips} /> : null}
+        {homes.length ? <GroupSection title="Households" rows={homes} /> : null}
+        {trips.length ? <GroupSection title="Trips" rows={trips} /> : null}
       </>
     );
   }
 
   return (
-    <div className="page">
+    <div className="page shared-list">
+      {demo ? null : (
+        <GroupToolbar>
+          <ToolButton icon="add" label="New household" onClick={() => { setDialog("create"); }} />
+        </GroupToolbar>
+      )}
       <OnlineNotice />
       {body}
       {households.isPending ? null : start}
@@ -81,65 +110,90 @@ export function SharedListPage() {
   );
 }
 
-function GroupSection({ title, households }: { title: string; households: Household[] }) {
-  const email = useAccountEmail();
-  const month = currentMonth();
-  // Each row's balance needs the members (to find you) and this month's recap. The household page
-  // reads the same queries, so opening one is instant. A failed row just shows no balance.
-  const details = useQueries({ queries: households.map((household) => householdDetailQuery(email, household.id)) });
-  const recaps = useQueries({ queries: households.map((household) => monthRecapQuery(email, household.id, month)) });
+interface GroupRow {
+  household: Household;
+  /** Current members' emails, for the avatars. */
+  members: string[];
+  /** Your balance this month, once known. */
+  balance: number | undefined;
+}
+
+/**
+ * The title's subtitle: your position this month across every household and trip ("November ·
+ * you're owed $104.30 overall"), once every balance is known and they share one currency.
+ */
+function Overall({ rows, month }: { rows: GroupRow[]; month: string }) {
+  const currencies = new Set(rows.map((row) => row.household.currency));
+  if (!rows.length || currencies.size !== 1 || rows.some((row) => row.balance === undefined)) return null;
+  const total = rows.reduce((sum, row) => sum + (row.balance ?? 0), 0);
+  const currency = rows[0]?.household.currency;
+  const name = monthLabel(month).split(" ")[0];
   return (
-    <section className="shared-section" aria-labelledby={`shared-${title}`}>
-      <h2 id={`shared-${title}`}>{title}</h2>
-      <ul className="group-list">
-        {households.map((household, index) => {
-          const members = details[index]?.data?.members.filter(isCurrent) ?? [];
-          const me = findMe(details[index]?.data?.members ?? [], email);
-          const balance = me ? recaps[index]?.data?.balances.find((row) => row.userId === me.userId)?.balanceCents : undefined;
-          const overdue = (recaps[index]?.data?.overdueMonths.length ?? 0) > 0;
-          return (
-            <li key={household.id}>
-              <Link to="/households/$id" params={{ id: household.id }} className="group-row">
-                <span>
-                  <span className="group-row__name">{household.name}</span>
-                  <span className="group-row__meta">
-                    {" "}
-                    · {household.memberCount} {household.memberCount === 1 ? "member" : "members"}
-                    {household.trip ? ` · ${dayLabel(household.trip.startDate)} – ${dayLabel(household.trip.endDate, true)}` : ""}
+    <p className="shared-overall">
+      {name} ·{" "}
+      {total > 0 ? (
+        <>
+          you're owed <Money cents={total} currency={currency} tone="income" /> overall
+        </>
+      ) : total < 0 ? (
+        <>
+          you owe <Money cents={-total} currency={currency} /> overall
+        </>
+      ) : (
+        "you're settled everywhere"
+      )}
+    </p>
+  );
+}
+
+function GroupSection({ title, rows }: { title: string; rows: GroupRow[] }) {
+  const headingId = `shared-${title.toLowerCase()}`;
+  return (
+    <section className="shared-section" aria-labelledby={headingId}>
+      <h2 id={headingId}>{title}</h2>
+      <ul className="shared-groups">
+        {rows.map(({ household, members, balance }) => (
+          <li key={household.id}>
+            <Link to={household.trip ? "/trips/$id" : "/households/$id"} params={{ id: household.id }} className="group-row">
+              <span className="group-row__tile" aria-hidden="true">
+                <Icon name={household.trip ? "airplane" : "home"} size={24} />
+              </span>
+              <span className="group-row__main">
+                <span className="group-row__name">{household.name}</span>
+                <span className="group-row__meta">
+                  <span className="avatars" aria-hidden="true">
+                    {members.slice(0, 4).map((member) => (
+                      <Avatar key={member} name={member} size={26} />
+                    ))}
                   </span>
-                  <span className="group-row__meta" style={{ display: "block" }}>
-                    {balance === undefined ? (
-                      household.currency
-                    ) : balance > 0 ? (
-                      <>
-                        {monthLabel(month).split(" ")[0]} · you're owed <Money cents={balance} currency={household.currency} tone="income" />
-                      </>
-                    ) : balance < 0 ? (
-                      <>
-                        {monthLabel(month).split(" ")[0]} · you owe <Money cents={-balance} currency={household.currency} />
-                      </>
-                    ) : (
-                      `${monthLabel(month).split(" ")[0]} · settled`
-                    )}
-                  </span>
+                  {household.trip ? shortRange(household.trip.startDate, household.trip.endDate) : `${String(household.memberCount)} ${household.memberCount === 1 ? "member" : "members"}`}
                 </span>
-                <span className="avatars" aria-hidden="true">
-                  {members.slice(0, 4).map((member) => (
-                    <Avatar key={member.userId} name={member.email} size={28} />
-                  ))}
-                </span>
-                {overdue ? (
-                  <Badge tone="danger" icon="alert-circle">
-                    Overdue
-                  </Badge>
-                ) : (
-                  <Icon name="chevron-forward" size={16} />
-                )}
-              </Link>
-            </li>
-          );
-        })}
+              </span>
+              <GroupBalance balance={balance} currency={household.currency} />
+              <Icon name="chevron-forward" size={16} />
+            </Link>
+          </li>
+        ))}
       </ul>
     </section>
+  );
+}
+
+/** This month's balance at the row's end: owed to you in income green, owing in the label color, or Settled. */
+function GroupBalance({ balance, currency }: { balance: number | undefined; currency: string }) {
+  if (balance === undefined) return <span className="group-row__balance" />;
+  if (balance === 0) {
+    return (
+      <span className="group-row__balance group-row__balance--settled">
+        <Icon name="checkmark-circle" size={16} />
+        Settled
+      </span>
+    );
+  }
+  return (
+    <span className="group-row__balance">
+      {balance > 0 ? "you're owed" : "you owe"}
+      <Money cents={Math.abs(balance)} currency={currency} tone={balance > 0 ? "income" : "expense"} />
+    </span>
   );
 }

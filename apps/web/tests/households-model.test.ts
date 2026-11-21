@@ -105,19 +105,28 @@ describe("audit sentences", () => {
     );
     expect(result.summary).toBe("bea@example.test edited Hydro");
     expect(result.changes).toEqual(["Total: $96.30 → $104.10", "Paid by: You → bea@example.test", "Category: Home → Bills"]);
+    expect(result.edits[2]).toEqual({ label: "Category", before: "Home", after: "Bills" });
+    expect(result.emphasis).toEqual(["bea@example.test", "Hydro"]);
   });
 
   it("describes payments and automatic occurrences", () => {
-    expect(describeAudit(event("reimbursement.created", null, { fromUserId: "a", toUserId: "b", amountCents: 3000, expenseId: "e" }, "a"), name, money).summary).toBe(
-      "You recorded your $30.00 share payment to bea@example.test",
-    );
-    expect(describeAudit(event("reimbursement.created", null, { fromUserId: "b", toUserId: "a", amountCents: 3000 }), name, money).summary).toBe(
-      "bea@example.test recorded bea@example.test paid You $30.00",
-    );
+    // As on `iphone-history`: "You recorded Jo's payment", with the amount under it.
+    expect(describeAudit(event("reimbursement.created", null, { fromUserId: "a", toUserId: "b", amountCents: 3000, expenseId: "e" }, "a"), name, money)).toMatchObject({
+      summary: "You recorded a payment",
+      changes: ["$30.00 share to bea@example.test"],
+      emphasis: ["You"],
+    });
+    expect(describeAudit(event("reimbursement.created", null, { fromUserId: "b", toUserId: "a", amountCents: 3000 }), name, money)).toMatchObject({
+      summary: "bea@example.test recorded a payment",
+      changes: ["$30.00 to You for the month"],
+    });
     expect(describeAudit(event("expense.created", null, { title: "Rent", totalCents: 290000, splitMode: "exact", recurringId: "r" }), name, money)).toEqual({
       summary: "Rent was added automatically",
       changes: ["$2900.00 · split by amount"],
+      edits: [],
+      emphasis: ["Rent"],
     });
+    expect(describeAudit(event("member.joined", null, { userId: "b" }), name, money, "trip").summary).toBe("bea@example.test joined the trip");
   });
 });
 

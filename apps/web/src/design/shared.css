@@ -25,7 +25,7 @@
   align-items: center;
 }
 
-/* ---------- list of groups ---------- */
+/* ---------- list of groups (card `iphone-shared-list`) ---------- */
 .group-list,
 .row-list {
   display: grid;
@@ -46,13 +46,40 @@
   border-top: 0.5px solid var(--pk-separator);
 }
 
+/* The title's subtitle: this month across everything shared. */
+.shared-overall {
+  margin: -6px 0 0;
+  color: var(--pk-label-2);
+  font-size: 0.9375rem;
+}
+
+.shared-overall .money {
+  font-weight: 600;
+}
+
+.shared-overall .pk-money--income {
+  color: var(--pk-income);
+}
+
+/* Each household or trip is its own card: tile, name over avatars, balance, chevron. */
+.shared-groups {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
 .group-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
   align-items: center;
-  gap: 4px 12px;
-  min-height: 64px;
-  padding: 10px 16px;
+  gap: 14px;
+  min-height: 80px;
+  padding: 16px;
+  border-radius: var(--pk-r-card);
+  background: var(--pk-surface);
+  box-shadow: 0 0 0 0.5px var(--pk-separator);
   color: inherit;
   text-decoration: none;
 }
@@ -61,12 +88,78 @@
   background: var(--pk-surface-2);
 }
 
+.group-row > .icon:last-child {
+  color: var(--pk-label-3);
+}
+
+.group-row__tile {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 15px;
+  background: var(--pk-fill);
+  color: var(--pk-label);
+}
+
+.group-row__main {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
 .group-row__name {
+  font-size: 1.0625rem;
   font-weight: 600;
   overflow-wrap: anywhere;
 }
 
-.group-row__meta,
+.group-row__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+}
+
+.group-row__meta .pk-avatar {
+  border: 1.5px solid var(--pk-surface);
+  font-size: 9px !important;
+  letter-spacing: -0.02em;
+}
+
+.group-row__meta .avatars .pk-avatar + .pk-avatar {
+  margin-inline-start: -4px;
+  box-shadow: none;
+}
+
+.group-row__balance {
+  display: grid;
+  justify-items: end;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  text-align: end;
+}
+
+.group-row__balance .money {
+  color: var(--pk-label);
+  font-size: 1.0625rem;
+  font-weight: 600;
+}
+
+.group-row__balance .pk-money--income {
+  color: var(--pk-income);
+}
+
+.group-row__balance--settled {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
 .row__meta {
   color: var(--pk-label-2);
   font-size: 0.8125rem;
@@ -83,23 +176,41 @@
   box-shadow: 0 0 0 2px var(--pk-surface);
 }
 
+/* Join with a code and New household: one list, copper titles on copper-soft tiles. */
 .start-actions {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
-  gap: 12px;
+  margin: 6px 0 0;
+  padding: 0;
+  overflow: hidden;
+  border-radius: var(--pk-r-card);
+  background: var(--pk-surface);
+  box-shadow: 0 0 0 0.5px var(--pk-separator);
+  list-style: none;
+}
+
+.start-actions > li + li .start-action {
+  position: relative;
+}
+
+.start-actions > li + li .start-action::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 64px;
+  border-top: 0.5px solid var(--pk-separator);
+  content: "";
 }
 
 .start-action {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 2px 12px;
-  min-height: 64px;
+  gap: 1px 12px;
+  width: 100%;
+  min-height: 60px;
   padding: 12px 16px;
   border: 0;
-  border-radius: var(--pk-r-card);
-  background: var(--pk-surface);
-  box-shadow: 0 0 0 0.5px var(--pk-separator);
+  background: none;
   color: inherit;
   font: inherit;
   text-align: start;
@@ -110,41 +221,87 @@
   background: var(--pk-surface-2);
 }
 
-.start-action .icon {
+.start-action__tile {
+  display: grid;
   grid-row: 1 / span 2;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--pk-tint-soft);
   color: var(--pk-tint);
 }
 
 .start-action__title {
+  color: var(--pk-tint-text);
+  font-size: 1.0625rem;
   font-weight: 600;
 }
 
-/* ---------- household header ---------- */
+.start-action__text {
+  color: var(--pk-label-2);
+  font-size: 0.9375rem;
+}
+
+/* ---------- household hero (cards `iphone-shared`, `web-household`) ---------- */
+/*
+ * Phones and tablets: centered avatars, the name, "November · you're owed" over the large amount,
+ * Record payment (copper) and + Expense, then the sections. From 1100px: avatars beside the
+ * balance, with the sections as chips at the right (`web-household`).
+ */
 .household-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px 18px;
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.household-head .glow {
+  inset: -220px -60px auto;
+}
+
+.glow--green {
+  background: var(--pk-glow-green);
+}
+
+.household-head .avatars .pk-avatar {
+  border: 3px solid var(--pk-bg);
+}
+
+.household-head .avatars .pk-avatar + .pk-avatar {
+  margin-inline-start: -8px;
+  box-shadow: none;
 }
 
 .household-head__summary {
   display: grid;
-  flex: 1;
-  gap: 2px;
-  min-width: min(100%, 220px);
+  justify-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.household-head__name {
+  margin: -6px 0 10px;
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
 }
 
 .household-head__balance {
+  margin: 0;
   color: var(--pk-label-2);
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
 }
 
 .household-head__balance .money {
   display: block;
   color: var(--pk-label);
-  font-size: 2rem;
+  font-size: 3.25rem;
   font-weight: 700;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
 }
 
 /* Meaning colors (design baseline `colors.meaning`): owed to you is income, owing keeps the label color, settled is muted. */
@@ -154,6 +311,58 @@
 
 .household-head__balance .pk-money--muted {
   color: var(--pk-label-2);
+}
+
+.household-head .section-tabs {
+  justify-self: stretch;
+}
+
+/* The name shows in the bar's title from 768px. */
+@media (min-width: 768px) {
+  .household-head__name {
+    display: none;
+  }
+}
+
+@media (min-width: 1100px) {
+  .household-head {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    justify-items: start;
+    gap: 18px;
+    text-align: start;
+  }
+
+  .household-head__summary {
+    justify-items: start;
+    gap: 0;
+  }
+
+  .household-head__balance .money {
+    font-size: 2.75rem;
+  }
+
+  /* The sections as chips at the hero's right: the current one filled with the label color. */
+  .household-head .section-tabs {
+    gap: 8px;
+    padding: 0;
+    background: none;
+    overflow: visible;
+  }
+
+  .household-head .section-tabs a {
+    min-height: 34px;
+    padding: 0 14px;
+    border-radius: 17px;
+    background: var(--pk-fill);
+    font-size: 0.9375rem;
+  }
+
+  .household-head .section-tabs a[aria-current="page"] {
+    background: var(--pk-label);
+    color: var(--pk-bg);
+    box-shadow: none;
+  }
 }
 
 .month-nav {
@@ -232,20 +441,93 @@ a.row:hover {
   grid-template-columns: minmax(0, 1fr) auto;
 }
 
+/* Suggested payments (cards `iphone-shared-balances`, `web-household`): who → who, the amount, Record paid. */
 .transfer {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px 10px;
-  padding: 10px 12px;
-  border-radius: 12px;
-  background: var(--pk-surface-2);
+  min-height: 56px;
+  padding: 10px 16px;
+}
+
+.transfer > .money {
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 .transfer__text {
+  display: flex;
   flex: 1;
-  min-width: min(100%, 12em);
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: min(100%, 10em);
+  font-size: 0.9375rem;
   overflow-wrap: anywhere;
+}
+
+.transfer__arrow {
+  display: inline-flex;
+  color: var(--pk-label-3);
+  transform: rotate(90deg);
+}
+
+.transfer-list--compact {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.transfer-list--compact .transfer {
+  padding: 10px 12px 10px 16px;
+  border-radius: 14px;
+  background: var(--pk-surface-2);
+}
+
+.transfer-list--compact .transfer__from {
+  font-weight: 600;
+}
+
+.pay-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--pk-fill);
+  color: var(--pk-label-3);
+  font: 600 0.875rem var(--pk-font);
+  white-space: nowrap;
+}
+
+.pay-pill--on {
+  background: var(--pk-tint);
+  color: #fff;
+  cursor: pointer;
+}
+
+.pay-pill--on:hover {
+  background: color-mix(in srgb, var(--pk-tint) 88%, #000);
+}
+
+.pay-pill:disabled {
+  cursor: not-allowed;
+}
+
+@media (pointer: coarse) {
+  .pay-pill {
+    min-height: 44px;
+    padding: 0 14px;
+    border-radius: 22px;
+  }
+}
+
+.balances-card .row-list .row__end .money {
+  font-size: 1rem;
 }
 
 .note {
@@ -268,23 +550,255 @@ a.row:hover {
   overflow-wrap: anywhere;
 }
 
-/* ---------- invite ---------- */
+/*
+ * The cards' grouped lists: an uppercase label (with an optional total or status on the right)
+ * above a solid card whose rows are divided by a line inset past the avatar.
+ */
+.shared-group {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.shared-group__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+  padding: 0 4px;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.shared-group__head h2,
+.shared-group__head h3 {
+  margin: 0;
+  font: inherit;
+}
+
+.shared-group__rows {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border-radius: var(--pk-r-card);
+  background: var(--pk-surface);
+  box-shadow: 0 0 0 0.5px var(--pk-separator);
+  list-style: none;
+}
+
+.shared-group__rows > li {
+  position: relative;
+}
+
+.shared-group__rows > li + li::before {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  right: 0;
+  left: 64px;
+  border-top: 0.5px solid var(--pk-separator);
+  content: "";
+}
+
+.shared-group__rows--plain > li + li::before {
+  left: 16px;
+}
+
+.shared-group__rows .row {
+  gap: 2px 12px;
+  min-height: 60px;
+  padding: 12px 16px;
+}
+
+.shared-group__rows .row > .pk-avatar {
+  align-self: center;
+}
+
+.row__main {
+  display: grid;
+  justify-items: start;
+  gap: 2px;
+  min-width: 0;
+}
+
+.row__main .pk-badge {
+  margin-top: 2px;
+}
+
+.shared-note {
+  display: flex;
+  gap: 8px;
+  margin: 0;
+  padding: 0 4px;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.shared-note > .icon {
+  flex: none;
+  margin-top: 1px;
+}
+
+/* ---------- the web-household expense table ---------- */
+.expense-table {
+  padding: 6px 12px;
+  overflow-x: auto;
+}
+
+.expense-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+.expense-table thead th {
+  padding: 10px 8px;
+  border-bottom: 0.5px solid var(--pk-separator);
+  color: var(--pk-label-2);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-align: start;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.expense-table tbody th,
+.expense-table tbody td {
+  padding: 10px 8px;
+  font-weight: 400;
+  text-align: start;
+  vertical-align: middle;
+}
+
+.expense-table tbody tr + tr > * {
+  border-top: 0.5px solid var(--pk-separator);
+}
+
+.expense-table tbody tr:hover > * {
+  background: var(--pk-surface-2);
+}
+
+.expense-table .num {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.expense-table tbody td.num:nth-child(4) .money {
+  font-weight: 600;
+}
+
+.expense-table tbody th {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.expense-table__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  color: inherit;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.expense-table__title:hover span:last-child {
+  text-decoration: underline;
+}
+
+.expense-table__title .category-dot {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+}
+
+.expense-table__repeat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: var(--pk-fill);
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.expense-table__payer {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+/* ---------- people and invite (card `iphone-shared-people`) ---------- */
+.member-role {
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
 .invite-code {
   display: grid;
   justify-items: center;
-  gap: 6px;
-  padding: 16px;
-  border-radius: 16px;
-  background: var(--pk-surface-2);
+  gap: 4px;
+  padding: 18px;
+  border-radius: var(--pk-r-card);
+  background: var(--pk-surface);
+  box-shadow: 0 0 0 0.5px var(--pk-separator);
   text-align: center;
 }
 
+.invite-code__hint {
+  margin: 0;
+  color: var(--pk-label-2);
+  font-size: 0.9375rem;
+}
+
 .invite-code__value {
-  font: 700 1.75rem var(--pk-font);
-  font-variant-numeric: tabular-nums;
+  margin-top: 4px;
+  font: 700 2.125rem ui-monospace, "SF Mono", Menlo, monospace;
   letter-spacing: 0.12em;
   overflow-wrap: anywhere;
   user-select: all;
+}
+
+.invite-code__expires {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--pk-pending);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.invite-code__actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.invite-code__actions .wbtn {
+  flex: 1;
+  min-height: 44px;
+  border-radius: 22px;
+}
+
+.invite-code__actions .wbtn--secondary {
+  border: 0;
+  background: var(--pk-fill);
+  box-shadow: none;
 }
 
 /* ---------- forms ---------- */
@@ -419,18 +933,189 @@ a.row:hover {
   font-weight: 600;
 }
 
-/* ---------- payment recording and stale state ---------- */
+/* ---------- payment recording and stale state (cards `iphone-record-payment`, `iphone-payment-stale`) ---------- */
+.wbtn--block {
+  width: 100%;
+  min-height: 52px;
+  border-radius: 26px;
+  font-size: 1.0625rem;
+}
+
+.wbtn--primary.wbtn--block {
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--pk-tint) 35%, transparent);
+}
+
 .payment-summary {
   display: grid;
   justify-items: center;
   gap: 6px;
-  padding: 8px 0;
+  padding: 4px 0;
   text-align: center;
 }
 
-.payment-summary .money {
-  font-size: 2rem;
+.payment-people {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 18px;
+  margin: 0 0 8px;
+}
+
+.payment-person {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  min-width: 0;
+  max-width: 9.5rem;
+  overflow-wrap: anywhere;
+}
+
+.payment-person .pk-avatar {
+  margin-bottom: 6px;
+}
+
+.payment-person .muted {
+  font-size: 0.8125rem;
+}
+
+.payment-people__arrow {
+  position: relative;
+  flex: none;
+  width: 56px;
+  height: 64px;
+}
+
+.payment-people__arrow::before {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  left: 0;
+  border-top: 2px dashed var(--pk-label-3);
+  content: "";
+}
+
+.payment-people__arrow::after {
+  position: absolute;
+  top: calc(50% - 6px);
+  right: 2px;
+  width: 10px;
+  height: 10px;
+  border-top: 2px solid var(--pk-label-3);
+  border-right: 2px solid var(--pk-label-3);
+  transform: rotate(45deg);
+  content: "";
+}
+
+.payment-summary__amount.money {
+  font-size: 3.25rem;
   font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+}
+
+.payment-summary__detail {
+  color: var(--pk-label-2);
+  font-size: 0.9375rem;
+}
+
+.payment-summary__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 6px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  background: var(--pk-fill);
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.payment-note {
+  display: flex;
+  gap: 10px;
+  margin: 0;
+  color: var(--pk-label-2);
+  font-size: 0.9375rem;
+  line-height: 1.35;
+}
+
+.payment-note > .icon {
+  flex: none;
+  margin-top: 1px;
+}
+
+.payment-stale__banner {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--pk-danger) 11%, transparent);
+  color: var(--pk-label-2);
+  font-size: 0.9375rem;
+}
+
+.payment-stale__banner > .icon {
+  flex: none;
+  color: var(--pk-danger);
+}
+
+.payment-stale__banner > span {
+  display: grid;
+  gap: 2px;
+}
+
+.payment-stale__banner strong {
+  color: var(--pk-label);
+  font-size: 1.0625rem;
+}
+
+.payment-stale__rows {
+  display: grid;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 16px;
+  background: var(--pk-surface);
+  box-shadow: 0 0 0 0.5px var(--pk-separator);
+}
+
+.payment-stale__rows > div {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+  min-height: 48px;
+  padding: 8px 16px;
+}
+
+.payment-stale__rows > div + div::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 16px;
+  border-top: 0.5px solid var(--pk-separator);
+  content: "";
+}
+
+.payment-stale__rows dt {
+  color: var(--pk-label-2);
+}
+
+.payment-stale__rows dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+.payment-stale__rows del {
+  margin-inline-end: 6px;
+  color: var(--pk-label-3);
+}
+
+.payment-stale__note {
+  text-align: center;
 }
 
 .compare {
@@ -487,14 +1172,6 @@ a.row:hover {
 
   .split-row > :last-child {
     grid-column: 1 / -1;
-  }
-
-  .row {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-
-  .row > .pk-avatar {
-    display: none;
   }
 }
 
@@ -611,6 +1288,30 @@ a.row:hover {
   gap: 10px;
 }
 
+.household-head__action.wbtn {
+  min-height: 44px;
+  padding: 0 20px;
+  border-radius: 22px;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.household-head__action.wbtn--primary {
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--pk-tint) 35%, transparent);
+}
+
+.household-head__action.glass {
+  color: var(--pk-label);
+}
+
+.balances-card > .card__head .card__title {
+  color: var(--pk-label);
+  font-size: 1.0625rem;
+  letter-spacing: -0.01em;
+  text-transform: none;
+}
+
 @media (min-width: 768px) {
   .topbar__tools:has(.group-tools) {
     flex: 1;
@@ -681,4 +1382,198 @@ a.row:hover {
 
 .expense-panel__head .card__title {
   margin: 0;
+}
+
+/* ---------- New household (card `iphone-household-create`) ---------- */
+.start-form__intro {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.start-form__intro p {
+  margin: 0;
+  color: var(--pk-label-2);
+  font-size: 0.9375rem;
+}
+
+.start-form__tile {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 22px;
+  background: var(--pk-fill);
+  color: var(--pk-label);
+}
+
+.start-form .form-field > label,
+.start-form .form-field > .form-field__label {
+  margin: 4px 4px 4px;
+  color: var(--pk-label-2);
+  font-size: 0.8125rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.start-form .form-field input {
+  min-height: 50px;
+  border-radius: 14px;
+  background: var(--pk-surface-2);
+  font-size: 1.0625rem;
+}
+
+.start-form .form-field input:focus {
+  background: var(--pk-surface);
+}
+
+.start-form__details {
+  display: grid;
+  margin: 0;
+  border-radius: 14px;
+  background: var(--pk-surface-2);
+}
+
+.start-form__details > div {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 48px;
+  padding: 0 14px;
+}
+
+.start-form__details > div + div::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 44px;
+  border-top: 0.5px solid var(--pk-separator);
+  content: "";
+}
+
+.start-form__details dt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1rem;
+}
+
+.start-form__details dt .icon {
+  color: var(--pk-label-2);
+}
+
+.start-form__details dd {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  color: var(--pk-label-2);
+}
+
+.start-form .form-hint {
+  margin: -6px 4px 0;
+}
+
+/* ---------- History (card `iphone-history`) ---------- */
+.history__intro {
+  margin: -8px 0 0;
+  color: var(--pk-label-2);
+  font-size: 0.9375rem;
+}
+
+/* The filters are the card's chips: the chosen one filled with the label color. */
+.history__filters .choices__options {
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0;
+  background: none;
+}
+
+.history__filters .choice {
+  flex: none;
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 17px;
+  background: var(--pk-fill);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.history__filters .choice--on {
+  background: var(--pk-label);
+  color: var(--pk-surface);
+  box-shadow: none;
+}
+
+.history-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+}
+
+.history-row__who {
+  position: relative;
+  flex: none;
+}
+
+.history-row__badge {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--pk-label-2);
+  box-shadow: 0 0 0 2px var(--pk-surface);
+  color: #fff;
+}
+
+.history-row__badge--income {
+  background: var(--pk-income);
+}
+
+.history-row__text {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+  font-size: 0.9375rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.history-row__text strong {
+  font-weight: 600;
+}
+
+.history-row__time {
+  flex: none;
+  color: var(--pk-label-3);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.history-change s {
+  color: var(--pk-label-2);
+}
+
+.shared-group__head .pk-badge {
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.transfer__text {
+  flex-wrap: nowrap;
+}
+
+/* Names may be long (emails until MAZ-171): they wrap, but never down to a letter per line. */
+.transfer__text > span:not(.transfer__arrow) {
+  min-width: min(100%, 4ch);
+  overflow-wrap: anywhere;
 }

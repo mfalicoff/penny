@@ -74,6 +74,8 @@ function stubWidth(width: number) {
     "matchMedia",
     vi.fn((query: string) => {
       const min = /min-width:\s*(\d+)px/.exec(query);
+      // A mouse and keyboard: the touch-tablet query (`ipad-shared`) never matches.
+      if (query.includes("pointer: coarse")) return { matches: false, media: query, addEventListener: vi.fn(), removeEventListener: vi.fn() };
       return { matches: min ? width >= Number(min[1]) : false, media: query, addEventListener: vi.fn(), removeEventListener: vi.fn() };
     }),
   );
@@ -90,8 +92,13 @@ describe("household layout (MAZ-229)", () => {
     expect(await screen.findByRole("region", { name: "Household summary" })).toHaveTextContent("October · ");
     expect(within(topbar()).getByRole("link", { name: "Back to Shared" })).toHaveAttribute("href", "/households");
     expect(within(topbar()).getByLabelText("Month")).toHaveValue("2026-10");
-    expect(within(topbar()).getByRole("link", { name: "History" })).toBeInTheDocument();
+    // Expenses has Invite and the … menu (card `iphone-shared`); History is in the menu there.
+    expect(within(topbar()).queryByRole("link", { name: "History" })).not.toBeInTheDocument();
     expect(within(topbar()).getByRole("link", { name: "Invite" })).toBeInTheDocument();
+    await user.click(within(topbar()).getByRole("button", { name: "Household actions" }));
+    expect(within(topbar()).getByRole("button", { name: "History" })).toBeInTheDocument();
+    expect(within(topbar()).getByRole("button", { name: "Rename" })).toBeInTheDocument();
+    await user.keyboard("{Escape}");
     // Phones keep Record payment and Shared expense in the hero; no month switcher or Repeating card on the page.
     const summary = screen.getByRole("region", { name: "Household summary" });
     expect(within(summary).getByRole("link", { name: "Record payment" })).toBeInTheDocument();
@@ -105,8 +112,11 @@ describe("household layout (MAZ-229)", () => {
     });
     expect(within(topbar()).getByLabelText("Month")).toBeInTheDocument();
 
+    // Balances collapses to the navigation bar with History and the … menu (card `iphone-shared-balances`).
+    expect(within(topbar()).queryByRole("link", { name: "Invite" })).not.toBeInTheDocument();
     await user.click(within(topbar()).getByRole("link", { name: "History" }));
     expect(await screen.findByRole("region", { name: "History" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "History" })).toBeInTheDocument();
     expect(screen.queryByRole("region", { name: "Household summary" })).not.toBeInTheDocument();
     expect(within(topbar()).queryByLabelText("Month")).not.toBeInTheDocument();
   });
@@ -123,8 +133,10 @@ describe("household layout (MAZ-229)", () => {
     // The add action moves to the navigation bar, beside History and Invite; the top bar's Add entry steps aside.
     expect(within(summary).queryByRole("button", { name: "Shared expense" })).not.toBeInTheDocument();
     expect(within(topbar()).getByRole("button", { name: "Shared expense" })).toBeInTheDocument();
-    // Balances sit beside the expenses: the month's expenses and its balances, on one page.
-    expect(await screen.findAllByRole("region", { name: "October 2026" })).toHaveLength(2);
+    // The expense table, with Balances beside it, on one page (card `web-household`).
+    const table = await screen.findByRole("region", { name: "Expenses in October 2026" });
+    expect(within(table).getAllByRole("columnheader").map((cell) => cell.textContent)).toEqual(["Expense", "Paid by", "Split", "Total", "Your share", "Status"]);
+    expect(await screen.findByRole("region", { name: "Balances" })).toBeInTheDocument();
     expect(screen.getByText(/Penny records payments made outside the app/)).toBeInTheDocument();
 
     await user.click(await screen.findByRole("link", { name: /^Hydro/ }));
@@ -147,7 +159,9 @@ describe("shared list, create and join", () => {
     const user = userEvent.setup();
     const { router } = renderApp("/households");
     expect(await screen.findByRole("heading", { name: "Nothing shared yet" })).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /New household/ }));
+    // The bar's + and the list's New household row both open it (card `iphone-shared-list`).
+    expect(within(topbar()).getByRole("button", { name: "New household" })).toBeInTheDocument();
+    await user.click(within(screen.getByRole("list", { name: "Start sharing" })).getByRole("button", { name: /New household/ }));
     const form = await dialog("New household");
     expect(within(form).getByText(/Everyone who joins must use CAD too/)).toBeInTheDocument();
 
@@ -195,7 +209,7 @@ describe("shared list, create and join", () => {
     expect(screen.getByText("You joined Bea's flat")).toBeInTheDocument();
   });
 
-  it("lists households with this month's balance and an overdue badge", async () => {
+  it("lists households with a tile, members and this month's balance, and the overall position", async () => {
     const id = seed();
     addExpense(ALEX, id, { title: "Hydro", totalCents: 9000, payerUserId: ids().alex });
     addExpense(BEA, id, { title: "Old rent", totalCents: 3000, payerUserId: ids().bea, date: "2026-09-10" });
@@ -203,9 +217,9 @@ describe("shared list, create and join", () => {
     renderApp("/households");
     const row = await within(await screen.findByRole("main")).findByRole("link", { name: /Maison/ });
     await waitFor(() => {
-      expect(row).toHaveTextContent("October · you're owed $60.00");
+      expect(row).toHaveTextContent(/3 members.*you're owed\$60\.00/);
     });
-    expect(within(row).getByText("Overdue")).toBeInTheDocument();
+    expect(screen.getByText(/^October · you're owed/)).toHaveTextContent("October · you're owed $60.00 income overall");
     // The sidebar lists the household with its balance in whole units, as on the cards (MAZ-221).
     const sidebar = screen.getByRole("complementary", { name: "Penny" });
     const item = within(sidebar).getByRole("link", { name: /^Maison.*\$60, you're owed \$60\.00$/ });
@@ -237,7 +251,7 @@ describe("shared list, create and join", () => {
     const record = within(head).getByRole("link", { name: "Record payment" });
     expect(record).toHaveAccessibleDescription("Shows balances and suggested payments to record");
     await user.click(record);
-    expect(await screen.findByRole("region", { name: "October 2026" })).toBeInTheDocument();
+    expect(await screen.findByRole("region", { name: "October" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Balances" })).toHaveAttribute("aria-current", "page");
   });
 
@@ -555,7 +569,10 @@ describe("payments and settlement", () => {
     const detail = await dialog("Costco run");
     expect(within(detail).getByText("Your share · in your spending").parentElement).toHaveTextContent("$61.40");
     await user.click(within(detail).getByRole("button", { name: `Mark ${BEA}'s share as paid` }));
-    expect(within(detail).getByText(/Penny keeps track; it doesn't send money, and nobody's spending changes/)).toBeInTheDocument();
+    // The card's Record payment sheet: titled so, the payer and receiver, Full share and one action.
+    expect(within(detail).getByRole("heading", { name: "Record payment" })).toBeInTheDocument();
+    expect(within(detail).getByText("Full share")).toBeInTheDocument();
+    expect(within(detail).getByText(/Penny keeps track — it doesn't send money, and nobody's spending changes/)).toBeInTheDocument();
     await user.click(within(detail).getByRole("button", { name: "Mark $61.40 as paid" }));
     expect(await screen.findByText("Share marked as paid")).toBeInTheDocument();
     expect(bodyOf(callsTo(fetchMock, `/api/households/${id}/expenses/${expense.id}/payments`)[0])).toEqual({ fromUserId: ids().bea, revision: 0 });
@@ -587,8 +604,10 @@ describe("payments and settlement", () => {
     const stale = await within(detail).findByRole("alert");
     expect(stale).toHaveTextContent("Hydro changed");
     expect(stale).toHaveTextContent(`${BEA} edited this expense after you opened it`);
-    expect(within(stale).getByRole("row", { name: /Total/ })).toHaveTextContent("$96.30$104.10");
-    expect(within(stale).getByRole("row", { name: /Your share/ })).toHaveTextContent("$32.10$34.70");
+    const row = (label: string) => within(stale).getByText(label, { selector: "dt" }).parentElement;
+    expect(row("Total")).toHaveTextContent("was $96.30 now $104.10");
+    expect(row("Your share")).toHaveTextContent("was $32.10 now $34.70");
+    expect(row("Edited")).toHaveTextContent(`${BEA} · just now`);
     expect(stale).toHaveTextContent("Nothing was recorded.");
     expect(stale).toHaveFocus();
     expect(within(stale).queryByRole("button", { name: /Mark/ })).not.toBeInTheDocument();
@@ -614,11 +633,12 @@ describe("payments and settlement", () => {
     expect(stale).toHaveTextContent("Internet payment changed");
     expect(stale).toHaveTextContent("You already recorded your share as paid after you opened this payment, maybe on another device.");
     expect(stale).not.toHaveTextContent("edited this expense");
-    expect(stale).not.toHaveTextContent("Edited by");
-    expect(stale).toHaveTextContent("Recorded by You");
-    expect(within(stale).queryByRole("row", { name: /^Total/ })).not.toBeInTheDocument();
-    expect(within(stale).queryByRole("row", { name: /^Your share \$/ })).not.toBeInTheDocument();
-    expect(within(stale).getByRole("row", { name: /Your share status/ })).toHaveTextContent("Not repaid yetRepaid");
+    const row = (label: string) => within(stale).queryByText(label, { selector: "dt" })?.parentElement;
+    expect(row("Edited")).toBeUndefined();
+    expect(row("Recorded")).toHaveTextContent("You · just now");
+    expect(row("Total")).toBeUndefined();
+    expect(row("Your share")).toBeUndefined();
+    expect(row("Your share status")).toHaveTextContent("was Not repaid yet now Repaid");
     expect(stale).toHaveTextContent("Nothing was recorded.");
     expect(server.state.reimbursements).toHaveLength(1);
   });
@@ -629,23 +649,25 @@ describe("payments and settlement", () => {
     serve();
     const user = userEvent.setup();
     const { unmount } = renderApp(`/households/${id}?tab=balances`);
-    const card = await screen.findByRole("region", { name: "October 2026" });
-    expect(within(card).getByText(/Monthly payments open on the last day of the month/)).toBeInTheDocument();
+    const card = await screen.findByRole("region", { name: "Suggested payments" });
+    expect(screen.getByText(/Monthly payments open on the last day of the month/)).toBeInTheDocument();
+    // Record paid shows, but isn't available before the month's last day.
+    expect(within(card).getByRole("button", { name: "Record paid" })).toBeDisabled();
     expect(within(card).queryByRole("button", { name: /Record that/ })).not.toBeInTheDocument();
     unmount();
 
     vi.setSystemTime(new Date("2026-10-31T12:00:00Z"));
     renderApp(`/households/${id}?tab=balances`);
-    const open = await screen.findByRole("region", { name: "October 2026" });
+    const open = await screen.findByRole("region", { name: "Suggested payments" });
     await user.click(within(open).getByRole("button", { name: `Record that You paid ${BEA} $30.00` }));
     const record = await dialog("Record payment");
-    expect(record).toHaveTextContent("Penny keeps track; it doesn't send money");
+    expect(record).toHaveTextContent("Penny keeps track — it doesn't send money");
     // Cam records the same transfer from another device first? No: Bea records Alex's payment first.
     server.handle(BEA, "POST", `/api/households/${id}/months/2026-10/reimbursements`, { fromUserId: ids().alex, toUserId: ids().bea, amountCents: 3000 });
     await user.click(within(record).getByRole("button", { name: "Mark $30.00 as paid" }));
-    const stale = await dialog("Balance changed");
+    const stale = await screen.findByRole("alert", { name: "October 2026 changed" });
     expect(stale).toHaveTextContent("Nothing was recorded.");
-    expect(within(stale).getByRole("row", { name: /Amount/ })).toHaveTextContent("Nothing to pay");
+    expect(within(stale).getByText(`You → ${BEA}`).parentElement).toHaveTextContent("was $30.00 now Nothing to pay");
     expect(server.state.reimbursements).toHaveLength(1);
   });
 
@@ -657,7 +679,7 @@ describe("payments and settlement", () => {
     serve({ unreachable: (method, url) => monthDown && method === "GET" && url.includes("/months/") });
     const user = userEvent.setup();
     renderApp(`/households/${id}?tab=balances`);
-    const open = await screen.findByRole("region", { name: "October 2026" });
+    const open = await screen.findByRole("region", { name: "Suggested payments" });
     await user.click(within(open).getByRole("button", { name: `Record that You paid ${BEA} $30.00` }));
     const record = await dialog("Record payment");
     server.handle(BEA, "POST", `/api/households/${id}/months/2026-10/reimbursements`, { fromUserId: ids().alex, toUserId: ids().bea, amountCents: 3000 });
@@ -666,13 +688,13 @@ describe("payments and settlement", () => {
     const alert = await within(record).findByRole("alert");
     expect(alert).toHaveTextContent("October 2026 changed after you opened this payment, so nothing was recorded.");
     expect(alert).toHaveTextContent("Penny couldn't load the new balance either: Penny can't reach the server.");
-    expect(screen.queryByRole("dialog", { name: "Balance changed" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("alert", { name: "October 2026 changed" })).not.toBeInTheDocument();
     expect(server.state.reimbursements).toHaveLength(1);
 
     // Once the month loads again, trying again shows the new balance.
     monthDown = false;
     await user.click(within(record).getByRole("button", { name: "Mark $30.00 as paid" }));
-    expect(within(await dialog("Balance changed")).getByRole("row", { name: /Amount/ })).toHaveTextContent("Nothing to pay");
+    expect(within(await screen.findByRole("alert", { name: "October 2026 changed" })).getByText(`You → ${BEA}`).parentElement).toHaveTextContent("Nothing to pay");
     expect(server.state.reimbursements).toHaveLength(1);
   });
 
@@ -684,7 +706,9 @@ describe("payments and settlement", () => {
     serve();
     const user = userEvent.setup();
     renderApp(`/households/${id.household.id}?tab=people`);
-    await user.click(await screen.findByRole("button", { name: "Leave household" }));
+    // Leave is in the navigation bar's … menu (card `iphone-shared-people`).
+    await user.click(await screen.findByRole("button", { name: "Household actions" }));
+    await user.click(within(topbar()).getByRole("button", { name: "Leave household" }));
     const confirm = await dialog("Leave Bea's flat?");
     await user.click(within(confirm).getByRole("button", { name: "Leave" }));
     expect(await within(confirm).findByRole("alert")).toHaveTextContent("Settle every monthly balance before leaving.");
@@ -697,7 +721,8 @@ describe("payments and settlement", () => {
     serve();
     const user = userEvent.setup();
     renderApp(`/households/${id}?tab=people`);
-    await user.click(await screen.findByRole("button", { name: "Archive household" }));
+    await user.click(await screen.findByRole("button", { name: "Household actions" }));
+    await user.click(within(topbar()).getByRole("button", { name: "Archive household" }));
     const confirm = await dialog("Archive Maison?");
     expect(confirm).toHaveTextContent("Still unsettled: October 2026");
     await user.click(within(confirm).getByRole("button", { name: "Archive" }));
@@ -725,9 +750,10 @@ describe("people, invites and history", () => {
     expect(await screen.findByLabelText(`Invite code ${code.split("").join(" ")}`)).toBeInTheDocument();
     expect(screen.getByText(/Expires in 10:00|Expires in 9:5\d/)).toBeInTheDocument();
 
-    // Member rows carry no actions (MAZ-229): removal starts under Manage.
+    // Member rows carry no actions (MAZ-229): removal starts in the navigation bar's … menu.
     expect(within(screen.getByRole("list", { name: "Members" })).queryByRole("button")).not.toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Remove someone" }));
+    await user.click(within(topbar()).getByRole("button", { name: "Household actions" }));
+    await user.click(within(topbar()).getByRole("button", { name: "Remove someone" }));
     const pick = await dialog("Remove someone");
     await user.click(within(pick).getByRole("button", { name: CAM }));
     const confirm = await dialog(`Remove ${CAM}?`);
@@ -746,9 +772,9 @@ describe("people, invites and history", () => {
     renderApp(`/households/${id}?tab=history`);
     const history = await screen.findByRole("region", { name: "History" });
     expect(history).toHaveTextContent(`${BEA} added Hydro`);
-    expect(history).toHaveTextContent(`${BEA} joined`);
+    expect(history).toHaveTextContent(`${BEA} joined the household`);
     await user.click(within(history).getByRole("radio", { name: "Payments" }));
-    expect(history).toHaveTextContent("You recorded your $30.00 share payment");
+    expect(history).toHaveTextContent(`You recorded a payment$30.00 share to ${BEA}`);
     expect(history).not.toHaveTextContent("added Hydro");
     expect(document.body).not.toHaveTextContent("Bea's private card");
     expect(document.body).not.toHaveTextContent("acct-bea");

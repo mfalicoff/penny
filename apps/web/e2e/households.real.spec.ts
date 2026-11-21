@@ -15,8 +15,34 @@ test.describe.configure({ mode: "serial", timeout: 180_000 });
 
 const PASSWORD = "correct horse battery";
 
-/** An expense's detail: a dialog below 1100px, the pane beside the expenses from there (MAZ-229). */
-const expenseDetail = (page: Page, name: string) => page.getByRole("dialog", { name }).or(page.getByRole("region", { name, exact: true }));
+/** An expense's detail: a dialog below 1100px, the pane beside the expenses from there (MAZ-229). Recording a share retitles it Record payment. */
+const expenseDetail = (page: Page, name: string) => {
+  const title = new RegExp("^(" + name + "|Record payment)$");
+  return page.getByRole("dialog", { name: title }).or(page.getByRole("region", { name: title }));
+};
+
+/**
+ * Runs a Manage action: from 1100px it's a button on People; narrower it's in the navigation bar's
+ * … menu (cards `iphone-shared`, `iphone-shared-people`).
+ */
+async function manage(page: Page, action: string) {
+  const menu = page.getByRole("button", { name: "Household actions" });
+  const button = page.getByRole("button", { name: action });
+  await expect(menu.or(button).first()).toBeVisible();
+  if (await menu.isVisible()) await menu.click();
+  await button.click();
+}
+
+/**
+ * One expense in the household's list: a row link on phones and tablets, a table row from 1100px
+ * (`web-household`). Either shows the total and your share.
+ */
+const expenseRow = (page: Page, name: RegExp) =>
+  page.getByRole("list", { name: "Expenses" }).getByRole("link", { name }).or(page.getByRole("region", { name: /^Expenses in / }).getByRole("row", { name }));
+
+/** The link that opens an expense, in the list or the table. */
+const expenseLink = (page: Page, name: RegExp) =>
+  page.getByRole("list", { name: "Expenses" }).getByRole("link", { name }).or(page.getByRole("region", { name: /^Expenses in / }).getByRole("link", { name }));
 const OCT_30 = "2026-10-30T15:00:00Z";
 const OCT_31 = "2026-10-31T15:00:00Z";
 
@@ -72,7 +98,7 @@ test("two people: invite, splits, private account, stale payment, monthly settle
 
   // Alex creates the household and an invite code; Bea joins with it.
   await alex.page.goto("/households");
-  await alex.page.getByRole("button", { name: /New household/ }).click();
+  await alex.page.getByRole("list", { name: "Start sharing" }).getByRole("button", { name: /New household/ }).click();
   await alex.page.getByRole("dialog", { name: "New household" }).getByLabel("Name").fill("Maison");
   await alex.page.getByRole("button", { name: "Create household" }).click();
   await expect(alex.page.getByRole("heading", { level: 1, name: "Maison" })).toBeVisible();
@@ -117,10 +143,10 @@ test("two people: invite, splits, private account, stale payment, monthly settle
 
   // Bea sees totals and her shares, never Alex's account, and repays Hydro on its own.
   await bea.page.goto(url);
-  const list = bea.page.getByRole("list", { name: "Expenses" });
-  await expect(list.getByRole("link", { name: /Hydro/ })).toContainText("$45.00 your share");
-  await expect(list.getByRole("link", { name: /Internet/ })).toContainText("$20.00 your share");
-  await list.getByRole("link", { name: /Hydro/ }).click();
+  const list = { row: (name: RegExp) => expenseRow(bea.page, name), link: (name: RegExp) => expenseLink(bea.page, name) };
+  await expect(list.row(/Hydro/)).toContainText("$45.00");
+  await expect(list.row(/Internet/)).toContainText("$20.00");
+  await list.link(/Hydro/).click();
   const hydro = expenseDetail(bea.page, "Hydro");
   await expect(hydro.getByText("The payer's account stays private to them.")).toBeVisible();
   await hydro.getByRole("button", { name: "Mark your share as paid" }).click();
@@ -129,7 +155,7 @@ test("two people: invite, splits, private account, stale payment, monthly settle
   await bea.page.keyboard.press("Escape");
 
   // Bea opens Internet's payment; Alex changes the shares first. The server refuses (409).
-  await list.getByRole("link", { name: /Internet/ }).click();
+  await list.link(/Internet/).click();
   const internet = expenseDetail(bea.page, "Internet");
   await internet.getByRole("button", { name: "Mark your share as paid" }).click();
   await alex.page.getByRole("link", { name: /Internet/ }).click();
@@ -142,14 +168,14 @@ test("two people: invite, splits, private account, stale payment, monthly settle
   await internet.getByRole("button", { name: "Mark $20.00 as paid" }).click();
   const stale = internet.getByRole("alert");
   await expect(stale).toContainText("Internet changed");
-  await expect(stale.getByRole("row", { name: /Your share/ })).toContainText("$30.00");
+  await expect(stale.locator("dt", { hasText: /^Your share$/ }).locator("..")).toContainText("$30.00");
   await expect(stale).toContainText("Nothing was recorded.");
   await stale.getByRole("button", { name: "Review expense" }).click();
   await bea.page.keyboard.press("Escape");
 
   // Archive is refused while October is unsettled.
   await alex.page.goto(`${url}?tab=people`);
-  await alex.page.getByRole("button", { name: "Archive household" }).click();
+  await manage(alex.page, "Archive household");
   const archive = alex.page.getByRole("dialog", { name: "Archive Maison?" });
   await archive.getByRole("button", { name: "Archive" }).click();
   await expect(archive.getByRole("alert")).toContainText("Settle all monthly balances before archiving.");
@@ -166,7 +192,7 @@ test("two people: invite, splits, private account, stale payment, monthly settle
   await bea.page.getByRole("dialog", { name: "Record payment" }).getByRole("button", { name: "Mark $30.00 as paid" }).click();
   await expect(bea.page.getByText("Payment recorded")).toBeVisible();
   await alex.page.getByRole("dialog", { name: "Record payment" }).getByRole("button", { name: "Mark $30.00 as paid" }).click();
-  await expect(alex.page.getByRole("dialog", { name: "Balance changed" })).toContainText("Nothing was recorded.");
+  await expect(alex.page.getByRole("alert", { name: "October 2026 changed" })).toContainText("Nothing was recorded.");
   await alex.page.getByRole("button", { name: "Review balances" }).click();
   await expect(alex.page.getByText("Everyone is settled for October 2026.")).toBeVisible();
 
@@ -174,11 +200,11 @@ test("two people: invite, splits, private account, stale payment, monthly settle
   await alex.page.goto(`${url}?tab=history`);
   const history = alex.page.getByRole("region", { name: "History" });
   await history.getByRole("radio", { name: "Payments" }).check({ force: true });
-  await expect(history).toContainText(`${bea.email} recorded ${bea.email} paid You $30.00`);
+  await expect(history).toContainText(`${bea.email} recorded a payment$30.00 to You for the month`);
 
   // Settled: archive succeeds, and Bea's copy turns read-only.
   await alex.page.goto(`${url}?tab=people`);
-  await alex.page.getByRole("button", { name: "Archive household" }).click();
+  await manage(alex.page, "Archive household");
   await alex.page.getByRole("dialog", { name: "Archive Maison?" }).getByRole("button", { name: "Archive" }).click();
   await expect(alex.page.getByRole("heading", { level: 1, name: "Shared" })).toBeVisible();
   await bea.page.goto(url);
