@@ -122,7 +122,7 @@ struct ShellTests {
         let parts = HomeView.projectedParts(summary, currency: "CAD", pending: 2)
         #expect(parts.amount + parts.rest == HomeView.projectedLine(summary, currency: "CAD", pending: 2))
         #expect(parts.rest == " projected · as of last sync")
-        #expect(parts.amount.hasPrefix("$") || parts.amount.hasPrefix(MoneyFormat.minus))
+        #expect(parts.amount == MoneyFormat.signed(summary.projectedRemaining, meaning: .neutral, currency: "CAD"))
     }
 
     @Test("whenOffline_OfflineCapsule_ShouldSayHowManyChangesWaitOnOneLine")
