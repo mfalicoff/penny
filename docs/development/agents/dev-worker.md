@@ -90,7 +90,7 @@ If something you left out means the issue isn't actually done (the pull request 
 1. Commit with a Conventional Commit message and push the branch.
 2. Open the pull request with `gh pr create`:
    - **Title:** a Conventional Commit, `type(scope): summary`. The type is one of `feat`, `fix`, `perf`, `refactor`, `docs`, `test`, `build`, `ci` or `chore`. The `PR title` check enforces this, and Release Please reads it after the squash merge.
-   - **Body:** what changed and why, how you tested it, anything you couldn't run, and any **Follow-ups**. End with `Fixes MAZ-123` on its own line.
+   - **Body:** what changed and why, how you tested it, anything you couldn't run, and any **Follow-ups**. End with `Fixes MAZ-123` on its own line. Don't name any other Linear issue by its identifier in the title, body or commits: Linear links every identifier it finds and moves that issue to In Progress. Describe it instead ("the server connect restyle").
    - **Label:** `agent`. Only pull requests with this label are reviewed.
    - **Not a draft.**
 3. Subscribe this session to the pull request's activity, so review comments and CI results come back to you.
