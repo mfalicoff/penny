@@ -33,8 +33,9 @@ The orchestrator only picks up Todo issues labelled `agent-ready`. It skips issu
 | --- | --- | --- |
 | `worker:fearful` | fearful, the Mac | any issue labelled `ios`, including mixed iOS + backend issues |
 | `worker:worker` | worker, Linux | everything else |
+| `worker:fear` | fear, a larger Linux desktop, not always online | everything else, alongside worker; the heavier issue when both are free |
 
-Each machine runs one issue at a time. A machine is busy while an issue carrying its `worker:*` label is In Progress or In Review. iOS work is never sent to Linux: it waits until the Mac is free and online.
+Each machine runs one issue at a time. A machine is busy while an issue carrying its `worker:*` label is In Progress or In Review. iOS work is never sent to Linux: it waits until the Mac is free and online. When fear is offline, starting its session fails, the orchestrator puts the issue back in Todo, and worker takes it. Worker and fear never work at the same time on issues that change the same screens or shared contract files.
 
 ## Follow-ups
 
@@ -67,4 +68,4 @@ To retry, fix whatever stopped it, remove `needs-human` and the `worker:*` label
 
 - The `CLAUDE_CODE_OAUTH_TOKEN` repository secret for the review workflow. Create it with `claude setup-token`, then run `gh secret set CLAUDE_CODE_OAUTH_TOKEN`.
 - The GitHub `agent` label, which the dev worker puts on its pull requests. Only pull requests with this label are reviewed.
-- Both bridge machines online, with Remote Control running in their `penny` checkouts. The orchestrator runs on worker, so nothing new is assigned while worker is offline.
+- The bridge machines online, with Remote Control running in their `penny` checkouts (fear may be offline; the orchestrator works around it). The orchestrator runs on worker, so nothing new is assigned while worker is offline.
