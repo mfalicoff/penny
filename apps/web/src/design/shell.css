@@ -267,6 +267,11 @@
   background: var(--pk-surface);
 }
 
+/* The touch tablets' round search button (card `ipad-home`); hidden elsewhere. */
+.topbar__search {
+  display: none;
+}
+
 /*
  * Phones: Add entry is the round copper button beside the tab bar (card `iphone-home`). It keeps
  * its accessible name and shows only the icon.
@@ -872,6 +877,36 @@ body:has(.pk-toast) .topbar__add {
     display: none;
   }
 
+  /*
+   * The iPad top bar (card `ipad-home`): a round glass search button beside a copper Add entry
+   * capsule, with no keyboard hints.
+   */
+  .topsearch {
+    display: none;
+  }
+
+  .topbar__search {
+    display: grid;
+  }
+
+  .topbar__add {
+    min-height: 44px;
+    padding: 0 18px;
+    border-radius: 22px;
+    box-shadow: 0 6px 18px color-mix(in srgb, var(--pk-tint) 38%, transparent);
+    font-size: 1.0625rem;
+  }
+
+  .topbar__add .pk-kbd {
+    display: none;
+  }
+
+  /* ipad-settings: Settings has no toolbar actions (N still opens Add entry). */
+  .app:has(.settings) .topbar__search,
+  .app:has(.settings) .topbar__add {
+    display: none;
+  }
+
   /* The iPad cards lead Home with the month controls; the title stays for screen readers. */
   .topbar--home .topbar__title {
     position: absolute;
@@ -900,5 +935,58 @@ body:has(.pk-toast) .topbar__add {
     background: var(--pk-surface);
     backdrop-filter: none;
     box-shadow: 0 0 0 0.5px var(--pk-separator), 0 1px 2px rgb(0 0 0 / 0.05);
+  }
+}
+
+/*
+ * Phones: Settings is a sheet over a dimmed Home (card `iphone-settings`). Home stays fixed under
+ * the dim; the sheet starts just below the top edge with rounded corners and a grabber, and scrolls
+ * with the page.
+ */
+@media (max-width: 767.98px) {
+  .app__behind {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .app__behind::after {
+    position: absolute;
+    inset: 0;
+    background: var(--pk-dim);
+    content: "";
+  }
+
+  .app__column--sheet {
+    position: relative;
+    z-index: 1;
+    min-height: calc(100dvh - 8px - env(safe-area-inset-top));
+    margin: calc(8px + env(safe-area-inset-top)) 6px 0;
+    border-radius: 38px 38px 0 0;
+    background: var(--pk-bg);
+  }
+
+  .app__grabber {
+    display: block;
+    flex: none;
+    width: 36px;
+    height: 5px;
+    margin: 7px auto -6px;
+    border-radius: 3px;
+    background: var(--pk-label-3);
+    opacity: 0.5;
+  }
+
+  .app__column--sheet > .topbar {
+    padding-top: 12px;
+  }
+}
+
+@media (min-width: 768px) {
+  .app__behind,
+  .app__grabber {
+    display: none;
   }
 }

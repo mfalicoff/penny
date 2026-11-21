@@ -1,6 +1,6 @@
 import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { renderApp, stubServer } from "./render";
 
 const main = () => screen.getByRole("navigation", { name: "Main" });
@@ -194,6 +194,63 @@ describe("phone navigation", () => {
     await user.click(within(manage).getByRole("link", { name: "Categories" }));
     expect(await screen.findByRole("heading", { level: 1, name: "Categories" })).toBeInTheDocument();
     expect(within(tabs).getByRole("link", { name: "Home" })).toHaveAttribute("aria-current", "true");
+  });
+});
+
+describe("phone Settings sheet", () => {
+  it("draws Settings over Home, which stays hidden from assistive technology and out of reach", async () => {
+    stubServer();
+    renderApp("/settings");
+    await screen.findByRole("navigation", { name: "Manage" });
+    // iphone-settings: the sheet's page is Settings; Home sits under the dim.
+    const behind = document.querySelector(".app__behind");
+    expect(behind).toHaveAttribute("aria-hidden", "true");
+    expect(behind).toHaveAttribute("inert");
+    await waitFor(() => {
+      expect(behind).toHaveTextContent("Left to spend");
+    });
+    expect(screen.queryByRole("region", { name: "Left to spend" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Done" })).toHaveAttribute("href", "/");
+  });
+
+  it("leaves other pages without Home behind them", async () => {
+    stubServer();
+    renderApp("/trips");
+    await screen.findByRole("heading", { level: 1, name: "Trips" });
+    expect(document.querySelector(".app__behind")).toBeNull();
+  });
+});
+
+describe("touch tablet top bar", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("searches from the round glass button (ipad-home) and keeps Settings without one", async () => {
+    // An iPad in landscape: every min-width query up to 1194px, and the touch tablet query.
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn((query: string) => {
+        const min = /min-width:\s*(\d+)px/.exec(query);
+        const fits = !min || 1194 >= Number(min[1]);
+        const matches = query.includes("pointer: coarse") || query.includes("hover: none") ? fits : fits && !query.includes("hover");
+        return { matches, media: query, addEventListener: vi.fn(), removeEventListener: vi.fn() };
+      }),
+    );
+    stubServer();
+    const user = userEvent.setup();
+    const { router } = renderApp("/trips");
+    await screen.findByRole("heading", { level: 1, name: "Trips" });
+    await user.click(within(screen.getByRole("banner")).getByRole("button", { name: "Search entries" }));
+    expect(await screen.findByRole("heading", { level: 1, name: "Activity" })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/transactions");
+    await waitFor(() => {
+      expect(screen.getByRole("searchbox", { name: "Search transactions" })).toHaveFocus();
+    });
+    // The sheet over Home is for phones only.
+    await act(() => router.navigate({ to: "/settings/appearance" }));
+    await screen.findByRole("heading", { level: 2, name: "Appearance" });
+    expect(document.querySelector(".app__behind")).toBeNull();
   });
 });
 
