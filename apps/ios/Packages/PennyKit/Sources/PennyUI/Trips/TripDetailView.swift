@@ -227,6 +227,9 @@ struct TripEntryRow: View {
     let ledger: Ledger
     /// Nil for private expenses on a shared trip, where the dates are the shared trip's.
     let range: TripRange?
+    /// A private expense on a shared trip, under Only you: the trip cards draw it as the shared rows,
+    /// with the amount unsigned and "date · account" without the category.
+    var onSharedTrip = false
 
     var body: some View {
         let category = ledger.category(id: entry.categoryId)
@@ -243,7 +246,7 @@ struct TripEntryRow: View {
             Spacer(minLength: 8)
             VStack(alignment: .trailing, spacing: 2) {
                 MoneyText(
-                    entry.share, meaning: .expense, currency: ledger.currency.rawValue,
+                    entry.share, meaning: onSharedTrip ? .neutral : .expense, currency: ledger.currency.rawValue,
                     style: .callout.weight(.semibold))
                 if entry.share != entry.total {
                     Text("of \(MoneyFormat.amount(entry.total, currency: ledger.currency.rawValue))")
@@ -257,7 +260,7 @@ struct TripEntryRow: View {
     private func meta(_ category: LedgerCategory?) -> String {
         var parts = [DayText.date(entry.date).formatted(.dateTime.month(.abbreviated).day())]
         if let account = entry.accountId.flatMap(ledger.account(id:)) { parts.append(account.name) }
-        parts.append(category?.name ?? "Unknown category")
+        if !onSharedTrip { parts.append(category?.name ?? "Unknown category") }
         if let range, !range.contains(entry.date) { parts.append("outside the trip dates") }
         return parts.joined(separator: " · ")
     }

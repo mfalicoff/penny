@@ -201,7 +201,7 @@ struct SharedTripExpenseSections: View {
             Section {
                 ForEach(context.privateEntries, id: \.id) { entry in
                     NavigationLink(value: DetailRoute.entry(id: entry.id)) {
-                        TripEntryRow(entry: entry, ledger: ledger, range: context.range)
+                        TripEntryRow(entry: entry, ledger: ledger, range: context.range, onSharedTrip: true)
                     }
                     .cardRow()
                     .accessibilityIdentifier("entry.\(entry.id)")

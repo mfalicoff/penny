@@ -2233,7 +2233,7 @@
             "ref": "MAZ-256"
           },
           {
-            "summary": "The right column shows the month's Balances (with its month control), then Your share by category, then the members, not the card's People with each person's month balance beside the hero; expense rows show the payer and \"you owe\", not the category tile and \"yours\" (follow-up recorded on MAZ-249)",
+            "summary": "The right column shows the month's Balances (with its month control), then Your share by category, then the members, not the card's People with each person's month balance beside the hero; expense rows show the payer and \"you owe\", not the category tile and \"yours\"; Expenses is two sections (Shared with everyone, then Only you) where the card has one Expenses card headed \"4 shared · 1 private\" (follow-up recorded on MAZ-249)",
             "kind": "follow-up",
             "ref": "MAZ-249"
           },
