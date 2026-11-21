@@ -335,4 +335,47 @@ struct EntryFlowTests {
         #expect(DayText.medium(friday, today: later).hasPrefix("Fri,"))
         #expect(DayText.medium(later, today: later) == "Today")
     }
+
+    @Test("whenAnEntryRepeats_EntryText_ShouldNameTheCadenceFromItsDate")
+    func repeatValue() {
+        let payday = CalendarDate(year: 2026, month: 11, day: 15) ?? .earliest
+        #expect(EntryText.repeats(nil, on: payday) == "Never")
+        #expect(EntryText.repeats(.monthly, on: payday) == "Monthly on the 15th")
+        #expect(EntryText.repeats(.weekly, on: payday) == "Weekly on Sunday")
+        #expect(EntryText.repeats(.yearly, on: payday) == "Yearly on November 15")
+        // An unreadable date still names the cadence.
+        #expect(EntryText.repeats(.monthly, on: nil) == "Monthly")
+    }
+
+    @Test("whenTheFormSavesOnIPad_EntryText_ShouldNameWhatIsAdded")
+    func saveTitle() {
+        #expect(EntryText.saveTitle(.expense, isNew: true) == "Add expense")
+        #expect(EntryText.saveTitle(.income, isNew: true) == "Add income")
+        #expect(EntryText.saveTitle(.investment, isNew: true) == "Add investment")
+        #expect(EntryText.saveTitle(.income, isNew: false) == "Save")
+    }
+
+    @Test("whenSplitting_EntrySplitSheet_ShouldShowTheEntryAndItsTotalUnderTheTitle")
+    func splitSubtitle() {
+        #expect(
+            EntrySplitSheet.subtitle(title: " Dinner with friends ", total: 7440, currency: "CAD").hasPrefix(
+                "Dinner with friends · "))
+        #expect(EntrySplitSheet.subtitle(title: "", total: nil, currency: "CAD").isEmpty)
+        #expect(EntrySplitSheet.subtitle(title: "Dinner", total: nil, currency: "CAD") == "Dinner")
+    }
+
+    @Test("whenTheSplitRowHasAShare_EntryFieldRow_ShouldDrawOnlyTheShareInCopper")
+    func splitEmphasis() {
+        let text = EntryFieldRow.styled("3 ways · $24.80 yours", emphasis: "$24.80")
+        let tinted = text.runs.filter { $0.foregroundColor != nil }.map { String(text[$0.range].characters) }
+        #expect(tinted == ["$24.80"])
+        let plain = EntryFieldRow.styled("All mine", emphasis: "$24.80")
+        #expect(plain.runs.allSatisfy { $0.foregroundColor == nil })
+    }
+
+    @Test("whenTheAmountIsShown_AmountDisplay_ShouldFadeTheSignInTheKindsColor")
+    func signColor() {
+        #expect(AmountDisplay.signStyle(.income) == PennyColor.income.opacity(0.45))
+        #expect(AmountDisplay.signStyle(.expense) == EntryText.meaning(.expense).color.opacity(0.4))
+    }
 }

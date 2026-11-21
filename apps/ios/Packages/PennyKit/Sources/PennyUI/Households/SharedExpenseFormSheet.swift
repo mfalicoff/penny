@@ -20,7 +20,7 @@ enum SharedFormText {
 /// the card, so the split shows above the keypad), your share, the most used categories, then
 /// labeled rows for Household, Date and Account, with repeat and note behind one disclosure row
 /// and Save as the toolbar check. Opened from Add entry (`scope`), it also has
-/// the type and Household, so it can go back to being a personal entry with what was typed.
+/// the Household row, so it can go back to being a personal entry with what was typed.
 ///
 /// Payer privacy: the account row appears only when the viewer pays, lists only the viewer's
 /// own accounts, and is never sent for someone else; other members never see it. Online only:
@@ -123,17 +123,14 @@ private struct SharedExpenseForm: View {
             ScrollView {
                 VStack(spacing: 16) {
                     banners
-                    if let scope, isNew {
-                        kindPicker(scope)
-                    }
                     amount
                     TextField("What was it for?", text: $form.draft.title)
                         .nameEntry()
                         .focused($focus, equals: .title)
                         .submitLabel(.done)
-                        .font(.title3)
-                        .padding(.horizontal, 16)
-                        .frame(minHeight: ControlSize.button)
+                        .font(.body)
+                        .padding(.horizontal, 14)
+                        .frame(minHeight: Metrics.minTouchTarget)
                         .background(
                             PennyColor.surface,
                             in: RoundedRectangle(cornerRadius: Metrics.rowRadius, style: .continuous)
@@ -157,6 +154,8 @@ private struct SharedExpenseForm: View {
                 }
             }
             .navigationTitle(title)
+            // The household under the title, so the form says where the expense goes.
+            .navigationSubtitle(model.household?.name ?? "")
             .inlineNavigationTitle()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -248,7 +247,6 @@ private struct SharedExpenseForm: View {
         switch form.draft.original {
         case .expense: "Edit expense"
         case .rule: "Edit repeating expense"
-        case nil where scope != nil: "Add entry"
         case nil: form.draft.repeats == nil ? "New expense" : "New repeating expense"
         }
     }
@@ -324,26 +322,6 @@ private struct SharedExpenseForm: View {
             .foregroundStyle(PennyColor.secondaryLabel)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-    }
-
-    /// Expense, Income or Investment, as in Add entry: the last two are personal only, so
-    /// choosing one goes back to the personal form with what was typed.
-    private func kindPicker(_ scope: EntryScope) -> some View {
-        Picker(
-            "Type",
-            selection: Binding(
-                get: { EntryKind.expense },
-                set: { kind in
-                    guard kind != .expense else { return }
-                    discarded = true
-                    form.discardDraft()
-                    scope.choose(nil, EntryHandoff(form.draft, viewerId: viewerId, kind: kind))
-                })
-        ) {
-            ForEach(EntryKind.allCases, id: \.self) { Text(EntryText.kind($0)).tag($0) }
-        }
-        .pickerStyle(.segmented)
-        .accessibilityIdentifier("sharedForm.kind")
     }
 
     @ViewBuilder private var amount: some View {
@@ -496,7 +474,7 @@ private struct SharedExpenseForm: View {
             VStack(spacing: 0) {
                 ForEach(participants) { member in
                     let share = (try? preview.get())?.first { $0.userId == member.userId }?.amountCents
-                    HStack(spacing: 12) {
+                    HStack(spacing: 10) {
                         Monogram(initials: model.people.initials(member.userId))
                         Text(model.people.name(member.userId)).lineLimit(1)
                         Spacer(minLength: 8)
@@ -505,11 +483,12 @@ private struct SharedExpenseForm: View {
                             .fontWeight(member.userId == viewerId ? .semibold : .regular)
                             .foregroundStyle(member.userId == viewerId ? PennyColor.label : PennyColor.secondaryLabel)
                     }
-                    .padding(.horizontal, 16)
-                    .frame(minHeight: Metrics.minTouchTarget)
+                    .font(.callout)
+                    .padding(.horizontal, 14)
+                    .frame(minHeight: 52)
                     .accessibilityElement(children: .combine)
                     .accessibilityIdentifier("sharedForm.split.\(member.userId)")
-                    divider
+                    if member.userId != participants.last?.userId || form.draft.mode != .equal { shareDivider }
                 }
                 if form.draft.mode != .equal {
                     Button {
@@ -550,7 +529,9 @@ private struct SharedExpenseForm: View {
         .accessibilityIdentifier("sharedForm.payer.\(member.userId)")
     }
 
-    private var divider: some View { Divider().padding(.leading, 52) }
+    private var divider: some View { EntryFieldRow.divider }
+    /// Between the split rows: inset past the monogram, as on the card.
+    private var shareDivider: some View { Divider().padding(.leading, 58) }
 
     private var splitValue: String {
         let people = participants.count
