@@ -8,8 +8,12 @@ import {
   outsideRange,
   phaseLabel,
   privateExpenses,
-  rangeLabel,
+  outsideDatesNote,
+  shareByCategory,
   sharedTripTotals,
+  tileStatus,
+  tripMonth,
+  tripRange,
   tripCards,
   tripPhase,
   tripSections,
@@ -89,10 +93,37 @@ describe("dates and phases", () => {
     expect(daysUntil("2026-01-01", "2026-01-02")).toBe(-1);
   });
 
-  it("writes both ends of the range, with the year once unless the trip crosses one", () => {
-    expect(rangeLabel("2026-11-12", "2026-11-19")).toBe("Thu, Nov 12 – Thu, Nov 19, 2026");
-    expect(rangeLabel("2026-12-28", "2027-01-03")).toBe("Mon, Dec 28, 2026 – Sun, Jan 3, 2027");
-    expect(rangeLabel("2026-11-12", "2026-11-12")).toBe("Thu, Nov 12, 2026");
+  it("writes the range as the cards do, with the year once unless the trip crosses one", () => {
+    expect(tripRange("2026-11-12", "2026-11-19")).toBe("Nov 12–19, 2026");
+    expect(tripRange("2026-08-30", "2026-09-02")).toBe("Aug 30 – Sep 2, 2026");
+    expect(tripRange("2026-12-28", "2027-01-03")).toBe("Dec 28, 2026 – Jan 3, 2027");
+    expect(tripRange("2026-11-12", "2026-11-12")).toBe("Nov 12, 2026");
+  });
+
+  it("leaves out this year on phones, but keeps another year", () => {
+    expect(tripRange("2026-11-12", "2026-11-19", { year: "auto", today: "2026-11-09" })).toBe("Nov 12–19");
+    expect(tripRange("2027-02-14", "2027-02-21", { year: "auto", today: "2026-11-09" })).toBe("Feb 14–21, 2027");
+  });
+
+  it("says upcoming, now or shared after a tile's dates, and nothing for a past personal trip", () => {
+    const today = "2026-11-09";
+    expect(tileStatus({ kind: "personal", startDate: "2027-02-14", endDate: "2027-02-21" }, today)).toBe("upcoming");
+    expect(tileStatus({ kind: "shared", startDate: "2026-11-08", endDate: "2026-11-12" }, today)).toBe("now");
+    expect(tileStatus({ kind: "shared", startDate: "2026-08-22", endDate: "2026-08-24" }, today)).toBe("shared");
+    expect(tileStatus({ kind: "personal", startDate: "2026-10-03", endDate: "2026-10-05" }, today)).toBeNull();
+  });
+
+  it("names the month before the trip in the date note", () => {
+    expect(outsideDatesNote("2026-11-12")).toBe("Expenses can be dated outside the trip — flights booked in October still count.");
+    expect(outsideDatesNote("2027-01-05")).toBe("Expenses can be dated outside the trip — flights booked in December still count.");
+    expect(outsideDatesNote("")).toBe("Expenses can be dated outside the trip — flights booked before it still count.");
+  });
+
+  it("opens a trip's balances on this month while it's on, else its nearest month", () => {
+    const lisbon = { startDate: "2026-11-02", endDate: "2026-12-03" };
+    expect(tripMonth(lisbon, "2026-10-15")).toBe("2026-11");
+    expect(tripMonth(lisbon, "2026-12-01")).toBe("2026-12");
+    expect(tripMonth(lisbon, "2027-03-01")).toBe("2026-12");
   });
 });
 
@@ -152,6 +183,16 @@ describe("shared trip totals", () => {
       { startDate: "2026-11-12", endDate: "2026-11-19" },
     );
     expect(totals).toEqual({ tripTotal: 88400, sharedShare: 20600, privateShare: 2400, yourSpending: 23000, outside: 2 });
+  });
+
+  it("adds your shares and private expenses by category, largest first", () => {
+    const rows = shareByCategory(
+      [shared("a", "2026-11-03", 82400, [["u1", 20600], ["u2", 61800]]), { ...shared("b", "2026-11-04", 2000, [["u1", 1000], ["u2", 1000]]), category: { name: "Travel", icon: "airplane", color: "#64748B" } }],
+      "u1",
+      [expense("p1", "2026-11-02", 2400, { categoryId: "transport" }), expense("p2", "2026-11-02", 500, { categoryId: "gone" })],
+      [{ id: "transport", name: "travel", icon: "bus", color: "#64748B" }],
+    );
+    expect(rows.map((row) => [row.name, row.amount])).toEqual([["Food", 20600], ["Travel", 3400], ["Other", 500]]);
   });
 
   it("counts personal trip expenses dated outside the travel range", () => {

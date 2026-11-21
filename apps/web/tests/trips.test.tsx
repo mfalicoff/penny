@@ -145,7 +145,7 @@ describe("personal trips", { timeout: 20_000 }, () => {
     await setDate(user, within(form).getByLabelText("Starts"), "2026-11-12");
     await user.click(within(form).getByRole("button", { name: "Create trip" }));
     expect(await screen.findByRole("heading", { level: 1, name: "Lisbon" })).toBeInTheDocument();
-    expect(screen.getByText("Thu, Nov 12 – Thu, Nov 19, 2026")).toBeInTheDocument();
+    expect(screen.getByText("Nov 12–19, 2026")).toBeInTheDocument();
     await waitFor(() => {
       expect(ledgerTrips()).toEqual([expect.objectContaining({ name: "Lisbon", startDate: "2026-11-12", endDate: "2026-11-19" })]);
     });
@@ -157,7 +157,7 @@ describe("personal trips", { timeout: 20_000 }, () => {
     await waitFor(() => {
       expect(ledgerTrips()[0]?.startDate).toBe("2026-11-10");
     });
-    expect(screen.getByText("Tue, Nov 10 – Thu, Nov 19, 2026")).toBeInTheDocument();
+    expect(screen.getByText("Nov 10–19, 2026")).toBeInTheDocument();
 
     // Back on the list the trip is featured as the next one.
     await user.click(screen.getByRole("link", { name: "Back to Trips" }));
@@ -263,7 +263,7 @@ describe("shared trips", { timeout: 20_000 }, () => {
     await user.click(screen.getByRole("link", { name: "Expenses" }));
     const onlyYou = await screen.findByRole("region", { name: "Only you" });
     expect(within(onlyYou).getByText("Paid train")).toBeInTheDocument();
-    expect(screen.getByText(/includes \$24\.00 only you can see/)).toBeInTheDocument();
+    expect(within(onlyYou).getByText("1 from before sharing")).toBeInTheDocument();
 
     await user.click(screen.getByRole("link", { name: "Back to Trips" }));
     await screen.findByRole("heading", { level: 1, name: "Trips" });
@@ -279,7 +279,10 @@ describe("shared trips", { timeout: 20_000 }, () => {
     const form = await dialog("New trip");
     await fillTrip(user, form, "Coast", "2026-11-01", "2026-11-03");
     await user.click(within(form).getByRole("switch", { name: "Share with others" }));
-    expect(within(form).getByText(/A shared trip in CAD/)).toBeInTheDocument();
+    // The card's PEOPLE group: you as the organizer, inviting after saving; the currency is locked.
+    expect(within(form).getByText("Organizer")).toBeInTheDocument();
+    expect(within(form).getByText("Invite with a code")).toBeInTheDocument();
+    expect(within(form).getByText("CAD")).toBeInTheDocument();
     await user.click(within(form).getByRole("button", { name: "Create shared trip" }));
     expect(await screen.findByRole("heading", { level: 1, name: "Coast" })).toBeInTheDocument();
     const id = server.state.households[0]?.id ?? "";
@@ -339,17 +342,18 @@ describe("shared trips", { timeout: 20_000 }, () => {
     await waitFor(() => {
       expect(server.state.households[0]?.trip).toEqual({ startDate: "2026-11-01", endDate: "2026-11-05" });
     });
-    expect(await screen.findByText(/Thu, Nov 5, 2026/)).toBeInTheDocument();
+    expect(await screen.findByText(/Nov 1–5 · /)).toBeInTheDocument();
     expect(server.state.expenses[0]?.date).toBe("2026-10-02");
 
-    // Balances settle month by month: October has the ferry, the URL keeps the month.
+    // Balances settle month by month. Before the trip they open on its first month (card
+    // `ipad-trip`'s "November balance"); October, with the early booking, is one month back.
     await user.click(screen.getByRole("link", { name: "Balances" }));
     expect(await screen.findByText(/A trip settles month by month/)).toBeInTheDocument();
     // The month is the navigation bar's month control (MAZ-229).
-    expect(screen.getByLabelText("Month")).toHaveValue("2026-10");
-    await user.click(screen.getByRole("button", { name: "Next month" }));
+    expect(screen.getByLabelText("Month")).toHaveValue("2026-11");
+    await user.click(screen.getByRole("button", { name: "Previous month" }));
     await waitFor(() => {
-      expect(screen.getByLabelText("Month")).toHaveValue("2026-11");
+      expect(screen.getByLabelText("Month")).toHaveValue("2026-10");
     });
   });
 

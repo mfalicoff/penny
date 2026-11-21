@@ -1,7 +1,7 @@
 import { validDate, type Ledger, type Transaction, type Trip } from "@domain/ledger.ts";
 import { tripOverview, tripSummaries } from "@domain/selectors/trips.ts";
 import type { Household, SharedExpense } from "../../api/schemas";
-import { dayLabel, localDate } from "../households/model";
+import { localDate, shortDate, shortRange } from "../households/model";
 
 /**
  * Trips (MAZ-93). A personal trip lives in the private ledger (offline first, `saveTrip`); a
@@ -41,11 +41,40 @@ export function phaseLabel(trip: { startDate: string; endDate: string }, today =
   return days <= 30 ? `In ${String(days)} days` : "Upcoming";
 }
 
-/** "Sat, Nov 12 – Thu, Nov 19, 2026": both ends, the year once (twice when the trip crosses a year). */
-export function rangeLabel(startDate: string, endDate: string): string {
-  if (startDate === endDate) return dayLabel(startDate, true);
-  const sameYear = startDate.slice(0, 4) === endDate.slice(0, 4);
-  return `${dayLabel(startDate, !sameYear)} – ${dayLabel(endDate, true)}`;
+/**
+ * "Nov 12–19, 2026" or "Dec 28, 2026 – Jan 3, 2027" (cards `web-trips`, `ipad-trip`). With
+ * `year: "auto"` the year is left out when the whole trip is in today's year, as on the iPhone
+ * cards: "Nov 12–19", "Oct 3–5", but "Feb 14–21, 2027".
+ */
+export function tripRange(startDate: string, endDate: string, { year = "always", today = localDate() }: { year?: "always" | "auto"; today?: string } = {}): string {
+  const startYear = startDate.slice(0, 4);
+  const endYear = endDate.slice(0, 4);
+  if (startYear !== endYear) return `${shortDate(startDate)}, ${startYear} – ${shortDate(endDate)}, ${endYear}`;
+  const range = shortRange(startDate, endDate);
+  return year === "auto" && startYear === today.slice(0, 4) ? range : `${range}, ${startYear}`;
+}
+
+/** "4 people" or "1 person". */
+export const peopleCount = (count: number) => `${String(count)} ${count === 1 ? "person" : "people"}`;
+
+/**
+ * The words after a trip tile's dates (card `web-trips`): "upcoming" or "now" while it hasn't
+ * ended, then "shared" for a shared trip; a past personal trip has none.
+ */
+export function tileStatus(card: Pick<TripCard, "kind" | "startDate" | "endDate">, today = localDate()): string | null {
+  const phase = tripPhase(card, today);
+  if (phase !== "past") return phase === "now" ? "now" : "upcoming";
+  return card.kind === "shared" ? "shared" : null;
+}
+
+/**
+ * The trip form's date note (card `iphone-trip-form`): "flights booked in October still count",
+ * naming the month before the trip starts.
+ */
+export function outsideDatesNote(startDate: string): string {
+  const [year = 2000, month = 1] = startDate.split("-").map(Number);
+  const before = validDate(startDate) ? new Date(Date.UTC(year, month - 2, 1)).toLocaleDateString("en-CA", { month: "long", timeZone: "UTC" }) : null;
+  return `Expenses can be dated outside the trip — flights booked ${before ? `in ${before}` : "before it"} still count.`;
 }
 
 /* ---------- the trip list ---------- */
@@ -165,4 +194,51 @@ export function tripSections(cards: readonly TripCard[], today = localDate()) {
   const upcoming = cards.filter((card) => tripPhase(card, today) !== "past").sort((a, b) => a.startDate.localeCompare(b.startDate) || a.name.localeCompare(b.name));
   const past = cards.filter((card) => tripPhase(card, today) === "past").sort((a, b) => b.endDate.localeCompare(a.endDate) || a.name.localeCompare(b.name));
   return { upcoming, past };
+}
+
+/**
+ * The month a shared trip's balances open on: this month while the trip is on, else the trip's
+ * first month before it starts and its last month after it ends (card `ipad-trip`: "November
+ * balance" for a November trip, seen in early November). A `?month=` link still wins.
+ */
+export function tripMonth(range: { startDate: string; endDate: string }, today = localDate()): string {
+  const month = today.slice(0, 7);
+  const first = range.startDate.slice(0, 7);
+  const last = range.endDate.slice(0, 7);
+  return month < first ? first : month > last ? last : month;
+}
+
+export interface CategoryShare {
+  key: string;
+  name: string;
+  icon: string;
+  color: string;
+  amount: number;
+}
+
+/**
+ * Your share of a shared trip by category (card `ipad-trip`), largest first: your split of each
+ * shared expense under its shared category, plus your private trip expenses under their ledger
+ * category. Categories are matched by name, so the same name from both sides is one row.
+ */
+export function shareByCategory(
+  expenses: readonly SharedExpense[],
+  meId: string | undefined,
+  personal: readonly Transaction[],
+  categories: readonly { id: string; name: string; icon: string; color: string }[],
+): CategoryShare[] {
+  const rows = new Map<string, CategoryShare>();
+  const add = (category: { name: string; icon: string; color: string }, amount: number) => {
+    if (amount <= 0) return;
+    const key = category.name.toLocaleLowerCase();
+    const row = rows.get(key);
+    if (row) row.amount += amount;
+    else rows.set(key, { key, name: category.name, icon: category.icon, color: category.color, amount });
+  };
+  for (const expense of expenses) add(expense.category, meId ? (expense.splits.find((split) => split.userId === meId)?.amountCents ?? 0) : 0);
+  for (const entry of personal) {
+    const category = categories.find((item) => item.id === entry.categoryId);
+    add(category ?? { name: "Other", icon: "ellipsis-horizontal", color: "#8E8E93" }, entry.share);
+  }
+  return [...rows.values()].sort((a, b) => b.amount - a.amount || a.name.localeCompare(b.name));
 }
