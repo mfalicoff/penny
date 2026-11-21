@@ -186,6 +186,12 @@ private struct EntryForm: View {
             shell.addEntryTripId = nil
             if !restored { editor.start(onTrip: tripId, ledger: ledger) }
         }
+        // The empty Home's kind tiles: a fresh entry opens on that kind; a kept draft comes back
+        // as it was typed, and the request is used up either way.
+        if mode == .new, let kind = shell.addEntryKind {
+            shell.addEntryKind = nil
+            if !restored, editor.draft.kind != kind { editor.setKind(kind, ledger: ledger) }
+        }
         let shell = self.shell
         let mode = self.mode
         model = EntryFormModel(editor: editor) { change, summary in

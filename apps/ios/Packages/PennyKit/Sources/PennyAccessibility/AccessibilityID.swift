@@ -147,7 +147,10 @@ public enum AccessibilityID {
         public static let flow = "home.flow"
         public static let recent = "home.recent"
         public static let empty = "home.empty"
-        public static let emptyAdd = "emptyHome.add"
+        /// The empty Home's Income, Expense and Invest tiles (`empty-home` card, MAZ-245).
+        public static let emptyIncome = "emptyHome.income"
+        public static let emptyExpense = "emptyHome.expense"
+        public static let emptyInvest = "emptyHome.invest"
         public static let emptyDemo = "emptyHome.demo"
         // MAZ-77: projected and expected income, Explore your month, the iPad dashboard panels.
         public static let projected = "home.projected"
@@ -162,11 +165,17 @@ public enum AccessibilityID {
         public static let comingUp = "home.comingUp"
         public static let dailySpending = "home.dailySpending"
         public static let sharedNotice = "home.sharedNotice"
+        /// iPad Home's toolbar (`ipad-home` card, MAZ-245): the month's back and forward
+        /// arrows, search (Activity's search field) and the copper Add entry capsule.
+        public static let previousMonth = "home.previousMonth"
+        public static let nextMonth = "home.nextMonth"
+        public static let search = "home.search"
+        public static let add = "home.add"
 
         static let all = [
-            settings, hero, month, flow, recent, empty, emptyAdd, emptyDemo,
+            settings, hero, month, flow, recent, empty, emptyIncome, emptyExpense, emptyInvest, emptyDemo,
             projected, expectedIncome, explore, exploreCalendar, exploreInsights, exploreMoneyFlow, totals, comingUp,
-            dailySpending, sharedNotice, calendar,
+            dailySpending, sharedNotice, calendar, previousMonth, nextMonth, search, add,
         ]
     }
 

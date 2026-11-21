@@ -14,7 +14,12 @@ struct SyncBanner: View {
 
     var body: some View {
         let status = shell.workspace.sync
-        if status.needsAttention {
+        if case .offline(let pending, _) = status {
+            OfflineCapsule(pending: pending, message: Self.message(status) ?? "") {
+                Task { await shell.workspace.syncNow() }
+            }
+            .accessibilityIdentifier("banner.sync")
+        } else if status.needsAttention {
             StatusBanner(tone: tone(status), title: Self.title(status), message: Self.message(status)) {
                 if case .signInRequired = status {
                     EmptyView()
@@ -57,6 +62,46 @@ struct SyncBanner: View {
         case .signInRequired: "Your changes stay on this device until you sign in again."
         case .upToDate, .syncing, .localOnly: nil
         }
+    }
+}
+
+/// The offline banner (`offline` card): one line on a glass capsule, "**Offline** · 2 changes
+/// waiting", and Retry. It is a control over the page, so it is glass (opaque with Reduce
+/// Transparency). VoiceOver also hears that nothing is lost, which the line leaves out.
+struct OfflineCapsule: View {
+    let pending: Int
+    let message: String
+    let retry: () -> Void
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "icloud.slash")
+                .font(.body.weight(.semibold))
+                .foregroundStyle(PennyColor.pending)
+                .accessibilityHidden(true)
+            Text("\(Text("Offline").fontWeight(.semibold))\(Self.detail(pending))")
+                .font(.subheadline)
+                .foregroundStyle(PennyColor.label)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityLabel("\(SyncBanner.title(.offline(pending: pending, lastSynced: nil))). \(message)")
+            Spacer(minLength: 8)
+            Button("Retry", action: retry)
+                .font(.subheadline)
+                .foregroundStyle(PennyColor.secondaryLabel)
+                .frame(minWidth: Metrics.minTouchTarget, minHeight: Metrics.minTouchTarget)
+                .contentShape(Rectangle())
+                .buttonStyle(.plain)
+        }
+        .padding(.leading, 16)
+        .padding(.trailing, 8)
+        .frame(minHeight: 48)
+        .pennyGlass(in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .accessibilityElement(children: .contain)
+    }
+
+    /// " · 2 changes waiting" after "Offline", or nothing when nothing waits.
+    static func detail(_ pending: Int) -> String {
+        pending == 0 ? "" : " · \(SyncText.changes(pending)) waiting"
     }
 }
 

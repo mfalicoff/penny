@@ -19,6 +19,15 @@ nonisolated public enum MoneyFormat {
         return value.formatted(.currency(code: currency).locale(locale).precision(.fractionLength(2)))
     }
 
+    /// `cents` rounded to whole units, without a sign: "$1,883" (the cards' compact legends and
+    /// the empty Home's "$0"). Use it only where the exact amount is a tap away or zero.
+    public static func whole(_ cents: Int64, currency: String, locale: Locale = .current) -> String {
+        let value = Decimal(cents.magnitude) / 100
+        return value.formatted(
+            .currency(code: currency).locale(locale).precision(.fractionLength(0)).rounded(
+                rule: .toNearestOrAwayFromZero))
+    }
+
     /// The amount with the sign its meaning takes: "−$48.90", "+$3,200.00", "$200.00".
     /// A negative `cents` with `.neutral` (a signed total such as Left to spend) keeps its minus.
     public static func signed(
@@ -113,27 +122,34 @@ public struct HeroAmount<Detail: View>: View {
     private let cents: Int64
     private let currency: String
     private let tone: MoneyMeaning
+    private let dimmed: Bool
     private let detail: Detail
 
+    /// `dimmed` draws a whole amount in the secondary label color with no cents, for a month
+    /// with nothing in it yet (the `empty-home` card's "$0").
     public init(
-        _ label: String, cents: Int64, currency: String, tone: MoneyMeaning = .neutral,
+        _ label: String, cents: Int64, currency: String, tone: MoneyMeaning = .neutral, dimmed: Bool = false,
         @ViewBuilder detail: () -> Detail
     ) {
         self.label = label
         self.cents = cents
         self.currency = currency
         self.tone = tone
+        self.dimmed = dimmed
         self.detail = detail()
     }
 
     public var body: some View {
-        let text = MoneyFormat.signed(cents, meaning: .neutral, currency: currency)
-        let parts = MoneyFormat.heroParts(text)
+        let text =
+            dimmed
+            ? MoneyFormat.whole(cents, currency: currency)
+            : MoneyFormat.signed(cents, meaning: .neutral, currency: currency)
+        let parts = dimmed ? (whole: text, fraction: "") : MoneyFormat.heroParts(text)
         VStack(alignment: .leading, spacing: 6) {
             Text(label.uppercased())
                 .font(PennyFont.style(.footnote))
                 .foregroundStyle(PennyColor.secondaryLabel)
-            let whole = Text(parts.whole).foregroundStyle(tone.color)
+            let whole = Text(parts.whole).foregroundStyle(dimmed ? PennyColor.secondaryLabel : tone.color)
             let fraction = Text(parts.fraction).foregroundStyle(PennyColor.secondaryLabel).font(.title.weight(.bold))
             Text("\(whole)\(fraction)")
                 .modifier(HeroAmountFont())

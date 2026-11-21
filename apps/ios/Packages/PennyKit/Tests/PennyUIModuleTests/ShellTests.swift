@@ -1,5 +1,6 @@
 import Foundation
 import PennyData
+import PennyDesign
 import PennyDomain
 import SwiftUI
 import Testing
@@ -117,6 +118,45 @@ struct ShellTests {
         let line = HomeView.projectedLine(summary, currency: "CAD", pending: 0)
         #expect(line.hasSuffix("projected"))
         #expect(HomeView.projectedLine(summary, currency: "CAD", pending: 2).hasSuffix("as of last sync"))
+        // The amount is its own part, drawn bold as on the cards.
+        let parts = HomeView.projectedParts(summary, currency: "CAD", pending: 2)
+        #expect(parts.amount + parts.rest == HomeView.projectedLine(summary, currency: "CAD", pending: 2))
+        #expect(parts.rest == " projected · as of last sync")
+        #expect(parts.amount.hasPrefix("$") || parts.amount.hasPrefix(MoneyFormat.minus))
+    }
+
+    @Test("whenOffline_OfflineCapsule_ShouldSayHowManyChangesWaitOnOneLine")
+    func offlineCapsule() {
+        #expect(OfflineCapsule.detail(0) == "")
+        #expect(OfflineCapsule.detail(2) == " · 2 changes waiting")
+        #expect("Offline" + OfflineCapsule.detail(1) == SyncBanner.title(.offline(pending: 1, lastSynced: nil)))
+    }
+
+    @Test("whenAnEmptyHomeTileIsTapped_ShellModel_ShouldOpenAddEntryOnThatKind")
+    func addEntryKind() {
+        let shell = ShellModel(workspace: FixedWorkspace(load: .ready(Ledger())), session: .demo, today: today)
+        shell.openAddEntry(kind: .income)
+        #expect(shell.route.isAddEntryPresented)
+        #expect(shell.addEntryKind == .income, "the form takes it once it opens")
+    }
+
+    @Test("whenIPadHomeSearchIsTapped_ShellModel_ShouldOpenActivityAndAskForItsSearchField")
+    func activitySearch() {
+        let shell = ShellModel(workspace: FixedWorkspace(load: .ready(Ledger())), session: .demo, today: today)
+        shell.openActivitySearch()
+        #expect(shell.route.tab == .activity)
+        #expect(shell.activitySearchRequested)
+    }
+
+    @Test("whenSteppingMonths_MonthStepButton_ShouldStayWithinThePickersMonths")
+    func monthSteps() throws {
+        let november = MonthKey(today)
+        let october = try #require(november.shifted(by: -1))
+        #expect(MonthPicker.step(november, by: 1, through: november) == nil, "no month after the current one")
+        #expect(MonthPicker.step(november, by: -1, through: november) == october)
+        let oldest = try #require(november.shifted(by: -11))
+        #expect(MonthPicker.step(oldest, by: -1, through: november) == nil, "the picker offers twelve months")
+        #expect(MonthPicker.step(oldest, by: 1, through: november) == oldest.shifted(by: 1))
     }
 
     @Test("whenTheSceneLeavesTheForeground_RootView_ShouldCoverTheAppInTheSameUpdate")
