@@ -279,11 +279,7 @@ private struct ScheduleRow: View {
 
     /// Income and investments take their meaning color, as on the cards; expenses their category's.
     private func tint(_ category: LedgerCategory?) -> Color {
-        switch rule.kind {
-        case .income: PennyColor.income
-        case .investment: PennyColor.invest
-        case .expense: PennyColor.category(category?.paletteColor ?? .other)
-        }
+        EntryText.tileColor(rule.kind, category: category, id: rule.categoryId)
     }
 }
 

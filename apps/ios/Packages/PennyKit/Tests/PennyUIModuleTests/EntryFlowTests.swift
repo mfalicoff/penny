@@ -274,4 +274,21 @@ struct EntryFlowTests {
             EntryText.futureDate(.expense, date: tomorrow, today: today).message.hasPrefix(
                 "Penny records this entry now."))
     }
+
+    @Test("whenAnEntryIsIncomeOrAnInvestment_EntryText_ShouldDrawItsTileInItsKindNotItsCategory")
+    func tiles() {
+        // MAZ-241: Payday and TFSA contribution on the cards draw their kind, not their category.
+        let salary = LedgerCategory(
+            id: "salary", name: "Salary", icon: "briefcase-outline", color: "#6C9C79", kind: .income)
+        #expect(EntryText.tileSymbol(.income, category: salary) == "arrow.down")
+        #expect(EntryText.tileColor(.income, category: salary, id: salary.id) == PennyColor.income)
+        #expect(EntryText.tileSymbol(.investment, category: nil) == "chart.line.uptrend.xyaxis")
+        #expect(EntryText.tileColor(.investment, category: nil, id: "investments") == PennyColor.invest)
+
+        let fun = LedgerCategory(id: "fun", name: "Fun", icon: "tv-outline", color: "#B15B7D", kind: .expense)
+        #expect(EntryText.tileSymbol(.expense, category: fun) == "tv")
+        #expect(EntryText.tileColor(.expense, category: fun, id: fun.id) == EntryText.color(fun, id: fun.id))
+        #expect(EntryText.tileSymbol(.expense, category: nil) == CategoryStyle.symbol(forIonicon: "pricetag"))
+        #expect(ScheduleText.tileSymbol(.expense, category: nil) == CategoryStyle.symbol(forIonicon: "repeat"))
+    }
 }

@@ -217,7 +217,8 @@ struct AttachTargetCard: View {
 
     private var symbol: String {
         switch target {
-        case .personal(let entry): EntryText.symbol(shell.workspace.load.ledger?.category(id: entry.categoryId))
+        case .personal(let entry):
+            EntryText.tileSymbol(entry.kind, category: shell.workspace.load.ledger?.category(id: entry.categoryId))
         case .shared(let expense, _): expense.category.symbol
         }
     }
@@ -225,7 +226,8 @@ struct AttachTargetCard: View {
     private var color: Color {
         switch target {
         case .personal(let entry):
-            EntryText.color(shell.workspace.load.ledger?.category(id: entry.categoryId), id: entry.categoryId)
+            EntryText.tileColor(
+                entry.kind, category: shell.workspace.load.ledger?.category(id: entry.categoryId), id: entry.categoryId)
         case .shared(let expense, _): expense.category.tint
         }
     }

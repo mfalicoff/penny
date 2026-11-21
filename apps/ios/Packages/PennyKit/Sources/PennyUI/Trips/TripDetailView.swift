@@ -231,9 +231,8 @@ struct TripEntryRow: View {
         let category = ledger.category(id: entry.categoryId)
         HStack(spacing: 12) {
             CategoryIcon(
-                symbol: CategoryStyle.symbol(forIonicon: category?.icon ?? "pricetag"),
-                color: PennyColor.category(
-                    category?.paletteColor ?? CategoryStyle.color(forCategoryID: entry.categoryId)))
+                symbol: EntryText.tileSymbol(entry.kind, category: category),
+                color: EntryText.tileColor(entry.kind, category: category, id: entry.categoryId))
             VStack(alignment: .leading, spacing: 2) {
                 Text(entry.title).font(.body.weight(.semibold)).foregroundStyle(PennyColor.label)
                     .fixedSize(horizontal: false, vertical: true)

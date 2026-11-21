@@ -48,9 +48,8 @@ struct EntryRow: View {
         let expected = entry.isExpected(today: shell.today)
         HStack(spacing: 12) {
             CategoryIcon(
-                symbol: CategoryStyle.symbol(forIonicon: category?.icon ?? "pricetag"),
-                color: PennyColor.category(
-                    category?.paletteColor ?? CategoryStyle.color(forCategoryID: entry.categoryId))
+                symbol: EntryText.tileSymbol(entry.kind, category: category),
+                color: EntryText.tileColor(entry.kind, category: category, id: entry.categoryId)
             )
             .overlay {
                 if expected { Circle().strokeBorder(PennyColor.pending, lineWidth: 2).accessibilityHidden(true) }

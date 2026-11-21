@@ -167,6 +167,27 @@ enum EntryText {
         category.map { PennyColor.category($0.paletteColor) } ?? color(categoryId)
     }
 
+    /// An entry's tile symbol, as on the cards (`.ic`): income and investments draw their kind
+    /// (an arrow down, the trend line); expenses draw their category's icon, `fallback` when the
+    /// category is missing.
+    static func tileSymbol(_ kind: EntryKind, category: LedgerCategory?, fallback: String = "pricetag") -> String {
+        switch kind {
+        case .income: "arrow.down"
+        case .investment: "chart.line.uptrend.xyaxis"
+        case .expense: CategoryStyle.symbol(forIonicon: category?.icon ?? fallback)
+        }
+    }
+
+    /// An entry's tile color, as on the cards: income green and investment indigo; expenses draw
+    /// their category's color. A category on its own (pickers, Categories) keeps its own color.
+    static func tileColor(_ kind: EntryKind, category: LedgerCategory?, id categoryId: String) -> Color {
+        switch kind {
+        case .income: PennyColor.income
+        case .investment: PennyColor.invest
+        case .expense: color(category, id: categoryId)
+        }
+    }
+
     /// "Today", "Yesterday", "Sun, Nov 15".
     static func day(_ day: CalendarDate, today: CalendarDate) -> String {
         if day == today { return "Today" }

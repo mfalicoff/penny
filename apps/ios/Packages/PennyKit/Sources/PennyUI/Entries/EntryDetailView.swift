@@ -38,7 +38,8 @@ struct EntryDetailView: View {
             Section {
                 VStack(alignment: .leading, spacing: 8) {
                     CategoryIcon(
-                        symbol: EntryText.symbol(category), color: EntryText.color(category, id: entry.categoryId),
+                        symbol: EntryText.tileSymbol(entry.kind, category: category),
+                        color: EntryText.tileColor(entry.kind, category: category, id: entry.categoryId),
                         size: 52)
                     Text(entry.title).font(.title.weight(.bold)).foregroundStyle(PennyColor.label)
                     Text("\(category?.name ?? "No category") · \(DayText.long(entry.date, today: shell.today))")
@@ -120,7 +121,8 @@ struct EntryDetailView: View {
                     title: entry.title,
                     detail:
                         "\(MoneyFormat.amount(entry.total, currency: currency)) total · \(EntryText.day(entry.date, today: shell.today))",
-                    symbol: EntryText.symbol(category), color: EntryText.color(category, id: entry.categoryId)))
+                    symbol: EntryText.tileSymbol(entry.kind, category: category),
+                    color: EntryText.tileColor(entry.kind, category: category, id: entry.categoryId)))
         }
         .deleteEntryConfirmation($deleting) {
             if let onDeleted { onDeleted() } else { dismiss() }
