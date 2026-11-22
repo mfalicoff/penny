@@ -660,6 +660,225 @@
       "view": "sign out confirmation with nothing waiting to sync"
     },
     {
+      "specimen": "iphone-activity-filters",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "activity filters sheet: October 2026, expenses, Groceries & dining"
+    },
+    {
+      "specimen": "iphone-activity-searching",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "activity search for coffee while the server search is still running",
+      "search": {
+        "query": "coffee"
+      },
+      "fault": {
+        "target": "http",
+        "method": "POST",
+        "pathPrefix": "/api/v1/search",
+        "delayMs": 20000,
+        "times": 1
+      }
+    },
+    {
+      "specimen": "iphone-home-explore",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "future-income",
+      "as": "dana",
+      "view": "home scrolled to Expected income and Explore your month, October 2026"
+    },
+    {
+      "specimen": "iphone-account-picker",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "account picker from a new expense: Everyday chequing selected"
+    },
+    {
+      "specimen": "iphone-household-picker",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "household picker from a new expense: Personal, Maison and Lisbon trip"
+    },
+    {
+      "specimen": "iphone-edit-entry",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "edit entry: \ud83c\udf89 Party supplies, September 2026"
+    },
+    {
+      "specimen": "iphone-shared-expense-detail",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "shared expense detail: Internet in Maison (Bea paid), October 2026"
+    },
+    {
+      "specimen": "iphone-join-code",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "bea",
+      "view": "join a household with an invite code"
+    },
+    {
+      "specimen": "iphone-invite-scanner",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "invite scanner with the camera pointed at a QR code"
+    },
+    {
+      "specimen": "iphone-invite",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "invite sheet for Maison with its code and QR code"
+    },
+    {
+      "specimen": "iphone-notifications-prompt",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "Shared tab with the household notifications prompt"
+    },
+    {
+      "specimen": "iphone-trip-personal",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "personal trip Qu\u00e9bec weekend"
+    },
+    {
+      "specimen": "iphone-trip-share",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "share confirmation for the personal trip Qu\u00e9bec weekend"
+    },
+    {
+      "specimen": "iphone-schedule-form",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "new schedule form: monthly Internet expense"
+    },
+    {
+      "specimen": "iphone-currency",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "currency settings, locked by existing entries"
+    },
+    {
+      "specimen": "iphone-sync-failed",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "home after the server stops answering, with changes waiting to sync",
+      "fault": {
+        "target": "http",
+        "pathPrefix": "/api/ledger",
+        "status": 503
+      }
+    },
+    {
+      "specimen": "iphone-shared-missing",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "home while household expenses fail to load",
+      "fault": {
+        "target": "http",
+        "method": "GET",
+        "pathPrefix": "/api/households",
+        "status": 503
+      }
+    },
+    {
+      "specimen": "iphone-demo",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": null,
+      "client": "signed-out",
+      "view": "home in the demo, opened from sign-in's sample data link, with the demo banner"
+    },
+    {
       "specimen": "iphone-receipt-inbox",
       "platform": "iPhone",
       "appearances": [
@@ -809,6 +1028,18 @@
       "scenario": "searchable-household",
       "as": "alex",
       "view": "iPad settings"
+    },
+    {
+      "specimen": "ipad-home-portrait",
+      "platform": "iPad",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "iPad home in portrait, October 2026",
+      "totals": "alex-2026-10"
     },
     {
       "specimen": "ipad-receipt-inbox",
@@ -984,6 +1215,200 @@
       "as": "solo",
       "client": "signed-out",
       "view": "web password sign-in"
+    },
+    {
+      "specimen": "web-households",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web shared list: Maison and Lisbon trip"
+    },
+    {
+      "specimen": "web-shared-expense",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web household Maison with the Internet expense open, October 2026",
+      "month": "2026-10"
+    },
+    {
+      "specimen": "web-trip",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web shared trip Lisbon trip"
+    },
+    {
+      "specimen": "web-recurring",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web recurring: Payday, Gym and paused Magazine, shared Streaming, TFSA contribution"
+    },
+    {
+      "specimen": "web-accounts",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web accounts: Everyday chequing and Visa"
+    },
+    {
+      "specimen": "web-categories",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web expense categories"
+    },
+    {
+      "specimen": "web-currency",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web currency settings, locked by existing entries"
+    },
+    {
+      "specimen": "web-schedule-form",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web new schedule dialog: monthly Internet expense"
+    },
+    {
+      "specimen": "web-edit-entry",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web edit entry dialog: \ud83c\udf89 Party supplies, September 2026"
+    },
+    {
+      "specimen": "web-join-code",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "bea",
+      "view": "web join a household dialog"
+    },
+    {
+      "specimen": "web-activity-searching",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web activity search for coffee while the server search is still running",
+      "search": {
+        "query": "coffee"
+      },
+      "fault": {
+        "target": "http",
+        "method": "POST",
+        "pathPrefix": "/api/v1/search",
+        "delayMs": 20000,
+        "times": 1
+      }
+    },
+    {
+      "specimen": "web-server-unreachable",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web home while the server doesn't answer its info request",
+      "fault": {
+        "target": "http",
+        "method": "GET",
+        "pathPrefix": "/api/info",
+        "status": 503
+      }
+    },
+    {
+      "specimen": "web-demo",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": null,
+      "client": "signed-out",
+      "view": "web home in the demo, opened from sign-in's sample data link, with the demo banner"
+    },
+    {
+      "specimen": "web-tablet",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web home at 1024 by 768 with the icon rail, October 2026",
+      "totals": "alex-2026-10"
+    },
+    {
+      "specimen": "web-password-reset",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": null,
+      "client": "signed-out",
+      "view": "web set a new password with a reset code"
+    },
+    {
+      "specimen": "web-export",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web settings, Export data pane"
     },
     {
       "specimen": "web-receipt-inbox",

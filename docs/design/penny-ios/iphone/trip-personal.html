@@ -1,0 +1,82 @@
+<!-- @dsCard group="iPhone" name="Personal trip" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Personal trip</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<style>
+  .glow { --glow-1: rgba(80, 150, 230, .40); --glow-2: rgba(255, 190, 120, .35); --glow-3: rgba(255, 140, 120, .2); }
+  .head { position: relative; z-index: 1; padding: 108px 24px 0; text-align: center; }
+  .head .when { font-size: 13px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .03em; }
+  .head h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.025em; margin-top: 2px; }
+  .head .d { font-size: 15px; color: var(--label-2); margin-top: 4px; display: flex; gap: 8px; justify-content: center; align-items: center; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 8px; background: var(--fill); color: var(--label-2); }
+  .chip [data-i] { width: 12px; height: 12px; }
+  .head .big { font-size: 48px; font-weight: 700; letter-spacing: -0.04em; margin-top: 10px; line-height: 1.05; }
+  .head .yours { font-size: 15px; color: var(--label-2); margin-top: 4px; }
+  .head .out { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 500; color: var(--label-2); margin-top: 8px; }
+  .head .out [data-i] { width: 14px; height: 14px; }
+  .actions { position: relative; z-index: 1; display: flex; gap: 10px; justify-content: center; margin-top: 16px; }
+  .actions [data-i] { width: 19px; height: 19px; }
+  .lbl { display: flex; justify-content: space-between; padding: 18px 20px 8px; font-size: 13px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .03em; position: relative; z-index: 1; }
+  .gf { padding: 6px 32px 0; font-size: 13px; color: var(--label-2); line-height: 1.38; }
+  .list { position: relative; z-index: 1; }
+  .row { min-height: 56px; padding: 9px 16px; }
+  .row .t span .chip { display: inline-flex; padding: 1px 6px; margin-left: 4px; font-size: 11px; vertical-align: 1px; }
+  .cats { padding: 6px 16px 10px; }
+  .catrow { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+  .catrow .ic { width: 30px; height: 30px; border-radius: 9px; }
+  .catrow .ic [data-i] { width: 16px; height: 16px; }
+  .catrow .t { flex: 1; font-size: 15px; font-weight: 600; }
+  .catrow .t .bar { height: 6px; border-radius: 3px; background: var(--fill); margin-top: 6px; overflow: hidden; }
+  .catrow .t .bar i { display: block; height: 100%; border-radius: 3px; }
+  .catrow .v { font-size: 15px; font-weight: 600; }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <div class="island"></div>
+  <div class="status"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="scroll">
+    <div class="glow"></div>
+    <div class="navbar">
+      <div class="glass gbtn"><i data-i="chevron-back"></i></div>
+      <div class="glass gcap">Edit trip</div>
+    </div>
+    <div class="head">
+      <div class="when">In 12 weeks</div>
+      <h1>Ski week</h1>
+      <div class="d">Feb 14–21, 2027 <span class="chip"><i data-i="lock-closed"></i>Personal</span></div>
+      <div class="big num">$640.00</div>
+      <div class="yours">Your spending</div>
+      <div class="out"><i data-i="calendar"></i>1 outside the trip dates</div>
+    </div>
+    <div class="actions">
+      <div class="glass gcap tinted"><i data-i="add"></i>Trip expense</div>
+      <div class="glass gcap"><i data-i="person-add"></i>Share trip</div>
+    </div>
+
+    <div class="lbl"><span>Trip expenses</span><span class="num">3 expenses</span></div>
+    <div class="list">
+      <div class="row"><div class="ic" style="background:var(--c-entertainment)"><i data-i="musical-notes"></i></div><div class="t"><b>Lift pass</b><span>Feb 14 · Visa</span></div><div class="amt num">$320.00</div></div>
+      <div class="row"><div class="ic" style="background:var(--c-home)"><i data-i="home"></i></div><div class="t"><b>Chalet deposit</b><span>Jan 5 · Main chequing <span class="chip">Before the trip</span></span></div><div class="amt num">$260.00</div></div>
+      <div class="row"><div class="ic" style="background:var(--c-transport)"><i data-i="bus"></i></div><div class="t"><b>Gas</b><span>Feb 14 · Visa</span></div><div class="amt num">$60.00</div></div>
+    </div>
+    <div class="gf">Expenses can be dated outside the trip: flights booked a month before still count.</div>
+
+    <div class="lbl"><span>By category</span></div>
+    <div class="list cats">
+      <div class="catrow"><div class="ic" style="background:var(--c-entertainment)"><i data-i="musical-notes"></i></div><div class="t">Entertainment<div class="bar"><i style="width:50%;background:var(--c-entertainment)"></i></div></div><div class="v num">$320.00</div></div>
+      <div class="catrow"><div class="ic" style="background:var(--c-home)"><i data-i="home"></i></div><div class="t">Home<div class="bar"><i style="width:40.6%;background:var(--c-home)"></i></div></div><div class="v num">$260.00</div></div>
+      <div class="catrow"><div class="ic" style="background:var(--c-transport)"><i data-i="bus"></i></div><div class="t">Transport<div class="bar"><i style="width:9.4%;background:var(--c-transport)"></i></div></div><div class="v num">$60.00</div></div>
+    </div>
+  </div>
+  <div class="tabbar">
+    <div class="tabs glass">
+      <div class="tab"><i data-i="home"></i>Home</div>
+      <div class="tab"><i data-i="list"></i>Activity</div>
+      <div class="tab"><i data-i="people"></i>Shared</div>
+      <div class="tab on"><i data-i="airplane"></i>Trips</div>
+    </div>
+    <div class="fab glass tinted"><i data-i="add"></i></div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+</body></html>

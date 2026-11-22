@@ -1,0 +1,107 @@
+<!-- @dsCard group="Web" name="Shared expense" viewport="1520x980" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · Web · Shared expense</title>
+<link rel="stylesheet" href="../assets/penny.css"><link rel="stylesheet" href="../assets/web.css">
+<script src="../assets/icons.js"></script><script src="../assets/sankey.js"></script><script src="../assets/web.js"></script>
+<style>
+  .wmain > .glow { --glow-1: rgba(47,163,107,.40); --glow-2: rgba(120,200,160,.30); --glow-3: rgba(80,140,230,.18); }
+  .hh { display: flex; align-items: center; gap: 18px; margin-bottom: 20px; }
+  .hh .avatar { width: 40px; height: 40px; font-size: 14px; border-color: var(--bg); }
+  .owed { font-size: 13px; color: var(--label-2); }
+  .owed b { display: block; font-size: 34px; font-weight: 700; color: var(--income); letter-spacing: -0.03em; }
+  .cols { display: grid; grid-template-columns: minmax(0,1fr) 400px; gap: 18px; align-items: start; }
+  .mini { width: 24px; height: 24px; font-size: 9px; border: 0; }
+  .det { padding: 18px 20px; }
+  .det .top { display: flex; align-items: center; gap: 12px; }
+  .det .top .ic { width: 40px; height: 40px; border-radius: 12px; }
+  .det .top .ic [data-i] { width: 20px; height: 20px; }
+  .det h2 { flex: 1; font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+  .kv { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 5px 0; font-size: 14px; border-top: .5px solid var(--separator); }
+  .kv:first-child { border-top: 0; }
+  .kv > span { color: var(--label-2); }
+  .kv b { font-weight: 600; text-align: right; }
+  .kv b small { display: block; font-size: 12px; font-weight: 500; color: var(--label-2); margin-top: 1px; }
+  .yours { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding: 8px 12px; border-radius: 12px; background: var(--surface-2); font-size: 14px; }
+  .yours span { color: var(--label-2); }
+  .yours b { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+  .sh { font-size: 12px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .04em; margin: 12px 0 2px; }
+  .person { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-top: .5px solid var(--separator); font-size: 14px; min-height: 38px; }
+  .person:first-of-type { border-top: 0; }
+  .person .avatar { width: 28px; height: 28px; border: 0; font-size: 10.5px; }
+  .person .t { flex: 1; }
+  .det .person .t span { margin-left: 6px; font-size: 12px; color: var(--label-2); }
+  .det .note { font-size: 12.5px; color: var(--label-2); padding: 8px 0 2px; }
+  .person .btn { height: 30px; font-size: 13px; padding: 0 11px; }
+  .acts { display: flex; gap: 8px; margin-top: 10px; }
+  .acts .btn { height: 34px; font-size: 13.5px; }
+  .bal .person { padding: 4px 0; min-height: 0; }
+  .tbl th { white-space: nowrap; }
+  .bal .person .t span { display: inline; margin-left: 6px; font-size: 12px; color: var(--label-2); }
+</style></head>
+<body class="canvas">
+<div class="browser" data-active="apartment" data-url="penny.example.com/households/apartment/expenses/hydro">
+  <main class="wmain">
+    <div class="glow"></div>
+    <div class="wtop">
+      <div class="btn icon"><i data-i="chevron-back"></i></div>
+      <h1>Apartment</h1>
+      <div class="month"><i><i data-i="chevron-back"></i></i><span>November 2026</span><i><i data-i="chevron-forward"></i></i></div>
+      <div class="sp"></div>
+      <div class="btn icon"><i data-i="time"></i></div>
+      <div class="btn"><i data-i="person-add"></i>Invite</div>
+      <div class="btn primary"><i data-i="add"></i>Shared expense</div>
+    </div>
+    <div class="wbody">
+      <div class="hh">
+        <div class="stack"><div class="avatar">MF</div><div class="avatar">MI</div><div class="avatar">JS</div></div>
+        <div class="owed">November · you're owed<b class="num">$142.50</b></div>
+        <div class="sp" style="flex:1"></div>
+        <div class="wchips"><span class="wchip on">Expenses</span><span class="wchip">Balances</span><span class="wchip">People</span></div>
+      </div>
+      <div class="cols">
+        <div class="panel" style="padding:12px 8px">
+          <table class="tbl">
+            <thead><tr><th>Expense</th><th>Paid by</th><th>Split</th><th class="r">Total</th><th class="r">Your share</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td><div class="cell"><div class="ic" style="background:var(--c-home)"><i data-i="home"></i></div><b>Rent</b><span class="tag"><i data-i="repeat"></i>Monthly</span></div></td><td><div class="cell"><div class="avatar mini">MF</div>You</div></td><td class="muted">By rent share</td><td class="r num"><b>$2,900.00</b></td><td class="r num">$1,450.00</td><td><span class="tag pend">Settles Nov 30</span></td></tr>
+              <tr class="sel"><td><div class="cell"><div class="ic" style="background:var(--c-home)"><i data-i="wifi"></i></div><b>Hydro</b></div></td><td><div class="cell"><div class="avatar mini">MI</div>Mira</div></td><td class="muted">Equally</td><td class="r num"><b>$96.30</b></td><td class="r num">$32.10</td><td><span class="tag pend">Settles Nov 30</span></td></tr>
+              <tr><td><div class="cell"><div class="ic" style="background:var(--c-groceries)"><i data-i="basket"></i></div><b>Costco run</b></div></td><td><div class="cell"><div class="avatar" style="width:24px;height:24px;font-size:9px;border:0">JS</div>Jo</div></td><td class="muted">Equally</td><td class="r num"><b>$184.20</b></td><td class="r num">$61.40</td><td><span class="tag inc"><i data-i="checkmark"></i>Paid</span></td></tr>
+              <tr><td><div class="cell"><div class="ic" style="background:var(--c-other)"><i data-i="ellipsis-horizontal"></i></div><b>Cleaning supplies</b></div></td><td><div class="cell"><div class="avatar mini">MI</div>Mira</div></td><td class="muted">Equally</td><td class="r num"><b>$41.70</b></td><td class="r num">$13.90</td><td><span class="tag pend">Settles Nov 30</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <aside class="panel det">
+            <div class="top">
+              <div class="ic" style="background:var(--c-home)"><i data-i="wifi"></i></div>
+              <h2>Hydro</h2>
+              <div class="btn icon" title="Close Hydro" style="width:32px;height:32px"><i data-i="close"></i></div>
+            </div>
+            <div style="margin-top:8px">
+              <div class="kv"><span>Total</span><b class="num">$96.30</b></div>
+              <div class="kv"><span>Date</span><b>Nov 2</b></div>
+              <div class="kv"><span>Category</span><b>Home</b></div>
+              <div class="kv"><span>Paid by</span><b>Mira</b></div>
+              <div class="kv"><span>Split</span><b>Equally</b></div>
+              <div class="kv"><span>Note</span><b>October bill</b></div>
+              <div class="note">The payer's account stays private to them.</div>
+            </div>
+            <div class="yours"><span>Your share · in your spending</span><b class="num">$32.10</b></div>
+            <div class="sh">Shares</div>
+            <div class="person"><div class="avatar">MF</div><div class="t">You</div><b class="num" style="margin-right:4px">$32.10</b><span class="btn">Mark as paid</span></div>
+            <div class="person"><div class="avatar">MI</div><div class="t">Mira<span>payer</span></div><b class="num" style="margin-right:4px">$32.10</b><span class="tag inc"><i data-i="checkmark"></i>Paid</span></div>
+            <div class="person"><div class="avatar">JS</div><div class="t">Jo</div><b class="num" style="margin-right:4px">$32.10</b><span class="btn">Mark as paid</span></div>
+            <div class="acts"><span class="btn"><i data-i="create"></i>Edit</span><span class="btn"><i data-i="time"></i>Change history</span><span style="flex:1"></span><span class="btn quiet" style="color:var(--danger)"><i data-i="trash"></i>Delete</span></div>
+          </aside>
+          <div class="panel bal" style="padding:14px 20px">
+            <div class="ph" style="margin-bottom:6px"><h4>Balances</h4><span class="tag pend">Settles Nov 30</span></div>
+            <div class="person"><div class="avatar">MF</div><div class="t">You<span>Paid $2,900 · share $1,529.40</span></div><b class="num pos">+$142.50</b></div>
+            <div class="person"><div class="avatar">MI</div><div class="t">Mira<span>Paid $138.00</span></div><b class="num">−$110.40</b></div>
+            <div class="person"><div class="avatar">JS</div><div class="t">Jo<span>Paid $184.20 · $61.40 repaid</span></div><b class="num">−$32.10</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</body></html>

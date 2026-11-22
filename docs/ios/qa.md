@@ -38,7 +38,7 @@ Each row is a feature area. "Server-checked" means the test reads the account's 
 
 ### Redesign card trace
 
-Every card in [design-baseline.json](../../contracts/design-baseline.json) whose native acceptance is MAZ-82 has a row. `scripts/tests/native-qa.test.ts` fails if a card is missing here or if this page names an XCUITest suite or test that does not exist. Visual comparison against the cards is MAZ-122's; a row marked Covered means the behavior is exercised, not that the screen matches the card pixel for pixel. The fifteen `web-*` cards are browser references (MAZ-96); their native counterparts are named.
+Every card in [design-baseline.json](../../contracts/design-baseline.json) whose native acceptance is MAZ-82 has a row. `scripts/tests/native-qa.test.ts` fails if a card is missing here or if this page names an XCUITest suite or test that does not exist. Visual comparison against the cards is MAZ-122's; a row marked Covered means the behavior is exercised, not that the screen matches the card pixel for pixel. The thirty-one `web-*` cards are browser references (MAZ-96); their native counterparts are named.
 
 | Card | Native suites | Notes | Status |
 | --- | --- | --- | --- |
@@ -125,6 +125,41 @@ Every card in [design-baseline.json](../../contracts/design-baseline.json) whose
 | `web-receipt-attach-confirm` | — | Web-only reference: native behavior is traced through `ipad-receipt-attach-confirm`; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-receipt-attached-toast` | — | Web-only reference: native behavior is traced through `ipad-receipt-attached-toast`; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-receipt-email-settings` | — | Web-only reference: native behavior is traced through `ipad-receipt-email-settings`; the browser journeys are MAZ-96 | Not applicable to native |
+| `iphone-activity-filters` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
+| `iphone-activity-searching` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
+| `iphone-home-explore` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
+| `iphone-account-picker` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
+| `iphone-household-picker` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
+| `iphone-edit-entry` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
+| `iphone-shared-expense-detail` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
+| `iphone-join-code` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
+| `iphone-invite-scanner` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
+| `iphone-invite` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
+| `iphone-notifications-prompt` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
+| `iphone-trip-personal` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
+| `iphone-trip-share` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
+| `iphone-schedule-form` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
+| `iphone-currency` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
+| `iphone-sync-failed` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
+| `iphone-shared-missing` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
+| `iphone-demo` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
+| `ipad-home-portrait` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
+| `web-households` | — | Web-only draft reference (MAZ-238): native behavior is traced through `iphone-shared-list`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-shared-expense` | — | Web-only draft reference (MAZ-238): native behavior is traced through `iphone-shared-expense-detail`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-trip` | — | Web-only draft reference (MAZ-238): native behavior is traced through `iphone-trip-detail`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-recurring` | — | Web-only draft reference (MAZ-238): native behavior is traced through `iphone-recurring`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-accounts` | — | Web-only draft reference (MAZ-238): native behavior is traced through `iphone-accounts`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-categories` | — | Web-only draft reference (MAZ-238): native behavior is traced through `iphone-categories`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-currency` | — | Web-only draft reference (MAZ-238): native behavior is traced through `iphone-currency`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-schedule-form` | — | Web-only draft reference (MAZ-238): native behavior is traced through `iphone-schedule-form`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-edit-entry` | — | Web-only draft reference (MAZ-238): native behavior is traced through `iphone-edit-entry`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-join-code` | — | Web-only draft reference (MAZ-238): native behavior is traced through `iphone-join-code`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-activity-searching` | — | Web-only draft reference (MAZ-238): native behavior is traced through `iphone-activity-searching`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-server-unreachable` | — | Web-only draft reference (MAZ-238): native behavior is traced through `iphone-offline`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-demo` | — | Web-only draft reference (MAZ-238): native behavior is traced through `iphone-demo`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-tablet` | — | Web-only draft reference (MAZ-238): native behavior is traced through `ipad-home`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-password-reset` | — | Web-only draft reference (MAZ-238): the flow has no native screen; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-export` | — | Web-only draft reference (MAZ-238): the flow has no native screen; the browser journeys are MAZ-96 | Not applicable to native |
 
 Justified native adaptations are recorded in [redesign](../reference/redesign.md#native-implementation-notes-maz-69). Android has no card (the Android app is retired, MAZ-98), and the desktop-only `web-*` cards have no native screen.
 

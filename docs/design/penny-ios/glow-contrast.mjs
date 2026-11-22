@@ -9,8 +9,10 @@
 // Known shortfalls are listed in glow-contrast-known.json with the issue that fixes them; the
 // script exits 1 on a shortfall that isn't listed, and on a listed one that now passes (remove it).
 // --update rewrites the list from this run, keeping each entry's issue.
+// It uses the same browser as render.mjs: Playwright's Chromium, or PENNY_DESIGN_CHROME, or a
+// Nix-store Google Chrome.
 import { createRequire } from "node:module";
-import { readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -37,7 +39,13 @@ const cards = ["iphone", "ipad", "web"]
   .map((file) => ({ file, id: file.replace("/", "-").replace(".html", "") }))
   .filter((card) => card.id.includes(filter));
 
-const browser = await playwright.chromium.launch();
+// As in render.mjs: Playwright's Chromium, or PENNY_DESIGN_CHROME, or a Nix-store Google Chrome.
+let executablePath = process.env.PENNY_DESIGN_CHROME;
+if (!executablePath && existsSync("/nix/store") && !existsSync(playwright.chromium.executablePath())) {
+  executablePath = readdirSync("/nix/store").filter((n) => /google-chrome-.*\d/.test(n)).sort().reverse()
+    .map((n) => `/nix/store/${n}/share/google/chrome/chrome`).find((p) => existsSync(p));
+}
+const browser = await playwright.chromium.launch(executablePath ? { executablePath } : {});
 let failures = 0;
 for (const card of cards) {
   const [w, h] = (readFileSync(join(root, card.file), "utf8").split("\n", 1)[0].match(/viewport="(\d+)x(\d+)"/)?.slice(1) ?? [1200, 900]).map(Number);

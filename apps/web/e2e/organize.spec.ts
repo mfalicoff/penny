@@ -110,7 +110,7 @@ test("account and category journeys: add, rename, move links and remove, by keyb
   // An in-use account: renamed (links stay), then its entries move and it's removed, with Undo.
   await page.getByRole("button", { name: "Edit Visa" }).click();
   let edit = page.getByRole("dialog", { name: "Edit account" });
-  await expect(edit.getByText("Visa is used by 2 entries. Move them to another account to remove it.", { exact: false })).toBeVisible();
+  await expect(edit.getByText("Visa is used by 2 entries.")).toBeVisible();
   await edit.getByLabel("Name").fill("Travel card");
   await edit.getByRole("button", { name: "Save" }).click();
   await expect(edit).toBeHidden();

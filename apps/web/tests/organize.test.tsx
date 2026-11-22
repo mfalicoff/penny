@@ -131,7 +131,7 @@ describe("payment accounts", { timeout: 20_000 }, () => {
     expect(name).toHaveAttribute("aria-invalid", "true");
 
     // In use: explained, and only removable by moving the links.
-    expect(within(form).getByText(/Visa is used by 2 entries and 1 schedule\. Move them to another account to remove it\./)).toBeInTheDocument();
+    expect(within(form).getByText("Visa is used by 2 entries and 1 schedule.")).toBeInTheDocument();
     expect(within(form).getByRole("button", { name: "Move and remove" })).toBeDisabled();
 
     await user.clear(name);
@@ -169,6 +169,18 @@ describe("payment accounts", { timeout: 20_000 }, () => {
     expect(server.state.ledger.accounts).toEqual([chequing, visa]);
     expect(server.state.ledger.transactions).toEqual([entry("e1", { accountId: visa.id }), entry("e2", { accountId: chequing.id })]);
     expect((server.state.ledger.recurring[0] as { accountId: string }).accountId).toBe(visa.id);
+  });
+
+  it("locks removal of an account in use when there is no other account to move its entries to", async () => {
+    ledgerServer({ accounts: [visa], transactions: [entry("e1", { accountId: visa.id })] });
+    const user = userEvent.setup();
+    renderApp("/accounts");
+    await user.click(await screen.findByRole("button", { name: "Edit Visa" }));
+    const form = await dialog("Edit account");
+    const section = within(form).getByRole("region", { name: "Remove account" });
+    expect(within(section).getByText("Visa is used by 1 entry. Add another account first, then move them there.")).toBeInTheDocument();
+    expect(within(section).queryByRole("button")).not.toBeInTheDocument();
+    expect(within(section).queryByLabelText("Move them to")).not.toBeInTheDocument();
   });
 
   it("removes an unused account right away, with Undo", async () => {

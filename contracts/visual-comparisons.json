@@ -1,7 +1,7 @@
 {
   "version": 1,
   "description": "Visual comparison of the iOS and web apps with each redesign card (MAZ-122). Method, statuses and re-sync steps: docs/design/visual-acceptance.md. Approved deviations are in docs/reference/redesign.md; follow-ups name their issue.",
-  "reviewedAt": "2026-11-21",
+  "reviewedAt": "2026-11-22",
   "cards": [
     {
       "id": "system-foundations",
@@ -647,7 +647,7 @@
             "ref": "MAZ-171"
           },
           {
-            "summary": "The month is chosen in the Expenses and Balances section headers (previous and next); the card shows no month control",
+            "summary": "The month is chosen in the Expenses and Balances section headers (previous and next), not with the card's month pill in the navigation bar",
             "kind": "follow-up",
             "ref": "MAZ-256"
           },
@@ -681,11 +681,6 @@
             "summary": "Expenses, Balances and People are links styled as the segmented control, each with its own URL (decided in MAZ-229)",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
-          },
-          {
-            "summary": "The month pill sits in the navigation bar, where the card shows no month control. Waiting for a design decision",
-            "kind": "follow-up",
-            "ref": "MAZ-229"
           }
         ]
       }
@@ -711,6 +706,11 @@
             "summary": "An overdue month is a separate Overdue list of month names, not its own section with a red Overdue tag and its payments (follow-up recorded on MAZ-248)",
             "kind": "follow-up",
             "ref": "MAZ-248"
+          },
+          {
+            "summary": "The month is chosen in the Balances section header (previous and next), not with the card's month pill in the navigation bar",
+            "kind": "follow-up",
+            "ref": "MAZ-256"
           }
         ]
       },
@@ -732,11 +732,6 @@
             "summary": "Expenses, Balances and People are links styled as the segmented control, each with its own URL (decided in MAZ-229)",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
-          },
-          {
-            "summary": "The month pill sits in the navigation bar, where the card shows no month control, so the household name takes its own small centered row under it. Waiting for a design decision",
-            "kind": "follow-up",
-            "ref": "MAZ-229"
           }
         ]
       }
@@ -1304,11 +1299,6 @@
             "summary": "A dialog with a Cancel / Add account footer, not a sheet",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-conventions-maz-227"
-          },
-          {
-            "summary": "An account in use offers Move them to and Move and remove instead of the card's locked Remove account row. Waiting for a design decision",
-            "kind": "follow-up",
-            "ref": "MAZ-232"
           }
         ]
       }
@@ -1374,11 +1364,6 @@
             "summary": "A dialog with a Cancel / Add category footer, not a sheet",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-conventions-maz-227"
-          },
-          {
-            "summary": "Eight colors (on two rows) and 26 icons instead of the card's five and 18, as iOS offers more too. Waiting for a design decision",
-            "kind": "follow-up",
-            "ref": "MAZ-232"
           }
         ]
       }
@@ -1843,6 +1828,574 @@
       }
     },
     {
+      "id": "iphone-activity-filters",
+      "view": "activity filters sheet: October 2026, expenses, Groceries & dining",
+      "native": {
+        "status": "blocked",
+        "owner": "MAZ-73",
+        "note": "Draft card for the owner's review (MAZ-238). Not captured on iOS yet: the Cards test plan has no state for it, and the card was drafted on a Linux machine without the simulator. The iOS capture follows once the owner approves the card."
+      },
+      "web": {
+        "status": "deviates",
+        "owner": "MAZ-88",
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Filters is a centred dialog with a close button and a Done footer, not a sheet with Clear, the title and the copper check",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "Sections run Type, Period, Category, Day, and Period reads All time, Month, Year; the card has Period (Month, Year, All time), One day, Type, Category",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "No One day switch or “Totals always cover the whole period.”; a Day date field shows instead",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "Type is a segmented control and Category a wrap of chips, not grouped lists with a copper check on the choice",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "Section headers are large title case without grouped surfaces, not small upper-case headers over solid groups",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          }
+        ]
+      }
+    },
+    {
+      "id": "iphone-activity-searching",
+      "view": "activity search for coffee while the server search is still running",
+      "native": {
+        "status": "blocked",
+        "owner": "MAZ-73",
+        "note": "Draft card for the owner's review (MAZ-238). Not captured on iOS yet: the Cards test plan has no state for it, and the card was drafted on a Linux machine without the simulator. The iOS capture follows once the owner approves the card."
+      },
+      "web": {
+        "status": "deviates",
+        "owner": "MAZ-88",
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Only the month chip shows while searching, not the All / Expenses / Income / Investments chips, and there is no Filters button",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "A plain left-aligned “Searching…” shows, not the centred spinner with “Searching your server…” and its scope line",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "The tab bar stays visible while searching; the card shows only the search field and its close button",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          }
+        ]
+      }
+    },
+    {
+      "id": "iphone-home-explore",
+      "view": "home scrolled to Expected income and Explore your month, October 2026",
+      "native": {
+        "status": "blocked",
+        "owner": "MAZ-77",
+        "note": "Draft card for the owner's review (MAZ-238). Not captured on iOS yet: the Cards test plan has no state for it, and the card was drafted on a Linux machine without the simulator. The iOS capture follows once the owner approves the card."
+      },
+      "web": {
+        "status": "deviates",
+        "owner": "MAZ-92",
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Home has no Expected income card (amber total, expected rows and the Projected note)",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "Home has no Explore your month section (Calendar, Spending by category and Money flow rows)",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          }
+        ]
+      }
+    },
+    {
+      "id": "iphone-account-picker",
+      "view": "account picker from a new expense: Everyday chequing selected",
+      "native": {
+        "status": "blocked",
+        "owner": "MAZ-73",
+        "note": "Draft card for the owner's review (MAZ-238). Not captured on iOS yet: the Cards test plan has no state for it, and the card was drafted on a Linux machine without the simulator. The iOS capture follows once the owner approves the card."
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-88",
+        "note": "The web picks the account with a native select in the entry form (a platform picker), so it has no account list to compare.",
+        "followUp": "MAZ-238"
+      }
+    },
+    {
+      "id": "iphone-household-picker",
+      "view": "household picker from a new expense: Personal, Maison and Lisbon trip",
+      "native": {
+        "status": "blocked",
+        "owner": "MAZ-73",
+        "note": "Draft card for the owner's review (MAZ-238). Not captured on iOS yet: the Cards test plan has no state for it, and the card was drafted on a Linux machine without the simulator. The iOS capture follows once the owner approves the card."
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-88",
+        "note": "The web picks the household with a native select in the entry form (a platform picker), so it has no household list to compare.",
+        "followUp": "MAZ-238"
+      }
+    },
+    {
+      "id": "iphone-edit-entry",
+      "view": "edit entry: 🎉 Party supplies, September 2026",
+      "native": {
+        "status": "blocked",
+        "owner": "MAZ-73",
+        "note": "Draft card for the owner's review (MAZ-238). Not captured on iOS yet: the Cards test plan has no state for it, and the card was drafted on a Linux machine without the simulator. The iOS capture follows once the owner approves the card."
+      },
+      "web": {
+        "status": "deviates",
+        "owner": "MAZ-88",
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "A centred dialog with a Cancel and Save footer, not a sheet with the close button, centred title and copper check, and no keypad",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "The Expense / Income / Invest control shows when editing; the card has none",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "Receipt, repeat, trip is expanded into Receipt and Trip sections, and its value overlaps its label; the card shows the collapsed row with “Doesn't repeat”",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "No “Editing changes this entry only. Change future dates in Recurring.”",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          }
+        ]
+      }
+    },
+    {
+      "id": "iphone-shared-expense-detail",
+      "view": "shared expense detail: Internet in Maison (Bea paid), October 2026",
+      "native": {
+        "status": "blocked",
+        "owner": "MAZ-75",
+        "note": "Draft card for the owner's review (MAZ-238). Not captured on iOS yet: the Cards test plan has no state for it, and the card was drafted on a Linux machine without the simulator. The iOS capture follows once the owner approves the card."
+      },
+      "web": {
+        "status": "deviates",
+        "owner": "MAZ-91",
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "A centred dialog over the household, not a pushed page with the household's back button and a ⋯ menu",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "No header with the category tile, title, Total and “date · paid · split” line; the fields are a plain list without Note, Paid with or Receipt rows",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "Your share is a copper-tinted banner, not the first row of the details",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "Shares have no monograms or green Paid status, Mark as paid is an outlined button, and the shares footer about Penny not moving money is missing",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "The help reads “The payer's account stays private to them.”, not the card's “Only you see which account you paid with…”",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "Edit is the filled copper button and Delete is plain; the card has a secondary Edit and a red “Delete for everyone”, then a Changes section",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          }
+        ]
+      }
+    },
+    {
+      "id": "iphone-join-code",
+      "view": "join a household with an invite code",
+      "native": {
+        "status": "blocked",
+        "owner": "MAZ-75",
+        "note": "Draft card for the owner's review (MAZ-238). Not captured on iOS yet: the Cards test plan has no state for it, and the card was drafted on a Linux machine without the simulator. The iOS capture follows once the owner approves the card."
+      },
+      "web": {
+        "status": "deviates",
+        "owner": "MAZ-91",
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "A centred dialog with Cancel and Join household in a footer, not a sheet with the key tile, large title and one full-width Join household",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "No “Scan a QR code” row (the web has no scanner)",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "The help asks to open the household's People section, and omits “You only share expenses dated from the day you join.”",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          }
+        ]
+      }
+    },
+    {
+      "id": "iphone-invite-scanner",
+      "view": "invite scanner with the camera pointed at a QR code",
+      "native": {
+        "status": "blocked",
+        "owner": "MAZ-75",
+        "note": "Draft card for the owner's review (MAZ-238). Not captured on iOS yet: the Cards test plan has no state for it, and the card was drafted on a Linux machine without the simulator. The iOS capture follows once the owner approves the card."
+      },
+      "web": {
+        "status": "not-applicable",
+        "owner": null,
+        "note": "No owner on this platform."
+      }
+    },
+    {
+      "id": "iphone-invite",
+      "view": "invite sheet for Maison with its code and QR code",
+      "native": {
+        "status": "blocked",
+        "owner": "MAZ-75",
+        "note": "Draft card for the owner's review (MAZ-238). Not captured on iOS yet: the Cards test plan has no state for it, and the card was drafted on a Linux machine without the simulator. The iOS capture follows once the owner approves the card."
+      },
+      "web": {
+        "status": "deviates",
+        "owner": "MAZ-91",
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "No Invite someone sheet: the code shows inline under People, with Copy only, no QR code, Share or New code",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "“Expires in” is amber; the card shows it in secondary text",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "The help omits “They open Shared, tap Join with a code, and type or scan it.”",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          }
+        ]
+      }
+    },
+    {
+      "id": "iphone-notifications-prompt",
+      "view": "Shared tab with the household notifications prompt",
+      "native": {
+        "status": "blocked",
+        "owner": "MAZ-75",
+        "note": "Draft card for the owner's review (MAZ-238). Not captured on iOS yet: the Cards test plan has no state for it, and the card was drafted on a Linux machine without the simulator. The iOS capture follows once the owner approves the card."
+      },
+      "web": {
+        "status": "not-applicable",
+        "owner": null,
+        "note": "No owner on this platform."
+      }
+    },
+    {
+      "id": "iphone-trip-personal",
+      "view": "personal trip Québec weekend",
+      "native": {
+        "status": "blocked",
+        "owner": "MAZ-76",
+        "note": "Draft card for the owner's review (MAZ-238). Not captured on iOS yet: the Cards test plan has no state for it, and the card was drafted on a Linux machine without the simulator. The iOS capture follows once the owner approves the card."
+      },
+      "web": {
+        "status": "deviates",
+        "owner": "MAZ-93",
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The header is a left-aligned title with chips and add-person and ⋯ buttons, not the centred phase, title, dates and Personal chip with Edit trip",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "A three-column card shows Your share, Expenses and Receipt totals instead of the large total with “Your spending” and the outside-dates line",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "No Trip expense and Share trip buttons under the total",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "The Trip expenses help differs (“Only your share of a split expense counts toward the trip.”), and By category has no bars",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          }
+        ]
+      }
+    },
+    {
+      "id": "iphone-trip-share",
+      "view": "share confirmation for the personal trip Québec weekend",
+      "native": {
+        "status": "blocked",
+        "owner": "MAZ-76",
+        "note": "Draft card for the owner's review (MAZ-238). Not captured on iOS yet: the Cards test plan has no state for it, and the card was drafted on a Linux machine without the simulator. The iOS capture follows once the owner approves the card."
+      },
+      "web": {
+        "status": "deviates",
+        "owner": "MAZ-93",
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "A centred dialog with Cancel and Share trip in a footer, not a sheet with the large “Share <trip>?” title and one full-width Share trip",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "The three points are a bulleted paragraph without their tinted icons, with different wording (no “It uses CAD.”, an extra sentence, a different third point)",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "No “Sharing needs a connection. Nothing is sent until you choose Share trip.”",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          }
+        ]
+      }
+    },
+    {
+      "id": "iphone-schedule-form",
+      "view": "new schedule form: monthly Internet expense",
+      "native": {
+        "status": "blocked",
+        "owner": "MAZ-74",
+        "note": "Draft card for the owner's review (MAZ-238). Not captured on iOS yet: the Cards test plan has no state for it, and the card was drafted on a Linux machine without the simulator. The iOS capture follows once the owner approves the card."
+      },
+      "web": {
+        "status": "deviates",
+        "owner": "MAZ-90",
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "A centred dialog with a close button, not a sheet with the close button, centred title and copper check",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "Fields are stacked labelled inputs (Type, Amount, Name, Repeats, …), not the card's Name, Amount and Your share group followed by the Schedule and Note sections",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "Repeats is a segmented control, not a Repeats row with a Monthly menu",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "The intro “Penny records each entry on its date…” replaces the card's two helps (“Reports count only your share.” and the first-date note)",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          }
+        ]
+      }
+    },
+    {
+      "id": "iphone-currency",
+      "view": "currency settings, locked by existing entries",
+      "native": {
+        "status": "blocked",
+        "owner": "MAZ-69",
+        "note": "Draft card for the owner's review (MAZ-238). Not captured on iOS yet: the Cards test plan has no state for it, and the card was drafted on a Linux machine without the simulator. The iOS capture follows once the owner approves the card."
+      },
+      "web": {
+        "status": "deviates",
+        "owner": "MAZ-85",
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The list sits in a card headed “Currency” / “Ledger currency”; the card's list has no heading",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "CAD has a copper check and no lock; the card shows a lock and a gray check, because the choice is locked",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "The help reads “Your ledger already has entries in CAD, so the currency can't change…” inside the list, not the footer “Currency is locked once your ledger has entries.”",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          }
+        ]
+      }
+    },
+    {
+      "id": "iphone-sync-failed",
+      "view": "home after the server stops answering, with changes waiting to sync",
+      "native": {
+        "status": "blocked",
+        "owner": "MAZ-71",
+        "note": "Draft card for the owner's review (MAZ-238). Not captured on iOS yet: the Cards test plan has no state for it, and the card was drafted on a Linux machine without the simulator. The iOS capture follows once the owner approves the card."
+      },
+      "web": {
+        "status": "deviates",
+        "owner": "MAZ-87",
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The banner reads “Not synced · 1 change waiting” and “The server is busy or restarting…”, not “Couldn't sync · N changes waiting” and “Penny couldn't reach your server. Your changes are kept…”",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "Retry is a bordered button, not the copper text action, and Projected has no “as of last sync”",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          }
+        ]
+      }
+    },
+    {
+      "id": "iphone-shared-missing",
+      "view": "home while household expenses fail to load",
+      "native": {
+        "status": "blocked",
+        "owner": "MAZ-75",
+        "note": "Draft card for the owner's review (MAZ-238). Not captured on iOS yet: the Cards test plan has no state for it, and the card was drafted on a Linux machine without the simulator. The iOS capture follows once the owner approves the card."
+      },
+      "web": {
+        "status": "deviates",
+        "owner": "MAZ-91",
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "No “Shared expenses may be missing” banner above the hero: a plain “Shared expenses couldn't load.” line sits below it",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "No amber icon or tinted banner surface, and the action reads “Try again”, not “Retry”",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          }
+        ]
+      }
+    },
+    {
+      "id": "iphone-demo",
+      "view": "home in the demo, opened from sign-in's sample data link, with the demo banner",
+      "native": {
+        "status": "blocked",
+        "owner": "MAZ-68",
+        "note": "Draft card for the owner's review (MAZ-238). Not captured on iOS yet: the Cards test plan has no state for it, and the card was drafted on a Linux machine without the simulator. The iOS capture follows once the owner approves the card."
+      },
+      "web": {
+        "status": "deviates",
+        "owner": "MAZ-84",
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The banner reads “You're exploring a demo” and “Sample data in this tab only…”, not “Demo · Changes are temporary” and “Sample data only. Nothing is saved or sent to a server.”",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "The banner is amber with a bordered “Leave demo”; the card's is copper-tinted with a copper “Leave” text action",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          }
+        ]
+      }
+    },
+    {
       "id": "iphone-receipt-inbox",
       "view": "receipt inbox, To attach: Acme Store (2 files), Mill St. Coffee, Fabrikam Hardware (1 of 2 attached), Northwind Rail (sender not verified) and Contoso Books (deleted in 3 days)",
       "native": {
@@ -2111,7 +2664,7 @@
             "ref": "MAZ-171"
           },
           {
-            "summary": "The month is chosen in the Expenses and Balances section headers (previous and next); the card shows no month control",
+            "summary": "The month is chosen in the Expenses and Balances section headers (previous and next), not with the card's previous, month and next in the toolbar over both panes",
             "kind": "follow-up",
             "ref": "MAZ-256"
           },
@@ -2145,11 +2698,6 @@
             "summary": "Expenses, Balances and People are links styled as the segmented control, each with its own URL (decided in MAZ-229)",
             "kind": "approved",
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
-          },
-          {
-            "summary": "The month is chosen in the bar (previous, month, next) over both panes; the card has no month control and its toolbar sits over the right pane (design decision)",
-            "kind": "follow-up",
-            "ref": "MAZ-279"
           }
         ]
       }
@@ -2302,6 +2850,46 @@
             "summary": "The sidebar footer names the account by its email, not the person’s name",
             "kind": "follow-up",
             "ref": "MAZ-171"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ipad-home-portrait",
+      "view": "iPad home in portrait, October 2026",
+      "native": {
+        "status": "blocked",
+        "owner": "MAZ-77",
+        "note": "Draft card for the owner's review (MAZ-238). Not captured on iOS yet: the Cards test plan has no state for it, and the card was drafted on a Linux machine without the simulator. The iOS capture follows once the owner approves the card."
+      },
+      "web": {
+        "status": "deviates",
+        "owner": "MAZ-92",
+        "capture": "834x1194",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The icon rail stays; the card collapses the sidebar behind a toolbar toggle, with Settings in the toolbar",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "No Income, Spent and Invested tiles under the hero, no expected pay in the projected line, and no Coming up",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "Follow your money is the compact bar, not the full flow chart with Show as a table",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "No Daily spending or By category: a Recent list shows instead",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
           }
         ]
       }
@@ -2637,6 +3225,551 @@
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           }
         ]
+      }
+    },
+    {
+      "id": "web-households",
+      "view": "web shared list: Maison and Lisbon trip",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-75",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "deviates",
+        "owner": "MAZ-91",
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The add button is an icon-only + beside search, not beside the Shared title",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "No “Start sharing” header, and Join with a code and New household are copper titles, not label-colour rows",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "The page backdrop is copper; the card's Shared page uses the green shared tint",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-shared-expense",
+      "view": "web household Maison with the Internet expense open, October 2026",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-75",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "deviates",
+        "owner": "MAZ-91",
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The detail title is a small upper-case eyebrow without the category tile, not a large title with the tile",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "Values sit beside their labels without row dividers, and Your share is a copper strip with a regular-size amount, not a neutral strip with a large amount",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "Share rows have no monograms, and the payer reads “Paid the expense”, not the payer tag with a green Paid",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "Edit is filled copper, Change history a copper link and Delete red-tinted on its own row; the card has outlined Edit and Change history with a red Delete on one row",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "The selected row isn't highlighted, and the page backdrop is copper, not the green shared tint",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-trip",
+      "view": "web shared trip Lisbon trip",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-76",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "deviates",
+        "owner": "MAZ-93",
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "No back button beside the title, and Invite is icon-only instead of labelled",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "No hero surface with the countdown chip, name, dates, totals and People; the countdown is amber upper-case text",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "Tabs are a full-width segmented control, not left-aligned pills",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "One Expenses list (“3 shared · 1 private”) replaces the “Shared with everyone” table and the separate “Only you” section with its note",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "People rows read “owes” or “gets back” without “Paid $X”, and the category card adds a sentence about balances",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-recurring",
+      "view": "web recurring: Payday, Gym and paused Magazine, shared Streaming, TFSA contribution",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-74",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "deviates",
+        "owner": "MAZ-90",
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The labelled New schedule button is an icon-only + beside search",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "The account or household is in the row's subtitle, not a right-aligned column before the amount",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-accounts",
+      "view": "web accounts: Everyday chequing and Visa",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-74",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "deviates",
+        "owner": "MAZ-89",
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The labelled Add account button is an icon-only + beside search",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "Rows have no edit button before the chevron, and account names are regular weight, not semibold",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-categories",
+      "view": "web expense categories",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-74",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "deviates",
+        "owner": "MAZ-89",
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The New category button is an icon-only + beside search, not a labelled button beside the title",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "The list runs full width instead of the card's centred column",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "No “Drag to reorder” hint and no drag handles: rows end in a chevron",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "Row titles are regular weight, not semibold, and an unused category reads “not used yet” in lower case",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-currency",
+      "view": "web currency settings, locked by existing entries",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-69",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "deviates",
+        "owner": "MAZ-85",
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The section list has no Export data item (follow-up recorded on MAZ-239)",
+            "kind": "follow-up",
+            "ref": "MAZ-239"
+          },
+          {
+            "summary": "Currencies are a list with a copper checkmark, code and name on two lines, not a radio group with the code and name on one row",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "No lock beside “Ledger currency”, and the locked note is plain text without its lock and tinted box",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-schedule-form",
+      "view": "web new schedule dialog: monthly Internet expense",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-74",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "deviates",
+        "owner": "MAZ-90",
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "One stacked column instead of the card's two panes, with a plain amount field instead of the large amount",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "Field labels are bold title case, not the small upper-case captions, and the description sits in the body, not under the title",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "First date, Category, Account and Your share are native inputs in a grid, not icon rows with their value and chevron",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "The preview reads “Saving records … now. Then next on …”, not the card's “First on …, then monthly on the 18th.”",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "No footer bar with the keyboard hints, and Cancel is a copper text link, not a bordered button",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "The Recurring page behind it has an icon-only + instead of the labelled New schedule button",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-edit-entry",
+      "view": "web edit entry dialog: 🎉 Party supplies, September 2026",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-73",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "deviates",
+        "owner": "MAZ-88",
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The Split value shows its amount in copper (“$16.00 yours”); the card's value is secondary text",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "The form adds a Note field under the receipt drop zone",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "The entry's detail panel stays open behind the dialog; the card shows Activity with nothing selected",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-join-code",
+      "view": "web join a household dialog",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-75",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "deviates",
+        "owner": "MAZ-91",
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The invite code is in the regular font, not the card's spaced code font",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "No tinted footer bar above Cancel and Join household, and Cancel is a copper text link, not a bordered button",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-activity-searching",
+      "view": "web activity search for coffee while the server search is still running",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-73",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "deviates",
+        "owner": "MAZ-88",
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Only the month chip shows while searching, not the All / Expenses / Income / Investments chips",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "“Searching…” is plain text at the top left with no spinner, not centred in the table with its headers",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "The month's entry, spent and in summary shows while the search runs; the card shows none",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "The search field sits beside the month switcher, not at the right beside Add entry",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-server-unreachable",
+      "view": "web home while the server doesn't answer its info request",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-71",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "deviates",
+        "owner": "MAZ-87",
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The sidebar footer still reads “Synced just now”, not “Can't reach server” with the red cloud icon",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "The banner title is red and its icon is a bare alert circle; the card uses the label colour with a red cloud icon in a tinted tile",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-demo",
+      "view": "web home in the demo, opened from sign-in's sample data link, with the demo banner",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-68",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "deviates",
+        "owner": "MAZ-84",
+        "capture": "1440x900",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "The demo banner is amber with an amber play icon; the card's is neutral with a copper play icon (amber means pending)",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "The sidebar footer shows the demo account, “Not synced” and the gear, not “Demo” with “Sample data”",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "The sidebar clips its shortcut badges, and Together lists “Shared” instead of the household and All households",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-tablet",
+      "view": "web home at 1024 by 768 with the icon rail, October 2026",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-77",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "deviates",
+        "owner": "MAZ-92",
+        "capture": "1024x768",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "No Came in, Spent and Invested tiles under the hero, and no Coming up beside it",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "Follow your money is the compact bar with Insights, not the full flow chart with Open full view and Show as a table",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          },
+          {
+            "summary": "Recent follows Follow your money, and search is the full field instead of an icon button",
+            "kind": "follow-up",
+            "ref": "MAZ-238"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-password-reset",
+      "view": "web set a new password with a reset code",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-68",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-84",
+        "note": "The web has no password reset: the server takes an operator-issued reset code (POST /api/auth/password-reset) and has no reset screen.",
+        "followUp": "MAZ-238"
+      }
+    },
+    {
+      "id": "web-export",
+      "view": "web settings, Export data pane",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-69",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-85",
+        "note": "The web has no Export data yet: Settings has no Export data section.",
+        "followUp": "MAZ-239"
       }
     },
     {
