@@ -1,11 +1,10 @@
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useId, useState, type KeyboardEvent, type ReactNode } from "react";
 import type { Ledger, Transaction } from "@domain/ledger.ts";
 import { isExpectedIncome } from "@domain/summary.ts";
 import { ApiError } from "../../api/client";
 import { useToday } from "../../app/useToday";
-import { ledgerCurrencyQuery } from "../../api/ledger";
 import { searchTransactionsQuery } from "../../api/search";
 import { useAccountEmail } from "../../auth/account";
 import { Badge, Button, cx, Kbd } from "../../design/controls";
@@ -14,6 +13,7 @@ import { tileStyle } from "../../design/categoryTint";
 import { formatCents, Money } from "../../design/Money";
 import { EmptyState, useOnline } from "../../design/states";
 import { useLedgerSync } from "../../offline/OfflineLedgerProvider";
+import { useLedgerCurrency } from "../../offline/useLedgerCurrency";
 import { dayLabel } from "../households/model";
 import type { EntryAction } from "../entries/EntryDetail";
 import { categoryIcon, repeatLabel, splitSummary } from "../entries/model";
@@ -73,12 +73,13 @@ export function ActivityResults({ search, filters, ledger, shared, onOpen, onCle
   const serverSearch = useInfiniteQuery(
     searchTransactionsQuery(email, { ...(filters.query ? { query: filters.query } : {}), ...range, ...(filters.kind ? { kind: filters.kind } : {}) }),
   );
-  const currency = useQuery(ledgerCurrencyQuery(email));
   const sync = useLedgerSync();
   const online = useOnline();
   const [limit, setLimit] = useState(PAGE);
 
   const localLedger = sync?.ledger ?? null;
+  // Personal amounts are in the ledger's currency, from the offline store's copy (MAZ-242).
+  const currency = useLedgerCurrency().data;
   if (sync && localLedger) {
     const stale = serverSearch.data !== undefined && serverSearch.dataUpdatedAt < sync.changedAt;
     const unreachable = serverSearch.data === undefined && serverSearch.error instanceof ApiError && serverSearch.error.status === 0;
@@ -155,7 +156,7 @@ export function ActivityResults({ search, filters, ledger, shared, onOpen, onCle
       </p>
       {total === 0 && !serverSearch.hasNextPage ? <NoResults search={search} onClear={onClear} /> : null}
       {/* A search with words is ranked by relevance, not date, so only browsing is grouped by day. */}
-      <RowList rows={rows} grouped={!filters.query} complete={!serverSearch.hasNextPage} ledger={localLedger ?? ledger} currency={currency.data} layout={layout} selectedKey={selectedKey} onOpen={onOpen} autoSelect={autoSelect} />
+      <RowList rows={rows} grouped={!filters.query} complete={!serverSearch.hasNextPage} ledger={localLedger ?? ledger} currency={currency} layout={layout} selectedKey={selectedKey} onOpen={onOpen} autoSelect={autoSelect} />
       {pageFailed || refreshFailed ? (
         <div role="alert">
           <p>{describeSearchError(serverSearch.error)}</p>

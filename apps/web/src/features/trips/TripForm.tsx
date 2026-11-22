@@ -1,11 +1,11 @@
 import { saveTrip } from "@domain/commands.ts";
 import { uid, type Trip } from "@domain/ledger.ts";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useId, useRef, useState, type RefObject, type SyntheticEvent } from "react";
 import { ApiError } from "../../api/client";
 import { archiveHousehold, createSharedTrip, householdsKey, refreshHousehold, updateSharedTrip } from "../../api/households";
-import { ledgerCurrencyQuery } from "../../api/ledger";
+import { useLedgerCurrency } from "../../offline/useLedgerCurrency";
 import { invalidateSearch } from "../../api/search";
 import { useAccountEmail } from "../../auth/account";
 import { useIsDemo } from "../../demo/demo";
@@ -37,7 +37,7 @@ export function TripFormDialog({ target, onClose }: { target: TripFormTarget; on
   const online = useOnline();
   const demo = useIsDemo();
   const workspace = useLedgerWorkspace();
-  const currency = useQuery({ ...ledgerCurrencyQuery(email), enabled: target.kind === "new" && !demo });
+  const currency = useLedgerCurrency({ enabled: target.kind === "new" && !demo });
   const initial: TripDraft =
     target.kind === "personal"
       ? { name: target.trip.name, startDate: target.trip.startDate, endDate: target.trip.endDate }
@@ -330,7 +330,7 @@ export function ShareTripDialog({ trip, expenseCount, onClose }: { trip: Trip; e
   const toast = useToast();
   const online = useOnline();
   const workspace = useLedgerWorkspace();
-  const currency = useQuery(ledgerCurrencyQuery(email));
+  const currency = useLedgerCurrency();
   const confirmRef = useRef<HTMLButtonElement>(null);
   const share = useMutation({
     mutationKey: ["trips", "share"],
