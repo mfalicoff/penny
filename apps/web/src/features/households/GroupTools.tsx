@@ -27,14 +27,15 @@ export function GroupToolbar({ lead, ownAdd, children }: { lead?: ReactNode; own
 /**
  * One round tool. Its name is always the accessible name; `labelled` shows it beside the icon from
  * 1100px (the `web-household` card's Invite). `primary` is the copper add action, which pages
- * render from 1100px only: narrower, it's in the page's hero or the … menu.
+ * render from 1100px only: narrower, it's in the page's hero or the … menu. `text` replaces the
+ * shown name with a shorter one (the iPad card's "+ Expense"); `label` stays the accessible name.
  */
-export function ToolButton({ ref, icon, label, labelled, primary, onClick }: { ref?: Ref<HTMLButtonElement>; icon: IconName; label: string; labelled?: boolean; primary?: boolean; onClick: () => void }) {
-  const named = labelled || primary;
+export function ToolButton({ ref, icon, label, text, labelled, primary, onClick }: { ref?: Ref<HTMLButtonElement>; icon: IconName; label: string; text?: string | undefined; labelled?: boolean; primary?: boolean; onClick: () => void }) {
+  const named = (labelled || primary) && text === undefined;
   return (
     <button ref={ref} type="button" className={cx("group-tool", !primary && "glass", labelled && "group-tool--labelled", primary && "group-tool--primary")} aria-label={named ? undefined : label} onClick={onClick}>
       <Icon name={icon} size={primary ? 18 : 20} />
-      {named ? <span className="group-tool__label">{label}</span> : null}
+      {named ? <span className="group-tool__label">{label}</span> : text !== undefined ? <span className="group-tool__label" aria-hidden="true">{text}</span> : null}
     </button>
   );
 }

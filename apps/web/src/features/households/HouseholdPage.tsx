@@ -1,12 +1,12 @@
 import { AddEntryDialog } from "../entries/AddEntryDialog";
 import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { householdDetailQuery, householdsQuery, monthRecapQuery } from "../../api/households";
 import type { HouseholdDetail, MonthRecap } from "../../api/schemas";
 import { useAccountEmail } from "../../auth/account";
 import { usePageTitle, usePageTitleStyle } from "../../app/shell/pageTitle";
-import { useMediaQuery, WIDE } from "../../app/useMediaQuery";
+import { TOUCH_TABLET, useMediaQuery, WIDE } from "../../app/useMediaQuery";
 import { Avatar, Badge, cx } from "../../design/controls";
 import { Money } from "../../design/Money";
 import { Icon } from "../../design/Icon";
@@ -20,11 +20,17 @@ import { ExpenseFormDialog, type FormTarget } from "./ExpenseForm";
 import { ExpensesTab } from "./ExpensesTab";
 import { GroupToolbar, MoreMenu, ToolButton, ToolContent, toolClass, type MoreItem } from "./GroupTools";
 import { HistoryPanel } from "./HistoryPanel";
-import { currentMonth, isCurrent, monthLabel, people } from "./model";
+import { byWeek, currentMonth, isCurrent, monthLabel, people } from "./model";
 import { OnlineNotice } from "./OnlineNotice";
 import { PeopleTab, useManageActions } from "./PeopleTab";
 import { RuleDialog } from "./RuleDialog";
 import type { HouseholdSearch, HouseholdTab } from "./search";
+
+/**
+ * The expense the touch-tablet pane last picked by itself (`ipad-shared`). Picking one changes the
+ * route, which mounts the page again, so it lives here: that expense opens without taking focus.
+ */
+let autoPicked: string | undefined;
 
 const TAB_LABEL: Record<Exclude<HouseholdTab, "history">, string> = { expenses: "Expenses", balances: "Balances", people: "People" };
 
@@ -36,7 +42,10 @@ const TAB_LABEL: Record<Exclude<HouseholdTab, "history">, string> = { expenses: 
  * small and centered; History is titled History. The bar holds the month, Invite or History and
  * the … menu (Manage); from 1100px it holds History, Invite and Shared expense, as on
  * `web-household`, and Expenses is two panes: the expense table, and the selected expense with
- * Balances beside it. `expenseId` opens that expense (`/households/$id/expenses/$expenseId`);
+ * Balances beside it. On a touch tablet from 1100px (`ipad-shared`) the hero splits across the two
+ * panes: the name, the members and the month's total over the expenses, and the viewer's balance
+ * over Balances and the selected expense, with + Expense in the bar. `expenseId` opens that
+ * expense (`/households/$id/expenses/$expenseId`);
  * `?rule=` opens a repeating expense.
  */
 export function HouseholdPage({ householdId, expenseId, search }: { householdId: string; expenseId?: string; search: HouseholdSearch }) {
@@ -82,6 +91,7 @@ function HouseholdScreen({ householdId, expenseId, search, detail, archived, rec
   const email = useAccountEmail();
   const navigate = useNavigate();
   const wide = useMediaQuery(WIDE);
+  const touch = useMediaQuery(TOUCH_TABLET);
   const [form, setForm] = useState<FormTarget | null>(null);
   const recordHintId = useId();
   const who = people(detail, email);
@@ -96,11 +106,46 @@ function HouseholdScreen({ householdId, expenseId, search, detail, archived, rec
   const closeRule = () => void navigate({ to: ".", search: linkSearch({}), replace: true });
   // From 1100px the selected expense sits beside the expenses instead of over them.
   const inlineExpense = wide && tab === "expenses";
+  // `ipad-shared`: a touch tablet splits the hero across the two panes instead of one above both.
+  const split = inlineExpense && touch;
+  // The pane always shows an expense, as `ipad-activity` always shows an entry: the first listed
+  // one when the household opens, and again when the selected one leaves the list (deleted, or
+  // another month chosen). An expense opened from elsewhere (Activity, Home) stays open even when
+  // it's from another month.
+  const listed = split && recap.data?.month === month ? byWeek(recap.data.expenses).flatMap((group) => group.expenses.map((expense) => expense.id)) : undefined;
+  const listedKey = listed?.join(",");
+  const previousList = useRef<{ month: string; ids: string[] } | null>(null);
+  useEffect(() => {
+    if (listedKey === undefined) return;
+    const ids = listedKey ? listedKey.split(",") : [];
+    const before = previousList.current;
+    previousList.current = { month, ids };
+    if (expenseId !== undefined) {
+      if (ids.includes(expenseId)) return;
+      const left = before !== null && (before.month !== month || before.ids.includes(expenseId));
+      if (!left) return;
+    }
+    const first = ids[0];
+    autoPicked = first;
+    const keep = { month: search.month };
+    if (first) void navigate({ to: "/households/$id/expenses/$expenseId", params: { id: householdId, expenseId: first }, search: keep, replace: true });
+    else if (expenseId !== undefined) void navigate({ to: "/households/$id", params: { id: householdId }, search: keep, replace: true });
+  }, [listedKey, month, search.month, expenseId, householdId, navigate]);
+  const monthName = monthLabel(month).split(" ")[0] ?? month;
+  const monthTotal = recap.data?.expenses.reduce((sum, expense) => sum + expense.totalCents, 0);
+  const glow = <div className={cx("glow", balance !== undefined && balance > 0 && "glow--green")} aria-hidden="true" />;
+  const balanceLine = (className: string) => (
+    <p className={className} aria-live="polite">
+      <MonthBalance month={month} balance={balance} loading={recap.isPending} view={view} />
+    </p>
+  );
   const expenseDetail = expenseId ? (
     <ExpenseDetailDialog
       view={view}
       expenseId={expenseId}
       variant={inlineExpense ? "panel" : "dialog"}
+      compact={split}
+      focusOnOpen={(id) => id !== autoPicked}
       onEdit={(expense) => { setForm({ kind: "edit", expense }); }}
       onRule={(rule) => { go({ rule }); }}
       onClose={() => { go({}); }}
@@ -130,7 +175,7 @@ function HouseholdScreen({ householdId, expenseId, search, detail, archived, rec
   );
 
   return (
-    <div className="page household">
+    <div className={cx("page household", split && "household--split")}>
       <GroupToolbar ownAdd lead={tab === "expenses" || tab === "balances" ? <MonthBarControls month={month} onChange={(next) => { go({ month: next }); }} /> : null}>
         {historyInBar ? (
           <Link to="/households/$id" params={{ id: householdId }} search={linkSearch({ tab: "history" })} className={toolClass()} aria-current={tab === "history" ? "page" : undefined}>
@@ -143,12 +188,15 @@ function HouseholdScreen({ householdId, expenseId, search, detail, archived, rec
           </Link>
         ) : null}
         {wide ? null : <MoreMenu items={more} label="Household actions" />}
-        {view.canWrite && wide ? <ToolButton primary icon="add" label="Shared expense" onClick={() => { setForm({ kind: "new" }); }} /> : null}
+        {view.canWrite && wide ? (
+          // The iPad card's capsule reads "+ Expense"; its name says what it adds.
+          <ToolButton primary icon="add" label="Shared expense" text={touch ? "Expense" : undefined} onClick={() => { setForm({ kind: "new" }); }} />
+        ) : null}
       </GroupToolbar>
       <OnlineNotice />
-      {tab === "expenses" ? (
+      {tab === "expenses" && !split ? (
         <section className="household-head" aria-label="Household summary">
-          <div className={cx("glow", balance !== undefined && balance > 0 && "glow--green")} aria-hidden="true" />
+          {glow}
           <span className="avatars household-head__people" aria-hidden="true">
             {current.slice(0, 5).map((member) => (
               <Avatar key={member.userId} name={member.email} size={44} />
@@ -160,9 +208,7 @@ function HouseholdScreen({ householdId, expenseId, search, detail, archived, rec
               {household.name}
             </p>
             {archived ? <Badge>Archived</Badge> : null}
-            <p className="household-head__balance" aria-live="polite">
-              <MonthBalance month={month} balance={balance} loading={recap.isPending} view={view} />
-            </p>
+            {balanceLine("household-head__balance")}
           </div>
           {view.canWrite && !wide ? (
             <div className="household-head__actions">
@@ -201,8 +247,37 @@ function HouseholdScreen({ householdId, expenseId, search, detail, archived, rec
           view={view}
           recap={recap}
           search={linkSearch({})}
+          lead={
+            split ? (
+              <section className="household-pane-head" aria-label="Household summary">
+                <div className="household-pane-head__top">
+                  {/* The bar's title is the page's heading, for screen readers only here; the pane shows the name. */}
+                  <p className="household-pane-head__name" aria-hidden="true">
+                    {household.name}
+                  </p>
+                  <span className="avatars household-pane-head__people" aria-hidden="true">
+                    {current.slice(0, 5).map((member) => (
+                      <Avatar key={member.userId} name={member.email} size={30} />
+                    ))}
+                  </span>
+                </div>
+                {archived ? <Badge>Archived</Badge> : null}
+                <p className="household-pane-head__total">
+                  {monthName} · {monthTotal === undefined ? "loading the month's total…" : <>{view.money(monthTotal)} in shared expenses</>}
+                </p>
+                {sections}
+              </section>
+            ) : undefined
+          }
           side={
-            wide ? (
+            split ? (
+              <>
+                {glow}
+                {balanceLine("household-head__balance household-owed")}
+                <BalancesTab view={view} recap={recap} compact />
+                {expenseDetail}
+              </>
+            ) : wide ? (
               <>
                 {expenseDetail}
                 <BalancesTab view={view} recap={recap} compact />

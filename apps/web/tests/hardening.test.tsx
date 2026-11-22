@@ -105,7 +105,8 @@ describe("personal amounts use the ledger currency", () => {
     const row = (await screen.findByText("Bread")).closest("li");
     if (!row) throw new Error("no Bread row");
     // MAZ-202: the row reads as the cards do, with the expense's minus sign.
-    expect(within(row).getByText("−€5.00")).toBeInTheDocument();
+    // This ledger has only a currency, so the offline store can't keep it: Query reads the currency once the store gives up.
+    expect(await within(row).findByText("−€5.00")).toBeInTheDocument();
   });
 
   it("shows a plain number rather than a wrong currency when the ledger can't be read", async () => {
