@@ -181,6 +181,7 @@ struct AccountFormSheet: View {
             } message: {
                 Text("Nothing uses this account, so no entry changes.")
             }
+            .pennySolidBars()
         }
         .tint(PennyColor.tint)
         .interactiveDismissDisabled(model.isSaving)

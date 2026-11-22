@@ -399,6 +399,10 @@ struct Penny {
         AccessibilityID.Settings.row("accounts"): .button,
         AccessibilityID.Settings.row("categories"): .button,
         AccessibilityID.Settings.appLockToggle: .switch,
+        AccessibilityID.Settings.showCents: .switch,
+        AccessibilityID.Settings.reduceTransparency: .switch,
+        AccessibilityID.Settings.weekStart: .button,
+        AccessibilityID.Settings.account: .button,
     ]
 
     private static let prefixTypes: [(prefix: String, type: XCUIElement.ElementType)] = [

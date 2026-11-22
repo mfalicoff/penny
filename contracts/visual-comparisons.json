@@ -1435,6 +1435,11 @@
             "summary": "Copy says \"this device\" where the card says \"this iPhone\"",
             "kind": "follow-up",
             "ref": "MAZ-255"
+          },
+          {
+            "summary": "Reduce transparency's description says the device's own setting covers the tab bar and the bars' buttons, which iOS keeps as system glass; the card says the switch covers the navigation and toolbars (design decision recorded on MAZ-250)",
+            "kind": "follow-up",
+            "ref": "MAZ-250"
           }
         ]
       },
@@ -2277,6 +2282,11 @@
             "summary": "Preferences has no Notifications row; the app shows Notifications as its own group with a footer (follow-up recorded on MAZ-257)",
             "kind": "follow-up",
             "ref": "MAZ-257"
+          },
+          {
+            "summary": "Reduce transparency's description says the device's own setting covers the tab bar and the bars' buttons, which iOS keeps as system glass; the card says the switch covers the navigation and toolbars (design decision recorded on MAZ-250)",
+            "kind": "follow-up",
+            "ref": "MAZ-250"
           }
         ]
       },

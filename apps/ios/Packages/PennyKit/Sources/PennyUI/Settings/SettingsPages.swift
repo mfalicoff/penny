@@ -45,8 +45,10 @@ struct AppearanceSettingsView: View {
                 switchRow(
                     "Reduce transparency",
                     detail:
-                        "Use solid surfaces instead of glass for the navigation and toolbars. "
-                        + "Your device's own setting also applies.",
+                        // Narrower than the card: iOS keeps the tab bar and the buttons in the bars glass
+                        // unless the device's own setting is on (design decision on MAZ-250).
+                        "Use solid navigation bars and controls instead of glass. "
+                        + "Your device's own setting also covers the tab bar and the bars' buttons.",
                     isOn: Binding(
                         get: { appearance.reducesTransparency }, set: { appearance.setReducesTransparency($0) })
                 )

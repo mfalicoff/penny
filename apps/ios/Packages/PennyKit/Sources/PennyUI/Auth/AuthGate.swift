@@ -233,6 +233,7 @@ struct SignedOutFlow: View {
                     ServerConnectView(auth: auth) { path.removeAll() }
                 }
             }
+            .pennySolidBars()
         }
         #if canImport(UIKit)
             .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in

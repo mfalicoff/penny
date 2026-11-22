@@ -41,3 +41,28 @@ extension View {
         modifier(PennyGlass(in: shape, tinted: tinted))
     }
 }
+
+/// Solid navigation and tab bars while Penny's own Reduce transparency is on (MAZ-250): the
+/// bars draw the surface color instead of Liquid Glass. The system's Reduce Transparency is handled by the system.
+/// Apply it to every navigation stack's root and to each pushed page.
+public struct PennySolidBars: ViewModifier {
+    @Environment(\.pennyReducesTransparency) private var appReducesTransparency
+
+    public init() {}
+
+    public func body(content: Content) -> some View {
+        #if os(iOS)
+            content
+                .toolbarBackground(PennyColor.surface, for: .navigationBar, .tabBar)
+                .toolbarBackgroundVisibility(
+                    appReducesTransparency ? .visible : .automatic, for: .navigationBar, .tabBar)
+        #else
+            content
+        #endif
+    }
+}
+
+extension View {
+    /// See `PennySolidBars`.
+    public func pennySolidBars() -> some View { modifier(PennySolidBars()) }
+}

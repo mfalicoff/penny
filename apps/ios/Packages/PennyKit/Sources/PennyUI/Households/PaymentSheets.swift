@@ -56,6 +56,7 @@ struct PaymentSheet: View {
                         .neutralToolbarGlyph()
                 }
             }
+            .pennySolidBars()
         }
         .interactiveDismissDisabled(working)
         .accessibilityIdentifier(isMonthly ? "screen.recordMonthly" : "screen.recordShare")

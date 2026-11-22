@@ -145,6 +145,7 @@ struct SettingsView: View {
                 }
             }
         }
+        .pennySolidBars()
         .accessibilityIdentifier("screen.settings")
     }
 
@@ -271,6 +272,10 @@ struct SettingsPage: View {
     let route: SettingsRoute
 
     var body: some View {
+        page.pennySolidBars()
+    }
+
+    @ViewBuilder private var page: some View {
         switch route {
         case .recurring: RecurringListView()
         case .accounts: AccountsListView()

@@ -100,6 +100,7 @@ struct InviteScannerView: View {
                             .accessibilityIdentifier("scanner.close")
                     }
                 }
+                .pennySolidBars()
         }
         .task { await model.start() }
         .accessibilityIdentifier("screen.inviteScanner")

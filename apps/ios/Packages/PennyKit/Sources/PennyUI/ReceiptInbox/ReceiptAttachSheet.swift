@@ -56,6 +56,7 @@ struct ReceiptAttachSheet: View {
                     }
                 }
             }
+            .pennySolidBars()
         }
         .onAppear {
             if file == nil { file = ReceiptInboxRules.preselectedFile(item).flatMap { $0.linked ? nil : $0 } }
@@ -405,6 +406,7 @@ struct ReceiptInboxPicker: View {
             .receiptViewer($previewing) { request in
                 ReceiptPreviewView(receipt: request.receipt, transfers: shell.receipts, context: nil)
             }
+            .pennySolidBars()
         }
         .task { await shell.receiptInbox.refresh(.toAttach) }
         .accessibilityIdentifier("screen.receiptInboxPicker")
