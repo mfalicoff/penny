@@ -482,6 +482,29 @@ final class CardCaptureTests: CardTestCase {
     }
 
     @MainActor
+    func test_whenTheServerStopsAnswering_IphoneSyncFailed_ShouldBeCaptured() async throws {
+        try await card("iphone-sync-failed", freshSeedPerAppearance: true) { card in
+            // Two changes wait while the ledger answers 503: the amber "Couldn't sync" banner with
+            // Retry over Home, and the rows waiting to sync.
+            try await card.makeTwoPendingChanges(nil)
+            try card.penny.openHome()
+            try card.penny.waitAfterRefresh(for: AccessibilityID.Feedback.syncBanner, on: AccessibilityID.Screen.home)
+        }
+    }
+
+    @MainActor
+    func test_whenHouseholdsFailToLoad_IphoneSharedMissing_ShouldBeCaptured() async throws {
+        try await card("iphone-shared-missing") { card in
+            // The household projection answers 503: Home shows the amber "Shared expenses may be
+            // missing" banner with Retry; the person's own entries still load.
+            try await card.applyFault()
+            try card.penny.openHome()
+            try card.penny.waitAfterRefresh(
+                for: AccessibilityID.Home.sharedNotice, on: AccessibilityID.Screen.home)
+        }
+    }
+
+    @MainActor
     func test_whenASaveFails_IphoneSaveError_ShouldBeCaptured() async throws {
         try await card(
             "iphone-save-error", freshSeedPerAppearance: true,

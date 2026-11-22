@@ -31,9 +31,11 @@ struct SyncBanner: View {
         }
     }
 
+    /// Amber, as on the `sync-failed` card: the changes are kept on the device and only wait to
+    /// upload, so it isn't a red error.
     private func tone(_ status: SyncStatus) -> BannerTone {
         if case .offline = status { return .offline }
-        return .error
+        return .warning
     }
 
     /// "iPad" on iPad, otherwise "iPhone" (the only idioms the app runs on).

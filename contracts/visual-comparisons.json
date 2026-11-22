@@ -2272,9 +2272,30 @@
       "id": "iphone-sync-failed",
       "view": "home after the server stops answering, with changes waiting to sync",
       "native": {
-        "status": "blocked",
+        "status": "deviates",
         "owner": "MAZ-71",
-        "note": "Draft card for the owner's review (MAZ-238). Not captured on iOS yet: the Cards test plan has no state for it, and the card was drafted on a Linux machine without the simulator. The iOS capture follows once the owner approves the card."
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Add entry is a fifth tab with the search role inside the system tab bar, not a separate copper button beside four tabs (Home around the banner, as on iphone-home)",
+            "kind": "follow-up",
+            "ref": "MAZ-254"
+          },
+          {
+            "summary": "Insights and the calendar are reached from Explore your month under Recent instead of the flow card's Insights pill; the calendar is a page, not a sheet (Home around the banner, as on iphone-home)",
+            "kind": "follow-up",
+            "ref": "MAZ-254"
+          },
+          {
+            "summary": "An inline \"Home\" title, and calendar and settings grouped in one capsule; the card has no title and two separate buttons (Home around the banner, as on iphone-home)",
+            "kind": "follow-up",
+            "ref": "MAZ-254"
+          }
+        ]
       },
       "web": {
         "status": "deviates",
@@ -2302,9 +2323,30 @@
       "id": "iphone-shared-missing",
       "view": "home while household expenses fail to load",
       "native": {
-        "status": "blocked",
+        "status": "deviates",
         "owner": "MAZ-75",
-        "note": "Draft card for the owner's review (MAZ-238). Not captured on iOS yet: the Cards test plan has no state for it, and the card was drafted on a Linux machine without the simulator. The iOS capture follows once the owner approves the card."
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Add entry is a fifth tab with the search role inside the system tab bar, not a separate copper button beside four tabs (Home around the banner, as on iphone-home)",
+            "kind": "follow-up",
+            "ref": "MAZ-254"
+          },
+          {
+            "summary": "Insights and the calendar are reached from Explore your month under Recent instead of the flow card's Insights pill; the calendar is a page, not a sheet (Home around the banner, as on iphone-home)",
+            "kind": "follow-up",
+            "ref": "MAZ-254"
+          },
+          {
+            "summary": "An inline \"Home\" title, and calendar and settings grouped in one capsule; the card has no title and two separate buttons (Home around the banner, as on iphone-home)",
+            "kind": "follow-up",
+            "ref": "MAZ-254"
+          }
+        ]
       },
       "web": {
         "status": "deviates",

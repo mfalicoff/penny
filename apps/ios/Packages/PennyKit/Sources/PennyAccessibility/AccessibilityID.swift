@@ -170,6 +170,7 @@ public enum AccessibilityID {
         public static let comingUp = "home.comingUp"
         public static let dailySpending = "home.dailySpending"
         public static let sharedNotice = "home.sharedNotice"
+        public static let sharedNoticeRetry = "home.sharedNoticeRetry"
         /// iPad Home's toolbar (`ipad-home` card, MAZ-245): the month's back and forward
         /// arrows, search (Activity's search field) and the copper Add entry capsule.
         public static let previousMonth = "home.previousMonth"
@@ -180,7 +181,7 @@ public enum AccessibilityID {
         static let all = [
             settings, hero, month, flow, recent, empty, emptyIncome, emptyExpense, emptyInvest, emptyDemo,
             projected, expectedIncome, explore, exploreCalendar, exploreInsights, exploreMoneyFlow, totals, comingUp,
-            dailySpending, sharedNotice, calendar, previousMonth, nextMonth, search, add,
+            dailySpending, sharedNotice, sharedNoticeRetry, calendar, previousMonth, nextMonth, search, add,
         ]
     }
 
