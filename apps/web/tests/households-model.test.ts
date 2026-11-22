@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import type { AuditEvent, SharedExpense } from "../src/api/schemas";
 import {
+  byWeek,
   describeAudit,
   eligibleMembers,
   equalSplit,
@@ -195,5 +196,23 @@ describe("staleChange names why a share payment went stale", () => {
   it("lists nothing when an edit changed no amount", () => {
     const now = { ...before, revision: 2, title: "Fibre", updatedBy: "bea", updatedAt: 9 };
     expect(staleChange(before, now, "alex", money, name).rows).toEqual([]);
+  });
+});
+
+describe("byWeek (ipad-shared)", () => {
+  const expense = (id: string, date: string) => ({ id, date }) as SharedExpense;
+  const now = new Date(2026, 10, 9, 12);
+
+  it("puts the last seven days, today included, under This week and the rest under Earlier", () => {
+    const groups = byWeek([expense("a", "2026-11-09"), expense("b", "2026-11-03"), expense("c", "2026-11-02"), expense("d", "2026-11-01")], now);
+    expect(groups.map((group) => [group.label, group.expenses.map((item) => item.id)])).toEqual([
+      ["This week", ["a", "b"]],
+      ["Earlier", ["c", "d"]],
+    ]);
+  });
+
+  it("leaves out an empty group", () => {
+    expect(byWeek([expense("a", "2026-10-02")], now).map((group) => group.label)).toEqual(["Earlier"]);
+    expect(byWeek([], now)).toEqual([]);
   });
 });
