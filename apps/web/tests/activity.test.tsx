@@ -1,5 +1,5 @@
 import { onlineManager } from "@tanstack/react-query";
-import { configure, screen, waitFor, within } from "@testing-library/react";
+import { act, configure, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { entry, ledgerServer, personalHit, setOnline, sharedHit, sharedRow } from "./fakes/ledgerServer";
@@ -336,6 +336,26 @@ describe("Activity on a desktop (web-activity, MAZ-225)", () => {
     await user.keyboard("{Escape}");
     expect(await screen.findByRole("complementary", { name: "Dinner out" })).toBeInTheDocument();
     expect(within(table).getByRole("button", { name: /^Dinner out/ })).toHaveAttribute("aria-current", "true");
+  });
+
+  it("brings the set-aside panel back, saying so, when another device deletes the entry being edited", async () => {
+    stubDesktop();
+    const dinner = entry("din", "Dinner out", { total: 1280, share: 640, date: "2026-11-09", categoryId: "food" });
+    const { otherDevice } = ledgerServer({ transactions: [dinner, rent] }, { shared: [], search: () => [personalHit(dinner), personalHit(rent)] });
+    const user = userEvent.setup();
+    renderApp("/transactions?month=2026-11");
+    const table = await within(await screen.findByRole("region", { name: "Search results" })).findByRole("table");
+    await user.click(within(table).getByRole("button", { name: /^Dinner out/ }));
+    await user.click(within(screen.getByRole("complementary", { name: "Dinner out" })).getByRole("button", { name: "Edit" }));
+    expect(await screen.findByRole("form", { name: "Edit entry" })).toBeInTheDocument();
+
+    otherDevice((ledger) => ({ ...ledger, transactions: ledger.transactions.filter((item) => item.id !== "din") }));
+    act(() => {
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    const panel = await screen.findByRole("complementary", { name: "Dinner out" });
+    expect(panel).toHaveTextContent("It was deleted on another device or in another tab.");
+    expect(screen.queryByRole("form", { name: "Edit entry" })).not.toBeInTheDocument();
   });
 
   it("moves through the table with the arrow keys, edits with E and deletes with ⌫", async () => {

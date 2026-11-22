@@ -98,13 +98,15 @@ function EntryDetailFrame({
   const writer = useLedgerWriter();
   const toast = useToast();
   const today = useToday();
-  const [mode, setMode] = useState<EntryAction>(initialAction);
-  useEffect(() => {
-    onModeChange?.(mode);
-  }, [mode, onModeChange]);
+  const [action, setMode] = useState<EntryAction>(initialAction);
   const live = writer.ledger?.transactions.find((item) => item.id === shown.id);
   const entry = live ?? shown;
   const gone = writer.ledger !== null && !live;
+  // Edit and Delete need the entry: once it's gone (deleted on another device), the detail shows again and says so.
+  const mode: EntryAction = live ? action : "detail";
+  useEffect(() => {
+    onModeChange?.(mode);
+  }, [mode, onModeChange]);
   const ledger = writer.ledger;
   const currency = ledger?.currency;
   const category = ledger?.categories.find((item) => item.id === entry.categoryId);
