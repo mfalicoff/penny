@@ -1,6 +1,8 @@
 services:
   postgres:
     image: docker.io/pgvector/pgvector:0.8.7-pg18-trixie@sha256:ab49524d18df7200b74ac9a475e1db6297fc1eb57da4c214c63d10ecc4b754fa
+    # As in deploy/compose.yaml: a statement whose client gave up stops within a second.
+    command: ["postgres", "-c", "client_connection_check_interval=1s"]
     environment:
       POSTGRES_DB: penny
       POSTGRES_USER: postgres

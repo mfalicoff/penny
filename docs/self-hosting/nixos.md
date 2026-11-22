@@ -8,7 +8,8 @@ The repository's flake ships Penny as Nix packages and a NixOS module. One optio
 | --- | --- |
 | `postgresql.service` | PostgreSQL 18 with `pg_trgm` and pgvector (skipped with an [external database](#external-postgresql)) |
 | `penny-db-setup.service` | One-shot, as `postgres`: creates the database, the database user `penny`, the `penny` schema owned by it and the extensions. Idempotent |
-| `penny.service` | The .NET API and its background workers, on `127.0.0.1:5080`. It applies pending migrations on startup, before it serves, and generates the receipt master key on first start if you don't supply one |
+| `penny-receipt-key.service` | One-shot, as root: generates the receipt master key on first start, unless you set `receiptKeyFile`. Does nothing once the key exists |
+| `penny.service` | The .NET API and its background workers, on `127.0.0.1:5080`. It applies pending migrations on startup, before it serves |
 | `nginx.service` | A virtual host that serves the web app, falls back to `index.html`, and proxies `/api/` to the API on the same origin |
 
 The API connects to the local PostgreSQL over its Unix socket with peer authentication: the `penny` system user may log in as the database user `penny`, and no database passwords exist. Receipts and ASP.NET data-protection keys live in `/var/lib/penny`.
@@ -166,7 +167,7 @@ programs.penny.database = {
 };
 ```
 
-The password file is read through systemd credentials, so it may be owned by root. The password must not contain `;`. A connection pooler must run in session mode: the startup migration holds a session advisory lock.
+The password file is read through systemd credentials, so it may be owned by root. The password must not contain `;`. A connection pooler must run in session mode: the startup migration holds a session advisory lock. Set `client_connection_check_interval = 1s` on the external server, so a statement whose request timed out doesn't keep running and holding its locks ([client connection checks](deployment.md#client-connection-checks)). A local database gets it from the module (`services.postgresql.settings.client_connection_check_interval`, a default you can override).
 
 An external database set up for a release with separate roles already has `penny_migrator` as the schema owner: set `user = "penny_migrator"` and `passwordFile` to its password file, and remove `runtimeUser` and `runtimePasswordFile` (evaluation fails while they are set). The [Compose upgrade notes](deployment.md#single-database-user) describe the same change.
 

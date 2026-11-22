@@ -130,6 +130,9 @@ var postgresImage = PinnedImage.Parse(DatabaseSchema.Image);
 var postgres = postgresImage
     .ApplyTo(builder.AddPostgres("postgres"))
     .WithEnvironment("POSTGRES_DB", "penny")
+    // As in deploy/compose.yaml: a statement whose client gave up stops within a second
+    // instead of running on and holding its locks.
+    .WithArgs("-c", "client_connection_check_interval=1s")
     // PostgreSQL 18 images keep their data under /var/lib/postgresql.
     .WithVolume("penny-aspire-postgres", "/var/lib/postgresql")
     .WithLifetime(ContainerLifetime.Persistent);

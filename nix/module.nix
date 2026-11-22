@@ -190,6 +190,9 @@ let
   };
 
   databaseUnits = lib.optionals localDatabase [ "postgresql.service" "penny-db-setup.service" ];
+  # Its own unit, not an ExecStartPre: systemd loads penny.service's credentials for every
+  # process of the unit, so a pre-start step can't create a file the unit loads.
+  keyUnits = lib.optional (cfg.receiptKeyFile == null) "penny-receipt-key.service";
 in
 {
   imports = [
@@ -602,6 +605,10 @@ in
       # Stronger than the stateVersion default, weaker than a plain definition.
       package = lib.mkOverride 900 pkgs.postgresql_18;
       extensions = ps: [ ps.pgvector ];
+      # A statement whose client gave up (a timed-out command whose cancellation wasn't
+      # acknowledged closes the socket) stops within a second instead of running on and
+      # holding its locks (docs/self-hosting/deployment.md#client-connection-checks).
+      settings.client_connection_check_interval = lib.mkDefault "1s";
       # The OS user `penny` may log in as the database user over the local socket.
       identMap = ''
         penny ${cfg.user} ${db.user}
@@ -701,17 +708,29 @@ in
       };
     };
 
+    # Generates the receipt master key on first start (as root, then hands it to the
+    # service user); a no-op once the key exists.
+    systemd.services.penny-receipt-key = mkIf (cfg.receiptKeyFile == null) {
+      description = "Penny receipt master key";
+      before = [ "penny.service" ];
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+        ExecStart = generateReceiptKey;
+        UMask = "0077";
+      };
+    };
+
     systemd.services.penny = {
       description = "Penny API";
       wantedBy = [ "multi-user.target" ];
       # Migrates the database on startup (under its advisory lock), then serves.
-      requires = databaseUnits;
+      requires = databaseUnits ++ keyUnits;
       wants = [ "network-online.target" ] ++ lib.optional mail.enable "penny-render.service";
-      after = databaseUnits ++ [ "network-online.target" ] ++ lib.optional mail.enable "penny-render.service";
+      after = databaseUnits ++ keyUnits ++ [ "network-online.target" ] ++ lib.optional mail.enable "penny-render.service";
       environment = apiEnvironment;
       serviceConfig = hardening // {
         Type = "exec";
-        ExecStartPre = lib.optional (cfg.receiptKeyFile == null) "+${generateReceiptKey}";
         ExecStart = apiStart;
         Restart = "on-failure";
         RestartSec = 5;

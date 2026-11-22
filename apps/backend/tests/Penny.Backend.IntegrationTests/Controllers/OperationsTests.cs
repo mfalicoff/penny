@@ -332,6 +332,32 @@ public sealed class OperationsTests(ApiFixture fixture) : IntegrationTestBase(fi
         );
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task whenClientConnectionChecksOff_Startup_ShouldWarn(bool off)
+    {
+        // The test server checks every second; a session option turns it off for the API.
+        var connection = off
+            ? new NpgsqlConnectionStringBuilder(Fixture.Connection)
+            {
+                Options = "-c client_connection_check_interval=0",
+            }.ConnectionString
+            : Fixture.Connection;
+        var logs = new CapturingLoggerProvider();
+        await using var factory = StartupFactory(connection, logs);
+        using var client = factory.CreateClient();
+        using var response = await client.GetAsync("/api/ready", Ct);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        logs.Messages.Any(message =>
+                message.Contains(
+                    "PostgreSQL has client_connection_check_interval off",
+                    StringComparison.Ordinal
+                )
+            )
+            .ShouldBe(off);
+    }
+
     private static TestApiFactory StartupFactory(string connection, CapturingLoggerProvider logs) =>
         new(
             connection,
