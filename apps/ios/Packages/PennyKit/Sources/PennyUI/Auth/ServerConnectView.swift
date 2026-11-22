@@ -20,9 +20,42 @@ struct ServerConnectView: View {
         _input = State(initialValue: auth.server?.server.description ?? "")
     }
 
+    private var isBlank: Bool { input.trimmingCharacters(in: .whitespaces).isEmpty }
+
     var body: some View {
-        Form {
-            Section {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                urlField
+                caption
+                if let failure { AuthMessage(text: failure).padding(.top, 14) }
+                if let check {
+                    verified(check)
+                } else {
+                    PrimaryButton(
+                        title: checking ? "Checking server…" : "Check server", busy: checking, action: runCheck
+                    )
+                    .disabled(checking || isBlank)
+                    .accessibilityIdentifier("server.check")
+                    .padding(.top, 22)
+                }
+            }
+            .padding(.horizontal, 18)
+            .padding(.top, 6)
+            .padding(.bottom, Metrics.gutter)
+            .frame(maxWidth: 560)
+            .frame(maxWidth: .infinity)
+        }
+        .scrollDismissesKeyboard(.interactively)
+        .signedOutBackground()
+        .navigationTitle("Penny server")
+        .inlineNavigationTitle()
+        .onAppear { focused = check == nil }
+    }
+
+    /// The URL with its label inside the field and a clear (×) button, as on the card.
+    private var urlField: some View {
+        AuthFieldGroup {
+            AuthFieldRow(label: "Server URL") {
                 TextField("Server URL", text: $input, prompt: Text(verbatim: "https://penny.example.com"))
                     .urlEntry()
                     .submitLabel(.go)
@@ -34,97 +67,129 @@ struct ServerConnectView: View {
                     }
                     .disabled(checking)
                     .accessibilityIdentifier("server.url")
-            } header: {
-                Text("Server URL").cardSectionHeader()
-            } footer: {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Enter the server’s base URL, without /api. This only affects this device.")
-                    if input.trimmingCharacters(in: .whitespaces).lowercased().hasPrefix("http:") {
-                        Text(
-                            "HTTP is unencrypted and may be blocked by your device. Prefer HTTPS outside a trusted local network."
-                        )
-                        .foregroundStyle(PennyColor.danger)
+            } trailing: {
+                if !input.isEmpty, !checking {
+                    Button {
+                        input = ""
+                        focused = true
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.body)
+                            .foregroundStyle(PennyColor.tertiaryLabel)
+                            .frame(width: Metrics.minTouchTarget, height: Metrics.minTouchTarget)
+                            .contentShape(Rectangle())
                     }
-                }
-            }
-
-            if let failure {
-                Section { AuthMessage(text: failure) }
-            }
-
-            if let check {
-                verified(check)
-            } else {
-                Section {
-                    Button(action: runCheck) {
-                        HStack {
-                            Text(checking ? "Checking server…" : "Check server")
-                            if checking {
-                                Spacer()
-                                ProgressView()
-                            }
-                        }
-                    }
-                    .disabled(checking || input.trimmingCharacters(in: .whitespaces).isEmpty)
-                    .accessibilityIdentifier("server.check")
+                    .buttonStyle(.plain)
+                    .padding(.trailing, -10)
+                    .accessibilityLabel("Clear server URL")
+                    .accessibilityIdentifier("server.clear")
                 }
             }
         }
-        .navigationTitle("Penny server")
-        .inlineNavigationTitle()
-        .onAppear { focused = check == nil }
+    }
+
+    private var caption: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Enter the server’s base URL, without /api. This only affects this device.")
+                .foregroundStyle(PennyColor.secondaryLabel)
+            if input.trimmingCharacters(in: .whitespaces).lowercased().hasPrefix("http:") {
+                Text(
+                    "HTTP is unencrypted and may be blocked by your device. Prefer HTTPS outside a trusted local network."
+                )
+                .foregroundStyle(PennyColor.danger)
+            }
+        }
+        .font(.footnote)
+        .fixedSize(horizontal: false, vertical: true)
+        .padding(.horizontal, 6)
+        .padding(.top, 8)
     }
 
     private func verified(_ check: ServerCheck) -> some View {
-        Group {
-            Section {
-                Label {
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(spacing: 12) {
+                    VerifiedBadge(encrypted: check.isEncrypted)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Server verified").font(PennyFont.style(.headline))
+                        Text("Server verified").font(PennyFont.style(.headline)).foregroundStyle(PennyColor.label)
                         Text(check.isEncrypted ? "Connected securely over HTTPS" : "Not encrypted (HTTP)")
-                            .font(PennyFont.style(.footnote))
+                            .font(.footnote)
                             .foregroundStyle(check.isEncrypted ? PennyColor.secondaryLabel : PennyColor.danger)
                     }
-                } icon: {
-                    Image(systemName: check.isEncrypted ? "checkmark.seal.fill" : "exclamationmark.shield")
-                        .foregroundStyle(check.isEncrypted ? PennyColor.income : PennyColor.danger)
                 }
                 .accessibilityElement(children: .combine)
                 .accessibilityIdentifier("server.verified")
-                LabeledContent("Name", value: "Penny")
-                LabeledContent("Version", value: check.version)
-                LabeledContent("Sign-in", value: Self.methods(check))
-            } footer: {
+                detail("Name", "Penny")
+                detail("Version", check.version)
+                detail("Sign-in", Self.methods(check))
+            }
+            .padding(16)
+            .background(PennyColor.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .padding(.top, 18)
+
+            Label {
                 Text("Switching servers later requires syncing your entries and signing out first.")
+                    .foregroundStyle(PennyColor.label)
+                    .fixedSize(horizontal: false, vertical: true)
+            } icon: {
+                Image(systemName: "exclamationmark.circle").foregroundStyle(PennyColor.pending)
             }
-            Section {
-                Button("Use this server") {
-                    do throws(AuthFailure) {
-                        try auth.useServer(check)
-                        onDone()
-                    } catch {
-                        failure = error.message
-                    }
+            .font(.footnote)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(PennyColor.pending.opacity(0.12), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .padding(.top, 14)
+
+            PrimaryButton(title: "Use this server") {
+                do throws(AuthFailure) {
+                    try auth.useServer(check)
+                    onDone()
+                } catch {
+                    failure = error.message
                 }
-                .font(PennyFont.style(.headline))
-                .accessibilityIdentifier("server.use")
-                Button("Check again", action: runCheck)
-                    .disabled(checking)
-                    .accessibilityIdentifier("server.checkAgain")
             }
+            .accessibilityIdentifier("server.use")
+            .padding(.top, 22)
+
+            Button("Check again", action: runCheck)
+                .font(PennyFont.style(.body))
+                .foregroundStyle(PennyColor.secondaryLabel)
+                .buttonStyle(.plain)
+                .frame(maxWidth: .infinity, minHeight: Metrics.minTouchTarget)
+                .contentShape(Rectangle())
+                .disabled(checking)
+                .accessibilityIdentifier("server.checkAgain")
+                .padding(.top, 6)
         }
+    }
+
+    /// A `.kv` row: the name in the label color, the value bold, over a hairline.
+    private func detail(_ name: String, _ value: String) -> some View {
+        VStack(spacing: 11) {
+            Rectangle().fill(PennyColor.separator).frame(height: 0.5)
+            HStack {
+                Text(name).foregroundStyle(PennyColor.label)
+                Spacer(minLength: 12)
+                Text(value).fontWeight(.semibold).foregroundStyle(PennyColor.label)
+                    .multilineTextAlignment(.trailing)
+            }
+            .font(.subheadline)
+        }
+        .padding(.top, 11)
+        .accessibilityElement(children: .combine)
     }
 
     static func methods(_ check: ServerCheck) -> String {
         switch check.singleSignOn {
-        case true?: "Email · \(check.singleSignOnLabel ?? "SSO")"
+        case true?: "Email · SSO"
         case false?: "Email"
         case nil: "Email (single sign-on unknown)"
         }
     }
 
     private func runCheck() {
-        guard !checking else { return }
+        guard !checking, !isBlank else { return }
         checking = true
         failure = nil
         check = nil
@@ -137,6 +202,26 @@ struct ServerConnectView: View {
                 failure = error.message
             }
         }
+    }
+}
+
+/// Server verified's badge (`.ok .badge`): a check in a circle on a light green tile, or, over
+/// plain HTTP, a warning on a light red one.
+private struct VerifiedBadge: View {
+    let encrypted: Bool
+    @ScaledMetric(relativeTo: .body) private var size = 40.0
+
+    var body: some View {
+        let color = encrypted ? PennyColor.income : PennyColor.danger
+        Image(systemName: encrypted ? "checkmark.circle" : "exclamationmark.shield")
+            .font(.system(size: size * 0.55))
+            .foregroundStyle(color)
+            .frame(width: size, height: size)
+            .background(
+                (encrypted ? PaletteToken.incomeSoft : PaletteToken.dangerSoft).value.color,
+                in: RoundedRectangle(cornerRadius: size * 0.3, style: .continuous)
+            )
+            .accessibilityHidden(true)
     }
 }
 

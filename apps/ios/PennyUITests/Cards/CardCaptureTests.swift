@@ -447,8 +447,8 @@ final class CardCaptureTests: CardTestCase {
         ) { card in
             try card.penny.tap(AccessibilityID.Auth.switchMode)
             try card.penny.wait(for: AccessibilityID.Auth.createAccount)
-            // The card's filled form. The password is typed too, but screenshots leave out a secure
-            // field's bullets, and the native form has no strength meter.
+            // The card's filled form, with the strength meter for the typed password. Screenshots leave
+            // out a secure field's bullets, so the password itself doesn't show.
             try card.penny.type("max@example.test", into: AccessibilityID.Auth.email)
             try card.penny.type("penny-card-pass", into: AccessibilityID.Auth.password)
             card.penny.hideKeyboard()

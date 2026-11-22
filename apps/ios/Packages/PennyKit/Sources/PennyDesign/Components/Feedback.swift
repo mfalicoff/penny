@@ -33,9 +33,11 @@ public struct StatusBanner<Action: View>: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             } else {
                 HStack(alignment: .center, spacing: 12) {
-                    content
-                    Spacer(minLength: 0)
-                    action
+                    // The text column takes every point the action doesn't need (no spacer, whose
+                    // extra gap made "Couldn't sync · 1 change waiting" wrap); the action keeps its
+                    // one-line width.
+                    content.layoutPriority(1)
+                    action.fixedSize()
                 }
             }
         }
@@ -61,6 +63,9 @@ public struct StatusBanner<Action: View>: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
+            // The title and message share one column as wide as the banner allows, so the
+            // title doesn't wrap into a narrower column than its message (`save-error`).
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
@@ -145,14 +150,32 @@ public struct SaveToast: View {
                 }
             }
             Spacer(minLength: 0)
-            if let undo { InlineActionButton("Undo", action: undo) }
+            if let undo { UndoCapsuleButton(action: undo) }
         }
-        .padding(.leading, 12)
-        .padding(.trailing, 4)
-        .padding(.vertical, 6)
-        .pennyGlass(in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .padding(.leading, 10)
+        .padding(.trailing, 8)
+        .padding(.vertical, 8)
+        .frame(minHeight: 60)
+        .pennyGlass(in: RoundedRectangle(cornerRadius: 30, style: .continuous))
         .accessibilityElement(children: .contain)
         .accessibilityLabel([title, detail].compactMap(\.self).joined(separator: ", "))
+    }
+}
+
+/// The toast's Undo (`.toast .undo`): copper text on a neutral capsule, 44pt tall.
+private struct UndoCapsuleButton: View {
+    @ScaledMetric(relativeTo: .subheadline) private var height = 44.0
+    let action: () -> Void
+
+    var body: some View {
+        Button("Undo", action: action)
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(PennyColor.tintText)
+            .padding(.horizontal, 18)
+            .frame(minHeight: max(height, Metrics.minTouchTarget))
+            .background(PennyColor.fill, in: Capsule())
+            .contentShape(Capsule())
+            .buttonStyle(.plain)
     }
 }
 

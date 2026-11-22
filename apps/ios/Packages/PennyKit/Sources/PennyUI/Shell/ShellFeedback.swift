@@ -158,17 +158,27 @@ struct ToastOverlay: ViewModifier {
             }
     }
 
+    /// The card's round tile (`.toast .ic`): the entry's own tile color and symbol (the category's
+    /// for an expense, green for income, indigo for an investment); a copper check otherwise.
     private func leading(_ summary: ChangeSummary) -> AnyView? {
         guard let kind = summary.kind else {
-            return AnyView(CategoryIcon(symbol: "checkmark", color: PennyColor.tint, size: 32))
+            return AnyView(Self.tile(symbol: "checkmark", color: PennyColor.tint))
         }
-        let symbol: String =
-            switch kind {
-            case .expense: "arrow.up"
-            case .income: "arrow.down"
-            case .investment: "chart.line.uptrend.xyaxis"
-            }
-        return AnyView(CategoryIcon(symbol: symbol, color: PennyColor.tint, size: 32))
+        let categoryId = summary.categoryId ?? ""
+        let category = shell.workspace.load.ledger?.category(id: categoryId)
+        return AnyView(
+            Self.tile(
+                symbol: EntryText.tileSymbol(kind, category: category),
+                color: EntryText.tileColor(kind, category: category, id: categoryId)))
+    }
+
+    private static func tile(symbol: String, color: Color) -> some View {
+        Image(systemName: symbol)
+            .font(.system(size: 18, weight: .medium))
+            .foregroundStyle(.white)
+            .frame(width: 40, height: 40)
+            .background(color, in: Circle())
+            .accessibilityHidden(true)
     }
 
     private func announce(_ text: String) {

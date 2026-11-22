@@ -98,10 +98,14 @@ public enum AccessibilityID {
         public static let notice = "auth.notice"
         public static let removeLeftoverData = "auth.removeLeftoverData"
         public static let signOut = "auth.signOut"
+        public static let back = "auth.back"
+        public static let passwordStrength = "auth.passwordStrength"
+        public static let passwordRule = "auth.passwordRule"
 
         static let all = [
             restoring, keychainUnavailable, tryDemo, server, changeServer, email, password, signIn, createAccount,
-            switchMode, singleSignOn, singleSignOnRetry, error, notice, removeLeftoverData, signOut,
+            switchMode, singleSignOn, singleSignOnRetry, error, notice, removeLeftoverData, signOut, back,
+            passwordStrength, passwordRule,
         ]
     }
 
@@ -112,9 +116,10 @@ public enum AccessibilityID {
         public static let verified = "server.verified"
         public static let use = "server.use"
         public static let checkAgain = "server.checkAgain"
+        public static let clear = "server.clear"
         public static let infoURL = "serverInfo.url"
 
-        static let all = [url, check, verified, use, checkAgain, infoURL]
+        static let all = [url, check, verified, use, checkAgain, clear, infoURL]
     }
 
     /// The iPhone tab bar. `tab(_:)` takes an `AppTab` raw value.
