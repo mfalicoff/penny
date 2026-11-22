@@ -321,8 +321,10 @@ public enum AccessibilityID {
         public static let searchBar = "activity.searchBar"
         public static func kindFilter(_ rawValue: String) -> String { "activity.filter.\(rawValue)" }
 
-        static let all = [filters, totals, searchEmpty, noSelection, deleteConfirm, add, search, searchBack, searchClear, searchBar]
-        static let prefixes = ["activity.filter.", "activity.activeFilter."]
+        static let all = [
+            filters, totals, searchEmpty, noSelection, deleteConfirm, add, search, searchBack, searchClear, searchBar,
+        ]
+        static let prefixes = ["activity.filter."]
     }
 
     /// Accounts, categories and recurring schedules (MAZ-74). Rows take the model id.

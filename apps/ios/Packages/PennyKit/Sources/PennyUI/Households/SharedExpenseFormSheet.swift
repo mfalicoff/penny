@@ -202,7 +202,10 @@ private struct SharedExpenseForm: View {
                             editCategories: { self.overlay = nil })
                     }
                 case .household:
-                    EntryHouseholdSheet(households: scope?.households ?? [], current: model.id) { id in
+                    EntryHouseholdSheet(
+                        households: scope?.households ?? [], current: model.id,
+                        initials: shell.account.map { HouseholdPeople.initials(email: $0.email) } ?? ""
+                    ) { id in
                         pendingHousehold = .some(id)
                     }
                 }

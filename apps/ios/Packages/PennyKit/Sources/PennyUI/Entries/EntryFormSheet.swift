@@ -147,6 +147,9 @@ private struct EntryForm: View {
     @FocusState private var titleFocused: Bool
     /// The income and investment Note row (iPhone): the keypad steps aside while it's typed.
     @FocusState private var noteFocused: Bool
+    /// iPhone income: the amount field is being typed in.
+    @FocusState private var amountFocused: Bool
+    @State private var editingAmount = false
     @State private var width: Double = 0
 
     var body: some View {
@@ -218,7 +221,14 @@ private struct EntryForm: View {
         }
     }
 
-    private var showsKeypad: Bool { sizeClass != .regular && !titleFocused && !noteFocused }
+    /// The iPhone keypad, except for income (`iphone-add-income` shows none: the rows and the
+    /// expected-pay callout stay in view, and the amount is typed with the number pad).
+    private var showsKeypad: Bool {
+        sizeClass != .regular && model?.draft.kind != .income && !titleFocused && !noteFocused
+    }
+
+    /// Income's amount on iPhone is a field, as on iPad, shown formatted until it is tapped.
+    private var typesAmount: Bool { sizeClass == .regular || model?.draft.kind == .income }
 
     /// iPad (`ipad-add-entry`, MAZ-182): the amount, name and categories on the left, the
     /// details on the right, and the type in the toolbar, when the sheet is wide enough.
@@ -313,6 +323,14 @@ private struct EntryForm: View {
                     titleField(model)
                     categoryChips(model)
                     rows(model)
+                    if !model.editor.isNew {
+                        // `iphone-edit-entry`: an edit never changes the schedule it came from.
+                        Text("Editing changes this entry only. Change future dates in Recurring.")
+                            .font(.footnote)
+                            .foregroundStyle(PennyColor.secondaryLabel)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 14)
+                    }
                     futureDateNote(draft)
                 }
             }
@@ -342,9 +360,14 @@ private struct EntryForm: View {
                     .keyboardShortcut(.cancelAction)
                     .accessibilityIdentifier("entryForm.close")
             }
-            // The type sits in the bar between × and ✓, with no title, as on the cards.
+            // The type sits in the bar between × and ✓, with no title, as on the cards. An edit keeps
+            // its type and says "Edit entry" there instead (`iphone-edit-entry`).
             ToolbarItem(placement: .principal) {
-                kindPicker(model).frame(width: isTwoColumn ? 320 : 236)
+                if model.editor.isNew {
+                    kindPicker(model).frame(width: isTwoColumn ? 320 : 236)
+                } else {
+                    Text("Edit entry").font(.headline).accessibilityAddTraits(.isHeader)
+                }
             }
             ToolbarItem(placement: .confirmationAction) {
                 // iPad: a labelled "Add expense" capsule; ⌘↩ saves (`ipad-add-entry`).
@@ -367,6 +390,7 @@ private struct EntryForm: View {
                             pendingHousehold = .some(id)
                             applyHousehold(model)
                         },
+                        chooseHousehold: offersHousehold(model) ? { overlay = .household } : nil,
                         save: { save(model) })
                 }
             }
@@ -382,7 +406,10 @@ private struct EntryForm: View {
                     kind: draft.kind, selection: $model.editor.draft.categoryId, ledger: ledger,
                     editCategories: { editCategories() })
             case .household:
-                EntryHouseholdSheet(households: scope?.households ?? [], current: nil) { id in
+                EntryHouseholdSheet(
+                    households: scope?.households ?? [], current: nil,
+                    initials: shell.account.map { HouseholdPeople.initials(email: $0.email) } ?? ""
+                ) { id in
                     pendingHousehold = .some(id)
                 }
             }
@@ -462,7 +489,19 @@ private struct EntryForm: View {
         let draft = model.draft
         let currency = ledger.currency.rawValue
         VStack(spacing: 6) {
-            if sizeClass == .regular {
+            if typesAmount, sizeClass != .regular, !editingAmount {
+                // iPhone income: the formatted amount until it is tapped (`iphone-add-income`).
+                Button {
+                    editingAmount = true
+                } label: {
+                    AmountDisplay(text: draft.amount, kind: draft.kind, currency: currency, caret: false)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Amount")
+                .accessibilityValue(draft.amount.isEmpty ? "Empty" : draft.amount)
+                .accessibilityHint("Double-tap to type the amount.")
+                .accessibilityIdentifier("entryForm.amount")
+            } else if typesAmount {
                 // The currency symbol before the typed amount, as on the keypad's display and the
                 // `ipad-add-entry` card.
                 HStack(alignment: .firstTextBaseline, spacing: 0) {
@@ -471,6 +510,9 @@ private struct EntryForm: View {
                         .accessibilityHidden(true)
                     TextField("0.00", text: $model.editor.draft.amount)
                         .decimalEntry()
+                        .focused($amountFocused)
+                        .onAppear { if editingAmount { amountFocused = true } }
+                        .onChange(of: amountFocused) { if !amountFocused { editingAmount = false } }
                         .fixedSize()
                         .foregroundStyle(EntryText.meaning(draft.kind).color)
                         // The copper caret after the amount, as on the card.
@@ -516,17 +558,6 @@ private struct EntryForm: View {
         // The cards' rows are 46pt on the iPhone expense form and 48pt elsewhere.
         let height = isTwoColumn || !expense ? 48 : ControlSize.compactRow
         VStack(spacing: 0) {
-            if offersHousehold(model) {
-                Button {
-                    overlay = .household
-                } label: {
-                    EntryFieldRow("Household", systemImage: "house", value: "Personal", height: height)
-                }
-                .buttonStyle(.plain)
-                .accessibilityHint("Choose a household to split this expense with")
-                .accessibilityIdentifier("entryForm.household")
-                EntryFieldRow.divider
-            }
             Button {
                 overlay = .date
             } label: {
@@ -564,6 +595,11 @@ private struct EntryForm: View {
             if isTwoColumn, expense {
                 EntryFieldRow.divider
                 tripRow(model, height: height)
+                // After Trip, as on `ipad-add-entry` (MAZ-277).
+                if offersHousehold(model) {
+                    EntryFieldRow.divider
+                    householdRow(height: height)
+                }
                 EntryFieldRow.divider
                 NavigationLink(value: EntryFormPage.details) {
                     EntryFieldRow(
@@ -647,6 +683,19 @@ private struct EntryForm: View {
         .accessibilityIdentifier("entryForm.trip")
     }
 
+    /// Household: Personal, or a household or shared trip to split a new expense with. On iPad it
+    /// follows Trip in the details; on iPhone it is in More details (`iphone-entry-extras`).
+    private func householdRow(height: Double) -> some View {
+        Button {
+            overlay = .household
+        } label: {
+            EntryFieldRow("Household", systemImage: "house", value: "Personal", chevron: true, height: height)
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint("Choose a household to split this expense with")
+        .accessibilityIdentifier("entryForm.household")
+    }
+
     /// iPhone income and investments: the note typed in its row ("Note · Optional").
     private func noteRow(_ model: EntryFormModel, height: Double) -> some View {
         @Bindable var model = model
@@ -726,6 +775,10 @@ private struct EntryForm: View {
 
     private func detailsValue(_ draft: EntryDraft) -> String {
         var parts: [String] = []
+        // An edit says where it stands with repeating (`iphone-edit-entry`: "Doesn't repeat").
+        if let original = model?.editor.original, model?.editor.isNew == false {
+            parts.append(original.recurringId == nil ? "Doesn't repeat" : "From a schedule")
+        }
         if draft.kind == .expense, draft.receipt != nil { parts.append("Receipt") }
         if model?.editor.isNew == true, let frequency = draft.frequency { parts.append(EntryText.frequency(frequency)) }
         if draft.kind == .expense, let trip = draft.tripId.flatMap(ledger.trip(id:)) { parts.append(trip.name) }

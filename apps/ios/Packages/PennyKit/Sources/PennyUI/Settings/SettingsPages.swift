@@ -73,7 +73,9 @@ struct AppearanceSettingsView: View {
             } footer: {
                 // The iPad card has no footnote here.
                 if sizeClass != .regular {
-                    Text("Penny supports Dynamic Type. Change text size in \(SyncBanner.deviceName) Settings › Display & Brightness.")
+                    Text(
+                        "Penny supports Dynamic Type. Change text size in \(SyncBanner.deviceName) Settings › Display & Brightness."
+                    )
                 }
             }
         }

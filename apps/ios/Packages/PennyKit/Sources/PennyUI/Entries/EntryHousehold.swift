@@ -88,19 +88,22 @@ struct EntryScope {
     }
 }
 
-/// The Household picker: Personal, then each household and shared trip. Picking one closes the
+/// The Household picker (`iphone-household-picker`): Personal ("Only you", with your monogram),
+/// then each household and shared trip under Split with, on icon tiles. Picking one closes the
 /// sheet; the form switches once it has gone (`onDismiss`), keeping what was typed.
 struct EntryHouseholdSheet: View {
     @Environment(\.dismiss) private var dismiss
     let households: [WireHousehold]
     let current: String?
+    /// The account's monogram on the Personal row.
+    var initials = ""
     let choose: (String?) -> Void
 
     var body: some View {
         NavigationStack {
             List {
                 Section {
-                    row(nil, title: "Personal", detail: "Only you", symbol: "person")
+                    row(nil, title: "Personal", detail: "Only you", symbol: nil)
                 } footer: {
                     Text("Your share counts in your spending either way.")
                 }
@@ -136,7 +139,8 @@ struct EntryHouseholdSheet: View {
         .accessibilityIdentifier("screen.householdPicker")
     }
 
-    private func row(_ id: String?, title: String, detail: String, symbol: String) -> some View {
+    /// `symbol` nil: the account's monogram (Personal).
+    private func row(_ id: String?, title: String, detail: String, symbol: String?) -> some View {
         let selected = id == current
         let option = id ?? "personal"
         return Button {
@@ -144,10 +148,16 @@ struct EntryHouseholdSheet: View {
             dismiss()
         } label: {
             HStack(spacing: 12) {
-                Image(systemName: symbol)
-                    .foregroundStyle(PennyColor.secondaryLabel)
-                    .frame(width: 24)
-                    .accessibilityHidden(true)
+                if let symbol {
+                    Image(systemName: symbol)
+                        .font(.body.weight(.medium))
+                        .foregroundStyle(PennyColor.label)
+                        .frame(width: 34, height: 34)
+                        .background(PennyColor.fill, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                        .accessibilityHidden(true)
+                } else {
+                    Monogram(initials: initials.isEmpty ? "?" : initials)
+                }
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title).foregroundStyle(PennyColor.label)
                     Text(detail).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)

@@ -194,8 +194,8 @@ private struct ExpensePage: View {
                         householdName: model.household?.name ?? "", symbol: expense.category.symbol,
                         color: expense.category.tint)
                 }
-                    .disabled(expense.isPaid)
-                    .accessibilityIdentifier("sharedExpense.delete")
+                .disabled(expense.isPaid)
+                .accessibilityIdentifier("sharedExpense.delete")
             } footer: {
                 if expense.isPaid {
                     Text(

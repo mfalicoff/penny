@@ -45,18 +45,22 @@ struct ConfirmationButtons: View {
                     close()
                     item.action()
                 } label: {
-                    Text(item.title)
-                        .font(.body.weight(.semibold))
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity, minHeight: height)
-                        .foregroundStyle(Self.foreground(item.style))
-                        .background(Self.background(item.style), in: Capsule())
-                        .contentShape(Capsule())
+                    Self.label(item.title, style: item.style, height: height)
                 }
                 .buttonStyle(.plain)
                 .accessibilityIdentifier(item.identifier)
             }
         }
+    }
+
+    static func label(_ title: String, style: ConfirmationAction.Style, height: Double) -> some View {
+        Text(title)
+            .font(.body.weight(.semibold))
+            .multilineTextAlignment(.center)
+            .frame(maxWidth: .infinity, minHeight: height)
+            .foregroundStyle(foreground(style))
+            .background(background(style), in: Capsule())
+            .contentShape(Capsule())
     }
 
     static func foreground(_ style: ConfirmationAction.Style) -> Color {
@@ -85,14 +89,21 @@ struct CenteredConfirmation<Item>: ViewModifier {
     let content: (Item) -> CenteredConfirmationContent
 
     func body(content base: Content) -> some View {
-        base
-            .fullScreenCover(isPresented: Binding(get: { item != nil }, set: { if !$0 { item = nil } })) {
-                if let item {
-                    CenteredConfirmationCard(content: content(item)) { self.item = nil }
-                        .presentationBackground(.clear)
-                }
-            }
-            .transaction(value: item != nil) { $0.disablesAnimations = true }
+        let presented = Binding(get: { item != nil }, set: { if !$0 { item = nil } })
+        #if os(iOS)
+            base
+                .fullScreenCover(isPresented: presented) { card }
+                .transaction(value: item != nil) { $0.disablesAnimations = true }
+        #else
+            base.sheet(isPresented: presented) { card }
+        #endif
+    }
+
+    @ViewBuilder private var card: some View {
+        if let item {
+            CenteredConfirmationCard(content: content(item)) { self.item = nil }
+                .presentationBackground(.clear)
+        }
     }
 }
 
@@ -193,6 +204,7 @@ extension View {
 struct DeleteConfirmationSheet: View {
     @Environment(\.dismiss) private var dismiss
     @ScaledMetric(relativeTo: .body) private var tile: Double = 40
+    @ScaledMetric(relativeTo: .body) private var buttonHeight = ControlSize.button
     @State private var height: Double = 320
 
     struct Subject {
@@ -245,14 +257,23 @@ struct DeleteConfirmationSheet: View {
             }
             .padding(14)
             .background(PennyColor.fill, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-            ConfirmationButtons(
-                actions: [
-                    ConfirmationAction(
-                        subject.confirmTitle, style: .destructiveFilled,
-                        identifier: "deleteEntry.confirm", action: confirm),
-                    ConfirmationAction(
-                        "Cancel", style: .cancel, identifier: "deleteEntry.cancel"),
-                ], close: { dismiss() })
+            VStack(spacing: 10) {
+                Button {
+                    dismiss()
+                    confirm()
+                } label: {
+                    ConfirmationButtons.label(subject.confirmTitle, style: .destructiveFilled, height: buttonHeight)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("deleteEntry.confirm")
+                Button {
+                    dismiss()
+                } label: {
+                    ConfirmationButtons.label("Cancel", style: .cancel, height: buttonHeight)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("deleteEntry.cancel")
+            }
         }
         .padding(.horizontal, 20)
         .padding(.top, 24)

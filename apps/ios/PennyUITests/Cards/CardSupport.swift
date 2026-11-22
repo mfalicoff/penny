@@ -64,7 +64,8 @@ struct CardContext {
         guard let fault = state.fault else { return }
         let rule = FaultRule(
             method: fault["method"] as? String, pathPrefix: fault["pathPrefix"] as? String ?? "/",
-            status: fault["status"] as? Int, abort: fault["abort"] as? Bool ?? false, times: fault["times"] as? Int)
+            status: fault["status"] as? Int, abort: fault["abort"] as? Bool ?? false,
+            delayMs: fault["delayMs"] as? Int, times: fault["times"] as? Int)
         try await stack.setFaults([rule])
     }
 
@@ -246,6 +247,20 @@ extension Penny {
             }
         }
         throw UIExpectationFailed(description: "The month menu did not choose \(title)")
+    }
+
+    /// Activity's month, stepped back in Filters (the period is a chip, not a menu, MAZ-255).
+    func selectActivityMonth(_ title: String) throws {
+        try tap(AccessibilityID.Activity.filters)
+        try wait(for: "screen.activityFilters")
+        for _ in 0..<24 where !app.staticTexts[title].exists {
+            try tap("filters.month.previous")
+        }
+        guard app.staticTexts[title].waitForExistence(timeout: 5) else {
+            throw UIExpectationFailed(description: "Filters did not reach \(title)")
+        }
+        try tap("filters.done")
+        try waitForAbsence(of: "screen.activityFilters")
     }
 
     /// The Trips tab (iPhone) or sidebar row (iPad).

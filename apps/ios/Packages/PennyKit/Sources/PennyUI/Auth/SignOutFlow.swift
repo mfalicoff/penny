@@ -71,7 +71,8 @@ struct SignOutButton: View {
             case .unreachable:
                 Text(
                     "You're still signed in and nothing was removed. Try again when you're online, or remove this "
-                        + "account from this \(SyncBanner.deviceName) now; the server keeps that session until it expires.")
+                        + "account from this \(SyncBanner.deviceName) now; the server keeps that session until it expires."
+                )
             }
         }
     }

@@ -95,7 +95,8 @@ struct DeleteEntryConfirmation: ViewModifier {
         return DeleteConfirmationSheet.Subject(
             title: target.title,
             detail: Self.detail(
-                total: target.total, date: target.date, place: target.accountId.flatMap { ledger?.account(id: $0) }?.name,
+                total: target.total, date: target.date,
+                place: target.accountId.flatMap { ledger?.account(id: $0) }?.name,
                 currency: shell.currency),
             symbol: EntryText.tileSymbol(target.kind, category: category),
             color: EntryText.tileColor(target.kind, category: category, id: target.categoryId),
@@ -202,7 +203,8 @@ struct SharedDeleteConfirmation: ViewModifier {
         return DeleteConfirmationSheet.Subject(
             title: target.title,
             detail: DeleteEntryConfirmation.detail(
-                total: target.total, date: target.date, place: target.householdName.isEmpty ? nil : target.householdName,
+                total: target.total, date: target.date,
+                place: target.householdName.isEmpty ? nil : target.householdName,
                 currency: currency),
             symbol: target.symbol, color: target.color,
             members: current.map { HouseholdPeople.initials(email: $0.email) },
