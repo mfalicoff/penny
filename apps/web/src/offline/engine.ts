@@ -165,6 +165,8 @@ export class LedgerSyncEngine {
   private generation = 0;
   private running: Promise<void> | null = null;
   private followUp: Promise<void> | null = null;
+  /** The newest server revision `noteServerRevision` heard of while a sync ran: checked once it's done. */
+  private heardRevision: number | null = null;
   private retryTimer: ReturnType<typeof setTimeout> | null = null;
   private retryDelay = 0;
   /** The delay of a retry that `beginSignOut` cancelled, so `cancelSignOut` can schedule it again. */
@@ -262,6 +264,7 @@ export class LedgerSyncEngine {
     this.detach?.();
     this.detach = null;
     this.followUp = null;
+    this.heardRevision = null;
     this.channel?.close();
     this.channel = null;
     const database = this.database;
@@ -445,9 +448,28 @@ export class LedgerSyncEngine {
     const generation = this.generation;
     const run = (this.options.lock ?? withLock)(`penny-ledger-sync:${this.key}`, () => this.syncLoop(generation)).finally(() => {
       if (this.running === run) this.running = null;
+      const heard = this.heardRevision;
+      this.heardRevision = null;
+      // A newer ledger reached this tab while this sync ran (and no sync is queued already): only
+      // sync again if this one didn't get as far, so a read of the same ledger doesn't download it twice.
+      if (heard !== null && generation === this.generation && !this.followUp && !this.issue && heard > (this.baseRevision ?? -1)) void this.sync();
     });
     this.running = run;
     return run;
+  }
+
+  /**
+   * A server ledger at `revision` reached this tab another way: a Query read, or a write such as
+   * Currency settings. Syncs when the stored base is older, so pending work is merged onto it. While
+   * a sync runs, which may read that ledger itself, it decides once that sync is done (MAZ-242).
+   */
+  noteServerRevision(revision: number): void {
+    if (!this.started) return;
+    if (this.running) {
+      this.heardRevision = Math.max(this.heardRevision ?? -1, revision);
+      return;
+    }
+    if (revision > (this.baseRevision ?? -1)) void this.sync();
   }
 
   /** Retry: runs now even if the browser reports no network, and resets the backoff. */

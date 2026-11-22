@@ -1,8 +1,8 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useId, useRef, useState, type SyntheticEvent } from "react";
 import { createHousehold, householdsKey, joinHousehold, normalizeInviteCode } from "../../api/households";
-import { ledgerCurrencyQuery } from "../../api/ledger";
+import { useLedgerCurrency } from "../../offline/useLedgerCurrency";
 import { invalidateSearch } from "../../api/search";
 import { useAccountEmail } from "../../auth/account";
 import { Button, ChoiceGroup } from "../../design/controls";
@@ -60,7 +60,7 @@ function CreateForm({ onClose }: { onClose: () => void }) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const toast = useToast();
-  const currency = useQuery(ledgerCurrencyQuery(email));
+  const currency = useLedgerCurrency();
   const [name, setName] = useState("");
   const [invalid, setInvalid] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
