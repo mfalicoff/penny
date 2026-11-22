@@ -258,7 +258,11 @@ extension Penny {
             }
         } else {
             let tab = app.buttons.matching(identifier: AccessibilityID.Tab.tab("trips")).firstMatch
-            let button = tab.waitForExistence(timeout: 5) ? tab : app.tabBars.buttons["Trips"]
+            // The cards' tab bar (`PennyTabBar`, MAZ-254) is found by its identifier.
+            guard tab.waitForExistence(timeout: Penny.timeout) else {
+                throw UIExpectationFailed(description: "No Trips tab")
+            }
+            let button = tab
             for _ in 0..<3 {
                 button.tap()
                 if element(AccessibilityID.Screen.trips).waitForExistence(timeout: 8) { return }

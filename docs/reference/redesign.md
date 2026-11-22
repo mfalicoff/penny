@@ -72,7 +72,6 @@ The cards are static HTML rendered with Inter and Ionicons as stand-ins for SF P
 
 The SwiftUI shell, settings, lock and demo are described in [native app shell](../ios/shell.md). Adaptations from the cards:
 
-- **Add entry on iPhone** is a `Tab` with the search role in the system tab bar, so it is real Liquid Glass and follows system accessibility. On the simulator it renders as a fifth item inside the bar, not as the card's separate copper circle; a custom separate button over the system bar is a follow-up for MAZ-122's comparison.
 - **iPad** uses the same navigation state in a `NavigationSplitView`; Settings and the Manage pages open in the detail column instead of a sheet. In compact widths (Slide Over, narrow Split View) the iPad uses the iPhone tab bar.
 - **Lock after** (Immediately, 1 minute, 5 minutes on `iphone-app-lock`) is MAZ-133 and not in this build; the lock applies immediately.
 - **The lock screen** shows no amount; the card's blurred hero behind the lock is not drawn, so nothing of the ledger is visible while locked.
@@ -82,10 +81,9 @@ The SwiftUI shell, settings, lock and demo are described in [native app shell](.
 
 The SwiftUI app builds `iphone-home`, `iphone-home-dark`, `iphone-empty-home`, `iphone-money-flow`, `iphone-insights`, `iphone-calendar` and `ipad-home` ([native overview](../ios/overview.md)). Adaptations from the cards:
 
-- **Home** adds an Expected income card under Projected when a schedule expects income, and an **Explore your month** list (Calendar, Spending by category, Money flow). The Follow your money card opens the money flow; Insights is reached from Explore instead of a pill on the card.
-- **The calendar is a page**, not a sheet: it shares the month with Home and the other pages and has its own previous/next and Today.
+- **Home** follows the cards since MAZ-254: the Follow your money card opens the money flow and its Insights pill opens Insights; the calendar is a sheet over Home from the toolbar; on iPhone, Expected income and Explore your month (Calendar, Spending by category, Money flow) follow `iphone-home-explore`, and the iPad dashboard has neither Explore nor Recent, as on `ipad-home`.
 - **The money flow is recorded-only**, like Left to spend. A value list under the chart is its accessible alternative and replaces it at accessibility text sizes.
-- **iPad** uses the dashboard only in a regular width of at least 760 points; the card's sidebar Insights row is not added (Insights is a page of Home).
+- **iPad** uses the dashboard only in a regular width of at least 760 points; narrower, it uses the iPhone layout.
 
 ## Web recurring notes (MAZ-90)
 
@@ -118,12 +116,13 @@ Expected differences that need no entry: SF Pro and SF Symbols on iOS, Inter and
 - **System sheets and controls.** Forms open as system sheets with Save in the toolbar, as on the cards. Split is a full sheet with the keypad over the form, not a stacked half sheet. The date, split mode and repeat rows open the system `DatePicker` and `Picker`.
 - **Confirmations are popovers.** On iOS 27, a confirmation dialog (delete, sign out) is a popover anchored to its button, not a bottom action sheet.
 - **Search in the navigation bar.** Activity uses the system `searchable` field, and the month is a toolbar menu.
-- **Local-first saving.** A save is kept on the device first. A failed upload shows **Couldn't sync** with Retry, not **Couldn't save** in the form (`iphone-save-error`). The saved toast appears on the local save, before the upload (`iphone-saved-toast`). Offline adds a **Shared expenses may be missing** banner when shared data couldn't load.
+- **Local-first saving.** A save is kept on the device first. A failed upload shows **Couldn't sync** with Retry, not **Couldn't save** in the form (`iphone-save-error`). The saved toast appears on the local save, before the upload (`iphone-saved-toast`).
 - **Names are emails.** Members carry only an email, so households show emails and initials from the email, as on the web.
 - **Settings** has no Notifications row: notifications follow the system permission, and the shared list asks for it once (**Hear about household changes**).
 - **Households and shared trips (MAZ-181).** The household page leads with its members, its name and the month's balance in its meaning color, as on `iphone-shared`. The cards show one month and no way to change it; on iOS the month is chosen in the Expenses and Balances section headers (the card's "November … total" row, with previous and next), so past months and their overdue payments stay reachable. Invite someone is the toolbar's person button, as on the cards, and opens the invite with its QR code. Under People the creator's invite card shows **Create invite code** until asked, then the code with its countdown, Copy, Share and New code, as on the web: a new code replaces the one already shared, so opening People never makes one. A shared trip leads with the trip total and your share (your shares plus your private expenses on it, the same number as the Trips list's Your share so far) instead of a month balance, and keeps **Trip expense** under it on iPhone, where the card relies on Add entry. In the shared expense form, Paid by and the split with each person's share are in the form above the keypad, as on the card; the keypad stays visible on iPhone (see Real keyboard and focus in [visual acceptance](../design/visual-acceptance.md#design-gaps)), and amounts or percentages are typed in the Split sheet (Edit shares). An equal split includes everyone on the expense's date, so it has no checkboxes. A refused payment (Payment changed) names its real cause and lists only the values that changed, as on the web (MAZ-176): when the same share was recorded first, often on another device, it shows the share's status instead of the card's total and share.
 - **Shared trips in More details.** The Trip list adds the shared trips you're on below your personal trips (MAZ-180), each with "Shared · N people", because picking one moves the expense to that trip's shared form; the card shows only trip names.
 - **Recurring subtitle spacing (MAZ-236, decided by the owner 2026-11-19).** Recurring keeps the system large title instead of redrawing it, so the subtitle ("Penny records these on their date.") sits about 20 points lower than on `iphone-recurring`: the list starts below the system's large-title area.
+- **Home's calendar and settings buttons (MAZ-254, decided by the owner 2026-11-20).** On iPhone, Home's calendar and settings are two buttons in the toolbar's trailing group, which iOS draws as one grouped Liquid Glass capsule, not the cards' two separate circles. This is the system's own toolbar grouping; Penny draws no capsule of its own.
 
 ### Web conventions (MAZ-227)
 

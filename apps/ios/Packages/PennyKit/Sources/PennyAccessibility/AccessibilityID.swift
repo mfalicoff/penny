@@ -126,21 +126,22 @@ public enum AccessibilityID {
     public enum Tab {
         public static func tab(_ rawValue: String) -> String { "tab.\(rawValue)" }
         public static let add = "tab.add"
+        /// The cards' tab bar itself (`PennyTabBar`, MAZ-254).
+        public static let bar = "tab.bar"
 
-        static let all = [add]
+        static let all = [add, bar]
         static let prefixes = ["tab."]
     }
 
     /// The iPad sidebar. `item(_:)` takes the lowercased item title.
     public enum Sidebar {
         public static func item(_ lowercasedTitle: String) -> String { "sidebar.\(lowercasedTitle)" }
-        public static let add = "sidebar.add"
         public static let settings = "sidebar.settings"
         /// Together's rows (MAZ-182): each household and trip by its id.
         public static func household(_ id: String) -> String { "sidebar.household.\(id)" }
         public static func trip(_ id: String) -> String { "sidebar.trip.\(id)" }
 
-        static let all = [add, settings]
+        static let all = [settings]
         static let prefixes = ["sidebar."]
     }
 
@@ -164,7 +165,8 @@ public enum AccessibilityID {
         public static let exploreCalendar = "home.exploreCalendar"
         public static let exploreInsights = "home.exploreInsights"
         public static let exploreMoneyFlow = "home.exploreMoneyFlow"
-        /// The toolbar calendar button (MAZ-180), next to Settings as on the `home` card.
+        /// The toolbar calendar button (MAZ-180), next to Settings as on the `home` card; it opens
+        /// the calendar sheet (MAZ-254).
         public static let calendar = "home.calendar"
         public static let totals = "home.totals"
         public static let comingUp = "home.comingUp"
@@ -177,11 +179,13 @@ public enum AccessibilityID {
         public static let nextMonth = "home.nextMonth"
         public static let search = "home.search"
         public static let add = "home.add"
+        /// The Follow your money card's Insights pill (`home` card, MAZ-254).
+        public static let insights = "home.insights"
 
         static let all = [
             settings, hero, month, flow, recent, empty, emptyIncome, emptyExpense, emptyInvest, emptyDemo,
             projected, expectedIncome, explore, exploreCalendar, exploreInsights, exploreMoneyFlow, totals, comingUp,
-            dailySpending, sharedNotice, sharedNoticeRetry, calendar, previousMonth, nextMonth, search, add,
+            dailySpending, sharedNotice, sharedNoticeRetry, calendar, previousMonth, nextMonth, search, add, insights,
         ]
     }
 
@@ -200,7 +204,8 @@ public enum AccessibilityID {
         public static let calendarPrevious = "calendar.previous"
         public static let calendarNext = "calendar.next"
         public static let calendarToday = "calendar.today"
-        public static let calendarTotals = "calendar.totals"
+        /// The calendar sheet's Close (MAZ-254).
+        public static let calendarClose = "calendar.close"
         public static let calendarGrid = "calendar.grid"
         public static let calendarDayTotal = "calendar.dayTotal"
         public static let calendarDayEntries = "calendar.dayEntries"
@@ -227,7 +232,7 @@ public enum AccessibilityID {
 
         static let all = [
             flowTotals, flowChart, flowFocus, flowFocusClear, flowDetails, insightsComparison, insightsDonut,
-            categoryTotal, calendarPrevious, calendarNext, calendarToday, calendarTotals, calendarGrid,
+            categoryTotal, calendarPrevious, calendarNext, calendarToday, calendarClose, calendarGrid,
             calendarDayTotal, calendarDayEntries, calendarLegend,
         ]
         static let prefixes = ["moneyFlow.node.", "moneyFlow.row.", "insights.category.", "calendar.day."]
@@ -237,6 +242,8 @@ public enum AccessibilityID {
     public enum Settings {
         public static func row(_ rawValue: String) -> String { "settings.\(rawValue)" }
         public static let done = "settings.done"
+        /// iPad: the toolbar's copper Add entry capsule (`ipad-settings` card, MAZ-254).
+        public static let add = "settings.add"
         public static let server = "settings.server"
         public static let syncStatus = "settings.syncStatus"
         /// The large title of the page beside the iPad's Settings list (MAZ-250).
@@ -259,7 +266,7 @@ public enum AccessibilityID {
 
         static let all = [
             done, server, syncStatus, pageTitle, account, leaveDemo, appLockToggle, appLockMessage, appLockHeader,
-            showCents, reduceTransparency, weekStart,
+            showCents, reduceTransparency, weekStart, add,
         ]
         static let prefixes = ["settings.", "currency.", "appearance.", "appLock.delay."]
     }
@@ -299,6 +306,8 @@ public enum AccessibilityID {
     /// Activity and its filters (MAZ-73). `kindFilter(_:)` takes an `EntryKind` raw value or `all`.
     public enum Activity {
         public static let filters = "activity.filters"
+        /// iPad: the toolbar's copper Add entry capsule (`ipad-activity` card, MAZ-254).
+        public static let add = "activity.add"
         public static let totals = "activity.totals"
         public static let searchEmpty = "activity.searchEmpty"
         /// iPad: the detail beside the list before an entry is chosen.
@@ -306,7 +315,7 @@ public enum AccessibilityID {
         public static let deleteConfirm = "deleteEntry.confirm"
         public static func kindFilter(_ rawValue: String) -> String { "activity.filter.\(rawValue)" }
 
-        static let all = [filters, totals, searchEmpty, noSelection, deleteConfirm]
+        static let all = [filters, totals, searchEmpty, noSelection, deleteConfirm, add]
         static let prefixes = ["activity.filter."]
     }
 

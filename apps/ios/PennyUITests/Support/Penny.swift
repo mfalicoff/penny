@@ -168,6 +168,23 @@ struct Penny {
         }
     }
 
+    /// Insights from Home: the Follow your money card's Insights pill on iPhone, the sidebar's
+    /// Insights row on iPad (`home` and `ipad-home` cards, MAZ-254).
+    func openInsights() throws {
+        if Device.isPad {
+            try tap(AccessibilityID.Sidebar.item("insights"))
+        } else {
+            try tap(AccessibilityID.Home.insights)
+        }
+        try wait(for: AccessibilityID.Screen.insights)
+    }
+
+    /// The calendar sheet, from Home's toolbar button (MAZ-254).
+    func openCalendar() throws {
+        try tap(AccessibilityID.Home.calendar)
+        try wait(for: AccessibilityID.Screen.calendar)
+    }
+
     /// Settings: the sheet from Home on iPhone, the detail column on iPad.
     func openSettings() throws {
         popSettingsPages()
@@ -235,28 +252,38 @@ struct Penny {
     /// The tab bar button (`tab.<AppTab>`). Only buttons are matched: the iOS 26+ floating tab
     /// bar is exposed as a toolbar, and the identifier must not match the tab's content.
     private func tabButton(_ title: String, id: String) throws -> XCUIElement {
+        // The cards' tab bar (`PennyTabBar`, MAZ-254), not the system's: found by identifier.
         let byID = app.buttons.matching(identifier: id).firstMatch
-        if byID.waitForExistence(timeout: 5) { return byID }
-        let button = app.tabBars.buttons[title]
-        guard button.waitForExistence(timeout: Penny.timeout) else {
+        guard byID.waitForExistence(timeout: Penny.timeout) else {
             throw UIExpectationFailed(description: "No \(title) tab")
         }
-        return button
+        return byID
     }
 
     // MARK: Entries
 
-    /// Opens the Add entry sheet: the tab bar's add button on iPhone, the sidebar's on iPad.
+    /// Opens the Add entry sheet: the tab bar's add button on iPhone; on iPad the copper capsule
+    /// of Home, Activity or Settings, whichever is shown, and ⌘N elsewhere (MAZ-254).
     /// A tap that lands while the floating tab bar is still settling is ignored, so it is retried.
     func openAddEntry() throws {
-        let button =
+        let button: XCUIElement? =
             Device.isPad
-            ? try wait(for: AccessibilityID.Sidebar.add) : try tabButton("Add entry", id: AccessibilityID.Tab.add)
+            ? padAddEntryButton() : try tabButton("Add entry", id: AccessibilityID.Tab.add)
         for _ in 0..<3 {
-            button.tap()
+            if let button { button.tap() } else { app.typeKey("n", modifierFlags: .command) }
             if element(AccessibilityID.Screen.addEntry).waitForExistence(timeout: 8) { return }
         }
         throw UIExpectationFailed(description: "Add entry did not open \(AccessibilityID.Screen.addEntry)")
+    }
+
+    /// iPad: the Add entry capsule of the screen shown (Home, Activity or Settings), or nil
+    /// where there is none (⌘N then opens Add entry).
+    private func padAddEntryButton() -> XCUIElement? {
+        for id in [AccessibilityID.Home.add, AccessibilityID.Activity.add, AccessibilityID.Settings.add] {
+            let button = app.buttons[id].firstMatch
+            if button.exists, button.isHittable { return button }
+        }
+        return nil
     }
 
     /// Types an amount such as "12.34". The form shows the in-sheet keypad at compact width
@@ -384,7 +411,8 @@ struct Penny {
         AccessibilityID.Auth.signIn: .button,
         AccessibilityID.Home.settings: .button,
         AccessibilityID.Home.empty: .button,
-        AccessibilityID.Sidebar.add: .button,
+        AccessibilityID.Home.calendar: .button,
+        AccessibilityID.Home.insights: .button,
         AccessibilityID.Sidebar.settings: .button,
         AccessibilityID.Tab.add: .button,
         AccessibilityID.EntryForm.title: .textField,

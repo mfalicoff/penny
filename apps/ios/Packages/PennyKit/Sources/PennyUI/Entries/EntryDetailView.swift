@@ -18,6 +18,9 @@ struct EntryDetailView: View {
     /// After a delete: shown beside the iPad Activity list, the selection clears; pushed, the
     /// page closes (the default).
     var onDeleted: (() -> Void)?
+    /// Beside the iPad Activity list: the copper Add entry capsule follows Edit, at the
+    /// trailing end of the toolbar (`ipad-activity` card, MAZ-254).
+    var showsAddEntry = false
     @State private var deleting: LedgerEntry?
     @State private var previewing: ReceiptPreviewRequest?
 
@@ -98,6 +101,12 @@ struct EntryDetailView: View {
                 .tint(PennyColor.label)
                 .accessibilityLabel("Edit")
                 .accessibilityIdentifier("entryDetail.edit")
+            }
+            if showsAddEntry {
+                ToolbarSpacer(.fixed, placement: .primaryAction)
+                ToolbarItem(placement: .primaryAction) {
+                    AddEntryCapsule().accessibilityIdentifier("activity.add")
+                }
             }
         }
         .receiptViewer($previewing) { request in

@@ -108,9 +108,44 @@ struct ShellRouteSidebarTests {
     @Test("whenHomeShowsAnotherPage_SidebarSelection_ShouldStayHome")
     func otherHomePages() {
         var route = ShellRoute()
-        route.push(.calendar)
+        route.push(.moneyFlow)
         #expect(route.sidebarSelection == .tab(.home))
         route.setPath([.moneyFlow, .insights], for: .home)
         #expect(route.sidebarSelection == .tab(.home), "only Insights opened as the first page is its row")
+    }
+
+    @Test("whenTheCalendarOpens_ShellRoute_ShouldCloseTheSettingsSheetAndAddEntry")
+    func calendarSheet() {
+        var route = ShellRoute()
+        route.openSettings()
+        route.openCalendar()
+        #expect(route.isCalendarPresented)
+        #expect(!route.isSettingsPresented, "only one sheet shows at a time")
+        route.openAddEntry()
+        #expect(route.isAddEntryPresented)
+        #expect(!route.isCalendarPresented, "Add entry replaces the calendar sheet")
+    }
+
+    @Test("whenALinkOpensOverTheCalendar_ShellRoute_ShouldCloseIt")
+    func calendarClosesForLinks() {
+        var route = ShellRoute()
+        route.openCalendar()
+        route.open(.trips)
+        #expect(!route.isCalendarPresented)
+        route.openCalendar()
+        route.openSettings(.appearance)
+        #expect(!route.isCalendarPresented)
+    }
+
+    @Test("whenACalendarRowIsChosen_ShellRoute_ShouldCloseTheSheetAndOpenThePageOnHome")
+    func calendarRow() {
+        var route = ShellRoute(tab: .home)
+        route.push(.moneyFlow)
+        route.openCalendar()
+        route.openFromCalendar(.entry(id: "e1"))
+        #expect(!route.isCalendarPresented)
+        #expect(route.tab == .home)
+        #expect(route.path(for: .home) == [.moneyFlow, .entry(id: "e1")])
+        #expect(route.sidebarSelection == .tab(.home))
     }
 }

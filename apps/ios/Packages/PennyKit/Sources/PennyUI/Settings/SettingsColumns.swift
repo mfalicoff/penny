@@ -34,14 +34,17 @@ struct SettingsColumns: View {
                                 // lock page has its own centered header instead.
                                 if page != .appLock { PageTitle(title: page.title) }
                             }
-                            .navigationDestination(for: SettingsRoute.self) { SettingsPage(route: $0) }
+                            .navigationDestination(for: SettingsRoute.self) {
+                                SettingsPage(route: $0).settingsAddEntry()
+                            }
+                            .settingsAddEntry()
                     }
                     .id(page)
                 }
             } else {
                 NavigationStack(path: singleColumnPath) {
-                    SettingsView()
-                        .navigationDestination(for: SettingsRoute.self) { SettingsPage(route: $0) }
+                    SettingsView().settingsAddEntry()
+                        .navigationDestination(for: SettingsRoute.self) { SettingsPage(route: $0).settingsAddEntry() }
                 }
             }
         }
@@ -85,5 +88,15 @@ private struct PageTitle: View {
             .background(PennyColor.background)
             .accessibilityAddTraits(.isHeader)
             .accessibilityIdentifier("settings.pageTitle")
+    }
+}
+
+extension View {
+    /// The copper Add entry capsule at the trailing end of the iPad Settings toolbar
+    /// (`ipad-settings` card, MAZ-254).
+    func settingsAddEntry() -> some View {
+        toolbar {
+            ToolbarItem(placement: .primaryAction) { AddEntryCapsule().accessibilityIdentifier("settings.add") }
+        }
     }
 }

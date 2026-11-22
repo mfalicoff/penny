@@ -736,6 +736,13 @@ const cards: Record<string, Card> = {
       await scrollTo(p, p.getByRole("region", { name: "Recent" }));
     },
   },
+  // alex's October has no income yet, so Left to spend is negative (MAZ-254).
+  "iphone-home-overspent": {
+    open: async ({ page: p }) => {
+      await home(p);
+      await expectAlexOctober(p);
+    },
+  },
   "iphone-account-picker": { skip: { status: "not-built", note: NATIVE_SELECT("account") } },
   "iphone-household-picker": { skip: { status: "not-built", note: NATIVE_SELECT("household") } },
   "iphone-edit-entry": { open: ({ page: p }) => editEntry(p) },

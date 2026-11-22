@@ -4,7 +4,7 @@ import PennyDomain
 import SwiftUI
 
 /// The signed-in (or demo) shell. In a compact width (iPhone, iPad Slide Over or a narrow
-/// split) it is the iOS 26 floating tab bar with Home, Activity, Shared and Trips and a
+/// split) it is the floating glass tab bar with Home, Activity, Shared and Trips and a
 /// separate + for Add entry; in a regular width (iPad) a `NavigationSplitView` with a sidebar.
 /// Both read and write the same `ShellRoute`, so resizing keeps the place.
 struct AppShell: View {
@@ -42,35 +42,35 @@ struct AppShell: View {
         .sheet(item: $shell.editingEntry, onDismiss: shell.sheetDismissed) { request in
             EntryFormSheet(mode: .edit(request.entry)).environment(shell)
         }
+        // The calendar is a sheet over Home on iPhone and iPad (`calendar` card, MAZ-254).
+        .sheet(isPresented: $shell.route.isCalendarPresented, onDismiss: shell.sheetDismissed) {
+            NavigationStack { CalendarView().pennySolidBars() }.environment(shell)
+        }
         .accessibilityIdentifier(shell.isDemo ? "root.demo" : "root.signedIn")
     }
 }
 
-/// What the tab bar selects: a tab, or the separate + (which opens Add entry and never
-/// becomes the selected tab).
-enum TabSelection: Hashable {
-    case tab(AppTab)
-    case add
-}
-
+/// The iPhone shell (`home` card and every tab screen, MAZ-254): the four tabs in one Liquid
+/// Glass capsule and, beside it, the separate copper + circle for Add entry. The system tab bar
+/// can't draw that (a tab with the search role renders as a fifth item inside the bar, and one
+/// item can't have its own tint), so `TabView` keeps each tab's stack and state with its own bar
+/// hidden, and `PennyTabBar` is drawn over the content.
 private struct TabShell: View {
     @Bindable var shell: ShellModel
 
     var body: some View {
-        TabView(selection: selection) {
+        TabView(selection: Binding(get: { shell.route.tab }, set: { shell.route.select($0) })) {
             ForEach(AppTab.allCases, id: \.self) { tab in
-                Tab(tab.title, systemImage: Self.symbol(tab), value: TabSelection.tab(tab)) {
-                    TabStack(tab: tab)
+                Tab(tab.title, systemImage: PennyTabBar.symbol(tab), value: tab) {
+                    TabStack(tab: tab, underTabBar: true)
                 }
-                .accessibilityIdentifier("tab.\(tab.rawValue)")
             }
-            // The separate circular button at the trailing end of the iOS 26 tab bar.
-            Tab("Add entry", systemImage: "plus", value: TabSelection.add, role: .search) {
-                Color.clear
-            }
-            .accessibilityIdentifier("tab.add")
         }
         .tint(PennyColor.tint)
+        // Over the content, and under the keyboard rather than above it.
+        .overlay(alignment: .bottom) {
+            PennyTabBar(shell: shell).ignoresSafeArea(.keyboard, edges: .bottom)
+        }
         .modifier(ToastOverlay(bottomPadding: 72))
         .sheet(isPresented: $shell.route.isSettingsPresented, onDismiss: shell.sheetDismissed) {
             NavigationStack(path: $shell.route.settingsPath) {
@@ -80,16 +80,72 @@ private struct TabShell: View {
             .environment(shell)
         }
     }
+}
 
-    private var selection: Binding<TabSelection> {
-        Binding(
-            get: { .tab(shell.route.tab) },
-            set: { next in
-                switch next {
-                case .tab(let tab): shell.route.select(tab)
-                case .add: shell.route.openAddEntry()
+/// The cards' tab bar: Home, Activity, Shared and Trips in a glass capsule (the selected tab
+/// copper on the neutral fill), and the copper glass + that opens Add entry. Both are opaque
+/// surfaces with Reduce Transparency (`pennyGlass`). The labels stay at the bar's size, as the
+/// system's do; at large text sizes a long press shows them in the large content viewer.
+struct PennyTabBar: View {
+    @Bindable var shell: ShellModel
+
+    static let height: Double = 62
+
+    var body: some View {
+        GlassEffectContainer(spacing: 10) {
+            HStack(spacing: 10) {
+                HStack(spacing: 0) {
+                    ForEach(AppTab.allCases, id: \.self) { tab in item(tab) }
                 }
-            })
+                .padding(4)
+                .frame(height: Self.height)
+                .pennyGlass(in: Capsule())
+                Button {
+                    shell.route.openAddEntry()
+                } label: {
+                    Image(systemName: "plus")
+                        .font(.system(size: 24, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: Self.height, height: Self.height)
+                        .contentShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .pennyGlass(in: Circle(), tinted: true)
+                .accessibilityLabel("Add entry")
+                .accessibilityShowsLargeContentViewer()
+                .accessibilityIdentifier("tab.add")
+            }
+        }
+        .padding(.horizontal, 16)
+        .dynamicTypeSize(...DynamicTypeSize.large)
+        // Only as tall as the bar, so the content above it scrolls and takes touches as before.
+        .frame(height: Self.height)
+        .fixedSize(horizontal: false, vertical: true)
+        // Its own container, so the shell's root identifier never replaces the tabs' own.
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("tab.bar")
+    }
+
+    private func item(_ tab: AppTab) -> some View {
+        let isSelected = shell.route.tab == tab
+        return Button {
+            shell.route.select(tab)
+        } label: {
+            VStack(spacing: 2) {
+                Image(systemName: Self.symbol(tab)).font(.system(size: 20, weight: .medium))
+                    .frame(height: 26)
+                Text(tab.title).font(.system(size: 10.5, weight: .semibold))
+            }
+            .foregroundStyle(isSelected ? PennyColor.tint : PennyColor.label)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(isSelected ? PennyColor.fill : Color.clear, in: Capsule())
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(tab.title)
+        .accessibilityAddTraits(isSelected ? [.isSelected] : [])
+        .accessibilityShowsLargeContentViewer()
+        .accessibilityIdentifier("tab.\(tab.rawValue)")
     }
 
     static func symbol(_ tab: AppTab) -> String {
@@ -106,13 +162,18 @@ private struct TabShell: View {
 struct TabStack: View {
     @Environment(ShellModel.self) private var shell
     let tab: AppTab
+    /// iPhone: the page sits under `PennyTabBar` (MAZ-254).
+    var underTabBar = false
 
     var body: some View {
         NavigationStack(path: Binding(get: { shell.route.path(for: tab) }, set: { shell.route.setPath($0, for: tab) }))
         {
             TabRoot(tab: tab)
                 .pennySolidBars()
-                .navigationDestination(for: DetailRoute.self) { DetailPage(route: $0).pennySolidBars() }
+                .underPennyTabBar(underTabBar)
+                .navigationDestination(for: DetailRoute.self) {
+                    DetailPage(route: $0).pennySolidBars().underPennyTabBar(underTabBar)
+                }
         }
     }
 }
@@ -143,7 +204,6 @@ struct DetailPage: View {
         case .entry(let id): EntryDetailView(id: id)
         case .moneyFlow: MoneyFlowView()
         case .insights: InsightsView()
-        case .calendar: CalendarView()
         case .categorySpending(let ids, let title): CategorySpendingView(categoryIds: ids, title: title)
         case .receiptInbox(let item): ReceiptInboxView(openItemID: item)
         }
@@ -162,6 +222,14 @@ private struct SplitShell: View {
             detail
         }
         .modifier(ToastOverlay(bottomPadding: 16))
+        // ⌘N opens Add entry wherever the iPad is (MAZ-254). An invisible button, so the shortcut
+        // is in the window's key commands without a second visible control.
+        .background {
+            Button("Add entry") { shell.route.openAddEntry() }
+                .keyboardShortcut("n", modifiers: .command)
+                .opacity(0)
+                .accessibilityHidden(true)
+        }
     }
 
     /// The Settings column's path without the Manage pages, which have their own stack. Opening
@@ -248,12 +316,8 @@ private struct Sidebar: View {
         .tint(PennyColor.tint)
         .navigationTitle("Penny")
         .toolbar(removing: .title)
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button("Add entry", systemImage: "plus") { shell.route.openAddEntry() }
-                    .accessibilityIdentifier("sidebar.add")
-            }
-        }
+        // Add entry is the copper capsule in the detail's toolbar (Home, Activity, Settings) and
+        // ⌘N, not a + in the sidebar (MAZ-254).
         .safeAreaInset(edge: .bottom) {
             SidebarFooter(shell: shell, isSelected: selected == .settings).background(.bar)
         }
@@ -406,5 +470,48 @@ private struct SidebarFooter: View {
         .padding(.horizontal, Metrics.gutter - 6)
         .padding(.bottom, 8)
         .accessibilityElement(children: .contain)
+    }
+}
+
+/// The copper "+ Add entry" capsule in the iPad toolbar of Home, Activity and Settings
+/// (`ipad-home`, `ipad-activity`, `ipad-settings`, MAZ-254). ⌘N opens Add entry from anywhere
+/// on iPad (`SplitShell`), so the capsule carries no shortcut of its own.
+struct AddEntryCapsule: View {
+    @Environment(ShellModel.self) private var shell
+
+    var body: some View {
+        Button {
+            shell.route.openAddEntry()
+        } label: {
+            // An HStack, not a Label: the toolbar would draw a Label as its icon alone.
+            HStack(spacing: 6) {
+                Image(systemName: "plus")
+                Text("Add entry")
+            }
+            .fontWeight(.semibold)
+        }
+        .buttonStyle(.glassProminent)
+        .tint(PennyColor.tint)
+    }
+}
+
+extension View {
+    /// A tab page on iPhone (MAZ-254): the system tab bar hidden under `PennyTabBar`, and the
+    /// page's content ending above the bar, so its last rows scroll clear of it as they do above
+    /// the system's. Each page gets it itself: a `TabView`'s own inset doesn't reach its pages.
+    @ViewBuilder
+    func underPennyTabBar(_ active: Bool) -> some View {
+        if active {
+            #if os(iOS)
+                toolbarVisibility(.hidden, for: .tabBar)
+                    .safeAreaInset(edge: .bottom, spacing: 0) {
+                        Color.clear.frame(height: PennyTabBar.height + 8).allowsHitTesting(false)
+                    }
+            #else
+                self
+            #endif
+        } else {
+            self
+        }
     }
 }
