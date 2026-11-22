@@ -1594,3 +1594,45 @@
     color: HighlightText;
   }
 }
+
+/*
+ * 768–1099px (card `web-tablet`, MAZ-283): the hero with its tiles beside a 300px Coming up, then
+ * Follow your money across the page and By category under it in two columns.
+ */
+@media (min-width: 768px) and (max-width: 1099.98px) {
+  .home-top--wide {
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 18px;
+  }
+
+  .home-top--wide > .hero {
+    grid-column: 1;
+  }
+
+  .home-top--wide > .home-coming {
+    grid-column: 2;
+  }
+
+  .home-top--wide > .home-sankey,
+  .home-top--wide > .breakdown,
+  .home-top--wide > .daily {
+    grid-column: 1 / -1;
+  }
+
+  .home-sankey {
+    display: grid;
+    min-width: 0;
+  }
+
+  .home-top--wide > .breakdown .breakdown__list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 28px;
+  }
+}
+
+/* A touch tablet in portrait (card `ipad-home-portrait`): Coming up runs across the page under the hero. */
+@media (min-width: 768px) and (max-width: 1099.98px) and (hover: none) and (pointer: coarse) {
+  .home-top--wide > .home-coming {
+    grid-column: 1 / -1;
+  }
+}

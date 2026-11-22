@@ -1,9 +1,9 @@
 import { useId, useMemo, useState } from "react";
 import type { PaymentAccount } from "@domain/ledger.ts";
 import { Button } from "../../design/controls";
-import { GroupToolbar, ToolButton } from "../households/GroupTools";
 import { Banner, EmptyState, ErrorState, LoadingState, useToast } from "../../design/states";
 import { AccountFormDialog } from "./AccountFormDialog";
+import { ManageAdd } from "./ManageAdd";
 import { OrganizeRow } from "./OrganizeRow";
 import { ACCOUNT_TYPE_ICONS, accountTypeLabels, accountUsage, refusedAccountRemovals, restoreAccount, unsyncedIds, usageOf, usageText, type Usage } from "./model";
 import { describeSaveError, useLedgerWorkspace, type LedgerWorkspace } from "./workspace";
@@ -38,10 +38,7 @@ export function AccountsPage() {
 
   return (
     <div className="page organize">
-      {/* The card's toolbar + (the navigation bar's tool slot, as on Trips). */}
-      <GroupToolbar>
-        <ToolButton icon="add" label="Add account" onClick={open} />
-      </GroupToolbar>
+      <ManageAdd label="Add account" onClick={open} />
       <RefusedRemovals workspace={workspace} />
       <p className="page__subtitle">Labels for how you pay and get paid.</p>
       {ledger.accounts.length === 0 ? (
@@ -64,6 +61,7 @@ export function AccountsPage() {
                 meta={`${accountTypeLabels[account.type]} · ${usageText(usageOf(usage, account.id))}`}
                 icon={ACCOUNT_TYPE_ICONS[account.type]}
                 waiting={waiting.has(account.id)}
+                edit
                 onOpen={() => {
                   setForm({ account });
                 }}

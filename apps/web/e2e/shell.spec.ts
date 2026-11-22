@@ -74,9 +74,12 @@ test.describe("layouts", () => {
     // Rail: the label is visually hidden but still names the link.
     const railWidth = await activity.evaluate((link) => link.getBoundingClientRect().width);
     expect(railWidth).toBeLessThan(60);
-    await expect(page.getByRole("searchbox", { name: "Search entries" })).toBeVisible();
+    // web-tablet: search is an icon button there (it opens Activity's search); the field comes back from 1100px.
+    await expect(page.getByRole("button", { name: "Search entries" })).toBeVisible();
+    await expect(page.getByRole("searchbox", { name: "Search entries" })).toBeHidden();
 
     await page.setViewportSize({ width: 1300, height: 800 });
+    await expect(page.getByRole("searchbox", { name: "Search entries" })).toBeVisible();
     await expect(page.getByText("Together")).toBeVisible();
     expect(await activity.evaluate((link) => link.getBoundingClientRect().width)).toBeGreaterThan(150);
   });

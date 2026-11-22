@@ -862,3 +862,72 @@
 .pk-dialog.pk-dialog--grouped {
   background: var(--pk-bg);
 }
+
+/*
+ * The web cards' shell banners (`web-server-unreachable`, `web-demo`, MAZ-283). Phones keep the
+ * compact banner; from 768px the icon sits in a 36px tinted tile, the title is 15px in the label
+ * color, and the banner is a 16px-radius panel: a faint red one for errors, glass with a copper
+ * tile for the demo.
+ */
+.pk-banner__tile {
+  display: contents;
+}
+
+@media (min-width: 768px) {
+  .pk-banner--tile {
+    gap: 14px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    font-size: 0.84375rem;
+  }
+
+  .pk-banner--tile .pk-banner__tile {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
+  }
+
+  .pk-banner--tile .pk-banner__tile .icon {
+    width: 19px !important;
+    height: 19px !important;
+  }
+
+  .pk-banner--tile .pk-banner__title {
+    margin-bottom: 1px;
+    color: var(--pk-label);
+    font-size: 0.9375rem;
+  }
+
+  .pk-banner--tile .pk-banner__msg {
+    margin-top: 0;
+    font-size: 0.84375rem;
+  }
+
+  .pk-banner--tile.pk-banner--error {
+    background: color-mix(in srgb, var(--pk-danger) 8%, var(--pk-surface));
+    box-shadow: 0 0 0 0.5px color-mix(in srgb, var(--pk-danger) 30%, transparent);
+  }
+
+  .pk-banner--tile.pk-banner--error .pk-banner__tile {
+    background: color-mix(in srgb, var(--pk-danger) 14%, transparent);
+    color: var(--pk-danger);
+  }
+
+  .pk-banner--tile.pk-banner--info {
+    background: color-mix(in srgb, var(--pk-surface) 78%, transparent);
+    backdrop-filter: blur(22px) saturate(180%);
+    box-shadow: inset 0 1px 0 var(--pk-glass-edge), 0 0 0 0.5px var(--pk-separator), var(--pk-glass-shadow);
+  }
+
+  .pk-banner--tile.pk-banner--info .pk-banner__tile {
+    background: var(--pk-tint-soft);
+    color: var(--pk-tint);
+  }
+
+  .pk-banner--tile.pk-banner--info .pk-banner__tile .icon {
+    color: var(--pk-tint);
+  }
+}

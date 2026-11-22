@@ -309,6 +309,8 @@ async function newSchedule(p: Page) {
   await page(p, "/recurring", "Recurring");
   await p.getByRole("button", { name: "New schedule" }).first().click();
   const dialog = p.getByRole("dialog", { name: "New schedule" });
+  // The card's draft starts on Nov 18, after the scenario clock (Oct 15), with the amount being typed.
+  await dialog.getByLabel("First date").fill("2026-11-18");
   await dialog.getByLabel("Name").fill("Internet");
   await dialog.getByLabel("Amount (CAD)").fill("75.00");
 }

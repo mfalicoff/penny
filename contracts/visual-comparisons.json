@@ -2253,7 +2253,7 @@
             "ref": "MAZ-238"
           },
           {
-            "summary": "Fields are stacked labelled inputs (Type, Amount, Name, Repeats, …), not the card's Name, Amount and Your share group followed by the Schedule and Note sections",
+            "summary": "The web dialog's order (Type, Amount, Name, Repeats, then the First date, Category, Account and Your share rows and Note), not the card's Name, Amount and Your share group followed by the Schedule and Note sections",
             "kind": "follow-up",
             "ref": "MAZ-238"
           },
@@ -2860,17 +2860,7 @@
             "ref": "MAZ-238"
           },
           {
-            "summary": "No Income, Spent and Invested tiles under the hero, no expected pay in the projected line, and no Coming up",
-            "kind": "follow-up",
-            "ref": "MAZ-238"
-          },
-          {
-            "summary": "Follow your money is the compact bar, not the full flow chart with Show as a table",
-            "kind": "follow-up",
-            "ref": "MAZ-238"
-          },
-          {
-            "summary": "No Daily spending or By category: a Recent list shows instead",
+            "summary": "Daily spending runs across the page with no By category beside it",
             "kind": "follow-up",
             "ref": "MAZ-238"
           }
@@ -3343,14 +3333,9 @@
         ],
         "deviations": [
           {
-            "summary": "The labelled New schedule button is an icon-only + beside search",
+            "summary": "The sidebar footer names the account by its email, not the person's name",
             "kind": "follow-up",
-            "ref": "MAZ-238"
-          },
-          {
-            "summary": "The account or household is in the row's subtitle, not a right-aligned column before the amount",
-            "kind": "follow-up",
-            "ref": "MAZ-238"
+            "ref": "MAZ-171"
           }
         ]
       }
@@ -3373,14 +3358,9 @@
         ],
         "deviations": [
           {
-            "summary": "The labelled Add account button is an icon-only + beside search",
+            "summary": "The sidebar footer names the account by its email, not the person's name",
             "kind": "follow-up",
-            "ref": "MAZ-238"
-          },
-          {
-            "summary": "Rows have no edit button before the chevron, and account names are regular weight, not semibold",
-            "kind": "follow-up",
-            "ref": "MAZ-238"
+            "ref": "MAZ-171"
           }
         ]
       }
@@ -3403,24 +3383,14 @@
         ],
         "deviations": [
           {
-            "summary": "The New category button is an icon-only + beside search, not a labelled button beside the title",
+            "summary": "No “Drag to reorder” hint and no drag handles: Penny keeps no category order (the owner's decision on MAZ-257), so the card is to drop them",
             "kind": "follow-up",
-            "ref": "MAZ-238"
+            "ref": "MAZ-257"
           },
           {
-            "summary": "The list runs full width instead of the card's centred column",
+            "summary": "The sidebar footer names the account by its email, not the person's name",
             "kind": "follow-up",
-            "ref": "MAZ-238"
-          },
-          {
-            "summary": "No “Drag to reorder” hint and no drag handles: rows end in a chevron",
-            "kind": "follow-up",
-            "ref": "MAZ-238"
-          },
-          {
-            "summary": "Row titles are regular weight, not semibold, and an unused category reads “not used yet” in lower case",
-            "kind": "follow-up",
-            "ref": "MAZ-238"
+            "ref": "MAZ-171"
           }
         ]
       }
@@ -3448,14 +3418,9 @@
             "ref": "MAZ-239"
           },
           {
-            "summary": "Currencies are a list with a copper checkmark, code and name on two lines, not a radio group with the code and name on one row",
+            "summary": "The sidebar footer names the account by its email, not the person's name",
             "kind": "follow-up",
-            "ref": "MAZ-238"
-          },
-          {
-            "summary": "No lock beside “Ledger currency”, and the locked note is plain text without its lock and tinted box",
-            "kind": "follow-up",
-            "ref": "MAZ-238"
+            "ref": "MAZ-171"
           }
         ]
       }
@@ -3478,34 +3443,9 @@
         ],
         "deviations": [
           {
-            "summary": "One stacked column instead of the card's two panes, with a plain amount field instead of the large amount",
+            "summary": "The sidebar footer names the account by its email, not the person's name",
             "kind": "follow-up",
-            "ref": "MAZ-238"
-          },
-          {
-            "summary": "Field labels are bold title case, not the small upper-case captions, and the description sits in the body, not under the title",
-            "kind": "follow-up",
-            "ref": "MAZ-238"
-          },
-          {
-            "summary": "First date, Category, Account and Your share are native inputs in a grid, not icon rows with their value and chevron",
-            "kind": "follow-up",
-            "ref": "MAZ-238"
-          },
-          {
-            "summary": "The preview reads “Saving records … now. Then next on …”, not the card's “First on …, then monthly on the 18th.”",
-            "kind": "follow-up",
-            "ref": "MAZ-238"
-          },
-          {
-            "summary": "No footer bar with the keyboard hints, and Cancel is a copper text link, not a bordered button",
-            "kind": "follow-up",
-            "ref": "MAZ-238"
-          },
-          {
-            "summary": "The Recurring page behind it has an icon-only + instead of the labelled New schedule button",
-            "kind": "follow-up",
-            "ref": "MAZ-238"
+            "ref": "MAZ-171"
           }
         ]
       }
@@ -3608,14 +3548,9 @@
         ],
         "deviations": [
           {
-            "summary": "The sidebar footer still reads “Synced just now”, not “Can't reach server” with the red cloud icon",
+            "summary": "The sidebar footer names the account by its email, not the person's name",
             "kind": "follow-up",
-            "ref": "MAZ-238"
-          },
-          {
-            "summary": "The banner title is red and its icon is a bare alert circle; the card uses the label colour with a red cloud icon in a tinted tile",
-            "kind": "follow-up",
-            "ref": "MAZ-238"
+            "ref": "MAZ-171"
           }
         ]
       }
@@ -3638,19 +3573,14 @@
         ],
         "deviations": [
           {
-            "summary": "The demo banner is amber with an amber play icon; the card's is neutral with a copper play icon (amber means pending)",
+            "summary": "The demo has no sample household, so Together lists “Shared” instead of a household and All households",
             "kind": "follow-up",
-            "ref": "MAZ-238"
+            "ref": "MAZ-283"
           },
           {
-            "summary": "The sidebar footer shows the demo account, “Not synced” and the gear, not “Demo” with “Sample data”",
+            "summary": "The sidebar footer keeps the Settings button beside Demo and Sample data; the card draws none, and without it the demo can't reach Settings",
             "kind": "follow-up",
-            "ref": "MAZ-238"
-          },
-          {
-            "summary": "The sidebar clips its shortcut badges, and Together lists “Shared” instead of the household and All households",
-            "kind": "follow-up",
-            "ref": "MAZ-238"
+            "ref": "MAZ-283"
           }
         ]
       }
@@ -3664,29 +3594,12 @@
         "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-92",
         "capture": "1024x768",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "No Came in, Spent and Invested tiles under the hero, and no Coming up beside it",
-            "kind": "follow-up",
-            "ref": "MAZ-238"
-          },
-          {
-            "summary": "Follow your money is the compact bar with Insights, not the full flow chart with Open full view and Show as a table",
-            "kind": "follow-up",
-            "ref": "MAZ-238"
-          },
-          {
-            "summary": "Recent follows Follow your money, and search is the full field instead of an icon button",
-            "kind": "follow-up",
-            "ref": "MAZ-238"
-          }
         ]
       }
     },
