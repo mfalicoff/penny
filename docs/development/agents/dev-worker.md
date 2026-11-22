@@ -65,7 +65,7 @@ Platform chrome is never a deviation: the status bar, home indicator, keyboard, 
 Do related work in this pull request rather than leaving it for later. Post a follow-up only when something can't be done here:
 
 - it needs a human: a design decision (see [Design cards](#design-cards)) or a human-only change;
-- it's on another platform than this issue's, or needs a backend, contract or shared-rule change the issue doesn't cover;
+- it needs a machine this one isn't (Swift work found while on Linux, for example), it's on another platform than this issue's, or it needs a backend, contract or shared-rule change the issue doesn't cover;
 - it would make the pull request much bigger than the issue itself, or touch screens the issue doesn't.
 
 The orchestrator adds each follow-up to an open issue that already covers that area, and creates a new issue only when none does.
