@@ -113,7 +113,6 @@ Expected differences that need no entry: SF Pro and SF Symbols on iOS, Inter and
 
 ### Native adaptations (MAZ-122)
 
-- **System sheets and controls.** Forms open as system sheets with Save in the toolbar, as on the cards. The date, split mode and repeat rows open the system `DatePicker` and `Picker`.
 - **Local-first saving.** A save is kept on the device first. A failed upload shows **Couldn't sync** with Retry, not **Couldn't save** in the form (`iphone-save-error`). The saved toast appears on the local save, before the upload (`iphone-saved-toast`).
 - **Names are emails.** Members carry only an email, so households show emails and initials from the email, as on the web.
 - **Settings** has no Notifications row: notifications follow the system permission, and the shared list asks for it once (**Hear about household changes**).
