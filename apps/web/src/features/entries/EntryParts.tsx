@@ -254,6 +254,8 @@ interface AmountHeroProps {
   value: string;
   onChange: (value: string) => void;
   currency: string;
+  /** The currency pill under the amount (iPhone and iPad cards); `iphone-shared-expense-add` has none. */
+  currencyPill?: boolean;
   kind: Kind;
   disabled?: boolean;
   /** `aria-invalid` and `aria-describedby` when the amount has an error. */
@@ -272,6 +274,7 @@ export function AmountHero({
   value,
   onChange,
   currency,
+  currencyPill = true,
   kind,
   disabled,
   invalid,
@@ -311,9 +314,11 @@ export function AmountHero({
           {...invalid}
         />
       </div>
-      <span className="amount-hero__currency" aria-hidden="true">
-        {currency}
-      </span>
+      {currencyPill ? (
+        <span className="amount-hero__currency" aria-hidden="true">
+          {currency}
+        </span>
+      ) : null}
       {error}
     </div>
   );

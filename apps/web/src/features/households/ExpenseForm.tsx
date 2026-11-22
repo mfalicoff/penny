@@ -5,12 +5,13 @@ import { ApiError } from "../../api/client";
 import { createExpense, createRule, expenseQuery, recurringQuery, refreshHousehold, timezoneOffsetMinutes, updateExpense, updateRule } from "../../api/households";
 import type { Allocation, ExpenseInput, Frequency, HouseholdMember, SharedCategory, SharedExpense, SharedRecurring, SplitMode } from "../../api/schemas";
 import { useAccountEmail } from "../../auth/account";
-import { Avatar, Button, ChoiceGroup, Kbd, SwitchRow } from "../../design/controls";
+import { Avatar, Button, ChoiceGroup, cx, Kbd, SwitchRow } from "../../design/controls";
+import { tileStyle } from "../../design/categoryTint";
 import { Icon } from "../../design/Icon";
 import { Banner, SaveErrorBanner, useToast } from "../../design/states";
-import { frequentCategories, mostUsedCategories } from "../entries/model";
+import { categoryIcon, frequentCategories, mostUsedCategories } from "../entries/model";
 import { CategoryPickerDialog } from "../entries/pickers";
-import { AmountHero, CategoryChips, DateRowInput, DetailList, DetailRow, EntryDialog, isMac, useEntryLayout } from "../entries/EntryParts";
+import { AmountHero, DateRowInput, DetailList, DetailRow, EntryDialog, isMac, useEntryLayout } from "../entries/EntryParts";
 import { HouseholdField, type EntrySeed, type HouseholdScope } from "../entries/scope";
 import { ReceiptField } from "../receipts/ReceiptField";
 import { useLedgerWorkspace } from "../organize/workspace";
@@ -127,18 +128,13 @@ function draftFrom(target: FormTarget, meId: string | undefined, fallbackCategor
   };
 }
 
-/** A category chip: ledger categories are matched to shared ones by name. */
-interface CategoryChip extends SharedCategory {
-  /** The ledger category's id, when the ledger has one of this name (for All categories). */
-  id?: string;
-}
-
 /**
  * Add or edit a shared expense, or edit a repeating one (cards `iphone-shared-expense-add`,
- * `iphone-split`; specimens `shared-expense`, `shared-split`, `shared-payer`). It is laid out like
- * the personal entry form: amount and title, category chips with All categories, date and account,
- * then who paid and the split, with repeat, note and receipt under More details and Save in the
- * footer (also ⌘↵ or Ctrl+Enter). A new one opened from Add entry (`scope`) also shows the type
+ * `iphone-split`; specimens `shared-expense`, `shared-split`, `shared-payer`), in the card's order:
+ * the amount; the title with the category as a pill in its field (it opens every category); Paid by
+ * as filled pills; the split mode and each person's share, checked as included; your share; then
+ * Date, your account and the "Receipt, repeat, note" row, which opens repeat, note and receipt in
+ * place (MAZ-278). Save is in the footer (also ⌘↵ or Ctrl+Enter). A new one opened from Add entry (`scope`) also shows the type
  * and Household, so it can go back to being a personal entry without losing what was typed.
  *
  * The preview mirrors the server's split rules; the server validates and computes the stored
@@ -181,7 +177,7 @@ export function ExpenseFormDialog({
   const payerRef = useRef<HTMLFieldSetElement>(null);
   const splitRef = useRef<HTMLDivElement>(null);
   const layout = useEntryLayout();
-  const ids = { form: useId(), title: useId(), amount: useId(), date: useId(), category: useId(), account: useId(), note: useId(), repeat: useId(), more: useId(), error: useId(), splitStatus: useId() };
+  const ids = { form: useId(), title: useId(), amount: useId(), date: useId(), category: useId(), account: useId(), note: useId(), repeat: useId(), more: useId(), error: useId(), splitStatus: useId(), splitWho: useId() };
 
   const paid = target.kind === "edit" && isPaid(target.expense);
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) => { setDraft((previous) => ({ ...previous, [key]: value })); };
@@ -221,17 +217,8 @@ export function ExpenseFormDialog({
     return list;
   }, [choices.categories, target]);
 
-  // The chips: the ledger's expense categories, most used first (as in the personal form), plus
-  // the expense's own when the ledger has none of that name. The selected one always shows.
+  // Every category picker choice: the ledger's expense categories, most used first.
   const ledgerCategories: Category[] = useMemo(() => (workspace.ledger ? frequentCategories(workspace.ledger, "expense") : []), [workspace.ledger]);
-  const chips: CategoryChip[] = useMemo(() => {
-    const all: CategoryChip[] = ledgerCategories.length ? ledgerCategories.map((category) => ({ id: category.id, name: category.name, icon: category.icon, color: category.color })) : categories;
-    const existing = categories.find((category) => category.name === draft.category);
-    const list = existing && !all.some((chip) => chip.name === existing.name) ? [existing, ...all] : all;
-    const shown = list.slice(0, 5);
-    const chosen = list.find((chip) => chip.name === draft.category);
-    return chosen && !shown.includes(chosen) ? [...shown, chosen] : shown;
-  }, [ledgerCategories, categories, draft.category]);
 
   const save = useMutation({
     mutationKey: ["households", "expense", "save"],
@@ -375,6 +362,30 @@ export function ExpenseFormDialog({
   const title = isNew ? "New expense" : target.kind === "rule" ? "Edit repeating expense" : "Edit expense";
   const payerIsMe = meId !== undefined && draft.payerUserId === meId;
   const chosenChip = ledgerCategories.find((category) => category.name === draft.category);
+  const chosenCategory: SharedCategory | undefined = chosenChip ?? categories.find((category) => category.name === draft.category);
+  const pillTint = tileStyle({ id: chosenChip?.id, color: chosenCategory?.color });
+  // Card `.note .pill`: the category sits in the title field, tinted with its color. It opens every
+  // category, where one can also be made; until the ledger has loaded it's a menu of the known ones.
+  const categoryPill = workspace.ledger ? (
+    <button type="button" id={ids.category} className="category-pill" style={pillTint} aria-haspopup="dialog" aria-label={`Category: ${draft.category}`} onClick={() => { setPicking(true); }}>
+      <Icon name={categoryIcon(chosenCategory?.icon)} size={15} weight={44} />
+      <span className="category-pill__name">{draft.category}</span>
+    </button>
+  ) : (
+    <span className="category-pill" style={pillTint}>
+      <Icon name={categoryIcon(chosenCategory?.icon)} size={15} weight={44} />
+      <span className="category-pill__name" aria-hidden="true">
+        {draft.category}
+      </span>
+      <select id={ids.category} aria-label="Category" value={draft.category} onChange={(event) => { set("category", event.currentTarget.value); }}>
+        {categories.map((category) => (
+          <option key={category.name} value={category.name}>
+            {category.name}
+          </option>
+        ))}
+      </select>
+    </span>
+  );
   const newScope = isNew ? scope : undefined;
 
   const notices = (
@@ -454,70 +465,47 @@ export function ExpenseFormDialog({
       }
       main={
         <>
-          <AmountHero id={ids.amount} inputRef={amountRef} value={draft.amount} onChange={(value) => { set("amount", value); }} currency={view.currency} kind="expense" disabled={paid} invalid={describe("amount")} error={errorText("amount")} />
-          <div className="entry-title">
+          <AmountHero id={ids.amount} inputRef={amountRef} value={draft.amount} onChange={(value) => { set("amount", value); }} currency={view.currency} kind="expense" currencyPill={false} disabled={paid} invalid={describe("amount")} error={errorText("amount")} />
+          <div className="entry-title entry-title--category">
             <label htmlFor={ids.title} className="visually-hidden">
               Title
             </label>
-            <input id={ids.title} ref={titleRef} maxLength={100} autoComplete="off" placeholder="Title" value={draft.title} onChange={(event) => { set("title", event.currentTarget.value); }} {...describe("title")} />
+            <div className="entry-title__field">
+              <input id={ids.title} ref={titleRef} maxLength={100} autoComplete="off" placeholder="Title" value={draft.title} onChange={(event) => { set("title", event.currentTarget.value); }} {...describe("title")} />
+              {categoryPill}
+            </div>
             {errorText("title")}
           </div>
-          <CategoryChips
-            id={ids.category}
-            name="shared-category"
-            categories={chips.map((category) => ({ key: category.name, name: category.name, tint: category, icon: category.icon }))}
-            selected={draft.category}
-            onChoose={(name) => {
-              set("category", name);
-            }}
-            {...(workspace.ledger ? { onAll: () => { setPicking(true); } } : {})}
-          />
         </>
       }
       details={
         <>
-          <DetailList>
-            <DetailRow icon="calendar" label={target.kind === "rule" ? "Next date" : "Date"} htmlFor={ids.date} {...(layout === "desktop" ? { chevron: "down" as const } : {})}>
-              <DateRowInput id={ids.date} inputRef={dateRef} value={draft.date} onChange={(value) => { set("date", value); }} today={localDate()} long={layout === "desktop"} invalid={describe("date")} />
-            </DetailRow>
-            {account ? (
-              <DetailRow icon="card" label="Your account" htmlFor={ids.account} {...(layout === "desktop" ? { chevron: "down" as const } : {})}>
-                {account}
-              </DetailRow>
-            ) : null}
-          </DetailList>
-          {errorText("date")}
-          {account ? (
-            <span id={`${ids.account}-hint`} className="form-hint">
-              Private: only you see which account you paid from.
-              {choices.accounts.some((item) => !item.synced) ? " Accounts added on this device can be chosen once they've synced." : null}
-            </span>
-          ) : !payerIsMe ? (
-            <p className="note">{view.who.name(draft.payerUserId)} chooses their own payment account; nobody else sees it.</p>
-          ) : null}
-          <fieldset className="choices" ref={payerRef} disabled={paid} {...(errors.payer ? { "aria-describedby": `${ids.error}-payer` } : {})}>
-            <legend className="choices__legend">Paid by</legend>
-            <div className="choices__options">
-              {participants.map((member) => (
-                <label key={member.userId} className={draft.payerUserId === member.userId ? "choice choice--on wbtn" : "choice wbtn"}>
-                  <input
-                    type="radio"
-                    name="payer"
-                    value={member.userId}
-                    checked={draft.payerUserId === member.userId}
-                    onChange={() => {
-                      setDraft((previous) => ({ ...previous, payerUserId: member.userId, accountId: member.userId === meId ? previous.accountId : "" }));
-                    }}
-                  />
-                  <Avatar name={member.email} size={22} />
-                  <span className="choice__label">{member.userId === meId ? "You" : member.email}</span>
-                </label>
-              ))}
+          <fieldset className="choices payer-pills" ref={payerRef} disabled={paid} {...(errors.payer ? { "aria-describedby": `${ids.error}-payer` } : {})}>
+            <legend className="entry-label">Paid by</legend>
+            <div className="payer-pills__row">
+              {participants.map((member) => {
+                const on = draft.payerUserId === member.userId;
+                return (
+                  <label key={member.userId} className={cx("payer-pill", on && "payer-pill--on")}>
+                    <input
+                      type="radio"
+                      name="payer"
+                      value={member.userId}
+                      checked={on}
+                      onChange={() => {
+                        setDraft((previous) => ({ ...previous, payerUserId: member.userId, accountId: member.userId === meId ? previous.accountId : "" }));
+                      }}
+                    />
+                    <Avatar name={member.email} size={26} />
+                    <span className="payer-pill__name">{member.userId === meId ? "You" : member.email}</span>
+                  </label>
+                );
+              })}
             </div>
             {errorText("payer")}
           </fieldset>
-  
-          <div ref={splitRef} tabIndex={-1} className="shared-section">
+
+          <div ref={splitRef} tabIndex={-1} className="shared-section shared-split">
             <ChoiceGroup<SplitMode>
               legend="Split"
               name="split-mode"
@@ -531,16 +519,20 @@ export function ExpenseFormDialog({
                 { value: "percent", label: "Percent", disabled: paid },
               ]}
             />
-            <ul className="split-rows" aria-label="Shares">
+            {/* Card `.alloc`: everyone on the expense's date is in the split, so each row is checked. */}
+            <ul className="split-rows split-rows--card" aria-label="Shares" aria-describedby={ids.splitWho}>
               {participants.map((member) => {
                 const share = preview?.shares?.find((item) => item.userId === member.userId)?.amountCents;
                 const name = member.userId === meId ? "You" : member.email;
                 return (
-                  <li key={member.userId} className="split-row">
-                    <Avatar name={member.email} size={28} />
+                  <li key={member.userId} className="split-row split-row--checked">
+                    <span className="split-row__check" aria-hidden="true">
+                      <Icon name="checkmark" size={14} weight={64} />
+                    </span>
+                    <Avatar name={member.email} size={30} />
                     <span className="split-row__name">{name}</span>
                     {draft.splitMode === "equal" ? (
-                      <span className="split-row__amount pk-num">{share === undefined ? "—" : view.money(share)}</span>
+                      <span className={cx("split-row__amount pk-num", member.userId === meId && "split-row__amount--me")}>{share === undefined ? "—" : view.money(share)}</span>
                     ) : draft.splitMode === "exact" ? (
                       <input
                         aria-label={`${member.userId === meId ? "Your" : `${name}'s`} share in ${view.currency}`}
@@ -556,7 +548,7 @@ export function ExpenseFormDialog({
                         }}
                       />
                     ) : (
-                      <span className="shared-actions" style={{ flexWrap: "nowrap" }}>
+                      <span className="split-row__percent">
                         <input
                           aria-label={`${member.userId === meId ? "Your" : `${name}'s`} share in percent`}
                           inputMode="decimal"
@@ -577,26 +569,53 @@ export function ExpenseFormDialog({
                 );
               })}
             </ul>
-            <div id={ids.splitStatus} className="split-total" role="status">
-              {splitStatusText(draft.splitMode, preview, totalCents, view.money)}
-            </div>
-            {errorText("split")}
-            {target.kind !== "rule" && !view.detail.household.trip ? (
-              <p className="note">Split among the members on {draft.date ? "that date" : "the expense date"}. People who join later aren't included.</p>
+            <p id={ids.splitWho} className="visually-hidden">
+              {splitWhoText(target.kind === "rule", view.detail.household.trip, totalCents)}
+            </p>
+            {/* Amounts and percentages say what's left to assign; an equal split needs no status (card). */}
+            {draft.splitMode !== "equal" ? (
+              <div id={ids.splitStatus} className="split-total" role="status">
+                {splitStatusText(draft.splitMode, preview, totalCents, view.money)}
+              </div>
             ) : null}
+            {errorText("split")}
             {myShare !== null && participantIds.includes(meId ?? "") ? (
-              <div className="your-share" role="status">
-                <span>Your share · counts in your spending</span>
-                <span className="pk-num">{view.money(myShare)}</span>
+              <div className="your-share your-share--form" role="status">
+                <span>
+                  Your share <span className="your-share__hint">· in your spending</span>
+                </span>
+                <b className="your-share__amount pk-num">{view.money(myShare)}</b>
               </div>
             ) : null}
           </div>
-  
-          <button type="button" className="disclosure" aria-expanded={more} aria-controls={ids.more} onClick={() => { setMore((value) => !value); }}>
-            <Icon name={more ? "chevron-down" : "chevron-forward"} size={16} weight={48} />
-            More details
-            <span className="note">{moreSummary(draft, target.kind !== "edit")}</span>
-          </button>
+
+          <DetailList>
+            <DetailRow icon="calendar" label={target.kind === "rule" ? "Next date" : "Date"} htmlFor={ids.date} {...(layout === "desktop" ? { chevron: "down" as const } : {})}>
+              <DateRowInput id={ids.date} inputRef={dateRef} value={draft.date} onChange={(value) => { set("date", value); }} today={localDate()} long={layout === "desktop"} invalid={describe("date")} />
+            </DetailRow>
+            {account ? (
+              <DetailRow icon="card" label="Your account" htmlFor={ids.account} {...(layout === "desktop" ? { chevron: "down" as const } : {})}>
+                {account}
+              </DetailRow>
+            ) : null}
+            <button type="button" className="entry-row entry-row--button" aria-expanded={more} aria-controls={ids.more} onClick={() => { setMore((value) => !value); }}>
+              <Icon name="ellipsis-horizontal" size={18} />
+              <span className="entry-row__label">{target.kind === "edit" ? "Receipt, note" : "Receipt, repeat, note"}</span>
+              <span className="entry-row__value">
+                {moreSummary(draft, target.kind !== "edit")}
+                <Icon name={more ? "chevron-down" : "chevron-forward"} size={13} weight={48} />
+              </span>
+            </button>
+          </DetailList>
+          {errorText("date")}
+          {account ? (
+            <span id={`${ids.account}-hint`} className="form-hint">
+              Private: only you see which account you paid from.
+              {choices.accounts.some((item) => !item.synced) ? " Accounts added on this device can be chosen once they've synced." : null}
+            </span>
+          ) : !payerIsMe ? (
+            <p className="note">{view.who.name(draft.payerUserId)} chooses their own payment account; nobody else sees it.</p>
+          ) : null}
           <div id={ids.more} className="more-details" hidden={!more}>
             {target.kind !== "edit" ? (
               <div className="form-grid">
@@ -658,12 +677,21 @@ export function ExpenseFormDialog({
 }
 
 
+const REPEAT_LABELS: Record<Frequency, string> = { weekly: "Weekly", monthly: "Monthly", yearly: "Yearly" };
+
+/** What the "Receipt, repeat, note" row holds, as in Add entry: "Receipt · Monthly · Note". */
 function moreSummary(draft: Draft, repeats: boolean): string {
   const parts: string[] = [];
-  if (repeats && draft.repeat !== "none") parts.push(`Repeats ${draft.repeat}`);
-  if (draft.note.trim()) parts.push("Note");
   if (draft.receipt) parts.push("Receipt");
-  return parts.length ? parts.join(" · ") : repeats ? "Repeat, note, receipt" : "Note, receipt";
+  if (repeats && draft.repeat !== "none") parts.push(REPEAT_LABELS[draft.repeat]);
+  if (draft.note.trim()) parts.push("Note");
+  return parts.join(" · ");
+}
+
+/** Who the split includes, read with the shares (the card shows only the checked rows). */
+function splitWhoText(rule: boolean, trip: unknown, total: number | null): string {
+  const who = rule ? "Everyone in the household when each one is added is included." : trip ? "Everyone on the trip is included." : "Everyone who was a member on the expense date is included; people who join later aren't.";
+  return total === null || total < 1 ? `${who} Enter the total to see each share.` : who;
 }
 
 function splitStatusText(
