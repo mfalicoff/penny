@@ -22,7 +22,7 @@ public sealed class PasswordResetPolicyTests(ApiFixture fixture) : IntegrationTe
     public async Task whenAttemptsExceedWindow_PasswordReset_ShouldShareRateLimitWithSignIn()
     {
         await using var factory = new TestApiFactory(
-            Fixture.RuntimeConnection,
+            Fixture.Connection,
             new Dictionary<string, string> { ["Auth:RateLimitPermits"] = "3" }
         );
         using var client = CreateClient(factory);
@@ -75,7 +75,7 @@ public sealed class PasswordResetPolicyTests(ApiFixture fixture) : IntegrationTe
     {
         var logs = new CapturingLoggerProvider();
         await using var factory = new TestApiFactory(
-            Fixture.RuntimeConnection,
+            Fixture.Connection,
             new Dictionary<string, string>
             {
                 ["Logging:LogLevel:Default"] = "Trace",

@@ -259,3 +259,8 @@ export function refusedAccountRemovals(issueMessage: string | undefined, local: 
   const kept = new Set(local.accounts.map((account) => account.id));
   return server.accounts.filter((account) => !kept.has(account.id));
 }
+
+/** The usage line as a line of its own: "Not used yet" (card `web-categories`). */
+export function sentenceCase(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}

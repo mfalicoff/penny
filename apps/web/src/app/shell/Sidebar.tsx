@@ -1,6 +1,7 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { serverInfoQuery } from "../../api/info";
 import { householdDetailQuery, householdsQuery, monthRecapQuery } from "../../api/households";
 import type { Household } from "../../api/schemas";
 import { useAccountEmail } from "../../auth/account";
@@ -28,6 +29,7 @@ const SIDEBAR_TRIPS = 3;
  */
 export function Sidebar() {
   const email = useAccountEmail();
+  const demo = useIsDemo();
   return (
     <aside className="sidebar sidebar--rail" aria-label="Penny">
       <Link to="/" className="brand" aria-label="Penny home">
@@ -57,18 +59,35 @@ export function Sidebar() {
           </ul>
         </div>
       </nav>
-      <div className="sidebar__foot">
-        <Avatar name={email} size={32} />
-        <div className="sidebar__account">
-          <span className="sidebar__email" title={email}>
-            {email}
+      {demo ? (
+        // The demo has no account: "Demo" with "Sample data" (card `web-demo`).
+        <div className="sidebar__foot sidebar__foot--demo">
+          <span className="sidebar__demo-mark" aria-hidden="true">
+            <Icon name="play" size={16} weight={44} />
           </span>
-          <SyncLine />
+          <div className="sidebar__account">
+            <span className="sidebar__email">Demo</span>
+            <p className="sync-line">Sample data</p>
+          </div>
+          {/* As on the account footer: on the web this is the only way into Settings. */}
+          <Link to="/settings" className="iconlink" aria-label="Settings" activeOptions={{ includeSearch: false }}>
+            <Icon name="settings" size={18} />
+          </Link>
         </div>
-        <Link to="/settings" className="iconlink" aria-label="Settings" activeOptions={{ includeSearch: false }}>
-          <Icon name="settings" size={18} />
-        </Link>
-      </div>
+      ) : (
+        <div className="sidebar__foot">
+          <Avatar name={email} size={32} />
+          <div className="sidebar__account">
+            <span className="sidebar__email" title={email}>
+              {email}
+            </span>
+            <SyncLine />
+          </div>
+          <Link to="/settings" className="iconlink" aria-label="Settings" activeOptions={{ includeSearch: false }}>
+            <Icon name="settings" size={18} />
+          </Link>
+        </div>
+      )}
     </aside>
   );
 }
@@ -161,9 +180,9 @@ const short = (cents: number, currency: string) =>
 
 function Together() {
   const email = useAccountEmail();
-  const demo = useIsDemo();
   const workspace = useLedgerWorkspace();
-  const households = useQuery({ ...householdsQuery(email), enabled: !demo });
+  // The demo answers with its sample household (MAZ-283).
+  const households = useQuery(householdsQuery(email));
   const homes = useMemo(() => (households.data ?? []).filter((household) => !household.trip), [households.data]);
   const trips = useMemo(() => {
     const today = localDate();
@@ -307,7 +326,11 @@ export function useSyncStatus(): SyncStatus {
  * server's version is in Settings › Server & sync; an unreachable server has its own banner.
  */
 export function SyncLine() {
-  const { icon, text, tone } = useSyncStatus();
+  const status = useSyncStatus();
+  const online = useOnline();
+  // The browser is online but the server doesn't answer (card `web-server-unreachable`).
+  const serverDown = useQuery(serverInfoQuery).isError && online;
+  const { icon, text, tone } = serverDown ? { icon: "cloud-offline" as const, text: "Can't reach server", tone: "error" as const } : status;
   return (
     <p className={cx("sync-line", tone && "sync-line--error")}>
       <Icon name={icon} size={13} />

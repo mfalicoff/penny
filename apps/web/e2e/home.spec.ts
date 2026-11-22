@@ -36,10 +36,10 @@ test("Home leads with recorded and projected remaining, then recent activity, wi
   await startDemo(page);
   // Watched from here: the 401 that shows the sign-in screen before the demo is expected.
   const errors = watchForErrors(page);
-  // 5,450.00 came in − 1,883.35 spent − 200.00 invested.
-  await expect(hero(page).locator(".hero__amount")).toHaveText("Recorded remaining: $3,366.65");
+  // 5,450.00 came in − 1,955.35 spent (with 72.00 of shares in the demo household, MAZ-283) − 200.00 invested.
+  await expect(hero(page).locator(".hero__amount")).toHaveText("Recorded remaining: $3,294.65");
   // + 400.00 expected retainer − 45.00 phone plan, in the cards' short line (MAZ-224).
-  await expect(hero(page)).toContainText(isMobile ? "$3,721.65 projected with expected pay" : "$3,721.65 projected · includes $400.00 expected pay");
+  await expect(hero(page)).toContainText(isMobile ? "$3,649.65 projected with expected pay" : "$3,649.65 projected · includes $400.00 expected pay");
   await expect(hero(page)).not.toContainText("Recorded so far");
   if (isMobile) await expect(page.getByRole("region", { name: "Recent" }).getByRole("listitem")).toHaveCount(5);
   else await expect(page.getByRole("region", { name: "Coming up" })).toContainText("Design retainer");
@@ -52,14 +52,14 @@ const regionOrder = (page: Page) => page.locator("main section[aria-labelledby]"
 
 test("Home shows the cards' sections and nothing more (MAZ-174, MAZ-224)", async ({ page, isMobile }) => {
   await startDemo(page);
-  const order = await regionOrder(page);
+  // Home renders its sections as the demo ledger loads, so poll rather than read the order once.
   if (isMobile) {
     // iphone-home: the hero alone (no tiles), the flow card, Recent.
-    expect(order).toEqual(["Left to spend", "Follow your money", "Recent"]);
+    await expect.poll(() => regionOrder(page)).toEqual(["Left to spend", "Follow your money", "Recent"]);
     await expect(hero(page).getByText("Came in")).toHaveCount(0);
   } else {
     // web-home: the hero and its tiles beside Coming up, then the Sankey beside By category.
-    expect(order).toEqual(["Left to spend", "Coming up", "Follow your money", "By category"]);
+    await expect.poll(() => regionOrder(page)).toEqual(["Left to spend", "Coming up", "Follow your money", "By category"]);
     await expect(page.getByRole("banner").getByRole("button", { name: "Previous month" })).toBeVisible();
   }
 });
@@ -129,7 +129,7 @@ test("the money flow is chosen with the keyboard and announced", async ({ page, 
   await scope.getByText("Show as a table").click();
   const table = scope.getByRole("table", { name: "Money flow for November 2026" });
   // Recorded-only (MAZ-136): Left over is Left to spend; the expected $400.00 retainer is not in it.
-  await expect(table.getByRole("row", { name: /Left over/ })).toContainText("$3,366.65");
+  await expect(table.getByRole("row", { name: /Left over/ })).toContainText("$3,294.65");
   expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
   expect(errors).toEqual([]);
 });
@@ -187,7 +187,7 @@ test("Insights compares the month and fits a 320px window", async ({ page }) => 
   await expect(page.getByRole("heading", { level: 1, name: "Insights" })).toBeVisible();
   // iphone-insights (MAZ-174): the donut and one month-over-month sentence, then the categories.
   const spending = page.getByRole("region", { name: "Spending" });
-  await expect(spending).toContainText("$1,883.35Spent");
+  await expect(spending).toContainText("$1,955.35Spent");
   await expect(spending).toContainText(/more than October|less than October|Same as October/);
   await expect(page.getByRole("region", { name: "Categories" }).getByRole("listitem").first()).toContainText("$1,450.00");
   // The money flow is its own screen, opened from Home (MAZ-224).
@@ -209,7 +209,7 @@ test("desktop Insights compares categories with last month and charts six months
   await expect(page.getByRole("heading", { name: "Spending by category" })).toHaveClass(/visually-hidden/);
   const months = page.getByRole("region", { name: "Last 6 months" });
   await months.getByText("Show as a table").click();
-  await expect(months.getByRole("row", { name: /^November 2026/ })).toContainText("$1,883.35");
+  await expect(months.getByRole("row", { name: /^November 2026/ })).toContainText("$1,955.35");
   await expect(months.getByRole("row")).toHaveCount(7);
   expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
   expect(errors).toEqual([]);

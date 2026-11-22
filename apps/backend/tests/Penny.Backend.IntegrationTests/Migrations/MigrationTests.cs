@@ -15,9 +15,7 @@ public sealed class MigrationTests(ApiFixture fixture) : IntegrationTestBase(fix
     public async Task whenMigrationRepeated_ApplyAsync_ShouldApplyEveryMigrationOnce()
     {
         await Fixture.SqlAsync("DROP SCHEMA penny CASCADE", Ct);
-        await using var migrator = DatabaseSettings
-            .Create(Fixture.MigrationConnection)
-            .CreateDataSource();
+        await using var migrator = DatabaseSettings.Create(Fixture.Connection).CreateDataSource();
         await DatabaseMigrator.ApplyAsync(migrator, Ct);
         await DatabaseMigrator.ApplyAsync(migrator, Ct);
         await using var context = PennyDbContext.Create(Fixture.Admin);
@@ -41,7 +39,7 @@ public sealed class MigrationTests(ApiFixture fixture) : IntegrationTestBase(fix
         held.Parameters.AddWithValue("key", DatabaseSchema.MigrationLock);
         await held.ExecuteNonQueryAsync(Ct);
         var busy = await Should.ThrowAsync<InvalidOperationException>(() =>
-            DatabaseMigrator.ApplyAsync(Fixture.Admin, Ct)
+            DatabaseMigrator.ApplyAsync(Fixture.App, Ct)
         );
         busy.Message.ShouldContain("lock");
         await transaction.RollbackAsync(Ct);
@@ -59,7 +57,7 @@ public sealed class MigrationTests(ApiFixture fixture) : IntegrationTestBase(fix
             Ct
         );
         var error = await Should.ThrowAsync<InvalidOperationException>(() =>
-            DatabaseMigrator.ApplyAsync(Fixture.Admin, Ct)
+            DatabaseMigrator.ApplyAsync(Fixture.App, Ct)
         );
         error.Message.ShouldContain("newer");
         await using var check = Fixture.Admin.CreateCommand(
@@ -73,9 +71,7 @@ public sealed class MigrationTests(ApiFixture fixture) : IntegrationTestBase(fix
     {
         // The catalog of a database created by the squashed InitialSchema (ResetAsync).
         var fresh = await CatalogAsync();
-        await using var migrator = DatabaseSettings
-            .Create(Fixture.MigrationConnection)
-            .CreateDataSource();
+        await using var migrator = DatabaseSettings.Create(Fixture.Connection).CreateDataSource();
         await PreSquashDatabaseAsync(migrator);
         await SqlAsMigratorAsync(
             migrator,
@@ -125,9 +121,7 @@ public sealed class MigrationTests(ApiFixture fixture) : IntegrationTestBase(fix
     [Fact]
     public async Task whenHistoryOnlyPartlyBeforeTheSquash_ApplyAsync_ShouldRejectWithoutChangingIt()
     {
-        await using var migrator = DatabaseSettings
-            .Create(Fixture.MigrationConnection)
-            .CreateDataSource();
+        await using var migrator = DatabaseSettings.Create(Fixture.Connection).CreateDataSource();
         await PreSquashDatabaseAsync(migrator);
         await SqlAsMigratorAsync(
             migrator,
@@ -216,7 +210,7 @@ public sealed class MigrationTests(ApiFixture fixture) : IntegrationTestBase(fix
             Ct
         );
         await Should.ThrowAsync<PostgresException>(() =>
-            DatabaseMigrator.ApplyAsync(Fixture.Admin, Ct)
+            DatabaseMigrator.ApplyAsync(Fixture.App, Ct)
         );
         await using var context = PennyDbContext.Create(Fixture.Admin);
         (await context.Database.GetAppliedMigrationsAsync(Ct)).ShouldBeEmpty();

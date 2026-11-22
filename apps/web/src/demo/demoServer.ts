@@ -73,6 +73,56 @@ export function sampleSchedules(today = new Date()) {
   return [rule("demo-rule-1", "Design retainer", "income", 40000, "freelance"), rule("demo-rule-2", "Phone plan", "expense", 4500, "other")];
 }
 
+/** The demo household (MAZ-283): made-up people and amounts, so Together lists one, as `web-demo` draws. */
+export const DEMO_HOUSEHOLD_ID = "demo-household";
+const DEMO_ME = "demo-user";
+const DEMO_HOUSEMATE = "demo-housemate";
+
+/**
+ * The household, its two members and this month's two shared expenses, split equally: you paid
+ * for cleaning supplies, your housemate paid the internet. Read-only: writes answer 404 like any other
+ * route the demo doesn't have.
+ */
+export function sampleHousehold(today = new Date()) {
+  const month = dateKey(today).slice(0, 7);
+  const on = (offset: number) => dateKey(new Date(today.getFullYear(), today.getMonth(), Math.max(1, today.getDate() - offset)));
+  const created = new Date(today.getFullYear(), today.getMonth() - 3, 1).getTime();
+  const household = { id: DEMO_HOUSEHOLD_ID, name: "Apartment", currency: "CAD" as const, creatorId: DEMO_ME, createdAt: created, memberCount: 2 };
+  const members = [
+    { userId: DEMO_ME, email: DEMO_EMAIL, joinedAt: created },
+    { userId: DEMO_HOUSEMATE, email: "housemate@penny.invalid", joinedAt: created },
+  ];
+  const expense = (id: string, title: string, totalCents: number, payerUserId: string, category: { name: string; icon: string; color: string }, date: string) => ({
+    id,
+    householdId: DEMO_HOUSEHOLD_ID,
+    title,
+    totalCents,
+    payerUserId,
+    splitMode: "equal" as const,
+    category,
+    note: "",
+    date,
+    splits: [
+      { userId: DEMO_ME, amountCents: totalCents / 2 },
+      { userId: DEMO_HOUSEMATE, amountCents: totalCents / 2 },
+    ],
+    revision: 0,
+    createdBy: payerUserId,
+    createdAt: created,
+    updatedBy: payerUserId,
+    updatedAt: created,
+    payments: [],
+    paymentsClosed: false,
+  });
+  const expenses = [
+    expense("demo-shared-1", "Cleaning supplies", 8400, DEMO_ME, { name: "Household", icon: "bag-handle-outline", color: "#9D83BA" }, on(2)),
+    expense("demo-shared-2", "Internet", 6000, DEMO_HOUSEMATE, { name: "Utilities", icon: "wifi-outline", color: "#678DB1" }, on(4)),
+  ];
+  // You paid 84.00 of supplies and owe 30.00 of the internet: your housemate owes you 12.00 this month.
+  const mine = expenses.reduce((sum, item) => sum + (item.payerUserId === DEMO_ME ? item.totalCents : 0) - item.totalCents / 2, 0);
+  return { month, household, members, expenses, balance: mine };
+}
+
 /**
  * An in-memory stand-in for the parts of the API the web app uses, for the temporary demo. It
  * keeps the API's rules that matter to the UI (revision conflicts, cursor paging) and answers
@@ -110,6 +160,61 @@ export function createDemoServer(today = new Date()): Transport {
     return { version: 1, items, totalCount: matches.length, nextCursor: next };
   }
 
+  // The sample household (MAZ-283): the list, the projection of your shares, the detail, the month's
+  // recap and the expenses. Anything else under /api/households answers 404.
+  const home = sampleHousehold(today);
+  function households(path: string): Response | null {
+    const [route = "", query = ""] = path.split("?");
+    const params = new URLSearchParams(query);
+    const inPeriod = (date: string) => (params.get("month") ? date.startsWith(`${params.get("month") ?? ""}-`) : params.get("year") ? date.startsWith(`${params.get("year") ?? ""}-`) : true);
+    if (route === "/api/households") return json({ households: [home.household] });
+    if (route === "/api/households/projection") {
+      const transactions = home.expenses
+        .filter((item) => inPeriod(item.date))
+        .map((item) => ({
+          id: item.id,
+          householdId: item.householdId,
+          householdName: home.household.name,
+          householdCurrency: home.household.currency,
+          title: item.title,
+          date: item.date,
+          totalCents: item.totalCents,
+          shareCents: item.totalCents / 2,
+          payerUserId: item.payerUserId,
+          category: item.category,
+          note: item.note,
+        }));
+      return json({ transactions, scheduled: [] });
+    }
+    const base = `/api/households/${DEMO_HOUSEHOLD_ID}`;
+    if (route === base) return json({ household: home.household, members: home.members });
+    if (route === `${base}/expenses`) return json({ expenses: home.expenses });
+    if (route.startsWith(`${base}/expenses/`)) {
+      const found = home.expenses.find((item) => route === `${base}/expenses/${item.id}`);
+      return found ? json({ expense: found }) : null;
+    }
+    if (route === `${base}/recurring`) return json({ rules: [] });
+    if (route === `${base}/audit`) return json({ events: [] });
+    const month = /^\/months\/(\d{4}-\d{2})$/.exec(route.slice(base.length))?.[1];
+    if (month) {
+      const current = month === home.month;
+      const balance = current ? home.balance : 0;
+      return json({
+        month,
+        expenses: current ? home.expenses : [],
+        reimbursements: [],
+        balances: [
+          { userId: DEMO_ME, balanceCents: balance },
+          { userId: DEMO_HOUSEMATE, balanceCents: -balance },
+        ],
+        suggestions: balance > 0 ? [{ fromUserId: DEMO_HOUSEMATE, toUserId: DEMO_ME, amountCents: balance }] : [],
+        overdue: false,
+        overdueMonths: [],
+      });
+    }
+    return null;
+  }
+
   // Receipts uploaded in the demo (MAZ-94): kept in this tab's memory only, like everything else.
   const receipts = new Map<string, { name: string; mime: string; bytes: Uint8Array<ArrayBuffer> }>();
   async function receipt(path: string, method: string, body: unknown): Promise<Response | null> {
@@ -129,6 +234,9 @@ export function createDemoServer(today = new Date()): Transport {
     if (signal?.aborted) throw new DOMException("The request was aborted.", "AbortError");
     const stored = await receipt(path, method, body);
     if (stored) return stored;
+
+    const shared = method === "GET" ? households(path) : null;
+    if (shared) return shared;
 
     const route = `${method} ${path}`;
     switch (route) {

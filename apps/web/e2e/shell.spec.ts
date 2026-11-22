@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "./test";
 import { openSettings } from "./shell";
+import { enterDemo, startDemo } from "./demo";
 
 // The redesigned shell in a real browser (MAZ-85): layouts at the breakpoints, no horizontal
 // scrolling at 320px, 200% zoom or doubled text, long names, themes, reduced motion and focus.
@@ -74,9 +75,12 @@ test.describe("layouts", () => {
     // Rail: the label is visually hidden but still names the link.
     const railWidth = await activity.evaluate((link) => link.getBoundingClientRect().width);
     expect(railWidth).toBeLessThan(60);
-    await expect(page.getByRole("searchbox", { name: "Search entries" })).toBeVisible();
+    // web-tablet: search is an icon button there (it opens Activity's search); the field comes back from 1100px.
+    await expect(page.getByRole("button", { name: "Search entries" })).toBeVisible();
+    await expect(page.getByRole("searchbox", { name: "Search entries" })).toBeHidden();
 
     await page.setViewportSize({ width: 1300, height: 800 });
+    await expect(page.getByRole("searchbox", { name: "Search entries" })).toBeVisible();
     await expect(page.getByText("Together")).toBeVisible();
     expect(await activity.evaluate((link) => link.getBoundingClientRect().width)).toBeGreaterThan(150);
   });
@@ -235,4 +239,18 @@ test("the demo stays in the tab: no private API calls, and a reload ends it", as
   await page.reload();
   await expect(page.getByRole("heading", { level: 1, name: "Welcome back" })).toBeVisible();
   expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
+});
+
+test("the demo lists its sample household in Together and opens it read-only (MAZ-283)", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the sidebar's Together section is a desktop and tablet layout");
+  await startDemo(page);
+  await enterDemo(page);
+  const together = page.getByRole("navigation", { name: "Main" });
+  // You paid 84.00 of cleaning supplies and owe 30.00 of the internet: you're owed 12.00 this month.
+  await expect(together.getByRole("link", { name: /^Apartment/ })).toContainText("$12");
+  await expect(together.getByRole("link", { name: "All households" })).toBeVisible();
+  await together.getByRole("link", { name: /^Apartment/ }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Apartment" })).toBeVisible();
+  await expect(page.getByRole("main")).toContainText("Cleaning supplies");
+  await expect(page.getByRole("main")).toContainText("Internet");
 });

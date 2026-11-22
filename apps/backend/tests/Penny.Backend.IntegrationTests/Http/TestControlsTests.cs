@@ -28,7 +28,7 @@ public sealed class TestControlsTests(ApiFixture fixture) : IntegrationTestBase(
         foreach (var (key, value) in extra ?? [])
             settings[key] = value;
         // The product services use the controllable clock, not the shared TestClock.
-        var factory = new TestApiFactory(Fixture.RuntimeConnection, settings, services =>
+        var factory = new TestApiFactory(Fixture.Connection, settings, services =>
             services.AddSingleton<TimeProvider>(provider =>
                 provider.GetRequiredService<ControllableClock>()
             )

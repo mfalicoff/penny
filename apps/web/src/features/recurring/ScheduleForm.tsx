@@ -1,10 +1,14 @@
 import { useId, useMemo, useRef, useState, type SyntheticEvent } from "react";
 import { saveSchedule } from "@domain/commands.ts";
 import { dateKey, parseDate, type Frequency, type Kind, type Ledger, type Recurring } from "@domain/ledger.ts";
-import { Button, ChoiceGroup } from "../../design/controls";
-import { Dialog } from "../../design/ModalDialog";
+import { Button, ChoiceGroup, Kbd } from "../../design/controls";
+import { tileStyle } from "../../design/categoryTint";
+import { Icon } from "../../design/Icon";
+import { AmountHero, DateRowInput, DetailList, DetailRow, EntryDialog, isMac } from "../entries/EntryParts";
+import { categoryIcon } from "../entries/model";
 import { formatCents } from "../../design/Money";
 import { Banner, SaveErrorBanner, useToast } from "../../design/states";
+import { TABLET, useMediaQuery } from "../../app/useMediaQuery";
 import {
   addSchedule,
   checkDraft,
@@ -13,14 +17,12 @@ import {
   draftFromRule,
   editedRule,
   emptyDraft,
-  LAST_DATE,
   MAX_NOTE,
   MAX_TITLE,
   newRule,
   ordinal,
   resumeDate,
   shortDay,
-  upcomingDates,
   type DraftErrors,
   type DraftField,
   type ScheduleDraft,
@@ -49,6 +51,7 @@ interface Props {
  */
 export function ScheduleFormDialog({ ledger, original: opened, onClose, onSaved = onClose }: Props) {
   const toast = useToast();
+  const layout = useMediaQuery(TABLET) ? "desktop" : "phone";
   const today = dateKey();
   const [original, setOriginal] = useState(opened);
   const [draft, setDraft] = useState<ScheduleDraft>(() => (opened ? draftFromRule(opened) : emptyDraft(ledger, today)));
@@ -114,202 +117,241 @@ export function ScheduleFormDialog({ ledger, original: opened, onClose, onSaved 
     { value: "investment", label: "Investment" },
   ];
 
+  const notices = (
+    <>
+      {removedElsewhere ? (
+        <Banner tone="error" title="This schedule was removed on another device">
+          Nothing was saved. Close this form; entries it already recorded stay in your activity.
+        </Banner>
+      ) : null}
+      {changedElsewhere ? (
+        <Banner
+          tone="error"
+          title="This schedule changed on another device"
+          action={
+            <span className="shared-actions">
+              <Button
+                onClick={() => {
+                  setOriginal(live);
+                  clearError();
+                }}
+              >
+                Keep my changes
+              </Button>
+              <Button
+                variant="quiet"
+                onClick={() => {
+                  setOriginal(live);
+                  setDraft(draftFromRule(live));
+                  setErrors({});
+                  clearError();
+                }}
+              >
+                Use the latest
+              </Button>
+            </span>
+          }
+        >
+          Nothing was saved and your changes are still here. Latest: {live.title}, {formatCents(live.share, ledger.currency)}, {live.active ? `next ${shortDay(live.nextDate)}` : "paused"}.
+        </Banner>
+      ) : null}
+      {error && !changedElsewhere && !removedElsewhere ? (
+        <SaveErrorBanner
+          message={error}
+          onRetry={() => {
+            void submit();
+          }}
+          retrying={saving}
+        />
+      ) : null}
+    </>
+  );
+  const hasNotices = removedElsewhere || changedElsewhere || Boolean(error);
+  const category = categories.find((item) => item.id === draft.categoryId);
+
+  // The card `web-schedule-form`, after `web-add-entry`: Type, the amount, Name and Repeats on the left;
+  // the dates, category, account, share, note and what saving will do on the right.
+  const main = (
+    <>
+      <ChoiceGroup<Kind>
+        legend="Type"
+        name={id("kind")}
+        value={draft.kind}
+        options={kindOptions}
+        onChange={(kind) => {
+          setDraft((previous) => ({
+            ...previous,
+            kind,
+            categoryId: ledger.categories.some((item) => item.id === previous.categoryId && item.kind === kind)
+              ? previous.categoryId
+              : (ledger.categories.find((item) => item.kind === kind)?.id ?? ""),
+            split: kind === "expense" ? previous.split : "full",
+          }));
+        }}
+      />
+      <div className="schedule-form__field">
+        <span className="entry-label" aria-hidden="true">
+          Amount ({ledger.currency})
+        </span>
+        <AmountHero id={id("amount")} inputRef={amountRef} value={draft.amount} onChange={(value) => { set("amount", value); }} currency={ledger.currency} currencyPill={false} kind={draft.kind} invalid={describe("amount")} error={errorText("amount")} />
+      </div>
+      <div className="schedule-form__field entry-title">
+        <label htmlFor={id("title")} className="entry-label">
+          Name
+        </label>
+        <input maxLength={MAX_TITLE} autoComplete="off" placeholder={draft.kind === "income" ? "Payday" : draft.kind === "investment" ? "TFSA contribution" : "Internet"} value={draft.title} onChange={(event) => { set("title", event.currentTarget.value); }} {...describe("title")} />
+        {errorText("title")}
+      </div>
+      <ChoiceGroup<Frequency>
+        legend="Repeats"
+        name={id("frequency")}
+        value={draft.frequency}
+        options={[
+          { value: "weekly", label: "Weekly" },
+          { value: "monthly", label: "Monthly" },
+          { value: "yearly", label: "Yearly" },
+        ]}
+        onChange={(frequency) => {
+          set("frequency", frequency);
+        }}
+      />
+    </>
+  );
+
+  const details = (
+    <>
+      <DetailList>
+        <DetailRow icon="calendar" label={original ? "Next date" : "First date"} htmlFor={id("date")} chevron="down">
+          <DateRowInput id={id("date")} value={draft.date} onChange={(value) => { set("date", value); }} today={today} long text={fullDay(draft.date)} invalid={describe("date")} />
+        </DetailRow>
+        <DetailRow icon="pricetag" label="Category" htmlFor={id("categoryId")} chevron="down">
+          {category ? (
+            <span className="schedule-form__dot" style={tileStyle({ id: category.id, color: category.color, entryKind: draft.kind })} aria-hidden="true">
+              <Icon name={categoryIcon(category.icon)} size={11} weight={56} />
+            </span>
+          ) : null}
+          <select className="entry-row__select" value={draft.categoryId} onChange={(event) => { set("categoryId", event.currentTarget.value); }} {...describe("categoryId")}>
+            {category ? null : <option value="">Choose a category</option>}
+            {categories.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.name}
+              </option>
+            ))}
+          </select>
+        </DetailRow>
+        <DetailRow icon="wallet" label="Account" htmlFor={id("accountId")} chevron="down">
+          <select className="entry-row__select" value={draft.accountId} onChange={(event) => { set("accountId", event.currentTarget.value); }} {...describe("accountId")}>
+            <option value="">No account</option>
+            {draft.accountId && !accounts.some((account) => account.id === draft.accountId) ? <option value={draft.accountId}>Removed account</option> : null}
+            {accounts.map((account) => (
+              <option key={account.id} value={account.id}>
+                {account.name}
+              </option>
+            ))}
+          </select>
+        </DetailRow>
+        {draft.kind === "expense" ? (
+          <DetailRow icon="people" label="Your share" htmlFor={id("split")} chevron="down">
+            <select id={id("split")} className="entry-row__select" value={draft.split} onChange={(event) => { set("split", event.currentTarget.value as SplitMode); }}>
+              <option value="full">All of it</option>
+              <option value="equal">Split equally</option>
+              <option value="amount">An amount</option>
+              <option value="percent">A percentage</option>
+            </select>
+          </DetailRow>
+        ) : null}
+        {draft.kind === "expense" && draft.split !== "full" ? (
+          <DetailRow icon="options" label={draft.split === "equal" ? "Number of people" : draft.split === "percent" ? "Your percentage" : `Your amount (${ledger.currency})`} htmlFor={id("share")}>
+            <input className="entry-row__input" inputMode={draft.split === "equal" ? "numeric" : "decimal"} autoComplete="off" value={draft.shareInput} onChange={(event) => { set("shareInput", event.currentTarget.value); }} {...describe("share")} />
+          </DetailRow>
+        ) : null}
+      </DetailList>
+      {errorText("date")}
+      {errorText("categoryId")}
+      {errorText("accountId")}
+      {errorText("share")}
+      <section className="entry-section schedule-form__note">
+        <label htmlFor={id("note")} className="entry-label">
+          Note
+        </label>
+        <textarea className="entry-note" maxLength={MAX_NOTE} placeholder="Note" rows={1} value={draft.note} onChange={(event) => { set("note", event.currentTarget.value); }} {...describe("note")} />
+        {errorText("note")}
+      </section>
+      <p className="schedule-preview" role="status" aria-live="polite">
+        <Icon name="repeat" size={16} />
+        <span>{preview}</span>
+      </p>
+    </>
+  );
+
+  const mac = isMac();
   return (
-    <Dialog
+    <EntryDialog
+      layout={layout}
+      className="schedule-dialog"
       title={title}
-      description={original ? "Changes apply to future dates. Entries already recorded keep their details." : "Penny records each entry on its date, in this browser's calendar."}
+      subtitle={original ? "Changes apply to future dates. Entries already recorded keep their details." : "Penny records each entry on its date, in this browser's calendar."}
       onClose={onClose}
       initialFocus={amountRef}
-      wide
-    >
-      <form className="form" onSubmit={onSubmit} noValidate aria-label={title}>
-        {removedElsewhere ? (
-          <Banner tone="error" title="This schedule was removed on another device">
-            Nothing was saved. Close this form; entries it already recorded stay in your activity.
-          </Banner>
-        ) : null}
-        {changedElsewhere ? (
-          <Banner
-            tone="error"
-            title="This schedule changed on another device"
-            action={
-              <span className="shared-actions">
-                <Button
-                  onClick={() => {
-                    setOriginal(live);
-                    clearError();
-                  }}
-                >
-                  Keep my changes
-                </Button>
-                <Button
-                  variant="quiet"
-                  onClick={() => {
-                    setOriginal(live);
-                    setDraft(draftFromRule(live));
-                    setErrors({});
-                    clearError();
-                  }}
-                >
-                  Use the latest
-                </Button>
-              </span>
-            }
-          >
-            Nothing was saved and your changes are still here. Latest: {live.title}, {formatCents(live.share, ledger.currency)}, {live.active ? `next ${shortDay(live.nextDate)}` : "paused"}.
-          </Banner>
-        ) : null}
-        {error && !changedElsewhere && !removedElsewhere ? (
-          <SaveErrorBanner
-            message={error}
-            onRetry={() => {
-              void submit();
-            }}
-            retrying={saving}
-          />
-        ) : null}
-
-        <ChoiceGroup<Kind>
-          legend="Type"
-          name={id("kind")}
-          value={draft.kind}
-          options={kindOptions}
-          onChange={(kind) => {
-            setDraft((previous) => ({
-              ...previous,
-              kind,
-              categoryId: ledger.categories.some((category) => category.id === previous.categoryId && category.kind === kind)
-                ? previous.categoryId
-                : (ledger.categories.find((category) => category.kind === kind)?.id ?? ""),
-              split: kind === "expense" ? previous.split : "full",
-            }));
-          }}
-        />
-
-        <div className="form-grid">
-          <div className="form-field form-amount">
-            <label htmlFor={id("amount")}>Amount ({ledger.currency})</label>
-            <input ref={amountRef} inputMode="decimal" autoComplete="off" placeholder="0.00" value={draft.amount} onChange={(event) => { set("amount", event.currentTarget.value); }} {...describe("amount")} />
-            {errorText("amount")}
-          </div>
-          <div className="form-field">
-            <label htmlFor={id("title")}>Name</label>
-            <input maxLength={MAX_TITLE} autoComplete="off" placeholder={draft.kind === "income" ? "Payday" : draft.kind === "investment" ? "TFSA contribution" : "Internet"} value={draft.title} onChange={(event) => { set("title", event.currentTarget.value); }} {...describe("title")} />
-            {errorText("title")}
-          </div>
-        </div>
-
-        <ChoiceGroup<Frequency>
-          legend="Repeats"
-          name={id("frequency")}
-          value={draft.frequency}
-          options={[
-            { value: "weekly", label: "Weekly" },
-            { value: "monthly", label: "Monthly" },
-            { value: "yearly", label: "Yearly" },
-          ]}
-          onChange={(frequency) => {
-            set("frequency", frequency);
-          }}
-        />
-
-        <div className="form-grid">
-          <div className="form-field">
-            <label htmlFor={id("date")}>{original ? "Next date" : "First date"}</label>
-            <input type="date" min={original ? today : "2000-01-01"} max={LAST_DATE} value={draft.date} onChange={(event) => { set("date", event.currentTarget.value); }} {...describe("date")} />
-            {errorText("date")}
-          </div>
-          <div className="form-field">
-            <label htmlFor={id("categoryId")}>Category</label>
-            <select value={draft.categoryId} onChange={(event) => { set("categoryId", event.currentTarget.value); }} {...describe("categoryId")}>
-              {categories.some((category) => category.id === draft.categoryId) ? null : <option value="">Choose a category</option>}
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-            {errorText("categoryId")}
-          </div>
-          <div className="form-field">
-            <label htmlFor={id("accountId")}>Account</label>
-            <select value={draft.accountId} onChange={(event) => { set("accountId", event.currentTarget.value); }} {...describe("accountId")}>
-              <option value="">No account</option>
-              {draft.accountId && !accounts.some((account) => account.id === draft.accountId) ? <option value={draft.accountId}>Removed account</option> : null}
-              {accounts.map((account) => (
-                <option key={account.id} value={account.id}>
-                  {account.name}
-                </option>
-              ))}
-            </select>
-            {errorText("accountId")}
-          </div>
-        </div>
-
-        {draft.kind === "expense" ? (
-          <div className="form-grid">
-            <div className="form-field">
-              <label htmlFor={id("split")}>Your share</label>
-              <select id={id("split")} value={draft.split} onChange={(event) => { set("split", event.currentTarget.value as SplitMode); }}>
-                <option value="full">All of it</option>
-                <option value="equal">Split equally</option>
-                <option value="amount">An amount</option>
-                <option value="percent">A percentage</option>
-              </select>
-            </div>
-            {draft.split !== "full" ? (
-              <div className="form-field">
-                <label htmlFor={id("share")}>{draft.split === "equal" ? "Number of people" : draft.split === "percent" ? "Your percentage" : `Your amount (${ledger.currency})`}</label>
-                <input inputMode={draft.split === "equal" ? "numeric" : "decimal"} autoComplete="off" value={draft.shareInput} onChange={(event) => { set("shareInput", event.currentTarget.value); }} {...describe("share")} />
-                {errorText("share")}
-              </div>
-            ) : null}
-          </div>
-        ) : null}
-
-        <div className="form-field">
-          <label htmlFor={id("note")}>Note</label>
-          <textarea maxLength={MAX_NOTE} value={draft.note} onChange={(event) => { set("note", event.currentTarget.value); }} {...describe("note")} />
-          {errorText("note")}
-        </div>
-
-        <p className="schedule-preview" role="status" aria-live="polite">
-          {preview}
-        </p>
-
-        <div className="form-actions">
-          <Button variant="quiet" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="submit" variant="primary" busy={saving || changedElsewhere || removedElsewhere}>
-            {saving ? "Saving…" : original ? "Save changes" : "Add schedule"}
-          </Button>
-        </div>
-      </form>
-    </Dialog>
+      form={{ id: id("form"), onSubmit, "aria-label": title }}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+          event.preventDefault();
+          if (!saving) void submit();
+        }
+      }}
+      {...(hasNotices ? { notices } : {})}
+      hint={
+        <span className="pk-dialog__hint">
+          <Kbd>{mac ? "⌘↵" : "Ctrl ↵"}</Kbd> save · <Kbd>Esc</Kbd> cancel
+        </span>
+      }
+      secondary={
+        <Button variant="secondary" onClick={onClose}>
+          Cancel
+        </Button>
+      }
+      primary={
+        <Button type="submit" variant="primary" busy={saving || changedElsewhere || removedElsewhere} aria-keyshortcuts="Meta+Enter Control+Enter">
+          {saving ? "Saving…" : original ? "Save changes" : "Add schedule"}
+        </Button>
+      }
+      main={main}
+      details={details}
+    />
   );
 }
 
-/** What saving will do with the dates: shown live under the form so the anchor-day and catch-up rules are visible. */
+/** "Nov 18, 2026": the First date row (card `web-schedule-form`). */
+function fullDay(date: string): string {
+  return /^\d{4}-\d{2}-\d{2}$/.test(date) ? parseDate(date).toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" }) : "Choose a date";
+}
+
+/**
+ * What saving will do with the dates, shown live under the form so the anchor-day and catch-up
+ * rules are visible: "First on Nov 18, then monthly on the 18th." (card `web-schedule-form`).
+ */
 function describePreview(draft: ScheduleDraft, ledger: Ledger, today: string, original: Recurring | undefined): string {
   const { errors } = checkDraft({ ...draft, title: draft.title || "x", amount: draft.amount || "1" }, ledger, today, original);
   if (errors.date) return "Choose a date to see the next dates.";
   const anchorDay = original && draft.date === original.nextDate ? original.anchorDay : parseDate(draft.date).getDate();
   const rule = { frequency: draft.frequency, nextDate: draft.date, anchorDay };
   const short = anchorDay > 28 && draft.frequency !== "weekly" ? ` In months without a ${ordinal(anchorDay)}, it uses the last day.` : "";
-  if (original && !original.active) return `Paused. If you resume it today, it continues on ${dayLabel(resumeDate(rule, today), true)}.${short}`;
+  const cadence = cadencePhrase(draft.frequency, draft.date, anchorDay);
+  const day = (date: string) => (date.slice(0, 4) === today.slice(0, 4) ? shortDay(date) : `${shortDay(date)}, ${date.slice(0, 4)}`);
+  if (original && !original.active) return `Paused. If you resume it today, it continues on ${day(resumeDate(rule, today))}, then ${cadence}.${short}`;
   const due = datesDueBy(draft.date, draft.frequency, anchorDay, today);
   if (due.length) {
-    const after = upcomingDates({ ...rule, nextDate: nextAfter(due, rule) }, 1)[0];
     const first = due[0] ?? draft.date;
-    const range = due.length === 1 ? dayLabel(first, true) : `${String(due.length)} entries, ${dayLabel(first, true)} through ${dayLabel(due[due.length - 1] ?? first, true)}`;
-    return `Saving records ${range} now.${after ? ` Then next on ${dayLabel(after, true)}.` : ""}${short}`;
+    const range = due.length === 1 ? day(first) : `${String(due.length)} entries, ${day(first)} through ${day(due[due.length - 1] ?? first)}`;
+    return `Saving records ${range} now, then ${cadence}.${short}`;
   }
-  const dates = upcomingDates(rule, 3);
-  return `${original ? "Next" : "First"} on ${dates.map((date, index) => dayLabel(date, date.slice(0, 4) !== (dates[index - 1] ?? "").slice(0, 4))).join(", then ")}.${short}`;
+  return `${original ? "Next" : "First"} on ${day(draft.date)}, then ${cadence}.${short}`;
 }
 
-function nextAfter(due: string[], rule: { frequency: Frequency; nextDate: string; anchorDay: number }): string {
-  const last = due[due.length - 1] ?? rule.nextDate;
-  return upcomingDates({ ...rule, nextDate: last }, 2)[1] ?? "2101-01-01";
+/** "monthly on the 18th", "weekly on Wednesdays", "yearly on Nov 18". */
+function cadencePhrase(frequency: Frequency, date: string, anchorDay: number): string {
+  if (frequency === "weekly") return `weekly on ${parseDate(date).toLocaleDateString("en-CA", { weekday: "long" })}s`;
+  if (frequency === "monthly") return `monthly on the ${ordinal(anchorDay)}`;
+  return `yearly on ${shortDay(date)}`;
 }

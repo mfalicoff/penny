@@ -52,7 +52,7 @@ public sealed class SearchPolicyTests(ApiFixture fixture) : SearchTestBase(fixtu
     public async Task whenSessionSearchesTooOften_SearchRateLimit_ShouldReturnTooManyRequests()
     {
         await using var factory = new TestApiFactory(
-            Fixture.RuntimeConnection,
+            Fixture.Connection,
             new Dictionary<string, string> { ["Search:RateLimitPermits"] = "30" }
         );
         using var client = CreateClient(factory);
@@ -81,7 +81,7 @@ public sealed class SearchPolicyTests(ApiFixture fixture) : SearchTestBase(fixtu
     public async Task whenStatementTimeoutFires_Search_ShouldReturnServiceUnavailableWithRetryAfter()
     {
         await using var factory = new TestApiFactory(
-            Fixture.RuntimeConnection,
+            Fixture.Connection,
             new Dictionary<string, string>
             {
                 ["Backend:RequestTimeoutSeconds"] = "20",
@@ -124,7 +124,7 @@ public sealed class SearchPolicyTests(ApiFixture fixture) : SearchTestBase(fixtu
         var (token, _) = await AccountAsync("worker@example.test");
         await SeedLedgerAsync(token);
         await using var factory = new TestApiFactory(
-            Fixture.RuntimeConnection,
+            Fixture.Connection,
             new Dictionary<string, string> { ["Search:EmbeddingWorker"] = "true" }
         );
         factory.StartServer();
@@ -154,7 +154,7 @@ public sealed class SearchPolicyTests(ApiFixture fixture) : SearchTestBase(fixtu
     {
         var logs = new CapturingLoggerProvider();
         await using var factory = new TestApiFactory(
-            Fixture.RuntimeConnection,
+            Fixture.Connection,
             new Dictionary<string, string>
             {
                 ["Logging:LogLevel:Default"] = "Trace",

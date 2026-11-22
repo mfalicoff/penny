@@ -75,6 +75,8 @@ function stubWidth(width: number) {
     "matchMedia",
     vi.fn((query: string) => {
       const min = /min-width:\s*(\d+)px/.exec(query);
+      // A mouse and keyboard: the touch-tablet query (`ipad-trip`) never matches.
+      if (query.includes("pointer: coarse")) return { matches: false, media: query, addEventListener: vi.fn(), removeEventListener: vi.fn() };
       return { matches: min ? width >= Number(min[1]) : false, media: query, addEventListener: vi.fn(), removeEventListener: vi.fn() };
     }),
   );
@@ -272,6 +274,31 @@ describe("shared trips", { timeout: 20_000 }, () => {
     await screen.findByRole("heading", { level: 1, name: "Trips" });
     expect(screen.getAllByRole("heading", { level: 2, name: "Lisbon" })).toHaveLength(1);
     expect(screen.queryByText("Personal")).not.toBeInTheDocument();
+  });
+
+  it("lays out a shared trip as the web-trip card on the desktop", async () => {
+    stubWidth(1440);
+    seedPersonal([{ id: "train", date: "2026-09-28", share: 2400 }]);
+    serve();
+    const user = userEvent.setup();
+    renderApp("/trips/lis");
+    await user.click(await screen.findByRole("button", { name: "Share trip" }));
+    await user.click(within(await dialog("Share Lisbon?")).getByRole("button", { name: "Share trip" }));
+    await user.click(await screen.findByRole("link", { name: "Expenses" }));
+
+    // Back and a labelled Invite in the bar; the hero with the countdown, totals and People.
+    expect(within(screen.getByRole("banner")).getByRole("link", { name: "Back to Trips" })).toBeInTheDocument();
+    expect(within(screen.getByRole("banner")).getByRole("link", { name: "Invite" })).toHaveTextContent("Invite");
+    const hero = await screen.findByRole("region", { name: "Trip summary" });
+    expect(within(hero).getByText("Trip total")).toBeInTheDocument();
+    const people = within(hero).getByRole("region", { name: "People" });
+    expect(within(people).getByText("Paid $0.00")).toBeInTheDocument();
+    // Only you is its own table, with what it counts in; the category card has no note about balances.
+    const onlyYou = await screen.findByRole("region", { name: "Only you" });
+    expect(within(onlyYou).getByText("Paid train")).toBeInTheDocument();
+    expect(within(onlyYou).getByText("1 expense")).toBeInTheDocument();
+    expect(within(onlyYou).getByText("Only you see these. They count in your spending, not in the trip's total or anyone's balance.")).toBeInTheDocument();
+    expect(screen.queryByText(/Balances settle per month/)).not.toBeInTheDocument();
   });
 
   it("creates a shared trip from New trip, and a member who joins later isn't in earlier expenses", async () => {

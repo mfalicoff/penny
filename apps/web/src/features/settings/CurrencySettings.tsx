@@ -4,7 +4,8 @@ import { ApiError } from "../../api/client";
 import { changeCurrency, CURRENCIES, currencyLock, ledgerQuery, setLedgerSnapshot, type Currency } from "../../api/ledger";
 import { invalidateSearch } from "../../api/search";
 import { useAccountEmail } from "../../auth/account";
-import { Card, ChoiceGroup } from "../../design/controls";
+import { Card, ChoiceGroup, cx } from "../../design/controls";
+import { Icon } from "../../design/Icon";
 import { ErrorState, LoadingState, SaveErrorBanner, useToast } from "../../design/states";
 import { SectionTitle } from "./SectionTitle";
 
@@ -97,10 +98,19 @@ export function CurrencySettings() {
   return (
     <>
       <SectionTitle>Currency</SectionTitle>
-      <Card title="Currency">
+      <Card title="Currency" className={cx("currency-card", lock !== "open" && "currency-card--locked")}>
         {save.isError ? <SaveErrorBanner message={describeSaveError(save.error)} {...retry} /> : null}
         <ChoiceGroup<Currency>
-          legend="Ledger currency"
+          legend={
+            <>
+              Ledger currency
+              {lock !== "open" ? (
+                <span className="currency-card__lock">
+                  <Icon name="lock-closed" size={13} />
+                </span>
+              ) : null}
+            </>
+          }
           name="currency"
           appearance="list"
           value={save.isPending ? save.variables.currency : current}
@@ -115,8 +125,15 @@ export function CurrencySettings() {
             disabled: save.isPending || (lock !== "open" && code !== current),
           }))}
         />
-        <p id={noteId} className="setting-note">
-          {save.isPending ? <span role="status">Saving…</span> : null} {note} Shared households keep their own currency.
+        <p id={noteId} className="setting-note currency-card__note">
+          {lock !== "open" ? (
+            <span className="currency-card__note-icon">
+              <Icon name="lock-closed" size={16} />
+            </span>
+          ) : null}
+          <span>
+            {save.isPending ? <span role="status">Saving…</span> : null} {note} Shared households keep their own currency.
+          </span>
         </p>
       </Card>
     </>

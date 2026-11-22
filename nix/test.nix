@@ -1,5 +1,5 @@
 # End-to-end check of the NixOS module: `nix flake check` (or `nix build .#checks.x86_64-linux.nixos`).
-# Boots PostgreSQL, the migration, the API and nginx, then signs up and reads the session
+# Boots PostgreSQL, the API (it migrates on startup) and nginx, then signs up and reads the session
 # through the same origin a browser would use.
 { self, pkgs }:
 
@@ -49,7 +49,7 @@ pkgs.testers.runNixOSTest {
     )
 
     # Restarting re-runs nothing destructive and the API comes back ready.
-    machine.succeed("systemctl restart penny-migrate.service penny.service")
+    machine.succeed("systemctl restart penny.service")
     machine.wait_until_succeeds("curl -fsS http://localhost/api/ready | jq -e '.ok == true'", timeout=120)
 
     # Maintenance commands run with the service's configuration.

@@ -14,16 +14,4 @@
     <PackageReference Include="Microsoft.ML.Tokenizers" />
     <PackageReference Include="System.Numerics.Tensors" />
   </ItemGroup>
-  <ItemGroup>
-    <!-- MAZ-63: the migrate command's grant-runtime option runs the same script operators run by hand. -->
-    <EmbeddedResource
-      Include="../../development/grant-runtime.sql"
-      LogicalName="Penny.Backend.Persistence.grant-runtime.sql"
-    />
-    <!-- The migrate command's bootstrap option: roles, schema and extensions, so PostgreSQL needs no init script. -->
-    <EmbeddedResource
-      Include="../../development/bootstrap.sql"
-      LogicalName="Penny.Backend.Persistence.bootstrap.sql"
-    />
-  </ItemGroup>
 </Project>

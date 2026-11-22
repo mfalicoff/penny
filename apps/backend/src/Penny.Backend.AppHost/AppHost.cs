@@ -1,5 +1,5 @@
-// Local development orchestration (MAZ-138): PostgreSQL, the migration
-// step, the search model download, the .NET API, the Vite web app, emailed receipts
+// Local development orchestration (MAZ-138): PostgreSQL, the search model
+// download, the .NET API (it migrates on startup), the Vite web app, emailed receipts
 // (penny-render and the Cloudflare Email Worker under wrangler dev, MAZ-184) and a Grafana
 // stack (Alloy, Loki, Tempo, Prometheus, Grafana). Start it with
 // `bash apps/backend/dotnet.sh run --project src/Penny.Backend.AppHost`.
@@ -19,18 +19,6 @@ Directory.CreateDirectory(receiptRoot);
 
 // Secrets are generated on first run and kept in this project's user secrets, so the
 // persistent database volume keeps matching them. Never reset them while the volume exists.
-var migrationPassword = builder.AddParameter(
-    "postgres-migration-password",
-    new GenerateParameterDefault { MinLength = 32, Special = false },
-    secret: true,
-    persist: true
-);
-var runtimePassword = builder.AddParameter(
-    "postgres-runtime-password",
-    new GenerateParameterDefault { MinLength = 32, Special = false },
-    secret: true,
-    persist: true
-);
 var receiptMasterKey = builder.AddParameter(
     "receipt-master-key",
     new Base64KeyParameterDefault(32),
@@ -135,8 +123,8 @@ ObservabilityImages
     .WaitFor(prometheus);
 
 // --- PostgreSQL -----------------------------------------------------------------------------
-// Same image and role layout as deploy/compose.yaml: `migrate --bootstrap` creates the
-// restricted migration and runtime roles, the penny schema and the extensions as administrator.
+// Same image as deploy/compose.yaml. The API connects as the container's own user and
+// migrates on startup (the schema and the search extensions included).
 
 var postgresImage = PinnedImage.Parse(DatabaseSchema.Image);
 var postgres = postgresImage
@@ -149,13 +137,7 @@ var postgres = postgresImage
 var endpoint = postgres.Resource.PrimaryEndpoint;
 var host = endpoint.Property(EndpointProperty.Host);
 var port = endpoint.Property(EndpointProperty.Port);
-var runtimeConnection = ReferenceExpression.Create(
-    $"Host={host};Port={port};Database=penny;Username=penny_runtime;Password={runtimePassword};SSL Mode=Disable"
-);
-var migrationConnection = ReferenceExpression.Create(
-    $"Host={host};Port={port};Database=penny;Username=penny_migrator;Password={migrationPassword};SSL Mode=Disable"
-);
-var adminConnection = ReferenceExpression.Create(
+var connection = ReferenceExpression.Create(
     $"Host={host};Port={port};Database=penny;Username=postgres;Password={postgres.Resource.PasswordParameter};SSL Mode=Disable"
 );
 
@@ -195,22 +177,11 @@ var searchModel = builder
     )
     .WithIconName("ArrowDownload");
 
-var migrate = builder
-    .AddProject<Projects.Penny_Backend_Api>("migrate")
-    .WithArgs("migrate", "--bootstrap", "--grant-runtime")
-    .WithEnvironment("ConnectionStrings__Admin", adminConnection)
-    .WithEnvironment("ConnectionStrings__Migration", migrationConnection)
-    .WithEnvironment("ConnectionStrings__Postgres", runtimeConnection)
-    .WithEnvironment("DOTNET_ENVIRONMENT", "Development")
-    .WithoutAspireTelemetry()
-    .WaitFor(postgres)
-    .WithIconName("DatabaseArrowUp");
-
 var api = builder
     .AddProject<Projects.Penny_Backend_Api>("api")
     .WithHttpEndpoint(port: 5001, name: "http")
     .WithEnvironment("ASPNETCORE_ENVIRONMENT", "Development")
-    .WithEnvironment("ConnectionStrings__Postgres", runtimeConnection)
+    .WithEnvironment("ConnectionStrings__Postgres", connection)
     .WithEnvironment("Receipts__Root", receiptRoot)
     .WithEnvironment("Receipts__MasterKey", receiptMasterKey)
     .WithEnvironment("Search__ModelDirectory", modelDirectory)
@@ -234,7 +205,6 @@ var api = builder
     .WaitFor(postgres)
     .WaitFor(alloy)
     .WaitFor(renderer)
-    .WaitForCompletion(migrate)
     .WaitForCompletion(searchModel);
 
 // The Cloudflare Email Worker (apps/email-worker) under wrangler dev (workerd), pointed at the

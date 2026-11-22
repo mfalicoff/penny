@@ -136,7 +136,7 @@ The key, provider tokens, device tokens, payloads and response bodies never appe
 
 ## Monitoring
 
-Logs (`PushDeliveryWorker`, `ApnsTransport`) carry only counts, provider reason codes and exception types: per-pass accepted/retrying/failed/invalid counts, APNs configuration rejections, and per-message or per-pass failures. Useful read-only queries (runtime role):
+Logs (`PushDeliveryWorker`, `ApnsTransport`) carry only counts, provider reason codes and exception types: per-pass accepted/retrying/failed/invalid counts, APNs configuration rejections, and per-message or per-pass failures. Useful read-only queries (as the API's database login):
 
 ```sql
 -- Backlog and age of undelivered messages

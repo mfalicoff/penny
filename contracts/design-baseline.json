@@ -131,7 +131,7 @@
     },
     {
       "path": ".design-sync/NOTES.md",
-      "sha256": "f3f4dade063d185e40f65b1f72cb0200fd2acf20be41f670855266b267c2fec8"
+      "sha256": "f4605d37878a74d8253bff6f120188f97a60b20cb838c77a84c15c193bbaeb40"
     },
     {
       "path": "docs/design/penny-ios/compare.mjs",
@@ -2513,7 +2513,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/web/trips.html",
-      "sha256": "c8e57c3b57c583239d2ab3fb2cb6d89de874e5b0bf0d8c8371ffd9ba5428bb26",
+      "sha256": "86cff9c7c1fcab6be1e7392bf58bc79c13a95fc05b833344f49de39a66813819",
       "nativeIssue": "MAZ-76",
       "webIssue": "MAZ-93",
       "route": "/trips",
@@ -2654,7 +2654,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/web/trip.html",
-      "sha256": "0a207f1010dc65095e80821cda961fbca49335ba232be1048b1ffc193724218c",
+      "sha256": "df3ae8f6b22bb2ebcc876a4d0a097154f68c1e5e4ed8d9523b028778e09dac08",
       "nativeIssue": "MAZ-76",
       "webIssue": "MAZ-93",
       "route": "/trips",
@@ -2723,7 +2723,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/web/categories.html",
-      "sha256": "f909f940fb4161ac872bdee34bcd3a22267bbf2fb941a9cfe2620dcbcd013c32",
+      "sha256": "906a7ec27f5f705d6523dc69de6b3a4d123d76a460bc6edd67b3e65b548b6d9d",
       "nativeIssue": "MAZ-74",
       "webIssue": "MAZ-89",
       "route": "/categories",
@@ -2884,7 +2884,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/web/demo.html",
-      "sha256": "c5c6dbac3a3df1077bac9f3312114ebe3a362256784839976622bde89a4c211c",
+      "sha256": "55b960d4a97e767c4fefede1f681a9afa2ee7de2dd1170314453e1ad52b095e4",
       "nativeIssue": "MAZ-68",
       "webIssue": "MAZ-84",
       "route": "/",

@@ -1942,7 +1942,7 @@
     {
       "id": "web-categories",
       "source": "docs/design/penny-ios/web/categories.html",
-      "sourceSha256": "f909f940fb4161ac872bdee34bcd3a22267bbf2fb941a9cfe2620dcbcd013c32",
+      "sourceSha256": "906a7ec27f5f705d6523dc69de6b3a4d123d76a460bc6edd67b3e65b548b6d9d",
       "viewport": {
         "w": 1520,
         "h": 980
@@ -1951,12 +1951,12 @@
         {
           "appearance": "light",
           "file": "previews/web-categories.light.png",
-          "sha256": "5df3cb3bb31147a59191dc43aaeac35cde795ec3a4977da03f4c27673a86c696"
+          "sha256": "78a5061f991d5b2fae2705647168f6b9456d916acf4ce672f22f100ee80fbd92"
         },
         {
           "appearance": "dark",
           "file": "previews/web-categories.dark.png",
-          "sha256": "de0405ba50898d58e0243191dccee56fc6a0d5f19f9b0339fe2d3a54a9e8d1e8"
+          "sha256": "82a52049a0c0f04441687c895d7997ea90301112e99c778b894759d76d59619b"
         }
       ]
     },
@@ -1984,7 +1984,7 @@
     {
       "id": "web-demo",
       "source": "docs/design/penny-ios/web/demo.html",
-      "sourceSha256": "c5c6dbac3a3df1077bac9f3312114ebe3a362256784839976622bde89a4c211c",
+      "sourceSha256": "55b960d4a97e767c4fefede1f681a9afa2ee7de2dd1170314453e1ad52b095e4",
       "viewport": {
         "w": 1520,
         "h": 980
@@ -1993,12 +1993,12 @@
         {
           "appearance": "light",
           "file": "previews/web-demo.light.png",
-          "sha256": "f4ff3c37a385f7a8b16b77447821c7539c1062018297afcb90d90bc73aa0d149"
+          "sha256": "b28cf6fa49c444a54e68f9de22a52906cab5032479ccada0bb03fb70e61d2c62"
         },
         {
           "appearance": "dark",
           "file": "previews/web-demo.dark.png",
-          "sha256": "5763a571eea65a618a64bb24cd59db247f65b91f4359c9e0d19e99e0950d2e8c"
+          "sha256": "72b2c0ea87767d49d18843503347bdf4bf109a2be95996d98deee42a28837252"
         }
       ]
     },
@@ -2467,7 +2467,7 @@
     {
       "id": "web-trip",
       "source": "docs/design/penny-ios/web/trip.html",
-      "sourceSha256": "0a207f1010dc65095e80821cda961fbca49335ba232be1048b1ffc193724218c",
+      "sourceSha256": "df3ae8f6b22bb2ebcc876a4d0a097154f68c1e5e4ed8d9523b028778e09dac08",
       "viewport": {
         "w": 1520,
         "h": 980
@@ -2476,19 +2476,19 @@
         {
           "appearance": "light",
           "file": "previews/web-trip.light.png",
-          "sha256": "3526f2fc363414d166e06e2ec82094b1569bd97a5bd2495baba9b2998ad775a8"
+          "sha256": "15412d68f479cf3592437c256e3ab9202c1dfdc651e3e9ca07cc0f7e41fa7e0b"
         },
         {
           "appearance": "dark",
           "file": "previews/web-trip.dark.png",
-          "sha256": "37173b87dc85994c92f8daffef4d86d4c41d84e7abdbc14832faeeb58bf384a0"
+          "sha256": "179ea29358924155612724e8393edf46090238530fad8e3a85218ce9cabf4423"
         }
       ]
     },
     {
       "id": "web-trips",
       "source": "docs/design/penny-ios/web/trips.html",
-      "sourceSha256": "c8e57c3b57c583239d2ab3fb2cb6d89de874e5b0bf0d8c8371ffd9ba5428bb26",
+      "sourceSha256": "86cff9c7c1fcab6be1e7392bf58bc79c13a95fc05b833344f49de39a66813819",
       "viewport": {
         "w": 1520,
         "h": 980
@@ -2497,12 +2497,12 @@
         {
           "appearance": "light",
           "file": "previews/web-trips.light.png",
-          "sha256": "8851be7be1ecb31e0c32a8d034a20468a71dd006f84812598e5e0d57cf8bc6df"
+          "sha256": "58d9760d5a44b1c69c8862e7c9a34ab39b1794ceec24abaf2236fde274a0dbb9"
         },
         {
           "appearance": "dark",
           "file": "previews/web-trips.dark.png",
-          "sha256": "2b49896eaa5c164c2bd95d8b9c5d06d6f0e9dfc9727af7f0e0c20cf720964a3b"
+          "sha256": "7879d2bb0988d6989d491b82c9d9f6aa11d80a8bf650e96a2cb5f35ef30cbc2d"
         }
       ]
     }

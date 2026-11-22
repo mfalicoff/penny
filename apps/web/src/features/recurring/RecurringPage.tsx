@@ -6,7 +6,7 @@ import { useAccountEmail } from "../../auth/account";
 import { Badge, cx } from "../../design/controls";
 import { Icon } from "../../design/Icon";
 import { Money } from "../../design/Money";
-import { GroupToolbar, ToolButton } from "../households/GroupTools";
+import { ManageAdd } from "../organize/ManageAdd";
 import { GroupLink } from "../households/links";
 import { Banner, EmptyState, ErrorState, LoadingState } from "../../design/states";
 import { useLedgerEngine, useLedgerSync } from "../../offline/OfflineLedgerProvider";
@@ -78,18 +78,14 @@ export function RecurringPage() {
   const close = () => {
     setView(null);
   };
-  // The card's toolbar + (the navigation bar's tool slot, as on Trips).
   const create = readOnly ? null : (
-    <GroupToolbar>
-      <ToolButton
-        ref={newButton}
-        icon="add"
-        label="New schedule"
-        onClick={() => {
-          setView({ kind: "new" });
-        }}
-      />
-    </GroupToolbar>
+    <ManageAdd
+      ref={newButton}
+      label="New schedule"
+      onClick={() => {
+        setView({ kind: "new" });
+      }}
+    />
   );
 
   const items: (Item & { kind: Kind })[] = [
@@ -212,13 +208,17 @@ function ScheduleRow({ rule, ledger, waiting, onOpen }: { rule: Recurring; ledge
           <span className="inline-list__items">
             <Timing rule={rule} />
             {account ? (
-              <span>
+              <span className="schedule-row__inline-account">
                 <span className="visually-hidden"> · </span>
                 {account.name}
               </span>
             ) : null}
           </span>
         </span>
+      </span>
+      {/* From 768px the account is its own column before the amount (card `web-recurring`). */}
+      <span className="schedule-row__account" aria-hidden="true">
+        {account?.name}
       </span>
       <span className="schedule-row__end">
         <Money {...rowAmount(rule.kind, rule.share)} currency={ledger.currency} tone={TONE[rule.kind]} />
@@ -249,7 +249,10 @@ function SharedScheduleRow({ schedule }: { schedule: SharedSchedule }) {
         <span className="schedule-row__meta">
           <Timing rule={rule} />
         </span>
-        <span className="schedule-row__meta">{household.name}</span>
+        <span className="schedule-row__meta schedule-row__inline-account">{household.name}</span>
+      </span>
+      <span className="schedule-row__account" aria-hidden="true">
+        {household.name}
       </span>
       <span className="schedule-row__end">
         <Money {...rowAmount("expense", shareCents)} currency={household.currency} />

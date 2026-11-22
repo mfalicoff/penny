@@ -113,8 +113,8 @@ test("a shared personal trip keeps its earlier expense private, and a later memb
   // Flights are booked before Bea joins: split among the people on the trip then (Alex).
   await alex.page.getByRole("link", { name: "Expenses" }).click();
   await addTripExpense(alex.page, "Flights", "824.00", "2026-10-02");
-  // Phones list it under Only you; from 1100px it sits in the one Expenses panel, marked Only you.
-  await expect(alex.page.getByRole("list", { name: /^(Private expenses|Trip expenses)$/ }).getByRole("button", { name: /Airport train/ })).toBeVisible();
+  // Phones list it under Only you and the iPad in the one Expenses panel; the desktop has an Only you table (`web-trip`).
+  await expect(alex.page.getByRole("list", { name: /^(Private expenses|Trip expenses)$/ }).or(alex.page.getByRole("region", { name: "Only you" })).getByRole("button", { name: /Airport train/ })).toBeVisible();
 
   await bea.page.goto("/trips");
   await bea.page.getByRole("button", { name: "Join a trip" }).click();
@@ -123,8 +123,9 @@ test("a shared personal trip keeps its earlier expense private, and a later memb
   await join.getByRole("button", { name: "Join trip" }).click();
   await expect(bea.page.getByRole("heading", { level: 1, name: "Lisbon" })).toBeVisible();
   await expect(bea.page).toHaveURL(new RegExp(`/trips/${tripId}$`));
-  const flights = bea.page.getByRole("link", { name: /Flights/ });
-  await expect(flights.getByText("Not part of your share")).toBeVisible();
+  // An expense is a row in the desktop table (`web-trip`), or a link in the list.
+  const tripExpense = (name: RegExp) => bea.page.getByRole("row", { name }).or(bea.page.getByRole("link", { name }));
+  await expect(tripExpense(/Flights/).getByText("Not part of your share")).toBeVisible();
   // Alex's private expense never reaches Bea.
   await expect(bea.page.getByText("Airport train")).toHaveCount(0);
   await expect(bea.page.getByRole("region", { name: "Only you" })).toHaveCount(0);
@@ -132,7 +133,7 @@ test("a shared personal trip keeps its earlier expense private, and a later memb
   // An expense after Bea joined is split with her; she sees it after a refresh.
   await addTripExpense(alex.page, "Apartment in Alfama", "368.00", "2026-11-12");
   await bea.page.reload();
-  await expect(bea.page.getByRole("link", { name: /Apartment in Alfama/ }).getByText("$184.00 yours")).toBeVisible();
+  await expect(tripExpense(/Apartment in Alfama/).getByText(/^\$184\.00( yours)?$/)).toBeVisible();
 
   // Balances settle by month: October (flights, Alex only) is settled, November isn't. Before the
   // trip they open on its month, November (card `ipad-trip`).

@@ -24,7 +24,7 @@ internal static class MaintenanceProcess
         foreach (var argument in arguments)
             start.ArgumentList.Add(argument);
         if (connection is not null)
-            start.Environment["ConnectionStrings__Migration"] = connection;
+            start.Environment["ConnectionStrings__Postgres"] = connection;
         foreach (var (name, value) in environment ?? new Dictionary<string, string>())
             start.Environment[name] = value;
         using var process = Process.Start(start)!;

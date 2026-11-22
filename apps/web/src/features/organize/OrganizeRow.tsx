@@ -11,6 +11,8 @@ interface OrganizeRowProps {
   tint?: TintSource;
   /** Saved in this browser, not yet on the server. */
   waiting: boolean;
+  /** From 768px, the edit glyph before the chevron (card `web-accounts`); the whole row still opens the form. */
+  edit?: boolean;
   onOpen: () => void;
 }
 
@@ -18,7 +20,7 @@ interface OrganizeRowProps {
  * One account or category in a list: the whole row opens its form. The button is named "Edit …"
  * and described by the type and usage line, plus "Waiting to sync" while that's true.
  */
-export function OrganizeRow({ name, meta, icon, tint, waiting, onOpen }: OrganizeRowProps) {
+export function OrganizeRow({ name, meta, icon, tint, waiting, edit, onOpen }: OrganizeRowProps) {
   const metaId = useId();
   const badgeId = useId();
   return (
@@ -38,6 +40,11 @@ export function OrganizeRow({ name, meta, icon, tint, waiting, onOpen }: Organiz
             <Badge tone="pending" icon="time">
               Waiting to sync
             </Badge>
+          </span>
+        ) : null}
+        {edit ? (
+          <span className="organize-row__edit" aria-hidden="true">
+            <Icon name="create" size={18} />
           </span>
         ) : null}
         <Icon name="chevron-forward" size={14} weight={56} />

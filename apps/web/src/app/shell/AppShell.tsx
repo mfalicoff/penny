@@ -252,6 +252,7 @@ function DemoBanner() {
   return (
     <Banner
       tone="info"
+      tile
       title="You're exploring a demo"
       action={
         <Button

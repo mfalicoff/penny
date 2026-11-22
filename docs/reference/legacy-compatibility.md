@@ -28,7 +28,7 @@ An iOS build older than contract 2.0.0 still works for everything except receipt
 | Malformed `Authorization` header falls back to the cookie | **Kept** | Neither client sends both credentials: iOS turns cookies off and the browser never sends `Authorization`. The rule costs nothing and has no effect on current clients |
 | Legacy scrypt password hashes and their reset path | **Removed** before MAZ-131 | Passwords are ASP.NET Core Identity hashes. Resets use `reset-password EMAIL` ([authentication](authentication.md#password-reset-maz-123)) |
 | SQLite import commands and the `sqlite_import` checkpoint table | **Removed** in #64 | `PreSquashUpgrade` drops the table when it upgrades a database from before the squash |
-| `PreSquashUpgrade` (pre-squash databases in `migrate`) | **Kept** | Remove it only once every deployment has run `migrate` since the squash. The operator has to confirm that; the code cannot check it |
+| `PreSquashUpgrade` (pre-squash databases in the migration) | **Kept** | Remove it only once every deployment has migrated (API startup or `migrate`) since the squash. The operator has to confirm that; the code cannot check it |
 | Read-time redaction of audit snapshots (`AuditRedaction`) | **Kept** | Imported audit rows may still hold a payer `accountId` or receipt name. Redacting on read keeps every response the same, whatever wrote the row. A one-time data migration could replace it later |
 | `legacy` markers in `contracts/openapi.json` | **None left** | |
 

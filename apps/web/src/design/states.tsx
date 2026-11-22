@@ -67,15 +67,23 @@ interface BannerProps {
   title: string;
   children?: ReactNode;
   action?: ReactNode;
+  /** Another glyph than the tone's. */
+  icon?: IconName;
+  /**
+   * A shell banner of the web cards (`web-server-unreachable`, `web-demo`): from 768px its icon
+   * sits in a tinted 36px tile and the title is in the label color.
+   */
+  tile?: boolean;
 }
 
 const BANNER_ICON: Record<BannerTone, IconName> = { offline: "cloud-offline", error: "alert-circle", info: "play" };
 
 /** Inline status bar (kit `Banner`). Errors are alerts; the rest are polite status messages. */
-export function Banner({ tone, title, children, action }: BannerProps) {
+export function Banner({ tone, title, children, action, icon, tile }: BannerProps) {
+  const glyph = <Icon name={icon ?? BANNER_ICON[tone]} size={20} />;
   return (
-    <div className={cx("pk-banner", `pk-banner--${tone}`, tone === "offline" && "glass")} role={tone === "error" ? "alert" : "status"}>
-      <Icon name={BANNER_ICON[tone]} size={20} />
+    <div className={cx("pk-banner", `pk-banner--${tone}`, tone === "offline" && "glass", tile && "pk-banner--tile")} role={tone === "error" ? "alert" : "status"}>
+      {tile ? <span className="pk-banner__tile">{glyph}</span> : glyph}
       <div className="pk-banner__body">
         <div className="pk-banner__title">{title}</div>
         {children ? <div className="pk-banner__msg">{children}</div> : null}
@@ -118,7 +126,7 @@ export function ServerUnreachableBanner({ unreachable }: { unreachable: boolean 
   const online = useOnline();
   if (!online || !unreachable) return null;
   return (
-    <Banner tone="error" title="Can't reach your Penny server">
+    <Banner tone="error" title="Can't reach your Penny server" icon="cloud-offline" tile>
       Penny shows what it already loaded and keeps trying. Nothing was signed out or deleted.
     </Banner>
   );

@@ -272,10 +272,9 @@
         </div>
         <figure class="terminal" aria-label="Starting Penny with Docker Compose">
           <div class="browser-bar" aria-hidden="true"><span></span><span></span><span></span><b>~/penny</b></div>
-          <pre><code><span class="dim"># deploy/.env from deploy/.env.example: the public origin and four secrets</span>
+          <pre><code><span class="dim"># deploy/.env from deploy/.env.example: the public origin and two secrets</span>
 <span class="prompt">$</span> docker compose -f deploy/compose.yaml up -d --wait
 <span class="ok">✔</span> Container penny-postgres-1      <span class="ok">Healthy</span>
-<span class="ok">✔</span> Container penny-migrate-1       <span class="ok">Exited</span>
 <span class="ok">✔</span> Container penny-penny-render-1  <span class="ok">Healthy</span>
 <span class="ok">✔</span> Container penny-api-1           <span class="ok">Healthy</span>
 <span class="ok">✔</span> Container penny-web-1           <span class="ok">Healthy</span></code></pre>

@@ -318,6 +318,17 @@ export function flowNodeIcon(node: FlowNode, categories: readonly Pick<Category,
   return kind === "income" ? "arrow-down" : "pricetag";
 }
 
+/**
+ * The chart's label for a node. The flow groups the smallest categories past the fifth as "Other
+ * <kind> categories", which is too long for the chart and would be shortened; its short form
+ * ("Other expenses") fits, so the drawn text stays a whole part of the node's accessible name.
+ */
+export function flowLabel(node: FlowNode): string {
+  const [kind = "", id = ""] = node.id.split(":");
+  if (id !== "overflow") return node.label;
+  return kind === "expense" ? "Other expenses" : `Other ${kind}`;
+}
+
 /** Shortens a long label for the chart (the full text stays in its accessible name and the table). */
 export function shortLabel(label: string, max = 18): string {
   const chars = Array.from(new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(label), (part) => part.segment);

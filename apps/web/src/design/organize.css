@@ -377,3 +377,170 @@
 .organize-remove .form-field select {
   background: var(--pk-surface);
 }
+
+/* ---------- a Manage page's add action (MAZ-283) ---------- */
+/*
+ * Phones: the iPhone cards' round glass + at the end of the navigation bar. From 768px the web
+ * cards' labelled button (`.btn`) right after the title, before the search field.
+ */
+.manage-tools {
+  display: flex;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.manage-add {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 22px;
+  color: var(--pk-label);
+  font: 600 0.875rem var(--pk-font);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.manage-add:hover {
+  color: var(--pk-tint-text);
+}
+
+/* The 16px glyph drawn at the round button's 20px. */
+.manage-add .icon {
+  transform: scale(1.25);
+}
+
+.manage-add__label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+@media (min-width: 768px) {
+  .manage-tools {
+    flex: none;
+  }
+
+  .manage-add,
+  .manage-add.glass {
+    width: auto;
+    height: 36px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--pk-surface);
+    backdrop-filter: none;
+    box-shadow: 0 0 0 0.5px var(--pk-separator), 0 1px 2px rgb(0 0 0 / 0.05);
+  }
+
+  .manage-add:hover {
+    background: var(--pk-surface-2);
+    color: var(--pk-label);
+  }
+
+  .manage-add .icon {
+    transform: none;
+  }
+
+  .manage-add__label {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+  }
+}
+
+.organize-row__edit {
+  display: none;
+}
+
+/*
+ * From 768px (cards `web-accounts`, `web-categories`; other widths follow them): the page is a
+ * 760px column under the top bar, with the web lists' 36px tiles, semibold names and, on
+ * accounts, the edit glyph before the chevron.
+ */
+@media (min-width: 768px) {
+  .page.organize,
+  .page.recurring {
+    width: 100%;
+    max-width: 760px;
+    margin-inline: auto;
+  }
+
+  .organize .choices--segmented .choices__options {
+    min-height: 36px;
+    border-radius: 10px;
+  }
+
+  .organize .choices--segmented .choice {
+    min-height: 32px;
+    border-radius: 8px;
+    font-size: 0.84375rem;
+  }
+
+  .organize-list--accounts,
+  .organize-list--categories {
+    --inset: 66px;
+  }
+
+  .organize-row {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-auto-columns: auto;
+    grid-auto-flow: column;
+    min-height: 54px;
+    padding: 8px 18px;
+  }
+
+  .organize-list--accounts .organize-row {
+    min-height: 58px;
+    padding-block: 10px;
+  }
+
+  .organize-row:hover {
+    background: var(--pk-fill);
+  }
+
+  .organize-row__name {
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .organize-tile,
+  .organize-tile--plain {
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
+  }
+
+  .organize-row__edit {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    color: var(--pk-label-2);
+  }
+
+  .organize-row:hover .organize-row__edit {
+    box-shadow: 0 0 0 0.5px var(--pk-separator), 0 1px 2px rgb(0 0 0 / 0.05);
+  }
+
+  .organize-row > .icon:last-child {
+    margin-inline-start: 4px;
+  }
+}
+
+@media (min-width: 768px) {
+  /* The web card's segmented control sits 16px below the lead-in (card `web-categories`). */
+  .organize > .choices--segmented {
+    margin-top: 16px;
+  }
+}

@@ -4,7 +4,7 @@ import { ApiError } from "../../api/client";
 import { deleteExpense, expenseQuery, refreshHousehold } from "../../api/households";
 import type { SharedExpense } from "../../api/schemas";
 import { useAccountEmail } from "../../auth/account";
-import { Avatar, Badge, Button } from "../../design/controls";
+import { Avatar, Badge, Button, cx } from "../../design/controls";
 import { tileStyle } from "../../design/categoryTint";
 import { Dialog } from "../../design/ModalDialog";
 import { Icon } from "../../design/Icon";
@@ -91,6 +91,7 @@ export function ExpenseDetailDialog({ view, expenseId, onEdit, onClose, onRule, 
     <DetailPane
       view={view}
       expense={data}
+      panel={variant === "panel"}
       headingRef={headingRef}
       onRecord={(fromUserId) => { setPane({ kind: "record", expense: data, fromUserId }); }}
       onDelete={() => { setPane({ kind: "delete" }); }}
@@ -177,12 +178,20 @@ export function ExpenseDetailDialog({ view, expenseId, onEdit, onClose, onRule, 
   }
 
   if (variant === "panel") {
+    // `web-shared-expense`: the expense leads with its category tile and a large title.
+    const titled = !recording && expense.data ? expense.data : undefined;
     return (
       <section className="card expense-panel" aria-labelledby={panelTitleId}>
         <div className="expense-panel__head">
-          <h2 id={panelTitleId} ref={panelHeading} tabIndex={-1} className="card__title">
+          <h2 id={panelTitleId} ref={panelHeading} tabIndex={-1} className={titled ? "expense-panel__title" : "card__title"}>
             {title}
           </h2>
+          {/* After the heading, so the heading keeps its place when the pane changes and keeps focus; CSS puts the tile first. */}
+          {titled ? (
+            <span className="category-dot expense-panel__tile" style={tileStyle(titled.category)} aria-hidden="true">
+              <Icon name={categoryIcon(titled.category.icon)} size={20} />
+            </span>
+          ) : null}
           {!compact || recording ? (
             <button type="button" className="wbtn wbtn--icon" aria-label={`Close ${title}`} onClick={close}>
               <Icon name="close" size={16} weight={44} />
@@ -208,6 +217,7 @@ export function ExpenseDetailDialog({ view, expenseId, onEdit, onClose, onRule, 
 function DetailPane({
   view,
   expense,
+  panel,
   headingRef,
   onRecord,
   onDelete,
@@ -217,6 +227,8 @@ function DetailPane({
 }: {
   view: HouseholdView;
   expense: SharedExpense;
+  /** The side pane from 1100px (`web-shared-expense`) rather than the dialog. */
+  panel: boolean;
   headingRef: RefObject<HTMLHeadingElement | null>;
   onRecord: (fromUserId: string) => void;
   onDelete: () => void;
@@ -229,20 +241,21 @@ function DetailPane({
   const mine = shareOf(expense, me);
   const payerIsMe = me !== undefined && expense.payerUserId === me;
   const accountName = expense.accountId ? choices.accounts.find((account) => account.id === expense.accountId)?.name : undefined;
+  const deletable = view.canWrite && !isPaid(expense);
 
   return (
-    <div className="form">
+    <div className={cx("form", panel && "expense-detail")}>
       <h3 ref={headingRef} tabIndex={-1} className="visually-hidden">
         {expense.title} details
       </h3>
-      <dl className="detail-grid">
+      <dl className={cx("detail-grid", panel && "detail-grid--rows")}>
         <dt>Total</dt>
         <dd>
           <Money cents={expense.totalCents} currency={view.currency} />
         </dd>
         <dt>Date</dt>
         <dd>
-          <time dateTime={expense.date}>{dayLabel(expense.date, true)}</time>
+          <time dateTime={expense.date}>{panel ? shortDate(expense.date) : dayLabel(expense.date, true)}</time>
           {expense.recurringId ? " · added by a repeating expense" : ""}
         </dd>
         <dt>Category</dt>
@@ -274,7 +287,7 @@ function DetailPane({
       </dl>
       {!payerIsMe ? <p className="note">The payer's account stays private to them.</p> : null}
       {me && expense.splits.some((split) => split.userId === me) ? (
-        <div className="your-share">
+        <div className={cx("your-share", panel && "your-share--plain")}>
           <span>Your share · in your spending</span>
           <Money cents={mine} currency={view.currency} />
         </div>
@@ -284,60 +297,131 @@ function DetailPane({
         <h3 id={`shares-${expense.id}`} className="card__title">
           Shares
         </h3>
-        <ul className="row-list">
-          {expense.splits.map((split) => {
-            const status = shareStatus(expense, split.userId, split.amountCents);
-            return (
-              <li key={split.userId} className="row row--plain">
-                <span>
-                  <span className="row__title">{view.who.name(split.userId)}</span>
-                  <span className="row__meta" style={{ display: "block" }}>
-                    {status === "paid" ? (
-                      <Badge tone="income" icon="checkmark">
-                        {SHARE_STATUS_LABEL[status]}
-                      </Badge>
-                    ) : (
-                      SHARE_STATUS_LABEL[status]
-                    )}
+        {panel ? (
+          <PanelShares view={view} expense={expense} onRecord={onRecord} />
+        ) : (
+          <ul className="row-list">
+            {expense.splits.map((split) => {
+              const status = shareStatus(expense, split.userId, split.amountCents);
+              return (
+                <li key={split.userId} className="row row--plain">
+                  <span>
+                    <span className="row__title">{view.who.name(split.userId)}</span>
+                    <span className="row__meta" style={{ display: "block" }}>
+                      {status === "paid" ? (
+                        <Badge tone="income" icon="checkmark">
+                          {SHARE_STATUS_LABEL[status]}
+                        </Badge>
+                      ) : (
+                        SHARE_STATUS_LABEL[status]
+                      )}
+                    </span>
                   </span>
-                </span>
-                <span className="row__end">
-                  <Money cents={split.amountCents} currency={view.currency} />
-                  {canRecordShare(expense, split.userId, view.who, view.archived) ? (
-                    <Button variant="secondary" onClick={() => { onRecord(split.userId); }} aria-label={`Mark ${possessive(view.who.name(split.userId))} share as paid`}>
-                      Mark as paid
-                    </Button>
-                  ) : null}
-                </span>
-              </li>
-            );
-          })}
-        </ul>
+                  <span className="row__end">
+                    <Money cents={split.amountCents} currency={view.currency} />
+                    {canRecordShare(expense, split.userId, view.who, view.archived) ? (
+                      <Button variant="secondary" onClick={() => { onRecord(split.userId); }} aria-label={`Mark ${possessive(view.who.name(split.userId))} share as paid`}>
+                        Mark as paid
+                      </Button>
+                    ) : null}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
         {expense.paymentsClosed ? <p className="note">This month has a monthly payment, so the remaining shares settle from Balances.</p> : null}
       </section>
 
-      <div className="form-actions" style={{ justifyContent: "flex-start" }}>
-        {view.canWrite ? (
-          <Button variant="primary" icon="create" onClick={onEdit}>
-            Edit
+      {panel ? (
+        // The card's row: outlined Edit and Change history, then Delete in red at the end.
+        <div className="expense-detail__actions">
+          {view.canWrite ? (
+            <Button variant="secondary" icon="create" onClick={onEdit}>
+              Edit
+            </Button>
+          ) : null}
+          <Button variant="secondary" icon="time" onClick={onHistory}>
+            Change history
           </Button>
-        ) : null}
-        <Button variant="quiet" icon="time" onClick={onHistory}>
-          Change history
-        </Button>
-        {onRule ? (
-          <Button variant="quiet" icon="repeat" onClick={onRule}>
-            Repeating expense
+          {onRule ? (
+            <Button variant="secondary" icon="repeat" onClick={onRule}>
+              Repeating expense
+            </Button>
+          ) : null}
+          {deletable ? (
+            <Button variant="danger-quiet" icon="trash" onClick={onDelete}>
+              Delete
+            </Button>
+          ) : null}
+        </div>
+      ) : (
+        <div className="form-actions" style={{ justifyContent: "flex-start" }}>
+          {view.canWrite ? (
+            <Button variant="primary" icon="create" onClick={onEdit}>
+              Edit
+            </Button>
+          ) : null}
+          <Button variant="quiet" icon="time" onClick={onHistory}>
+            Change history
           </Button>
-        ) : null}
-        {view.canWrite && !isPaid(expense) ? (
-          <Button variant="danger-quiet" icon="trash" onClick={onDelete}>
-            Delete
-          </Button>
-        ) : null}
-      </div>
+          {onRule ? (
+            <Button variant="quiet" icon="repeat" onClick={onRule}>
+              Repeating expense
+            </Button>
+          ) : null}
+          {deletable ? (
+            <Button variant="danger-quiet" icon="trash" onClick={onDelete}>
+              Delete
+            </Button>
+          ) : null}
+        </div>
+      )}
       {view.canWrite && isPaid(expense) ? <p className="note">A share of this expense is already repaid, so it can't be deleted, and its payer, total, month and shares are fixed.</p> : null}
     </div>
+  );
+}
+
+/**
+ * `web-shared-expense`'s shares: each member's monogram, name (the payer tagged "payer"), share,
+ * then Mark as paid where you can record it, a green Paid once repaid (the payer's own share is
+ * paid), or how it stands.
+ */
+function PanelShares({ view, expense, onRecord }: { view: HouseholdView; expense: SharedExpense; onRecord: (fromUserId: string) => void }) {
+  return (
+    <ul className="row-list detail-shares">
+      {expense.splits.map((split) => {
+        const payer = split.userId === expense.payerUserId;
+        const status = shareStatus(expense, split.userId, split.amountCents);
+        let state;
+        if (payer || status === "paid") {
+          state = (
+            <Badge tone="income" icon="checkmark">
+              Paid
+            </Badge>
+          );
+        } else if (canRecordShare(expense, split.userId, view.who, view.archived)) {
+          state = (
+            <Button variant="secondary" onClick={() => { onRecord(split.userId); }} aria-label={`Mark ${possessive(view.who.name(split.userId))} share as paid`}>
+              Mark as paid
+            </Button>
+          );
+        } else {
+          state = <span className="row__meta">{SHARE_STATUS_LABEL[status]}</span>;
+        }
+        return (
+          <li key={split.userId} className="detail-share">
+            <Avatar name={view.who.avatar(split.userId)} size={28} />
+            <span className="detail-share__name">
+              {view.who.name(split.userId)}
+              {payer ? <span className="detail-share__tag">payer</span> : null}
+            </span>
+            <Money cents={split.amountCents} currency={view.currency} />
+            {state}
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 

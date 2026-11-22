@@ -6,8 +6,10 @@ namespace Penny.Backend.Persistence.Migrations;
 
 public static class DatabaseMigrator
 {
-    // Applies pending EF Core migrations. EF takes its own lock on the history table;
-    // the advisory lock additionally excludes a concurrent `migrate` for the whole run.
+    // Applies pending EF Core migrations: on API startup and in the `migrate` command.
+    // EF takes its own lock on the history table; the advisory lock additionally excludes
+    // a concurrent run for the whole run. Missing search extensions are created first
+    // when the database user may create them.
     public static async Task ApplyAsync(
         NpgsqlDataSource source,
         CancellationToken cancellationToken
@@ -15,14 +17,13 @@ public static class DatabaseMigrator
     {
         await using var guard = await source.OpenConnectionAsync(cancellationToken);
         if (guard.PostgreSqlVersion.Major != DatabaseSchema.PostgresMajor)
-            throw new InvalidOperationException(
+            throw new DatabaseSetupException(
                 "PostgreSQL 18 is required. No migration was applied."
             );
-        if (!await SearchExtensions.AvailableAsync(guard, cancellationToken))
-            throw new InvalidOperationException(SearchExtensions.Missing);
         await AcquireLockAsync(guard, cancellationToken);
         try
         {
+            await SearchExtensions.EnsureAsync(guard, cancellationToken);
             await using var context = PennyDbContext.Create(guard);
             context.Database.SetCommandTimeout(TimeSpan.FromMinutes(5));
             var known = context.Database.GetMigrations().ToHashSet(StringComparer.Ordinal);
@@ -35,7 +36,7 @@ public static class DatabaseMigrator
                 applied = await context.Database.GetAppliedMigrationsAsync(cancellationToken);
             }
             if (applied.Any(migration => !known.Contains(migration)))
-                throw new InvalidOperationException(
+                throw new DatabaseSetupException(
                     "Database schema is newer than this build. No migration was applied."
                 );
             await context.Database.MigrateAsync(cancellationToken);
@@ -46,7 +47,7 @@ public static class DatabaseMigrator
         }
     }
 
-    // Session-level lock held by `migrate` for the whole run.
+    // Session-level lock held for the whole migration run.
     internal static async Task AcquireLockAsync(NpgsqlConnection connection, CancellationToken ct)
     {
         await using var command = new NpgsqlCommand("SELECT pg_try_advisory_lock($1)", connection);
@@ -54,9 +55,7 @@ public static class DatabaseMigrator
             new NpgsqlParameter<long> { TypedValue = DatabaseSchema.MigrationLock }
         );
         if (await command.ExecuteScalarAsync(ct) is not true)
-            throw new InvalidOperationException(
-                "Another database migration holds the lock. Retry after it completes."
-            );
+            throw new MigrationLockedException();
     }
 
     internal static async Task ReleaseLockAsync(NpgsqlConnection connection)

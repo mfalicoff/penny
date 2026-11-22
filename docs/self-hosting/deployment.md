@@ -11,13 +11,12 @@ Penny v2 runs as a .NET API with PostgreSQL 18, behind an nginx front end that s
 | Service | Image | Role | Network |
 | --- | --- | --- | --- |
 | `web` | `ghcr.io/<owner>/penny-web` | Unprivileged nginx: the v2 web app (`apps/web`), SPA fallback, and a same-origin proxy for `/api/` ([web app](#the-web-app)) | The only published port (default `127.0.0.1:8080`) |
-| `api` | `ghcr.io/<owner>/penny-api` | ASP.NET Core API plus the background workers (shared recurrence, push delivery, search embeddings) | Internal network only |
-| `migrate` | `penny-api` | One-shot `migrate --grant-runtime`: applies EF migrations under the migration lock, then the runtime grants, and exits | Internal |
+| `api` | `ghcr.io/<owner>/penny-api` | ASP.NET Core API plus the background workers (shared recurrence, push delivery, search embeddings). Applies pending database migrations on startup, before it serves | Internal network only |
 | `postgres` | `pgvector/pgvector:0.8.7-pg18-trixie` (digest pinned) | PostgreSQL 18.6 with `pg_trgm` and pgvector 0.8.7; profile `bundled-postgres` | Internal |
 
 Persistent data lives in two named volumes: `penny-postgres` (the database) and `penny-receipts` (encrypted receipt files at `/var/lib/penny/receipts`). The receipt master key lives in `deploy/.env` and **must be backed up separately**; without it, receipts can't be decrypted.
 
-Startup order is enforced by Compose: PostgreSQL healthy → `migrate` completed successfully → `api` healthy (`/api/ready`) → `web`. The API never migrates on its own. Its readiness check fails (503) until the schema, grants, extensions, and receipt storage are all correct.
+Startup order is enforced by Compose: PostgreSQL healthy → `api` healthy (`/api/ready`) → `web`. On startup the API migrates the database before it starts its workers and listener: it creates the `penny` schema and the `pg_trgm` and `vector` extensions when missing and applies pending EF migrations under an advisory lock. While PostgreSQL is unreachable or another process is migrating, it retries for up to 5 minutes; any other migration failure is logged (without credentials or SQL) and the container exits, so it restarts and `up --wait` reports it. Its readiness check fails (503) until the schema, extensions and receipt storage are all correct. The healthcheck allows 120 seconds for a first start or an upgrade that migrates.
 
 Containers run as non-root users (API uid 1654, nginx uid 101), with read-only root filesystems, all capabilities dropped and `no-new-privileges`. Images are built for **linux/amd64** and **linux/arm64**; every base image is pinned to a multi-platform digest.
 
@@ -37,7 +36,7 @@ Supported topologies:
 - **One API container** (the default): the API serves HTTP and runs all workers.
 - **Several API containers** behind `web`, all with workers on, or a dedicated worker container (same image and settings, workers on, no traffic) with the HTTP containers set to `false`. Rate limits (sign-in, invites, search) are kept in memory per process, so each process allows the configured number. Keep the total pool size within PostgreSQL's `max_connections` ([pool sizing](operations.md#connections-and-pool-sizing)).
 
-Run exactly one `migrate` at a time. A second one waits for the advisory lock or fails with "Another database migration holds the lock."
+API replicas that start together migrate one at a time: the others wait for the advisory lock and then find nothing to apply. To migrate separately instead (for example before rolling out several replicas), set `Database__MigrateOnStartup=false` in `deploy/api.env` and run `docker compose -f deploy/compose.yaml run --rm api migrate` before `up`.
 
 ## Quick start
 
@@ -45,13 +44,13 @@ Requirements: Docker Engine with Compose v2.24+ or Podman with a Compose provide
 
 ```sh
 cp deploy/.env.example deploy/.env && chmod 600 deploy/.env
-# set PENNY_PUBLIC_ORIGIN, then fill in the four secrets:
-#   openssl rand -hex 24      (each password)
+# set PENNY_PUBLIC_ORIGIN, then fill in the two secrets:
+#   openssl rand -hex 24      (PENNY_DB_PASSWORD)
 #   openssl rand -base64 32   (PENNY_RECEIPT_KEY)
 docker compose -f deploy/compose.yaml up -d --wait
 ```
 
-`deploy/.env` holds separate passwords for the PostgreSQL administrator, the migration role and the runtime role, a 32-byte receipt master key (base64) and the public origin users will open. Compose refuses to start while any of them is empty. Back the file up: without the receipt key, receipts cannot be decrypted. To build the images from a checkout instead of pulling them, run `docker compose -f deploy/compose.yaml -f deploy/compose.build.yaml build` first, or set `PENNY_API_IMAGE`/`PENNY_WEB_IMAGE` to your own tags.
+`deploy/.env` holds the password of the API's PostgreSQL login, a 32-byte receipt master key (base64) and the public origin users will open. Compose refuses to start while any of them is empty. Back the file up: without the receipt key, receipts cannot be decrypted. To build the images from a checkout instead of pulling them, run `docker compose -f deploy/compose.yaml -f deploy/compose.build.yaml build` first, or set `PENNY_API_IMAGE`/`PENNY_WEB_IMAGE` to your own tags.
 
 Then open the origin, create your account, and turn off open registration:
 
@@ -109,22 +108,36 @@ With a same-host proxy, nginx in `web` sees the Compose gateway as the client. S
 | --- | --- | --- |
 | `PENNY_PUBLIC_ORIGIN` | (required) | Browser origin; becomes `Auth__AllowedOrigins` |
 | `PENNY_SECURE_COOKIES` | `true` | `Auth__SecureCookies`; `false` only for `http://localhost` |
-| `PENNY_ADMIN_PASSWORD` | (required) | PostgreSQL administrator; only `postgres` (first initialization) and `migrate` (bootstrap) receive it |
-| `PENNY_ADMIN_USER` | `postgres` | Administrator login `migrate --bootstrap` uses; for an [external PostgreSQL](#external-postgresql) |
-| `PENNY_MIGRATION_PASSWORD` | (required) | Role `penny_migrator` (schema owner); only `migrate` receives it |
-| `PENNY_RUNTIME_PASSWORD` | (required) | Role `penny_runtime` (DML only); only `api` receives it |
+| `PENNY_DB_USER` | `penny` | The API's PostgreSQL login; it owns the `penny` schema. The bundled `postgres` creates it on first initialization. `penny_migrator` for installs from before the [single database user](#single-database-user) |
+| `PENNY_DB_PASSWORD` | (required) | Its password; only `postgres` (first initialization) and `api` receive it |
 | `PENNY_RECEIPT_KEY` | (required) | `Receipts__MasterKey`, base64 of 32 bytes; never rotated, never logged |
 | `COMPOSE_PROFILES` | `bundled-postgres` | Empty for an [external PostgreSQL](#external-postgresql) |
 | `PENNY_DB_HOST` / `PENNY_DB_PORT` / `PENNY_DB_NAME` | `postgres` / `5432` / `penny` | Database location |
 | `PENNY_DB_SSL_MODE` | `Disable` | Npgsql `SSL Mode`; use `VerifyFull` for any remote server |
-| `PENNY_DB_OPTIONS` | empty | Appended to both connection strings, starting with `;`, for example `;Root Certificate=/run/penny/ca.pem` |
+| `PENNY_DB_OPTIONS` | empty | Appended to the connection string, starting with `;`, for example `;Root Certificate=/run/penny/ca.pem` |
 | `PENNY_API_IMAGE` / `PENNY_WEB_IMAGE` | `ghcr.io/mfalicoff/penny-*:latest` | Pin exact release tags in production |
 | `PENNY_BIND` / `PENNY_PORT` | `127.0.0.1` / `8080` | Published address of `web` |
 | `PENNY_SUBNET` | `172.31.63.0/24` | Compose network; also the API's trusted proxy range |
 | `PENNY_REAL_IP_FROM` | `127.0.0.1/32` | Outer proxy trusted by nginx for `X-Forwarded-For` |
 | `PENNY_WEB_TELEMETRY_URL` | empty (off) | Opt-in browser telemetry: a Faro collector URL (`https://`, no query), such as Grafana Cloud Frontend Observability's. Published as `/telemetry.json` and allowed in the page's `connect-src`; `web` refuses to start with anything else ([web app telemetry](observability.md#web-app-telemetry)) |
 
-Passwords must not contain `;` (they are embedded in connection strings); use hex, as `openssl rand -hex 24` produces. The role names are fixed: `penny_migrator` and `penny_runtime`. `.env` is authoritative for both role passwords: every `migrate` run sets them again (as SCRAM verifiers), so rotating one means changing `.env` and running `up -d --wait`. The administrator password is the exception: the image reads it only on first initialization, so change it with `ALTER ROLE` first.
+The password must not contain `;` (it is embedded in the connection string); use hex, as `openssl rand -hex 24` produces. The bundled `postgres` image reads `PENNY_DB_USER` and `PENNY_DB_PASSWORD` only when it initializes an empty volume; changing them later in `.env` does not change the database. To rotate the password, change it in PostgreSQL first, then in `.env` ([secret rotation](operations.md#secret-rotation)).
+
+### Single database user
+
+The API uses one PostgreSQL login: it creates and migrates the schema on startup and serves with the same login. Releases before this change used a one-shot `migrate` service with three logins: an administrator (`PENNY_ADMIN_PASSWORD`), `penny_migrator` (the schema owner, `PENNY_MIGRATION_PASSWORD`) and a restricted `penny_runtime` (`PENNY_RUNTIME_PASSWORD`). To upgrade an existing install:
+
+1. Take a backup ([backup](operations.md#back-up)).
+2. In `deploy/.env`, set `PENNY_DB_USER=penny_migrator` and `PENNY_DB_PASSWORD` to the old `PENNY_MIGRATION_PASSWORD` value, and delete `PENNY_ADMIN_PASSWORD`, `PENNY_ADMIN_USER`, `PENNY_MIGRATION_PASSWORD` and `PENNY_RUNTIME_PASSWORD`. Use `deploy/compose.yaml` and `deploy/.env.example` from the new release.
+3. `docker compose -f deploy/compose.yaml pull && docker compose -f deploy/compose.yaml up -d --wait --remove-orphans`. `--remove-orphans` removes the old `migrate` container.
+
+`penny_migrator` already owns the `penny` schema, and the extensions already exist, so it needs no superuser privileges. Do not set `PENNY_DB_USER=penny` on an existing volume: `POSTGRES_USER` only applies when a volume is first initialized, so that login does not exist there. The bundled database's `postgres` superuser keeps its old password (the former `PENNY_ADMIN_PASSWORD`); keep that in your secret manager for administration. Once the upgrade is verified, an administrator can drop the unused runtime role:
+
+```sh
+docker compose -f deploy/compose.yaml exec postgres psql -U postgres -d penny -c 'DROP OWNED BY penny_runtime; DROP ROLE penny_runtime;'
+```
+
+`DROP OWNED BY` removes only that role's grants; it owns no objects. Use `-d` with your `PENNY_DB_NAME` if it is not `penny`.
 
 ### `deploy/api.env` (optional API settings)
 
@@ -159,20 +172,30 @@ Keep secrets out of the image, the repository and command lines. If your platfor
 
 ### External PostgreSQL
 
-Requirements: PostgreSQL **18** (readiness rejects other majors), with `pg_trgm` and pgvector **0.8 or later** available, and an administrator login on the target database that can create roles and extensions. `migrate --bootstrap` uses that login to create the `penny_migrator` and `penny_runtime` roles, the `penny` schema and both extensions in `public` when they are missing, and to set the role passwords. It does nothing else, and the API never receives the login. The statements are [`apps/backend/development/bootstrap.sql`](../../apps/backend/development/bootstrap.sql). If you can't give `migrate` an administrator login, have your DBA run that script once, set each role's password, and override `migrate`'s `command` to `["migrate", "--grant-runtime"]` in a `compose.override.yaml`. On managed services where the administrator is not a superuser, use the provider's extension mechanism (for example an allow-list parameter) and confirm availability first: `SELECT name, default_version FROM pg_available_extensions WHERE name IN ('pg_trgm', 'vector');`. See [managed hosts](operations.md#managed-postgresql-hosts).
+Requirements: PostgreSQL **18** (the API refuses other majors), with `pg_trgm` and pgvector **0.8 or later** available. The API needs one login that can create the `penny` schema; it never needs an administrator. Once, as an administrator:
 
-Then in `deploy/.env`: `COMPOSE_PROFILES=` (empty), `PENNY_DB_HOST`, `PENNY_DB_PORT`, `PENNY_DB_NAME`, `PENNY_DB_SSL_MODE=VerifyFull`, `PENNY_ADMIN_USER`, `PENNY_ADMIN_PASSWORD` and the role passwords. For a private CA, mount the certificate read-only into `migrate` and `api` with a `compose.override.yaml` and point `PENNY_DB_OPTIONS=;Root Certificate=/run/penny/ca.pem` at it. A connection pooler in front of PostgreSQL must run in **session** mode: `migrate` holds a session advisory lock.
+```sql
+CREATE ROLE penny LOGIN PASSWORD '…';           -- or let your provider create the user
+GRANT CREATE ON DATABASE penny TO penny;        -- or: CREATE SCHEMA penny AUTHORIZATION penny;
+\c penny
+CREATE EXTENSION IF NOT EXISTS pg_trgm SCHEMA public;
+CREATE EXTENSION IF NOT EXISTS vector SCHEMA public;
+```
+
+The API creates missing extensions itself when its login may, but `vector` is not a trusted extension and needs a superuser, so on most servers the administrator creates both. Without them the API stops on startup with "extensions are missing and the database user cannot create them. Create them as an administrator". On managed services where the administrator is not a superuser, use the provider's extension mechanism (for example an allow-list parameter) and confirm availability first: `SELECT name, default_version FROM pg_available_extensions WHERE name IN ('pg_trgm', 'vector');`. See [managed hosts](operations.md#managed-postgresql-hosts).
+
+Then in `deploy/.env`: `COMPOSE_PROFILES=` (empty), `PENNY_DB_HOST`, `PENNY_DB_PORT`, `PENNY_DB_NAME`, `PENNY_DB_SSL_MODE=VerifyFull`, `PENNY_DB_USER` and `PENNY_DB_PASSWORD`. For a private CA, mount the certificate read-only into `api` with a `compose.override.yaml` and point `PENNY_DB_OPTIONS=;Root Certificate=/run/penny/ca.pem` at it. A connection pooler in front of PostgreSQL must run in **session** mode: the migration holds a session advisory lock.
 
 ## Upgrade
 
-Every release is forward-only. Read the release notes first: they state whether the release contains a database migration. A database created before the EF migrations were squashed into `InitialSchema` is moved onto the squashed history by `migrate` itself, with no extra step ([backend README](../../apps/backend/README.md#upgrading-a-database-from-before-the-squash)).
+Every release is forward-only. Read the release notes first: they state whether the release contains a database migration. A database created before the EF migrations were squashed into `InitialSchema` is moved onto the squashed history by the migration itself, with no extra step ([backend README](../../apps/backend/README.md#upgrading-a-database-from-before-the-squash)).
 
 1. Take a backup ([backup](operations.md#back-up)) and note the current image tags.
 2. Set `PENNY_API_IMAGE` and `PENNY_WEB_IMAGE` to the new **exact** version tags in `deploy/.env`, and use `deploy/compose.yaml` from the same release.
-3. `docker compose -f deploy/compose.yaml pull && docker compose -f deploy/compose.yaml up -d --wait`. Compose recreates `migrate` (bootstrap, new migrations and grants), then `api`, then `web`. Since `migrate` logs in as the administrator, `PENNY_ADMIN_PASSWORD` in `.env` must be the current one. The old API keeps serving until the new one is ready only if you run more than one replica; otherwise expect a short gap.
+3. `docker compose -f deploy/compose.yaml pull && docker compose -f deploy/compose.yaml up -d --wait`. Compose recreates `api`, which applies new migrations before it serves, then `web`. The old API keeps serving until the new one is ready only if you run more than one replica; otherwise expect a short gap.
 4. Check `/api/ready`, sign in, open a ledger and a household, and download a receipt. Watch the logs for errors ([monitoring](operations.md#monitoring)).
 
-A failed `migrate` leaves the previous schema in place (each migration runs in its own transaction) and the API is not started; fix the cause and run `up` again.
+A failed migration leaves the previous schema in place (each migration runs in its own transaction), and the API exits without serving; its log names the reason. Fix the cause and run `up` again.
 
 ### The web app
 
@@ -186,7 +209,7 @@ The `web` image serves the browser app (`apps/web`: React, Vite, TanStack). It t
 ## Roll back
 
 - **Release without a migration:** set the previous image tags and run `up -d --wait` again. The web image can be rolled back on its own ([web app](#the-web-app)).
-- **Release with a migration:** the previous build refuses the newer schema. Its readiness reports `schema` and its `migrate` refuses "Database schema is newer than this build". Prefer rolling forward with a fixed release. If you must go back, restore the pre-upgrade backup ([restore](operations.md#restore)) with the previous images, then reconcile the writes accepted since the backup ([write reconciliation](operations.md#write-reconciliation-after-a-rollback)).
+- **Release with a migration:** the previous build refuses the newer schema. On startup its migration refuses "Database schema is newer than this build" and the API exits. Prefer rolling forward with a fixed release. If you must go back, restore the pre-upgrade backup ([restore](operations.md#restore)) with the previous images, then reconcile the writes accepted since the backup ([write reconciliation](operations.md#write-reconciliation-after-a-rollback)).
 
 ## Container images and releases
 

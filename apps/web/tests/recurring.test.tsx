@@ -89,7 +89,8 @@ describe("recurring schedules", () => {
     expect(within(income).getByRole("button")).toHaveTextContent(/Payday.*Monthly · next Nov 15.*\+\$2,250\.00 income/);
     const expenses = screen.getByRole("list", { name: "Expense schedules" });
     const rows = within(expenses).getAllByRole("button");
-    expect(rows.map((row) => row.textContent)).toEqual([expect.stringMatching(/^Internet.*next Nov 18 · Visa−\$65\.00/), expect.stringMatching(/^GymPaused · monthly−\$45\.00/)]);
+    // From 768px the account (or household) also shows as its own column, hidden from assistive technology.
+    expect(rows.map((row) => row.textContent)).toEqual([expect.stringMatching(/^Internet.*next Nov 18 · Visa(Visa)?−\$65\.00/), expect.stringMatching(/^GymPaused · monthly−\$45\.00/)]);
     expect(screen.getByRole("list", { name: "Investment schedules" })).toHaveTextContent("TFSA contribution");
     expect(screen.getByText("Penny records these on their date.")).toBeInTheDocument();
     // The sidebar counts the active schedules beside Recurring, and so does Manage in Settings on phones (MAZ-221).
@@ -132,8 +133,8 @@ describe("recurring schedules", () => {
     });
     expect(within(expenses).getAllByRole("listitem").map((row) => row.textContent)).toEqual([
       expect.stringMatching(/^Internet.*next Nov 18/),
-      expect.stringMatching(/^Streaming Shared\s*Monthly · next Nov 20Maison−\$8\.00your share/),
-      expect.stringMatching(/^Cleaner Shared\s*Paused · monthlyMaison−\$30\.00your share/),
+      expect.stringMatching(/^Streaming Shared\s*Monthly · next Nov 20Maison(Maison)?−\$8\.00your share/),
+      expect.stringMatching(/^Cleaner Shared\s*Paused · monthlyMaison(Maison)?−\$30\.00your share/),
     ]);
     // A shared schedule opens its household, where it's edited.
     expect(within(expenses).getByRole("link", { name: /^Streaming/ })).toHaveAttribute("href", "/households/h1?rule=s1");
@@ -159,7 +160,7 @@ describe("recurring schedules", () => {
     await user.type(within(dialog).getByLabelText("Name"), "Rent");
     await user.clear(within(dialog).getByLabelText("First date"));
     await user.type(within(dialog).getByLabelText("First date"), "2026-09-30");
-    expect(within(dialog).getByRole("status")).toHaveTextContent("Saving records 2 entries, Wed, Sep 30, 2026 through Fri, Oct 30, 2026 now. Then next on Mon, Nov 30, 2026.");
+    expect(within(dialog).getByRole("status")).toHaveTextContent("Saving records 2 entries, Sep 30 through Oct 30 now, then monthly on the 30th.");
     await user.click(within(dialog).getByRole("button", { name: "Add schedule" }));
 
     expect(await screen.findByText("Rent added")).toBeInTheDocument();

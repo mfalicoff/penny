@@ -75,7 +75,7 @@ public sealed class SecurityPolicyTests(ApiFixture fixture) : IntegrationTestBas
     public async Task whenSignInAttemptsExceedWindow_RateLimit_ShouldReturnTooManyRequestsPerHost()
     {
         await using var factory = new TestApiFactory(
-            Fixture.RuntimeConnection,
+            Fixture.Connection,
             new Dictionary<string, string> { ["Auth:RateLimitPermits"] = "40" }
         );
         factory.UseKestrel(0);
@@ -113,7 +113,7 @@ public sealed class SecurityPolicyTests(ApiFixture fixture) : IntegrationTestBas
     )
     {
         await using var factory = new TestApiFactory(
-            Fixture.RuntimeConnection,
+            Fixture.Connection,
             new Dictionary<string, string>
             {
                 ["Auth:RateLimitPermits"] = "1",

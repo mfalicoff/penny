@@ -749,3 +749,107 @@
 .themes--tiles .theme-preview--system .theme-preview__card {
   background: linear-gradient(90deg, #fff 50%, #1a1918 50%);
 }
+
+/* ---------- Currency (MAZ-283) ---------- */
+/*
+ * Phones keep the iPhone list with a copper checkmark (`iphone-currency`). From 768px the pane is
+ * the web card's (`web-currency`): 640px wide, a lock beside "Ledger currency" while it can't
+ * change, the four currencies as radio rows (code and name on one line) in a bordered group, and
+ * the lock note in a tinted box. The native radios stay; the circles are drawn for them.
+ */
+.currency-card__lock,
+.currency-card__note-icon {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .currency-card {
+    width: 100%;
+    max-width: 640px;
+  }
+
+  .currency-card .choices__legend {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 4px 0 8px;
+    font-size: 0.8125rem;
+  }
+
+  .currency-card__lock {
+    display: inline-flex;
+    color: var(--pk-label-2);
+  }
+
+  .currency-card .choices--list .choices__options {
+    margin-top: 2px;
+    padding: 2px 14px;
+    border-radius: 14px;
+    box-shadow: 0 0 0 0.5px var(--pk-separator);
+  }
+
+  .currency-card .choices--list .choice {
+    grid-template-columns: 20px 46px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    min-height: 0;
+    padding: 12px 0;
+    font-size: 0.90625rem;
+  }
+
+  .currency-card .choices--list .choice::before {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1.5px var(--pk-label-3);
+    content: "";
+  }
+
+  .currency-card .choices--list .choice--on::before {
+    box-shadow: inset 0 0 0 6px var(--pk-tint);
+  }
+
+  .currency-card .choices--list .choice:has(input:focus-visible)::before {
+    outline: 2px solid var(--pk-tint);
+    outline-offset: 2px;
+  }
+
+  .currency-card .choices--list .choice__label {
+    font-size: 0.875rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .currency-card .choices--list .choice__desc {
+    grid-row: auto;
+    color: inherit;
+    font-size: inherit;
+  }
+
+  .currency-card .choices--list .choice > .icon {
+    display: none;
+  }
+
+  .currency-card .choices--list .choice--disabled {
+    opacity: 0.45;
+  }
+
+  .currency-card--locked .currency-card__note {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 0;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: var(--pk-surface-2);
+    color: var(--pk-label-2);
+    font-size: 0.8125rem;
+    line-height: 1.45;
+  }
+
+  .currency-card__note-icon {
+    display: inline-flex;
+    flex: none;
+    margin-top: 1px;
+  }
+}

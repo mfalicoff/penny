@@ -80,6 +80,10 @@ interface EntryDialogProps {
   onKeyDown?: (event: KeyboardEvent<HTMLFormElement>) => void;
   /** Pickers opened from the form (rendered in their own portal). */
   children?: ReactNode;
+  /** Another form drawn in this dialog (the New schedule card), for its own adjustments. */
+  className?: string;
+  /** The footer's keyboard hint, instead of the entry cards' own. */
+  hint?: ReactNode;
 }
 
 /**
@@ -104,6 +108,8 @@ export function EntryDialog({
   form,
   onKeyDown,
   children,
+  className,
+  hint,
 }: EntryDialogProps) {
   const titleId = useId();
   const mac = isMac();
@@ -133,7 +139,7 @@ export function EntryDialog({
       labelledBy={titleId}
       onClose={onClose}
       {...(initialFocus ? { initialFocus } : {})}
-      panelClassName={`pk-dialog entry-dialog entry-dialog--${layout}`}
+      panelClassName={cx("pk-dialog entry-dialog", `entry-dialog--${layout}`, className)}
     >
       <form {...form} className="entry-dialog__frame" noValidate onKeyDown={onKeyDown}>
         <div className="entry-dialog__head">
@@ -167,7 +173,9 @@ export function EntryDialog({
           <div className="entry-dialog__details">{details}</div>
         </div>
         <div className="pk-dialog__foot entry-dialog__foot">
-          {layout === "tablet" ? (
+          {hint !== undefined && layout !== "phone" ? (
+            hint
+          ) : layout === "tablet" ? (
             <span className="pk-dialog__hint">
               <Kbd>{mac ? "⌘" : "Ctrl"}</Kbd>
               <Kbd>↵</Kbd> Add <Kbd>esc</Kbd> Cancel <Kbd>⇥</Kbd> Next field

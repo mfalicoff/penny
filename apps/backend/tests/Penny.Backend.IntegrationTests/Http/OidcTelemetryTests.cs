@@ -25,11 +25,7 @@ public sealed class OidcTelemetryTests(ApiFixture fixture, FakeOidcProvider prov
         var settings = FakeOidcProvider.Settings();
         foreach (var (key, value) in TelemetryCapture.Settings(collector.Endpoint))
             settings[key] = value;
-        await using var api = Provider.CreateApi(
-            Fixture.RuntimeConnection,
-            settings,
-            capture.Configure
-        );
+        await using var api = Provider.CreateApi(Fixture.Connection, settings, capture.Configure);
         using var client = CreateClient(api);
 
         var (transaction, callbackUrl) = await BeginAsync(

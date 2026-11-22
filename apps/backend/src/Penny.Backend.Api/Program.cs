@@ -10,8 +10,7 @@ if (args.FirstOrDefault() == HealthProbeCommand.Name)
 
 var maintenance =
     args.FirstOrDefault()
-    is "migrate"
-        or "bootstrap"
+    is MaintenanceCommand.Name
         or PasswordResetCommand.Name
         or SearchCommand.Rebuild
         or SearchCommand.Verify

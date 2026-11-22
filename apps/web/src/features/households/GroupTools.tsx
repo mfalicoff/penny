@@ -11,12 +11,13 @@ import { Icon, type IconName } from "../../design/Icon";
  *
  * `lead` (the month control) sits right after the title from 768px; the tools go to the end of
  * the bar. `ownAdd` says the page brings its own add action from 1100px, so the top bar's Add entry
- * and search step aside, as on the `web-household` and `ipad-*` cards.
+ * and search step aside, as on the `web-household` and `ipad-*` cards. `start` keeps the tools
+ * beside the title from 768px instead (the `web-households` card's + beside Shared).
  */
-export function GroupToolbar({ lead, ownAdd, children }: { lead?: ReactNode; ownAdd?: boolean; children: ReactNode }) {
+export function GroupToolbar({ lead, ownAdd, start, children }: { lead?: ReactNode; ownAdd?: boolean; start?: boolean; children: ReactNode }) {
   const slot = useTopbarSlot();
   const bar = (
-    <div className={cx("group-tools", ownAdd && "group-tools--own-add")}>
+    <div className={cx("group-tools", ownAdd && "group-tools--own-add", start && "group-tools--start")}>
       {lead ? <div className="group-tools__lead">{lead}</div> : null}
       <div className="group-tools__end">{children}</div>
     </div>

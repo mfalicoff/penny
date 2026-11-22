@@ -187,7 +187,7 @@ public sealed partial class ReceiptTests(ApiFixture fixture) : ReceiptTestBase(f
     {
         // The production request limit (20 MB); the shared host uses 64 KB.
         await using var factory = new TestApiFactory(
-            Fixture.RuntimeConnection,
+            Fixture.Connection,
             new Dictionary<string, string>
             {
                 ["Backend:MaxRequestBodyBytes"] = (20 * 1024 * 1024).ToString(
@@ -411,7 +411,7 @@ public sealed partial class ReceiptTests(ApiFixture fixture) : ReceiptTestBase(f
     public async Task whenMetadataWriteFails_Upload_ShouldRemoveTheFile()
     {
         var token = await RegisterAsync("owner@example.test");
-        await Fixture.SqlAsync("REVOKE INSERT ON penny.receipts FROM penny_runtime", Ct);
+        await Fixture.SqlAsync("REVOKE INSERT ON penny.receipts FROM penny_app", Ct);
         await ShouldFailAsync(
             UploadAsync(token, Disposition("a.pdf"), "application/pdf", Pdf()),
             HttpStatusCode.InternalServerError,

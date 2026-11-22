@@ -107,7 +107,7 @@ interface ChoiceOption<T extends string> {
 }
 
 interface ChoiceGroupProps<T extends string> {
-  legend: string;
+  legend: ReactNode;
   /** Hide the legend visually but keep it for assistive technology. */
   hideLegend?: boolean;
   name: string;

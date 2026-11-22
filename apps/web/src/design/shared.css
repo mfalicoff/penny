@@ -2030,3 +2030,309 @@ a.row:hover {
   font-size: 1.25rem;
   font-weight: 700;
 }
+
+/* ---------- the selected expense beside the table (card `web-shared-expense`) ---------- */
+.expense-table tbody tr.expense-table__open > * {
+  background: var(--pk-tint-soft);
+}
+
+.expense-panel__tile {
+  order: -1;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+}
+
+.expense-panel__title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+.expense-detail {
+  gap: 10px;
+}
+
+/* Label at the start, value at the end, a hairline between rows. */
+.detail-grid--rows {
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 0;
+  font-size: 0.875rem;
+}
+
+.detail-grid--rows dt,
+.detail-grid--rows dd {
+  padding: 5px 0;
+  border-top: 0.5px solid var(--pk-separator);
+}
+
+.detail-grid--rows dt:first-of-type,
+.detail-grid--rows dd:first-of-type {
+  border-top: 0;
+}
+
+.detail-grid--rows dt {
+  padding-inline-end: 12px;
+}
+
+.detail-grid--rows dd {
+  font-weight: 600;
+  text-align: end;
+}
+
+.expense-detail > .note {
+  margin: 0;
+  font-size: 0.8125rem;
+}
+
+/* Your share on a neutral strip, its amount as large as the title. */
+.your-share--plain {
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--pk-surface-2);
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+
+.your-share--plain > span {
+  color: var(--pk-label-2);
+}
+
+.your-share--plain .money {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.expense-detail .shared-section {
+  gap: 2px;
+}
+
+.detail-shares > li + li {
+  border-top: 0.5px solid var(--pk-separator);
+}
+
+.detail-share {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 6px 0;
+  font-size: 0.875rem;
+}
+
+.detail-share__name {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.detail-share__tag {
+  margin-inline-start: 6px;
+  color: var(--pk-label-2);
+  font-size: 0.75rem;
+}
+
+.detail-share > .money {
+  font-weight: 600;
+}
+
+.expense-detail__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.expense-detail__actions > .wbtn--danger-quiet {
+  margin-inline-start: auto;
+}
+
+.expense-detail__actions > .wbtn--danger-quiet {
+  background: transparent;
+}
+
+.expense-detail__actions > .wbtn--danger-quiet:hover {
+  background: var(--pk-danger-soft);
+}
+
+/* The Shared list's + sits right after the title (`web-households`); search and Add entry stay at the end. */
+@media (min-width: 768px) {
+  .group-tools--start .group-tools__end {
+    margin-inline-start: 0;
+  }
+}
+
+/* ---------- the Shared list from 768px (card `web-households`) ---------- */
+.shared-list__glow,
+.start-action__chevron {
+  display: none;
+}
+
+/* Phones (`iphone-shared-list`) have no Start sharing heading: the rows say what they do. */
+@media (max-width: 767.98px) {
+  .shared-start > h2 {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+}
+
+@media (min-width: 768px) {
+  .shared-list {
+    width: 100%;
+    max-width: 880px;
+    margin-inline: auto;
+    gap: 0;
+  }
+
+  .shared-list > .shared-overall {
+    margin: 0 0 4px;
+  }
+
+  .shared-list .shared-section {
+    gap: 0;
+  }
+
+  .shared-list .shared-section > h2 {
+    margin: 22px 4px 8px;
+    font-size: 0.75rem;
+  }
+
+  .shared-list__glow {
+    display: block;
+    inset: -220px -60px auto;
+    height: 560px;
+    opacity: 0.55;
+  }
+
+  /* Each section is one panel of rows with hairlines between them. */
+  .shared-groups {
+    gap: 0;
+    overflow: hidden;
+    border-radius: 20px;
+    background: var(--pk-surface);
+    box-shadow: 0 0 0 0.5px var(--pk-separator);
+  }
+
+  .shared-groups > li + li .group-row {
+    position: relative;
+  }
+
+  .shared-groups > li + li .group-row::before {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 80px;
+    border-top: 0.5px solid var(--pk-separator);
+    content: "";
+  }
+
+  .group-row {
+    gap: 16px;
+    min-height: 0;
+    padding: 16px 20px;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  .group-row:hover {
+    background: var(--pk-fill);
+  }
+
+  .group-row__tile {
+    width: 44px;
+    height: 44px;
+    border-radius: 13px;
+  }
+
+  .group-row__name {
+    font-size: 1rem;
+    letter-spacing: -0.01em;
+  }
+
+  .group-row__main {
+    gap: 4px;
+  }
+
+  .group-row__balance .money {
+    font-size: 1.125rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .group-row__balance--settled {
+    font-size: 0.875rem;
+  }
+
+  .start-actions {
+    margin: 0;
+    border-radius: 20px;
+  }
+
+  .start-actions > li + li .start-action::before {
+    left: 72px;
+  }
+
+  .start-action {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 1px 16px;
+    padding: 13px 20px;
+  }
+
+  .start-action:hover {
+    background: var(--pk-fill);
+  }
+
+  .start-action__tile {
+    color: var(--pk-tint-text);
+  }
+
+  .start-action__title {
+    color: var(--pk-label);
+    font-size: 1rem;
+    letter-spacing: -0.01em;
+  }
+
+  .start-action__text {
+    font-size: 0.8125rem;
+  }
+
+  .start-action__chevron {
+    display: grid;
+    grid-row: 1 / span 2;
+    grid-column: 3;
+    color: var(--pk-label-3);
+  }
+}
+
+/* ---------- Join with a code and New household (card `web-join-code`) ---------- */
+/* The invite code in the card's spaced code type. */
+.form-field input.invite-code-input {
+  min-height: 48px;
+  border-radius: 12px;
+  background: var(--pk-surface-2);
+  font-size: 1.25rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.14em;
+}
+
+/* The form's actions are the dialog's footer: a tinted bar across the bottom, buttons at the end. */
+.pk-dialog__body > .form > .start-form__foot,
+.pk-dialog__body > .start-form > .start-form__foot {
+  justify-content: flex-end;
+  margin: 6px -18px -18px;
+  padding: 12px 18px;
+  border-top: 0.5px solid var(--pk-separator);
+  background: var(--pk-surface-2);
+}

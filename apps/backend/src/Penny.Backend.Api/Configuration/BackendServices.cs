@@ -51,6 +51,22 @@ public static class BackendServices
         builder.Services.AddSingleton(options);
         var controls = AddTestControls(builder);
         builder.Services.AddSingleton(_ => database.CreateDataSource());
+        // First hosted service: migrate before workers and Kestrel start.
+        if (ReadMigrateOnStartup(configuration))
+            builder.Services.AddHostedService(provider => new StartupMigration(
+                DatabaseSettings.Create(
+                    configuration.GetConnectionString("Postgres"),
+                    maxPoolSize: 1,
+                    BackendOptions.ReadBounded(
+                        configuration,
+                        "Database:ConnectTimeoutSeconds",
+                        5,
+                        1,
+                        30
+                    )
+                ),
+                provider.GetRequiredService<ILogger<StartupMigration>>()
+            ));
         builder.Services.AddSingleton<IStorageReadiness, PostgresReadiness>();
         builder.Services.Configure<ApiBehaviorOptions>(api =>
             api.InvalidModelStateResponseFactory = _ => new BadRequestObjectResult(
@@ -103,6 +119,19 @@ public static class BackendServices
             OcrOptions.Read(configuration)
         );
     }
+
+    // On by default, like other self-hosted servers; off when an operator (or a test host)
+    // runs the `migrate` command itself.
+    private static bool ReadMigrateOnStartup(IConfiguration configuration) =>
+        configuration["Database:MigrateOnStartup"] switch
+        {
+            null => true,
+            "true" => true,
+            "false" => false,
+            _ => throw new InvalidOperationException(
+                "Database:MigrateOnStartup must be true or false."
+            ),
+        };
 
     // MAZ-62 full-stack test controls: a pinnable clock, injected faults, unique users
     // and data reset. Off by default; TestControlOptions refuses Production. When off,
@@ -314,7 +343,7 @@ public static class BackendServices
             "Receipts:MinFreeMegabytes",
             100,
             0,
-            1_000_000
+            100_000_000
         );
         services.AddSingleton<IStorageReadiness>(
             new ReceiptStorageReadiness(receipts, minimumFreeMegabytes * 1024L * 1024L)
