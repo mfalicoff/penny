@@ -1,0 +1,55 @@
+<!-- @dsCard group="iPhone" name="Searching your server" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Searching your server</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<style>
+  .head { padding: 112px 20px 0; }
+  .chips { display: flex; gap: 8px; padding: 14px 16px 0; overflow: hidden; }
+  .scope { display: flex; align-items: center; gap: 6px; padding: 16px 20px 0; font-size: 13px; color: var(--label-2); }
+  .scope [data-i] { width: 14px; height: 14px; --sw: 52px; }
+  .loading { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 96px 36px 0; font-size: 15px; color: var(--label-2); }
+  .spin { position: relative; width: 28px; height: 28px; }
+  .spin i { position: absolute; left: 12.5px; top: 0; width: 3px; height: 8px; border-radius: 2px; background: var(--label-2); transform-origin: 1.5px 14px; }
+  .spin i:nth-child(1) { transform: rotate(0deg); opacity: 1; }
+  .spin i:nth-child(2) { transform: rotate(45deg); opacity: .88; }
+  .spin i:nth-child(3) { transform: rotate(90deg); opacity: .76; }
+  .spin i:nth-child(4) { transform: rotate(135deg); opacity: .64; }
+  .spin i:nth-child(5) { transform: rotate(180deg); opacity: .52; }
+  .spin i:nth-child(6) { transform: rotate(225deg); opacity: .4; }
+  .spin i:nth-child(7) { transform: rotate(270deg); opacity: .3; }
+  .spin i:nth-child(8) { transform: rotate(315deg); opacity: .2; }
+  .searchbar { position: absolute; left: 16px; right: 16px; bottom: 26px; display: flex; gap: 10px; z-index: 25; }
+  .search { flex: 1; height: 52px; border-radius: 26px; display: flex; align-items: center; gap: 8px; padding: 0 14px 0 18px; font-size: 17px; }
+  .search [data-i] { width: 19px; height: 19px; color: var(--label-2); }
+  .search .clear { margin-left: auto; width: 22px; height: 22px; border-radius: 50%; background: var(--label-3); color: var(--surface); display: grid; place-items: center; }
+  .search .clear [data-i] { width: 13px; height: 13px; color: var(--surface); --sw: 60px; }
+  .caret { display: inline-block; width: 2px; height: 22px; background: var(--tint); margin-left: 1px; vertical-align: -4px; }
+  .tabmini { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; }
+  .tabmini [data-i] { width: 22px; height: 22px; }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <div class="island"></div>
+  <div class="status"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="scroll">
+    <div class="navbar">
+      <div></div>
+      <div class="grp"><div class="glass gbtn"><i data-i="options"></i></div></div>
+    </div>
+    <div class="head"><div class="largetitle">Activity</div></div>
+    <div class="chips">
+      <span class="pill on">All</span><span class="pill">Expenses</span><span class="pill">Income</span><span class="pill">Investments</span><span class="pill"><i data-i="calendar"></i>November</span>
+    </div>
+    <div class="scope"><i data-i="search"></i>Searching your server…</div>
+    <div class="loading">
+      <div class="spin"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      Searching your server…
+    </div>
+  </div>
+  <div class="searchbar">
+    <div class="glass tabmini"><i data-i="close"></i></div>
+    <div class="glass search"><i data-i="search"></i><span>coffee<span class="caret"></span></span><span class="clear"><i data-i="close"></i></span></div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+</body></html>

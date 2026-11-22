@@ -75,7 +75,7 @@
   "sources": [
     {
       "path": "docs/design/penny-ios/README.md",
-      "sha256": "ede37ba2f79366e76ea7dd232e8b743b942cf44f00d82209f78bb3db3082d1ac"
+      "sha256": "3d29322cbfcbbcfa0e1030d13ff77815ccebd16a5c9af9d00d20cff02701d7f1"
     },
     {
       "path": "docs/design/penny-ios/render.mjs",
@@ -131,7 +131,7 @@
     },
     {
       "path": ".design-sync/NOTES.md",
-      "sha256": "754e4beaf7681de6815d60d0115de66401ee2bb80fc0813de407eb16679b58da"
+      "sha256": "549a2a7c5b181cf83cf39519923f212894aef2e99d7efb2655a49c5af6471ce3"
     },
     {
       "path": "docs/design/penny-ios/compare.mjs",
@@ -143,7 +143,7 @@
     },
     {
       "path": "docs/design/visual-acceptance.md",
-      "sha256": "4a494cca3ba3d54c700982744c75ab28a167fa496ec307cf03d39c310649bbcb"
+      "sha256": "4ca31c130159dc36528d1fdab34d2bdd9c65d04eb21c562034baf7fcc92bccd8"
     }
   ],
   "tokens": {
@@ -1510,6 +1510,420 @@
       "status": "planned"
     },
     {
+      "id": "iphone-activity-filters",
+      "name": "Activity filters",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Daily money",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/activity-filters.html",
+      "sha256": "d589f909b9b96152bdc9571914c3ac2078286ff8b1a8ad0b89e6ce386aaec220",
+      "nativeIssue": "MAZ-73",
+      "webIssue": "MAZ-88",
+      "route": "/transactions",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "day grouping, filters, server search with pending local scope, swipe or row actions"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-activity-searching",
+      "name": "Searching your server",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Daily money",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/activity-searching.html",
+      "sha256": "3006c865e0fa1ed47f5ec6e6c889ad8014d1e364bffbfbb04595987b619b8bbb",
+      "nativeIssue": "MAZ-73",
+      "webIssue": "MAZ-88",
+      "route": "/transactions",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "day grouping, filters, server search with pending local scope, swipe or row actions"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-home-explore",
+      "name": "Home: Expected income and Explore your month",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Daily money",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/home-explore.html",
+      "sha256": "4217e6c601af7c72a481383fb98b4203037368ce330889499dbb1bbbdd497624",
+      "nativeIssue": "MAZ-77",
+      "webIssue": "MAZ-92",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-account-picker",
+      "name": "Account picker",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Entries",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/account-picker.html",
+      "sha256": "55067630af3ef10a9b395181ffdbcbd436513c7479585932c3a9cfeeacce6c8c",
+      "nativeIssue": "MAZ-73",
+      "webIssue": "MAZ-88",
+      "route": "/entries/new",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "three-tap expense, retained draft, keyboard-safe save, duplicate-submit and validation"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-household-picker",
+      "name": "Household picker",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Entries",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/household-picker.html",
+      "sha256": "13343c2bdf04a792756d71ced3dbcd485d338e025635b7284fd01a36f17a6522",
+      "nativeIssue": "MAZ-73",
+      "webIssue": "MAZ-88",
+      "route": "/entries/new",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "three-tap expense, retained draft, keyboard-safe save, duplicate-submit and validation"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-edit-entry",
+      "name": "Edit entry",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Entries",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/edit-entry.html",
+      "sha256": "de0e8edda5ec273a0856042cae925c263415836f99c3471c9044f8995dd69c4b",
+      "nativeIssue": "MAZ-73",
+      "webIssue": "MAZ-88",
+      "route": "/entries/new",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "three-tap expense, retained draft, keyboard-safe save, duplicate-submit and validation"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-shared-expense-detail",
+      "name": "Shared expense",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Shared",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/shared-expense-detail.html",
+      "sha256": "f0d589ea1837641980ac1e7eb9001fff30f240d07ec44985c820fb0deb43ccda",
+      "nativeIssue": "MAZ-75",
+      "webIssue": "MAZ-91",
+      "route": "/households",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "two-user shared expense, balances, payment recording, privacy and stale revisions"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-join-code",
+      "name": "Join with a code",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Shared",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/join-code.html",
+      "sha256": "fd39e602b03452e955a291d4d86481ea6941879f81c78c6c6d20786bf42cdf69",
+      "nativeIssue": "MAZ-75",
+      "webIssue": "MAZ-91",
+      "route": "/households",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "two-user shared expense, balances, payment recording, privacy and stale revisions"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-invite-scanner",
+      "name": "Scan invite",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Shared",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/invite-scanner.html",
+      "sha256": "aef0a1b754080361db16cb5a6bf2ed9558b10f204dae705105e1764a15937e14",
+      "nativeIssue": "MAZ-75",
+      "webIssue": null,
+      "route": "/households",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": null,
+        "scenario": "two-user shared expense, balances, payment recording, privacy and stale revisions"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-invite",
+      "name": "Invite someone",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Shared",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/invite.html",
+      "sha256": "1aea5c93a0dd7a0e597e265321b40f34a83d4ac32038fb5101868c8c8c850701",
+      "nativeIssue": "MAZ-75",
+      "webIssue": "MAZ-91",
+      "route": "/households",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "two-user shared expense, balances, payment recording, privacy and stale revisions"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-notifications-prompt",
+      "name": "Notifications prompt",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Shared",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/notifications-prompt.html",
+      "sha256": "949e18092fdb03407aa55d67f1a0914a164b2be8a725606d8cf60705de838994",
+      "nativeIssue": "MAZ-75",
+      "webIssue": null,
+      "route": "/households",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": null,
+        "scenario": "two-user shared expense, balances, payment recording, privacy and stale revisions"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-trip-personal",
+      "name": "Personal trip",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Trips",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/trip-personal.html",
+      "sha256": "3328f7e56736516ec17195ea04a14e59ba2b01e3e1533d250c0725160ec33b81",
+      "nativeIssue": "MAZ-76",
+      "webIssue": "MAZ-93",
+      "route": "/trips",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "personal and shared trips, Only you entries, membership and balances"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-trip-share",
+      "name": "Share a trip",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Trips",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/trip-share.html",
+      "sha256": "31870f23a09384b0fb114fe3faff9a951cf50d93f7730b8c9f3bef4053e09032",
+      "nativeIssue": "MAZ-76",
+      "webIssue": "MAZ-93",
+      "route": "/trips",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "personal and shared trips, Only you entries, membership and balances"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-schedule-form",
+      "name": "New schedule",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Organize & settings",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/schedule-form.html",
+      "sha256": "963c99ebb029ed9104eecfc1c6473ad090f48af56dfa70c0db664551d75bea7b",
+      "nativeIssue": "MAZ-74",
+      "webIssue": "MAZ-90",
+      "route": "/recurring",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "cadence, next date, pause and remove, anchor-31 rules"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-currency",
+      "name": "Currency",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Organize & settings",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/currency.html",
+      "sha256": "733337c4fc34378082b540809b2cc1629686c58934d38f06fdf9042eee198248",
+      "nativeIssue": "MAZ-69",
+      "webIssue": "MAZ-85",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "settings sheet or pane, persistence, larger text, VoiceOver and keyboard"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-sync-failed",
+      "name": "Couldn't sync",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Access & states",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/sync-failed.html",
+      "sha256": "ec9555a5ff53dd33a00e7c913359ec9e29484b275584c164afc42853f28f4d7e",
+      "nativeIssue": "MAZ-71",
+      "webIssue": "MAZ-87",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "offline banner, pending rows, reconnect and conflict-safe sync"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-shared-missing",
+      "name": "Shared expenses may be missing",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Access & states",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/shared-missing.html",
+      "sha256": "0e5d1a45eed9e9e40d01b37db8e34ff7abc746ad4932e9a86f6ebad42688742f",
+      "nativeIssue": "MAZ-75",
+      "webIssue": "MAZ-91",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "two-user shared expense, balances, payment recording, privacy and stale revisions"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-demo",
+      "name": "Demo",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Access & states",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/demo.html",
+      "sha256": "d44d8964d5a779fcd93d8332b5278dc8ae1bb21b44394d681508a7d95cb911a8",
+      "nativeIssue": "MAZ-68",
+      "webIssue": "MAZ-84",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "password and OIDC sign-in, registration, sign-out with pending changes"
+      },
+      "status": "planned"
+    },
+    {
       "id": "iphone-receipt-inbox",
       "name": "Receipts to attach",
       "group": "iPhone",
@@ -1808,6 +2222,29 @@
         "native": "MAZ-82",
         "web": "MAZ-96",
         "scenario": "settings sheet or pane, persistence, larger text, VoiceOver and keyboard"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "ipad-home-portrait",
+      "name": "Home (portrait)",
+      "group": "iPad",
+      "platform": "iPad",
+      "category": "iPad",
+      "viewport": {
+        "w": 914,
+        "h": 1274
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/ipad/home-portrait.html",
+      "sha256": "a464e2b71e7f020064373747ae3db3587cd43013404bc1798c5c590693275c8e",
+      "nativeIssue": "MAZ-77",
+      "webIssue": "MAZ-92",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
       },
       "status": "planned"
     },
@@ -2156,6 +2593,374 @@
         "native": "MAZ-82",
         "web": "MAZ-96",
         "scenario": "password and OIDC sign-in, registration, sign-out with pending changes"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-households",
+      "name": "All households",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/households.html",
+      "sha256": "27bf9a0111e48333388badf286b7df95ae320ec08f768688bcb8a98df8d649b4",
+      "nativeIssue": "MAZ-75",
+      "webIssue": "MAZ-91",
+      "route": "/households",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "two-user shared expense, balances, payment recording, privacy and stale revisions"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-shared-expense",
+      "name": "Shared expense",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/shared-expense.html",
+      "sha256": "7ead6bf924cbb366b20aa6f171c72ef171bc0ab90908d3d1c5ed0a781b3ffb4c",
+      "nativeIssue": "MAZ-75",
+      "webIssue": "MAZ-91",
+      "route": "/households",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "two-user shared expense, balances, payment recording, privacy and stale revisions"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-trip",
+      "name": "Trip",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/trip.html",
+      "sha256": "0a207f1010dc65095e80821cda961fbca49335ba232be1048b1ffc193724218c",
+      "nativeIssue": "MAZ-76",
+      "webIssue": "MAZ-93",
+      "route": "/trips",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "personal and shared trips, Only you entries, membership and balances"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-recurring",
+      "name": "Recurring",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/recurring.html",
+      "sha256": "9b6df70434beb9105efd3e2633bcd4df3da5661878d1ec73932e342fc205c4c2",
+      "nativeIssue": "MAZ-74",
+      "webIssue": "MAZ-90",
+      "route": "/recurring",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "cadence, next date, pause and remove, anchor-31 rules"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-accounts",
+      "name": "Accounts",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/accounts.html",
+      "sha256": "343766181d04453be5bdcc7ad5b583c7676b46d2b6f96c7bbd38ce0e5dffe7c6",
+      "nativeIssue": "MAZ-74",
+      "webIssue": "MAZ-89",
+      "route": "/accounts",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "label-only accounts with usage counts; in-use accounts cannot be removed"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-categories",
+      "name": "Categories",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/categories.html",
+      "sha256": "f909f940fb4161ac872bdee34bcd3a22267bbf2fb941a9cfe2620dcbcd013c32",
+      "nativeIssue": "MAZ-74",
+      "webIssue": "MAZ-89",
+      "route": "/categories",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "category palette only, kinds, rename merge and in-use protection"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-currency",
+      "name": "Currency",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/currency.html",
+      "sha256": "7d97108352703ccc24f2996009ad577c0c2fcecde371c941c73958576947a56f",
+      "nativeIssue": "MAZ-69",
+      "webIssue": "MAZ-85",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "settings sheet or pane, persistence, larger text, VoiceOver and keyboard"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-schedule-form",
+      "name": "New schedule",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/schedule-form.html",
+      "sha256": "145d6e4a3de54007efe7614e6bba3e8091274be1f056ed53148f28c46d0ec247",
+      "nativeIssue": "MAZ-74",
+      "webIssue": "MAZ-90",
+      "route": "/recurring",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "cadence, next date, pause and remove, anchor-31 rules"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-edit-entry",
+      "name": "Edit entry",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/edit-entry.html",
+      "sha256": "bd29d3a2b758723c516ae07536f4910711f4e52cd1fa406206aa5aa57a90dbdb",
+      "nativeIssue": "MAZ-73",
+      "webIssue": "MAZ-88",
+      "route": "/entries/new",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "three-tap expense, retained draft, keyboard-safe save, duplicate-submit and validation"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-join-code",
+      "name": "Join with a code",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/join-code.html",
+      "sha256": "27ad2d70ccf407be4d384c49defd621c51500102c222e0a30e4edc5bc9e65b9b",
+      "nativeIssue": "MAZ-75",
+      "webIssue": "MAZ-91",
+      "route": "/households",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "two-user shared expense, balances, payment recording, privacy and stale revisions"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-activity-searching",
+      "name": "Searching",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/activity-searching.html",
+      "sha256": "50bd7682479dfd38c5f24038dd66b399ff0a8bc2c9c2672bdc027610cea3da95",
+      "nativeIssue": "MAZ-73",
+      "webIssue": "MAZ-88",
+      "route": "/transactions",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "day grouping, filters, server search with pending local scope, swipe or row actions"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-server-unreachable",
+      "name": "Can't reach your server",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/server-unreachable.html",
+      "sha256": "563e5a9cafa85b621d444306cac19a8fb2f1d78a2c8becef74d2baaaa9e4d069",
+      "nativeIssue": "MAZ-71",
+      "webIssue": "MAZ-87",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "offline banner, pending rows, reconnect and conflict-safe sync"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-demo",
+      "name": "Demo",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/demo.html",
+      "sha256": "c5c6dbac3a3df1077bac9f3312114ebe3a362256784839976622bde89a4c211c",
+      "nativeIssue": "MAZ-68",
+      "webIssue": "MAZ-84",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "password and OIDC sign-in, registration, sign-out with pending changes"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-tablet",
+      "name": "Home (768 to 1099px)",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1104,
+        "h": 848
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/tablet.html",
+      "sha256": "6325ca6ba41fc8d62f1ccbaeffbbb8b84b4f5734946c109aad24f537218d9950",
+      "nativeIssue": "MAZ-77",
+      "webIssue": "MAZ-92",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-password-reset",
+      "name": "Set a new password",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/password-reset.html",
+      "sha256": "60ace124203e463a3d33cc229cc9f368d00965412f22a8d30ef778cd6c685bf7",
+      "nativeIssue": "MAZ-68",
+      "webIssue": "MAZ-84",
+      "route": "/auth/callback",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "password and OIDC sign-in, registration, sign-out with pending changes"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "web-export",
+      "name": "Export data",
+      "group": "Web",
+      "platform": "Web",
+      "category": "Web",
+      "viewport": {
+        "w": 1520,
+        "h": 980
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/web/export.html",
+      "sha256": "f3d04d130ba1d5d7cd4c2ce6cd134198b15e9f8af1a64771f06dcac6181471d1",
+      "nativeIssue": "MAZ-69",
+      "webIssue": "MAZ-85",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "settings sheet or pane, persistence, larger text, VoiceOver and keyboard"
       },
       "status": "planned"
     },
