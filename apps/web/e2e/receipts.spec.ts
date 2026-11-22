@@ -52,6 +52,12 @@ interface Server {
   hold: Promise<void> | null;
   /** Every private request answers 401. */
   expired: boolean;
+  /**
+   * The next receipt read ends the session: it answers 401, and so does every private request
+   * after it. Requests the app sends on its own before that read (a ledger sync) still succeed,
+   * so only the receipt can be what signs the person out.
+   */
+  expireOnReceiptRead: boolean;
 }
 
 async function mockApi(context: BrowserContext, transactions: Entry[] = []): Promise<Server> {
@@ -71,12 +77,14 @@ async function mockApi(context: BrowserContext, transactions: Entry[] = []): Pro
     failNext: null,
     hold: null,
     expired: false,
+    expireOnReceiptRead: false,
   };
   await context.route("**/api/**", async (route) => {
     const request = route.request();
     const { pathname } = new URL(request.url());
     if (pathname === "/api/info") return route.fulfill({ json: { name: "penny", version: "2.0.0-e2e" } });
     if (pathname === "/api/auth/oidc") return route.fulfill({ json: { enabled: false } });
+    if (server.expireOnReceiptRead && request.method() === "GET" && /^\/api\/receipts\/[^/]+$/.test(pathname)) server.expired = true;
     if (server.expired) return route.fulfill({ status: 401, json: { error: "Please sign in to continue." } });
     if (pathname === "/api/auth/me") return route.fulfill({ json: { email: EMAIL } });
     if (pathname === "/api/ledger") {
@@ -389,14 +397,22 @@ test("a receipt you can't read says so, and an ended session returns to sign-in"
   const server = await mockApi(context, [hidden]);
   await open(page);
   await page.getByRole("region", { name: "Search results" }).getByRole("button", { name: /^Shared dinner/ }).click();
-  await page.getByRole("dialog", { name: "Shared dinner" }).or(page.getByRole("complementary", { name: "Shared dinner" })).getByRole("button", { name: "Open receipt dinner.pdf" }).click();
+  const detail = page.getByRole("dialog", { name: "Shared dinner" }).or(page.getByRole("complementary", { name: "Shared dinner" }));
+  await expect(detail).toBeVisible();
+  const opener = detail.getByRole("button", { name: "Open receipt dinner.pdf" });
+  await opener.click();
   const preview = page.getByRole("dialog", { name: "dinner.pdf" });
   await expect(preview.getByRole("alert")).toContainText("This receipt isn't available");
   await expect(preview.getByRole("button", { name: "Download" })).toHaveCount(0);
   await preview.getByRole("button", { name: "Close" }).click();
+  await expect(preview).toHaveCount(0);
+  await expect(opener).toBeFocused();
 
-  server.expired = true;
-  await page.getByRole("dialog", { name: "Shared dinner" }).or(page.getByRole("complementary", { name: "Shared dinner" })).getByRole("button", { name: "Open receipt dinner.pdf" }).click();
+  // The session ends with the next receipt read (MAZ-217). Ending it before the click made every
+  // request answer 401, so a ledger sync the app sent on its own could sign out first, and the
+  // click then waited for a detail that was gone.
+  server.expireOnReceiptRead = true;
+  await opener.click();
   await expect(page.getByRole("heading", { level: 1, name: "Welcome back" })).toBeVisible();
   await expect(page.getByRole("status").filter({ hasText: "Your session ended" })).toBeVisible();
   expect(unexpected(errors)).toEqual([]);
