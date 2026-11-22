@@ -186,6 +186,12 @@ The API creates missing extensions itself when its login may, but `vector` is no
 
 Then in `deploy/.env`: `COMPOSE_PROFILES=` (empty), `PENNY_DB_HOST`, `PENNY_DB_PORT`, `PENNY_DB_NAME`, `PENNY_DB_SSL_MODE=VerifyFull`, `PENNY_DB_USER` and `PENNY_DB_PASSWORD`. For a private CA, mount the certificate read-only into `api` with a `compose.override.yaml` and point `PENNY_DB_OPTIONS=;Root Certificate=/run/penny/ca.pem` at it. A connection pooler in front of PostgreSQL must run in **session** mode: the migration holds a session advisory lock.
 
+### Client connection checks
+
+Set `client_connection_check_interval = 1s` on the server. When a database command times out (`Database__CommandTimeoutSeconds`) and PostgreSQL doesn't acknowledge the cancellation within a second, the API closes the connection. Without this setting, PostgreSQL notices that only once the statement finishes, so the statement keeps running and holding its locks, and one timed-out request can block other users' writes for as long as it runs. With it, PostgreSQL checks the connection every second while a statement runs and stops the statement when the client is gone.
+
+The bundled `postgres` service, the [NixOS module](nixos.md) and the development stacks set it already. For an external server, set it in `postgresql.conf` (or your provider's parameter group), or for Penny's database only, as an administrator or the database owner: `ALTER DATABASE penny SET client_connection_check_interval = '1s';` (applies to new connections). On startup the API logs a warning, "PostgreSQL has client_connection_check_interval off", while its connections see the setting off. PostgreSQL supports the check only on Linux and a few other systems.
+
 ## Upgrade
 
 Every release is forward-only. Read the release notes first: they state whether the release contains a database migration. A database created before the EF migrations were squashed into `InitialSchema` is moved onto the squashed history by the migration itself, with no extra step ([backend README](../../apps/backend/README.md#upgrading-a-database-from-before-the-squash)).

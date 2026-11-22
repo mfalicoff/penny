@@ -602,6 +602,10 @@ in
       # Stronger than the stateVersion default, weaker than a plain definition.
       package = lib.mkOverride 900 pkgs.postgresql_18;
       extensions = ps: [ ps.pgvector ];
+      # A statement whose client gave up (a timed-out command whose cancellation wasn't
+      # acknowledged closes the socket) stops within a second instead of running on and
+      # holding its locks (docs/self-hosting/deployment.md#client-connection-checks).
+      settings.client_connection_check_interval = lib.mkDefault "1s";
       # The OS user `penny` may log in as the database user over the local socket.
       identMap = ''
         penny ${cfg.user} ${db.user}

@@ -26,6 +26,9 @@ pkgs.testers.runNixOSTest {
     machine.wait_for_unit("nginx.service")
     machine.wait_until_succeeds("curl -fsS http://localhost/api/ready | jq -e '.ok == true'", timeout=180)
 
+    # A statement whose client gave up stops within a second (MAZ-261).
+    machine.succeed("test \"$(runuser -u postgres -- psql -tAX -c 'SHOW client_connection_check_interval')\" = 1s")
+
     # Static app and SPA fallback.
     machine.succeed("curl -fsS http://localhost/ | grep -qi '<html'")
     machine.succeed("curl -fsS http://localhost/some/deep/link | grep -qi '<html'")

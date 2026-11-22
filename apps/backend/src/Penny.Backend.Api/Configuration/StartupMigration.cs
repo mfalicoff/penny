@@ -32,6 +32,7 @@ internal sealed partial class StartupMigration(
             {
                 await DatabaseMigrator.ApplyAsync(database, cancellationToken);
                 LogMigrated(logger);
+                await CheckClientConnectionChecksAsync(database, cancellationToken);
                 return;
             }
             catch (Exception error)
@@ -62,6 +63,27 @@ internal sealed partial class StartupMigration(
         }
     }
 
+    // MAZ-261: when a command times out and PostgreSQL doesn't acknowledge the cancellation
+    // within a second, Npgsql closes the socket. Without client_connection_check_interval,
+    // PostgreSQL only notices once the statement finishes, so it keeps running and holding
+    // its locks, blocking other users' writes. Penny's bundled servers set it; an external
+    // server may not, so say so on startup. Best effort: never stops the host.
+    private async Task CheckClientConnectionChecksAsync(
+        NpgsqlDataSource database,
+        CancellationToken cancellationToken
+    )
+    {
+        try
+        {
+            await using var command = database.CreateCommand(
+                "SELECT current_setting('client_connection_check_interval')"
+            );
+            if (await command.ExecuteScalarAsync(cancellationToken) is "0")
+                LogClientChecksOff(logger);
+        }
+        catch (Exception error) when (error is NpgsqlException or TimeoutException) { }
+    }
+
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
     private static bool Waitable(Exception error) =>
@@ -70,6 +92,12 @@ internal sealed partial class StartupMigration(
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Database migrated.")]
     private static partial void LogMigrated(ILogger logger);
+
+    [LoggerMessage(
+        Level = LogLevel.Warning,
+        Message = "PostgreSQL has client_connection_check_interval off: a statement whose request timed out keeps running and holding its locks. Set it to 1s on the server (docs/self-hosting/deployment.md#client-connection-checks)."
+    )]
+    private static partial void LogClientChecksOff(ILogger logger);
 
     [LoggerMessage(
         Level = LogLevel.Warning,
