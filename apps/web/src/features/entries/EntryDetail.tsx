@@ -1,7 +1,7 @@
 import { deleteEntry, saveEntry } from "@domain/commands.ts";
 import type { Category, Transaction } from "@domain/ledger.ts";
 import { isExpectedIncome } from "@domain/summary.ts";
-import { useId, useRef, useState, type ReactNode, type RefObject } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode, type RefObject } from "react";
 import { useToday } from "../../app/useToday";
 import { Badge, Button, cx } from "../../design/controls";
 import { Icon } from "../../design/Icon";
@@ -56,14 +56,17 @@ export function EntryDetailDialog({ entry, onClose, initialAction = "detail" }: 
  *   has no Close: Delete and Edit lead it over a glow, the tile sits beside the title, and the
  *   Split group lists your share and the other people's. Saving an edit keeps the entry open;
  *   deleting it calls `onClose`, and Activity selects another entry.
+ *
+ * On a desktop the panel steps aside while Edit is open (`web-edit-entry`: Activity with nothing
+ * selected behind the form), and `onEditing` tells Activity so, to drop the row's selection.
  */
-export function EntryDetailPanel({ entry, onClose, initialAction = "detail", touch = false }: DetailProps & { touch?: boolean }) {
+export function EntryDetailPanel({ entry, onClose, initialAction = "detail", touch = false, onEditing }: DetailProps & { touch?: boolean; onEditing?: (editing: boolean) => void }) {
   const titleId = useId();
   const editRef = useRef<HTMLButtonElement>(null);
   return (
-    <EntryDetailFrame entry={entry} onClose={onClose} initialAction={initialAction} keepOnSave={touch}>
-      {(sheet) => (
-        <aside className={touch ? "entry-panel entry-panel--pane" : "entry-panel"} aria-labelledby={titleId}>
+    <EntryDetailFrame entry={entry} onClose={onClose} initialAction={initialAction} keepOnSave={touch} onModeChange={onEditing ? (mode) => { onEditing(mode === "edit"); } : undefined}>
+      {(sheet, mode) => (
+        <aside className={touch ? "entry-panel entry-panel--pane" : "entry-panel"} aria-labelledby={titleId} hidden={!touch && mode === "edit"}>
           {touch ? <div className="entry-panel__glow" aria-hidden="true" /> : null}
           {sheet({ titleId, editRef, layout: touch ? "pane" : "panel" })}
         </aside>
@@ -84,11 +87,21 @@ interface SheetSlots {
 }
 
 /** The detail's content and its Edit and Delete flows, shared by the dialog and the panel. */
-function EntryDetailFrame({ entry: shown, onClose, initialAction, keepOnSave = false, children }: DetailProps & { initialAction: EntryAction; keepOnSave?: boolean; children: (sheet: (slots: SheetSlots) => ReactNode) => ReactNode }) {
+function EntryDetailFrame({
+  entry: shown,
+  onClose,
+  initialAction,
+  keepOnSave = false,
+  onModeChange,
+  children,
+}: DetailProps & { initialAction: EntryAction; keepOnSave?: boolean; onModeChange?: ((mode: EntryAction) => void) | undefined; children: (sheet: (slots: SheetSlots) => ReactNode, mode: EntryAction) => ReactNode }) {
   const writer = useLedgerWriter();
   const toast = useToast();
   const today = useToday();
   const [mode, setMode] = useState<EntryAction>(initialAction);
+  useEffect(() => {
+    onModeChange?.(mode);
+  }, [mode, onModeChange]);
   const live = writer.ledger?.transactions.find((item) => item.id === shown.id);
   const entry = live ?? shown;
   const gone = writer.ledger !== null && !live;
@@ -233,7 +246,7 @@ function EntryDetailFrame({ entry: shown, onClose, initialAction, keepOnSave = f
 
   return (
     <>
-      {children(sheet)}
+      {children(sheet, mode)}
       {mode === "edit" && live ? (
         <EntryFormDialog
           target={{ kind: "edit", entry: live }}

@@ -295,7 +295,8 @@ test("edits with a stale-version check and deletes after confirming", async ({ c
   server.ledger = { ...server.ledger, transactions: server.ledger.transactions.map((item) => (item.id === "rent" ? { ...item, total: 150000, share: 150000 } : item)) };
   server.revision += 1;
   await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
-  await expect(detail).toContainText("$1,500.00");
+  // The list behind the form shows the synced amount (on a desktop the detail panel steps aside while editing, MAZ-273).
+  await expect(results(page)).toContainText("1,500.00");
   await page.getByRole("dialog", { name: "Edit entry" }).getByRole("button", { name: SAVE }).click();
   const banner = edit.getByRole("alert");
   await expect(banner).toContainText("This entry changed on another device");

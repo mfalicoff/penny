@@ -44,7 +44,9 @@ interface Open {
  * - Desktops (`web-activity`): the period beside the title and search in the top bar; the chips,
  *   Filters and the period's summary over a table, and the open entry in a panel beside it.
  *
- * While searching, the chips are the active filters, each removable (`iphone-search-empty`).
+ * While searching on a phone or touch tablet, the chips are the active filters, each removable
+ * (`iphone-search-empty`). A desktop keeps its chips, and hides the period's summary while the
+ * results load (`web-activity-searching`, activity.css).
  */
 export function ActivityPage({ search, from }: { search: ActivitySearch; from: "/transactions" }) {
   const navigateTo = useNavigate({ from });
@@ -59,6 +61,8 @@ export function ActivityPage({ search, from }: { search: ActivitySearch; from: "
   const filters = rowFilters(search);
   const [open, setOpen] = useState<Open | null>(null);
   const [filtering, setFiltering] = useState(false);
+  // A desktop's panel steps aside while its Edit form is open (`web-edit-entry`).
+  const [editing, setEditing] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const tablet = useMediaQuery(TABLET);
   const wide = useMediaQuery(WIDE);
@@ -70,6 +74,7 @@ export function ActivityPage({ search, from }: { search: ActivitySearch; from: "
   // `ipad-activity`: on a touch tablet the pane always shows an entry, so the first listed one is
   // selected when Activity opens and whenever the selected one leaves the list.
   const pane = beside && touch;
+  const besideShown = beside && !(editing && !touch);
   const autoSelect = useCallback((pick: { entry: Transaction; row: HTMLElement } | null) => {
     if (!pick) {
       setOpen(null);
@@ -83,6 +88,7 @@ export function ActivityPage({ search, from }: { search: ActivitySearch; from: "
     if (!open) return;
     const { opener } = open;
     setOpen(null);
+    setEditing(false);
     // Back to where the person was: the row, or the search field if the row is gone (deleted).
     setTimeout(() => {
       // The list may have re-rendered (a save switches it to this device's copy), so find the row again by its key.
@@ -95,7 +101,8 @@ export function ActivityPage({ search, from }: { search: ActivitySearch; from: "
 
   const searchField = <SearchField key={search.q ?? ""} inputRef={searchRef} search={search} navigate={navigate} variant={desktop ? "top" : tablet ? "inline" : "bottom"} />;
   const narrowed = Boolean(search.kind || search.category || activeDay(search) || period.type !== "all");
-  const chips = search.q && narrowed ? (
+  // Desktops keep the type chips and Filters while searching (`web-activity-searching`): the period is beside the title.
+  const chips = search.q && narrowed && !desktop ? (
     <ActiveFilters search={search} navigate={navigate} ledger={ledger} />
   ) : (
     <div className="activity-chips">
@@ -119,7 +126,7 @@ export function ActivityPage({ search, from }: { search: ActivitySearch; from: "
       ledger={ledger ?? writer.ledger}
       shared={shared}
       layout={desktop ? "table" : "list"}
-      selectedKey={beside ? selectedKey : undefined}
+      selectedKey={besideShown ? selectedKey : undefined}
       autoSelect={pane ? autoSelect : undefined}
       onClear={(...keys) => {
         navigate((previous) => without(previous, ...keys));
@@ -132,7 +139,7 @@ export function ActivityPage({ search, from }: { search: ActivitySearch; from: "
   );
 
   return (
-    <div className={cx("page activity", !tablet && "activity--phone", beside && open && "activity--beside")}>
+    <div className={cx("page activity", !tablet && "activity--phone", besideShown && open && "activity--beside")}>
       {desktop ? <PeriodStepper search={search} navigate={navigate} slot /> : null}
       {/* While searching, the phone's top row is empty (`iphone-search-empty`): the active filters are the chips. */}
       {tablet || search.q ? null : <PhoneFiltersButton search={search} onClick={() => { setFiltering(true); }} />}
@@ -155,7 +162,7 @@ export function ActivityPage({ search, from }: { search: ActivitySearch; from: "
       </div>
       {!tablet ? searchField : null}
 
-      {open && beside ? <EntryDetailPanel key={`${open.entry.id}:${String(open.nonce)}`} entry={open.entry} initialAction={open.action} touch={touch} onClose={close} /> : null}
+      {open && beside ? <EntryDetailPanel key={`${open.entry.id}:${String(open.nonce)}`} entry={open.entry} initialAction={open.action} touch={touch} onClose={close} onEditing={setEditing} /> : null}
       {open && !beside ? <EntryDetailDialog key={`${open.entry.id}:${String(open.nonce)}`} entry={open.entry} initialAction={open.action} onClose={close} /> : null}
       {filtering ? (
         <FiltersDialog

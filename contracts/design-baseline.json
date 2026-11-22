@@ -131,7 +131,7 @@
     },
     {
       "path": ".design-sync/NOTES.md",
-      "sha256": "883f40898ad396e76427a8f13f1ec71500826409557cdff4c6dcf0b9b870e745"
+      "sha256": "76dd6a38732af2f5e709d1605256e60ad13b255d09eeb3de338aaa5edef170ea"
     },
     {
       "path": "docs/design/penny-ios/compare.mjs",
@@ -143,7 +143,7 @@
     },
     {
       "path": "docs/design/visual-acceptance.md",
-      "sha256": "ce1df1dd10446a708cdb7bb28676cdaa38a2ceaa4026bc746f429d093d52cd7d"
+      "sha256": "7a9544d8eb54fc34542b7f72e12918cd493765246cfb97aa81234b490d68ecbe"
     }
   ],
   "tokens": {
@@ -2119,7 +2119,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/ipad/activity.html",
-      "sha256": "9a87af30666314fc75ef5bca635f42da5d3f910371ffd43d72baebb84e1c7c11",
+      "sha256": "62d9f1d6e395070674362abd62035c453e730482ead4d84b23884be517adc682",
       "nativeIssue": "MAZ-73",
       "webIssue": "MAZ-88",
       "route": "/transactions",
@@ -2444,7 +2444,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/web/activity.html",
-      "sha256": "0f81e00619ae7aee0fe1582311f055acaaf172964ad9fdc25f0de3e98fe83213",
+      "sha256": "cae71657abf0c3e88a22c538d3fbe05ad5228ec20087bafc0e14c9a6f5f8d5a0",
       "nativeIssue": "MAZ-73",
       "webIssue": "MAZ-88",
       "route": "/transactions",
