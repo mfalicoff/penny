@@ -990,3 +990,75 @@ body:has(.pk-toast) .topbar__add {
     display: none;
   }
 }
+
+/*
+ * The lists take the sidebar's width, so a long trip or household name ends in an ellipsis
+ * instead of widening every row past the sidebar's edge (card `web-demo`, MAZ-283).
+ */
+.sidebar__nav,
+.sidebar__list {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* The demo's footer: a copper play mark, "Demo" and "Sample data" (card `web-demo`). */
+.sidebar__demo-mark {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--pk-tint-soft);
+  color: var(--pk-tint);
+}
+
+.sidebar__foot--demo {
+  min-height: 44px;
+}
+
+/*
+ * The footer's settings button keeps its 44px target but lets the account text run under its
+ * padding, so "Can't reach server" fits beside it (card `web-server-unreachable`).
+ */
+@media (min-width: 1100px) {
+  .sidebar__foot {
+    gap: 8px;
+  }
+
+  .sidebar__foot .iconlink {
+    margin-inline-start: -8px;
+  }
+}
+
+/*
+ * 768–1099px with a mouse (card `web-tablet`, MAZ-283): search is a square icon button like the
+ * calendar's, which opens Activity's search, and the rail ends with Settings above the avatar.
+ */
+@media (min-width: 768px) and (max-width: 1099.98px) and (hover: hover) {
+  .topsearch {
+    display: none;
+  }
+
+  .topbar__search,
+  .topbar__search.glass {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--pk-separator);
+    border-radius: 10px;
+    background: var(--pk-surface);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+    backdrop-filter: none;
+  }
+
+  .topbar__search .icon {
+    width: 17px !important;
+    height: 17px !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1099.98px) {
+  .sidebar--rail .sidebar__foot .iconlink {
+    order: -1;
+  }
+}

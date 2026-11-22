@@ -1,11 +1,11 @@
 import { useId, useMemo, useState } from "react";
 import { kinds, type Category, type Kind } from "@domain/ledger.ts";
 import { ChoiceGroup } from "../../design/controls";
-import { GroupToolbar, ToolButton } from "../households/GroupTools";
 import { EmptyState, ErrorState, LoadingState } from "../../design/states";
 import { CategoryFormDialog } from "./CategoryFormDialog";
+import { ManageAdd } from "./ManageAdd";
 import { OrganizeRow } from "./OrganizeRow";
-import { categoryIcon, categoryUsage, kindLabels, unsyncedIds, usageOf, usageText, type Usage } from "./model";
+import { categoryIcon, categoryUsage, kindLabels, sentenceCase, unsyncedIds, usageOf, usageText, type Usage } from "./model";
 import { useLedgerWorkspace } from "./workspace";
 
 const KIND_PLURAL: Record<Kind, string> = { expense: "expense categories", income: "income categories", investment: "investment categories" };
@@ -40,10 +40,7 @@ export function CategoriesPage({ kind, onKindChange }: { kind: Kind; onKindChang
 
   return (
     <div className="page organize">
-      {/* The card's toolbar + (the navigation bar's tool slot, as on Trips). */}
-      <GroupToolbar>
-        <ToolButton icon="add" label="New category" onClick={open} />
-      </GroupToolbar>
+      <ManageAdd label="New category" onClick={open} />
       <ChoiceGroup<Kind>
         legend="Kind"
         hideLegend
@@ -69,7 +66,7 @@ export function CategoriesPage({ kind, onKindChange }: { kind: Kind; onKindChang
               <OrganizeRow
                 key={category.id}
                 name={category.name}
-                meta={usageText(usageOf(usage, category.id))}
+                meta={sentenceCase(usageText(usageOf(usage, category.id)))}
                 icon={categoryIcon(category.icon)}
                 tint={{ id: category.id, color: category.color }}
                 waiting={waiting.has(category.id)}

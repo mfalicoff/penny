@@ -305,7 +305,7 @@ describe("categories", { timeout: 20_000 }, () => {
       await user.click(within(form).getByRole("radio", { name: "Teal" }));
       await user.click(within(form).getByRole("radio", { name: "Airplane" }));
       await user.click(within(form).getByRole("button", { name: "Add category" }));
-      expect(await screen.findByRole("button", { name: `Edit ${label} things` })).toHaveAccessibleDescription(/not used yet/);
+      expect(await screen.findByRole("button", { name: `Edit ${label} things` })).toHaveAccessibleDescription(/Not used yet/);
     }
     await waitFor(() => {
       expect(server.state.ledger.categories.slice(2).map(({ name, kind, color, icon }) => ({ name, kind, color, icon }))).toEqual([

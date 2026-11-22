@@ -244,3 +244,172 @@
   font-size: 0.875rem;
 }
 
+
+.schedule-row__account {
+  display: none;
+}
+
+/*
+ * From 768px (card `web-recurring`): the account, or a shared schedule's household, is a
+ * right-aligned column before the amount instead of part of the detail line. The column copy is
+ * hidden from assistive technology, which reads the detail line's copy.
+ */
+@media (min-width: 768px) {
+  .schedule-row {
+    grid-template-columns: auto minmax(0, 1fr) auto minmax(120px, auto) auto;
+    min-height: 58px;
+    padding: 10px 18px;
+  }
+
+  .recurring .group-list--inset {
+    --inset: 66px;
+  }
+
+  .schedule-row:hover {
+    background: var(--pk-fill);
+  }
+
+  .schedule-row__inline-account {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .schedule-row__account {
+    display: block;
+    width: 120px;
+    color: var(--pk-label-2);
+    font-size: 0.8125rem;
+    text-align: end;
+    overflow-wrap: anywhere;
+  }
+
+  .schedule-row > .icon:last-child {
+    margin-inline-start: 4px;
+  }
+}
+
+/*
+ * New and edit schedule (cards `web-schedule-form`, after `web-add-entry`; MAZ-283): the entry
+ * dialog's two panes, with small upper-case captions over Type, the amount, Name and Repeats, the
+ * details as icon rows, a white note field and the preview with its repeat glyph.
+ */
+.dialog__panel.pk-dialog.schedule-dialog {
+  width: min(100%, 780px);
+}
+
+.schedule-dialog .entry-dialog__head {
+  align-items: flex-start;
+}
+
+.schedule-dialog .entry-dialog__title span {
+  margin-top: 3px;
+}
+
+.schedule-dialog .entry-dialog__main {
+  gap: 0;
+}
+
+.schedule-dialog .entry-dialog__main > .choices .choices__legend,
+.schedule-dialog .entry-dialog__main .entry-label {
+  margin: 16px 0 8px;
+  padding: 0;
+  color: var(--pk-label-2);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.schedule-dialog .entry-dialog__main > .choices .choices__legend {
+  margin-top: 0;
+}
+
+.schedule-dialog .entry-dialog__main > * + .choices {
+  margin-top: 16px;
+}
+
+.schedule-dialog .entry-dialog__main .choices--segmented .choices__options {
+  border-radius: 10px;
+}
+
+.schedule-dialog .entry-dialog__main .choices--segmented .choice {
+  min-height: 28px;
+  border-radius: 8px;
+  font-size: 0.84375rem;
+}
+
+.schedule-form__field {
+  display: grid;
+  min-width: 0;
+}
+
+.schedule-dialog .entry-title {
+  gap: 0;
+  margin-top: 0;
+}
+
+.schedule-dialog .amount-hero {
+  padding: 0;
+}
+
+.schedule-dialog .amount-hero__line {
+  font-size: 2.875rem;
+  line-height: 1.1;
+}
+
+.schedule-dialog .entry-rows + .form-error {
+  margin-top: 6px;
+}
+
+.schedule-form__dot {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  background: var(--tile, var(--pk-c-other));
+  color: #fff;
+}
+
+.schedule-form__note {
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.schedule-form__note > .entry-label {
+  padding: 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+}
+
+.schedule-dialog .schedule-form__note .entry-note {
+  min-height: 44px;
+  padding: 11px 12px;
+  border-radius: 10px;
+  background: var(--pk-surface);
+  box-shadow: inset 0 0 0 0.5px var(--pk-separator);
+  font-size: 0.9375rem;
+  resize: none;
+}
+
+.schedule-dialog .schedule-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--pk-fill);
+  color: var(--pk-label);
+  font-size: 0.84375rem;
+  font-weight: 600;
+}
+
+.schedule-dialog .schedule-preview > .icon {
+  color: var(--pk-label-2);
+}

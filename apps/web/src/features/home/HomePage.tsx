@@ -2,7 +2,7 @@ import type { Kind, Ledger, Transaction } from "@domain/ledger.ts";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useId, useState } from "react";
 import { usePreferences } from "../../app/preferences";
-import { TOUCH_TABLET, useMediaQuery, WIDE } from "../../app/useMediaQuery";
+import { TABLET, TOUCH_TABLET, useMediaQuery } from "../../app/useMediaQuery";
 import { useLedgerSync } from "../../offline/OfflineLedgerProvider";
 import { rowAmount } from "../recurring/model";
 import { Badge, Button, cx } from "../../design/controls";
@@ -32,9 +32,9 @@ const RECENT = 5;
  * `web-home`). One number leads at every width: the recorded remaining ("Left to spend") with
  * the projected remaining under it. Then, as the cards draw them:
  *
- * - below 1100px (`iphone-home`): the compact Follow your money card, which opens Money flow
+ * - below 768px (`iphone-home`): the compact Follow your money card, which opens Money flow
  *   (`/money-flow`) and Insights, then Recent;
- * - from 1100px (`web-home`, `ipad-home`): Came in / Spent / Invested under the hero with Coming
+ * - from 768px (`web-home`, `ipad-home`, `web-tablet`): Came in / Spent / Invested under the hero with Coming
  *   up beside it, then the Sankey beside By category.
  *
  * The calendar is a sheet over Home, opened from the calendar button: in the phone's top row
@@ -50,7 +50,8 @@ export function HomePage({ search }: { search: HomeSearch }) {
   const [open, setOpen] = useState<Opened>(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const today = useToday();
-  const wide = useMediaQuery(WIDE);
+  // From 768px the dashboard (cards `web-home`, `ipad-home`, and `web-tablet` with the icon rail).
+  const wide = useMediaQuery(TABLET);
   // ipad-home: a touch tablet shows the hero's one-line legend and Daily spending; desktop (web-home) shows the tiles and By category.
   const tablet = useMediaQuery(TOUCH_TABLET);
   const showCalendar = calendarOpen || Boolean(search.day);
