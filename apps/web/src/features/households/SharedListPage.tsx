@@ -1,6 +1,7 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { TABLET, useMediaQuery } from "../../app/useMediaQuery";
 import { householdDetailQuery, householdsQuery, monthRecapQuery } from "../../api/households";
 import type { Household } from "../../api/schemas";
 import { useAccountEmail } from "../../auth/account";
@@ -16,13 +17,16 @@ import { currentMonth, findMe, isCurrent, monthLabel, shortRange } from "./model
 import { OnlineNotice } from "./OnlineNotice";
 
 /**
- * Shared (card `iphone-shared-list`): this month's position across everything shared under the
- * title, then the households and trips the account belongs to, each with a tile, its members and
- * this month's balance, and the two ways in (join with a code, new household) as one list.
+ * Shared (cards `iphone-shared-list`, `web-households`): this month's position across everything
+ * shared under the title, then the households and trips the account belongs to, each with a tile,
+ * its members and this month's balance, and the two ways in (join with a code, new household) as
+ * one list. From 768px the page is the `web-households` column: + beside the title, each section
+ * one panel of rows, and Start sharing's rows in the label color with a chevron.
  */
 export function SharedListPage() {
   const email = useAccountEmail();
   const demo = useIsDemo();
+  const tablet = useMediaQuery(TABLET);
   const households = useQuery({ ...householdsQuery(email), enabled: !demo });
   const [dialog, setDialog] = useState<"create" | "join" | null>(null);
   const all = households.data ?? [];
@@ -41,26 +45,35 @@ export function SharedListPage() {
   });
 
   const start = (
-    <ul className="start-actions" aria-label="Start sharing">
-      <li>
-        <button type="button" className="start-action" onClick={() => { setDialog("join"); }}>
-          <span className="start-action__tile">
-            <Icon name="key" />
-          </span>
-          <span className="start-action__title">Join with a code</span>
-          <span className="start-action__text">Someone shared an invite code with you</span>
-        </button>
-      </li>
-      <li>
-        <button type="button" className="start-action" onClick={() => { setDialog("create"); }}>
-          <span className="start-action__tile">
-            <Icon name="person-add" />
-          </span>
-          <span className="start-action__title">New household</span>
-          <span className="start-action__text">Split rent, bills and groceries every month</span>
-        </button>
-      </li>
-    </ul>
+    <section className="shared-section shared-start" aria-labelledby="shared-start">
+      <h2 id="shared-start">Start sharing</h2>
+      <ul className="start-actions" aria-labelledby="shared-start">
+        <li>
+          <button type="button" className="start-action" onClick={() => { setDialog("join"); }}>
+            <span className="start-action__tile">
+              <Icon name="key" />
+            </span>
+            <span className="start-action__title">Join with a code</span>
+            <span className="start-action__text">Someone shared an invite code with you</span>
+            <span className="start-action__chevron" aria-hidden="true">
+              <Icon name="chevron-forward" size={16} />
+            </span>
+          </button>
+        </li>
+        <li>
+          <button type="button" className="start-action" onClick={() => { setDialog("create"); }}>
+            <span className="start-action__tile">
+              <Icon name={tablet ? "add" : "person-add"} />
+            </span>
+            <span className="start-action__title">New household</span>
+            <span className="start-action__text">Split rent, bills and groceries every month</span>
+            <span className="start-action__chevron" aria-hidden="true">
+              <Icon name="chevron-forward" size={16} />
+            </span>
+          </button>
+        </li>
+      </ul>
+    </section>
   );
 
   let body;
@@ -96,8 +109,9 @@ export function SharedListPage() {
 
   return (
     <div className="page shared-list">
+      <div className="glow glow--green shared-list__glow" aria-hidden="true" />
       {demo ? null : (
-        <GroupToolbar>
+        <GroupToolbar start>
           <ToolButton icon="add" label="New household" onClick={() => { setDialog("create"); }} />
         </GroupToolbar>
       )}

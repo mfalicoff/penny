@@ -151,7 +151,9 @@ test("two people: invite, splits, private account, stale payment, monthly settle
   await expect(hydro.getByText("The payer's account stays private to them.")).toBeVisible();
   await hydro.getByRole("button", { name: "Mark your share as paid" }).click();
   await hydro.getByRole("button", { name: "Mark $45.00 as paid" }).click();
-  await expect(hydro.getByText("Repaid", { exact: true })).toBeVisible();
+  // Her share now reads Repaid (the phone dialog) or Paid in green (the desktop pane, `web-shared-expense`).
+  await expect(hydro.getByRole("button", { name: "Mark your share as paid" })).toHaveCount(0);
+  await expect(hydro.getByText(/^(Repaid|Paid)$/).last()).toBeVisible();
   await bea.page.keyboard.press("Escape");
 
   // Bea opens Internet's payment; Alex changes the shares first. The server refuses (409).

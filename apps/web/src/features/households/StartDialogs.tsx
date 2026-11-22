@@ -151,8 +151,9 @@ function CreateForm({ onClose }: { onClose: () => void }) {
             ? "Penny couldn't read your ledger currency, so it can't create a household right now."
             : "Reading your ledger currency…"}
       </p>
-      <div className="form-actions">
-        <Button variant="quiet" onClick={onClose}>
+      {/* The dialog footer of `web-join-code`: a tinted bar with Cancel and the action at the end. */}
+      <div className="form-actions start-form__foot">
+        <Button variant="secondary" onClick={onClose}>
           Cancel
         </Button>
         <Button type="submit" variant="primary" busy={create.isPending || !currency.data}>
@@ -212,6 +213,7 @@ function JoinForm({ onClose, trip = false }: { onClose: () => void; trip?: boole
         <input
           id={codeId}
           ref={codeRef}
+          className="invite-code-input"
           value={code}
           maxLength={20}
           autoComplete="off"
@@ -232,8 +234,9 @@ function JoinForm({ onClose, trip = false }: { onClose: () => void; trip?: boole
             : "Ask a member to open the household's People section and choose Invite. Codes work for 10 minutes, and your ledger currency must match the household's."}
         </span>
       </div>
-      <div className="form-actions">
-        <Button variant="quiet" onClick={onClose}>
+      {/* The dialog footer of `web-join-code`: a tinted bar with Cancel and the action at the end. */}
+      <div className="form-actions start-form__foot">
+        <Button variant="secondary" onClick={onClose}>
           Cancel
         </Button>
         <Button type="submit" variant="primary" busy={join.isPending}>

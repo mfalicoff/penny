@@ -30,6 +30,8 @@ interface Props {
    * month's total. With it, the expenses are grouped under This week and Earlier.
    */
   lead?: ReactNode;
+  /** The open expense, tinted in the table as the card's selected row (`web-shared-expense`). */
+  selectedId?: string | undefined;
 }
 
 const FREQUENCY: Record<SharedRecurring["frequency"], string> = { weekly: "Weekly", monthly: "Monthly", yearly: "Yearly" };
@@ -40,7 +42,7 @@ const FREQUENCY: Record<SharedRecurring["frequency"], string> = { weekly: "Weekl
  * the payer's avatar, "<payer> paid · split equally" and the viewer's position; from 1100px a
  * household shows them as a table with the payer, split, total, your share and status.
  */
-export function ExpensesTab({ view, recap, search, side, lead }: Props) {
+export function ExpensesTab({ view, recap, search, side, lead, selectedId }: Props) {
   const email = useAccountEmail();
   // The table is the desktop's (`web-household`); a touch tablet keeps the card's list (`ipad-shared`).
   const tablet = useMediaQuery(TOUCH_TABLET);
@@ -65,7 +67,7 @@ export function ExpensesTab({ view, recap, search, side, lead }: Props) {
       </EmptyState>
     );
   } else if (table) {
-    list = <ExpenseTable view={view} expenses={expenses} search={search} rules={rules.data} />;
+    list = <ExpenseTable view={view} expenses={expenses} search={search} rules={rules.data} selectedId={selectedId} />;
   } else if (lead) {
     list = byWeek(expenses).map((group) => (
       <section key={group.label} className="shared-group" aria-labelledby={`expenses-${group.key}`}>
@@ -173,7 +175,7 @@ function ExpenseAmounts({ expense, view }: { expense: SharedExpense; view: House
  * The `web-household` table: EXPENSE (category tile, title, the repeat's frequency), PAID BY,
  * SPLIT, TOTAL, YOUR SHARE and STATUS. The title links to the expense, which opens beside it.
  */
-function ExpenseTable({ view, expenses, search, rules }: { view: HouseholdView; expenses: SharedExpense[]; search: GroupSearch; rules: SharedRecurring[] | undefined }) {
+function ExpenseTable({ view, expenses, search, rules, selectedId }: { view: HouseholdView; expenses: SharedExpense[]; search: GroupSearch; rules: SharedRecurring[] | undefined; selectedId: string | undefined }) {
   const me = view.who.meId;
   return (
     <section className="card expense-table" aria-label={`Expenses in ${monthLabel(view.month)}`}>
@@ -197,7 +199,7 @@ function ExpenseTable({ view, expenses, search, rules }: { view: HouseholdView; 
             const rule = expense.recurringId ? rules?.find((item) => item.id === expense.recurringId) : undefined;
             const mine = shareOf(expense, me);
             return (
-              <tr key={expense.id}>
+              <tr key={expense.id} className={expense.id === selectedId ? "expense-table__open" : undefined}>
                 <th scope="row">
                   <ExpenseLink route={view.route} householdId={view.householdId} expenseId={expense.id} search={search} className="expense-table__title">
                     <span className="category-dot" style={tileStyle(expense.category)} aria-hidden="true">
