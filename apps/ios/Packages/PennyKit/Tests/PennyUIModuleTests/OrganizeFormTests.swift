@@ -97,8 +97,11 @@ struct OrganizeFormTests {
         let workspace = Self.workspace(entries: [entry], rules: [Self.rule()])
         let usage = workspace.load.ledger?.usage(ofAccount: "visa") ?? RecordUsage()
         #expect(
-            AccountFormModel.removalNote(name: "Visa", usage: usage)
-                == "Visa is used by 1 entry and 1 schedule. Move them to another account to remove it.")
+            AccountFormModel.removalNote(name: "Visa", usage: usage, canMove: true)
+                == "Visa is used by 1 entry and 1 schedule.")
+        #expect(
+            AccountFormModel.removalNote(name: "Visa", usage: usage, canMove: false)
+                == "Visa is used by 1 entry and 1 schedule. Add another account first, then move them there.")
         let model = AccountFormModel(account: Self.visa)
         #expect(await !model.remove(with: Self.commit(workspace)))
         #expect(model.failure == .rule(.accountHasEntries))
@@ -108,12 +111,49 @@ struct OrganizeFormTests {
     @Test("whenAnAccountIsUnused_AccountForm_ShouldRemoveIt")
     func removeUnused() async {
         let workspace = Self.workspace()
-        #expect(AccountFormModel.removalNote(name: "Visa", usage: RecordUsage()) == nil)
+        #expect(AccountFormModel.removalNote(name: "Visa", usage: RecordUsage(), canMove: true) == nil)
         let model = AccountFormModel(account: Self.visa)
         #expect(model.title == "Edit account")
         #expect(await model.remove(with: Self.commit(workspace)))
         #expect(workspace.load.ledger?.accounts.isEmpty == true)
         #expect(workspace.commits.last?.title == "Account removed")
+    }
+
+    @Test("whenAnAccountInUseIsMovedAndRemoved_AccountForm_ShouldMoveEveryEntryAndScheduleThenRemoveIt")
+    func moveAndRemoveAccount() async throws {
+        let chequing = PaymentAccount(id: "chq", name: "Main chequing", type: .bank)
+        let entry = LedgerEntry(
+            id: "e", title: "Lunch", kind: .expense, total: 900, share: 900, categoryId: "food", accountId: "visa",
+            date: Self.today)
+        let other = LedgerEntry(
+            id: "o", title: "Rent", kind: .expense, total: 90_000, share: 90_000, categoryId: "home",
+            accountId: "chq", date: Self.today)
+        let workspace = Self.workspace(accounts: [Self.visa, chequing], entries: [entry, other], rules: [Self.rule()])
+        let ledger = try #require(workspace.load.ledger)
+        let model = AccountFormModel(account: Self.visa)
+        #expect(model.moveTargets(in: ledger) == [chequing])
+        #expect(await !model.moveAndRemove(in: ledger, with: Self.commit(workspace)), "nothing chosen yet")
+        model.moveTo = "chq"
+        #expect(await model.moveAndRemove(in: ledger, with: Self.commit(workspace)))
+        let after = try #require(workspace.load.ledger)
+        #expect(after.account(id: "visa") == nil)
+        #expect(after.transactions.allSatisfy { $0.accountId == "chq" })
+        #expect(after.recurring.map(\.accountId) == ["chq"])
+        #expect(workspace.commits.last?.title == "Account removed")
+        #expect(workspace.commits.last?.detail == "Visa, moved to Main chequing")
+    }
+
+    @Test("whenTheTargetWasRemovedOnAnotherDevice_AccountForm_ShouldRefuseTheMoveAndChangeNothing")
+    func moveToRemovedAccount() async throws {
+        let chequing = PaymentAccount(id: "chq", name: "Main chequing", type: .bank)
+        let opened = try #require(Self.workspace(accounts: [Self.visa, chequing]).load.ledger)
+        let workspace = Self.workspace(rules: [Self.rule()])
+        let model = AccountFormModel(account: Self.visa)
+        model.moveTo = "chq"
+        #expect(await !model.moveAndRemove(in: opened, with: Self.commit(workspace)))
+        #expect(model.failure == .rule(.accountRemoved))
+        #expect(workspace.load.ledger?.recurring.first?.accountId == "visa")
+        #expect(workspace.load.ledger?.account(id: "visa") != nil)
     }
 
     @Test("whenTheAccountChangedOnAnotherDevice_AccountForm_ShouldRefuseTheStaleEdit")
@@ -189,10 +229,48 @@ struct OrganizeFormTests {
         #expect(!model.canChangeKind(in: ledger))
         #expect(CategoryFormModel(kind: .expense).canChangeKind(in: ledger), "a new category can pick its kind")
         #expect(
-            CategoryFormModel.removalNote(name: "Home", usage: ledger.usage(ofCategory: "home"))
-                == "Home is used by 1 schedule. Keep it to preserve your history.")
+            CategoryFormModel.removalNote(name: "Home", usage: ledger.usage(ofCategory: "home"), canMove: true)
+                == "Home is used by 1 schedule.")
+        #expect(
+            CategoryFormModel.removalNote(name: "Home", usage: ledger.usage(ofCategory: "home"), canMove: false)
+                == "Home is used by 1 schedule. Add another category of this kind first, then move them there.")
         #expect(await !model.remove(with: Self.commit(workspace)))
         #expect(model.failure == .rule(.categoryHasEntries))
+    }
+
+    @Test("whenACategoryInUseIsMovedAndRemoved_CategoryForm_ShouldOfferOnlyItsKindAndMoveEverything")
+    func moveAndRemoveCategory() async throws {
+        let entry = LedgerEntry(
+            id: "e", title: "Router", kind: .expense, total: 9_000, share: 9_000, categoryId: "home",
+            accountId: "visa", date: Self.today)
+        let workspace = Self.workspace(entries: [entry], rules: [Self.rule()])
+        let ledger = try #require(workspace.load.ledger)
+        let home = try #require(ledger.category(id: "home"))
+        let model = CategoryFormModel(category: home)
+        let targets = model.moveTargets(in: ledger)
+        #expect(!targets.isEmpty && targets.allSatisfy { $0.kind == .expense && $0.id != "home" })
+        let target = try #require(targets.first)
+        model.moveTo = target.id
+        #expect(await model.moveAndRemove(in: ledger, with: Self.commit(workspace)))
+        let after = try #require(workspace.load.ledger)
+        #expect(after.category(id: "home") == nil)
+        #expect(after.transactions.map(\.categoryId) == [target.id])
+        #expect(after.recurring.map(\.categoryId) == [target.id])
+        #expect(workspace.commits.last?.title == "Category removed")
+    }
+
+    @Test("whenTheTargetHasAnotherKind_CategoryForm_ShouldRefuseTheMove")
+    func moveToOtherKind() async throws {
+        let workspace = Self.workspace(rules: [Self.rule()])
+        let ledger = try #require(workspace.load.ledger)
+        let home = try #require(ledger.category(id: "home"))
+        let income = try #require(ledger.categories.first { $0.kind == .income })
+        let model = CategoryFormModel(category: home)
+        #expect(!model.moveTargets(in: ledger).contains(income))
+        model.moveTo = income.id
+        #expect(await !model.moveAndRemove(in: ledger, with: Self.commit(workspace)))
+        #expect(model.failure == .rule(.categoryRemoved))
+        #expect(workspace.load.ledger?.category(id: "home") != nil)
     }
 
     // MARK: Schedule form
@@ -333,6 +411,15 @@ struct OrganizeFormTests {
         #expect(dates.map(\.description) == ["2027-01-18", "2027-02-18", "2027-03-18"])
         let active = ScheduleDetailView.upcoming(Self.rule(), ledger: ledger, today: Self.today)
         #expect(active.first == Self.day("2026-11-18"))
+    }
+
+    @Test("whenTheNextDatesAreListed_ScheduleDetail_ShouldLeaveTheYearOutUnlessAYearAway")
+    func upcomingDateText() {
+        let english = Locale(identifier: "en_US")
+        guard Locale.current.language.languageCode == english.language.languageCode else { return }
+        #expect(ScheduleDetailView.longDate(Self.day("2026-11-18"), today: Self.today) == "Wed, Nov 18")
+        #expect(ScheduleDetailView.longDate(Self.day("2027-01-18"), today: Self.today) == "Mon, Jan 18")
+        #expect(ScheduleDetailView.longDate(Self.day("2027-11-18"), today: Self.today) == "Thu, Nov 18, 2027")
     }
 
     @Test("whenRemoved_Schedule_ShouldStopAndKeepItsRecordedEntries")

@@ -248,7 +248,8 @@ describe("shared list, create and join", () => {
     expect(within(topbar()).getByRole("button", { name: "New household" })).toBeInTheDocument();
     await user.click(within(screen.getByRole("list", { name: "Start sharing" })).getByRole("button", { name: /New household/ }));
     const form = await dialog("New household");
-    expect(within(form).getByText(/Everyone who joins must use CAD too/)).toBeInTheDocument();
+    // The currency comes from the offline store, which can answer after the dialog opens.
+    expect(await within(form).findByText(/Everyone who joins must use CAD too/)).toBeInTheDocument();
 
     // Validation keeps focus on the field and sends nothing.
     await user.click(within(form).getByRole("button", { name: "Create household" }));
