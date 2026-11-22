@@ -975,6 +975,163 @@
       "blockedBy": "full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184)"
     },
     {
+      "specimen": "iphone-profile",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "Settings \u203a Profile for a password account: picture, name, verified email, export and delete"
+    },
+    {
+      "specimen": "iphone-profile-provider",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "empty",
+      "as": "solo",
+      "view": "Settings \u203a Profile for a Google account: name and picture from the provider, read only"
+    },
+    {
+      "specimen": "iphone-profile-photo",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "profile picture move-and-scale crop"
+    },
+    {
+      "specimen": "iphone-name-prompt",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "Home with the name prompt for an account without a display name"
+    },
+    {
+      "specimen": "iphone-sign-in-providers",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "empty",
+      "as": "solo",
+      "client": "signed-out",
+      "view": "sign-in with Apple, Google, SSO and email, with Forgot password and the privacy policy link"
+    },
+    {
+      "specimen": "iphone-create-account-providers",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "empty",
+      "as": "solo",
+      "client": "signed-out",
+      "view": "create account with Apple, Google or email, the name field and the privacy policy line"
+    },
+    {
+      "specimen": "iphone-verify-email",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "empty",
+      "as": "solo",
+      "view": "check your email after creating a password account"
+    },
+    {
+      "specimen": "iphone-unverified",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "empty",
+      "as": "solo",
+      "view": "Shared tab for an account whose email isn't verified yet"
+    },
+    {
+      "specimen": "iphone-forgot-password",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "empty",
+      "as": "solo",
+      "client": "signed-out",
+      "view": "password reset by email, link sent"
+    },
+    {
+      "specimen": "iphone-invite-email",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "household invite by email with waiting and expired invites"
+    },
+    {
+      "specimen": "iphone-delete-account",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "Settings \u203a Profile \u203a Delete account confirmation"
+    },
+    {
+      "specimen": "iphone-export-all",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "full data export ready to save or share"
+    },
+    {
+      "specimen": "iphone-monitoring-prompt",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "Home with the crash report consent sheet"
+    },
+    {
+      "specimen": "iphone-privacy",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "Settings \u203a Privacy with the report switches and the privacy policy link"
+    },
+    {
       "specimen": "ipad-home",
       "platform": "iPad",
       "appearances": [
@@ -1136,6 +1293,17 @@
       "as": "alex",
       "view": "iPad receipt email settings: a live address until 2027-02-10 and two allowed senders",
       "blockedBy": "full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184)"
+    },
+    {
+      "specimen": "ipad-profile",
+      "platform": "iPad",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "Settings with Profile in the detail column"
     },
     {
       "specimen": "web-home",
@@ -1505,6 +1673,130 @@
       "as": "alex",
       "view": "web receipt email settings: a live address until 2027-02-10 and two allowed senders",
       "blockedBy": "full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184)"
+    },
+    {
+      "specimen": "web-profile",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web settings, Profile pane for a password account"
+    },
+    {
+      "specimen": "web-sign-in-providers",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "empty",
+      "as": "solo",
+      "client": "signed-out",
+      "view": "web sign-in with Apple, Google, SSO and email"
+    },
+    {
+      "specimen": "web-create-account",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "empty",
+      "as": "solo",
+      "client": "signed-out",
+      "view": "web create account with Apple, Google or email"
+    },
+    {
+      "specimen": "web-verify-email",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "empty",
+      "as": "solo",
+      "view": "web check your email after creating an account"
+    },
+    {
+      "specimen": "web-email-verified",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "empty",
+      "as": "solo",
+      "view": "web email verified after opening the link"
+    },
+    {
+      "specimen": "web-forgot-password",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "empty",
+      "as": "solo",
+      "client": "signed-out",
+      "view": "web password reset by email, link sent"
+    },
+    {
+      "specimen": "web-invite-email",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web household invite by email dialog"
+    },
+    {
+      "specimen": "web-delete-account",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web delete account dialog over the Profile pane"
+    },
+    {
+      "specimen": "web-export-all",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web settings, Export data pane with the full export"
+    },
+    {
+      "specimen": "web-privacy",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web settings, Privacy pane"
+    },
+    {
+      "specimen": "web-monitoring-prompt",
+      "platform": "Web",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "web Home with the error report consent"
     }
   ]
 }

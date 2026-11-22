@@ -1,0 +1,55 @@
+<!-- @dsCard group="iPhone" name="Invite by email" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Invite by email</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<style>
+  .behind { position: absolute; border: 0; width: 482px; height: 954px; left: -40px; top: -40px; pointer-events: none; }
+  .scrim { position: absolute; inset: 0; background: var(--dim); z-index: 5; }
+  .sheet { position: absolute; left: 6px; right: 6px; top: 110px; bottom: 6px; border-radius: 44px; background: var(--bg); z-index: 10; overflow: hidden; }
+  .grabber { width: 36px; height: 5px; border-radius: 3px; background: var(--label-3); opacity: .5; margin: 7px auto 0; }
+  .bar { display: flex; justify-content: space-between; align-items: center; padding: 6px 14px 0; height: 56px; }
+  .bar h2 { font-size: 17px; font-weight: 600; }
+  .bar .side { width: 86px; display: flex; } .bar .side.r { justify-content: flex-end; }
+  .gh { padding: 18px 32px 7px; font-size: 13px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .03em; }
+  .gf { padding: 7px 32px 0; font-size: 13px; color: var(--label-2); line-height: 1.4; }
+  .send { display: flex; gap: 10px; margin: 0 16px; }
+  .field { flex: 1; background: var(--surface); border-radius: 16px; height: 52px; display: flex; align-items: center; padding: 0 16px; font-size: 17px; }
+  .field .cur { width: 2px; height: 22px; background: var(--tint); margin-left: 1px; border-radius: 1px; }
+  .send .glass { height: 52px; padding: 0 20px; font-size: 17px; }
+  .glist { background: var(--surface); border-radius: 22px; margin: 0 16px; overflow: hidden; }
+  .sr { display: flex; align-items: center; gap: 12px; min-height: 58px; padding: 8px 16px; position: relative; font-size: 17px; }
+  .sr + .sr::before { content: ""; position: absolute; top: 0; left: 60px; right: 0; border-top: .5px solid var(--separator); }
+  .sr .avatar { width: 32px; height: 32px; font-size: 12px; border: 0; flex: none; }
+  .sr .avatar.out { background: var(--fill); color: var(--label-2); }
+  .sr .avatar.out .mail { width: 16px; height: 16px; }
+  .sr .tx { flex: 1; min-width: 0; } .sr .tx small { display: block; font-size: 13px; color: var(--label-2); margin-top: 1px; }
+  .pend { font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 8px; background: color-mix(in srgb, var(--pending) 16%, transparent); color: var(--pending); }
+  .more { width: 30px; height: 30px; border-radius: 50%; background: var(--fill); display: grid; place-items: center; color: var(--label-2); }
+  .more [data-i] { width: 16px; height: 16px; }
+  .alt { display: flex; align-items: center; gap: 12px; margin: 18px 16px 0; background: var(--surface); border-radius: 22px; padding: 14px 16px; font-size: 17px; }
+  .alt .ic { width: 32px; height: 32px; border-radius: 9px; background: var(--fill); color: var(--label); display: grid; place-items: center; }
+  .alt .ic [data-i] { width: 18px; height: 18px; }
+  .alt small { display: block; font-size: 13px; color: var(--label-2); }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <iframe class="behind" src="shared-people.html" scrolling="no"></iframe><div class="scrim"></div>
+  <div class="island"></div>
+  <div class="status" style="color:#fff"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="bar"><div class="side"><div class="glass gbtn"><i data-i="close"></i></div></div><h2>Invite to Apartment</h2><div class="side r"></div></div>
+    <div class="gh">Send an invite</div>
+    <div class="send"><div class="field">sam@example.com<span class="cur"></span></div><div class="glass gcap tinted">Send</div></div>
+    <div class="gf">Penny emails them a link to join. If they are new to Penny, the link lets them create an account on penny.example.com first. Joining still asks them to accept.</div>
+    <div class="gh">Invited</div>
+    <div class="glist">
+      <div class="sr"><div class="avatar out"><svg class="mail" viewBox="0 0 512 512" aria-hidden="true"><rect x="48" y="96" width="416" height="320" rx="40" ry="40" style="fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:var(--sw,32px)"/><polyline points="112 160 256 272 400 160" style="fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:var(--sw,32px)"/></svg></div><div class="tx">jo.s@example.com<small>Sent today at 9:38</small></div><span class="pend">Waiting</span><div class="more"><i data-i="ellipsis-horizontal"></i></div></div>
+      <div class="sr"><div class="avatar out"><svg class="mail" viewBox="0 0 512 512" aria-hidden="true"><rect x="48" y="96" width="416" height="320" rx="40" ry="40" style="fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:var(--sw,32px)"/><polyline points="112 160 256 272 400 160" style="fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:var(--sw,32px)"/></svg></div><div class="tx">alex.k@example.com<small>Sent Nov 18 · link expired</small></div><span class="tag" style="font-size:12px;font-weight:600;padding:3px 8px;border-radius:8px;background:var(--fill);color:var(--label-2)">Expired</span><div class="more"><i data-i="ellipsis-horizontal"></i></div></div>
+    </div>
+    <div class="gf">Resend or cancel an invite from its menu.</div>
+    <div class="alt"><div class="ic"><i data-i="key"></i></div><div style="flex:1">Share a code instead<small>For someone next to you</small></div><i data-i="chevron-forward" class="chev"></i></div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+</body></html>

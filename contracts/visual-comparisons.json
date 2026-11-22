@@ -2432,6 +2432,230 @@
       }
     },
     {
+      "id": "iphone-profile",
+      "view": "Settings › Profile for a password account: picture, name, verified email, export and delete",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-171",
+        "note": "Draft card (MAZ-267) for the owner's review. The app has no editable profile: no display name, picture, sign-in rows or Your data section.",
+        "followUp": "MAZ-171"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-171",
+        "note": "Draft card (MAZ-267) for the owner's review. The web has no editable profile: no display name, picture, sign-in rows or Your data section.",
+        "followUp": "MAZ-171"
+      }
+    },
+    {
+      "id": "iphone-profile-provider",
+      "view": "Settings › Profile for a Google account: name and picture from the provider, read only",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-171",
+        "note": "Draft card (MAZ-267) for the owner's review. The app has no Google sign-in and no profile from a provider.",
+        "followUp": "MAZ-171"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-171",
+        "note": "Draft card (MAZ-267) for the owner's review. The web has no Google sign-in and no profile from a provider.",
+        "followUp": "MAZ-171"
+      }
+    },
+    {
+      "id": "iphone-profile-photo",
+      "view": "profile picture move-and-scale crop",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-171",
+        "note": "Draft card (MAZ-267) for the owner's review. The app has no profile picture.",
+        "followUp": "MAZ-171"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-171",
+        "note": "Draft card (MAZ-267) for the owner's review. The web has no profile picture.",
+        "followUp": "MAZ-171"
+      }
+    },
+    {
+      "id": "iphone-name-prompt",
+      "view": "Home with the name prompt for an account without a display name",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-171",
+        "note": "Draft card (MAZ-267) for the owner's review. The app has no display name or name prompt.",
+        "followUp": "MAZ-171"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-171",
+        "note": "Draft card (MAZ-267) for the owner's review. The web has no display name or name prompt.",
+        "followUp": "MAZ-171"
+      }
+    },
+    {
+      "id": "iphone-sign-in-providers",
+      "view": "sign-in with Apple, Google, SSO and email, with Forgot password and the privacy policy link",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-170",
+        "note": "Draft card (MAZ-267) for the owner's review. The app has no Apple or Google sign-in, Forgot password or privacy policy link.",
+        "followUp": "MAZ-170"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-170",
+        "note": "Draft card (MAZ-267) for the owner's review. The web has no Apple or Google sign-in, Forgot password or privacy policy link.",
+        "followUp": "MAZ-170"
+      }
+    },
+    {
+      "id": "iphone-create-account-providers",
+      "view": "create account with Apple, Google or email, the name field and the privacy policy line",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-170",
+        "note": "Draft card (MAZ-267) for the owner's review. The app has no Apple or Google sign-up, name field or privacy policy line.",
+        "followUp": "MAZ-170"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-170",
+        "note": "Draft card (MAZ-267) for the owner's review. The web has no Apple or Google sign-up, name field or privacy policy line.",
+        "followUp": "MAZ-170"
+      }
+    },
+    {
+      "id": "iphone-verify-email",
+      "view": "check your email after creating a password account",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-172",
+        "note": "Draft card (MAZ-267) for the owner's review. The app has no email verification.",
+        "followUp": "MAZ-172"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-172",
+        "note": "Draft card (MAZ-267) for the owner's review. The web has no email verification.",
+        "followUp": "MAZ-172"
+      }
+    },
+    {
+      "id": "iphone-unverified",
+      "view": "Shared tab for an account whose email isn't verified yet",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-172",
+        "note": "Draft card (MAZ-267) for the owner's review. The app has no email verification, so sharing is never held back.",
+        "followUp": "MAZ-172"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-172",
+        "note": "Draft card (MAZ-267) for the owner's review. The web has no email verification, so sharing is never held back.",
+        "followUp": "MAZ-172"
+      }
+    },
+    {
+      "id": "iphone-forgot-password",
+      "view": "password reset by email, link sent",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-124",
+        "note": "Draft card (MAZ-267) for the owner's review. The app has no password reset by email (the server sends no email).",
+        "followUp": "MAZ-124"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-124",
+        "note": "Draft card (MAZ-267) for the owner's review. The web has no password reset by email (the server sends no email).",
+        "followUp": "MAZ-124"
+      }
+    },
+    {
+      "id": "iphone-invite-email",
+      "view": "household invite by email with waiting and expired invites",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-124",
+        "note": "Draft card (MAZ-267) for the owner's review. The app has no invites by email (the server sends no email).",
+        "followUp": "MAZ-124"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-124",
+        "note": "Draft card (MAZ-267) for the owner's review. The web has no invites by email (the server sends no email).",
+        "followUp": "MAZ-124"
+      }
+    },
+    {
+      "id": "iphone-delete-account",
+      "view": "Settings › Profile › Delete account confirmation",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-152",
+        "note": "Draft card (MAZ-267) for the owner's review. The app has no account deletion.",
+        "followUp": "MAZ-152"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-152",
+        "note": "Draft card (MAZ-267) for the owner's review. The web has no account deletion.",
+        "followUp": "MAZ-152"
+      }
+    },
+    {
+      "id": "iphone-export-all",
+      "view": "full data export ready to save or share",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-152",
+        "note": "Draft card (MAZ-267) for the owner's review. The app has no full data export.",
+        "followUp": "MAZ-152"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-152",
+        "note": "Draft card (MAZ-267) for the owner's review. The web has no full data export.",
+        "followUp": "MAZ-152"
+      }
+    },
+    {
+      "id": "iphone-monitoring-prompt",
+      "view": "Home with the crash report consent sheet",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-129",
+        "note": "Draft card (MAZ-267) for the owner's review. The app has no crash or performance reporting.",
+        "followUp": "MAZ-129"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-129",
+        "note": "Draft card (MAZ-267) for the owner's review. The web sends errors and timings when its server turns telemetry on, but asks nobody: there is no consent prompt.",
+        "followUp": "MAZ-129"
+      }
+    },
+    {
+      "id": "iphone-privacy",
+      "view": "Settings › Privacy with the report switches and the privacy policy link",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-129",
+        "note": "Draft card (MAZ-267) for the owner's review. The app has no Privacy page.",
+        "followUp": "MAZ-129"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-129",
+        "note": "Draft card (MAZ-267) for the owner's review. The web has no Privacy page: telemetry is on or off for the whole server, with no switches for the person.",
+        "followUp": "MAZ-129"
+      }
+    },
+    {
       "id": "ipad-home",
       "view": "iPad home dashboard, October 2026",
       "native": {
@@ -2891,6 +3115,22 @@
         "status": "blocked",
         "owner": "MAZ-184",
         "note": "No seeded receipt inbox yet (full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184))"
+      }
+    },
+    {
+      "id": "ipad-profile",
+      "view": "Settings with Profile in the detail column",
+      "native": {
+        "status": "not-built",
+        "owner": "MAZ-171",
+        "note": "Draft card (MAZ-267) for the owner's review. The app has no editable profile.",
+        "followUp": "MAZ-171"
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-171",
+        "note": "Draft card (MAZ-267) for the owner's review. The web has no editable profile.",
+        "followUp": "MAZ-171"
       }
     },
     {
@@ -3585,6 +3825,171 @@
         "status": "blocked",
         "owner": "MAZ-184",
         "note": "No seeded receipt inbox yet (full-stack-seeds.json has no receipt address or inbox items yet: seeding them needs the inbound mail pipeline (MAZ-184))"
+      }
+    },
+    {
+      "id": "web-profile",
+      "view": "web settings, Profile pane for a password account",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-171",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-171",
+        "note": "Draft card (MAZ-267) for the owner's review. The web has Settings › Profile shows only the signed-in email: no name, picture, sign-in or Your data sections.",
+        "followUp": "MAZ-171"
+      }
+    },
+    {
+      "id": "web-sign-in-providers",
+      "view": "web sign-in with Apple, Google, SSO and email",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-170",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-170",
+        "note": "Draft card (MAZ-267) for the owner's review. The web has no Apple or Google sign-in, Forgot password or privacy policy link.",
+        "followUp": "MAZ-170"
+      }
+    },
+    {
+      "id": "web-create-account",
+      "view": "web create account with Apple, Google or email",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-170",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-170",
+        "note": "Draft card (MAZ-267) for the owner's review. The web has no Apple or Google sign-up, name field or privacy policy line.",
+        "followUp": "MAZ-170"
+      }
+    },
+    {
+      "id": "web-verify-email",
+      "view": "web check your email after creating an account",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-172",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-172",
+        "note": "Draft card (MAZ-267) for the owner's review. The web has no email verification.",
+        "followUp": "MAZ-172"
+      }
+    },
+    {
+      "id": "web-email-verified",
+      "view": "web email verified after opening the link",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-172",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-172",
+        "note": "Draft card (MAZ-267) for the owner's review. The web has no email verification.",
+        "followUp": "MAZ-172"
+      }
+    },
+    {
+      "id": "web-forgot-password",
+      "view": "web password reset by email, link sent",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-124",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-124",
+        "note": "Draft card (MAZ-267) for the owner's review. The web has no password reset by email (the server sends no email).",
+        "followUp": "MAZ-124"
+      }
+    },
+    {
+      "id": "web-invite-email",
+      "view": "web household invite by email dialog",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-124",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-124",
+        "note": "Draft card (MAZ-267) for the owner's review. The web has no invites by email (the server sends no email).",
+        "followUp": "MAZ-124"
+      }
+    },
+    {
+      "id": "web-delete-account",
+      "view": "web delete account dialog over the Profile pane",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-152",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-152",
+        "note": "Draft card (MAZ-267) for the owner's review. The web has no account deletion.",
+        "followUp": "MAZ-152"
+      }
+    },
+    {
+      "id": "web-export-all",
+      "view": "web settings, Export data pane with the full export",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-152",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-152",
+        "note": "Draft card (MAZ-267) for the owner's review. The web has no Export data pane.",
+        "followUp": "MAZ-152"
+      }
+    },
+    {
+      "id": "web-privacy",
+      "view": "web settings, Privacy pane",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-129",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-129",
+        "note": "Draft card (MAZ-267) for the owner's review. The web has no Privacy pane: telemetry is on or off for the whole server, with no switches for the person.",
+        "followUp": "MAZ-129"
+      }
+    },
+    {
+      "id": "web-monitoring-prompt",
+      "view": "web Home with the error report consent",
+      "native": {
+        "status": "not-applicable",
+        "owner": "MAZ-129",
+        "note": "Desktop browser card; the native counterpart is the matching iphone-* or ipad-* card."
+      },
+      "web": {
+        "status": "not-built",
+        "owner": "MAZ-129",
+        "note": "Draft card (MAZ-267) for the owner's review. The web sends errors and timings when its server turns telemetry on, but asks nobody: there is no consent prompt.",
+        "followUp": "MAZ-129"
       }
     }
   ]

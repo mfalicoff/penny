@@ -1,0 +1,33 @@
+<!-- @dsCard group="iPhone" name="Profile picture crop" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Profile picture crop</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<style>
+  .stage { position: absolute; inset: 0; background: #000; overflow: hidden; }
+  .photo { position: absolute; left: -40px; right: -40px; top: 170px; height: 520px;
+    background:
+      radial-gradient(ellipse 15% 17% at 50% 40%, #E9B98F 0 98%, transparent 100%),
+      radial-gradient(ellipse 16% 9% at 50% 27%, #4A3426 0 98%, transparent 100%),
+      radial-gradient(ellipse 34% 26% at 50% 86%, #3F5E7A 0 98%, transparent 100%),
+      linear-gradient(180deg, #A9C9D6 0%, #CFE0E4 46%, #E6D3B3 47%, #D9C29C 100%); }
+  .mask { position: absolute; left: 50%; top: 430px; width: 330px; height: 330px; transform: translate(-50%, -50%); border-radius: 50%; box-shadow: 0 0 0 999px rgba(0,0,0,.62); outline: 1px solid rgba(255,255,255,.7); }
+  .ttl { position: absolute; top: 120px; left: 0; right: 0; text-align: center; color: #fff; font-size: 17px; font-weight: 600; }
+  .sub { position: absolute; top: 146px; left: 0; right: 0; text-align: center; color: rgba(255,255,255,.62); font-size: 14px; }
+  .acts { position: absolute; left: 20px; right: 20px; bottom: 54px; display: flex; justify-content: space-between; }
+  .acts .glass { height: 48px; padding: 0 22px; font-size: 17px; font-weight: 600; }
+  .note { position: absolute; left: 32px; right: 32px; bottom: 122px; text-align: center; color: rgba(255,255,255,.62); font-size: 13px; line-height: 1.4; }
+  .status, .home-ind { color: #fff; }
+  .home-ind { background: #fff; }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <div class="stage"><div class="photo"></div><div class="mask"></div></div>
+  <div class="island"></div>
+  <div class="status"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="ttl">Move and scale</div>
+  <div class="sub">Pinch to zoom, drag to move</div>
+  <div class="note">People in your households and trips see this picture. Penny removes the photo's location and other details before saving it.</div>
+  <div class="acts"><div class="glass gcap">Cancel</div><div class="glass gcap tinted">Choose</div></div>
+  <div class="home-ind"></div>
+</div>
+</body></html>

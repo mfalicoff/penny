@@ -1,0 +1,92 @@
+<!-- @dsCard group="Web" name="Export all your data" viewport="1520x980" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · Web · Export all your data</title>
+<link rel="stylesheet" href="../assets/penny.css"><link rel="stylesheet" href="../assets/web.css">
+<script src="../assets/icons.js"></script><script src="../assets/sankey.js"></script><script src="../assets/web.js"></script>
+<style>
+  .sx { display: grid; grid-template-columns: 240px minmax(0,1fr); gap: 28px; }
+  .snav { display: flex; flex-direction: column; gap: 2px; }
+  .snav .wnav [data-i] { color: var(--label-2); }
+  .pane { max-width: 680px; }
+  .sec { margin-bottom: 18px; }
+  .sec h3 { font-size: 13px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 8px; }
+  .lead { font-size: 14.5px; color: var(--label-2); margin: -2px 0 14px; line-height: 1.45; }
+  .srow { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: .5px solid var(--separator); font-size: 14.5px; }
+  .srow:first-of-type { border-top: 0; }
+  .srow .t { flex: 1; } .srow .t span { display: block; font-size: 12.5px; color: var(--label-2); margin-top: 1px; }
+  .srow .v { color: var(--label-2); display: flex; gap: 6px; align-items: center; }
+  .srow .v [data-i] { width: 15px; height: 15px; }
+  .srow .ri { width: 30px; height: 30px; border-radius: 8px; background: var(--fill); display: grid; place-items: center; flex: none; }
+  .srow .ri [data-i], .srow .ri svg { width: 17px; height: 17px; }
+  .switch { width: 42px; height: 25px; border-radius: 13px; background: var(--tint); position: relative; flex: none; }
+  .switch::after { content: ""; position: absolute; top: 2px; right: 2px; width: 21px; height: 21px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+  .switch.off { background: var(--fill); } .switch.off::after { right: auto; left: 2px; }
+  .foot { font-size: 12.5px; color: var(--label-2); margin-top: 4px; display: flex; align-items: center; gap: 6px; }
+  .foot [data-i] { width: 14px; height: 14px; }
+  .foot a { color: var(--tint-text); font-weight: 600; }
+  .pic { background: radial-gradient(circle at 50% 39%, #E9B98F 0 17%, transparent 17.5%), radial-gradient(ellipse 40% 30% at 50% 100%, #3F5E7A 0 99%, transparent 100%), linear-gradient(160deg, #A9C9D6, #E6D3B3); border: 0; }
+  .wfld { border-radius: 10px; background: var(--surface-2); box-shadow: inset 0 0 0 .5px var(--separator); padding: 9px 12px; font-size: 14.5px; }
+  .wfld.focus { box-shadow: inset 0 0 0 1.5px var(--tint), 0 0 0 4px var(--tint-soft); background: var(--surface); }
+  .wfld .caret { display: inline-block; width: 2px; height: 17px; background: var(--tint); vertical-align: -3px; margin-left: 1px; border-radius: 1px; }
+  .lbl { display: block; font-size: 13px; font-weight: 600; margin: 14px 0 6px; }
+  .btn.danger { color: var(--danger); }
+  .btn.dangerfill { background: var(--danger); color: #fff; box-shadow: none; }
+  .opt { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-top: .5px solid var(--separator); font-size: 14.5px; }
+  .opt:first-of-type { border-top: 0; }
+  .radio { width: 18px; height: 18px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--label-3); flex: none; }
+  .radio.on { box-shadow: inset 0 0 0 5.5px var(--tint); }
+  .opt .v { margin-left: auto; font-size: 13px; color: var(--label-2); }
+  .inc { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; margin: 4px 0 4px; }
+  .inc div { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+  .inc [data-i] { width: 15px; height: 15px; color: var(--label-2); }
+  .dl { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
+  .file { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--label-2); }
+  .file [data-i] { width: 15px; height: 15px; }
+  .prog { flex: 1; max-width: 220px; height: 6px; border-radius: 3px; background: var(--fill); overflow: hidden; }
+  .prog i { display: block; width: 100%; height: 100%; background: var(--label); opacity: .8; }
+</style></head>
+<body class="canvas">
+<div class="browser" data-active="" data-url="penny.example.com/settings/export">
+  <main class="wmain">
+    <div class="wtop"><h1>Settings</h1><div class="sp"></div>
+      <div class="wsearch"><i data-i="search"></i>Search entries<kbd>⌘K</kbd></div>
+      <div class="btn primary"><i data-i="add"></i>Add entry <kbd>N</kbd></div></div>
+    <div class="wbody">
+      <div class="sx">
+        <div class="snav">
+          <div class="wnav"><i data-i="people"></i>Profile</div>
+          <div class="wnav"><i data-i="sunny"></i>Appearance</div>
+          <div class="wnav"><i data-i="cash"></i>Currency</div>
+          <div class="wnav"><i data-i="server"></i>Server &amp; sync</div>
+          <div class="wnav"><i data-i="lock-closed"></i>Privacy</div>
+          <div class="wnav on"><i data-i="document-text"></i>Export data</div>
+          <div class="wnav" style="color:var(--danger)"><i data-i="log-out" style="color:var(--danger)"></i>Sign out</div>
+        </div>
+        <div class="pane">
+          <div class="panel sec">
+            <div class="ph"><h4>All your data</h4></div>
+            <div class="lead">One ZIP file with everything on penny.example.com that belongs to you.</div>
+            <div class="inc">
+              <div><i data-i="checkmark"></i>Entries as CSV and JSON</div>
+              <div><i data-i="checkmark"></i>Accounts, categories and schedules</div>
+              <div><i data-i="checkmark"></i>Households and trips you're in</div>
+              <div><i data-i="checkmark"></i>Receipts, as the original files</div>
+              <div><i data-i="checkmark"></i>Your name, picture and email</div>
+            </div>
+            <div class="dl"><span class="btn primary"><i data-i="arrow-down"></i>Download ZIP</span><span class="file"><i data-i="document-text"></i>penny-export-2026-11-22.zip · 14.2 MB · ready</span></div>
+          </div>
+          <div class="panel sec">
+            <div class="ph"><h4>Entries only</h4></div>
+            <div class="lead">A CSV file you can open in a spreadsheet.</div>
+            <div class="opt"><span class="radio"></span>This month<span class="v">November 2026</span></div>
+            <div class="opt"><span class="radio"></span>This year<span class="v">2026</span></div>
+            <div class="opt"><span class="radio on"></span>Everything</div>
+            <div class="dl"><span class="btn"><i data-i="arrow-down"></i>Download CSV</span></div>
+          </div>
+          <div class="foot"><i data-i="lock-closed"></i>The server prepares the ZIP and deletes it after you download it.</div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</body></html>
