@@ -194,8 +194,8 @@ test("concurrent edits keep the loser's draft and a stale payment records nothin
   await bea.page.getByRole("link", { name: /Hydro/ }).click();
   await expenseDetail(bea.page, "Hydro").getByRole("button", { name: "Edit" }).click();
   const beaForm = bea.page.getByRole("dialog", { name: "Edit expense" });
-  // Note sits under More details, as in Add entry.
-  await beaForm.getByRole("button", { name: /More details/ }).click();
+  // Note sits under the "Receipt, note" row (an edit has no repeat), as on the card.
+  await beaForm.getByRole("button", { name: /^Receipt, note/ }).click();
   await beaForm.getByLabel("Note").fill("Includes the late fee");
   const alexForm = alex.page.getByRole("dialog", { name: "Edit expense" });
   await alexForm.getByLabel(/^Amount \(/).fill("104.10");

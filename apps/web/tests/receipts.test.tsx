@@ -519,7 +519,7 @@ describe("receipts on shared expenses", () => {
     const form = await screen.findByRole("dialog", { name: "New expense" });
     await user.type(within(form).getByLabelText("Title"), "Groceries run");
     await user.type(within(form).getByLabelText("Amount (CAD)"), "30");
-    await user.click(within(form).getByRole("button", { name: /More details/ }));
+    await user.click(within(form).getByRole("button", { name: /^Receipt, repeat, note/ }));
     const group = within(form).getByRole("group", { name: "Receipt" });
     expect(group).toHaveAccessibleDescription(/Everyone in the household can open it\./);
     await user.upload(within(form).getByLabelText("Receipt file"), file(PNG_BYTES, "groceries.png", "image/png"));
