@@ -24,6 +24,12 @@ public sealed class LargeLedgerTests(ApiFixture fixture) : IntegrationTestBase(f
     private static readonly TimeSpan FullReadBudget = TimeSpan.FromSeconds(20);
     private static readonly TimeSpan ConcurrentRequestBudget = TimeSpan.FromSeconds(15);
 
+    private const int VacuumedWriteEntries = 30_000;
+
+    // VACUUM back to back slows the write by contention alone (about 6 s instead of 2 s
+    // locally); without the fix the same write runs into the 5 s command timeout.
+    private static readonly TimeSpan VacuumedWriteBudget = TimeSpan.FromSeconds(20);
+
     private const int Users = 8;
     private const int EntriesPerUser = 5_000;
     private const int Rounds = 4;
@@ -49,12 +55,7 @@ public sealed class LargeLedgerTests(ApiFixture fixture) : IntegrationTestBase(f
     // Every CI run. The first write of a full ledger bulk-copies its new entries and
     // search documents (MAZ-137); it must finish within the production request
     // deadline (`Backend:RequestTimeoutSeconds`, 30 s), so its budget stays below it.
-    // Skipped (MAZ-262): on CI the bulk copy intermittently stalls on the database
-    // (past the 5 s statement timeout, or for 100 s when that timeout is lifted), and
-    // the cause is not known yet. Re-enable it with the fix.
-    [Fact(
-        Skip = "MAZ-262: the full-ledger bulk copy intermittently stalls on CI; re-enable with the fix."
-    )]
+    [Fact]
     public async Task whenLedgerAtTransactionLimit_LedgerFlow_ShouldWriteReadAndRefuseOneMore()
     {
         await using var host = LargeHost();
@@ -96,6 +97,85 @@ public sealed class LargeLedgerTests(ApiFixture fixture) : IntegrationTestBase(f
         write.Elapsed.ShouldBeLessThan(FullWriteBudget);
         edit.Elapsed.ShouldBeLessThan(FullWriteBudget);
         read.Elapsed.ShouldBeLessThan(FullReadBudget);
+    }
+
+    // MAZ-271: VACUUM during a first large write records the table without the rows the
+    // write has not committed, so the planner sees `ledger_entries` as empty. The search
+    // documents' foreign-key checks then used the smallest index matching `user_id`
+    // instead of the primary key, each check scanned the user's whole ledger, and the
+    // write stalled for minutes (20,000 rows took 17 s instead of 0.13 s in PostgreSQL
+    // alone). On CI, autovacuum after the previous test's reset did this at random.
+    // The primary key must also be larger than the other indexes, as the entries an
+    // earlier test wrote and the reset deleted leave it; here VACUUM then runs over and
+    // over for the whole write.
+    [Fact]
+    public async Task whenVacuumRunsDuringFirstLargeWrite_PutLedger_ShouldStayWithinBudget()
+    {
+        await using var host = LargeHost();
+        using var client = CreateClient(host);
+        var earlier = await RegisterAsync("earlier@example.test", client);
+        var written = await GetAsync(client, earlier);
+        for (var index = 0; index < VacuumedWriteEntries; index++)
+            written["ledger"]!["transactions"]!.AsArray().Add(Entry(index));
+        using (var saved = await PutAsync(client, earlier, written))
+            saved.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Fixture.SqlAsync(
+            "DELETE FROM penny.search_documents; DELETE FROM penny.ledger_entries",
+            Ct
+        );
+        await Fixture.SqlAsync("VACUUM penny.ledger_entries", Ct);
+
+        var token = await RegisterAsync("vacuumed@example.test", client);
+        var snapshot = await GetAsync(client, token);
+        var entries = snapshot["ledger"]!["transactions"]!.AsArray();
+        for (var index = 0; index < VacuumedWriteEntries; index++)
+            entries.Add(Entry(index));
+
+        using var stop = CancellationTokenSource.CreateLinkedTokenSource(Ct);
+        var vacuums = 0;
+        var vacuum = Task.Run(
+            async () =>
+            {
+                // Its own connection: VACUUM waits for the write's lock once the write has
+                // analyzed the table, longer than the fixture's 5 s command timeout.
+                await using var admin = new Npgsql.NpgsqlConnection(
+                    new Npgsql.NpgsqlConnectionStringBuilder(Fixture.AdminConnection)
+                    {
+                        CommandTimeout = 60,
+                    }.ConnectionString
+                );
+                await admin.OpenAsync(CancellationToken.None);
+                await using var command = new Npgsql.NpgsqlCommand(
+                    "VACUUM penny.ledger_entries",
+                    admin
+                );
+                while (!stop.IsCancellationRequested)
+                {
+                    await command.ExecuteNonQueryAsync(CancellationToken.None);
+                    vacuums++;
+                    await Task.Delay(25, CancellationToken.None);
+                }
+            },
+            CancellationToken.None
+        );
+        var write = Stopwatch.StartNew();
+        try
+        {
+            using var saved = await PutAsync(client, token, snapshot);
+            saved.StatusCode.ShouldBe(HttpStatusCode.OK, await saved.Content.ReadAsStringAsync(Ct));
+        }
+        finally
+        {
+            write.Stop();
+            await stop.CancelAsync();
+            await vacuum;
+        }
+
+        Report(
+            $"first write of {VacuumedWriteEntries} entries under repeated VACUUM ({vacuums} runs): {write.Elapsed.TotalSeconds:F2} s"
+        );
+        vacuums.ShouldBeGreaterThan(1);
+        write.Elapsed.ShouldBeLessThan(VacuumedWriteBudget);
     }
 
     [Fact]
