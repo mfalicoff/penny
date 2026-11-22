@@ -3,17 +3,18 @@ import PennyDesign
 import PennyDomain
 import SwiftUI
 
-/// The month calendar (`calendar` card): a grid starting on Monday, or Sunday (Settings ›
-/// Appearance › Week starts on, MAZ-250), with dots in the meaning colors
-/// (gray spent, green income, indigo invested) and an amber ring for scheduled occurrences and
-/// income dated after today (MAZ-136), then the chosen day's entries. Choosing a day filters
-/// the list only; the month's totals above the grid never change with it. At accessibility text
-/// sizes the grid becomes a list of the days that have entries, so nothing is squeezed into
-/// seven columns.
+/// The month calendar (`calendar` card), a sheet over Home on iPhone and iPad (MAZ-254): Close,
+/// the month between previous and next, and Today in its navigation bar; a grid starting on
+/// Monday, or Sunday (Settings › Appearance › Week starts on, MAZ-250), with dots in the meaning
+/// colors (gray spent, green income, indigo invested) and an amber ring for scheduled
+/// occurrences and income dated after today (MAZ-136); then the chosen day's entries. Choosing
+/// an entry closes the sheet and opens it on Home. At accessibility text sizes the grid becomes
+/// a list of the days that have entries, so nothing is squeezed into seven columns.
 struct CalendarView: View {
     @Environment(ShellModel.self) private var shell
     @Environment(AppearanceModel.self) private var appearance
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.dismiss) private var dismiss
     @State private var selection: CalendarDate?
 
     var body: some View {
@@ -25,8 +26,6 @@ struct CalendarView: View {
             let selected = Self.selectedDay(selection, month: shell.month, today: shell.today)
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    header
-                    MonthTotalsLine(summary: summary, currency: currency)
                     VStack(spacing: 12) {
                         if typeSize.isAccessibilitySize {
                             CalendarDayList(
@@ -43,10 +42,14 @@ struct CalendarView: View {
                     if let selected {
                         DayDetail(
                             day: calendar.day(selected), entries: report.monthEntries(summary, day: selected),
-                            report: report, currency: currency, today: shell.today)
+                            report: report, currency: currency, today: shell.today
+                        ) { route in
+                            shell.navigate { $0.openFromCalendar(route) }
+                        }
                     }
                 }
                 .padding(.horizontal, Metrics.gutter)
+                .padding(.top, 8)
                 .padding(.bottom, 24)
                 .frame(maxWidth: 720)
                 .frame(maxWidth: .infinity)
@@ -55,6 +58,24 @@ struct CalendarView: View {
         .background(PennyColor.background)
         .navigationTitle("Calendar")
         .toolbarTitleDisplayModeInline()
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button(role: .close) { dismiss() }
+                    .tint(PennyColor.label)
+                    .accessibilityIdentifier("calendar.close")
+            }
+            ToolbarItem(placement: .principal) { header }
+            ToolbarItem(placement: .primaryAction) {
+                // The card's glass "Today" capsule, in the label color: copper is for the
+                // selected day.
+                Button("Today") {
+                    shell.month = MonthKey(shell.today)
+                    selection = shell.today
+                }
+                .tint(PennyColor.label)
+                .accessibilityIdentifier("calendar.today")
+            }
+        }
         .accessibilityIdentifier("screen.calendar")
     }
 
@@ -64,65 +85,40 @@ struct CalendarView: View {
         return month.contains(today) ? today : nil
     }
 
+    /// "‹ November 2026 ›": the month between its previous and next, as on the card. Next stops
+    /// at the current month, as the month picker does.
     private var header: some View {
-        @Bindable var shell = shell
         let first = MonthKey(CalendarDate.earliest)
         let last = MonthKey(shell.today)
-        return HStack(spacing: 4) {
+        return HStack(spacing: 2) {
             Button {
                 if let previous = shell.month.shifted(by: -1) { shell.month = previous }
             } label: {
-                Image(systemName: "chevron.backward").frame(
-                    width: Metrics.minTouchTarget, height: Metrics.minTouchTarget)
+                Image(systemName: "chevron.backward").font(.subheadline.weight(.semibold))
+                    .frame(width: 32, height: Metrics.minTouchTarget)
+                    .contentShape(Rectangle())
             }
             .disabled(shell.month <= first)
             .accessibilityLabel("Previous month")
             .accessibilityIdentifier("calendar.previous")
             Text(MonthPicker.title(shell.month, long: true))
                 .font(.headline)
-                .frame(maxWidth: .infinity)
-                .multilineTextAlignment(.center)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
                 .accessibilityAddTraits(.isHeader)
             Button {
                 if let next = shell.month.shifted(by: 1), next <= last { shell.month = next }
             } label: {
-                Image(systemName: "chevron.forward").frame(
-                    width: Metrics.minTouchTarget, height: Metrics.minTouchTarget)
+                Image(systemName: "chevron.forward").font(.subheadline.weight(.semibold))
+                    .frame(width: 32, height: Metrics.minTouchTarget)
+                    .contentShape(Rectangle())
             }
             .disabled(shell.month >= last)
             .accessibilityLabel("Next month")
             .accessibilityIdentifier("calendar.next")
-            Button("Today") {
-                shell.month = last
-                selection = shell.today
-            }
-            .font(.subheadline.weight(.semibold))
-            .frame(minHeight: Metrics.minTouchTarget)
-            .padding(.horizontal, 12)
-            .pennyGlass()
-            .accessibilityIdentifier("calendar.today")
         }
-        .tint(PennyColor.tintText)
-    }
-}
-
-/// The month's recorded totals, unchanged by the day chosen below.
-struct MonthTotalsLine: View {
-    let summary: MonthSummary
-    let currency: String
-
-    var body: some View {
-        let text = [
-            "Spent \(MoneyFormat.amount(summary.recorded.expense, currency: currency))",
-            "Came in \(MoneyFormat.amount(summary.recorded.income, currency: currency))",
-            "Invested \(MoneyFormat.amount(summary.recorded.investment, currency: currency))",
-        ].joined(separator: " · ")
-        Text(text)
-            .font(.footnote.monospacedDigit())
-            .foregroundStyle(PennyColor.secondaryLabel)
-            .fixedSize(horizontal: false, vertical: true)
-            .accessibilityLabel("This month, recorded: \(text)")
-            .accessibilityIdentifier("calendar.totals")
+        .buttonStyle(.plain)
+        .foregroundStyle(PennyColor.label)
     }
 }
 
@@ -296,13 +292,15 @@ struct CalendarDayList: View {
     }
 }
 
-/// The chosen day: its recorded net, what is expected or scheduled on it, and its entries.
+/// The chosen day: its recorded net, what is expected or scheduled on it, and its entries. A
+/// row hands its page to `open` (the sheet closes and Home shows it).
 struct DayDetail: View {
     let day: CalendarMonth.Day?
     let entries: [ReportEntry]
     let report: LedgerReport
     let currency: String
     let today: CalendarDate
+    let open: (DetailRoute) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -332,7 +330,8 @@ struct DayDetail: View {
                 .foregroundStyle(PennyColor.pending)
                 .fixedSize(horizontal: false, vertical: true)
             }
-            EntryList(entries: entries, report: report, currency: currency, empty: "Nothing on this day.")
+            EntryList(
+                entries: entries, report: report, currency: currency, empty: "Nothing on this day.", open: open)
         }
         .accessibilityIdentifier("calendar.dayEntries")
     }

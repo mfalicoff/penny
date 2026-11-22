@@ -333,7 +333,7 @@ async function syncFailed(run: Run) {
 async function sharedMissing(run: Run) {
   await armFault(run);
   await home(run.page);
-  await expect(run.page.getByText(/Shared expenses (couldn't load|need a connection)/).first()).toBeVisible();
+  await expect(run.page.getByRole("status").filter({ hasText: "Shared expenses may be missing" })).toBeVisible();
 }
 
 /** The demo, from sign-in's sample data link. */
@@ -734,6 +734,13 @@ const cards: Record<string, Card> = {
       await home(p);
       // The web's Home has no Expected income card or Explore your month: the capture shows the end of Home.
       await scrollTo(p, p.getByRole("region", { name: "Recent" }));
+    },
+  },
+  // alex's October has no income yet, so Left to spend is negative (MAZ-254).
+  "iphone-home-overspent": {
+    open: async ({ page: p }) => {
+      await home(p);
+      await expectAlexOctober(p);
     },
   },
   "iphone-account-picker": { skip: { status: "not-built", note: NATIVE_SELECT("account") } },

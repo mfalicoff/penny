@@ -128,8 +128,7 @@ final class AccessibilityAuditTests: PennyUITestCase {
         try penny.openSettings()
         unexpected += try audit("settings", variant)
         try penny.openHome()
-        try penny.tap(AccessibilityID.Home.exploreInsights)
-        try penny.wait(for: AccessibilityID.Screen.insights)
+        try penny.openInsights()
         unexpected += try audit("insights", variant)
         // Thrown, not asserted: a failed XCTAssert in async UI test code hangs instead of stopping.
         guard unexpected.isEmpty else {

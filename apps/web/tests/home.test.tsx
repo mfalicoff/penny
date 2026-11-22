@@ -2,7 +2,7 @@ import { onlineManager } from "@tanstack/react-query";
 import { act, configure, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { entry, ledgerServer, sharedRow } from "./fakes/ledgerServer";
+import { entry, ledgerServer, setOnline, sharedRow } from "./fakes/ledgerServer";
 import { reloadPreferences, setPreferences } from "../src/app/preferences";
 import { renderApp } from "./render";
 
@@ -250,12 +250,47 @@ describe("Home", () => {
     expect(flow).toHaveTextContent("Salary selected · select a band or label to focus it, again to clear");
   });
 
-  it("says when the month is overspent, in words", async () => {
+  it("says when the month is overspent, in words, and ends the flow legend in Over (iphone-home-overspent)", async () => {
     server([rent, coffee]);
     renderApp("/?month=2026-11");
-    expect(await within(await screen.findByRole("region", { name: "Left to spend" })).findByText("Overspent")).toBeInTheDocument();
-    expect(hero()).toHaveTextContent("You've spent and invested $1,486.20 more than came in this month.");
-    expect(screen.getByRole("region", { name: "Follow your money" })).toHaveTextContent("Beyond income");
+    expect(await within(await screen.findByRole("region", { name: "Left to spend" })).findByText(/more went out than came in/)).toBeInTheDocument();
+    expect(hero()).toHaveTextContent("$1,486.20 more went out than came in");
+    expect(hero()).not.toHaveTextContent("Overspent");
+    const flow = screen.getByRole("region", { name: "Follow your money" });
+    expect(within(flow).getByText("Over")).toBeInTheDocument();
+    expect(flow).not.toHaveTextContent("Beyond income");
+    expect(within(flow).queryByText("Left")).not.toBeInTheDocument();
+  });
+
+  it("shows the amber shared banner above the hero when households can't load, and Retry clears it (iphone-shared-missing)", async () => {
+    const fake = server();
+    fake.state.sharedDown = true;
+    const user = userEvent.setup();
+    renderApp("/?month=2026-11");
+    const banner = await screen.findByText("Shared expenses may be missing", {}, { timeout: 8000 });
+    const status = banner.closest<HTMLElement>("[role=status]");
+    if (!status) throw new Error("The banner is a status message.");
+    expect(status).toHaveTextContent("Penny couldn't load your households. Your own entries are up to date.");
+    // The banner comes before the hero, as on the cards.
+    expect(status.compareDocumentPosition(hero()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    fake.state.sharedDown = false;
+    await user.click(within(status).getByRole("button", { name: "Retry" }));
+    await waitFor(() => {
+      expect(screen.queryByText("Shared expenses may be missing")).not.toBeInTheDocument();
+    });
+    await loaded();
+  });
+
+  it("offline, keeps the shared share it last loaded and says shared expenses may be missing (iphone-offline)", async () => {
+    server();
+    renderApp("/?month=2026-11");
+    await loaded();
+    expect(screen.queryByText("Shared expenses may be missing")).not.toBeInTheDocument();
+    setOnline(false);
+    const banner = await screen.findByText("Shared expenses may be missing");
+    expect(banner.closest("[role=status]")).toHaveTextContent("You're offline. Shared expenses update when you're back online.");
+    // What was loaded still counts (Hydro's $30.00 share).
+    expect(recorded()).toHaveTextContent("$3,113.80");
   });
 
   it("opens the calendar as a sheet over Home, lists a day's entries and moves by keyboard (MAZ-224)", async () => {

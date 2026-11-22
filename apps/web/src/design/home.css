@@ -221,6 +221,13 @@
   min-width: 0;
 }
 
+/* Cards `iphone-shared-missing`, `iphone-offline`: the amber banner spans the page, above the hero. */
+.home-shared-missing {
+  grid-column: 1 / -1;
+  position: relative;
+  z-index: 1;
+}
+
 /* Panels keep their content at the top when a grid row makes them taller. */
 .home-top > .card {
   align-content: start;

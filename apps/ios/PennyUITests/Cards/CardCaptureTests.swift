@@ -37,10 +37,34 @@ final class CardCaptureTests: CardTestCase {
     }
 
     @MainActor
+    func test_whenSeeded_IphoneHomeExplore_ShouldBeCaptured() async throws {
+        try await card("iphone-home-explore") { card in
+            try card.penny.wait(for: AccessibilityID.Home.expectedIncome)
+            // Scrolled to the end of Home: Expected income and Explore your month above the tab bar.
+            let last = try card.penny.wait(for: AccessibilityID.Home.exploreMoneyFlow)
+            let origin = card.app.coordinate(withNormalizedOffset: CGVector(dx: 0, dy: 0))
+            for _ in 0..<4 where last.frame.maxY > card.app.frame.height - 100 {
+                // A drag on the left of the page, clear of the scroll indicator and the tab bar.
+                origin.withOffset(CGVector(dx: 60, dy: 640)).press(
+                    forDuration: 0.05, thenDragTo: origin.withOffset(CGVector(dx: 60, dy: 240)),
+                    withVelocity: .slow, thenHoldForDuration: 0.3)
+            }
+            guard last.frame.maxY <= card.app.frame.height - 100 else {
+                throw UIExpectationFailed(description: "Explore your month stayed under the tab bar")
+            }
+        }
+    }
+
+    @MainActor
+    func test_whenSeeded_IphoneHomeOverspent_ShouldBeCaptured() async throws {
+        try await card("iphone-home-overspent") { card in try card.penny.wait(for: AccessibilityID.Home.hero) }
+    }
+
+    @MainActor
     func test_whenSeeded_IphoneMoneyFlow_ShouldBeCaptured() async throws {
         try await card("iphone-money-flow") { card in
             try card.penny.selectMonth("September 2026")
-            try card.penny.tap(AccessibilityID.Home.exploreMoneyFlow)
+            try card.penny.tap(AccessibilityID.Home.flow)
             try card.penny.wait(for: AccessibilityID.Screen.moneyFlow)
             try card.penny.wait(for: AccessibilityID.Overview.flowChart)
             // The card focuses the largest spending band (Home), with its focus card.
@@ -53,7 +77,8 @@ final class CardCaptureTests: CardTestCase {
     @MainActor
     func test_whenSeeded_IphoneInsights_ShouldBeCaptured() async throws {
         try await card("iphone-insights") { card in
-            try card.penny.tap(AccessibilityID.Home.exploreInsights)
+            // The flow card's Insights pill, as on the home card (MAZ-254).
+            try card.penny.tap(AccessibilityID.Home.insights)
             try card.penny.wait(for: AccessibilityID.Screen.insights)
         }
     }
@@ -61,7 +86,8 @@ final class CardCaptureTests: CardTestCase {
     @MainActor
     func test_whenSeeded_IphoneCalendar_ShouldBeCaptured() async throws {
         try await card("iphone-calendar") { card in
-            try card.penny.tap(AccessibilityID.Home.exploreCalendar)
+            // The calendar is a sheet over Home, from its toolbar button (MAZ-254).
+            try card.penny.tap(AccessibilityID.Home.calendar)
             try card.penny.wait(for: AccessibilityID.Screen.calendar)
             try card.penny.wait(for: AccessibilityID.Overview.calendarGrid)
             // The card selects a past day with entries: Oct 3, the ETF purchase.

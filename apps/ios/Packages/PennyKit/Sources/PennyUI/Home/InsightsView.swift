@@ -142,7 +142,8 @@ struct ComparisonBars: View {
     }
 }
 
-/// The categories, largest first. Each row opens that category's entries for the month.
+/// The categories, largest first. Each row opens that category's entries for the month; as on the
+/// card, rows end in the amount and share, not a chevron.
 struct CategoryList: View {
     let breakdown: CategoryBreakdown
     let report: LedgerReport
@@ -201,8 +202,6 @@ struct CategoryShareRow: View {
                 .frame(height: 5)
                 .accessibilityHidden(true)
             }
-            Image(systemName: "chevron.forward").font(.footnote.weight(.semibold))
-                .foregroundStyle(PennyColor.tertiaryLabel).accessibilityHidden(true)
         }
         .foregroundStyle(PennyColor.label)
         .padding(.horizontal, 16)
@@ -262,12 +261,14 @@ struct CategorySpendingView: View {
 }
 
 /// Rows of entries on a solid surface. Recorded rows open their detail; a scheduled row is a
-/// preview and says so.
+/// preview and says so. A list outside a tab's stack (the calendar sheet) passes `open`, which
+/// is handed the row's page instead of pushing it there.
 struct EntryList: View {
     let entries: [ReportEntry]
     let report: LedgerReport
     let currency: String
     let empty: String
+    var open: ((DetailRoute) -> Void)?
 
     var body: some View {
         if entries.isEmpty {
@@ -280,6 +281,13 @@ struct EntryList: View {
                 ForEach(entries) { entry in
                     if entry.scheduled {
                         EntryRow(entry: entry, report: report, currency: currency)
+                    } else if let open {
+                        Button {
+                            open(ActivityRoute.destination(entry))
+                        } label: {
+                            EntryRow(entry: entry, report: report, currency: currency)
+                        }
+                        .buttonStyle(.plain)
                     } else {
                         NavigationLink(value: ActivityRoute.destination(entry)) {
                             EntryRow(entry: entry, report: report, currency: currency)

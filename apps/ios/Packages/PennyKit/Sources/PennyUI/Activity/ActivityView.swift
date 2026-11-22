@@ -74,6 +74,12 @@ struct ActivityView: View {
                 Button("Filters", systemImage: "line.3.horizontal.decrease") { filtersPresented = true }
                     .accessibilityIdentifier("activity.filters")
             }
+            // iPad: the copper Add entry capsule at the trailing end (`ipad-activity`, MAZ-254). Beside
+            // the list the chosen entry's toolbar has it after Edit; with the list alone, it is here.
+            if sizeClass == .regular, Self.splitListWidth(for: width) == nil {
+                ToolbarSpacer(.fixed, placement: .primaryAction)
+                ToolbarItem(placement: .primaryAction) { AddEntryCapsule().accessibilityIdentifier("activity.add") }
+            }
         }
         .sheet(isPresented: $filtersPresented) {
             ActivityFiltersSheet().environment(shell)
@@ -100,9 +106,14 @@ private struct ActivitySelectionDetail: View {
 
     var body: some View {
         if let id = shell.activitySelection {
-            EntryDetailView(id: id, onDeleted: { shell.activitySelection = nil }).id(id)
+            EntryDetailView(id: id, onDeleted: { shell.activitySelection = nil }, showsAddEntry: true).id(id)
         } else {
             PennyStateView(.empty, title: "No entry selected", message: "Choose an entry to see its details here.")
+                .toolbar {
+                    ToolbarItem(placement: .primaryAction) {
+                        AddEntryCapsule().accessibilityIdentifier("activity.add")
+                    }
+                }
                 .accessibilityIdentifier("activity.noSelection")
         }
     }

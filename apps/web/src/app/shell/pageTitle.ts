@@ -47,3 +47,13 @@ export function usePageTitleStyle(style: PageTitleStyle) {
     };
   }, [set, style]);
 }
+
+/**
+ * Opens the shell's Add entry dialog. The iPad Activity pane (card `ipad-activity`) draws its own
+ * copper Add entry after Edit, in place of the top bar's. Null outside the shell.
+ */
+export const AddEntryContext = createContext<(() => void) | null>(null);
+
+export function useOpenAddEntry(): (() => void) | null {
+  return use(AddEntryContext);
+}

@@ -5,11 +5,11 @@ import { usePreferences } from "../../app/preferences";
 import { TABLET, TOUCH_TABLET, useMediaQuery } from "../../app/useMediaQuery";
 import { useLedgerSync } from "../../offline/OfflineLedgerProvider";
 import { rowAmount } from "../recurring/model";
-import { Badge, Button, cx } from "../../design/controls";
+import { Button, cx } from "../../design/controls";
 import { Icon } from "../../design/Icon";
 import { tileStyle } from "../../design/categoryTint";
 import { formatCents, formatWhole, HeroMoney, Money } from "../../design/Money";
-import { LoadingState } from "../../design/states";
+import { Banner, LoadingState } from "../../design/states";
 import type { SharedState } from "../activity/data";
 import { AddEntryDialog } from "../entries/AddEntryDialog";
 import { EntryDetailDialog } from "../entries/EntryDetail";
@@ -84,7 +84,8 @@ export function HomePage({ search }: { search: HomeSearch }) {
         <FirstEntry currency={ledger.currency} />
       ) : (
         <div className={cx("home-top", wide && "home-top--wide")}>
-          <Hero report={report} currency={ledger.currency} shared={shared} wide={wide} tablet={tablet} />
+          <SharedMissing shared={shared} />
+          <Hero report={report} currency={ledger.currency} wide={wide} tablet={tablet} />
           {wide ? (
             <>
               <ComingUp report={report} ledger={view} currency={ledger.currency} />
@@ -258,7 +259,7 @@ function shortDay(date: string) {
  * expected pay on Nov 15" (`web-home`, `ipad-home`, the date when one income is expected) with
  * Came in / Spent / Invested under it.
  */
-function Hero({ report, currency, shared, wide, tablet }: { report: MonthReport; currency: string; shared: SharedState & { retry: () => void }; wide: boolean; tablet: boolean }) {
+function Hero({ report, currency, wide, tablet }: { report: MonthReport; currency: string; wide: boolean; tablet: boolean }) {
   const id = useId();
   const { showCents } = usePreferences();
   // iphone-offline: while the server can't be reached, Projected is what the last sync knew.
@@ -283,10 +284,7 @@ function Hero({ report, currency, shared, wide, tablet }: { report: MonthReport;
       </p>
       {overspent ? (
         <p className="hero__over">
-          <Badge tone="danger" icon="alert-circle">
-            Overspent
-          </Badge>{" "}
-          You've spent and invested {formatCents(-report.recordedNet, currency)} more than came in this month.
+          <span className="pk-num">{formatCents(-report.recordedNet, currency)}</span> more went out than came in
         </p>
       ) : null}
       <p className="hero__projected">
@@ -367,15 +365,35 @@ function Hero({ report, currency, shared, wide, tablet }: { report: MonthReport;
           </div>
         </dl>
       ) : null}
-      {shared.status === "unavailable" ? (
-        <p className="note" role="status">
-          {shared.message}{" "}
-          <Button variant="quiet" onClick={shared.retry}>
-            Try again
-          </Button>
-        </p>
-      ) : null}
     </section>
+  );
+}
+
+/**
+ * Cards `iphone-shared-missing` and `iphone-offline`: when households couldn't load, an amber banner
+ * above the hero says shared expenses may be missing from the month, with Retry. Offline, or while
+ * the server doesn't answer, the shared rows Penny last loaded can't update either, so it shows then
+ * too (`iphone-offline`, under the sync banner).
+ */
+function SharedMissing({ shared }: { shared: SharedState & { retry: () => void } }) {
+  const sync = useLedgerSync();
+  const unreachable = sync?.phase === "offline" || sync?.issue?.kind === "serverUnreachable";
+  const offline = shared.status === "unavailable" ? shared.offline : shared.status === "ready" && (shared.cached || unreachable);
+  if (shared.status !== "unavailable" && !offline) return null;
+  return (
+    <div className="home-shared-missing">
+      <Banner
+        tone="warning"
+        title="Shared expenses may be missing"
+        action={
+          <Button variant="quiet" onClick={shared.retry}>
+            Retry
+          </Button>
+        }
+      >
+        {offline ? "You're offline. Shared expenses update when you're back online." : "Penny couldn't load your households. Your own entries are up to date."}
+      </Banner>
+    </div>
   );
 }
 
@@ -439,12 +457,13 @@ function comingMeta(entry: Ledger["transactions"][number], accounts: ReadonlyMap
 function FlowSummary({ report, currency, month }: { report: MonthReport; currency: string; month: string }) {
   const { recorded } = report;
   const left = Math.max(0, report.recordedNet);
-  const beyond = Math.max(0, -report.recordedNet);
+  const over = Math.max(0, -report.recordedNet);
   const whole = Math.max(recorded.income, recorded.expense + recorded.investment) || 1;
   const parts = [
     { key: "expense", label: "Spent", amount: recorded.expense },
     { key: "investment", label: "Invested", amount: recorded.investment },
-    { key: "left", label: "Left", amount: left },
+    // iphone-home-overspent: an overspent month ends in "Over" (in the Spent color), not "Left $0".
+    over ? { key: "over", label: "Over", amount: over } : { key: "left", label: "Left", amount: left },
   ];
   return (
     <Panel
@@ -462,13 +481,13 @@ function FlowSummary({ report, currency, month }: { report: MonthReport; currenc
       }
     >
       <div className="summary-bar" aria-hidden="true">
-        {parts.map((part) => (part.amount ? <span key={part.key} className={`summary-bar__part summary-bar__part--${part.key}`} style={{ width: `${String((part.amount / whole) * 100)}%` }} /> : null))}
+        {parts.map((part) => (part.amount && part.key !== "over" ? <span key={part.key} className={`summary-bar__part summary-bar__part--${part.key}`} style={{ width: `${String((part.amount / whole) * 100)}%` }} /> : null))}
       </div>
       <dl className="summary-legend">
         {parts.map((part) => (
           <div key={part.key}>
             <dt>
-              <span className={`tile__dot tile__dot--${part.key === "left" ? "income" : part.key}`} aria-hidden="true" />
+              <span className={`tile__dot tile__dot--${part.key === "left" ? "income" : part.key === "over" ? "expense" : part.key}`} aria-hidden="true" />
               {part.label}
             </dt>
             <dd>
@@ -476,17 +495,6 @@ function FlowSummary({ report, currency, month }: { report: MonthReport; currenc
             </dd>
           </div>
         ))}
-        {beyond ? (
-          <div>
-            <dt>
-              <span className="tile__dot tile__dot--danger" aria-hidden="true" />
-              Beyond income
-            </dt>
-            <dd>
-              <Whole cents={beyond} currency={currency} />
-            </dd>
-          </div>
-        ) : null}
       </dl>
     </Panel>
   );

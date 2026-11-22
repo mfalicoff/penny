@@ -192,7 +192,11 @@ extension Penny {
             }
         } else {
             let tab = app.buttons.matching(identifier: AccessibilityID.Tab.tab("shared")).firstMatch
-            let button = tab.waitForExistence(timeout: 5) ? tab : app.tabBars.buttons["Shared"]
+            // The cards' tab bar (`PennyTabBar`, MAZ-254) is found by its identifier.
+            guard tab.waitForExistence(timeout: Penny.timeout) else {
+                throw UIExpectationFailed(description: "No Shared tab")
+            }
+            let button = tab
             for _ in 0..<3 {
                 button.tap()
                 if element(AccessibilityID.Screen.shared).waitForExistence(timeout: 8) { return }

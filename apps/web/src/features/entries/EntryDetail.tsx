@@ -2,6 +2,7 @@ import { deleteEntry, saveEntry } from "@domain/commands.ts";
 import type { Category, Transaction } from "@domain/ledger.ts";
 import { isExpectedIncome } from "@domain/summary.ts";
 import { useEffect, useId, useRef, useState, type ReactNode, type RefObject } from "react";
+import { useOpenAddEntry } from "../../app/shell/pageTitle";
 import { useToday } from "../../app/useToday";
 import { Badge, Button, cx } from "../../design/controls";
 import { Icon } from "../../design/Icon";
@@ -115,6 +116,7 @@ function EntryDetailFrame({
   const split = splitSummary(entry);
   const expected = isExpectedIncome(entry, today);
   const canWrite = Boolean(writer.save) && !gone;
+  const openAdd = useOpenAddEntry();
 
   const sheet = ({ titleId, editRef, layout }: SheetSlots) => {
     const actionsOnTop = layout !== "panel";
@@ -154,6 +156,12 @@ function EntryDetailFrame({
               <span className="entry-sheet__toolbar">
                 {deleteButton}
                 {editButton}
+                {/* ipad-activity: the copper Add entry ends the pane's toolbar, after Edit (the top bar's steps aside). */}
+                {openAdd ? (
+                  <Button variant="primary" icon="add" className="entry-sheet__add" onClick={openAdd}>
+                    Add entry
+                  </Button>
+                ) : null}
               </span>
             </div>
             <div className="entry-sheet__identity">

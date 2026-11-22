@@ -17,7 +17,8 @@ final class AddEntryOverSettingsTests: PennyUITestCase {
         try penny.signIn(email: account.email, password: account.password)
         try penny.openSettingsPage("currency", screen: AccessibilityID.Screen.currency)
 
-        try penny.tap(AccessibilityID.Sidebar.add)
+        // The Settings toolbar's copper capsule (`ipad-settings` card, MAZ-254).
+        try penny.tap(AccessibilityID.Settings.add)
         try penny.wait(for: AccessibilityID.Screen.addEntry)
         screenshot("add-entry-over-settings")
         try penny.tap(AccessibilityID.EntryForm.close)

@@ -45,19 +45,9 @@
         ],
         "deviations": [
           {
-            "summary": "Add entry is a fifth tab with the search role inside the system tab bar, not a separate copper button beside four tabs",
-            "kind": "follow-up",
-            "ref": "MAZ-254"
-          },
-          {
-            "summary": "Insights and the calendar are reached from Explore your month under Recent instead of the flow card's Insights pill; the calendar is a page, not a sheet",
-            "kind": "follow-up",
-            "ref": "MAZ-254"
-          },
-          {
-            "summary": "An inline \"Home\" title, and calendar and settings grouped in one capsule; the card has no title and two separate buttons",
-            "kind": "follow-up",
-            "ref": "MAZ-254"
+            "summary": "Calendar and settings share the system's grouped glass capsule in Home's toolbar; the card draws two separate circles",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
           }
         ]
       },
@@ -90,19 +80,9 @@
         ],
         "deviations": [
           {
-            "summary": "Add entry is a fifth tab with the search role inside the system tab bar, not a separate copper button beside four tabs",
-            "kind": "follow-up",
-            "ref": "MAZ-254"
-          },
-          {
-            "summary": "Insights and the calendar are reached from Explore your month under Recent instead of the flow card's Insights pill; the calendar is a page, not a sheet",
-            "kind": "follow-up",
-            "ref": "MAZ-254"
-          },
-          {
-            "summary": "An inline \"Home\" title, and calendar and settings grouped in one capsule; the card has no title and two separate buttons",
-            "kind": "follow-up",
-            "ref": "MAZ-254"
+            "summary": "Calendar and settings share the system's grouped glass capsule in Home's toolbar; the card draws two separate circles",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
           }
         ]
       },
@@ -137,7 +117,7 @@
           {
             "summary": "The money flow is recorded-only, with a value list under the chart",
             "kind": "follow-up",
-            "ref": "MAZ-254"
+            "ref": "MAZ-259"
           },
           {
             "summary": "The card now has the flow card's focus hint (Select a band or label to focus it, again to clear) and Show as a table, which the native screen doesn't show yet (follow-up recorded on MAZ-224)",
@@ -160,24 +140,12 @@
       "id": "iphone-insights",
       "view": "insights, October 2026",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-77",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "Insights and the calendar are reached from Explore your month under Recent instead of the flow card's Insights pill; the calendar is a page, not a sheet",
-            "kind": "follow-up",
-            "ref": "MAZ-254"
-          },
-          {
-            "summary": "Category rows end in a chevron",
-            "kind": "follow-up",
-            "ref": "MAZ-254"
-          }
         ]
       },
       "web": {
@@ -194,24 +162,12 @@
       "id": "iphone-calendar",
       "view": "month calendar, October 2026, Oct 3 selected with its entries",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-77",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "Insights and the calendar are reached from Explore your month under Recent instead of the flow card's Insights pill; the calendar is a page, not a sheet",
-            "kind": "follow-up",
-            "ref": "MAZ-254"
-          },
-          {
-            "summary": "Adds a month totals line, a disabled next chevron at the current month and a copper Today",
-            "kind": "follow-up",
-            "ref": "MAZ-254"
-          }
         ]
       },
       "web": {
@@ -245,11 +201,6 @@
             "summary": "Adds a Spent · Came in · Invested totals line and chevrons on rows",
             "kind": "follow-up",
             "ref": "MAZ-255"
-          },
-          {
-            "summary": "Add entry is a fifth tab with the search role inside the system tab bar, not a separate copper button beside four tabs",
-            "kind": "follow-up",
-            "ref": "MAZ-254"
           }
         ]
       },
@@ -491,19 +442,12 @@
       "id": "iphone-entry-detail",
       "view": "entry p-party (trip, shared personal share and a photo receipt)",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-73",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "Add entry is a fifth tab with the search role inside the system tab bar, not a separate copper button beside four tabs",
-            "kind": "follow-up",
-            "ref": "MAZ-254"
-          }
         ]
       },
       "web": {
@@ -999,19 +943,12 @@
       "id": "iphone-trips",
       "view": "trips: Québec weekend (personal) and Lisbon trip (shared)",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-76",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "Add entry is a fifth tab with the search role inside the system tab bar, not a separate copper button beside four tabs",
-            "kind": "follow-up",
-            "ref": "MAZ-254"
-          }
         ]
       },
       "web": {
@@ -1045,11 +982,6 @@
             "summary": "History (clock) is in the toolbar where the card has the … menu",
             "kind": "follow-up",
             "ref": "MAZ-256"
-          },
-          {
-            "summary": "Add entry is a fifth tab with the search role inside the system tab bar, not a separate copper button beside four tabs",
-            "kind": "follow-up",
-            "ref": "MAZ-254"
           },
           {
             "summary": "Shared expense rows show the payer's monogram and email, the split and \"you owe\" / \"owed\", not the category tile and \"yours\" (follow-up recorded on MAZ-249)",
@@ -1582,24 +1514,12 @@
       "id": "iphone-empty-home",
       "view": "home, October 2026, no entries",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-77",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "Add entry is a fifth tab with the search role inside the system tab bar, not a separate copper button beside four tabs",
-            "kind": "follow-up",
-            "ref": "MAZ-254"
-          },
-          {
-            "summary": "An inline \"Home\" title, and calendar and settings grouped in one capsule; the card has no title and two separate buttons",
-            "kind": "follow-up",
-            "ref": "MAZ-254"
-          }
         ]
       },
       "web": {
@@ -1632,9 +1552,9 @@
         ],
         "deviations": [
           {
-            "summary": "Offline adds a \"Shared expenses may be missing\" banner when shared data couldn't load",
-            "kind": "follow-up",
-            "ref": "MAZ-254"
+            "summary": "Calendar and settings share the system's grouped glass capsule in Home's toolbar; the card draws two separate circles (Home around the banner, as on iphone-home)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
           }
         ]
       },
@@ -1879,9 +1799,20 @@
       "id": "iphone-home-explore",
       "view": "home scrolled to Expected income and Explore your month, October 2026",
       "native": {
-        "status": "blocked",
+        "status": "deviates",
         "owner": "MAZ-77",
-        "note": "Draft card for the owner's review (MAZ-238). Not captured on iOS yet: the Cards test plan has no state for it, and the card was drafted on a Linux machine without the simulator. The iOS capture follows once the owner approves the card."
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Calendar and settings share the system's grouped glass capsule in Home's toolbar; the card draws two separate circles",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
+          }
+        ]
       },
       "web": {
         "status": "deviates",
@@ -1902,6 +1833,35 @@
             "kind": "follow-up",
             "ref": "MAZ-238"
           }
+        ]
+      }
+    },
+    {
+      "id": "iphone-home-overspent",
+      "view": "home, October 2026: more went out than came in, so Left to spend is negative with the line under it",
+      "native": {
+        "status": "deviates",
+        "owner": "MAZ-77",
+        "capture": "iPhone 18 Pro simulator, iOS 27",
+        "appearances": [
+          "light",
+          "dark"
+        ],
+        "deviations": [
+          {
+            "summary": "Calendar and settings share the system's grouped glass capsule in Home's toolbar; the card draws two separate circles",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
+          }
+        ]
+      },
+      "web": {
+        "status": "matches",
+        "owner": "MAZ-92",
+        "capture": "402x874",
+        "appearances": [
+          "light",
+          "dark"
         ]
       }
     },
@@ -2286,19 +2246,9 @@
         ],
         "deviations": [
           {
-            "summary": "Add entry is a fifth tab with the search role inside the system tab bar, not a separate copper button beside four tabs (Home around the banner, as on iphone-home)",
-            "kind": "follow-up",
-            "ref": "MAZ-254"
-          },
-          {
-            "summary": "Insights and the calendar are reached from Explore your month under Recent instead of the flow card's Insights pill; the calendar is a page, not a sheet (Home around the banner, as on iphone-home)",
-            "kind": "follow-up",
-            "ref": "MAZ-254"
-          },
-          {
-            "summary": "An inline \"Home\" title, and calendar and settings grouped in one capsule; the card has no title and two separate buttons (Home around the banner, as on iphone-home)",
-            "kind": "follow-up",
-            "ref": "MAZ-254"
+            "summary": "Calendar and settings share the system's grouped glass capsule in Home's toolbar; the card draws two separate circles (Home around the banner, as on iphone-home)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
           }
         ]
       },
@@ -2337,41 +2287,19 @@
         ],
         "deviations": [
           {
-            "summary": "Add entry is a fifth tab with the search role inside the system tab bar, not a separate copper button beside four tabs (Home around the banner, as on iphone-home)",
-            "kind": "follow-up",
-            "ref": "MAZ-254"
-          },
-          {
-            "summary": "Insights and the calendar are reached from Explore your month under Recent instead of the flow card's Insights pill; the calendar is a page, not a sheet (Home around the banner, as on iphone-home)",
-            "kind": "follow-up",
-            "ref": "MAZ-254"
-          },
-          {
-            "summary": "An inline \"Home\" title, and calendar and settings grouped in one capsule; the card has no title and two separate buttons (Home around the banner, as on iphone-home)",
-            "kind": "follow-up",
-            "ref": "MAZ-254"
+            "summary": "Calendar and settings share the system's grouped glass capsule in Home's toolbar; the card draws two separate circles (Home around the banner, as on iphone-home)",
+            "kind": "approved",
+            "ref": "docs/reference/redesign.md#native-adaptations-maz-122"
           }
         ]
       },
       "web": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-91",
         "capture": "402x874",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "No “Shared expenses may be missing” banner above the hero: a plain “Shared expenses couldn't load.” line sits below it",
-            "kind": "follow-up",
-            "ref": "MAZ-238"
-          },
-          {
-            "summary": "No amber icon or tinted banner surface, and the action reads “Try again”, not “Retry”",
-            "kind": "follow-up",
-            "ref": "MAZ-238"
-          }
         ]
       }
     },
@@ -2516,7 +2444,7 @@
         ],
         "deviations": [
           {
-            "summary": "The sidebar's toolbar keeps the + (Add entry) beside Home's Add entry capsule, and the sidebar button above the penny. mark (whether Add entry leaves the sidebar is a design decision recorded on MAZ-245)",
+            "summary": "The sidebar button sits above the penny. mark in the sidebar's toolbar; the card has no such button",
             "kind": "follow-up",
             "ref": "MAZ-182"
           },
@@ -2526,19 +2454,9 @@
             "ref": "MAZ-171"
           },
           {
-            "summary": "Insights and the calendar are reached from Explore your month under Recent instead of the flow card's Insights pill; the calendar is a page, not a sheet",
-            "kind": "follow-up",
-            "ref": "MAZ-254"
-          },
-          {
-            "summary": "The card now has the flow card's focus hint (Select a band or label to focus it, again to clear) and Show as a table, which the native screen doesn't show yet (follow-up recorded on MAZ-224)",
+            "summary": "The card has Show as a table under the money flow, which the native dashboard doesn't show yet (follow-up recorded on MAZ-224)",
             "kind": "follow-up",
             "ref": "MAZ-224"
-          },
-          {
-            "summary": "The calendar button is in the toolbar trailing group before Search, not beside the month control as the card now draws it (MAZ-258)",
-            "kind": "follow-up",
-            "ref": "MAZ-258"
           }
         ]
       },
@@ -2572,7 +2490,7 @@
         ],
         "deviations": [
           {
-            "summary": "The sidebar's toolbar keeps the + (Add entry) and the sidebar button above the penny. mark (follow-up recorded on MAZ-182: Add entry moves to the toolbar capsule)",
+            "summary": "The sidebar button sits above the penny. mark in the sidebar's toolbar; the card has no such button",
             "kind": "follow-up",
             "ref": "MAZ-182"
           },
@@ -2769,7 +2687,7 @@
         ],
         "deviations": [
           {
-            "summary": "The sidebar's toolbar keeps the + (Add entry) and the sidebar button above the penny. mark (follow-up recorded on MAZ-182: Add entry moves to the toolbar capsule)",
+            "summary": "The sidebar button sits above the penny. mark in the sidebar's toolbar; the card has no such button",
             "kind": "follow-up",
             "ref": "MAZ-182"
           },
