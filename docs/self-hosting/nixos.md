@@ -166,7 +166,7 @@ programs.penny.database = {
 };
 ```
 
-The password file is read through systemd credentials, so it may be owned by root. The password must not contain `;`. A connection pooler must run in session mode: the startup migration holds a session advisory lock.
+The password file is read through systemd credentials, so it may be owned by root. The password must not contain `;`. A connection pooler must run in session mode: the startup migration holds a session advisory lock. Set `client_connection_check_interval = 1s` on the external server, so a statement whose request timed out doesn't keep running and holding its locks ([client connection checks](deployment.md#client-connection-checks)). A local database gets it from the module (`services.postgresql.settings.client_connection_check_interval`, a default you can override).
 
 An external database set up for a release with separate roles already has `penny_migrator` as the schema owner: set `user = "penny_migrator"` and `passwordFile` to its password file, and remove `runtimeUser` and `runtimePasswordFile` (evaluation fails while they are set). The [Compose upgrade notes](deployment.md#single-database-user) describe the same change.
 

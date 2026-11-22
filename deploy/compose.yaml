@@ -24,6 +24,10 @@ services:
     # PostgreSQL 18.6 with pgvector 0.8.7: the digest pinned in apps/backend/compose.yaml
     # and DatabaseSchema.Image. Upgrades follow docs/self-hosting/deployment.md#upgrade-postgresql.
     image: docker.io/pgvector/pgvector:0.8.7-pg18-trixie@sha256:ab49524d18df7200b74ac9a475e1db6297fc1eb57da4c214c63d10ecc4b754fa
+    # A statement whose client gave up (a timed-out command whose cancellation wasn't
+    # acknowledged closes the socket) stops within a second instead of running on and
+    # holding its locks (docs/self-hosting/deployment.md#client-connection-checks).
+    command: ["postgres", "-c", "client_connection_check_interval=1s"]
     environment:
       POSTGRES_DB: ${PENNY_DB_NAME:-penny}
       # Only used to initialize an empty volume: this login owns the database (and, in
