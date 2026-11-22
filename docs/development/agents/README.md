@@ -32,11 +32,11 @@ The orchestrator only picks up Todo issues labelled `agent-ready`. It skips issu
 
 | Worker | Machine | Runs |
 | --- | --- | --- |
-| `worker:fearful` | fearful, the Mac | any issue labelled `ios`, including mixed iOS + backend issues |
-| `worker:worker` | worker, Linux | everything else |
+| `worker:fearful` | fearful, the Mac | issues that need Swift, Xcode or the iOS simulators, including mixed iOS + backend issues |
+| `worker:worker` | worker, Linux | everything else, including design cards and the web or docs side of `ios`-labelled issues whose Swift part lives in another issue |
 | `worker:fear` | fear, a larger Linux desktop, not always online | everything else, alongside worker; the heavier issue when both are free |
 
-Each machine runs one issue at a time. A machine is busy while an issue carrying its `worker:*` label is In Progress or In Review. iOS work is never sent to Linux: it waits until the Mac is free and online. When fear is offline, starting its session fails, the orchestrator puts the issue back in Todo, and worker takes it. Worker and fear never work at the same time on issues that change the same screens or shared contract files.
+A machine is busy while it runs as many sessions as its capacity (see Bundles). Swift work is never sent to Linux: it waits until the Mac is free and online. Design cards don't need the Mac, so card issues run on Linux even when they're labelled `ios`. When fear is offline, starting its session fails, the orchestrator puts the issue back in Todo, and worker takes it. Worker and fear never work at the same time on issues that change the same screens or shared contract files.
 
 ## Bundles
 
