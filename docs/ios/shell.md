@@ -13,7 +13,7 @@ This page describes the SwiftUI shell that MAZ-69 adds to `apps/ios`: the naviga
 | PennyDomain | `Navigation/ShellRoute.swift` | `AppTab`, `DetailRoute`, `SettingsRoute`, `SidebarItem`, `ShellRoute` (all navigation state and rules) and `DeepLinkInbox` (links waiting for sign-in and unlock) |
 | PennyDomain | `Demo/DemoLedger.swift` | The made-up sample ledger, dated around today, with `demo-` ids |
 | PennyData | `AppLock/` | `AppLockController`, the `DeviceAuthenticator` protocol and its LocalAuthentication implementation, and the Keychain setting store |
-| PennyData | `Preferences/DevicePreferences.swift` | Appearance (system, light, dark) |
+| PennyData | `Preferences/DevicePreferences.swift` | Appearance (system, light, dark) and the Display settings (cents on Home, Reduce transparency, week start) |
 | PennyData | `Workspace/` | The `LedgerWorkspace` protocol and `SyncStatus`, `AccountWorkspace` (a signed-in account over the MAZ-71 offline engine), `DemoWorkspace` and `FixedWorkspace` |
 | PennyDesign | `Components/` | `MoneyText`, `MoneyFormat`, `HeroAmount`, `GlassIconButton`, `GlassCapsuleButton`, `PennyButton`, `PennyMark`, `pennyCard`, `StatusBanner`, `SaveToast`, `PennyStateView`, `CategoryIcon`, `CategoryStyle`, `ControlSize` |
 | PennyUI | `Shell/`, `Home/`, `Activity/`, `Together/`, `Settings/`, `Specimens.swift` | The shell (tab bar and split view), Home, Activity, Shared, Trips, Settings and its pages, the lock cover, the toast and banners, and Xcode previews named after the cards |
@@ -26,7 +26,7 @@ This page describes the SwiftUI shell that MAZ-69 adds to `apps/ios`: the naviga
 
 - The system iOS 26 `TabView`: **Home**, **Activity**, **Shared** and **Trips**, a floating Liquid Glass tab bar. There is no More tab.
 - **Add entry** is the separate circular button at the trailing end of the tab bar. It is a `Tab` with the search role; selecting it opens the Add entry sheet and never becomes the selected tab. On the iOS 26 and 27 simulators it renders as a fifth item inside the glass bar ("Add entry"), not as a separate copper circle, and iOS doesn't let one tab item have its own tint. This is a recorded adaptation ([redesign](../reference/redesign.md#native-implementation-notes-maz-69)).
-- **Settings** opens as a sheet from the gear button in Home's toolbar. Recurring, Accounts and Categories (the old More tab) are its Manage pages.
+- **Settings** opens as a sheet from the gear button in Home's toolbar. Recurring, Accounts and Categories (the old More tab) are its Manage pages. On iPad they are sidebar rows only, so the Settings list leaves them out (`ipad-settings`).
 - Each tab keeps its own navigation stack. Choosing the tab that is already shown returns it to its root.
 
 ### iPad (regular width)
@@ -90,12 +90,15 @@ PennyDesign keeps the tokens of the baseline (`Tokens.swift`, checked by `TokenB
 | Setting | Where it's stored | Behavior |
 | --- | --- | --- |
 | Appearance: System (default), Light, Dark | `UserDefaults` (`penny.appearance`), this device only | Applied at the root with `preferredColorScheme`. An unknown stored value falls back to System. Settings › Appearance shows Light, Dark and System as three small previews (MAZ-180); at accessibility text sizes they stack. Text size follows the device. |
-| Currency: CAD, USD, EUR or GBP | The ledger (through the workspace) | The four currencies `contracts/openapi.json` allows. Locked, with the ledger rule's message, once the ledger has entries or recurring rules, as the ledger rule does; locked while in an active household ("Currency is locked while you're in a household."), which the server enforces (`Your ledger currency must match your active households.`). The household count comes from MAZ-75; until then only the ledger rule applies on the device. A change shows the save toast; a failure shows the save error and keeps the choice to retry. |
+| Show cents on Home: on (default) or off | App preferences (`penny.showsCents`), this device only | Off rounds Home's Left to spend to whole units ("$1,117"); VoiceOver still reads the exact amount (MAZ-250, as the web's `showCents`). |
+| Reduce transparency: off (default) or on | App preferences (`penny.reducesTransparency`), this device only | On, the navigation bars of every stack and sheet draw the solid surface (`pennySolidBars`) and Penny's own glass controls (`pennyGlass`) the opaque surface, as with the system's Reduce Transparency, which applies whatever this says. iOS 26 keeps the floating tab bar and the buttons in the bars as system glass, so the switch's description says the device's own setting covers those (design decision on MAZ-250). `ReduceTransparencyTests` checks the bars' pixels in light and dark. |
+| Week starts on: Monday (default) or Sunday | App preferences (`penny.weekStart`), this device only | The calendar's first column (`CalendarMonth`, `WeekStart`). |
+| Currency: CAD, USD, EUR or GBP | The ledger (through the workspace) | The four currencies `contracts/openapi.json` allows. Locked once the ledger has entries or recurring rules, as the ledger rule does: the Settings row shows the currency and a lock instead of a chevron, and Preferences says "Currency is locked once your ledger has entries." (the web says the same, MAZ-250); the Currency page gives the ledger rule's message. The server also refuses a currency that differs from an active household's (`Your ledger currency must match your active households.`). A change shows the save toast; a failure shows the save error and keeps the choice to retry. |
 | Face ID lock | Keychain, this device only, not synced | See [App lock](#app-lock). |
 | Lock after: Immediately (default), After 1 minute or After 5 minutes | App preferences (`penny.lockDelay`), this device only, not synced | Shown while the lock is on. See [App lock](#app-lock). |
-| Server | The saved server (MAZ-68) | Read-only while signed in: "Sign out to change servers." |
+| Server | The saved server (MAZ-68) | Read-only while signed in: the host, "Sign out to change servers" and a lock. The account row at the top opens the server's details. |
 
-Settings shows the account with its sync status and Sign out (the MAZ-68 flow, which warns about unsynced changes), or Leave demo. An account's Settings has a **Notifications** row (MAZ-79, [native notifications](notifications.md#permission)). While the lock is on, its page offers **Lock after** (MAZ-133, see [App lock](#app-lock)).
+Settings shows the account with its sync status (a green cloud once synced) and Sign out (the MAZ-68 flow, which warns about unsynced changes), or Leave demo. An account's Settings has a **Notifications** row (MAZ-79, [native notifications](notifications.md#permission)). While the lock is on, its page offers **Lock after** (MAZ-133, see [App lock](#app-lock)).
 
 ## App lock
 

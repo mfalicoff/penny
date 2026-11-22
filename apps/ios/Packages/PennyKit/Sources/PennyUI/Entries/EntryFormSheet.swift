@@ -56,6 +56,7 @@ struct EntryFormSheet: View {
                             }
                         }
                     }
+                    .pennySolidBars()
                 }
                 .id(generation)
                 // iPad: a centered sheet wide enough for the two-column form (`ipad-add-entry`).

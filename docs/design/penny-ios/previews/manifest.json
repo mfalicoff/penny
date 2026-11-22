@@ -913,7 +913,7 @@
     {
       "id": "iphone-settings",
       "source": "docs/design/penny-ios/iphone/settings.html",
-      "sourceSha256": "dad7b83d8d3165b24049ea91d5ecd7a0450c15e5625e9b2ea21980f7e8e3e87b",
+      "sourceSha256": "a867d1a328329d12cdd91e15cbd234ae2c39065048e396a2dd78eead1334dcf0",
       "viewport": {
         "w": 482,
         "h": 954
@@ -922,12 +922,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-settings.light.png",
-          "sha256": "69949fca827ff23b17fedb56711430ee8ce931e18566032832da930a88f40a9c"
+          "sha256": "a65b91be0e75ed95a25c5c2a3a39a98fd6c393907ffc15c7571620da87eb091f"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-settings.dark.png",
-          "sha256": "764f3751c2388749d9647f95a43354ef3ef821d82e2502c7fd726c9ca0e46ce2"
+          "sha256": "70d057a714e48db202f0f98111ee00c7ae4b1425ddb9c1533ddbea5d026790c7"
         }
       ]
     },

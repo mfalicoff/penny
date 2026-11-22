@@ -25,6 +25,14 @@ struct MoneyFormatTests {
         #expect(MoneyFormat.whole(-4_890, currency: "CAD", locale: locale) == "$49", "unsigned, like amount")
     }
 
+    @Test("whenShowCentsOnHomeIsOff_MoneyFormat_ShouldRoundASignedTotalToWholeUnits")
+    func signedWhole() {
+        #expect(MoneyFormat.signedWhole(111_665, currency: "CAD", locale: locale) == "$1,117")
+        #expect(MoneyFormat.signedWhole(-111_665, currency: "CAD", locale: locale) == "\u{2212}$1,117")
+        #expect(MoneyFormat.signedWhole(-49, currency: "CAD", locale: locale) == "$0", "no minus on a rounded zero")
+        #expect(MoneyFormat.signedWhole(-50, currency: "CAD", locale: locale) == "\u{2212}$1")
+    }
+
     @Test("whenReadByVoiceOver_MoneyFormat_ShouldSayTheMeaningInWords")
     func spoken() {
         #expect(MoneyFormat.spoken(4_890, meaning: .expense, currency: "CAD", locale: locale) == "$48.90 spent")

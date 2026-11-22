@@ -168,12 +168,16 @@ struct HomeView: View {
 /// Left to spend (recorded) and Projected, two distinct lines.
 struct HomeHero: View {
     @Environment(ShellModel.self) private var shell
+    @Environment(AppearanceModel.self) private var appearance
     let summary: MonthSummary
     let currency: String
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HeroAmount("Left to spend", cents: summary.recordedRemaining, currency: currency) {
+            HeroAmount(
+                "Left to spend", cents: summary.recordedRemaining, currency: currency,
+                showsCents: appearance.showsCents
+            ) {
                 if summary.recordedRemaining < 0 {
                     Text(
                         "\(MoneyFormat.amount(-summary.recordedRemaining, currency: currency)) more went out than came in"

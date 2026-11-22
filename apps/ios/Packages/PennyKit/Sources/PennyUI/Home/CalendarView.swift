@@ -3,7 +3,8 @@ import PennyDesign
 import PennyDomain
 import SwiftUI
 
-/// The month calendar (`calendar` card): a Monday-first grid with dots in the meaning colors
+/// The month calendar (`calendar` card): a grid starting on Monday, or Sunday (Settings ›
+/// Appearance › Week starts on, MAZ-250), with dots in the meaning colors
 /// (gray spent, green income, indigo invested) and an amber ring for scheduled occurrences and
 /// income dated after today (MAZ-136), then the chosen day's entries. Choosing a day filters
 /// the list only; the month's totals above the grid never change with it. At accessibility text
@@ -11,6 +12,7 @@ import SwiftUI
 /// seven columns.
 struct CalendarView: View {
     @Environment(ShellModel.self) private var shell
+    @Environment(AppearanceModel.self) private var appearance
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var selection: CalendarDate?
 
@@ -18,7 +20,7 @@ struct CalendarView: View {
         WorkspaceContent { ledger in
             let report = shell.report(ledger)
             let summary = report.month(shell.month, today: shell.today)
-            let calendar = CalendarMonth(summary)
+            let calendar = CalendarMonth(summary, weekStart: appearance.weekStart)
             let currency = ledger.currency.rawValue
             let selected = Self.selectedDay(selection, month: shell.month, today: shell.today)
             ScrollView {
@@ -132,18 +134,16 @@ struct CalendarGrid: View {
     let choose: (CalendarDate) -> Void
     @ScaledMetric(relativeTo: .body) private var cell = 44.0
 
-    private static let weekdays = ["M", "T", "W", "T", "F", "S", "S"]
-    private static let weekdayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-
     var body: some View {
         Grid(horizontalSpacing: 0, verticalSpacing: 4) {
             GridRow {
+                let names = calendar.weekStart.weekdayNames
                 ForEach(0..<7, id: \.self) { index in
-                    Text(Self.weekdays[index])
+                    Text(String(names[index].prefix(1)))
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(PennyColor.secondaryLabel)
                         .frame(maxWidth: .infinity)
-                        .accessibilityLabel(Self.weekdayNames[index])
+                        .accessibilityLabel(names[index])
                 }
             }
             .accessibilityHidden(true)

@@ -246,6 +246,14 @@ struct OverviewTests {
         #expect(calendar.weeks.allSatisfy { $0.count == 7 })
         #expect(calendar.weeks.flatMap { $0 }.compactMap { $0 }.count == 30)
         #expect(calendar.weeks[0][6]?.date == .day("2026-11-01"))
+
+        let sundayFirst = CalendarMonth(summary, weekStart: .sunday)
+        #expect(sundayFirst.leadingBlanks == 0, "Sunday is the first column")
+        #expect(sundayFirst.weeks.count == 5)
+        #expect(sundayFirst.weeks[0][0]?.date == .day("2026-11-01"))
+        #expect(sundayFirst.weeks[0][1]?.date == .day("2026-11-02"))
+        #expect(WeekStart.sunday.weekdayNames.first == "Sunday" && WeekStart.sunday.weekdayNames.last == "Saturday")
+        #expect(WeekStart.monday.weekdayNames.first == "Monday")
     }
 
     @Test("whenComparingMonths_Overview_ShouldUseRecordedSpendingOfBoth")

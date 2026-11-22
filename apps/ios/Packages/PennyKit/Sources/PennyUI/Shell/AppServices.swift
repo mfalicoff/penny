@@ -51,21 +51,43 @@ public struct AppServices {
     }
 }
 
-/// The appearance setting, applied at the root. `.system` follows the device.
+/// The appearance setting, applied at the root (`.system` follows the device), and the Display
+/// settings (MAZ-250): cents on Home's hero, Reduce transparency and the calendar's first day.
 @MainActor
 @Observable
 final class AppearanceModel {
     private(set) var preference: AppearancePreference
+    private(set) var showsCents: Bool
+    private(set) var reducesTransparency: Bool
+    private(set) var weekStart: WeekStart
     @ObservationIgnored private let preferences: any DevicePreferences
 
     init(preferences: any DevicePreferences) {
         self.preferences = preferences
         preference = preferences.appearance
+        showsCents = preferences.showsCents
+        reducesTransparency = preferences.reducesTransparency
+        weekStart = preferences.weekStart
     }
 
     func set(_ next: AppearancePreference) {
         preferences.setAppearance(next)
         preference = next
+    }
+
+    func setShowsCents(_ next: Bool) {
+        preferences.setShowsCents(next)
+        showsCents = next
+    }
+
+    func setReducesTransparency(_ next: Bool) {
+        preferences.setReducesTransparency(next)
+        reducesTransparency = next
+    }
+
+    func setWeekStart(_ next: WeekStart) {
+        preferences.setWeekStart(next)
+        weekStart = next
     }
 
     var colorScheme: ColorScheme? {

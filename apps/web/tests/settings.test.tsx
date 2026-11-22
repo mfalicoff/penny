@@ -109,7 +109,7 @@ describe("appearance", () => {
 });
 
 /** An in-memory ledger behind GET/PUT /api/ledger with revision checks, like the API. */
-function ledgerServer(initial: { currency: string; transactions?: unknown[]; recurring?: unknown[] }, options: { put?: () => Response | undefined } = {}) {
+function ledgerServer(initial: { currency: string; categories?: unknown[]; transactions?: unknown[]; recurring?: unknown[] }, options: { put?: () => Response | undefined } = {}) {
   const state = { revision: 3, ledger: { version: 4, accounts: [], trips: [], categories: [], transactions: [], recurring: [], ...initial } };
   const fetchMock = stubServer((url, init) => {
     if (url !== "/api/ledger") return undefined;
@@ -163,6 +163,16 @@ describe("currency", () => {
     expect(group).toHaveAccessibleDescription(/already has entries in USD, so the currency can't change/);
     expect(within(group).getByRole("radio", { name: /USD/ })).toBeEnabled();
     for (const code of ["CAD", "EUR", "GBP"]) expect(within(group).getByRole("radio", { name: new RegExp(code) })).toBeDisabled();
+  });
+
+  it("says why under Preferences on phones, in the iOS app's words, once the ledger has entries", async () => {
+    ledgerServer({
+      currency: "USD",
+      categories: [{ id: "c-groceries", name: "Groceries", kind: "expense", color: "#2F9E6B", icon: "cart" }],
+      transactions: [{ id: "t1", title: "Bread", kind: "expense", total: 400, share: 400, categoryId: "c-groceries", date: "2026-11-12", note: "" }],
+    });
+    renderApp("/settings");
+    expect(await screen.findByText("Currency is locked once your ledger has entries.")).toBeInTheDocument();
   });
 
   it("doesn't guess that a ledger is empty when the server omits the lists", async () => {
