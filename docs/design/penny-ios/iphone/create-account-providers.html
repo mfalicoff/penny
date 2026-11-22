@@ -1,0 +1,78 @@
+<!-- @dsCard group="iPhone" name="Create account with Apple, Google or email" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Create account with Apple, Google or email</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<style>
+  .glow { top: -60px; }
+  .wrap { position: relative; z-index: 1; padding: 0 24px; }
+  .srv { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); z-index: 20; height: 36px; font-size: 14px; font-weight: 500; padding: 0 14px; white-space: nowrap; }
+  .srv [data-i] { width: 16px; height: 16px; color: var(--label-2); --sw: 40px; }
+  .srv em { font-style: normal; color: var(--tint-text); font-weight: 600; margin-left: 4px; }
+  .logo { width: 56px; height: 56px; border-radius: 17px; background: var(--tint); color: #fff; display: grid; place-items: center; margin: 0 auto; box-shadow: 0 10px 30px color-mix(in srgb, var(--tint) 35%, transparent); }
+  .logo [data-i] { width: 30px; height: 30px; --sw: 36px; }
+  h1 { font-size: 32px; font-weight: 700; letter-spacing: -0.03em; text-align: center; margin-top: 14px; }
+  .lede { font-size: 16px; color: var(--label-2); text-align: center; margin-top: 6px; line-height: 1.35; }
+  .fields { background: var(--surface); border-radius: 18px; margin-top: 22px; }
+  .f { padding: 9px 16px; position: relative; }
+  .f + .f::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; border-top: .5px solid var(--separator); }
+  .f label { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; color: var(--label-2); }
+  .f label a { color: var(--tint-text); }
+  .f div { font-size: 17px; margin-top: 2px; height: 24px; }
+  .f .ph { color: var(--label-3); }
+  .hint { font-size: 13px; color: var(--label-2); margin: 8px 4px 0; display: flex; align-items: center; gap: 6px; }
+  .cta { width: 100%; height: 50px; border-radius: 25px; justify-content: center; font-size: 17px; margin-top: 16px; display: flex; }
+  .or { display: flex; align-items: center; gap: 12px; color: var(--label-2); font-size: 13px; margin: 14px 0; }
+  .or::before, .or::after { content: ""; flex: 1; border-top: .5px solid var(--separator); }
+  .prov { display: flex; flex-direction: column; gap: 10px; }
+  .pb { height: 50px; border-radius: 25px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 17px; font-weight: 600; }
+  .pb .lg { width: 19px; height: 19px; }
+  .pb.apple { background: #000; color: #fff; }
+  .dark .pb.apple { background: #fff; color: #000; }
+  .pb.google { background: #fff; color: #1F1F1F; box-shadow: inset 0 0 0 1px #747775; }
+  .dark .pb.google { background: #131314; color: #E3E3E3; box-shadow: inset 0 0 0 1px #8E918F; }
+  .pb.sso { margin-top: 0; }
+  .pb.sso [data-i] { width: 19px; height: 19px; }
+  .link { text-align: center; font-size: 15px; color: var(--label-2); margin-top: 16px; }
+  .link b { color: var(--tint-text); font-weight: 600; }
+  .legal { position: absolute; bottom: 40px; left: 40px; right: 40px; text-align: center; font-size: 13px; color: var(--label-2); line-height: 1.4; z-index: 1; }
+  .legal a { color: var(--label); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+  .demo { position: absolute; bottom: 74px; left: 0; right: 0; text-align: center; font-size: 15px; font-weight: 600; color: var(--label); z-index: 1; display: flex; justify-content: center; }
+  .demo span { display: inline-flex; align-items: center; gap: 6px; }
+  .demo [data-i] { width: 18px; height: 18px; color: var(--tint); }
+  .meter { display: flex; gap: 4px; margin: 10px 4px 0; }
+  .meter i { flex: 1; height: 4px; border-radius: 2px; background: var(--fill); }
+  .meter i.on { background: var(--label); }
+  .terms { font-size: 13px; color: var(--label-2); text-align: center; margin-top: 12px; line-height: 1.4; }
+  .terms a { color: var(--label); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <div class="island"></div>
+  <div class="status"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="scroll">
+    <div class="glow"></div>
+    <div class="navbar"><div class="glass gbtn"><i data-i="chevron-back"></i></div></div>
+    <div class="glass gcap srv" style="top:118px"><i data-i="server"></i>penny.example.com</div>
+    <div class="wrap" style="padding-top:176px">
+      <h1 style="text-align:left;margin-top:0;font-size:30px">Make yourself at home.</h1>
+      <p class="lede" style="text-align:left;font-size:15px">Your account lives on this server. Penny never connects to your bank.</p>
+      <div class="prov" style="margin-top:18px">
+        <div class="pb apple"><svg class="lg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.37 12.6c-.02-2.3 1.88-3.4 1.96-3.46-1.07-1.56-2.73-1.78-3.32-1.8-1.41-.14-2.76.83-3.47.83-.72 0-1.82-.81-2.99-.79-1.54.02-2.96.9-3.75 2.27-1.6 2.78-.41 6.89 1.15 9.14.76 1.1 1.67 2.34 2.86 2.3 1.15-.05 1.58-.74 2.97-.74 1.38 0 1.77.74 2.98.72 1.23-.02 2.01-1.12 2.76-2.23.87-1.28 1.23-2.52 1.25-2.58-.03-.01-2.39-.92-2.4-3.66zM14.1 5.86c.63-.77 1.06-1.83.94-2.9-.91.04-2.02.61-2.67 1.37-.58.67-1.1 1.76-.96 2.8 1.02.08 2.06-.52 2.69-1.27z"/></svg>Sign up with Apple</div>
+        <div class="pb google"><svg class="lg" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Sign up with Google</div>
+      </div>
+      <div class="or">or use your email</div>
+      <div class="fields" style="margin-top:0">
+        <div class="f"><label>Name</label><div>Max Falicoff</div></div>
+        <div class="f"><label>Email</label><div>max@example.com</div></div>
+        <div class="f"><label>Password</label><div>••••••••••••</div></div>
+      </div>
+      <div class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
+      <p class="hint"><i data-i="checkmark" style="width:15px;height:15px;--sw:56px"></i>At least 10 characters</p>
+      <div class="glass gcap tinted cta">Create account</div>
+      <p class="terms">By creating an account you agree to the <a>Privacy Policy</a>.</p>
+      <p class="link" style="margin-top:12px">Already have an account? <b>Sign in</b></p>
+    </div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+</body></html>

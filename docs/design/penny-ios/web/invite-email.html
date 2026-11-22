@@ -1,0 +1,104 @@
+<!-- @dsCard group="Web" name="Invite by email" viewport="1520x980" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · Web · Invite by email</title>
+<link rel="stylesheet" href="../assets/penny.css"><link rel="stylesheet" href="../assets/web.css">
+<script src="../assets/icons.js"></script><script src="../assets/sankey.js"></script><script src="../assets/web.js"></script>
+<style>
+  .wmain > .glow { --glow-1: rgba(47,163,107,.40); --glow-2: rgba(120,200,160,.30); --glow-3: rgba(80,140,230,.18); }
+  .hh { display: flex; align-items: center; gap: 18px; margin-bottom: 20px; }
+  .hh .avatar { width: 40px; height: 40px; font-size: 14px; border-color: var(--bg); }
+  .owed { font-size: 13px; color: var(--label-2); }
+  .owed b { display: block; font-size: 34px; font-weight: 700; color: var(--income); letter-spacing: -0.03em; }
+  .cols { display: grid; grid-template-columns: minmax(0,1fr) 380px; gap: 18px; }
+  .person { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: .5px solid var(--separator); font-size: 14px; }
+  .person:first-of-type { border-top: 0; }
+  .person .avatar { width: 30px; height: 30px; border: 0; font-size: 11px; }
+  .person .t { flex: 1; } .person .t span { display: block; font-size: 12px; color: var(--label-2); }
+  .pay { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); margin-top: 8px; font-size: 14px; }
+  .pay .sp { flex: 1; }
+  .modal { left: 50%; top: 150px; transform: translateX(-50%); width: 520px; }
+  .mbody { padding: 18px 20px 20px; }
+  .mbody .lbl:first-child { margin-top: 0; }
+  .sendrow { display: flex; gap: 8px; } .sendrow .wfld { flex: 1; }
+  .fhint { font-size: 13px; line-height: 1.45; color: var(--label-2); margin-top: 8px; }
+  .irow { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: .5px solid var(--separator); font-size: 14px; }
+  .irow:first-of-type { border-top: 0; }
+  .irow .ii { width: 30px; height: 30px; border-radius: 50%; background: var(--fill); color: var(--label-2); display: grid; place-items: center; }
+  .irow .ii .mail { width: 15px; height: 15px; }
+  .irow .t { flex: 1; } .irow .t span { display: block; font-size: 12.5px; color: var(--label-2); }
+  .pend { font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 8px; background: color-mix(in srgb, var(--pending) 16%, transparent); color: var(--pending); }
+  .exp { font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 8px; background: var(--fill); color: var(--label-2); }
+  .lbl { display: block; font-size: 13px; font-weight: 600; margin: 18px 0 6px; }
+  .wfld { border-radius: 10px; background: var(--surface-2); box-shadow: inset 0 0 0 .5px var(--separator); padding: 9px 12px; font-size: 14.5px; }
+  .wfld.focus { box-shadow: inset 0 0 0 1.5px var(--tint), 0 0 0 4px var(--tint-soft); background: var(--surface); }
+  .wfld .caret { display: inline-block; width: 2px; height: 17px; background: var(--tint); vertical-align: -3px; margin-left: 1px; border-radius: 1px; }
+  .mf a { color: var(--tint-text); font-weight: 600; font-size: 13.5px; display: inline-flex; align-items: center; gap: 6px; }
+  .mf a [data-i] { width: 15px; height: 15px; }
+</style></head>
+<body class="canvas">
+<div class="browser" data-active="apartment" data-url="penny.example.com/households/apartment">
+  <main class="wmain">
+    <div class="glow"></div>
+    <div class="wtop">
+      <div class="btn icon"><i data-i="chevron-back"></i></div>
+      <h1>Apartment</h1>
+      <div class="month"><i><i data-i="chevron-back"></i></i><span>November 2026</span><i><i data-i="chevron-forward"></i></i></div>
+      <div class="sp"></div>
+      <div class="btn icon"><i data-i="time"></i></div>
+      <div class="btn"><i data-i="person-add"></i>Invite</div>
+      <div class="btn primary"><i data-i="add"></i>Shared expense</div>
+    </div>
+    <div class="wbody">
+      <div class="hh">
+        <div class="stack"><div class="avatar">MF</div><div class="avatar">MI</div><div class="avatar">JS</div></div>
+        <div class="owed">November · you're owed<b class="num">$142.50</b></div>
+        <div class="sp" style="flex:1"></div>
+        <div class="wchips"><span class="wchip on">Expenses</span><span class="wchip">Balances</span><span class="wchip">People</span></div>
+      </div>
+      <div class="cols">
+        <div class="panel" style="padding:12px 8px">
+          <table class="tbl">
+            <thead><tr><th>Expense</th><th>Paid by</th><th>Split</th><th class="r">Total</th><th class="r">Your share</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td><div class="cell"><div class="ic" style="background:var(--c-home)"><i data-i="home"></i></div><b>Rent</b><span class="tag"><i data-i="repeat"></i>Monthly</span></div></td><td><div class="cell"><div class="avatar" style="width:24px;height:24px;font-size:9px;border:0">MF</div>You</div></td><td class="muted">By rent share</td><td class="r num"><b>$2,900.00</b></td><td class="r num">$1,450.00</td><td><span class="tag pend">Settles Nov 30</span></td></tr>
+              <tr class="hover"><td><div class="cell"><div class="ic" style="background:var(--c-home)"><i data-i="wifi"></i></div><b>Hydro</b></div></td><td><div class="cell"><div class="avatar" style="width:24px;height:24px;font-size:9px;border:0">MI</div>Mira</div></td><td class="muted">Equally</td><td class="r num"><b>$96.30</b></td><td class="r num">$32.10</td><td><span class="tag pend">Settles Nov 30</span></td></tr>
+              <tr><td><div class="cell"><div class="ic" style="background:var(--c-groceries)"><i data-i="basket"></i></div><b>Costco run</b></div></td><td><div class="cell"><div class="avatar" style="width:24px;height:24px;font-size:9px;border:0">JS</div>Jo</div></td><td class="muted">Equally</td><td class="r num"><b>$184.20</b></td><td class="r num">$61.40</td><td><span class="tag inc"><i data-i="checkmark"></i>Paid</span></td></tr>
+              <tr><td><div class="cell"><div class="ic" style="background:var(--c-other)"><i data-i="ellipsis-horizontal"></i></div><b>Cleaning supplies</b></div></td><td><div class="cell"><div class="avatar" style="width:24px;height:24px;font-size:9px;border:0">MI</div>Mira</div></td><td class="muted">Equally</td><td class="r num"><b>$41.70</b></td><td class="r num">$13.90</td><td><span class="tag pend">Settles Nov 30</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:18px">
+          <div class="panel">
+            <div class="ph"><h4>Balances</h4><span class="tag pend">Settles Nov 30</span></div>
+            <div class="person"><div class="avatar">MF</div><div class="t">You<span>Paid $2,900 · share $1,529.40</span></div><b class="num pos">+$142.50</b></div>
+            <div class="person"><div class="avatar">MI</div><div class="t">Mira<span>Paid $138.00</span></div><b class="num">−$110.40</b></div>
+            <div class="person"><div class="avatar">JS</div><div class="t">Jo<span>Paid $184.20 · $61.40 repaid</span></div><b class="num">−$32.10</b></div>
+            <div style="font-size:12px;font-weight:600;color:var(--label-2);text-transform:uppercase;letter-spacing:.04em;margin-top:14px">Suggested payments</div>
+            <div class="pay"><b>Mira</b> → You<span class="sp"></span><b class="num">$110.40</b><span class="btn" style="height:30px;font-size:13px;opacity:.5">Record paid</span></div>
+            <div class="pay"><b>Jo</b> → You<span class="sp"></span><b class="num">$32.10</b><span class="btn" style="height:30px;font-size:13px;opacity:.5">Record paid</span></div>
+            <div class="hint" style="margin-top:10px"><i data-i="time" style="width:13px;height:13px"></i>Monthly payments open on the last day of the month.</div>
+          </div>
+          <div class="panel">
+            <div class="ph"><h4>October</h4><span class="tag bad"><i data-i="alert-circle"></i>Overdue</span></div>
+            <div class="pay" style="margin-top:0"><b>Jo</b> → Mira<span class="sp"></span><b class="num">$18.00</b><span class="btn primary" style="height:30px;font-size:13px">Record paid</span></div>
+            <div class="hint" style="margin-top:10px">Penny records payments made outside the app. It never moves money.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <div class="scrimw"></div>
+  <div class="modal">
+    <div class="mh"><h3>Invite to Apartment</h3><div class="btn icon"><i data-i="close"></i></div></div>
+    <div class="mbody">
+      <label class="lbl">Email</label>
+      <div class="sendrow"><div class="wfld focus">sam@example.com<span class="caret"></span></div><span class="btn primary">Send invite</span></div>
+      <div class="fhint">Penny emails them a link to join. If they are new to Penny, the link lets them create an account on penny.example.com first. Joining still asks them to accept.</div>
+      <label class="lbl">Invited</label>
+      <div class="irow"><div class="ii"><svg class="mail" viewBox="0 0 512 512" aria-hidden="true"><rect x="48" y="96" width="416" height="320" rx="40" ry="40" style="fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:var(--sw,32px)"/><polyline points="112 160 256 272 400 160" style="fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:var(--sw,32px)"/></svg></div><div class="t">jo.s@example.com<span>Sent today at 9:38</span></div><span class="pend">Waiting</span><span class="btn">Resend</span><div class="btn icon"><i data-i="ellipsis-horizontal"></i></div></div>
+      <div class="irow"><div class="ii"><svg class="mail" viewBox="0 0 512 512" aria-hidden="true"><rect x="48" y="96" width="416" height="320" rx="40" ry="40" style="fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:var(--sw,32px)"/><polyline points="112 160 256 272 400 160" style="fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:var(--sw,32px)"/></svg></div><div class="t">alex.k@example.com<span>Sent Nov 18 · link expired</span></div><span class="exp">Expired</span><span class="btn">Resend</span><div class="btn icon"><i data-i="ellipsis-horizontal"></i></div></div>
+    </div>
+    <div class="mf"><a><i data-i="key"></i>Share a code instead</a><span style="flex:1"></span><span class="btn">Done</span></div>
+  </div>
+</div>
+</body></html>

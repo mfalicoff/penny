@@ -1,0 +1,42 @@
+<!-- @dsCard group="iPhone" name="Add your name" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Add your name</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<style>
+  .behind { position: absolute; border: 0; width: 482px; height: 954px; left: -40px; top: -40px; pointer-events: none; }
+  .scrim { position: absolute; inset: 0; background: var(--dim); z-index: 5; }
+  .sheet { position: absolute; left: 6px; right: 6px; top: 400px; bottom: 6px; border-radius: 44px; background: var(--surface); z-index: 10; overflow: hidden; }
+  .grabber { width: 36px; height: 5px; border-radius: 3px; background: var(--label-3); opacity: .5; margin: 7px auto 0; }
+  .wrap { padding: 22px 22px 0; }
+  .who { display: flex; align-items: center; gap: 14px; }
+  .who .avatar { width: 52px; height: 52px; font-size: 18px; border: 0; }
+  .who b { display: block; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+  .who span { font-size: 14px; color: var(--label-2); }
+  .lede { font-size: 15px; color: var(--label-2); line-height: 1.4; margin-top: 14px; }
+  .fld { margin-top: 18px; background: var(--bg); border-radius: 16px; padding: 10px 16px; }
+  .fld label { display: block; font-size: 12px; font-weight: 600; color: var(--label-2); }
+  .fld div { font-size: 17px; margin-top: 2px; height: 24px; display: flex; align-items: center; }
+  .fld .cur { width: 2px; height: 22px; background: var(--tint); margin-left: 1px; border-radius: 1px; }
+  .hint { font-size: 13px; color: var(--label-2); margin: 8px 4px 0; }
+  .cta { width: 100%; height: 52px; border-radius: 26px; justify-content: center; font-size: 17px; margin-top: 20px; display: flex; }
+  .skip { text-align: center; font-size: 16px; font-weight: 600; color: var(--label); margin-top: 16px; }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <iframe class="behind" src="home.html" scrolling="no"></iframe><div class="scrim"></div>
+  <div class="island"></div>
+  <div class="status" style="color:#fff"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="wrap">
+      <div class="who"><div class="avatar">MA</div><div><b>What should people call you?</b><span>max@example.com</span></div></div>
+      <p class="lede">Your households and trips show this name instead of your email. You can add a picture later in Settings › Profile.</p>
+      <div class="fld"><label>Name</label><div>Max<span class="cur"></span></div></div>
+      <p class="hint">Up to 60 characters.</p>
+      <div class="glass gcap tinted cta">Save name</div>
+      <div class="skip">Not now</div>
+    </div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+</body></html>

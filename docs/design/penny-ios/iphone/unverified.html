@@ -1,0 +1,60 @@
+<!-- @dsCard group="iPhone" name="Verify your email to share" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Verify your email to share</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<style>
+  .head { padding: 112px 20px 0; }
+  .head p { font-size: 15px; color: var(--label-2); margin-top: 4px; }
+  .ask { margin: 16px 16px 0; background: var(--surface); border-radius: var(--r-card); padding: 18px; }
+  .ask .top { display: flex; gap: 14px; align-items: flex-start; }
+  .ask .ai { width: 44px; height: 44px; border-radius: 13px; background: color-mix(in srgb, var(--pending) 16%, transparent); color: var(--pending); display: grid; place-items: center; flex: none; }
+  .ask .ai .mail { width: 24px; height: 24px; }
+  .ask b { display: block; font-size: 17px; font-weight: 600; letter-spacing: -0.01em; margin-top: 1px; }
+  .ask p { font-size: 14px; color: var(--label-2); line-height: 1.4; margin-top: 4px; }
+  .ask p em { font-style: normal; font-weight: 600; color: var(--label); }
+  .ask .btns { display: flex; gap: 10px; margin-top: 16px; }
+  .ask .b { flex: 1; height: 44px; border-radius: 22px; display: grid; place-items: center; font-size: 16px; font-weight: 600; background: var(--fill); color: var(--label); }
+  .ask .b.tint { background: var(--tint); color: #fff; }
+  .empty { text-align: center; padding: 48px 36px 0; }
+  .empty .ei { width: 64px; height: 64px; border-radius: 20px; background: var(--fill); color: var(--label-2); display: grid; place-items: center; margin: 0 auto; }
+  .empty .ei [data-i] { width: 32px; height: 32px; }
+  .empty b { display: block; font-size: 20px; font-weight: 700; letter-spacing: -0.02em; margin-top: 14px; }
+  .empty p { font-size: 15px; color: var(--label-2); line-height: 1.4; margin-top: 6px; }
+  .acts { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
+  .acts div { height: 44px; padding: 0 18px; border-radius: 22px; background: var(--fill); display: inline-flex; align-items: center; gap: 6px; font-size: 16px; font-weight: 600; color: var(--label-3); }
+  .acts [data-i] { width: 18px; height: 18px; }
+  .gbtn.off { opacity: .45; }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <div class="island"></div>
+  <div class="status"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="scroll">
+    <div class="navbar"><div></div><div style="display:flex;gap:8px"><div class="glass gbtn off"><i data-i="add"></i></div></div></div>
+    <div class="head"><div class="largetitle">Shared</div><p>Split costs with a household or a trip.</p></div>
+    <div class="ask">
+      <div class="top">
+        <div class="ai"><svg class="mail" viewBox="0 0 512 512" aria-hidden="true"><rect x="48" y="96" width="416" height="320" rx="40" ry="40" style="fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:var(--sw,32px)"/><polyline points="112 160 256 272 400 160" style="fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:var(--sw,32px)"/></svg></div>
+        <div><b>Verify your email to share</b><p>Open the link we sent to <em>max@example.com</em>. Until then you can't create, join or be invited to households and trips.</p></div>
+      </div>
+      <div class="btns"><div class="b tint">Resend link</div><div class="b">Change email</div></div>
+    </div>
+    <div class="empty">
+      <div class="ei"><i data-i="people"></i></div>
+      <b>No households or trips yet</b>
+      <p>Once you're verified, create a household or join one with a code from a member.</p>
+      <div class="acts"><div><i data-i="add"></i>New household</div><div><i data-i="key"></i>Join</div></div>
+    </div>
+  </div>
+  <div class="tabbar">
+    <div class="tabs glass">
+      <div class="tab"><i data-i="home"></i>Home</div>
+      <div class="tab"><i data-i="list"></i>Activity</div>
+      <div class="tab on"><i data-i="people"></i>Shared</div>
+      <div class="tab"><i data-i="airplane"></i>Trips</div>
+    </div>
+    <div class="fab glass tinted"><i data-i="add"></i></div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+</body></html>

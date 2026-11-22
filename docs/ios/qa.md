@@ -161,6 +161,32 @@ Every card in [design-baseline.json](../../contracts/design-baseline.json) whose
 | `web-tablet` | — | Web-only draft reference (MAZ-238): native behavior is traced through `ipad-home`; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-password-reset` | — | Web-only draft reference (MAZ-238): the flow has no native screen; the browser journeys are MAZ-96 | Not applicable to native |
 | `web-export` | — | Web-only draft reference (MAZ-238): the flow has no native screen; the browser journeys are MAZ-96 | Not applicable to native |
+| `iphone-profile` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-171) | Gap: draft card, not built yet |
+| `iphone-profile-provider` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-171) | Gap: draft card, not built yet |
+| `iphone-profile-photo` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-171) | Gap: draft card, not built yet |
+| `iphone-name-prompt` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-171) | Gap: draft card, not built yet |
+| `iphone-sign-in-providers` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-170) | Gap: draft card, not built yet |
+| `iphone-create-account-providers` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-170) | Gap: draft card, not built yet |
+| `iphone-verify-email` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-172) | Gap: draft card, not built yet |
+| `iphone-unverified` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-172) | Gap: draft card, not built yet |
+| `iphone-forgot-password` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-124) | Gap: draft card, not built yet |
+| `iphone-invite-email` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-124) | Gap: draft card, not built yet |
+| `iphone-delete-account` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-152) | Gap: draft card, not built yet |
+| `iphone-export-all` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-152) | Gap: draft card, not built yet |
+| `iphone-monitoring-prompt` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-129) | Gap: draft card, not built yet |
+| `iphone-privacy` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-129) | Gap: draft card, not built yet |
+| `ipad-profile` | — | Draft card (MAZ-267), waiting for the owner's review; the feature isn't built yet (MAZ-171) | Gap: draft card, not built yet |
+| `web-profile` | — | Web-only draft reference (MAZ-267): native behavior is traced through `iphone-profile`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-sign-in-providers` | — | Web-only draft reference (MAZ-267): native behavior is traced through `iphone-sign-in-providers`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-create-account` | — | Web-only draft reference (MAZ-267): native behavior is traced through `iphone-create-account-providers`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-verify-email` | — | Web-only draft reference (MAZ-267): native behavior is traced through `iphone-verify-email`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-email-verified` | — | Web-only draft reference (MAZ-267): native behavior is traced through `iphone-verify-email`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-forgot-password` | — | Web-only draft reference (MAZ-267): native behavior is traced through `iphone-forgot-password`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-invite-email` | — | Web-only draft reference (MAZ-267): native behavior is traced through `iphone-invite-email`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-delete-account` | — | Web-only draft reference (MAZ-267): native behavior is traced through `iphone-delete-account`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-export-all` | — | Web-only draft reference (MAZ-267): native behavior is traced through `iphone-export-all`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-privacy` | — | Web-only draft reference (MAZ-267): native behavior is traced through `iphone-privacy`; the browser journeys are MAZ-96 | Not applicable to native |
+| `web-monitoring-prompt` | — | Web-only draft reference (MAZ-267): native behavior is traced through `iphone-monitoring-prompt`; the browser journeys are MAZ-96 | Not applicable to native |
 
 Justified native adaptations are recorded in [redesign](../reference/redesign.md#native-implementation-notes-maz-69). Android has no card (the Android app is retired, MAZ-98), and the desktop-only `web-*` cards have no native screen.
 

@@ -1,0 +1,77 @@
+<!-- @dsCard group="Web" name="Check your email" viewport="1520x980" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · Web · Check your email</title>
+<link rel="stylesheet" href="../assets/penny.css"><link rel="stylesheet" href="../assets/web.css">
+<script src="../assets/icons.js"></script><script src="../assets/sankey.js"></script><script src="../assets/web.js"></script>
+<style>
+  .split { display: grid; grid-template-columns: 1fr 1fr; height: 100%; width: 100%; }
+  .brand { position: relative; overflow: hidden; padding: 56px; display: flex; flex-direction: column; }
+  .brand::before { content: ""; position: absolute; inset: -80px; background: var(--glow-pk, radial-gradient(40% 45% at 30% 40%, rgba(255,138,76,.55), transparent 70%), radial-gradient(35% 40% at 70% 65%, rgba(255,196,120,.45), transparent 70%), radial-gradient(35% 35% at 45% 85%, rgba(255,120,150,.28), transparent 70%)); filter: blur(40px); }
+  .brand > * { position: relative; }
+  .brand h1 { font-size: 52px; font-weight: 700; letter-spacing: -0.04em; line-height: 1.05; margin-top: auto; }
+  .brand p { font-size: 17px; color: var(--label-2); margin-top: 14px; max-width: 420px; }
+  .mini { margin-top: 36px; width: 380px; padding: 18px; border-radius: 22px; }
+  .formside { position: relative; display: grid; place-items: center; background: var(--surface); }
+  .form { width: 380px; }
+  .form h2 { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
+  .form .sub { color: var(--label-2); font-size: 15px; margin-top: 4px; line-height: 1.45; }
+  .form .sub b { color: var(--label); font-weight: 600; }
+  .fld { margin-top: 12px; border-radius: 12px; background: var(--surface-2); box-shadow: inset 0 0 0 .5px var(--separator); padding: 8px 14px; }
+  .fld span { display: flex; justify-content: space-between; font-size: 12px; color: var(--label-2); }
+  .fld span a { color: var(--tint-text); font-weight: 600; }
+  .fld div { font-size: 16px; margin-top: 2px; }
+  .big { width: 100%; height: 46px; justify-content: center; font-size: 15.5px; margin-top: 18px; border-radius: 12px; }
+  .or { display: flex; align-items: center; gap: 12px; color: var(--label-3); font-size: 12px; margin: 16px 0; }
+  .or::before, .or::after { content: ""; flex: 1; border-top: .5px solid var(--separator); }
+  .pb { width: 100%; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 15px; font-weight: 600; margin-top: 10px; }
+  .pb .lg { width: 18px; height: 18px; flex: none; }
+  .pb.apple { background: #000; color: #fff; }
+  .dark .pb.apple { background: #fff; color: #000; }
+  .pb.google { background: #fff; color: #1F1F1F; box-shadow: inset 0 0 0 1px #747775; }
+  .dark .pb.google { background: #131314; color: #E3E3E3; box-shadow: inset 0 0 0 1px #8E918F; }
+  .pb.sso { background: var(--surface); box-shadow: inset 0 0 0 1px var(--separator); color: var(--label); }
+  .pb.sso [data-i] { width: 17px; height: 17px; }
+  .alt { text-align: center; font-size: 14px; color: var(--label-2); margin-top: 18px; }
+  .alt b { color: var(--tint-text); }
+  .legal { font-size: 12.5px; color: var(--label-2); text-align: center; margin-top: 14px; line-height: 1.45; }
+  .legal a { color: var(--label); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+  .demo { position: absolute; bottom: 40px; left: 0; right: 0; text-align: center; }
+  .demo span { display: inline-flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 600; color: var(--label); }
+  .demo [data-i] { width: 18px; height: 18px; color: var(--tint); }
+  .demo p { font-size: 13px; color: var(--label-2); margin-top: 6px; }
+  .demo p a { color: var(--label); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+  .back { display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 14px; font-weight: 600; color: var(--tint-text); margin-top: 20px; }
+  .back [data-i] { width: 14px; height: 14px; --sw: 48px; }
+  .mi { width: 56px; height: 56px; border-radius: 17px; background: var(--tint-soft); color: var(--tint); display: grid; place-items: center; margin-bottom: 18px; }
+  .mi .mail, .mi [data-i] { width: 28px; height: 28px; }
+  .note { display: flex; gap: 10px; margin-top: 18px; padding: 12px 14px; border-radius: 12px; background: var(--surface-2); box-shadow: inset 0 0 0 .5px var(--separator); font-size: 14px; line-height: 1.45; color: var(--label-2); }
+  .note [data-i] { width: 18px; height: 18px; flex: none; margin-top: 1px; }
+</style></head>
+<body class="canvas">
+<div class="browser" data-noside data-url="penny.example.com/verify-email">
+  <main class="wmain">
+    <div class="split">
+      <div class="brand">
+        <div class="wbrand" style="padding:0"><span class="logo"><i data-i="leaf"></i></span>penny.</div>
+        <h1>A little more clarity<br>about your money.</h1>
+        <p>Personal and shared expenses on your own server. Penny never connects to your bank.</p>
+        <div class="mini glass">
+          <div class="eyebrow">Left to spend</div>
+          <div class="num" style="font-size:40px;font-weight:700;letter-spacing:-0.04em;margin-top:4px">$1,116<span style="font-size:22px;opacity:.55">.65</span></div>
+          <div class="flow" style="margin-top:12px"><i style="width:58.8%;background:var(--label);opacity:.82"></i><i style="width:6.3%;background:var(--invest)"></i><i style="width:34.9%;background:var(--income)"></i></div>
+        </div>
+      </div>
+      <div class="formside">
+        <div class="form">
+          <div class="mi"><svg class="mail" viewBox="0 0 512 512" aria-hidden="true"><rect x="48" y="96" width="416" height="320" rx="40" ry="40" style="fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:var(--sw,32px)"/><polyline points="112 160 256 272 400 160" style="fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:var(--sw,32px)"/></svg></div>
+          <h2>Check your email</h2>
+          <div class="sub">We sent a link to <b>max@example.com</b>. Open it to verify your address.</div>
+          <div class="note"><i data-i="people"></i><span>You can use your own ledger right away. Households, trips and invites open once your email is verified.</span></div>
+          <div class="btn primary big">Continue to Penny</div>
+          <div class="alt">Didn&#39;t get it? <span style="color:var(--label-3);font-weight:600">Resend in <span class="num">0:42</span></span> · <b>Change email</b></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</body></html>

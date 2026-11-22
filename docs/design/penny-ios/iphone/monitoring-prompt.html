@@ -1,0 +1,48 @@
+<!-- @dsCard group="iPhone" name="Share crash reports" viewport="482x954" -->
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Penny · iPhone · Share crash reports</title>
+<link rel="stylesheet" href="../assets/penny.css"><script src="../assets/icons.js"></script>
+<style>
+  .behind { position: absolute; border: 0; width: 482px; height: 954px; left: -40px; top: -40px; pointer-events: none; }
+  .scrim { position: absolute; inset: 0; background: var(--dim); z-index: 5; }
+  .sheet { position: absolute; left: 6px; right: 6px; top: 268px; bottom: 6px; border-radius: 44px; background: var(--surface); z-index: 10; overflow: hidden; }
+  .grabber { width: 36px; height: 5px; border-radius: 3px; background: var(--label-3); opacity: .5; margin: 7px auto 0; }
+  .wrap { padding: 20px 22px 0; }
+  .ai { width: 52px; height: 52px; border-radius: 16px; background: var(--tint-soft); color: var(--tint); display: grid; place-items: center; }
+  .ai [data-i] { width: 28px; height: 28px; }
+  h2 { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; margin-top: 14px; }
+  .lede { font-size: 15px; color: var(--label-2); line-height: 1.4; margin-top: 6px; }
+  .inc { background: var(--bg); border-radius: 18px; margin-top: 16px; padding: 2px 0; }
+  .li { display: flex; gap: 12px; padding: 11px 14px; font-size: 15px; line-height: 1.35; position: relative; }
+  .li + .li::before { content: ""; position: absolute; top: 0; left: 44px; right: 0; border-top: .5px solid var(--separator); }
+  .li [data-i] { width: 18px; height: 18px; flex: none; margin-top: 1px; }
+  .li .y { color: var(--label); } .li .n { color: var(--label-2); }
+  .li small { display: block; font-size: 13px; color: var(--label-2); }
+  .btns { display: flex; flex-direction: column; gap: 8px; margin-top: 18px; }
+  .b { height: 50px; border-radius: 25px; display: grid; place-items: center; font-size: 17px; font-weight: 600; background: var(--fill); color: var(--label); }
+  .b.tint { background: var(--tint); color: #fff; }
+  .foot { font-size: 13px; color: var(--label-2); text-align: center; margin-top: 12px; line-height: 1.4; }
+  .foot a { color: var(--tint-text); font-weight: 600; }
+</style></head>
+<body class="canvas">
+<div class="iphone">
+  <iframe class="behind" src="home.html" scrolling="no"></iframe><div class="scrim"></div>
+  <div class="island"></div>
+  <div class="status" style="color:#fff"><span>9:41</span><span class="r"><i data-i="wifi"></i><i data-i="battery-full"></i></span></div>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="wrap">
+      <div class="ai"><i data-i="alert-circle"></i></div>
+      <h2>Help fix problems faster?</h2>
+      <p class="lede">penny.example.com can collect crash reports and how long screens take to load, so its operator can find and fix problems.</p>
+      <div class="inc">
+        <div class="li"><i data-i="checkmark" class="y"></i><div>Crashes, errors and loading times<small>With the device model and app version</small></div></div>
+        <div class="li"><i data-i="close" class="n"></i><div>Never your entries, amounts, titles, notes, names, emails or searches</div></div>
+      </div>
+      <div class="btns"><div class="b tint">Share reports</div><div class="b">Don't share</div></div>
+      <p class="foot">Off until you choose. Change it anytime in Settings › Privacy. <a>Privacy Policy</a></p>
+    </div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+</body></html>
