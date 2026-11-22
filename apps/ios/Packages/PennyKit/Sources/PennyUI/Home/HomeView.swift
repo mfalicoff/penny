@@ -68,67 +68,70 @@ struct HomeView: View {
             }
         }
         .background(PennyColor.background)
+        // As on the cards, Home's bar has no title: the month leads it. The title still names
+        // the page for VoiceOver and for Back on the pages above it.
         .navigationTitle("Home")
         .toolbarTitleDisplayModeInline()
+        .toolbar(removing: .title)
         .toolbar {
             if sizeClass == .regular {
-                // iPad (`ipad-home` card): the month between back and forward arrows, then
-                // search and the copper Add entry capsule. Settings is in the sidebar's footer.
+                // iPad (`ipad-home` card): the month between back and forward arrows and the
+                // calendar after them, then search and the copper Add entry capsule. Settings is
+                // in the sidebar's footer.
                 ToolbarItem(placement: .navigation) { MonthStepButton(offset: -1) }
                 ToolbarSpacer(.fixed, placement: .navigation)
                 ToolbarItem(placement: .navigation) { MonthPicker(showsYear: true) }
                 ToolbarSpacer(.fixed, placement: .navigation)
                 ToolbarItem(placement: .navigation) { MonthStepButton(offset: 1) }
-            } else {
-                ToolbarItem(placement: .navigation) { MonthPicker() }
-            }
-            if hasEntries {
-                ToolbarItem(placement: .primaryAction) {
-                    NavigationLink(value: DetailRoute.calendar) {
-                        Label("Calendar", systemImage: "calendar")
-                    }
-                    .accessibilityIdentifier("home.calendar")
+                if hasEntries {
+                    ToolbarSpacer(.fixed, placement: .navigation)
+                    ToolbarItem(placement: .navigation) { calendarButton }
                 }
-            }
-            if sizeClass == .regular {
-                ToolbarSpacer(.fixed, placement: .primaryAction)
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         shell.openActivitySearch()
                     } label: {
                         Label("Search activity", systemImage: "magnifyingglass")
                     }
+                    // The cards draw the bar's icons in the label color; copper is for Add entry.
+                    .tint(PennyColor.label)
                     .accessibilityIdentifier("home.search")
                 }
                 ToolbarSpacer(.fixed, placement: .primaryAction)
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        shell.route.openAddEntry()
-                    } label: {
-                        // An HStack, not a Label: the toolbar would draw a Label as its icon alone.
-                        HStack(spacing: 6) {
-                            Image(systemName: "plus")
-                            Text("Add entry")
-                        }
-                        .fontWeight(.semibold)
-                    }
-                    .buttonStyle(.glassProminent)
-                    .tint(PennyColor.tint)
-                    .accessibilityIdentifier("home.add")
-                }
+                ToolbarItem(placement: .primaryAction) { AddEntryCapsule().accessibilityIdentifier("home.add") }
             } else {
+                ToolbarItem(placement: .navigation) { MonthPicker() }
+                // The calendar and settings share the system's grouped glass capsule (approved,
+                // MAZ-254).
+                if hasEntries {
+                    ToolbarItem(placement: .primaryAction) { calendarButton }
+                }
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         shell.route.openSettings()
                     } label: {
                         Label("Settings", systemImage: "gearshape")
                     }
+                    // The cards draw the bar's icons in the label color; copper is for Add entry.
+                    .tint(PennyColor.label)
                     .accessibilityIdentifier("home.settings")
                 }
             }
         }
         .task(id: shell.month) { await shell.refreshShared() }
         .accessibilityIdentifier("screen.home")
+    }
+
+    /// Opens the month calendar as a sheet over Home (`calendar` card, MAZ-254).
+    private var calendarButton: some View {
+        Button {
+            shell.navigate { $0.openCalendar() }
+        } label: {
+            Label("Calendar", systemImage: "calendar")
+        }
+        // The cards draw the bar's icons in the label color; copper is for Add entry.
+        .tint(PennyColor.label)
+        .accessibilityIdentifier("home.calendar")
     }
 
     /// Nothing at all yet: no entries, no schedules and no shared rows.
@@ -249,7 +252,8 @@ struct ExpectedIncomeCard: View {
 }
 
 /// The compact "Follow your money" card: spent, invested and left as one bar and three
-/// numbers. It opens the money flow page, which has the full chart and every value.
+/// numbers. It opens the money flow page, which has the full chart and every value; its
+/// Insights pill opens Insights (`home` card, MAZ-254).
 struct FlowSummaryCard: View {
     let flow: MoneyFlow
     let currency: String
@@ -261,7 +265,10 @@ struct FlowSummaryCard: View {
                     Text("Follow your money").font(.headline).foregroundStyle(PennyColor.label)
                     Image(systemName: "chevron.forward").font(.footnote.weight(.semibold))
                         .foregroundStyle(PennyColor.tertiaryLabel)
-                    Spacer(minLength: 0)
+                    Spacer(minLength: 8)
+                    // Keeps the pill's place, so the title is centered on it; the pill itself is
+                    // its own button over the card.
+                    InsightsPill.Label().hidden()
                 }
                 if flow.isEmpty {
                     Text("Nothing recorded this month yet.")
@@ -290,6 +297,9 @@ struct FlowSummaryCard: View {
         .accessibilityHint("Shows where your money went")
         .accessibilityAddTraits(.isButton)
         .accessibilityIdentifier("home.flow")
+        .overlay(alignment: .topTrailing) {
+            InsightsPill().padding(18)
+        }
     }
 
     @ViewBuilder
@@ -307,6 +317,37 @@ struct FlowSummaryCard: View {
 
     /// Spending's gray, the same as its band in the bar.
     static let spentColor = PennyColor.label.opacity(0.75)
+}
+
+/// The Follow your money card's "Insights" pill (`home` card, MAZ-254): a copper pie and the
+/// word on the neutral fill. It opens Insights, Home's spending by category.
+struct InsightsPill: View {
+    var body: some View {
+        NavigationLink(value: DetailRoute.insights) {
+            Label()
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Insights")
+        .accessibilityHint("Shows spending by category")
+        .accessibilityIdentifier("home.insights")
+    }
+
+    /// The pill itself: 32 points tall, with a 44-point tap area.
+    struct Label: View {
+        @ScaledMetric(relativeTo: .subheadline) private var height = 32.0
+
+        var body: some View {
+            HStack(spacing: 6) {
+                Image(systemName: "chart.pie").font(.footnote.weight(.semibold))
+                    .foregroundStyle(PennyColor.tint)
+                Text("Insights").font(.subheadline.weight(.semibold)).foregroundStyle(PennyColor.label)
+            }
+            .padding(.horizontal, 12)
+            .frame(minHeight: height)
+            .background(PennyColor.fill, in: Capsule())
+            .contentShape(Rectangle().inset(by: -6))
+        }
+    }
 }
 
 /// One item of a dot legend (the cards' `.legend`): a meaning-colored dot, the name in the
@@ -382,9 +423,11 @@ struct RecentSection: View {
     }
 }
 
-/// "Explore your month": the calendar, spending by category and the money flow, each a page of
-/// the Home stack with a one-line preview of what it holds.
+/// "Explore your month" on iPhone (`home-explore` card): the calendar (a sheet over Home),
+/// spending by category and the money flow (pages of the Home stack), each with a one-line
+/// preview of what it holds. The iPad dashboard has no Explore list (`ipad-home`, MAZ-254).
 struct ExploreSection: View {
+    @Environment(ShellModel.self) private var shell
     let report: LedgerReport
     let summary: MonthSummary
     let currency: String
@@ -396,22 +439,32 @@ struct ExploreSection: View {
         VStack(alignment: .leading, spacing: 8) {
             OverviewHeader("Explore your month")
             VStack(spacing: 0) {
-                row(
-                    .calendar, "Calendar", "calendar", Self.calendarLine(calendar)
-                )
+                Button {
+                    shell.navigate { $0.openCalendar() }
+                } label: {
+                    row("Calendar", "calendar", Self.calendarLine(calendar))
+                }
+                .buttonStyle(.plain)
+                .accessibilityElement(children: .combine)
                 .accessibilityIdentifier("home.exploreCalendar")
                 Divider().padding(.leading, 64)
-                row(
-                    .insights, "Spending by category", "chart.pie", Self.categoriesLine(breakdown, currency: currency)
-                )
+                NavigationLink(value: DetailRoute.insights) {
+                    row("Spending by category", "chart.pie", Self.categoriesLine(breakdown, currency: currency))
+                }
+                .buttonStyle(.plain)
+                .accessibilityElement(children: .combine)
                 .accessibilityIdentifier("home.exploreInsights")
                 Divider().padding(.leading, 64)
-                row(
-                    .moneyFlow, "Money flow", "arrow.triangle.branch",
-                    flow.isEmpty
-                        ? "Nothing recorded yet"
-                        : "Came in \(OverviewText.money(flow.income, currency)) · went out \(OverviewText.money(flow.outflow, currency))"
-                )
+                NavigationLink(value: DetailRoute.moneyFlow) {
+                    row(
+                        "Money flow", "wallet.bifold",
+                        flow.isEmpty
+                            ? "Nothing recorded yet"
+                            : "Came in \(OverviewText.money(flow.income, currency)) · went out \(OverviewText.money(flow.outflow, currency))"
+                    )
+                }
+                .buttonStyle(.plain)
+                .accessibilityElement(children: .combine)
                 .accessibilityIdentifier("home.exploreMoneyFlow")
             }
             .background(
@@ -434,29 +487,24 @@ struct ExploreSection: View {
         return "Mostly \(top.category.name) · \(top.percent)"
     }
 
-    private func row(_ route: DetailRoute, _ title: String, _ symbol: String, _ detail: String)
-        -> some View
-    {
-        NavigationLink(value: route) {
-            HStack(spacing: 12) {
-                CategoryIcon(symbol: symbol, color: PennyColor.tint)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title).font(.body.weight(.semibold)).foregroundStyle(PennyColor.label)
-                        .fixedSize(horizontal: false, vertical: true)
-                    Text(detail).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                Spacer(minLength: 8)
-                Image(systemName: "chevron.forward").font(.footnote.weight(.semibold))
-                    .foregroundStyle(PennyColor.tertiaryLabel).accessibilityHidden(true)
+    /// A row as on the card: a copper tile, the title over its preview, and a chevron.
+    private func row(_ title: String, _ symbol: String, _ detail: String) -> some View {
+        HStack(spacing: 12) {
+            CategoryIcon(symbol: symbol, color: PennyColor.tint)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.body.weight(.semibold)).foregroundStyle(PennyColor.label)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text(detail).font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
-            .frame(minHeight: ControlSize.row)
-            .contentShape(Rectangle())
+            Spacer(minLength: 8)
+            Image(systemName: "chevron.forward").font(.footnote.weight(.semibold))
+                .foregroundStyle(PennyColor.tertiaryLabel).accessibilityHidden(true)
         }
-        .buttonStyle(.plain)
-        .accessibilityElement(children: .combine)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .frame(minHeight: max(ControlSize.row, 60))
+        .contentShape(Rectangle())
     }
 }
 
@@ -644,7 +692,8 @@ struct EmptyHomeKinds: View {
 
 /// Home in a wide regular width (`ipad-home`, adapted from the `desktop` reference): the hero
 /// with Income, Spent and Invested beside Coming up, then the full money flow beside daily
-/// spending and Explore your month, then Recent.
+/// spending. As on the card there is no Explore list or Recent under it (MAZ-254): the calendar
+/// is in the toolbar, Insights in the sidebar, and the money flow opens from its panel's header.
 struct HomeDashboard: View {
     @Environment(ShellModel.self) private var shell
     let report: LedgerReport
@@ -669,18 +718,25 @@ struct HomeDashboard: View {
             }
             HStack(alignment: .top, spacing: 20) {
                 VStack(alignment: .leading, spacing: 12) {
-                    OverviewHeader(title: "Follow your money") {
-                        NavigationLink(value: DetailRoute.moneyFlow) {
-                            Text("Details").font(.subheadline.weight(.semibold)).foregroundStyle(PennyColor.tintText)
+                    // The card's header: the title, and the focus hint with a chevron that opens
+                    // the money flow page (no separate Details link).
+                    NavigationLink(value: DetailRoute.moneyFlow) {
+                        ViewThatFits(in: .horizontal) {
+                            HStack(alignment: .firstTextBaseline, spacing: 8) { flowHeader(flow) }
+                            VStack(alignment: .leading, spacing: 4) { flowHeader(flow) }
                         }
-                        .accessibilityLabel("Money flow details")
-                        .accessibilityIdentifier("home.flow")
+                        .contentShape(Rectangle())
                     }
+                    .buttonStyle(.plain)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("Follow your money")
+                    .accessibilityHint("Shows the money flow page")
+                    .accessibilityAddTraits([.isButton, .isHeader])
+                    .accessibilityIdentifier("home.flow")
                     if flow.isEmpty {
                         Text("Nothing recorded this month yet.")
                             .font(.subheadline).foregroundStyle(PennyColor.secondaryLabel)
                     } else {
-                        Text("Tap a band to focus").font(.footnote).foregroundStyle(PennyColor.secondaryLabel)
                         SankeyChart(flow: flow, currency: currency, focused: $focused)
                         if let id = focused, let node = flow.node(id: id) {
                             FlowFocusCard(node: node, flow: flow, report: report, currency: currency) { focused = nil }
@@ -689,15 +745,27 @@ struct HomeDashboard: View {
                 }
                 .pennyCard()
                 .frame(maxWidth: .infinity)
-                VStack(alignment: .leading, spacing: 20) {
-                    DailySpendingPanel(summary: summary, currency: currency, today: shell.today)
-                    ExploreSection(report: report, summary: summary, currency: currency)
-                }
-                .frame(width: side)
+                DailySpendingPanel(summary: summary, currency: currency, today: shell.today)
+                    .frame(width: side)
             }
-            RecentSection(report: report, summary: summary)
         }
         .onChange(of: shell.month) { focused = nil }
+    }
+
+    @ViewBuilder
+    private func flowHeader(_ flow: MoneyFlow) -> some View {
+        Text("Follow your money").font(.headline).foregroundStyle(PennyColor.label)
+        Spacer(minLength: 0)
+        HStack(spacing: 4) {
+            if !flow.isEmpty {
+                Text("Select a band or label to focus it, again to clear")
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Image(systemName: "chevron.forward").font(.footnote.weight(.semibold))
+                .foregroundStyle(PennyColor.tertiaryLabel)
+        }
+        .font(.footnote)
+        .foregroundStyle(PennyColor.secondaryLabel)
     }
 
     /// The side column (Coming up, daily spending): the card's third column, 1 of 3.15 parts

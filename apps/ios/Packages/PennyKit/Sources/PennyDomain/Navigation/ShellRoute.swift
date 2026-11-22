@@ -23,11 +23,11 @@ public enum DetailRoute: Hashable, Sendable {
     /// A personal entry's detail (Activity, MAZ-73).
     case entry(id: String)
     /// Home's analysis pages for the month on screen (MAZ-77): the money flow, Insights
-    /// (spending by category), the calendar, and one category's entries. They follow the
-    /// shell's month, so they are pages of the Home stack rather than deep-link destinations.
+    /// (spending by category) and one category's entries. They follow the shell's month, so
+    /// they are pages of the Home stack rather than deep-link destinations. The calendar is a
+    /// sheet over Home instead (`isCalendarPresented`, MAZ-254).
     case moneyFlow
     case insights
-    case calendar
     case categorySpending(categoryIds: [String], title: String)
     /// The receipt inbox (MAZ-184), opened on one item when `itemID` is set (a notification).
     case receiptInbox(itemID: String?)
@@ -95,6 +95,8 @@ public struct ShellRoute: Equatable, Sendable {
     public var isSettingsPresented: Bool
     public var settingsPath: [SettingsRoute]
     public var isAddEntryPresented: Bool
+    /// The month calendar, a sheet over Home (`calendar` card, MAZ-254) on iPhone and iPad.
+    public var isCalendarPresented = false
     /// The create-or-join household sheet (MAZ-75), over the Shared tab.
     public var householdStart: HouseholdStart?
     /// A join sheet a link asked for, waiting to be presented (MAZ-75). A link usually arrives
@@ -133,7 +135,23 @@ public struct ShellRoute: Equatable, Sendable {
     /// Shows a page inside the current tab.
     public mutating func push(_ route: DetailRoute) { paths[tab, default: []].append(route) }
 
+    /// Opens the calendar over Home.
+    public mutating func openCalendar() {
+        isAddEntryPresented = false
+        if !settingsIsColumn { isSettingsPresented = false }
+        isCalendarPresented = true
+    }
+
+    /// A row of the calendar sheet was chosen: the sheet closes and the page opens on Home, so
+    /// Back leads to Home under it.
+    public mutating func openFromCalendar(_ route: DetailRoute) {
+        isCalendarPresented = false
+        tab = .home
+        paths[.home, default: []].append(route)
+    }
+
     public mutating func openSettings(_ page: SettingsRoute? = nil) {
+        isCalendarPresented = false
         isAddEntryPresented = false
         householdStart = nil
         pendingHouseholdStart = nil
@@ -143,6 +161,7 @@ public struct ShellRoute: Equatable, Sendable {
 
     public mutating func openAddEntry() {
         if !settingsIsColumn { isSettingsPresented = false }
+        isCalendarPresented = false
         householdStart = nil
         isAddEntryPresented = true
     }
@@ -189,6 +208,7 @@ public struct ShellRoute: Equatable, Sendable {
 
     private mutating func show(_ next: AppTab, _ path: [DetailRoute]) {
         isSettingsPresented = false
+        isCalendarPresented = false
         householdStart = nil
         pendingHouseholdStart = nil
         settingsPath = []

@@ -290,6 +290,7 @@ final class ShellModel {
     static func closesSheet(from old: ShellRoute, to new: ShellRoute) -> Bool {
         (old.isAddEntryPresented && !new.isAddEntryPresented)
             || (old.householdStart != nil && new.householdStart == nil)
+            || (old.isCalendarPresented && !new.isCalendarPresented)
             || (old.isSettingsPresented && !new.isSettingsPresented && !old.settingsIsColumn)
     }
 

@@ -32,7 +32,7 @@ Each row is a feature area. "Server-checked" means the test reads the account's 
 | Households and shared expenses | `HouseholdJourneyTests` | Two users on the real API: invite, join, split, payment, stale edit, links, scanner without camera | — | Split amounts |
 | Trips | `TripJourneyTests` | Personal trip shared with earlier private expenses, splits, totals counted once, delete guard | — | Yes |
 | Receipts | `ReceiptJourneyTests` | Photo and PDF round trips (SHA-256), failures, oversized and renamed files, session end during upload | — | Bytes |
-| Reports | `OverviewJourneyTests` | Left to spend before Projected, money flow focus, calendar day selection keeps month totals, Insights drill-down, XXXL value lists | — | Demo data |
+| Reports | `OverviewJourneyTests` | Left to spend before Projected, money flow focus, the calendar sheet's day selection and Close, Insights from the flow card's pill, XXXL value lists | — | Demo data |
 | Settings and links | `SettingsJourneyTests`, `AppLockDelayTests`, `SmokeJourneyTests`, `HouseholdJourneyTests`, `NotificationJourneyTests`, `AddEntryOverSettingsTests` | Appearance kept across relaunch, app lock refused where the device cannot authenticate, Lock after delays, currency, `penny://join` links, notification navigation | App relaunch | Currency |
 | Upgrades | `LifecycleTests` | Seeded earlier-install state; `PENNY_UPGRADE_FROM_APP` installs a previous build first | Upgrade | — |
 
@@ -45,10 +45,11 @@ Every card in [design-baseline.json](../../contracts/design-baseline.json) whose
 | `system-foundations` | `AccessibilityAuditTests`, `ScreenshotTests` | Contrast audit in light/dark/XXXL and Reduce Transparency; TokenBaselineTests (PennyKit) checks tokens | Covered (automated audit + screenshots) |
 | `system-widgets` | — | WidgetKit rendering, families and deep links are device checks (MAZ-80, PennyWidgetUITests in PennyKit) | Device-only (checklist) |
 | `iphone-home` | `OverviewJourneyTests`, `AccessibilityAuditTests`, `ScreenshotTests` | Left to spend before Projected; audit; light/dark × default/XL/RT/RM captures | Covered |
+| `iphone-home-overspent` | `CardCaptureTests` | A negative Left to spend with "… more went out than came in" under it (MAZ-254) | Covered |
 | `iphone-home-dark` | `ScreenshotTests`, `AccessibilityAuditTests` | Dark captures and dark/dark-XXXL audits | Covered (visual comparison: MAZ-122) |
 | `iphone-money-flow` | `OverviewJourneyTests`, `ScreenshotTests` | Focus/clear, value list at XXXL | Covered |
 | `iphone-insights` | `OverviewJourneyTests`, `AccessibilityAuditTests` | Category drill-down; audited in every variant | Covered |
-| `iphone-calendar` | `OverviewJourneyTests`, `ScreenshotTests` | Day selection keeps month totals | Covered |
+| `iphone-calendar` | `OverviewJourneyTests`, `ScreenshotTests` | The calendar sheet over Home: day selection, Today, Close | Covered |
 | `iphone-activity` | `EntryJourneyTests`, `SearchJourneyTests`, `AccessibilityAuditTests` | Day rows, kind filters keep totals, server totals after each write | Covered |
 | `iphone-search-empty` | `SearchJourneyTests`, `KeyboardLayoutTests` | No-match query shows the empty state; with the keyboard up it stays clear of the totals and the server-results line | Covered |
 | `iphone-add-expense` | `SmokeJourneyTests`, `EntryJourneyTests`, `AccessibilityAuditTests` | Keypad entry, server write, keyboard-safe Save at XXXL | Covered; duplicate-submit tapping is unit-tested only (EntryFlowTests) |
@@ -127,7 +128,7 @@ Every card in [design-baseline.json](../../contracts/design-baseline.json) whose
 | `web-receipt-email-settings` | — | Web-only reference: native behavior is traced through `ipad-receipt-email-settings`; the browser journeys are MAZ-96 | Not applicable to native |
 | `iphone-activity-filters` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
 | `iphone-activity-searching` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
-| `iphone-home-explore` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
+| `iphone-home-explore` | `OverviewJourneyTests`, `CardCaptureTests` | Expected income and Explore your month under Recent; the calendar row opens the calendar sheet (MAZ-254) | Covered |
 | `iphone-account-picker` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
 | `iphone-household-picker` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |
 | `iphone-edit-entry` | — | Draft card (MAZ-238), waiting for the owner's review; the Cards test plan has no state for it yet | Gap: draft card, not traced yet |

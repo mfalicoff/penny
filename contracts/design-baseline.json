@@ -75,7 +75,7 @@
   "sources": [
     {
       "path": "docs/design/penny-ios/README.md",
-      "sha256": "3d29322cbfcbbcfa0e1030d13ff77815ccebd16a5c9af9d00d20cff02701d7f1"
+      "sha256": "3d0ce9c76dace2dbebea7b9696f9ac9d9c90c3655e98f565fa0df94a4fd23169"
     },
     {
       "path": "docs/design/penny-ios/render.mjs",
@@ -131,7 +131,7 @@
     },
     {
       "path": ".design-sync/NOTES.md",
-      "sha256": "f3f4dade063d185e40f65b1f72cb0200fd2acf20be41f670855266b267c2fec8"
+      "sha256": "000222f045e60ebd70b2c5e352a66eeaaaebfd8a956a9dfe9cfac7e272f7a3bc"
     },
     {
       "path": "docs/design/penny-ios/compare.mjs",
@@ -143,7 +143,7 @@
     },
     {
       "path": "docs/design/visual-acceptance.md",
-      "sha256": "1f3b901ce69352b5fe27a333b4eda038842f57233696a600fc881dac8f8a5e63"
+      "sha256": "8f6333652658712bc25d12d73bf4aa7fa916791c0f33022b464cd38edeed47d7"
     }
   ],
   "tokens": {
@@ -1406,7 +1406,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/iphone/offline.html",
-      "sha256": "0f6342bdefeb7670531e0bc4507246826b9dee0cea110081c610495c50b2dc4d",
+      "sha256": "02af69b160344f9a02887ee0a18a6bf57d7d35049417c7bf543b90e7c88d7577",
       "nativeIssue": "MAZ-71",
       "webIssue": "MAZ-87",
       "route": "/",
@@ -1568,6 +1568,29 @@
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/iphone/home-explore.html",
       "sha256": "4217e6c601af7c72a481383fb98b4203037368ce330889499dbb1bbbdd497624",
+      "nativeIssue": "MAZ-77",
+      "webIssue": "MAZ-92",
+      "route": "/",
+      "acceptance": {
+        "native": "MAZ-82",
+        "web": "MAZ-96",
+        "scenario": "recorded versus projected totals, accessible charts and adaptive layout"
+      },
+      "status": "planned"
+    },
+    {
+      "id": "iphone-home-overspent",
+      "name": "Home: more went out than came in",
+      "group": "iPhone",
+      "platform": "iPhone",
+      "category": "Daily money",
+      "viewport": {
+        "w": 482,
+        "h": 954
+      },
+      "theme": "light",
+      "sourcePath": "docs/design/penny-ios/iphone/home-overspent.html",
+      "sha256": "3cffcc560be28e7bf0298cf1054a2e2bf33588724a853a231f0becc99985fa34",
       "nativeIssue": "MAZ-77",
       "webIssue": "MAZ-92",
       "route": "/",
@@ -2119,7 +2142,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/ipad/activity.html",
-      "sha256": "62d9f1d6e395070674362abd62035c453e730482ead4d84b23884be517adc682",
+      "sha256": "ac03a6e2597e6e4bf185a1fc2b3488f84e8d0d13ff245f93550066dd3aa9ef6c",
       "nativeIssue": "MAZ-73",
       "webIssue": "MAZ-88",
       "route": "/transactions",
@@ -2214,7 +2237,7 @@
       },
       "theme": "light",
       "sourcePath": "docs/design/penny-ios/ipad/settings.html",
-      "sha256": "ac15f995ae42120102d833f2d00f033c724f26e2adbc27ae0ecccd5e6a6dd663",
+      "sha256": "dbd3d6672477326fc5722b4bb47ac33b9ef51fd158ddeab2cd83ee74cf3e5987",
       "nativeIssue": "MAZ-69",
       "webIssue": "MAZ-85",
       "route": "/",

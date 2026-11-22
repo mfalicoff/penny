@@ -37,15 +37,17 @@ final class ReduceTransparencyTests: PennyUITestCase {
             screenshot("reduce-transparency-\(dark ? "dark" : "light")-appearance")
             XCTAssertTrue(isSurface(barColor(penny, over: appearancePage), dark: dark), "a Settings page's bar")
 
-            // Kept for the next launch, and applied to a page pushed on Home, Settings and a sheet.
+            // Kept for the next launch, and applied to the calendar sheet, Settings and Add entry.
             let relaunched = try await relaunch()
             try relaunched.waitForShell()
-            try relaunched.tap(AccessibilityID.Home.exploreCalendar)
-            try relaunched.wait(for: AccessibilityID.Screen.calendar)
+            try relaunched.openCalendar()
             screenshot("reduce-transparency-\(dark ? "dark" : "light")-calendar")
             XCTAssertTrue(
-                isSurface(barColor(relaunched, over: AccessibilityID.Screen.calendar), dark: dark), "Home's pushed page"
+                isSurface(barColor(relaunched, over: AccessibilityID.Screen.calendar), dark: dark),
+                "the calendar sheet over Home"
             )
+            try relaunched.tap(AccessibilityID.Overview.calendarClose)
+            try relaunched.waitForAbsence(of: AccessibilityID.Screen.calendar)
             try relaunched.openSettings()
             screenshot("reduce-transparency-\(dark ? "dark" : "light")-settings")
             XCTAssertTrue(

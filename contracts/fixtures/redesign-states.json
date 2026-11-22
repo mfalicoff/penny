@@ -703,6 +703,18 @@
       "view": "home scrolled to Expected income and Explore your month, October 2026"
     },
     {
+      "specimen": "iphone-home-overspent",
+      "platform": "iPhone",
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "scenario": "searchable-household",
+      "as": "alex",
+      "view": "home, October 2026: more went out than came in, so Left to spend is negative with the line under it",
+      "totals": "alex-2026-10"
+    },
+    {
       "specimen": "iphone-account-picker",
       "platform": "iPhone",
       "appearances": [

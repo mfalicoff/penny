@@ -16,7 +16,13 @@
   .offline { position: absolute; top: 112px; left: 16px; right: 16px; height: 48px; border-radius: 24px; display: flex; align-items: center; gap: 10px; padding: 0 16px; z-index: 21; font-size: 15px; }
   .offline [data-i] { width: 20px; height: 20px; color: var(--pending); }
   .offline b { font-weight: 600; } .offline span { color: var(--label-2); margin-left: auto; font-size: 14px; }
-  .hero { padding-top: 176px !important; }
+  .banner { --tone: var(--pending); position: absolute; top: 172px; left: 16px; right: 16px; border-radius: 18px; display: flex; align-items: center; gap: 12px; padding: 11px 8px 11px 14px; z-index: 21; background: color-mix(in srgb, var(--tone) 13%, var(--surface)); }
+  .banner > [data-i] { width: 22px; height: 22px; color: var(--tone); --sw: 44px; }
+  .banner .t { flex: 1; min-width: 0; }
+  .banner .t b { display: block; font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+  .banner .t span { display: block; font-size: 13px; color: var(--label-2); line-height: 1.35; margin-top: 2px; }
+  .banner .act { flex: none; min-width: 44px; height: 44px; padding: 0 10px; display: grid; place-items: center; font-size: 15px; font-weight: 600; color: var(--tint-text); }
+  .hero { padding-top: 270px !important; }
   .wait { display: inline-flex !important; align-items: center; gap: 4px; color: var(--pending) !important; font-weight: 500; }
   .wait [data-i] { width: 13px; height: 13px; --sw: 44px; }
 </style></head>
@@ -32,6 +38,7 @@
     </div>
 
     <div class="offline glass"><i data-i="cloud-offline"></i><b>Offline</b> · 2 changes waiting<span>Retry</span></div>
+    <div class="banner"><i data-i="alert-circle"></i><div class="t"><b>Shared expenses may be missing</b><span>You're offline. Shared expenses update when you're back online.</span></div><div class="act">Retry</div></div>
     <div class="hero">
       <div class="eyebrow">Left to spend</div>
       <div class="big num">$1,116<small>.65</small></div>
