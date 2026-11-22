@@ -2193,9 +2193,14 @@
             "ref": "docs/reference/redesign.md#web-adaptations-maz-122"
           },
           {
-            "summary": "One hero spans both panes; the card puts the month's amount at the top of the right pane and the name with the month total on the left, groups the expenses under THIS WEEK and EARLIER, and its button reads + Expense",
+            "summary": "The month is chosen in the bar (previous, month, next) over both panes; the card has no month control and its toolbar sits over the right pane (design decision)",
             "kind": "follow-up",
-            "ref": "MAZ-229"
+            "ref": "MAZ-279"
+          },
+          {
+            "summary": "Balances is the web-household panel (Paid and share on each row, then Suggested payments with Record paid and the longer note), not the card's rows with \"pays you\" and gets back or owes; the selected expense shows only once one is chosen",
+            "kind": "follow-up",
+            "ref": "MAZ-279"
           }
         ]
       }
