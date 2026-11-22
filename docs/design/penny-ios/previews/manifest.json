@@ -83,7 +83,7 @@
     {
       "id": "iphone-account-form",
       "source": "docs/design/penny-ios/iphone/account-form.html",
-      "sourceSha256": "94f766b78e365477ef16f174b6adcc3bd689f49a6608d74358f246f24fd5b092",
+      "sourceSha256": "8008b7aa1719c6fbba15a745acdce587aa20bd07e67a61129711e120c246eaa5",
       "viewport": {
         "w": 482,
         "h": 954
@@ -92,12 +92,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-account-form.light.png",
-          "sha256": "5b48cab530793761efcb874d91eb3b27722784945a76ef093d3afcdad87ca208"
+          "sha256": "eadfc23c8d9b1cc1f2d5b2b55c0fb748e406da11f5e14356d594cb628e26ff58"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-account-form.dark.png",
-          "sha256": "a2e0f042ace5f77823afc63802417b9247adff657e428d00cb3d312d332dccc9"
+          "sha256": "ca0b4e5c742b7b937610284f14987fda21f6b4d8be56cbe6f5eb96071633e9d7"
         }
       ]
     },
@@ -335,7 +335,7 @@
     {
       "id": "iphone-category-form",
       "source": "docs/design/penny-ios/iphone/category-form.html",
-      "sourceSha256": "03a90a5723b6db50e1aacf72b7d2c19d68aba33e6286b752dc806a4fe7a28488",
+      "sourceSha256": "576e015fb130b93911f016294a0ce49cf0177faa1ac320d453d1365fd105b1e4",
       "viewport": {
         "w": 482,
         "h": 954
@@ -344,12 +344,12 @@
         {
           "appearance": "light",
           "file": "previews/iphone-category-form.light.png",
-          "sha256": "e94b0689d6e684aa5d525e51133ac1062f80208eef01440cc5e2487e189e279e"
+          "sha256": "fed34b78b790e1faaf1eb3e379c0cbd8fddcd7eb05343e19e029e58ebf025910"
         },
         {
           "appearance": "dark",
           "file": "previews/iphone-category-form.dark.png",
-          "sha256": "6b1555878f46600068f1b561a6853aa41d31dd71e96920b44caf855318ade175"
+          "sha256": "ae6a45c38faf7efb6156e498ed9cca16959a736d0dd5384d2528e83597ef4ba0"
         }
       ]
     },

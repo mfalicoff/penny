@@ -1215,19 +1215,12 @@
       "id": "iphone-schedule-detail",
       "view": "schedule Gym (anchor 31)",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-74",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "An inline title and no … button; upcoming dates include the year; a separator above Edit and Pause",
-            "kind": "follow-up",
-            "ref": "MAZ-251"
-          }
         ]
       },
       "web": {
@@ -1265,14 +1258,9 @@
         ],
         "deviations": [
           {
-            "summary": "No \"Labels for how you pay and get paid.\" subtitle",
+            "summary": "The subtitle sits about 20 points further below the large title than on the card, as on Recurring, where it is approved (MAZ-236): iOS keeps the system large title, and the list starts below its area. Waiting for a design decision",
             "kind": "follow-up",
             "ref": "MAZ-251"
-          },
-          {
-            "summary": "Bank account uses a bank building icon where the card uses a wallet",
-            "kind": "follow-up",
-            "ref": "MAZ-257"
           }
         ]
       },
@@ -1288,21 +1276,14 @@
     },
     {
       "id": "iphone-account-form",
-      "view": "edit Visa, used by entries and schedules, so Remove is locked",
+      "view": "edit Visa, used by entries and schedules, so it offers Move and remove",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-74",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "Bank account uses a bank building icon where the card uses a wallet",
-            "kind": "follow-up",
-            "ref": "MAZ-257"
-          }
         ]
       },
       "web": {
@@ -1335,7 +1316,7 @@
         ],
         "deviations": [
           {
-            "summary": "No Edit button or drag handles to reorder, and the footer explains removal instead of the shortcuts",
+            "summary": "No Edit button, drag handles or Drag to reorder, and the footer explains removal instead of the first-three shortcuts: Penny stores no category order, and the shortcuts follow use. Waiting for a design decision",
             "kind": "follow-up",
             "ref": "MAZ-251"
           }
@@ -1362,24 +1343,12 @@
       "id": "iphone-category-form",
       "view": "new category draft: Coffee",
       "native": {
-        "status": "deviates",
+        "status": "matches",
         "owner": "MAZ-74",
         "capture": "iPhone 18 Pro simulator, iOS 27",
         "appearances": [
           "light",
           "dark"
-        ],
-        "deviations": [
-          {
-            "summary": "The name field has a Name header",
-            "kind": "follow-up",
-            "ref": "MAZ-251"
-          },
-          {
-            "summary": "Capture state: the name keeps the keyboard up over part of Icon; Return would save the category (follow-up from MAZ-253)",
-            "kind": "follow-up",
-            "ref": "MAZ-253"
-          }
         ]
       },
       "web": {

@@ -476,7 +476,7 @@
       ],
       "scenario": "searchable-household",
       "as": "alex",
-      "view": "edit Visa, used by entries and schedules, so Remove is locked"
+      "view": "edit Visa, used by entries and schedules, so it offers Move and remove"
     },
     {
       "specimen": "iphone-categories",

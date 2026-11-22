@@ -25,6 +25,8 @@ final class AccountFormModel {
     let id: String
     var name: String
     var type: AccountType
+    /// The account that "Move and remove" moves this one's entries and schedules to.
+    var moveTo: String?
     private(set) var failure: SaveFailure?
     private(set) var isSaving = false
 
@@ -62,10 +64,27 @@ final class AccountFormModel {
         return failure == nil
     }
 
-    /// Why Remove is unavailable, naming what uses the account; nil when it can be removed.
-    static func removalNote(name: String, usage: RecordUsage) -> String? {
+    /// Moves every entry and schedule that uses the account to `moveTo`, then removes the
+    /// account, in one change (`LedgerChange.moveAccountAndRemove`).
+    func moveAndRemove(in ledger: Ledger, with commit: LedgerCommit) async -> Bool {
+        guard let original, let target = moveTo.flatMap(ledger.account(id:)), !isSaving else { return false }
+        isSaving = true
+        defer { isSaving = false }
+        failure = await commit(
+            .moveAccountAndRemove(original, to: target),
+            ChangeSummary(title: "Account removed", detail: "\(original.name), moved to \(target.name)"))
+        return failure == nil
+    }
+
+    /// The accounts "Move them to" offers: every other account.
+    func moveTargets(in ledger: Ledger) -> [PaymentAccount] { ledger.accounts.filter { $0.id != id } }
+
+    /// What uses the account, and what to do about it: "Visa is used by 31 entries and 3
+    /// schedules." with a place to move them, or how to make one. Nil while nothing uses it.
+    static func removalNote(name: String, usage: RecordUsage, canMove: Bool) -> String? {
         guard usage.isInUse else { return nil }
-        return "\(name) is used by \(OrganizeText.uses(usage)). Move them to another account to remove it."
+        let note = "\(name) is used by \(OrganizeText.uses(usage))."
+        return canMove ? note : "\(note) Add another account first, then move them there."
     }
 }
 
@@ -85,6 +104,8 @@ final class CategoryFormModel {
     var color: String
     /// The stored Ionicons name.
     var icon: String
+    /// The category that "Move and remove" moves this one's entries and schedules to.
+    var moveTo: String?
     private(set) var failure: SaveFailure?
     private(set) var isSaving = false
 
@@ -137,9 +158,78 @@ final class CategoryFormModel {
         return failure == nil
     }
 
-    static func removalNote(name: String, usage: RecordUsage) -> String? {
+    /// The counterpart of `AccountFormModel.moveAndRemove`: the target has the category's kind.
+    func moveAndRemove(in ledger: Ledger, with commit: LedgerCommit) async -> Bool {
+        guard let original, let target = moveTo.flatMap(ledger.category(id:)), !isSaving else { return false }
+        isSaving = true
+        defer { isSaving = false }
+        failure = await commit(
+            .moveCategoryAndRemove(original, to: target),
+            ChangeSummary(title: "Category removed", detail: "\(original.name), moved to \(target.name)"))
+        return failure == nil
+    }
+
+    /// The categories "Move them to" offers: the others of the category's stored kind.
+    func moveTargets(in ledger: Ledger) -> [LedgerCategory] {
+        let kind = original?.kind ?? kind
+        return ledger.categories.filter { $0.id != id && $0.kind == kind }
+    }
+
+    static func removalNote(name: String, usage: RecordUsage, canMove: Bool) -> String? {
         guard usage.isInUse else { return nil }
-        return "\(name) is used by \(OrganizeText.uses(usage)). Keep it to preserve your history."
+        let note = "\(name) is used by \(OrganizeText.uses(usage))."
+        return canMove ? note : "\(note) Add another category of this kind first, then move them there."
+    }
+}
+
+// MARK: Move and remove
+
+extension LedgerChange {
+    /// Moves every entry and schedule from `account` to `target`, then removes `account`,
+    /// in one change: both happen or neither does (the web's `moveAccountAndRemove`). The
+    /// removal still goes through `saveAccount`, so an account changed on another device, or a
+    /// target removed there, is refused instead of overwritten.
+    static func moveAccountAndRemove(_ account: PaymentAccount, to target: PaymentAccount) -> LedgerChange {
+        LedgerChange { (ledger) throws(LedgerRuleError) in
+            guard target.id != account.id, ledger.account(id: target.id) != nil else { throw .accountRemoved }
+            var next = ledger
+            next.transactions = ledger.transactions.map { entry in
+                guard entry.accountId == account.id else { return entry }
+                var entry = entry
+                entry.accountId = target.id
+                return entry
+            }
+            next.recurring = ledger.recurring.map { rule in
+                guard rule.accountId == account.id else { return rule }
+                var rule = rule
+                rule.accountId = target.id
+                return rule
+            }
+            return try LedgerChange.saveAccount(account, original: account, remove: true).apply(to: next)
+        }
+    }
+
+    /// The category counterpart of `moveAccountAndRemove`; the target must have the same kind.
+    static func moveCategoryAndRemove(_ category: LedgerCategory, to target: LedgerCategory) -> LedgerChange {
+        LedgerChange { (ledger) throws(LedgerRuleError) in
+            guard target.id != category.id,
+                ledger.categories.contains(where: { $0.id == target.id && $0.kind == category.kind })
+            else { throw .categoryRemoved }
+            var next = ledger
+            next.transactions = ledger.transactions.map { entry in
+                guard entry.categoryId == category.id else { return entry }
+                var entry = entry
+                entry.categoryId = target.id
+                return entry
+            }
+            next.recurring = ledger.recurring.map { rule in
+                guard rule.categoryId == category.id else { return rule }
+                var rule = rule
+                rule.categoryId = target.id
+                return rule
+            }
+            return try LedgerChange.saveCategory(category, original: category, remove: true).apply(to: next)
+        }
     }
 }
 
@@ -274,7 +364,7 @@ enum OrganizeText {
 
     static func accountSymbol(_ type: AccountType) -> String {
         switch type {
-        case .bank: "building.columns"
+        case .bank: "wallet.bifold"
         case .credit: "creditcard"
         case .cash: "banknote"
         case .other: "ellipsis"
