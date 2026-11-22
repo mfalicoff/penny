@@ -163,6 +163,8 @@ describe("household on a touch tablet (ipad-shared)", () => {
     serve();
     const user = userEvent.setup();
     renderApp(`/households/${id}`);
+    // The pane always shows an expense: the first listed one (the URL selects it, so the page settles there first).
+    const panel = await screen.findByRole("region", { name: "Hydro" });
     // The expenses pane leads with the name, the members and the month's total.
     const summary = await screen.findByRole("region", { name: "Household summary" });
     expect(summary).toHaveTextContent("Maison");
@@ -181,10 +183,45 @@ describe("household on a touch tablet (ipad-shared)", () => {
     const add = within(topbar()).getByRole("button", { name: "Shared expense" });
     expect(add).toHaveTextContent("Expense");
     expect(add).not.toHaveTextContent("Shared");
-    // The selected expense opens below Balances.
-    await user.click(screen.getByRole("link", { name: /^Hydro/ }));
-    const panel = await screen.findByRole("region", { name: "Hydro" });
+    // Balances is the card's: each member's payment on their row, and gets back or owes under the amount.
+    const rows = within(balances).getByRole("list", { name: "Balances for October 2026" });
+    expect(within(rows).getAllByText(/^pays you \$/)).toHaveLength(2);
+    expect(within(rows).getByText("gets back")).toBeVisible();
+    expect(within(rows).getAllByText("owes")).toHaveLength(2);
+    expect(within(balances).getByText("Record paid opens on the last day of the month. Repay a single expense any time with Mark as paid.")).toBeInTheDocument();
+    expect(within(balances).queryByText("Suggested payments")).not.toBeInTheDocument();
+    // The selected expense is below Balances, and the page picking it didn't move focus.
     expect(balances.compareDocumentPosition(panel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(within(panel).queryByRole("button", { name: "Close Hydro" })).not.toBeInTheDocument();
+    expect(within(panel).getByRole("heading", { name: "Hydro" })).not.toHaveFocus();
+    // Choosing another expense opens it there and moves focus to it.
+    await user.click(screen.getByRole("link", { name: /^Rent/ }));
+    const rent = await screen.findByRole("region", { name: "Rent" });
+    await waitFor(() => {
+      expect(within(rent).getByRole("heading", { name: "Rent" })).toHaveFocus();
+    });
+    // A month with no expenses leaves the pane to Balances.
+    await user.click(within(topbar()).getByRole("button", { name: "Next month" }));
+    await waitFor(() => {
+      expect(screen.queryByRole("region", { name: "Rent" })).not.toBeInTheDocument();
+    });
+    expect(await screen.findByText("No shared expenses in November 2026")).toBeInTheDocument();
+    // Back in October, the first expense is selected again.
+    await user.click(within(topbar()).getByRole("button", { name: "Previous month" }));
+    expect(await screen.findByRole("region", { name: "Hydro" })).toBeInTheDocument();
+  });
+
+  it("keeps an expense from another month open when it's opened directly", async () => {
+    stubWidth(1194, true);
+    const id = seed();
+    const { alex } = ids();
+    addExpense(ALEX, id, { title: "Hydro", totalCents: 9000, payerUserId: alex, date: "2026-10-18" });
+    const internet = addExpense(ALEX, id, { title: "Internet", totalCents: 6000, payerUserId: alex, date: "2026-09-10" });
+    serve();
+    renderApp(`/households/${id}/expenses/${internet.id}`);
+    expect(await screen.findByRole("list", { name: "This week" })).toBeInTheDocument();
+    expect(await screen.findByRole("region", { name: "Internet" })).toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Hydro" })).not.toBeInTheDocument();
   });
 });
 

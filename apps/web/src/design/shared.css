@@ -1266,6 +1266,45 @@ a.row:hover {
     line-height: 1.05;
   }
 
+  /* ipad-shared's Balances rows: the name, then the payment that settles it, then the balance. */
+  .balance-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .balance-row__name {
+    flex: none;
+    font-size: 0.9375rem;
+  }
+
+  .balance-row__pays {
+    flex: 1;
+    min-width: 0;
+    margin-inline-start: 4px;
+    color: var(--pk-label-2);
+    font-size: 0.8125rem;
+  }
+
+  .balance-row .row__end {
+    margin-inline-start: auto;
+  }
+
+  .balance-row .row__end .money {
+    font-weight: 600;
+  }
+
+  .balance-row .row__end .row__meta {
+    font-size: 0.75rem;
+  }
+
+  .balance-hint {
+    margin: 10px 0 0;
+    color: var(--pk-label-2);
+    font-size: 0.8125rem;
+    line-height: 1.4;
+  }
+
   /* The open expense's row is tinted, as the card's selected row. */
   .household--split .shared-group__rows .row[aria-current="page"] {
     background: var(--pk-tint-soft);
